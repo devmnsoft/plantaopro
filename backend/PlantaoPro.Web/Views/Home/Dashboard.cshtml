@@ -1,1 +1,22 @@
-<h1>Dashboard</h1><div class="cards"><div>Total médicos</div><div>Total hospitais</div><div>Plantões disponíveis</div></div>
+@model DashboardOverviewDto
+<h2 class="mb-3">Dashboard</h2>
+<div class="row g-3 mb-3">
+    <div class="col-md-2"><div class="card stat"><div>Médicos</div><strong>@Model?.Indicadores.TotalMedicos</strong></div></div>
+    <div class="col-md-2"><div class="card stat"><div>Hospitais</div><strong>@Model?.Indicadores.TotalHospitais</strong></div></div>
+    <div class="col-md-2"><div class="card stat"><div>Plantões abertos</div><strong>@Model?.Indicadores.PlantoesAbertos</strong></div></div>
+    <div class="col-md-2"><div class="card stat"><div>Plantões realizados</div><strong>@Model?.Indicadores.PlantoesRealizados</strong></div></div>
+    <div class="col-md-2"><div class="card stat"><div>Pagamentos pendentes</div><strong>@Model?.Indicadores.PagamentosPendentes</strong></div></div>
+    <div class="col-md-2"><div class="card stat"><div>Valor pago mês</div><strong>@Model?.Indicadores.ValorPagoMes.ToString("C")</strong></div></div>
+</div>
+<div class="row g-3"><div class="col-md-6"><div class="card p-3"><canvas id="chartPlantoesMes"></canvas></div></div><div class="col-md-6"><div class="card p-3"><canvas id="chartPagamentosMes"></canvas></div></div><div class="col-md-6"><div class="card p-3"><canvas id="chartEsp"></canvas></div></div><div class="col-md-6"><div class="card p-3"><canvas id="chartHosp"></canvas></div></div></div>
+@section Scripts {
+<script>
+window.dashboardData = {
+plMes: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.PlantoesPorMes ?? Enumerable.Empty<DashboardChartItem>())),
+pgMes: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.PagamentosPorMes ?? Enumerable.Empty<DashboardChartItem>())),
+esp: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.PlantoesPorEspecialidade ?? Enumerable.Empty<DashboardChartItem>())),
+hosp: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model?.PlantoesPorHospital ?? Enumerable.Empty<DashboardChartItem>()))
+};
+renderDashboardCharts();
+</script>
+}

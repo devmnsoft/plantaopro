@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.37216.2 d17.14
+VisualStudioVersion = 17.14.37216.2
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Web", "PlantaoPro.Web\PlantaoPro.Web.csproj", "{96FEFB9C-90CF-CDB5-53D4-52CF21F0E3C8}"
 EndProject
@@ -11,6 +11,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Infrastructure", "PlantaoPro.Infrastructure\PlantaoPro.Infrastructure.csproj", "{842B6508-5751-80B4-8424-BDF9B4234E37}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.CrossCutting", "PlantaoPro.CrossCutting\PlantaoPro.CrossCutting.csproj", "{291F0896-0818-7D7D-5995-6C34DE36F88D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Api", "PlantaoPro.Api\PlantaoPro.Api.csproj", "{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,6 +40,10 @@ Global
 		{291F0896-0818-7D7D-5995-6C34DE36F88D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{291F0896-0818-7D7D-5995-6C34DE36F88D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{291F0896-0818-7D7D-5995-6C34DE36F88D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

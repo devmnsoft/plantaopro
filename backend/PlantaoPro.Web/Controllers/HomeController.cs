@@ -1,13 +1,11 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using System.Net.Http.Headers;
+using System.Security.Claims;
+using System.Text.Json;
 
 namespace PlantaoPro.Web.Controllers
 {
@@ -37,7 +35,8 @@ namespace PlantaoPro.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
             try
             {
                 var client = _httpClientFactory.CreateClient("PlantaoProApi");
@@ -84,7 +83,8 @@ namespace PlantaoPro.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
             var client = _httpClientFactory.CreateClient("PlantaoProApi");
             var response = await client.PostAsJsonAsync("api/auth/forgot-password", new ForgotPasswordRequest(model.Email));
             var content = await response.Content.ReadFromJsonAsync<ApiResponse<JsonElement>>();
@@ -106,7 +106,8 @@ namespace PlantaoPro.Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                return View(model);
             var client = _httpClientFactory.CreateClient("PlantaoProApi");
             var response = await client.PostAsJsonAsync("api/auth/reset-password", new ResetPasswordRequest(model.Email, model.Token, model.NovaSenha));
             var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();

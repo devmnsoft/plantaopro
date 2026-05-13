@@ -7,7 +7,7 @@ namespace PlantaoPro.Api.Controllers
 {
 [ApiController]
 [Route("api/hospitais")]
-public class HospitaisController(HospitalService service):ControllerBase{
+public class HospitaisController : ControllerBase{ private readonly HospitalService service; public HospitaisController(HospitalService service){ this.service=service; }
  [HttpGet] public async Task<IActionResult> Get(){var r=await service.GetAllAsync();return StatusCode(r.StatusCode,r);}
  [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id){var r=await service.GetByIdAsync(id);return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpPost] public async Task<IActionResult> Create(CreateHospitalRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.CreateAsync(req,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 

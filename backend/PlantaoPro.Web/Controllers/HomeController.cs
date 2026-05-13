@@ -151,7 +151,7 @@ namespace PlantaoPro.Web.Controllers
             {
                 _logger.LogError(ex, "Erro ao carregar dashboard.");
                 TempData["Error"] = "Erro ao carregar dashboard.";
-                return View(new DashboardOverviewDto(new DashboardDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), [], [], [], [], [], [], []));
+                return View(new DashboardOverviewDto(new DashboardDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>()));
             }
         }
     }

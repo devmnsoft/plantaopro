@@ -23,10 +23,15 @@ builder.Services
 builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
-    client.BaseAddress = new Uri(cfg["ApiSettings:BaseUrl"] ?? "http://localhost:5259/");
+
+    var baseUrl = cfg["PlantaoProApi:BaseUrl"];
+
+    if (string.IsNullOrWhiteSpace(baseUrl))
+        throw new InvalidOperationException("A configuração PlantaoProApi:BaseUrl não foi encontrada no appsettings.");
+
+    client.BaseAddress = new Uri(baseUrl);
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 });
-
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

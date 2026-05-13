@@ -1,0 +1,1 @@
+SET search_path TO plantaopro; INSERT INTO especialidades(nome,descricao) VALUES ('Clínica Médica','Atendimento geral'),('Pediatria','Atendimento infantil'),('Cardiologia','Especialidade cardíaca') ON CONFLICT(nome) DO NOTHING;

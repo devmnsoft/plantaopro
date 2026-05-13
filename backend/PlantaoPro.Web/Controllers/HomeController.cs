@@ -1,0 +1,1 @@
+using Microsoft.AspNetCore.Mvc; namespace PlantaoPro.Web.Controllers; public class HomeController:Controller{ public IActionResult Dashboard()=>View(); } public class AccountController:Controller{ public IActionResult Login()=>View(); }

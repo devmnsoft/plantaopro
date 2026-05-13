@@ -8,7 +8,7 @@ namespace PlantaoPro.Api.Controllers
 {
 [ApiController]
 [Route("api/medicos")]
-public class MedicosController(MedicoService service):ControllerBase{
+public class MedicosController : ControllerBase{ private readonly MedicoService service; public MedicosController(MedicoService service){ this.service=service; }
  [HttpGet]
  public async Task<IActionResult> Get(){var r=await service.ListarAsync();return StatusCode(r.StatusCode,r);}
  [Authorize]

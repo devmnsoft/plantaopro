@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Mvc;using Pl
 namespace PlantaoPro.Api.Controllers
 {
 [ApiController][Route("api")]
-public class EscalasController(EscalaService service):ControllerBase{
+public class EscalasController : ControllerBase{ private readonly EscalaService service; public EscalasController(EscalaService service){ this.service=service; }
  [Authorize][HttpGet("escalas")] public async Task<IActionResult> Listar([FromQuery]EscalaFilterRequest f){var r=await service.ListarAsync(f);return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpGet("escalas/{id:guid}")] public async Task<IActionResult> Get(Guid id){var r=await service.GetByIdAsync(id);return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpGet("medicos/me/plantoes")] public async Task<IActionResult> Meus([FromQuery]int page=1,[FromQuery]int pageSize=20){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.ListarPorMedicoUsuarioAsync(uid,page,pageSize);return StatusCode(r.StatusCode,r);} 

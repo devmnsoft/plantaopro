@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Mvc;using Pl
 namespace PlantaoPro.Api.Controllers
 {
 [ApiController][Route("api/financeiro")]
-public class FinanceiroController(FinanceiroService service):ControllerBase{
+public class FinanceiroController : ControllerBase{ private readonly FinanceiroService service; public FinanceiroController(FinanceiroService service){ this.service=service; }
  [Authorize][HttpGet("pagamentos")] public async Task<IActionResult> Listar([FromQuery]PagamentoFilterRequest f){var r=await service.ListarAsync(f);return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpGet("pagamentos/{id:guid}")] public async Task<IActionResult> Get(Guid id){var r=await service.GetByIdAsync(id);return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpPost("pagamentos/gerar")] public async Task<IActionResult> Gerar([FromBody]GerarPagamentoRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.GerarAsync(req,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 

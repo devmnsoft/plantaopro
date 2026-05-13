@@ -7,7 +7,7 @@ namespace PlantaoPro.Api.Controllers
 {
 [ApiController]
 [Route("api/plantoes")]
-public class PlantoesController(PlantaoService service):ControllerBase{
+public class PlantoesController : ControllerBase{ private readonly PlantaoService service; public PlantoesController(PlantaoService service){ this.service=service; }
  [HttpGet] public async Task<IActionResult> Get([FromQuery]PlantaoFilterRequest filter){var r=await service.GetAllAsync(filter); return StatusCode(r.StatusCode,r);} 
  [HttpGet("disponiveis")] public async Task<IActionResult> Disponiveis([FromQuery]PlantaoFilterRequest filter){var r=await service.GetAllAsync(filter with{Status="aberto"}); return StatusCode(r.StatusCode,r);} 
  [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id){var r=await service.GetByIdAsync(id); return StatusCode(r.StatusCode,r);} 

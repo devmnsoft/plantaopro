@@ -1,5 +1,17 @@
-# Manual de Execução
-Siga os passos do README para configurar banco, API, Web e Mobile.
+# Manual de execução
 
-## Execução e validação
-Se `dotnet` não estiver instalado, executar validações estáticas e revisar SQL/Controllers/Services.
+1. Criar banco PostgreSQL e executar:
+   - `database/PlantaoPro_PostgreSQL_Completo.sql`
+   - `database/seeds.sql`
+2. Configurar connection string em `backend/PlantaoPro.Api/appsettings.json`.
+3. Subir API.
+
+## Fluxos críticos
+- Aceite/Confirmação/Recusa/Cancelamento/Substituição/Realização de escala devem registrar histórico (`historico_escala`) e auditoria (`auditoria`).
+- Geração/Confirmação/Cancelamento de pagamento devem registrar `historico_pagamento` e auditoria.
+- Notificações são criadas automaticamente nas operações de escala e financeiro.
+
+## Exemplo curl
+```bash
+curl -X GET "http://localhost:5000/api/dashboard" -H "Authorization: Bearer <token>"
+```

@@ -23,3 +23,12 @@ CREATE INDEX IF NOT EXISTS idx_escalas_medico ON escalas(medico_id);
 CREATE INDEX IF NOT EXISTS idx_escalas_plantao ON escalas(plantao_id);
 CREATE INDEX IF NOT EXISTS idx_pagamentos_status ON pagamentos(status);
 CREATE INDEX IF NOT EXISTS idx_notificacoes_usuario_lida ON notificacoes(usuario_id,lida);
+
+CREATE TABLE IF NOT EXISTS historico_pagamento(id uuid primary key default uuid_generate_v4(),pagamento_id uuid references pagamentos(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,usuario_id uuid,reg_date timestamp default now());
+
+
+CREATE INDEX IF NOT EXISTS idx_escalas_status ON escalas(status);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_medico ON pagamentos(medico_id);
+CREATE INDEX IF NOT EXISTS idx_pagamentos_plantao ON pagamentos(plantao_id);
+CREATE INDEX IF NOT EXISTS idx_historico_escala_escala ON historico_escala(escala_id);
+CREATE INDEX IF NOT EXISTS idx_historico_pagamento_pagamento ON historico_pagamento(pagamento_id);

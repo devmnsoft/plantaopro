@@ -1,0 +1,1 @@
+using System.Data; using Npgsql; namespace PlantaoPro.Infrastructure; public interface IConnectionFactory{IDbConnection Create();} public sealed class NpgsqlConnectionFactory:IConnectionFactory{private readonly string _cs; public NpgsqlConnectionFactory(string cs)=>_cs=cs; public IDbConnection Create()=>new NpgsqlConnection(_cs);}

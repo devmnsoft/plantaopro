@@ -1,0 +1,1 @@
+namespace PlantaoPro.Domain.Entities; public record BaseEntity(Guid Id, DateTime RegDate, DateTime? RegUpdate, char RegStatus); public record Medico(Guid Id,string Nome,string Cpf,string Crm,string UfCrm): BaseEntity(Id,DateTime.UtcNow,null,'A');

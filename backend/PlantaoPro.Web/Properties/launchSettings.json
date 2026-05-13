@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "PlantaoPro.Web": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "https://localhost:58285;http://localhost:58286"
+    }
+  }
+}

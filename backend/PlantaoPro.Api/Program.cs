@@ -17,6 +17,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<IAuditService,AuditService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MedicoService>();
+builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<PlantaoService>();
+builder.Services.AddScoped<EspecialidadeService>();
+builder.Services.AddScoped<HospitalService>();
 
 var app=builder.Build();
 app.UseExceptionHandler(a=>a.Run(async ctx=>{ctx.Response.StatusCode=500;ctx.Response.ContentType="application/json";await ctx.Response.WriteAsJsonAsync(ApiResponse<string>.Fail("Erro interno ao processar a solicitação.",500));}));

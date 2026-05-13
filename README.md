@@ -13,3 +13,6 @@ Projeto full-stack para gestão de plantões médicos com backend ASP.NET Core (
 5. Web: `dotnet run --project backend/PlantaoPro.Web`.
 6. Mobile: `cd mobile/PlantaoPro.App && npm install && npx expo start`.
 Usuário admin: admin@plantaopro.com / Admin@123
+
+## Backend MVP (rodada atual)
+Foram adicionados endpoints reais para hospitais, especialidades, plantões, escalas (aceitar), financeiro (gerar pagamento), notificações e dashboard usando Dapper/PostgreSQL.

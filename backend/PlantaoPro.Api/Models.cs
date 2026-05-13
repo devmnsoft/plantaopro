@@ -34,6 +34,6 @@ public record ReplaceEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record CompleteEscalaRequest(string? Justificativa);
 public record PagamentoFilterRequest(Guid? MedicoId,Guid? HospitalId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? EspecialidadeId,int Page=1,int PageSize=20);
 public record CancelPaymentRequest(string Justificativa);
-public record NotificationFilterRequest(string? Tipo,bool? Lida,int Page=1,int PageSize=20);
+public record NotificationFilterRequest(string? Tipo,bool? Lida,DateTime? DataInicio,DateTime? DataFim,int Page=1,int PageSize=20);
 public record DashboardChartItem(string Label,decimal Valor);
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoDto> ProximosPlantoes,IEnumerable<PagamentoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);

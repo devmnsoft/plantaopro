@@ -4,12 +4,13 @@ using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using System.Security.Claims;
 
-namespace PlantaoPro.Api.Controllers;
+namespace PlantaoPro.Api.Controllers
+{
 [ApiController]
 [Route("api/medicos")]
 public class MedicosController(MedicoService service):ControllerBase{
  [HttpGet]
- public async Task<IActionResult> Get()=>Ok(await service.ListarAsync());
+ public async Task<IActionResult> Get(){var r=await service.ListarAsync();return StatusCode(r.StatusCode,r);}
  [Authorize]
  [HttpPost("cadastro")]
  public async Task<IActionResult> Cadastro([FromBody]CreateMedicoRequest req){
@@ -17,4 +18,5 @@ public class MedicosController(MedicoService service):ControllerBase{
    var r=await service.CriarAsync(req,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());
    return StatusCode(r.StatusCode,r);
  }
+}
 }

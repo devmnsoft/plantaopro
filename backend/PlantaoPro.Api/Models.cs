@@ -1,4 +1,5 @@
-namespace PlantaoPro.Api.Models;
+namespace PlantaoPro.Api.Models
+{
 public record ApiResponse<T>(bool Success,string Message,T? Data,IEnumerable<string>? Errors,int StatusCode,DateTime Timestamp){
     public static ApiResponse<T> Ok(T data,string message="Sucesso")=>new(true,message,data,null,200,DateTime.UtcNow);
     public static ApiResponse<T> Fail(string message,int status=400,IEnumerable<string>? errors=null)=>new(false,message,default,errors,status,DateTime.UtcNow);
@@ -34,6 +35,7 @@ public record ReplaceEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record CompleteEscalaRequest(string? Justificativa);
 public record PagamentoFilterRequest(Guid? MedicoId,Guid? HospitalId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? EspecialidadeId,int Page=1,int PageSize=20);
 public record CancelPaymentRequest(string Justificativa);
-public record NotificationFilterRequest(string? Tipo,bool? Lida,int Page=1,int PageSize=20);
+public record NotificationFilterRequest(string? Tipo,bool? Lida,DateTime? DataInicio,DateTime? DataFim,int Page=1,int PageSize=20);
 public record DashboardChartItem(string Label,decimal Valor);
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoDto> ProximosPlantoes,IEnumerable<PagamentoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);
+}

@@ -2,7 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 
-namespace PlantaoPro.Api.Controllers;
+namespace PlantaoPro.Api.Controllers
+{
 [ApiController]
 [Route("api/auth")]
 public class AuthController(AuthService service):ControllerBase{
@@ -11,4 +12,5 @@ public class AuthController(AuthService service):ControllerBase{
    var r=await service.LoginAsync(req,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());
    return StatusCode(r.StatusCode,r);
  }
+}
 }

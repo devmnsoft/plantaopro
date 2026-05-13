@@ -1,1 +1,1 @@
-namespace PlantaoPro.Application.Services; public interface IAuthService{string GenerateToken(Guid userId,string email,IEnumerable<string> roles);} public interface IMedicoService{Task<IEnumerable<object>> ListarAsync();}
+namespace PlantaoPro.Application.Services; public interface IAuthService { string GenerateToken(Guid userId, string email, IEnumerable<string> roles); } public interface IMedicoService { Task<IEnumerable<object>> ListarAsync(); }

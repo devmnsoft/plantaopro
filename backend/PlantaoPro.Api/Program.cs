@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
@@ -7,7 +8,30 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PlantaoPro API",
+        Version = "v1",
+        Description = "API principal do PlantaoPro para autenticação, escalas e gestão operacional."
+    });
+});
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("DevelopmentCors", policy =>
+    {
+        policy.WithOrigins(
+            "https://localhost:5259",
+            "http://localhost:5259",
+            "https://localhost:5001",
+            "http://localhost:5000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -34,14 +58,22 @@ builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    await DevelopmentSeed.RunAsync(app.Services);
+    app.UseCors("DevelopmentCors");
+}
+
 app.UseExceptionHandler(a => a.Run(async ctx =>
 {
     ctx.Response.StatusCode = 500;
     ctx.Response.ContentType = "application/json";
     await ctx.Response.WriteAsJsonAsync(ApiResponse<string>.Fail("Erro interno ao processar a solicitação.", 500));
 }));
-app.UseSwagger();
-app.UseSwaggerUI();
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

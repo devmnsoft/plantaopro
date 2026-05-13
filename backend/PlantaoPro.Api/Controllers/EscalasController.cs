@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;using Microsoft.AspNetCore.Mvc;using PlantaoPro.Api.Data;using PlantaoPro.Api.Models;
-namespace PlantaoPro.Api.Controllers;
+namespace PlantaoPro.Api.Controllers
+{
 [ApiController][Route("api")]
 public class EscalasController(EscalaService service):ControllerBase{
  [Authorize][HttpGet("escalas")] public async Task<IActionResult> Listar([FromQuery]EscalaFilterRequest f){var r=await service.ListarAsync(f);return StatusCode(r.StatusCode,r);} 
@@ -11,3 +12,4 @@ public class EscalasController(EscalaService service):ControllerBase{
  [Authorize][HttpPost("escalas/{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id,[FromBody]CancelEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"cancelado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpPost("escalas/{id:guid}/substituir")] public async Task<IActionResult> Substituir(Guid id,[FromBody]ReplaceEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"substituido",req.Justificativa,uid,req.NovoMedicoId,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
  [Authorize][HttpPost("escalas/{id:guid}/marcar-realizado")] public async Task<IActionResult> Realizado(Guid id,[FromBody]CompleteEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"realizado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} }
+}

@@ -4,7 +4,8 @@ using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using System.Security.Claims;
 
-namespace PlantaoPro.Api.Controllers;
+namespace PlantaoPro.Api.Controllers
+{
 [ApiController]
 [Route("api/medicos")]
 public class MedicosController(MedicoService service):ControllerBase{
@@ -17,4 +18,5 @@ public class MedicosController(MedicoService service):ControllerBase{
    var r=await service.CriarAsync(req,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());
    return StatusCode(r.StatusCode,r);
  }
+}
 }

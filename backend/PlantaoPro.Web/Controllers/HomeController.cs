@@ -158,33 +158,58 @@ namespace PlantaoPro.Web.Controllers
     }
 
     [Authorize]
-    public class HomeController : Controller
+    public class HomeController : BaseWebController
     {
-        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<HomeController> _logger;
 
-        public HomeController(IHttpClientFactory httpClientFactory, ILogger<HomeController> logger)
+        public HomeController(IHttpClientFactory httpClientFactory, ILogger<HomeController> logger) : base(httpClientFactory, logger)
         {
-            _httpClientFactory = httpClientFactory;
             _logger = logger;
         }
 
         public async Task<IActionResult> Dashboard()
         {
+            var fallback = new DashboardOverviewDto(new DashboardDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>());
+
             try
             {
-                var client = _httpClientFactory.CreateClient("PlantaoProApi");
-                var token = User.FindFirst("jwt")?.Value;
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-                var overview = await client.GetFromJsonAsync<ApiResponse<DashboardOverviewDto>>("api/dashboard/overview");
+                var client = CreateApiClient();
+                if (!AddBearerToken(client)) return HandleUnauthorized();
+
+                const string endpoint = "api/dashboard";
+                var (data, error, statusCode) = await ReadApiResponse<DashboardOverviewDto>(client, endpoint);
+
+                if (statusCode == HttpStatusCode.Unauthorized)
+                    return HandleUnauthorized("Sessão expirada. Faça login novamente.");
+
+                if (statusCode == HttpStatusCode.Forbidden)
+                    return EmptyViewWithError(fallback, "Acesso negado ao dashboard.");
+
+                if (statusCode == HttpStatusCode.NotFound)
+                    return EmptyViewWithError(fallback, "Rota de dashboard não encontrada na API.");
+
+                if ((int)statusCode >= 500)
+                    return EmptyViewWithError(fallback, "A API está indisponível no momento.");
+
                 _logger.LogInformation("Acesso dashboard usuário:{User}", User.Identity?.Name);
-                return View(overview?.Data);
+                var safeData = data is null ? fallback : data with
+                {
+                    ProximosPlantoes = data.ProximosPlantoes ?? Array.Empty<PlantaoDto>(),
+                    UltimosPagamentos = data.UltimosPagamentos ?? Array.Empty<PagamentoDto>(),
+                    UltimasNotificacoes = data.UltimasNotificacoes ?? Array.Empty<NotificacaoDto>(),
+                    PlantoesPorMes = data.PlantoesPorMes ?? Array.Empty<DashboardChartItem>(),
+                    PagamentosPorMes = data.PagamentosPorMes ?? Array.Empty<DashboardChartItem>(),
+                    PlantoesPorEspecialidade = data.PlantoesPorEspecialidade ?? Array.Empty<DashboardChartItem>(),
+                    PlantoesPorHospital = data.PlantoesPorHospital ?? Array.Empty<DashboardChartItem>()
+                };
+                if (!string.IsNullOrWhiteSpace(error)) TempData["Info"] = error;
+                return View(safeData);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao carregar dashboard.");
                 TempData["Error"] = "Erro ao carregar dashboard.";
-                return View(new DashboardOverviewDto(new DashboardDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>()));
+                return View(fallback);
             }
         }
     }

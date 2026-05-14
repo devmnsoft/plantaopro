@@ -1,6 +1,5 @@
-@model dynamic
-<h2>Detalhes</h2>
-@if (Model?.IsPlaceholder == true)
-{<div class="alert alert-info">Detalhamento em preparação.</div>}
-else
-{<pre>@System.Text.Json.JsonSerializer.Serialize(Model?.Item)</pre>}
+@model Guid
+<h1 class="h4">Detalhes da Escala</h1>
+<p class="text-muted">Visualização operacional detalhada estará disponível em breve.</p>
+<p><small class="text-muted">Informação técnica: @Model</small></p>
+<a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>

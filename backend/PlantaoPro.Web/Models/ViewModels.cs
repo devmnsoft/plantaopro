@@ -43,8 +43,8 @@ namespace PlantaoPro.Web.Models
     public record ResetPasswordRequest(string Email, string Token, string NovaSenha);
     public record DashboardDto(long TotalMedicos, long TotalHospitais, long TotalEspecialidades, long TotalPlantoes, long PlantoesAbertos, long PlantoesConfirmados, long PlantoesRealizados, long PlantoesCancelados, long PagamentosPendentes, long PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, long NotificacoesNaoLidas);
     public record DashboardChartItem(string Label, decimal Valor);
-    public record PlantaoDto(Guid Id, Guid HospitalId, Guid EspecialidadeId, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string Observacoes);
-    public record PagamentoDto(Guid Id, Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? Observacoes);
+    public record PlantaoResumoDto(Guid Id, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string? Observacoes);
+    public record PagamentoResumoDto(Guid Id, string MedicoNome, string MedicoCrm, string HospitalNome, string EspecialidadeNome, DateTime DataPlantao, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? ChavePix, string? Observacoes);
     public record NotificacaoDto(Guid Id, string Titulo, string Mensagem, string Tipo, bool Lida, DateTime RegDate);
     public record DashboardOverviewDto(DashboardDto Indicadores, IEnumerable<PlantaoDto> ProximosPlantoes, IEnumerable<PagamentoDto> UltimosPagamentos, IEnumerable<NotificacaoDto> UltimasNotificacoes, IEnumerable<DashboardChartItem> PlantoesPorMes, IEnumerable<DashboardChartItem> PagamentosPorMes, IEnumerable<DashboardChartItem> PlantoesPorEspecialidade, IEnumerable<DashboardChartItem> PlantoesPorHospital);
 
@@ -52,7 +52,7 @@ namespace PlantaoPro.Web.Models
     public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
     public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
     public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
-    public record EscalaDto(Guid Id,Guid PlantaoId,Guid MedicoId,string Status,string? Justificativa);
+    public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
 
     public record ListPageViewModel<T>(
         IEnumerable<T> Items,

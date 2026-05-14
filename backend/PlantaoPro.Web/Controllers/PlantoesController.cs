@@ -6,5 +6,6 @@ namespace PlantaoPro.Web.Controllers;
 public class PlantoesController : BaseWebController
 {
     public PlantoesController(IHttpClientFactory f, ILogger<PlantoesController> l) : base(f, l) { }
-    public async Task<IActionResult> Index() => await this.RenderPaged<PlantaoDto>("api/plantoes?page=1&pageSize=20");
+    public async Task<IActionResult> Index() => await this.RenderPaged<PlantaoResumoDto>("api/plantoes?page=1&pageSize=20");
+    public IActionResult Details(Guid id) => View(model: id);
 }

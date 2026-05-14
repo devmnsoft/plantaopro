@@ -79,32 +79,5 @@ namespace PlantaoPro.Web.Models
     string? ErrorMessage = null,
     bool IsPlaceholder = false
 );
-    public record PlantaoDto(
-    Guid Id,
-    Guid HospitalId,
-    Guid EspecialidadeId,
-    DateTime DataInicio,
-    DateTime DataFim,
-    decimal Valor,
-    int Vagas,
-    int VagasDisponiveis,
-    string Tipo,
-    string Status,
-    string? Observacoes
-);
-
-    public record PagamentoDto(
-        Guid Id,
-        Guid EscalaId,
-        Guid MedicoId,
-        Guid PlantaoId,
-        decimal ValorPrevisto,
-        decimal? ValorPago,
-        string Status,
-        DateOnly? DataPrevista,
-        DateOnly? DataPagamento,
-        string? FormaPagamento,
-        string? Observacoes
-    );
 
 }

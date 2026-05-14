@@ -1,9 +1,13 @@
 @model dynamic
+@using System.Linq
+@{
+    var items = Model?.Items as System.Collections.IEnumerable ?? Enumerable.Empty<object>();
+}
 <h2 class="mb-3">Lista</h2>
 @if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
 <div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Detalhes</th><th>Ações</th></tr></thead><tbody>
-@if (Model?.Items?.Any() == true) {
-foreach (var item in Model.Items) {
+@if (items.Cast<object>().Any()) {
+foreach (var item in items) {
 <tr>
 <td>@item.Id</td>
 <td>

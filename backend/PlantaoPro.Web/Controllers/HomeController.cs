@@ -169,7 +169,7 @@ namespace PlantaoPro.Web.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            var fallback = new DashboardOverviewDto(new DashboardDto(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0m, 0m, 0L), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>());
+            var fallback = CriarDashboardVazio();
 
             try
             {
@@ -194,8 +194,8 @@ namespace PlantaoPro.Web.Controllers
                 _logger.LogInformation("Acesso dashboard usuário:{User}", User.Identity?.Name);
                 var safeData = data is null ? fallback : data with
                 {
-                    ProximosPlantoes = data.ProximosPlantoes ?? Array.Empty<PlantaoDto>(),
-                    UltimosPagamentos = data.UltimosPagamentos ?? Array.Empty<PagamentoDto>(),
+                    ProximosPlantoes = data.ProximosPlantoes ?? Array.Empty<PlantaoResumoDto>(),
+                    UltimosPagamentos = data.UltimosPagamentos ?? Array.Empty<PagamentoResumoDto>(),
                     UltimasNotificacoes = data.UltimasNotificacoes ?? Array.Empty<NotificacaoDto>(),
                     PlantoesPorMes = data.PlantoesPorMes ?? Array.Empty<DashboardChartItem>(),
                     PagamentosPorMes = data.PagamentosPorMes ?? Array.Empty<DashboardChartItem>(),
@@ -212,5 +212,18 @@ namespace PlantaoPro.Web.Controllers
                 return View(fallback);
             }
         }
+        private static DashboardOverviewDto CriarDashboardVazio()
+        {
+            return new DashboardOverviewDto(
+                new DashboardDto(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0m, 0m, 0L),
+                Array.Empty<PlantaoResumoDto>(),
+                Array.Empty<PagamentoResumoDto>(),
+                Array.Empty<NotificacaoDto>(),
+                Array.Empty<DashboardChartItem>(),
+                Array.Empty<DashboardChartItem>(),
+                Array.Empty<DashboardChartItem>(),
+                Array.Empty<DashboardChartItem>());
+        }
+
     }
 }

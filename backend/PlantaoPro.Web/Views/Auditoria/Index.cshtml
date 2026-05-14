@@ -1,5 +1,15 @@
-@model dynamic
+@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
+@{
+    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
+}
 <h2>Auditoria</h2>
 <table class="table"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Registro</th><th>IP</th><th>Descrição</th></tr></thead><tbody>
-@if(Model?.Items?.Any()==true){foreach(var item in Model.Items){<tr><td>@item.dataHora</td><td>@item.usuario</td><td>@item.acao</td><td>@item.entidade</td><td>@item.registro</td><td>@item.ip</td><td>@item.descricao</td></tr>}} else {<tr><td colspan="7">Sem registros</td></tr>}
+@if(items.Any())
+{
+    foreach(var log in items)
+    {
+        <tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td>@log.Acao</td><td>@log.Entidade</td><td>@log.Registro</td><td>@log.Ip</td><td>@log.Descricao</td></tr>
+    }
+}
+else {<tr><td colspan="7">Sem registros</td></tr>}
 </tbody></table><partial name="_Pagination" model="Model" />

@@ -22,12 +22,14 @@
                 <li><a class="@(currentController=="Escalas"?"active":"")" asp-controller="Escalas" asp-action="Index"><i class="bi bi-diagram-3"></i> Escalas</a></li>
                 <li><a class="@(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i> Financeiro</a></li>
                 <li><a class="@(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i> Notificações</a></li>
+                <li><a class="@(currentController=="MinhaAgenda"?"active":"")" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i> Minha Agenda</a></li>
+                <li><a class="@(currentController=="Auditoria"?"active":"")" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-shield-check"></i> Auditoria</a></li>
                 <li><a class="@(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></li>
                 <li><a class="@(currentController=="Configuracoes"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i> Configurações</a></li>
                 <li><a asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
             </ul></aside>
             <main class="flex-grow-1 p-4">
-                <div class="topbar mb-3"><span>Olá, @User.Identity?.Name</span></div>
+                <div class="topbar mb-3 d-flex justify-content-between"><span>Olá, @User.Identity?.Name</span><a asp-controller="Notificacoes" asp-action="Index" class="btn btn-sm btn-light"><i class="bi bi-bell"></i> <span class="badge text-bg-danger">0</span></a></div>
                 <partial name="_ToastMessages" />
                 @RenderBody()
             </main>

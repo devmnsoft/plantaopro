@@ -1,7 +1,19 @@
-@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PagamentoDto>
-<h2 class="mb-3">Financeiro</h2>
-<div class="card p-3 mb-3"><div class="d-flex justify-content-between"><div>Gestão de financeiro.</div><button class="btn btn-sm btn-outline-primary" disabled>Em breve</button></div></div>
+@model dynamic
+<h2 class="mb-3">Lista</h2>
 @if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
-<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Resumo</th></tr></thead><tbody>
-@if (Model?.Items?.Any() == true) { foreach (var item in Model.Items) { <tr><td>@item.Id</td><td>@item</td></tr> } } else { <tr><td colspan="2" class="text-center text-muted">Nenhum registro encontrado.</td></tr> }
+<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Detalhes</th><th>Ações</th></tr></thead><tbody>
+@if (Model?.Items?.Any() == true) {
+foreach (var item in Model.Items) {
+<tr>
+<td>@item.Id</td>
+<td>
+@if(item.GetType().GetProperty("Nome") != null){@item.Nome}
+else if(item.GetType().GetProperty("Titulo") != null){@item.Titulo}
+else if(item.GetType().GetProperty("Status") != null){@item.Status}
+</td>
+<td><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", new { id = item.Id })">Detalhes</a> <button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Ação</button></td>
+</tr>
+}
+} else { <tr><td colspan="3" class="text-center text-muted">Nenhum registro encontrado.</td></tr> }
 </tbody></table></div>
+<partial name="_Pagination" model="Model" />

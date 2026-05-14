@@ -169,7 +169,7 @@ namespace PlantaoPro.Web.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
-            var fallback = new DashboardOverviewDto(new DashboardDto(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>());
+            var fallback = new DashboardOverviewDto(new DashboardDto(0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0m, 0m, 0L), Array.Empty<PlantaoDto>(), Array.Empty<PagamentoDto>(), Array.Empty<NotificacaoDto>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>(), Array.Empty<DashboardChartItem>());
 
             try
             {

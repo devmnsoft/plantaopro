@@ -1,0 +1,10 @@
+@model PlantaoPro.Web.Models.HealthViewModel
+<h2>Saúde do Sistema</h2>
+<div class="row g-3">
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Status</h6><span class="badge bg-success">@Model.Status</span></div></div></div>
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Ambiente</h6><p>@Model.Ambiente</p></div></div></div>
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Banco</h6><p>@(Model.BancoConectado ? "Conectado" : "Indisponível")</p></div></div></div>
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Schema</h6><p>@Model.Schema</p></div></div></div>
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Usuário</h6><p>@Model.UsuarioAutenticado</p></div></div></div>
+<div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h6>Token presente</h6><p>@(Model.TokenPresente ? "Sim" : "Não")</p></div></div></div>
+</div>

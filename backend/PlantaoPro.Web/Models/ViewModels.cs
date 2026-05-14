@@ -61,6 +61,11 @@ namespace PlantaoPro.Web.Models
     public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
     public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
     public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
+
+    public record AuditoriaDto(DateTime DataHora, string Usuario, string Acao, string Entidade, string Registro, string Ip, string Descricao);
+    public record HealthViewModel(string Status,string Ambiente,string Schema,bool BancoConectado,DateTime DataHora,string? Versao,string BaseUrlApi,bool TokenPresente,string UsuarioAutenticado,string SwaggerUrl);
+    public record MinhaAgendaViewModel(IEnumerable<PlantaoResumoDto> MeusPlantoes, IEnumerable<PagamentoResumoDto> MeusPagamentos, IEnumerable<NotificacaoDto> MinhasNotificacoes, string? ErrorMessage = null);
+
     public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
 
     public interface IListPageViewModel

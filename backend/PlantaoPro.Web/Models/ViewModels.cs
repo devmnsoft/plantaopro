@@ -48,9 +48,9 @@ namespace PlantaoPro.Web.Models
     public record NotificacaoDto(Guid Id, string Titulo, string Mensagem, string Tipo, bool Lida, DateTime RegDate);
     public record DashboardOverviewDto(DashboardDto Indicadores, IEnumerable<PlantaoDto> ProximosPlantoes, IEnumerable<PagamentoDto> UltimosPagamentos, IEnumerable<NotificacaoDto> UltimasNotificacoes, IEnumerable<DashboardChartItem> PlantoesPorMes, IEnumerable<DashboardChartItem> PagamentosPorMes, IEnumerable<DashboardChartItem> PlantoesPorEspecialidade, IEnumerable<DashboardChartItem> PlantoesPorHospital);
 
-    public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,char RegStatus);
-    public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,char RegStatus);
-    public record EspecialidadeDto(Guid Id,string Nome,string Descricao,char RegStatus);
+    public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,string RegStatus);
+    public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
+    public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
     public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
     public record EscalaDto(Guid Id,Guid PlantaoId,Guid MedicoId,string Status,string? Justificativa);
     public record ListPageViewModel<T>(IEnumerable<T> Items, string? ErrorMessage = null, string? InfoMessage = null);

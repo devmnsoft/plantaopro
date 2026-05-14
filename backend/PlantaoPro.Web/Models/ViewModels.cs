@@ -61,3 +61,14 @@ namespace PlantaoPro.Web.Models
     public record DetailsPageViewModel<T>(T? Item, string? ErrorMessage = null, bool IsPlaceholder = false);
 }
 
+    public record ListPageViewModel<T>(
+        IEnumerable<T> Items,
+        string? ErrorMessage = null,
+        string? InfoMessage = null,
+        long Total = 0,
+        int Page = 1,
+        int PageSize = 20)
+    {
+        public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)Total / PageSize);
+    }
+}

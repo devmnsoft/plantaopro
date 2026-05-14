@@ -1,12 +1,11 @@
 @model dynamic
-@if (Model is not null && Model.TotalPages > 1)
+@if (Model != null && Model.TotalPages > 1)
 {
-    <nav class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted small">Página @Model.Page de @Model.TotalPages · @Model.Total registros</span>
-        <ul class="pagination pagination-sm mb-0">
-            <li class="page-item @(Model.Page <= 1 ? "disabled" : "")"><span class="page-link">Anterior</span></li>
-            <li class="page-item active"><span class="page-link">@Model.Page</span></li>
-            <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")"><span class="page-link">Próximo</span></li>
-        </ul>
-    </nav>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <small>Total: @Model.Total | Página @Model.Page / @Model.TotalPages</small>
+        <div>
+            <a class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")" href="?page=@(Model.Page-1)&pageSize=@Model.PageSize">Anterior</a>
+            <a class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="?page=@(Model.Page+1)&pageSize=@Model.PageSize">Próximo</a>
+        </div>
+    </div>
 }

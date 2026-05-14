@@ -53,6 +53,13 @@ namespace PlantaoPro.Web.Models
     public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
     public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
     public record EscalaDto(Guid Id,Guid PlantaoId,Guid MedicoId,string Status,string? Justificativa);
+    public record ListPageViewModel<T>(IEnumerable<T> Items, int Page = 1, int PageSize = 20, long Total = 0, string? ErrorMessage = null, string? InfoMessage = null)
+    {
+        public int TotalPages => PageSize <= 0 ? 1 : (int)Math.Ceiling((double)Math.Max(Total, 1) / PageSize);
+    }
+
+    public record DetailsPageViewModel<T>(T? Item, string? ErrorMessage = null, bool IsPlaceholder = false);
+}
 
     public record ListPageViewModel<T>(
         IEnumerable<T> Items,

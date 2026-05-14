@@ -63,13 +63,21 @@ namespace PlantaoPro.Web.Models
     public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
     public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
 
+    public interface IListPageViewModel
+    {
+        long Total { get; }
+        int Page { get; }
+        int PageSize { get; }
+        int TotalPages { get; }
+    }
+
     public record ListPageViewModel<T>(
         IEnumerable<T> Items,
         string? ErrorMessage = null,
         string? InfoMessage = null,
         long Total = 0,
         int Page = 1,
-        int PageSize = 20)
+        int PageSize = 20) : IListPageViewModel
     {
         public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)Total / PageSize);
     }

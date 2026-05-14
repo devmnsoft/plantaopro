@@ -1,23 +1,194 @@
-@model dynamic
-@using System.Linq
+@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.NotificacaoDto>
+
 @{
-    var items = Model?.Items as System.Collections.IEnumerable ?? Enumerable.Empty<object>();
+    ViewData["Title"] = "Notificações";
+
+    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.NotificacaoDto>();
+    var total = Model?.Total ?? 0;
+    var naoLidas = items.Count(x => !x.Lida);
+    var lidas = items.Count(x => x.Lida);
 }
-<h2 class="mb-3">Lista</h2>
-@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
-<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Detalhes</th><th>Ações</th></tr></thead><tbody>
-@if (items.Cast<object>().Any()) {
-foreach (var item in items) {
-<tr>
-<td>@item.Id</td>
-<td>
-@if(item.GetType().GetProperty("Nome") != null){@item.Nome}
-else if(item.GetType().GetProperty("Titulo") != null){@item.Titulo}
-else if(item.GetType().GetProperty("Status") != null){@item.Status}
-</td>
-<td><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", new { id = item.Id })">Detalhes</a> <button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Ação</button></td>
-</tr>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2 class="mb-1">Notificações</h2>
+        <p class="text-muted mb-0">
+            Acompanhe alertas, avisos operacionais e mensagens do sistema.
+        </p>
+    </div>
+
+    <button class="btn btn-outline-primary" disabled title="Em breve">
+        <i class="bi bi-check2-all me-1"></i>
+        Marcar todas como lidas
+    </button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        @Model.ErrorMessage
+    </div>
 }
-} else { <tr><td colspan="3" class="text-center text-muted">Nenhum registro encontrado.</td></tr> }
-</tbody></table></div>
-<partial name="_Pagination" model="Model" />
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Total</div>
+                <div class="fs-4 fw-bold">@total</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Não lidas nesta página</div>
+                <div class="fs-4 fw-bold text-warning">@naoLidas</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="text-muted small">Lidas nesta página</div>
+                <div class="fs-4 fw-bold text-success">@lidas</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Pesquisar</label>
+                <input type="text"
+                       class="form-control"
+                       name="q"
+                       placeholder="Título ou mensagem..."
+                       disabled />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Tipo</label>
+                <select class="form-select" name="tipo" disabled>
+                    <option value="">Todos</option>
+                    <option value="escala">Escala</option>
+                    <option value="pagamento">Pagamento</option>
+                    <option value="sistema">Sistema</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select class="form-select" name="lida" disabled>
+                    <option value="">Todas</option>
+                    <option value="false">Não lidas</option>
+                    <option value="true">Lidas</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <button type="button" class="btn btn-outline-secondary w-100" disabled title="Em breve">
+                    <i class="bi bi-funnel me-1"></i>
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Lista de Notificações</strong>
+
+        <span class="text-muted small">
+            Total: @total
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Título</th>
+                    <th>Mensagem</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Data</th>
+                    <th class="text-end" style="width: 180px;">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (items.Any())
+                {
+                    foreach (var item in items)
+                    {
+                        <tr class="@(item.Lida ? "" : "table-warning")">
+                            <td>
+                                <strong>@item.Titulo</strong>
+                                <div class="text-muted small">
+                                    Código: @item.Id
+                                </div>
+                            </td>
+
+                            <td>@item.Mensagem</td>
+
+                            <td>
+                                <span class="badge bg-info text-dark">
+                                    @item.Tipo
+                                </span>
+                            </td>
+
+                            <td>
+                                @if (item.Lida)
+                                {
+                                    <span class="badge bg-success">Lida</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Não lida</span>
+                                }
+                            </td>
+
+                            <td>@item.RegDate.ToString("dd/MM/yyyy HH:mm")</td>
+
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   title="Ver detalhes">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-success"
+                                        disabled
+                                        title="Em breve">
+                                    <i class="bi bi-check2"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-bell fs-1 d-block mb-2"></i>
+                            Nenhuma notificação encontrada.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer bg-white">
+        <partial name="_Pagination" model="Model" />
+    </div>
+</div>

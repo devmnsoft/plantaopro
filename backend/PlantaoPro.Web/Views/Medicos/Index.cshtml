@@ -1,23 +1,172 @@
-@model dynamic
-@using System.Linq
+@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>
+
 @{
-    var items = Model?.Items as System.Collections.IEnumerable ?? Enumerable.Empty<object>();
+    ViewData["Title"] = "Médicos";
+
+    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.MedicoDto>();
+    var total = Model?.Total ?? 0;
 }
-<h2 class="mb-3">Lista</h2>
-@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
-<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Detalhes</th><th>Ações</th></tr></thead><tbody>
-@if (items.Cast<object>().Any()) {
-foreach (var item in items) {
-<tr>
-<td>@item.Id</td>
-<td>
-@if(item.GetType().GetProperty("Nome") != null){@item.Nome}
-else if(item.GetType().GetProperty("Titulo") != null){@item.Titulo}
-else if(item.GetType().GetProperty("Status") != null){@item.Status}
-</td>
-<td><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", new { id = item.Id })">Detalhes</a> <button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Ação</button></td>
-</tr>
+
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h2 class="mb-1">Médicos</h2>
+        <p class="text-muted mb-0">
+            Cadastro e acompanhamento dos profissionais disponíveis para plantões.
+        </p>
+    </div>
+
+    <button class="btn btn-primary" disabled title="Em breve">
+        <i class="bi bi-plus-circle me-1"></i>
+        Novo Médico
+    </button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        @Model.ErrorMessage
+    </div>
 }
-} else { <tr><td colspan="3" class="text-center text-muted">Nenhum registro encontrado.</td></tr> }
-</tbody></table></div>
-<partial name="_Pagination" model="Model" />
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Pesquisar</label>
+                <input type="text"
+                       class="form-control"
+                       name="q"
+                       placeholder="Nome, CRM, CPF ou e-mail..."
+                       disabled />
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label">CRM</label>
+                <input type="text"
+                       class="form-control"
+                       name="crm"
+                       placeholder="CRM"
+                       disabled />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Cidade</label>
+                <input type="text"
+                       class="form-control"
+                       name="cidade"
+                       placeholder="Cidade"
+                       disabled />
+            </div>
+
+            <div class="col-md-3">
+                <button type="button" class="btn btn-outline-secondary w-100" disabled title="Em breve">
+                    <i class="bi bi-funnel me-1"></i>
+                    Filtrar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>Lista de Médicos</strong>
+
+        <span class="text-muted small">
+            Total: @total
+        </span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Nome</th>
+                    <th>CRM/UF</th>
+                    <th>CPF</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Cidade/UF</th>
+                    <th style="width: 120px;">Status</th>
+                    <th class="text-end" style="width: 180px;">Ações</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @if (items.Any())
+                {
+                    foreach (var item in items)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@item.Nome</strong>
+                                <div class="text-muted small">
+                                    Código: @item.Id
+                                </div>
+                            </td>
+
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    @item.Crm/@item.UfCrm
+                                </span>
+                            </td>
+
+                            <td>@item.Cpf</td>
+                            <td>@item.Email</td>
+                            <td>@item.Telefone</td>
+                            <td>@item.Cidade/@item.Estado</td>
+
+                            <td>
+                                @if (string.Equals(item.RegStatus, "A", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="badge bg-success">Ativo</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inativo</span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   asp-action="Details"
+                                   asp-route-id="@item.Id"
+                                   title="Ver detalhes">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        disabled
+                                        title="Em breve">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        disabled
+                                        title="Em breve">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-2"></i>
+                            Nenhum médico encontrado.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-footer bg-white">
+        <partial name="_Pagination" model="Model" />
+    </div>
+</div>

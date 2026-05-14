@@ -6,12 +6,12 @@ public record ApiResponse<T>(bool Success,string Message,T? Data,IEnumerable<str
 }
 public record LoginRequest(string Email,string Senha);
 public record LoginResponse(string Token,DateTime ExpiresAt,Guid UsuarioId,string Nome,string[] Roles);
-public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,char RegStatus);
+public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,string RegStatus);
 public record CreateMedicoRequest(string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId);
-public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,char RegStatus);
+public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
 public record CreateHospitalRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel);
-public record UpdateHospitalRequest(string RazaoSocial,string NomeFantasia,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,char RegStatus);
-public record EspecialidadeDto(Guid Id,string Nome,string Descricao,char RegStatus);
+public record UpdateHospitalRequest(string RazaoSocial,string NomeFantasia,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
+public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
 public record CreateEspecialidadeRequest(string Nome,string Descricao);
 public record PlantaoDto(Guid Id,Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,int VagasDisponiveis,string Tipo,string Status,string Observacoes);
 public record CreatePlantaoRequest(Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,string Tipo,string Observacoes);
@@ -24,7 +24,7 @@ public record SubstituirEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record GerarPagamentoRequest(Guid EscalaId,DateOnly DataPrevista);
 public record ConfirmarPagamentoRequest(decimal ValorPago,string FormaPagamento,DateOnly DataPagamento,string? Observacoes);
 public record PagamentoDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento,string? Observacoes);
-public record DashboardDto(int TotalMedicos,int TotalHospitais,int TotalEspecialidades,int TotalPlantoes,int PlantoesAbertos,int PlantoesConfirmados,int PlantoesRealizados,int PlantoesCancelados,int PagamentosPendentes,int PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,int NotificacoesNaoLidas);
+public record DashboardDto(long TotalMedicos,long TotalHospitais,long TotalEspecialidades,long TotalPlantoes,long PlantoesAbertos,long PlantoesConfirmados,long PlantoesRealizados,long PlantoesCancelados,long PagamentosPendentes,long PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,long NotificacoesNaoLidas);
 public record NotificacaoDto(Guid Id,string Titulo,string Mensagem,string Tipo,bool Lida,DateTime RegDate);
 
 public record EscalaFilterRequest(Guid? MedicoId,Guid? PlantaoId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? HospitalId,Guid? EspecialidadeId,int Page=1,int PageSize=20);

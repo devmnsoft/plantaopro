@@ -1,10 +1,10 @@
-@model dynamic
+@model PlantaoPro.Web.Models.IListPageViewModel?
 
 @{
-    var totalRegistros = (long?)(Model?.Total) ?? 0L;
-    var paginaAtual = (int?)(Model?.Page) ?? 1;
-    var tamanhoPagina = (int?)(Model?.PageSize) ?? 20;
-    var totalPaginas = (int?)(Model?.TotalPages) ?? 0;
+    var totalRegistros = Model?.Total ?? 0L;
+    var paginaAtual = Math.Max(1, Model?.Page ?? 1);
+    var tamanhoPagina = Math.Max(1, Model?.PageSize ?? 20);
+    var totalPaginas = Math.Max(0, Model?.TotalPages ?? 0);
 }
 
 @if (totalPaginas > 1)
@@ -17,10 +17,7 @@
         <nav aria-label="Paginação">
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item @(paginaAtual <= 1 ? "disabled" : "")">
-                    <a class="page-link"
-                       href="?pagina=@(paginaAtual - 1)&tamanhoPagina=@tamanhoPagina">
-                        Anterior
-                    </a>
+                    <a class="page-link" href="?page=@(paginaAtual - 1)&pageSize=@tamanhoPagina">Anterior</a>
                 </li>
 
                 <li class="page-item active">
@@ -28,10 +25,7 @@
                 </li>
 
                 <li class="page-item @(paginaAtual >= totalPaginas ? "disabled" : "")">
-                    <a class="page-link"
-                       href="?pagina=@(paginaAtual + 1)&tamanhoPagina=@tamanhoPagina">
-                        Próxima
-                    </a>
+                    <a class="page-link" href="?page=@(paginaAtual + 1)&pageSize=@tamanhoPagina">Próxima</a>
                 </li>
             </ul>
         </nav>

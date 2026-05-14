@@ -26,6 +26,7 @@
                 <li><a class="@(currentController=="Auditoria"?"active":"")" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-shield-check"></i> Auditoria</a></li>
                 <li><a class="@(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></li>
                 <li><a class="@(currentController=="Configuracoes"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i> Configurações</a></li>
+                <li><a class="@(currentController=="Configuracoes" && ViewContext.RouteData.Values["action"]?.ToString()=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-heart-pulse"></i> Saúde do Sistema</a></li>
                 <li><a asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
             </ul></aside>
             <main class="flex-grow-1 p-4">

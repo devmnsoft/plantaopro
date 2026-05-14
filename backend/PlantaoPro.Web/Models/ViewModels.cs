@@ -41,7 +41,7 @@ namespace PlantaoPro.Web.Models
     public record LoginResponse(string Token, DateTime ExpiresAt, Guid UsuarioId, string Nome, string[] Roles);
     public record ForgotPasswordRequest(string Email);
     public record ResetPasswordRequest(string Email, string Token, string NovaSenha);
-    public record DashboardDto(int TotalMedicos, int TotalHospitais, int TotalEspecialidades, int TotalPlantoes, int PlantoesAbertos, int PlantoesConfirmados, int PlantoesRealizados, int PlantoesCancelados, int PagamentosPendentes, int PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, int NotificacoesNaoLidas);
+    public record DashboardDto(long TotalMedicos, long TotalHospitais, long TotalEspecialidades, long TotalPlantoes, long PlantoesAbertos, long PlantoesConfirmados, long PlantoesRealizados, long PlantoesCancelados, long PagamentosPendentes, long PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, long NotificacoesNaoLidas);
     public record DashboardChartItem(string Label, decimal Valor);
     public record PlantaoDto(Guid Id, Guid HospitalId, Guid EspecialidadeId, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string Observacoes);
     public record PagamentoDto(Guid Id, Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? Observacoes);

@@ -24,7 +24,7 @@ public record SubstituirEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record GerarPagamentoRequest(Guid EscalaId,DateOnly DataPrevista);
 public record ConfirmarPagamentoRequest(decimal ValorPago,string FormaPagamento,DateOnly DataPagamento,string? Observacoes);
 public record PagamentoDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento,string? Observacoes);
-public record DashboardDto(int TotalMedicos,int TotalHospitais,int TotalEspecialidades,int TotalPlantoes,int PlantoesAbertos,int PlantoesConfirmados,int PlantoesRealizados,int PlantoesCancelados,int PagamentosPendentes,int PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,int NotificacoesNaoLidas);
+public record DashboardDto(long TotalMedicos,long TotalHospitais,long TotalEspecialidades,long TotalPlantoes,long PlantoesAbertos,long PlantoesConfirmados,long PlantoesRealizados,long PlantoesCancelados,long PagamentosPendentes,long PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,long NotificacoesNaoLidas);
 public record NotificacaoDto(Guid Id,string Titulo,string Mensagem,string Tipo,bool Lida,DateTime RegDate);
 
 public record EscalaFilterRequest(Guid? MedicoId,Guid? PlantaoId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? HospitalId,Guid? EspecialidadeId,int Page=1,int PageSize=20);

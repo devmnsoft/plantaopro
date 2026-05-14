@@ -29,3 +29,13 @@
 ## Dashboard
 - GET `/api/dashboard`
 - GET `/api/mobile/home`
+
+## Health
+- GET /api/health
+
+## Auditoria
+- GET /api/auditoria?page=1&pageSize=20
+
+## Minha Agenda (Web)
+- /MinhaAgenda: consolida dados do médico logado com fallback seguro.
+

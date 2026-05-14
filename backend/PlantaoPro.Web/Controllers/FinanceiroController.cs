@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
-
 namespace PlantaoPro.Web.Controllers;
-
 public class FinanceiroController : BaseWebController
 {
     public FinanceiroController(IHttpClientFactory f, ILogger<FinanceiroController> l) : base(f, l) { }

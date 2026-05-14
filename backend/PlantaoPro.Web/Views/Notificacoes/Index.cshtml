@@ -1,6 +1,19 @@
-@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.NotificacaoDto>
-<h1 class="h3">Notificações</h1><p class="text-muted">Central de notificações</p>
-<div class="table-responsive"><table class="table table-hover"><thead><tr><th>Título</th><th>Mensagem</th><th>Tipo</th><th>Lida</th><th>Data</th><th class="text-end">Ações</th></tr></thead><tbody>
-@foreach (var item in Model.Items){<tr><td>@item.Titulo</td><td>@item.Mensagem</td><td>@item.Tipo</td><td><span class="badge @(item.Lida?"bg-secondary":"bg-warning text-dark")">@(item.Lida?"Lida":"Não lida")</span></td><td>@item.RegDate.ToString("dd/MM/yyyy HH:mm")</td><td class="text-end"><button class="btn btn-sm btn-outline-primary" disabled>Marcar lida</button></td></tr>}
-@if (!Model.Items.Any()){<tr><td colspan="6" class="text-center text-muted py-4">Nenhuma notificação no período.</td></tr>}
-</tbody></table></div><partial name="_Pagination" model="Model" />
+@model dynamic
+<h2 class="mb-3">Lista</h2>
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+<div class="table-responsive"><table class="table table-striped"><thead><tr><th>ID</th><th>Detalhes</th><th>Ações</th></tr></thead><tbody>
+@if (Model?.Items?.Any() == true) {
+foreach (var item in Model.Items) {
+<tr>
+<td>@item.Id</td>
+<td>
+@if(item.GetType().GetProperty("Nome") != null){@item.Nome}
+else if(item.GetType().GetProperty("Titulo") != null){@item.Titulo}
+else if(item.GetType().GetProperty("Status") != null){@item.Status}
+</td>
+<td><a class="btn btn-sm btn-outline-primary" href="@Url.Action("Details", new { id = item.Id })">Detalhes</a> <button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Ação</button></td>
+</tr>
+}
+} else { <tr><td colspan="3" class="text-center text-muted">Nenhum registro encontrado.</td></tr> }
+</tbody></table></div>
+<partial name="_Pagination" model="Model" />

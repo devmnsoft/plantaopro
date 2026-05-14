@@ -6,5 +6,5 @@ namespace PlantaoPro.Web.Controllers;
 public class NotificacoesController : BaseWebController
 {
     public NotificacoesController(IHttpClientFactory f, ILogger<NotificacoesController> l) : base(f, l) { }
-    public async Task<IActionResult> Index() => await this.RenderList<NotificacaoDto>("api/notificacoes");
+    public async Task<IActionResult> Index() => await this.RenderPaged<NotificacaoDto>("api/notificacoes?page=1&pageSize=20");
 }

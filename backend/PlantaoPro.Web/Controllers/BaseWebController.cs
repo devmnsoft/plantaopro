@@ -40,7 +40,7 @@ public abstract class BaseWebController : Controller
     }
 
     [NonAction]
-    public async Task<(T Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponse<T>(HttpClient client, string endpoint)
+    public async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponse<T>(HttpClient client, string endpoint)
     {
         var response = await client.GetAsync(endpoint);
         var content = await response.Content.ReadAsStringAsync();
@@ -53,18 +53,18 @@ public abstract class BaseWebController : Controller
         {
             Logger.LogWarning("Falha ao consultar API. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
             var apiError = TryParseMessage(content);
-            return (default!, apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
+            return (default, apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
         }
 
         try
         {
             var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            return (apiResult is not null ? apiResult.Data : default!, apiResult?.Message, response.StatusCode);
+            return (apiResult is not null ? apiResult.Data : default, apiResult?.Message, response.StatusCode);
         }
         catch (JsonException ex)
         {
             Logger.LogError(ex, "Erro de desserialização. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
-            return (default!, "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
+            return (default, "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
         }
     }
 

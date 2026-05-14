@@ -1,11 +1,17 @@
 @model dynamic
-@if (Model != null && Model.TotalPages > 1)
+@{
+    var total = (long?)(Model?.Total) ?? 0;
+    var page = (int?)(Model?.Page) ?? 1;
+    var pageSize = (int?)(Model?.PageSize) ?? 20;
+    var totalPages = (int?)(Model?.TotalPages) ?? 0;
+}
+@if (totalPages > 1)
 {
     <div class="d-flex justify-content-between align-items-center mt-3">
-        <small>Total: @Model.Total | Página @Model.Page / @Model.TotalPages</small>
+        <small>Total: @total | Página @page / @totalPages</small>
         <div>
-            <a class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")" href="?page=@(Model.Page-1)&pageSize=@Model.PageSize">Anterior</a>
-            <a class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.TotalPages ? "disabled" : "")" href="?page=@(Model.Page+1)&pageSize=@Model.PageSize">Próximo</a>
+            <a class="btn btn-sm btn-outline-secondary @(page <= 1 ? "disabled" : "")" href="?page=@(page-1)&pageSize=@pageSize">Anterior</a>
+            <a class="btn btn-sm btn-outline-secondary @(page >= totalPages ? "disabled" : "")" href="?page=@(page+1)&pageSize=@pageSize">Próximo</a>
         </div>
     </div>
 }

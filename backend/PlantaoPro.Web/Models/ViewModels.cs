@@ -55,4 +55,4 @@ namespace PlantaoPro.Web.Models
     public record EscalaDto(Guid Id,Guid PlantaoId,Guid MedicoId,string Status,string? Justificativa);
     public record ListPageViewModel<T>(IEnumerable<T> Items, string? ErrorMessage = null, string? InfoMessage = null);
 }
-}
+

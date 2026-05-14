@@ -1,0 +1,16 @@
+@model IDictionary<string, string?>
+@{
+    ViewData["Title"] = "Saúde do Sistema";
+}
+<h2 class="mb-3">Saúde do Sistema</h2>
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <dl class="row mb-0">
+            @foreach (var dado in Model)
+            {
+                <dt class="col-md-3">@dado.Key</dt>
+                <dd class="col-md-9">@dado.Value</dd>
+            }
+        </dl>
+    </div>
+</div>

@@ -1,0 +1,5 @@
+@model string
+@{
+    var normalizedStatus = (Model ?? string.Empty).Trim().ToLowerInvariant();
+}
+<span class="status-badge status-@normalizedStatus">@(string.IsNullOrWhiteSpace(Model) ? "N/A" : Model)</span>

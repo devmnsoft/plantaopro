@@ -1,4 +1,23 @@
-function togglePassword(id,btn){const i=document.getElementById(id);i.type=i.type==='password'?'text':'password';btn.querySelector('i').className=i.type==='password'?'bi bi-eye':'bi bi-eye-slash';}
-document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el=>new bootstrap.Tooltip(el));const f=document.getElementById('loginForm');if(f){f.addEventListener('submit',()=>{const b=document.getElementById('btnLogin');if(!b)return;b.disabled=true;b.querySelector('.spinner-border').classList.remove('d-none');b.querySelector('.label').textContent='Entrando...';});}});
-function chart(el,label,data){if(!document.getElementById(el))return;new Chart(document.getElementById(el),{type:'bar',data:{labels:data.map(x=>x.label),datasets:[{label,data:data.map(x=>x.valor),backgroundColor:'#0d6efd'}]}})}
-function renderDashboardCharts(){if(!window.dashboardData)return;chart('chartPlantoesMes','Plantões por mês',window.dashboardData.plMes);chart('chartPagamentosMes','Pagamentos por mês',window.dashboardData.pgMes);chart('chartEsp','Plantões por especialidade',window.dashboardData.esp);chart('chartHosp','Plantões por hospital',window.dashboardData.hosp);}
+document.addEventListener("DOMContentLoaded", function () {
+    const sidebarToggle = document.getElementById("sidebarToggle");
+    const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener("click", function () {
+            document.body.classList.toggle("sidebar-open");
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener("click", function () {
+            document.body.classList.remove("sidebar-open");
+        });
+    }
+
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        if (window.bootstrap) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        }
+    });
+});

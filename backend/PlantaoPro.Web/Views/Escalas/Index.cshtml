@@ -2,7 +2,89 @@
 @{ var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.EscalaResumoDto>(); var total=items.Count(); var solicitado=items.Count(x=>x.Status=="solicitado"); var confirmado=items.Count(x=>x.Status=="confirmado"); var realizado=items.Count(x=>x.Status=="realizado"); var cancelado=items.Count(x=>x.Status=="cancelado"); }
 <div class="page-header d-flex justify-content-between align-items-start gap-3 mb-4"><div><h2 class="mb-1">Escalas Médicas</h2><p class="text-muted mb-0">Tela principal de operação das confirmações e execução de plantões.</p></div><div><button class="btn btn-primary" disabled title="Em breve">Nova Escala</button></div></div>
 <div class="row g-3 mb-3">
-<div class="col-md"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@total</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Solicitadas</div><div class="metric-value">@solicitado</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Confirmadas</div><div class="metric-value">@confirmado</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Realizadas</div><div class="metric-value">@realizado</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Canceladas</div><div class="metric-value">@cancelado</div></div></div>
+    <div class="col-6 col-lg">
+        <div class="metric-card">
+            <div class="metric-label">Total</div>
+            <div class="metric-value">@total</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="metric-card">
+            <div class="metric-label">Solicitadas</div>
+            <div class="metric-value">@solicitado</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="metric-card">
+            <div class="metric-label">Confirmadas</div>
+            <div class="metric-value">@confirmado</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="metric-card">
+            <div class="metric-label">Realizadas</div>
+            <div class="metric-value">@realizado</div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="metric-card">
+            <div class="metric-label">Canceladas</div>
+            <div class="metric-value">@cancelado</div>
+        </div>
+    </div>
+</div>
+
+<div class="filter-card mb-3">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-3">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status" disabled>
+                <option value="">Todos</option>
+                <option value="solicitado">Solicitado</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="realizado">Realizado</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="recusado">Recusado</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Hospital</label>
+            <input class="form-control"
+                   name="hospital"
+                   placeholder="Hospital ou clínica"
+                   disabled />
+        </div>
+
+        <div class="col-md-3">
+            <label class="form-label">Especialidade</label>
+            <input class="form-control"
+                   name="especialidade"
+                   placeholder="Especialidade"
+                   disabled />
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button type="button"
+                    class="btn btn-soft-primary w-100"
+                    disabled
+                    title="Em breve">
+                <i class="bi bi-funnel me-1"></i>
+                Filtrar
+            </button>
+
+            <button type="button"
+                    class="btn btn-outline-secondary w-100"
+                    disabled
+                    title="Em breve">
+                Limpar
+            </button>
+        </div>
+    </form>
 </div>
 <div class="filter-card mb-3"><div class="row g-2"><div class="col-md-3"><label class="form-label">Status</label><select class="form-select" disabled><option>Todos</option></select></div><div class="col-md-3"><label class="form-label">Hospital</label><input class="form-control" disabled/></div><div class="col-md-3"><label class="form-label">Especialidade</label><input class="form-control" disabled/></div><div class="col-md-3 d-flex align-items-end gap-2"><button class="btn btn-soft-primary w-100" disabled title="Em breve">Filtrar</button><button class="btn btn-outline-secondary w-100" disabled title="Em breve">Limpar</button></div></div></div>
 <div class="data-card card"><div class="card-body p-0"><div class="table-responsive"><table class="table table-modern align-middle"><thead><tr><th>Médico</th><th>Hospital</th><th>Especialidade</th><th>Data/hora</th><th>Valor</th><th>Status</th><th>Justificativa</th><th class="text-end">Ações</th></tr></thead><tbody>

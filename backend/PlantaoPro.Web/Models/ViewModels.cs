@@ -68,6 +68,25 @@ namespace PlantaoPro.Web.Models
 
     public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
 
+
+    public record PlantaoDetailsDto(Guid Id, Guid HospitalId, Guid EspecialidadeId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string? Observacoes);
+    public record PlantaoFormViewModel
+    {
+        public Guid? Id { get; set; }
+        [Required] public Guid HospitalId { get; set; }
+        [Required] public Guid EspecialidadeId { get; set; }
+        [Required] public DateTime DataInicio { get; set; }
+        [Required] public DateTime DataFim { get; set; }
+        [Range(0.01, double.MaxValue, ErrorMessage = "Valor deve ser maior que zero.")] public decimal Valor { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Vagas deve ser maior que zero.")] public int Vagas { get; set; }
+        [Required] public string Tipo { get; set; } = "Presencial";
+        public string Observacoes { get; set; } = string.Empty;
+        public IEnumerable<HospitalDto> Hospitais { get; set; } = Enumerable.Empty<HospitalDto>();
+        public IEnumerable<EspecialidadeDto> Especialidades { get; set; } = Enumerable.Empty<EspecialidadeDto>();
+    }
+
+    public record StatusActionViewModel(Guid Id, [Required] string Justificativa);
+    public record AcceptPlantaoWebRequest(Guid MedicoId);
     public interface IListPageViewModel
     {
         long Total { get; }

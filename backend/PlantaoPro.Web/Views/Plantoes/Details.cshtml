@@ -1,5 +1,22 @@
-@model Guid
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.PlantaoDetailsDto>
 <h1 class="h4">Detalhes do Plantão</h1>
-<p class="text-muted">Visualização operacional detalhada estará disponível em breve.</p>
-<p><small class="text-muted">Informação técnica: @Model</small></p>
-<a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-danger">@Model.ErrorMessage</div> }
+@if (Model.Data is null) { <p class="text-muted">Plantão não encontrado.</p> }
+else {
+<div class="card"><div class="card-body">
+    <p><strong>Hospital:</strong> @Model.Data.HospitalNome (@Model.Data.HospitalCidade/@Model.Data.HospitalEstado)</p>
+    <p><strong>Especialidade:</strong> @Model.Data.EspecialidadeNome</p>
+    <p><strong>Data/hora:</strong> @Model.Data.DataInicio.ToString("dd/MM/yyyy HH:mm") - @Model.Data.DataFim.ToString("dd/MM/yyyy HH:mm")</p>
+    <p><strong>Valor:</strong> @Model.Data.Valor.ToString("C")</p>
+    <p><strong>Vagas:</strong> @Model.Data.VagasDisponiveis/@Model.Data.Vagas</p>
+    <p><strong>Status:</strong> <span class="badge status-@Model.Data.Status">@Model.Data.Status</span></p>
+    <p><strong>Observações:</strong> @Model.Data.Observacoes</p>
+</div></div>
+<div class="mt-3 d-flex gap-2">
+    <a asp-action="Edit" asp-route-id="@Model.Data.Id" class="btn btn-outline-primary" @(Model.Data.Status!="rascunho"?"aria-disabled=true disabled":"")>Editar</a>
+    <form asp-action="Publicar" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@Model.Data.Id" /><button class="btn btn-success" @(Model.Data.Status!="rascunho"?"disabled title=\"Somente rascunho\"":"")>Publicar</button></form>
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal" @(Model.Data.Status=="cancelado"?"disabled":"")>Cancelar</button>
+</div>
+<div class="modal fade" id="cancelModal"><div class="modal-dialog"><div class="modal-content"><form asp-action="Cancelar" method="post">@Html.AntiForgeryToken()<div class="modal-header"><h5>Cancelar Plantão</h5></div><div class="modal-body"><input type="hidden" name="Id" value="@Model.Data.Id" /><label>Justificativa</label><textarea class="form-control" name="Justificativa" required></textarea></div><div class="modal-footer"><button class="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button><button class="btn btn-danger" type="submit">Confirmar</button></div></form></div></div></div>
+}
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">Voltar</a>

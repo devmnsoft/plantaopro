@@ -1,0 +1,16 @@
+@model PlantaoPro.Web.Models.PlantaoFormViewModel
+<form method="post">
+    @Html.AntiForgeryToken()
+    <div class="row g-3">
+        <div class="col-md-6"><label>Hospital</label><select asp-for="HospitalId" class="form-select" asp-items="@(new SelectList(Model.Hospitais, "Id", "NomeFantasia"))"></select></div>
+        <div class="col-md-6"><label>Especialidade</label><select asp-for="EspecialidadeId" class="form-select" asp-items="@(new SelectList(Model.Especialidades, "Id", "Nome"))"></select></div>
+        <div class="col-md-3"><label>Data início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
+        <div class="col-md-3"><label>Data fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>
+        <div class="col-md-2"><label>Valor</label><input asp-for="Valor" class="form-control" /></div>
+        <div class="col-md-2"><label>Vagas</label><input asp-for="Vagas" class="form-control" /></div>
+        <div class="col-md-2"><label>Tipo</label><input asp-for="Tipo" class="form-control" /></div>
+        <div class="col-12"><label>Observações</label><textarea asp-for="Observacoes" class="form-control"></textarea></div>
+    </div>
+    <div asp-validation-summary="All" class="text-danger mt-2"></div>
+    <div class="mt-3"><button class="btn btn-primary" type="submit">Salvar</button> <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a></div>
+</form>

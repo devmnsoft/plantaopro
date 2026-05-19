@@ -1,9 +1,9 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PlantaoResumoDto>
-<div class="page-header d-flex justify-content-between align-items-center">
-<div><h1 class="h3 mb-1">Plantões</h1><p class="text-muted mb-0">Visão operacional de vagas e alocação médica.</p></div>
-<button class="btn btn-primary" disabled title="Em breve">Novo Plantão</button>
-</div>
+@{ var total = Model.Items.Count(); var abertos = Model.Items.Count(x=>x.Status=="aberto"); var confirmados = Model.Items.Count(x=>x.Status=="confirmado"); }
+<div class="page-header d-flex justify-content-between align-items-center"><div><h1 class="h3 mb-1">Plantões</h1><p class="text-muted mb-0">Visão comercial de vagas e disponibilidade.</p></div><div><a class="btn btn-outline-primary" asp-action="Calendario">Calendário</a> <button class="btn btn-primary" disabled title="Em breve">Novo Plantão</button></div></div>
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><small>Total</small><h4>@total</h4></div></div><div class="col-md-4"><div class="metric-card"><small>Abertos</small><h4>@abertos</h4></div></div><div class="col-md-4"><div class="metric-card"><small>Confirmados</small><h4>@confirmados</h4></div></div></div>
+<div class="filter-bar d-flex gap-2 flex-wrap"><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Filtro por cidade</button><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Filtro por especialidade</button><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Filtro por status</button></div>
 <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Hospital</th><th>Cidade/UF</th><th>Especialidade</th><th>Data início</th><th>Data fim</th><th>Valor</th><th>Vagas</th><th>Vagas disponíveis</th><th>Tipo</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
 @foreach (var plantao in Model.Items){<tr><td>@plantao.HospitalNome</td><td>@plantao.HospitalCidade/@plantao.HospitalEstado</td><td>@plantao.EspecialidadeNome</td><td>@plantao.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td>@plantao.DataFim.ToString("dd/MM/yyyy HH:mm")</td><td>@plantao.Valor.ToString("C")</td><td>@plantao.Vagas</td><td>@plantao.VagasDisponiveis</td><td>@plantao.Tipo</td><td><span class="badge status-@plantao.Status.ToLowerInvariant()">@plantao.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@plantao.Id">Detalhes</a></td></tr>}
-@if (!Model.Items.Any()){<tr><td colspan="11" class="text-center text-muted py-5">Nenhum plantão encontrado.</td></tr>}
+@if (!Model.Items.Any()){<tr><td colspan="11" class="empty-state">Nenhum plantão encontrado.</td></tr>}
 </tbody></table></div><partial name="_Pagination" model="Model" />

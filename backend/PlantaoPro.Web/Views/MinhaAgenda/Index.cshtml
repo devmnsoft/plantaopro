@@ -1,1 +1,9 @@
-<h2>Minha Agenda</h2><div class="alert alert-info">Painel consolidado de plantões, escalas, pagamentos e notificações em carregamento seguro.</div>
+@model PlantaoPro.Web.Models.MinhaAgendaViewModel
+<h2>Minha Agenda</h2>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+<h4>Próximos plantões</h4>
+@if(Model.MeusPlantoes.Any()){<ul>@foreach(var p in Model.MeusPlantoes){<li>@p.HospitalNome - @p.EspecialidadeNome - @p.DataInicio.ToString("dd/MM HH:mm")</li>}</ul>}else{<div class="text-muted">Sem plantões.</div>}
+<h4>Pagamentos</h4>
+@if(Model.MeusPagamentos.Any()){<ul>@foreach(var pg in Model.MeusPagamentos){<li>@pg.HospitalNome - @pg.ValorPrevisto.ToString("C") - @pg.Status</li>}</ul>}else{<div class="text-muted">Sem pagamentos.</div>}
+<h4>Notificações</h4>
+@if(Model.MinhasNotificacoes.Any()){<ul>@foreach(var n in Model.MinhasNotificacoes){<li>@n.Titulo - @n.RegDate.ToString("dd/MM HH:mm")</li>}</ul>}else{<div class="text-muted">Sem notificações.</div>}

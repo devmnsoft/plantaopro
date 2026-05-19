@@ -83,17 +83,17 @@
             <tbody>
                 @if (items.Any())
                 {
-                    foreach (var item in items)
+                    foreach (var row in items)
                     {
                         <tr>
                             <td>
-                                <strong>@item.Nome</strong>
+                                <strong>@row.Nome</strong>
                             </td>
 
-                            <td>@item.Descricao</td>
+                            <td>@row.Descricao</td>
 
                             <td>
-                                @if (string.Equals(item.RegStatus, "A", StringComparison.OrdinalIgnoreCase))
+                                @if (string.Equals(row.RegStatus, "A", StringComparison.OrdinalIgnoreCase))
                                 {
                                     <span class="badge bg-success">Ativo</span>
                                 }
@@ -106,7 +106,7 @@
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary"
                                    asp-action="Details"
-                                   asp-route-id="@item.Id"
+                                   asp-route-id="@row.Id"
                                    title="Ver detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>

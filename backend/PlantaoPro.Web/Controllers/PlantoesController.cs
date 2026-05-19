@@ -10,5 +10,8 @@ public class PlantoesController : BaseWebController
     public async Task<IActionResult> Index(string? hospital, string? especialidade, string? status, string? tipo, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
         => await this.RenderPaged<PlantaoResumoDto>($"api/plantoes?hospital={hospital}&especialidade={especialidade}&status={status}&tipo={tipo}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
 
+
+    public IActionResult Calendario() => View();
+
     public IActionResult Details(Guid id) => View(model: id);
 }

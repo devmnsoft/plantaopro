@@ -8,7 +8,7 @@
 {
     foreach(var log in items)
     {
-        <tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td>@log.Acao</td><td>@log.Entidade</td><td>@log.Registro</td><td>@log.Ip</td><td>@log.Descricao</td></tr>
+        <tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td>@log.Acao</td><td>@log.Entidade</td><td>@(string.IsNullOrWhiteSpace(log.Registro) ? "-" : (log.Registro.Length > 8 ? log.Registro[..8] + "…" : log.Registro))</td><td>@log.Ip</td><td>@log.Descricao</td></tr>
     }
 }
 else {<tr><td colspan="7">Sem registros</td></tr>}

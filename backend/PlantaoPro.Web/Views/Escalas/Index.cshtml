@@ -1,20 +1,9 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.EscalaResumoDto>
-@{
-    int total = Model.Items.Count();
-}
-<div class="page-header d-flex justify-content-between align-items-center">
-  <div><h1 class="h3 mb-1">Escalas Médicas</h1><p class="text-muted mb-0">Acompanhe solicitações, confirmações, realizações e substituições de escalas.</p></div>
-  <button class="btn btn-primary" disabled title="Em breve">Nova Escala / Alocar Médico</button>
-</div>
-<div class="row g-3 mb-3"><div class="col"><div class="metric-card"><small>Total</small><h4>@total</h4></div></div></div>
-<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Médico</th><th>CRM</th><th>Hospital</th><th>Especialidade</th><th>Data/Hora</th><th>Valor</th><th>Status</th><th>Justificativa</th><th class="text-end">Ações</th></tr></thead><tbody>
-@foreach (var escala in Model.Items){
-<tr>
-<td>@escala.MedicoNome</td><td>@escala.MedicoCrm/@escala.MedicoUfCrm</td><td>@escala.HospitalNome</td><td>@escala.EspecialidadeNome</td>
-<td>@escala.DataInicio.ToString("dd/MM HH:mm") - @escala.DataFim.ToString("dd/MM HH:mm")</td><td>@escala.Valor.ToString("C")</td>
-<td><span class="badge status-@escala.Status.ToLowerInvariant()">@escala.Status</span></td><td>@(string.IsNullOrWhiteSpace(escala.Justificativa)?"-":escala.Justificativa)</td>
-<td class="text-end action-buttons"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@escala.Id">Detalhes</a></td>
-</tr>}
-@if (!Model.Items.Any()){<tr><td colspan="9" class="text-center py-5 text-muted">Nenhuma escala encontrada.</td></tr>}
-</tbody></table></div>
-<partial name="_Pagination" model="Model" />
+@{ var total = Model.Items.Count(); var solicitado = Model.Items.Count(x=>x.Status=="solicitado"); var confirmado = Model.Items.Count(x=>x.Status=="confirmado"); var realizado = Model.Items.Count(x=>x.Status=="realizado"); }
+<div class="page-header d-flex justify-content-between align-items-center"><div><h1 class="h3 mb-1">Escalas Médicas</h1><p class="text-muted mb-0">Gestão central das confirmações e execuções de escala.</p></div><button class="btn btn-primary" disabled title="Em breve">Nova Escala / Alocar Médico</button></div>
+<div class="row g-3 mb-3"><div class="col-md-3"><div class="metric-card"><small>Total</small><h4>@total</h4></div></div><div class="col-md-3"><div class="metric-card"><small>Solicitado</small><h4>@solicitado</h4></div></div><div class="col-md-3"><div class="metric-card"><small>Confirmado</small><h4>@confirmado</h4></div></div><div class="col-md-3"><div class="metric-card"><small>Realizado</small><h4>@realizado</h4></div></div></div>
+<div class="filter-bar d-flex gap-2 flex-wrap"><span class="badge text-bg-light">Filtros:</span><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Status</button><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Hospital</button><button class="btn btn-sm btn-outline-secondary" disabled title="Em breve">Especialidade</button></div>
+<div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Médico</th><th>CRM/UF</th><th>Hospital</th><th>Especialidade</th><th>Data/Hora</th><th>Valor</th><th>Status</th><th>Justificativa</th><th class="text-end">Ações</th></tr></thead><tbody>
+@foreach (var escala in Model.Items){<tr><td>@escala.MedicoNome</td><td>@escala.MedicoCrm/@escala.MedicoUfCrm</td><td>@escala.HospitalNome</td><td>@escala.EspecialidadeNome</td><td>@escala.DataInicio.ToString("dd/MM HH:mm") - @escala.DataFim.ToString("dd/MM HH:mm")</td><td>@escala.Valor.ToString("C")</td><td><span class="badge status-@escala.Status.ToLowerInvariant()">@escala.Status</span></td><td>@(string.IsNullOrWhiteSpace(escala.Justificativa)?"-":escala.Justificativa)</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@escala.Id">Detalhes</a> <button class="btn btn-sm btn-outline-success" disabled title="Em breve">Confirmar</button></td></tr>}
+@if (!Model.Items.Any()){<tr><td colspan="9" class="empty-state">Nenhuma escala encontrada.</td></tr>}
+</tbody></table></div><partial name="_Pagination" model="Model" />

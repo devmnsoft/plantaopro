@@ -126,23 +126,23 @@
             <tbody>
                 @if (items.Any())
                 {
-                    foreach (var item in items)
+                    foreach (var row in items)
                     {
-                        <tr class="@(item.Lida ? "" : "table-warning")">
+                        <tr class="@(row.Lida ? "" : "table-warning")">
                             <td>
-                                <strong>@item.Titulo</strong>
+                                <strong>@row.Titulo</strong>
                             </td>
 
-                            <td>@item.Mensagem</td>
+                            <td>@row.Mensagem</td>
 
                             <td>
                                 <span class="badge bg-info text-dark">
-                                    @item.Tipo
+                                    @row.Tipo
                                 </span>
                             </td>
 
                             <td>
-                                @if (item.Lida)
+                                @if (row.Lida)
                                 {
                                     <span class="badge bg-success">Lida</span>
                                 }
@@ -152,12 +152,12 @@
                                 }
                             </td>
 
-                            <td>@item.RegDate.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@row.RegDate.ToString("dd/MM/yyyy HH:mm")</td>
 
                             <td class="text-end">
                                 <a class="btn btn-sm btn-outline-primary"
                                    asp-action="Details"
-                                   asp-route-id="@item.Id"
+                                   asp-route-id="@row.Id"
                                    title="Ver detalhes">
                                     <i class="bi bi-eye"></i>
                                 </a>

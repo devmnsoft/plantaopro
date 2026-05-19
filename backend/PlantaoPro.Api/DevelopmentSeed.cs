@@ -31,7 +31,7 @@ public static class DevelopmentSeed
         var adminPerfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where upper(nome)='ADMINISTRADOR' limit 1");
         await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,usuario_id,perfil_id,reg_status,reg_date) select gen_random_uuid(),@u,@p,'A',now() where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@u and perfil_id=@p and reg_status='A')", new { u = usuarioId, p = adminPerfilId });
 
-        string[] especialidades = ["Clínica Médica","Cardiologia","Ortopedia","Pediatria","Ginecologia","Anestesiologia","Neurologia","Cirurgia Geral","Dermatologia","Psiquiatria"];
+        string[] especialidades = new[] { "Clínica Médica", "Cardiologia", "Ortopedia", "Pediatria", "Ginecologia", "Anestesiologia", "Neurologia", "Cirurgia Geral", "Dermatologia", "Psiquiatria" };
         foreach (var e in especialidades)
             await cn.ExecuteAsync("insert into plantaopro.especialidades(id,nome,descricao,reg_status,reg_date) select gen_random_uuid(),@n,@d,'A',now() where not exists(select 1 from plantaopro.especialidades where nome=@n)", new { n = e, d = $"Especialidade de {e}" });
 

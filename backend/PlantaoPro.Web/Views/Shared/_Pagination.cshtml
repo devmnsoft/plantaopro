@@ -1,33 +1,17 @@
 @model PlantaoPro.Web.Models.IListPageViewModel?
-
 @{
     var totalRegistros = Model?.Total ?? 0L;
     var paginaAtual = Math.Max(1, Model?.Page ?? 1);
     var tamanhoPagina = Math.Max(1, Model?.PageSize ?? 20);
     var totalPaginas = Math.Max(0, Model?.TotalPages ?? 0);
 }
-
 @if (totalPaginas > 1)
 {
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
-        <small class="text-muted">
-            Total: @totalRegistros registro(s) — Página @paginaAtual de @totalPaginas
-        </small>
-
-        <nav aria-label="Paginação">
-            <ul class="pagination pagination-sm mb-0">
-                <li class="page-item @(paginaAtual <= 1 ? "disabled" : "")">
-                    <a class="page-link" href="?page=@(paginaAtual - 1)&pageSize=@tamanhoPagina">Anterior</a>
-                </li>
-
-                <li class="page-item active">
-                    <span class="page-link">@paginaAtual</span>
-                </li>
-
-                <li class="page-item @(paginaAtual >= totalPaginas ? "disabled" : "")">
-                    <a class="page-link" href="?page=@(paginaAtual + 1)&pageSize=@tamanhoPagina">Próxima</a>
-                </li>
-            </ul>
-        </nav>
-    </div>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
+<small class="text-muted">Total: @totalRegistros registro(s) — Página @paginaAtual de @totalPaginas</small>
+<nav aria-label="Paginação"><ul class="pagination pagination-sm mb-0">
+<li class="page-item @(paginaAtual <= 1 ? "disabled" : "")"><a class="page-link" href="?page=@(paginaAtual - 1)&pageSize=@tamanhoPagina">Anterior</a></li>
+<li class="page-item active"><span class="page-link">@paginaAtual</span></li>
+<li class="page-item @(paginaAtual >= totalPaginas ? "disabled" : "")"><a class="page-link" href="?page=@(paginaAtual + 1)&pageSize=@tamanhoPagina">Próxima</a></li>
+</ul></nav></div>
 }

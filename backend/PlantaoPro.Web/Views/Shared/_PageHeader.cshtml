@@ -1,4 +1,4 @@
-@model (string Title, string Subtitle, string? Icon, string? PrimaryActionText, string? PrimaryActionUrl, bool PrimaryActionDisabled)
+@model PlantaoPro.Web.Models.PageHeaderViewModel
 
 <div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div class="d-flex align-items-start gap-3">
@@ -11,15 +11,15 @@
             <p class="text-muted mb-0">@Model.Subtitle</p>
         </div>
     </div>
-    @if (!string.IsNullOrWhiteSpace(Model.PrimaryActionText))
+    @if (!string.IsNullOrWhiteSpace(Model.ButtonText))
     {
-        if (!Model.PrimaryActionDisabled && !string.IsNullOrWhiteSpace(Model.PrimaryActionUrl))
+        if (!Model.ButtonDisabled && !string.IsNullOrWhiteSpace(Model.ButtonAction) && !string.IsNullOrWhiteSpace(Model.ButtonController))
         {
-            <a class="btn btn-primary" href="@Model.PrimaryActionUrl">@Model.PrimaryActionText</a>
+            <a class="btn btn-primary" asp-action="@Model.ButtonAction" asp-controller="@Model.ButtonController">@Model.ButtonText</a>
         }
         else
         {
-            <button class="btn btn-primary" disabled title="Em breve">@Model.PrimaryActionText</button>
+            <button class="btn btn-primary" disabled title="Em breve">@Model.ButtonText</button>
         }
     }
 </div>

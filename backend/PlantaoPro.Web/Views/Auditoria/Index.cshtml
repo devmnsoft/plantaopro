@@ -1,15 +1,5 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
-@{
-    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
-}
-<h2>Auditoria</h2>
-<table class="table"><thead><tr><th>Data/Hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Registro</th><th>IP</th><th>Descrição</th></tr></thead><tbody>
-@if(items.Any())
-{
-    foreach(var log in items)
-    {
-        <tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td>@log.Acao</td><td>@log.Entidade</td><td>@(string.IsNullOrWhiteSpace(log.Registro) ? "-" : (log.Registro.Length > 8 ? log.Registro[..8] + "…" : log.Registro))</td><td>@log.Ip</td><td>@log.Descricao</td></tr>
-    }
-}
-else {<tr><td colspan="7">Sem registros</td></tr>}
-</tbody></table><partial name="_Pagination" model="Model" />
+@{ViewData["Title"]="Auditoria"; var items=Model?.Items??Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();}
+<div class="page-header d-flex justify-content-between mb-4"><div><h2 class="page-title">Auditoria</h2><p class="page-subtitle">Rastreabilidade de ações e eventos operacionais.</p></div><button class="btn btn-soft-secondary" disabled title="Em breve">Exportar</button></div>
+<div class="filter-card mb-3"><form class="row g-2"><div class="col-md-3"><input class="form-control" placeholder="Usuário" disabled></div><div class="col-md-2"><input class="form-control" placeholder="Ação" disabled></div><div class="col-md-2"><input class="form-control" placeholder="Entidade" disabled></div><div class="col-md-2"><input class="form-control" placeholder="Período inicial" disabled></div><div class="col-md-2"><input class="form-control" placeholder="Período final" disabled></div><div class="col-md-1"><button class="btn btn-soft-primary w-100" disabled title="Em breve">Filtrar</button></div></form></div>
+<div class="data-card card"><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Data/hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Registro</th><th>IP</th><th>Descrição</th></tr></thead><tbody>@if(items.Any()){foreach(var log in items){<tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td><span class="status-badge status-ativo">@log.Acao</span></td><td>@log.Entidade</td><td>@log.Registro</td><td>@log.Ip</td><td>@log.Descricao</td></tr>}}else{<tr><td colspan="7"><div class="empty-state text-center">Sem registros de auditoria.</div></td></tr>}</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model"/></div></div>

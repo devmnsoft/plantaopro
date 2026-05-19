@@ -1,9 +1,9 @@
 <div class="toast-container position-fixed top-0 end-0 p-3">
-    @foreach (var item in new[] { ("Success", "success"), ("Error", "danger"), ("Warning", "warning"), ("Info", "info") })
+    @foreach (var toast in new[] { ("Success", "success"), ("Error", "danger"), ("Warning", "warning"), ("Info", "info") })
     {
-        if (TempData[item.Item1] is string msg && !string.IsNullOrWhiteSpace(msg))
+        if (TempData[toast.Item1] is string msg && !string.IsNullOrWhiteSpace(msg))
         {
-            <div class="toast align-items-center text-bg-@item.Item2 border-0 show mb-2" role="alert">
+            <div class="toast align-items-center text-bg-@toast.Item2 border-0 show mb-2" role="alert">
                 <div class="d-flex"><div class="toast-body">@msg</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
             </div>
         }

@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   toggle?.addEventListener("click", () => body.classList.toggle("sidebar-open"));
   overlay?.addEventListener("click", () => body.classList.remove("sidebar-open"));
+  document.querySelectorAll('.nav-link-app').forEach((link)=>link.addEventListener('click',()=>body.classList.remove('sidebar-open')));
 
   document.querySelectorAll('[title]').forEach((el) => {
     if (window.bootstrap) new bootstrap.Tooltip(el);

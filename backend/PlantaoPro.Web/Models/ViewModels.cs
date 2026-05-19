@@ -87,6 +87,26 @@ namespace PlantaoPro.Web.Models
 
     public record StatusActionViewModel(Guid Id, [Required] string Justificativa);
     public record AcceptPlantaoWebRequest(Guid MedicoId);
+    public record PageHeaderViewModel(
+        string Title,
+        string Subtitle,
+        string? Icon = null,
+        string? ButtonText = null,
+        string? ButtonAction = null,
+        string? ButtonController = null,
+        bool ButtonDisabled = false
+    );
+
+    public record EmptyStateViewModel(
+        string Icon,
+        string Title,
+        string Description,
+        string? ButtonText = null,
+        string? ButtonAction = null,
+        string? ButtonController = null,
+        bool ButtonDisabled = false
+    );
+
     public interface IListPageViewModel
     {
         long Total { get; }

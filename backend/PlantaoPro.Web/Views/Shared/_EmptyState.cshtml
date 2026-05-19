@@ -1,18 +1,18 @@
-@model (string Icon, string Title, string Description, string? ActionText, string? ActionUrl, bool ActionDisabled)
+@model PlantaoPro.Web.Models.EmptyStateViewModel
 
 <div class="empty-state text-center">
     <div class="empty-state-icon"><i class="bi @Model.Icon"></i></div>
     <h5 class="mb-2">@Model.Title</h5>
     <p class="text-muted mb-3">@Model.Description</p>
-    @if (!string.IsNullOrWhiteSpace(Model.ActionText))
+    @if (!string.IsNullOrWhiteSpace(Model.ButtonText))
     {
-        if (!Model.ActionDisabled && !string.IsNullOrWhiteSpace(Model.ActionUrl))
+        if (!Model.ButtonDisabled && !string.IsNullOrWhiteSpace(Model.ButtonAction) && !string.IsNullOrWhiteSpace(Model.ButtonController))
         {
-            <a class="btn btn-soft-primary" href="@Model.ActionUrl">@Model.ActionText</a>
+            <a class="btn btn-soft-primary" asp-action="@Model.ButtonAction" asp-controller="@Model.ButtonController">@Model.ButtonText</a>
         }
         else
         {
-            <button class="btn btn-soft-primary" disabled title="Em breve">@Model.ActionText</button>
+            <button class="btn btn-soft-primary" disabled title="Em breve">@Model.ButtonText</button>
         }
     }
 </div>

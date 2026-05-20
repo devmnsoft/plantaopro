@@ -61,7 +61,13 @@ public class UsuariosController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { }, "Senha alterada com sucesso."));
     }
 
-    private Guid GetUserId() => Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid) ? uid : Guid.Empty;
+    private Guid GetUserId()
+    {
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var uid)) return uid;
+        if (Guid.TryParse(User.FindFirstValue("uid"), out uid)) return uid;
+        if (Guid.TryParse(User.FindFirstValue(ClaimTypes.Name), out uid)) return uid;
+        return Guid.Empty;
+    }
 }
 
 public record UserSettingsDto(Guid Id, string Nome, string Email, string? Telefone, string PreferenciasNotificacao);

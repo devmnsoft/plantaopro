@@ -11,7 +11,19 @@ public class ConfiguracoesController : BaseWebController
 {
     public ConfiguracoesController(IHttpClientFactory f, ILogger<ConfiguracoesController> l) : base(f, l) { }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+    {
+        var client = CreateApiClient();
+        var tokenPresente = AddBearerToken(client);
+        if (!tokenPresente) return HandleUnauthorized();
+
+        var response = await client.GetFromJsonAsync<ApiResponse<UserSettingsSummaryViewModel>>("api/usuarios/me");
+        var model = response?.Data is null
+            ? new UserSettingsSummaryViewModel()
+            : response.Data;
+
+        return View(model);
+    }
 
     public async Task<IActionResult> Saude()
     {
@@ -49,4 +61,10 @@ public class ConfiguracoesController : BaseWebController
 
         return View(dados);
     }
+}
+
+
+public record UserSettingsSummaryViewModel(Guid Id, string Nome, string Email, string? Telefone, string PreferenciasNotificacao)
+{
+    public UserSettingsSummaryViewModel() : this(Guid.Empty, string.Empty, string.Empty, null, "Email"){}
 }

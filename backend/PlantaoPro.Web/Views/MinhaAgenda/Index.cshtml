@@ -1,16 +1,10 @@
-@model PlantaoPro.Web.Models.MedicoAreaResumoDto?
-@{ ViewData["Title"]="Minha Agenda"; }
-<div class="page-header mb-4"><h2 class="page-title">Minha Agenda</h2><p class="page-subtitle">Acompanhe seus plantões, solicitações e pagamentos.</p></div>
-@if (TempData["Error"] is string err){<div class="alert alert-warning">@err</div>}
-@if(Model is not null){
-<div class="row g-3">
-<div class="col-md-3"><div class="card p-3">Plantões disponíveis: <strong>@Model.PlantoesDisponiveis</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Solicitações pendentes: <strong>@Model.SolicitacoesPendentes</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Escalas confirmadas: <strong>@Model.EscalasConfirmadas</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Plantões realizados: <strong>@Model.PlantoesRealizados</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Pagamentos pendentes: <strong>@Model.PagamentosPendentes</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Valor pendente: <strong>@Model.ValorPendente.ToString("C")</strong></div></div>
-<div class="col-md-3"><div class="card p-3">Notificações não lidas: <strong>@Model.NotificacoesNaoLidas</strong></div></div>
-</div>
-<div class="mt-3 d-flex gap-2"><a asp-action="PlantoesDisponiveis" class="btn btn-primary">Ver plantões disponíveis</a><a class="btn btn-outline-secondary disabled" aria-disabled="true">Minhas escalas</a><a class="btn btn-outline-secondary disabled" aria-disabled="true">Meus pagamentos</a><a asp-controller="Notificacoes" asp-action="Index" class="btn btn-outline-info">Notificações</a></div>
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.MedicoAreaResumoDto>
+@{ ViewData["Title"] = "Minha Agenda"; var data = Model?.Data; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Minha Agenda","Acompanhe seus plantões, solicitações e pagamentos.","bi-calendar-check")' />
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage) || TempData["Error"] is string err){<div class="alert alert-warning">@(Model?.ErrorMessage ?? err)</div>}
+@if(data is not null){
+<div class="row g-3"><div class="col-md-3"><div class="metric-card"><div class="metric-label">Disponíveis</div><div class="metric-value">@data.PlantoesDisponiveis</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Solicitações</div><div class="metric-value">@data.SolicitacoesPendentes</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Confirmadas</div><div class="metric-value">@data.EscalasConfirmadas</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Pag. pendentes</div><div class="metric-value">@data.PagamentosPendentes</div></div></div></div>
+<div class="mt-3 d-flex gap-2 flex-wrap"><a asp-action="PlantoesDisponiveis" class="btn btn-primary">Ver plantões disponíveis</a><button class="btn btn-outline-secondary" disabled title="Em breve">Minhas escalas</button><button class="btn btn-outline-secondary" disabled title="Em breve">Meus pagamentos</button></div>
+}else{
+<div class="card border-0 shadow-sm"><div class="card-body"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-x","Agenda indisponível","Não foi possível carregar sua agenda no momento.")' /></div></div>
 }

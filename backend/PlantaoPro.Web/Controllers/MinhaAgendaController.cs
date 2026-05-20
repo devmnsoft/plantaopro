@@ -40,7 +40,13 @@ public class MinhaAgendaController : BaseWebController
             TempData["Error"] = resumo.Error ?? "Não foi possível carregar a área do médico.";
         }
 
-        return View(resumo.Data);
+        var model = new DetailsPageViewModel<MedicoAreaResumoDto>(
+            Data: resumo.Data,
+            ErrorMessage: TempData["Error"] as string,
+            IsPlaceholder: resumo.Data is null
+        );
+
+        return View(model);
     }
 
     public async Task<IActionResult> PlantoesDisponiveis(int page = 1, int pageSize = 20)

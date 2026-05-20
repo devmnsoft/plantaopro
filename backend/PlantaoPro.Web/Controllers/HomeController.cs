@@ -59,10 +59,10 @@ namespace PlantaoPro.Web.Controllers
                     var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, normalizedEmail) };
                     var safeRoles = apiResult.Data.Roles ?? Array.Empty<string>();
                     claims.AddRange(safeRoles
+                        .Select(NormalizeRole)
                         .Where(role => !string.IsNullOrWhiteSpace(role))
-                        .Select(role => role.Trim().ToUpperInvariant())
                         .Distinct()
-                        .Select(role => new Claim(ClaimTypes.Role, role)));
+                        .Select(role => new Claim(ClaimTypes.Role, role!)));
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
                     TempData["Success"] = "Login realizado com sucesso.";
                     _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, string.Join(',', safeRoles), DateTime.UtcNow);
@@ -106,6 +106,26 @@ namespace PlantaoPro.Web.Controllers
                 TempData["Error"] = "Erro ao conectar ao servidor.";
                 return View(model);
             }
+        }
+
+
+        private static string? NormalizeRole(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return null;
+            var value = role.Trim().ToUpperInvariant()
+                .Replace("Á", "A").Replace("À", "A").Replace("Â", "A").Replace("Ã", "A")
+                .Replace("É", "E").Replace("Ê", "E")
+                .Replace("Í", "I")
+                .Replace("Ó", "O").Replace("Ô", "O").Replace("Õ", "O")
+                .Replace("Ú", "U")
+                .Replace("Ç", "C");
+
+            return value switch
+            {
+                "ADMIN" => RolesConstants.Administrador,
+                "COORDENADOR" or "COORDENACAO" => RolesConstants.Coordenacao,
+                _ => value
+            };
         }
 
         [Authorize]

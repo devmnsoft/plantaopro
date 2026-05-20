@@ -45,6 +45,11 @@ public record CompleteEscalaRequest(string? Justificativa);
 public record PagamentoFilterRequest(Guid? MedicoId,Guid? HospitalId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? EspecialidadeId,int Page=1,int PageSize=20);
 public record CancelarPagamentoRequest(string Justificativa);
 public record NotificationFilterRequest(string? Tipo,bool? Lida,DateTime? DataInicio,DateTime? DataFim,int Page=1,int PageSize=20);
+
+public record MedicoAreaResumoDto(string MedicoNome,string Crm,string UfCrm,int PlantoesDisponiveis,int SolicitacoesPendentes,int EscalasConfirmadas,int PlantoesRealizados,int PagamentosPendentes,decimal ValorPendente,int NotificacoesNaoLidas);
+public record MedicoPlantaoDisponivelDto(Guid PlantaoId,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int VagasDisponiveis,string Tipo,string Status,bool JaSolicitado,bool TemConflitoHorario);
+public record MedicoEscalaDto(Guid EscalaId,Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string Status,string? Justificativa);
+public record MedicoPagamentoDto(Guid PagamentoId,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento);
 public record DashboardChartItem(string Label,decimal Valor);
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoResumoDto> ProximosPlantoes,IEnumerable<PagamentoResumoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);
 }

@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -5,17 +6,20 @@ namespace PlantaoPro.Web.Controllers;
 public class MinhaAgendaController : BaseWebController
 {
     public MinhaAgendaController(IHttpClientFactory f, ILogger<MinhaAgendaController> l) : base(f, l) { }
+
     public async Task<IActionResult> Index()
     {
-        var client = CreateApiClient();
-        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var resumo = await ReadApiResponse<MedicoAreaResumoDto>(client, "api/medico-area/resumo");
+        if (resumo.StatusCode == HttpStatusCode.NotFound) TempData["Error"] = "Seu usuário ainda não está vinculado a um cadastro médico. Entre em contato com a coordenação.";
+        return View(resumo.Data);
+    }
 
-        var p = await ReadApiResponse<PagedResult<PlantaoResumoDto>>(client, "api/plantoes?page=1&pageSize=5");
-        var pg = await ReadApiResponse<PagedResult<PagamentoResumoDto>>(client, "api/financeiro/pagamentos?page=1&pageSize=5");
-        var n = await ReadApiResponse<PagedResult<NotificacaoDto>>(client, "api/notificacoes?page=1&pageSize=5");
-
-        var err = p.Error ?? pg.Error ?? n.Error;
-        var vm = new MinhaAgendaViewModel(p.Data?.Items ?? Array.Empty<PlantaoResumoDto>(), pg.Data?.Items ?? Array.Empty<PagamentoResumoDto>(), n.Data?.Items ?? Array.Empty<NotificacaoDto>(), err);
-        return View(vm);
+    public async Task<IActionResult> PlantoesDisponiveis(int page=1,int pageSize=20)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var r = await ReadApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>(client, $"api/medico-area/plantoes-disponiveis?page={page}&pageSize={pageSize}");
+        if (r.StatusCode==HttpStatusCode.NotFound) TempData["Error"] = r.Error;
+        return View(new ListPageViewModel<MedicoPlantaoDisponivelDto>(r.Data?.Items ?? [], r.Data?.Total ?? 0, r.Data?.Page ?? page, r.Data?.PageSize ?? pageSize));
     }
 }

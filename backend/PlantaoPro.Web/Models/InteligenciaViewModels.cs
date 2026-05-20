@@ -16,16 +16,23 @@ public record KpiMedicoViewModel(int EscalasRealizadas, decimal HorasTrabalhadas
 
 public record AlertaFinanceiroViewModel(Guid MedicoId, string Medico, int DiasEmAtraso, decimal ValorPendente);
 
+public record DashboardFiltroViewModel(DateTime Inicio, DateTime Fim, string? Hospital, string? Especialidade, Guid? MedicoId);
+
+public record MedicoPrioridadeViewModel(Guid MedicoId, int EscalasUltimos7Dias, decimal HorasUltimos7Dias, decimal ScorePrioridade);
+
 public record DashboardExecutivoViewModel(
     int EscalasAtivas,
     int EscalasComConflito,
     decimal TotalPagar,
     int NotificacoesPendentes,
+    decimal MediaHorasSemanaPorMedico,
     IEnumerable<AlertaFinanceiroViewModel> AlertasFinanceiros,
-    IEnumerable<string> AlertasOperacionais);
+    IEnumerable<string> AlertasOperacionais,
+    IEnumerable<MedicoPrioridadeViewModel> RankingPrioridade);
 
 public record InteligenciaDashboardViewModel(
     DashboardExecutivoViewModel Executivo,
+    DashboardFiltroViewModel FiltroAplicado,
     IDictionary<string, decimal> TotalPorMedico,
     IDictionary<string, decimal> TotalPorHospital,
     IDictionary<string, decimal> TotalPorEspecialidade,

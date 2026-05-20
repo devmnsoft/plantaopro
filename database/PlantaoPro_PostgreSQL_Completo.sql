@@ -32,3 +32,28 @@ CREATE INDEX IF NOT EXISTS idx_pagamentos_medico ON pagamentos(medico_id);
 CREATE INDEX IF NOT EXISTS idx_pagamentos_plantao ON pagamentos(plantao_id);
 CREATE INDEX IF NOT EXISTS idx_historico_escala_escala ON historico_escala(escala_id);
 CREATE INDEX IF NOT EXISTS idx_historico_pagamento_pagamento ON historico_pagamento(pagamento_id);
+
+-- Evolução comercial 2026: inteligência operacional e financeira
+ALTER TABLE plantaopro.escalas
+    ADD COLUMN IF NOT EXISTS horas_previstas numeric(6,2) GENERATED ALWAYS AS (EXTRACT(EPOCH FROM (fim_utc - inicio_utc))/3600.0) STORED,
+    ADD COLUMN IF NOT EXISTS score_prioridade numeric(8,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS conflito_horario boolean NOT NULL DEFAULT false;
+
+ALTER TABLE plantaopro.escalas
+    ADD CONSTRAINT IF NOT EXISTS ck_escalas_horas_previstas_positivas CHECK (horas_previstas > 0 AND horas_previstas <= 24);
+
+ALTER TABLE plantaopro.pagamentos
+    ADD COLUMN IF NOT EXISTS horas_referencia numeric(6,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS valor_hora numeric(10,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS processado_automaticamente boolean NOT NULL DEFAULT false;
+
+ALTER TABLE plantaopro.pagamentos
+    ADD CONSTRAINT IF NOT EXISTS ck_pagamentos_valor_hora_nao_negativo CHECK (valor_hora >= 0),
+    ADD CONSTRAINT IF NOT EXISTS ck_pagamentos_horas_referencia_nao_negativa CHECK (horas_referencia >= 0);
+
+CREATE INDEX IF NOT EXISTS ix_escalas_medico_inicio_fim ON plantaopro.escalas (medico_id, inicio_utc, fim_utc);
+CREATE INDEX IF NOT EXISTS ix_escalas_hospital_especialidade_inicio ON plantaopro.escalas (hospital_id, especialidade_id, inicio_utc DESC);
+CREATE INDEX IF NOT EXISTS ix_pagamentos_status_vencimento ON plantaopro.pagamentos (status, vencimento_utc);
+
+COMMENT ON COLUMN plantaopro.escalas.score_prioridade IS 'Score para priorização inteligente de médicos com menor carga recente.';
+COMMENT ON COLUMN plantaopro.escalas.conflito_horario IS 'Flag operacional para alertas visuais e auditoria de conflitos.';

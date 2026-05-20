@@ -28,6 +28,7 @@ public class UsuariosController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = RolesConstants.Administrador)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<UserListVM>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListUsers()
     {
         var users = await _userService.ListAsync();
@@ -35,6 +36,9 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet("me")]
+    [ProducesResponseType(typeof(ApiResponse<UsuarioDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMe()
     {
         var uid = GetUserId();
@@ -58,6 +62,8 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPut("me")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateMe([FromBody] UpdateUserSettingsRequest req)
     {
         var uid = GetUserId();
@@ -69,6 +75,9 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPost("me/alterar-senha")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> AlterarSenha([FromBody] AlterarSenhaRequest req)
     {
         var uid = GetUserId();
@@ -85,6 +94,9 @@ public class UsuariosController : ControllerBase
 
     [HttpPost("unlock/{id:guid}")]
     [Authorize(Roles = RolesConstants.Administrador + ",ADMINISTRATOR")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Unlock(Guid id)
     {
         var adminId = GetUserId();

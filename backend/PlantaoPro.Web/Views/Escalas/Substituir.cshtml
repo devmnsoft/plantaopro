@@ -1,0 +1,8 @@
+@model PlantaoPro.Web.Models.StatusActionViewModel
+<h2>Substituir Escala</h2>
+<form method="post">
+    <input type="hidden" asp-for="Id" />
+    <div class="mb-3"><label class="form-label">Novo Médico (ID)</label><input name="novoMedicoId" class="form-control" required /></div>
+    <div class="mb-3"><label class="form-label">Justificativa</label><textarea name="justificativa" class="form-control" required></textarea></div>
+    <button class="btn btn-primary">Substituir</button>
+</form>

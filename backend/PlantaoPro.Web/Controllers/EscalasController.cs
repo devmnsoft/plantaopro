@@ -1,3 +1,6 @@
+using System.Net;
+using System.Text;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -7,8 +10,39 @@ public class EscalasController : BaseWebController
 {
     public EscalasController(IHttpClientFactory f, ILogger<EscalasController> l) : base(f, l) { }
 
-    public async Task<IActionResult> Index(string? medico, string? hospital, string? especialidade, string? status, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
-        => await this.RenderPaged<EscalaResumoDto>($"api/escalas?medico={medico}&hospital={hospital}&especialidade={especialidade}&status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
+    public async Task<IActionResult> Index(Guid? medicoId, Guid? hospitalId, Guid? especialidadeId, string? status, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
+        => await this.RenderPaged<EscalaResumoDto>($"api/escalas?medicoId={medicoId}&hospitalId={hospitalId}&especialidadeId={especialidadeId}&status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
 
-    public IActionResult Details(Guid id) => View(model: id);
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var model = await this.RenderDetails<EscalaDetailsDto>($"api/escalas/{id}");
+        if (model.ErrorMessage == "Sessão expirada.") return HandleUnauthorized();
+        return View(model);
+    }
+
+    [HttpPost] public async Task<IActionResult> Confirmar(Guid id) => await PostStatus($"api/escalas/{id}/confirmar", new { justificativa = "Confirmada pela coordenação" }, "Escala confirmada.", id);
+    [HttpPost] public async Task<IActionResult> Recusar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/recusar", new { justificativa }, "Escala recusada.", id);
+    [HttpPost] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/cancelar", new { justificativa }, "Escala cancelada.", id);
+    [HttpPost] public async Task<IActionResult> MarcarRealizado(Guid id) => await PostStatus($"api/escalas/{id}/marcar-realizado", new { justificativa = "Escala concluída" }, "Escala marcada como realizada.", id);
+
+    [HttpGet] public IActionResult Substituir(Guid id) => View(model: new StatusActionViewModel(id, string.Empty));
+    [HttpPost] public async Task<IActionResult> Substituir(Guid id, Guid novoMedicoId, string justificativa)
+        => await PostStatus($"api/escalas/{id}/substituir", new { novoMedicoId, justificativa }, "Escala substituída.", id);
+
+    private async Task<IActionResult> PostStatus(string endpoint, object payload, string success, Guid id)
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var json = JsonSerializer.Serialize(payload);
+        var response = await client.PostAsync(endpoint, new StringContent(json, Encoding.UTF8, "application/json"));
+        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["Error"] = "Falha na operação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        TempData["Success"] = success;
+        return RedirectToAction(nameof(Details), new { id });
+    }
 }

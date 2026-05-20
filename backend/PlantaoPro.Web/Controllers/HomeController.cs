@@ -68,7 +68,7 @@ namespace PlantaoPro.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(nonSensitiveMessage))
                     _logger.LogWarning("Falha de login retornada pela API: {ApiMessage}", nonSensitiveMessage);
 
-                TempData["Error"] = response.StatusCode switch
+                var errorMessage = response.StatusCode switch
                 {
                     HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
                     HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "E-mail ou senha inválidos.",
@@ -76,6 +76,8 @@ namespace PlantaoPro.Web.Controllers
                     _ => "Erro ao autenticar. Tente novamente."
                 };
 
+                TempData["Error"] = errorMessage;
+                ModelState.AddModelError(string.Empty, errorMessage);
                 _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", model.Email, ip, false, DateTime.UtcNow);
                 return View(model);
             }

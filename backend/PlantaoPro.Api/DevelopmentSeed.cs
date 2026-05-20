@@ -57,10 +57,11 @@ public static class DevelopmentSeed
                     email,
                     hash = BCrypt.Net.BCrypt.HashPassword("123456")
                 });
-            else if (string.IsNullOrWhiteSpace(usuario.SenhaHash))
-                await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new
+            else
+                await cn.ExecuteAsync("update plantaopro.usuarios set nome=@nome,senha_hash=@hash,reg_status='A',reg_update=now() where id=@id", new
                 {
                     id = userId,
+                    nome,
                     hash = BCrypt.Net.BCrypt.HashPassword("123456")
                 });
 

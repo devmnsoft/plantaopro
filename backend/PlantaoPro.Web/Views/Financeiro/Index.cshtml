@@ -1,8 +1,66 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PagamentoResumoDto>
-@{ ViewData["Title"]="Financeiro"; var items=Model?.Items??Enumerable.Empty<PlantaoPro.Web.Models.PagamentoResumoDto>(); var pend=items.Where(x=>x.Status=="pendente"); var pago=items.Where(x=>x.Status=="pago"); var cancelados=items.Count(x=>x.Status=="cancelado"); var previstoMes=items.Where(x=>x.DataPrevista.HasValue && x.DataPrevista.Value.Month==DateTime.Today.Month && x.DataPrevista.Value.Year==DateTime.Today.Year).Sum(x=>x.ValorPrevisto);} 
-<div class="page-header d-flex justify-content-between flex-wrap gap-2 mb-4"><div><h2 class="page-title">Financeiro</h2><p class="page-subtitle">Controle de pagamentos previstos, pendentes, pagos e cancelados.</p></div><div class="d-flex gap-2 flex-wrap"><button class="btn btn-soft-secondary" disabled title="Exportação PDF disponível na versão enterprise"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button><button class="btn btn-soft-secondary" disabled title="Exportação Excel disponível na versão enterprise"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button></div></div>
-<div class="row g-3 mb-3"><div class="col-md"><div class="metric-card"><div class="metric-label">Valor pendente</div><div class="metric-value">@pend.Sum(x=>x.ValorPrevisto).ToString("C")</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Valor pago</div><div class="metric-value">@pago.Sum(x=>x.ValorPago ?? 0).ToString("C")</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Qtd pendente</div><div class="metric-value">@pend.Count()</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Qtd paga</div><div class="metric-value">@pago.Count()</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Cancelados</div><div class="metric-value">@cancelados</div></div></div><div class="col-md"><div class="metric-card"><div class="metric-label">Previsto no mês</div><div class="metric-value">@previstoMes.ToString("C")</div></div></div></div>
-<table class="table table-modern"><thead><tr><th>Médico</th><th>CRM</th><th>Hospital</th><th>Especialidade</th><th>Data</th><th>Previsto</th><th>Pago</th><th>Status</th><th>Data prevista</th><th>Data pagamento</th><th>Forma</th><th>Ações</th></tr></thead><tbody>
-@if(items.Any()){foreach(var pg in items){<tr><td>@pg.MedicoNome</td><td>@pg.MedicoCrm</td><td>@pg.HospitalNome</td><td>@pg.EspecialidadeNome</td><td>@pg.DataPlantao.ToString("dd/MM/yyyy HH:mm")</td><td>@pg.ValorPrevisto.ToString("C")</td><td>@((pg.ValorPago ?? 0).ToString("C"))</td><td><partial name="_StatusBadge" model="pg.Status"/></td><td>@(pg.DataPrevista?.ToString("dd/MM/yyyy")??"-")</td><td>@(pg.DataPagamento?.ToString("dd/MM/yyyy")??"-")</td><td>@(pg.FormaPagamento??"-")</td><td><a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@pg.Id">Detalhes</a>@if(pg.Status=="pendente"){<form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="d-inline"><input type="hidden" name="valorPago" value="@pg.ValorPrevisto"/><input type="hidden" name="dataPagamento" value="@DateOnly.FromDateTime(DateTime.Today)"/><input type="hidden" name="formaPagamento" value="PIX"/><button class="btn btn-sm btn-soft-success" type="submit" data-confirm="Confirmar pagamento para @pg.MedicoNome?" data-confirm-class="btn-success">Confirmar</button></form><a class="btn btn-sm btn-soft-danger" asp-action="Details" asp-route-id="@pg.Id" data-confirm="Registrar cancelamento de pagamento?" data-justify-field="justificativa">Cancelar</a>}</td></tr>}
-}} else {<tr><td colspan="12"><partial name="_EmptyState" model="new PlantaoPro.Web.Models.EmptyStateViewModel { Icon = "bi-cash-stack", Title = "Sem pagamentos no período", Description = "Assim que houver escala realizada, os lançamentos financeiros aparecerão aqui." }" /></td></tr>}
-</tbody></table><partial name="_Pagination" model="Model" />
+
+@{
+    ViewData["Title"] = "Financeiro";
+    var items = Model?.Items ?? Array.Empty<PlantaoPro.Web.Models.PagamentoResumoDto>();
+}
+
+<div class="page-header">
+    <h2>Financeiro</h2>
+    <p class="text-muted">Controle pagamentos previstos, pendentes, pagos e cancelados.</p>
+</div>
+
+@if (!items.Any())
+{
+    <div class="empty-state">
+        <i class="bi bi-calendar2-x"></i>
+        <h5>Sem pagamentos</h5>
+        <p>Nenhum pagamento encontrado para os filtros atuais.</p>
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-modern align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Médico</th>
+                    <th>Hospital</th>
+                    <th>Especialidade</th>
+                    <th>Data do Plantão</th>
+                    <th>Valor Previsto</th>
+                    <th>Valor Pago</th>
+                    <th>Status</th>
+                    <th class="text-end">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in items)
+                {
+                    <tr>
+                        <td>@p.MedicoNome</td>
+                        <td>@p.HospitalNome</td>
+                        <td>@p.EspecialidadeNome</td>
+                        <td>@p.DataPlantao.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@p.ValorPrevisto.ToString("C")</td>
+                        <td>@(p.ValorPago.HasValue ? p.ValorPago.Value.ToString("C") : "-")</td>
+                        <td>
+                            <span class="badge status-@p.Status.ToLowerInvariant()">@p.Status</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="action-buttons">
+                                <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@p.Id">Detalhes</a>
+                                <button class="btn btn-sm btn-soft-success" disabled title="Em breve">Confirmar</button>
+                                <button class="btn btn-sm btn-soft-danger" disabled title="Em breve">Cancelar</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<div class="card-footer bg-white">
+    <partial name="_Pagination" model="Model" />
+</div>

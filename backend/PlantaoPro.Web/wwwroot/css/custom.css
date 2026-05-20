@@ -68,3 +68,19 @@ body.app-body { background: radial-gradient(circle at 0% -10%, #d9e8ff, transpar
 .progress{height:8px;border-radius:999px;background:#ebf2ff}.progress-bar{background:linear-gradient(90deg,var(--pp-primary),#3f8cff)}
 .table-modern td{vertical-align:middle}
 @media (max-width:575.98px){.dashboard-filters{width:100%;display:grid;grid-template-columns:1fr}.filter-item{min-width:0}}
+
+/* identidade visual v2 */
+.brand-logo{height:36px;max-width:220px}
+.app-sidebar{box-shadow:inset -1px 0 0 rgba(255,255,255,.06)}
+.app-topbar{gap:12px}
+.topbar-left{min-width:0}.topbar-left>div{min-width:0}.page-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40vw}
+.table-responsive{border-radius:0 0 var(--pp-radius) var(--pp-radius)}
+.login-card-modern .btn.is-loading .label{opacity:.8}
+.login-card-modern .spinner-border{width:1rem;height:1rem}
+
+@media (max-width:991.98px){
+  .app-topbar{height:auto;padding:12px 14px;align-items:flex-start;flex-direction:column}
+  .topbar-actions{width:100%;justify-content:space-between}
+  .user-pill{max-width:calc(100vw - 48px)}
+  .page-title{max-width:85vw}
+}

@@ -14,7 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll("form").forEach((form) => {
     form.addEventListener("submit", () => {
       form.querySelectorAll('button[type="submit"]').forEach((btn) => {
-        if (!btn.disabled) {
+        if (btn.disabled) return;
+
+        const spinner = btn.querySelector(".spinner-border");
+        if (spinner) {
+          btn.disabled = true;
+          spinner.classList.remove("d-none");
+          btn.classList.add("is-loading");
+        } else {
           btn.dataset.originalText = btn.innerHTML;
           btn.disabled = true;
           btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Carregando...';

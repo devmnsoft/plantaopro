@@ -1,9 +1,8 @@
-<svg width="412" height="76" viewBox="0 0 412 76" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="4" y="4" width="68" height="68" rx="18" fill="url(#lg)"/>
-  <path d="M23 32.5C23 24.492 29.492 18 37.5 18H42.5C50.508 18 57 24.492 57 32.5V35C57 43.008 50.508 49.5 42.5 49.5H37.5C29.492 49.5 23 55.992 23 64" stroke="#E6F4FF" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M38.5 27V40" stroke="#E6F4FF" stroke-width="5" stroke-linecap="round"/>
-  <path d="M31.8 33.5H45.2" stroke="#E6F4FF" stroke-width="5" stroke-linecap="round"/>
-  <text x="90" y="40" fill="#F8FCFF" font-family="Inter,Segoe UI,sans-serif" font-size="33" font-weight="700">PlantãoPro</text>
-  <text x="90" y="59" fill="#A9C8F5" font-family="Inter,Segoe UI,sans-serif" font-size="14" font-weight="500">gestão inteligente de plantões</text>
-  <defs><linearGradient id="lg" x1="4" y1="4" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop stop-color="#2563EB"/><stop offset="1" stop-color="#0F766E"/></linearGradient></defs>
+<svg width="560" height="130" viewBox="0 0 560 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="88" height="88" rx="24" fill="url(#g)"/>
+  <path d="M25 45H38.5V31.5H49.5V45H63V56H49.5V69.5H38.5V56H25V45Z" fill="white"/>
+  <circle cx="68" cy="68" r="9" fill="#9BE7D6"/>
+  <text x="108" y="55" fill="#F8FCFF" font-family="Inter, Segoe UI, sans-serif" font-size="44" font-weight="800">PlantãoPro</text>
+  <text x="109" y="85" fill="#A8C2E8" font-family="Inter, Segoe UI, sans-serif" font-size="21" font-weight="500">Escalas médicas com inteligência operacional</text>
+  <defs><linearGradient id="g" x1="8" y1="4" x2="78" y2="83" gradientUnits="userSpaceOnUse"><stop stop-color="#165DFF"/><stop offset="1" stop-color="#0E8E77"/></linearGradient></defs>
 </svg>

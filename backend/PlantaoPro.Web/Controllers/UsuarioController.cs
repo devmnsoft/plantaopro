@@ -1,8 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using System.Security.Claims;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -13,6 +12,7 @@ public class UsuarioController : BaseWebController
 
     public async Task<IActionResult> Index()
     {
+        Logger.LogInformation("Acessando configurações do usuário {Email}", User.FindFirstValue(ClaimTypes.Email));
         var model = await LoadSettings();
         return View(model);
     }
@@ -54,7 +54,11 @@ public class UsuarioController : BaseWebController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(UserSettingsViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Revise os campos destacados e tente novamente.";
+            return View(model);
+        }
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
         var response = await client.PutAsJsonAsync("api/usuarios/me", new { model.Nome, model.Email, model.Telefone, model.PreferenciasNotificacao });
@@ -70,7 +74,11 @@ public class UsuarioController : BaseWebController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AlterarSenha(AlterarSenhaViewModel model)
     {
-        if (!ModelState.IsValid) return View(model);
+        if (!ModelState.IsValid)
+        {
+            TempData["Error"] = "Revise os campos da nova senha.";
+            return View(model);
+        }
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
         var response = await client.PostAsJsonAsync("api/usuarios/me/alterar-senha", new { model.SenhaAtual, model.NovaSenha });
@@ -93,28 +101,3 @@ public class UsuarioController : BaseWebController
         };
     }
 }
-
-public class UserSettingsViewModel
-{
-    [Required(ErrorMessage = "Informe o nome.")]
-    public string Nome { get; set; } = string.Empty;
-    [Required, EmailAddress(ErrorMessage = "E-mail inválido.")]
-    public string Email { get; set; } = string.Empty;
-    [Phone(ErrorMessage = "Telefone inválido.")]
-    public string? Telefone { get; set; }
-    [Required]
-    public string PreferenciasNotificacao { get; set; } = "Email";
-}
-
-public class AlterarSenhaViewModel
-{
-    [Required(ErrorMessage = "Informe a senha atual.")]
-    public string SenhaAtual { get; set; } = string.Empty;
-    [Required(ErrorMessage = "Informe a nova senha."), MinLength(8, ErrorMessage = "A nova senha deve ter pelo menos 8 caracteres.")]
-    public string NovaSenha { get; set; } = string.Empty;
-    [Required(ErrorMessage = "Confirme a nova senha."), Compare(nameof(NovaSenha), ErrorMessage = "As senhas não conferem.")]
-    public string ConfirmarSenha { get; set; } = string.Empty;
-}
-
-public record UserSettingsDtoWeb(Guid Id, string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
-public record UserListVMWeb(Guid Id, string Username, string Email, string Role, bool Locked);

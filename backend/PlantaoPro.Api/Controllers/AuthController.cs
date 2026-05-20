@@ -28,7 +28,10 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
-            var r = await _service.LoginAsync(req, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+            var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString());
+            var perfil = r.Data?.Roles is { Length: > 0 } ? string.Join(',', r.Data.Roles) : "sem-perfil";
+            _logger.LogInformation("Login processado Email:{Email} IP:{Ip} Status:{Status} Perfil:{Perfil} DataHoraUtc:{DataHoraUtc}", req.Email, ip, r.StatusCode, perfil, DateTime.UtcNow);
             return StatusCode(r.StatusCode, r);
         }
 

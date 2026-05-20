@@ -122,7 +122,7 @@ namespace PlantaoPro.Web.Controllers
 
             return value switch
             {
-                "ADMIN" => RolesConstants.Administrador,
+                "ADMIN" or "ADMINISTRADOR" => RolesConstants.Administrador,
                 "COORDENADOR" or "COORDENACAO" => RolesConstants.Coordenacao,
                 _ => value
             };

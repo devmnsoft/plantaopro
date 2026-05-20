@@ -17,29 +17,30 @@
     <div class="login-wrapper">
         <section class="login-side">
             <div>
-                <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="img-fluid" style="max-width:280px" />
-                <h1 class="h3 mt-4">Gestão de plantões com padrão enterprise.</h1>
-                <p class="mb-0 opacity-75">Centralize escalas, produtividade médica e indicadores financeiros em uma experiência SaaS moderna e segura.</p>
+                <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="img-fluid" style="max-width:290px" />
+                <h1 class="h3 mt-4">Gestão de plantões com governança e performance.</h1>
+                <p class="mb-0 opacity-75">Uma experiência premium para equipes médicas, coordenação operacional e financeiro trabalharem com previsibilidade.</p>
             </div>
             <div>
-                <div class="login-feature"><i class="bi bi-shield-check"></i><span>Autenticação segura e controle de acesso por perfil.</span></div>
-                <div class="login-feature"><i class="bi bi-graph-up-arrow"></i><span>Indicadores em tempo real para decisão rápida.</span></div>
-                <div class="login-feature"><i class="bi bi-grid-1x2"></i><span>Fluxos padronizados para operação e financeiro.</span></div>
+                <div class="login-feature"><i class="bi bi-shield-lock"></i><span>Segurança com monitoramento de tentativas e bloqueio temporário inteligente.</span></div>
+                <div class="login-feature"><i class="bi bi-calendar2-check"></i><span>Escalas, plantões e disponibilidade em uma visão unificada.</span></div>
+                <div class="login-feature"><i class="bi bi-cash-stack"></i><span>Conciliação e pagamentos com rastreabilidade de ponta a ponta.</span></div>
             </div>
         </section>
 
         <section class="login-card-modern">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="login-logo" />
-                <div><strong>PlantãoPro</strong><div class="text-muted small">Acesse sua conta</div></div>
+                <div><strong>PlantãoPro</strong><div class="text-muted small">Acesse sua conta profissional</div></div>
             </div>
             <form asp-action="Login" method="post" id="loginForm" novalidate>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="alert-validation mb-3"></div>
                 <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" placeholder="voce@empresa.com" autocomplete="email" /><span asp-validation-for="Email" class="text-danger small"></span></div>
                 <div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" placeholder="Sua senha" autocomplete="current-password" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha',this)" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button></div><span asp-validation-for="Senha" class="text-danger small"></span></div>
-                <div class="d-flex justify-content-between align-items-center mb-3"><a asp-action="ForgotPassword" class="small text-decoration-none">Esqueci a senha</a><small class="text-muted">Proteção anti-bloqueio ativo</small></div>
+                <div class="d-flex justify-content-between align-items-center mb-4"><a asp-action="ForgotPassword" class="small text-decoration-none">Esqueci a senha</a><span class="login-state-tag"><i class="bi bi-shield-check"></i>Ambiente protegido</span></div>
                 <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit"><span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none"></span></button>
+                <p class="login-footnote mt-3 mb-0">Ao entrar, você concorda com as políticas de uso e segurança da plataforma.</p>
             </form>
         </section>
     </div>

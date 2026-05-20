@@ -1,34 +1,35 @@
 :root {
-  --pp-bg: #f2f7ff;
+  --pp-bg: #edf3ff;
   --pp-surface: #ffffff;
-  --pp-surface-soft: #f8fbff;
-  --pp-border: #d7e3f5;
+  --pp-surface-soft: #f7faff;
+  --pp-border: #d5e1f3;
   --pp-text: #0f1f35;
   --pp-muted: #5a6f8f;
   --pp-primary: #1d4ed8;
   --pp-primary-2: #2563eb;
-  --pp-accent: #14b8a6;
+  --pp-accent: #0f766e;
   --pp-success: #0f9f62;
   --pp-warning: #b7791f;
   --pp-danger: #d14343;
-  --pp-sidebar: #0b1c33;
-  --pp-sidebar-2: #102649;
+  --pp-sidebar: #091a31;
+  --pp-sidebar-2: #102949;
   --pp-radius: 14px;
   --pp-shadow: 0 12px 26px rgba(15, 30, 58, .08);
 }
 body { font-family: Inter, "Segoe UI", system-ui, sans-serif; color: var(--pp-text); }
-body.app-body { background: var(--pp-bg); }
+body.app-body { background: radial-gradient(circle at 0% -10%, #dbe9ff, transparent 34%), var(--pp-bg); }
 .auth-main { min-height: 100vh; background: radial-gradient(circle at top right, #dceaff 0%, #f4f8ff 52%, #fbfdff 100%); }
 
-.app-shell{display:flex;min-height:100vh}.app-sidebar{width:292px;background:linear-gradient(180deg,var(--pp-sidebar),var(--pp-sidebar-2));color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
+.app-shell{display:flex;min-height:100vh}.app-sidebar{width:300px;background:linear-gradient(180deg,var(--pp-sidebar),var(--pp-sidebar-2));color:#fff;padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto}
 .sidebar-brand{display:flex;align-items:center;gap:12px;padding:8px 8px 14px;margin-bottom:8px;border-bottom:1px solid rgba(255,255,255,.16)}
 .brand-logo{height:34px}.brand-logo-compact{height:38px;width:38px}.brand-subtitle{font-size:.75rem;color:#9cb6da}
 .nav-section-title{font-size:.68rem;color:#9cb6da;letter-spacing:.08em;text-transform:uppercase;font-weight:700;margin:16px 8px 8px}
-.nav-link-app{display:flex;align-items:center;gap:10px;color:#d8e6ff;text-decoration:none;padding:10px 11px;border-radius:10px}
-.nav-link-app.active{background:linear-gradient(90deg,var(--pp-primary),var(--pp-primary-2));color:#fff}.nav-link-app:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-link-app{display:flex;align-items:center;gap:10px;color:#d8e6ff;text-decoration:none;padding:10px 11px;border-radius:12px;transition:.2s ease}
+.nav-link-app.active{background:linear-gradient(90deg,var(--pp-primary),var(--pp-primary-2));color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.2)}.nav-link-app:hover{background:rgba(255,255,255,.08);color:#fff}
 .logout-link{color:#ffcccc}
 
-.app-topbar{height:76px;background:rgba(255,255,255,.92);border-bottom:1px solid var(--pp-border);backdrop-filter:blur(8px);display:flex;justify-content:space-between;align-items:center;padding:12px 22px;position:sticky;top:0;z-index:999}
+.app-topbar{height:78px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--pp-border);backdrop-filter:blur(8px);display:flex;justify-content:space-between;align-items:center;padding:12px 22px;position:sticky;top:0;z-index:999}
+.topbar-actions{display:flex;align-items:center;gap:10px}.btn-icon{height:40px;width:40px;display:grid;place-items:center}
 .app-content{padding:24px}.page-title{font-size:1.1rem;margin:0;font-weight:800}.app-breadcrumb a{color:var(--pp-primary)}
 .user-pill{display:flex;gap:10px;align-items:center;background:#f6faff;border:1px solid var(--pp-border);border-radius:999px;padding:6px 10px}
 .user-avatar{height:32px;width:32px;border-radius:50%;display:grid;place-items:center;background:#e2ecff;color:var(--pp-primary)}
@@ -37,6 +38,7 @@ body.app-body { background: var(--pp-bg); }
 .table-modern thead th,.table thead th{font-size:.74rem;letter-spacing:.04em;text-transform:uppercase;color:#4a6286;background:#f1f7ff}
 .table tbody tr:hover{background:#f7fbff}
 .empty-state{padding:2rem;border:1px dashed #bbd0f0;border-radius:var(--pp-radius);background:var(--pp-surface-soft)}
+.alert{border-radius:12px}
 
 .btn{border-radius:12px;font-weight:600}.btn-primary{background:linear-gradient(90deg,var(--pp-primary),var(--pp-primary-2));border-color:var(--pp-primary)}
 .form-control,.form-select{border-radius:12px;border-color:#c9d8ef}.form-control:focus,.form-select:focus{border-color:#8cb0ef;box-shadow:0 0 0 .2rem rgba(37,99,235,.14)}
@@ -47,10 +49,12 @@ body.app-body { background: var(--pp-bg); }
 .status-cancelado,.status-recusado,.status-inativo{background:#fff1f2;color:var(--pp-danger)}
 
 .login-shell{min-height:100vh;display:grid;place-items:center}
-.login-wrapper{display:grid;grid-template-columns:minmax(320px,1fr) minmax(340px,480px);gap:24px;align-items:stretch;max-width:1060px;width:100%}
-.login-side{background:linear-gradient(160deg,#0f2d56,#133f79 54%,#0f766e);color:#e9f4ff;border-radius:24px;padding:38px;box-shadow:0 22px 45px rgba(7,24,47,.3);display:flex;flex-direction:column;justify-content:space-between}
+.login-wrapper{display:grid;grid-template-columns:minmax(320px,1fr) minmax(340px,480px);gap:24px;align-items:stretch;max-width:1080px;width:100%}
+.login-side{background:linear-gradient(160deg,#0b2a52,#11407a 54%,#0f766e);color:#e9f4ff;border-radius:24px;padding:38px;box-shadow:0 22px 45px rgba(7,24,47,.3);display:flex;flex-direction:column;justify-content:space-between}
 .login-card-modern{background:#fff;border:1px solid var(--pp-border);border-radius:24px;padding:36px;box-shadow:var(--pp-shadow)}
 .login-logo{height:52px}.login-feature{display:flex;gap:10px;align-items:start;margin-top:14px}.login-feature i{color:#8ecbff}
+.login-state-tag{display:inline-flex;align-items:center;gap:6px;background:#f0fdf4;color:#166534;border-radius:999px;padding:4px 10px;font-size:.78rem}
 .alert-validation{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:12px;padding:.75rem}
+.login-footnote{color:#607394;font-size:.8rem}
 .sidebar-overlay{position:fixed;inset:0;background:rgba(10,20,39,.52);opacity:0;pointer-events:none;transition:.2s;z-index:1030}
 @media (max-width:991.98px){.app-sidebar{position:fixed;left:-310px;transition:.25s;z-index:1040}body.sidebar-open .app-sidebar{left:0}body.sidebar-open .sidebar-overlay{opacity:1;pointer-events:auto}.app-content{padding:16px}.login-wrapper{grid-template-columns:1fr}.login-side{display:none}}

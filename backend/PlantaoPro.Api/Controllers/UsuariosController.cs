@@ -44,20 +44,38 @@ public class UsuariosController : ControllerBase
         var uid = GetUserId();
         if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
 
+        var requestDateUtc = DateTime.UtcNow;
+        var requestIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+        var requestEmail = User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+
         await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
-                // Alteração: mapeamento explícito da coluna preferencias_notificacao para o DTO null-safe.
-        var user = await cn.QueryFirstOrDefaultAsync<UsuarioDto>("select id, email, nome, telefone, perfil, preferencias_notificacao as PreferenciasNotificacao from plantaopro.usuarios where id=@id and reg_status='A'", new { id = uid });
+        var user = await cn.QueryFirstOrDefaultAsync<UsuarioDto>(@"
+            select
+                u.id,
+                u.email,
+                u.nome,
+                u.telefone,
+                coalesce(string_agg(distinct p.nome, ','), '') as Perfil,
+                coalesce(u.preferencias_notificacao, '{}') as PreferenciasNotificacao
+            from plantaopro.usuarios u
+            left join plantaopro.usuarios_perfis up on up.usuario_id = u.id and up.reg_status = 'A'
+            left join plantaopro.perfis p on p.id = up.perfil_id and p.reg_status = 'A'
+            where u.id = @id and u.reg_status = 'A'
+            group by u.id, u.email, u.nome, u.telefone, u.preferencias_notificacao", new { id = uid });
 
         if (user is null)
         {
-            _logger.LogWarning("GET /api/usuarios/me não encontrado Email:{Email} Perfil:{Perfil} IP:{Ip} DataHoraUtc:{DataHoraUtc} Status:{Status}", User.FindFirstValue(ClaimTypes.Email) ?? string.Empty, User.FindFirstValue(ClaimTypes.Role) ?? string.Empty, HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, DateTime.UtcNow, 404);
+            _logger.LogWarning("GET /api/usuarios/me não encontrado UsuarioId:{UsuarioId} Email:{Email} IP:{Ip} Status:{Status} DataHoraUtc:{DataHoraUtc}", uid, requestEmail, requestIp, 404, requestDateUtc);
             return NotFound(ApiResponse<object>.Fail("Usuário não encontrado.", 404));
         }
 
-        // Alteração: fallback para JSON vazio quando preferencias_notificacao vier nulo.
-        var dto = user with { PreferenciasNotificacao = string.IsNullOrWhiteSpace(user.PreferenciasNotificacao) ? "{}" : user.PreferenciasNotificacao };
+        var dto = user with
+        {
+            Perfil = string.IsNullOrWhiteSpace(user.Perfil) ? "SEM_PERFIL" : user.Perfil,
+            PreferenciasNotificacao = string.IsNullOrWhiteSpace(user.PreferenciasNotificacao) ? "{}" : user.PreferenciasNotificacao
+        };
 
-        _logger.LogInformation("GET /api/usuarios/me sucesso Email:{Email} Perfil:{Perfil} IP:{Ip} DataHoraUtc:{DataHoraUtc} Status:{Status}", dto.Email, dto.Perfil ?? string.Empty, HttpContext.Connection.RemoteIpAddress?.ToString() ?? string.Empty, DateTime.UtcNow, 200);
+        _logger.LogInformation("GET /api/usuarios/me sucesso UsuarioId:{UsuarioId} Email:{Email} Perfil:{Perfil} IP:{Ip} Status:{Status} DataHoraUtc:{DataHoraUtc}", dto.Id, dto.Email, dto.Perfil, requestIp, 200, requestDateUtc);
         return Ok(ApiResponse<UsuarioDto>.Ok(dto));
     }
 
@@ -123,6 +141,6 @@ public class UsuariosController : ControllerBase
 }
 
 // Alteração: DTO atualizado com Perfil e PreferenciasNotificacao null-safe para o endpoint /api/usuarios/me.
-public record UsuarioDto(Guid Id, string Email, string Nome, string? Telefone, string? Perfil, string PreferenciasNotificacao = "{}");
+public record UsuarioDto(Guid Id, string Email, string Nome, string? Telefone, string Perfil = "SEM_PERFIL", string PreferenciasNotificacao = "{}");
 public record UpdateUserSettingsRequest(string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
 public record AlterarSenhaRequest(string SenhaAtual, string NovaSenha);

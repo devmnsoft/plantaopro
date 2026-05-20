@@ -162,12 +162,32 @@ namespace PlantaoPro.Api.Data
         {
             var jwt = cfg.GetSection("Jwt");
             var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
-            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            claims.AddRange(roles.Select(NormalizeRole).Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => new Claim(ClaimTypes.Role, r!)));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(jwt["Issuer"], jwt["Audience"], claims, expires: DateTime.UtcNow.AddHours(8), signingCredentials: creds));
         }
+
+        private static string? NormalizeRole(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role)) return null;
+            var value = role.Trim().ToUpperInvariant()
+                .Replace("Á", "A").Replace("À", "A").Replace("Â", "A").Replace("Ã", "A")
+                .Replace("É", "E").Replace("Ê", "E")
+                .Replace("Í", "I")
+                .Replace("Ó", "O").Replace("Ô", "O").Replace("Õ", "O")
+                .Replace("Ú", "U")
+                .Replace("Ç", "C");
+
+            return value switch
+            {
+                "ADMIN" or "ADMINISTRADOR" => RolesConstants.Administrador,
+                "COORDENADOR" or "COORDENACAO" => RolesConstants.Coordenacao,
+                _ => value
+            };
+        }
     }
+
     public sealed class MedicoService
     {
         private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<MedicoService> logger; public MedicoService(IConfiguration cfg, IAuditService audit, ILogger<MedicoService> logger)

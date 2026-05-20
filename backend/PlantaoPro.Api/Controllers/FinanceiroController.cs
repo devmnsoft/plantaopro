@@ -44,12 +44,21 @@ namespace PlantaoPro.Api.Controllers
         }
         [Authorize]
         [HttpPost("pagamentos/{id:guid}/cancelar")]
-        public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelPaymentRequest req)
+        public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarPagamentoRequest req)
         {
             var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
             var r = await service.CancelarAsync(id, req.Justificativa, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
+
+        [Authorize]
+        [HttpGet("resumo")]
+        public async Task<IActionResult> Resumo([FromQuery] PagamentoFilterRequest f)
+        {
+            var r = await service.ListarAsync(f);
+            return StatusCode(r.StatusCode, r);
+        }
+
         [Authorize]
         [HttpGet("meus-pagamentos")]
         public async Task<IActionResult> Meus([FromQuery] int page = 1, [FromQuery] int pageSize = 20)

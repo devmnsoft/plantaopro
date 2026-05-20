@@ -10,7 +10,7 @@
 <td>@e.HospitalNome</td><td>@e.EspecialidadeNome</td>
 <td>@e.DataInicio.ToString("dd/MM HH:mm") - @e.DataFim.ToString("dd/MM HH:mm")</td><td>@e.Valor.ToString("C")</td>
 <td><partial name="_StatusBadge" model="e.Status"/></td><td>@(e.Justificativa??"-")</td>
-<td><a asp-action="Details" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary">Detalhes</a></td>
+<td><a asp-action="Details" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary">Detalhes</a> @if(e.Status=="realizado"){<form asp-controller="Financeiro" asp-action="GerarPagamento" method="post" class="d-inline"><input type="hidden" name="escalaId" value="@e.Id" /><button class="btn btn-sm btn-outline-success">Gerar pagamento</button></form>}</td>
 </tr>}
 </tbody>
 </table>

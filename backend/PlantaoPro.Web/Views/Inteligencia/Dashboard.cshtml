@@ -3,15 +3,45 @@
     ViewData["Title"] = "Dashboard Inteligente";
 }
 
-<h2 class="mb-3">Dashboard Executivo Inteligente</h2>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="mb-0">Dashboard Executivo Inteligente</h2>
+    <span class="badge text-bg-info" data-bs-toggle="tooltip" title="Filtros de período, hospital, especialidade e médico ativos">KPI em tempo real</span>
+</div>
+
+<form method="get" class="dashboard-filters mb-3">
+    <div class="filter-item"><label class="form-label">Início</label><input class="form-control" type="date" name="inicio" value="@Model.FiltroAplicado.Inicio.ToString("yyyy-MM-dd")" /></div>
+    <div class="filter-item"><label class="form-label">Fim</label><input class="form-control" type="date" name="fim" value="@Model.FiltroAplicado.Fim.ToString("yyyy-MM-dd")" /></div>
+    <div class="filter-item"><label class="form-label">Hospital</label><input class="form-control" name="hospital" value="@Model.FiltroAplicado.Hospital" placeholder="Hospital A"/></div>
+    <div class="filter-item"><label class="form-label">Especialidade</label><input class="form-control" name="especialidade" value="@Model.FiltroAplicado.Especialidade" placeholder="Clínica"/></div>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+    <button class="btn btn-outline-secondary" type="button" disabled data-bs-toggle="tooltip" title="Em breve"><i class="bi bi-file-earmark-pdf"></i> Exportar PDF/Excel</button>
+</form>
+
 <div class="row g-3 mb-3">
-    <div class="col-md-3"><div class="card"><div class="card-body"><small>Escalas Ativas</small><h4>@Model.Executivo.EscalasAtivas</h4></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><small>Conflitos</small><h4>@Model.Executivo.EscalasComConflito</h4></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><small>Total a Pagar</small><h4>@Model.Executivo.TotalPagar.ToString("C")</h4></div></div></div>
-    <div class="col-md-3"><div class="card"><div class="card-body"><small>Notificações</small><h4>@Model.Executivo.NotificacoesPendentes</h4></div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Escalas Ativas</div><div class="metric-value">@Model.Executivo.EscalasAtivas</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Conflitos</div><div class="metric-value text-danger">@Model.Executivo.EscalasComConflito</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Total a Pagar</div><div class="metric-value">@Model.Executivo.TotalPagar.ToString("C")</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Média h/semana</div><div class="metric-value">@Model.Executivo.MediaHorasSemanaPorMedico</div></div></div>
 </div>
 
 @if (!Model.TotalPorEspecialidade.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", Url.Action("Index", "Escalas"))' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", "Index", "Escalas")' />
+}
+else
+{
+    <div class="data-card p-3 mb-3">
+        <h5>Ranking de prioridade de médicos (menor carga recente)</h5>
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead><tr><th>Médico</th><th>Escalas (7d)</th><th>Horas (7d)</th><th>Score</th></tr></thead>
+                <tbody>
+                @foreach (var item in Model.Executivo.RankingPrioridade)
+                {
+                    <tr><td>@item.MedicoId</td><td>@item.EscalasUltimos7Dias</td><td>@item.HorasUltimos7Dias</td><td><span class="badge text-bg-success">@item.ScorePrioridade</span></td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

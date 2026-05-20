@@ -9,7 +9,7 @@ public interface IInteligenciaNegocioService
     IReadOnlyList<Guid> PriorizarMedicosComMenosEscalas(IEnumerable<EscalaHistoricoDto> historico, DateTime referenciaUtc);
     decimal CalcularPagamentoProporcional(decimal valorHora, DateTime inicioUtc, DateTime fimUtc);
     IEnumerable<AlertaFinanceiroViewModel> GerarAlertasPendencia(IEnumerable<(Guid MedicoId, string Medico, DateTime VencimentoUtc, decimal Valor)> pendencias, int diasLimite);
-    InteligenciaDashboardViewModel ConstruirDashboard(IEnumerable<EscalaHistoricoDto> historico, IEnumerable<NotificacaoEventoDto> auditoria);
+    InteligenciaDashboardViewModel ConstruirDashboard(IEnumerable<EscalaHistoricoDto> historico, IEnumerable<NotificacaoEventoDto> auditoria, DashboardFiltroViewModel? filtro = null);
     KpiMedicoViewModel ConstruirKpiMedico(Guid medicoId, IEnumerable<EscalaHistoricoDto> historico, string especialidadePrincipal);
     IEnumerable<NotificacaoEventoDto> GerarNotificacoesEscala(string nomeMedico, string nomeHospital, DateTime inicioUtc, DateTime fimUtc, bool alteracao);
 }
@@ -56,22 +56,47 @@ public class InteligenciaNegocioService : IInteligenciaNegocioService
             .ToList();
     }
 
-    public InteligenciaDashboardViewModel ConstruirDashboard(IEnumerable<EscalaHistoricoDto> historico, IEnumerable<NotificacaoEventoDto> auditoria)
+    public InteligenciaDashboardViewModel ConstruirDashboard(IEnumerable<EscalaHistoricoDto> historico, IEnumerable<NotificacaoEventoDto> auditoria, DashboardFiltroViewModel? filtro = null)
     {
-        var lista = historico.ToList();
+        var filtroAplicado = filtro ?? new DashboardFiltroViewModel(DateTime.UtcNow.Date.AddDays(-30), DateTime.UtcNow.Date.AddDays(1), null, null, null);
+        var lista = historico
+            .Where(x => x.InicioUtc >= filtroAplicado.Inicio && x.FimUtc <= filtroAplicado.Fim)
+            .Where(x => string.IsNullOrWhiteSpace(filtroAplicado.Hospital) || x.Hospital == filtroAplicado.Hospital)
+            .Where(x => string.IsNullOrWhiteSpace(filtroAplicado.Especialidade) || x.Especialidade == filtroAplicado.Especialidade)
+            .Where(x => !filtroAplicado.MedicoId.HasValue || x.MedicoId == filtroAplicado.MedicoId)
+            .ToList();
+
         var totalPorMedico = lista.GroupBy(x => x.MedicoId.ToString()).ToDictionary(g => g.Key, g => g.Sum(v => v.ValorPago));
         var totalPorHospital = lista.GroupBy(x => x.Hospital).ToDictionary(g => g.Key, g => g.Sum(v => v.ValorPago));
         var totalPorEspecialidade = lista.GroupBy(x => x.Especialidade).ToDictionary(g => g.Key, g => g.Sum(v => v.ValorPago));
+
+        var referencia = DateTime.UtcNow;
+        var ranking = lista.Where(x => x.InicioUtc >= referencia.AddDays(-7))
+            .GroupBy(x => x.MedicoId)
+            .Select(g =>
+            {
+                var horas = Math.Round(g.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours), 1);
+                var score = Math.Round((40m - Math.Min(horas, 40m)) + Math.Max(0, 5 - g.Count()) * 8m, 2);
+                return new MedicoPrioridadeViewModel(g.Key, g.Count(), horas, score);
+            })
+            .OrderByDescending(x => x.ScorePrioridade)
+            .Take(10)
+            .ToList();
+
+        var medias = lista.GroupBy(x => x.MedicoId).Select(g => g.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours));
+        var mediaHoras = medias.Any() ? Math.Round(medias.Average(), 1) : 0;
 
         var executivo = new DashboardExecutivoViewModel(
             EscalasAtivas: lista.Count,
             EscalasComConflito: 0,
             TotalPagar: lista.Sum(x => x.ValorPago),
             NotificacoesPendentes: auditoria.Count(),
+            MediaHorasSemanaPorMedico: mediaHoras,
             AlertasFinanceiros: Array.Empty<AlertaFinanceiroViewModel>(),
-            AlertasOperacionais: new[] { "Monitorar substituições e conflitos diariamente." });
+            AlertasOperacionais: new[] { "Monitorar substituições e conflitos diariamente.", "Sinalizar médicos acima de 40h semanais." },
+            RankingPrioridade: ranking);
 
-        return new InteligenciaDashboardViewModel(executivo, totalPorMedico, totalPorHospital, totalPorEspecialidade, auditoria.OrderByDescending(a => a.DataHoraUtc).Take(20));
+        return new InteligenciaDashboardViewModel(executivo, filtroAplicado, totalPorMedico, totalPorHospital, totalPorEspecialidade, auditoria.OrderByDescending(a => a.DataHoraUtc).Take(20));
     }
 
     public KpiMedicoViewModel ConstruirKpiMedico(Guid medicoId, IEnumerable<EscalaHistoricoDto> historico, string especialidadePrincipal)
@@ -88,11 +113,7 @@ public class InteligenciaNegocioService : IInteligenciaNegocioService
             .Select(g => $"Plantões recomendados no hospital {g.Key} ({g.Count()} ocorrências históricas)")
             .ToList();
 
-        return new KpiMedicoViewModel(
-            EscalasRealizadas: baseMedico.Count,
-            HorasTrabalhadasSemana: Math.Round(ultimosSete.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours), 1),
-            PagamentosReceber: baseMedico.Sum(h => h.ValorPago),
-            Recomendacoes: recomendacoes);
+        return new KpiMedicoViewModel(baseMedico.Count, Math.Round(ultimosSete.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours), 1), baseMedico.Sum(h => h.ValorPago), recomendacoes);
     }
 
     public IEnumerable<NotificacaoEventoDto> GerarNotificacoesEscala(string nomeMedico, string nomeHospital, DateTime inicioUtc, DateTime fimUtc, bool alteracao)

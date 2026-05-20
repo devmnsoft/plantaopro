@@ -1,23 +1,35 @@
 @model DashboardOverviewDto
+@using PlantaoPro.Web.Security
 @{
     ViewData["Title"] = "Dashboard Executivo";
-    var indicadores = Model?.Indicadores;
+    var i = Model?.Indicadores;
     var proximos = Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>();
     var pagamentos = Model?.UltimosPagamentos ?? Enumerable.Empty<PlantaoPro.Web.Models.PagamentoResumoDto>();
-    var notificacoes = Model?.UltimasNotificacoes ?? Enumerable.Empty<PlantaoPro.Web.Models.NotificacaoDto>();
     var porEspecialidade = Model?.PlantoesPorEspecialidade ?? Enumerable.Empty<DashboardChartItem>();
     var porHospital = Model?.PlantoesPorHospital ?? Enumerable.Empty<DashboardChartItem>();
+    var isMed = User.IsMedico();
+    var isFin = User.IsFinanceiro();
 }
-<div class="page-header mb-4"><h2 class="page-title">Dashboard Executivo</h2><p class="page-subtitle">Visão geral da operação clínica, assistencial e financeira.</p></div>
-<div class="metric-grid row g-3 mb-4">
+<div class="page-header mb-4"><h2 class="page-title">Dashboard Executivo</h2><p class="page-subtitle">Painel comercial com visão objetiva da operação.</p></div>
+
+@if (!isMed)
+{
+<div class="row g-3 mb-4 kpi-grid">
 @foreach (var m in new[] {
-("bi-people","Médicos",(indicadores?.TotalMedicos ?? 0).ToString()),("bi-hospital","Hospitais",(indicadores?.TotalHospitais ?? 0).ToString()),("bi-heart-pulse","Especialidades",(indicadores?.TotalEspecialidades ?? 0).ToString()),("bi-calendar2-week","Plantões",(indicadores?.TotalPlantoes ?? 0).ToString()),("bi-unlock","Plantões abertos",(indicadores?.PlantoesAbertos ?? 0).ToString()),("bi-check2-circle","Plantões confirmados",(indicadores?.PlantoesConfirmados ?? 0).ToString()),("bi-patch-check","Plantões realizados",(indicadores?.PlantoesRealizados ?? 0).ToString()),("bi-hourglass-split","Pagamentos pendentes",(indicadores?.PagamentosPendentes ?? 0).ToString()),("bi-cash","Valor pendente",(indicadores?.ValorPendente ?? 0).ToString("C")),("bi-cash-stack","Valor pago no mês",(indicadores?.ValorPagoMes ?? 0).ToString("C")),("bi-bell","Notificações não lidas",(indicadores?.NotificacoesNaoLidas ?? 0).ToString())
-}){<div class="col-6 col-xl-3"><div class="metric-card h-100"><div class="metric-icon"><i class="bi @m.Item1"></i></div><div class="metric-label">@m.Item2</div><div class="metric-value">@m.Item3</div></div></div>}
+("Médicos",(i?.TotalMedicos ?? 0).ToString()),("Hospitais",(i?.TotalHospitais ?? 0).ToString()),("Plantões",(i?.TotalPlantoes ?? 0).ToString()),("Abertos",(i?.PlantoesAbertos ?? 0).ToString()),("Confirmados",(i?.PlantoesConfirmados ?? 0).ToString()),("Pendentes",(i?.PagamentosPendentes ?? 0).ToString()),("Valor pendente",(i?.ValorPendente ?? 0).ToString("C")),("Pago no mês",(i?.ValorPagoMes ?? 0).ToString("C"))
+})
+{<div class="col-6 col-lg-3"><div class="metric-card h-100"><div class="kpi-title">@m.Item1</div><div class="metric-value">@m.Item2</div></div></div>}
 </div>
+}
+
+@if (isMed)
+{
+<div class="data-card card mb-3"><div class="card-header"><strong>Minha Agenda</strong></div><div class="card-body"><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(8)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}} else {<tr><td colspan="4"><div class="empty-state">Sem agenda programada.</div></td></tr>}</tbody></table></div></div></div>
+}
+else
+{
 <div class="row g-3">
-<div class="col-12 col-xxl-6"><div class="data-card card"><div class="card-header"><strong>Próximos plantões</strong></div><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(6)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}}else{<tr><td colspan="4"><div class="empty-state text-center">Nenhum plantão programado.</div></td></tr>}</tbody></table></div></div></div>
-<div class="col-12 col-xxl-6"><div class="data-card card"><div class="card-header"><strong>Últimos pagamentos</strong></div><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Médico</th><th>Hospital</th><th>Valor</th><th>Status</th></tr></thead><tbody>@if(pagamentos.Any()){foreach(var pg in pagamentos.Take(6)){<tr><td>@pg.MedicoNome</td><td>@pg.HospitalNome</td><td>@pg.ValorPrevisto.ToString("C")</td><td><partial name="_StatusBadge" model="pg.Status" /></td></tr>}}else{<tr><td colspan="4"><div class="empty-state text-center">Nenhum pagamento recente.</div></td></tr>}</tbody></table></div></div></div>
-<div class="col-12 col-xxl-6"><div class="data-card card"><div class="card-header"><strong>Últimas notificações</strong></div><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Título</th><th>Tipo</th><th>Data</th></tr></thead><tbody>@if(notificacoes.Any()){foreach(var n in notificacoes.Take(6)){<tr><td>@n.Titulo</td><td>@n.Tipo</td><td>@n.RegDate.ToString("dd/MM/yyyy HH:mm")</td></tr>}}else{<tr><td colspan="3"><div class="empty-state text-center">Nenhuma notificação recente.</div></td></tr>}</tbody></table></div></div></div>
-<div class="col-12 col-xxl-6"><div class="data-card card h-100"><div class="card-header"><strong>Plantões por especialidade</strong></div><div class="card-body">@if(porEspecialidade.Any()){<ul class="list-group list-group-flush">@foreach(var it in porEspecialidade.Take(8)){<li class="list-group-item d-flex justify-content-between"><span>@it.Label</span><span class="badge bg-light text-dark">@it.Valor</span></li>}</ul>}else{<div class="empty-state text-center">Sem dados de especialidades.</div>}</div></div></div>
-<div class="col-12"><div class="data-card card"><div class="card-header"><strong>Plantões por hospital</strong></div><div class="card-body">@if(porHospital.Any()){<div class="row g-2">@foreach(var h in porHospital.Take(12)){<div class="col-md-4"><div class="d-flex justify-content-between border rounded p-2"><span>@h.Label</span><span class="badge bg-light text-dark">@h.Valor</span></div></div>}</div>}else{<div class="empty-state text-center">Sem dados de hospital.</div>}</div></div></div>
+<div class="col-12 col-xxl-7"><div class="data-card card h-100"><div class="card-header"><strong>Próximos plantões</strong></div><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(6)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}} else {<tr><td colspan="4"><div class="empty-state">Nenhum plantão programado.</div></td></tr>}</tbody></table></div></div></div>
+<div class="col-12 col-xxl-5"><div class="data-card card h-100"><div class="card-header"><strong>@(isFin ? "KPIs Financeiros" : "Distribuição por especialidade")</strong></div><div class="card-body">@if(isFin){<ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between"><span>Pagamentos pendentes</span><strong>@(i?.PagamentosPendentes ?? 0)</strong></li><li class="list-group-item d-flex justify-content-between"><span>Valor pendente</span><strong>@(i?.ValorPendente ?? 0).ToString("C")</strong></li><li class="list-group-item d-flex justify-content-between"><span>Pago no mês</span><strong>@(i?.ValorPagoMes ?? 0).ToString("C")</strong></li></ul>} else if(porEspecialidade.Any()){foreach(var it in porEspecialidade.Take(8)){<div class="mb-2"><div class="d-flex justify-content-between"><span>@it.Label</span><span>@it.Valor</span></div><div class="progress" role="progressbar"><div class="progress-bar" style="width:@(Math.Min(it.Valor*10,100))%"></div></div></div>}} else {<div class="empty-state">Sem dados no período.</div>}</div></div></div>
 </div>
+}

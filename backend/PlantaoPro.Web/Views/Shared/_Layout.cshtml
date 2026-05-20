@@ -103,7 +103,7 @@
             </nav>
         </aside>
 
-        <section class="app-main">
+        <section class="app-main" data-app-shell="true">
             <header class="app-topbar">
                 <div class="topbar-left">
                     <button class="btn btn-light d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
@@ -119,8 +119,8 @@
                 </div>
 
                 <div class="topbar-actions">
-                    <a class="btn btn-light" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a>
-                    <button class="btn btn-light" type="button" disabled data-bs-toggle="tooltip" title="Em breve"><i class="bi bi-lightning-charge"></i></button>
+                    <a class="btn btn-light btn-icon" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a>
+                    <button class="btn btn-light btn-icon" type="button" disabled data-bs-toggle="tooltip" title="Automação (em breve)"><i class="bi bi-lightning-charge"></i></button>
                     <div class="user-pill">
                         <div class="user-avatar"><i class="bi bi-person"></i></div>
                         <div class="user-info"><span class="user-name">@User.Identity?.Name</span><small><a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">Configurações</a></small></div>

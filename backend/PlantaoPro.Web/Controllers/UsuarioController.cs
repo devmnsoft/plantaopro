@@ -17,6 +17,36 @@ public class UsuarioController : BaseWebController
         return View(model);
     }
 
+    [Authorize(Roles = PlantaoPro.Web.Security.RolesConstants.Administrador)]
+    [HttpGet]
+    public async Task<IActionResult> Admin(string? search = null, string? status = null)
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var response = await client.GetFromJsonAsync<ApiResponse<List<UserListVMWeb>>>("api/usuarios");
+        var users = response?.Data ?? new List<UserListVMWeb>();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            users = users.Where(x => x.Username.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Email.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (!string.IsNullOrWhiteSpace(status))
+            users = users.Where(x => status == "blocked" ? x.Locked : !x.Locked).ToList();
+
+        return View(users);
+    }
+
+    [Authorize(Roles = PlantaoPro.Web.Security.RolesConstants.Administrador)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Unlock(Guid id)
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var response = await client.PostAsync($"api/usuarios/unlock/{id}", null);
+        var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = result?.Message ?? "Não foi possível desbloquear o usuário.";
+        return RedirectToAction(nameof(Admin));
+    }
+
     [HttpGet]
     public async Task<IActionResult> Edit() => View(await LoadSettings());
 
@@ -87,3 +117,4 @@ public class AlterarSenhaViewModel
 }
 
 public record UserSettingsDtoWeb(Guid Id, string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
+public record UserListVMWeb(Guid Id, string Username, string Email, string Role, bool Locked);

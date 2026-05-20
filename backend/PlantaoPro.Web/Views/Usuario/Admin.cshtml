@@ -1,0 +1,40 @@
+@model IEnumerable<PlantaoPro.Web.Controllers.UserListVMWeb>
+@{ ViewData["Title"] = "Gestão de Usuários"; }
+<div class="data-card p-4">
+    <h4 class="mb-3">Gestão de Usuários</h4>
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-6"><input name="search" class="form-control" placeholder="Pesquisar por nome ou e-mail" value="@Context.Request.Query["search"]" /></div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">Todos</option>
+                <option value="blocked" selected="@(Context.Request.Query["status"]=="blocked")">Bloqueados</option>
+                <option value="active" selected="@(Context.Request.Query["status"]=="active")">Ativos</option>
+            </select>
+        </div>
+        <div class="col-md-3"><button class="btn btn-primary w-100">Filtrar</button></div>
+    </form>
+    <table class="table align-middle">
+        <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Username</td>
+                <td>@item.Email</td>
+                <td>@item.Role</td>
+                <td>@(item.Locked ? "Bloqueado" : "Ativo")</td>
+                <td>
+                    @if (item.Locked)
+                    {
+                        <form asp-action="Unlock" method="post" onsubmit="return confirm('Confirmar desbloqueio do usuário?');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <button class="btn btn-sm btn-warning">Desbloquear</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

@@ -85,6 +85,7 @@ builder.Services.AddScoped<EscalaService>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
+builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 
 var app = builder.Build();

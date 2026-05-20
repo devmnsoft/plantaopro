@@ -224,6 +224,66 @@ namespace PlantaoPro.Api.Data
             return ApiResponse<MedicoDto>.Ok(new(id, req.Nome, req.Cpf, req.Crm, req.UfCrm, req.Email, req.Telefone, req.Cidade, req.Estado, req.EspecialidadeId, "A"));
         }
     }
+
+    public record UserListVM(Guid Id, string Username, string Email, string Role, bool Locked);
+
+    public sealed class UserService
+    {
+        private readonly IConfiguration cfg;
+        private readonly IAuditService audit;
+
+        public UserService(IConfiguration cfg, IAuditService audit)
+        {
+            this.cfg = cfg;
+            this.audit = audit;
+        }
+
+        public async Task<IEnumerable<UserListVM>> ListAsync()
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            return await cn.QueryAsync<UserListVM>(
+                @"select
+                    u.id as Id,
+                    u.nome as Username,
+                    u.email as Email,
+                    coalesce(string_agg(distinct p.nome, ', '), 'SEM_PERFIL') as Role,
+                    exists(
+                        select 1 from plantaopro.login_tentativas lt
+                        where lt.usuario_id = u.id
+                          and lt.sucesso = false
+                          and lt.bloqueado_ate is not null
+                          and lt.bloqueado_ate > now()
+                    ) as Locked
+                  from plantaopro.usuarios u
+                  left join plantaopro.usuarios_perfis up on up.usuario_id = u.id and up.reg_status = 'A'
+                  left join plantaopro.perfis p on p.id = up.perfil_id and p.reg_status = 'A'
+                  where u.reg_status = 'A'
+                  group by u.id, u.nome, u.email
+                  order by u.nome");
+        }
+
+        public async Task<bool> UnlockUserAsync(Guid userId, Guid adminId, string? ipAddress, string? userAgent)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+
+            var exists = await cn.ExecuteScalarAsync<int>(
+                "select count(1) from plantaopro.usuarios where id=@id and reg_status='A'",
+                new { id = userId }, tx);
+            if (exists == 0) return false;
+
+            await cn.ExecuteAsync(
+                @"update plantaopro.login_tentativas
+                  set bloqueado_ate = null
+                  where usuario_id = @id and sucesso = false",
+                new { id = userId }, tx);
+
+            await tx.CommitAsync();
+            await audit.LogAsync(adminId, "UNLOCK_USER", "APP_USER", userId, "Usuário desbloqueado por administrador", ip: ipAddress, userAgent: userAgent);
+            return true;
+        }
+    }
     public sealed class HospitalService
     {
         private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<HospitalService> logger; public HospitalService(IConfiguration cfg, IAuditService audit, ILogger<HospitalService> logger)

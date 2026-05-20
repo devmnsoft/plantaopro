@@ -15,11 +15,21 @@ public class UsuariosController : ControllerBase
 {
     private readonly IConfiguration _configuration;
     private readonly IAuditService _auditService;
+    private readonly UserService _userService;
 
-    public UsuariosController(IConfiguration configuration, IAuditService auditService)
+    public UsuariosController(IConfiguration configuration, IAuditService auditService, UserService userService)
     {
         _configuration = configuration;
         _auditService = auditService;
+        _userService = userService;
+    }
+
+    [HttpGet]
+    [Authorize(Roles = RolesConstants.Administrador)]
+    public async Task<IActionResult> ListUsers()
+    {
+        var users = await _userService.ListAsync();
+        return Ok(ApiResponse<IEnumerable<UserListVM>>.Ok(users));
     }
 
     [HttpGet("me")]
@@ -59,6 +69,24 @@ public class UsuariosController : ControllerBase
         await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@h,reg_update=now() where id=@id", new { h = newHash, id = uid });
         await _auditService.LogAsync(uid, "USUARIO_ALTERAR_SENHA", "usuarios", uid, "Alteração de senha do usuário", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
         return Ok(ApiResponse<object>.Ok(new { }, "Senha alterada com sucesso."));
+    }
+
+    [HttpPost("unlock/{id:guid}")]
+    [Authorize(Roles = RolesConstants.Administrador + ",ADMINISTRATOR")]
+    public async Task<IActionResult> Unlock(Guid id)
+    {
+        var adminId = GetUserId();
+        if (adminId == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
+
+        var isAdministrator =
+            User.IsInRole(RolesConstants.Administrador) ||
+            User.IsInRole("ADMINISTRATOR");
+
+        if (!isAdministrator) throw new UnauthorizedAccessException("Somente administradores podem desbloquear usuários.");
+
+        var ok = await _userService.UnlockUserAsync(id, adminId, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+        if (!ok) return NotFound(ApiResponse<object>.Fail("Usuário não encontrado.", 404));
+        return Ok(ApiResponse<object>.Ok(new { message = "Usuário desbloqueado com sucesso" }, "Usuário desbloqueado com sucesso"));
     }
 
     private Guid GetUserId()

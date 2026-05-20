@@ -709,6 +709,15 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (conflito > 0)
                     return ApiResponse<string>.Fail("Conflito de horário para médico");
+                var horasSemana = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (pl.data_fim-pl.data_inicio))/3600.0),0)
+                    from plantaopro.escalas e
+                    join plantaopro.plantoes pl on pl.id=e.plantao_id
+                    where e.medico_id=@m and e.reg_status='A' and e.status in ('solicitado','confirmado','realizado')
+                      and date_trunc('week',pl.data_inicio)=date_trunc('week',@di)", new { m = medicoId, di = p.Di }, tx);
+                var horasPlantao = (decimal)(p.Df - p.Di).TotalHours;
+                const decimal limiteSemanalHoras = 60m;
+                if ((horasSemana + horasPlantao) > limiteSemanalHoras)
+                    return ApiResponse<string>.Fail($"Limite semanal de {limiteSemanalHoras}h excedido para o médico.");
                 var escalaId = Guid.NewGuid();
                 await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date) values(@id,@p,@m,'solicitado',null,@u,'A',now())", new
                 {
@@ -940,7 +949,7 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (ex > 0)
                     return ApiResponse<Guid>.Fail("Pagamento já gerado para a escala");
-                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A'", new
+                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, DateTime DataInicio, DateTime DataFim, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,p.data_inicio,p.data_fim,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A'", new
                 {
                     id = req.EscalaId
                 }, tx);
@@ -948,13 +957,15 @@ namespace PlantaoPro.Api.Data
                     return ApiResponse<Guid>.Fail("Somente escala realizada pode gerar pagamento");
                 var id = Guid.NewGuid();
                 var dataPrevista = req.DataPrevista ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+                var horas = Math.Max(1m, (decimal)(row.DataFim - row.DataInicio).TotalHours);
+                var valorProporcional = Math.Round((row.Valor / 12m) * horas, 2);
                 await cn.ExecuteAsync("insert into plantaopro.pagamentos(id,escala_id,medico_id,plantao_id,valor_previsto,valor_pago,status,data_prevista,observacoes,reg_date,reg_status,created_by) values(@id,@e,@m,@p,@v,null,'pendente',@d,@o,now(),'A',@u)", new
                 {
                     id,
                     e = row.EscalaId,
                     m = row.MedicoId,
                     p = row.PlantaoId,
-                    v = row.Valor,
+                    v = valorProporcional,
                     d = dataPrevista,
                     o = req.Observacoes,
                     u = userId
@@ -1233,6 +1244,26 @@ namespace PlantaoPro.Api.Data
 exists(select 1 from plantaopro.escalas e where e.plantao_id=p.id and e.medico_id=@mid and e.reg_status='A') as JaSolicitado,
 exists(select 1 from plantaopro.escalas e2 join plantaopro.plantoes p2 on p2.id=e2.plantao_id where e2.medico_id=@mid and e2.reg_status='A' and e2.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p2.data_inicio,p2.data_fim)) as TemConflitoHorario
 from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off",new{mid=med.Id,s,off});return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items,p,s,total));}
+        public async Task<ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>> PlantoesRecomendadosAsync(Guid uid,int top=5)
+        {
+            await using var cn=Cn();
+            var med=await GetMedicoAsync(cn,uid);
+            if(med.Id is null) return ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Fail("Médico não encontrado para o usuário autenticado.",404);
+            var items = await cn.QueryAsync<MedicoPlantaoRecomendacaoDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,
+                (case when p.especialidade_id=(select especialidade_id from plantaopro.medicos where id=@mid) then 60 else 20 end
+                + greatest(0,30 - coalesce((select count(1) from plantaopro.escalas e2 where e2.medico_id=@mid and e2.reg_date>now()-interval '30 days' and e2.reg_status='A'),0)*3)
+                + case when exists(select 1 from plantaopro.escalas e3 join plantaopro.plantoes p3 on p3.id=e3.plantao_id where e3.medico_id=@mid and e3.reg_status='A' and e3.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p3.data_inicio,p3.data_fim)) then -100 else 10 end
+                )::decimal as Score,
+                (case when p.especialidade_id=(select especialidade_id from plantaopro.medicos where id=@mid) then 'Compatível com especialidade' else 'Boa oportunidade por baixa carga recente' end) as MotivoRecomendacao
+                from plantaopro.plantoes p
+                join plantaopro.hospitais h on h.id=p.hospital_id
+                join plantaopro.especialidades esp on esp.id=p.especialidade_id
+                where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0
+                order by Score desc,p.data_inicio asc
+                limit @top", new { mid = med.Id, top = Math.Clamp(top,1,20)});
+            return ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Ok(items);
+        }
+
         public async Task<ApiResponse<PagedResult<MedicoEscalaDto>>> MinhasEscalasAsync(Guid uid, int page, int pageSize)
         {
             await using var cn = Cn();

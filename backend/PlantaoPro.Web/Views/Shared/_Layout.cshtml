@@ -69,13 +69,12 @@
                 }
 
                 <div class="nav-section-title">Financeiro</div>
-                @if (isAdmin || isFin)
+                @if (isAdmin || isFin || isMed)
                 {
-                    <a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></a>
-                }
-                @if (isMed)
-                {
-                    <a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus Pagamentos</span></a>
+                    <a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>@((isAdmin || isFin) ? "Pagamentos" : "Meus Pagamentos")</span>
+                    </a>
                 }
 
                 <div class="nav-section-title">Gestão</div>

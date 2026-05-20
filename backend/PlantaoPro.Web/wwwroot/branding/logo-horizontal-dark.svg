@@ -1,8 +1,10 @@
-<svg width="560" height="130" viewBox="0 0 560 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="88" height="88" rx="24" fill="url(#g)"/>
-  <path d="M25 45H38.5V31.5H49.5V45H63V56H49.5V69.5H38.5V56H25V45Z" fill="white"/>
-  <circle cx="68" cy="68" r="9" fill="#9BE7D6"/>
-  <text x="108" y="55" fill="#0D1E3A" font-family="Inter, Segoe UI, sans-serif" font-size="44" font-weight="800">PlantãoPro</text>
-  <text x="109" y="85" fill="#49638A" font-family="Inter, Segoe UI, sans-serif" font-size="21" font-weight="500">Escalas médicas com inteligência operacional</text>
-  <defs><linearGradient id="g" x1="8" y1="4" x2="78" y2="83" gradientUnits="userSpaceOnUse"><stop stop-color="#165DFF"/><stop offset="1" stop-color="#0E8E77"/></linearGradient></defs>
+<svg width="720" height="172" viewBox="0 0 720 172" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="172" rx="18" fill="none"/>
+  <g transform="translate(18,12)">
+    <rect x="0" y="0" width="148" height="148" rx="36" fill="#1F73F1"/>
+    <path d="M74 27c-25 0-45 20-45 45 0 31 31 49 43 69a2.8 2.8 0 0 0 4 0c12-20 43-38 43-69 0-25-20-45-45-45Z" fill="#EAF4FF"/>
+    <path d="M73 50v20H53v16h20v20h16V86h20V70H89V50H73Z" fill="#0B2A52"/>
+  </g>
+  <text x="192" y="92" fill="#0E1D33" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="62" font-weight="800">PlantãoPro</text>
+  <text x="196" y="130" fill="#51698D" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="500">Escalas médicas • Operação • Financeiro</text>
 </svg>

@@ -61,3 +61,20 @@ CREATE INDEX IF NOT EXISTS ix_historico_alteracoes_registro ON historico_alterac
 
 ALTER TABLE IF EXISTS pagamentos
     ADD CONSTRAINT IF NOT EXISTS ck_pagamentos_valores_positivos CHECK (valor_previsto >= 0 AND (valor_pago IS NULL OR valor_pago >= 0));
+
+
+-- Regras premium SaaS: score de prioridade, limites semanais, notificacoes e constraints de pagamentos
+alter table if exists plantaopro.escalas
+    add column if not exists escala_prioridade_score numeric(10,2) not null default 0,
+    add column if not exists horas_previstas numeric(10,2) not null default 0;
+
+alter table if exists plantaopro.medicos
+    add column if not exists limite_horas_semanais numeric(10,2) not null default 60;
+
+alter table if exists plantaopro.pagamentos
+    add constraint ck_pagamentos_valores_validos check (coalesce(valor_pago,0) >= 0 and valor_previsto >= 0),
+    add constraint ck_pagamentos_status_validos check (status in ('PENDENTE','PAGO','CANCELADO'));
+
+create index if not exists idx_escalas_medico_periodo on plantaopro.escalas(medico_id, data_inicio, data_fim);
+create index if not exists idx_pagamentos_status_data on plantaopro.pagamentos(status, data_prevista);
+create index if not exists idx_notificacoes_usuario_lida on plantaopro.notificacoes(usuario_id, lida);

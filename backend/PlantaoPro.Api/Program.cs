@@ -15,6 +15,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpLogging(_ => { });
 builder.Services.AddSwaggerGen(c =>
 {
+    c.OperationFilter<DefaultApiResponseOperationFilter>();
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "PlantaoPro API",

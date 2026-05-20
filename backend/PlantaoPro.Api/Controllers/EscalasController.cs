@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api;
 
 namespace PlantaoPro.Api.Controllers
 {
@@ -15,21 +16,21 @@ namespace PlantaoPro.Api.Controllers
             this.service = service;
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.EscalasGestao)]
         [HttpGet("escalas")]
         public async Task<IActionResult> Listar([FromQuery] EscalaFilterRequest f)
         {
             var r = await service.ListarAsync(f);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.EscalasGestao)]
         [HttpGet("escalas/{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
             var r = await service.GetByIdAsync(id);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Medico)]
         [HttpGet("medicos/me/plantoes")]
         public async Task<IActionResult> Meus([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
@@ -38,7 +39,7 @@ namespace PlantaoPro.Api.Controllers
             return StatusCode(r.StatusCode, r);
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Medico)]
         [HttpPost("plantoes/{id:guid}/aceitar")]
         public async Task<IActionResult> Aceitar(Guid id, [FromBody] AcceptPlantaoRequest req)
         {
@@ -46,7 +47,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.AceitarAsync(id, req.MedicoId, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Medico)]
         [HttpPost("plantoes/{id:guid}/solicitar")]
         public async Task<IActionResult> Solicitar(Guid id, [FromBody] SolicitarPlantaoRequest req)
         {
@@ -55,7 +56,7 @@ namespace PlantaoPro.Api.Controllers
             return StatusCode(r.StatusCode, r);
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.EscalasGestao)]
         [HttpPost("escalas/{id:guid}/confirmar")]
         public async Task<IActionResult> Confirmar(Guid id, [FromBody] ConfirmEscalaRequest req)
         {

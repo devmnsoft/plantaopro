@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api;
 
 namespace PlantaoPro.Api.Controllers
 {
@@ -13,19 +14,21 @@ namespace PlantaoPro.Api.Controllers
         {
             this.service = service;
         }
+        [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpGet]
         public async Task<IActionResult> Get()
         {
             var r = await service.GetAllAsync();
             return StatusCode(r.StatusCode, r);
         }
+        [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var r = await service.GetByIdAsync(id);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpPost]
         public async Task<IActionResult> Create(CreateHospitalRequest req)
         {
@@ -33,7 +36,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.CreateAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpPut("{id:guid}")]
         public async Task<IActionResult> Update(Guid id, UpdateHospitalRequest req)
         {
@@ -41,7 +44,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.UpdateAsync(id, req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {

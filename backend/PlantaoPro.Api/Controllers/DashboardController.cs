@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
+using PlantaoPro.Api;
 
 namespace PlantaoPro.Api.Controllers
 {
@@ -12,7 +13,7 @@ namespace PlantaoPro.Api.Controllers
         {
             this.service = service;
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Dashboard)]
         [HttpGet("dashboard")]
         public async Task<IActionResult> Dashboard()
         {
@@ -20,7 +21,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.GetAsync(uid);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Dashboard)]
         [HttpGet("mobile/home")]
         public async Task<IActionResult> MobileHome()
         {

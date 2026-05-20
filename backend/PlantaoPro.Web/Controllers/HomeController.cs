@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
+using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers
 {
@@ -109,6 +110,10 @@ namespace PlantaoPro.Web.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        public IActionResult AccessDenied() => View();
+
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
 
         [HttpPost]
@@ -169,6 +174,7 @@ namespace PlantaoPro.Web.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
+            if (User.IsMedico()) return RedirectToAction("Index", "MinhaAgenda");
             var fallback = CriarDashboardVazio();
 
             try

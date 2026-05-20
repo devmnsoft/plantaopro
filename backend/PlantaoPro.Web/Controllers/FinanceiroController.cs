@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
+[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Financeiro)]
 public class FinanceiroController : BaseWebController
 {
     public FinanceiroController(IHttpClientFactory f, ILogger<FinanceiroController> l) : base(f, l) { }

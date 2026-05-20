@@ -72,12 +72,14 @@ namespace PlantaoPro.Web.Controllers
                 var errorMessage = response.StatusCode switch
                 {
                     HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
+                    (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
                     HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "E-mail ou senha inválidos.",
                     HttpStatusCode.InternalServerError => "Erro interno ao autenticar. Consulte os logs.",
                     _ => "Erro ao autenticar. Tente novamente."
                 };
 
                 TempData["Error"] = errorMessage;
+                if ((HttpStatusCode)423 == response.StatusCode) TempData["Warning"] = errorMessage;
                 ModelState.AddModelError(string.Empty, errorMessage);
                 _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, false, DateTime.UtcNow);
                 return View(model);

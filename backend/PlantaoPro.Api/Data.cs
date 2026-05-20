@@ -36,6 +36,8 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class AuthService
     {
+        private const int MaxTentativasFalhas = 5;
+        private const int BloqueioMinutos = 15;
         private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger)
         {
             this.cfg = cfg;
@@ -49,25 +51,41 @@ namespace PlantaoPro.Api.Data
             try
             {
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await GarantirTabelaTentativasAsync(cn);
                 var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
                     Email = normalizedEmail
                 });
                 if (user is null)
                 {
+                    await RegistrarTentativaAsync(cn, null, normalizedEmail, ip, ua, false, "USER_NOT_FOUND");
                     logger.LogWarning("Login negado: usuário não encontrado Email:{Email} IP:{Ip}", normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                }
+                var usuarioId = (Guid)user.id;
+                var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
+                    @"select bloqueado_ate from plantaopro.login_tentativas
+                      where usuario_id=@usuarioId and sucesso=false and bloqueado_ate is not null
+                      order by reg_date desc limit 1", new { usuarioId });
+                if (bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
+                {
+                    var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
+                    logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
+                    return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
                 var regStatus = ((string?)user.reg_status) ?? "";
                 if (!string.Equals(regStatus, "A", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "USER_INACTIVE");
+                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário inativo. Contate o administrador.", 403);
                 }
                 var senhaHash = (string?)user.senha_hash;
                 if (string.IsNullOrWhiteSpace(senhaHash))
                 {
-                    logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "PASSWORD_HASH_EMPTY");
+                    logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
                 bool senhaValida = false;
@@ -94,8 +112,17 @@ namespace PlantaoPro.Api.Data
                 }
                 if (!senhaValida)
                 {
-                    logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    var tentativasFalhas = await cn.QueryFirstAsync<int>(
+                        @"select count(*) from plantaopro.login_tentativas
+                          where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - interval '24 hours'",
+                        new { usuarioId });
+                    var proximaTentativa = tentativasFalhas + 1;
+                    DateTime? novoBloqueio = proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
+                    logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Tentativa:{Tentativa} Email:{Email} IP:{Ip}", usuarioId, proximaTentativa, normalizedEmail, ip);
+                    if (novoBloqueio.HasValue)
+                        return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
+                    return ApiResponse<LoginResponse>.Fail($"E-mail ou senha inválidos. Tentativa {proximaTentativa}/{MaxTentativasFalhas}.", 401);
                 }
                 var roles = (await cn.QueryAsync<string>("select p.nome from plantaopro.perfis p join plantaopro.usuarios_perfis up on up.perfil_id=p.id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A'", new
                 {
@@ -107,13 +134,30 @@ namespace PlantaoPro.Api.Data
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
                 var token = GenerateToken((Guid)user.id, (string)user.email, roles);
-                await audit.LogAsync((Guid)user.id, "LOGIN", "usuarios", (Guid)user.id, "Login", ip: ip, userAgent: ua);
-                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", (Guid)user.id, normalizedEmail, string.Join(',', roles), ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), (Guid)user.id, (string)user.nome, roles), "Login realizado com sucesso.");
+                await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
+                await audit.LogAsync(usuarioId, "LOGIN", "usuarios", usuarioId, "Login", ip: ip, userAgent: ua);
+                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
+        private static Task GarantirTabelaTentativasAsync(NpgsqlConnection cn) =>
+            cn.ExecuteAsync(@"create table if not exists plantaopro.login_tentativas(
+                id uuid primary key default gen_random_uuid(),
+                usuario_id uuid null,
+                email text not null,
+                ip text null,
+                user_agent text null,
+                sucesso boolean not null,
+                motivo text not null,
+                bloqueado_ate timestamp null,
+                reg_date timestamp not null default now()
+            )");
+        private static Task RegistrarTentativaAsync(NpgsqlConnection cn, Guid? usuarioId, string email, string? ip, string? ua, bool sucesso, string motivo, DateTime? bloqueadoAte = null) =>
+            cn.ExecuteAsync(@"insert into plantaopro.login_tentativas(usuario_id,email,ip,user_agent,sucesso,motivo,bloqueado_ate,reg_date)
+                values(@usuarioId,@email,@ip,@ua,@sucesso,@motivo,@bloqueadoAte,now())",
+                new { usuarioId, email, ip, ua, sucesso, motivo, bloqueadoAte });
         string GenerateToken(Guid uid, string email, string[] roles)
         {
             var jwt = cfg.GetSection("Jwt");

@@ -44,7 +44,11 @@ namespace PlantaoPro.Web.Models
     public record DashboardDto(long TotalMedicos, long TotalHospitais, long TotalEspecialidades, long TotalPlantoes, long PlantoesAbertos, long PlantoesConfirmados, long PlantoesRealizados, long PlantoesCancelados, long PagamentosPendentes, long PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, long NotificacoesNaoLidas);
     public record DashboardChartItem(string Label, decimal Valor);
     public record PlantaoResumoDto(Guid Id, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string? Observacoes);
-    public record PagamentoResumoDto(Guid Id, string MedicoNome, string MedicoCrm, string HospitalNome, string EspecialidadeNome, DateTime DataPlantao, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? ChavePix, string? Observacoes);
+    public record PagamentoResumoDto(Guid Id, Guid EscalaId, Guid MedicoId, Guid PlantaoId, string MedicoNome, string MedicoCrm, string HospitalNome, string EspecialidadeNome, DateTime DataPlantao, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? ChavePix, string? Observacoes);
+    public record PagamentoDetailsDto(Guid Id, Guid EscalaId, Guid MedicoId, Guid PlantaoId, string MedicoNome, string MedicoCrm, string MedicoUfCrm, string MedicoEmail, string MedicoTelefone, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicioPlantao, DateTime DataFimPlantao, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? ChavePix, string? Observacoes, DateTime RegDate);
+    public record GerarPagamentoRequest(Guid EscalaId, DateOnly? DataPrevista, string? Observacoes);
+    public record ConfirmarPagamentoRequest(decimal ValorPago, DateOnly DataPagamento, string FormaPagamento, string? Observacoes);
+    public record CancelarPagamentoRequest(string Justificativa);
     public record NotificacaoDto(Guid Id, string Titulo, string Mensagem, string Tipo, bool Lida, DateTime RegDate);
 
     public record DashboardOverviewDto(

@@ -1,5 +1,10 @@
-@model Guid
-<h1 class="h4">Detalhes do Pagamento</h1>
-<p class="text-muted">Visualização financeira detalhada estará disponível em breve.</p>
-<p><small class="text-muted">Informação técnica: @Model</small></p>
-<a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.PagamentoDetailsDto>
+@{ var pg = Model.Data; ViewData["Title"]="Detalhes do pagamento"; }
+@if (pg is null){<div class="alert alert-warning">Pagamento não encontrado.</div> <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a> return;}
+<h2>Pagamento</h2>
+<div class="card p-3 mb-3"><div><strong>Médico:</strong> @pg.MedicoNome (CRM @pg.MedicoCrm/@pg.MedicoUfCrm)</div><div><strong>Contato:</strong> @pg.MedicoEmail | @pg.MedicoTelefone</div><div><strong>Hospital:</strong> @pg.HospitalNome - @pg.HospitalCidade/@pg.HospitalEstado</div><div><strong>Especialidade:</strong> @pg.EspecialidadeNome</div><div><strong>Plantão:</strong> @pg.DataInicioPlantao.ToString("dd/MM/yyyy HH:mm") - @pg.DataFimPlantao.ToString("dd/MM/yyyy HH:mm")</div><div><strong>Status:</strong> <partial name="_StatusBadge" model="pg.Status"/></div><div><strong>Valor previsto:</strong> @pg.ValorPrevisto.ToString("C")</div><div><strong>Valor pago:</strong> @((pg.ValorPago ?? 0).ToString("C"))</div><div><strong>Data prevista:</strong> @(pg.DataPrevista?.ToString("dd/MM/yyyy")??"-")</div><div><strong>Data pagamento:</strong> @(pg.DataPagamento?.ToString("dd/MM/yyyy")??"-")</div><div><strong>Forma:</strong> @(pg.FormaPagamento??"-")</div><div><strong>Observações:</strong> @(pg.Observacoes??"-")</div></div>
+@if(pg.Status=="pendente"){
+<form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="mb-2"><input name="valorPago" type="number" step="0.01" value="@pg.ValorPrevisto" class="form-control mb-2" required /><input name="dataPagamento" type="date" class="form-control mb-2" required /><input name="formaPagamento" class="form-control mb-2" value="PIX" required /><input name="observacoes" class="form-control mb-2" placeholder="Observações" /><button class="btn btn-success">Confirmar pagamento</button></form>
+<form asp-action="CancelarPagamento" asp-route-id="@pg.Id" method="post"><textarea name="justificativa" class="form-control mb-2" required></textarea><button class="btn btn-danger">Cancelar pagamento</button></form>
+}
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">Voltar</a>

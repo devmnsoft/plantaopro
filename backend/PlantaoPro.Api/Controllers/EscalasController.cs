@@ -5,33 +5,95 @@ using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers
 {
-[ApiController][Route("api")]
-public class EscalasController : ControllerBase
-{
-    private readonly EscalaService service;
-    public EscalasController(EscalaService service){ this.service=service; }
+    [ApiController]
+    [Route("api")]
+    public class EscalasController : ControllerBase
+    {
+        private readonly EscalaService service;
+        public EscalasController(EscalaService service)
+        {
+            this.service = service;
+        }
 
-    [Authorize][HttpGet("escalas")]
-    public async Task<IActionResult> Listar([FromQuery]EscalaFilterRequest f){var r=await service.ListarAsync(f);return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpGet("escalas/{id:guid}")]
-    public async Task<IActionResult> Get(Guid id){var r=await service.GetByIdAsync(id);return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpGet("medicos/me/plantoes")]
-    public async Task<IActionResult> Meus([FromQuery]int page=1,[FromQuery]int pageSize=20){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.ListarPorMedicoUsuarioAsync(uid,page,pageSize);return StatusCode(r.StatusCode,r);} 
+        [Authorize]
+        [HttpGet("escalas")]
+        public async Task<IActionResult> Listar([FromQuery] EscalaFilterRequest f)
+        {
+            var r = await service.ListarAsync(f);
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpGet("escalas/{id:guid}")]
+        public async Task<IActionResult> Get(Guid id)
+        {
+            var r = await service.GetByIdAsync(id);
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpGet("medicos/me/plantoes")]
+        public async Task<IActionResult> Meus([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.ListarPorMedicoUsuarioAsync(uid, page, pageSize);
+            return StatusCode(r.StatusCode, r);
+        }
 
-    [Authorize][HttpPost("plantoes/{id:guid}/aceitar")]
-    public async Task<IActionResult> Aceitar(Guid id,[FromBody]AcceptPlantaoRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AceitarAsync(id,req.MedicoId,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpPost("plantoes/{id:guid}/solicitar")]
-    public async Task<IActionResult> Solicitar(Guid id,[FromBody]SolicitarPlantaoRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AceitarAsync(id,req.MedicoId,uid,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
+        [Authorize]
+        [HttpPost("plantoes/{id:guid}/aceitar")]
+        public async Task<IActionResult> Aceitar(Guid id, [FromBody] AcceptPlantaoRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AceitarAsync(id, req.MedicoId, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpPost("plantoes/{id:guid}/solicitar")]
+        public async Task<IActionResult> Solicitar(Guid id, [FromBody] SolicitarPlantaoRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AceitarAsync(id, req.MedicoId, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
 
-    [Authorize][HttpPost("escalas/{id:guid}/confirmar")]
-    public async Task<IActionResult> Confirmar(Guid id,[FromBody]ConfirmEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"confirmado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpPost("escalas/{id:guid}/recusar")]
-    public async Task<IActionResult> Recusar(Guid id,[FromBody]RecusarEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"recusado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpPost("escalas/{id:guid}/cancelar")]
-    public async Task<IActionResult> Cancelar(Guid id,[FromBody]CancelarEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"cancelado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpPost("escalas/{id:guid}/substituir")]
-    public async Task<IActionResult> Substituir(Guid id,[FromBody]SubstituirEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"substituido",req.Justificativa,uid,req.NovoMedicoId,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-    [Authorize][HttpPost("escalas/{id:guid}/marcar-realizado")]
-    public async Task<IActionResult> Realizado(Guid id,[FromBody]CompleteEscalaRequest req){var uid=Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);var r=await service.AlterarStatusAsync(id,"realizado",req.Justificativa,uid,null,HttpContext.Connection.RemoteIpAddress?.ToString(),Request.Headers.UserAgent.ToString());return StatusCode(r.StatusCode,r);} 
-}
+        [Authorize]
+        [HttpPost("escalas/{id:guid}/confirmar")]
+        public async Task<IActionResult> Confirmar(Guid id, [FromBody] ConfirmEscalaRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AlterarStatusAsync(id, "confirmado", req.Justificativa, uid, null, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpPost("escalas/{id:guid}/recusar")]
+        public async Task<IActionResult> Recusar(Guid id, [FromBody] RecusarEscalaRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AlterarStatusAsync(id, "recusado", req.Justificativa, uid, null, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpPost("escalas/{id:guid}/cancelar")]
+        public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarEscalaRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AlterarStatusAsync(id, "cancelado", req.Justificativa, uid, null, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpPost("escalas/{id:guid}/substituir")]
+        public async Task<IActionResult> Substituir(Guid id, [FromBody] SubstituirEscalaRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AlterarStatusAsync(id, "substituido", req.Justificativa, uid, req.NovoMedicoId, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+        [Authorize]
+        [HttpPost("escalas/{id:guid}/marcar-realizado")]
+        public async Task<IActionResult> Realizado(Guid id, [FromBody] CompleteEscalaRequest req)
+        {
+            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var r = await service.AlterarStatusAsync(id, "realizado", req.Justificativa, uid, null, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            return StatusCode(r.StatusCode, r);
+        }
+    }
 }

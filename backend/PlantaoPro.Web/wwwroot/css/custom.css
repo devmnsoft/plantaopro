@@ -84,3 +84,20 @@ body.app-body { background: radial-gradient(circle at 0% -10%, #d9e8ff, transpar
   .user-pill{max-width:calc(100vw - 48px)}
   .page-title{max-width:85vw}
 }
+
+/* layout refresh 2026 */
+.sidebar-brand{min-height:78px}
+.brand-logo{height:40px;max-width:230px;width:100%;object-fit:contain}
+.app-content .row>[class*='col-']{margin-bottom:1rem}
+.data-card .card-header,.card .card-header{background:#f8fbff;border-bottom:1px solid var(--pp-border);font-weight:700}
+.table-responsive{border:1px solid var(--pp-border);border-radius:14px;background:#fff}
+.form-label{font-weight:600;color:#23406a}
+.alert-info{background:#eef6ff;border-color:#bfdbfe;color:#1e3a8a}
+.empty-state i{font-size:1.6rem;color:#4f7ecf}
+
+@media (max-width: 767.98px){
+  .app-topbar{padding:10px 12px}
+  .topbar-actions{flex-wrap:wrap;gap:8px}
+  .app-content{padding:12px}
+  .metric-card{padding:14px}
+}

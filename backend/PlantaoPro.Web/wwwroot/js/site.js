@@ -76,3 +76,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 });
+
+function togglePassword(inputId, button){const input=document.getElementById(inputId);if(!input)return;const icon=button?.querySelector("i");const show=input.type==="password";input.type=show?"text":"password";if(icon){icon.classList.toggle("bi-eye",!show);icon.classList.toggle("bi-eye-slash",show);}}

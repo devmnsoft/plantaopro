@@ -1,3 +1,16 @@
+@using PlantaoPro.Web.Security
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+    // Declarando todas as variáveis de perfil
+    var isAdmin = User.IsAdmin();
+    var isCoord = User.IsCoordenacao();
+    var isOper = User.IsOperador();
+    var isFin = User.IsFinanceiro();
+    var isMed = User.IsMedico();
+    var isHospital = User.IsHospital();
+}
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,55 +21,120 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
 </head>
-@using PlantaoPro.Web.Security
 <body class="app-body">
-@{ var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home"; var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-   var isAdmin = User.IsAdmin(); var isCoord = User.IsCoordenacao(); var isOper = User.IsOperador(); var isFin = User.IsFinanceiro(); var isMed = User.IsMedico(); var isHosp = User.IsHospital(); }
 @if (User.Identity?.IsAuthenticated == true)
 {
-<div class="app-shell">
-<aside class="app-sidebar" id="appSidebar">
-<div class="sidebar-brand"><div class="brand-icon"><i class="bi bi-calendar2-heart"></i></div><div><div class="brand-title">PlantãoPro</div><div class="brand-subtitle">Gestão Inteligente de Plantões</div></div></div>
-<nav class="sidebar-nav">
-<div class="nav-section-title">Operação</div>
-<a class="nav-link-app @(currentController=="Home"?"active":"")" asp-controller="Home" asp-action="Dashboard"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
-@if (isAdmin || isCoord || isOper || isHospital) {<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Index"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>}
-@if (isAdmin || isCoord || isOper || isHospital) {<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Calendario"?"active":"")" asp-controller="Plantoes" asp-action="Calendario"><i class="bi bi-calendar3"></i><span>Calendário</span></a>}
-@if (isAdmin || isCoord || isOper || isHospital || isMed) {<a class="nav-link-app @(currentController=="Escalas"?"active":"")" asp-controller="Escalas" asp-action="Index"><i class="bi bi-diagram-3"></i><span>Escalas</span></a>}
-@if (isMed) {<a class="nav-link-app @(currentController=="MinhaAgenda"?"active":"")" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Minha Agenda</span></a>}
+    <div class="app-shell">
+        <aside class="app-sidebar" id="appSidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon"><i class="bi bi-calendar2-heart"></i></div>
+                <div>
+                    <div class="brand-title">PlantãoPro</div>
+                    <div class="brand-subtitle">Gestão Inteligente de Plantões</div>
+                </div>
+            </div>
 
-@if (isAdmin || isCoord || isOper) {
-<div class="nav-section-title">Cadastros</div>
-<a class="nav-link-app @(currentController=="Medicos"?"active":"")" asp-controller="Medicos" asp-action="Index"><i class="bi bi-people"></i><span>Médicos</span></a>
-<a class="nav-link-app @(currentController=="Hospitais"?"active":"")" asp-controller="Hospitais" asp-action="Index"><i class="bi bi-hospital"></i><span>Hospitais/Clínicas</span></a>
-<a class="nav-link-app @(currentController=="Especialidades"?"active":"")" asp-controller="Especialidades" asp-action="Index"><i class="bi bi-heart-pulse"></i><span>Especialidades</span></a>
-}
+            <nav class="sidebar-nav">
+                <div class="nav-section-title">Operação</div>
+                <a class="nav-link-app @(currentController=="Home"?"active":"")" asp-controller="Home" asp-action="Dashboard"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
 
-<div class="nav-section-title">Financeiro</div>
-@if (isAdmin || isFin) {<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></a>}
-@if (isMed) {<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus Pagamentos</span></a>}
+                @if (isAdmin || isCoord || isOper || isHospital)
+                {
+                    <a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Index"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>
+                    <a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Calendario"?"active":"")" asp-controller="Plantoes" asp-action="Calendario"><i class="bi bi-calendar3"></i><span>Calendário</span></a>
+                }
 
-<div class="nav-section-title">Gestão</div>
-<a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
-@if (isAdmin) {<a class="nav-link-app @(currentController=="Auditoria"?"active":"")" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-shield-check"></i><span>Auditoria</span></a>}
-@if (isAdmin || isCoord || isOper || isFin) {<a class="nav-link-app @(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>}
+                @if (isAdmin || isCoord || isOper || isHospital || isMed)
+                {
+                    <a class="nav-link-app @(currentController=="Escalas"?"active":"")" asp-controller="Escalas" asp-action="Index"><i class="bi bi-diagram-3"></i><span>Escalas</span></a>
+                }
 
-@if (isAdmin) {
-<div class="nav-section-title">Sistema</div>
-<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Index"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i><span>Configurações</span></a>
-<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-activity"></i><span>Saúde do Sistema</span></a>
-}
-<a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
-</nav></aside>
-<section class="app-main">
-<header class="app-topbar"><div class="topbar-left"><button class="btn btn-light d-lg-none" id="sidebarToggle" type="button"><i class="bi bi-list"></i></button><div><h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1><nav><ol class="breadcrumb app-breadcrumb mb-0"><li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Home</a></li><li class="breadcrumb-item active">@currentController</li></ol></nav></div></div><div class="topbar-actions"><a class="btn btn-light" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a><div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>Usuário logado</small></div></div></div></header>
-<main class="app-content"><partial name="_ToastMessages"/>@RenderBody()</main>
-</section></div><div class="sidebar-overlay" id="sidebarOverlay"></div>
+                @if (isMed)
+                {
+                    <a class="nav-link-app @(currentController=="MinhaAgenda"?"active":"")" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Minha Agenda</span></a>
+                }
+
+                @if (isAdmin || isCoord || isOper)
+                {
+                    <div class="nav-section-title">Cadastros</div>
+                    <a class="nav-link-app @(currentController=="Medicos"?"active":"")" asp-controller="Medicos" asp-action="Index"><i class="bi bi-people"></i><span>Médicos</span></a>
+                    <a class="nav-link-app @(currentController=="Hospitais"?"active":"")" asp-controller="Hospitais" asp-action="Index"><i class="bi bi-hospital"></i><span>Hospitais/Clínicas</span></a>
+                    <a class="nav-link-app @(currentController=="Especialidades"?"active":"")" asp-controller="Especialidades" asp-action="Index"><i class="bi bi-heart-pulse"></i><span>Especialidades</span></a>
+                }
+
+                <div class="nav-section-title">Financeiro</div>
+                @if (isAdmin || isFin)
+                {
+                    <a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></a>
+                }
+                @if (isMed)
+                {
+                    <a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus Pagamentos</span></a>
+                }
+
+                <div class="nav-section-title">Gestão</div>
+                <a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
+
+                @if (isAdmin)
+                {
+                    <a class="nav-link-app @(currentController=="Auditoria"?"active":"")" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-shield-check"></i><span>Auditoria</span></a>
+                }
+
+                @if (isAdmin || isCoord || isOper || isFin)
+                {
+                    <a class="nav-link-app @(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>
+                }
+
+                @if (isAdmin)
+                {
+                    <div class="nav-section-title">Sistema</div>
+                    <a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Index"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i><span>Configurações</span></a>
+                    <a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-activity"></i><span>Saúde do Sistema</span></a>
+                }
+
+                <a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
+            </nav>
+        </aside>
+
+        <section class="app-main">
+            <header class="app-topbar">
+                <div class="topbar-left">
+                    <button class="btn btn-light d-lg-none" id="sidebarToggle" type="button"><i class="bi bi-list"></i></button>
+                    <div>
+                        <h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1>
+                        <nav>
+                            <ol class="breadcrumb app-breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Home</a></li>
+                                <li class="breadcrumb-item active">@currentController</li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <a class="btn btn-light" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a>
+                    <div class="user-pill">
+                        <div class="user-avatar"><i class="bi bi-person"></i></div>
+                        <div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>Usuário logado</small></div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="app-content">
+                <partial name="_ToastMessages"/>
+                @RenderBody()
+            </main>
+        </section>
+    </div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 }
 else
 {
-<main class="auth-main"><partial name="_ToastMessages" />@RenderBody()</main>
+    <main class="auth-main"><partial name="_ToastMessages" />@RenderBody()</main>
 }
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="~/js/site.js" asp-append-version="true"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", false)
-</body></html>
+</body>
+</html>

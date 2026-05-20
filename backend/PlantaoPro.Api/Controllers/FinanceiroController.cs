@@ -67,6 +67,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.MeusAsync(uid, page, pageSize);
             return StatusCode(r.StatusCode, r);
         }
+
         [Authorize]
         [HttpGet("meus-pagamentos/{id:guid}")]
         public async Task<IActionResult> MeuPorId(Guid id)

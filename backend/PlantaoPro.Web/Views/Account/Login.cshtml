@@ -29,13 +29,17 @@
         </section>
 
         <section class="login-card-modern">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="login-logo" />
-                <div><strong>PlantãoPro</strong><div class="text-muted small">Acesse sua conta profissional</div></div>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="login-logo" />
+                    <div><strong>PlantãoPro</strong><div class="text-muted small">Acesse sua conta profissional</div></div>
+                </div>
+                <span class="badge text-bg-light border">Acesso Seguro</span>
             </div>
-            <form asp-action="Login" method="post" id="loginForm" novalidate>
+            <form asp-action="Login" method="post" id="loginForm" novalidate data-login-form="true">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="alert-validation mb-3"></div>
+                <div class="login-attempt-warning mb-3 d-none" id="loginAttemptWarning"><i class="bi bi-exclamation-triangle me-1"></i><span></span></div>
                 <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" placeholder="voce@empresa.com" autocomplete="email" /><span asp-validation-for="Email" class="text-danger small"></span></div>
                 <div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" placeholder="Sua senha" autocomplete="current-password" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha',this)" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button></div><span asp-validation-for="Senha" class="text-danger small"></span></div>
                 <div class="d-flex justify-content-between align-items-center mb-4"><a asp-action="ForgotPassword" class="small text-decoration-none">Esqueci a senha</a><span class="login-state-tag"><i class="bi bi-shield-check"></i>Ambiente protegido</span></div>

@@ -59,3 +59,12 @@ body.app-body { background: radial-gradient(circle at 0% -10%, #d9e8ff, transpar
 .login-footnote{color:#607394;font-size:.8rem}.login-attempt-warning{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:.6rem .75rem}
 .sidebar-overlay{position:fixed;inset:0;background:rgba(10,20,39,.52);opacity:0;pointer-events:none;transition:.2s;z-index:1030}
 @media (max-width:991.98px){.app-sidebar{position:fixed;left:-310px;transition:.25s;z-index:1040}body.sidebar-open .app-sidebar{left:0}body.sidebar-open .sidebar-overlay{opacity:1;pointer-events:auto}.app-content{padding:16px}.login-wrapper{grid-template-columns:1fr}.login-side{display:none}}
+
+
+.dashboard-filters{display:flex;gap:10px;align-items:end;background:#fff;border:1px solid var(--pp-border);padding:10px 12px;border-radius:14px;box-shadow:var(--pp-shadow)}
+.filter-item{min-width:160px}
+.page-subtitle{color:var(--pp-muted)}
+.kpi-icon{height:34px;width:34px;border-radius:10px;background:#eaf1ff;color:var(--pp-primary);display:grid;place-items:center;margin-bottom:8px}
+.progress{height:8px;border-radius:999px;background:#ebf2ff}.progress-bar{background:linear-gradient(90deg,var(--pp-primary),#3f8cff)}
+.table-modern td{vertical-align:middle}
+@media (max-width:575.98px){.dashboard-filters{width:100%;display:grid;grid-template-columns:1fr}.filter-item{min-width:0}}

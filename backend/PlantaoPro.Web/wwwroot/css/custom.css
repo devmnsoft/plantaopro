@@ -111,6 +111,5 @@ body.app-body { background: radial-gradient(circle at 0% -10%, #d9e8ff, transpar
 /* brand refresh logo png */
 .brand-logo,.topbar-mini-logo,.login-logo,.dashboard-brand{object-fit:contain}
 .brand-logo{height:42px;max-width:240px;width:auto}
-.topbar-mini-logo{height:26px;width:26px;border-radius:6px}
-.login-logo{height:56px;width:56px;border-radius:12px;background:#f0f6ff;padding:6px}
-.nav-link-app i::before{display:block}
+.topbar-mini-logo{height:26px;width:26px;border-radius:8px;background:#edf4ff;padding:3px}
+.login-logo{height:56px;width:56px;border-radius:12px;background:#f0f6ff;padding:6px;border:1px solid #dbe7fb}

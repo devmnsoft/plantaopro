@@ -42,7 +42,7 @@ public class UsuariosController : ControllerBase
 
         await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
                 // Alteração: mapeamento explícito da coluna preferencias_notificacao para o DTO null-safe.
-        var user = await cn.QueryFirstOrDefaultAsync<UsuarioDto>("select id, email, nome, perfil, preferencias_notificacao as PreferenciasNotificacao from plantaopro.usuarios where id=@id and reg_status='A'", new { id = uid });
+        var user = await cn.QueryFirstOrDefaultAsync<UsuarioDto>("select id, email, nome, telefone, perfil, preferencias_notificacao as PreferenciasNotificacao from plantaopro.usuarios where id=@id and reg_status='A'", new { id = uid });
 
         if (user is null)
         {
@@ -111,6 +111,6 @@ public class UsuariosController : ControllerBase
 }
 
 // Alteração: DTO atualizado com Perfil e PreferenciasNotificacao null-safe para o endpoint /api/usuarios/me.
-public record UsuarioDto(Guid Id, string Email, string Nome, string? Perfil, string PreferenciasNotificacao = "{}");
+public record UsuarioDto(Guid Id, string Email, string Nome, string? Telefone, string? Perfil, string PreferenciasNotificacao = "{}");
 public record UpdateUserSettingsRequest(string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
 public record AlterarSenhaRequest(string SenhaAtual, string NovaSenha);

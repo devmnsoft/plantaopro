@@ -5,6 +5,14 @@
     <div class="col-12 col-xl-7">
         <div class="data-card p-4 h-100">
             <h4 class="mb-3">Conta do usuário</h4>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+            {
+                @* Feedback visual amigável quando a API retornar erro ou estiver indisponível. *@
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @ViewBag.ErrorMessage
+                </div>
+            }
             @if (string.IsNullOrWhiteSpace(Model.Email))
             {
                 <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-person-x", "Dados indisponíveis", "Não foi possível carregar os dados da conta.", "Tentar novamente", "Index", "Configuracoes")' />

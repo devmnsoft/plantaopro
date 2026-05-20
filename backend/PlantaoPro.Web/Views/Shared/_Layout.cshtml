@@ -3,14 +3,12 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
 
-    // Perfis do usuário logado
-    var roles = User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).ToList();
-    var isAdmin = roles.Contains("ADMINISTRADOR");
-    var isCoord = roles.Contains("COORDENACAO");
-    var isOper = roles.Contains("OPERADOR");
-    var isFin = roles.Contains("FINANCEIRO");
-    var isMed = roles.Contains("MEDICO");
-    var isHospital = roles.Contains("HOSPITAL");
+    var isAdmin = User.IsAdmin();
+    var isCoord = User.IsCoordenacao();
+    var isOper = User.IsOperador();
+    var isFin = User.IsFinanceiro();
+    var isMed = User.IsMedico();
+    var isHospital = User.IsHospital();
 }
 
 <!DOCTYPE html>
@@ -34,7 +32,7 @@
             <div class="sidebar-brand">
                 <div>
                     <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="brand-logo" />
-                    <div class="brand-subtitle">Escala, operação e financeiro em um só lugar</div>
+                    <div class="brand-subtitle">Mais controle. Menos imprevistos.</div>
                 </div>
             </div>
 
@@ -107,6 +105,10 @@
                 <div class="topbar-left">
                     <button class="btn btn-light d-lg-none" id="sidebarToggle"><i class="bi bi-list"></i></button>
                     <div>
+                        <div class="topbar-brand-line">
+                            <img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="topbar-mini-logo" />
+                            <span class="topbar-slogan">Plantões que funcionam, resultados que aparecem.</span>
+                        </div>
                         <h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1>
                         <nav>
                             <ol class="breadcrumb app-breadcrumb mb-0">

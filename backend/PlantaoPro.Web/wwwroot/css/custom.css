@@ -101,3 +101,8 @@ body.app-body { background: radial-gradient(circle at 0% -10%, #d9e8ff, transpar
   .app-content{padding:12px}
   .metric-card{padding:14px}
 }
+
+
+.topbar-brand-line{display:flex;align-items:center;gap:8px}.topbar-mini-logo{height:20px;width:20px}.topbar-slogan{font-size:.74rem;color:var(--pp-muted);font-weight:600}.dashboard-brand{height:34px;max-width:220px;object-fit:contain}
+.nav-link-app i{width:1.1rem;text-align:center;flex:0 0 1.1rem}
+@media (max-width:991.98px){.topbar-slogan{display:none}}

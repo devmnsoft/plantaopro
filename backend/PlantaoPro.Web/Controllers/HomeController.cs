@@ -56,10 +56,11 @@ namespace PlantaoPro.Web.Controllers
                 if (response.IsSuccessStatusCode && apiResult?.Success == true && apiResult.Data is not null)
                 {
                     var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, model.Email) };
-                    claims.AddRange(apiResult.Data.Roles.Select(role => new Claim(ClaimTypes.Role, role)));
+                    var safeRoles = apiResult.Data.Roles ?? Array.Empty<string>();
+                    claims.AddRange(safeRoles.Where(role => !string.IsNullOrWhiteSpace(role)).Select(role => new Claim(ClaimTypes.Role, role)));
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
                     TempData["Success"] = "Login realizado com sucesso.";
-                    _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip}", model.Email, ip);
+                    _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", model.Email, ip, string.Join(',', safeRoles), DateTime.UtcNow);
                     return RedirectToAction("Dashboard", "Home");
                 }
 
@@ -75,7 +76,7 @@ namespace PlantaoPro.Web.Controllers
                     _ => "Erro ao autenticar. Tente novamente."
                 };
 
-                _logger.LogWarning("Login inválido Email:{Email} IP:{Ip}", model.Email, ip);
+                _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", model.Email, ip, false, DateTime.UtcNow);
                 return View(model);
             }
             catch (HttpRequestException ex)

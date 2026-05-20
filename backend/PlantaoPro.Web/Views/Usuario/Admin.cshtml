@@ -1,7 +1,13 @@
-@model IEnumerable<PlantaoPro.Web.Controllers.UserListVMWeb>
+@using PlantaoPro.Web.Models.ViewModels
+@model UserListVMWeb
 @{ ViewData["Title"] = "Gestão de Usuários"; }
+
 <div class="data-card p-4">
-    <h4 class="mb-3">Gestão de Usuários</h4>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <h4 class="mb-0">Gestão de Usuários</h4>
+        <span class="badge bg-primary">@Model.Total usuário(s)</span>
+    </div>
+
     <form method="get" class="row g-2 mb-3">
         <div class="col-md-6"><input name="search" class="form-control" placeholder="Pesquisar por nome ou e-mail" value="@Context.Request.Query["search"]" /></div>
         <div class="col-md-3">
@@ -13,28 +19,47 @@
         </div>
         <div class="col-md-3"><button class="btn btn-primary w-100">Filtrar</button></div>
     </form>
-    <table class="table align-middle">
-        <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                <td>@item.Username</td>
-                <td>@item.Email</td>
-                <td>@item.Role</td>
-                <td>@(item.Locked ? "Bloqueado" : "Ativo")</td>
-                <td>
-                    @if (item.Locked)
-                    {
-                        <form asp-action="Unlock" method="post" onsubmit="return confirm('Confirmar desbloqueio do usuário?');">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@item.Id" />
-                            <button class="btn btn-sm btn-warning">Desbloquear</button>
-                        </form>
-                    }
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="text-center py-4">
+            <i class="bi bi-people text-muted" style="font-size:2rem;"></i>
+            <p class="text-muted mt-2 mb-0">Nenhum usuário encontrado para os filtros selecionados.</p>
+        </div>
+    }
+    else
+    {
+        <table class="table align-middle">
+            <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>@item.Username</td>
+                    <td>@item.Email</td>
+                    <td>@item.Role</td>
+                    <td>
+                        <span class="badge @(item.Locked ? "bg-warning text-dark" : "bg-success")">
+                            @(item.Locked ? "Bloqueado" : "Ativo")
+                        </span>
+                    </td>
+                    <td>
+                        @if (item.Locked)
+                        {
+                            <form asp-action="Unlock" method="post" onsubmit="return confirm('Confirmar desbloqueio do usuário?');">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button class="btn btn-sm btn-warning">Desbloquear</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-outline-secondary" disabled title="Usuário já está ativo">Desbloquear</button>
+                        }
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
 </div>

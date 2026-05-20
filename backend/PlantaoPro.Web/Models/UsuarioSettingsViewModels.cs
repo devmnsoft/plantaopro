@@ -1,7 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace PlantaoPro.Web.Models;
+namespace PlantaoPro.Web.Models.ViewModels;
 
+/// <summary>
+/// ViewModel utilizado pela tela de edição de perfil do usuário autenticado.
+/// </summary>
 public class UserSettingsViewModel
 {
     [Required(ErrorMessage = "Informe o nome.")]
@@ -21,6 +24,9 @@ public class UserSettingsViewModel
     public string PreferenciasNotificacao { get; set; } = "Email";
 }
 
+/// <summary>
+/// ViewModel da tela de alteração de senha com validações de confirmação.
+/// </summary>
 public class AlterarSenhaViewModel
 {
     [Required(ErrorMessage = "Informe a senha atual.")]
@@ -39,4 +45,26 @@ public class AlterarSenhaViewModel
 }
 
 public record UserSettingsDtoWeb(Guid Id, string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
-public record UserListVMWeb(Guid Id, string Username, string Email, string Role, bool Locked);
+
+/// <summary>
+/// Item exibido na listagem administrativa de usuários.
+/// </summary>
+public record UserListItemDto(Guid Id, string Username, string Email, string Role, bool Locked);
+
+/// <summary>
+/// ViewModel da listagem administrativa de usuários com suporte a paginação.
+/// </summary>
+public record UserListVMWeb(
+    IEnumerable<UserListItemDto> Items,
+    string? ErrorMessage = null,
+    string? InfoMessage = null,
+    long Total = 0,
+    int Page = 1,
+    int PageSize = 20)
+    : ListPageViewModel<UserListItemDto>(
+        Items ?? Enumerable.Empty<UserListItemDto>(),
+        ErrorMessage,
+        InfoMessage,
+        Total,
+        Page,
+        PageSize);

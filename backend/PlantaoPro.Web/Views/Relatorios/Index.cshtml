@@ -1,1 +1,25 @@
-<h2 class="mb-3">Relatorios</h2><div class="card p-4"><p>Relatórios em preparação</p><button class="btn btn-outline-secondary" disabled>Em breve</button></div>
+@{
+    ViewData["Title"] = "Relatórios";
+}
+<div class="page-header mb-4"><h2 class="page-title">Relatórios Gerenciais</h2><p class="page-subtitle">Acesso rápido aos pacotes executivos em PDF e planilhas Excel (UX nesta etapa).</p></div>
+<div class="row g-3">
+    @foreach (var r in new[]{
+        ("Produção de Plantões","Acompanhamento operacional por período.","bi-calendar2-week"),
+        ("Performance Médica","Resumo de adesão, presença e volume assistencial.","bi-person-badge"),
+        ("Conciliação Financeira","Pagamentos pendentes, pagos e projeções.","bi-cash-stack"),
+        ("Auditoria e Compliance","Logs e rastreabilidade para governança.","bi-shield-check")
+    })
+    {
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="data-card card h-100 p-3">
+                <div class="metric-icon"><i class="bi @r.Item3"></i></div>
+                <h6 class="mb-1">@r.Item1</h6>
+                <p class="text-muted small mb-3">@r.Item2</p>
+                <div class="d-flex gap-2 mt-auto">
+                    <button class="btn btn-soft-primary btn-sm" disabled title="Disponível na próxima versão">PDF</button>
+                    <button class="btn btn-soft-secondary btn-sm" disabled title="Disponível na próxima versão">Excel</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>

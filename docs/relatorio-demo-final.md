@@ -1,38 +1,77 @@
 # Relatório de validação final — Demo PlantãoPro
 
-Data: 2026-05-20
+**Data:** 20/05/2026
 
-## Escopo executado
-- Validação técnica de build (API/Web).
-- Revisão final de UX/UI e ajustes de responsividade.
-- Verificação de visibilidade de menu por perfil (Administrador, Coordenação, Operador, Financeiro e Médico).
+## 1) Status desta execução
+Esta rodada foi executada em ambiente de terminal sem navegador gráfico e sem SDK .NET instalado. Por isso, a validação foi feita como **pré-flight técnico + roteiro operacional de demonstração**, com registro explícito das limitações para não comprometer a apresentação comercial.
 
-## Resultado do teste manual/funcional
-Nesta execução de agente em terminal não há navegador interativo para concluir login visual ponta-a-ponta com múltiplos perfis.
-Foi realizada validação por revisão de código + checklist de fluxo operacional suportado pelos controllers/views já existentes.
+## 2) TAREFA 1 — Teste manual completo (checklist de execução)
+> **Resultado nesta rodada:** checklist preparado e critérios de aceite documentados; execução visual multi-perfil pendente de rodada com navegador.
 
-## Ajustes aplicados nesta rodada
-1. **Menu lateral por perfil**
-   - Itens operacionais e cadastros passaram a respeitar visibilidade por perfil.
-   - Itens administrativos (Auditoria, Configurações, Saúde) permanecem exclusivos de administrador.
-   - Relatórios disponíveis para perfis de gestão/financeiro.
+### Perfis a validar no login
+- ADMINISTRADOR
+- COORDENAÇÃO
+- OPERADOR
+- FINANCEIRO
+- MÉDICO
+- HOSPITAL
 
-2. **UX/UI responsivo (SaaS)**
-   - Ajustes de breakpoint para tabelas e topbar em 1366x768, 1920x1080 e mobile.
-   - Melhoria de legibilidade e comportamento de cards/tabelas em telas menores.
+### Itens obrigatórios por perfil
+- Dashboard correto do perfil.
+- Menus permitidos visíveis; menus proibidos ocultos.
+- Botões habilitados/desabilitados conforme permissão e status.
+- Empty states coerentes (sem quebra visual).
+- Nenhuma exibição de GUID/DTO cru em cards, tabelas e detalhes.
 
-## Checklist operacional para apresentação comercial
-Fluxo validado para demonstração (dependente de execução via UI/API com dados seed):
-1. Criar plantão rascunho.
-2. Editar plantão rascunho.
+### Fluxos funcionais
+- Plantões: criar/editar/publicar.
+- Escalas: confirmar/realizar.
+- Financeiro: gerar/confirmar pagamento.
+- Notificações: geração e visualização.
+- Auditoria: trilhas com ator, ação e data/hora.
+
+## 3) TAREFA 2 — Ajustes visuais finais (escopo de inspeção)
+> **Resultado nesta rodada:** escopo fechado e pronto para inspeção guiada durante UAT comercial.
+
+Telas críticas para validar UX SaaS:
+- Escalas
+- Plantões
+- Financeiro
+- Minha Agenda
+- Auditoria
+- Dashboard
+
+Critérios visuais:
+- Responsividade em 1366x768, 1920x1080 e mobile.
+- Hierarquia visual consistente (tipografia, badges, cores, espaçamento).
+- Estados de carregamento/sem dados/erro com comunicação clara.
+
+## 4) TAREFA 3 — Fluxos de demonstração (roteiro comercial)
+1. Criar plantão em rascunho.
+2. Editar plantão em rascunho.
 3. Publicar plantão.
-4. Solicitar plantão como médico.
-5. Confirmar escala como coordenação.
+4. Médico solicita plantão.
+5. Coordenação confirma escala.
 6. Marcar escala como realizada.
 7. Gerar pagamento.
 8. Confirmar pagamento.
-9. Conferir notificações + auditoria.
+9. Ver notificações.
+10. Ver auditoria.
+11. Validar dashboard atualizado.
 
-## Pendências observáveis antes da apresentação ao vivo
-- Executar smoke visual guiado por navegador com os quatro logins solicitados para captura final de evidências (prints por perfil).
-- Rodar roteiro em ambiente com banco seed carregado e registrar IDs de evidência (plantão/escala/pagamento).
+## 5) TAREFA 4 — Validação final do build
+Comandos esperados:
+- `dotnet build backend/PlantaoPro.Api/PlantaoPro.Api.csproj`
+- `dotnet build backend/PlantaoPro.Web/PlantaoPro.Web.csproj`
+
+**Resultado nesta execução:** não foi possível validar build porque o comando `dotnet` não está disponível no ambiente atual (`dotnet: command not found`).
+
+## 6) TAREFA 5 — Entrega
+Entregáveis desta rodada:
+- Relatório final de validação e roteiro de demonstração atualizado.
+- Checklist objetivo para execução manual por perfil.
+- Critérios de aceite para UX e fluxos comerciais.
+
+## 7) Go/No-Go para apresentação
+- **Go condicional:** após rodar os dois builds em máquina com SDK .NET e executar o smoke visual com os 6 perfis.
+- **Recomendação imediata:** capturar evidências (screenshots) de cada etapa do fluxo comercial para anexar ao material de apresentação.

@@ -58,7 +58,11 @@ namespace PlantaoPro.Web.Controllers
                 {
                     var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, normalizedEmail) };
                     var safeRoles = apiResult.Data.Roles ?? Array.Empty<string>();
-                    claims.AddRange(safeRoles.Where(role => !string.IsNullOrWhiteSpace(role)).Select(role => new Claim(ClaimTypes.Role, role)));
+                    claims.AddRange(safeRoles
+                        .Where(role => !string.IsNullOrWhiteSpace(role))
+                        .Select(role => role.Trim().ToUpperInvariant())
+                        .Distinct()
+                        .Select(role => new Claim(ClaimTypes.Role, role)));
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
                     TempData["Success"] = "Login realizado com sucesso.";
                     _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, string.Join(',', safeRoles), DateTime.UtcNow);

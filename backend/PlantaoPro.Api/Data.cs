@@ -347,7 +347,19 @@ namespace PlantaoPro.Api.Data
             });
             await audit.LogAsync(u, "CREATE", "plantoes", id, "Criação", ip: ip, userAgent: ua);
             logger.LogInformation("Plantão criado {Id}", id);
-            return ApiResponse<PlantaoDto>.Ok(new(id, r.HospitalId, r.EspecialidadeId, r.DataInicio, r.DataFim, r.Valor, r.Vagas, r.Vagas, r.Tipo, "rascunho", r.Observacoes));
+            return ApiResponse<PlantaoDto>.Ok(new(
+       id,
+       r.HospitalId,
+       r.EspecialidadeId,
+       r.DataInicio,
+       r.DataFim,
+       r.Valor,
+       r.Vagas,
+       r.Vagas,
+       r.Tipo,
+       "rascunho",
+       r.Observacoes ?? string.Empty
+   ));
         }
         public async Task<ApiResponse<string>> UpdateAsync(Guid id, UpdatePlantaoRequest r, Guid u, string? ip, string? ua)
         {

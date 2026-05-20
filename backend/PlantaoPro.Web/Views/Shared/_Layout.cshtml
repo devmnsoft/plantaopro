@@ -49,7 +49,7 @@
 <a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
 </nav></aside>
 <section class="app-main">
-<header class="app-topbar"><div class="topbar-left"><button class="btn btn-light d-lg-none" id="sidebarToggle" type="button"><i class="bi bi-list"></i></button><div><h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1><nav><ol class="breadcrumb app-breadcrumb mb-0"><li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Home</a></li><li class="breadcrumb-item active">@currentController</li></ol></nav></div></div><div class="topbar-actions"><a class="btn btn-light" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a><div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>Usuário logado</small></div></div></div></header>
+<header class="app-topbar"><div class="topbar-left"><button class="btn btn-light d-lg-none" id="sidebarToggle" type="button"><i class="bi bi-list"></i></button><div><h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1><nav><ol class="breadcrumb app-breadcrumb mb-0"><li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Home</a></li><li class="breadcrumb-item"><span>@currentController</span></li><li class="breadcrumb-item active">@currentAction</li></ol></nav></div></div><div class="topbar-actions"><a class="btn btn-light btn-icon" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a><div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>Usuário logado</small></div></div></div></header>
 <main class="app-content"><partial name="_ToastMessages"/>@RenderBody()</main>
 </section></div><div class="sidebar-overlay" id="sidebarOverlay"></div>
 }
@@ -58,5 +58,21 @@ else
 <main class="auth-main"><partial name="_ToastMessages" />@RenderBody()</main>
 }
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script src="~/js/site.js" asp-append-version="true"></script>
+<div class="modal fade" id="globalActionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><h5 class="modal-title">Confirmar ação</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p class="mb-2" id="globalActionModalMessage">Deseja continuar com esta ação?</p>
+                <div class="d-none" id="globalActionModalJustificationWrap">
+                    <label for="globalActionModalJustification" class="form-label">Justificativa</label>
+                    <textarea id="globalActionModalJustification" class="form-control" rows="3" placeholder="Informe uma justificativa"></textarea>
+                    <div class="form-text">Este comentário será anexado ao campo configurado para auditoria.</div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-danger" id="globalActionModalConfirm">Confirmar</button></div>
+        </div>
+    </div>
+</div>
 @await RenderSectionAsync("Scripts", false)
 </body></html>

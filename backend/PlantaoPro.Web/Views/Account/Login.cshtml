@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login • PlantãoPro</title>
+    <link rel="icon" type="image/svg+xml" href="~/branding/logo-icon.svg" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/custom.css" asp-append-version="true" />
@@ -13,33 +14,34 @@
 <body class="auth-main">
 <div class="login-shell container py-4">
     @await Html.PartialAsync("_ToastMessages")
-    <div class="login-card-modern">
-        <div class="brand-block text-center">
-            <div class="login-card-brand">
+    <div class="login-wrapper">
+        <section class="login-side">
+            <div>
+                <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="img-fluid" style="max-width:280px" />
+                <h1 class="h3 mt-4">Gestão de plantões com padrão enterprise.</h1>
+                <p class="mb-0 opacity-75">Centralize escalas, produtividade médica e indicadores financeiros em uma experiência SaaS moderna e segura.</p>
+            </div>
+            <div>
+                <div class="login-feature"><i class="bi bi-shield-check"></i><span>Autenticação segura e controle de acesso por perfil.</span></div>
+                <div class="login-feature"><i class="bi bi-graph-up-arrow"></i><span>Indicadores em tempo real para decisão rápida.</span></div>
+                <div class="login-feature"><i class="bi bi-grid-1x2"></i><span>Fluxos padronizados para operação e financeiro.</span></div>
+            </div>
+        </section>
+
+        <section class="login-card-modern">
+            <div class="d-flex align-items-center gap-2 mb-3">
                 <img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="login-logo" />
-                <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="img-fluid" style="max-width:220px" />
+                <div><strong>PlantãoPro</strong><div class="text-muted small">Acesse sua conta</div></div>
             </div>
-            <h2 class="mt-3 mb-1">Bem-vindo de volta</h2>
-            <p class="text-muted mb-4">Acesse sua conta e acompanhe operação, agenda e financeiro em tempo real.</p>
-        </div>
-        <form asp-action="Login" method="post" id="loginForm" novalidate>
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
-            @if (TempData["Warning"] is string warningMessage && !string.IsNullOrWhiteSpace(warningMessage))
-            {
-                <div class="alert alert-warning py-2 small">
-                    <i class="bi bi-shield-exclamation me-1"></i>@warningMessage
-                </div>
-            }
-            <div class="alert alert-info py-2 small">
-                <strong>Ambiente de demonstração:</strong> use <code>admin@plantaopro.com</code> e senha <code>123456</code>.
-            </div>
-            <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" placeholder="voce@empresa.com" /><span asp-validation-for="Email" class="text-danger small"></span></div>
-            <div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" placeholder="Sua senha" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha',this)"><i class="bi bi-eye"></i></button></div><span asp-validation-for="Senha" class="text-danger small"></span></div>
-            <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit"><span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none"></span></button>
-            <div class="form-text mt-2">Após múltiplas falhas, o acesso é bloqueado temporariamente por segurança.</div>
-            <a asp-action="ForgotPassword" class="d-inline-block mt-3">Esqueci a senha</a>
-        </form>
+            <form asp-action="Login" method="post" id="loginForm" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert-validation mb-3"></div>
+                <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" placeholder="voce@empresa.com" autocomplete="email" /><span asp-validation-for="Email" class="text-danger small"></span></div>
+                <div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" placeholder="Sua senha" autocomplete="current-password" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha',this)" aria-label="Mostrar senha"><i class="bi bi-eye"></i></button></div><span asp-validation-for="Senha" class="text-danger small"></span></div>
+                <div class="d-flex justify-content-between align-items-center mb-3"><a asp-action="ForgotPassword" class="small text-decoration-none">Esqueci a senha</a><small class="text-muted">Proteção anti-bloqueio ativo</small></div>
+                <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit"><span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none"></span></button>
+            </form>
+        </section>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

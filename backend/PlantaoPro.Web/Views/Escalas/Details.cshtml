@@ -1,5 +1,28 @@
-@model Guid
-<h1 class="h4">Detalhes da Escala</h1>
-<p class="text-muted">Visualização operacional detalhada estará disponível em breve.</p>
-<p><small class="text-muted">Informação técnica: @Model</small></p>
-<a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.EscalaDetailsDto>
+@{ var e = Model.Data; }
+<h2>Detalhes da Escala</h2>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+@if (e is not null)
+{
+    <div class="card"><div class="card-body">
+        <h5>@e.MedicoNome</h5>
+        <p>CRM: @e.MedicoCrm/@e.MedicoUfCrm • @e.MedicoEmail • @e.MedicoTelefone</p>
+        <p>@e.HospitalNome - @e.HospitalCidade/@e.HospitalEstado</p>
+        <p>@e.EspecialidadeNome | @e.DataInicio.ToString("dd/MM/yyyy HH:mm") - @e.DataFim.ToString("HH:mm") | @e.Valor.ToString("C")</p>
+        <p>Status: <partial name="_StatusBadge" model="e.Status" /> </p>
+        <p>Justificativa: @(string.IsNullOrWhiteSpace(e.Justificativa)?"-":e.Justificativa)</p>
+        <div class="d-flex gap-2">
+            @if (e.Status == "solicitado")
+            {
+                <form method="post" asp-action="Confirmar" asp-route-id="@e.Id"><button class="btn btn-success">Confirmar</button></form>
+                <form method="post" asp-action="Recusar" asp-route-id="@e.Id"><input name="justificativa" class="form-control" placeholder="Justificativa" required /><button class="btn btn-danger mt-2">Recusar</button></form>
+            }
+            @if (e.Status == "confirmado")
+            {
+                <form method="post" asp-action="MarcarRealizado" asp-route-id="@e.Id"><button class="btn btn-primary">Marcar realizado</button></form>
+                <a class="btn btn-outline-secondary" asp-action="Substituir" asp-route-id="@e.Id">Substituir</a>
+            }
+        </div>
+    </div></div>
+}
+<a asp-action="Index" class="btn btn-outline-secondary mt-3">Voltar</a>

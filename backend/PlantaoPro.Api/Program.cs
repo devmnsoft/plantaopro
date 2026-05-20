@@ -12,6 +12,7 @@ builder.Services.AddControllers(options =>
     options.Filters.Add<RequestLogContextFilter>();
 });
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpLogging(_ => { });
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -86,11 +87,13 @@ builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 
 var app = builder.Build();
+app.UseHttpLogging();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
     await DevelopmentSeed.RunAsync(app.Services);
     app.UseCors("DevelopmentCors");
 }

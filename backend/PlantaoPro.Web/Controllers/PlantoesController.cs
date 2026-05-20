@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -6,12 +7,13 @@ using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
+[Authorize]
 public class PlantoesController : BaseWebController
 {
     public PlantoesController(IHttpClientFactory f, ILogger<PlantoesController> l) : base(f, l) { }
 
     public async Task<IActionResult> Index(string? hospital, string? especialidade, string? status, string? tipo, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
-        => await this.RenderPaged<PlantaoResumoDto>($"api/plantoes?hospital={hospital}&especialidade={especialidade}&status={status}&tipo={tipo}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
+        => await this.RenderPaged<PlantaoResumoDto>($"api/plantoes?status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&cidade={hospital}&estado={tipo}&page={page}&pageSize={pageSize}");
 
     public IActionResult Calendario() => View();
 
@@ -40,7 +42,7 @@ public class PlantoesController : BaseWebController
         var (data, error, statusCode) = await ReadApiResponse<PlantaoDetailsDto>(client, $"api/plantoes/{id}");
         if (statusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
         if (data is null) { TempData["Error"] = error ?? "Plantão não encontrado."; return RedirectToAction(nameof(Index)); }
-        var vm = new PlantaoFormViewModel { Id = data.Id, HospitalId = data.HospitalId, EspecialidadeId = data.EspecialidadeId, DataInicio = data.DataInicio, DataFim = data.DataFim, Valor = data.Valor, Vagas = data.Vagas, Tipo = data.Tipo, Observacoes = data.Observacoes ?? string.Empty };
+        var vm = new PlantaoFormViewModel { Id = data.Id, HospitalId = data.HospitalId, EspecialidadeId = data.EspecialidadeId, DataInicio = data.DataInicio, DataFim = data.DataFim, Valor = data.Valor, Vagas = data.Vagas, Tipo = data.Tipo, Observacoes = data.Observacoes, Status = data.Status };
         return View(await BuildForm(vm));
     }
 

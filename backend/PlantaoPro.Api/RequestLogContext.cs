@@ -44,6 +44,13 @@ public sealed class RequestLogContextFilter : IActionFilter
         var elapsedMs = (http.Items[StopwatchKey] as Stopwatch)?.ElapsedMilliseconds ?? 0;
         if (http.Items[StopwatchKey] is Stopwatch sw) sw.Stop();
 
-        _logger.LogInformation("API request finalizado Endpoint:{Endpoint} UsuarioId:{UsuarioId} Email:{Email} Perfil:{Perfil} IP:{Ip} StatusCode:{StatusCode} Sucesso:{Sucesso} DuracaoMs:{DuracaoMs} DataHoraUtc:{DataHoraUtc}", endpoint, userId, email, string.IsNullOrWhiteSpace(roles) ? "sem-perfil" : roles, ip, http.Response.StatusCode, success, elapsedMs, DateTime.UtcNow);
+        if (success)
+        {
+            _logger.LogInformation("API request finalizado Endpoint:{Endpoint} UsuarioId:{UsuarioId} Email:{Email} Perfil:{Perfil} IP:{Ip} StatusCode:{StatusCode} Sucesso:{Sucesso} DuracaoMs:{DuracaoMs} DataHoraUtc:{DataHoraUtc}", endpoint, userId, email, string.IsNullOrWhiteSpace(roles) ? "sem-perfil" : roles, ip, http.Response.StatusCode, success, elapsedMs, DateTime.UtcNow);
+        }
+        else
+        {
+            _logger.LogWarning("API request com falha Endpoint:{Endpoint} UsuarioId:{UsuarioId} Email:{Email} Perfil:{Perfil} IP:{Ip} StatusCode:{StatusCode} Sucesso:{Sucesso} DuracaoMs:{DuracaoMs} DataHoraUtc:{DataHoraUtc}", endpoint, userId, email, string.IsNullOrWhiteSpace(roles) ? "sem-perfil" : roles, ip, http.Response.StatusCode, success, elapsedMs, DateTime.UtcNow);
+        }
     }
 }

@@ -14,8 +14,8 @@ public class MedicoAreaController : ControllerBase
     public MedicoAreaController(MedicoAreaService service){this.service=service;}
     private Guid Uid()=>Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);
 
-    [HttpGet("resumo")] public async Task<IActionResult> Resumo()=>StatusCode((await service.ResumoAsync(Uid())).StatusCode, await service.ResumoAsync(Uid()));
-    [HttpGet("plantoes-disponiveis")] public async Task<IActionResult> PlantoesDisponiveis([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.PlantoesDisponiveisAsync(Uid(),page,pageSize)).StatusCode, await service.PlantoesDisponiveisAsync(Uid(),page,pageSize));
-    [HttpGet("minhas-escalas")] public async Task<IActionResult> MinhasEscalas([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MinhasEscalasAsync(Uid(),page,pageSize)).StatusCode, await service.MinhasEscalasAsync(Uid(),page,pageSize));
-    [HttpGet("meus-pagamentos")] public async Task<IActionResult> MeusPagamentos([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MeusPagamentosAsync(Uid(),page,pageSize)).StatusCode, await service.MeusPagamentosAsync(Uid(),page,pageSize));
+    [HttpGet("resumo")] public async Task<IActionResult> Resumo(){ var r = await service.ResumoAsync(Uid()); return StatusCode(r.StatusCode, r); }
+    [HttpGet("plantoes-disponiveis")] public async Task<IActionResult> PlantoesDisponiveis([FromQuery]int page=1,[FromQuery]int pageSize=20){ var r = await service.PlantoesDisponiveisAsync(Uid(),page,pageSize); return StatusCode(r.StatusCode, r); }
+    [HttpGet("minhas-escalas")] public async Task<IActionResult> MinhasEscalas([FromQuery]int page=1,[FromQuery]int pageSize=20){ var r = await service.MinhasEscalasAsync(Uid(),page,pageSize); return StatusCode(r.StatusCode, r); }
+    [HttpGet("meus-pagamentos")] public async Task<IActionResult> MeusPagamentos([FromQuery]int page=1,[FromQuery]int pageSize=20){ var r = await service.MeusPagamentosAsync(Uid(),page,pageSize); return StatusCode(r.StatusCode, r); }
 }

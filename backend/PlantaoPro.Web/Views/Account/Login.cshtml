@@ -22,12 +22,19 @@
         <form asp-action="Login" method="post" id="loginForm" novalidate>
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2"></div>
+            @if (TempData["Warning"] is string warningMessage && !string.IsNullOrWhiteSpace(warningMessage))
+            {
+                <div class="alert alert-warning py-2 small">
+                    <i class="bi bi-shield-exclamation me-1"></i>@warningMessage
+                </div>
+            }
             <div class="alert alert-info py-2 small">
                 <strong>Ambiente de demonstração:</strong> use <code>admin@plantaopro.com</code> e senha <code>123456</code>.
             </div>
             <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" placeholder="voce@empresa.com" /><span asp-validation-for="Email" class="text-danger small"></span></div>
             <div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" placeholder="Sua senha" /><button class="btn btn-outline-secondary" type="button" onclick="togglePassword('senha',this)"><i class="bi bi-eye"></i></button></div><span asp-validation-for="Senha" class="text-danger small"></span></div>
             <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit"><span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none"></span></button>
+            <div class="form-text mt-2">Após múltiplas falhas, o acesso é bloqueado temporariamente por segurança.</div>
             <a asp-action="ForgotPassword" class="d-inline-block mt-3">Esqueci a senha</a>
         </form>
     </div>

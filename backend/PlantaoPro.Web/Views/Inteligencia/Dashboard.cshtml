@@ -1,0 +1,17 @@
+@model PlantaoPro.Web.Models.InteligenciaDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard Inteligente";
+}
+
+<h2 class="mb-3">Dashboard Executivo Inteligente</h2>
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card"><div class="card-body"><small>Escalas Ativas</small><h4>@Model.Executivo.EscalasAtivas</h4></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><small>Conflitos</small><h4>@Model.Executivo.EscalasComConflito</h4></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><small>Total a Pagar</small><h4>@Model.Executivo.TotalPagar.ToString("C")</h4></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body"><small>Notificações</small><h4>@Model.Executivo.NotificacoesPendentes</h4></div></div></div>
+</div>
+
+@if (!Model.TotalPorEspecialidade.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", Url.Action("Index", "Escalas"))' />
+}

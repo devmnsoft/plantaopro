@@ -63,11 +63,14 @@ public class ConfiguracoesController : BaseWebController
     {
         var client = CreateApiClient();
         var tokenPresente = AddBearerToken(client);
-        var response = await client.GetAsync("api/health");
+        var endpoint = "api/health";
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "N/D";
+        var email = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name ?? "N/D";
+        var dataHoraUtc = DateTime.UtcNow;
 
         var baseUrl = client.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
         var dados = new HealthViewModel(
-            Status: response.IsSuccessStatusCode ? "Healthy" : $"HTTP {(int)response.StatusCode}",
+            Status: "N/D",
             Ambiente: "N/D",
             Schema: "plantaopro",
             BancoConectado: false,
@@ -78,19 +81,48 @@ public class ConfiguracoesController : BaseWebController
             UsuarioAutenticado: User.Identity?.Name ?? "Não autenticado",
             SwaggerUrl: string.IsNullOrWhiteSpace(baseUrl) ? "swagger" : $"{baseUrl}/swagger");
 
-        if (response.IsSuccessStatusCode)
+        try
         {
-            using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            var data = json.RootElement.GetProperty("data");
-            dados = dados with
+            var response = await client.GetAsync(endpoint);
+            dados = dados with { Status = response.IsSuccessStatusCode ? "Healthy" : $"HTTP {(int)response.StatusCode}" };
+
+            var rawJson = await response.Content.ReadAsStringAsync();
+            if (!string.IsNullOrWhiteSpace(rawJson))
             {
-                Status = data.GetProperty("status").GetString() ?? dados.Status,
-                BancoConectado = data.GetProperty("bancoConectado").GetBoolean(),
-                Schema = data.GetProperty("schema").GetString() ?? dados.Schema,
-                Ambiente = data.GetProperty("ambiente").GetString() ?? dados.Ambiente,
-                DataHora = data.GetProperty("dataHora").GetDateTime(),
-                Versao = data.TryGetProperty("versao", out var versao) ? versao.GetString() : dados.Versao
-            };
+                using var json = JsonDocument.Parse(rawJson);
+                if (json.RootElement.TryGetProperty("data", out var data))
+                {
+                    if (data.TryGetProperty("status", out var status) && status.ValueKind == JsonValueKind.String)
+                        dados = dados with { Status = status.GetString() ?? dados.Status };
+
+                    if (data.TryGetProperty("bancoConectado", out var banco) && (banco.ValueKind == JsonValueKind.True || banco.ValueKind == JsonValueKind.False))
+                        dados = dados with { BancoConectado = banco.GetBoolean() };
+
+                    if (data.TryGetProperty("schema", out var schema) && schema.ValueKind == JsonValueKind.String)
+                        dados = dados with { Schema = schema.GetString() ?? dados.Schema };
+
+                    if (data.TryGetProperty("ambiente", out var ambiente) && ambiente.ValueKind == JsonValueKind.String)
+                        dados = dados with { Ambiente = ambiente.GetString() ?? dados.Ambiente };
+
+                    if (data.TryGetProperty("dataHora", out var dh) && dh.ValueKind == JsonValueKind.String && DateTime.TryParse(dh.GetString(), out var parsed))
+                        dados = dados with { DataHora = parsed };
+
+                    if (data.TryGetProperty("versao", out var versao) && versao.ValueKind == JsonValueKind.String)
+                        dados = dados with { Versao = versao.GetString() };
+                }
+            }
+
+            Logger.LogInformation("Healthcheck web concluído. Endpoint:{Endpoint} StatusCode:{StatusCode} Sucesso:{Sucesso} IP:{Ip} Email:{Email} DataHoraUtc:{DataHoraUtc}", endpoint, (int)response.StatusCode, response.IsSuccessStatusCode, ip, email, dataHoraUtc);
+        }
+        catch (HttpRequestException ex)
+        {
+            TempData["Error"] = "Não foi possível consultar a saúde da API no momento.";
+            Logger.LogError(ex, "Falha HTTP em Saude. Endpoint:{Endpoint} StatusCode:{StatusCode} Sucesso:{Sucesso} IP:{Ip} Email:{Email} DataHoraUtc:{DataHoraUtc}", endpoint, 503, false, ip, email, dataHoraUtc);
+        }
+        catch (JsonException ex)
+        {
+            TempData["Error"] = "O retorno de saúde da API veio em formato inesperado.";
+            Logger.LogError(ex, "Falha de parse JSON em Saude. Endpoint:{Endpoint} StatusCode:{StatusCode} Sucesso:{Sucesso} IP:{Ip} Email:{Email} DataHoraUtc:{DataHoraUtc}", endpoint, 500, false, ip, email, dataHoraUtc);
         }
 
         return View(dados);

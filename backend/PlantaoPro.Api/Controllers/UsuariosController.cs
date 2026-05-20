@@ -2,6 +2,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using System.Security.Claims;
 

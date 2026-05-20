@@ -41,26 +41,27 @@ namespace PlantaoPro.Web.Controllers
                 return View(model);
 
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-            _logger.LogInformation("Tentativa de login no Web Email:{Email} IP:{Ip}", model.Email, ip);
+            var normalizedEmail = (model.Email ?? string.Empty).Trim();
+            _logger.LogInformation("Tentativa de login no Web Email:{Email} IP:{Ip}", normalizedEmail, ip);
 
             try
             {
                 var client = _httpClientFactory.CreateClient("PlantaoProApi");
                 _logger.LogInformation("BaseUrl API utilizada no login: {ApiBaseUrl}", client.BaseAddress);
 
-                var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(model.Email, model.Senha));
+                var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(normalizedEmail, model.Senha ?? string.Empty));
                 _logger.LogInformation("Status code retornado pela API no login: {StatusCode}", (int)response.StatusCode);
 
                 var apiResult = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
 
                 if (response.IsSuccessStatusCode && apiResult?.Success == true && apiResult.Data is not null)
                 {
-                    var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, model.Email) };
+                    var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, normalizedEmail) };
                     var safeRoles = apiResult.Data.Roles ?? Array.Empty<string>();
                     claims.AddRange(safeRoles.Where(role => !string.IsNullOrWhiteSpace(role)).Select(role => new Claim(ClaimTypes.Role, role)));
                     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
                     TempData["Success"] = "Login realizado com sucesso.";
-                    _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", model.Email, ip, string.Join(',', safeRoles), DateTime.UtcNow);
+                    _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, string.Join(',', safeRoles), DateTime.UtcNow);
                     return RedirectToAction("Dashboard", "Home");
                 }
 
@@ -78,24 +79,24 @@ namespace PlantaoPro.Web.Controllers
 
                 TempData["Error"] = errorMessage;
                 ModelState.AddModelError(string.Empty, errorMessage);
-                _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", model.Email, ip, false, DateTime.UtcNow);
+                _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, false, DateTime.UtcNow);
                 return View(model);
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Falha de comunicação com a API no login Email:{Email}", model.Email);
+                _logger.LogError(ex, "Falha de comunicação com a API no login Email:{Email}", normalizedEmail);
                 TempData["Error"] = "Não foi possível conectar à API do PlantãoPro. Verifique se a API está em execução.";
                 return View(model);
             }
             catch (TaskCanceledException ex)
             {
-                _logger.LogError(ex, "Timeout ao chamar API no login Email:{Email}", model.Email);
+                _logger.LogError(ex, "Timeout ao chamar API no login Email:{Email}", normalizedEmail);
                 TempData["Error"] = "A autenticação demorou mais que o esperado. Tente novamente.";
                 return View(model);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado no login Email:{Email}", model.Email);
+                _logger.LogError(ex, "Erro inesperado no login Email:{Email}", normalizedEmail);
                 TempData["Error"] = "Erro ao conectar ao servidor.";
                 return View(model);
             }

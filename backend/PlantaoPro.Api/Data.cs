@@ -1050,6 +1050,39 @@ namespace PlantaoPro.Api.Data
         }
     }
 
+
+    public sealed class MedicoAreaService
+    {
+        private readonly IConfiguration cfg;
+        private readonly IAuditService audit;
+        private readonly ILogger<MedicoAreaService> logger;
+        public MedicoAreaService(IConfiguration cfg, IAuditService audit, ILogger<MedicoAreaService> logger){this.cfg=cfg;this.audit=audit;this.logger=logger;}
+        private NpgsqlConnection Cn()=>new(cfg.GetConnectionString("Default"));
+
+        private async Task<(Guid? Id,string? Nome,string? Crm,string? UfCrm)> GetMedicoAsync(NpgsqlConnection cn, Guid uid)
+            => await cn.QueryFirstOrDefaultAsync<(Guid?,string?,string?,string?)>("select id,nome,crm,uf_crm from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new { uid });
+
+        public async Task<ApiResponse<MedicoAreaResumoDto>> ResumoAsync(Guid uid)
+        {
+            await using var cn=Cn();
+            var med=await GetMedicoAsync(cn,uid);
+            if(med.Id is null) return ApiResponse<MedicoAreaResumoDto>.Fail("Médico não encontrado para o usuário autenticado.",404);
+            var dto=await cn.QueryFirstAsync<MedicoAreaResumoDto>(@"select @nome as MedicoNome,@crm as Crm,@uf as UfCrm,
+            (select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0) as PlantoesDisponiveis,
+            (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='solicitado' and e.reg_status='A') as SolicitacoesPendentes,
+            (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='confirmado' and e.reg_status='A') as EscalasConfirmadas,
+            (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='realizado' and e.reg_status='A') as PlantoesRealizados,
+            (select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as PagamentosPendentes,
+            (select coalesce(sum(pg.valor_previsto),0) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as ValorPendente,
+            (select count(1) from plantaopro.notificacoes n where n.usuario_id=@uid and n.lida=false and n.reg_status='A') as NotificacoesNaoLidas",new{uid,mid=med.Id,nome=med.Nome,crm=med.Crm,uf=med.UfCrm});
+            return ApiResponse<MedicoAreaResumoDto>.Ok(dto);
+        }
+        public async Task<ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>> PlantoesDisponiveisAsync(Guid uid,int page,int pageSize){await using var cn=Cn();var med=await GetMedicoAsync(cn,uid);if(med.Id is null) return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Fail("Médico não encontrado para o usuário autenticado.",404);var p=Math.Max(1,page);var s=Math.Clamp(pageSize,1,100);var off=(p-1)*s;var total=await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0");var items=await cn.QueryAsync<MedicoPlantaoDisponivelDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,
+exists(select 1 from plantaopro.escalas e where e.plantao_id=p.id and e.medico_id=@mid and e.reg_status='A') as JaSolicitado,
+exists(select 1 from plantaopro.escalas e2 join plantaopro.plantoes p2 on p2.id=e2.plantao_id where e2.medico_id=@mid and e2.reg_status='A' and e2.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p2.data_inicio,p2.data_fim)) as TemConflitoHorario
+from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off",new{mid=med.Id,s,off});return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items,p,s,total));}
+    }
+
     public sealed class DashboardService
     {
         private readonly IConfiguration cfg; public DashboardService(IConfiguration cfg)

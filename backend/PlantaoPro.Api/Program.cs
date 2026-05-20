@@ -59,6 +59,7 @@ builder.Services.AddScoped<HospitalService>();
 builder.Services.AddScoped<EscalaService>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
+builder.Services.AddScoped<MedicoAreaService>();
 
 var app = builder.Build();
 

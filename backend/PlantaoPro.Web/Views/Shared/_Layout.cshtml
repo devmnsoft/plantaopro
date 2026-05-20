@@ -20,23 +20,32 @@
 <nav class="sidebar-nav">
 <div class="nav-section-title">Operação</div>
 <a class="nav-link-app @(currentController=="Home"?"active":"")" asp-controller="Home" asp-action="Dashboard"><i class="bi bi-speedometer2"></i><span>Dashboard</span></a>
-<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Index"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>
-<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Calendario"?"active":"")" asp-controller="Plantoes" asp-action="Calendario"><i class="bi bi-calendar3"></i><span>Calendário</span></a>
-<a class="nav-link-app @(currentController=="Escalas"?"active":"")" asp-controller="Escalas" asp-action="Index"><i class="bi bi-diagram-3"></i><span>Escalas</span></a>
-<a class="nav-link-app @(currentController=="MinhaAgenda"?"active":"")" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Minha Agenda</span></a>
+@if (isAdmin || isCoord || isOper || isHospital) {<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Index"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>}
+@if (isAdmin || isCoord || isOper || isHospital) {<a class="nav-link-app @(currentController=="Plantoes"&&currentAction=="Calendario"?"active":"")" asp-controller="Plantoes" asp-action="Calendario"><i class="bi bi-calendar3"></i><span>Calendário</span></a>}
+@if (isAdmin || isCoord || isOper || isHospital || isMed) {<a class="nav-link-app @(currentController=="Escalas"?"active":"")" asp-controller="Escalas" asp-action="Index"><i class="bi bi-diagram-3"></i><span>Escalas</span></a>}
+@if (isMed) {<a class="nav-link-app @(currentController=="MinhaAgenda"?"active":"")" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Minha Agenda</span></a>}
+
+@if (isAdmin || isCoord || isOper) {
 <div class="nav-section-title">Cadastros</div>
 <a class="nav-link-app @(currentController=="Medicos"?"active":"")" asp-controller="Medicos" asp-action="Index"><i class="bi bi-people"></i><span>Médicos</span></a>
 <a class="nav-link-app @(currentController=="Hospitais"?"active":"")" asp-controller="Hospitais" asp-action="Index"><i class="bi bi-hospital"></i><span>Hospitais/Clínicas</span></a>
 <a class="nav-link-app @(currentController=="Especialidades"?"active":"")" asp-controller="Especialidades" asp-action="Index"><i class="bi bi-heart-pulse"></i><span>Especialidades</span></a>
+}
+
 <div class="nav-section-title">Financeiro</div>
-@if (isAdmin || isFin) {<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></a>} @if (isMed){<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus Pagamentos</span></a>}
+@if (isAdmin || isFin) {<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Pagamentos</span></a>}
+@if (isMed) {<a class="nav-link-app @(currentController=="Financeiro"?"active":"")" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus Pagamentos</span></a>}
+
 <div class="nav-section-title">Gestão</div>
 <a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
 @if (isAdmin) {<a class="nav-link-app @(currentController=="Auditoria"?"active":"")" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-shield-check"></i><span>Auditoria</span></a>}
-<a class="nav-link-app @(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>
+@if (isAdmin || isCoord || isOper || isFin) {<a class="nav-link-app @(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>}
+
+@if (isAdmin) {
 <div class="nav-section-title">Sistema</div>
-@if (isAdmin) {<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Index"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i><span>Configurações</span></a>}
-@if (isAdmin) {<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-activity"></i><span>Saúde do Sistema</span></a>}
+<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Index"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i><span>Configurações</span></a>
+<a class="nav-link-app @(currentController=="Configuracoes"&&currentAction=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-activity"></i><span>Saúde do Sistema</span></a>
+}
 <a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
 </nav></aside>
 <section class="app-main">

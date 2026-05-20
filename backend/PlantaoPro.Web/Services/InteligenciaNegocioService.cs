@@ -11,6 +11,7 @@ public interface IInteligenciaNegocioService
     IEnumerable<AlertaFinanceiroViewModel> GerarAlertasPendencia(IEnumerable<(Guid MedicoId, string Medico, DateTime VencimentoUtc, decimal Valor)> pendencias, int diasLimite);
     InteligenciaDashboardViewModel ConstruirDashboard(IEnumerable<EscalaHistoricoDto> historico, IEnumerable<NotificacaoEventoDto> auditoria);
     KpiMedicoViewModel ConstruirKpiMedico(Guid medicoId, IEnumerable<EscalaHistoricoDto> historico, string especialidadePrincipal);
+    IEnumerable<NotificacaoEventoDto> GerarNotificacoesEscala(string nomeMedico, string nomeHospital, DateTime inicioUtc, DateTime fimUtc, bool alteracao);
 }
 
 public class InteligenciaNegocioService : IInteligenciaNegocioService
@@ -92,5 +93,16 @@ public class InteligenciaNegocioService : IInteligenciaNegocioService
             HorasTrabalhadasSemana: Math.Round(ultimosSete.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours), 1),
             PagamentosReceber: baseMedico.Sum(h => h.ValorPago),
             Recomendacoes: recomendacoes);
+    }
+
+    public IEnumerable<NotificacaoEventoDto> GerarNotificacoesEscala(string nomeMedico, string nomeHospital, DateTime inicioUtc, DateTime fimUtc, bool alteracao)
+    {
+        var acao = alteracao ? "atualizada" : "criada";
+        var mensagem = $"Escala {acao}: {nomeHospital} | {inicioUtc:dd/MM HH:mm} até {fimUtc:dd/MM HH:mm}.";
+        return new[]
+        {
+            new NotificacaoEventoDto(nomeMedico, mensagem, DateTime.UtcNow, "InApp"),
+            new NotificacaoEventoDto("coordenacao@plantaopro.com", $"Escala do médico {nomeMedico} {acao}.", DateTime.UtcNow, "Email")
+        };
     }
 }

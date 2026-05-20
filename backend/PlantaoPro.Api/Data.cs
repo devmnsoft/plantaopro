@@ -73,9 +73,25 @@ namespace PlantaoPro.Api.Data
                 bool senhaValida = false;
                 try
                 {
+                    // Compatibilidade com bases legadas que armazenavam senha em texto plano
+                    // (ou em formato não BCrypt). Ao autenticar com sucesso em legado, o hash
+                    // é atualizado imediatamente para BCrypt.
                     senhaValida = BCrypt.Net.BCrypt.Verify(req.Senha, senhaHash);
                 }
-                catch (Exception ex) { logger.LogError(ex, "Falha na verificação BCrypt UsuarioId:{UsuarioId} Email:{Email} HashLength:{HashLength} IP:{Ip}", (Guid)user.id, normalizedEmail, senhaHash.Length, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
+                catch
+                {
+                    senhaValida = string.Equals(req.Senha, senhaHash, StringComparison.Ordinal);
+                    if (senhaValida)
+                    {
+                        var senhaMigradaHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
+                        await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new
+                        {
+                            hash = senhaMigradaHash,
+                            id = (Guid)user.id
+                        });
+                        logger.LogInformation("Senha legada migrada para BCrypt UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    }
+                }
                 if (!senhaValida)
                 {
                     logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);

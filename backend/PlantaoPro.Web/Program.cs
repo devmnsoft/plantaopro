@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.OpenApi.Models;
 using PlantaoPro.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +9,14 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "PlantãoPro Web API",
+        Version = "v1"
+    });
+});
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

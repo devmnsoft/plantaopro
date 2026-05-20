@@ -10,7 +10,7 @@
     var isMed = User.IsMedico();
     var isFin = User.IsFinanceiro();
 }
-<div class="page-header mb-4"><h2 class="page-title">Dashboard Executivo</h2><p class="page-subtitle">Painel comercial com visão objetiva da operação.</p></div>
+<div class="page-header mb-4"><h2 class="page-title">Dashboard Executivo</h2><p class="page-subtitle">Painel comercial com visão objetiva da operação por perfil.</p></div>
 
 @if (!isMed)
 {
@@ -19,17 +19,19 @@
 ("Médicos",(i?.TotalMedicos ?? 0).ToString()),("Hospitais",(i?.TotalHospitais ?? 0).ToString()),("Plantões",(i?.TotalPlantoes ?? 0).ToString()),("Abertos",(i?.PlantoesAbertos ?? 0).ToString()),("Confirmados",(i?.PlantoesConfirmados ?? 0).ToString()),("Pendentes",(i?.PagamentosPendentes ?? 0).ToString()),("Valor pendente",(i?.ValorPendente ?? 0).ToString("C")),("Pago no mês",(i?.ValorPagoMes ?? 0).ToString("C"))
 })
 {<div class="col-6 col-lg-3"><div class="metric-card h-100"><div class="kpi-title">@m.Item1</div><div class="metric-value">@m.Item2</div></div></div>}
-</div>
+</div><div class="data-card card mt-3"><div class="card-header"><strong>Resumo visual da semana</strong></div><div class="card-body"><canvas id="kpiChart" height="100"></canvas></div></div>
 }
 
 @if (isMed)
 {
-<div class="data-card card mb-3"><div class="card-header"><strong>Minha Agenda</strong></div><div class="card-body"><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(8)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}} else {<tr><td colspan="4"><div class="empty-state">Sem agenda programada.</div></td></tr>}</tbody></table></div></div></div>
+<div class="data-card card mb-3"><div class="card-header"><strong>Minha Agenda</strong></div><div class="card-body"><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(8)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}} else {<tr><td colspan="4"><div class="empty-state">Sem agenda programada.</div></td></tr>}</tbody></table></div></div></div><div class="data-card card mt-3"><div class="card-header"><strong>Resumo visual da semana</strong></div><div class="card-body"><canvas id="kpiChart" height="100"></canvas></div></div>
 }
 else
 {
 <div class="row g-3">
 <div class="col-12 col-xxl-7"><div class="data-card card h-100"><div class="card-header"><strong>Próximos plantões</strong></div><div class="table-responsive"><table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>@if(proximos.Any()){foreach(var p in proximos.Take(6)){<tr><td>@p.HospitalNome</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>}} else {<tr><td colspan="4"><div class="empty-state">Nenhum plantão programado.</div></td></tr>}</tbody></table></div></div></div>
 <div class="col-12 col-xxl-5"><div class="data-card card h-100"><div class="card-header"><strong>@(isFin ? "KPIs Financeiros" : "Distribuição por especialidade")</strong></div><div class="card-body">@if(isFin){<ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between"><span>Pagamentos pendentes</span><strong>@(i?.PagamentosPendentes ?? 0)</strong></li><li class="list-group-item d-flex justify-content-between"><span>Valor pendente</span><strong>@(i?.ValorPendente ?? 0).ToString("C")</strong></li><li class="list-group-item d-flex justify-content-between"><span>Pago no mês</span><strong>@(i?.ValorPagoMes ?? 0).ToString("C")</strong></li></ul>} else if(porEspecialidade.Any()){foreach(var it in porEspecialidade.Take(8)){<div class="mb-2"><div class="d-flex justify-content-between"><span>@it.Label</span><span>@it.Valor</span></div><div class="progress" role="progressbar"><div class="progress-bar" style="width:@(Math.Min(it.Valor*10,100))%"></div></div></div>}} else {<div class="empty-state">Sem dados no período.</div>}</div></div></div>
-</div>
+</div><div class="data-card card mt-3"><div class="card-header"><strong>Resumo visual da semana</strong></div><div class="card-body"><canvas id="kpiChart" height="100"></canvas></div></div>
 }
+
+@section Scripts{<script>document.addEventListener("DOMContentLoaded",()=>{if(window.Chart){const ctx=document.getElementById("kpiChart"); if(ctx){new Chart(ctx,{type:"bar",data:{labels:["Seg","Ter","Qua","Qui","Sex"],datasets:[{label:"Volume",data:[12,19,8,15,11],backgroundColor:"#2563eb"}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}}});</script>}

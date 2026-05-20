@@ -1,10 +1,75 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.MedicoAreaResumoDto>
-@{ ViewData["Title"] = "Minha Agenda"; var data = Model?.Data; }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Minha Agenda","Acompanhe seus plantões, solicitações e pagamentos.","bi-calendar-check")' />
-@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage) || TempData["Error"] is string err){<div class="alert alert-warning">@(Model?.ErrorMessage ?? err)</div>}
-@if(data is not null){
-<div class="row g-3"><div class="col-md-3"><div class="metric-card"><div class="metric-label">Disponíveis</div><div class="metric-value">@data.PlantoesDisponiveis</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Solicitações</div><div class="metric-value">@data.SolicitacoesPendentes</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Confirmadas</div><div class="metric-value">@data.EscalasConfirmadas</div></div></div><div class="col-md-3"><div class="metric-card"><div class="metric-label">Pag. pendentes</div><div class="metric-value">@data.PagamentosPendentes</div></div></div></div>
-<div class="mt-3 d-flex gap-2 flex-wrap"><a asp-action="PlantoesDisponiveis" class="btn btn-primary">Ver plantões disponíveis</a><button class="btn btn-outline-secondary" disabled title="Em breve">Minhas escalas</button><button class="btn btn-outline-secondary" disabled title="Em breve">Meus pagamentos</button></div>
-}else{
-<div class="card border-0 shadow-sm"><div class="card-body"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-x","Agenda indisponível","Não foi possível carregar sua agenda no momento.")' /></div></div>
+@{
+    ViewData["Title"] = "Minha Agenda";
+    var data = Model?.Data;
+    var errorMessage = Model?.ErrorMessage ?? TempData["Error"] as string;
+
+    // Criar o PageHeaderViewModel antes do partial
+    var header = new PlantaoPro.Web.Models.PageHeaderViewModel(
+        Title: "Minha Agenda",
+        Subtitle: "Acompanhe seus plantões, solicitações e pagamentos.",
+        Icon: "bi-calendar-check"
+    );
+
+    // Criar EmptyStateViewModel antes do partial
+    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel(
+        Icon: "bi-calendar-x",
+        Title: "Agenda indisponível",
+        Description: "Não foi possível carregar sua agenda no momento.",
+        ButtonText: null,
+        ButtonAction: null,
+        ButtonController: null,
+        ButtonDisabled: true
+    );
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-warning">@errorMessage</div>
+}
+
+@if (data is not null)
+{
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Disponíveis</div>
+                <div class="metric-value">@data.PlantoesDisponiveis</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Solicitações</div>
+                <div class="metric-value">@data.SolicitacoesPendentes</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Confirmadas</div>
+                <div class="metric-value">@data.EscalasConfirmadas</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card">
+                <div class="metric-label">Pag. pendentes</div>
+                <div class="metric-value">@data.PagamentosPendentes</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3 d-flex gap-2 flex-wrap">
+        <a asp-action="PlantoesDisponiveis" class="btn btn-primary">Ver plantões disponíveis</a>
+        <button class="btn btn-outline-secondary" disabled title="Em breve">Minhas escalas</button>
+        <button class="btn btn-outline-secondary" disabled title="Em breve">Meus pagamentos</button>
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <partial name="_EmptyState" model="emptyState" />
+        </div>
+    </div>
 }

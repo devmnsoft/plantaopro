@@ -79,6 +79,7 @@
 
                 <div class="nav-section-title">Gestão</div>
                 <a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
+                <a class="nav-link-app @(currentController=="Usuario"?"active":"")" asp-controller="Usuario" asp-action="Index"><i class="bi bi-person-gear"></i><span>Minha Conta</span></a>
 
                 @if (isAdmin)
                 {
@@ -120,7 +121,7 @@
                     <a class="btn btn-light" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i></a>
                     <div class="user-pill">
                         <div class="user-avatar"><i class="bi bi-person"></i></div>
-                        <div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>Usuário logado</small></div>
+                        <div class="user-info"><span class="user-name">@User.Identity?.Name</span><small><a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">Configurações</a></small></div>
                     </div>
                 </div>
             </header>

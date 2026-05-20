@@ -1,0 +1,16 @@
+@model PlantaoPro.Web.Controllers.UserSettingsViewModel
+@{ ViewData["Title"] = "Configurações do Usuário"; }
+<div class="data-card p-4">
+    <h4 class="mb-3">Meu Perfil</h4>
+    <dl class="row">
+        <dt class="col-sm-3">Nome</dt><dd class="col-sm-9">@Model.Nome</dd>
+        <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9">@Model.Email</dd>
+        <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Telefone)?"Não informado":Model.Telefone)</dd>
+        <dt class="col-sm-3">Notificações</dt><dd class="col-sm-9">@Model.PreferenciasNotificacao</dd>
+    </dl>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-primary" asp-action="Edit"><i class="bi bi-pencil"></i> Editar dados</a>
+        <a class="btn btn-outline-primary" asp-action="AlterarSenha"><i class="bi bi-key"></i> Alterar senha</a>
+        <button class="btn btn-outline-secondary" disabled title="Em breve">2FA</button>
+    </div>
+</div>

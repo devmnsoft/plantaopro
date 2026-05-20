@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
+[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador)]
 public class EspecialidadesController : BaseWebController
 {
  public EspecialidadesController(IHttpClientFactory f, ILogger<EspecialidadesController> l):base(f,l){}

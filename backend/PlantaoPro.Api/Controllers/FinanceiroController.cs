@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api;
 namespace PlantaoPro.Api.Controllers
 {
     [ApiController]
@@ -12,21 +13,21 @@ namespace PlantaoPro.Api.Controllers
         {
             this.service = service;
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpGet("pagamentos")]
         public async Task<IActionResult> Listar([FromQuery] PagamentoFilterRequest f)
         {
             var r = await service.ListarAsync(f);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpGet("pagamentos/{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
             var r = await service.GetByIdAsync(id);
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpPost("pagamentos/gerar")]
         public async Task<IActionResult> Gerar([FromBody] GerarPagamentoRequest req)
         {
@@ -34,7 +35,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.GerarAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpPost("pagamentos/{id:guid}/confirmar")]
         public async Task<IActionResult> Confirmar(Guid id, [FromBody] ConfirmarPagamentoRequest req)
         {
@@ -42,7 +43,7 @@ namespace PlantaoPro.Api.Controllers
             var r = await service.ConfirmarAsync(id, req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
             return StatusCode(r.StatusCode, r);
         }
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpPost("pagamentos/{id:guid}/cancelar")]
         public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarPagamentoRequest req)
         {
@@ -51,7 +52,7 @@ namespace PlantaoPro.Api.Controllers
             return StatusCode(r.StatusCode, r);
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpGet("resumo")]
         public async Task<IActionResult> Resumo([FromQuery] PagamentoFilterRequest f)
         {
@@ -59,7 +60,7 @@ namespace PlantaoPro.Api.Controllers
             return StatusCode(r.StatusCode, r);
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Medico)]
         [HttpGet("meus-pagamentos")]
         public async Task<IActionResult> Meus([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
@@ -68,7 +69,7 @@ namespace PlantaoPro.Api.Controllers
             return StatusCode(r.StatusCode, r);
         }
 
-        [Authorize]
+        [Authorize(Roles = RolesConstants.Medico)]
         [HttpGet("meus-pagamentos/{id:guid}")]
         public async Task<IActionResult> MeuPorId(Guid id)
         {

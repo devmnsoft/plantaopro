@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Api;
 namespace PlantaoPro.Api.Controllers;
 [ApiController]
 [Route("api/auditoria")]
+[Microsoft.AspNetCore.Authorization.Authorize(Roles = RolesConstants.Administrador)]
 public class AuditoriaController : ControllerBase
 {
     [HttpGet]

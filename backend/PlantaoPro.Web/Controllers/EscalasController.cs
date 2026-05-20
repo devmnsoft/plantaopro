@@ -1,11 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
 
+[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador + "," + RolesConstants.Hospital)]
 public class EscalasController : BaseWebController
 {
     public EscalasController(IHttpClientFactory f, ILogger<EscalasController> l) : base(f, l) { }

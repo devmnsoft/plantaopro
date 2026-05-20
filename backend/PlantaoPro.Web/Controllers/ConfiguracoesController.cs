@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using System.Text.Json;
 
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
 
+[Authorize(Roles = RolesConstants.Administrador)]
 public class ConfiguracoesController : BaseWebController
 {
     public ConfiguracoesController(IHttpClientFactory f, ILogger<ConfiguracoesController> l) : base(f, l) { }

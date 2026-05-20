@@ -17,19 +17,32 @@ public static class DevelopmentSeed
         await cn.OpenAsync();
         await cn.ExecuteAsync("create schema if not exists plantaopro;");
 
-        var perfis = new[] { "ADMINISTRADOR", "COORDENADOR", "FINANCEIRO" };
+        var perfis = new[] { "ADMINISTRADOR", "COORDENACAO", "OPERADOR", "FINANCEIRO", "MEDICO", "HOSPITAL" };
         foreach (var nome in perfis)
             await cn.ExecuteAsync("insert into plantaopro.perfis(id,nome,descricao,reg_status,reg_date) select gen_random_uuid(),@nome,@desc,'A',now() where not exists(select 1 from plantaopro.perfis where upper(nome)=upper(@nome))", new { nome, desc = $"Perfil {nome.ToLowerInvariant()}" });
 
-        var admin = await cn.QueryFirstOrDefaultAsync<(Guid Id, string? SenhaHash)>("select id,senha_hash from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new { Email = "admin@plantaopro.com" });
-        var usuarioId = admin.Id == Guid.Empty ? Guid.NewGuid() : admin.Id;
-        if (admin.Id == Guid.Empty)
-            await cn.ExecuteAsync("insert into plantaopro.usuarios(id,nome,email,senha_hash,reg_status,reg_date) values(@id,'Administrador Geral','admin@plantaopro.com',@hash,'A',now())", new { id = usuarioId, hash = BCrypt.Net.BCrypt.HashPassword("123456") });
-        else if (string.IsNullOrWhiteSpace(admin.SenhaHash))
-            await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new { id = usuarioId, hash = BCrypt.Net.BCrypt.HashPassword("123456") });
+        var usuariosSeed = new[]
+        {
+            ("admin@plantaopro.com", "Administrador Geral", "ADMINISTRADOR"),
+            ("coordenacao@plantaopro.com", "Usuário Coordenação", "COORDENACAO"),
+            ("operador@plantaopro.com", "Usuário Operador", "OPERADOR"),
+            ("financeiro@plantaopro.com", "Usuário Financeiro", "FINANCEIRO"),
+            ("medico@plantaopro.com", "Usuário Médico", "MEDICO"),
+            ("hospital@plantaopro.com", "Usuário Hospital", "HOSPITAL")
+        };
 
-        var adminPerfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where upper(nome)='ADMINISTRADOR' limit 1");
-        await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,usuario_id,perfil_id,reg_status,reg_date) select gen_random_uuid(),@u,@p,'A',now() where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@u and perfil_id=@p and reg_status='A')", new { u = usuarioId, p = adminPerfilId });
+        foreach (var (email, nome, perfilNome) in usuariosSeed)
+        {
+            var usuario = await cn.QueryFirstOrDefaultAsync<(Guid Id, string? SenhaHash)>("select id,senha_hash from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new { Email = email });
+            var userId = usuario.Id == Guid.Empty ? Guid.NewGuid() : usuario.Id;
+            if (usuario.Id == Guid.Empty)
+                await cn.ExecuteAsync("insert into plantaopro.usuarios(id,nome,email,senha_hash,reg_status,reg_date) values(@id,@nome,@email,@hash,'A',now())", new { id = userId, nome, email, hash = BCrypt.Net.BCrypt.HashPassword("123456") });
+            else if (string.IsNullOrWhiteSpace(usuario.SenhaHash))
+                await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new { id = userId, hash = BCrypt.Net.BCrypt.HashPassword("123456") });
+
+            var perfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where upper(nome)=upper(@perfilNome) limit 1", new { perfilNome });
+            await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,usuario_id,perfil_id,reg_status,reg_date) select gen_random_uuid(),@u,@p,'A',now() where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@u and perfil_id=@p and reg_status='A')", new { u = userId, p = perfilId });
+        }
 
         string[] especialidades = new[] { "Clínica Médica", "Cardiologia", "Ortopedia", "Pediatria", "Ginecologia", "Anestesiologia", "Neurologia", "Cirurgia Geral", "Dermatologia", "Psiquiatria" };
         foreach (var e in especialidades)
@@ -41,6 +54,9 @@ public static class DevelopmentSeed
         for (var i = 1; i <= 20; i++)
             await cn.ExecuteAsync("insert into plantaopro.medicos(id,nome,cpf,crm,uf_crm,email,telefone,cidade,estado,especialidade_id,reg_status,reg_date) select gen_random_uuid(),@n,@cpf,@crm,'SP',@e,@t,'São Paulo','SP',(select id from plantaopro.especialidades order by nome offset @off limit 1),'A',now() where not exists(select 1 from plantaopro.medicos where cpf=@cpf)", new { n = $"Dr(a). Profissional {i}", cpf = $"999999999{i:00}", crm = $"CRM{i:00000}", e = $"medico{i}@plantaopro.com", t = "(11) 98888-8888", off = (i - 1) % 10 });
 
+
+        var medicoUserId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.usuarios where lower(email)='medico@plantaopro.com' limit 1");
+        await cn.ExecuteAsync("update plantaopro.medicos set usuario_id=@uid where id=(select id from plantaopro.medicos where reg_status='A' and (usuario_id is null or usuario_id<>@uid) order by reg_date limit 1)", new { uid = medicoUserId });
         await cn.ExecuteAsync(@"insert into plantaopro.plantoes(id,hospital_id,especialidade_id,data_inicio,data_fim,valor,vagas,vagas_disponiveis,tipo,status,observacoes,reg_status,reg_date)
 select gen_random_uuid(),h.id,e.id,now()+((x.i||' day')::interval),now()+((x.i||' day')::interval)+interval '12 hour',800 + x.i*25,2,2,'presencial',case when x.i%4=0 then 'confirmado' else 'aberto' end,'Cobertura assistencial de rotina','A',now()
 from generate_series(1,30) x(i)

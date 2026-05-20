@@ -5,9 +5,11 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
+[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador + "," + RolesConstants.Hospital)]
 public class PlantoesController : BaseWebController
 {
     public PlantoesController(IHttpClientFactory f, ILogger<PlantoesController> l) : base(f, l) { }

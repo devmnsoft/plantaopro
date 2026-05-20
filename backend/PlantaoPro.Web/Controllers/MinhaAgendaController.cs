@@ -1,9 +1,12 @@
+using Microsoft.AspNetCore.Authorization;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
+using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
 
+[Authorize(Roles = RolesConstants.Medico)]
 public class MinhaAgendaController : BaseWebController
 {
     public MinhaAgendaController(

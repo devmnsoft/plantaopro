@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
+using PlantaoPro.Api;
 
 namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Medico)]
 [Route("api/medico-area")]
 public class MedicoAreaController : ControllerBase
 {

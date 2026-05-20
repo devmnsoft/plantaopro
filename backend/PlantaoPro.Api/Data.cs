@@ -51,7 +51,7 @@ namespace PlantaoPro.Api.Data
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
-                    Email = req.Email
+                    Email = normalizedEmail
                 });
                 if (user is null)
                 {
@@ -101,7 +101,7 @@ namespace PlantaoPro.Api.Data
         string GenerateToken(Guid uid, string email, string[] roles)
         {
             var jwt = cfg.GetSection("Jwt");
-            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new("uid", uid.ToString()) };
+            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -1093,6 +1093,42 @@ namespace PlantaoPro.Api.Data
 exists(select 1 from plantaopro.escalas e where e.plantao_id=p.id and e.medico_id=@mid and e.reg_status='A') as JaSolicitado,
 exists(select 1 from plantaopro.escalas e2 join plantaopro.plantoes p2 on p2.id=e2.plantao_id where e2.medico_id=@mid and e2.reg_status='A' and e2.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p2.data_inicio,p2.data_fim)) as TemConflitoHorario
 from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off",new{mid=med.Id,s,off});return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items,p,s,total));}
+        public async Task<ApiResponse<PagedResult<MedicoEscalaDto>>> MinhasEscalasAsync(Guid uid, int page, int pageSize)
+        {
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null) return ApiResponse<PagedResult<MedicoEscalaDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var p = Math.Max(1, page);
+            var s = Math.Clamp(pageSize, 1, 100);
+            var off = (p - 1) * s;
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.reg_status='A'", new { mid = med.Id });
+            var items = await cn.QueryAsync<MedicoEscalaDto>(@"select e.id as EscalaId,e.plantao_id as PlantaoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,e.status,e.justificativa
+            from plantaopro.escalas e
+            join plantaopro.plantoes p on p.id=e.plantao_id
+            join plantaopro.hospitais h on h.id=p.hospital_id
+            join plantaopro.especialidades esp on esp.id=p.especialidade_id
+            where e.medico_id=@mid and e.reg_status='A'
+            order by p.data_inicio desc limit @s offset @off", new { mid = med.Id, s, off });
+            return ApiResponse<PagedResult<MedicoEscalaDto>>.Ok(new(items, p, s, total));
+        }
+        public async Task<ApiResponse<PagedResult<MedicoPagamentoDto>>> MeusPagamentosAsync(Guid uid, int page, int pageSize)
+        {
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null) return ApiResponse<PagedResult<MedicoPagamentoDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var p = Math.Max(1, page);
+            var s = Math.Clamp(pageSize, 1, 100);
+            var off = (p - 1) * s;
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.reg_status='A'", new { mid = med.Id });
+            var items = await cn.QueryAsync<MedicoPagamentoDto>(@"select pg.id as PagamentoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataPlantao,pg.valor_previsto as ValorPrevisto,pg.valor_pago as ValorPago,pg.status,pg.data_prevista as DataPrevista,pg.data_pagamento as DataPagamento,pg.forma_pagamento as FormaPagamento
+            from plantaopro.pagamentos pg
+            join plantaopro.plantoes p on p.id=pg.plantao_id
+            join plantaopro.hospitais h on h.id=p.hospital_id
+            join plantaopro.especialidades esp on esp.id=p.especialidade_id
+            where pg.medico_id=@mid and pg.reg_status='A'
+            order by p.data_inicio desc limit @s offset @off", new { mid = med.Id, s, off });
+            return ApiResponse<PagedResult<MedicoPagamentoDto>>.Ok(new(items, p, s, total));
+        }
     }
 
     public sealed class DashboardService

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Models.ViewModels;
 using System.Security.Claims;
 
 namespace PlantaoPro.Web.Controllers;
@@ -23,15 +24,16 @@ public class UsuarioController : BaseWebController
     {
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
-        var response = await client.GetFromJsonAsync<ApiResponse<List<UserListVMWeb>>>("api/usuarios");
-        var users = response?.Data ?? new List<UserListVMWeb>();
+        var response = await client.GetFromJsonAsync<ApiResponse<List<UserListItemDto>>>("api/usuarios");
+        var users = response?.Data ?? new List<UserListItemDto>();
 
         if (!string.IsNullOrWhiteSpace(search))
             users = users.Where(x => x.Username.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Email.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
         if (!string.IsNullOrWhiteSpace(status))
             users = users.Where(x => status == "blocked" ? x.Locked : !x.Locked).ToList();
 
-        return View(users);
+        var model = new UserListVMWeb(users, Total: users.Count, Page: 1, PageSize: Math.Max(users.Count, 1));
+        return View(model);
     }
 
     [Authorize(Roles = PlantaoPro.Web.Security.RolesConstants.Administrador)]

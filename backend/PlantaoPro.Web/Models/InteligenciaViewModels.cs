@@ -20,15 +20,22 @@ public record DashboardFiltroViewModel(DateTime Inicio, DateTime Fim, string? Ho
 
 public record MedicoPrioridadeViewModel(Guid MedicoId, int EscalasUltimos7Dias, decimal HorasUltimos7Dias, decimal ScorePrioridade);
 
+public record SugestaoPlantaoViewModel(Guid MedicoId, string MedicoNome, string Hospital, string Especialidade, DateTime InicioUtc, DateTime FimUtc, decimal ScoreAderencia, string Justificativa);
+
+public record IndicadorProdutividadeViewModel(string Chave, string Dimensao, int Escalas, decimal Horas, decimal Receita);
+
 public record DashboardExecutivoViewModel(
     int EscalasAtivas,
     int EscalasComConflito,
     decimal TotalPagar,
     int NotificacoesPendentes,
     decimal MediaHorasSemanaPorMedico,
+    int MedicosAcimaLimiteSemanal,
     IEnumerable<AlertaFinanceiroViewModel> AlertasFinanceiros,
     IEnumerable<string> AlertasOperacionais,
-    IEnumerable<MedicoPrioridadeViewModel> RankingPrioridade);
+    IEnumerable<MedicoPrioridadeViewModel> RankingPrioridade,
+    IEnumerable<SugestaoPlantaoViewModel> SugestoesPlantoes,
+    IEnumerable<IndicadorProdutividadeViewModel> Produtividade);
 
 public record InteligenciaDashboardViewModel(
     DashboardExecutivoViewModel Executivo,

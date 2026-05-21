@@ -23,33 +23,66 @@ public class FinanceiroController : BaseWebController
     [HttpPost]
     public async Task<IActionResult> GerarPagamento(Guid escalaId)
     {
-        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
-        var payload = JsonSerializer.Serialize(new GerarPagamentoRequest(escalaId, null, null));
-        var response = await client.PostAsync("api/financeiro/pagamentos/gerar", new StringContent(payload, Encoding.UTF8, "application/json"));
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível gerar pagamento."; return RedirectToAction(nameof(Index)); }
-        TempData["Success"] = "Pagamento gerado com sucesso."; return RedirectToAction(nameof(Index));
+        try
+        {
+            var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+            var payload = JsonSerializer.Serialize(new GerarPagamentoRequest(escalaId, null, null));
+            var response = await client.PostAsync("api/financeiro/pagamentos/gerar", new StringContent(payload, Encoding.UTF8, "application/json"));
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível gerar pagamento."; return RedirectToAction(nameof(Index)); }
+            TempData["Success"] = "Pagamento gerado com sucesso."; return RedirectToAction(nameof(Index));
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.LogError(ex, "Falha HTTP ao gerar pagamento para escala {EscalaId}", escalaId);
+            TempData["Error"] = "Falha de comunicação ao gerar pagamento.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro inesperado ao gerar pagamento para escala {EscalaId}", escalaId);
+            TempData["Error"] = "Erro inesperado ao gerar pagamento.";
+            return RedirectToAction(nameof(Index));
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> ConfirmarPagamento(Guid id, decimal valorPago, DateOnly dataPagamento, string formaPagamento, string? observacoes)
     {
-        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
-        var payload = JsonSerializer.Serialize(new ConfirmarPagamentoRequest(valorPago, dataPagamento, formaPagamento, observacoes));
-        var response = await client.PostAsync($"api/financeiro/pagamentos/{id}/confirmar", new StringContent(payload, Encoding.UTF8, "application/json"));
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível confirmar pagamento."; return RedirectToAction(nameof(Details), new { id }); }
-        TempData["Success"] = "Pagamento confirmado com sucesso."; return RedirectToAction(nameof(Details), new { id });
+        try
+        {
+            var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+            var payload = JsonSerializer.Serialize(new ConfirmarPagamentoRequest(valorPago, dataPagamento, formaPagamento, observacoes));
+            var response = await client.PostAsync($"api/financeiro/pagamentos/{id}/confirmar", new StringContent(payload, Encoding.UTF8, "application/json"));
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível confirmar pagamento."; return RedirectToAction(nameof(Details), new { id }); }
+            TempData["Success"] = "Pagamento confirmado com sucesso."; return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao confirmar pagamento {PagamentoId} valor {ValorPago}", id, valorPago);
+            TempData["Error"] = "Erro inesperado ao confirmar pagamento.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 
     [HttpPost]
     public async Task<IActionResult> CancelarPagamento(Guid id, string justificativa)
     {
-        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
-        var payload = JsonSerializer.Serialize(new CancelarPagamentoRequest(justificativa));
-        var response = await client.PostAsync($"api/financeiro/pagamentos/{id}/cancelar", new StringContent(payload, Encoding.UTF8, "application/json"));
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível cancelar pagamento."; return RedirectToAction(nameof(Details), new { id }); }
-        TempData["Success"] = "Pagamento cancelado com sucesso."; return RedirectToAction(nameof(Details), new { id });
+        try
+        {
+            var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+            var payload = JsonSerializer.Serialize(new CancelarPagamentoRequest(justificativa));
+            var response = await client.PostAsync($"api/financeiro/pagamentos/{id}/cancelar", new StringContent(payload, Encoding.UTF8, "application/json"));
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (!response.IsSuccessStatusCode) { TempData["Error"] = "Não foi possível cancelar pagamento."; return RedirectToAction(nameof(Details), new { id }); }
+            TempData["Success"] = "Pagamento cancelado com sucesso."; return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao cancelar pagamento {PagamentoId}", id);
+            TempData["Error"] = "Erro inesperado ao cancelar pagamento.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 }

@@ -34,18 +34,35 @@ public class EscalasController : BaseWebController
 
     private async Task<IActionResult> PostStatus(string endpoint, object payload, string success, Guid id)
     {
-        var client = CreateApiClient();
-        if (!AddBearerToken(client)) return HandleUnauthorized();
-        var json = JsonSerializer.Serialize(payload);
-        var response = await client.PostAsync(endpoint, new StringContent(json, Encoding.UTF8, "application/json"));
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        var content = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            TempData["Error"] = "Falha na operação.";
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+            var json = JsonSerializer.Serialize(payload);
+            var response = await client.PostAsync(endpoint, new StringContent(json, Encoding.UTF8, "application/json"));
+            LogRequestContext("Escala.Status", endpoint, (int)response.StatusCode);
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            var content = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.LogWarning("Falha ao atualizar escala {EscalaId}. Endpoint:{Endpoint}. Payload:{Payload}. Response:{Response}", id, endpoint, json, content);
+                TempData["Error"] = "Falha na operação.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            TempData["Success"] = success;
             return RedirectToAction(nameof(Details), new { id });
         }
-        TempData["Success"] = success;
-        return RedirectToAction(nameof(Details), new { id });
+        catch (HttpRequestException ex)
+        {
+            Logger.LogError(ex, "Erro de comunicação ao atualizar escala {EscalaId} no endpoint {Endpoint}", id, endpoint);
+            TempData["Error"] = "Falha de comunicação com a API.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro inesperado ao atualizar escala {EscalaId} no endpoint {Endpoint}", id, endpoint);
+            TempData["Error"] = "Erro inesperado ao processar solicitação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 }

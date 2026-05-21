@@ -68,6 +68,23 @@ public abstract class BaseWebController : Controller
         }
     }
 
+
+    [NonAction]
+    protected void LogRequestContext(string acao, string endpoint, int? statusCode = null)
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "ip-desconhecido";
+        var usuario = User.Identity?.Name ?? "anônimo";
+        var perfil = string.Join(',', User.Claims.Where(c => c.Type.Contains("role", StringComparison.OrdinalIgnoreCase)).Select(c => c.Value).Distinct());
+        Logger.LogInformation("{Acao} | Endpoint:{Endpoint} | Status:{Status} | Usuario:{Usuario} | Perfil:{Perfil} | IP:{IP} | TimestampUtc:{TimestampUtc}",
+            acao,
+            endpoint,
+            statusCode,
+            usuario,
+            string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil,
+            ip,
+            DateTime.UtcNow);
+    }
+
     [NonAction]
     public ViewResult EmptyViewWithError<TModel>(TModel model, string message)
     {

@@ -202,7 +202,7 @@ namespace PlantaoPro.Web.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Dashboard()
+        public async Task<IActionResult> Dashboard([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim, [FromQuery] string? hospital, [FromQuery] string? especialidade)
         {
             if (User.IsMedico()) return RedirectToAction("Index", "MinhaAgenda");
             var fallback = CriarDashboardVazio();
@@ -227,7 +227,8 @@ namespace PlantaoPro.Web.Controllers
                 if ((int)statusCode >= 500)
                     return EmptyViewWithError(fallback, "A API está indisponível no momento.");
 
-                _logger.LogInformation("Acesso dashboard usuário:{User}", User.Identity?.Name);
+                _logger.LogInformation("Acesso dashboard usuário:{User} FiltrosInicio:{Inicio} FiltrosFim:{Fim} Hospital:{Hospital} Especialidade:{Especialidade}",
+                    User.Identity?.Name, inicio, fim, hospital, especialidade);
                 var safeData = data is null ? fallback : data with
                 {
                     ProximosPlantoes = data.ProximosPlantoes ?? Array.Empty<PlantaoResumoDto>(),
@@ -238,6 +239,7 @@ namespace PlantaoPro.Web.Controllers
                     PlantoesPorEspecialidade = data.PlantoesPorEspecialidade ?? Array.Empty<DashboardChartItem>(),
                     PlantoesPorHospital = data.PlantoesPorHospital ?? Array.Empty<DashboardChartItem>()
                 };
+                safeData = AplicarFiltrosDashboard(safeData, inicio, fim, hospital, especialidade);
                 if (!string.IsNullOrWhiteSpace(error)) TempData["Info"] = error;
                 return View(safeData);
             }
@@ -259,6 +261,51 @@ namespace PlantaoPro.Web.Controllers
                 Array.Empty<DashboardChartItem>(),
                 Array.Empty<DashboardChartItem>(),
                 Array.Empty<DashboardChartItem>());
+        }
+
+        private static DashboardOverviewDto AplicarFiltrosDashboard(
+            DashboardOverviewDto source,
+            DateTime? inicio,
+            DateTime? fim,
+            string? hospital,
+            string? especialidade)
+        {
+            var inicioEfetivo = inicio?.Date;
+            var fimEfetivo = fim?.Date.AddDays(1).AddTicks(-1);
+            var hospitalFiltro = (hospital ?? string.Empty).Trim();
+            var especialidadeFiltro = (especialidade ?? string.Empty).Trim();
+
+            bool MatchPeriodo(DateTime data) =>
+                (!inicioEfetivo.HasValue || data >= inicioEfetivo.Value) &&
+                (!fimEfetivo.HasValue || data <= fimEfetivo.Value);
+
+            bool MatchPlantao(PlantaoResumoDto p) =>
+                MatchPeriodo(p.DataInicio) &&
+                (string.IsNullOrWhiteSpace(hospitalFiltro) || p.HospitalNome.Contains(hospitalFiltro, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(especialidadeFiltro) || p.EspecialidadeNome.Contains(especialidadeFiltro, StringComparison.OrdinalIgnoreCase));
+
+            bool MatchPagamento(PagamentoResumoDto p) =>
+                MatchPeriodo(p.DataPlantao) &&
+                (string.IsNullOrWhiteSpace(hospitalFiltro) || p.HospitalNome.Contains(hospitalFiltro, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(especialidadeFiltro) || p.EspecialidadeNome.Contains(especialidadeFiltro, StringComparison.OrdinalIgnoreCase));
+
+            var plantoesFiltrados = source.ProximosPlantoes.Where(MatchPlantao).ToArray();
+            var pagamentosFiltrados = source.UltimosPagamentos.Where(MatchPagamento).ToArray();
+            var indicadores = source.Indicadores with
+            {
+                TotalPlantoes = plantoesFiltrados.LongLength,
+                PlantoesConfirmados = plantoesFiltrados.LongCount(p => p.Status.Equals("CONFIRMADO", StringComparison.OrdinalIgnoreCase)),
+                PagamentosPendentes = pagamentosFiltrados.LongCount(p => p.Status.Equals("PENDENTE", StringComparison.OrdinalIgnoreCase)),
+                ValorPendente = pagamentosFiltrados.Where(p => p.Status.Equals("PENDENTE", StringComparison.OrdinalIgnoreCase)).Sum(p => p.ValorPrevisto),
+                ValorPagoMes = pagamentosFiltrados.Where(p => p.Status.Equals("PAGO", StringComparison.OrdinalIgnoreCase)).Sum(p => p.ValorPago ?? 0)
+            };
+
+            return source with
+            {
+                Indicadores = indicadores,
+                ProximosPlantoes = plantoesFiltrados,
+                UltimosPagamentos = pagamentosFiltrados
+            };
         }
 
     }

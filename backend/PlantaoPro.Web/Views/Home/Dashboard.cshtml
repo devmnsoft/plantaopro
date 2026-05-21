@@ -29,6 +29,16 @@
         <button class="btn btn-outline-secondary btn-sm" disabled title="Em breve">Exportar BI</button>
     </div>
 </div>
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-body py-3">
+        <form class="row g-2">
+            <div class="col-12 col-md-3"><input type="month" class="form-control form-control-sm" aria-label="Período" /></div>
+            <div class="col-12 col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Hospital" /></div>
+            <div class="col-12 col-md-3"><input type="text" class="form-control form-control-sm" placeholder="Especialidade" /></div>
+            <div class="col-12 col-md-3 d-grid"><button type="button" class="btn btn-outline-primary btn-sm" disabled title="Em breve">Aplicar filtros avançados</button></div>
+        </form>
+    </div>
+</div>
 
 <div class="row g-3 mb-4 kpi-grid">
 @foreach (var m in new[] {
@@ -98,6 +108,13 @@
 
 @section Scripts{
 <script>
-document.addEventListener("DOMContentLoaded",()=>{ if(window.Chart){const ctx=document.getElementById("kpiChart");if(ctx){new Chart(ctx,{type:"line",data:{labels:["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"],datasets:[{label:"Plantões",data:[12,19,8,15,11,9,13],borderColor:"#155eef",backgroundColor:"rgba(21,94,239,.14)",fill:true,tension:.35}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});}}});
+document.addEventListener("DOMContentLoaded",()=>{
+  if(!window.Chart) return;
+  const ctx=document.getElementById("kpiChart");
+  if(!ctx) return;
+  const labels=[@Html.Raw(string.Join(",", (Model?.PlantoesPorMes ?? Enumerable.Empty<DashboardChartItem>()).Select(x=>$"\"{x.Label}\"")))];
+  const values=[@Html.Raw(string.Join(",", (Model?.PlantoesPorMes ?? Enumerable.Empty<DashboardChartItem>()).Select(x=>x.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
+  new Chart(ctx,{type:"bar",data:{labels:labels.length?labels:["Sem dados"],datasets:[{label:"Plantões por mês",data:values.length?values:[0],borderRadius:8,backgroundColor:"#155eef"}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
+});
 </script>
 }

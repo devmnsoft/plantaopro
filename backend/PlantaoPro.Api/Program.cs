@@ -86,6 +86,8 @@ builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<PermissionService>();
+builder.Services.AddScoped<NotificationPreferenceService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 
 var app = builder.Build();

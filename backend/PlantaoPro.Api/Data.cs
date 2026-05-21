@@ -708,7 +708,10 @@ namespace PlantaoPro.Api.Data
                     df = p.Df
                 }, tx);
                 if (conflito > 0)
+                {
+                    await cn.ExecuteAsync("update plantaopro.plantoes set conflito_detectado=true,updated_by=@u,reg_update=now() where id=@id", new { id = plantaoId, u = userId }, tx);
                     return ApiResponse<string>.Fail("Conflito de horário para médico");
+                }
                 var horasSemana = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (pl.data_fim-pl.data_inicio))/3600.0),0)
                     from plantaopro.escalas e
                     join plantaopro.plantoes pl on pl.id=e.plantao_id
@@ -718,6 +721,13 @@ namespace PlantaoPro.Api.Data
                 const decimal limiteSemanalHoras = 60m;
                 if ((horasSemana + horasPlantao) > limiteSemanalHoras)
                     return ApiResponse<string>.Fail($"Limite semanal de {limiteSemanalHoras}h excedido para o médico.");
+                var escalasRecentes = await cn.ExecuteScalarAsync<int>(@"select count(1)
+                    from plantaopro.escalas e
+                    join plantaopro.plantoes pl on pl.id=e.plantao_id
+                    where e.medico_id=@m and e.reg_status='A'
+                      and e.status in ('confirmado','realizado')
+                      and pl.data_inicio >= (now() - interval '30 days')", new { m = medicoId }, tx);
+                var scorePrioridade = Math.Round(100m / (1m + escalasRecentes), 2);
                 var escalaId = Guid.NewGuid();
                 await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date) values(@id,@p,@m,'solicitado',null,@u,'A',now())", new
                 {
@@ -726,9 +736,17 @@ namespace PlantaoPro.Api.Data
                     m = medicoId,
                     u = userId
                 }, tx);
-                await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis-1,status=case when vagas_disponiveis-1<=0 then 'reservado' else status end,updated_by=@u,reg_update=now() where id=@id", new
+                await cn.ExecuteAsync(@"update plantaopro.plantoes
+                    set vagas_disponiveis=vagas_disponiveis-1,
+                        status=case when vagas_disponiveis-1<=0 then 'reservado' else status end,
+                        conflito_detectado=false,
+                        score_prioridade=@score,
+                        updated_by=@u,
+                        reg_update=now()
+                    where id=@id", new
                 {
                     id = plantaoId,
+                    score = scorePrioridade,
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, escalaId, null, "solicitado", "Aceite de plantão", userId);

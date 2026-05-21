@@ -56,6 +56,12 @@ public record AlertaOperacionalDto(string Tipo,string Titulo,string Descricao,st
 public record RolePermissionDto(string Role,IEnumerable<string> Permissions);
 public record NotificationPreferenceDto(string Tipo,bool InApp,bool Email);
 public record UpsertNotificationPreferenceRequest(string Tipo,bool InApp,bool Email);
+public record PremiumKpiCardDto(string Chave,string Titulo,decimal Valor,string Cor,string Icone,string Indicador,string Tooltip);
+public record PremiumOperacoesResumoDto(
+    IEnumerable<PremiumKpiCardDto> Kpis,
+    IEnumerable<AlertaOperacionalDto> Alertas,
+    IEnumerable<DashboardChartItem> SeriePlantoes,
+    IEnumerable<DashboardChartItem> SeriePagamentos);
 
 
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoResumoDto> ProximosPlantoes,IEnumerable<PagamentoResumoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);

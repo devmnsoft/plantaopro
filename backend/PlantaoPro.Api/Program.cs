@@ -88,6 +88,7 @@ builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<NotificationPreferenceService>();
+builder.Services.AddScoped<PremiumOperacoesService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 
 var app = builder.Build();

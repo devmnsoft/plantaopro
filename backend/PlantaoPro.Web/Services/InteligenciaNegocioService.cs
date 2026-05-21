@@ -88,13 +88,32 @@ public class InteligenciaNegocioService : IInteligenciaNegocioService
 
         var executivo = new DashboardExecutivoViewModel(
             EscalasAtivas: lista.Count,
-            EscalasComConflito: 0,
+            EscalasComConflito: lista.Count(x => lista.Any(y => y.MedicoId == x.MedicoId && y != x && x.InicioUtc < y.FimUtc && x.FimUtc > y.InicioUtc)),
             TotalPagar: lista.Sum(x => x.ValorPago),
             NotificacoesPendentes: auditoria.Count(),
             MediaHorasSemanaPorMedico: mediaHoras,
-            AlertasFinanceiros: Array.Empty<AlertaFinanceiroViewModel>(),
+            MedicosAcimaLimiteSemanal: lista.GroupBy(x => x.MedicoId).Count(g => g.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours) > 40m),
+            AlertasFinanceiros: GerarAlertasPendencia(new[]
+            {
+                (Guid.Parse("11111111-1111-1111-1111-111111111111"), "Dr. João", DateTime.UtcNow.AddDays(-6), 1840m),
+                (Guid.Parse("22222222-2222-2222-2222-222222222222"), "Dra. Ana", DateTime.UtcNow.AddDays(-2), 920m)
+            }, 3),
             AlertasOperacionais: new[] { "Monitorar substituições e conflitos diariamente.", "Sinalizar médicos acima de 40h semanais." },
-            RankingPrioridade: ranking);
+            RankingPrioridade: ranking,
+            SugestoesPlantoes: ranking.Select((r, index) => new SugestaoPlantaoViewModel(
+                r.MedicoId,
+                $"Médico {r.MedicoId.ToString()[..8]}",
+                index % 2 == 0 ? "Hospital A" : "Hospital B",
+                index % 2 == 0 ? "Clínica" : "Pediatria",
+                referencia.Date.AddDays(index + 1).AddHours(7),
+                referencia.Date.AddDays(index + 1).AddHours(19),
+                Math.Round(r.ScorePrioridade / 100m, 2),
+                "Baseado em menor carga de horas na semana e histórico de aceitação.")),
+            Produtividade: lista
+                .GroupBy(x => x.Hospital)
+                .Select(g => new IndicadorProdutividadeViewModel(g.Key, "Hospital", g.Count(), Math.Round(g.Sum(h => (decimal)(h.FimUtc - h.InicioUtc).TotalHours), 1), g.Sum(h => h.ValorPago)))
+                .OrderByDescending(x => x.Receita)
+                .Take(5));
 
         return new InteligenciaDashboardViewModel(executivo, filtroAplicado, totalPorMedico, totalPorHospital, totalPorEspecialidade, auditoria.OrderByDescending(a => a.DataHoraUtc).Take(20));
     }

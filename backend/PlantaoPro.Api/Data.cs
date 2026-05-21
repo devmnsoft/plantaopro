@@ -66,7 +66,10 @@ namespace PlantaoPro.Api.Data
                 var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
                     @"select bloqueado_ate from plantaopro.login_tentativas
                       where usuario_id=@usuarioId and sucesso=false and bloqueado_ate is not null
-                      order by reg_date desc limit 1", new { usuarioId });
+                      order by reg_date desc limit 1", new
+                    {
+                        usuarioId
+                    });
                 if (bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
                 {
                     var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
@@ -115,7 +118,10 @@ namespace PlantaoPro.Api.Data
                     var tentativasFalhas = await cn.QueryFirstAsync<int>(
                         @"select count(*) from plantaopro.login_tentativas
                           where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - interval '24 hours'",
-                        new { usuarioId });
+                        new
+                        {
+                            usuarioId
+                        });
                     var proximaTentativa = tentativasFalhas + 1;
                     DateTime? novoBloqueio = proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
@@ -157,7 +163,16 @@ namespace PlantaoPro.Api.Data
         private static Task RegistrarTentativaAsync(NpgsqlConnection cn, Guid? usuarioId, string email, string? ip, string? ua, bool sucesso, string motivo, DateTime? bloqueadoAte = null) =>
             cn.ExecuteAsync(@"insert into plantaopro.login_tentativas(usuario_id,email,ip,user_agent,sucesso,motivo,bloqueado_ate,reg_date)
                 values(@usuarioId,@email,@ip,@ua,@sucesso,@motivo,@bloqueadoAte,now())",
-                new { usuarioId, email, ip, ua, sucesso, motivo, bloqueadoAte });
+                new
+                {
+                    usuarioId,
+                    email,
+                    ip,
+                    ua,
+                    sucesso,
+                    motivo,
+                    bloqueadoAte
+                });
         string GenerateToken(Guid uid, string email, string[] roles)
         {
             var jwt = cfg.GetSection("Jwt");
@@ -170,7 +185,8 @@ namespace PlantaoPro.Api.Data
 
         private static string? NormalizeRole(string? role)
         {
-            if (string.IsNullOrWhiteSpace(role)) return null;
+            if (string.IsNullOrWhiteSpace(role))
+                return null;
             var value = role.Trim().ToUpperInvariant()
                 .Replace("Á", "A").Replace("À", "A").Replace("Â", "A").Replace("Ã", "A")
                 .Replace("É", "E").Replace("Ê", "E")
@@ -270,14 +286,21 @@ namespace PlantaoPro.Api.Data
 
             var exists = await cn.ExecuteScalarAsync<int>(
                 "select count(1) from plantaopro.usuarios where id=@id and reg_status='A'",
-                new { id = userId }, tx);
-            if (exists == 0) return false;
+                new
+                {
+                    id = userId
+                }, tx);
+            if (exists == 0)
+                return false;
 
             await cn.ExecuteAsync(
                 @"update plantaopro.login_tentativas
                   set bloqueado_ate = null
                   where usuario_id = @id and sucesso = false",
-                new { id = userId }, tx);
+                new
+                {
+                    id = userId
+                }, tx);
 
             await tx.CommitAsync();
             await audit.LogAsync(adminId, "UNLOCK_USER", "APP_USER", userId, "Usuário desbloqueado por administrador", ip: ipAddress, userAgent: userAgent);
@@ -709,14 +732,22 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (conflito > 0)
                 {
-                    await cn.ExecuteAsync("update plantaopro.plantoes set conflito_detectado=true,updated_by=@u,reg_update=now() where id=@id", new { id = plantaoId, u = userId }, tx);
+                    await cn.ExecuteAsync("update plantaopro.plantoes set conflito_detectado=true,updated_by=@u,reg_update=now() where id=@id", new
+                    {
+                        id = plantaoId,
+                        u = userId
+                    }, tx);
                     return ApiResponse<string>.Fail("Conflito de horário para médico");
                 }
                 var horasSemana = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (pl.data_fim-pl.data_inicio))/3600.0),0)
                     from plantaopro.escalas e
                     join plantaopro.plantoes pl on pl.id=e.plantao_id
                     where e.medico_id=@m and e.reg_status='A' and e.status in ('solicitado','confirmado','realizado')
-                      and date_trunc('week',pl.data_inicio)=date_trunc('week',@di)", new { m = medicoId, di = p.Di }, tx);
+                      and date_trunc('week',pl.data_inicio)=date_trunc('week',@di)", new
+                {
+                    m = medicoId,
+                    di = p.Di
+                }, tx);
                 var horasPlantao = (decimal)(p.Df - p.Di).TotalHours;
                 const decimal limiteSemanalHoras = 60m;
                 if ((horasSemana + horasPlantao) > limiteSemanalHoras)
@@ -726,7 +757,10 @@ namespace PlantaoPro.Api.Data
                     join plantaopro.plantoes pl on pl.id=e.plantao_id
                     where e.medico_id=@m and e.reg_status='A'
                       and e.status in ('confirmado','realizado')
-                      and pl.data_inicio >= (now() - interval '30 days')", new { m = medicoId }, tx);
+                      and pl.data_inicio >= (now() - interval '30 days')", new
+                {
+                    m = medicoId
+                }, tx);
                 var scorePrioridade = Math.Round(100m / (1m + escalasRecentes), 2);
                 var escalaId = Guid.NewGuid();
                 await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date) values(@id,@p,@m,'solicitado',null,@u,'A',now())", new
@@ -886,7 +920,8 @@ namespace PlantaoPro.Api.Data
                 logger.LogInformation("Escala {EscalaId} status {Status}", id, novo);
                 return ApiResponse<string>.Ok("ok", "Status atualizado");
             }
-            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro status escala {EscalaId}", id); return ApiResponse<string>.Fail("Erro ao alterar status da escala", 500); }
+            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro status escala {EscalaId}", id); 
+                return ApiResponse<string>.Fail("Erro ao alterar status da escala", 500); }
         }
     }
 
@@ -1237,36 +1272,70 @@ namespace PlantaoPro.Api.Data
         private readonly IConfiguration cfg;
         private readonly IAuditService audit;
         private readonly ILogger<MedicoAreaService> logger;
-        public MedicoAreaService(IConfiguration cfg, IAuditService audit, ILogger<MedicoAreaService> logger){this.cfg=cfg;this.audit=audit;this.logger=logger;}
-        private NpgsqlConnection Cn()=>new(cfg.GetConnectionString("Default"));
+        public MedicoAreaService(IConfiguration cfg, IAuditService audit, ILogger<MedicoAreaService> logger)
+        {
+            this.cfg = cfg;
+            this.audit = audit;
+            this.logger = logger;
+        }
+        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
 
-        private async Task<(Guid? Id,string? Nome,string? Crm,string? UfCrm)> GetMedicoAsync(NpgsqlConnection cn, Guid uid)
-            => await cn.QueryFirstOrDefaultAsync<(Guid?,string?,string?,string?)>("select id,nome,crm,uf_crm from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new { uid });
+        private async Task<(Guid? Id, string? Nome, string? Crm, string? UfCrm)> GetMedicoAsync(NpgsqlConnection cn, Guid uid)
+            => await cn.QueryFirstOrDefaultAsync<(Guid?, string?, string?, string?)>("select id,nome,crm,uf_crm from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new
+            {
+                uid
+            });
 
         public async Task<ApiResponse<MedicoAreaResumoDto>> ResumoAsync(Guid uid)
         {
-            await using var cn=Cn();
-            var med=await GetMedicoAsync(cn,uid);
-            if(med.Id is null) return ApiResponse<MedicoAreaResumoDto>.Fail("Médico não encontrado para o usuário autenticado.",404);
-            var dto=await cn.QueryFirstAsync<MedicoAreaResumoDto>(@"select @nome as MedicoNome,@crm as Crm,@uf as UfCrm,
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null)
+                return ApiResponse<MedicoAreaResumoDto>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var dto = await cn.QueryFirstAsync<MedicoAreaResumoDto>(@"select @nome as MedicoNome,@crm as Crm,@uf as UfCrm,
             (select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0) as PlantoesDisponiveis,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='solicitado' and e.reg_status='A') as SolicitacoesPendentes,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='confirmado' and e.reg_status='A') as EscalasConfirmadas,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='realizado' and e.reg_status='A') as PlantoesRealizados,
             (select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as PagamentosPendentes,
             (select coalesce(sum(pg.valor_previsto),0) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as ValorPendente,
-            (select count(1) from plantaopro.notificacoes n where n.usuario_id=@uid and n.lida=false and n.reg_status='A') as NotificacoesNaoLidas",new{uid,mid=med.Id,nome=med.Nome,crm=med.Crm,uf=med.UfCrm});
+            (select count(1) from plantaopro.notificacoes n where n.usuario_id=@uid and n.lida=false and n.reg_status='A') as NotificacoesNaoLidas", new
+            {
+                uid,
+                mid = med.Id,
+                nome = med.Nome,
+                crm = med.Crm,
+                uf = med.UfCrm
+            });
             return ApiResponse<MedicoAreaResumoDto>.Ok(dto);
         }
-        public async Task<ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>> PlantoesDisponiveisAsync(Guid uid,int page,int pageSize){await using var cn=Cn();var med=await GetMedicoAsync(cn,uid);if(med.Id is null) return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Fail("Médico não encontrado para o usuário autenticado.",404);var p=Math.Max(1,page);var s=Math.Clamp(pageSize,1,100);var off=(p-1)*s;var total=await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0");var items=await cn.QueryAsync<MedicoPlantaoDisponivelDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,
+        public async Task<ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>> PlantoesDisponiveisAsync(Guid uid, int page, int pageSize)
+        {
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null)
+                return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var p = Math.Max(1, page);
+            var s = Math.Clamp(pageSize, 1, 100);
+            var off = (p - 1) * s;
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0");
+            var items = await cn.QueryAsync<MedicoPlantaoDisponivelDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,
 exists(select 1 from plantaopro.escalas e where e.plantao_id=p.id and e.medico_id=@mid and e.reg_status='A') as JaSolicitado,
 exists(select 1 from plantaopro.escalas e2 join plantaopro.plantoes p2 on p2.id=e2.plantao_id where e2.medico_id=@mid and e2.reg_status='A' and e2.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p2.data_inicio,p2.data_fim)) as TemConflitoHorario
-from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off",new{mid=med.Id,s,off});return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items,p,s,total));}
-        public async Task<ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>> PlantoesRecomendadosAsync(Guid uid,int top=5)
+from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off", new
+            {
+                mid = med.Id,
+                s,
+                off
+            });
+            return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items, p, s, total));
+        }
+        public async Task<ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>> PlantoesRecomendadosAsync(Guid uid, int top = 5)
         {
-            await using var cn=Cn();
-            var med=await GetMedicoAsync(cn,uid);
-            if(med.Id is null) return ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Fail("Médico não encontrado para o usuário autenticado.",404);
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null)
+                return ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
             var items = await cn.QueryAsync<MedicoPlantaoRecomendacaoDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,
                 (case when p.especialidade_id=(select especialidade_id from plantaopro.medicos where id=@mid) then 60 else 20 end
                 + greatest(0,30 - coalesce((select count(1) from plantaopro.escalas e2 where e2.medico_id=@mid and e2.reg_date>now()-interval '30 days' and e2.reg_status='A'),0)*3)
@@ -1278,7 +1347,11 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
                 join plantaopro.especialidades esp on esp.id=p.especialidade_id
                 where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0
                 order by Score desc,p.data_inicio asc
-                limit @top", new { mid = med.Id, top = Math.Clamp(top,1,20)});
+                limit @top", new
+            {
+                mid = med.Id,
+                top = Math.Clamp(top, 1, 20)
+            });
             return ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Ok(items);
         }
 
@@ -1286,36 +1359,54 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
         {
             await using var cn = Cn();
             var med = await GetMedicoAsync(cn, uid);
-            if (med.Id is null) return ApiResponse<PagedResult<MedicoEscalaDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            if (med.Id is null)
+                return ApiResponse<PagedResult<MedicoEscalaDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
             var p = Math.Max(1, page);
             var s = Math.Clamp(pageSize, 1, 100);
             var off = (p - 1) * s;
-            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.reg_status='A'", new { mid = med.Id });
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.reg_status='A'", new
+            {
+                mid = med.Id
+            });
             var items = await cn.QueryAsync<MedicoEscalaDto>(@"select e.id as EscalaId,e.plantao_id as PlantaoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,e.status,e.justificativa
             from plantaopro.escalas e
             join plantaopro.plantoes p on p.id=e.plantao_id
             join plantaopro.hospitais h on h.id=p.hospital_id
             join plantaopro.especialidades esp on esp.id=p.especialidade_id
             where e.medico_id=@mid and e.reg_status='A'
-            order by p.data_inicio desc limit @s offset @off", new { mid = med.Id, s, off });
+            order by p.data_inicio desc limit @s offset @off", new
+            {
+                mid = med.Id,
+                s,
+                off
+            });
             return ApiResponse<PagedResult<MedicoEscalaDto>>.Ok(new(items, p, s, total));
         }
         public async Task<ApiResponse<PagedResult<MedicoPagamentoDto>>> MeusPagamentosAsync(Guid uid, int page, int pageSize)
         {
             await using var cn = Cn();
             var med = await GetMedicoAsync(cn, uid);
-            if (med.Id is null) return ApiResponse<PagedResult<MedicoPagamentoDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            if (med.Id is null)
+                return ApiResponse<PagedResult<MedicoPagamentoDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
             var p = Math.Max(1, page);
             var s = Math.Clamp(pageSize, 1, 100);
             var off = (p - 1) * s;
-            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.reg_status='A'", new { mid = med.Id });
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.reg_status='A'", new
+            {
+                mid = med.Id
+            });
             var items = await cn.QueryAsync<MedicoPagamentoDto>(@"select pg.id as PagamentoId,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,p.data_inicio as DataPlantao,pg.valor_previsto as ValorPrevisto,pg.valor_pago as ValorPago,pg.status,pg.data_prevista as DataPrevista,pg.data_pagamento as DataPagamento,pg.forma_pagamento as FormaPagamento
             from plantaopro.pagamentos pg
             join plantaopro.plantoes p on p.id=pg.plantao_id
             join plantaopro.hospitais h on h.id=p.hospital_id
             join plantaopro.especialidades esp on esp.id=p.especialidade_id
             where pg.medico_id=@mid and pg.reg_status='A'
-            order by p.data_inicio desc limit @s offset @off", new { mid = med.Id, s, off });
+            order by p.data_inicio desc limit @s offset @off", new
+            {
+                mid = med.Id,
+                s,
+                off
+            });
             return ApiResponse<PagedResult<MedicoPagamentoDto>>.Ok(new(items, p, s, total));
         }
     }

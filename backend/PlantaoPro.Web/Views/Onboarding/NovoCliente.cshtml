@@ -1,0 +1,29 @@
+@model PlantaoPro.Web.Models.OnboardingClienteViewModel
+@{
+    ViewData["Title"] = "Novo Cliente";
+}
+<div class="container py-4">
+    <h3 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Wizard de Onboarding</h3>
+    <div class="progress mb-4" role="progressbar"><div class="progress-bar" style="width: 100%">Etapas 1-4</div></div>
+    <form method="post" class="card card-body shadow-sm">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Razão Social</label><input asp-for="RazaoSocial" class="form-control"/></div>
+            <div class="col-md-6"><label class="form-label">Nome Fantasia</label><input asp-for="NomeFantasia" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">CNPJ</label><input asp-for="Cnpj" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">E-mail cliente</label><input asp-for="Email" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">Telefone cliente</label><input asp-for="Telefone" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">Plano (GUID)</label><input asp-for="PlanoId" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">Status</label><select asp-for="Status" class="form-select"><option>ATIVO</option><option>TESTE</option></select></div>
+            <div class="col-md-4"><label class="form-label">Cidade/UF</label><div class="input-group"><input asp-for="Cidade" class="form-control"/><input asp-for="Estado" class="form-control"/></div></div>
+            <div class="col-md-6"><label class="form-label">Unidade</label><input asp-for="UnidadeNome" class="form-control"/></div>
+            <div class="col-md-3"><label class="form-label">Tipo unidade</label><input asp-for="UnidadeTipo" class="form-control"/></div>
+            <div class="col-md-3"><label class="form-label">Resp. unidade</label><input asp-for="UnidadeResponsavel" class="form-control"/></div>
+            <div class="col-md-6"><label class="form-label">Usuário admin</label><input asp-for="UsuarioNome" class="form-control"/></div>
+            <div class="col-md-3"><label class="form-label">E-mail admin</label><input asp-for="UsuarioEmail" class="form-control"/></div>
+            <div class="col-md-3"><label class="form-label">Telefone admin</label><input asp-for="UsuarioTelefone" class="form-control"/></div>
+            <div class="col-md-4"><label class="form-label">Senha temporária</label><input asp-for="UsuarioSenha" type="password" class="form-control"/></div>
+        </div>
+        <div class="mt-4 d-flex gap-2"><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a><button class="btn btn-primary" type="submit">Criar cliente</button></div>
+    </form>
+</div>

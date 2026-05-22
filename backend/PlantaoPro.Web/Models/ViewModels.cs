@@ -158,3 +158,52 @@ public interface IListPageViewModel
 );
 
 }
+
+namespace PlantaoPro.Web.Models
+{
+    public class OnboardingClienteViewModel
+    {
+        [Required] public string RazaoSocial { get; set; } = string.Empty;
+        [Required] public string NomeFantasia { get; set; } = string.Empty;
+        [Required] public string Cnpj { get; set; } = string.Empty;
+        [Required, EmailAddress] public string Email { get; set; } = string.Empty;
+        [Required] public string Telefone { get; set; } = string.Empty;
+        [Required] public string Cidade { get; set; } = string.Empty;
+        [Required] public string Estado { get; set; } = string.Empty;
+        [Required] public Guid PlanoId { get; set; }
+        [Required] public string Status { get; set; } = "ATIVO";
+        [Required] public string UnidadeNome { get; set; } = string.Empty;
+        [Required] public string UnidadeTipo { get; set; } = "Matriz";
+        [Required] public string UnidadeCidade { get; set; } = string.Empty;
+        [Required] public string UnidadeEstado { get; set; } = string.Empty;
+        public string? UnidadeResponsavel { get; set; }
+        [Required] public string UsuarioNome { get; set; } = string.Empty;
+        [Required, EmailAddress] public string UsuarioEmail { get; set; } = string.Empty;
+        [Required] public string UsuarioTelefone { get; set; } = string.Empty;
+        [Required] public string UsuarioSenha { get; set; } = string.Empty;
+
+        public CreateClienteOnboardingRequest ToRequest() => new(
+            RazaoSocial, NomeFantasia, Cnpj, Email, Telefone, Cidade, Estado,
+            PlanoId, Status, UnidadeNome, UnidadeTipo, UnidadeCidade, UnidadeEstado,
+            UnidadeResponsavel, UsuarioNome, UsuarioEmail, UsuarioTelefone, UsuarioSenha);
+    }
+
+    public record CreateClienteOnboardingRequest(
+        string RazaoSocial, string NomeFantasia, string Cnpj, string Email, string Telefone, string Cidade, string Estado,
+        Guid PlanoId, string Status, string UnidadeNome, string UnidadeTipo, string UnidadeCidade, string UnidadeEstado,
+        string? UnidadeResponsavel, string UsuarioNome, string UsuarioEmail, string UsuarioTelefone, string UsuarioSenha);
+
+    public record OnboardingResumoDto(
+        Guid ClienteId = default,
+        string ClienteNome = "",
+        Guid PlanoId = default,
+        string PlanoNome = "",
+        Guid UnidadeId = default,
+        string UnidadeNome = "",
+        Guid UsuarioId = default,
+        string UsuarioNome = "",
+        string UsuarioEmail = "",
+        Guid AssinaturaId = default,
+        string AssinaturaStatus = "",
+        DateTime DataCriacaoAssinatura = default);
+}

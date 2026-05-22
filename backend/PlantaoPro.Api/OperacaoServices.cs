@@ -1,5 +1,6 @@
 using Dapper;
 using Npgsql;
+using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api;

@@ -42,6 +42,11 @@
                     <i class="bi bi-speedometer2"></i><span>Dashboard</span>
                 </a>
 
+                @if (isAdmin || isCoord || isOper || isFin)
+                {
+                    <a class="nav-link-app @(currentController=="Operacao"?"active":"")" asp-controller="Operacao" asp-action="Index"><i class="bi bi-broadcast"></i><span>Central Operacional</span></a>
+                }
+
                 @if (isAdmin || isCoord || isOper || isHospital)
                 {
                     <a class="nav-link-app @(currentController=="Plantoes"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>

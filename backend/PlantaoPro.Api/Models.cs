@@ -64,5 +64,10 @@ public record PremiumOperacoesResumoDto(
     IEnumerable<DashboardChartItem> SeriePagamentos);
 
 
+
+public record OperacaoPlantaoCriticoDto(Guid Id,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,int VagasDisponiveis,string Status);
+public record OperacaoEscalaPendenteDto(Guid Id,string MedicoNome,string HospitalNome,DateTime DataInicio,DateTime DataFim,string Status);
+public record OperacaoPagamentoPendenteDto(Guid Id,string MedicoNome,string HospitalNome,decimal ValorPrevisto,string Status,DateOnly? DataPrevista);
+public record OperacaoResumoDto(long TotalPlantoesHoje,long TotalPlantoesAbertos,long TotalEscalasSolicitadas,long TotalEscalasConfirmadasHoje,long TotalConflitos,long TotalPagamentosPendentes,decimal ValorPendente,long NotificacoesNaoLidas,IEnumerable<OperacaoPlantaoCriticoDto>? PlantoesCriticos,IEnumerable<OperacaoEscalaPendenteDto>? EscalasPendentes,IEnumerable<OperacaoPagamentoPendenteDto>? PagamentosPendentes);
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoResumoDto> ProximosPlantoes,IEnumerable<PagamentoResumoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);
 }

@@ -27,7 +27,8 @@
 
 @if (!Model.TotalPorEspecialidade.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", "Index", "Escalas")' />
+    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", "Index", "Escalas");
+    <partial name="_EmptyState" model="@emptyState" />
 }
 else
 {
@@ -39,7 +40,12 @@ else
                 <tbody>
                 @foreach (var item in Model.Executivo.RankingPrioridade)
                 {
-                    <tr><td>@item.MedicoId</td><td>@item.EscalasUltimos7Dias</td><td>@item.HorasUltimos7Dias</td><td><span class="badge text-bg-success">@item.ScorePrioridade</span></td></tr>
+                    <tr>
+                        <td>Médico @item.MedicoId.ToString()[..8].ToUpperInvariant()</td>
+                        <td>@item.EscalasUltimos7Dias</td>
+                        <td>@item.HorasUltimos7Dias</td>
+                        <td><span class="badge text-bg-success">@item.ScorePrioridade</span></td>
+                    </tr>
                 }
                 </tbody>
             </table>

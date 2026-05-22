@@ -119,7 +119,15 @@ public record DashboardChartItem(string Label, decimal Valor);
         bool ButtonDisabled = false
     );
 
-    public interface IListPageViewModel
+    
+    public record OperacaoPlantaoCriticoDto(Guid Id,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,int VagasDisponiveis,string Status);
+    public record OperacaoEscalaPendenteDto(Guid Id,string MedicoNome,string HospitalNome,DateTime DataInicio,DateTime DataFim,string Status);
+    public record OperacaoPagamentoPendenteDto(Guid Id,string MedicoNome,string HospitalNome,decimal ValorPrevisto,string Status,DateOnly? DataPrevista);
+    public record OperacaoResumoDto(long TotalPlantoesHoje,long TotalPlantoesAbertos,long TotalEscalasSolicitadas,long TotalEscalasConfirmadasHoje,long TotalConflitos,long TotalPagamentosPendentes,decimal ValorPendente,long NotificacoesNaoLidas,IEnumerable<OperacaoPlantaoCriticoDto> PlantoesCriticos,IEnumerable<OperacaoEscalaPendenteDto> EscalasPendentes,IEnumerable<OperacaoPagamentoPendenteDto> PagamentosPendentes)
+    {
+        public static OperacaoResumoDto Empty() => new(0,0,0,0,0,0,0,0,Array.Empty<OperacaoPlantaoCriticoDto>(),Array.Empty<OperacaoEscalaPendenteDto>(),Array.Empty<OperacaoPagamentoPendenteDto>());
+    }
+public interface IListPageViewModel
     {
         long Total { get; }
         int Page { get; }

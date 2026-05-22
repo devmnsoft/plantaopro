@@ -90,6 +90,7 @@ builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<NotificationPreferenceService>();
 builder.Services.AddScoped<PremiumOperacoesService>();
 builder.Services.AddScoped<OperacaoService>();
+builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 
 var app = builder.Build();

@@ -95,10 +95,16 @@ namespace PlantaoPro.Api.Data
 
                     // 4. Criar Assinatura
                     var assinaturaId = Guid.NewGuid();
-                    var planoDetails = await cn.QueryFirstOrDefaultAsync<(decimal Valor,)>(
-                        "SELECT valor_mensal FROM plantaopro.planos WHERE id = @id",
+                    var valorContratado = await cn.QueryFirstOrDefaultAsync<decimal?>(
+                        "SELECT valor_mensal FROM plantaopro.planos WHERE id = @id AND reg_status = 'A'",
                         new { id = req.PlanoId },
                         transaction: tx);
+
+                    if (!valorContratado.HasValue)
+                    {
+                        logger.LogWarning("Plano não encontrado ou inativo: {PlanoId}", req.PlanoId);
+                        return ApiResponse<OnboardingResumoDto>.Fail("Plano não encontrado ou inativo.", 404);
+                    }
 
                     var dataFim = req.Status == "TESTE"
                         ? DateTime.UtcNow.AddDays(30)
@@ -117,7 +123,7 @@ namespace PlantaoPro.Api.Data
                             req.PlanoId,
                             DataFim = dataFim,
                             Status = "ATIVA",
-                            ValorContratado = planoDetails.Valor,
+                            ValorContratado = valorContratado.Value,
                             DiaVencimento = DateTime.UtcNow.Day,
                             Observacoes = $"Assinatura criada via onboarding em {DateTime.UtcNow:dd/MM/yyyy HH:mm}"
                         },

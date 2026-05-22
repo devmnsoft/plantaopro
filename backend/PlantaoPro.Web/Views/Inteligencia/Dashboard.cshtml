@@ -38,14 +38,16 @@ else
             <table class="table table-modern mb-0">
                 <thead><tr><th>Médico</th><th>Escalas (7d)</th><th>Horas (7d)</th><th>Score</th></tr></thead>
                 <tbody>
+                @{ var posicaoMedico = 1; }
                 @foreach (var item in Model.Executivo.RankingPrioridade)
                 {
                     <tr>
-                        <td>Médico @item.MedicoId.ToString()[..8].ToUpperInvariant()</td>
+                        <td>Médico Prioridade #@posicaoMedico</td>
                         <td>@item.EscalasUltimos7Dias</td>
                         <td>@item.HorasUltimos7Dias</td>
                         <td><span class="badge text-bg-success">@item.ScorePrioridade</span></td>
                     </tr>
+                    posicaoMedico++;
                 }
                 </tbody>
             </table>

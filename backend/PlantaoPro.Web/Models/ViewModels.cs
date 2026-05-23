@@ -207,3 +207,27 @@ namespace PlantaoPro.Web.Models
         string AssinaturaStatus = "",
         DateTime DataCriacaoAssinatura = default);
 }
+
+public sealed class ConversaListViewModel
+{
+    public Guid Id { get; set; }
+    public string Titulo { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime UltimaAtualizacao { get; set; }
+    public int NaoLidas { get; set; }
+}
+
+public sealed class NovaConversaViewModel
+{
+    public string Titulo { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "SUPORTE";
+    public string? Entidade { get; set; }
+    public Guid? EntidadeId { get; set; }
+    public string ParticipantesCsv { get; set; } = string.Empty;
+}
+
+public sealed class ConversaDetalhesViewModel
+{
+    public Guid ConversaId { get; set; }
+}

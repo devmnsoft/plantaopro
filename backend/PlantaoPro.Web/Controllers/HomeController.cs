@@ -202,6 +202,8 @@ namespace PlantaoPro.Web.Controllers
             _logger = logger;
         }
 
+        public IActionResult Produto() => View();
+
         public async Task<IActionResult> Dashboard([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim, [FromQuery] string? hospital, [FromQuery] string? especialidade)
         {
             if (User.IsMedico()) return RedirectToAction("Index", "MinhaAgenda");

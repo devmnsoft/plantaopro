@@ -14,7 +14,22 @@ public record UpdateHospitalRequest(string RazaoSocial,string NomeFantasia,strin
 public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
 public record CreateEspecialidadeRequest(string Nome,string Descricao);
 public record PlantaoDto(Guid Id,Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,int VagasDisponiveis,string Tipo,string Status,string Observacoes);
-public record PlantaoResumoDto(Guid Id,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,int VagasDisponiveis,string Tipo,string Status);
+public sealed class PlantaoResumoDto
+{
+    public Guid Id { get; set; }
+    public string HospitalNome { get; set; } = string.Empty;
+    public string HospitalCidade { get; set; } = string.Empty;
+    public string HospitalEstado { get; set; } = string.Empty;
+    public string EspecialidadeNome { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
+    public decimal Valor { get; set; }
+    public int Vagas { get; set; }
+    public int VagasDisponiveis { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Observacoes { get; set; } = string.Empty;
+}
 public record CreatePlantaoRequest(Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,string Tipo,string? Observacoes);
 public record UpdatePlantaoRequest(Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,string Tipo,string? Observacoes);
 public record PlantaoFilterRequest(Guid? HospitalId,Guid? EspecialidadeId,string? Status,DateTime? DataInicio,DateTime? DataFim,string? Cidade,string? Estado,int Page=1,int PageSize=20);
@@ -32,7 +47,26 @@ public record SubstituirEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record GerarPagamentoRequest(Guid EscalaId,DateOnly? DataPrevista,string? Observacoes);
 public record ConfirmarPagamentoRequest(decimal ValorPago,DateOnly DataPagamento,string FormaPagamento,string? Observacoes);
 public record PagamentoDetailsDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string MedicoEmail,string MedicoTelefone,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento,string? Observacoes);
-public record PagamentoResumoDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,string MedicoNome,string MedicoCrm,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista);
+public sealed class PagamentoResumoDto
+{
+    public Guid Id { get; set; }
+    public Guid EscalaId { get; set; }
+    public Guid MedicoId { get; set; }
+    public Guid PlantaoId { get; set; }
+    public string MedicoNome { get; set; } = string.Empty;
+    public string MedicoCrm { get; set; } = string.Empty;
+    public string HospitalNome { get; set; } = string.Empty;
+    public string EspecialidadeNome { get; set; } = string.Empty;
+    public DateTime DataPlantao { get; set; }
+    public decimal ValorPrevisto { get; set; }
+    public decimal ValorPago { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public DateOnly? DataPrevista { get; set; }
+    public DateOnly? DataPagamento { get; set; }
+    public string FormaPagamento { get; set; } = string.Empty;
+    public string ChavePix { get; set; } = string.Empty;
+    public string Observacoes { get; set; } = string.Empty;
+}
 public record DashboardDto(long TotalMedicos,long TotalHospitais,long TotalEspecialidades,long TotalPlantoes,long PlantoesAbertos,long PlantoesConfirmados,long PlantoesRealizados,long PlantoesCancelados,long PagamentosPendentes,long PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,long NotificacoesNaoLidas);
 public record NotificacaoDto(Guid Id,string Titulo,string Mensagem,string Tipo,bool Lida,DateTime RegDate);
 
@@ -70,7 +104,20 @@ public record UpdateClienteRequest(string RazaoSocial,string NomeFantasia,string
 public record OperacaoPlantaoCriticoDto(Guid Id,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,int VagasDisponiveis,string Status);
 public record OperacaoEscalaPendenteDto(Guid Id,string MedicoNome,string HospitalNome,DateTime DataInicio,DateTime DataFim,string Status);
 public record OperacaoPagamentoPendenteDto(Guid Id,string MedicoNome,string HospitalNome,decimal ValorPrevisto,string Status,DateOnly? DataPrevista);
-public record OperacaoResumoDto(long TotalPlantoesHoje,long TotalPlantoesAbertos,long TotalEscalasSolicitadas,long TotalEscalasConfirmadasHoje,long TotalConflitos,long TotalPagamentosPendentes,decimal ValorPendente, IEnumerable<OperacaoPlantaoCriticoDto>? PlantoesCriticos = null, IEnumerable<OperacaoEscalaPendenteDto>? EscalasPendentes = null, IEnumerable<OperacaoPagamentoPendenteDto>? PagamentosPendentes = null);
+public sealed class OperacaoResumoDto
+{
+    public long TotalPlantoesHoje { get; set; }
+    public long TotalPlantoesAbertos { get; set; }
+    public long TotalEscalasSolicitadas { get; set; }
+    public long TotalEscalasConfirmadasHoje { get; set; }
+    public long TotalConflitos { get; set; }
+    public long TotalPagamentosPendentes { get; set; }
+    public decimal ValorPendente { get; set; }
+    public long NotificacoesNaoLidas { get; set; }
+    public OperacaoPlantaoCriticoDto[] PlantoesCriticos { get; set; } = Array.Empty<OperacaoPlantaoCriticoDto>();
+    public OperacaoEscalaPendenteDto[] EscalasPendentes { get; set; } = Array.Empty<OperacaoEscalaPendenteDto>();
+    public OperacaoPagamentoPendenteDto[] PagamentosPendentes { get; set; } = Array.Empty<OperacaoPagamentoPendenteDto>();
+}
 public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoResumoDto> ProximosPlantoes,IEnumerable<PagamentoResumoDto> UltimosPagamentos,IEnumerable<NotificacaoDto> UltimasNotificacoes,IEnumerable<DashboardChartItem> PlantoesPorMes,IEnumerable<DashboardChartItem> PagamentosPorMes,IEnumerable<DashboardChartItem> PlantoesPorEspecialidade,IEnumerable<DashboardChartItem> PlantoesPorHospital);
 
 // ============================================================================
@@ -120,7 +167,15 @@ public record CreateClienteOnboardingRequest(
 
 // Onboarding - Response com resumo
 
-public record ConversaListDto(Guid Id,string Titulo,string Tipo,string Status,DateTime UltimaAtualizacao,int NaoLidas);
+public sealed class ConversaListDto
+{
+    public Guid Id { get; set; }
+    public string Titulo { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime UltimaAtualizacao { get; set; }
+    public long NaoLidas { get; set; }
+}
 public record CriarConversaRequest(string Titulo,string? Tipo,string? Entidade,Guid? EntidadeId,Guid[] Participantes);
 public record EnviarMensagemRequest(string Mensagem);
 

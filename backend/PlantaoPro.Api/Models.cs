@@ -119,6 +119,11 @@ public record CreateClienteOnboardingRequest(
 );
 
 // Onboarding - Response com resumo
+
+public record ConversaListDto(Guid Id,string Titulo,string Tipo,string Status,DateTime UltimaAtualizacao,int NaoLidas);
+public record CriarConversaRequest(string Titulo,string? Tipo,string? Entidade,Guid? EntidadeId,Guid[] Participantes);
+public record EnviarMensagemRequest(string Mensagem);
+
 public record OnboardingResumoDto(
     Guid ClienteId,
     string ClienteNome,

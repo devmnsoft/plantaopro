@@ -1,4 +1,75 @@
 @model PlantaoPro.Web.Models.ConversaDetalhesViewModel
-@{ ViewData["Title"] = "Detalhes da conversa"; }
-<div class="page-header mb-3"><h2>Conversa</h2></div>
-<div class="card"><div class="card-body"><p>Conversa: @Model.ConversaId</p><div class="alert alert-info">Integração completa do chat em andamento.</div></div></div>
+@using PlantaoPro.Web.Models
+@{
+    ViewData["Title"] = "Conversa";
+    var mensagens = Model?.Mensagens ?? Array.Empty<MensagemConversaDto>();
+    var participantes = Model?.Participantes ?? Array.Empty<ParticipanteConversaDto>();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-1">@Model.Titulo</h2>
+        <div class="d-flex gap-2"><span class="badge text-bg-light border">@Model.Tipo</span><span class="badge text-bg-secondary">@Model.Status</span></div>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+<div class="row g-3">
+    <div class="col-12 col-lg-8">
+        <div class="card"><div class="card-body" style="min-height:320px;">
+            @if (mensagens.Any())
+            {
+                @foreach (var msg in mensagens.OrderBy(m => m.RegDate))
+                {
+                    <div class="d-flex mb-3 @(msg.MinhaMensagem ? "justify-content-end" : "justify-content-start")">
+                        <div class="p-2 rounded @(msg.MinhaMensagem ? "bg-primary text-white" : "bg-light border")" style="max-width: 80%;">
+                            <div class="small fw-semibold">@msg.RemetenteNome</div>
+                            <div>@msg.Mensagem</div>
+                            <div class="small opacity-75">@msg.RegDate.ToString("dd/MM/yyyy HH:mm")</div>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                var emptyState = new EmptyStateViewModel("bi-chat-left-text", "Sem mensagens ainda", "Envie a primeira mensagem para iniciar a conversa.");
+                <partial name="_EmptyState" model="emptyState" />
+            }
+        </div></div>
+
+        <div class="card mt-3"><div class="card-body">
+            <form asp-action="EnviarMensagem" method="post">
+                @Html.AntiForgeryToken()
+                <input asp-for="NovaMensagem.ConversaId" type="hidden" value="@Model.Id" />
+                <div class="mb-2">
+                    <label asp-for="NovaMensagem.Mensagem" class="form-label"></label>
+                    <textarea asp-for="NovaMensagem.Mensagem" class="form-control" rows="3" placeholder="Digite sua mensagem..."></textarea>
+                    <span asp-validation-for="NovaMensagem.Mensagem" class="text-danger"></span>
+                </div>
+                <button type="submit" class="btn btn-primary">Enviar mensagem</button>
+            </form>
+        </div></div>
+    </div>
+    <div class="col-12 col-lg-4">
+        <div class="card"><div class="card-header">Participantes</div><div class="card-body">
+            @if (participantes.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var p in participantes)
+                    {
+                        <li class="list-group-item px-0"><div class="fw-semibold">@p.Nome</div><div class="small text-muted">@p.Email · @p.Perfil</div></li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <div class="alert alert-light border mb-0">Participantes indisponíveis.</div>
+            }
+        </div></div>
+    </div>
+</div>

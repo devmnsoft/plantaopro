@@ -63,4 +63,43 @@ public class ClientesController : ControllerBase
         }
         catch (Exception ex) { logger.LogError(ex, "Erro ao suspender cliente"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível suspender cliente.", 500)); }
     }
+
+    [HttpPost("{id:guid}/suspender")]
+    public async Task<IActionResult> Suspender(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.ExecuteAsync("update plantaopro.clientes set status='SUSPENSO',reg_update=now() where id=@id and reg_status='A'", new { id });
+            if (rows == 0) return NotFound(ApiResponse<string>.Fail("Cliente não encontrado.", 404));
+            return Ok(ApiResponse<string>.Ok("ok", "Cliente suspenso com sucesso."));
+        }
+        catch (Exception ex) { logger.LogError(ex, "Erro ao suspender cliente {ClienteId}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível suspender cliente.", 500)); }
+    }
+
+    [HttpPost("{id:guid}/reativar")]
+    public async Task<IActionResult> Reativar(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.ExecuteAsync("update plantaopro.clientes set status='ATIVO',reg_status='A',reg_update=now() where id=@id", new { id });
+            if (rows == 0) return NotFound(ApiResponse<string>.Fail("Cliente não encontrado.", 404));
+            return Ok(ApiResponse<string>.Ok("ok", "Cliente reativado com sucesso."));
+        }
+        catch (Exception ex) { logger.LogError(ex, "Erro ao reativar cliente {ClienteId}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível reativar cliente.", 500)); }
+    }
+
+    [HttpPost("{id:guid}/cancelar")]
+    public async Task<IActionResult> Cancelar(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.ExecuteAsync("update plantaopro.clientes set status='CANCELADO',reg_update=now() where id=@id and reg_status='A'", new { id });
+            if (rows == 0) return NotFound(ApiResponse<string>.Fail("Cliente não encontrado.", 404));
+            return Ok(ApiResponse<string>.Ok("ok", "Cliente cancelado com sucesso."));
+        }
+        catch (Exception ex) { logger.LogError(ex, "Erro ao cancelar cliente {ClienteId}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível cancelar cliente.", 500)); }
+    }
 }

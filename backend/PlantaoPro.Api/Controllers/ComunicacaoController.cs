@@ -32,12 +32,15 @@ public class ComunicacaoController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var data = await cn.QueryAsync<ConversaListDto>(@"select c.id,c.titulo,c.tipo,c.status,c.reg_date as UltimaAtualizacao,
-                coalesce((select count(1) from plantaopro.mensagens m where m.conversa_id=c.id and m.lida=false and m.remetente_usuario_id<>@userId),0) as NaoLidas
+            var data = await cn.QueryAsync<ConversaListDto>(@"select c.id as ""Id"",coalesce(c.titulo,'') as ""Titulo"",coalesce(c.tipo,'') as ""Tipo"",coalesce(c.status,'') as ""Status"",coalesce(max(m.reg_date), c.reg_date) as ""UltimaAtualizacao"",
+                count(ml.id) filter (where coalesce(ml.lida,false)=false and ml.remetente_usuario_id<>@userId) as ""NaoLidas""
                 from plantaopro.conversas c
                 join plantaopro.conversa_participantes cp on cp.conversa_id=c.id and cp.reg_status='A'
+                left join plantaopro.mensagens m on m.conversa_id=c.id and m.reg_status='A'
+                left join plantaopro.mensagens ml on ml.conversa_id=c.id and ml.reg_status='A'
                 where c.reg_status='A' and cp.usuario_id=@userId
-                order by c.reg_date desc", new { userId });
+                group by c.id,c.titulo,c.tipo,c.status,c.reg_date
+                order by coalesce(max(m.reg_date), c.reg_date) desc", new { userId });
             return Ok(ApiResponse<IEnumerable<ConversaListDto>>.Ok(data, "Conversas listadas."));
         }
         catch (Exception ex)

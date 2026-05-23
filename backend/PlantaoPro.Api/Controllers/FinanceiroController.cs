@@ -9,16 +9,27 @@ namespace PlantaoPro.Api.Controllers
     [Route("api/financeiro")]
     public class FinanceiroController : ControllerBase
     {
-        private readonly FinanceiroService service; public FinanceiroController(FinanceiroService service)
+        private readonly FinanceiroService service;
+        private readonly ILogger<FinanceiroController> logger;
+        public FinanceiroController(FinanceiroService service, ILogger<FinanceiroController> logger)
         {
             this.service = service;
+            this.logger = logger;
         }
         [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpGet("pagamentos")]
         public async Task<IActionResult> Listar([FromQuery] PagamentoFilterRequest f)
         {
-            var r = await service.ListarAsync(f);
-            return StatusCode(r.StatusCode, r);
+            try
+            {
+                var r = await service.ListarAsync(f);
+                return StatusCode(r.StatusCode, r);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro ao listar pagamentos");
+                return StatusCode(500, ApiResponse<string>.Fail("Erro ao listar pagamentos.", 500));
+            }
         }
         [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpGet("pagamentos/{id:guid}")]

@@ -24,7 +24,7 @@ public sealed class OperacaoService
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
 
-            var resumo = await cn.QueryFirstAsync<OperacaoResumoDto>(@"
+            var resumo = await cn.QueryFirstOrDefaultAsync<OperacaoResumoContadoresRow>(@"
 select
   (select count(1) from plantaopro.plantoes p where p.reg_status='A' and date_trunc('day', p.data_inicio)=date_trunc('day', now())) as TotalPlantoesHoje,
   (select count(1) from plantaopro.plantoes p where p.reg_status='A' and lower(coalesce(p.status,''))='aberto') as TotalPlantoesAbertos,
@@ -39,7 +39,7 @@ select
      and p1.data_inicio < p2.data_fim and p2.data_inicio < p1.data_fim) as TotalConflitos,
   (select count(1) from plantaopro.pagamentos pg where pg.reg_status='A' and lower(coalesce(pg.status,'')) in ('pendente','atrasado')) as TotalPagamentosPendentes,
   (select coalesce(sum(pg.valor_previsto),0) from plantaopro.pagamentos pg where pg.reg_status='A' and lower(coalesce(pg.status,'')) in ('pendente','atrasado')) as ValorPendente,
-  (select count(1) from plantaopro.notificacoes n where n.reg_status='A' and coalesce(n.lida,false)=false and (n.usuario_id=@userId or n.usuario_id is null)) as NotificacoesNaoLidas", new { userId });
+  (select count(1) from plantaopro.notificacoes n where n.reg_status='A' and coalesce(n.lida,false)=false and (n.usuario_id=@userId or n.usuario_id is null)) as NotificacoesNaoLidas", new { userId }) ?? new OperacaoResumoContadoresRow();
 
             var plantoesCriticos = await cn.QueryAsync<OperacaoPlantaoCriticoDto>(@"
 select p.id, h.nome_fantasia as HospitalNome, e.nome as EspecialidadeNome, p.data_inicio as DataInicio, p.data_fim as DataFim, p.vagas_disponiveis as VagasDisponiveis, p.status
@@ -71,11 +71,19 @@ where pg.reg_status='A' and lower(coalesce(pg.status,'')) in ('pendente','atrasa
 order by pg.data_prevista asc nulls last
 limit 8");
 
-            var payload = resumo with
+            var payload = new OperacaoResumoDto
             {
-                PlantoesCriticos = plantoesCriticos,
-                EscalasPendentes = escalasPendentes,
-                PagamentosPendentes = pagamentosPendentes
+                TotalPlantoesHoje = resumo.TotalPlantoesHoje,
+                TotalPlantoesAbertos = resumo.TotalPlantoesAbertos,
+                TotalEscalasSolicitadas = resumo.TotalEscalasSolicitadas,
+                TotalEscalasConfirmadasHoje = resumo.TotalEscalasConfirmadasHoje,
+                TotalConflitos = resumo.TotalConflitos,
+                TotalPagamentosPendentes = resumo.TotalPagamentosPendentes,
+                ValorPendente = resumo.ValorPendente,
+                NotificacoesNaoLidas = resumo.NotificacoesNaoLidas,
+                PlantoesCriticos = plantoesCriticos?.ToArray() ?? Array.Empty<OperacaoPlantaoCriticoDto>(),
+                EscalasPendentes = escalasPendentes?.ToArray() ?? Array.Empty<OperacaoEscalaPendenteDto>(),
+                PagamentosPendentes = pagamentosPendentes?.ToArray() ?? Array.Empty<OperacaoPagamentoPendenteDto>()
             };
 
             await audit.LogAsync(userId, "OPERACAO_RESUMO", "operacao", null, "Consulta da central operacional", ip: ip, userAgent: ua);
@@ -87,4 +95,16 @@ limit 8");
             return ApiResponse<OperacaoResumoDto>.Fail("Não foi possível carregar a central operacional no momento.", 500);
         }
     }
+}
+
+public sealed class OperacaoResumoContadoresRow
+{
+    public long TotalPlantoesHoje { get; set; }
+    public long TotalPlantoesAbertos { get; set; }
+    public long TotalEscalasSolicitadas { get; set; }
+    public long TotalEscalasConfirmadasHoje { get; set; }
+    public long TotalConflitos { get; set; }
+    public long TotalPagamentosPendentes { get; set; }
+    public decimal ValorPendente { get; set; }
+    public long NotificacoesNaoLidas { get; set; }
 }

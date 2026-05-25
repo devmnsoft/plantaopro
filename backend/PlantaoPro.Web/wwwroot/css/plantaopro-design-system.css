@@ -1,0 +1,7 @@
+.kpi-card{background:#fff;border:1px solid var(--pp-border);border-radius:16px;padding:16px;box-shadow:var(--pp-shadow)}
+.kpi-value{font-size:1.6rem;font-weight:800;line-height:1.2}.kpi-subtitle{color:var(--pp-muted);font-size:.85rem}.kpi-variation{margin-top:.75rem;font-size:.8rem;font-weight:600}
+.kpi-primary .kpi-icon{background:#eaf1ff;color:#155eef}.kpi-success .kpi-icon{background:#e8fff2;color:#0c8f57}.kpi-warning .kpi-icon{background:#fff8e9;color:#b7791f}.kpi-danger .kpi-icon{background:#fff1f2;color:#cc3d4d}
+.module-banner{background:linear-gradient(145deg,#0b2a52,#1f4f90);color:#eff6ff;border-radius:16px;padding:18px;border:1px solid rgba(255,255,255,.12)}
+.module-banner-title{font-size:1.05rem;font-weight:700}.module-banner-description{opacity:.92}
+.action-toolbar,.filter-panel{border:1px solid var(--pp-border);border-radius:14px;background:#fff}
+.pp-hidden{display:none!important}

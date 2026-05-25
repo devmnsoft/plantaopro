@@ -1,0 +1,16 @@
+@model PlantaoPro.Web.Models.ActionToolbarViewModel?
+<div class="action-toolbar mb-3">
+    <div class="d-flex gap-2 flex-wrap">
+        @if (!string.IsNullOrWhiteSpace(Model?.NewText))
+        {
+            if (!string.IsNullOrWhiteSpace(Model?.NewController) && !string.IsNullOrWhiteSpace(Model?.NewAction) && !(Model?.NewDisabled ?? false))
+            {
+                <a class="btn btn-primary" asp-controller="@Model!.NewController" asp-action="@Model.NewAction"><i class="bi bi-plus-circle me-1"></i>@Model.NewText</a>
+            }
+            else { <button class="btn btn-primary" disabled title="Em breve">@Model.NewText</button> }
+        }
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#globalFilterPanel"><i class="bi bi-funnel me-1"></i>Filtros</button>
+        <button type="submit" form="@Model?.ExportFormId" class="btn btn-outline-success" @(string.IsNullOrWhiteSpace(Model?.ExportFormId) ? "disabled" : null) title="@(string.IsNullOrWhiteSpace(Model?.ExportFormId) ? "Em breve" : "Exportar")"><i class="bi bi-download me-1"></i>Exportar</button>
+        <a class="btn btn-outline-primary" href="@Context.Request.Path@Context.Request.QueryString"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</a>
+    </div>
+</div>

@@ -1,0 +1,13 @@
+@model PlantaoPro.Web.Models.ConfirmModalViewModel?
+<div class="modal fade" id="@(Model?.ModalId ?? "confirmModal")" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">@(Model?.Title ?? "Confirmar ação")</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">@(Model?.Message ?? "Deseja realmente continuar?")</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-@(Model?.Type ?? "danger")" data-confirm-action="@(Model?.ActionUrl ?? string.Empty)">@(Model?.ActionText ?? "Confirmar")</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -193,4 +193,18 @@ public record OnboardingResumoDto(
     string AssinaturaStatus,
     DateTime DataCriacaoAssinatura
 );
+public sealed class BiResumoExecutivoDto
+{
+    public long TotalClientesAtivos { get; set; }
+    public decimal ReceitaMensalEstimada { get; set; }
+    public decimal ReceitaVencida { get; set; }
+    public long PlantoesPublicadosMes { get; set; }
+    public decimal PercentualCobertura { get; set; }
+    public long EscalasConfirmadas { get; set; }
+    public long EscalasCanceladas { get; set; }
+    public long PagamentosPendentes { get; set; }
+    public long PagamentosConfirmados { get; set; }
+    public decimal TempoMedioPreenchimentoHoras { get; set; }
+}
+
 }

@@ -1,0 +1,19 @@
+@model PlantaoPro.Web.Models.KpiCardViewModel?
+@{
+    var semantic = string.IsNullOrWhiteSpace(Model?.SemanticColor) ? "primary" : Model!.SemanticColor!.Trim().ToLowerInvariant();
+    var icon = string.IsNullOrWhiteSpace(Model?.Icon) ? "bi-graph-up-arrow" : Model!.Icon;
+}
+<div class="kpi-card kpi-@semantic">
+    <div class="d-flex justify-content-between align-items-start gap-3">
+        <div>
+            <div class="kpi-title">@(Model?.Title ?? "Indicador")</div>
+            <div class="kpi-value">@(Model?.Value ?? "0")</div>
+            <div class="kpi-subtitle">@(Model?.Subtitle ?? "Sem atualização recente")</div>
+        </div>
+        <div class="kpi-icon"><i class="bi @icon"></i></div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model?.Variation))
+    {
+        <div class="kpi-variation">@(Model?.Variation)</div>
+    }
+</div>

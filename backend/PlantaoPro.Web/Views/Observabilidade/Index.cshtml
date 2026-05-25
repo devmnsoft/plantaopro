@@ -1,0 +1,16 @@
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Observabilidade";
+}
+<div class="container-fluid">
+    <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Observabilidade SaaS","Saúde operacional da plataforma","bi-activity")' />
+
+    <div class="alert alert-info"><i class="bi bi-shield-check"></i> Visão segura para demonstração, sem exposição de stack trace.</div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Resumo rápido</h5>
+            <pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Resumo, new JsonSerializerOptions { WriteIndented = true })</pre>
+        </div>
+    </div>
+</div>

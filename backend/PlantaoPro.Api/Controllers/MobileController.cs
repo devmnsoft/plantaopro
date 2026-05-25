@@ -63,6 +63,37 @@ public class MobileController : ControllerBase
         }
     }
 
+
+
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        var uid = GetUserId();
+        if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Sessão inválida.", 401));
+        var nome = User.FindFirst("nome")?.Value ?? User.Identity?.Name ?? "Usuário";
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
+        return Ok(ApiResponse<object>.Ok(new { id = uid, nome, email, perfil = GetPerfil() }, "Usuário autenticado."));
+    }
+
+    [HttpPost("auth/logout")]
+    public IActionResult Logout() => Ok(ApiResponse<object>.Ok(new { revoked = false }, "Logout concluído no cliente mobile."));
+
+    [HttpPut("notificacoes/{id:guid}/lida")]
+    public async Task<IActionResult> NotificacaoLida(Guid id)
+    {
+        var uid = GetUserId();
+        try { var response = await _notificacao.MarcarLidaAsync(uid, id, GetIp(), Request.Headers.UserAgent.ToString()); return StatusCode(response.StatusCode, response); }
+        catch (Exception ex) { _logger.LogError(ex, "Mobile notificacao lida erro uid:{Uid} id:{Id}", uid, id); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar notificação.", 500)); }
+    }
+
+    [HttpPut("notificacoes/lidas")]
+    public async Task<IActionResult> NotificacoesLidas()
+    {
+        var uid = GetUserId();
+        try { var response = await _notificacao.MarcarTodasLidasAsync(uid, GetIp(), Request.Headers.UserAgent.ToString()); return StatusCode(response.StatusCode, response); }
+        catch (Exception ex) { _logger.LogError(ex, "Mobile notificacoes lidas erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar notificações.", 500)); }
+    }
+
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard()
     {
@@ -139,4 +170,71 @@ public class MobileController : ControllerBase
             return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar contador de notificações.", 500));
         }
     }
+
+    [HttpGet("convites")]
+    public async Task<IActionResult> Convites([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        return await PlantoesDisponiveis(page, pageSize);
+    }
+
+    [HttpGet("convites/{id:guid}")]
+    public async Task<IActionResult> Convite(Guid id)
+    {
+        return await Plantao(id);
+    }
+
+    [HttpPost("convites/{id:guid}/aceitar")]
+    public async Task<IActionResult> AceitarConvite(Guid id)
+    {
+        return await SolicitarPlantao(id);
+    }
+
+    [HttpPost("convites/{id:guid}/recusar")]
+    public IActionResult RecusarConvite(Guid id)
+    {
+        return Ok(ApiResponse<object>.Ok(new { id, status = "recusado" }, "Convite recusado."));
+    }
+
+    [HttpGet("plantoes/{id:guid}")]
+    public async Task<IActionResult> Plantao(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var row = await cn.QueryFirstOrDefaultAsync(@"select p.id, h.nome_fantasia as hospitalNome, e.nome as especialidadeNome, p.data_inicio as dataInicio, p.data_fim as dataFim, p.valor, p.vagas_disponiveis as vagasDisponiveis, p.status
+from plantaopro.plantoes p
+join plantaopro.hospitais h on h.id=p.hospital_id
+join plantaopro.especialidades e on e.id=p.especialidade_id
+where p.id=@id and p.reg_status='A'", new { id });
+            if (row is null) return NotFound(ApiResponse<object>.Fail("Plantão não encontrado.", 404));
+            return Ok(ApiResponse<object>.Ok(row, "Plantão carregado."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile plantao detalhe erro id:{Id}", id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar o plantão.", 500));
+        }
+    }
+
+    [HttpPost("plantoes/{id:guid}/solicitar")]
+    public async Task<IActionResult> SolicitarPlantao(Guid id)
+    {
+        var uid = GetUserId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' limit 1", new { uid });
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
+            var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas where plantao_id=@id and medico_id=@medico and reg_status='A'", new { id, medico = medicoId });
+            if (exists > 0) return BadRequest(ApiResponse<object>.Fail("Solicitação já existe para este plantão.", 400));
+            await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,reg_status,reg_date) values(gen_random_uuid(),@id,@medico,'solicitado','A',now())", new { id, medico = medicoId });
+            return Ok(ApiResponse<object>.Ok(new { id }, "Solicitação enviada com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile solicitar plantao erro uid:{Uid} id:{Id}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível solicitar plantão.", 500));
+        }
+    }
+
 }

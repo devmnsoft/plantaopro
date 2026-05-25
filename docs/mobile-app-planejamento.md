@@ -1,30 +1,41 @@
-# Planejamento inicial do app PlantãoPro
+# Planejamento Técnico — App Mobile PlantãoPro
 
 ## Objetivo
-Entregar um aplicativo mobile focado em produtividade do médico plantonista e acompanhamento operacional em tempo real.
+Entregar uma experiência mobile para médicos focada em operação diária: login, agenda, convites, escalas, pagamentos e notificações.
 
-## Público
-- Médicos (MVP)
-- Coordenação (fase 2)
-- Financeiro (fase 3)
+## Público-alvo
+- Médicos plantonistas (principal)
+- Coordenação (fase posterior)
 
 ## Stack recomendada
-- React Native com Expo (rápido para MVP)
-- Alternativa corporativa: .NET MAUI
+1. **Principal: React Native + Expo**
+2. **Alternativa: .NET MAUI**
 
-## MVP de telas
-Login, Dashboard, Plantões disponíveis, Detalhes do plantão, Solicitar plantão, Convites, Minhas escalas, Meus pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+## Arquitetura sugerida
+- Camadas: `presentation`, `application`, `infrastructure`.
+- API única via `/api/mobile/*`.
+- DTOs leves e respostas padronizadas `ApiResponse<T>`.
 
-## JWT e segurança
-- Login em `/api/mobile/auth/login`
-- Access token curto + renovação controlada
-- Storage seguro (Keychain/Keystore)
+## Organização de pastas (sugestão)
+- `src/app` (rotas)
+- `src/features` (módulos)
+- `src/shared` (componentes, tema, cliente HTTP)
+- `src/state` (store global)
 
-## Navegação sugerida
-- Tabs: Dashboard, Agenda, Convites, Pagamentos, Perfil
-- Stack interno para detalhes e edições
+## Autenticação e JWT
+- Login em `/api/mobile/auth/login`.
+- Guardar access token seguro (SecureStore/Keychain).
+- Renovação com refresh token quando o backend suportar endpoint dedicado.
 
-## Próximos passos
-1. Consolidar contratos de DTO mobile
-2. Finalizar paginação/erros padronizados
-3. Prototipar UI mobile no design system atual
+## Tratamento de erro
+- Mapear erros HTTP para mensagens amigáveis.
+- Retry só para falhas transitórias.
+
+## Estado global
+- Sessão do usuário.
+- Notificações não lidas.
+- Preferências locais de UI.
+
+## Navegação
+- Stack inicial: Login -> Dashboard.
+- Tabs principais: Agenda, Convites, Escalas, Pagamentos, Perfil.

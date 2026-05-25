@@ -1,36 +1,22 @@
-# Mobile API endpoints (PlantãoPro)
+# Mobile API Endpoints
+
+Base: `/api/mobile`
 
 ## Autenticação
-- `POST /api/mobile/auth/login`
+- `POST /auth/login`
+  - Request: `{ "email": "medico@exemplo.com", "senha": "***" }`
+  - Response: `ApiResponse<MobileLoginResponseDto>`
 
-## Usuário e dashboard
-- `GET /api/mobile/me`
-- `GET /api/mobile/dashboard`
+## Dashboard e Agenda
+- `GET /dashboard`
+- `GET /plantoes-disponiveis?page=1&pageSize=20`
+- `GET /minhas-escalas?page=1&pageSize=20`
+- `GET /meus-pagamentos?page=1&pageSize=20`
 
-## Plantões/Convites/Escalas
-- `GET /api/mobile/plantoes-disponiveis`
-- `GET /api/mobile/plantoes/{id}`
-- `POST /api/mobile/plantoes/{id}/solicitar`
-- `GET /api/mobile/convites`
-- `POST /api/mobile/convites/{id}/aceitar`
-- `POST /api/mobile/convites/{id}/recusar`
-- `GET /api/mobile/minhas-escalas`
+## Notificações
+- `GET /notificacoes?page=1&pageSize=20`
+- `GET /notificacoes/contador`
 
-## Financeiro e notificações
-- `GET /api/mobile/meus-pagamentos`
-- `GET /api/mobile/notificacoes`
-- `PUT /api/mobile/notificacoes/{id}/lida`
-- `PUT /api/mobile/notificacoes/lidas`
-
-## Perfil médico
-- `GET /api/mobile/perfil`
-- `PUT /api/mobile/perfil`
-- `GET /api/mobile/disponibilidade`
-- `PUT /api/mobile/disponibilidade`
-- `GET /api/mobile/preferencias`
-- `PUT /api/mobile/preferencias`
-
-## Exemplo de resposta padrão
-```json
-{ "success": true, "message": "OK", "data": {}, "errors": [] }
-```
+## Regras de autenticação
+- JWT obrigatório em todos os endpoints, exceto login.
+- Usuário médico só visualiza dados próprios.

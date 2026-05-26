@@ -46,7 +46,7 @@
                     <td>
                         @if (item.Locked)
                         {
-                            <form asp-action="Unlock" method="post" onsubmit="return confirm('Confirmar desbloqueio do usuário?');">
+                            <form asp-action="Unlock" method="post" class="d-inline" data-confirm="true" data-confirm-title="Desbloquear usuário" data-confirm-message="Confirma desbloquear este usuário?" data-confirm-type="warning">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@item.Id" />
                                 <button class="btn btn-sm btn-warning">Desbloquear</button>

@@ -43,6 +43,8 @@ namespace PlantaoPro.Api.Data
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            this.elegibilidade = elegibilidade;
+            this.conflitoService = conflitoService;
         }
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
         {
@@ -602,12 +604,14 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class EscalaService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ILogger<EscalaService> logger; public EscalaService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ILogger<EscalaService> logger)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ILogger<EscalaService> logger; private readonly MedicoElegibilidadeService elegibilidade; private readonly ConflitoHorarioService conflitoService; public EscalaService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ILogger<EscalaService> logger, MedicoElegibilidadeService elegibilidade, ConflitoHorarioService conflitoService)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.notificacao = notificacao;
             this.logger = logger;
+            this.elegibilidade = elegibilidade;
+            this.conflitoService = conflitoService;
         }
         private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
         private async Task<(Guid Id, string C, string U, bool A)> ValidarMedicoAsync(Guid medicoId, NpgsqlConnection cn, NpgsqlTransaction tx)
@@ -717,6 +721,9 @@ namespace PlantaoPro.Api.Data
                     return ApiResponse<string>.Fail("Plantão não encontrado", 404);
                 if (p.Status != "aberto" || p.Vagas <= 0)
                     return ApiResponse<string>.Fail("Plantão indisponível para aceite");
+                var eleg = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(medicoId, plantaoId);
+                if (eleg.Bloqueado)
+                    return ApiResponse<string>.Fail(string.Join("; ", eleg.MotivosBloqueio));
                 var dup = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas where plantao_id=@p and medico_id=@m and status in ('solicitado','confirmado','realizado') and reg_status='A'", new
                 {
                     p = plantaoId,
@@ -724,13 +731,8 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (dup > 0)
                     return ApiResponse<string>.Fail("Médico já possui escala nesse plantão");
-                var conflito = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas e join plantaopro.plantoes pl on pl.id=e.plantao_id where e.medico_id=@m and e.status in ('solicitado','confirmado','realizado') and e.reg_status='A' and tsrange(pl.data_inicio,pl.data_fim,'[]') && tsrange(@di,@df,'[]')", new
-                {
-                    m = medicoId,
-                    di = p.Di,
-                    df = p.Df
-                }, tx);
-                if (conflito > 0)
+                var conflito = await conflitoService.ExisteConflitoAsync(medicoId, p.Di, p.Df);
+                if (conflito)
                 {
                     await cn.ExecuteAsync("update plantaopro.plantoes set conflito_detectado=true,updated_by=@u,reg_update=now() where id=@id", new
                     {
@@ -809,6 +811,10 @@ namespace PlantaoPro.Api.Data
                 {
                     if (e.Status != "solicitado")
                         return ApiResponse<string>.Fail("Somente escala solicitada pode ser confirmada");
+                    var dadosPlantao = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new { id = e.PlantaoId }, tx);
+                    var elegibilidadeConfirmacao = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(e.MedicoId, e.PlantaoId);
+                    if (elegibilidadeConfirmacao.Bloqueado) return ApiResponse<string>.Fail(string.Join("; ", elegibilidadeConfirmacao.MotivosBloqueio));
+                    if (await conflitoService.ExisteConflitoAsync(e.MedicoId, dadosPlantao.Di, dadosPlantao.Df, id)) return ApiResponse<string>.Fail("Conflito de horário detectado na confirmação.");
                     await cn.ExecuteAsync("update plantaopro.escalas set status='confirmado',updated_by=@u,reg_update=now() where id=@id", new
                     {
                         id,

@@ -82,6 +82,8 @@ builder.Services.AddScoped<PlantaoService>();
 builder.Services.AddScoped<EspecialidadeService>();
 builder.Services.AddScoped<HospitalService>();
 builder.Services.AddScoped<EscalaService>();
+builder.Services.AddScoped<ConflitoHorarioService>();
+builder.Services.AddScoped<MedicoElegibilidadeService>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();

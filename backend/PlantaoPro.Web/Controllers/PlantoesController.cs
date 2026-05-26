@@ -99,10 +99,10 @@ public class PlantoesController : BaseWebController
     {
         model ??= new PlantaoFormViewModel { DataInicio = DateTime.Now.AddHours(1), DataFim = DateTime.Now.AddHours(13), Vagas = 1 };
         var client = CreateApiClient(); if (!AddBearerToken(client)) return model;
-        var (hospitais, _, _) = await ReadApiResponse<PagedResult<HospitalDto>>(client, "api/hospitais?page=1&pageSize=200");
-        var (especialidades, _, _) = await ReadApiResponse<PagedResult<EspecialidadeDto>>(client, "api/especialidades?page=1&pageSize=200");
-        model.Hospitais = hospitais?.Items ?? Enumerable.Empty<HospitalDto>();
-        model.Especialidades = especialidades?.Items ?? Enumerable.Empty<EspecialidadeDto>();
+        var (hospitais, _, _) = await ReadApiListResponseAsync<HospitalDto>(client, "api/hospitais");
+        var (especialidades, _, _) = await ReadApiListResponseAsync<EspecialidadeDto>(client, "api/especialidades");
+        model.Hospitais = hospitais;
+        model.Especialidades = especialidades;
         return model;
     }
 }

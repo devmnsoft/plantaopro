@@ -14,6 +14,9 @@ public class MedicosController : ControllerBase{ private readonly MedicoService 
  [HttpGet]
  public async Task<IActionResult> Get(){var r=await service.ListarAsync();return StatusCode(r.StatusCode,r);}
  [Authorize(Roles = RolesConstants.CadastrosOperacao)]
+ [HttpGet("{id:guid}")]
+ public async Task<IActionResult> GetById(Guid id){var r=await service.GetByIdAsync(id);return StatusCode(r.StatusCode,r);}
+ [Authorize(Roles = RolesConstants.CadastrosOperacao)]
  [HttpPost("cadastro")]
  public async Task<IActionResult> Cadastro([FromBody]CreateMedicoRequest req){
    var uid=Guid.Parse(User.Claims.First(x=>x.Type=="uid").Value);

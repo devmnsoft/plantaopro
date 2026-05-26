@@ -43,6 +43,9 @@ namespace PlantaoPro.Api.Data
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            this.regra = regra;
+            this.historico = historico;
+            this.transicao = transicao;
             this.elegibilidade = elegibilidade;
             this.conflitoService = conflitoService;
         }
@@ -213,6 +216,9 @@ namespace PlantaoPro.Api.Data
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            this.regra = regra;
+            this.historico = historico;
+            this.transicao = transicao;
         }
         public async Task<ApiResponse<IEnumerable<MedicoDto>>> ListarAsync()
         {
@@ -418,7 +424,7 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class PlantaoService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; private readonly PlantaoRegraService regra; private readonly PlantaoHistoricoService historico; private readonly PlantaoTransicaoService transicao; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger, PlantaoRegraService regra, PlantaoHistoricoService historico, PlantaoTransicaoService transicao)
         {
             this.cfg = cfg;
             this.audit = audit;
@@ -483,8 +489,9 @@ namespace PlantaoPro.Api.Data
         }
         public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua)
         {
-            if (r.DataFim <= r.DataInicio || r.Valor <= 0 || r.Vagas <= 0)
-                return ApiResponse<PlantaoDto>.Fail("Dados inválidos");
+            var validaCriacao = regra.ValidarCriacao(r);
+            if (!validaCriacao.Success)
+                return ApiResponse<PlantaoDto>.Fail(validaCriacao.Message);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var hospitalAtivo = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.hospitais where id=@id and reg_status='A'", new
             {
@@ -535,10 +542,9 @@ namespace PlantaoPro.Api.Data
             });
             if (status is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            if (status != "rascunho")
-                return ApiResponse<string>.Fail("Somente plantão em rascunho pode ser editado");
-            if (r.DataFim <= r.DataInicio || r.Valor <= 0 || r.Vagas <= 0)
-                return ApiResponse<string>.Fail("Dados inválidos");
+            var validacaoEdicao = regra.ValidarEdicao(status, r);
+            if (!validacaoEdicao.Success)
+                return ApiResponse<string>.Fail(validacaoEdicao.Message);
             await cn.ExecuteAsync("update plantaopro.plantoes set hospital_id=@h,especialidade_id=@e,data_inicio=@di,data_fim=@df,valor=@v,vagas=@vg,vagas_disponiveis=@vg,tipo=@t,observacoes=@o,reg_update=now(),updated_by=@u where id=@id", new
             {
                 id,
@@ -568,19 +574,7 @@ namespace PlantaoPro.Api.Data
             }, tx);
             if (old is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            var valid = (old, novo) switch
-            {
-                ("rascunho", "aberto") => true,
-                ("rascunho", "cancelado") => true,
-                ("aberto", "cancelado") => true,
-                ("aberto", "reservado") => true,
-                ("reservado", "confirmado") => true,
-                ("reservado", "aberto") => true,
-                ("confirmado", "realizado") => true,
-                ("confirmado", "cancelado") => true,
-                ("realizado", "pago") => true,
-                _ => false
-            };
+            var valid = transicao.PodeTransicionar(old, novo);
             if (!valid)
                 return ApiResponse<string>.Fail($"Transição inválida: {old} -> {novo}");
             await cn.ExecuteAsync("update plantaopro.plantoes set status=@s,reg_update=now(),updated_by=@u where id=@id", new
@@ -589,14 +583,7 @@ namespace PlantaoPro.Api.Data
                 s = novo,
                 u
             }, tx);
-            await cn.ExecuteAsync("insert into plantaopro.historico_plantao(id,plantao_id,status_anterior,status_novo,justificativa,usuario_id,reg_date) values(gen_random_uuid(),@id,@a,@n,@j,@u,now())", new
-            {
-                id,
-                a = old,
-                n = novo,
-                j = just,
-                u
-            }, tx);
+            await historico.RegistrarAsync(cn, tx, id, old, novo, just, u);
             await tx.CommitAsync();
             await audit.LogAsync(u, "STATUS_CHANGE", "plantoes", id, $"{old}->{novo}", ip: ip, userAgent: ua);
             return ApiResponse<string>.Ok("ok", "Status atualizado.");

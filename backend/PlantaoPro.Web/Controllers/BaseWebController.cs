@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
@@ -14,7 +15,11 @@ public abstract class BaseWebController : Controller
     protected readonly IHttpClientFactory HttpClientFactory;
     protected readonly ILogger Logger;
     private const int MaxLogContentLength = 400;
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter(), new DateOnlyJsonConverter() }
+    };
 
     protected BaseWebController(IHttpClientFactory httpClientFactory, ILogger logger)
     {
@@ -23,7 +28,24 @@ public abstract class BaseWebController : Controller
     }
 
     [NonAction] public HttpClient CreateApiClient() => HttpClientFactory.CreateClient("PlantaoProApi");
-    [NonAction] public string? GetJwtToken() => User.FindFirst("jwt")?.Value;
+    [NonAction] public string? GetJwtToken() => GetTokenFromSessionOrCookie() ?? User.FindFirst("jwt")?.Value;
+
+    [NonAction]
+    public string? GetTokenFromSessionOrCookie()
+    {
+        var sessionToken = HttpContext?.Session?.GetString("jwt");
+        if (!string.IsNullOrWhiteSpace(sessionToken))
+        {
+            return sessionToken;
+        }
+
+        if (Request?.Cookies?.TryGetValue("jwt", out var cookieToken) == true && !string.IsNullOrWhiteSpace(cookieToken))
+        {
+            return cookieToken;
+        }
+
+        return null;
+    }
 
     [NonAction]
     public bool AddBearerToken(HttpClient client)
@@ -97,6 +119,15 @@ public abstract class BaseWebController : Controller
             TempData["Error"] = "Não foi possível concluir a operação agora. Tente novamente.";
             return (default, "Falha de comunicação com a API.", HttpStatusCode.InternalServerError);
         }
+    }
+
+
+
+    [NonAction]
+    public async Task<(bool Success, string? Error, HttpStatusCode StatusCode)> SendApiWithoutResponseAsync<TRequest>(HttpClient client, HttpMethod method, string endpoint, TRequest request)
+    {
+        var response = await SendApiAsync<TRequest, JsonElement>(client, method, endpoint, request);
+        return (response.StatusCode is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous, response.Error, response.StatusCode);
     }
 
     [NonAction]
@@ -193,6 +224,7 @@ public abstract class BaseWebController : Controller
             HttpStatusCode.Unauthorized => "Sessão expirada. Faça login novamente.",
             HttpStatusCode.Forbidden => "Você não possui permissão para realizar esta ação.",
             HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
+            HttpStatusCode.Conflict => apiMessage ?? "Conflito de dados detectado. Atualize a tela e tente novamente.",
             HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
             _ => apiMessage ?? "Não foi possível concluir a operação agora."
         };
@@ -229,5 +261,17 @@ public abstract class BaseWebController : Controller
             TempData["Error"] = message;
             return (default, message, HttpStatusCode.InternalServerError);
         }
+    }
+
+    private sealed class DateOnlyJsonConverter : JsonConverter<DateOnly>
+    {
+        public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            var value = reader.GetString();
+            return DateOnly.TryParse(value, out var parsed) ? parsed : DateOnly.MinValue;
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateOnly value, JsonSerializerOptions options)
+            => writer.WriteStringValue(value.ToString("yyyy-MM-dd"));
     }
 }

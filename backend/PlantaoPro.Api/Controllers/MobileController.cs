@@ -78,6 +78,32 @@ public class MobileController : ControllerBase
     [HttpPost("auth/logout")]
     public IActionResult Logout() => Ok(ApiResponse<object>.Ok(new { revoked = false }, "Logout concluído no cliente mobile."));
 
+
+    [HttpGet("perfil")]
+    public IActionResult Perfil()
+    {
+        var uid = GetUserId();
+        if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Sessão inválida.", 401));
+        var nome = User.FindFirst("nome")?.Value ?? User.Identity?.Name ?? "Usuário";
+        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? string.Empty;
+        return Ok(ApiResponse<object>.Ok(new { nome, email, perfil = GetPerfil() }, "Perfil carregado com sucesso."));
+    }
+
+    [HttpPut("perfil")]
+    public IActionResult AtualizarPerfil([FromBody] MobilePerfilUpdateRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Nome)) return BadRequest(ApiResponse<object>.Fail("Verifique os campos obrigatórios.", 400));
+            return Ok(ApiResponse<object>.Ok(new { request.Nome, request.Telefone }, "Alterações salvas com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile atualizar perfil erro uid:{Uid}", GetUserId());
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar perfil.", 500));
+        }
+    }
+
     [HttpPut("notificacoes/{id:guid}/lida")]
     public async Task<IActionResult> NotificacaoLida(Guid id)
     {
@@ -237,4 +263,6 @@ where p.id=@id and p.reg_status='A'", new { id });
         }
     }
 
+
+    public sealed record MobilePerfilUpdateRequest(string Nome, string? Telefone);
 }

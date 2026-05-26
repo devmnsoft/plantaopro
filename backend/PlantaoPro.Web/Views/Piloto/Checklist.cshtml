@@ -1,0 +1,19 @@
+@model List<PlantaoPro.Web.Controllers.PilotoController.ChecklistViewModel>
+@{ ViewData["Title"] = "Checklist do Piloto"; }
+<h1>Checklist do Piloto</h1>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Nenhum item no checklist.</div>
+}
+else
+{
+    <ul class="list-group">
+    @foreach (var item in Model)
+    {
+        <li class="list-group-item d-flex justify-content-between">
+            <span>@item.Titulo</span>
+            <span class="badge @(item.Concluido ? "text-bg-success" : "text-bg-warning")">@(item.Concluido ? "Concluído" : "Pendente")</span>
+        </li>
+    }
+    </ul>
+}

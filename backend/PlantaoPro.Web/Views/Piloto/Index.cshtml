@@ -1,0 +1,15 @@
+@model IDictionary<string, object>
+@{
+    ViewData["Title"] = "Painel do Piloto";
+}
+<h1>Painel do Piloto</h1>
+<p class="text-muted">Acompanhamento da implantação piloto.</p>
+<div class="row g-3">
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Cliente piloto</strong><div>@(Model != null && Model.ContainsKey("clientePiloto") ? Model["clientePiloto"] : "-")</div></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Usuários ativos</strong><div>@(Model != null && Model.ContainsKey("usuariosAtivos") ? Model["usuariosAtivos"] : "0")</div></div></div></div>
+    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Plantões publicados</strong><div>@(Model != null && Model.ContainsKey("plantoesPublicados") ? Model["plantoesPublicados"] : "0")</div></div></div></div>
+</div>
+<div class="mt-4 d-flex gap-2">
+    <a asp-action="Checklist" class="btn btn-primary">Checklist</a>
+    <a asp-action="Ocorrencias" class="btn btn-outline-primary">Ocorrências</a>
+</div>

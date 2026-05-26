@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -81,6 +82,41 @@ public abstract class BaseWebController : Controller
     }
 
     [NonAction]
+    public async Task<(TResponse? Data, string? Error, HttpStatusCode StatusCode)> SendApiAsync<TRequest, TResponse>(HttpClient client, HttpMethod method, string endpoint, TRequest request)
+    {
+        try
+        {
+            var payload = new StringContent(JsonSerializer.Serialize(request, JsonOptions), Encoding.UTF8, "application/json");
+            var message = new HttpRequestMessage(method, endpoint) { Content = payload };
+            var response = await client.SendAsync(message);
+            return await ReadApiResponsePayloadAsync<TResponse>(endpoint, response);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao enviar requisição para API. Endpoint:{Endpoint}", endpoint);
+            TempData["Error"] = "Não foi possível concluir a operação agora. Tente novamente.";
+            return (default, "Falha de comunicação com a API.", HttpStatusCode.InternalServerError);
+        }
+    }
+
+    [NonAction]
+    public async Task<(bool Success, string? Error, HttpStatusCode StatusCode)> DeleteApiAsync(HttpClient client, string endpoint, bool useDelete = false)
+    {
+        try
+        {
+            var response = useDelete ? await client.DeleteAsync(endpoint) : await client.PostAsync(endpoint, null);
+            var handled = await ReadApiResponsePayloadAsync<JsonElement>(endpoint, response);
+            return (response.IsSuccessStatusCode, handled.Error, handled.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao excluir/inativar recurso na API. Endpoint:{Endpoint}", endpoint);
+            TempData["Error"] = "Não foi possível concluir a operação agora. Tente novamente.";
+            return (false, "Falha de comunicação com a API.", HttpStatusCode.InternalServerError);
+        }
+    }
+
+    [NonAction]
     public async Task<(PagedResult<T> Data, string? Error, HttpStatusCode StatusCode)> ReadApiPagedResponseAsync<T>(HttpClient client, string endpoint, int page = 1, int pageSize = 20)
     {
         var response = await client.GetAsync(endpoint);
@@ -146,5 +182,52 @@ public abstract class BaseWebController : Controller
             return parsed?.Message;
         }
         catch { return null; }
+    }
+
+    [NonAction]
+    public string HandleApiError(HttpStatusCode statusCode, string? apiMessage = null)
+    {
+        var message = statusCode switch
+        {
+            HttpStatusCode.BadRequest => apiMessage ?? "Não foi possível processar a solicitação. Revise os dados e tente novamente.",
+            HttpStatusCode.Unauthorized => "Sessão expirada. Faça login novamente.",
+            HttpStatusCode.Forbidden => "Você não possui permissão para realizar esta ação.",
+            HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
+            HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
+            _ => apiMessage ?? "Não foi possível concluir a operação agora."
+        };
+
+        TempData["Error"] = message;
+        return message;
+    }
+
+    private async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponsePayloadAsync<T>(string endpoint, HttpResponseMessage response)
+    {
+        var content = await response.Content.ReadAsStringAsync();
+        var user = User.Identity?.Name ?? "anônimo";
+        var sample = content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
+
+        Logger.LogInformation("API call BaseUrl:{BaseUrl} Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario}", response.RequestMessage?.RequestUri?.GetLeftPart(UriPartial.Authority), endpoint, (int)response.StatusCode, user);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Logger.LogWarning("Falha ao consultar API. Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, user, sample);
+            var parsedMessage = TryParseMessage(content);
+            var message = HandleApiError(response.StatusCode, parsedMessage);
+            return (default, message, response.StatusCode);
+        }
+
+        try
+        {
+            var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
+            return (apiResult is not null ? apiResult.Data : default, apiResult?.Message, response.StatusCode);
+        }
+        catch (JsonException ex)
+        {
+            Logger.LogError(ex, "Erro de desserialização. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
+            var message = "A API retornou dados em formato inesperado. Tente novamente em instantes.";
+            TempData["Error"] = message;
+            return (default, message, HttpStatusCode.InternalServerError);
+        }
     }
 }

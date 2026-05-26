@@ -34,19 +34,19 @@
                         <td>@c.Cidade/@c.Estado</td>
                         <td><span class="badge bg-@(c.Status=="ATIVO"?"success":c.Status=="TESTE"?"warning text-dark":c.Status=="SUSPENSO"?"danger":"secondary")">@c.Status</span></td>
                         <td class="text-end">
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" onsubmit="return confirm('Confirma suspender este cliente?');">
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Confirma suspender este cliente?" data-confirm-type="warning">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@c.Id" />
                                 <input type="hidden" name="acao" value="SUSPENDER" />
                                 <button type="submit" class="btn btn-sm btn-outline-warning" @(c.Status == "SUSPENSO" || c.Status == "CANCELADO" ? "disabled" : null)>Suspender</button>
                             </form>
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" onsubmit="return confirm('Confirma reativar este cliente?');">
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Reativar cliente" data-confirm-message="Confirma reativar este cliente?" data-confirm-type="success">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@c.Id" />
                                 <input type="hidden" name="acao" value="REATIVAR" />
                                 <button type="submit" class="btn btn-sm btn-outline-success" @(c.Status == "ATIVO" ? "disabled" : null)>Reativar</button>
                             </form>
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" onsubmit="return confirm('Confirma cancelar este cliente?');">
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Cancelar cliente" data-confirm-message="Confirma cancelar este cliente?" data-confirm-type="danger">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@c.Id" />
                                 <input type="hidden" name="acao" value="CANCELAR" />

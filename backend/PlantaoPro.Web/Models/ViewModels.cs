@@ -69,7 +69,29 @@ public record DashboardChartItem(string Label, decimal Valor);
     public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,string RegStatus);
     public record HospitalDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Telefone,string Email,string Endereco,string Cidade,string Estado,string Responsavel,string RegStatus);
     public record EspecialidadeDto(Guid Id,string Nome,string Descricao,string RegStatus);
-    public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
+    public class PagedResult<T>
+    {
+        public IEnumerable<T> Items { get; set; } = Array.Empty<T>();
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public long TotalItems { get; set; }
+        public int TotalPages { get; set; }
+        public long Total
+        {
+            get => TotalItems;
+            set => TotalItems = value;
+        }
+        public bool HasItems => Items.Any();
+
+        public static PagedResult<T> Empty(int page = 1, int pageSize = 20) => new()
+        {
+            Page = page <= 0 ? 1 : page,
+            PageSize = pageSize <= 0 ? 20 : pageSize,
+            TotalItems = 0,
+            TotalPages = 0,
+            Items = Array.Empty<T>()
+        };
+    }
 
     public record AuditoriaDto(DateTime DataHora, string Usuario, string Acao, string Entidade, string Registro, string Ip, string Descricao);
     public record HealthViewModel(string Status,string Ambiente,string Schema,bool BancoConectado,DateTime DataHora,string? Versao,string BaseUrlApi,bool TokenPresente,string UsuarioAutenticado,string SwaggerUrl);

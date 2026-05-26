@@ -217,6 +217,12 @@ namespace PlantaoPro.Api.Data
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             return ApiResponse<IEnumerable<MedicoDto>>.Ok(await cn.QueryAsync<MedicoDto>("select id,nome,cpf,crm,uf_crm as UfCrm,email,telefone,cidade,estado,especialidade_id as EspecialidadeId,reg_status as RegStatus from plantaopro.medicos where reg_status='A' order by nome"));
         }
+        public async Task<ApiResponse<MedicoDto>> GetByIdAsync(Guid id)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var medico = await cn.QueryFirstOrDefaultAsync<MedicoDto>("select id,nome,cpf,crm,uf_crm as UfCrm,email,telefone,cidade,estado,especialidade_id as EspecialidadeId,reg_status as RegStatus from plantaopro.medicos where id=@id and reg_status='A'", new { id });
+            return medico is null ? ApiResponse<MedicoDto>.Fail("Registro não encontrado.", 404) : ApiResponse<MedicoDto>.Ok(medico);
+        }
         public async Task<ApiResponse<MedicoDto>> CriarAsync(CreateMedicoRequest req, Guid userId, string? ip, string? ua)
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
@@ -398,6 +404,12 @@ namespace PlantaoPro.Api.Data
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             return ApiResponse<IEnumerable<EspecialidadeDto>>.Ok(await cn.QueryAsync<EspecialidadeDto>("select id,nome,descricao,reg_status as RegStatus from plantaopro.especialidades where reg_status='A' order by nome"));
+        }
+        public async Task<ApiResponse<EspecialidadeDto>> GetByIdAsync(Guid id)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var especialidade = await cn.QueryFirstOrDefaultAsync<EspecialidadeDto>("select id,nome,descricao,reg_status as RegStatus from plantaopro.especialidades where id=@id and reg_status='A'", new { id });
+            return especialidade is null ? ApiResponse<EspecialidadeDto>.Fail("Registro não encontrado.", 404) : ApiResponse<EspecialidadeDto>.Ok(especialidade);
         }
         public async Task<ApiResponse<EspecialidadeDto>> CreateAsync(CreateEspecialidadeRequest r, Guid u, string? ip, string? ua)
         {

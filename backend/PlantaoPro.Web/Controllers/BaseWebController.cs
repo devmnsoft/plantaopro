@@ -13,6 +13,7 @@ public abstract class BaseWebController : Controller
     protected readonly IHttpClientFactory HttpClientFactory;
     protected readonly ILogger Logger;
     private const int MaxLogContentLength = 400;
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     protected BaseWebController(IHttpClientFactory httpClientFactory, ILogger logger)
     {
@@ -41,6 +42,10 @@ public abstract class BaseWebController : Controller
 
     [NonAction]
     public async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponse<T>(HttpClient client, string endpoint)
+        => await ReadApiResponseAsync<T>(client, endpoint);
+
+    [NonAction]
+    public async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponseAsync<T>(HttpClient client, string endpoint)
     {
         var response = await client.GetAsync(endpoint);
         var content = await response.Content.ReadAsStringAsync();
@@ -58,7 +63,7 @@ public abstract class BaseWebController : Controller
 
         try
         {
-            var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
             return (apiResult is not null ? apiResult.Data : default, apiResult?.Message, response.StatusCode);
         }
         catch (JsonException ex)
@@ -68,6 +73,47 @@ public abstract class BaseWebController : Controller
         }
     }
 
+    [NonAction]
+    public async Task<(IEnumerable<T> Data, string? Error, HttpStatusCode StatusCode)> ReadApiListResponseAsync<T>(HttpClient client, string endpoint)
+    {
+        var result = await ReadApiResponseAsync<IEnumerable<T>>(client, endpoint);
+        return (result.Data ?? Array.Empty<T>(), result.Error, result.StatusCode);
+    }
+
+    [NonAction]
+    public async Task<(PagedResult<T> Data, string? Error, HttpStatusCode StatusCode)> ReadApiPagedResponseAsync<T>(HttpClient client, string endpoint, int page = 1, int pageSize = 20)
+    {
+        var response = await client.GetAsync(endpoint);
+        var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            var apiError = TryParseMessage(content);
+            return (PagedResult<T>.Empty(page, pageSize), apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            if (!doc.RootElement.TryGetProperty("data", out var data))
+                return (PagedResult<T>.Empty(page, pageSize), null, response.StatusCode);
+
+            if (data.ValueKind == JsonValueKind.Array)
+            {
+                var items = JsonSerializer.Deserialize<List<T>>(data.GetRawText(), JsonOptions) ?? new List<T>();
+                return (new PagedResult<T> { Items = items, Page = page, PageSize = pageSize, TotalItems = items.Count, TotalPages = items.Count == 0 ? 0 : 1 }, null, response.StatusCode);
+            }
+
+            var paged = JsonSerializer.Deserialize<PagedResult<T>>(data.GetRawText(), JsonOptions) ?? PagedResult<T>.Empty(page, pageSize);
+            if (paged.TotalPages <= 0 && paged.PageSize > 0)
+                paged.TotalPages = (int)Math.Ceiling((double)paged.TotalItems / paged.PageSize);
+            return (paged, null, response.StatusCode);
+        }
+        catch (JsonException ex)
+        {
+            Logger.LogError(ex, "Erro de desserialização paginada. Endpoint:{Endpoint}", endpoint);
+            return (PagedResult<T>.Empty(page, pageSize), "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
+        }
+    }
 
     [NonAction]
     protected void LogRequestContext(string acao, string endpoint, int? statusCode = null)
@@ -96,7 +142,7 @@ public abstract class BaseWebController : Controller
     {
         try
         {
-            var parsed = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var parsed = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(content, JsonOptions);
             return parsed?.Message;
         }
         catch { return null; }

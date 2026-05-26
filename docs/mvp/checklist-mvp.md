@@ -1,54 +1,20 @@
-# Checklist MVP Comercial — PlantãoPro
+# Checklist MVP Comercial Avançado (Pré-Produção)
 
-Data de referência: **26/05/2026**
+## Estabilidade
+- Build API/Web sem erros locais de código.
+- JWT/login preservados.
+- Fluxos críticos com tratamento amigável (400/401/403/404/409/500).
 
-## 1) Estabilidade técnica
-- [ ] Build API verde em homologação.
-- [ ] Build Web verde em homologação.
-- [ ] Sem arquivos binários/versionados indevidos.
-- [ ] JWT e login validados por perfil.
-- [ ] Logs estruturados ativos.
+## Produto
+- CRUDs principais com paginação, filtros, empty-state, toasts e confirmação.
+- API mobile com endpoints de autenticação, agenda, convites, escalas e pagamentos.
+- Regras de negócio essenciais para plantões/escalas/pagamentos.
 
-## 2) Fluxo comercial
-- [ ] Onboarding comercial completo (cliente → plano → assinatura → unidade → usuários).
-- [ ] CNPJ duplicado bloqueado com mensagem amigável.
-- [ ] E-mail admin duplicado bloqueado com mensagem amigável.
-- [ ] Onboarding com retomada (progresso salvo).
-- [ ] Conclusão com próximos passos.
+## Segurança
+- Validação por perfil (ADMINISTRADOR_GLOBAL, ADMINISTRADOR, COORDENACAO, OPERADOR, FINANCEIRO, MEDICO, HOSPITAL).
+- Isolamento por cliente_id e dados próprios para médico.
+- Auditoria em ações críticas.
 
-## 3) SaaS (plano, assinatura, limite)
-- [ ] Limites aplicados (médicos, hospitais, plantões/mês).
-- [ ] Bloqueios com auditoria + toast.
-- [ ] Status de assinatura respeitado (TESTE/ATIVA/SUSPENSA/VENCIDA/CANCELADA).
-- [ ] Dashboard de consumo por cliente.
-
-## 4) Faturamento SaaS
-- [ ] Geração mensal sem duplicidade por competência.
-- [ ] Marcação de pagamento com data/valor/forma.
-- [ ] Cancelamento com justificativa.
-- [ ] Alertas para faturas vencidas.
-
-## 5) Customer Success
-- [ ] Painel de saúde por cliente.
-- [ ] Clientes em risco destacados.
-- [ ] Registro de interação CS.
-- [ ] Alertas de mudança de saúde (RISCO/CRÍTICO).
-
-## 6) Operação
-- [ ] Área do médico mobile-first validada.
-- [ ] API mobile mínima validada no Swagger.
-- [ ] Suporte (abertura, mensagens, resolução, cancelamento).
-- [ ] Relatórios essenciais com filtros e exportação.
-
-## 7) Segurança e governança
-- [ ] Revisão de permissões por perfil.
-- [ ] Auditoria em ações críticas.
-- [ ] Acesso negado amigável.
-- [ ] Sem exposição de dados sensíveis.
-
-## 8) Venda e implantação
-- [ ] Tela de demo comercial pronta.
-- [ ] Manual de ajuda interno publicado.
-- [ ] Documentação de deploy/homologação atualizada.
-- [ ] Roteiro de apresentação comercial aprovado.
-
+## Operação
+- Observabilidade com indicadores executivos.
+- Documentação de deploy/homologação e roteiro de demo comercial.

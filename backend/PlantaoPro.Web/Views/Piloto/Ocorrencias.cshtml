@@ -1,0 +1,27 @@
+@model List<PlantaoPro.Web.Controllers.PilotoController.OcorrenciaViewModel>
+@{ ViewData["Title"] = "Ocorrências do Piloto"; }
+<h1>Ocorrências do Piloto</h1>
+<form asp-action="CriarOcorrencia" method="post" class="row g-2 mb-3">
+    @Html.AntiForgeryToken()
+    <div class="col-md-3"><input name="Tipo" class="form-control" placeholder="Tipo" required /></div>
+    <div class="col-md-2"><input name="Prioridade" class="form-control" placeholder="Prioridade" required /></div>
+    <div class="col-md-4"><input name="Descricao" class="form-control" placeholder="Descrição" required /></div>
+    <div class="col-md-2"><input name="Responsavel" class="form-control" placeholder="Responsável" /></div>
+    <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Salvar</button></div>
+</form>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Nenhuma ocorrência registrada.</div>
+}
+else
+{
+<table class="table table-striped table-responsive">
+    <thead><tr><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th><th>Responsável</th></tr></thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr><td>@item.Tipo</td><td>@item.Prioridade</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td>@item.Descricao</td><td>@item.Responsavel</td></tr>
+    }
+    </tbody>
+</table>
+}

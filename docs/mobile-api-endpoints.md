@@ -1,24 +1,29 @@
-# Endpoints Mobile
+# Endpoints Mobile (MVP Piloto)
 
-## Autenticação
-- `POST /api/auth/login`
+## Auth
+- `POST /api/mobile/auth/login`
 
-## Médico
-- `GET /api/medico-area/agenda`
-- `GET /api/medico-area/plantoes-disponiveis`
-- `POST /api/escalas/solicitar`
-- `GET /api/medico-area/convites`
-- `POST /api/medico-area/convites/{id}/aceitar`
-- `POST /api/medico-area/convites/{id}/recusar`
+## Sessão e perfil
+- `GET /api/mobile/me`
+- `GET /api/mobile/perfil`
+- `PUT /api/mobile/perfil`
+
+## Dashboard e operação
+- `GET /api/mobile/dashboard`
+- `GET /api/mobile/plantoes-disponiveis`
+- `GET /api/mobile/convites`
+- `POST /api/mobile/convites/{id}/aceitar`
+- `POST /api/mobile/convites/{id}/recusar`
+- `GET /api/mobile/minhas-escalas`
 
 ## Financeiro
-- `GET /api/financeiro/pagamentos`
+- `GET /api/mobile/meus-pagamentos`
 
-## Exemplo JSON (login)
-```json
-{ "email": "medico@plantaopro.com", "senha": "***" }
-```
+## Notificações
+- `GET /api/mobile/notificacoes`
+- `PUT /api/mobile/notificacoes/{id}/lida`
 
-## Tratamento de erro
-- Exibir mensagem amigável de `ApiResponse`.
-- Em 401, limpar sessão local e redirecionar para login.
+## Padrões
+- JWT obrigatório.
+- Respostas em `ApiResponse<T>`.
+- Mensagens amigáveis para falha de validação e permissão.

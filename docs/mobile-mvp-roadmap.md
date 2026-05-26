@@ -1,6 +1,12 @@
 # Roadmap MVP Mobile
-- Sprint 1: estrutura, navegação e autenticação.
-- Sprint 2: agenda e plantões disponíveis.
-- Sprint 3: convites e solicitações.
-- Sprint 4: pagamentos e notificações in-app.
-- Sprint 5: hardening, telemetria e publicação beta.
+
+## Entrega piloto
+- Login, dashboard e plantões.
+- Convites e escalas.
+- Pagamentos e notificações.
+- Perfil básico.
+
+## Próxima iteração
+- Upload de documentos.
+- Chat em tempo real.
+- Offline parcial para agenda.

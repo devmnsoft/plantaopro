@@ -1,16 +1,52 @@
+@using System.Text.Json
+
 @{
-    var messages = new[] { ("Success", "success"), ("Error", "error"), ("Warning", "warning"), ("Info", "info") }
-        .Where(x => TempData[x.Item1] is string text && !string.IsNullOrWhiteSpace(text))
-        .Select(x => new { Type = x.Item2, Message = (TempData[x.Item1] as string)! })
-        .ToList();
+    var toasts = new List<object>();
+
+    if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
+    {
+        toasts.Add(new { Type = "success", Message = success });
+    }
+
+    if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+    {
+        toasts.Add(new { Type = "error", Message = error });
+    }
+
+    if (TempData["Warning"] is string warning && !string.IsNullOrWhiteSpace(warning))
+    {
+        toasts.Add(new { Type = "warning", Message = warning });
+    }
+
+    if (TempData["Info"] is string info && !string.IsNullOrWhiteSpace(info))
+    {
+        toasts.Add(new { Type = "info", Message = info });
+    }
+
+    var toastJson = JsonSerializer.Serialize(toasts);
 }
-@if (messages.Any())
+
+@if (toasts.Count > 0)
 {
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            @foreach (var toast in messages)
-            {
-                @:window.PlantaoProToast?.@toast.Type("@Html.Raw(System.Text.Encodings.Web.JavaScriptEncoder.Default.Encode(toast.Message))");
+        window.addEventListener('DOMContentLoaded', function () {
+            const toasts = @Html.Raw(toastJson);
+
+            if (window.PlantaoProToast && Array.isArray(toasts)) {
+                toasts.forEach(function (toast) {
+                    if (!toast || !toast.message && !toast.Message) {
+                        return;
+                    }
+
+                    const type = (toast.type || toast.Type || 'info').toLowerCase();
+                    const message = toast.message || toast.Message;
+
+                    if (typeof window.PlantaoProToast[type] === 'function') {
+                        window.PlantaoProToast[type](message);
+                    } else {
+                        window.PlantaoProToast.info(message);
+                    }
+                });
             }
         });
     </script>

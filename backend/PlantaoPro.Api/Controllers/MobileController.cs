@@ -52,8 +52,8 @@ public class MobileController : ControllerBase
                 return StatusCode(response.StatusCode, ApiResponse<MobileLoginResponseDto>.Fail(response.Message, response.StatusCode));
             }
 
-            var payload = new MobileLoginResponseDto(response.Data.Token, response.Data.RefreshToken, response.Data.ExpiresAtUtc, response.Data.Roles ?? Array.Empty<string>());
-            _logger.LogInformation("Mobile login sucesso uid:{Uid} perfil:{Perfil} ip:{Ip} duracaoMs:{Duracao}", response.Data.UserId, string.Join(',', payload.Roles), GetIp(), sw.ElapsedMilliseconds);
+            var payload = new MobileLoginResponseDto(response.Data.Token, null, response.Data.ExpiresAt, response.Data.Roles ?? Array.Empty<string>());
+            _logger.LogInformation("Mobile login sucesso uid:{Uid} perfil:{Perfil} ip:{Ip} duracaoMs:{Duracao}", response.Data.UsuarioId, string.Join(',', payload.Roles), GetIp(), sw.ElapsedMilliseconds);
             return Ok(ApiResponse<MobileLoginResponseDto>.Ok(payload, "Login realizado com sucesso."));
         }
         catch (Exception ex)

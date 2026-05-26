@@ -43,11 +43,6 @@ namespace PlantaoPro.Api.Data
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
-            this.regra = regra;
-            this.historico = historico;
-            this.transicao = transicao;
-            this.elegibilidade = elegibilidade;
-            this.conflitoService = conflitoService;
         }
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
         {
@@ -216,9 +211,6 @@ namespace PlantaoPro.Api.Data
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
-            this.regra = regra;
-            this.historico = historico;
-            this.transicao = transicao;
         }
         public async Task<ApiResponse<IEnumerable<MedicoDto>>> ListarAsync()
         {
@@ -424,11 +416,14 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class PlantaoService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; private readonly PlantaoRegraService regra; private readonly PlantaoHistoricoService historico; private readonly PlantaoTransicaoService transicao; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger, PlantaoRegraService regra, PlantaoHistoricoService historico, PlantaoTransicaoService transicao)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; private readonly PlantaoRegraService _regra; private readonly PlantaoHistoricoService _historico; private readonly PlantaoTransicaoService _transicao; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger, PlantaoRegraService regra, PlantaoHistoricoService historico, PlantaoTransicaoService transicao)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            _regra = regra;
+            _historico = historico;
+            _transicao = transicao;
         }
         public async Task<ApiResponse<PagedResult<PlantaoResumoDto>>> GetAllAsync(PlantaoFilterRequest f)
         {
@@ -489,7 +484,7 @@ namespace PlantaoPro.Api.Data
         }
         public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua)
         {
-            var validaCriacao = regra.ValidarCriacao(r);
+            var validaCriacao = _regra.ValidarCriacao(r);
             if (!validaCriacao.Success)
                 return ApiResponse<PlantaoDto>.Fail(validaCriacao.Message);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
@@ -542,7 +537,7 @@ namespace PlantaoPro.Api.Data
             });
             if (status is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            var validacaoEdicao = regra.ValidarEdicao(status, r);
+            var validacaoEdicao = _regra.ValidarEdicao(status, r);
             if (!validacaoEdicao.Success)
                 return ApiResponse<string>.Fail(validacaoEdicao.Message);
             await cn.ExecuteAsync("update plantaopro.plantoes set hospital_id=@h,especialidade_id=@e,data_inicio=@di,data_fim=@df,valor=@v,vagas=@vg,vagas_disponiveis=@vg,tipo=@t,observacoes=@o,reg_update=now(),updated_by=@u where id=@id", new
@@ -574,7 +569,7 @@ namespace PlantaoPro.Api.Data
             }, tx);
             if (old is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            var valid = transicao.PodeTransicionar(old, novo);
+            var valid = _transicao.PodeTransicionar(old, novo);
             if (!valid)
                 return ApiResponse<string>.Fail($"Transição inválida: {old} -> {novo}");
             await cn.ExecuteAsync("update plantaopro.plantoes set status=@s,reg_update=now(),updated_by=@u where id=@id", new
@@ -583,7 +578,7 @@ namespace PlantaoPro.Api.Data
                 s = novo,
                 u
             }, tx);
-            await historico.RegistrarAsync(cn, tx, id, old, novo, just, u);
+            await _historico.RegistrarAsync(cn, tx, id, old, novo, just, u);
             await tx.CommitAsync();
             await audit.LogAsync(u, "STATUS_CHANGE", "plantoes", id, $"{old}->{novo}", ip: ip, userAgent: ua);
             return ApiResponse<string>.Ok("ok", "Status atualizado.");

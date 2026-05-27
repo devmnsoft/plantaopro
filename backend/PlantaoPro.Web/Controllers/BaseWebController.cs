@@ -28,7 +28,7 @@ public abstract class BaseWebController : Controller
     }
 
     [NonAction] public HttpClient CreateApiClient() => HttpClientFactory.CreateClient("PlantaoProApi");
-    [NonAction] public string? GetJwtToken() => GetTokenFromSessionOrCookie() ?? User.FindFirst("jwt")?.Value;
+    [NonAction] public string? GetJwtToken() => GetTokenFromSessionOrCookie() ?? User.FindFirst("jwt")?.Value ?? User.FindFirst("Token")?.Value;
 
     [NonAction]
     public string? GetTokenFromSessionOrCookie()
@@ -37,6 +37,12 @@ public abstract class BaseWebController : Controller
         if (!string.IsNullOrWhiteSpace(sessionToken))
         {
             return sessionToken;
+        }
+
+        var legacySessionToken = HttpContext?.Session?.GetString("JwtToken");
+        if (!string.IsNullOrWhiteSpace(legacySessionToken))
+        {
+            return legacySessionToken;
         }
 
         if (Request?.Cookies?.TryGetValue("jwt", out var cookieToken) == true && !string.IsNullOrWhiteSpace(cookieToken))

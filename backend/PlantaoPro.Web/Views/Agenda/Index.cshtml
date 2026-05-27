@@ -1,7 +1,8 @@
 @model PlantaoPro.Web.Models.AgendaOperacionalViewModel
 @{
+    var vm = Model ?? new PlantaoPro.Web.Models.AgendaOperacionalViewModel();
     ViewData["Title"] = "Agenda Operacional";
-    var grouped = (Model?.Itens ?? Array.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>())
+    var grouped = (vm.Itens ?? Array.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>())
         .OrderBy(x => x.DataInicio)
         .GroupBy(x => x.DataInicio.Date)
         .ToList();
@@ -14,16 +15,16 @@
 
 <form method="get" class="card border-0 shadow-sm mb-3">
     <div class="card-body row g-2">
-        <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@Model.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
-        <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@Model.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
-        <div class="col-md-3"><label class="form-label">Status</label><input type="text" name="status" value="@Model.Status" class="form-control" placeholder="aberto, confirmado..." /></div>
+        <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@vm.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@vm.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">Status</label><input type="text" name="status" value="@vm.Status" class="form-control" placeholder="aberto, confirmado..." /></div>
         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">Filtrar</button></div>
     </div>
 </form>
 
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+@if (!string.IsNullOrWhiteSpace(vm.ErrorMessage))
 {
-    <div class="alert alert-danger">@Model.ErrorMessage</div>
+    <div class="alert alert-danger">@vm.ErrorMessage</div>
 }
 
 @if (!grouped.Any())
@@ -32,7 +33,7 @@
 }
 else
 {
-    <div class="small text-muted mb-2">Total de eventos: @Model.Total</div>
+    <div class="small text-muted mb-2">Total de eventos: @vm.Total</div>
     @foreach (var day in grouped)
     {
         <div class="card border-0 shadow-sm mb-3">

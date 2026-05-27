@@ -1,7 +1,10 @@
+@using System
+@using System.Linq
+@using System.Collections.Generic
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>
 @{
     ViewData["Title"] = "Médicos";
-    var vm = Model ?? new PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>();
+    var vm = Model ?? new PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>(Enumerable.Empty<PlantaoPro.Web.Models.MedicoDto>(), null, null, 0, 1, 20);
     var items = vm.Items ?? new List<PlantaoPro.Web.Models.MedicoDto>();
     var ativos = items.Count(x => string.Equals(x.RegStatus, "A", StringComparison.OrdinalIgnoreCase));
 }

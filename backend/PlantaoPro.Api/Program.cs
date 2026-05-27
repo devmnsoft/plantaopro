@@ -103,13 +103,22 @@ builder.Services.AddScoped<RequestLogContextFilter>();
 var app = builder.Build();
 app.UseHttpLogging();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapGet("/", () => Results.Redirect("/swagger"));
+
     await DevelopmentSeed.RunAsync(app.Services);
     app.UseCors("DevelopmentCors");
+}
+else
+{
+    app.MapGet("/", () => Results.Ok(new
+    {
+        application = "PlantaoPro.Api",
+        status = "online"
+    }));
 }
 
 app.UseExceptionHandler(a => a.Run(async ctx =>

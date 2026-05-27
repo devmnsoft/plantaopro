@@ -54,6 +54,7 @@
                 @if (isAdmin || isCoord || isOper || isHospital)
                 {
                     <a class="nav-link-app @(currentController=="Plantoes"?"active":"")" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>
+                    <a class="nav-link-app @(currentController=="Agenda"?"active":"")" asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i><span>Agenda Operacional</span></a>
                     <a class="nav-link-app @(currentController=="Plantoes" && currentAction=="Calendario"?"active":"")" asp-controller="Plantoes" asp-action="Calendario"><i class="bi bi-calendar3"></i><span>Calendário</span></a>
                 }
 

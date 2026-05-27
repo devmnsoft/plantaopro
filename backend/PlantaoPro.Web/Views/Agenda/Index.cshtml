@@ -1,0 +1,63 @@
+@model PlantaoPro.Web.Models.AgendaOperacionalViewModel
+@{
+    ViewData["Title"] = "Agenda Operacional";
+    var grouped = (Model?.Itens ?? Array.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>())
+        .OrderBy(x => x.DataInicio)
+        .GroupBy(x => x.DataInicio.Date)
+        .ToList();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Agenda Operacional</h1>
+    <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Criar Plantão</a>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-3">
+    <div class="card-body row g-2">
+        <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@Model.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@Model.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
+        <div class="col-md-3"><label class="form-label">Status</label><input type="text" name="status" value="@Model.Status" class="form-control" placeholder="aberto, confirmado..." /></div>
+        <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">Filtrar</button></div>
+    </div>
+</form>
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger">@Model.ErrorMessage</div>
+}
+
+@if (!grouped.Any())
+{
+    @await Html.PartialAsync("_EmptyState", new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-x", "Sem eventos no período", "Ajuste os filtros para visualizar plantões na agenda."))
+}
+else
+{
+    <div class="small text-muted mb-2">Total de eventos: @Model.Total</div>
+    @foreach (var day in grouped)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white"><strong>@day.Key.ToString("dddd, dd/MM/yyyy")</strong></div>
+            <div class="card-body">
+                <div class="row g-3">
+                    @foreach (var item in day)
+                    {
+                        var statusClass = (item.Status ?? string.Empty).ToLowerInvariant();
+                        <div class="col-12 col-lg-6">
+                            <div class="border rounded p-3 h-100">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">@item.HospitalNome</div>
+                                        <div class="text-muted small">@item.EspecialidadeNome · @item.HospitalCidade/@item.HospitalEstado</div>
+                                    </div>
+                                    <span class="badge status-@statusClass">@item.Status</span>
+                                </div>
+                                <div class="mt-2 small">@item.DataInicio.ToString("HH:mm") - @item.DataFim.ToString("HH:mm") · @item.Valor.ToString("C")</div>
+                                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary mt-2">Abrir plantão</a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+}

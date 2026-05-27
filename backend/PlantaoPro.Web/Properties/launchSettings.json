@@ -6,7 +6,9 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:58285;http://localhost:58286"
+      "applicationUrl": "https://localhost:58285;http://localhost:58286",
+      "dotnetRunMessages": true,
+      "launchUrl": "Account/Login"
     }
   }
 }

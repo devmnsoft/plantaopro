@@ -20,8 +20,10 @@ public class MobileController : ControllerBase
     private readonly MedicoRecomendacaoService _recomendacaoService;
     private readonly NotificacaoService _notificacao;
     private readonly ILogger<MobileController> _logger;
+    private readonly UsuarioContextService _usuarioContext;
+    private readonly AssinaturaGuardService _assinaturaGuard;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
@@ -29,6 +31,8 @@ public class MobileController : ControllerBase
         _recomendacaoService = recomendacaoService;
         _notificacao = notificacao;
         _logger = logger;
+        _usuarioContext = usuarioContext;
+        _assinaturaGuard = assinaturaGuard;
     }
 
     private Guid GetUserId()
@@ -40,6 +44,24 @@ public class MobileController : ControllerBase
     private string GetPerfil() => User.FindFirst("perfil")?.Value ?? "desconhecido";
     private string GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
 
+
+    private async Task<ApiResponse<bool>?> ValidarPlanoMobileAsync()
+    {
+        var clienteId = _usuarioContext.GetClienteId();
+        if (!clienteId.HasValue)
+        {
+            return ApiResponse<bool>.Fail("Cliente do usuário não identificado para acesso mobile.", 403);
+        }
+
+        var permissao = await _assinaturaGuard.PodeUsarMobile(clienteId.Value);
+        if (!permissao.Success)
+        {
+            _logger.LogWarning("Acesso mobile negado por plano cliente:{ClienteId} uid:{Uid}", clienteId, GetUserId());
+            return permissao;
+        }
+
+        return null;
+    }
     [AllowAnonymous]
     [HttpPost("auth/login")]
     public async Task<IActionResult> Login([FromBody] MobileLoginRequestDto request)
@@ -68,8 +90,10 @@ public class MobileController : ControllerBase
 
 
     [HttpGet("me")]
-    public IActionResult Me()
+    public async Task<IActionResult> Me()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Sessão inválida.", 401));
         var nome = User.FindFirst("nome")?.Value ?? User.Identity?.Name ?? "Usuário";
@@ -82,8 +106,10 @@ public class MobileController : ControllerBase
 
 
     [HttpGet("perfil")]
-    public IActionResult Perfil()
+    public async Task<IActionResult> Perfil()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Sessão inválida.", 401));
         var nome = User.FindFirst("nome")?.Value ?? User.Identity?.Name ?? "Usuário";
@@ -125,6 +151,8 @@ public class MobileController : ControllerBase
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var sw = Stopwatch.StartNew();
         var uid = GetUserId();
         try
@@ -143,6 +171,8 @@ public class MobileController : ControllerBase
     [HttpGet("plantoes-disponiveis")]
     public async Task<IActionResult> PlantoesDisponiveis([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var sw = Stopwatch.StartNew();
         var uid = GetUserId();
         try
@@ -161,6 +191,8 @@ public class MobileController : ControllerBase
     [HttpGet("minhas-escalas")]
     public async Task<IActionResult> MinhasEscalas([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try { var response = await _medicoArea.MinhasEscalasAsync(uid, page, pageSize); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile escalas erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar escalas.", 500)); }
@@ -169,6 +201,8 @@ public class MobileController : ControllerBase
     [HttpGet("meus-pagamentos")]
     public async Task<IActionResult> MeusPagamentos([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try { var response = await _medicoArea.MeusPagamentosAsync(uid, page, pageSize); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile pagamentos erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar pagamentos.", 500)); }
@@ -177,6 +211,8 @@ public class MobileController : ControllerBase
     [HttpGet("notificacoes")]
     public async Task<IActionResult> Notificacoes([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try { var response = await _notificacao.ListarAsync(uid, new NotificationFilterRequest(null, null, null, null, page, pageSize)); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile notificacoes erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar notificações.", 500)); }

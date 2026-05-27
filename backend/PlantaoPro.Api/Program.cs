@@ -13,6 +13,7 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpLogging(_ => { });
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(c =>
 {
     c.OperationFilter<DefaultApiResponseOperationFilter>();
@@ -100,6 +101,10 @@ builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<OnboardingService>();
 builder.Services.AddScoped<BiService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
+builder.Services.AddScoped<UsuarioContextService>();
+builder.Services.AddScoped<TenantGuardService>();
+builder.Services.AddScoped<PermissionGuardService>();
+builder.Services.AddScoped<AssinaturaGuardService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

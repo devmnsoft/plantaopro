@@ -1,14 +1,27 @@
-@model IDictionary<string, object>
+@model PlantaoPro.Web.Models.PilotoResumoViewModel
 @{
+    var page = Model ?? new PlantaoPro.Web.Models.PilotoResumoViewModel();
     ViewData["Title"] = "Painel do Piloto";
 }
-<h1>Painel do Piloto</h1>
-<p class="text-muted">Acompanhamento da implantação piloto.</p>
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Painel do Piloto","Acompanhamento da implantação piloto.","bi-speedometer2",null,null,null,true)' />
+
 <div class="row g-3">
-    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Cliente piloto</strong><div>@(Model != null && Model.ContainsKey("clientePiloto") ? Model["clientePiloto"] : "-")</div></div></div></div>
-    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Usuários ativos</strong><div>@(Model != null && Model.ContainsKey("usuariosAtivos") ? Model["usuariosAtivos"] : "0")</div></div></div></div>
-    <div class="col-md-4"><div class="card"><div class="card-body"><strong>Plantões publicados</strong><div>@(Model != null && Model.ContainsKey("plantoesPublicados") ? Model["plantoesPublicados"] : "0")</div></div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Cliente piloto</div><div class="metric-value">@(string.IsNullOrWhiteSpace(page.ClientePiloto) ? "-" : page.ClientePiloto)</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Usuários ativos</div><div class="metric-value">@page.UsuariosAtivos</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Plantões publicados</div><div class="metric-value">@page.PlantoesPublicados</div></div></div>
 </div>
+<div class="row g-3 mt-1">
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Ocorrências abertas</div><div class="metric-value">@page.OcorrenciasAbertas</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Ocorrências resolvidas</div><div class="metric-value">@page.OcorrenciasResolvidas</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Pendências implantação</div><div class="metric-value">@page.PendenciasImplantacao</div></div></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(page.ErrorMessage))
+{
+    <div class="alert alert-warning mt-3">@page.ErrorMessage</div>
+}
+
 <div class="mt-4 d-flex gap-2">
     <a asp-action="Checklist" class="btn btn-primary">Checklist</a>
     <a asp-action="Ocorrencias" class="btn btn-outline-primary">Ocorrências</a>

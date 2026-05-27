@@ -1,12 +1,13 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>
 @{
     ViewData["Title"] = "Médicos";
-    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.MedicoDto>();
+    var page = Model ?? new PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoDto>();
+    var items = page.Items ?? new List<PlantaoPro.Web.Models.MedicoDto>();
     var ativos = items.Count(x => string.Equals(x.RegStatus, "A", StringComparison.OrdinalIgnoreCase));
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Médicos","Cadastro e acompanhamento dos profissionais disponíveis para plantões.","bi-people","Novo Médico",null,null,true)' />
-<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@Model.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Ativos</div><div class="metric-value">@ativos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Inativos</div><div class="metric-value">@(Math.Max(0, Model.Total - ativos))</div></div></div></div>
-@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)){<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i>@Model.ErrorMessage</div>}
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@page.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Ativos</div><div class="metric-value">@ativos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Inativos</div><div class="metric-value">@(Math.Max(0, page.Total - ativos))</div></div></div></div>
+@if (!string.IsNullOrWhiteSpace(page.ErrorMessage)){<div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-1"></i>@page.ErrorMessage</div>}
 <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Médico</th><th>CRM/UF</th><th>Contato</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
 @if (items.Any()) { foreach (var row in items) { <tr><td><div class="fw-semibold">@row.Nome</div><div class="text-muted small">CPF @row.Cpf</div></td><td><span class="badge bg-light text-dark border">@row.Crm/@row.UfCrm</span></td><td><div>@row.Email</div><div class="text-muted small">@row.Telefone</div></td><td>@row.Cidade/@row.Estado</td><td><partial name="_StatusBadge" model='@(string.Equals(row.RegStatus,"A",StringComparison.OrdinalIgnoreCase) ? "ativo" : "inativo")' /></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@row.Id" title="Ver detalhes"><i class="bi bi-eye"></i></a> <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Em breve"><i class="bi bi-pencil"></i></button></td></tr> } } else { <tr><td colspan="6" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-people","Nenhum médico encontrado","Ainda não há médicos para os filtros atuais.")' /></td></tr> }
-</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div></div>
+</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="page" /></div></div>

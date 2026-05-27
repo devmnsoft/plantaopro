@@ -1,12 +1,12 @@
 @model PlantaoPro.Web.Models.PilotoChecklistViewModel
 @{
-    var page = Model ?? new PlantaoPro.Web.Models.PilotoChecklistViewModel();
-    var itens = page.Itens ?? new List<PlantaoPro.Web.Models.PilotoChecklistItemViewModel>();
+    var vm = Model ?? new PlantaoPro.Web.Models.PilotoChecklistViewModel();
+    var itens = vm.Itens ?? new List<PlantaoPro.Web.Models.PilotoChecklistItemViewModel>();
     ViewData["Title"] = "Checklist do Piloto";
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist do Piloto","Acompanhe os itens de implantação.","bi-check2-square",null,null,null,true)' />
 
-<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@page.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-value">@page.Concluidos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Percentual</div><div class="metric-value">@page.Percentual%</div></div></div></div>
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@vm.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-value">@vm.Concluidos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Percentual</div><div class="metric-value">@vm.Percentual%</div></div></div></div>
 
 @if (!itens.Any())
 {

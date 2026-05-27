@@ -34,12 +34,14 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 
+builder.Services.AddAuthorization();
+
 builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("PlantaoProApiHttpClient");
 
-    var baseUrl = cfg["PlantaoProApi:BaseUrl"];
+    var baseUrl = cfg["ApiSettings:BaseUrl"] ?? cfg["PlantaoProApi:BaseUrl"];
 
     if (string.IsNullOrWhiteSpace(baseUrl))
         throw new InvalidOperationException("Configuração PlantaoProApi:BaseUrl não encontrada.");

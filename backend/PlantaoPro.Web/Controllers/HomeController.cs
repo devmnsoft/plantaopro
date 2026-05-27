@@ -119,7 +119,7 @@ namespace PlantaoPro.Web.Controllers
                     return Redirect(returnUrl);
                 }
 
-                return RedirectToActionByPerfil(perfil, normalizedEmail);
+                return RedirectToActionByPerfil(perfil);
             }
             catch (Exception ex)
             {
@@ -129,22 +129,22 @@ namespace PlantaoPro.Web.Controllers
             }
         }
 
-        private IActionResult RedirectToActionByPerfil(string? perfil, string? email)
+        private IActionResult RedirectToActionByPerfil(string? perfil)
         {
             var normalized = NormalizeRole(perfil) ?? string.Empty;
             var destination = normalized switch
             {
                 "MEDICO" => (Action: "Index", Controller: "MinhaAgenda"),
                 "FINANCEIRO" => (Action: "Index", Controller: "Financeiro"),
-                "COORDENACAO" => (Action: "Index", Controller: "CentralOperacional"),
-                "OPERADOR" => (Action: "Index", Controller: "CentralOperacional"),
+                "COORDENACAO" => (Action: "Dashboard", Controller: "Home"),
+                "OPERADOR" => (Action: "Dashboard", Controller: "Home"),
                 "HOSPITAL" => (Action: "Index", Controller: "Agenda"),
                 "ADMINISTRADOR_GLOBAL" => (Action: "Dashboard", Controller: "Home"),
                 "ADMINISTRADOR" => (Action: "Dashboard", Controller: "Home"),
                 _ => (Action: "Dashboard", Controller: "Home")
             };
 
-            _logger.LogInformation("Redirecionando usuário após login. Email:{Email} Perfil:{Perfil} Destino:{Controller}/{Action}", email, normalized, destination.Controller, destination.Action);
+            _logger.LogInformation("Redirecionando usuário após login. Perfil:{Perfil} Destino:{Controller}/{Action}", normalized, destination.Controller, destination.Action);
             return RedirectToAction(destination.Action, destination.Controller);
         }
 

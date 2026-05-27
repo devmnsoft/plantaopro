@@ -1,46 +1,50 @@
-# Execução local - PlantãoPro
+# Execução local — PlantãoPro
 
-## URLs padrão de desenvolvimento
+## Portas padrão
+- API: `https://localhost:51977` (`http://localhost:51978`).
+- Web MVC: `https://localhost:58285` (`http://localhost:58286`).
 
-- **API (`PlantaoPro.Api`)**
-  - HTTPS: `https://localhost:51977`
-  - HTTP: `http://localhost:51978`
-  - Página inicial: redireciona para `/swagger` em Development
-  - Health check: `/api/health`
-- **Web (`PlantaoPro.Web`)**
-  - HTTPS: `https://localhost:58285`
-  - HTTP: `http://localhost:58286`
-  - Página inicial de execução: `/Account/Login`
+## Rodar a API
+1. Abra `backend/PlantaoPro.Api`.
+2. Execute o projeto `PlantaoPro.Api`.
+3. Acesse:
+   - `https://localhost:51977/` (redireciona para Swagger em Development)
+   - `https://localhost:51977/swagger`
+   - `https://localhost:51977/api/health`
 
-## Opção 1 — Rodar API + Web juntos (recomendado)
+## Rodar o Web
+1. Abra `backend/PlantaoPro.Web`.
+2. Execute o projeto `PlantaoPro.Web`.
+3. Acesse `https://localhost:58285/Account/Login`.
 
-No Visual Studio:
+## Visual Studio — startup múltiplo
+1. Solution > **Configure Startup Projects**.
+2. Selecione **Multiple startup projects**.
+3. Defina **Start** para:
+   - `PlantaoPro.Api`
+   - `PlantaoPro.Web`
 
-1. Clique com botão direito na **Solution**.
-2. Abra **Configure Startup Projects**.
-3. Selecione **Multiple startup projects**.
-4. Configure:
-   - `PlantaoPro.Api` = `Start`
-   - `PlantaoPro.Web` = `Start`
+## Configuração Web -> API
+No arquivo `backend/PlantaoPro.Web/appsettings.Development.json`, configure:
 
-Depois de iniciar:
+```json
+"ApiSettings": {
+  "BaseUrl": "https://localhost:51977/"
+}
+```
 
-- Abra o Web em `https://localhost:58285/Account/Login`.
-- Swagger da API em `https://localhost:51977/swagger`.
+## Testes rápidos esperados
+1. `GET https://localhost:51977/` abre Swagger (Development).
+2. `GET https://localhost:51977/swagger` retorna UI do Swagger.
+3. `GET https://localhost:51977/api/health` retorna 200 com status Healthy.
+4. Abrir Web em `/Account/Login`.
+5. Login admin redireciona para dashboard interno.
+6. Login médico redireciona para `MinhaAgenda`.
+7. Sem autenticação em rota protegida, volta para `/Account/Login?returnUrl=...`.
+8. Após login, volta para `returnUrl` local.
+9. Nunca redirecionar para a raiz da API após login.
 
-## Opção 2 — Rodar somente a API
-
-1. Defina `PlantaoPro.Api` como startup.
-2. Inicie o projeto.
-3. Abra `https://localhost:51977/swagger`.
-
-## Opção 3 — Rodar somente o Web
-
-1. Defina `PlantaoPro.Web` como startup.
-2. Garanta que a API esteja em execução separadamente em `https://localhost:51977`.
-3. Inicie o Web e abra `https://localhost:58285/Account/Login`.
-
-## Observações
-
-- O navegador principal deve abrir a interface **Web**, não a raiz da API.
-- O Web consome a API via configuração `PlantaoProApi:BaseUrl`.
+## Se `https://localhost:51977/` abrir 404
+- Verifique se o profile da API usa `launchUrl: "swagger"` em `launchSettings.json`.
+- Verifique se `Program.cs` da API mapeia `app.MapGet("/", ...)`.
+- Confirme que o ambiente está como `Development` para redirecionar automaticamente ao Swagger.

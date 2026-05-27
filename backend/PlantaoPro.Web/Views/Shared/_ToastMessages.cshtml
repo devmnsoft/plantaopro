@@ -37,12 +37,12 @@
                 return;
             }
 
-            let parsedToasts = [];
+            let parsedToasts = new Array();
 
             try {
-                parsedToasts = JSON.parse(el.textContent || '[]');
+                parsedToasts = JSON.parse(el.textContent || 'null') || new Array();
             } catch (e) {
-                parsedToasts = [];
+                parsedToasts = new Array();
             }
 
             parsedToasts.forEach(function (toast) {

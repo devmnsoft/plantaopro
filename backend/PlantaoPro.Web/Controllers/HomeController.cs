@@ -35,78 +35,119 @@ namespace PlantaoPro.Web.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
-            if (!ModelState.IsValid)
-                return View(model);
-
-            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             var normalizedEmail = (model.Email ?? string.Empty).Trim();
-            _logger.LogInformation("Tentativa de login no Web Email:{Email} IP:{Ip}", normalizedEmail, ip);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            _logger.LogInformation("Login POST iniciado. Email:{Email} IP:{Ip} ReturnUrl:{ReturnUrl}", normalizedEmail, ip, returnUrl);
+
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation("Login POST inválido por ModelState. Email:{Email}", normalizedEmail);
+                return View(model);
+            }
 
             try
             {
-                var client = _httpClientFactory.CreateClient("PlantaoProApi");
-                _logger.LogInformation("BaseUrl API utilizada no login: {ApiBaseUrl}", client.BaseAddress);
+                using var client = _httpClientFactory.CreateClient("PlantaoProApi");
+                _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", client.BaseAddress);
 
                 var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(normalizedEmail, model.Senha ?? string.Empty));
-                _logger.LogInformation("Status code retornado pela API no login: {StatusCode}", (int)response.StatusCode);
+                var body = await response.Content.ReadAsStringAsync();
+                _logger.LogInformation("Resposta da API de login. Status:{StatusCode}", (int)response.StatusCode);
 
-                var apiResult = await response.Content.ReadFromJsonAsync<ApiResponse<LoginResponse>>();
+                var apiResult = JsonSerializer.Deserialize<ApiResponse<LoginResponse>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                if (response.IsSuccessStatusCode && apiResult?.Success == true && apiResult.Data is not null)
+                if (!response.IsSuccessStatusCode || apiResult is null || !apiResult.Success || apiResult.Data is null || string.IsNullOrWhiteSpace(apiResult.Data.Token))
                 {
-                    var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, apiResult.Data.UsuarioId.ToString()), new(ClaimTypes.Name, apiResult.Data.Nome), new("jwt", apiResult.Data.Token), new(ClaimTypes.Email, normalizedEmail) };
-                    var safeRoles = apiResult.Data.Roles ?? Array.Empty<string>();
-                    claims.AddRange(safeRoles
-                        .Select(NormalizeRole)
-                        .Where(role => !string.IsNullOrWhiteSpace(role))
-                        .Distinct()
-                        .Select(role => new Claim(ClaimTypes.Role, role!)));
-                    await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)));
-                    TempData["Success"] = "Login realizado com sucesso.";
-                    _logger.LogInformation("Login sucesso Email:{Email} IP:{Ip} Perfis:{Perfis} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, string.Join(',', safeRoles), DateTime.UtcNow);
-                    return RedirectToAction("Dashboard", "Home");
+                    var errorMessage = response.StatusCode switch
+                    {
+                        HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
+                        (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
+                        HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "E-mail ou senha inválidos.",
+                        _ => "Não foi possível autenticar. Tente novamente."
+                    };
+
+                    TempData["Error"] = errorMessage;
+                    ModelState.AddModelError(string.Empty, errorMessage);
+                    _logger.LogWarning("Falha no login Web. Email:{Email} Status:{Status} SuccessFlag:{SuccessFlag}", normalizedEmail, (int)response.StatusCode, apiResult?.Success);
+                    return View(model);
                 }
 
-                var nonSensitiveMessage = apiResult?.Message;
-                if (!string.IsNullOrWhiteSpace(nonSensitiveMessage))
-                    _logger.LogWarning("Falha de login retornada pela API: {ApiMessage}", nonSensitiveMessage);
+                var login = apiResult.Data;
+                var perfil = NormalizeRole((login.Roles ?? Array.Empty<string>()).FirstOrDefault()) ?? string.Empty;
 
-                var errorMessage = response.StatusCode switch
+                var claims = new List<Claim>
                 {
-                    HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
-                    (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
-                    HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "E-mail ou senha inválidos.",
-                    HttpStatusCode.InternalServerError => "Erro interno ao autenticar. Consulte os logs.",
-                    _ => "Erro ao autenticar. Tente novamente."
+                    new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
+                    new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? normalizedEmail : login.Nome),
+                    new Claim(ClaimTypes.Email, normalizedEmail),
+                    new Claim(ClaimTypes.Role, perfil),
+                    new Claim("Perfil", perfil),
+                    new Claim("jwt", login.Token)
                 };
 
-                TempData["Error"] = errorMessage;
-                if ((HttpStatusCode)423 == response.StatusCode) TempData["Warning"] = errorMessage;
-                ModelState.AddModelError(string.Empty, errorMessage);
-                _logger.LogWarning("Login inválido Email:{Email} IP:{Ip} Sucesso:{Sucesso} DataHoraUtc:{DataHoraUtc}", normalizedEmail, ip, false, DateTime.UtcNow);
-                return View(model);
-            }
-            catch (HttpRequestException ex)
-            {
-                _logger.LogError(ex, "Falha de comunicação com a API no login Email:{Email}", normalizedEmail);
-                TempData["Error"] = "Não foi possível conectar à API do PlantãoPro. Verifique se a API está em execução.";
-                return View(model);
-            }
-            catch (TaskCanceledException ex)
-            {
-                _logger.LogError(ex, "Timeout ao chamar API no login Email:{Email}", normalizedEmail);
-                TempData["Error"] = "A autenticação demorou mais que o esperado. Tente novamente.";
-                return View(model);
+                foreach (var role in login.Roles ?? Array.Empty<string>())
+                {
+                    var normalizedRole = NormalizeRole(role);
+                    if (!string.IsNullOrWhiteSpace(normalizedRole) && !claims.Any(c => c.Type == ClaimTypes.Role && c.Value == normalizedRole))
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, normalizedRole));
+                    }
+                }
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                });
+                _logger.LogInformation("Cookie de autenticação criado. Email:{Email}", normalizedEmail);
+
+                HttpContext.Session.SetString("jwt", login.Token);
+                HttpContext.Session.SetString("JwtToken", login.Token);
+                HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);
+                HttpContext.Session.SetString("UsuarioEmail", normalizedEmail);
+                HttpContext.Session.SetString("UsuarioPerfil", perfil);
+                _logger.LogInformation("Token salvo na sessão. Email:{Email} Perfil:{Perfil}", normalizedEmail, perfil);
+
+                if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    _logger.LogInformation("Redirecionando por returnUrl. Email:{Email} Destino:{Destino}", normalizedEmail, returnUrl);
+                    return Redirect(returnUrl);
+                }
+
+                return RedirectToActionByPerfil(perfil, normalizedEmail);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro inesperado no login Email:{Email}", normalizedEmail);
-                TempData["Error"] = "Erro ao conectar ao servidor.";
+                _logger.LogError(ex, "Erro inesperado no login Web. Email:{Email}", normalizedEmail);
+                TempData["Error"] = "Não foi possível realizar o login no momento.";
                 return View(model);
             }
         }
+
+        private IActionResult RedirectToActionByPerfil(string? perfil, string? email)
+        {
+            var normalized = NormalizeRole(perfil) ?? string.Empty;
+            var destination = normalized switch
+            {
+                "MEDICO" => (Action: "Index", Controller: "MinhaAgenda"),
+                "FINANCEIRO" => (Action: "Index", Controller: "Financeiro"),
+                "COORDENACAO" => (Action: "Index", Controller: "CentralOperacional"),
+                "OPERADOR" => (Action: "Index", Controller: "CentralOperacional"),
+                "HOSPITAL" => (Action: "Index", Controller: "Agenda"),
+                "ADMINISTRADOR_GLOBAL" => (Action: "Dashboard", Controller: "Home"),
+                "ADMINISTRADOR" => (Action: "Dashboard", Controller: "Home"),
+                _ => (Action: "Dashboard", Controller: "Home")
+            };
+
+            _logger.LogInformation("Redirecionando usuário após login. Email:{Email} Perfil:{Perfil} Destino:{Controller}/{Action}", email, normalized, destination.Controller, destination.Action);
+            return RedirectToAction(destination.Action, destination.Controller);
+        }
+
 
 
         private static string? NormalizeRole(string? role)

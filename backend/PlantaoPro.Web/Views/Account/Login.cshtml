@@ -36,7 +36,8 @@
                 </div>
                 <span class="badge text-bg-light border">Acesso Seguro</span>
             </div>
-            <form asp-action="Login" method="post" id="loginForm" novalidate data-login-form="true">
+            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" novalidate data-login-form="true">
+                <input type="hidden" name="returnUrl" value="@Context.Request.Query["returnUrl"]" />
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="alert-validation mb-3"></div>
                 <div class="login-attempt-warning mb-3 d-none" id="loginAttemptWarning"><i class="bi bi-exclamation-triangle me-1"></i><span></span></div>

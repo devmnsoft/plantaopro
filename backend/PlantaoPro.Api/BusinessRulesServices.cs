@@ -140,3 +140,73 @@ and date_trunc('week',p.data_inicio)=date_trunc('week',@dataInicio)", new { medi
         return itens;
     }
 }
+
+public sealed class MedicoRecomendacaoService
+{
+    private readonly IConfiguration _cfg;
+    private readonly ConflitoHorarioService _conflitoHorarioService;
+
+    public MedicoRecomendacaoService(IConfiguration cfg, ConflitoHorarioService conflitoHorarioService)
+    {
+        _cfg = cfg;
+        _conflitoHorarioService = conflitoHorarioService;
+    }
+
+    private NpgsqlConnection Cn() => new(_cfg.GetConnectionString("Default"));
+
+    public async Task<IEnumerable<MedicoPlantaoRecomendacaoDto>> RecomendarPlantoesAsync(Guid medicoId, int limite = 10)
+    {
+        await using var cn = Cn();
+        var candidatos = (await cn.QueryAsync<(Guid PlantaoId, string HospitalNome, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, bool TemEspecialidade, bool JaSolicitado)>(@"
+select p.id as PlantaoId,
+       coalesce(h.nome_fantasia,'') as HospitalNome,
+       coalesce(e.nome,'') as EspecialidadeNome,
+       p.data_inicio as DataInicio,
+       p.data_fim as DataFim,
+       p.valor as Valor,
+       exists(select 1 from plantaopro.medico_especialidades me where me.medico_id=@medicoId and me.especialidade_id=p.especialidade_id and me.reg_status='A') as TemEspecialidade,
+       exists(select 1 from plantaopro.escalas esc where esc.plantao_id=p.id and esc.medico_id=@medicoId and esc.reg_status='A') as JaSolicitado
+from plantaopro.plantoes p
+join plantaopro.hospitais h on h.id=p.hospital_id
+join plantaopro.especialidades e on e.id=p.especialidade_id
+where p.reg_status='A' and lower(coalesce(p.status,'')) in ('aberto','em_escala') and p.data_inicio >= now()
+order by p.data_inicio asc
+limit @buscaLimite", new { medicoId, buscaLimite = Math.Max(limite * 3, 20) })).ToList();
+
+        var recomendacoes = new List<MedicoPlantaoRecomendacaoDto>();
+        foreach (var candidato in candidatos)
+        {
+            if (candidato.JaSolicitado)
+            {
+                continue;
+            }
+
+            var score = 100m;
+            var motivos = new List<string>();
+            if (!candidato.TemEspecialidade)
+            {
+                score -= 70m;
+                motivos.Add("especialidade divergente");
+            }
+
+            var temConflito = await _conflitoHorarioService.ExisteConflitoAsync(medicoId, candidato.DataInicio, candidato.DataFim);
+            if (temConflito)
+            {
+                score -= 50m;
+                motivos.Add("conflito de horário");
+            }
+
+            var horas = (decimal)(candidato.DataFim - candidato.DataInicio).TotalHours;
+            score += Math.Min(20m, horas);
+            if (candidato.Valor >= 2000m)
+            {
+                score += 10m;
+            }
+
+            var textoMotivo = motivos.Count == 0 ? "Alta aderência ao seu perfil, sem conflitos de horário." : "Atenção: " + string.Join("; ", motivos) + ".";
+            recomendacoes.Add(new MedicoPlantaoRecomendacaoDto(candidato.PlantaoId, candidato.HospitalNome, candidato.EspecialidadeNome, candidato.DataInicio, candidato.DataFim, candidato.Valor, Math.Max(0m, score), textoMotivo));
+        }
+
+        return recomendacoes.OrderByDescending(x => x.Score).ThenBy(x => x.DataInicio).Take(Math.Max(limite, 1)).ToArray();
+    }
+}

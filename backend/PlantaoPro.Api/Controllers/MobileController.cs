@@ -17,14 +17,16 @@ public class MobileController : ControllerBase
     private readonly IConfiguration _cfg;
     private readonly AuthService _auth;
     private readonly MedicoAreaService _medicoArea;
+    private readonly MedicoRecomendacaoService _recomendacaoService;
     private readonly NotificacaoService _notificacao;
     private readonly ILogger<MobileController> _logger;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, NotificacaoService notificacao, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
         _medicoArea = medicoArea;
+        _recomendacaoService = recomendacaoService;
         _notificacao = notificacao;
         _logger = logger;
     }
@@ -219,6 +221,37 @@ public class MobileController : ControllerBase
     public IActionResult RecusarConvite(Guid id)
     {
         return Ok(ApiResponse<object>.Ok(new { id, status = "recusado" }, "Convite recusado."));
+    }
+
+    [HttpGet("recomendacoes")]
+    public async Task<IActionResult> Recomendacoes([FromQuery] int limite = 10)
+    {
+        var uid = GetUserId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' limit 1", new { uid });
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
+            var lista = await _recomendacaoService.RecomendarPlantoesAsync(medicoId.Value, limite);
+            return Ok(ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Ok(lista, "Recomendações carregadas com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile recomendacoes erro uid:{Uid}", uid);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar recomendações.", 500));
+        }
+    }
+
+    [HttpGet("disponibilidade")]
+    public IActionResult Disponibilidade()
+    {
+        return Ok(ApiResponse<object>.Ok(new { }, "Disponibilidade carregada com sucesso."));
+    }
+
+    [HttpGet("preferencias")]
+    public IActionResult Preferencias()
+    {
+        return Ok(ApiResponse<object>.Ok(new { notificacoesPush = true, lembretePlantaoHoras = 12 }, "Preferências carregadas com sucesso."));
     }
 
     [HttpGet("plantoes/{id:guid}")]

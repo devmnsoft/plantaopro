@@ -6,7 +6,7 @@ using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
-[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador + "," + RolesConstants.Hospital + "," + RolesConstants.Medico)]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL," + RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador + "," + RolesConstants.Hospital + "," + RolesConstants.Medico)]
 public class AgendaController : BaseWebController
 {
     public AgendaController(IHttpClientFactory factory, ILogger<AgendaController> logger) : base(factory, logger) { }

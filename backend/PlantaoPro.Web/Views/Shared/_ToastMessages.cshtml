@@ -28,26 +28,41 @@
 
 @if (toasts.Count > 0)
 {
+    <script type="application/json" id="pp-toast-data">@Html.Raw(toastJson)</script>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
-            const toasts = @Html.Raw(toastJson);
+            const el = document.getElementById('pp-toast-data');
 
-            if (window.PlantaoProToast && Array.isArray(toasts)) {
-                toasts.forEach(function (toast) {
-                    if (!toast || !toast.message && !toast.Message) {
-                        return;
-                    }
-
-                    const type = (toast.type || toast.Type || 'info').toLowerCase();
-                    const message = toast.message || toast.Message;
-
-                    if (typeof window.PlantaoProToast[type] === 'function') {
-                        window.PlantaoProToast[type](message);
-                    } else {
-                        window.PlantaoProToast.info(message);
-                    }
-                });
+            if (!el || !window.PlantaoProToast) {
+                return;
             }
+
+            let parsedToasts = [];
+
+            try {
+                parsedToasts = JSON.parse(el.textContent || '[]');
+            } catch (e) {
+                parsedToasts = [];
+            }
+
+            parsedToasts.forEach(function (toast) {
+                if (!toast) {
+                    return;
+                }
+
+                const type = String(toast.type || toast.Type || 'info').toLowerCase();
+                const message = toast.message || toast.Message || '';
+
+                if (!message) {
+                    return;
+                }
+
+                if (typeof window.PlantaoProToast[type] === 'function') {
+                    window.PlantaoProToast[type](message);
+                } else {
+                    window.PlantaoProToast.info(message);
+                }
+            });
         });
     </script>
 }

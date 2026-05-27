@@ -101,11 +101,12 @@ public sealed class PilotoController : ControllerBase
     }
 
     private static List<(int Id, string Titulo)> ChecklistBase() =>
-    [
-        (1, "Cliente cadastrado"), (2, "Usuários criados"), (3, "Hospitais cadastrados"), (4, "Médicos cadastrados"), (5, "Especialidades cadastradas"),
-        (6, "Primeiro plantão criado"), (7, "Primeiro plantão publicado"), (8, "Primeiro médico escalado"), (9, "Primeiro pagamento confirmado"),
-        (10, "Usuários treinados"), (11, "Homologação aprovada")
-    ];
+        new()
+        {
+            (1, "Cliente cadastrado"), (2, "Usuários criados"), (3, "Hospitais cadastrados"), (4, "Médicos cadastrados"), (5, "Especialidades cadastradas"),
+            (6, "Primeiro plantão criado"), (7, "Primeiro plantão publicado"), (8, "Primeiro médico escalado"), (9, "Primeiro pagamento confirmado"),
+            (10, "Usuários treinados"), (11, "Homologação aprovada")
+        };
 
     public sealed record PilotoNovaOcorrenciaRequest(string Tipo, string Prioridade, string Descricao, string? Responsavel);
     public sealed record PilotoOcorrenciaDto(Guid Id, string Tipo, string Prioridade, string Descricao, string Status, string Responsavel, DateTime DataAbertura, DateTime? DataResolucao);

@@ -1,26 +1,34 @@
 @model PlantaoPro.Web.Models.PageHeaderViewModel?
-
+@{
+    var title = Model?.Title ?? ViewData["Title"]?.ToString() ?? "PlantãoPro";
+    var subtitle = Model?.Subtitle ?? string.Empty;
+    var icon = Model?.Icon ?? "bi-grid";
+    var buttonText = Model?.ButtonText ?? string.Empty;
+    var buttonAction = Model?.ButtonAction ?? string.Empty;
+    var buttonController = Model?.ButtonController ?? string.Empty;
+    var buttonDisabled = Model?.ButtonDisabled ?? true;
+}
 <div class="page-header d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
     <div class="d-flex align-items-start gap-3">
-        @if (!string.IsNullOrWhiteSpace(Model?.Icon))
+        @if (!string.IsNullOrWhiteSpace(icon))
         {
-            <div class="page-header-icon"><i class="bi @Model.Icon"></i></div>
+            <div class="page-header-icon"><i class="bi @icon"></i></div>
         }
         <div>
-            <h2 class="mb-1">@(Model?.Title ?? "Painel")</h2>
-            <p class="text-muted mb-0">@(Model?.Subtitle ?? string.Empty)</p>
+            <h2 class="mb-1">@title</h2>
+            <p class="text-muted mb-0">@subtitle</p>
         </div>
     </div>
 
-    @if (!string.IsNullOrWhiteSpace(Model?.ButtonText))
+    @if (!string.IsNullOrWhiteSpace(buttonText))
     {
-        if (!(Model?.ButtonDisabled ?? true) && !string.IsNullOrWhiteSpace(Model?.ButtonAction) && !string.IsNullOrWhiteSpace(Model?.ButtonController))
+        if (!buttonDisabled && !string.IsNullOrWhiteSpace(buttonAction) && !string.IsNullOrWhiteSpace(buttonController))
         {
-            <a class="btn btn-primary" asp-action="@Model.ButtonAction" asp-controller="@Model.ButtonController">@Model.ButtonText</a>
+            <a class="btn btn-primary" asp-action="@buttonAction" asp-controller="@buttonController">@buttonText</a>
         }
         else
         {
-            <button class="btn btn-primary" disabled title="Em breve">@Model.ButtonText</button>
+            <button class="btn btn-primary" disabled title="Em breve">@buttonText</button>
         }
     }
 </div>

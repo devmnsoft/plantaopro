@@ -1,22 +1,23 @@
 @model PlantaoPro.Web.Models.ConversaDetalhesViewModel
 @using PlantaoPro.Web.Models
 @{
-    ViewData["Title"] = "Conversa";
-    var mensagens = Model?.Mensagens ?? Array.Empty<MensagemConversaDto>();
-    var participantes = Model?.Participantes ?? Array.Empty<ParticipanteConversaDto>();
+    var conversa = Model ?? new ConversaDetalhesViewModel();
+    var mensagens = conversa.Mensagens ?? Array.Empty<MensagemConversaDto>();
+    var participantes = conversa.Participantes ?? Array.Empty<ParticipanteConversaDto>();
+    ViewData["Title"] = string.IsNullOrWhiteSpace(conversa.Titulo) ? "Conversa" : conversa.Titulo;
 }
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-        <h2 class="mb-1">@Model.Titulo</h2>
-        <div class="d-flex gap-2"><span class="badge text-bg-light border">@Model.Tipo</span><span class="badge text-bg-secondary">@Model.Status</span></div>
+        <h2 class="mb-1">@conversa.Titulo</h2>
+        <div class="d-flex gap-2"><span class="badge text-bg-light border">@conversa.Tipo</span><span class="badge text-bg-secondary">@conversa.Status</span></div>
     </div>
     <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
 </div>
 
-@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+@if (!string.IsNullOrWhiteSpace(conversa.ErrorMessage))
 {
-    <div class="alert alert-warning">@Model.ErrorMessage</div>
+    <div class="alert alert-warning">@conversa.ErrorMessage</div>
 }
 
 <div class="row g-3">
@@ -45,7 +46,7 @@
         <div class="card mt-3"><div class="card-body">
             <form asp-action="EnviarMensagem" method="post">
                 @Html.AntiForgeryToken()
-                <input asp-for="NovaMensagem.ConversaId" type="hidden" value="@Model.Id" />
+                <input asp-for="NovaMensagem.ConversaId" type="hidden" value="@conversa.Id" />
                 <div class="mb-2">
                     <label asp-for="NovaMensagem.Mensagem" class="form-label"></label>
                     <textarea asp-for="NovaMensagem.Mensagem" class="form-control" rows="3" placeholder="Digite sua mensagem..."></textarea>

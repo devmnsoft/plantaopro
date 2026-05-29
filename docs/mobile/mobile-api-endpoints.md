@@ -1,56 +1,31 @@
-# API Mobile Endpoints
+# API Mobile MVP — endpoints
 
-## Auth
+Todos os endpoints mobile devem usar JWT, retornar `ApiResponse<T>`, não expor dados sensíveis e aplicar plano mobile quando configurado.
+
+## Autenticação
 - `POST /api/mobile/auth/login`
 - `GET /api/mobile/me`
 
-## Dashboard
+## Dashboard e operação médica
 - `GET /api/mobile/dashboard`
-
-## Plantões
-- `GET /api/mobile/plantoes-disponiveis`
+- `GET /api/mobile/plantoes-disponiveis?page=1&pageSize=20`
 - `GET /api/mobile/plantoes/{id}`
 - `POST /api/mobile/plantoes/{id}/solicitar`
-
-## Convites
 - `GET /api/mobile/convites`
 - `GET /api/mobile/convites/{id}`
 - `POST /api/mobile/convites/{id}/aceitar`
 - `POST /api/mobile/convites/{id}/recusar`
+- `GET /api/mobile/minhas-escalas?page=1&pageSize=20`
 
-## Escalas
-- `GET /api/mobile/minhas-escalas`
-- `GET /api/mobile/minhas-escalas/{id}`
-
-## Pagamentos
-- `GET /api/mobile/meus-pagamentos`
-- `GET /api/mobile/meus-pagamentos/{id}`
-- `POST /api/mobile/meus-pagamentos/{id}/contestar`
-
-## Notificações
-- `GET /api/mobile/notificacoes`
-- `GET /api/mobile/notificacoes/contador`
+## Financeiro e notificações
+- `GET /api/mobile/meus-pagamentos?page=1&pageSize=20`
+- `GET /api/mobile/notificacoes?page=1&pageSize=20`
 - `PUT /api/mobile/notificacoes/{id}/lida`
-- `PUT /api/mobile/notificacoes/lidas`
 
-## Perfil
+## Perfil, disponibilidade e preferências
 - `GET /api/mobile/perfil`
 - `PUT /api/mobile/perfil`
-
-## Disponibilidade
 - `GET /api/mobile/disponibilidade`
 - `PUT /api/mobile/disponibilidade`
-
-## Preferências
 - `GET /api/mobile/preferencias`
 - `PUT /api/mobile/preferencias`
-
-## Desempenho
-- `GET /api/mobile/meu-desempenho`
-
-## Regras transversais
-- JWT obrigatório.
-- `ApiResponse<T>` em todas as respostas.
-- Paginação em listagens.
-- Escopo de dados por médico/cliente.
-- 403 amigável para plano sem permissão mobile.

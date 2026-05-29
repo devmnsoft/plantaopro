@@ -869,13 +869,8 @@ namespace PlantaoPro.Api.Data
                     {
                         id = e.PlantaoId
                     }, tx);
-                    var conflito = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas e join plantaopro.plantoes pl on pl.id=e.plantao_id where e.medico_id=@m and e.status in ('solicitado','confirmado','realizado') and e.reg_status='A' and tsrange(pl.data_inicio,pl.data_fim,'[]') && tsrange(@di,@df,'[]')", new
-                    {
-                        m = novoMedicoId,
-                        di = pl.Di,
-                        df = pl.Df
-                    }, tx);
-                    if (conflito > 0)
+                    var conflito = await conflitoService.ExisteConflitoAsync(novoMedicoId.Value, pl.Di, pl.Df);
+                    if (conflito)
                         return ApiResponse<string>.Fail("Novo médico com conflito de horário");
                     await cn.ExecuteAsync("update plantaopro.escalas set status='substituido',justificativa=@j,updated_by=@u,reg_update=now() where id=@id", new
                     {

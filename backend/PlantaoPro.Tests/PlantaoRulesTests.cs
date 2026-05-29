@@ -10,7 +10,7 @@ public class PlantaoRulesTests
     [Fact]
     public void ValidarCriacao_DeveFalhar_QuandoDataFimMenorOuIgualInicio()
     {
-        var req = new CreatePlantaoRequest { DataInicio = DateTime.UtcNow, DataFim = DateTime.UtcNow.AddHours(-1), Valor = 100, Vagas = 1 };
+        var req = new CreatePlantaoRequest(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(-1), 100, 1, "Presencial", null);
         var resp = _service.ValidarCriacao(req);
         Assert.False(resp.Success);
     }
@@ -18,7 +18,7 @@ public class PlantaoRulesTests
     [Fact]
     public void ValidarCriacao_DeveFalhar_QuandoVagasZero()
     {
-        var req = new CreatePlantaoRequest { DataInicio = DateTime.UtcNow, DataFim = DateTime.UtcNow.AddHours(12), Valor = 100, Vagas = 0 };
+        var req = new CreatePlantaoRequest(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(12), 100, 0, "Presencial", null);
         var resp = _service.ValidarCriacao(req);
         Assert.False(resp.Success);
     }
@@ -26,7 +26,7 @@ public class PlantaoRulesTests
     [Fact]
     public void ValidarCriacao_DeveFalhar_QuandoValorNegativo()
     {
-        var req = new CreatePlantaoRequest { DataInicio = DateTime.UtcNow, DataFim = DateTime.UtcNow.AddHours(12), Valor = -1, Vagas = 1 };
+        var req = new CreatePlantaoRequest(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow.AddHours(12), -1, 1, "Presencial", null);
         var resp = _service.ValidarCriacao(req);
         Assert.False(resp.Success);
     }

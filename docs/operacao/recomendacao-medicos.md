@@ -1,22 +1,19 @@
-# Recomendação de médicos por plantão
+# Recomendação de médicos
 
-## Objetivo
-Padronizar os critérios operacionais para recomendação de profissionais no preenchimento de plantões.
+## Endpoint
+- `GET /api/plantoes/{id}/medicos-recomendados?limite=20`
 
-## Critérios
-1. Médico ativo e com cadastro regular.
-2. Especialidade compatível.
-3. Sem conflito com escalas no mesmo período.
-4. Preferência de turno e disponibilidade.
-5. Priorização por menor carga semanal.
+## DTO
+`MedicoRecomendadoDto` expõe id, nome, CRM, especialidade, score, motivos, alertas, conflito, disponibilidade, convite existente e escala existente.
 
-## Regras de segurança
-- Exibir apenas médicos do mesmo `cliente_id` (exceto ADMINISTRADOR_GLOBAL).
-- Bloquear convite duplicado para o mesmo plantão.
-- Auditoria obrigatória em geração de convites.
+## Critérios do MVP
+- Médico ativo.
+- Especialidade compatível recebe maior score.
+- Conflito de horário reduz disponibilidade e score.
+- Médico já convidado ou já escalado aparece com alerta/badge para evitar duplicidade.
 
-## Fluxo
-1. Usuário abre detalhes do plantão.
-2. Sistema calcula candidatos elegíveis.
-3. Usuário revisa score e status.
-4. Usuário gera convite em lote.
+## Próximas melhorias
+- Taxa histórica de aceite/cancelamento.
+- Carga horária semanal ponderada.
+- Avaliação média e score médico.
+- Preferência de turno e disponibilidade declarada.

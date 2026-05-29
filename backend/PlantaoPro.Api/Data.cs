@@ -13,25 +13,42 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class AuditService : IAuditService
     {
-        private readonly IConfiguration cfg; public AuditService(IConfiguration cfg)
+        private readonly IConfiguration cfg;
+        private readonly ILogger<AuditService> logger;
+
+        public AuditService(IConfiguration cfg, ILogger<AuditService> logger)
         {
             this.cfg = cfg;
+            this.logger = logger;
         }
+
         public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
         {
-            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
+            try
             {
-                u = userId,
-                a = acao,
-                e = entidade,
-                r = registroId,
-                ip,
-                d = descricao,
-                va = valorAnterior,
-                vn = valorNovo,
-                ua = userAgent
-            });
+                await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
+                {
+                    u = userId,
+                    a = acao,
+                    e = entidade,
+                    r = registroId,
+                    ip,
+                    d = descricao,
+                    va = valorAnterior,
+                    vn = valorNovo,
+                    ua = userAgent
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Falha ao registrar auditoria. UsuarioId={UsuarioId} Acao={Acao} Entidade={Entidade} RegistroId={RegistroId}",
+                    userId,
+                    acao,
+                    entidade,
+                    registroId);
+            }
         }
     }
     public sealed class AuthService

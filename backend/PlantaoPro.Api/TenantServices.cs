@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Data;
 
 namespace PlantaoPro.Api;
 
@@ -49,11 +50,16 @@ public sealed class TenantGuardService
 {
     private readonly UsuarioContextService usuarioContextService;
     private readonly IAuditService auditService;
+    private readonly ILogger<TenantGuardService> logger;
 
-    public TenantGuardService(UsuarioContextService usuarioContextService, IAuditService auditService)
+    public TenantGuardService(
+        UsuarioContextService usuarioContextService,
+        IAuditService auditService,
+        ILogger<TenantGuardService> logger)
     {
         this.usuarioContextService = usuarioContextService;
         this.auditService = auditService;
+        this.logger = logger;
     }
 
     public async Task<ApiResponse<bool>> ValidarAcessoClienteAsync(Guid clienteId)
@@ -63,7 +69,24 @@ public sealed class TenantGuardService
         var atual = usuarioContextService.GetClienteId();
         if (atual.HasValue && atual.Value == clienteId) return ApiResponse<bool>.Ok(true, "Acesso autorizado.");
 
-        await auditService.LogAsync(usuarioContextService.GetUsuarioId(), "seguranca", "acesso_negado_cliente", "segurança", clienteId, "Bloqueio por isolamento de cliente.", null, null, null, null, null);
+        var usuarioId = usuarioContextService.GetUsuarioId();
+        try
+        {
+            await auditService.LogAsync(
+                usuarioId,
+                "ACESSO_NEGADO_CLIENTE",
+                "clientes",
+                clienteId,
+                "Bloqueio por isolamento de cliente.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Falha ao auditar bloqueio de acesso ao cliente. UsuarioId={UsuarioId} ClienteId={ClienteId}",
+                usuarioId,
+                clienteId);
+        }
+
         return ApiResponse<bool>.Fail("Acesso negado ao cliente informado.", 403);
     }
 }

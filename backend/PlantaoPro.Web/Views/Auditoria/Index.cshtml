@@ -1,6 +1,59 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
-@{ ViewData["Title"] = "Auditoria"; var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>(); }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria","Rastreabilidade de ações e eventos operacionais.","bi-shield-check","Exportar",null,null,true)' />
-<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Data/hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Descrição</th></tr></thead><tbody>
-@if(items.Any()){foreach(var log in items){<tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td><partial name="_StatusBadge" model="log.Acao" /></td><td>@log.Entidade</td><td>@log.Ip</td><td>@log.Descricao</td></tr>}}else{<tr><td colspan="6" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x","Sem registros de auditoria","Não houve eventos no período selecionado.")' /></td></tr>}
-</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div></div>
+@{
+    ViewData["Title"] = "Auditoria";
+    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
+    var resumo = ViewBag.Resumo as PlantaoPro.Web.Models.AuditoriaResumoDto;
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria","Rastreabilidade enterprise de ações críticas, acessos negados e eventos sensíveis.","bi-shield-check","Exportar CSV",Url.Action("Index", "Auditoria"),null,true)' />
+
+<div class="row g-3 mb-4">
+    <div class="col-12 col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><span class="text-muted small">Ações hoje</span><h3 class="mb-0">@(resumo?.AcoesHoje ?? 0)</h3></div></div></div>
+    <div class="col-12 col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><span class="text-muted small">Falhas hoje</span><h3 class="mb-0 text-danger">@(resumo?.FalhasHoje ?? 0)</h3></div></div></div>
+    <div class="col-12 col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><span class="text-muted small">Acessos negados</span><h3 class="mb-0 text-warning">@(resumo?.AcessosNegados ?? 0)</h3></div></div></div>
+    <div class="col-12 col-md-3"><div class="card border-0 shadow-sm h-100"><div class="card-body"><span class="text-muted small">Exportações</span><h3 class="mb-0 text-primary">@(resumo?.Exportacoes ?? 0)</h3></div></div></div>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-12 col-md-2"><label class="form-label">Início</label><input class="form-control" type="date" name="dataInicio" value="@ViewBag.DataInicio" /></div>
+            <div class="col-12 col-md-2"><label class="form-label">Fim</label><input class="form-control" type="date" name="dataFim" value="@ViewBag.DataFim" /></div>
+            <div class="col-12 col-md-2"><label class="form-label">Perfil</label><input class="form-control" name="perfil" value="@ViewBag.Perfil" /></div>
+            <div class="col-12 col-md-2"><label class="form-label">Entidade</label><input class="form-control" name="entidade" value="@ViewBag.Entidade" /></div>
+            <div class="col-12 col-md-2"><label class="form-label">Ação</label><input class="form-control" name="acao" value="@ViewBag.Acao" /></div>
+            <div class="col-12 col-md-2"><label class="form-label">Sucesso</label><select class="form-select" name="sucesso"><option value="">Todos</option><option value="true">Sucesso</option><option value="false">Falha</option></select></div>
+            <div class="col-12 col-md-10"><label class="form-label">Texto livre</label><input class="form-control" name="texto" value="@ViewBag.Texto" placeholder="Busque por ação, entidade ou detalhes" /></div>
+            <div class="col-12 col-md-2 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Filtrar</button></div>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Data/hora</th><th>Perfil</th><th>Ação</th><th>Entidade</th><th>Status</th><th>IP</th><th class="text-end">Detalhes</th></tr></thead>
+            <tbody>
+            @if (items.Any())
+            {
+                foreach (var log in items)
+                {
+                    <tr>
+                        <td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><span class="badge text-bg-light">@(log.Perfil ?? "-")</span></td>
+                        <td><span class="badge text-bg-primary">@log.Acao</span></td>
+                        <td>@log.Entidade</td>
+                        <td>@if (log.Sucesso) { <span class="badge text-bg-success">Sucesso</span> } else { <span class="badge text-bg-danger">Falha</span> }</td>
+                        <td>@(log.Ip ?? "-")</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" asp-controller="Auditoria" asp-action="Details" asp-route-id="@log.Id">Ver</a></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="7" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x","Sem registros de auditoria","Não houve eventos para os filtros selecionados.")' /></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div>
+</div>

@@ -2,6 +2,7 @@ namespace PlantaoPro.Api;
 
 public static class RolesConstants
 {
+    public const string AdministradorGlobal = "ADMINISTRADOR_GLOBAL";
     public const string Administrador = "ADMINISTRADOR";
     public const string Coordenacao = "COORDENACAO";
     public const string Operador = "OPERADOR";

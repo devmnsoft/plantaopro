@@ -27,7 +27,7 @@ Validar o ciclo operacional completo do PlantãoPro em pré-produção: criaçã
 15. Validar notificações, auditoria e indicadores do dashboard.
 
 ## Critérios de aceite
-- Nenhuma etapa exibe stack trace, SQL bruto, `alert()` ou confirmação nativa.
+- Nenhuma etapa exibe stack trace, SQL bruto, diálogo nativo de alerta ou confirmação.
 - Médico não acessa dados de outro médico.
 - Usuário de cliente comum não vê dados de outro cliente.
 - Conflito crítico bloqueia solicitação, aceite, confirmação e substituição.

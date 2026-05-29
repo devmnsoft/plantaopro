@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -15,12 +14,11 @@ public sealed class ObservabilidadeController : BaseWebController
         {
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
-            var resumo = await ReadApiResponse<object>(client, "api/observabilidade/resumo");
-            var performance = await ReadApiResponse<object>(client, "api/observabilidade/performance?limit=10");
-            var erros = await ReadApiResponse<object>(client, "api/observabilidade/erros?limit=10");
-            ViewBag.Resumo = resumo.Data;
-            ViewBag.Performance = performance.Data;
-            ViewBag.Erros = erros.Data;
+            ViewBag.Resumo = (await ReadApiResponse<object>(client, "api/observabilidade/resumo")).Data;
+            ViewBag.Performance = (await ReadApiResponse<object>(client, "api/observabilidade/performance?limit=10")).Data;
+            ViewBag.Erros = (await ReadApiResponse<object>(client, "api/observabilidade/erros?limit=10")).Data;
+            ViewBag.AcessosNegados = (await ReadApiResponse<object>(client, "api/observabilidade/acessos-negados?limit=10")).Data;
+            ViewBag.Logins = (await ReadApiResponse<object>(client, "api/observabilidade/logins?limit=10")).Data;
             return View();
         }
         catch (Exception ex)
@@ -29,5 +27,21 @@ public sealed class ObservabilidadeController : BaseWebController
             TempData["Error"] = "Falha ao carregar observabilidade.";
             return View();
         }
+    }
+
+    public async Task<IActionResult> Erros()
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        ViewBag.Erros = (await ReadApiResponse<object>(client, "api/observabilidade/erros?limit=50")).Data;
+        return View();
+    }
+
+    public async Task<IActionResult> Performance()
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        ViewBag.Performance = (await ReadApiResponse<object>(client, "api/observabilidade/performance?limit=50")).Data;
+        return View();
     }
 }

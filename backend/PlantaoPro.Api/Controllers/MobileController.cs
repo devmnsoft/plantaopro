@@ -22,8 +22,9 @@ public class MobileController : ControllerBase
     private readonly ILogger<MobileController> _logger;
     private readonly UsuarioContextService _usuarioContext;
     private readonly AssinaturaGuardService _assinaturaGuard;
+    private readonly IAuditService _audit;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
@@ -33,6 +34,7 @@ public class MobileController : ControllerBase
         _logger = logger;
         _usuarioContext = usuarioContext;
         _assinaturaGuard = assinaturaGuard;
+        _audit = audit;
     }
 
     private Guid GetUserId()
@@ -50,12 +52,14 @@ public class MobileController : ControllerBase
         var clienteId = _usuarioContext.GetClienteId();
         if (!clienteId.HasValue)
         {
+            await _audit.RegistrarAsync(GetUserId(), null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.BloqueioTenant, new { motivo = "CLIENTE_NAO_IDENTIFICADO", endpoint = HttpContext.Request.Path.Value }, false, GetIp(), GetPerfil());
             return ApiResponse<bool>.Fail("Cliente do usuário não identificado para acesso mobile.", 403);
         }
 
         var permissao = await _assinaturaGuard.PodeUsarMobile(clienteId.Value);
         if (!permissao.Success)
         {
+            await _audit.RegistrarAsync(GetUserId(), clienteId.Value, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.BloqueioPermissao, new { motivo = permissao.Message, endpoint = HttpContext.Request.Path.Value }, false, GetIp(), GetPerfil());
             _logger.LogWarning("Acesso mobile negado por plano cliente:{ClienteId} uid:{Uid}", clienteId, GetUserId());
             return permissao;
         }

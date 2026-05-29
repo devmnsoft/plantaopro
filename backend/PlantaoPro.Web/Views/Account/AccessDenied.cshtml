@@ -1,8 +1,2 @@
 @{ ViewData["Title"] = "Acesso negado"; }
-<div class="container py-5">
-    <div class="alert alert-danger">
-        <h4>Acesso negado</h4>
-        <p>Você não possui permissão para acessar este recurso.</p>
-        <a class="btn btn-primary" asp-controller="Home" asp-action="Dashboard">Voltar</a>
-    </div>
-</div>
+<partial name="~/Views/Shared/AccessDenied.cshtml" />

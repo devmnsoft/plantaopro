@@ -30,6 +30,11 @@ public sealed class UsuarioContextService
         return Guid.TryParse(claim, out id) ? id : null;
     }
 
+    public string? GetPerfilPrincipal()
+    {
+        return GetRoles().FirstOrDefault();
+    }
+
     public string[] GetRoles()
     {
         return httpContextAccessor.HttpContext?.User
@@ -40,23 +45,31 @@ public sealed class UsuarioContextService
             .ToArray() ?? Array.Empty<string>();
     }
 
+    public string? GetIp()
+    {
+        return httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+    }
+
     public bool IsAdminGlobal()
     {
-        return GetRoles().Any(r => string.Equals(r, "ADMINISTRADOR_GLOBAL", StringComparison.OrdinalIgnoreCase));
+        return GetRoles().Any(r => string.Equals(r, RolesConstants.AdministradorGlobal, StringComparison.OrdinalIgnoreCase));
     }
 }
 
 public sealed class TenantGuardService
 {
+    private readonly IConfiguration cfg;
     private readonly UsuarioContextService usuarioContextService;
     private readonly IAuditService auditService;
     private readonly ILogger<TenantGuardService> logger;
 
     public TenantGuardService(
+        IConfiguration cfg,
         UsuarioContextService usuarioContextService,
         IAuditService auditService,
         ILogger<TenantGuardService> logger)
     {
+        this.cfg = cfg;
         this.usuarioContextService = usuarioContextService;
         this.auditService = auditService;
         this.logger = logger;
@@ -64,36 +77,90 @@ public sealed class TenantGuardService
 
     public async Task<ApiResponse<bool>> ValidarAcessoClienteAsync(Guid clienteId)
     {
-        if (usuarioContextService.IsAdminGlobal()) return ApiResponse<bool>.Ok(true, "Acesso autorizado.");
+        var usuarioId = usuarioContextService.GetUsuarioId();
+        if (await PodeAcessarClienteAsync(usuarioId ?? Guid.Empty, clienteId)) return ApiResponse<bool>.Ok(true, "Acesso autorizado.");
+
+        await RegistrarAcessoNegadoAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Cliente, clienteId, AuditoriaConstants.Acoes.BloqueioTenant, "Bloqueio por isolamento de cliente.");
+        return ApiResponse<bool>.Fail("Acesso negado ao cliente informado.", 403);
+    }
+
+    public Task<bool> PodeAcessarClienteAsync(Guid usuarioId, Guid clienteId)
+    {
+        if (usuarioContextService.IsAdminGlobal()) return Task.FromResult(true);
 
         var atual = usuarioContextService.GetClienteId();
-        if (atual.HasValue && atual.Value == clienteId) return ApiResponse<bool>.Ok(true, "Acesso autorizado.");
+        return Task.FromResult(atual.HasValue && atual.Value == clienteId);
+    }
 
-        var usuarioId = usuarioContextService.GetUsuarioId();
-        try
+    public async Task<bool> PodeAcessarMedicoAsync(Guid usuarioId, Guid medicoId)
+    {
+        if (usuarioContextService.IsAdminGlobal()) return true;
+        var clienteId = await BuscarClienteIdAsync("plantaopro.medicos", medicoId);
+        if (clienteId.HasValue && !await PodeAcessarClienteAsync(usuarioId, clienteId.Value)) return false;
+
+        if (TemPerfil(RolesConstants.Medico))
         {
-            await auditService.LogAsync(
-                usuarioId,
-                "ACESSO_NEGADO_CLIENTE",
-                "clientes",
-                clienteId,
-                "Bloqueio por isolamento de cliente.");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex,
-                "Falha ao auditar bloqueio de acesso ao cliente. UsuarioId={UsuarioId} ClienteId={ClienteId}",
-                usuarioId,
-                clienteId);
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var vinculado = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.medicos where id=@medicoId and usuario_id=@usuarioId)", new { medicoId, usuarioId });
+            return vinculado;
         }
 
-        return ApiResponse<bool>.Fail("Acesso negado ao cliente informado.", 403);
+        return clienteId.HasValue;
+    }
+
+    public async Task<bool> PodeAcessarHospitalAsync(Guid usuarioId, Guid hospitalId)
+    {
+        if (usuarioContextService.IsAdminGlobal()) return true;
+        var clienteId = await BuscarClienteIdAsync("plantaopro.hospitais", hospitalId);
+        if (!clienteId.HasValue || !await PodeAcessarClienteAsync(usuarioId, clienteId.Value)) return false;
+        if (!TemPerfil(RolesConstants.Hospital)) return true;
+
+        using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        return await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.hospitais where id=@hospitalId and usuario_id=@usuarioId)", new { hospitalId, usuarioId });
+    }
+
+    public Task<bool> PodeAcessarPlantaoAsync(Guid usuarioId, Guid plantaoId) => PodeAcessarEntidadePorClienteAsync(usuarioId, "plantaopro.plantoes", plantaoId);
+    public Task<bool> PodeAcessarEscalaAsync(Guid usuarioId, Guid escalaId) => PodeAcessarEntidadePorClienteAsync(usuarioId, "plantaopro.escalas", escalaId);
+    public Task<bool> PodeAcessarPagamentoAsync(Guid usuarioId, Guid pagamentoId) => PodeAcessarEntidadePorClienteAsync(usuarioId, "plantaopro.pagamentos", pagamentoId);
+
+    public async Task RegistrarAcessoNegadoAsync(Guid? usuarioId, Guid? clienteId, string entidade, Guid? entidadeId, string acao, string motivo)
+    {
+        logger.LogWarning("Acesso negado UsuarioId={UsuarioId} ClienteId={ClienteId} Entidade={Entidade} EntidadeId={EntidadeId} Motivo={Motivo}", usuarioId, clienteId, entidade, entidadeId, motivo);
+        await auditService.RegistrarAsync(usuarioId, clienteId, entidade, entidadeId, acao, new { motivo }, false, usuarioContextService.GetIp(), usuarioContextService.GetPerfilPrincipal());
+    }
+
+    private async Task<bool> PodeAcessarEntidadePorClienteAsync(Guid usuarioId, string tabela, Guid id)
+    {
+        if (usuarioContextService.IsAdminGlobal()) return true;
+        var clienteId = await BuscarClienteIdAsync(tabela, id);
+        return clienteId.HasValue && await PodeAcessarClienteAsync(usuarioId, clienteId.Value);
+    }
+
+    private async Task<Guid?> BuscarClienteIdAsync(string tabela, Guid id)
+    {
+        using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        return await cn.ExecuteScalarAsync<Guid?>($"select cliente_id from {tabela} where id=@id limit 1", new { id });
+    }
+
+    private bool TemPerfil(string perfil)
+    {
+        return usuarioContextService.GetRoles().Any(x => string.Equals(x, perfil, StringComparison.OrdinalIgnoreCase));
     }
 }
 
 public sealed class PermissionGuardService
 {
     private readonly UsuarioContextService usuarioContextService;
+    private static readonly Dictionary<string, string[]> FallbackPermissoes = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+    {
+        [RolesConstants.AdministradorGlobal] = Permissoes.Todas,
+        [RolesConstants.Administrador] = Permissoes.AdminCliente,
+        [RolesConstants.Coordenacao] = Permissoes.Coordenacao,
+        [RolesConstants.Operador] = Permissoes.Operador,
+        [RolesConstants.Financeiro] = Permissoes.Financeiro,
+        [RolesConstants.Medico] = Permissoes.Medico,
+        [RolesConstants.Hospital] = Permissoes.Hospital
+    };
 
     public PermissionGuardService(UsuarioContextService usuarioContextService)
     {
@@ -105,6 +172,53 @@ public sealed class PermissionGuardService
         var atuais = usuarioContextService.GetRoles();
         return roles.Any(role => atuais.Any(r => string.Equals(r, role, StringComparison.OrdinalIgnoreCase)));
     }
+
+    public bool HasPermission(string permissao)
+    {
+        var roles = usuarioContextService.GetRoles();
+        return roles.Any(role => FallbackPermissoes.TryGetValue(role, out var permissoes)
+            && permissoes.Any(x => string.Equals(x, permissao, StringComparison.OrdinalIgnoreCase)));
+    }
+}
+
+public static class Permissoes
+{
+    public const string MedicosVer = "MEDICOS_VER";
+    public const string MedicosCriar = "MEDICOS_CRIAR";
+    public const string MedicosEditar = "MEDICOS_EDITAR";
+    public const string MedicosInativar = "MEDICOS_INATIVAR";
+    public const string HospitaisVer = "HOSPITAIS_VER";
+    public const string HospitaisCriar = "HOSPITAIS_CRIAR";
+    public const string HospitaisEditar = "HOSPITAIS_EDITAR";
+    public const string PlantoesVer = "PLANTOES_VER";
+    public const string PlantoesCriar = "PLANTOES_CRIAR";
+    public const string PlantoesEditar = "PLANTOES_EDITAR";
+    public const string PlantoesPublicar = "PLANTOES_PUBLICAR";
+    public const string PlantoesCancelar = "PLANTOES_CANCELAR";
+    public const string EscalasVer = "ESCALAS_VER";
+    public const string EscalasConfirmar = "ESCALAS_CONFIRMAR";
+    public const string EscalasRecusar = "ESCALAS_RECUSAR";
+    public const string EscalasCancelar = "ESCALAS_CANCELAR";
+    public const string FinanceiroVer = "FINANCEIRO_VER";
+    public const string FinanceiroConfirmar = "FINANCEIRO_CONFIRMAR";
+    public const string FinanceiroCancelar = "FINANCEIRO_CANCELAR";
+    public const string UsuariosGerenciar = "USUARIOS_GERENCIAR";
+    public const string ClientesGerenciar = "CLIENTES_GERENCIAR";
+    public const string PlanosGerenciar = "PLANOS_GERENCIAR";
+    public const string AssinaturasGerenciar = "ASSINATURAS_GERENCIAR";
+    public const string RelatoriosVer = "RELATORIOS_VER";
+    public const string AuditoriaVer = "AUDITORIA_VER";
+    public const string ObservabilidadeVer = "OBSERVABILIDADE_VER";
+    public const string ConfiguracoesEditar = "CONFIGURACOES_EDITAR";
+    public const string SuporteVer = "SUPORTE_VER";
+
+    public static readonly string[] Todas = new[] { MedicosVer, MedicosCriar, MedicosEditar, MedicosInativar, HospitaisVer, HospitaisCriar, HospitaisEditar, PlantoesVer, PlantoesCriar, PlantoesEditar, PlantoesPublicar, PlantoesCancelar, EscalasVer, EscalasConfirmar, EscalasRecusar, EscalasCancelar, FinanceiroVer, FinanceiroConfirmar, FinanceiroCancelar, UsuariosGerenciar, ClientesGerenciar, PlanosGerenciar, AssinaturasGerenciar, RelatoriosVer, AuditoriaVer, ObservabilidadeVer, ConfiguracoesEditar, SuporteVer };
+    public static readonly string[] AdminCliente = new[] { MedicosVer, MedicosCriar, MedicosEditar, MedicosInativar, HospitaisVer, HospitaisCriar, HospitaisEditar, PlantoesVer, PlantoesCriar, PlantoesEditar, PlantoesPublicar, PlantoesCancelar, EscalasVer, EscalasConfirmar, EscalasRecusar, EscalasCancelar, FinanceiroVer, FinanceiroConfirmar, FinanceiroCancelar, UsuariosGerenciar, RelatoriosVer, AuditoriaVer, ConfiguracoesEditar, SuporteVer };
+    public static readonly string[] Coordenacao = new[] { MedicosVer, HospitaisVer, PlantoesVer, PlantoesCriar, PlantoesEditar, PlantoesPublicar, PlantoesCancelar, EscalasVer, EscalasConfirmar, EscalasRecusar, EscalasCancelar, RelatoriosVer, SuporteVer };
+    public static readonly string[] Operador = new[] { MedicosVer, HospitaisVer, PlantoesVer, PlantoesCriar, PlantoesEditar, EscalasVer, EscalasConfirmar, EscalasRecusar, SuporteVer };
+    public static readonly string[] Financeiro = new[] { FinanceiroVer, FinanceiroConfirmar, FinanceiroCancelar, RelatoriosVer };
+    public static readonly string[] Medico = new[] { PlantoesVer, EscalasVer, EscalasConfirmar, EscalasRecusar, FinanceiroVer };
+    public static readonly string[] Hospital = new[] { PlantoesVer, EscalasVer, RelatoriosVer };
 }
 
 public sealed class AssinaturaGuardService
@@ -122,14 +236,14 @@ public sealed class AssinaturaGuardService
     {
         try
         {
-            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var assinatura = await cn.QueryFirstOrDefaultAsync<(string Status, Guid PlanoId)>(@"select a.status as Status, a.plano_id as PlanoId
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var assinatura = await cn.QueryFirstOrDefaultAsync<AssinaturaResumo>(@"select a.status as Status, a.plano_id as PlanoId
 from plantaopro.assinaturas a
 where a.cliente_id=@clienteId and a.reg_status='A'
 order by a.reg_date desc
 limit 1", new { clienteId });
 
-            if (assinatura == default) return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para uso mobile.", 403);
+            if (assinatura is null) return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para uso mobile.", 403);
 
             if (string.Equals(assinatura.Status, "suspensa", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(assinatura.Status, "cancelada", StringComparison.OrdinalIgnoreCase)
@@ -148,5 +262,11 @@ limit 1", new { clienteId });
             logger.LogError(ex, "Erro ao validar acesso mobile por assinatura. cliente:{ClienteId}", clienteId);
             return ApiResponse<bool>.Fail("Não foi possível validar permissão mobile no momento.", 500);
         }
+    }
+
+    public sealed class AssinaturaResumo
+    {
+        public string Status { get; set; } = string.Empty;
+        public Guid PlanoId { get; set; }
     }
 }

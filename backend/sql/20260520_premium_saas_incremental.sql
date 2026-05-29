@@ -59,8 +59,18 @@ CREATE INDEX IF NOT EXISTS ix_notificacoes_envio_log_reg_date ON notificacoes_en
 CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_entidade ON auditoria_acoes_criticas(entidade, reg_date DESC);
 CREATE INDEX IF NOT EXISTS ix_historico_alteracoes_registro ON historico_alteracoes(registro_id, reg_date DESC);
 
-ALTER TABLE IF EXISTS pagamentos
-    ADD CONSTRAINT IF NOT EXISTS ck_pagamentos_valores_positivos CHECK (valor_previsto >= 0 AND (valor_pago IS NULL OR valor_pago >= 0));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_valores_positivos'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_valores_positivos
+        CHECK (valor_previsto >= 0 AND (valor_pago IS NULL OR valor_pago >= 0));
+    END IF;
+END $$;
 
 
 -- Regras premium SaaS: score de prioridade, limites semanais, notificacoes e constraints de pagamentos

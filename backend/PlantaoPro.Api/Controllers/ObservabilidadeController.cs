@@ -8,7 +8,7 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
 [Route("api/observabilidade")]
-[Authorize(Roles = "ADMINISTRADOR_GLOBAL")]
+[Authorize(Roles = RolesConstants.AdministradorGlobal)]
 public sealed class ObservabilidadeController : ControllerBase
 {
     private readonly IConfiguration _cfg;
@@ -25,11 +25,13 @@ public sealed class ObservabilidadeController : ControllerBase
     {
         try
         {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var data = await cn.QueryFirstAsync(@"select
                 (select count(*) from plantaopro.api_request_logs where reg_date::date = current_date) as TotalRequestsHoje,
                 (select count(*) from plantaopro.api_error_logs where reg_date::date = current_date) as TotalErrosHoje,
                 coalesce((select avg(duration_ms) from plantaopro.api_request_logs where reg_date::date = current_date),0) as TempoMedioMs,
+                (select count(*) from plantaopro.api_request_logs where status_code in (401,403) and reg_date::date = current_date) as AcessosNegadosHoje,
+                (select count(*) from plantaopro.auditoria_acoes_criticas where acao in ('LOGIN_SUCESSO','LOGIN_FALHA') and reg_date::date = current_date) as LoginsHoje,
                 (select count(*) from plantaopro.usuarios where reg_status = 'A') as UsuariosAtivos");
             return Ok(ApiResponse<object>.Ok(data, "Resumo de observabilidade carregado."));
         }
@@ -45,10 +47,10 @@ public sealed class ObservabilidadeController : ControllerBase
     {
         try
         {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode,
-                error_message as ErrorMessage, reg_date as Data
-                from plantaopro.api_error_logs order by reg_date desc limit @limit", new { limit });
+                error_message as ErrorMessage, perfil as Perfil, ip as Ip, reg_date as Data
+                from plantaopro.api_error_logs order by reg_date desc limit @limit", new { limit = NormalizarLimit(limit) });
             return Ok(ApiResponse<object>.Ok(data, "Erros carregados."));
         }
         catch (Exception ex)
@@ -63,19 +65,79 @@ public sealed class ObservabilidadeController : ControllerBase
     {
         try
         {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo,
                 avg(duration_ms) as TempoMedioMs, max(duration_ms) as TempoMaximoMs, count(*) as Total
                 from plantaopro.api_request_logs
                 group by endpoint, method
                 order by avg(duration_ms) desc
-                limit @limit", new { limit });
+                limit @limit", new { limit = NormalizarLimit(limit) });
             return Ok(ApiResponse<object>.Ok(data, "Performance carregada."));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao carregar performance");
             return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar performance.", 500));
+        }
+    }
+
+    [HttpGet("acessos-negados")]
+    public async Task<IActionResult> AcessosNegados([FromQuery] int limit = 50)
+    {
+        try
+        {
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode,
+                usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, ip as Ip, reg_date as Data
+                from plantaopro.api_request_logs
+                where status_code in (401,403)
+                order by reg_date desc limit @limit", new { limit = NormalizarLimit(limit) });
+            return Ok(ApiResponse<object>.Ok(data, "Acessos negados carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar acessos negados");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar acessos negados.", 500));
+        }
+    }
+
+    [HttpGet("logins")]
+    public async Task<IActionResult> Logins([FromQuery] int limit = 50)
+    {
+        try
+        {
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select usuario_id as UsuarioId, cliente_id as ClienteId, acao as Acao,
+                sucesso as Sucesso, ip_origem as Ip, perfil as Perfil, reg_date as Data
+                from plantaopro.auditoria_acoes_criticas
+                where acao in ('LOGIN_SUCESSO','LOGIN_FALHA')
+                order by reg_date desc limit @limit", new { limit = NormalizarLimit(limit) });
+            return Ok(ApiResponse<object>.Ok(data, "Logins carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar logins");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar logins.", 500));
+        }
+    }
+
+    [HttpGet("requests")]
+    public async Task<IActionResult> Requests([FromQuery] int limit = 50)
+    {
+        try
+        {
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode,
+                duration_ms as DuracaoMs, usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, ip as Ip,
+                sucesso as Sucesso, error_message as ErrorMessage, reg_date as Data
+                from plantaopro.api_request_logs
+                order by reg_date desc limit @limit", new { limit = NormalizarLimit(limit) });
+            return Ok(ApiResponse<object>.Ok(data, "Requests carregadas."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar requests");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar requests.", 500));
         }
     }
 
@@ -87,7 +149,7 @@ public sealed class ObservabilidadeController : ControllerBase
     {
         try
         {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var ok = await cn.ExecuteScalarAsync<int>("select 1");
             return Ok(ApiResponse<object>.Ok(new { Status = ok == 1 ? "Saudável" : "Atenção", Timestamp = DateTime.UtcNow }, "Status do banco carregado."));
         }
@@ -103,10 +165,10 @@ public sealed class ObservabilidadeController : ControllerBase
     {
         try
         {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var data = await cn.QueryAsync(@"select job_name as Nome, status as Status, message as Mensagem,
                 duration_ms as DuracaoMs, reg_date as Data
-                from plantaopro.background_job_logs order by reg_date desc limit @limit", new { limit });
+                from plantaopro.background_job_logs order by reg_date desc limit @limit", new { limit = NormalizarLimit(limit) });
             return Ok(ApiResponse<object>.Ok(data, "Jobs carregados."));
         }
         catch (Exception ex)
@@ -115,4 +177,6 @@ public sealed class ObservabilidadeController : ControllerBase
             return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar jobs.", 500));
         }
     }
+
+    private static int NormalizarLimit(int limit) => limit <= 0 || limit > 200 ? 50 : limit;
 }

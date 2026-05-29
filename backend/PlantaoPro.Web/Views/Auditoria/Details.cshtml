@@ -1,0 +1,17 @@
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
+@{
+    ViewData["Title"] = "Detalhe de auditoria";
+    var item = Model.Data;
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Detalhe de auditoria","Análise segura do evento selecionado.","bi-card-checklist","Voltar",Url.Action("Index", "Auditoria"),null,false)' />
+@if (Model.IsPlaceholder || item is null)
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-exclamation-triangle","Registro indisponível",Model.ErrorMessage ?? "Não foi possível carregar o registro.")' />
+}
+else
+{
+    <div class="row g-3">
+        <div class="col-12 col-lg-4"><div class="card border-0 shadow-sm"><div class="card-body"><h5>Dados principais</h5><dl class="mb-0"><dt>Ação</dt><dd><span class="badge text-bg-primary">@item.Acao</span></dd><dt>Entidade</dt><dd>@item.Entidade</dd><dt>Status</dt><dd>@if (item.Sucesso) { <span class="badge text-bg-success">Sucesso</span> } else { <span class="badge text-bg-danger">Falha</span> }</dd><dt>Data/hora</dt><dd>@item.DataHora.ToString("dd/MM/yyyy HH:mm:ss")</dd><dt>IP</dt><dd>@(item.Ip ?? "-")</dd><dt>Perfil</dt><dd>@(item.Perfil ?? "-")</dd></dl></div></div></div>
+        <div class="col-12 col-lg-8"><div class="card border-0 shadow-sm"><div class="card-body"><h5>Detalhes JSON</h5><pre class="bg-light border rounded p-3 small mb-0">@(string.IsNullOrWhiteSpace(item.Detalhes) ? "{}" : item.Detalhes)</pre></div></div></div>
+    </div>
+}

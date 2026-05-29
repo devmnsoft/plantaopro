@@ -1,14 +1,28 @@
 using Dapper;
 using Npgsql;
+using PlantaoPro.Api;
 using PlantaoPro.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
     {
+        Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default);
+
         Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null);
     }
     public sealed class AuditService : IAuditService
@@ -22,33 +36,134 @@ namespace PlantaoPro.Api.Data
             this.logger = logger;
         }
 
-        public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
+        public async Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default)
         {
             try
             {
-                await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-                await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
-                {
-                    u = userId,
-                    a = acao,
-                    e = entidade,
-                    r = registroId,
-                    ip,
-                    d = descricao,
-                    va = valorAnterior,
-                    vn = valorNovo,
-                    ua = userAgent
-                });
+                var detalhesJson = JsonSerializer.Serialize(SanitizarDetalhes(detalhes));
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.auditoria_acoes_criticas
+                    (id,usuario_id,cliente_id,entidade,entidade_id,acao,detalhes,sucesso,ip_origem,perfil,reg_date)
+                    values (gen_random_uuid(),@usuarioId,@clienteId,@entidade,@entidadeId,@acao,cast(@detalhes as jsonb),@sucesso,@ipOrigem,@perfil,now())",
+                    new
+                    {
+                        usuarioId,
+                        clienteId,
+                        entidade = Normalizar(entidade),
+                        entidadeId,
+                        acao = Normalizar(acao),
+                        detalhes = detalhesJson,
+                        sucesso,
+                        ipOrigem,
+                        perfil
+                    }, cancellationToken: ct));
             }
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Falha ao registrar auditoria. UsuarioId={UsuarioId} Acao={Acao} Entidade={Entidade} RegistroId={RegistroId}",
-                    userId,
+                    "Falha ao registrar auditoria central. UsuarioId={UsuarioId} ClienteId={ClienteId} Acao={Acao} Entidade={Entidade} EntidadeId={EntidadeId}",
+                    usuarioId,
+                    clienteId,
                     acao,
                     entidade,
-                    registroId);
+                    entidadeId);
             }
+        }
+
+        public Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
+        {
+            var detalhes = new
+            {
+                descricao,
+                valorAnterior,
+                valorNovo,
+                userAgent
+            };
+
+            return RegistrarAsync(userId, null, entidade, registroId, MapearAcaoLegada(acao), detalhes, true, ip, null);
+        }
+
+        private static string Normalizar(string value) => string.IsNullOrWhiteSpace(value) ? "NAO_INFORMADO" : value.Trim().ToUpperInvariant();
+
+        private static string MapearAcaoLegada(string acao)
+        {
+            var normalizada = Normalizar(acao);
+            return normalizada switch
+            {
+                "LOGIN" => AuditoriaConstants.Acoes.LoginSucesso,
+                "CREATE" => AuditoriaConstants.Acoes.Criar,
+                "UPDATE" => AuditoriaConstants.Acoes.Editar,
+                "DELETE" => AuditoriaConstants.Acoes.Inativar,
+                "ACEITAR" => AuditoriaConstants.Acoes.ConfirmarEscala,
+                _ => normalizada
+            };
+        }
+
+        private static object? SanitizarDetalhes(object? detalhes)
+        {
+            if (detalhes is null) return null;
+            var json = JsonSerializer.Serialize(detalhes);
+            using var doc = JsonDocument.Parse(json);
+            return SanitizarElemento(doc.RootElement);
+        }
+
+        private static object? SanitizarElemento(JsonElement element)
+        {
+            if (element.ValueKind == JsonValueKind.Object)
+            {
+                var dict = new Dictionary<string, object?>();
+                foreach (var prop in element.EnumerateObject())
+                {
+                    if (EhCampoSensivel(prop.Name))
+                    {
+                        dict[prop.Name] = "***";
+                    }
+                    else
+                    {
+                        dict[prop.Name] = SanitizarElemento(prop.Value);
+                    }
+                }
+
+                return dict;
+            }
+
+            if (element.ValueKind == JsonValueKind.Array)
+            {
+                var list = new List<object?>();
+                foreach (var item in element.EnumerateArray())
+                {
+                    list.Add(SanitizarElemento(item));
+                }
+
+                return list;
+            }
+
+            if (element.ValueKind == JsonValueKind.String) return element.GetString();
+            if (element.ValueKind == JsonValueKind.Number && element.TryGetInt64(out var longValue)) return longValue;
+            if (element.ValueKind == JsonValueKind.Number && element.TryGetDecimal(out var decimalValue)) return decimalValue;
+            if (element.ValueKind == JsonValueKind.True) return true;
+            if (element.ValueKind == JsonValueKind.False) return false;
+            return null;
+        }
+
+        private static bool EhCampoSensivel(string nome)
+        {
+            return nome.Contains("senha", StringComparison.OrdinalIgnoreCase)
+                || nome.Contains("password", StringComparison.OrdinalIgnoreCase)
+                || nome.Contains("token", StringComparison.OrdinalIgnoreCase)
+                || nome.Contains("hash", StringComparison.OrdinalIgnoreCase)
+                || nome.Contains("secret", StringComparison.OrdinalIgnoreCase)
+                || nome.Contains("segredo", StringComparison.OrdinalIgnoreCase);
         }
     }
     public sealed class AuthService
@@ -69,13 +184,14 @@ namespace PlantaoPro.Api.Data
             {
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 await GarantirTabelaTentativasAsync(cn);
-                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
+                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
                     Email = normalizedEmail
                 });
                 if (user is null)
                 {
                     await RegistrarTentativaAsync(cn, null, normalizedEmail, ip, ua, false, "USER_NOT_FOUND");
+                    await audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Usuario, null, AuditoriaConstants.Acoes.LoginFalha, new { email = normalizedEmail, motivo = "USER_NOT_FOUND", userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login negado: usuário não encontrado Email:{Email} IP:{Ip}", normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
@@ -91,6 +207,7 @@ namespace PlantaoPro.Api.Data
                 {
                     var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
+                    await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginFalha, new { motivo = "LOCKED_ACTIVE", bloqueadoAte = bloqueioAte.Value, userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
                     return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
@@ -98,6 +215,7 @@ namespace PlantaoPro.Api.Data
                 if (!string.Equals(regStatus, "A", StringComparison.OrdinalIgnoreCase))
                 {
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "USER_INACTIVE");
+                    await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginFalha, new { motivo = "USER_INACTIVE", userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário inativo. Contate o administrador.", 403);
                 }
@@ -105,6 +223,7 @@ namespace PlantaoPro.Api.Data
                 if (string.IsNullOrWhiteSpace(senhaHash))
                 {
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "PASSWORD_HASH_EMPTY");
+                    await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginFalha, new { motivo = "PASSWORD_HASH_EMPTY", userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
@@ -142,6 +261,7 @@ namespace PlantaoPro.Api.Data
                     var proximaTentativa = tentativasFalhas + 1;
                     DateTime? novoBloqueio = proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
+                    await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginFalha, new { motivo = "INVALID_PASSWORD", tentativa = proximaTentativa, bloqueado = novoBloqueio.HasValue, userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Tentativa:{Tentativa} Email:{Email} IP:{Ip}", usuarioId, proximaTentativa, normalizedEmail, ip);
                     if (novoBloqueio.HasValue)
                         return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
@@ -153,12 +273,14 @@ namespace PlantaoPro.Api.Data
                 })).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
                 if (roles.Length == 0)
                 {
+                    await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginFalha, new { motivo = "SEM_PERFIL", userAgent = ua }, false, ip, null);
                     logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles);
+                Guid? clienteIdToken = user.cliente_id is Guid ? (Guid)user.cliente_id : null;
+                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteIdToken);
                 await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
-                await audit.LogAsync(usuarioId, "LOGIN", "usuarios", usuarioId, "Login", ip: ip, userAgent: ua);
+                await audit.RegistrarAsync(usuarioId, null, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { userAgent = ua }, true, ip, string.Join(',', roles));
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
                 return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles), "Login realizado com sucesso.");
             }
@@ -190,10 +312,11 @@ namespace PlantaoPro.Api.Data
                     motivo,
                     bloqueadoAte
                 });
-        string GenerateToken(Guid uid, string email, string[] roles)
+        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId)
         {
             var jwt = cfg.GetSection("Jwt");
-            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
+            var claims = new List<Claim> { new Claim(JwtRegisteredClaimNames.Sub, uid.ToString()), new Claim(ClaimTypes.Name, email), new Claim(ClaimTypes.Email, email), new Claim("uid", uid.ToString()) };
+            if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
             claims.AddRange(roles.Select(NormalizeRole).Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => new Claim(ClaimTypes.Role, r!)));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

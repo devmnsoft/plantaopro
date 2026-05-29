@@ -1,16 +1,18 @@
 @using System.Text.Json
 @{
     ViewData["Title"] = "Observabilidade";
+    var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 }
 <div class="container-fluid">
-    <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Observabilidade SaaS","Saúde operacional da plataforma","bi-activity")' />
+    <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Observabilidade SaaS","Saúde operacional, segurança e performance da plataforma.","bi-activity")' />
 
-    <div class="alert alert-info"><i class="bi bi-shield-check"></i> Visão segura para demonstração, sem exposição de stack trace.</div>
+    <div class="alert alert-info border-0 shadow-sm"><i class="bi bi-shield-check"></i> Dados sensíveis e stack traces completos são mascarados antes de aparecer neste painel.</div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Resumo rápido</h5>
-            <pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Resumo, new JsonSerializerOptions { WriteIndented = true })</pre>
-        </div>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-xl-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h5>Resumo executivo</h5><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.Resumo, jsonOptions)</pre></div></div></div>
+        <div class="col-12 col-xl-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h5>Endpoints mais lentos</h5><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.Performance, jsonOptions)</pre></div></div></div>
+        <div class="col-12 col-xl-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h5>Últimos erros</h5><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.Erros, jsonOptions)</pre></div></div></div>
+        <div class="col-12 col-xl-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h5>Acessos negados</h5><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.AcessosNegados, jsonOptions)</pre></div></div></div>
+        <div class="col-12 col-xl-6"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h5>Últimos logins</h5><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.Logins, jsonOptions)</pre></div></div></div>
     </div>
 </div>

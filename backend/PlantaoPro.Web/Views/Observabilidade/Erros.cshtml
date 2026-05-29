@@ -1,0 +1,4 @@
+@using System.Text.Json
+@{ ViewData["Title"] = "Erros"; var jsonOptions = new JsonSerializerOptions { WriteIndented = true }; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Erros Web/API","Últimas falhas registradas sem stack trace sensível.","bi-bug","Voltar",Url.Action("Index", "Observabilidade"),null,false)' />
+<div class="card border-0 shadow-sm"><div class="card-body"><pre class="small mb-0 bg-light border rounded p-3">@JsonSerializer.Serialize(ViewBag.Erros, jsonOptions)</pre></div></div>

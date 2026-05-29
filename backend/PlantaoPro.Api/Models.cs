@@ -101,6 +101,55 @@ public record ClienteDto(Guid Id,string RazaoSocial,string NomeFantasia,string C
 public record CreateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status);
 public record UpdateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus);
 
+
+public sealed class ConflitoHorarioResultadoDto
+{
+    public bool PossuiConflito { get; set; }
+    public long TotalConflitos { get; set; }
+    public string Grau { get; set; } = string.Empty;
+    public string Mensagem { get; set; } = string.Empty;
+    public IEnumerable<PlantaoPro.Api.ConflitoHorarioDetalheDto> Conflitos { get; set; } = Array.Empty<PlantaoPro.Api.ConflitoHorarioDetalheDto>();
+}
+
+public record VerificarConflitoRequest(Guid MedicoId,DateTime DataInicio,DateTime DataFim,Guid? EscalaIgnoradaId);
+
+public sealed class MedicoRecomendadoDto
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Crm { get; set; } = string.Empty;
+    public string Especialidade { get; set; } = string.Empty;
+    public decimal ScoreRecomendacao { get; set; }
+    public IEnumerable<string> Motivos { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> Alertas { get; set; } = Array.Empty<string>();
+    public bool PossuiConflito { get; set; }
+    public bool Disponivel { get; set; }
+    public bool JaConvidado { get; set; }
+    public bool JaEscalado { get; set; }
+}
+
+public record ConvidarRecomendadosRequest(IEnumerable<Guid> MedicoIds,string? Mensagem);
+
+public sealed class CentralEscalaPendenciaDto
+{
+    public string Tipo { get; set; } = string.Empty;
+    public string Prioridade { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public Guid? ReferenciaId { get; set; }
+    public DateTime? DataReferencia { get; set; }
+}
+
+public sealed class CentralEscalaAcaoRecomendadaDto
+{
+    public string Codigo { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Severidade { get; set; } = string.Empty;
+    public string UrlSugerida { get; set; } = string.Empty;
+    public Guid? ReferenciaId { get; set; }
+}
+
 public record OperacaoPlantaoCriticoDto(Guid Id,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,int VagasDisponiveis,string Status);
 public record OperacaoEscalaPendenteDto(Guid Id,string MedicoNome,string HospitalNome,DateTime DataInicio,DateTime DataFim,string Status);
 public record OperacaoPagamentoPendenteDto(Guid Id,string MedicoNome,string HospitalNome,decimal ValorPrevisto,string Status,DateOnly? DataPrevista);

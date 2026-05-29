@@ -1,30 +1,29 @@
-# Motor de conflito de horário
+# Regras de conflito de horário
 
-## Fórmula de conflito
-Há conflito quando:
+## Sobreposição
+Um conflito existe quando:
 
-`novoInicio < escalaExistenteFim AND novoFim > escalaExistenteInicio`
+```text
+novoInicio < escalaExistenteFim
+AND
+novoFim > escalaExistenteInicio
+```
 
 ## Status considerados
-Considerar:
-- `SOLICITADA`
-- `CONFIRMADA`
-- `EM_ANDAMENTO`
+- `SOLICITADA` / `solicitado`
+- `CONFIRMADA` / `confirmado`
+- `EM_ANDAMENTO` / `em_andamento`
 
-Não considerar:
+## Status ignorados
 - `CANCELADA`
 - `RECUSADA`
 - `SUBSTITUIDA`
+- `REALIZADA` não bloqueia novos plantões futuros quando não há sobreposição ativa.
 
-## Contrato esperado
-- `PossuiConflito`
-- `TotalConflitos`
-- `Conflitos[]`
-- `Grau` (`LEVE`, `MODERADO`, `CRITICO`)
+## Endpoints
+- `POST /api/conflitos/verificar`
+- `GET /api/conflitos/medico/{medicoId}`
+- `GET /api/conflitos/plantao/{plantaoId}`
 
-## Aplicação obrigatória
-- Solicitação de plantão.
-- Aceite de convite.
-- Confirmação de escala.
-- Substituição de escala.
-- Geração de recomendação médica.
+## Retorno
+O retorno usa `ApiResponse<ConflitoHorarioResultadoDto>` com `PossuiConflito`, `TotalConflitos`, `Grau`, `Mensagem` e lista de conflitos.

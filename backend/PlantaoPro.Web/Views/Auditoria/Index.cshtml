@@ -36,12 +36,12 @@
                 {
                     <tr>
                         <td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td><code>@(log.UsuarioId?.ToString() ?? "-")</code></td>
-                        <td><code>@(log.ClienteId?.ToString() ?? "-")</code></td>
+                        <td><div>@(string.IsNullOrWhiteSpace(log.UsuarioNome) ? "-" : log.UsuarioNome)</div><code class="small">@(log.UsuarioId?.ToString() ?? "-")</code></td>
+                        <td><div>@(string.IsNullOrWhiteSpace(log.ClienteNome) ? "-" : log.ClienteNome)</div><code class="small">@(log.ClienteId?.ToString() ?? "-")</code></td>
                         <td><span class="badge bg-secondary">@log.Perfil</span></td>
                         <td><span class="badge bg-info text-dark">@log.Acao</span></td>
                         <td>@log.Entidade</td>
-                        <td>@(log.IpOrigem ?? log.Ip)</td>
+                        <td>@(string.IsNullOrWhiteSpace(log.IpOrigem) ? "-" : log.IpOrigem)</td>
                         <td>@if (log.Sucesso) { <span class="badge bg-success">Sucesso</span> } else { <span class="badge bg-danger">Falha</span> }</td>
                         <td><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@log.Id">Detalhes</a></td>
                     </tr>

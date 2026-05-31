@@ -98,22 +98,78 @@ public record DashboardChartItem(string Label, decimal Valor);
         public Guid Id { get; set; }
         public Guid? UsuarioId { get; set; }
         public Guid? ClienteId { get; set; }
-        public string Usuario { get; set; } = string.Empty;
+        public string UsuarioNome { get; set; } = string.Empty;
+        public string ClienteNome { get; set; } = string.Empty;
+        public string Perfil { get; set; } = string.Empty;
         public string Entidade { get; set; } = string.Empty;
         public Guid? EntidadeId { get; set; }
-        public string Registro { get; set; } = string.Empty;
         public string Acao { get; set; } = string.Empty;
         public bool Sucesso { get; set; }
         public string IpOrigem { get; set; } = string.Empty;
-        public string Ip { get; set; } = string.Empty;
-        public string Perfil { get; set; } = string.Empty;
+        public DateTime RegDate { get; set; }
+
+        public string Usuario
+        {
+            get => UsuarioNome;
+            set => UsuarioNome = value ?? string.Empty;
+        }
+
+        public string Ip
+        {
+            get => IpOrigem;
+            set => IpOrigem = value ?? string.Empty;
+        }
+
+        public string Registro { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
-        public DateTime DataHora { get; set; }
+
+        public DateTime DataHora
+        {
+            get => RegDate;
+            set => RegDate = value;
+        }
     }
 
-    public sealed class AuditoriaDetalheDto : AuditoriaDto
+    public sealed class AuditoriaDetalheDto
     {
-        public string Detalhes { get; set; } = "{}";
+        public Guid Id { get; set; }
+        public Guid? UsuarioId { get; set; }
+        public Guid? ClienteId { get; set; }
+        public string UsuarioNome { get; set; } = string.Empty;
+        public string ClienteNome { get; set; } = string.Empty;
+        public string Perfil { get; set; } = string.Empty;
+        public string Entidade { get; set; } = string.Empty;
+        public Guid? EntidadeId { get; set; }
+        public string Acao { get; set; } = string.Empty;
+        public bool Sucesso { get; set; }
+        public string IpOrigem { get; set; } = string.Empty;
+        public string UserAgent { get; set; } = string.Empty;
+        public string DetalhesJson { get; set; } = "{}";
+        public DateTime RegDate { get; set; }
+
+        public string Usuario
+        {
+            get => UsuarioNome;
+            set => UsuarioNome = value ?? string.Empty;
+        }
+
+        public string Ip
+        {
+            get => IpOrigem;
+            set => IpOrigem = value ?? string.Empty;
+        }
+
+        public string Detalhes
+        {
+            get => DetalhesJson;
+            set => DetalhesJson = string.IsNullOrWhiteSpace(value) ? "{}" : value;
+        }
+
+        public DateTime DataHora
+        {
+            get => RegDate;
+            set => RegDate = value;
+        }
     }
 
     public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Exportacoes);

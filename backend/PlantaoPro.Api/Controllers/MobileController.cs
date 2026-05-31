@@ -3,6 +3,7 @@ using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 
@@ -22,8 +23,9 @@ public class MobileController : ControllerBase
     private readonly ILogger<MobileController> _logger;
     private readonly UsuarioContextService _usuarioContext;
     private readonly AssinaturaGuardService _assinaturaGuard;
+    private readonly IAuditService _audit;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
@@ -57,6 +59,7 @@ public class MobileController : ControllerBase
         if (!permissao.Success)
         {
             _logger.LogWarning("Acesso mobile negado por plano cliente:{ClienteId} uid:{Uid}", clienteId, GetUserId());
+            await _audit.RegistrarAsync(GetUserId(), clienteId, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.AcessoNegado, new { motivo = permissao.Message }, false, GetIp(), GetPerfil());
             return permissao;
         }
 
@@ -266,7 +269,8 @@ public class MobileController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' limit 1", new { uid });
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' and (@clienteId is null or cliente_id=@clienteId) limit 1", new { uid, clienteId });
             if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
             var lista = await _recomendacaoService.RecomendarPlantoesAsync(medicoId.Value, limite);
             return Ok(ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Ok(lista, "Recomendações carregadas com sucesso."));
@@ -296,11 +300,12 @@ public class MobileController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var clienteId = _usuarioContext.GetClienteId();
             var row = await cn.QueryFirstOrDefaultAsync(@"select p.id, h.nome_fantasia as hospitalNome, e.nome as especialidadeNome, p.data_inicio as dataInicio, p.data_fim as dataFim, p.valor, p.vagas_disponiveis as vagasDisponiveis, p.status
 from plantaopro.plantoes p
 join plantaopro.hospitais h on h.id=p.hospital_id
 join plantaopro.especialidades e on e.id=p.especialidade_id
-where p.id=@id and p.reg_status='A'", new { id });
+where p.id=@id and p.reg_status='A' and (@clienteId is null or p.cliente_id=@clienteId)", new { id, clienteId });
             if (row is null) return NotFound(ApiResponse<object>.Fail("Plantão não encontrado.", 404));
             return Ok(ApiResponse<object>.Ok(row, "Plantão carregado."));
         }
@@ -318,11 +323,19 @@ where p.id=@id and p.reg_status='A'", new { id });
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' limit 1", new { uid });
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' and (@clienteId is null or cliente_id=@clienteId) limit 1", new { uid, clienteId });
             if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
+            var plantaoPermitido = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.plantoes where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { id, clienteId });
+            if (plantaoPermitido == 0)
+            {
+                await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.ApiMobile, id, AuditoriaConstants.Acoes.AcessoNegado, new { motivo = "plantao_fora_do_cliente" }, false, GetIp(), GetPerfil());
+                return StatusCode(403, ApiResponse<object>.Fail("Você não possui permissão para acessar este plantão.", 403));
+            }
             var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas where plantao_id=@id and medico_id=@medico and reg_status='A'", new { id, medico = medicoId });
             if (exists > 0) return BadRequest(ApiResponse<object>.Fail("Solicitação já existe para este plantão.", 400));
             await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,reg_status,reg_date) values(gen_random_uuid(),@id,@medico,'solicitado','A',now())", new { id, medico = medicoId });
+            await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Escala, null, AuditoriaConstants.Acoes.SolicitarEscala, new { plantaoId = id, medicoId }, true, GetIp(), GetPerfil());
             return Ok(ApiResponse<object>.Ok(new { id }, "Solicitação enviada com sucesso."));
         }
         catch (Exception ex)

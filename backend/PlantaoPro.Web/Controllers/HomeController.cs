@@ -185,6 +185,15 @@ namespace PlantaoPro.Web.Controllers
 
         [HttpGet]
         [AllowAnonymous]
+        public IActionResult StatusCode(int code)
+        {
+            if (code == 404) return View("~/Views/Shared/NotFound.cshtml");
+            if (code == 403) return RedirectToAction(nameof(AccessDenied));
+            return View("~/Views/Shared/Error.cshtml");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
         public IActionResult ForgotPassword() => View(new ForgotPasswordViewModel());
 
         [HttpPost]

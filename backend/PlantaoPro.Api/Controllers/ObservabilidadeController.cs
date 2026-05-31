@@ -79,6 +79,61 @@ public sealed class ObservabilidadeController : ControllerBase
         }
     }
 
+    [HttpGet("requests")]
+    public async Task<IActionResult> Requests([FromQuery] int limit = 50)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode, usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, ip as Ip, duration_ms as DuracaoMs, sucesso as Sucesso, reg_date as Data
+                from plantaopro.api_request_logs order by reg_date desc limit @limit", new { limit });
+            return Ok(ApiResponse<object>.Ok(data, "Requests carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar requests");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar requests.", 500));
+        }
+    }
+
+    [HttpGet("acessos-negados")]
+    public async Task<IActionResult> AcessosNegados([FromQuery] int limit = 50)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, entidade as Entidade, entidade_id as EntidadeId, acao as Acao, detalhes::text as Detalhes, ip_origem as Ip, reg_date as Data
+                from plantaopro.auditoria_acoes_criticas
+                where acao in ('ACESSO_NEGADO','BLOQUEIO_TENANT','BLOQUEIO_PERMISSAO')
+                order by reg_date desc limit @limit", new { limit });
+            return Ok(ApiResponse<object>.Ok(data, "Acessos negados carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar acessos negados");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar acessos negados.", 500));
+        }
+    }
+
+    [HttpGet("logins")]
+    public async Task<IActionResult> Logins([FromQuery] int limit = 50)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var data = await cn.QueryAsync(@"select usuario_id as UsuarioId, perfil as Perfil, acao as Acao, sucesso as Sucesso, ip_origem as Ip, reg_date as Data
+                from plantaopro.auditoria_acoes_criticas
+                where acao in ('LOGIN_SUCESSO','LOGIN_FALHA')
+                order by reg_date desc limit @limit", new { limit });
+            return Ok(ApiResponse<object>.Ok(data, "Logins carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar logins");
+            return StatusCode(500, ApiResponse<string>.Fail("Falha ao carregar logins.", 500));
+        }
+    }
+
     [HttpGet("endpoints")]
     public Task<IActionResult> Endpoints([FromQuery] int limit = 20) => Performance(limit);
 

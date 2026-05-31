@@ -1,16 +1,16 @@
 @using System.Text.Json
 @{
     ViewData["Title"] = "Observabilidade";
+    var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 }
 <div class="container-fluid">
-    <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Observabilidade SaaS","Saúde operacional da plataforma","bi-activity")' />
+    <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Observabilidade SaaS", "Saúde operacional da plataforma sem exposição de dados sensíveis.", "bi-activity")' />
 
-    <div class="alert alert-info"><i class="bi bi-shield-check"></i> Visão segura para demonstração, sem exposição de stack trace.</div>
+    <div class="alert alert-info"><i class="bi bi-shield-check"></i> Visão restrita a ADMINISTRADOR_GLOBAL. Stack traces e payloads sensíveis são mascarados.</div>
 
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title">Resumo rápido</h5>
-            <pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Resumo, new JsonSerializerOptions { WriteIndented = true })</pre>
-        </div>
+    <div class="row g-4">
+        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white fw-semibold">Resumo</div><div class="card-body"><pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Resumo, jsonOptions)</pre></div></div></div>
+        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white fw-semibold">Endpoints lentos</div><div class="card-body"><pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Performance, jsonOptions)</pre></div></div></div>
+        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white fw-semibold">Últimos erros</div><div class="card-body"><pre class="small mb-0">@JsonSerializer.Serialize(ViewBag.Erros, jsonOptions)</pre></div></div></div>
     </div>
 </div>

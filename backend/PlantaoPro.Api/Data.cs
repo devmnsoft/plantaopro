@@ -4,11 +4,24 @@ using PlantaoPro.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
     {
+        Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default);
+
         Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null);
     }
     public sealed class AuditService : IAuditService
@@ -22,11 +35,52 @@ namespace PlantaoPro.Api.Data
             this.logger = logger;
         }
 
-        public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
+        public async Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default)
         {
             try
             {
-                await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                var detalhesJson = SanitizarDetalhes(detalhes);
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.auditoria_acoes_criticas
+(id, usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date, reg_status)
+values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao, cast(@detalhes as jsonb), @sucesso, @ipOrigem, @perfil, now(), 'A')",
+                    new { usuarioId, clienteId, entidade, entidadeId, acao, detalhes = detalhesJson, sucesso, ipOrigem, perfil }, cancellationToken: ct));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Falha ao registrar auditoria central. UsuarioId={UsuarioId} ClienteId={ClienteId} Acao={Acao} Entidade={Entidade} EntidadeId={EntidadeId}",
+                    usuarioId,
+                    clienteId,
+                    acao,
+                    entidade,
+                    entidadeId);
+            }
+        }
+
+        public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
+        {
+            await RegistrarAsync(userId, null, entidade, registroId, acao, new
+            {
+                descricao,
+                valorAnterior = MascararTexto(valorAnterior),
+                valorNovo = MascararTexto(valorNovo),
+                userAgent = MascararTexto(userAgent)
+            }, true, ip, null);
+
+            try
+            {
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
                 {
                     u = userId,
@@ -35,20 +89,56 @@ namespace PlantaoPro.Api.Data
                     r = registroId,
                     ip,
                     d = descricao,
-                    va = valorAnterior,
-                    vn = valorNovo,
-                    ua = userAgent
+                    va = MascararTexto(valorAnterior),
+                    vn = MascararTexto(valorNovo),
+                    ua = MascararTexto(userAgent)
                 });
             }
             catch (Exception ex)
             {
                 logger.LogError(ex,
-                    "Falha ao registrar auditoria. UsuarioId={UsuarioId} Acao={Acao} Entidade={Entidade} RegistroId={RegistroId}",
+                    "Falha ao registrar auditoria legada. UsuarioId={UsuarioId} Acao={Acao} Entidade={Entidade} RegistroId={RegistroId}",
                     userId,
                     acao,
                     entidade,
                     registroId);
             }
+        }
+
+        private static string SanitizarDetalhes(object? detalhes)
+        {
+            if (detalhes is null) return "{}";
+            var json = detalhes is string texto ? texto : JsonSerializer.Serialize(detalhes);
+            var sanitizado = MascararTexto(json) ?? "{}";
+            if (string.Equals(sanitizado, "[DADO_SENSIVEL_MASCARADO]", StringComparison.Ordinal))
+            {
+                return "{\"mascarado\":true}";
+            }
+
+            try
+            {
+                using var parsed = JsonDocument.Parse(sanitizado);
+                return sanitizado;
+            }
+            catch (JsonException)
+            {
+                return JsonSerializer.Serialize(new { descricao = sanitizado });
+            }
+        }
+
+        private static string? MascararTexto(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor)) return valor;
+            var sensiveis = new[] { "senha", "password", "token", "hash", "secret", "segredo", "authorization" };
+            var texto = valor;
+            foreach (var termo in sensiveis)
+            {
+                if (texto.IndexOf(termo, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return "[DADO_SENSIVEL_MASCARADO]";
+                }
+            }
+            return texto.Length > 4000 ? texto.Substring(0, 4000) : texto;
         }
     }
     public sealed class AuthService

@@ -66,6 +66,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+app.UseStatusCodePagesWithReExecute("/Account/StatusCode", "?code={0}");
 
 app.UseRouting();
 app.UseSession();

@@ -39,3 +39,23 @@ public class PlantaoRulesTests
         Assert.False(transicao.PodeTransicionar(PlantaoStatus.Realizado, PlantaoStatus.Aberto));
     }
 }
+
+
+public class EnterpriseSecurityConstantsTests
+{
+    [Fact]
+    public void Auditoria_DeveExporEventosCriticosPadronizados()
+    {
+        Assert.Equal("LOGIN_SUCESSO", PlantaoPro.Api.AuditoriaConstants.Acoes.LoginSucesso);
+        Assert.Equal("ACESSO_NEGADO", PlantaoPro.Api.AuditoriaConstants.Acoes.AcessoNegado);
+        Assert.Equal("BLOQUEIO_TENANT", PlantaoPro.Api.AuditoriaConstants.Acoes.BloqueioTenant);
+    }
+
+    [Fact]
+    public void Permissoes_DeveExporPermissoesMinimas()
+    {
+        Assert.Equal("AUDITORIA_VER", PlantaoPro.Api.PermissionConstants.AuditoriaVer);
+        Assert.Equal("OBSERVABILIDADE_VER", PlantaoPro.Api.PermissionConstants.ObservabilidadeVer);
+        Assert.Equal("FINANCEIRO_CONFIRMAR", PlantaoPro.Api.PermissionConstants.FinanceiroConfirmar);
+    }
+}

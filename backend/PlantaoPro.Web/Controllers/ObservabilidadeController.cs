@@ -30,4 +30,8 @@ public sealed class ObservabilidadeController : BaseWebController
             return View();
         }
     }
+
+    public IActionResult Erros() => View();
+
+    public IActionResult Performance() => View();
 }

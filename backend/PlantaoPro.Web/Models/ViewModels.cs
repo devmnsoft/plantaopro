@@ -93,7 +93,30 @@ public record DashboardChartItem(string Label, decimal Valor);
         };
     }
 
-    public record AuditoriaDto(DateTime DataHora, string Usuario, string Acao, string Entidade, string Registro, string Ip, string Descricao);
+    public sealed class AuditoriaDto
+    {
+        public Guid Id { get; set; }
+        public Guid? UsuarioId { get; set; }
+        public Guid? ClienteId { get; set; }
+        public string Usuario { get; set; } = string.Empty;
+        public string Entidade { get; set; } = string.Empty;
+        public Guid? EntidadeId { get; set; }
+        public string Registro { get; set; } = string.Empty;
+        public string Acao { get; set; } = string.Empty;
+        public bool Sucesso { get; set; }
+        public string IpOrigem { get; set; } = string.Empty;
+        public string Ip { get; set; } = string.Empty;
+        public string Perfil { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
+        public DateTime DataHora { get; set; }
+    }
+
+    public sealed class AuditoriaDetalheDto : AuditoriaDto
+    {
+        public string Detalhes { get; set; } = "{}";
+    }
+
+    public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Exportacoes);
     public record HealthViewModel(string Status,string Ambiente,string Schema,bool BancoConectado,DateTime DataHora,string? Versao,string BaseUrlApi,bool TokenPresente,string UsuarioAutenticado,string SwaggerUrl);
     public record MinhaAgendaViewModel(IEnumerable<PlantaoResumoDto> MeusPlantoes, IEnumerable<PagamentoResumoDto> MeusPagamentos, IEnumerable<NotificacaoDto> MinhasNotificacoes, string? ErrorMessage = null);
 

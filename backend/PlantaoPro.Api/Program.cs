@@ -135,6 +135,7 @@ app.UseExceptionHandler(a => a.Run(async ctx =>
 }));
 
 app.UseAuthentication();
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

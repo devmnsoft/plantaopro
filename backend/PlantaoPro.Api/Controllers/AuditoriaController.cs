@@ -43,17 +43,30 @@ public class AuditoriaController : ControllerBase
             var clienteId = _usuarioContext.GetClienteId();
             if (!_usuarioContext.IsAdminGlobal() && clienteId.HasValue)
             {
-                where.Add("cliente_id = @ctxClienteId");
+                where.Add("a.cliente_id = @ctxClienteId");
                 args.Add("ctxClienteId", clienteId.Value);
             }
 
             args.Add("limit", pageSize);
             args.Add("offset", (page - 1) * pageSize);
             var whereSql = where.Count == 0 ? string.Empty : " where " + string.Join(" and ", where);
-            var items = await cn.QueryAsync<AuditoriaItemDto>(@"select id as Id, usuario_id as UsuarioId, cliente_id as ClienteId, entidade as Entidade, entidade_id as EntidadeId,
-acao as Acao, sucesso as Sucesso, ip_origem as IpOrigem, perfil as Perfil, reg_date as DataHora
-from plantaopro.auditoria_acoes_criticas" + whereSql + " order by reg_date desc limit @limit offset @offset", args);
-            var total = await cn.ExecuteScalarAsync<long>("select count(*) from plantaopro.auditoria_acoes_criticas" + whereSql, args);
+            var items = await cn.QueryAsync<AuditoriaItemDto>(@"select
+    a.id as ""Id"",
+    a.usuario_id as ""UsuarioId"",
+    a.cliente_id as ""ClienteId"",
+    coalesce(u.nome, '') as ""UsuarioNome"",
+    coalesce(c.nome_fantasia, '') as ""ClienteNome"",
+    coalesce(a.perfil, '') as ""Perfil"",
+    coalesce(a.entidade, '') as ""Entidade"",
+    a.entidade_id as ""EntidadeId"",
+    coalesce(a.acao, '') as ""Acao"",
+    coalesce(a.sucesso, true) as ""Sucesso"",
+    coalesce(a.ip_origem, '') as ""IpOrigem"",
+    a.reg_date as ""RegDate""
+from plantaopro.auditoria_acoes_criticas a
+left join plantaopro.usuarios u on u.id = a.usuario_id
+left join plantaopro.clientes c on c.id = a.cliente_id" + whereSql + " order by a.reg_date desc limit @limit offset @offset", args);
+            var total = await cn.ExecuteScalarAsync<long>("select count(*) from plantaopro.auditoria_acoes_criticas a" + whereSql, args);
             return Ok(ApiResponse<PagedResult<AuditoriaItemDto>>.Ok(new PagedResult<AuditoriaItemDto>(items, page, pageSize, total), "Auditoria carregada."));
         }
         catch (Exception ex)
@@ -72,9 +85,25 @@ from plantaopro.auditoria_acoes_criticas" + whereSql + " order by reg_date desc 
         try
         {
             using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var item = await cn.QueryFirstOrDefaultAsync<AuditoriaDetalheDto>(@"select id as Id, usuario_id as UsuarioId, cliente_id as ClienteId, entidade as Entidade, entidade_id as EntidadeId,
-acao as Acao, detalhes::text as Detalhes, sucesso as Sucesso, ip_origem as IpOrigem, perfil as Perfil, reg_date as DataHora
-from plantaopro.auditoria_acoes_criticas where id=@id", new { id });
+            var item = await cn.QueryFirstOrDefaultAsync<AuditoriaDetalheDto>(@"select
+    a.id as ""Id"",
+    a.usuario_id as ""UsuarioId"",
+    a.cliente_id as ""ClienteId"",
+    coalesce(u.nome, '') as ""UsuarioNome"",
+    coalesce(c.nome_fantasia, '') as ""ClienteNome"",
+    coalesce(a.perfil, '') as ""Perfil"",
+    coalesce(a.entidade, '') as ""Entidade"",
+    a.entidade_id as ""EntidadeId"",
+    coalesce(a.acao, '') as ""Acao"",
+    coalesce(a.sucesso, true) as ""Sucesso"",
+    coalesce(a.ip_origem, '') as ""IpOrigem"",
+    '' as ""UserAgent"",
+    coalesce(a.detalhes::text, '{}') as ""DetalhesJson"",
+    a.reg_date as ""RegDate""
+from plantaopro.auditoria_acoes_criticas a
+left join plantaopro.usuarios u on u.id = a.usuario_id
+left join plantaopro.clientes c on c.id = a.cliente_id
+where a.id=@id", new { id });
             if (item is null) return NotFound(ApiResponse<string>.Fail("Registro de auditoria não encontrado.", 404));
             if (!_usuarioContext.IsAdminGlobal() && _usuarioContext.GetClienteId().HasValue && item.ClienteId != _usuarioContext.GetClienteId())
             {
@@ -121,7 +150,7 @@ from plantaopro.auditoria_acoes_criticas where id=@id", new { id });
         if (result?.Value is not ApiResponse<PagedResult<AuditoriaItemDto>> response || response.Data is null) return StatusCode(result?.StatusCode ?? 500, result?.Value);
         await _audit.RegistrarAsync(_usuarioContext.GetUsuarioId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.Relatorio, null, AuditoriaConstants.Acoes.ExportarRelatorio, new { tipo = "auditoria_csv" }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), string.Join(',', _usuarioContext.GetRoles()));
         var sb = new StringBuilder("DataHora;UsuarioId;ClienteId;Perfil;Entidade;EntidadeId;Acao;Sucesso;Ip\n");
-        foreach (var item in response.Data.Items) sb.AppendLine($"{item.DataHora:O};{item.UsuarioId};{item.ClienteId};{item.Perfil};{item.Entidade};{item.EntidadeId};{item.Acao};{item.Sucesso};{item.IpOrigem}");
+        foreach (var item in response.Data.Items) sb.AppendLine($"{item.RegDate:O};{item.UsuarioId};{item.ClienteId};{item.Perfil};{item.Entidade};{item.EntidadeId};{item.Acao};{item.Sucesso};{item.IpOrigem}");
         return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "auditoria.csv");
     }
 
@@ -129,15 +158,15 @@ from plantaopro.auditoria_acoes_criticas where id=@id", new { id });
     {
         args = new DynamicParameters();
         var where = new List<string>();
-        if (filtro.DataInicio.HasValue) { where.Add("reg_date >= @dataInicio"); args.Add("dataInicio", filtro.DataInicio.Value); }
-        if (filtro.DataFim.HasValue) { where.Add("reg_date <= @dataFim"); args.Add("dataFim", filtro.DataFim.Value); }
-        if (filtro.UsuarioId.HasValue) { where.Add("usuario_id = @usuarioId"); args.Add("usuarioId", filtro.UsuarioId.Value); }
-        if (filtro.ClienteId.HasValue) { where.Add("cliente_id = @clienteId"); args.Add("clienteId", filtro.ClienteId.Value); }
-        if (!string.IsNullOrWhiteSpace(filtro.Perfil)) { where.Add("perfil ilike @perfil"); args.Add("perfil", "%" + filtro.Perfil + "%"); }
-        if (!string.IsNullOrWhiteSpace(filtro.Entidade)) { where.Add("entidade = @entidade"); args.Add("entidade", filtro.Entidade); }
-        if (!string.IsNullOrWhiteSpace(filtro.Acao)) { where.Add("acao = @acao"); args.Add("acao", filtro.Acao); }
-        if (filtro.Sucesso.HasValue) { where.Add("sucesso = @sucesso"); args.Add("sucesso", filtro.Sucesso.Value); }
-        if (!string.IsNullOrWhiteSpace(filtro.Texto)) { where.Add("(acao ilike @texto or entidade ilike @texto or detalhes::text ilike @texto)"); args.Add("texto", "%" + filtro.Texto + "%"); }
+        if (filtro.DataInicio.HasValue) { where.Add("a.reg_date >= @dataInicio"); args.Add("dataInicio", filtro.DataInicio.Value); }
+        if (filtro.DataFim.HasValue) { where.Add("a.reg_date <= @dataFim"); args.Add("dataFim", filtro.DataFim.Value); }
+        if (filtro.UsuarioId.HasValue) { where.Add("a.usuario_id = @usuarioId"); args.Add("usuarioId", filtro.UsuarioId.Value); }
+        if (filtro.ClienteId.HasValue) { where.Add("a.cliente_id = @clienteId"); args.Add("clienteId", filtro.ClienteId.Value); }
+        if (!string.IsNullOrWhiteSpace(filtro.Perfil)) { where.Add("a.perfil ilike @perfil"); args.Add("perfil", "%" + filtro.Perfil + "%"); }
+        if (!string.IsNullOrWhiteSpace(filtro.Entidade)) { where.Add("a.entidade = @entidade"); args.Add("entidade", filtro.Entidade); }
+        if (!string.IsNullOrWhiteSpace(filtro.Acao)) { where.Add("a.acao = @acao"); args.Add("acao", filtro.Acao); }
+        if (filtro.Sucesso.HasValue) { where.Add("a.sucesso = @sucesso"); args.Add("sucesso", filtro.Sucesso.Value); }
+        if (!string.IsNullOrWhiteSpace(filtro.Texto)) { where.Add("(a.acao ilike @texto or a.entidade ilike @texto or a.detalhes::text ilike @texto)"); args.Add("texto", "%" + filtro.Texto + "%"); }
         return where;
     }
 }
@@ -162,18 +191,51 @@ public sealed class AuditoriaItemDto
     public Guid Id { get; set; }
     public Guid? UsuarioId { get; set; }
     public Guid? ClienteId { get; set; }
+    public string UsuarioNome { get; set; } = string.Empty;
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Perfil { get; set; } = string.Empty;
     public string Entidade { get; set; } = string.Empty;
     public Guid? EntidadeId { get; set; }
     public string Acao { get; set; } = string.Empty;
     public bool Sucesso { get; set; }
     public string IpOrigem { get; set; } = string.Empty;
-    public string Perfil { get; set; } = string.Empty;
-    public DateTime DataHora { get; set; }
+    public DateTime RegDate { get; set; }
+
+    public DateTime DataHora
+    {
+        get => RegDate;
+        set => RegDate = value;
+    }
 }
 
-public sealed class AuditoriaDetalheDto : AuditoriaItemDto
+public sealed class AuditoriaDetalheDto
 {
-    public string Detalhes { get; set; } = "{}";
+    public Guid Id { get; set; }
+    public Guid? UsuarioId { get; set; }
+    public Guid? ClienteId { get; set; }
+    public string UsuarioNome { get; set; } = string.Empty;
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Perfil { get; set; } = string.Empty;
+    public string Entidade { get; set; } = string.Empty;
+    public Guid? EntidadeId { get; set; }
+    public string Acao { get; set; } = string.Empty;
+    public bool Sucesso { get; set; }
+    public string IpOrigem { get; set; } = string.Empty;
+    public string UserAgent { get; set; } = string.Empty;
+    public string DetalhesJson { get; set; } = "{}";
+    public DateTime RegDate { get; set; }
+
+    public string Detalhes
+    {
+        get => DetalhesJson;
+        set => DetalhesJson = string.IsNullOrWhiteSpace(value) ? "{}" : value;
+    }
+
+    public DateTime DataHora
+    {
+        get => RegDate;
+        set => RegDate = value;
+    }
 }
 
 public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Exportacoes);

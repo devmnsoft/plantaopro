@@ -185,7 +185,7 @@ namespace PlantaoPro.Web.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult StatusCode(int code)
+        public IActionResult ErrorStatusCode(int code)
         {
             if (code == 404) return View("~/Views/Shared/NotFound.cshtml");
             if (code == 403) return RedirectToAction(nameof(AccessDenied));

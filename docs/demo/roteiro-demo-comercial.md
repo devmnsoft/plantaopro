@@ -1,32 +1,33 @@
-# Roteiro de demo comercial — PlantãoPro pré-homologação
+# Roteiro de demo comercial — PlantãoPro
 
-## Narrativa
-“Vamos demonstrar como uma coordenação transforma uma demanda de plantão em escala confirmada, pagamento médico e rastreabilidade operacional.”
+## Objetivo
+Demonstrar que o PlantãoPro reduz retrabalho da coordenação, aumenta controle de escalas médicas, melhora rastreabilidade e prepara a operação para uso web + mobile.
 
-## Sequência sugerida
-1. Mostrar Dashboard por perfil.
-2. Criar ou abrir hospital e especialidade.
-3. Criar médico com especialidade compatível.
-4. Criar plantão em rascunho.
-5. Publicar plantão com modal de confirmação.
-6. Abrir Central de Escala e destacar pendências.
-7. Entrar como médico em layout mobile-first.
-8. Solicitar plantão disponível.
-9. Voltar como coordenação e confirmar escala.
-10. Mostrar redução de vaga e histórico.
-11. Marcar escala realizada.
-12. Entrar como financeiro e gerar/confirmar pagamento.
-13. Mostrar notificação e pagamento no perfil médico.
-14. Mostrar auditoria, observabilidade e relatório CSV.
-15. Abrir Swagger e destacar API Mobile MVP.
+## Preparação
+- Ambiente homologação ativo.
+- Usuários de demonstração revisados em `docs/demo/usuarios-demonstracao.md`.
+- Dados mínimos: hospital, especialidade, médicos, plantão aberto, escala pendente, pagamento pendente e notificações.
+- Swagger aberto em aba separada para mostrar API Mobile MVP, sem expor segredo.
 
-## Mensagens de valor
-- Menos planilhas e menos WhatsApp solto.
-- Controle por perfil e por cliente.
-- Rastreabilidade de decisões críticas.
-- Experiência médica simples no celular.
-- Base pronta para piloto controlado.
+## Narrativa sugerida
+1. **Dor do cliente:** escalas por planilha/WhatsApp geram conflitos, atrasos e baixa rastreabilidade.
+2. **Dashboard:** mostrar indicadores, pendências e visão executiva.
+3. **Cadastros:** abrir médicos, hospitais e especialidades com filtros e status.
+4. **Plantões:** criar ou abrir plantão existente, publicar e explicar vagas/status.
+5. **Área do médico:** entrar como médico, ver plantões disponíveis, solicitar plantão e observar feedback por toast.
+6. **Coordenação:** confirmar escala pela Central de Escala, usando modal de confirmação.
+7. **Financeiro:** gerar/confirmar pagamento e mostrar visão do médico.
+8. **Comunicação/notificações:** mostrar mensagens e eventos relevantes.
+9. **Relatórios:** exportar CSV e explicar auditoria da exportação.
+10. **Auditoria/observabilidade:** demonstrar rastreabilidade para operação segura.
+11. **Mobile MVP:** mostrar endpoints com JWT, paginação e isolamento do médico.
 
-## Pendências honestas para piloto
-- Integrações externas de pagamento e mensageria podem ser conectadas após validação operacional.
-- Métricas avançadas de score médico dependem de histórico real de uso.
+## Critérios de sucesso da demo
+- Fluxo ponta a ponta entendido por decisores.
+- Cliente percebe ganhos em controle, tempo e segurança.
+- Sem erros visuais graves durante navegação.
+- Próximo passo comercial definido: piloto, proposta ou homologação técnica.
+
+## Pendências conhecidas a declarar se questionado
+- Disponibilidade/preferências mobile estão em contrato MVP e devem evoluir com o aplicativo.
+- Integrações externas dependem de credenciais e escopo de implantação.

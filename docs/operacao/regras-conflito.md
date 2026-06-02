@@ -1,6 +1,6 @@
 # Regras de conflito de horário
 
-## Sobreposição
+## Fórmula
 Um conflito existe quando:
 
 ```text
@@ -9,21 +9,26 @@ AND
 novoFim > escalaExistenteInicio
 ```
 
-## Status considerados
-- `SOLICITADA` / `solicitado`
-- `CONFIRMADA` / `confirmado`
-- `EM_ANDAMENTO` / `em_andamento`
+## Status que contam
+- `solicitado`
+- `confirmado`
+- `em_andamento`, quando existir no ciclo operacional
 
 ## Status ignorados
-- `CANCELADA`
-- `RECUSADA`
-- `SUBSTITUIDA`
-- `REALIZADA` não bloqueia novos plantões futuros quando não há sobreposição ativa.
+- `cancelado`
+- `recusado`
+- `substituido`
+- `nao_compareceu`
 
-## Endpoints
-- `POST /api/conflitos/verificar`
-- `GET /api/conflitos/medico/{medicoId}`
-- `GET /api/conflitos/plantao/{plantaoId}`
+## Aplicação obrigatória
+- Solicitar plantão.
+- Aceitar convite.
+- Confirmar escala.
+- Substituir médico.
+- Recomendar médicos.
 
-## Retorno
-O retorno usa `ApiResponse<ConflitoHorarioResultadoDto>` com `PossuiConflito`, `TotalConflitos`, `Grau`, `Mensagem` e lista de conflitos.
+## UX esperada
+- Exibir badge “Conflito”.
+- Apresentar modal com detalhes do plantão conflitante.
+- Bloquear conflito crítico com toast amigável.
+- Registrar auditoria em tentativas bloqueadas quando a ação for crítica.

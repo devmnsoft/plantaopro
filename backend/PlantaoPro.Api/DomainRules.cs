@@ -60,7 +60,7 @@ public sealed class PlantaoHistoricoService
 {
     public async Task RegistrarAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid plantaoId, string? statusAnterior, string statusNovo, string? justificativa, Guid usuarioId)
     {
-        await cn.ExecuteAsync(@"insert into plantaopro.historico_plantao
+        await cn.ExecuteAsync(@"insert into plantaopro.plantao_historico
 (id,plantao_id,status_anterior,status_novo,justificativa,usuario_id,reg_date)
 values(gen_random_uuid(),@plantaoId,@statusAnterior,@statusNovo,@justificativa,@usuarioId,now())",
             new { plantaoId, statusAnterior, statusNovo, justificativa, usuarioId }, tx);

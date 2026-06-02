@@ -1,22 +1,31 @@
-# API Mobile MVP — fluxos
+# API Mobile MVP — fluxos de homologação
 
-## Login
-1. App envia e-mail/senha para `POST /api/mobile/auth/login`.
-2. API retorna JWT, validade e roles.
-3. App usa `Authorization: Bearer {token}` nos demais endpoints.
+## Login e sessão
+1. Enviar e-mail e senha para `POST /api/mobile/auth/login`.
+2. Armazenar JWT apenas em storage seguro do app.
+3. Enviar `Authorization: Bearer {token}` nos demais endpoints.
 
 ## Solicitar plantão
-1. Médico lista `GET /api/mobile/plantoes-disponiveis`.
-2. App abre `GET /api/mobile/plantoes/{id}`.
-3. App solicita em `POST /api/mobile/plantoes/{id}/solicitar`.
-4. API valida médico autenticado, duplicidade, vaga e conflito crítico.
+1. App carrega dashboard.
+2. App lista plantões disponíveis com paginação.
+3. Médico abre detalhe do plantão.
+4. Médico solicita plantão.
+5. API valida vínculo do médico, duplicidade, elegibilidade e conflito.
+6. App exibe toast/snackbar com mensagem amigável.
 
-## Convite
-1. Médico lista convites.
-2. Aceita ou recusa informando motivo quando aplicável.
-3. API registra auditoria e cria notificação operacional.
+## Convites
+1. App lista convites pendentes.
+2. Médico aceita convite.
+3. API revalida vaga e conflito.
+4. Médico pode recusar convite informando motivo quando exigido.
 
-## Pagamentos
-1. Médico consulta `GET /api/mobile/meus-pagamentos`.
-2. Status `pago` indica confirmação financeira.
-3. Contestação deve usar o fluxo financeiro web/API quando disponível para o cliente.
+## Pagamentos e notificações
+1. App lista pagamentos próprios.
+2. App destaca pagamentos pendentes e confirmados.
+3. App lista notificações.
+4. Médico marca notificação como lida.
+
+## Segurança
+- Médico nunca informa `medicoId` para acessar dados de terceiros.
+- O backend resolve o médico pelo usuário autenticado sempre que possível.
+- Payloads de erro não devem expor stack trace ou SQL.

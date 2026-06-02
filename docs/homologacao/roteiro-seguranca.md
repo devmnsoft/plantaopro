@@ -10,3 +10,11 @@
 8. Testar endpoint mobile sem token e confirmar 401.
 9. Testar endpoint mobile com médico e confirmar isolamento.
 10. Validar build, Swagger e `/api/health`.
+
+## Evidências esperadas
+
+- Evento `LOGIN_SUCESSO` com `usuario_id`, `cliente_id`, perfil e IP após login válido.
+- Evento `LOGIN_FALHA` sem senha/token em detalhes após login inválido.
+- Evento `BLOQUEIO_PERMISSAO` quando perfil sem permissão tenta acessar recurso restrito.
+- Evento `BLOQUEIO_TENANT` ou `ACESSO_NEGADO` quando usuário tenta cruzar tenant.
+- Registros em `api_request_logs`, `api_error_logs`, `acessos_negados_log` e `permissao_logs` quando aplicável.

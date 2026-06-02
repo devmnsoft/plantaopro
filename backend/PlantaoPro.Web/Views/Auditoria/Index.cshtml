@@ -3,8 +3,17 @@
     ViewData["Title"] = "Auditoria";
     var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
     var resumo = ViewBag.Resumo as PlantaoPro.Web.Models.AuditoriaResumoDto;
+    var queryString = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value : string.Empty;
+    var exportUrl = Url.Action("ExportarCsv", "Auditoria") + queryString;
+    var filtroDataInicio = Context.Request.Query["dataInicio"].ToString();
+    var filtroDataFim = Context.Request.Query["dataFim"].ToString();
+    var filtroPerfil = Context.Request.Query["perfil"].ToString();
+    var filtroEntidade = Context.Request.Query["entidade"].ToString();
+    var filtroAcao = Context.Request.Query["acao"].ToString();
+    var filtroTexto = Context.Request.Query["texto"].ToString();
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria", "Rastreabilidade enterprise de ações críticas, falhas e acessos negados.", "bi-shield-check", "Exportar CSV", null, null, true)' />
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria", "Rastreabilidade enterprise de ações críticas, falhas e acessos negados.", "bi-shield-check")' />
+<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="@exportUrl"><i class="bi bi-download"></i> Exportar CSV</a></div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Ações hoje</span><h3>@(resumo?.AcoesHoje ?? 0)</h3></div></div></div>
@@ -15,12 +24,13 @@
 
 <form method="get" class="card border-0 shadow-sm mb-4">
     <div class="card-body row g-3">
-        <div class="col-md-2"><label class="form-label">Início</label><input class="form-control" type="date" name="dataInicio" /></div>
-        <div class="col-md-2"><label class="form-label">Fim</label><input class="form-control" type="date" name="dataFim" /></div>
-        <div class="col-md-2"><label class="form-label">Perfil</label><input class="form-control" name="perfil" placeholder="ADMINISTRADOR" /></div>
-        <div class="col-md-2"><label class="form-label">Entidade</label><input class="form-control" name="entidade" placeholder="PLANTAO" /></div>
-        <div class="col-md-2"><label class="form-label">Ação</label><input class="form-control" name="acao" placeholder="CRIAR" /></div>
-        <div class="col-md-2"><label class="form-label">Texto</label><input class="form-control" name="texto" placeholder="Busca livre" /></div>
+        <div class="col-md-2"><label class="form-label">Início</label><input class="form-control" type="date" name="dataInicio" value="@filtroDataInicio" /></div>
+        <div class="col-md-2"><label class="form-label">Fim</label><input class="form-control" type="date" name="dataFim" value="@filtroDataFim" /></div>
+        <div class="col-md-2"><label class="form-label">Perfil</label><input class="form-control" name="perfil" value="@filtroPerfil" placeholder="ADMINISTRADOR" /></div>
+        <div class="col-md-2"><label class="form-label">Entidade</label><input class="form-control" name="entidade" value="@filtroEntidade" placeholder="PLANTAO" /></div>
+        <div class="col-md-2"><label class="form-label">Ação</label><input class="form-control" name="acao" value="@filtroAcao" placeholder="CRIAR" /></div>
+        <div class="col-md-2"><label class="form-label">Texto</label><input class="form-control" name="texto" value="@filtroTexto" placeholder="Busca livre" /></div>
+        <div class="col-md-2"><label class="form-label">Sucesso</label><select class="form-select" name="sucesso"><option value="">Todos</option><option value="true">Sucesso</option><option value="false">Falha</option></select></div>
         <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
     </div>
 </form>

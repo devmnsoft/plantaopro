@@ -19,3 +19,9 @@ O fallback por perfil cobre permissões como `MEDICOS_VER`, `PLANTOES_CRIAR`, `E
 ## Bloqueio
 
 Permissão negada deve retornar 403 amigável, registrar auditoria com `BLOQUEIO_PERMISSAO` e nunca expor regra interna ou SQL.
+
+## Permissões auditadas nesta rodada
+
+`PermissionGuardService` passa a registrar cada validação relevante em `plantaopro.permissao_logs`, incluindo usuário, cliente, permissão, decisão e motivo resumido. Quando a permissão é negada, o fluxo também chama o `TenantGuardService.RegistrarAcessoNegadoAsync`, gerando auditoria central `BLOQUEIO_PERMISSAO`.
+
+Lista mínima mantida no fallback: `MEDICOS_*`, `HOSPITAIS_*`, `PLANTOES_*`, `ESCALAS_*`, `FINANCEIRO_*`, `USUARIOS_GERENCIAR`, `CLIENTES_GERENCIAR`, `PLANOS_GERENCIAR`, `ASSINATURAS_GERENCIAR`, `RELATORIOS_VER`, `AUDITORIA_VER`, `OBSERVABILIDADE_VER`, `CONFIGURACOES_EDITAR` e `SUPORTE_VER`.

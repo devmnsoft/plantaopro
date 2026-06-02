@@ -36,7 +36,7 @@ namespace PlantaoPro.Api.Controllers
                 var perfil = r.Data?.Roles is { Length: > 0 } ? string.Join(',', r.Data.Roles) : "sem-perfil";
                 await _auditService.RegistrarAsync(
                     r.Data?.UsuarioId,
-                    null,
+                    r.Data?.ClienteId,
                     AuditoriaConstants.Entidades.Usuario,
                     r.Data?.UsuarioId,
                     r.Success ? AuditoriaConstants.Acoes.LoginSucesso : AuditoriaConstants.Acoes.LoginFalha,

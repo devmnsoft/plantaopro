@@ -59,3 +59,23 @@ public class EnterpriseSecurityConstantsTests
         Assert.Equal("FINANCEIRO_CONFIRMAR", PlantaoPro.Api.PermissionConstants.FinanceiroConfirmar);
     }
 }
+
+public class AuthContractTests
+{
+    [Fact]
+    public void LoginResponse_DeveCarregarClienteIdParaIsolamentoMultiempresa()
+    {
+        var clienteId = Guid.NewGuid();
+        var response = new LoginResponse("token", DateTime.UtcNow.AddHours(1), Guid.NewGuid(), "Admin", new[] { "ADMINISTRADOR" }, clienteId);
+
+        Assert.Equal(clienteId, response.ClienteId);
+    }
+
+    [Fact]
+    public void Auditoria_DeveExporEntidadesSaasCriticas()
+    {
+        Assert.Equal("FATURA_SAAS", PlantaoPro.Api.AuditoriaConstants.Entidades.FaturaSaas);
+        Assert.Equal("ASSINATURA", PlantaoPro.Api.AuditoriaConstants.Entidades.Assinatura);
+        Assert.Equal("API_MOBILE", PlantaoPro.Api.AuditoriaConstants.Entidades.ApiMobile);
+    }
+}

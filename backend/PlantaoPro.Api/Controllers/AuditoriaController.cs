@@ -97,7 +97,7 @@ left join plantaopro.clientes c on c.id = a.cliente_id" + whereSql + " order by 
     coalesce(a.acao, '') as ""Acao"",
     coalesce(a.sucesso, true) as ""Sucesso"",
     coalesce(a.ip_origem, '') as ""IpOrigem"",
-    '' as ""UserAgent"",
+    coalesce(a.user_agent, a.detalhes->>'userAgent', '') as ""UserAgent"",
     coalesce(a.detalhes::text, '{}') as ""DetalhesJson"",
     a.reg_date as ""RegDate""
 from plantaopro.auditoria_acoes_criticas a

@@ -35,6 +35,7 @@ Autenticação: JWT Bearer em todos os endpoints, exceto `POST /api/mobile/auth/
 | GET | `/preferencias` | Consultar preferências. | Retorna preferências leves. |
 | PUT | `/preferencias` | Atualizar preferências. | Registra auditoria. |
 | GET | `/suporte/chamados` | Listar chamados do usuário. | Filtra por usuário e cliente; paginação obrigatória. |
+| GET | `/suporte/chamados/{id}` | Detalhar chamado do usuário. | Filtra por usuário e cliente; retorna timeline leve e registra acesso negado quando indisponível. |
 | POST | `/suporte/chamados` | Abrir chamado pelo app. | Exige título e descrição; cria protocolo e auditoria. |
 
 ## Payloads principais
@@ -69,3 +70,10 @@ Resultado esperado: HTTP 201 com `id`, `protocolo` e `status=ABERTO`.
 4. Abrir um chamado em `/suporte/chamados`.
 5. Listar `/suporte/chamados` e confirmar que apenas chamados do usuário aparecem.
 6. Repetir uma chamada sem token e confirmar HTTP 401.
+
+
+## Central operacional e multiempresa
+
+- A Central de Escala usa o contexto do usuário autenticado para filtrar contadores, plantões críticos, escalas pendentes e pagamentos pendentes por `cliente_id`, exceto para `ADMINISTRADOR_GLOBAL`.
+- Chamados mobile retornam apenas registros do usuário autenticado e do cliente vinculado ao token.
+- Acesso a chamado indisponível retorna mensagem amigável e registra auditoria sem expor dados de outro cliente.

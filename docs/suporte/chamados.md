@@ -36,3 +36,10 @@ O script `backend/sql/20260602_suporte_mobile_rc.sql` cria de forma segura:
 
 - Resposta pelo app pode ser evoluída após o MVP.
 - SLA e filas por responsável podem ser adicionados no ciclo pós-RC.
+
+
+## Detalhamento mobile
+
+- `GET /api/mobile/suporte/chamados` lista chamados do usuário autenticado com paginação.
+- `GET /api/mobile/suporte/chamados/{id}` detalha somente chamado próprio e do mesmo cliente, retornando dados leves do chamado e até 50 mensagens em ordem cronológica.
+- Tentativa de acessar chamado inexistente, de outro usuário ou de outro cliente retorna mensagem amigável e auditoria de acesso negado.

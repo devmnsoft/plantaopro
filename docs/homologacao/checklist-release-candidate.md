@@ -36,6 +36,7 @@ Consolidar uma validação objetiva para homologação real, demonstração come
 - [ ] `POST /api/mobile/convites/{id}/aceitar` revalida vaga, conflito, duplicidade e elegibilidade pelo serviço de escala.
 - [ ] `POST /api/mobile/convites/{id}/recusar` exige motivo, atualiza status do convite e registra auditoria sem logar o texto sensível.
 - [ ] `GET /api/mobile/meus-pagamentos` não retorna dados de outro médico.
+- [ ] `GET /api/mobile/suporte/chamados/{id}` retorna apenas chamado próprio, com timeline leve e sem dados sensíveis.
 
 ## Segurança e multiempresa
 - [ ] ADMINISTRADOR_GLOBAL visualiza todos os clientes.
@@ -43,6 +44,7 @@ Consolidar uma validação objetiva para homologação real, demonstração come
 - [ ] MEDICO visualiza apenas dados próprios.
 - [ ] HOSPITAL visualiza apenas dados da própria unidade quando aplicável.
 - [ ] Acesso negado gera resposta amigável e auditoria.
+- [ ] Central de Escala isolada por cliente para ADMINISTRADOR/COORDENACAO/FINANCEIRO, mantendo visão global apenas para ADMINISTRADOR_GLOBAL.
 
 ## Auditoria, observabilidade e relatórios
 - [ ] Login sucesso/falha, publicação, escala, pagamento, convite e exportações registram auditoria.

@@ -54,6 +54,7 @@ public static class AuditoriaConstants
         public const string Documento = "DOCUMENTO";
         public const string Notificacao = "NOTIFICACAO";
         public const string Comunicacao = "COMUNICACAO";
+        public const string Operacao = "OPERACAO";
         public const string Suporte = "SUPORTE";
         public const string Relatorio = "RELATORIO";
         public const string Tenant = "TENANT";

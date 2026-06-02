@@ -699,6 +699,27 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
             });
             return d is null ? ApiResponse<PlantaoDetailsDto>.Fail("Plantão não encontrado", 404) : ApiResponse<PlantaoDetailsDto>.Ok(d);
         }
+        public async Task<ApiResponse<IEnumerable<EscalaResumoDto>>> ListarEscalasAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<EscalaResumoDto>("select e.id as \"Id\",e.plantao_id as \"PlantaoId\",e.medico_id as \"MedicoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(m.uf_crm,'') as \"MedicoUfCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataInicio\",pl.data_fim as \"DataFim\",coalesce(pl.valor,0) as \"Valor\",coalesce(pl.tipo,'') as \"TipoPlantao\",coalesce(e.status,'') as \"Status\",coalesce(e.justificativa,'') as \"Justificativa\",e.reg_date as \"RegDate\" from plantaopro.escalas e join plantaopro.medicos m on m.id=e.medico_id join plantaopro.plantoes pl on pl.id=e.plantao_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where e.plantao_id=@plantaoId and e.reg_status='A' order by e.reg_date desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<EscalaResumoDto>>.Ok(items);
+        }
+
+        public async Task<ApiResponse<IEnumerable<PlantaoHistoricoDto>>> ListarHistoricoAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<PlantaoHistoricoDto>("select id as \"Id\",plantao_id as \"PlantaoId\",coalesce(status_anterior,'') as \"StatusAnterior\",coalesce(status_novo,'') as \"StatusNovo\",coalesce(justificativa,'') as \"Justificativa\",usuario_id as \"UsuarioId\",reg_date as \"RegDate\" from plantaopro.plantao_historico where plantao_id=@plantaoId and reg_status='A' order by reg_date desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<PlantaoHistoricoDto>>.Ok(items);
+        }
+
+        public async Task<ApiResponse<IEnumerable<PlantaoConviteDto>>> ListarConvitesAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<PlantaoConviteDto>("select c.id as \"Id\",c.plantao_id as \"PlantaoId\",c.medico_id as \"MedicoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(c.status,'') as \"Status\",coalesce(c.mensagem,'') as \"Mensagem\",c.data_envio as \"DataEnvio\",c.data_resposta as \"DataResposta\",coalesce(c.motivo_recusa,'') as \"MotivoRecusa\" from plantaopro.plantao_convites c join plantaopro.medicos m on m.id=c.medico_id where c.plantao_id=@plantaoId and c.reg_status='A' order by c.data_envio desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<PlantaoConviteDto>>.Ok(items);
+        }
+
         public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua)
         {
             var validaCriacao = _regra.ValidarCriacao(r);
@@ -918,8 +939,8 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                 }, tx);
                 if (p.Id == Guid.Empty)
                     return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-                if (p.Status != "aberto" || p.Vagas <= 0)
-                    return ApiResponse<string>.Fail("Plantão indisponível para aceite");
+                if (!(p.Status == "aberto" || p.Status == "em_escala") || p.Vagas <= 0)
+                    return ApiResponse<string>.Fail("Plantão indisponível para solicitação");
                 var eleg = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(medicoId, plantaoId);
                 if (eleg.Bloqueado)
                     return ApiResponse<string>.Fail(string.Join("; ", eleg.MotivosBloqueio));
@@ -972,8 +993,7 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     u = userId
                 }, tx);
                 await cn.ExecuteAsync(@"update plantaopro.plantoes
-                    set vagas_disponiveis=vagas_disponiveis-1,
-                        status=case when vagas_disponiveis-1<=0 then 'reservado' else status end,
+                    set status=case when status='aberto' then 'em_escala' else status end,
                         conflito_detectado=false,
                         score_prioridade=@score,
                         updated_by=@u,
@@ -989,7 +1009,7 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                 await audit.LogAsync(userId, "ACEITAR", "escalas", escalaId, "Aceite de plantão", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 logger.LogInformation("Escala {EscalaId} aceita", escalaId);
-                return ApiResponse<string>.Ok("ok", "Plantão aceito.");
+                return ApiResponse<string>.Ok("ok", "Solicitação registrada. A vaga será consumida na confirmação da escala.");
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao aceitar plantão {PlantaoId}", plantaoId); return ApiResponse<string>.Fail("Erro ao aceitar plantão", 500); }
         }
@@ -1019,7 +1039,15 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                         id,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set status='confirmado',updated_by=@u,reg_update=now() where id=@p", new
+                    var vagasDisponiveis = await cn.ExecuteScalarAsync<int>("select coalesce(vagas_disponiveis,0) from plantaopro.plantoes where id=@p for update", new { p = e.PlantaoId }, tx);
+                    if (vagasDisponiveis <= 0)
+                        return ApiResponse<string>.Fail("Não há vagas disponíveis para confirmar esta escala.");
+                    await cn.ExecuteAsync(@"update plantaopro.plantoes
+                        set vagas_disponiveis=vagas_disponiveis-1,
+                            status=case when vagas_disponiveis-1<=0 then 'preenchido' else 'em_escala' end,
+                            updated_by=@u,
+                            reg_update=now()
+                        where id=@p and vagas_disponiveis>0", new
                     {
                         p = e.PlantaoId,
                         u = userId
@@ -1037,7 +1065,11 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                         j = justificativa,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis+1,status=case when status='reservado' then 'aberto' else status end,updated_by=@u,reg_update=now() where id=@p", new
+                    await cn.ExecuteAsync(@"update plantaopro.plantoes
+                        set status=case when exists(select 1 from plantaopro.escalas where plantao_id=@p and reg_status='A' and status='solicitado') then 'em_escala' else 'aberto' end,
+                            updated_by=@u,
+                            reg_update=now()
+                        where id=@p", new
                     {
                         p = e.PlantaoId,
                         u = userId
@@ -1055,11 +1087,19 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                         j = justificativa,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis+1,status=case when status in ('reservado','confirmado') then 'aberto' else status end,updated_by=@u,reg_update=now() where id=@p", new
+                    if (e.Status == "confirmado")
                     {
-                        p = e.PlantaoId,
-                        u = userId
-                    }, tx);
+                        await cn.ExecuteAsync(@"update plantaopro.plantoes
+                            set vagas_disponiveis=least(vagas, vagas_disponiveis+1),
+                                status=case when exists(select 1 from plantaopro.escalas where plantao_id=@p and reg_status='A' and status='solicitado') then 'em_escala' else 'aberto' end,
+                                updated_by=@u,
+                                reg_update=now()
+                            where id=@p", new
+                        {
+                            p = e.PlantaoId,
+                            u = userId
+                        }, tx);
+                    }
                     await AddHistoricoAsync(cn, tx, id, e.Status, "cancelado", justificativa, userId);
                     await notificacao.CriarNotificacaoAsync(userId, "Escala cancelada", justificativa!, "escala", tx);
                 }
@@ -1070,7 +1110,7 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     var med = await ValidarMedicoAsync(novoMedicoId.Value, cn, tx);
                     if (med.Id == Guid.Empty || !med.A || string.IsNullOrWhiteSpace(med.C) || string.IsNullOrWhiteSpace(med.U))
                         return ApiResponse<string>.Fail("Novo médico inválido");
-                    var pl = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio,data_fim from plantaopro.plantoes where id=@id", new
+                    var pl = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new
                     {
                         id = e.PlantaoId
                     }, tx);
@@ -1112,6 +1152,19 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "realizado", justificativa, userId);
                     await notificacao.CriarNotificacaoAsync(userId, "Escala realizada", "Escala marcada como realizada", "escala", tx);
+                }
+                else if (novo == "nao_compareceu")
+                {
+                    if (e.Status != "confirmado")
+                        return ApiResponse<string>.Fail("Somente escala confirmada pode ser marcada como não compareceu");
+                    await cn.ExecuteAsync("update plantaopro.escalas set status='nao_compareceu',justificativa=@j,updated_by=@u,reg_update=now() where id=@id", new
+                    {
+                        id,
+                        j = justificativa,
+                        u = userId
+                    }, tx);
+                    await AddHistoricoAsync(cn, tx, id, e.Status, "nao_compareceu", justificativa, userId);
+                    await notificacao.CriarNotificacaoAsync(userId, "Não comparecimento registrado", justificativa ?? "Escala marcada como não compareceu", "escala", tx);
                 }
                 else
                     return ApiResponse<string>.Fail("Status não suportado");

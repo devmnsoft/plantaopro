@@ -1,18 +1,29 @@
-# Central de Escala
+# Central de Escala — operação pré-homologação
 
-A Central de Escala consolida a operação diária em uma sala de controle para coordenação e operação.
+## Objetivo
+Ser a tela de controle operacional da coordenação para identificar lacunas, riscos e próximas ações.
 
-## Endpoints
-- `GET /api/central-escala/resumo`: KPIs e listas críticas.
-- `GET /api/central-escala/plantoes`: plantões filtrados e paginados.
-- `GET /api/central-escala/pendencias`: pendências priorizadas.
-- `GET /api/central-escala/acoes-recomendadas`: ações sugeridas para cobertura, escala e financeiro.
+## Deve exibir
+- Plantões abertos e em escala.
+- Plantões sem médico confirmado.
+- Escalas solicitadas aguardando decisão.
+- Convites pendentes ou próximos de expirar.
+- Conflitos críticos de horário.
+- Pagamentos pendentes após escala realizada.
+- Alertas operacionais de alto impacto.
 
-## Web
-- `/CentralEscala`: visão executiva responsiva com KPIs, plantões sem cobertura, escalas solicitadas e pagamentos pendentes.
-- `/CentralEscala/Plantao/{id}`: leitura operacional do plantão com atalhos para detalhes, escalas e agenda.
+## Regras operacionais
+- Solicitação médica não consome vaga definitiva.
+- Confirmação da coordenação consome uma vaga disponível.
+- Cancelamento de escala confirmada libera uma vaga, limitado ao total do plantão.
+- Vagas zeradas levam o plantão para status preenchido.
+- Não comparecimento não libera pagamento automático.
 
-## Regras
-- Médico não deve acessar a central.
-- Coordenação/administrador/operador acessam dados do cliente permitido.
-- Ações críticas continuam sendo feitas nos módulos origem para preservar validação, auditoria e modais existentes.
+## Indicadores sugeridos
+| Indicador | Uso |
+|---|---|
+| Plantões abertos | Capacidade ainda disponível |
+| Escalas solicitadas | Pendências de decisão da coordenação |
+| Conflitos | Risco de falha operacional |
+| Pagamentos pendentes | Entregável para financeiro |
+| Alertas críticos | Prioridade de intervenção |

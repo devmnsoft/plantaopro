@@ -37,6 +37,8 @@ public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Tot
 public record CancelarPlantaoRequest(string Justificativa);
 public record StatusRequest(string Justificativa);
 public record PlantaoDetailsDto(Guid Id,Guid HospitalId,Guid EspecialidadeId,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,int VagasDisponiveis,string Tipo,string Status,string? Observacoes,string RegStatus,DateTime RegDate);
+public record PlantaoHistoricoDto(Guid Id,Guid PlantaoId,string StatusAnterior,string StatusNovo,string Justificativa,Guid? UsuarioId,DateTime RegDate);
+public record PlantaoConviteDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string Status,string Mensagem,DateTime DataEnvio,DateTime? DataResposta,string MotivoRecusa);
 public record EscalaDto(Guid Id,Guid PlantaoId,Guid MedicoId,string Status,string? Justificativa);
 public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
 public record EscalaDetailsDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string MedicoEmail,string MedicoTelefone,string HospitalNome,string HospitalCidade,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string Status,string? Justificativa);

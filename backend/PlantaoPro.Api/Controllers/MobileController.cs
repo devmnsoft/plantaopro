@@ -50,6 +50,9 @@ public class MobileController : ControllerBase
         return string.IsNullOrWhiteSpace(roles) ? "sem-perfil" : roles;
     }
     private string GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+    private static int NormalizarPage(int page) => Math.Max(1, page);
+    private static int NormalizarPageSize(int pageSize) => Math.Clamp(pageSize, 1, 50);
+    private static int NormalizarLimite(int limite) => Math.Clamp(limite, 1, 25);
 
 
     private async Task<ApiResponse<bool>?> ValidarPlanoMobileAsync()
@@ -130,8 +133,10 @@ public class MobileController : ControllerBase
     }
 
     [HttpPut("perfil")]
-    public IActionResult AtualizarPerfil([FromBody] MobilePerfilUpdateRequest request)
+    public async Task<IActionResult> AtualizarPerfil([FromBody] MobilePerfilUpdateRequest request)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         try
         {
             if (string.IsNullOrWhiteSpace(request.Nome)) return BadRequest(ApiResponse<object>.Fail("Verifique os campos obrigatórios.", 400));
@@ -147,6 +152,8 @@ public class MobileController : ControllerBase
     [HttpPut("notificacoes/{id:guid}/lida")]
     public async Task<IActionResult> NotificacaoLida(Guid id)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try { var response = await _notificacao.MarcarLidaAsync(uid, id, GetIp(), Request.Headers.UserAgent.ToString()); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile notificacao lida erro uid:{Uid} id:{Id}", uid, id); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar notificação.", 500)); }
@@ -155,6 +162,8 @@ public class MobileController : ControllerBase
     [HttpPut("notificacoes/lidas")]
     public async Task<IActionResult> NotificacoesLidas()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try { var response = await _notificacao.MarcarTodasLidasAsync(uid, GetIp(), Request.Headers.UserAgent.ToString()); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile notificacoes lidas erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar notificações.", 500)); }
@@ -189,8 +198,8 @@ public class MobileController : ControllerBase
         var uid = GetUserId();
         try
         {
-            var response = await _medicoArea.PlantoesDisponiveisAsync(uid, page, pageSize);
-            _logger.LogInformation("Mobile plantoes disponiveis uid:{Uid} perfil:{Perfil} ip:{Ip} page:{Page} size:{Size} duracaoMs:{Duracao}", uid, GetPerfil(), GetIp(), page, pageSize, sw.ElapsedMilliseconds);
+            var response = await _medicoArea.PlantoesDisponiveisAsync(uid, NormalizarPage(page), NormalizarPageSize(pageSize));
+            _logger.LogInformation("Mobile plantoes disponiveis uid:{Uid} perfil:{Perfil} ip:{Ip} page:{Page} size:{Size} duracaoMs:{Duracao}", uid, GetPerfil(), GetIp(), NormalizarPage(page), NormalizarPageSize(pageSize), sw.ElapsedMilliseconds);
             return StatusCode(response.StatusCode, response);
         }
         catch (Exception ex)
@@ -206,7 +215,7 @@ public class MobileController : ControllerBase
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
-        try { var response = await _medicoArea.MinhasEscalasAsync(uid, page, pageSize); return StatusCode(response.StatusCode, response); }
+        try { var response = await _medicoArea.MinhasEscalasAsync(uid, NormalizarPage(page), NormalizarPageSize(pageSize)); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile escalas erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar escalas.", 500)); }
     }
 
@@ -216,7 +225,7 @@ public class MobileController : ControllerBase
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
-        try { var response = await _medicoArea.MeusPagamentosAsync(uid, page, pageSize); return StatusCode(response.StatusCode, response); }
+        try { var response = await _medicoArea.MeusPagamentosAsync(uid, NormalizarPage(page), NormalizarPageSize(pageSize)); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile pagamentos erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar pagamentos.", 500)); }
     }
 
@@ -226,18 +235,20 @@ public class MobileController : ControllerBase
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
-        try { var response = await _notificacao.ListarAsync(uid, new NotificationFilterRequest(null, null, null, null, page, pageSize)); return StatusCode(response.StatusCode, response); }
+        try { var response = await _notificacao.ListarAsync(uid, new NotificationFilterRequest(null, null, null, null, NormalizarPage(page), NormalizarPageSize(pageSize))); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile notificacoes erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar notificações.", 500)); }
     }
 
     [HttpGet("notificacoes/contador")]
     public async Task<IActionResult> ContadorNotificacoes()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var total = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.notificacoes where usuario_id=@uid and reg_status='A' and coalesce(lida,false)=false", new { uid });
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.notificacoes where usuario_id=@uid and reg_status='A' and coalesce(lida,false)=false", new { uid });
             return Ok(ApiResponse<object>.Ok(new { total }, "Contador carregado."));
         }
         catch (Exception ex)
@@ -250,7 +261,7 @@ public class MobileController : ControllerBase
     [HttpGet("convites")]
     public async Task<IActionResult> Convites([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        return await PlantoesDisponiveis(page, pageSize);
+        return await PlantoesDisponiveis(NormalizarPage(page), NormalizarPageSize(pageSize));
     }
 
     [HttpGet("convites/{id:guid}")]
@@ -266,14 +277,19 @@ public class MobileController : ControllerBase
     }
 
     [HttpPost("convites/{id:guid}/recusar")]
-    public IActionResult RecusarConvite(Guid id)
+    public async Task<IActionResult> RecusarConvite(Guid id)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        await _audit.RegistrarAsync(GetUserId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.ApiMobile, id, AuditoriaConstants.Acoes.RecusarConvite, new { conviteId = id }, true, GetIp(), GetPerfil());
         return Ok(ApiResponse<object>.Ok(new { id, status = "recusado" }, "Convite recusado."));
     }
 
     [HttpGet("recomendacoes")]
     public async Task<IActionResult> Recomendacoes([FromQuery] int limite = 10)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try
         {
@@ -281,7 +297,7 @@ public class MobileController : ControllerBase
             var clienteId = _usuarioContext.GetClienteId();
             var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' and (@clienteId is null or cliente_id=@clienteId) limit 1", new { uid, clienteId });
             if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
-            var lista = await _recomendacaoService.RecomendarPlantoesAsync(medicoId.Value, limite);
+            var lista = await _recomendacaoService.RecomendarPlantoesAsync(medicoId.Value, NormalizarLimite(limite));
             return Ok(ApiResponse<IEnumerable<MedicoPlantaoRecomendacaoDto>>.Ok(lista, "Recomendações carregadas com sucesso."));
         }
         catch (Exception ex)
@@ -305,6 +321,42 @@ public class MobileController : ControllerBase
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         return Ok(ApiResponse<object>.Ok(new { notificacoesPush = true, lembretePlantaoHoras = 12 }, "Preferências carregadas com sucesso."));
+    }
+
+
+
+    [HttpPut("disponibilidade")]
+    public async Task<IActionResult> AtualizarDisponibilidade([FromBody] object request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        try
+        {
+            await _audit.RegistrarAsync(GetUserId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.Editar, new { area = "disponibilidade_mobile" }, true, GetIp(), GetPerfil());
+            return Ok(ApiResponse<object>.Ok(new { atualizado = true }, "Disponibilidade atualizada com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile atualizar disponibilidade erro uid:{Uid}", GetUserId());
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar disponibilidade.", 500));
+        }
+    }
+
+    [HttpPut("preferencias")]
+    public async Task<IActionResult> AtualizarPreferencias([FromBody] object request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        try
+        {
+            await _audit.RegistrarAsync(GetUserId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.Editar, new { area = "preferencias_mobile" }, true, GetIp(), GetPerfil());
+            return Ok(ApiResponse<object>.Ok(new { atualizado = true }, "Preferências atualizadas com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile atualizar preferencias erro uid:{Uid}", GetUserId());
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível atualizar preferências.", 500));
+        }
     }
 
     [HttpGet("plantoes/{id:guid}")]

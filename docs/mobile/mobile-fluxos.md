@@ -10,8 +10,10 @@
 2. App lista plantões disponíveis com paginação.
 3. Médico abre detalhe do plantão.
 4. Médico solicita plantão.
-5. API valida vínculo do médico, duplicidade, elegibilidade e conflito.
-6. App exibe toast/snackbar com mensagem amigável.
+5. API resolve o médico pelo usuário autenticado, valida `cliente_id` do plantão e delega a solicitação ao serviço operacional de escala.
+6. Serviço de escala bloqueia plantão indisponível, duplicidade, médico inativo, especialidade incompatível, conflito de horário e limite semanal.
+7. API registra auditoria da solicitação ou do acesso negado.
+8. App exibe toast/snackbar com mensagem amigável.
 
 ## Convites
 1. App lista convites pendentes.

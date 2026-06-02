@@ -27,10 +27,10 @@
 |---|---|---|---|
 | `GET` | `/api/mobile/plantoes-disponiveis?page=1&pageSize=20` | Listar oportunidades disponíveis. | Apenas plantões do cliente do médico, paginado. |
 | `GET` | `/api/mobile/plantoes/{id}` | Detalhar plantão. | `404` se não existir; `403` se fora do cliente. |
-| `POST` | `/api/mobile/plantoes/{id}/solicitar` | Solicitar escala. | Bloqueia duplicidade e audita. |
+| `POST` | `/api/mobile/plantoes/{id}/solicitar` | Solicitar escala. | Valida cliente, médico ativo, especialidade, duplicidade, conflito, vagas e regras de escala antes de auditar. |
 | `GET` | `/api/mobile/convites?page=1&pageSize=20` | Listar convites/oportunidades. | MVP reaproveita a listagem disponível. |
 | `GET` | `/api/mobile/convites/{id}` | Detalhar convite. | Mesmo contrato do detalhe de plantão. |
-| `POST` | `/api/mobile/convites/{id}/aceitar` | Aceitar convite. | Mesmo contrato de solicitação de plantão. |
+| `POST` | `/api/mobile/convites/{id}/aceitar` | Aceitar convite. | Revalida as mesmas regras da solicitação de plantão no momento do aceite. |
 | `POST` | `/api/mobile/convites/{id}/recusar` | Recusar convite. | Retorna status recusado e registra auditoria. |
 | `GET` | `/api/mobile/minhas-escalas?page=1&pageSize=20` | Escalas do médico. | Médico só vê dados próprios. |
 
@@ -59,3 +59,4 @@
 - [ ] `401` para chamada sem token.
 - [ ] `403` para plano/perfil sem permissão.
 - [ ] Listagens com `page` e `pageSize`.
+- [ ] Solicitação mobile reutiliza o serviço operacional de escala para duplicidade, elegibilidade, conflito e vagas.

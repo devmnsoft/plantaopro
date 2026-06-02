@@ -20,18 +20,20 @@ public class MobileController : ControllerBase
     private readonly MedicoAreaService _medicoArea;
     private readonly MedicoRecomendacaoService _recomendacaoService;
     private readonly NotificacaoService _notificacao;
+    private readonly EscalaService _escala;
     private readonly ILogger<MobileController> _logger;
     private readonly UsuarioContextService _usuarioContext;
     private readonly AssinaturaGuardService _assinaturaGuard;
     private readonly IAuditService _audit;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, EscalaService escala, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
         _medicoArea = medicoArea;
         _recomendacaoService = recomendacaoService;
         _notificacao = notificacao;
+        _escala = escala;
         _logger = logger;
         _usuarioContext = usuarioContext;
         _assinaturaGuard = assinaturaGuard;
@@ -368,11 +370,17 @@ public class MobileController : ControllerBase
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var clienteId = _usuarioContext.GetClienteId();
+            var plantaoExiste = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes where id=@id and reg_status='A'", new { id });
             var row = await cn.QueryFirstOrDefaultAsync(@"select p.id, h.nome_fantasia as hospitalNome, e.nome as especialidadeNome, p.data_inicio as dataInicio, p.data_fim as dataFim, p.valor, p.vagas_disponiveis as vagasDisponiveis, p.status
 from plantaopro.plantoes p
 join plantaopro.hospitais h on h.id=p.hospital_id
 join plantaopro.especialidades e on e.id=p.especialidade_id
 where p.id=@id and p.reg_status='A' and (@clienteId is null or p.cliente_id=@clienteId)", new { id, clienteId });
+            if (row is null && plantaoExiste > 0)
+            {
+                await _audit.RegistrarAsync(GetUserId(), clienteId, AuditoriaConstants.Entidades.ApiMobile, id, AuditoriaConstants.Acoes.AcessoNegado, new { motivo = "plantao_fora_do_cliente" }, false, GetIp(), GetPerfil());
+                return StatusCode(403, ApiResponse<object>.Fail("Você não possui permissão para acessar este plantão.", 403));
+            }
             if (row is null) return NotFound(ApiResponse<object>.Fail("Plantão não encontrado.", 404));
             return Ok(ApiResponse<object>.Ok(row, "Plantão carregado."));
         }
@@ -389,27 +397,35 @@ where p.id=@id and p.reg_status='A' and (@clienteId is null or p.cliente_id=@cli
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
+        var sw = Stopwatch.StartNew();
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var clienteId = _usuarioContext.GetClienteId();
-            var medicoId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.medicos where lower(email)=lower((select email from plantaopro.usuarios where id=@uid)) and reg_status='A' and (@clienteId is null or cliente_id=@clienteId) limit 1", new { uid, clienteId });
-            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado.", 404));
-            var plantaoPermitido = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.plantoes where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { id, clienteId });
+            var medicoId = await cn.ExecuteScalarAsync<Guid?>(@"select id
+from plantaopro.medicos
+where reg_status='A'
+  and (@clienteId is null or cliente_id=@clienteId)
+  and (usuario_id=@uid or lower(email)=lower((select email from plantaopro.usuarios where id=@uid)))
+limit 1", new { uid, clienteId });
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+
+            var plantaoPermitido = await cn.ExecuteScalarAsync<long>(@"select count(1)
+from plantaopro.plantoes
+where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { id, clienteId });
             if (plantaoPermitido == 0)
             {
                 await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.ApiMobile, id, AuditoriaConstants.Acoes.AcessoNegado, new { motivo = "plantao_fora_do_cliente" }, false, GetIp(), GetPerfil());
                 return StatusCode(403, ApiResponse<object>.Fail("Você não possui permissão para acessar este plantão.", 403));
             }
-            var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas where plantao_id=@id and medico_id=@medico and reg_status='A'", new { id, medico = medicoId });
-            if (exists > 0) return BadRequest(ApiResponse<object>.Fail("Solicitação já existe para este plantão.", 400));
-            await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,reg_status,reg_date) values(gen_random_uuid(),@id,@medico,'solicitado','A',now())", new { id, medico = medicoId });
-            await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Escala, null, AuditoriaConstants.Acoes.SolicitarEscala, new { plantaoId = id, medicoId }, true, GetIp(), GetPerfil());
-            return Ok(ApiResponse<object>.Ok(new { id }, "Solicitação enviada com sucesso."));
+
+            var response = await _escala.AceitarAsync(id, medicoId.Value, uid, GetIp(), Request.Headers.UserAgent.ToString());
+            _logger.LogInformation("Mobile solicitação de plantão uid:{Uid} medico:{MedicoId} plantao:{PlantaoId} status:{StatusCode} duracaoMs:{Duracao}", uid, medicoId, id, response.StatusCode, sw.ElapsedMilliseconds);
+            return StatusCode(response.StatusCode, response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Mobile solicitar plantao erro uid:{Uid} id:{Id}", uid, id);
+            _logger.LogError(ex, "Mobile solicitar plantao erro uid:{Uid} id:{Id} duracaoMs:{Duracao}", uid, id, sw.ElapsedMilliseconds);
             return StatusCode(500, ApiResponse<object>.Fail("Não foi possível solicitar plantão.", 500));
         }
     }

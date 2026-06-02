@@ -59,6 +59,7 @@ Use este checklist antes de liberar ambiente para cliente piloto ou demonstraç�
 - [ ] `POST /api/mobile/auth/login` retorna JWT válido.
 - [ ] Endpoint mobile sem token retorna `401`.
 - [ ] Médico não acessa plantão de outro cliente.
+- [ ] Solicitação mobile reutiliza regras de escala para bloquear duplicidade, conflito, médico inativo, especialidade incompatível e plantão sem vaga.
 - [ ] Listagens mobile usam paginação e payload leve.
 - [ ] Plano sem mobile retorna `403` amigável.
 - [ ] Documentação em `docs/mobile/mobile-api-endpoints.md` revisada.

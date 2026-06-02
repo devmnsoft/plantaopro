@@ -63,4 +63,42 @@ public class MobileAndSecurityContractTests
         Assert.DoesNotContain("Exception", response.Message);
         Assert.DoesNotContain("stack", response.Message, StringComparison.OrdinalIgnoreCase);
     }
+    [Fact]
+    public void MobileController_DeveCentralizarSolicitacaoNoServicoDeEscala()
+    {
+        var campo = typeof(MobileController).GetField("_escala", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var metodo = typeof(MobileController).GetMethod(nameof(MobileController.SolicitarPlantao));
+
+        Assert.NotNull(campo);
+        Assert.Equal(typeof(PlantaoPro.Api.Data.EscalaService), campo!.FieldType);
+        Assert.NotNull(metodo);
+    }
+
+    [Fact]
+    public void MobileController_DeveExporEndpointsMvpObrigatorios()
+    {
+        var rotas = typeof(MobileController)
+            .GetMethods()
+            .SelectMany(m => m.GetCustomAttributes(typeof(HttpMethodAttribute), inherit: true).Cast<HttpMethodAttribute>())
+            .SelectMany(a => a.Template is null ? Array.Empty<string>() : new[] { a.Template })
+            .ToArray();
+
+        Assert.Contains("auth/login", rotas);
+        Assert.Contains("me", rotas);
+        Assert.Contains("dashboard", rotas);
+        Assert.Contains("plantoes-disponiveis", rotas);
+        Assert.Contains("plantoes/{id:guid}", rotas);
+        Assert.Contains("plantoes/{id:guid}/solicitar", rotas);
+        Assert.Contains("convites", rotas);
+        Assert.Contains("convites/{id:guid}/aceitar", rotas);
+        Assert.Contains("convites/{id:guid}/recusar", rotas);
+        Assert.Contains("minhas-escalas", rotas);
+        Assert.Contains("meus-pagamentos", rotas);
+        Assert.Contains("notificacoes", rotas);
+        Assert.Contains("notificacoes/{id:guid}/lida", rotas);
+        Assert.Contains("perfil", rotas);
+        Assert.Contains("disponibilidade", rotas);
+        Assert.Contains("preferencias", rotas);
+    }
+
 }

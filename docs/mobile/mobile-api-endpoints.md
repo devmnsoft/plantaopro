@@ -28,10 +28,10 @@
 | `GET` | `/api/mobile/plantoes-disponiveis?page=1&pageSize=20` | Listar oportunidades disponíveis. | Apenas plantões do cliente do médico, paginado. |
 | `GET` | `/api/mobile/plantoes/{id}` | Detalhar plantão. | `404` se não existir; `403` se fora do cliente. |
 | `POST` | `/api/mobile/plantoes/{id}/solicitar` | Solicitar escala. | Valida cliente, médico ativo, especialidade, duplicidade, conflito, vagas e regras de escala antes de auditar. |
-| `GET` | `/api/mobile/convites?page=1&pageSize=20` | Listar convites/oportunidades. | MVP reaproveita a listagem disponível. |
-| `GET` | `/api/mobile/convites/{id}` | Detalhar convite. | Mesmo contrato do detalhe de plantão. |
-| `POST` | `/api/mobile/convites/{id}/aceitar` | Aceitar convite. | Revalida as mesmas regras da solicitação de plantão no momento do aceite. |
-| `POST` | `/api/mobile/convites/{id}/recusar` | Recusar convite. | Retorna status recusado e registra auditoria. |
+| `GET` | `/api/mobile/convites?page=1&pageSize=20` | Listar convites do médico autenticado. | Retorna somente convites vinculados ao médico/cliente, com paginação e dados leves de plantão. |
+| `GET` | `/api/mobile/convites/{id}` | Detalhar convite. | `404` quando o convite não pertence ao médico autenticado ou ao cliente permitido. |
+| `POST` | `/api/mobile/convites/{id}/aceitar` | Aceitar convite. | Revalida vagas, duplicidade, conflito e elegibilidade pelo serviço operacional de escala; atualiza o convite para `ACEITO` quando a solicitação é criada. |
+| `POST` | `/api/mobile/convites/{id}/recusar` | Recusar convite. | Exige `{ "motivo": "..." }`, atualiza o convite para `RECUSADO` e registra auditoria sem logar o texto do motivo. |
 | `GET` | `/api/mobile/minhas-escalas?page=1&pageSize=20` | Escalas do médico. | Médico só vê dados próprios. |
 
 ## Financeiro e notificações
@@ -60,3 +60,4 @@
 - [ ] `403` para plano/perfil sem permissão.
 - [ ] Listagens com `page` e `pageSize`.
 - [ ] Solicitação mobile reutiliza o serviço operacional de escala para duplicidade, elegibilidade, conflito e vagas.
+- [ ] Convites mobile usam o identificador do convite, não do plantão, e não retornam convites de outro médico.

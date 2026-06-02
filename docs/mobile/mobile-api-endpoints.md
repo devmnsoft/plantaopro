@@ -1,63 +1,71 @@
-# API Mobile MVP — endpoints
+# API Mobile MVP — Release Candidate
 
-## Padrões obrigatórios
-- Base: `/api/mobile`.
-- Autenticação: `Bearer JWT` em todos os endpoints, exceto `POST /api/mobile/auth/login`.
-- Perfil esperado: `MEDICO` para jornadas do aplicativo; demais perfis devem receber `403` amigável quando a ação não for permitida.
-- Envelope: todas as respostas usam `ApiResponse<T>` com `success`, `message`, `data`, `errors`, `statusCode` e `timestamp`.
-- Listagens aceitam `page` e `pageSize`; o backend normaliza `page >= 1` e limita `pageSize` para evitar payload pesado.
-- Payloads não retornam senha, hash, segredo, SQL bruto, stack trace ou dados de outro cliente/médico.
+Base: `/api/mobile`  
+Autenticação: JWT Bearer em todos os endpoints, exceto `POST /api/mobile/auth/login`.
 
-## Autenticação
-| Método | Endpoint | Autenticação | Objetivo | Resultado esperado |
-|---|---|---:|---|---|
-| `POST` | `/api/mobile/auth/login` | Não | Autenticar médico com e-mail/senha. | `ApiResponse<MobileLoginResponseDto>` com `token`, `expiresAtUtc` e `roles`. |
-| `POST` | `/api/mobile/auth/logout` | Sim | Encerrar sessão local do app. | Confirmação para o app descartar o token. |
+## Regras transversais
 
-## Identidade, perfil e dashboard
-| Método | Endpoint | Objetivo | Observações |
+- Todas as respostas seguem `ApiResponse<T>`.
+- Listagens aceitam `page` e `pageSize`; o backend limita `pageSize` a 50.
+- O usuário médico acessa somente seus próprios plantões, convites, escalas, pagamentos, notificações e chamados.
+- O acesso é negado com mensagem amigável quando o plano do cliente não permite mobile.
+- Logs não devem registrar senha, hash, token completo ou payload sensível.
+
+## Endpoints homologáveis
+
+| Método | Rota | Objetivo | Critério de aceite |
 |---|---|---|---|
-| `GET` | `/api/mobile/me` | Dados mínimos do usuário autenticado. | Retorna id, nome, e-mail e perfil. |
-| `GET` | `/api/mobile/dashboard` | Resumo mobile do médico. | Cards leves: plantões disponíveis, escalas, pagamentos e notificações. |
-| `GET` | `/api/mobile/perfil` | Perfil do usuário. | Sem dados sensíveis. |
-| `PUT` | `/api/mobile/perfil` | Atualizar nome/telefone. | Valida `nome` obrigatório e registra erro amigável. |
+| POST | `/auth/login` | Autenticar app e retornar JWT. | Login válido retorna token; login inválido retorna falha amigável. |
+| GET | `/me` | Identificar usuário autenticado. | Sem token retorna 401; com token retorna dados leves. |
+| GET | `/dashboard` | Resumo mobile do médico. | Retorna próximos plantões, convites, pagamentos e notificações. |
+| GET | `/plantoes-disponiveis` | Plantões abertos para solicitação. | Respeita cliente, médico e paginação. |
+| GET | `/plantoes/{id}` | Detalhe leve do plantão. | Plantão de outro cliente retorna 403 amigável. |
+| POST | `/plantoes/{id}/solicitar` | Solicitar plantão. | Valida médico autenticado, cliente, vaga e regras de escala. |
+| GET | `/convites` | Convites do médico. | Não expõe token, senha ou usuário interno. |
+| POST | `/convites/{id}/aceitar` | Aceitar convite. | Revalida vaga/conflito antes de criar/confirmar escala. |
+| POST | `/convites/{id}/recusar` | Recusar convite. | Exige motivo e registra auditoria. |
+| GET | `/minhas-escalas` | Escalas do médico. | Retorna somente escalas próprias. |
+| GET | `/meus-pagamentos` | Pagamentos do médico. | Retorna somente pagamentos próprios. |
+| GET | `/notificacoes` | Feed de notificações. | Paginação e dados leves. |
+| PUT | `/notificacoes/{id}/lida` | Marcar notificação como lida. | Só altera notificação do próprio usuário. |
+| GET | `/perfil` | Perfil mobile. | Dados mínimos sem informações sensíveis. |
+| PUT | `/perfil` | Atualizar dados editáveis. | Validação de campos obrigatórios. |
+| GET | `/disponibilidade` | Consultar disponibilidade. | Retorno leve para tela mobile-first. |
+| PUT | `/disponibilidade` | Atualizar disponibilidade. | Registra auditoria. |
+| GET | `/preferencias` | Consultar preferências. | Retorna preferências leves. |
+| PUT | `/preferencias` | Atualizar preferências. | Registra auditoria. |
+| GET | `/suporte/chamados` | Listar chamados do usuário. | Filtra por usuário e cliente; paginação obrigatória. |
+| POST | `/suporte/chamados` | Abrir chamado pelo app. | Exige título e descrição; cria protocolo e auditoria. |
 
-## Plantões, convites e escalas
-| Método | Endpoint | Objetivo | Segurança/performance |
-|---|---|---|---|
-| `GET` | `/api/mobile/plantoes-disponiveis?page=1&pageSize=20` | Listar oportunidades disponíveis. | Apenas plantões do cliente do médico, paginado. |
-| `GET` | `/api/mobile/plantoes/{id}` | Detalhar plantão. | `404` se não existir; `403` se fora do cliente. |
-| `POST` | `/api/mobile/plantoes/{id}/solicitar` | Solicitar escala. | Valida cliente, médico ativo, especialidade, duplicidade, conflito, vagas e regras de escala antes de auditar. |
-| `GET` | `/api/mobile/convites?page=1&pageSize=20` | Listar convites do médico autenticado. | Retorna somente convites vinculados ao médico/cliente, com paginação e dados leves de plantão. |
-| `GET` | `/api/mobile/convites/{id}` | Detalhar convite. | `404` quando o convite não pertence ao médico autenticado ou ao cliente permitido. |
-| `POST` | `/api/mobile/convites/{id}/aceitar` | Aceitar convite. | Revalida vagas, duplicidade, conflito e elegibilidade pelo serviço operacional de escala; atualiza o convite para `ACEITO` quando a solicitação é criada. |
-| `POST` | `/api/mobile/convites/{id}/recusar` | Recusar convite. | Exige `{ "motivo": "..." }`, atualiza o convite para `RECUSADO` e registra auditoria sem logar o texto do motivo. |
-| `GET` | `/api/mobile/minhas-escalas?page=1&pageSize=20` | Escalas do médico. | Médico só vê dados próprios. |
+## Payloads principais
 
-## Financeiro e notificações
-| Método | Endpoint | Objetivo | Observações |
-|---|---|---|---|
-| `GET` | `/api/mobile/meus-pagamentos?page=1&pageSize=20` | Pagamentos do médico. | Sem dados financeiros de outros médicos. |
-| `GET` | `/api/mobile/notificacoes?page=1&pageSize=20` | Notificações do usuário. | Paginado e filtrado pelo usuário autenticado. |
-| `GET` | `/api/mobile/notificacoes/contador` | Total de não lidas. | Retorna `long` no contador. |
-| `PUT` | `/api/mobile/notificacoes/{id}/lida` | Marcar uma notificação como lida. | Usa plano mobile e usuário autenticado. |
-| `PUT` | `/api/mobile/notificacoes/lidas` | Marcar todas como lidas. | Usa plano mobile e usuário autenticado. |
+### Login
 
-## Preferências, disponibilidade e recomendações
-| Método | Endpoint | Objetivo | Observações |
-|---|---|---|---|
-| `GET` | `/api/mobile/disponibilidade` | Disponibilidade do médico. | MVP retorna contrato base para evolução do app. |
-| `PUT` | `/api/mobile/disponibilidade` | Atualizar disponibilidade. | A implementar conforme app mobile avançar. |
-| `GET` | `/api/mobile/preferencias` | Preferências mobile. | Retorna flags leves. |
-| `PUT` | `/api/mobile/preferencias` | Atualizar preferências. | A implementar conforme app mobile avançar. |
-| `GET` | `/api/mobile/recomendacoes?limite=10` | Plantões recomendados. | Limite normalizado para evitar respostas pesadas. |
+```json
+{
+  "email": "medico.demo@plantaopro.local",
+  "senha": "Senha@123"
+}
+```
 
-## Checklist Swagger
-- [ ] Tag `Mobile` visível.
-- [ ] Login mobile documentado sem cadeado.
-- [ ] Demais endpoints exigem JWT.
-- [ ] `401` para chamada sem token.
-- [ ] `403` para plano/perfil sem permissão.
-- [ ] Listagens com `page` e `pageSize`.
-- [ ] Solicitação mobile reutiliza o serviço operacional de escala para duplicidade, elegibilidade, conflito e vagas.
-- [ ] Convites mobile usam o identificador do convite, não do plantão, e não retornam convites de outro médico.
+### Criar chamado mobile
+
+```json
+{
+  "titulo": "Dúvida sobre pagamento",
+  "descricao": "Pagamento do plantão realizado ainda não apareceu como confirmado.",
+  "categoria": "FINANCEIRO",
+  "prioridade": "NORMAL"
+}
+```
+
+Resultado esperado: HTTP 201 com `id`, `protocolo` e `status=ABERTO`.
+
+## Checklist de smoke test no Swagger
+
+1. Executar `POST /api/mobile/auth/login` com médico demo.
+2. Copiar o token e autorizar o Swagger com `Bearer <token>`.
+3. Executar `/me`, `/dashboard`, `/plantoes-disponiveis` e `/notificacoes`.
+4. Abrir um chamado em `/suporte/chamados`.
+5. Listar `/suporte/chamados` e confirmar que apenas chamados do usuário aparecem.
+6. Repetir uma chamada sem token e confirmar HTTP 401.

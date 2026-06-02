@@ -586,7 +586,94 @@ where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId
     }
 
 
+    [HttpGet("suporte/chamados")]
+    public async Task<IActionResult> ChamadosSuporte([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        var clienteId = _usuarioContext.GetClienteId();
+        var pagina = NormalizarPage(page);
+        var tamanho = NormalizarPageSize(pageSize);
+        var offset = (pagina - 1) * tamanho;
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var total = await cn.ExecuteScalarAsync<long>(@"select count(1)
+from plantaopro.chamados_suporte
+where reg_status='A'
+  and usuario_id=@uid
+  and (@clienteId is null or cliente_id=@clienteId)", new { uid, clienteId });
+
+            var itens = await cn.QueryAsync<MobileChamadoSuporteDto>(@"select id as ""Id"",
+       coalesce(protocolo,'') as ""Protocolo"",
+       coalesce(titulo,'') as ""Titulo"",
+       coalesce(categoria,'GERAL') as ""Categoria"",
+       coalesce(prioridade,'NORMAL') as ""Prioridade"",
+       coalesce(status,'ABERTO') as ""Status"",
+       criado_em as ""CriadoEm"",
+       atualizado_em as ""AtualizadoEm""
+from plantaopro.chamados_suporte
+where reg_status='A'
+  and usuario_id=@uid
+  and (@clienteId is null or cliente_id=@clienteId)
+order by criado_em desc
+limit @tamanho offset @offset", new { uid, clienteId, tamanho, offset });
+
+            return Ok(ApiResponse<object>.Ok(new { page = pagina, pageSize = tamanho, total, items = itens }, "Chamados carregados com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile listar chamados suporte erro uid:{Uid}", uid);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar chamados de suporte.", 500));
+        }
+    }
+
+    [HttpPost("suporte/chamados")]
+    public async Task<IActionResult> CriarChamadoSuporte([FromBody] MobileCriarChamadoSuporteRequest? request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        var clienteId = _usuarioContext.GetClienteId();
+        if (request is null || string.IsNullOrWhiteSpace(request.Titulo) || string.IsNullOrWhiteSpace(request.Descricao))
+        {
+            return BadRequest(ApiResponse<object>.Fail("Informe título e descrição do chamado.", 400));
+        }
+
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var id = Guid.NewGuid();
+            var protocolo = "SUP-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            await cn.ExecuteAsync(@"insert into plantaopro.chamados_suporte
+(id, cliente_id, usuario_id, protocolo, titulo, descricao, categoria, prioridade, status, origem, reg_status, criado_em, atualizado_em)
+values
+(@id, @clienteId, @uid, @protocolo, @titulo, @descricao, @categoria, @prioridade, 'ABERTO', 'MOBILE', 'A', now(), now())", new
+            {
+                id,
+                clienteId,
+                uid,
+                protocolo,
+                titulo = request.Titulo.Trim(),
+                descricao = request.Descricao.Trim(),
+                categoria = string.IsNullOrWhiteSpace(request.Categoria) ? "GERAL" : request.Categoria.Trim().ToUpperInvariant(),
+                prioridade = string.IsNullOrWhiteSpace(request.Prioridade) ? "NORMAL" : request.Prioridade.Trim().ToUpperInvariant()
+            });
+            await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Suporte, id, AuditoriaConstants.Acoes.Criar, new { origem = "mobile", protocolo }, true, GetIp(), GetPerfil());
+            return StatusCode(201, new ApiResponse<object>(true, "Chamado criado com sucesso.", new { id, protocolo, status = "ABERTO" }, null, 201, DateTime.UtcNow));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile criar chamado suporte erro uid:{Uid}", uid);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível criar chamado de suporte.", 500));
+        }
+    }
+
+
     public sealed record MobilePerfilUpdateRequest(string Nome, string? Telefone);
+    public sealed record MobileCriarChamadoSuporteRequest(string Titulo, string Descricao, string? Categoria, string? Prioridade);
+    public sealed record MobileChamadoSuporteDto(Guid Id, string Protocolo, string Titulo, string Categoria, string Prioridade, string Status, DateTime CriadoEm, DateTime AtualizadoEm);
     public sealed record MobileRecusarConviteRequest(string Motivo);
     public sealed record MobileConviteDto(Guid Id, Guid PlantaoId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, string Status, string Mensagem, DateTime DataEnvio, DateTime? DataResposta, string MotivoRecusa);
 }

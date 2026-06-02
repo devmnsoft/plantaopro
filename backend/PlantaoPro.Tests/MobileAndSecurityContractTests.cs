@@ -99,6 +99,7 @@ public class MobileAndSecurityContractTests
         Assert.Contains("perfil", rotas);
         Assert.Contains("disponibilidade", rotas);
         Assert.Contains("preferencias", rotas);
+        Assert.Contains("suporte/chamados", rotas);
     }
 
 
@@ -129,6 +130,20 @@ public class MobileAndSecurityContractTests
         Assert.DoesNotContain("SenhaHash", propriedades);
         Assert.DoesNotContain("Token", propriedades);
         Assert.DoesNotContain("UsuarioId", propriedades);
+    }
+
+    [Fact]
+    public void MobileSuporte_DeveUsarContratoLeveESemDadosSensiveis()
+    {
+        var dto = typeof(MobileController).GetNestedType("MobileChamadoSuporteDto");
+        var request = typeof(MobileController).GetNestedType("MobileCriarChamadoSuporteRequest");
+
+        Assert.NotNull(dto);
+        Assert.NotNull(request);
+        Assert.Contains("Protocolo", dto!.GetProperties().Select(p => p.Name));
+        Assert.Contains("Titulo", request!.GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("Senha", dto.GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("Token", dto.GetProperties().Select(p => p.Name));
     }
 
 }

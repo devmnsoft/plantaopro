@@ -629,6 +629,55 @@ limit @tamanho offset @offset", new { uid, clienteId, tamanho, offset });
         }
     }
 
+    [HttpGet("suporte/chamados/{id:guid}")]
+    public async Task<IActionResult> ChamadoSuporte(Guid id)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        var clienteId = _usuarioContext.GetClienteId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var chamado = await cn.QueryFirstOrDefaultAsync<MobileChamadoSuporteDetalheDto>(@"select id as ""Id"",
+       coalesce(protocolo,'') as ""Protocolo"",
+       coalesce(titulo,'') as ""Titulo"",
+       coalesce(descricao,'') as ""Descricao"",
+       coalesce(categoria,'GERAL') as ""Categoria"",
+       coalesce(prioridade,'NORMAL') as ""Prioridade"",
+       coalesce(status,'ABERTO') as ""Status"",
+       criado_em as ""CriadoEm"",
+       atualizado_em as ""AtualizadoEm""
+from plantaopro.chamados_suporte
+where id=@id
+  and reg_status='A'
+  and usuario_id=@uid
+  and (@clienteId is null or cliente_id=@clienteId)", new { id, uid, clienteId });
+            if (chamado is null)
+            {
+                await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Suporte, id, AuditoriaConstants.Acoes.AcessoNegado, new { motivo = "chamado_mobile_indisponivel" }, false, GetIp(), GetPerfil());
+                return NotFound(ApiResponse<object>.Fail("Chamado não encontrado para o usuário autenticado.", 404));
+            }
+
+            var mensagens = await cn.QueryAsync<MobileChamadoMensagemDto>(@"select id as ""Id"",
+       coalesce(tipo_autor,'USUARIO') as ""TipoAutor"",
+       coalesce(mensagem,'') as ""Mensagem"",
+       criado_em as ""CriadoEm""
+from plantaopro.chamado_mensagens
+where chamado_id=@id
+  and reg_status='A'
+order by criado_em asc
+limit 50", new { id });
+
+            return Ok(ApiResponse<MobileChamadoSuporteDetalheResponseDto>.Ok(new MobileChamadoSuporteDetalheResponseDto(chamado, mensagens), "Chamado carregado com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile detalhe chamado suporte erro uid:{Uid} chamado:{ChamadoId}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar o chamado de suporte.", 500));
+        }
+    }
+
     [HttpPost("suporte/chamados")]
     public async Task<IActionResult> CriarChamadoSuporte([FromBody] MobileCriarChamadoSuporteRequest? request)
     {
@@ -674,6 +723,9 @@ values
     public sealed record MobilePerfilUpdateRequest(string Nome, string? Telefone);
     public sealed record MobileCriarChamadoSuporteRequest(string Titulo, string Descricao, string? Categoria, string? Prioridade);
     public sealed record MobileChamadoSuporteDto(Guid Id, string Protocolo, string Titulo, string Categoria, string Prioridade, string Status, DateTime CriadoEm, DateTime AtualizadoEm);
+    public sealed record MobileChamadoSuporteDetalheDto(Guid Id, string Protocolo, string Titulo, string Descricao, string Categoria, string Prioridade, string Status, DateTime CriadoEm, DateTime AtualizadoEm);
+    public sealed record MobileChamadoMensagemDto(Guid Id, string TipoAutor, string Mensagem, DateTime CriadoEm);
+    public sealed record MobileChamadoSuporteDetalheResponseDto(MobileChamadoSuporteDetalheDto Chamado, IEnumerable<MobileChamadoMensagemDto> Mensagens);
     public sealed record MobileRecusarConviteRequest(string Motivo);
     public sealed record MobileConviteDto(Guid Id, Guid PlantaoId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, string Status, string Mensagem, DateTime DataEnvio, DateTime? DataResposta, string MotivoRecusa);
 }

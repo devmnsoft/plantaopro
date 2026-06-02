@@ -100,6 +100,7 @@ public class MobileAndSecurityContractTests
         Assert.Contains("disponibilidade", rotas);
         Assert.Contains("preferencias", rotas);
         Assert.Contains("suporte/chamados", rotas);
+        Assert.Contains("suporte/chamados/{id:guid}", rotas);
     }
 
 
@@ -136,14 +137,34 @@ public class MobileAndSecurityContractTests
     public void MobileSuporte_DeveUsarContratoLeveESemDadosSensiveis()
     {
         var dto = typeof(MobileController).GetNestedType("MobileChamadoSuporteDto");
+        var detalhe = typeof(MobileController).GetNestedType("MobileChamadoSuporteDetalheDto");
+        var mensagem = typeof(MobileController).GetNestedType("MobileChamadoMensagemDto");
+        var response = typeof(MobileController).GetNestedType("MobileChamadoSuporteDetalheResponseDto");
         var request = typeof(MobileController).GetNestedType("MobileCriarChamadoSuporteRequest");
 
         Assert.NotNull(dto);
+        Assert.NotNull(detalhe);
+        Assert.NotNull(mensagem);
+        Assert.NotNull(response);
         Assert.NotNull(request);
         Assert.Contains("Protocolo", dto!.GetProperties().Select(p => p.Name));
         Assert.Contains("Titulo", request!.GetProperties().Select(p => p.Name));
+        Assert.Contains("Descricao", detalhe!.GetProperties().Select(p => p.Name));
+        Assert.Contains("Mensagem", mensagem!.GetProperties().Select(p => p.Name));
+        Assert.Contains("Mensagens", response!.GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("Senha", dto.GetProperties().Select(p => p.Name));
         Assert.DoesNotContain("Token", dto.GetProperties().Select(p => p.Name));
+        Assert.DoesNotContain("UsuarioId", detalhe.GetProperties().Select(p => p.Name));
+    }
+
+    [Fact]
+    public void OperacaoService_DeveReceberContextoDoUsuarioParaIsolamentoMultiempresa()
+    {
+        var construtor = Assert.Single(typeof(OperacaoService).GetConstructors());
+        var tipos = construtor.GetParameters().Select(p => p.ParameterType).ToArray();
+
+        Assert.Contains(typeof(UsuarioContextService), tipos);
+        Assert.Contains(AuditoriaConstants.Entidades.Operacao, new[] { AuditoriaConstants.Entidades.Operacao });
     }
 
 }

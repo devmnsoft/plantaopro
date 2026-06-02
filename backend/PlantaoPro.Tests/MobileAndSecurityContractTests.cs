@@ -101,4 +101,34 @@ public class MobileAndSecurityContractTests
         Assert.Contains("preferencias", rotas);
     }
 
+
+    [Fact]
+    public void MobileConvites_DeveUsarContratoDeConviteERecusaComMotivo()
+    {
+        var recusar = typeof(MobileController).GetMethod(nameof(MobileController.RecusarConvite));
+        var aceitar = typeof(MobileController).GetMethod(nameof(MobileController.AceitarConvite));
+        var dto = typeof(MobileController).GetNestedType("MobileConviteDto");
+        var request = typeof(MobileController).GetNestedType("MobileRecusarConviteRequest");
+
+        Assert.NotNull(aceitar);
+        Assert.NotNull(recusar);
+        Assert.NotNull(dto);
+        Assert.NotNull(request);
+        Assert.Contains("PlantaoId", dto!.GetProperties().Select(p => p.Name));
+        Assert.Contains("Status", dto.GetProperties().Select(p => p.Name));
+        Assert.Contains("Motivo", request!.GetProperties().Select(p => p.Name));
+    }
+
+    [Fact]
+    public void MobileConvites_NaoDeveExporCamposSensiveisNoDto()
+    {
+        var dto = typeof(MobileController).GetNestedType("MobileConviteDto");
+        var propriedades = dto!.GetProperties().Select(p => p.Name).ToArray();
+
+        Assert.DoesNotContain("Senha", propriedades);
+        Assert.DoesNotContain("SenhaHash", propriedades);
+        Assert.DoesNotContain("Token", propriedades);
+        Assert.DoesNotContain("UsuarioId", propriedades);
+    }
+
 }

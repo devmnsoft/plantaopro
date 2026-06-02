@@ -57,6 +57,44 @@ public class MobileController : ControllerBase
     private static int NormalizarLimite(int limite) => Math.Clamp(limite, 1, 25);
 
 
+
+    private async Task<Guid?> GetMedicoIdAutenticadoAsync(NpgsqlConnection cn, Guid uid, Guid? clienteId)
+    {
+        return await cn.ExecuteScalarAsync<Guid?>(@"select id
+from plantaopro.medicos
+where reg_status='A'
+  and (@clienteId is null or cliente_id=@clienteId)
+  and (usuario_id=@uid or lower(email)=lower((select email from plantaopro.usuarios where id=@uid)))
+limit 1", new { uid, clienteId });
+    }
+
+    private async Task<MobileConviteDto?> BuscarConviteDoMedicoAsync(NpgsqlConnection cn, Guid conviteId, Guid medicoId, Guid? clienteId)
+    {
+        return await cn.QueryFirstOrDefaultAsync<MobileConviteDto>(@"select c.id as ""Id"",
+       c.plantao_id as ""PlantaoId"",
+       coalesce(h.nome_fantasia,'') as ""HospitalNome"",
+       coalesce(h.cidade,'') as ""HospitalCidade"",
+       coalesce(h.estado,'') as ""HospitalEstado"",
+       coalesce(e.nome,'') as ""EspecialidadeNome"",
+       p.data_inicio as ""DataInicio"",
+       p.data_fim as ""DataFim"",
+       p.valor as ""Valor"",
+       coalesce(c.status,'') as ""Status"",
+       coalesce(c.mensagem,'') as ""Mensagem"",
+       c.data_envio as ""DataEnvio"",
+       c.data_resposta as ""DataResposta"",
+       coalesce(c.motivo_recusa,'') as ""MotivoRecusa""
+from plantaopro.plantao_convites c
+join plantaopro.plantoes p on p.id=c.plantao_id
+join plantaopro.hospitais h on h.id=p.hospital_id
+join plantaopro.especialidades e on e.id=p.especialidade_id
+where c.id=@conviteId
+  and c.medico_id=@medicoId
+  and c.reg_status='A'
+  and p.reg_status='A'
+  and (@clienteId is null or p.cliente_id=@clienteId)", new { conviteId, medicoId, clienteId });
+    }
+
     private async Task<ApiResponse<bool>?> ValidarPlanoMobileAsync()
     {
         var clienteId = _usuarioContext.GetClienteId();
@@ -263,28 +301,145 @@ public class MobileController : ControllerBase
     [HttpGet("convites")]
     public async Task<IActionResult> Convites([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        return await PlantoesDisponiveis(NormalizarPage(page), NormalizarPageSize(pageSize));
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        var pg = NormalizarPage(page);
+        var ps = NormalizarPageSize(pageSize);
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await GetMedicoIdAutenticadoAsync(cn, uid, clienteId);
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+
+            var total = await cn.ExecuteScalarAsync<long>(@"select count(1)
+from plantaopro.plantao_convites c
+join plantaopro.plantoes p on p.id=c.plantao_id
+where c.medico_id=@medicoId
+  and c.reg_status='A'
+  and p.reg_status='A'
+  and (@clienteId is null or p.cliente_id=@clienteId)", new { medicoId, clienteId });
+            var items = await cn.QueryAsync<MobileConviteDto>(@"select c.id as ""Id"",
+       c.plantao_id as ""PlantaoId"",
+       coalesce(h.nome_fantasia,'') as ""HospitalNome"",
+       coalesce(h.cidade,'') as ""HospitalCidade"",
+       coalesce(h.estado,'') as ""HospitalEstado"",
+       coalesce(e.nome,'') as ""EspecialidadeNome"",
+       p.data_inicio as ""DataInicio"",
+       p.data_fim as ""DataFim"",
+       p.valor as ""Valor"",
+       coalesce(c.status,'') as ""Status"",
+       coalesce(c.mensagem,'') as ""Mensagem"",
+       c.data_envio as ""DataEnvio"",
+       c.data_resposta as ""DataResposta"",
+       coalesce(c.motivo_recusa,'') as ""MotivoRecusa""
+from plantaopro.plantao_convites c
+join plantaopro.plantoes p on p.id=c.plantao_id
+join plantaopro.hospitais h on h.id=p.hospital_id
+join plantaopro.especialidades e on e.id=p.especialidade_id
+where c.medico_id=@medicoId
+  and c.reg_status='A'
+  and p.reg_status='A'
+  and (@clienteId is null or p.cliente_id=@clienteId)
+order by c.data_envio desc
+limit @lim offset @off", new { medicoId, clienteId, lim = ps, off = (pg - 1) * ps });
+            return Ok(ApiResponse<PagedResult<MobileConviteDto>>.Ok(new PagedResult<MobileConviteDto>(items, pg, ps, total), "Convites carregados."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile convites erro uid:{Uid}", uid);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar convites.", 500));
+        }
     }
 
     [HttpGet("convites/{id:guid}")]
     public async Task<IActionResult> Convite(Guid id)
     {
-        return await Plantao(id);
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await GetMedicoIdAutenticadoAsync(cn, uid, clienteId);
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+            var convite = await BuscarConviteDoMedicoAsync(cn, id, medicoId.Value, clienteId);
+            if (convite is null) return NotFound(ApiResponse<object>.Fail("Convite não encontrado.", 404));
+            return Ok(ApiResponse<MobileConviteDto>.Ok(convite, "Convite carregado."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile convite detalhe erro uid:{Uid} convite:{ConviteId}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar convite.", 500));
+        }
     }
 
     [HttpPost("convites/{id:guid}/aceitar")]
     public async Task<IActionResult> AceitarConvite(Guid id)
     {
-        return await SolicitarPlantao(id);
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await GetMedicoIdAutenticadoAsync(cn, uid, clienteId);
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+            var convite = await BuscarConviteDoMedicoAsync(cn, id, medicoId.Value, clienteId);
+            if (convite is null) return NotFound(ApiResponse<object>.Fail("Convite não encontrado.", 404));
+            if (!string.Equals(convite.Status, "ENVIADO", StringComparison.OrdinalIgnoreCase) && !string.Equals(convite.Status, "PENDENTE", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(ApiResponse<object>.Fail("Convite não está pendente para aceite.", 400));
+            }
+
+            var response = await _escala.AceitarAsync(convite.PlantaoId, medicoId.Value, uid, GetIp(), Request.Headers.UserAgent.ToString());
+            if (response.Success)
+            {
+                await cn.ExecuteAsync("update plantaopro.plantao_convites set status='ACEITO', data_resposta=now() where id=@id and medico_id=@medicoId", new { id, medicoId });
+                await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Convite, id, AuditoriaConstants.Acoes.AceitarConvite, new { conviteId = id, convite.PlantaoId }, true, GetIp(), GetPerfil());
+            }
+
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile aceitar convite erro uid:{Uid} convite:{ConviteId}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível aceitar convite.", 500));
+        }
     }
 
     [HttpPost("convites/{id:guid}/recusar")]
-    public async Task<IActionResult> RecusarConvite(Guid id)
+    public async Task<IActionResult> RecusarConvite(Guid id, [FromBody] MobileRecusarConviteRequest? request)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
-        await _audit.RegistrarAsync(GetUserId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.ApiMobile, id, AuditoriaConstants.Acoes.RecusarConvite, new { conviteId = id }, true, GetIp(), GetPerfil());
-        return Ok(ApiResponse<object>.Ok(new { id, status = "recusado" }, "Convite recusado."));
+        var uid = GetUserId();
+        if (request is null || string.IsNullOrWhiteSpace(request.Motivo)) return BadRequest(ApiResponse<object>.Fail("Informe o motivo da recusa.", 400));
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var clienteId = _usuarioContext.GetClienteId();
+            var medicoId = await GetMedicoIdAutenticadoAsync(cn, uid, clienteId);
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+            var convite = await BuscarConviteDoMedicoAsync(cn, id, medicoId.Value, clienteId);
+            if (convite is null) return NotFound(ApiResponse<object>.Fail("Convite não encontrado.", 404));
+            if (!string.Equals(convite.Status, "ENVIADO", StringComparison.OrdinalIgnoreCase) && !string.Equals(convite.Status, "PENDENTE", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest(ApiResponse<object>.Fail("Convite não está pendente para recusa.", 400));
+            }
+
+            await cn.ExecuteAsync("update plantaopro.plantao_convites set status='RECUSADO', data_resposta=now(), motivo_recusa=@motivo where id=@id and medico_id=@medicoId", new { id, medicoId, motivo = request.Motivo.Trim() });
+            await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Convite, id, AuditoriaConstants.Acoes.RecusarConvite, new { conviteId = id, motivo = "informado" }, true, GetIp(), GetPerfil());
+            return Ok(ApiResponse<object>.Ok(new { id, status = "RECUSADO" }, "Convite recusado."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile recusar convite erro uid:{Uid} convite:{ConviteId}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível recusar convite.", 500));
+        }
     }
 
     [HttpGet("recomendacoes")]
@@ -432,4 +587,6 @@ where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId
 
 
     public sealed record MobilePerfilUpdateRequest(string Nome, string? Telefone);
+    public sealed record MobileRecusarConviteRequest(string Motivo);
+    public sealed record MobileConviteDto(Guid Id, Guid PlantaoId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, string Status, string Mensagem, DateTime DataEnvio, DateTime? DataResposta, string MotivoRecusa);
 }

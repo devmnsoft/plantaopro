@@ -48,6 +48,10 @@ public static class AuditoriaConstants
         public const string Escala = "ESCALA";
         public const string Convite = "CONVITE";
         public const string Pagamento = "PAGAMENTO";
+        public const string FaturaSaas = "FATURA_SAAS";
+        public const string Assinatura = "ASSINATURA";
+        public const string Plano = "PLANO";
+        public const string Documento = "DOCUMENTO";
         public const string Notificacao = "NOTIFICACAO";
         public const string Comunicacao = "COMUNICACAO";
         public const string Suporte = "SUPORTE";

@@ -35,6 +35,7 @@ public class MobileController : ControllerBase
         _logger = logger;
         _usuarioContext = usuarioContext;
         _assinaturaGuard = assinaturaGuard;
+        _audit = audit;
     }
 
     private Guid GetUserId()
@@ -43,7 +44,11 @@ public class MobileController : ControllerBase
         return Guid.TryParse(uidClaim, out var uid) ? uid : Guid.Empty;
     }
 
-    private string GetPerfil() => User.FindFirst("perfil")?.Value ?? "desconhecido";
+    private string GetPerfil()
+    {
+        var roles = string.Join(',', User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(x => x.Value));
+        return string.IsNullOrWhiteSpace(roles) ? "sem-perfil" : roles;
+    }
     private string GetIp() => HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
 
 
@@ -76,16 +81,20 @@ public class MobileController : ControllerBase
             if (!response.Success || response.Data is null)
             {
                 _logger.LogWarning("Mobile login bloqueado email:{Email} ip:{Ip} duracaoMs:{Duracao}", request.Email, GetIp(), sw.ElapsedMilliseconds);
+                await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { email = request.Email, statusCode = response.StatusCode }, false, GetIp(), "sem-perfil");
                 return StatusCode(response.StatusCode, ApiResponse<MobileLoginResponseDto>.Fail(response.Message, response.StatusCode));
             }
 
             var payload = new MobileLoginResponseDto(response.Data.Token, null, response.Data.ExpiresAt, response.Data.Roles ?? Array.Empty<string>());
-            _logger.LogInformation("Mobile login sucesso uid:{Uid} perfil:{Perfil} ip:{Ip} duracaoMs:{Duracao}", response.Data.UsuarioId, string.Join(',', payload.Roles), GetIp(), sw.ElapsedMilliseconds);
+            var perfil = string.Join(',', payload.Roles);
+            await _audit.RegistrarAsync(response.Data.UsuarioId, response.Data.ClienteId, AuditoriaConstants.Entidades.ApiMobile, response.Data.UsuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { email = request.Email }, true, GetIp(), string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil);
+            _logger.LogInformation("Mobile login sucesso uid:{Uid} perfil:{Perfil} ip:{Ip} duracaoMs:{Duracao}", response.Data.UsuarioId, perfil, GetIp(), sw.ElapsedMilliseconds);
             return Ok(ApiResponse<MobileLoginResponseDto>.Ok(payload, "Login realizado com sucesso."));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Mobile login erro ip:{Ip} duracaoMs:{Duracao}", GetIp(), sw.ElapsedMilliseconds);
+            await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { email = request.Email, motivo = "erro_interno" }, false, GetIp(), "sem-perfil");
             return StatusCode(500, ApiResponse<MobileLoginResponseDto>.Fail("Não foi possível autenticar no momento.", 500));
         }
     }
@@ -283,20 +292,26 @@ public class MobileController : ControllerBase
     }
 
     [HttpGet("disponibilidade")]
-    public IActionResult Disponibilidade()
+    public async Task<IActionResult> Disponibilidade()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         return Ok(ApiResponse<object>.Ok(new { }, "Disponibilidade carregada com sucesso."));
     }
 
     [HttpGet("preferencias")]
-    public IActionResult Preferencias()
+    public async Task<IActionResult> Preferencias()
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         return Ok(ApiResponse<object>.Ok(new { notificacoesPush = true, lembretePlantaoHoras = 12 }, "Preferências carregadas com sucesso."));
     }
 
     [HttpGet("plantoes/{id:guid}")]
     public async Task<IActionResult> Plantao(Guid id)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
@@ -319,6 +334,8 @@ where p.id=@id and p.reg_status='A' and (@clienteId is null or p.cliente_id=@cli
     [HttpPost("plantoes/{id:guid}/solicitar")]
     public async Task<IActionResult> SolicitarPlantao(Guid id)
     {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
         var uid = GetUserId();
         try
         {

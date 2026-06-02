@@ -41,6 +41,11 @@ public sealed class UsuarioContextService
             .ToArray() ?? Array.Empty<string>();
     }
 
+    public string? GetIpOrigem()
+    {
+        return httpContextAccessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+    }
+
     public bool IsAdminGlobal()
     {
         return GetRoles().Any(r => string.Equals(r, "ADMINISTRADOR_GLOBAL", StringComparison.OrdinalIgnoreCase));
@@ -112,7 +117,40 @@ public sealed class TenantGuardService
         var clienteId = usuarioContextService.GetClienteId();
         var perfil = string.Join(',', usuarioContextService.GetRoles());
         logger.LogWarning("Acesso negado UsuarioId={UsuarioId} ClienteId={ClienteId} Perfil={Perfil} Entidade={Entidade} EntidadeId={EntidadeId} Motivo={Motivo}", usuarioId, clienteId, perfil, entidade, entidadeId, motivo);
-        await auditService.RegistrarAsync(usuarioId, clienteId, entidade, entidadeId, acao, new { motivo }, false, null, string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil);
+        var perfilSeguro = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil;
+        var ip = usuarioContextService.GetIpOrigem();
+        await auditService.RegistrarAsync(usuarioId, clienteId, entidade, entidadeId, acao, new { motivo }, false, ip, perfilSeguro);
+
+        try
+        {
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.ExecuteAsync(@"insert into plantaopro.acessos_negados_log(id, usuario_id, cliente_id, entidade, entidade_id, motivo, ip, perfil, reg_date, reg_status)
+values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @motivo, @ip, @perfil, now(), 'A')", new
+            {
+                usuarioId,
+                clienteId,
+                entidade,
+                entidadeId,
+                motivo = MascararMotivo(motivo),
+                ip,
+                perfil = perfilSeguro
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao registrar acesso negado em tabela operacional UsuarioId={UsuarioId} Entidade={Entidade} EntidadeId={EntidadeId}", usuarioId, entidade, entidadeId);
+        }
+    }
+
+    private static string MascararMotivo(string motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo)) return "Acesso negado.";
+        var termosSensiveis = new[] { "senha", "password", "token", "hash", "secret", "segredo", "authorization" };
+        foreach (var termo in termosSensiveis)
+        {
+            if (motivo.IndexOf(termo, StringComparison.OrdinalIgnoreCase) >= 0) return "[DADO_SENSIVEL_MASCARADO]";
+        }
+        return motivo.Length > 500 ? motivo.Substring(0, 500) : motivo;
     }
 
     private async Task<bool> PodeAcessarEntidadePorClienteAsync(Guid usuarioId, Guid entidadeId, string tabela, string colunaId)
@@ -141,7 +179,7 @@ public sealed class PermissionGuardService
     private static readonly Dictionary<string, string[]> FallbackPermissoes = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
     {
         ["ADMINISTRADOR_GLOBAL"] = new[] { "*" },
-        ["ADMINISTRADOR"] = new[] { PermissionConstants.MedicosVer, PermissionConstants.MedicosCriar, PermissionConstants.MedicosEditar, PermissionConstants.MedicosInativar, PermissionConstants.HospitaisVer, PermissionConstants.HospitaisCriar, PermissionConstants.HospitaisEditar, PermissionConstants.PlantoesVer, PermissionConstants.PlantoesCriar, PermissionConstants.PlantoesEditar, PermissionConstants.PlantoesPublicar, PermissionConstants.PlantoesCancelar, PermissionConstants.EscalasVer, PermissionConstants.EscalasConfirmar, PermissionConstants.EscalasRecusar, PermissionConstants.EscalasCancelar, PermissionConstants.FinanceiroVer, PermissionConstants.FinanceiroConfirmar, PermissionConstants.FinanceiroCancelar, PermissionConstants.UsuariosGerenciar, PermissionConstants.RelatoriosVer, PermissionConstants.AuditoriaVer, PermissionConstants.ConfiguracoesEditar, PermissionConstants.SuporteVer },
+        ["ADMINISTRADOR"] = new[] { PermissionConstants.MedicosVer, PermissionConstants.MedicosCriar, PermissionConstants.MedicosEditar, PermissionConstants.MedicosInativar, PermissionConstants.HospitaisVer, PermissionConstants.HospitaisCriar, PermissionConstants.HospitaisEditar, PermissionConstants.PlantoesVer, PermissionConstants.PlantoesCriar, PermissionConstants.PlantoesEditar, PermissionConstants.PlantoesPublicar, PermissionConstants.PlantoesCancelar, PermissionConstants.EscalasVer, PermissionConstants.EscalasConfirmar, PermissionConstants.EscalasRecusar, PermissionConstants.EscalasCancelar, PermissionConstants.FinanceiroVer, PermissionConstants.FinanceiroConfirmar, PermissionConstants.FinanceiroCancelar, PermissionConstants.UsuariosGerenciar, PermissionConstants.ClientesGerenciar, PermissionConstants.RelatoriosVer, PermissionConstants.AuditoriaVer, PermissionConstants.ConfiguracoesEditar, PermissionConstants.SuporteVer },
         ["COORDENACAO"] = new[] { PermissionConstants.MedicosVer, PermissionConstants.HospitaisVer, PermissionConstants.PlantoesVer, PermissionConstants.PlantoesCriar, PermissionConstants.PlantoesEditar, PermissionConstants.PlantoesPublicar, PermissionConstants.PlantoesCancelar, PermissionConstants.EscalasVer, PermissionConstants.EscalasConfirmar, PermissionConstants.EscalasRecusar, PermissionConstants.EscalasCancelar, PermissionConstants.RelatoriosVer },
         ["OPERADOR"] = new[] { PermissionConstants.MedicosVer, PermissionConstants.HospitaisVer, PermissionConstants.PlantoesVer, PermissionConstants.EscalasVer, PermissionConstants.EscalasConfirmar, PermissionConstants.EscalasRecusar },
         ["FINANCEIRO"] = new[] { PermissionConstants.FinanceiroVer, PermissionConstants.FinanceiroConfirmar, PermissionConstants.FinanceiroCancelar, PermissionConstants.RelatoriosVer },
@@ -151,11 +189,15 @@ public sealed class PermissionGuardService
 
     private readonly UsuarioContextService usuarioContextService;
     private readonly TenantGuardService tenantGuardService;
+    private readonly IConfiguration cfg;
+    private readonly ILogger<PermissionGuardService> logger;
 
-    public PermissionGuardService(UsuarioContextService usuarioContextService, TenantGuardService tenantGuardService)
+    public PermissionGuardService(UsuarioContextService usuarioContextService, TenantGuardService tenantGuardService, IConfiguration cfg, ILogger<PermissionGuardService> logger)
     {
         this.usuarioContextService = usuarioContextService;
         this.tenantGuardService = tenantGuardService;
+        this.cfg = cfg;
+        this.logger = logger;
     }
 
     public bool HasAnyRole(params string[] roles)
@@ -176,9 +218,36 @@ public sealed class PermissionGuardService
 
     public async Task<ApiResponse<bool>> ValidarPermissaoAsync(string permissao)
     {
-        if (TemPermissao(permissao)) return ApiResponse<bool>.Ok(true, "Permissão autorizada.");
+        if (TemPermissao(permissao))
+        {
+            await RegistrarPermissaoLogAsync(permissao, true, null);
+            return ApiResponse<bool>.Ok(true, "Permissão autorizada.");
+        }
+
+        await RegistrarPermissaoLogAsync(permissao, false, "Permissão insuficiente.");
         await tenantGuardService.RegistrarAcessoNegadoAsync(AuditoriaConstants.Entidades.Permissao, null, AuditoriaConstants.Acoes.BloqueioPermissao, "Permissão requerida: " + permissao);
         return ApiResponse<bool>.Fail("Você não possui permissão para executar esta ação.", 403);
+    }
+
+    private async Task RegistrarPermissaoLogAsync(string permissao, bool autorizado, string? motivo)
+    {
+        try
+        {
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.ExecuteAsync(@"insert into plantaopro.permissao_logs(id, usuario_id, cliente_id, permissao, autorizado, motivo, reg_date, reg_status)
+values (gen_random_uuid(), @usuarioId, @clienteId, @permissao, @autorizado, @motivo, now(), 'A')", new
+            {
+                usuarioId = usuarioContextService.GetUsuarioId(),
+                clienteId = usuarioContextService.GetClienteId(),
+                permissao,
+                autorizado,
+                motivo
+            });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao registrar log de permissão Permissao={Permissao} Autorizado={Autorizado}", permissao, autorizado);
+        }
     }
 }
 
@@ -197,7 +266,7 @@ public sealed class AssinaturaGuardService
     {
         try
         {
-            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var assinatura = await cn.QueryFirstOrDefaultAsync<(string Status, Guid PlanoId)>(@"select a.status as Status, a.plano_id as PlanoId
 from plantaopro.assinaturas a
 where a.cliente_id=@clienteId and a.reg_status='A'

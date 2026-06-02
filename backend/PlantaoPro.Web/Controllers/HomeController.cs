@@ -87,6 +87,11 @@ namespace PlantaoPro.Web.Controllers
                     new Claim("jwt", login.Token)
                 };
 
+                if (login.ClienteId.HasValue)
+                {
+                    claims.Add(new Claim("cliente_id", login.ClienteId.Value.ToString()));
+                }
+
                 foreach (var role in login.Roles ?? Array.Empty<string>())
                 {
                     var normalizedRole = NormalizeRole(role);
@@ -185,7 +190,7 @@ namespace PlantaoPro.Web.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ErrorStatusCode(int code)
+        public IActionResult ErrorHttpStatus(int code)
         {
             if (code == 404) return View("~/Views/Shared/NotFound.cshtml");
             if (code == 403) return RedirectToAction(nameof(AccessDenied));

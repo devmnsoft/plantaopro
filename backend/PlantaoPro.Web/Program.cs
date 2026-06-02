@@ -23,8 +23,8 @@ builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
+        options.LoginPath = "/Home/Login";
+        options.LogoutPath = "/Home/Logout";
         options.AccessDeniedPath = "/Account/AccessDenied";
         options.Cookie.Name = "PlantaoPro.Auth";
         options.Cookie.HttpOnly = true;
@@ -66,7 +66,7 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseStatusCodePagesWithReExecute("/Account/ErrorStatusCode", "?code={0}");
+app.UseStatusCodePagesWithReExecute("/Account/ErrorHttpStatus", "?code={0}");
 
 app.UseRouting();
 app.UseSession();

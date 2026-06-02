@@ -70,7 +70,10 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
 
         public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
         {
-            await RegistrarAsync(userId, null, entidade, registroId, acao, new
+            var entidadeCentral = NormalizarEntidade(entidade);
+            var acaoCentral = NormalizarAcao(acao, entidadeCentral, descricao);
+            var clienteId = await ResolverClienteIdAsync(entidade, registroId);
+            await RegistrarAsync(userId, clienteId, entidadeCentral, registroId, acaoCentral, new
             {
                 descricao,
                 valorAnterior = MascararTexto(valorAnterior),
@@ -103,6 +106,98 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     entidade,
                     registroId);
             }
+        }
+
+
+        private async Task<Guid?> ResolverClienteIdAsync(string entidade, Guid? registroId)
+        {
+            if (!registroId.HasValue) return null;
+            var tabela = entidade?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(tabela)) return null;
+
+            var tabelasPermitidas = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["clientes"] = "clientes",
+                ["medicos"] = "medicos",
+                ["hospitais"] = "hospitais",
+                ["especialidades"] = "especialidades",
+                ["plantoes"] = "plantoes",
+                ["escalas"] = "escalas",
+                ["convites"] = "convites",
+                ["pagamentos"] = "pagamentos",
+                ["assinaturas"] = "assinaturas",
+                ["faturas_saas"] = "faturas_saas"
+            };
+
+            if (!tabelasPermitidas.TryGetValue(tabela, out var tabelaSql)) return null;
+
+            try
+            {
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                if (string.Equals(tabelaSql, "clientes", StringComparison.OrdinalIgnoreCase))
+                {
+                    return await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.clientes where id=@id", new { id = registroId.Value });
+                }
+
+                return await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro." + tabelaSql + " where id=@id", new { id = registroId.Value });
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Falha ao resolver cliente da auditoria Entidade={Entidade} RegistroId={RegistroId}", entidade, registroId);
+                return null;
+            }
+        }
+
+        private static string NormalizarEntidade(string? entidade)
+        {
+            var valor = (entidade ?? string.Empty).Trim().ToLowerInvariant();
+            return valor switch
+            {
+                "usuarios" or "app_user" => AuditoriaConstants.Entidades.Usuario,
+                "clientes" => AuditoriaConstants.Entidades.Cliente,
+                "medicos" => AuditoriaConstants.Entidades.Medico,
+                "hospitais" => AuditoriaConstants.Entidades.Hospital,
+                "especialidades" => AuditoriaConstants.Entidades.Especialidade,
+                "plantoes" => AuditoriaConstants.Entidades.Plantao,
+                "escalas" => AuditoriaConstants.Entidades.Escala,
+                "convites" => AuditoriaConstants.Entidades.Convite,
+                "pagamentos" => AuditoriaConstants.Entidades.Pagamento,
+                "notificacoes" => AuditoriaConstants.Entidades.Notificacao,
+                "conversas" or "mensagens" => AuditoriaConstants.Entidades.Comunicacao,
+                "relatorios" or "bi" or "operacao" => AuditoriaConstants.Entidades.Relatorio,
+                _ => string.IsNullOrWhiteSpace(valor) ? "SISTEMA" : valor.ToUpperInvariant()
+            };
+        }
+
+        private static string NormalizarAcao(string? acao, string entidade, string? descricao)
+        {
+            var valor = (acao ?? string.Empty).Trim().ToUpperInvariant();
+            if (valor == "CREATE")
+            {
+                if (entidade == AuditoriaConstants.Entidades.Convite) return AuditoriaConstants.Acoes.CriarConvite;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento) return AuditoriaConstants.Acoes.GerarPagamento;
+                return AuditoriaConstants.Acoes.Criar;
+            }
+            if (valor == "UPDATE") return AuditoriaConstants.Acoes.Editar;
+            if (valor == "DELETE") return AuditoriaConstants.Acoes.Inativar;
+            if (valor == "LOGIN") return AuditoriaConstants.Acoes.LoginSucesso;
+            if (valor == "ACEITAR") return AuditoriaConstants.Acoes.ConfirmarEscala;
+            if (valor == "UNLOCK_USER") return AuditoriaConstants.Acoes.Reativar;
+            if (valor == "USUARIO_UPDATE") return AuditoriaConstants.Acoes.Editar;
+            if (valor == "USUARIO_ALTERAR_SENHA" || valor == "PASSWORD_FORGOT" || valor == "PASSWORD_RESET") return AuditoriaConstants.Acoes.AlterarConfiguracao;
+            if (valor == "STATUS_CHANGE")
+            {
+                var desc = descricao ?? string.Empty;
+                if (entidade == AuditoriaConstants.Entidades.Plantao && desc.IndexOf("publicado", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.PublicarPlantao;
+                if (entidade == AuditoriaConstants.Entidades.Plantao && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarPlantao;
+                if (entidade == AuditoriaConstants.Entidades.Escala && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarEscala;
+                if (entidade == AuditoriaConstants.Entidades.Escala && desc.IndexOf("realiz", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.RealizarEscala;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento && desc.IndexOf("pago", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.ConfirmarPagamento;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarPagamento;
+                return AuditoriaConstants.Acoes.Editar;
+            }
+
+            return string.IsNullOrWhiteSpace(valor) ? "EVENTO" : valor;
         }
 
         private static string SanitizarDetalhes(object? detalhes)
@@ -159,7 +254,7 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
             {
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 await GarantirTabelaTentativasAsync(cn);
-                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
+                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
                     Email = normalizedEmail
                 });
@@ -246,11 +341,13 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles);
+                Guid? clienteId = null;
+                object? usuarioCliente = user.cliente_id;
+                if (usuarioCliente is Guid usuarioClienteId) clienteId = usuarioClienteId;
+                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteId);
                 await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
-                await audit.LogAsync(usuarioId, "LOGIN", "usuarios", usuarioId, "Login", ip: ip, userAgent: ua);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles), "Login realizado com sucesso.");
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles, clienteId), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
@@ -280,10 +377,11 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao
                     motivo,
                     bloqueadoAte
                 });
-        string GenerateToken(Guid uid, string email, string[] roles)
+        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId)
         {
             var jwt = cfg.GetSection("Jwt");
             var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
+            if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
             claims.AddRange(roles.Select(NormalizeRole).Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => new Claim(ClaimTypes.Role, r!)));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

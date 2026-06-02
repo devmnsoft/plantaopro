@@ -47,6 +47,7 @@ public sealed class RequestLoggingMiddleware
             var clienteId = GetGuidClaim(context, "cliente_id");
             var perfil = string.Join(',', context.User.FindAll(ClaimTypes.Role).Select(x => x.Value));
             var ip = context.Connection.RemoteIpAddress?.ToString();
+            var perfilSeguro = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil;
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await cn.ExecuteAsync(@"insert into plantaopro.api_request_logs(id, endpoint, method, status_code, usuario_id, cliente_id, perfil, ip, duration_ms, sucesso, error_message, reg_date, reg_status)
 values (gen_random_uuid(), @endpoint, @method, @statusCode, @usuarioId, @clienteId, @perfil, @ip, @durationMs, @sucesso, @errorMessage, now(), 'A')", new
@@ -56,7 +57,7 @@ values (gen_random_uuid(), @endpoint, @method, @statusCode, @usuarioId, @cliente
                 statusCode,
                 usuarioId,
                 clienteId,
-                perfil = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil,
+                perfil = perfilSeguro,
                 ip,
                 durationMs,
                 sucesso = exception is null && statusCode < 400,
@@ -73,10 +74,31 @@ values (gen_random_uuid(), @endpoint, @method, @statusCode, @usuarioId, @cliente
                     statusCode,
                     usuarioId,
                     clienteId,
-                    perfil = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil,
+                    perfil = perfilSeguro,
                     ip,
                     errorMessage = exception is null ? "Erro HTTP " + statusCode : "erro_interno"
                 });
+            }
+
+            if (statusCode == 403 || (statusCode == 401 && !endpoint.Contains("/auth/login", StringComparison.OrdinalIgnoreCase)))
+            {
+                var acao = statusCode == 403 ? AuditoriaConstants.Acoes.AcessoNegado : AuditoriaConstants.Acoes.LoginFalha;
+                await cn.ExecuteAsync(@"insert into plantaopro.auditoria_acoes_criticas(id, usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date, reg_status)
+values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, null, @acao, cast(@detalhes as jsonb), false, @ip, @perfil, now(), 'A')", new
+                {
+                    usuarioId,
+                    clienteId,
+                    entidade = statusCode == 403 ? AuditoriaConstants.Entidades.Permissao : AuditoriaConstants.Entidades.Usuario,
+                    acao,
+                    detalhes = "{\"endpoint\":" + System.Text.Json.JsonSerializer.Serialize(endpoint) + ",\"statusCode\":" + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}",
+                    ip,
+                    perfil = perfilSeguro
+                });
+            }
+
+            if (durationMs >= 2000)
+            {
+                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, method, statusCode, durationMs, usuarioId, clienteId, perfilSeguro, ip);
             }
         }
         catch (Exception ex)

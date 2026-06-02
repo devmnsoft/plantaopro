@@ -1,37 +1,44 @@
-# API Mobile MVP — fluxos de homologação
+# Fluxos Mobile — Release Candidate
 
-## Login e sessão
-1. Enviar e-mail e senha para `POST /api/mobile/auth/login`.
-2. Armazenar JWT apenas em storage seguro do app.
-3. Enviar `Authorization: Bearer {token}` nos demais endpoints.
+## Fluxo 1 — Solicitação de plantão
 
-## Solicitar plantão
-1. App carrega dashboard.
-2. App lista plantões disponíveis com paginação.
-3. Médico abre detalhe do plantão.
-4. Médico solicita plantão.
-5. API resolve o médico pelo usuário autenticado, valida `cliente_id` do plantão e delega a solicitação ao serviço operacional de escala.
-6. Serviço de escala bloqueia plantão indisponível, duplicidade, médico inativo, especialidade incompatível, conflito de horário e limite semanal.
-7. API registra auditoria da solicitação ou do acesso negado.
-8. App exibe toast/snackbar com mensagem amigável.
+1. Médico autentica no app por `/api/mobile/auth/login`.
+2. App carrega `/api/mobile/dashboard`.
+3. Médico abre `/api/mobile/plantoes-disponiveis`.
+4. Médico consulta `/api/mobile/plantoes/{id}`.
+5. Médico solicita em `/api/mobile/plantoes/{id}/solicitar`.
+6. Backend valida plano mobile, identidade do médico, cliente, duplicidade, conflito e vaga.
+7. A solicitação aparece em `/api/mobile/minhas-escalas`.
+8. Coordenação confirma pela Web.
+9. Médico recebe notificação em `/api/mobile/notificacoes`.
 
-## Convites
-1. App lista convites do médico autenticado em `GET /api/mobile/convites?page=1&pageSize=20`.
-2. API resolve o médico pelo usuário autenticado e filtra convites por `medico_id`, `cliente_id` e `reg_status`, sem aceitar `medicoId` no payload.
-3. Médico abre o detalhe do convite em `GET /api/mobile/convites/{id}`; convites de outro médico retornam `404` amigável.
-4. Médico aceita convite em `POST /api/mobile/convites/{id}/aceitar`.
-5. API valida se o convite está `ENVIADO` ou `PENDENTE`, revalida vaga, duplicidade, conflito e elegibilidade pelo serviço operacional de escala e atualiza o convite para `ACEITO` quando a solicitação é criada.
-6. Médico recusa convite em `POST /api/mobile/convites/{id}/recusar` enviando `{ "motivo": "..." }`.
-7. API exige motivo, atualiza o convite para `RECUSADO`, grava data de resposta e registra auditoria sem logar o texto sensível do motivo.
-8. App exibe toast/snackbar com a mensagem amigável retornada pelo `ApiResponse<T>`.
+Critério de aprovação: médico não acessa plantão de outro cliente e não consegue solicitar plantão duplicado ou conflitante.
 
-## Pagamentos e notificações
-1. App lista pagamentos próprios.
-2. App destaca pagamentos pendentes e confirmados.
-3. App lista notificações.
-4. Médico marca notificação como lida.
+## Fluxo 2 — Convite
 
-## Segurança
-- Médico nunca informa `medicoId` para acessar dados de terceiros.
-- O backend resolve o médico pelo usuário autenticado sempre que possível.
-- Payloads de erro não devem expor stack trace ou SQL.
+1. Coordenação convida médico elegível pela Web.
+2. App lista `/api/mobile/convites`.
+3. Médico aceita `/api/mobile/convites/{id}/aceitar` ou recusa `/api/mobile/convites/{id}/recusar` com motivo.
+4. Backend revalida vaga e conflito no aceite.
+5. A ação registra auditoria e gera notificação operacional.
+
+Critério de aprovação: convite expirado, já respondido ou de outro médico não pode ser aceito.
+
+## Fluxo 3 — Pagamento
+
+1. Coordenação marca escala como realizada.
+2. Financeiro gera e confirma pagamento.
+3. Médico consulta `/api/mobile/meus-pagamentos`.
+4. Médico vê status, valor previsto, valor pago, forma e data quando disponíveis.
+
+Critério de aprovação: médico vê somente pagamentos próprios.
+
+## Fluxo 4 — Suporte mobile
+
+1. Médico abre tela de suporte no app.
+2. App lista `/api/mobile/suporte/chamados`.
+3. Médico cria chamado com título e descrição.
+4. Backend gera protocolo `SUP-*`, registra cliente/usuário e audita a criação.
+5. Admin/CS trata o chamado na operação Web.
+
+Critério de aprovação: chamado de outro usuário/cliente não aparece para o médico.

@@ -59,8 +59,17 @@ CREATE INDEX IF NOT EXISTS ix_notificacoes_envio_log_reg_date ON notificacoes_en
 CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_entidade ON auditoria_acoes_criticas(entidade, reg_date DESC);
 CREATE INDEX IF NOT EXISTS ix_historico_alteracoes_registro ON historico_alteracoes(registro_id, reg_date DESC);
 
-ALTER TABLE IF EXISTS pagamentos
-    ADD CONSTRAINT IF NOT EXISTS ck_pagamentos_valores_positivos CHECK (valor_previsto >= 0 AND (valor_pago IS NULL OR valor_pago >= 0));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_valores_positivos'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_valores_positivos CHECK (valor_previsto >= 0 AND (valor_pago IS NULL OR valor_pago >= 0));
+    END IF;
+END $$;
 
 
 -- Regras premium SaaS: score de prioridade, limites semanais, notificacoes e constraints de pagamentos
@@ -71,9 +80,26 @@ alter table if exists plantaopro.escalas
 alter table if exists plantaopro.medicos
     add column if not exists limite_horas_semanais numeric(10,2) not null default 60;
 
-alter table if exists plantaopro.pagamentos
-    add constraint ck_pagamentos_valores_validos check (coalesce(valor_pago,0) >= 0 and valor_previsto >= 0),
-    add constraint ck_pagamentos_status_validos check (status in ('PENDENTE','PAGO','CANCELADO'));
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_valores_validos'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_valores_validos CHECK (coalesce(valor_pago,0) >= 0 and valor_previsto >= 0);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_status_validos'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_status_validos CHECK (status in ('PENDENTE','PAGO','CANCELADO'));
+    END IF;
+END $$;
 
 create index if not exists idx_escalas_medico_periodo on plantaopro.escalas(medico_id, data_inicio, data_fim);
 create index if not exists idx_pagamentos_status_data on plantaopro.pagamentos(status, data_prevista);

@@ -53,3 +53,20 @@ Consolidar uma validação objetiva para homologação real, demonstração come
 - Registrar evidências manuais do fluxo ponta a ponta com prints ou vídeo curto.
 - Validar massa de dados realista em ambiente de homologação antes de piloto.
 - Confirmar credenciais e URLs finais no checklist pós-deploy.
+
+## Atualização desta rodada RC
+
+- [x] Varredura obrigatória executada sem ocorrências para `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()`, `confirm()` e collection expression em API/Web.
+- [x] Verificação de binários versionados executada sem arquivos indevidos rastreados.
+- [x] API Mobile MVP documentada com suporte a chamados (`GET/POST /api/mobile/suporte/chamados`).
+- [x] Script SQL incremental criado para suporte mobile e mensagens de chamados.
+- [ ] Build local não executado nesta estação porque o SDK `dotnet` não está instalado no ambiente do agente; executar no runner/ambiente de homologação antes do aceite final.
+
+## Smoke test manual recomendado antes da demonstração
+
+1. Autenticar no Swagger como médico demo.
+2. Validar `/api/mobile/me`, `/dashboard`, `/plantoes-disponiveis`, `/convites`, `/minhas-escalas`, `/meus-pagamentos` e `/notificacoes`.
+3. Criar chamado em `/api/mobile/suporte/chamados` e confirmar protocolo.
+4. Listar chamados mobile e confirmar isolamento por usuário/cliente.
+5. Repetir endpoints protegidos sem token e confirmar resposta 401 amigável.
+6. Repetir detalhe de plantão de outro cliente e confirmar resposta 403 amigável com auditoria.

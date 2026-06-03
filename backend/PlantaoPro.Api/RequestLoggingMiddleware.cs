@@ -2,6 +2,7 @@ using Dapper;
 using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace PlantaoPro.Api;
 
@@ -42,63 +43,83 @@ public sealed class RequestLoggingMiddleware
         {
             var statusCode = exception is null ? context.Response.StatusCode : 500;
             var endpoint = context.Request.Path.Value ?? "/";
-            var method = context.Request.Method;
+            var metodo = context.Request.Method;
             var usuarioId = GetGuidClaim(context, "uid") ?? GetGuidClaim(context, ClaimTypes.NameIdentifier);
             var clienteId = GetGuidClaim(context, "cliente_id");
+            var email = MascararTexto(context.User.FindFirst(ClaimTypes.Email)?.Value ?? context.User.FindFirst("email")?.Value);
             var perfil = string.Join(',', context.User.FindAll(ClaimTypes.Role).Select(x => x.Value));
-            var ip = context.Connection.RemoteIpAddress?.ToString();
-            var perfilSeguro = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil;
+            var perfilSeguro = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : MascararTexto(perfil);
+            var ipOrigem = context.Connection.RemoteIpAddress?.ToString();
+            var userAgent = MascararTexto(context.Request.Headers["User-Agent"].ToString());
+            var queryString = MascararTexto(context.Request.QueryString.HasValue ? context.Request.QueryString.Value : null);
+            var erro = ObterMensagemErro(statusCode, exception);
+
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync(@"insert into plantaopro.api_request_logs(id, endpoint, method, status_code, usuario_id, cliente_id, perfil, ip, duration_ms, sucesso, error_message, reg_date, reg_status)
-values (gen_random_uuid(), @endpoint, @method, @statusCode, @usuarioId, @clienteId, @perfil, @ip, @durationMs, @sucesso, @errorMessage, now(), 'A')", new
+            await cn.ExecuteAsync(@"insert into plantaopro.api_request_logs
+    (endpoint, metodo, status_code, sucesso, duracao_ms, usuario_id, cliente_id, email, perfil, ip_origem, user_agent, query_string, erro, reg_date)
+values
+    (@Endpoint, @Metodo, @StatusCode, @Sucesso, @DuracaoMs, @UsuarioId, @ClienteId, @Email, @Perfil, @IpOrigem, @UserAgent, @QueryString, @Erro, now())", new
             {
-                endpoint,
-                method,
-                statusCode,
-                usuarioId,
-                clienteId,
-                perfil = perfilSeguro,
-                ip,
-                durationMs,
-                sucesso = exception is null && statusCode < 400,
-                errorMessage = exception is null ? (statusCode >= 400 ? "HTTP " + statusCode : null) : "erro_interno"
+                Endpoint = endpoint,
+                Metodo = metodo,
+                StatusCode = statusCode,
+                Sucesso = exception is null && statusCode < 400,
+                DuracaoMs = durationMs,
+                UsuarioId = usuarioId,
+                ClienteId = clienteId,
+                Email = email,
+                Perfil = perfilSeguro,
+                IpOrigem = ipOrigem,
+                UserAgent = userAgent,
+                QueryString = queryString,
+                Erro = erro
             });
 
             if (exception is not null || statusCode >= 500)
             {
-                await cn.ExecuteAsync(@"insert into plantaopro.api_error_logs(id, endpoint, method, status_code, usuario_id, cliente_id, perfil, ip, error_message, reg_date, reg_status)
-values (gen_random_uuid(), @endpoint, @method, @statusCode, @usuarioId, @clienteId, @perfil, @ip, @errorMessage, now(), 'A')", new
+                await cn.ExecuteAsync(@"insert into plantaopro.api_error_logs
+    (endpoint, metodo, status_code, usuario_id, cliente_id, email, perfil, ip_origem, user_agent, mensagem, exception_type, stack_trace, reg_date)
+values
+    (@Endpoint, @Metodo, @StatusCode, @UsuarioId, @ClienteId, @Email, @Perfil, @IpOrigem, @UserAgent, @Mensagem, @ExceptionType, @StackTrace, now())", new
                 {
-                    endpoint,
-                    method,
-                    statusCode,
-                    usuarioId,
-                    clienteId,
-                    perfil = perfilSeguro,
-                    ip,
-                    errorMessage = exception is null ? "Erro HTTP " + statusCode : "erro_interno"
+                    Endpoint = endpoint,
+                    Metodo = metodo,
+                    StatusCode = statusCode,
+                    UsuarioId = usuarioId,
+                    ClienteId = clienteId,
+                    Email = email,
+                    Perfil = perfilSeguro,
+                    IpOrigem = ipOrigem,
+                    UserAgent = userAgent,
+                    Mensagem = erro ?? "erro_interno",
+                    ExceptionType = exception?.GetType().Name,
+                    StackTrace = (string?)null
                 });
             }
 
             if (statusCode == 403 || (statusCode == 401 && !endpoint.Contains("/auth/login", StringComparison.OrdinalIgnoreCase)))
             {
                 var acao = statusCode == 403 ? AuditoriaConstants.Acoes.AcessoNegado : AuditoriaConstants.Acoes.LoginFalha;
-                await cn.ExecuteAsync(@"insert into plantaopro.auditoria_acoes_criticas(id, usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date, reg_status)
-values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, null, @acao, cast(@detalhes as jsonb), false, @ip, @perfil, now(), 'A')", new
+                var detalhes = JsonSerializer.Serialize(new { endpoint, statusCode });
+                await cn.ExecuteAsync(@"insert into plantaopro.auditoria_acoes_criticas
+    (usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, user_agent, reg_date)
+values
+    (@UsuarioId, @ClienteId, @Entidade, null, @Acao, cast(@Detalhes as jsonb), false, @IpOrigem, @Perfil, @UserAgent, now())", new
                 {
-                    usuarioId,
-                    clienteId,
-                    entidade = statusCode == 403 ? AuditoriaConstants.Entidades.Permissao : AuditoriaConstants.Entidades.Usuario,
-                    acao,
-                    detalhes = "{\"endpoint\":" + System.Text.Json.JsonSerializer.Serialize(endpoint) + ",\"statusCode\":" + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}",
-                    ip,
-                    perfil = perfilSeguro
+                    UsuarioId = usuarioId,
+                    ClienteId = clienteId,
+                    Entidade = statusCode == 403 ? AuditoriaConstants.Entidades.Permissao : AuditoriaConstants.Entidades.Usuario,
+                    Acao = acao,
+                    Detalhes = detalhes,
+                    IpOrigem = ipOrigem,
+                    Perfil = perfilSeguro,
+                    UserAgent = userAgent
                 });
             }
 
             if (durationMs >= 2000)
             {
-                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, method, statusCode, durationMs, usuarioId, clienteId, perfilSeguro, ip);
+                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, metodo, statusCode, durationMs, usuarioId, clienteId, perfilSeguro, ipOrigem);
             }
         }
         catch (Exception ex)
@@ -107,10 +128,35 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, null, @acao, cast(
         }
     }
 
+    private static string? ObterMensagemErro(int statusCode, Exception? exception)
+    {
+        if (exception is not null)
+        {
+            return "erro_interno";
+        }
+
+        return statusCode >= 400 ? "HTTP " + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
+    }
+
     private static Guid? GetGuidClaim(HttpContext context, string claimType)
     {
         var value = context.User.FindFirst(claimType)?.Value;
         Guid id;
         return Guid.TryParse(value, out id) ? id : null;
+    }
+
+    private static string? MascararTexto(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor)) return valor;
+        var sensiveis = new[] { "senha", "password", "token", "hash", "secret", "segredo", "authorization", "bearer", "access_token", "refresh_token" };
+        foreach (var termo in sensiveis)
+        {
+            if (valor.IndexOf(termo, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return "[DADO_SENSIVEL_MASCARADO]";
+            }
+        }
+
+        return valor.Length > 1000 ? valor.Substring(0, 1000) : valor;
     }
 }

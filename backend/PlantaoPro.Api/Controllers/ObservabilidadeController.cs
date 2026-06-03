@@ -29,7 +29,7 @@ public sealed class ObservabilidadeController : ControllerBase
             var data = await cn.QueryFirstAsync(@"select
                 (select count(*) from plantaopro.api_request_logs where reg_date::date = current_date) as TotalRequestsHoje,
                 (select count(*) from plantaopro.api_error_logs where reg_date::date = current_date) as TotalErrosHoje,
-                coalesce((select avg(duration_ms) from plantaopro.api_request_logs where reg_date::date = current_date),0) as TempoMedioMs,
+                coalesce((select avg(duracao_ms) from plantaopro.api_request_logs where reg_date::date = current_date),0) as TempoMedioMs,
                 (select count(*) from plantaopro.usuarios where reg_status = 'A') as UsuariosAtivos");
             return Ok(ApiResponse<object>.Ok(data, "Resumo de observabilidade carregado."));
         }
@@ -46,8 +46,8 @@ public sealed class ObservabilidadeController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode,
-                error_message as ErrorMessage, reg_date as Data
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, metodo as Metodo, status_code as StatusCode,
+                mensagem as ErrorMessage, reg_date as Data
                 from plantaopro.api_error_logs order by reg_date desc limit @limit", new { limit });
             return Ok(ApiResponse<object>.Ok(data, "Erros carregados."));
         }
@@ -64,11 +64,11 @@ public sealed class ObservabilidadeController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo,
-                avg(duration_ms) as TempoMedioMs, max(duration_ms) as TempoMaximoMs, count(*) as Total
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, metodo as Metodo,
+                avg(duracao_ms) as TempoMedioMs, max(duracao_ms) as TempoMaximoMs, count(*) as Total
                 from plantaopro.api_request_logs
-                group by endpoint, method
-                order by avg(duration_ms) desc
+                group by endpoint, metodo
+                order by avg(duracao_ms) desc
                 limit @limit", new { limit });
             return Ok(ApiResponse<object>.Ok(data, "Performance carregada."));
         }
@@ -85,7 +85,7 @@ public sealed class ObservabilidadeController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var data = await cn.QueryAsync(@"select endpoint as Endpoint, method as Metodo, status_code as StatusCode, usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, ip as Ip, duration_ms as DuracaoMs, sucesso as Sucesso, reg_date as Data
+            var data = await cn.QueryAsync(@"select endpoint as Endpoint, metodo as Metodo, status_code as StatusCode, usuario_id as UsuarioId, cliente_id as ClienteId, perfil as Perfil, ip_origem as Ip, duracao_ms as DuracaoMs, sucesso as Sucesso, reg_date as Data
                 from plantaopro.api_request_logs order by reg_date desc limit @limit", new { limit });
             return Ok(ApiResponse<object>.Ok(data, "Requests carregados."));
         }

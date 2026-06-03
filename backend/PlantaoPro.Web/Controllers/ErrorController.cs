@@ -6,29 +6,22 @@ namespace PlantaoPro.Web.Controllers;
 [AllowAnonymous]
 public sealed class ErrorController : Controller
 {
+    [HttpGet]
     [Route("erro/{statusCode:int}")]
     public IActionResult HttpStatus(int statusCode)
     {
         ViewData["StatusCode"] = statusCode;
 
-        if (statusCode == 401)
+        return statusCode switch
         {
-            return RedirectToAction("Login", "Account");
-        }
-
-        if (statusCode == 403)
-        {
-            return RedirectToAction("AccessDenied", "Account");
-        }
-
-        if (statusCode == 404)
-        {
-            return View("~/Views/Shared/NotFound.cshtml");
-        }
-
-        return View("~/Views/Shared/Error.cshtml");
+            401 => RedirectToAction("Login", "Account"),
+            403 => RedirectToAction("AccessDenied", "Account"),
+            404 => View("~/Views/Shared/NotFound.cshtml"),
+            _ => View("~/Views/Shared/Error.cshtml")
+        };
     }
 
+    [HttpGet]
     [Route("erro")]
     public IActionResult Error()
     {

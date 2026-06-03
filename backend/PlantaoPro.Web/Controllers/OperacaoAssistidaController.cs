@@ -30,7 +30,7 @@ public sealed class OperacaoAssistidaController : BaseWebController
         {
             _logger.LogError(ex, "Erro ao carregar operação assistida.");
             TempData["Error"] = "Não foi possível carregar a operação assistida.";
-            return View(new());
+            return View(new OperacaoAssistidaIndexViewModel());
         }
     }
 

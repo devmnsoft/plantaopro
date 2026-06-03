@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.chamado_mensagens (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     chamado_id uuid NOT NULL,
     usuario_id uuid NULL,
+    tipo_autor varchar(30) NOT NULL DEFAULT 'USUARIO',
     mensagem text NOT NULL,
     visibilidade varchar(30) NOT NULL DEFAULT 'CLIENTE',
     reg_status char(1) NOT NULL DEFAULT 'A',
@@ -40,6 +41,7 @@ ALTER TABLE plantaopro.chamados_suporte ADD COLUMN IF NOT EXISTS origem varchar(
 ALTER TABLE plantaopro.chamados_suporte ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
 ALTER TABLE plantaopro.chamados_suporte ADD COLUMN IF NOT EXISTS criado_em timestamp without time zone NOT NULL DEFAULT now();
 ALTER TABLE plantaopro.chamados_suporte ADD COLUMN IF NOT EXISTS atualizado_em timestamp without time zone NOT NULL DEFAULT now();
+ALTER TABLE plantaopro.chamado_mensagens ADD COLUMN IF NOT EXISTS tipo_autor varchar(30) NOT NULL DEFAULT 'USUARIO';
 
 DO $$
 BEGIN

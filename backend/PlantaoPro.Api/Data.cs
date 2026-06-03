@@ -1,4 +1,5 @@
 using Dapper;
+using System.Data;
 using Npgsql;
 using PlantaoPro.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
@@ -50,11 +51,24 @@ namespace PlantaoPro.Api.Data
             try
             {
                 var detalhesJson = SanitizarDetalhes(detalhes);
-                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                using IDbConnection cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.auditoria_acoes_criticas
-(id, usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date, reg_status)
-values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @acao, cast(@detalhes as jsonb), @sucesso, @ipOrigem, @perfil, now(), 'A')",
-                    new { usuarioId, clienteId, entidade, entidadeId, acao, detalhes = detalhesJson, sucesso, ipOrigem, perfil }, cancellationToken: ct));
+    (usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date)
+values
+    (@UsuarioId, @ClienteId, @Entidade, @EntidadeId, @Acao, cast(@Detalhes as jsonb), @Sucesso, @IpOrigem, @Perfil, now())",
+                    new
+                    {
+                        UsuarioId = usuarioId,
+                        ClienteId = clienteId,
+                        Entidade = entidade,
+                        EntidadeId = entidadeId,
+                        Acao = acao,
+                        Detalhes = detalhesJson,
+                        Sucesso = sucesso,
+                        IpOrigem = ipOrigem,
+                        Perfil = perfil
+                    },
+                    cancellationToken: ct));
             }
             catch (Exception ex)
             {

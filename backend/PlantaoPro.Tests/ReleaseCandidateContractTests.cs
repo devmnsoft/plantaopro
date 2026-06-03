@@ -209,3 +209,56 @@ public class BetaComercialDocumentationContractTests
         return diretorio.FullName;
     }
 }
+
+public class OperacaoAssistidaBetaContractTests
+{
+    [Fact]
+    public void OperacaoAssistidaController_DeveExporEndpointsObrigatoriosDaBetaComercial()
+    {
+        var rotas = typeof(PlantaoPro.Api.Controllers.OperacaoAssistidaController)
+            .GetMethods()
+            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.HttpMethodAttribute>())
+            .SelectMany(a => a.Template is null ? Array.Empty<string>() : new[] { a.Template })
+            .ToArray();
+
+        Assert.Contains("clientes", rotas);
+        Assert.Contains("clientes/{clienteId:guid}", rotas);
+        Assert.Contains("clientes/{clienteId:guid}/checklist", rotas);
+        Assert.Contains("checklist/{id:guid}/concluir", rotas);
+        Assert.Contains("checklist/{id:guid}/reabrir", rotas);
+        Assert.Contains("clientes/{clienteId:guid}/ocorrencias", rotas);
+        Assert.Contains("ocorrencias/{id:guid}/resolver", rotas);
+        Assert.Contains("clientes/{clienteId:guid}/treinamentos", rotas);
+    }
+
+    [Fact]
+    public void SqlOperacaoAssistida_DeveCriarEstruturaIncrementalSegura()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "backend", "sql", "20260603_operacao_assistida_beta.sql");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_clientes", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_checklist", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_ocorrencias", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_treinamentos", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("pg_constraint", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string EncontrarRaizRepositorio()
+    {
+        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
+        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
+        {
+            diretorio = diretorio.Parent;
+        }
+
+        if (diretorio is null)
+        {
+            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
+        }
+
+        return diretorio.FullName;
+    }
+}

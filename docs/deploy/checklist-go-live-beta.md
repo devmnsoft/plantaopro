@@ -40,3 +40,17 @@
 
 ## Aprovação de go-live
 - Build verde, smoke test concluído, cliente piloto comunicado e monitoramento ativo por 48 horas.
+
+## Validação final da operação assistida
+
+- Confirmar execução do SQL incremental `backend/sql/20260603_operacao_assistida_beta.sql` no schema `plantaopro`.
+- Abrir `/OperacaoAssistida` com ADMINISTRADOR_GLOBAL.
+- Validar isolamento acessando o mesmo módulo com ADMINISTRADOR do cliente.
+- Conferir que ocorrências críticas aparecem em alertas operacionais e auditoria.
+
+## Validação final da operação assistida
+
+- Confirmar execução do SQL incremental `backend/sql/20260603_operacao_assistida_beta.sql` no schema `plantaopro`.
+- Abrir `/OperacaoAssistida` com ADMINISTRADOR_GLOBAL.
+- Validar isolamento acessando o mesmo módulo com ADMINISTRADOR do cliente.
+- Conferir que ocorrências críticas aparecem em alertas operacionais e auditoria.

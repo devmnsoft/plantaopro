@@ -1,0 +1,41 @@
+@model PlantaoPro.Web.Models.OperacaoAssistidaTreinamentosPageViewModel
+@{
+    ViewData["Title"] = "Treinamentos da Operação Assistida";
+    var treinamentos = Model?.Treinamentos ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaTreinamentoViewModel>();
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Treinamentos", Model?.ClienteNome ?? "Cliente", "bi-mortarboard", null, null, null, true)' />
+
+<div class="card mb-3"><div class="card-body">
+    <h5>Novo treinamento</h5>
+    <form asp-action="RegistrarTreinamento" method="post" class="row g-2">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ClienteId" value="@(Model?.ClienteId ?? Guid.Empty)" />
+        <div class="col-md-3"><input name="Tema" class="form-control" placeholder="Tema" required /></div>
+        <div class="col-md-2"><input name="Perfil" class="form-control" placeholder="Perfil" /></div>
+        <div class="col-md-2"><input name="Responsavel" class="form-control" placeholder="Responsável" /></div>
+        <div class="col-md-3"><input name="Participantes" class="form-control" placeholder="Participantes" /></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Registrar</button></div>
+        <div class="col-12"><input name="Observacoes" class="form-control" placeholder="Observações" /></div>
+    </form>
+</div></div>
+
+@if (!treinamentos.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-mortarboard", "Nenhum treinamento registrado", "Registre treinamentos por perfil para evidenciar a homologação assistida.")' />
+}
+else
+{
+    <div class="list-group">
+    @foreach (var item in treinamentos)
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between"><strong>@item.Tema</strong><span class="badge text-bg-info">@item.Perfil</span></div>
+            <div class="text-muted small">@item.RealizadoEm.ToString("dd/MM/yyyy HH:mm") · Responsável: @item.Responsavel · Participantes: @item.Participantes</div>
+            @if (!string.IsNullOrWhiteSpace(item.Observacoes))
+            {
+                <div>@item.Observacoes</div>
+            }
+        </div>
+    }
+    </div>
+}

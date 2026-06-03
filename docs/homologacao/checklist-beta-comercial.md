@@ -72,3 +72,23 @@ Consolidar o PlantãoPro como **Beta Comercial Controlada**: demonstrável para 
 - Push notification real, publicação nas lojas e integrações externas ficam para pós-Sprint Zero mobile.
 - Carga de performance deve ser repetida com dados reais do cliente piloto.
 - Regras fiscais/contábeis definitivas dependem de validação do cliente e contador.
+
+## Operação assistida com cliente real
+
+- [ ] Cliente aparece no painel de operação assistida.
+- [ ] Checklist padrão de implantação disponível.
+- [ ] Conclusão de item registra auditoria e atualiza progresso.
+- [ ] Reabertura exige justificativa.
+- [ ] Ocorrência crítica gera alerta operacional.
+- [ ] Treinamentos por perfil registrados.
+- [ ] Nenhuma ocorrência crítica aberta antes do go-live beta.
+
+## Operação assistida com cliente real
+
+- [ ] Cliente aparece no painel de operação assistida.
+- [ ] Checklist padrão de implantação disponível.
+- [ ] Conclusão de item registra auditoria e atualiza progresso.
+- [ ] Reabertura exige justificativa.
+- [ ] Ocorrência crítica gera alerta operacional.
+- [ ] Treinamentos por perfil registrados.
+- [ ] Nenhuma ocorrência crítica aberta antes do go-live beta.

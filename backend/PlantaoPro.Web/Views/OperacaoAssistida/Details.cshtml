@@ -1,0 +1,33 @@
+@model PlantaoPro.Web.Models.OperacaoAssistidaDetalheViewModel
+@{
+    ViewData["Title"] = "Detalhe da Operação Assistida";
+    var cliente = Model?.Cliente ?? new PlantaoPro.Web.Models.OperacaoAssistidaClienteViewModel();
+    var checklist = Model?.Checklist ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaChecklistItemViewModel>();
+    var ocorrencias = Model?.Ocorrencias ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaOcorrenciaViewModel>();
+    var treinamentos = Model?.Treinamentos ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaTreinamentoViewModel>();
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Operação Assistida", cliente.ClienteNome, "bi-kanban", null, null, null, true)' />
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="metric-card"><div class="metric-label">Progresso</div><div class="metric-value">@cliente.Percentual%</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="metric-label">Ocorrências abertas</div><div class="metric-value">@cliente.OcorrenciasAbertas</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="metric-label">Críticas</div><div class="metric-value">@cliente.OcorrenciasCriticas</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="metric-label">Treinamentos</div><div class="metric-value">@treinamentos.Count()</div></div></div>
+</div>
+
+<div class="card mb-3"><div class="card-body">
+    <h5>Timeline do cliente</h5>
+    <ol class="mb-0">
+        @foreach (var item in checklist.OrderBy(x => x.Ordem).Take(8))
+        {
+            <li class="mb-2"><span class="badge @(item.Concluido ? "text-bg-success" : "text-bg-light")">@(item.Concluido ? "Concluído" : "Pendente")</span> @item.Titulo</li>
+        }
+    </ol>
+</div></div>
+
+<div class="d-flex flex-wrap gap-2">
+    <a asp-action="Checklist" asp-route-clienteId="@cliente.ClienteId" class="btn btn-outline-success">Abrir checklist completo</a>
+    <a asp-action="Ocorrencias" asp-route-clienteId="@cliente.ClienteId" class="btn btn-outline-warning">Gerenciar ocorrências</a>
+    <a asp-action="Treinamentos" asp-route-clienteId="@cliente.ClienteId" class="btn btn-outline-info">Registrar treinamentos</a>
+    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+</div>

@@ -70,3 +70,11 @@ utils/
 3. Sprint 2: convites, escalas e notificações.
 4. Sprint 3: pagamentos, perfil, disponibilidade e suporte.
 5. Pré-lojas: ícones, splash, permissões, política de privacidade e build Android/iOS.
+
+## Integração com operação assistida
+
+Durante a Sprint Zero do app, usar o módulo de operação assistida para registrar validações mobile-first: login, dashboard, plantões disponíveis, convites, escalas, pagamentos, notificações, suporte e perfil. Qualquer bloqueio do app deve ser aberto como ocorrência de homologação com prioridade adequada.
+
+## Integração com operação assistida
+
+Durante a Sprint Zero do app, usar o módulo de operação assistida para registrar validações mobile-first: login, dashboard, plantões disponíveis, convites, escalas, pagamentos, notificações, suporte e perfil. Qualquer bloqueio do app deve ser aberto como ocorrência de homologação com prioridade adequada.

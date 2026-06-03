@@ -1,0 +1,58 @@
+@model PlantaoPro.Web.Models.OperacaoAssistidaIndexViewModel
+@{
+    ViewData["Title"] = "Operação Assistida";
+    var clientes = Model?.Clientes ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaClienteViewModel>();
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Operação Assistida", "Acompanhe implantação, homologação, ocorrências e treinamentos por cliente.", "bi-person-check", null, null, null, true)' />
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="status" class="form-select">
+            <option value="">Todos os status</option>
+            <option value="EM_IMPLANTACAO" selected="@(Model?.Status == "EM_IMPLANTACAO")">Em implantação</option>
+            <option value="HOMOLOGACAO" selected="@(Model?.Status == "HOMOLOGACAO")">Homologação</option>
+            <option value="APROVADA" selected="@(Model?.Status == "APROVADA")">Aprovada</option>
+        </select>
+    </div>
+    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filtrar</button></div>
+</form>
+
+@if (!clientes.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-person-check", "Nenhum cliente em operação assistida", "Cadastre clientes e acompanhe a implantação assistida nesta visão.")' />
+}
+else
+{
+    <div class="row g-3">
+    @foreach (var cliente in clientes)
+    {
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between gap-2">
+                        <div>
+                            <h5 class="card-title mb-1">@cliente.ClienteNome</h5>
+                            <span class="badge text-bg-secondary">@cliente.Status</span>
+                            <span class="badge text-bg-light">Risco @cliente.Risco</span>
+                        </div>
+                        @if (cliente.OcorrenciasCriticas > 0)
+                        {
+                            <span class="badge text-bg-danger align-self-start">@cliente.OcorrenciasCriticas crítica(s)</span>
+                        }
+                    </div>
+                    <div class="progress my-3" role="progressbar" aria-label="Progresso da implantação" aria-valuenow="@cliente.Percentual" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar" style="width: @cliente.Percentual%">@cliente.Percentual%</div>
+                    </div>
+                    <p class="text-muted small mb-3">Responsável: @cliente.Responsavel · Ocorrências abertas: @cliente.OcorrenciasAbertas</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a asp-action="Details" asp-route-id="@cliente.ClienteId" class="btn btn-sm btn-outline-primary">Detalhes</a>
+                        <a asp-action="Checklist" asp-route-clienteId="@cliente.ClienteId" class="btn btn-sm btn-outline-success">Checklist</a>
+                        <a asp-action="Ocorrencias" asp-route-clienteId="@cliente.ClienteId" class="btn btn-sm btn-outline-warning">Ocorrências</a>
+                        <a asp-action="Treinamentos" asp-route-clienteId="@cliente.ClienteId" class="btn btn-sm btn-outline-info">Treinamentos</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    </div>
+}

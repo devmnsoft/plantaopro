@@ -355,3 +355,74 @@ public sealed class BiResumoExecutivoDto
 }
 
 }
+
+namespace PlantaoPro.Api.Models
+{
+public sealed class OperacaoAssistidaClienteDto
+{
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public string ClienteStatus { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Responsavel { get; set; } = string.Empty;
+    public DateTime? InicioPrevisto { get; set; }
+    public DateTime? GoLivePrevisto { get; set; }
+    public int Percentual { get; set; }
+    public string Risco { get; set; } = string.Empty;
+    public string Observacoes { get; set; } = string.Empty;
+    public long OcorrenciasAbertas { get; set; }
+    public long OcorrenciasCriticas { get; set; }
+}
+
+public sealed class OperacaoAssistidaChecklistDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public int Ordem { get; set; }
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public bool Concluido { get; set; }
+    public DateTime? ConcluidoEm { get; set; }
+    public string ConcluidoPor { get; set; } = string.Empty;
+    public string Justificativa { get; set; } = string.Empty;
+}
+
+public sealed class OperacaoAssistidaOcorrenciaDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public string Prioridade { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Responsavel { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Solucao { get; set; } = string.Empty;
+    public DateTime DataAbertura { get; set; }
+    public DateTime? DataResolucao { get; set; }
+}
+
+public sealed class OperacaoAssistidaTreinamentoDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string Tema { get; set; } = string.Empty;
+    public string Perfil { get; set; } = string.Empty;
+    public string Responsavel { get; set; } = string.Empty;
+    public string Participantes { get; set; } = string.Empty;
+    public DateTime RealizadoEm { get; set; }
+    public string Observacoes { get; set; } = string.Empty;
+}
+
+public record OperacaoAssistidaDetalheDto(
+    OperacaoAssistidaClienteDto Cliente,
+    IEnumerable<OperacaoAssistidaChecklistDto> Checklist,
+    IEnumerable<OperacaoAssistidaOcorrenciaDto> Ocorrencias,
+    IEnumerable<OperacaoAssistidaTreinamentoDto> Treinamentos);
+
+public record ConcluirChecklistOperacaoRequest(string? Responsavel, string? Observacao);
+public record ReabrirChecklistOperacaoRequest(string Justificativa);
+public record CriarOcorrenciaOperacaoRequest(string Tipo, string Prioridade, string Descricao, string? Responsavel);
+public record ResolverOcorrenciaOperacaoRequest(string Solucao, string? Responsavel);
+public record RegistrarTreinamentoOperacaoRequest(string Tema, string? Perfil, string? Responsavel, string? Participantes, DateTime? RealizadoEm, string? Observacoes);
+
+}

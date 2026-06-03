@@ -35,3 +35,10 @@
 - Auditoria registra conclusão, reabertura, criação/resolução de ocorrência e treinamento.
 - Filtros por status/prioridade funcionam.
 - Cliente comum não visualiza outra empresa.
+
+## Validação técnica adicional
+
+- Em um cliente sem checklist prévio, abrir a aba **Checklist** antes de concluir itens; a API deve persistir o checklist padrão automaticamente.
+- Tentar criar ocorrência com tipo inválido e confirmar retorno amigável 400.
+- Tentar criar ocorrência com prioridade inválida e confirmar retorno amigável 400.
+- Confirmar que a listagem de clientes aceita `page` e `pageSize` e que `pageSize` acima de 50 é limitado pelo backend.

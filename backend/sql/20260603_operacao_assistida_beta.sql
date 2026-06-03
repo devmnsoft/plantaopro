@@ -94,3 +94,17 @@ BEGIN
         CHECK (status IN ('ABERTA','EM_ANALISE','RESOLVIDA','CANCELADA'));
     END IF;
 END $$;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_operacao_assistida_checklist_cliente_ordem ON plantaopro.operacao_assistida_checklist(cliente_id, ordem) WHERE reg_status = 'A';
+CREATE INDEX IF NOT EXISTS ix_operacao_assistida_checklist_id_status ON plantaopro.operacao_assistida_checklist(id, reg_status);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'ck_operacao_assistida_ocorrencias_tipo'
+    ) THEN
+        ALTER TABLE plantaopro.operacao_assistida_ocorrencias
+        ADD CONSTRAINT ck_operacao_assistida_ocorrencias_tipo
+        CHECK (tipo IN ('BUG','DUVIDA','MELHORIA','TREINAMENTO','CONFIGURACAO'));
+    END IF;
+END $$;

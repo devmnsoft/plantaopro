@@ -227,8 +227,24 @@ public class OperacaoAssistidaBetaContractTests
         Assert.Contains("checklist/{id:guid}/concluir", rotas);
         Assert.Contains("checklist/{id:guid}/reabrir", rotas);
         Assert.Contains("clientes/{clienteId:guid}/ocorrencias", rotas);
+        Assert.Equal(2, rotas.Count(r => r == "clientes/{clienteId:guid}/ocorrencias"));
         Assert.Contains("ocorrencias/{id:guid}/resolver", rotas);
         Assert.Contains("clientes/{clienteId:guid}/treinamentos", rotas);
+    }
+
+    [Fact]
+    public void OperacaoAssistidaController_DevePersistirChecklistPadraoEValidarOcorrencia()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "OperacaoAssistidaController.cs");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("GarantirChecklistPadraoAsync", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("on conflict (id) do nothing", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TiposOcorrenciaPermitidos", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PrioridadesOcorrenciaPermitidas", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Tipo de ocorrência inválido", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Prioridade inválida", conteudo, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -243,6 +259,8 @@ public class OperacaoAssistidaBetaContractTests
         Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_ocorrencias", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.operacao_assistida_treinamentos", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("pg_constraint", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ux_operacao_assistida_checklist_cliente_ordem", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ck_operacao_assistida_ocorrencias_tipo", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", conteudo, StringComparison.OrdinalIgnoreCase);
     }
 

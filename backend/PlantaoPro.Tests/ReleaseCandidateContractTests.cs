@@ -146,3 +146,66 @@ public class SaasCommercialContractTests
         return diretorio.FullName;
     }
 }
+
+public class BetaComercialDocumentationContractTests
+{
+    [Fact]
+    public void ChecklistBetaComercial_DeveCobrirOperacaoSaasMobileESeguranca()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-beta-comercial.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("Beta Comercial Controlada", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Checklist operacional médico", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Checklist SaaS básico", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("API Mobile MVP", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("segurança", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("observabilidade", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void SprintZeroMobile_DeveOrientarReactNativeExpoSecureStoreETelasMvp()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "mobile", "sprint-zero-app.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("React Native", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Expo", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SecureStore", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Plantões disponíveis", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Meus pagamentos", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Suporte", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DeployGoLiveBeta_DeveConterSmokeTestRollbackEOperacaoAssistida()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "deploy", "checklist-go-live-beta.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("Smoke test obrigatório", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Rollback", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/api/health", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Fluxo operacional médico", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("operação assistida", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string EncontrarRaizRepositorio()
+    {
+        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
+        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
+        {
+            diretorio = diretorio.Parent;
+        }
+
+        if (diretorio is null)
+        {
+            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
+        }
+
+        return diretorio.FullName;
+    }
+}

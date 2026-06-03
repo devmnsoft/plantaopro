@@ -13,11 +13,15 @@ namespace PlantaoPro.Api.Controllers
         private readonly PlantaoService service;
         private readonly MedicoRecomendacaoService recomendacaoService;
         private readonly ILogger<PlantoesController> logger;
+        private readonly AssinaturaGuardService assinaturaGuard;
+        private readonly UsuarioContextService usuarioContext;
 
-        public PlantoesController(PlantaoService service, MedicoRecomendacaoService recomendacaoService, ILogger<PlantoesController> logger)
+        public PlantoesController(PlantaoService service, MedicoRecomendacaoService recomendacaoService, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext, ILogger<PlantoesController> logger)
         {
             this.service = service;
             this.recomendacaoService = recomendacaoService;
+            this.assinaturaGuard = assinaturaGuard;
+            this.usuarioContext = usuarioContext;
             this.logger = logger;
         }
 
@@ -211,6 +215,16 @@ namespace PlantaoPro.Api.Controllers
             try
             {
                 var uid = GetUserId();
+                if (string.Equals(status, "aberto", StringComparison.OrdinalIgnoreCase))
+                {
+                    var clienteId = usuarioContext.GetClienteId();
+                    if (clienteId.HasValue)
+                    {
+                        var permissaoPlano = await assinaturaGuard.PodePublicarPlantao(clienteId.Value);
+                        if (!permissaoPlano.Success) return StatusCode(permissaoPlano.StatusCode, permissaoPlano);
+                    }
+                }
+
                 var r = await service.ChangeStatusAsync(id, status, justificativa, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
                 return StatusCode(r.StatusCode, r);
             }

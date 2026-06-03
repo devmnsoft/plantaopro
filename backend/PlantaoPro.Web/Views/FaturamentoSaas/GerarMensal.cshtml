@@ -1,0 +1,17 @@
+@model DateOnly
+@{
+    ViewData["Title"] = "Gerar faturamento mensal";
+}
+<div class="container py-3">
+    <h1 class="h3">Gerar faturamento mensal</h1>
+    <p class="text-muted">Gera faturas para assinaturas ATIVAS sem duplicar competência.</p>
+    <form method="post" class="card card-body col-12 col-lg-6">
+        @Html.AntiForgeryToken()
+        <label class="form-label" for="competencia">Competência</label>
+        <input class="form-control mb-3" id="competencia" name="competencia" type="date" value="@Model.ToString("yyyy-MM-01")" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Gerar faturas</button>
+            <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+        </div>
+    </form>
+</div>

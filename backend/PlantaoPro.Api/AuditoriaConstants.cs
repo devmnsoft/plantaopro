@@ -35,6 +35,8 @@ public static class AuditoriaConstants
         public const string DownloadDocumento = "DOWNLOAD_DOCUMENTO";
         public const string BloqueioTenant = "BLOQUEIO_TENANT";
         public const string BloqueioPermissao = "BLOQUEIO_PERMISSAO";
+        public const string AlterarStatus = "ALTERAR_STATUS";
+        public const string Notificar = "NOTIFICAR";
     }
 
     public static class Entidades

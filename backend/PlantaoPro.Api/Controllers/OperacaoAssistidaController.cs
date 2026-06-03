@@ -61,7 +61,7 @@ where {where}", new { clienteId = filtroCliente, status });
     coalesce(oa.responsavel, 'MNSOFT') as Responsavel,
     oa.inicio_previsto as InicioPrevisto,
     oa.go_live_previsto as GoLivePrevisto,
-    coalesce(oa.percentual, 0)::int as Percentual,
+    coalesce((select round(100.0 * sum(case when ck.concluido then 1 else 0 end) / nullif(count(1),0))::int from plantaopro.operacao_assistida_checklist ck where ck.cliente_id = c.id and ck.reg_status = 'A'), oa.percentual, 0)::int as Percentual,
     coalesce(oa.risco, 'BAIXO') as Risco,
     coalesce(oa.observacoes, '') as Observacoes,
     coalesce((select count(1) from plantaopro.operacao_assistida_ocorrencias o where o.cliente_id = c.id and o.reg_status = 'A' and o.status in ('ABERTA','EM_ANALISE')), 0)::bigint as OcorrenciasAbertas,
@@ -71,12 +71,6 @@ left join plantaopro.operacao_assistida_clientes oa on oa.cliente_id = c.id and 
 where {where}
 order by coalesce(oa.reg_update, oa.reg_date, c.reg_date) desc
 limit @limit offset @offset", new { clienteId = filtroCliente, status, limit = pageSize, offset })).ToList();
-
-            foreach (var item in itens)
-            {
-                var checklist = await ObterChecklistClienteAsync(cn, item.ClienteId);
-                item.Percentual = CalcularPercentual(checklist);
-            }
 
             return Ok(ApiResponse<PagedResult<OperacaoAssistidaClienteDto>>.Ok(new PagedResult<OperacaoAssistidaClienteDto>(itens, page, pageSize, total), "Clientes em operação assistida carregados."));
         }
@@ -104,7 +98,7 @@ limit @limit offset @offset", new { clienteId = filtroCliente, status, limit = p
     coalesce(oa.responsavel, 'MNSOFT') as Responsavel,
     oa.inicio_previsto as InicioPrevisto,
     oa.go_live_previsto as GoLivePrevisto,
-    coalesce(oa.percentual, 0)::int as Percentual,
+    coalesce((select round(100.0 * sum(case when ck.concluido then 1 else 0 end) / nullif(count(1),0))::int from plantaopro.operacao_assistida_checklist ck where ck.cliente_id = c.id and ck.reg_status = 'A'), oa.percentual, 0)::int as Percentual,
     coalesce(oa.risco, 'BAIXO') as Risco,
     coalesce(oa.observacoes, '') as Observacoes,
     coalesce((select count(1) from plantaopro.operacao_assistida_ocorrencias o where o.cliente_id = c.id and o.reg_status = 'A' and o.status in ('ABERTA','EM_ANALISE')), 0)::bigint as OcorrenciasAbertas,
@@ -147,8 +141,10 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     }
 
     [HttpPost("checklist/{id:guid}/concluir")]
-    public async Task<IActionResult> ConcluirChecklist(Guid id, [FromBody] ConcluirChecklistOperacaoRequest request)
+    public async Task<IActionResult> ConcluirChecklist(Guid id, [FromBody] ConcluirChecklistOperacaoRequest? request)
     {
+        request ??= new ConcluirChecklistOperacaoRequest(null, null);
+
         try
         {
             var item = await LocalizarChecklistAsync(id);
@@ -173,10 +169,11 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     }
 
     [HttpPost("checklist/{id:guid}/reabrir")]
-    public async Task<IActionResult> ReabrirChecklist(Guid id, [FromBody] ReabrirChecklistOperacaoRequest request)
+    public async Task<IActionResult> ReabrirChecklist(Guid id, [FromBody] ReabrirChecklistOperacaoRequest? request)
     {
-        if (string.IsNullOrWhiteSpace(request.Justificativa))
+        if (string.IsNullOrWhiteSpace(request?.Justificativa))
             return BadRequest(ApiResponse<string>.Fail("Informe a justificativa para reabrir o item.", 400));
+        var justificativa = request.Justificativa.Trim();
 
         try
         {
@@ -188,10 +185,10 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
             item.Concluido = false;
             item.ConcluidoEm = null;
             item.ConcluidoPor = string.Empty;
-            item.Justificativa = request.Justificativa;
+            item.Justificativa = justificativa;
             ChecklistOverrides[id] = item;
             await PersistirChecklistAsync(item);
-            await AuditarAsync(item.ClienteId, id, "REABRIR_CHECKLIST_OPERACAO_ASSISTIDA", new { item.Titulo, request.Justificativa });
+            await AuditarAsync(item.ClienteId, id, "REABRIR_CHECKLIST_OPERACAO_ASSISTIDA", new { item.Titulo, Justificativa = justificativa });
             return Ok(ApiResponse<OperacaoAssistidaChecklistDto>.Ok(item, "Item reaberto com sucesso."));
         }
         catch (Exception ex)
@@ -220,10 +217,18 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     }
 
     [HttpPost("clientes/{clienteId:guid}/ocorrencias")]
-    public async Task<IActionResult> CriarOcorrencia(Guid clienteId, [FromBody] CriarOcorrenciaOperacaoRequest request)
+    public async Task<IActionResult> CriarOcorrencia(Guid clienteId, [FromBody] CriarOcorrenciaOperacaoRequest? request)
     {
-        if (string.IsNullOrWhiteSpace(request.Descricao))
+        if (string.IsNullOrWhiteSpace(request?.Descricao))
             return BadRequest(ApiResponse<string>.Fail("Informe a descrição da ocorrência.", 400));
+
+        var descricao = request.Descricao.Trim();
+        var tipo = Normalizar(request.Tipo, "DUVIDA");
+        var prioridade = Normalizar(request.Prioridade, "MEDIA");
+        if (!ValorPermitido(tipo, TiposOcorrenciaPermitidos))
+            return BadRequest(ApiResponse<string>.Fail("Tipo de ocorrência inválido. Use BUG, DUVIDA, MELHORIA, TREINAMENTO ou CONFIGURACAO.", 400));
+        if (!ValorPermitido(prioridade, PrioridadesOcorrenciaPermitidas))
+            return BadRequest(ApiResponse<string>.Fail("Prioridade inválida. Use BAIXA, MEDIA, ALTA ou CRITICA.", 400));
 
         try
         {
@@ -234,11 +239,11 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
             {
                 Id = Guid.NewGuid(),
                 ClienteId = clienteId,
-                Tipo = Normalizar(request.Tipo, "DUVIDA"),
-                Prioridade = Normalizar(request.Prioridade, "MEDIA"),
+                Tipo = tipo,
+                Prioridade = prioridade,
                 Status = "ABERTA",
                 Responsavel = request.Responsavel ?? string.Empty,
-                Descricao = request.Descricao.Trim(),
+                Descricao = descricao,
                 Solucao = string.Empty,
                 DataAbertura = DateTime.UtcNow
             };
@@ -262,10 +267,11 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     }
 
     [HttpPost("ocorrencias/{id:guid}/resolver")]
-    public async Task<IActionResult> ResolverOcorrencia(Guid id, [FromBody] ResolverOcorrenciaOperacaoRequest request)
+    public async Task<IActionResult> ResolverOcorrencia(Guid id, [FromBody] ResolverOcorrenciaOperacaoRequest? request)
     {
-        if (string.IsNullOrWhiteSpace(request.Solucao))
+        if (string.IsNullOrWhiteSpace(request?.Solucao))
             return BadRequest(ApiResponse<string>.Fail("Informe a solução aplicada.", 400));
+        var solucao = request.Solucao.Trim();
 
         try
         {
@@ -275,7 +281,7 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
             if (!acesso.Success) return StatusCode(acesso.StatusCode, acesso);
 
             ocorrencia.Status = "RESOLVIDA";
-            ocorrencia.Solucao = request.Solucao.Trim();
+            ocorrencia.Solucao = solucao;
             ocorrencia.DataResolucao = DateTime.UtcNow;
             ocorrencia.Responsavel = string.IsNullOrWhiteSpace(request.Responsavel) ? ocorrencia.Responsavel : request.Responsavel.Trim();
             OcorrenciasMemoria[id] = ocorrencia;
@@ -291,10 +297,11 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     }
 
     [HttpPost("clientes/{clienteId:guid}/treinamentos")]
-    public async Task<IActionResult> RegistrarTreinamento(Guid clienteId, [FromBody] RegistrarTreinamentoOperacaoRequest request)
+    public async Task<IActionResult> RegistrarTreinamento(Guid clienteId, [FromBody] RegistrarTreinamentoOperacaoRequest? request)
     {
-        if (string.IsNullOrWhiteSpace(request.Tema))
+        if (string.IsNullOrWhiteSpace(request?.Tema))
             return BadRequest(ApiResponse<string>.Fail("Informe o tema do treinamento.", 400));
+        var tema = request.Tema.Trim();
 
         try
         {
@@ -305,7 +312,7 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
             {
                 Id = Guid.NewGuid(),
                 ClienteId = clienteId,
-                Tema = request.Tema.Trim(),
+                Tema = tema,
                 Perfil = request.Perfil ?? string.Empty,
                 Responsavel = request.Responsavel ?? string.Empty,
                 Participantes = request.Participantes ?? string.Empty,
@@ -341,6 +348,7 @@ order by ordem", new { clienteId })).ToList();
         if (salvos.Count == 0)
         {
             salvos = ChecklistPadrao(clienteId).ToList();
+            await GarantirChecklistPadraoAsync(cn, salvos);
         }
 
         foreach (var item in salvos)
@@ -387,6 +395,16 @@ limit 50", new { clienteId })).ToList();
         var item = await cn.QuerySingleOrDefaultAsync<OperacaoAssistidaChecklistDto>(@"select id as Id, cliente_id as ClienteId, ordem as Ordem, titulo as Titulo, descricao as Descricao, concluido as Concluido, concluido_em as ConcluidoEm, coalesce(concluido_por, '') as ConcluidoPor, coalesce(justificativa, '') as Justificativa
 from plantaopro.operacao_assistida_checklist where id = @id and reg_status = 'A'", new { id });
         return item;
+    }
+
+    private static async Task GarantirChecklistPadraoAsync(NpgsqlConnection cn, IEnumerable<OperacaoAssistidaChecklistDto> checklist)
+    {
+        foreach (var item in checklist)
+        {
+            await cn.ExecuteAsync(@"insert into plantaopro.operacao_assistida_checklist(id, cliente_id, ordem, titulo, descricao, concluido, reg_date, reg_status)
+values (@Id, @ClienteId, @Ordem, @Titulo, @Descricao, false, now(), 'A')
+on conflict (id) do nothing", item);
+        }
     }
 
     private async Task<OperacaoAssistidaOcorrenciaDto?> LocalizarOcorrenciaAsync(Guid id)
@@ -500,9 +518,17 @@ values (gen_random_uuid(), @clienteId, 'OPERACAO_ASSISTIDA', 'Ocorrência críti
         return lista.Count == 0 ? 0 : (int)Math.Round(lista.Count(x => x.Concluido) * 100d / lista.Count);
     }
 
+    private static readonly string[] TiposOcorrenciaPermitidos = { "BUG", "DUVIDA", "MELHORIA", "TREINAMENTO", "CONFIGURACAO" };
+    private static readonly string[] PrioridadesOcorrenciaPermitidas = { "BAIXA", "MEDIA", "ALTA", "CRITICA" };
+
     private static string Normalizar(string? valor, string padrao)
     {
         return string.IsNullOrWhiteSpace(valor) ? padrao : valor.Trim().ToUpperInvariant().Replace('Ú', 'U').Replace('Í', 'I').Replace('É', 'E').Replace('Á', 'A').Replace('Ã', 'A').Replace('Ç', 'C');
+    }
+
+    private static bool ValorPermitido(string valor, IEnumerable<string> permitidos)
+    {
+        return permitidos.Contains(valor, StringComparer.OrdinalIgnoreCase);
     }
 
     private static Guid DeterministicGuid(Guid clienteId, int ordem)

@@ -50,3 +50,21 @@ A operação assistida permite que a MNSOFT acompanhe um cliente real durante im
 - Treinamentos registrados para administração, coordenação, financeiro e médicos pilotos.
 - Fluxo operacional médico e fluxo SaaS básico validados.
 - Auditoria e observabilidade revisadas após simulação ponta a ponta.
+
+## Regras técnicas consolidadas nesta beta
+
+- Ao abrir o checklist de um cliente pela primeira vez, a API materializa o checklist padrão no schema `plantaopro`, com IDs determinísticos e `ON CONFLICT` seguro. Isso evita falha operacional ao concluir um item recém-exibido na primeira homologação do cliente.
+- A listagem de clientes usa paginação (`page`/`pageSize`, máximo 50) e calcula o percentual por consulta agregada no banco, evitando uma chamada adicional de checklist por cliente na tela executiva.
+- Tipos aceitos para ocorrência: `BUG`, `DUVIDA`, `MELHORIA`, `TREINAMENTO`, `CONFIGURACAO`.
+- Prioridades aceitas para ocorrência: `BAIXA`, `MEDIA`, `ALTA`, `CRITICA`.
+- Payload vazio ou incompleto em ações críticas retorna erro amigável 400, sem stack trace para o usuário.
+
+## Smoke test recomendado antes da demonstração
+
+1. Abrir `/OperacaoAssistida` como `ADMINISTRADOR_GLOBAL` e confirmar cards dos clientes.
+2. Entrar no detalhe de um cliente sem checklist salvo e validar que os 18 itens aparecem.
+3. Concluir o item **Cliente cadastrado** e confirmar aumento do percentual.
+4. Reabrir o item com justificativa e confirmar auditoria.
+5. Criar ocorrência `CRITICA` do tipo `BUG` e confirmar alerta operacional.
+6. Resolver a ocorrência com solução preenchida.
+7. Registrar treinamento para `COORDENACAO` e validar timeline.

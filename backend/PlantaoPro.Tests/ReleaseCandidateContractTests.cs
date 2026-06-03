@@ -79,3 +79,70 @@ public class ReleaseCandidateContractTests
         return diretorio.FullName;
     }
 }
+
+public class SaasCommercialContractTests
+{
+    [Fact]
+    public void AssinaturaGuard_DeveExporValidacoesComerciaisDoPlano()
+    {
+        var metodos = typeof(PlantaoPro.Api.AssinaturaGuardService).GetMethods().Select(m => m.Name).ToArray();
+
+        Assert.Contains("PodeCadastrarMedico", metodos);
+        Assert.Contains("PodeCadastrarHospital", metodos);
+        Assert.Contains("PodePublicarPlantao", metodos);
+        Assert.Contains("PodeUsarMobile", metodos);
+        Assert.Contains("PodeUsarBi", metodos);
+        Assert.Contains("PodeUsarRelatoriosAvancados", metodos);
+        Assert.Contains("PodeUsarIntegracoes", metodos);
+        Assert.Contains("ObterUsoPlano", metodos);
+    }
+
+    [Fact]
+    public void FaturamentoSaasController_DeveExporEndpointsMvpComercial()
+    {
+        var rotas = typeof(PlantaoPro.Api.Controllers.FaturamentoSaasController)
+            .GetMethods()
+            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.HttpMethodAttribute>())
+            .SelectMany(a => a.Template is null ? Array.Empty<string>() : new[] { a.Template })
+            .ToArray();
+
+        Assert.Contains("resumo", rotas);
+        Assert.Contains("faturas", rotas);
+        Assert.Contains("faturas/{id:guid}", rotas);
+        Assert.Contains("gerar-mensal", rotas);
+        Assert.Contains("faturas/{id:guid}/marcar-paga", rotas);
+        Assert.Contains("faturas/{id:guid}/cancelar", rotas);
+        Assert.Contains("faturas/{id:guid}/notificar", rotas);
+        Assert.Contains("faturas/{id:guid}/contestar", rotas);
+        Assert.Contains("inadimplencia", rotas);
+    }
+
+    [Fact]
+    public void SqlMvpComercial_DeveUsarConstraintsSegurasEStatusDeFatura()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "backend", "sql", "20260603_mvp_comercial_avancado.sql");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("CREATE TABLE IF NOT EXISTS plantaopro.faturas_saas", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE INDEX IF NOT EXISTS ix_faturas_saas_cliente_status", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("EM_CONTESTACAO", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string EncontrarRaizRepositorio()
+    {
+        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
+        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
+        {
+            diretorio = diretorio.Parent;
+        }
+
+        if (diretorio is null)
+        {
+            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
+        }
+
+        return diretorio.FullName;
+    }
+}

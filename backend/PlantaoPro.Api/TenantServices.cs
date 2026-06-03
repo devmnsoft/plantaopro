@@ -262,35 +262,92 @@ public sealed class AssinaturaGuardService
         this.logger = logger;
     }
 
-    public async Task<ApiResponse<bool>> PodeUsarMobile(Guid clienteId)
+    public Task<ApiResponse<bool>> PodeCadastrarMedico(Guid clienteId) => ValidarLimiteAsync(clienteId, "medicos", "Limite de médicos do plano atingido.");
+
+    public Task<ApiResponse<bool>> PodeCadastrarHospital(Guid clienteId) => ValidarLimiteAsync(clienteId, "hospitais", "Limite de hospitais do plano atingido.");
+
+    public Task<ApiResponse<bool>> PodePublicarPlantao(Guid clienteId) => ValidarLimiteAsync(clienteId, "plantoes", "Limite mensal de plantões do plano atingido.");
+
+    public Task<ApiResponse<bool>> PodeUsarMobile(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "mobile", "Seu plano atual não permite acesso mobile.");
+
+    public Task<ApiResponse<bool>> PodeUsarBi(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "bi", "Seu plano atual não permite BI.");
+
+    public Task<ApiResponse<bool>> PodeUsarRelatoriosAvancados(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "relatorios", "Seu plano atual não permite relatórios avançados.");
+
+    public Task<ApiResponse<bool>> PodeUsarIntegracoes(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "integracoes", "Seu plano atual não permite integrações.");
+
+    public async Task<ApiResponse<UsoPlanoDto>> ObterUsoPlano(Guid clienteId)
     {
         try
         {
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var assinatura = await cn.QueryFirstOrDefaultAsync<(string Status, Guid PlanoId)>(@"select a.status as Status, a.plano_id as PlanoId
+            var clienteStatus = await cn.ExecuteScalarAsync<string?>("select upper(coalesce(status,'')) from plantaopro.clientes where id=@clienteId and reg_status='A'", new { clienteId });
+            if (string.Equals(clienteStatus, "SUSPENSO", StringComparison.OrdinalIgnoreCase)) return ApiResponse<UsoPlanoDto>.Fail("Cliente suspenso não pode operar até regularização.", 403);
+            if (string.Equals(clienteStatus, "CANCELADO", StringComparison.OrdinalIgnoreCase)) return ApiResponse<UsoPlanoDto>.Fail("Cliente cancelado não pode operar.", 403);
+
+            var uso = await cn.QueryFirstOrDefaultAsync<UsoPlanoDto>(@"select a.cliente_id as ""ClienteId"", a.id as ""AssinaturaId"", p.id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""AssinaturaStatus"",
+       (select count(1)::int from plantaopro.medicos m where m.cliente_id=a.cliente_id and m.reg_status='A') as ""MedicosUsados"",
+       coalesce(p.limite_medicos,0) as ""MedicosLimite"",
+       (select count(1)::int from plantaopro.hospitais h where h.cliente_id=a.cliente_id and h.reg_status='A') as ""HospitaisUsados"",
+       coalesce(p.limite_hospitais,0) as ""HospitaisLimite"",
+       (select count(1)::int from plantaopro.plantoes pl where pl.cliente_id=a.cliente_id and pl.reg_status='A' and date_trunc('month',pl.data_inicio)=date_trunc('month',now())) as ""PlantoesMesUsados"",
+       coalesce(p.limite_plantoes_mes,0) as ""PlantoesMesLimite"",
+       coalesce(p.permite_mobile,p.permite_api,false) as ""PermiteMobile"",
+       coalesce(p.permite_bi,p.permite_relatorios,false) as ""PermiteBi"",
+       coalesce(p.permite_relatorios_avancados,p.permite_relatorios,false) as ""PermiteRelatoriosAvancados"",
+       coalesce(p.permite_integracoes,p.permite_api,false) as ""PermiteIntegracoes""
 from plantaopro.assinaturas a
+join plantaopro.planos p on p.id=a.plano_id
 where a.cliente_id=@clienteId and a.reg_status='A'
-order by a.reg_date desc
+order by case when upper(a.status)='ATIVA' then 0 else 1 end, a.reg_date desc
 limit 1", new { clienteId });
 
-            if (assinatura == default) return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para uso mobile.", 403);
-
-            if (string.Equals(assinatura.Status, "suspensa", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(assinatura.Status, "cancelada", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(assinatura.Status, "vencida", StringComparison.OrdinalIgnoreCase))
-            {
-                return ApiResponse<bool>.Fail("Assinatura sem permissão de operação mobile no momento.", 403);
-            }
-
-            var permiteMobile = await cn.ExecuteScalarAsync<bool?>("select permite_mobile from plantaopro.planos where id=@id and reg_status='A'", new { id = assinatura.PlanoId });
-            if (permiteMobile != true) return ApiResponse<bool>.Fail("Seu plano atual não permite acesso mobile.", 403);
-
-            return ApiResponse<bool>.Ok(true, "Acesso mobile permitido.");
+            return uso is null
+                ? ApiResponse<UsoPlanoDto>.Fail("Cliente sem assinatura cadastrada.", 403)
+                : ApiResponse<UsoPlanoDto>.Ok(uso, "Uso do plano carregado.");
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Erro ao validar acesso mobile por assinatura. cliente:{ClienteId}", clienteId);
-            return ApiResponse<bool>.Fail("Não foi possível validar permissão mobile no momento.", 500);
+            logger.LogError(ex, "Erro ao obter uso do plano. cliente:{ClienteId}", clienteId);
+            return ApiResponse<UsoPlanoDto>.Fail("Não foi possível validar uso do plano no momento.", 500);
         }
+    }
+
+    private async Task<ApiResponse<bool>> ValidarFuncionalidadeAsync(Guid clienteId, string funcionalidade, string mensagemBloqueio)
+    {
+        var usoResponse = await ObterUsoPlano(clienteId);
+        if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
+        var uso = usoResponse.Data;
+        var statusOk = string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase);
+        if (!statusOk) return ApiResponse<bool>.Fail("Assinatura sem permissão de operação no momento.", 403);
+
+        var permitido = funcionalidade switch
+        {
+            "mobile" => uso.PermiteMobile,
+            "bi" => uso.PermiteBi,
+            "relatorios" => uso.PermiteRelatoriosAvancados,
+            "integracoes" => uso.PermiteIntegracoes,
+            _ => false
+        };
+
+        return permitido ? ApiResponse<bool>.Ok(true, "Funcionalidade permitida.") : ApiResponse<bool>.Fail(mensagemBloqueio, 403);
+    }
+
+    private async Task<ApiResponse<bool>> ValidarLimiteAsync(Guid clienteId, string limite, string mensagemBloqueio)
+    {
+        var usoResponse = await ObterUsoPlano(clienteId);
+        if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
+        var uso = usoResponse.Data;
+        if (!string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase)) return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para operar.", 403);
+
+        var permitido = limite switch
+        {
+            "medicos" => uso.MedicosLimite <= 0 || uso.MedicosUsados < uso.MedicosLimite,
+            "hospitais" => uso.HospitaisLimite <= 0 || uso.HospitaisUsados < uso.HospitaisLimite,
+            "plantoes" => uso.PlantoesMesLimite <= 0 || uso.PlantoesMesUsados < uso.PlantoesMesLimite,
+            _ => false
+        };
+
+        return permitido ? ApiResponse<bool>.Ok(true, "Limite disponível.") : ApiResponse<bool>.Fail(mensagemBloqueio, 403);
     }
 }

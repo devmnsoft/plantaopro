@@ -174,6 +174,102 @@ public record DashboardOverviewDto(DashboardDto Indicadores,IEnumerable<PlantaoR
 // ============================================================================
 // ONBOARDING SAAS
 // ============================================================================
+
+public sealed class PlanoComercialDto
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public decimal ValorMensal { get; set; }
+    public int LimiteMedicos { get; set; }
+    public int LimiteHospitais { get; set; }
+    public int LimitePlantoesMes { get; set; }
+    public bool PermiteMobile { get; set; }
+    public bool PermiteBi { get; set; }
+    public bool PermiteRelatoriosAvancados { get; set; }
+    public bool PermiteIntegracoes { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+public record PlanoComercialRequest(string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteMobile,bool PermiteBi,bool PermiteRelatoriosAvancados,bool PermiteIntegracoes);
+
+public sealed class AssinaturaComercialDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public Guid PlanoId { get; set; }
+    public string PlanoNome { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public decimal ValorContratado { get; set; }
+    public int DiaVencimento { get; set; }
+    public string Observacoes { get; set; } = string.Empty;
+}
+
+public record AssinaturaComercialRequest(Guid ClienteId,Guid PlanoId,DateTime DataInicio,DateTime DataFim,decimal ValorContratado,int DiaVencimento,string? Observacoes);
+public record JustificativaRequest(string Justificativa);
+public record MotivoRequest(string Motivo);
+
+public sealed class UsoPlanoDto
+{
+    public Guid ClienteId { get; set; }
+    public Guid AssinaturaId { get; set; }
+    public Guid PlanoId { get; set; }
+    public string PlanoNome { get; set; } = string.Empty;
+    public string AssinaturaStatus { get; set; } = string.Empty;
+    public int MedicosUsados { get; set; }
+    public int MedicosLimite { get; set; }
+    public int HospitaisUsados { get; set; }
+    public int HospitaisLimite { get; set; }
+    public int PlantoesMesUsados { get; set; }
+    public int PlantoesMesLimite { get; set; }
+    public bool PermiteMobile { get; set; }
+    public bool PermiteBi { get; set; }
+    public bool PermiteRelatoriosAvancados { get; set; }
+    public bool PermiteIntegracoes { get; set; }
+}
+
+public record GerarFaturasSaasRequest(DateOnly Competencia);
+public record MarcarFaturaPagaRequest(decimal ValorPago,DateOnly DataPagamento,string FormaPagamento,string? Observacoes);
+
+public sealed class FaturamentoSaasResumoDto
+{
+    public decimal ReceitaPrevista { get; set; }
+    public decimal ReceitaRecebida { get; set; }
+    public long FaturasAbertas { get; set; }
+    public long FaturasVencidas { get; set; }
+    public long FaturasEmContestacao { get; set; }
+}
+
+public sealed class FaturaSaasDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public Guid AssinaturaId { get; set; }
+    public DateOnly Competencia { get; set; }
+    public decimal Valor { get; set; }
+    public DateOnly Vencimento { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public decimal? ValorPago { get; set; }
+    public DateOnly? DataPagamento { get; set; }
+    public string FormaPagamento { get; set; } = string.Empty;
+    public string MotivoCancelamento { get; set; } = string.Empty;
+    public string MotivoContestacao { get; set; } = string.Empty;
+    public DateTime CriadoEm { get; set; }
+}
+
+public sealed class InadimplenciaSaasDto
+{
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public long FaturasVencidas { get; set; }
+    public decimal ValorVencido { get; set; }
+    public DateOnly VencimentoMaisAntigo { get; set; }
+}
+
 public record PlanoDto(Guid Id,string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteRelatorios,bool PermiteApi,string Status);
 
 public record AssinaturaDto(Guid Id,Guid ClienteId,Guid PlanoId,DateTime DataInicio,DateTime DataFim,string Status,decimal ValorContratado,int DiaVencimento,string? Observacoes);

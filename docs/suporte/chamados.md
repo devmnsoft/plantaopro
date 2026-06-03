@@ -1,45 +1,54 @@
-# Suporte e Chamados — Release Candidate
+# Chamados de suporte
 
 ## Objetivo
+Documento de homologação e demonstração para o PlantãoPro como MVP comercial homologável em produção controlada. Deve validar fluxo operacional médico, fluxo SaaS básico, API Mobile MVP, segurança e multiempresa, auditoria, observabilidade, suporte, Customer Success e faturamento SaaS.
 
-Permitir que cliente, médico e operação acompanhem incidentes, dúvidas e solicitações com rastreabilidade, prioridade e auditoria.
+## Usuários de teste
+| Perfil | Usuário sugerido | Uso esperado |
+| --- | --- | --- |
+| ADMINISTRADOR_GLOBAL | admin.global@plantaopro.local | Gestão de clientes, planos, assinaturas, faturamento SaaS, observabilidade e auditoria global. |
+| ADMINISTRADOR | admin.cliente@hospital.local | Administração do cliente, hospitais, médicos, usuários e relatórios do próprio cliente. |
+| COORDENACAO | coordenacao@hospital.local | Criação/publicação de plantões, confirmação de escalas e Central de Escala. |
+| FINANCEIRO | financeiro@hospital.local | Geração, confirmação, cancelamento e contestação de pagamentos médicos. |
+| MEDICO | medico@hospital.local | Minha Agenda, plantões disponíveis, convites, escalas, pagamentos e notificações. |
+| HOSPITAL | hospital@hospital.local | Visualização de plantões, escalas confirmadas e comunicação da unidade. |
 
-## Regras funcionais
+## Passo a passo principal
+1. Entrar como ADMINISTRADOR_GLOBAL e validar Dashboard com clientes ativos, suspensos, faturas vencidas e clientes em risco.
+2. Criar cliente, plano ativo e assinatura ativa; validar uso do plano em barras/progresso na Web ou via API.
+3. Criar hospital, especialidade e médico respeitando cliente_id e limites contratados.
+4. Criar plantão em RASCUNHO, publicar e validar bloqueio caso cliente esteja SUSPENSO/CANCELADO ou limite mensal tenha sido atingido.
+5. Entrar como MEDICO, abrir área mobile-first, listar plantões disponíveis, solicitar plantão e validar conflito/duplicidade.
+6. Entrar como COORDENACAO, confirmar escala, reduzir vaga disponível, marcar escala como REALIZADA e conferir auditoria/notificação.
+7. Entrar como FINANCEIRO, gerar pagamento somente de escala REALIZADA, confirmar com valor/data/forma e bloquear duplicidade.
+8. Entrar como MEDICO, conferir pagamento confirmado, notificação e histórico de agenda.
+9. Gerar fatura SaaS mensal, marcar paga, contestar/cancelar com motivo quando aplicável e consultar inadimplência.
+10. Criar chamado de suporte, responder/resolver com descrição, registrar contato de Customer Success e plano de ação.
+11. Exportar relatório CSV permitido e verificar auditoria de exportação.
+12. Abrir Swagger, validar /api/health, login JWT, endpoints Mobile e retorno 401 sem token.
 
-- Cliente visualiza apenas chamados do próprio cliente.
-- Médico visualiza apenas chamados abertos pelo próprio usuário.
-- Admin global pode auditar todos os chamados.
-- Criação exige título e descrição.
-- Resolução exige descrição da solução.
-- Cancelamento exige justificativa.
-- Chamado crítico deve gerar alerta operacional.
-- Mensagens devem gerar notificação ao solicitante ou responsável.
+## Resultado esperado
+- Login, JWT, Cookie Authentication, Swagger e /api/health permanecem funcionais.
+- Médico acessa somente dados próprios; usuário comum acessa somente dados do próprio cliente; admin global visualiza todos os clientes.
+- Toda ação crítica registra auditoria, usa mensagem amigável e não expõe stack trace, SQL, token, senha ou segredo.
+- Faturas SaaS seguem status ABERTA, PAGA, VENCIDA, CANCELADA e EM_CONTESTACAO sem duplicar competência da mesma assinatura.
+- Suporte, Customer Success, dashboards, relatórios e API Mobile estão demonstráveis para homologação controlada.
 
-## Fluxo de homologação
-
-1. Entrar como médico demo.
-2. Abrir um chamado via API Mobile ou tela Web de suporte.
-3. Confirmar protocolo gerado.
-4. Entrar como administrador/CS.
-5. Responder e resolver o chamado com descrição.
-6. Confirmar notificação e auditoria.
-
-## Estrutura SQL incremental
-
-O script `backend/sql/20260602_suporte_mobile_rc.sql` cria de forma segura:
-
-- `plantaopro.chamados_suporte`
-- `plantaopro.chamado_mensagens`
-- índices por cliente/status, usuário/data e mensagens por chamado
+## Critérios de aprovação
+- Build da API e Web verde no ambiente com SDK .NET instalado.
+- Varredura sem @page/asp-page em Views MVC, sem href="#", sem alert/confirm nativo e sem collection expression incompatível.
+- Fluxo operacional médico ponta a ponta concluído sem exceção técnica.
+- Fluxo SaaS básico concluído com bloqueios de plano/assinatura e auditoria.
+- Testes mínimos compilam e contratos de segurança/mobile/SaaS passam.
 
 ## Pendências conhecidas
+- Validar dados reais de SMTP/push antes de ativar notificações externas.
+- Executar carga inicial e índices incrementais em homologação antes do teste com cliente real.
+- Evoluir app mobile nativo a partir dos contratos Mobile documentados.
 
-- Resposta pelo app pode ser evoluída após o MVP.
-- SLA e filas por responsável podem ser adicionados no ciclo pós-RC.
-
-
-## Detalhamento mobile
-
-- `GET /api/mobile/suporte/chamados` lista chamados do usuário autenticado com paginação.
-- `GET /api/mobile/suporte/chamados/{id}` detalha somente chamado próprio e do mesmo cliente, retornando dados leves do chamado e até 50 mensagens em ordem cronológica.
-- Tentativa de acessar chamado inexistente, de outro usuário ou de outro cliente retorna mensagem amigável e auditoria de acesso negado.
+## Como testar suporte e Customer Success
+1. Criar chamado como cliente/médico com título, descrição, categoria e prioridade.
+2. Validar que o cliente/médico enxerga somente chamados próprios e admin global enxerga todos.
+3. Responder chamado, resolver com descrição e cancelar somente com justificativa.
+4. Registrar interação de Customer Success para cliente em risco e criar plano de ação com responsável e prazo.
+5. Confirmar notificação, alerta crítico quando prioridade for crítica e auditoria das ações.

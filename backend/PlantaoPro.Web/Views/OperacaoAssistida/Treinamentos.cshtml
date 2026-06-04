@@ -7,7 +7,7 @@
 
 <div class="card mb-3"><div class="card-body">
     <h5>Novo treinamento</h5>
-    <form asp-action="RegistrarTreinamento" method="post" class="row g-2">
+    <form asp-action="RegistrarTreinamento" method="post" class="row g-2" data-confirm="true" data-confirm-title="Registrar treinamento" data-confirm-message="Confirma registrar este treinamento na operação assistida do cliente?" data-confirm-type="success">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ClienteId" value="@(Model?.ClienteId ?? Guid.Empty)" />
         <div class="col-md-3"><input name="Tema" class="form-control" placeholder="Tema" required /></div>

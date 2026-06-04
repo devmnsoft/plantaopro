@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BarberSync Admin</title>
+    <link rel="stylesheet" href="/css/admin-design-system.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/admin-layout.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="admin-shell">
+        <partial name="_AdminSidebar" />
+        <main>
+            <partial name="_AdminTopbar" />
+            @RenderBody()
+        </main>
+    </div>
+    <div id="toast-region" class="toast-region"></div>
+    <script src="/js/admin-toast.js" asp-append-version="true"></script>
+    <script src="/js/admin-event-bus.js" asp-append-version="true"></script>
+    <script src="/js/admin-demo-store.js" asp-append-version="true"></script>
+    <script src="/js/admin-api-client.js" asp-append-version="true"></script>
+    <script src="/js/admin-modal.js" asp-append-version="true"></script>
+    <script src="/js/admin-crud.js" asp-append-version="true"></script>
+    <script src="/js/admin-dashboard.js" asp-append-version="true"></script>
+    <script src="/js/admin-shell.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -2,11 +2,9 @@
 @{
     var modal = Model ?? new PlantaoPro.Web.Models.ConfirmModalViewModel();
 
-    var id = !string.IsNullOrWhiteSpace(modal.ModalId)
-        ? modal.ModalId
-        : string.IsNullOrWhiteSpace(modal.Id)
-            ? "ppGlobalConfirmModal"
-            : modal.Id;
+    var id = string.IsNullOrWhiteSpace(modal.Id)
+        ? "pp-confirm-modal"
+        : modal.Id;
 
     var title = string.IsNullOrWhiteSpace(modal.Title)
         ? "Confirmar ação"
@@ -16,24 +14,22 @@
         ? "Deseja realmente continuar?"
         : modal.Message;
 
-    var confirmText = !string.IsNullOrWhiteSpace(modal.ActionText)
-        ? modal.ActionText
-        : string.IsNullOrWhiteSpace(modal.ConfirmText)
-            ? "Confirmar"
-            : modal.ConfirmText;
+    var confirmText = string.IsNullOrWhiteSpace(modal.ConfirmText)
+        ? "Confirmar"
+        : modal.ConfirmText;
 
     var cancelText = string.IsNullOrWhiteSpace(modal.CancelText)
         ? "Cancelar"
         : modal.CancelText;
 
     var type = string.IsNullOrWhiteSpace(modal.Type)
-        ? "danger"
+        ? "warning"
         : modal.Type;
 }
 
 <div class="modal fade" id="@id" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content pp-confirm-modal">
+        <div class="modal-content pp-confirm-modal pp-confirm-modal-@type">
             <div class="modal-header">
                 <div>
                     <span class="pp-confirm-kicker">Confirmação necessária</span>
@@ -41,12 +37,14 @@
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
+
             <div class="modal-body">
                 <p class="mb-0" data-pp-confirm-message>@message</p>
             </div>
+
             <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@cancelText</button>
-                <button type="button" class="btn btn-@type" data-pp-confirm-submit>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">@cancelText</button>
+                <button type="button" class="btn btn-primary" data-pp-confirm-action>
                     <i class="bi bi-check2-circle me-1"></i>@confirmText
                 </button>
             </div>

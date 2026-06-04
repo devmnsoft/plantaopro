@@ -86,9 +86,19 @@ Consolidar o PlantãoPro como **Beta Comercial Controlada**: demonstrável para 
 ## Operação assistida com cliente real
 
 - [ ] Cliente aparece no painel de operação assistida.
-- [ ] Checklist padrão de implantação disponível.
-- [ ] Conclusão de item registra auditoria e atualiza progresso.
-- [ ] Reabertura exige justificativa.
-- [ ] Ocorrência crítica gera alerta operacional.
-- [ ] Treinamentos por perfil registrados.
+- [ ] Cards exibem status, risco, responsável, progresso e ocorrências críticas.
+- [ ] Checklist padrão de implantação disponível para todos os clientes em homologação.
+- [ ] Conclusão de item usa modal de confirmação, registra auditoria e atualiza progresso.
+- [ ] Reabertura usa modal de confirmação, exige justificativa e registra auditoria.
+- [ ] Registro de ocorrência usa modal de confirmação; ocorrência crítica gera alerta operacional.
+- [ ] Resolução de ocorrência exige descrição da solução, usa modal de confirmação e registra auditoria.
+- [ ] Treinamentos por perfil registrados com responsável, participantes e observações.
 - [ ] Nenhuma ocorrência crítica aberta antes do go-live beta.
+
+## Higiene de branch e produto
+
+- [ ] Branch atual confirmada antes de iniciar alterações.
+- [ ] Branch indevida de outro produto não foi mergeada novamente.
+- [ ] Varredura sem termos, módulos, domínios de negócio e portas pertencentes ao produto incorreto.
+- [ ] App mobile legítimo mantido somente em `mobile/PlantaoPro.App`.
+- [ ] Nenhum diretório raiz de app externo, ignorado ou não versionado, permanece no workspace de release.

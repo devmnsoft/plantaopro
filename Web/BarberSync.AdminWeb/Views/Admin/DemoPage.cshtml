@@ -1,0 +1,11 @@
+@model string
+<section class="hero">
+    <div><p class="eyebrow">@Model</p><h1>Operação comercial BarberSync</h1><p>Dados demo persistentes, ações com EventBus e fallback seguro via /AdminApi.</p></div>
+    <button class="primary" data-action="create" data-entity="clients">Criar ação demo</button>
+</section>
+<section class="kpis" id="dashboard-kpis"></section>
+<section class="panel">
+    <div class="panel-head"><h2>Dados e ações</h2><div><button data-action="refresh">Atualizar</button><button data-action="copilot">Perguntar Copilot</button></div></div>
+    <div id="crud-grid" class="grid"></div>
+</section>
+<section class="panel"><h2>EventBus</h2><ul id="event-feed"></ul></section>

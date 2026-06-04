@@ -1,0 +1,5 @@
+**/bin/
+**/obj/
+.git/
+mobile/PlantaoPro.App/node_modules/
+MobileApp/node_modules/

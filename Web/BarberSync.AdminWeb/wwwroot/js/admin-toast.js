@@ -1,1 +1,0 @@
-window.BarberSyncToast={show(message,type='info'){const host=document.getElementById('toast-region');if(!host)return;const el=document.createElement('div');el.className='toast';el.textContent=message;host.appendChild(el);setTimeout(()=>el.remove(),3500);}};

@@ -166,6 +166,6 @@ if ("serviceWorker" in navigator) {
 }
 </script>
 @await RenderSectionAsync("Scripts", false)
-<partial name="_ConfirmModal" />
+<partial name="_ConfirmModal" model="new PlantaoPro.Web.Models.ConfirmModalViewModel()" />
 </body>
 </html>

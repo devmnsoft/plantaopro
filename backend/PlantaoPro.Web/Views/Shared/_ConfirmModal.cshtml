@@ -1,13 +1,55 @@
-@model PlantaoPro.Web.Models.ConfirmModalViewModel?
-<div class="modal fade" id="@(Model?.ModalId ?? "confirmModal")" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header"><h5 class="modal-title">@(Model?.Title ?? "Confirmar ação")</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-      <div class="modal-body">@(Model?.Message ?? "Deseja realmente continuar?")</div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-@(Model?.Type ?? "danger")" data-confirm-action="@(Model?.ActionUrl ?? string.Empty)">@(Model?.ActionText ?? "Confirmar")</button>
-      </div>
+@model PlantaoPro.Web.Models.ConfirmModalViewModel
+@{
+    var modal = Model ?? new PlantaoPro.Web.Models.ConfirmModalViewModel();
+
+    var id = !string.IsNullOrWhiteSpace(modal.ModalId)
+        ? modal.ModalId
+        : string.IsNullOrWhiteSpace(modal.Id)
+            ? "ppGlobalConfirmModal"
+            : modal.Id;
+
+    var title = string.IsNullOrWhiteSpace(modal.Title)
+        ? "Confirmar ação"
+        : modal.Title;
+
+    var message = string.IsNullOrWhiteSpace(modal.Message)
+        ? "Deseja realmente continuar?"
+        : modal.Message;
+
+    var confirmText = !string.IsNullOrWhiteSpace(modal.ActionText)
+        ? modal.ActionText
+        : string.IsNullOrWhiteSpace(modal.ConfirmText)
+            ? "Confirmar"
+            : modal.ConfirmText;
+
+    var cancelText = string.IsNullOrWhiteSpace(modal.CancelText)
+        ? "Cancelar"
+        : modal.CancelText;
+
+    var type = string.IsNullOrWhiteSpace(modal.Type)
+        ? "danger"
+        : modal.Type;
+}
+
+<div class="modal fade" id="@id" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content pp-confirm-modal">
+            <div class="modal-header">
+                <div>
+                    <span class="pp-confirm-kicker">Confirmação necessária</span>
+                    <h5 class="modal-title mb-0" data-pp-confirm-title>@title</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" data-pp-confirm-message>@message</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">@cancelText</button>
+                <button type="button" class="btn btn-@type" data-pp-confirm-submit>
+                    <i class="bi bi-check2-circle me-1"></i>@confirmText
+                </button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

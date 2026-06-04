@@ -92,7 +92,7 @@ values
                     IpOrigem = ipOrigem,
                     UserAgent = userAgent,
                     Mensagem = erro ?? "erro_interno",
-                    ExceptionType = exception?.GetType().Name,
+                    ExceptionType = exception?.GetType ().Name,
                     StackTrace = (string?)null
                 });
             }

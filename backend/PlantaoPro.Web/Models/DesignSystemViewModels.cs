@@ -32,16 +32,12 @@ public sealed class ActionToolbarViewModel
 
 public sealed class ConfirmModalViewModel
 {
-    public string Id { get; set; } = "ppGlobalConfirmModal";
+    public string Id { get; set; } = "pp-confirm-modal";
     public string Title { get; set; } = "Confirmar ação";
     public string Message { get; set; } = "Deseja realmente continuar?";
     public string ConfirmText { get; set; } = "Confirmar";
     public string CancelText { get; set; } = "Cancelar";
-    public string Type { get; set; } = "danger";
-
-    public string? ModalId { get; set; }
-    public string? ActionText { get; set; }
-    public string? ActionUrl { get; set; }
+    public string Type { get; set; } = "warning";
 }
 
 public sealed class FilterPanelViewModel

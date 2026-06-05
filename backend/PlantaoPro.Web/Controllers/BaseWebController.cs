@@ -18,7 +18,8 @@ public abstract class BaseWebController : Controller
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter(), new DateOnlyJsonConverter() }
+        NumberHandling = JsonNumberHandling.AllowReadingFromString,
+        Converters = { new JsonStringEnumConverter(), new DateOnlyJsonConverter(), new NullableDateOnlyJsonConverter() }
     };
 
     protected BaseWebController(IHttpClientFactory httpClientFactory, ILogger logger)
@@ -216,7 +217,7 @@ public abstract class BaseWebController : Controller
                 return message;
             }
 
-            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("errors", out var errors))
+            if (root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var errors, "errors", "Errors"))
             {
                 if (errors.ValueKind == JsonValueKind.Array)
                 {
@@ -298,11 +299,16 @@ public abstract class BaseWebController : Controller
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
 
-        if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var data))
+        if (root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var data, "data", "Data"))
         {
             if (data.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
             {
                 return default;
+            }
+
+            if (IsEnumerableTarget<T>() && data.ValueKind == JsonValueKind.Object && TryGetProperty(data, out var items, "items", "Items", "results", "Results"))
+            {
+                return JsonSerializer.Deserialize<T>(items.GetRawText(), JsonOptions);
             }
 
             return JsonSerializer.Deserialize<T>(data.GetRawText(), JsonOptions);
@@ -320,7 +326,7 @@ public abstract class BaseWebController : Controller
 
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
-        var data = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var wrappedData)
+        var data = root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var wrappedData, "data", "Data")
             ? wrappedData
             : root;
 
@@ -360,13 +366,47 @@ public abstract class BaseWebController : Controller
     private static bool TryGetStringProperty(JsonElement root, string name, out string? value)
     {
         value = null;
-        if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty(name, out var property))
+        if (!TryGetProperty(root, out var property, name))
         {
             return false;
         }
 
         value = property.ValueKind == JsonValueKind.String ? property.GetString() : property.ToString();
         return !string.IsNullOrWhiteSpace(value);
+    }
+
+    private static bool TryGetProperty(JsonElement root, out JsonElement value, params string[] names)
+    {
+        value = default;
+        if (root.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        foreach (var name in names.Where(n => !string.IsNullOrWhiteSpace(n)).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (root.TryGetProperty(name, out value))
+            {
+                return true;
+            }
+        }
+
+        foreach (var property in root.EnumerateObject())
+        {
+            if (names.Any(name => string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase)))
+            {
+                value = property.Value;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsEnumerableTarget<T>()
+    {
+        var target = typeof(T);
+        return target != typeof(string) && target != typeof(JsonElement) && typeof(System.Collections.IEnumerable).IsAssignableFrom(target);
     }
 
     private static string BuildApiErrorMessage(HttpStatusCode statusCode, string? apiMessage = null)
@@ -385,11 +425,81 @@ public abstract class BaseWebController : Controller
     {
         public override DateOnly Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
+            if (reader.TokenType is JsonTokenType.Null)
+            {
+                return DateOnly.MinValue;
+            }
+
+            if (reader.TokenType is not JsonTokenType.String)
+            {
+                throw new JsonException($"Token inválido para DateOnly: {reader.TokenType}.");
+            }
+
             var value = reader.GetString();
-            return DateOnly.TryParse(value, out var parsed) ? parsed : DateOnly.MinValue;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return DateOnly.MinValue;
+            }
+
+            if (DateOnly.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+
+            if (DateTime.TryParse(value, out var dateTime))
+            {
+                return DateOnly.FromDateTime(dateTime);
+            }
+
+            throw new JsonException($"Data inválida para DateOnly: {value}.");
         }
 
         public override void Write(Utf8JsonWriter writer, DateOnly value, JsonSerializerOptions options)
             => writer.WriteStringValue(value.ToString("yyyy-MM-dd"));
+    }
+
+    private sealed class NullableDateOnlyJsonConverter : JsonConverter<DateOnly?>
+    {
+        public override DateOnly? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType is JsonTokenType.Null)
+            {
+                return null;
+            }
+
+            if (reader.TokenType is not JsonTokenType.String)
+            {
+                throw new JsonException($"Token inválido para DateOnly?: {reader.TokenType}.");
+            }
+
+            var value = reader.GetString();
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return null;
+            }
+
+            if (DateOnly.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+
+            if (DateTime.TryParse(value, out var dateTime))
+            {
+                return DateOnly.FromDateTime(dateTime);
+            }
+
+            throw new JsonException($"Data inválida para DateOnly?: {value}.");
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateOnly? value, JsonSerializerOptions options)
+        {
+            if (value.HasValue)
+            {
+                writer.WriteStringValue(value.Value.ToString("yyyy-MM-dd"));
+                return;
+            }
+
+            writer.WriteNullValue();
+        }
     }
 }

@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -16,6 +17,11 @@ public sealed class AccountController : Controller
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AccountController> _logger;
     private readonly IWebHostEnvironment _environment;
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        PropertyNameCaseInsensitive = true,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
+    };
 
     public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IWebHostEnvironment environment)
     {
@@ -57,7 +63,7 @@ public sealed class AccountController : Controller
             var body = await response.Content.ReadAsStringAsync();
             _logger.LogInformation("Resposta da API de login. Status:{StatusCode}", (int)response.StatusCode);
 
-            var apiResult = JsonSerializer.Deserialize<ApiResponse<LoginResponse>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var apiResult = DeserializeApiResponse<LoginResponse>(body);
 
             if (!response.IsSuccessStatusCode || apiResult is null || !apiResult.Success || apiResult.Data is null || string.IsNullOrWhiteSpace(apiResult.Data.Token))
             {
@@ -135,6 +141,25 @@ public sealed class AccountController : Controller
         }
     }
 
+    private ApiResponse<T>? DeserializeApiResponse<T>(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<ApiResponse<T>>(body, JsonOptions);
+        }
+        catch (JsonException ex)
+        {
+            var sample = body.Length > 400 ? body[..400] + "..." : body;
+            _logger.LogError(ex, "Resposta JSON inválida recebida da API de autenticação. ResponseSample:{ResponseSample}", sample);
+            return null;
+        }
+    }
+
     private IActionResult RedirectToActionByPerfil(string? perfil)
     {
         var normalized = NormalizeRole(perfil) ?? string.Empty;
@@ -202,7 +227,8 @@ public sealed class AccountController : Controller
             return View(model);
         var client = _httpClientFactory.CreateClient("PlantaoProApi");
         var response = await client.PostAsJsonAsync("api/auth/forgot-password", new ForgotPasswordRequest(model.Email));
-        var content = await response.Content.ReadFromJsonAsync<ApiResponse<JsonElement>>();
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var content = DeserializeApiResponse<JsonElement>(responseBody);
         TempData["Info"] = "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.";
         if (_environment.IsDevelopment() && content?.Data.TryGetProperty("tokenDev", out var tokenDev) == true && tokenDev.GetString() is { Length: > 0 } token)
         {
@@ -225,7 +251,8 @@ public sealed class AccountController : Controller
             return View(model);
         var client = _httpClientFactory.CreateClient("PlantaoProApi");
         var response = await client.PostAsJsonAsync("api/auth/reset-password", new ResetPasswordRequest(model.Email, model.Token, model.NovaSenha));
-        var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
+        var responseBody = await response.Content.ReadAsStringAsync();
+        var result = DeserializeApiResponse<object>(responseBody);
         if (result?.Success == true)
         {
             TempData["Success"] = "Senha redefinida com sucesso.";

@@ -39,8 +39,12 @@ public class UsuarioController : BaseWebController
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var response = await client.GetFromJsonAsync<ApiResponse<List<UserListItemDto>>>("api/usuarios");
-            var users = response?.Data ?? new List<UserListItemDto>();
+            var (data, error, _) = await ReadApiResponse<List<UserListItemDto>>(client, "api/usuarios");
+            if (!string.IsNullOrWhiteSpace(error))
+            {
+                TempData["Warning"] = error;
+            }
+            var users = data ?? new List<UserListItemDto>();
 
             if (!string.IsNullOrWhiteSpace(search))
                 users = users.Where(x => x.Username.Contains(search, StringComparison.OrdinalIgnoreCase) || x.Email.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -69,9 +73,9 @@ public class UsuarioController : BaseWebController
             Logger.LogInformation("Iniciando desbloqueio de usuário. UsuarioId:{UsuarioId}", id);
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
-            var response = await client.PostAsync($"api/usuarios/unlock/{id}", null);
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-            TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = result?.Message ?? "Não foi possível desbloquear o usuário.";
+            var (data, error, statusCode) = await SendApiAsync<object, object>(client, HttpMethod.Post, $"api/usuarios/unlock/{id}", new { });
+            _ = data;
+            TempData[statusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous ? "Success" : "Error"] = error ?? (statusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous ? "Usuário desbloqueado com sucesso." : "Não foi possível desbloquear o usuário.");
             return RedirectToAction(nameof(Admin));
         }
         catch (Exception ex)
@@ -102,9 +106,9 @@ public class UsuarioController : BaseWebController
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var response = await client.PutAsJsonAsync("api/usuarios/me", new { model.Nome, model.Email, model.Telefone, model.PreferenciasNotificacao });
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-            TempData[response.IsSuccessStatusCode && result?.Success == true ? "Success" : "Error"] = result?.Message ?? "Não foi possível salvar alterações.";
+            var (_, error, statusCode) = await SendApiAsync<object, object>(client, HttpMethod.Put, "api/usuarios/me", new { model.Nome, model.Email, model.Telefone, model.PreferenciasNotificacao });
+            var success = statusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+            TempData[success ? "Success" : "Error"] = error ?? (success ? "Alterações salvas com sucesso." : "Não foi possível salvar alterações.");
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -135,9 +139,9 @@ public class UsuarioController : BaseWebController
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var response = await client.PostAsJsonAsync("api/usuarios/me/alterar-senha", new { model.SenhaAtual, model.NovaSenha });
-            var result = await response.Content.ReadFromJsonAsync<ApiResponse<object>>();
-            TempData[response.IsSuccessStatusCode && result?.Success == true ? "Success" : "Error"] = result?.Message ?? "Não foi possível alterar senha.";
+            var (_, error, statusCode) = await SendApiAsync<object, object>(client, HttpMethod.Post, "api/usuarios/me/alterar-senha", new { model.SenhaAtual, model.NovaSenha });
+            var success = statusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+            TempData[success ? "Success" : "Error"] = error ?? (success ? "Senha alterada com sucesso." : "Não foi possível alterar senha.");
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
@@ -154,13 +158,13 @@ public class UsuarioController : BaseWebController
         {
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return new();
-            var response = await client.GetFromJsonAsync<ApiResponse<UserSettingsDtoWeb>>("api/usuarios/me");
-            return response?.Data is null ? new UserSettingsViewModel() : new UserSettingsViewModel
+            var (data, _, _) = await ReadApiResponse<UserSettingsDtoWeb>(client, "api/usuarios/me");
+            return data is null ? new UserSettingsViewModel() : new UserSettingsViewModel
             {
-                Nome = response.Data.Nome,
-                Email = response.Data.Email,
-                Telefone = response.Data.Telefone,
-                PreferenciasNotificacao = response.Data.PreferenciasNotificacao
+                Nome = data.Nome,
+                Email = data.Email,
+                Telefone = data.Telefone,
+                PreferenciasNotificacao = data.PreferenciasNotificacao
             };
         }
         catch (Exception ex)

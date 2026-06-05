@@ -5,19 +5,31 @@
     var newAction = Model?.NewAction ?? string.Empty;
     var newDisabled = Model?.NewDisabled ?? true;
     var downloadFormId = Model?.DownloadFormId ?? string.Empty;
+    var canCreate = !string.IsNullOrWhiteSpace(newController) && !string.IsNullOrWhiteSpace(newAction) && !newDisabled;
+    var canDownload = !string.IsNullOrWhiteSpace(downloadFormId);
 }
-<div class="action-toolbar mb-3">
+<div class="action-toolbar mb-3" role="toolbar" aria-label="Ações da página">
     <div class="d-flex gap-2 flex-wrap">
         @if (!string.IsNullOrWhiteSpace(newText))
         {
-            if (!string.IsNullOrWhiteSpace(newController) && !string.IsNullOrWhiteSpace(newAction) && !newDisabled)
+            if (canCreate)
             {
                 <a class="btn btn-primary" asp-controller="@newController" asp-action="@newAction"><i class="bi bi-plus-circle me-1"></i>@newText</a>
             }
-            else { <button class="btn btn-primary" disabled title="Em breve">@newText</button> }
+            else
+            {
+                <button type="button" class="btn btn-primary" disabled title="Em breve"><i class="bi bi-plus-circle me-1"></i>@newText</button>
+            }
         }
-        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#globalFilterPanel"><i class="bi bi-funnel me-1"></i>Filtros</button>
-        <button type="submit" form="@downloadFormId" class="btn btn-outline-success" @(string.IsNullOrWhiteSpace(downloadFormId) ? "disabled" : null) title="@(string.IsNullOrWhiteSpace(downloadFormId) ? "Em breve" : "Baixar")"><i class="bi bi-download me-1"></i>Baixar</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#globalFilterPanel" aria-controls="globalFilterPanel" aria-expanded="false"><i class="bi bi-funnel me-1"></i>Filtros</button>
+        @if (canDownload)
+        {
+            <button type="submit" form="@downloadFormId" class="btn btn-outline-success" title="Baixar"><i class="bi bi-download me-1"></i>Baixar</button>
+        }
+        else
+        {
+            <button type="button" class="btn btn-outline-success" disabled title="Em breve"><i class="bi bi-download me-1"></i>Baixar</button>
+        }
         <a class="btn btn-outline-primary" href="@Context.Request.Path@Context.Request.QueryString"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</a>
     </div>
 </div>

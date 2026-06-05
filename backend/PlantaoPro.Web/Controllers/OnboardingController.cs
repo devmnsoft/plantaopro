@@ -1,4 +1,4 @@
-using System.Net.Http.Json;
+using System.Net.Http;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
@@ -28,16 +28,15 @@ public sealed class OnboardingController : BaseWebController
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
             var req = model.ToRequest();
-            var response = await client.PostAsJsonAsync("api/onboarding/cliente", req);
-            var payload = await response.Content.ReadFromJsonAsync<ApiResponse<OnboardingResumoDto>>();
+            var (payload, error, statusCode) = await SendApiAsync<CreateClienteOnboardingRequest, OnboardingResumoDto>(client, HttpMethod.Post, "api/onboarding/cliente", req);
 
-            if (!response.IsSuccessStatusCode || payload?.Data is null)
+            if (statusCode is < System.Net.HttpStatusCode.OK or >= System.Net.HttpStatusCode.Ambiguous || payload is null)
             {
-                ModelState.AddModelError(string.Empty, payload?.Message ?? "Não foi possível concluir o onboarding.");
+                ModelState.AddModelError(string.Empty, error ?? "Não foi possível concluir o onboarding.");
                 return View(model);
             }
 
-            return RedirectToAction(nameof(Sucesso), new { clienteId = payload.Data.ClienteId });
+            return RedirectToAction(nameof(Sucesso), new { clienteId = payload.ClienteId });
         }
         catch (Exception ex)
         {

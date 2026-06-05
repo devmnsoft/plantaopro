@@ -70,7 +70,7 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 - [ ] Observabilidade cobre erros do dia, endpoints lentos, últimos erros, últimos logins, falhas API/Web, integrações, acessos negados, faturas vencidas, chamados críticos e ocorrências críticas.
 - [ ] Relatórios têm filtros, cards resumo, tabela, paginação, EmptyState, exportação CSV, auditoria de exportação e respeito a `cliente_id`.
 - [ ] API Mobile MVP expõe endpoints documentados, exige JWT, usa `ApiResponse<T>`, payload leve, paginação e 403 amigável quando o plano não permite mobile.
-- [ ] App Expo lista plantões, escalas e pagamentos com IDs normalizados (`plantaoId`/`escalaId`/`pagamentoId` -> `id`) e fallback amigável quando endpoint estiver indisponível.
+- [ ] App móvel lista plantões, escalas e pagamentos com IDs normalizados (`plantaoId`/`escalaId`/`pagamentoId` -> `id`) e fallback amigável quando endpoint estiver indisponível.
 - [ ] Sprint Zero do app está documentada em `docs/mobile/sprint-zero-app.md`, `docs/mobile/arquitetura-app.md`, `docs/mobile/telas-mvp-app.md`, `docs/mobile/mobile-api-endpoints.md` e `docs/mobile/mobile-fluxos.md`.
 
 ## Incremento 2026-06-05 — AJAX seguro em ações críticas Web

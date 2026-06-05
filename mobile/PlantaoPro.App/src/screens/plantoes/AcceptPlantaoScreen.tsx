@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
 import React from 'react';
-import { View, Text } from 'react-native';
-export default function AcceptPlantaoScreen(){return <View style={{padding:12}}><Text>AcceptPlantaoScreen</Text></View>;}
->>>>>>> pr-2
+import ScreenContainer from '../../components/ScreenContainer';
+import Header from '../../components/Header';
+import ButtonPrimary from '../../components/ButtonPrimary';
+export default function AcceptPlantaoScreen() { return <ScreenContainer><Header title="Aceitar convite" /><ButtonPrimary title="Confirmar aceite" /></ScreenContainer>; }

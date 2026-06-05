@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
 import React from 'react';
-import { View, Text } from 'react-native';
-export default function TabNavigator(){return <View style={{padding:12}}><Text>TabNavigator</Text></View>;}
->>>>>>> pr-2
+import HomeScreen from '../screens/home/HomeScreen';
+export default function TabNavigator() { return <HomeScreen />; }

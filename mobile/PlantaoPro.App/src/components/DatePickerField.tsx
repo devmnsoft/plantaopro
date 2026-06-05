@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
 import React from 'react';
-import { View, Text } from 'react-native';
-export default function DatePickerField(){return <View style={{padding:12}}><Text>DatePickerField</Text></View>;}
->>>>>>> pr-2
+import InputField from './InputField';
+export default function DatePickerField({ label, value }: { label: string; value?: string }) { return <InputField label={label} value={value ?? ''} editable={false} />; }

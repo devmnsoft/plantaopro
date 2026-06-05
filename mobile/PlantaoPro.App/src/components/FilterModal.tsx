@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
 import React from 'react';
-import { View, Text } from 'react-native';
-export default function FilterModal(){return <View style={{padding:12}}><Text>FilterModal</Text></View>;}
->>>>>>> pr-2
+import ConfirmModal from './ConfirmModal';
+export default function FilterModal({ visible, onClose }: { visible: boolean; onClose: () => void }) { return <ConfirmModal visible={visible} title="Filtros" message="Filtros mobile serão aplicados conforme os endpoints paginados." onCancel={onClose} onConfirm={onClose} />; }

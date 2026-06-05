@@ -1,7 +1,7 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
-import React from 'react';
-import { View, Text } from 'react-native';
-export default function ProfileScreen(){return <View style={{padding:12}}><Text>ProfileScreen</Text></View>;}
->>>>>>> pr-2
+import React, { useEffect, useState } from 'react';
+import { Text } from 'react-native';
+import ScreenContainer from '../../components/ScreenContainer';
+import Header from '../../components/Header';
+import { UserProfile } from '../../types/auth.types';
+import { getProfile } from '../../services/authService';
+export default function ProfileScreen() { const [profile, setProfile] = useState<UserProfile | null>(null); useEffect(() => { getProfile().then((r) => setProfile(r.data)); }, []); return <ScreenContainer><Header title="Perfil" /><Text>{profile?.nome ?? 'Médico'}</Text><Text>{profile?.email ?? 'perfil@plantaopro.local'}</Text></ScreenContainer>; }

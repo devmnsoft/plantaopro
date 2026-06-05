@@ -70,6 +70,7 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 - [ ] Observabilidade cobre erros do dia, endpoints lentos, últimos erros, últimos logins, falhas API/Web, integrações, acessos negados, faturas vencidas, chamados críticos e ocorrências críticas.
 - [ ] Relatórios têm filtros, cards resumo, tabela, paginação, EmptyState, exportação CSV, auditoria de exportação e respeito a `cliente_id`.
 - [ ] API Mobile MVP expõe endpoints documentados, exige JWT, usa `ApiResponse<T>`, payload leve, paginação e 403 amigável quando o plano não permite mobile.
+- [ ] App Expo lista plantões, escalas e pagamentos com IDs normalizados (`plantaoId`/`escalaId`/`pagamentoId` -> `id`) e fallback amigável quando endpoint estiver indisponível.
 - [ ] Sprint Zero do app está documentada em `docs/mobile/sprint-zero-app.md`, `docs/mobile/arquitetura-app.md`, `docs/mobile/telas-mvp-app.md`, `docs/mobile/mobile-api-endpoints.md` e `docs/mobile/mobile-fluxos.md`.
 
 ## Incremento 2026-06-05 — AJAX seguro em ações críticas Web
@@ -128,5 +129,6 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 ## Pendências reais aceitáveis para Beta
 
 - Execução de `dotnet build`, `dotnet test` e smoke test Web/API deve ocorrer no CI ou homologação quando o SDK .NET estiver disponível.
+- Validar em dispositivo/emulador que a lista financeira renderiza `valorPrevisto`/`valorPago` como `valor` e usa `pagamentoId` como chave estável.
 - Evidências visuais do teste manual devem ser anexadas pelo responsável de homologação, com usuário, data, horário e resultado.
 - Teste de carga com massa real, push notification real, publicação em lojas e integrações externas permanecem como escopo pós-Beta.

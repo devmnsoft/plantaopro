@@ -18,6 +18,7 @@ public class MobileController : ControllerBase
     private readonly IConfiguration _cfg;
     private readonly AuthService _auth;
     private readonly MedicoAreaService _medicoArea;
+    private readonly FinanceiroService _financeiro;
     private readonly MedicoRecomendacaoService _recomendacaoService;
     private readonly NotificacaoService _notificacao;
     private readonly EscalaService _escala;
@@ -26,11 +27,12 @@ public class MobileController : ControllerBase
     private readonly AssinaturaGuardService _assinaturaGuard;
     private readonly IAuditService _audit;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, EscalaService escala, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, FinanceiroService financeiro, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, EscalaService escala, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
         _medicoArea = medicoArea;
+        _financeiro = financeiro;
         _recomendacaoService = recomendacaoService;
         _notificacao = notificacao;
         _escala = escala;
@@ -267,6 +269,24 @@ where c.id=@conviteId
         var uid = GetUserId();
         try { var response = await _medicoArea.MeusPagamentosAsync(uid, NormalizarPage(page), NormalizarPageSize(pageSize)); return StatusCode(response.StatusCode, response); }
         catch (Exception ex) { _logger.LogError(ex, "Mobile pagamentos erro uid:{Uid}", uid); return StatusCode(500, ApiResponse<object>.Fail("Não foi possível listar pagamentos.", 500)); }
+    }
+
+    [HttpGet("meus-pagamentos/{id:guid}")]
+    public async Task<IActionResult> MeuPagamento(Guid id)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        try
+        {
+            var response = await _financeiro.MeuByIdAsync(uid, id);
+            return StatusCode(response.StatusCode, response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile detalhe pagamento erro uid:{Uid} pagamento:{PagamentoId}", uid, id);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar pagamento.", 500));
+        }
     }
 
     [HttpGet("notificacoes")]

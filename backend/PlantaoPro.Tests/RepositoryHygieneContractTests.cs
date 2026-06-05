@@ -120,6 +120,35 @@ public class RepositoryHygieneContractTests
         }
     }
 
+
+    [Fact]
+    public void SanitizacaoBeta_DeveDocumentarValidacoesObrigatoriasSemResiduosExternos()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-sanitizacao-beta-2026-06-05.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("branch work", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("produto incorreto", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("React Native/Expo permitido", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/api/health", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("pendências", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void HealthController_DeveRetornarApiResponseTipado()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "HealthController.cs");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("ApiResponse<HealthDto>", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ProducesResponseType", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PlantaoPro.Api online", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("new {", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool DeveInspecionar(string arquivo)
     {
         var normalizado = arquivo.Replace(Path.DirectorySeparatorChar, '/');

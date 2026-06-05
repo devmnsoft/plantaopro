@@ -78,6 +78,34 @@ Executar o roteiro manual final descrito em `docs/homologacao/checklist-beta-com
 8. Exportações CSV com auditoria e respeito a `cliente_id`.
 9. 403/404 amigáveis e responsividade mobile-first.
 
+
+## Complemento da rodada final em 2026-06-05
+
+Validações executadas nesta rodada final:
+
+```bash
+git branch --show-current
+git branch --all
+git status --short
+git diff --stat
+git log --oneline --decorate -10
+git branch backup/antes-beta-homologavel-final-plantaopro
+rg -n "<termos-proibidos-do-produto-externo>" .
+dotnet clean backend/PlantaoPro.Api/PlantaoPro.Api.csproj
+dotnet clean backend/PlantaoPro.Web/PlantaoPro.Web.csproj
+dotnet build backend/PlantaoPro.Api/PlantaoPro.Api.csproj
+dotnet build backend/PlantaoPro.Web/PlantaoPro.Web.csproj
+```
+
+Resultado atualizado:
+
+- Branch atual confirmada: `work`.
+- Branch de backup final criada: `backup/antes-beta-homologavel-final-plantaopro`.
+- `git status --short` inicial sem alterações locais.
+- Varredura de higiene não encontrou código ativo do produto externo; os únicos apontamentos continuam sendo documentação legítima de app mobile do próprio PlantãoPro e termos de exportação/auditoria sem relação com domínio externo.
+- O container desta execução não possui `dotnet` instalado; por isso, build, teste automatizado e smoke test HTTP ficam como validação obrigatória de CI/homologação antes do aceite final.
+- Foi criado o checklist específico `docs/homologacao/checklist-beta-homologavel.md`, consolidando gates de branch, build, operação médica, SaaS, operação assistida, segurança, auditoria, observabilidade, relatórios, API Mobile MVP e roteiro manual de 42 passos.
+
 ## Pendências controladas para operação assistida
 
 - Reexecutar `dotnet build` e `dotnet test` no CI/homologação com SDK .NET.

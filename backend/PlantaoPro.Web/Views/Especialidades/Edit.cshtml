@@ -1,0 +1,7 @@
+@model PlantaoPro.Web.Models.EspecialidadeFormViewModel
+@{
+    ViewData["Title"] = "Editar Especialidade";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Editar Especialidade", "Atualize dados cadastrais com validação e auditoria.", "bi-pencil-square")' />
+<partial name="_EspecialidadeForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -224,6 +224,68 @@ public record DashboardChartItem(string Label, decimal Valor);
     
     public record ClienteDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus,DateTime RegDate,DateTime? RegUpdate);
     public record CreateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status);
+    public class EspecialidadeFormViewModel
+    {
+        public Guid? Id { get; set; }
+        [Required(ErrorMessage = "Informe o nome da especialidade.")]
+        [StringLength(120, ErrorMessage = "O nome deve ter até 120 caracteres.")]
+        public string Nome { get; set; } = string.Empty;
+        [StringLength(500, ErrorMessage = "A descrição deve ter até 500 caracteres.")]
+        public string Descricao { get; set; } = string.Empty;
+        [Required]
+        public string RegStatus { get; set; } = "A";
+    }
+
+    public class HospitalFormViewModel
+    {
+        public Guid? Id { get; set; }
+        [Required(ErrorMessage = "Informe a razão social.")]
+        public string RazaoSocial { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe o nome fantasia.")]
+        public string NomeFantasia { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe o CNPJ.")]
+        public string Cnpj { get; set; } = string.Empty;
+        [Phone(ErrorMessage = "Telefone inválido.")]
+        public string Telefone { get; set; } = string.Empty;
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        public string Email { get; set; } = string.Empty;
+        public string Endereco { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe a cidade.")]
+        public string Cidade { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe a UF.")]
+        [StringLength(2, MinimumLength = 2, ErrorMessage = "UF deve ter 2 caracteres.")]
+        public string Estado { get; set; } = string.Empty;
+        public string Responsavel { get; set; } = string.Empty;
+        [Required]
+        public string RegStatus { get; set; } = "A";
+    }
+
+    public class MedicoFormViewModel
+    {
+        public Guid? Id { get; set; }
+        [Required(ErrorMessage = "Informe o nome do médico.")]
+        public string Nome { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe o CPF.")]
+        public string Cpf { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe o CRM.")]
+        public string Crm { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Informe a UF do CRM.")]
+        [StringLength(2, MinimumLength = 2, ErrorMessage = "UF deve ter 2 caracteres.")]
+        public string UfCrm { get; set; } = string.Empty;
+        [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        public string Email { get; set; } = string.Empty;
+        [Phone(ErrorMessage = "Telefone inválido.")]
+        public string Telefone { get; set; } = string.Empty;
+        public string Cidade { get; set; } = string.Empty;
+        [StringLength(2, ErrorMessage = "UF deve ter até 2 caracteres.")]
+        public string Estado { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Selecione a especialidade.")]
+        public Guid EspecialidadeId { get; set; }
+        [Required]
+        public string RegStatus { get; set; } = "A";
+        public IEnumerable<EspecialidadeDto> Especialidades { get; set; } = Enumerable.Empty<EspecialidadeDto>();
+    }
+
     public record UpdateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus);
 
     public record OperacaoPlantaoCriticoDto(Guid Id,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,int VagasDisponiveis,string Status);

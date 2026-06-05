@@ -113,6 +113,9 @@
 
   async function parseAjaxResponse(response){
     const text=await response.text();
+    if(response.redirected&&response.url){
+      return {success:response.ok,message:response.ok?'Operação concluída com sucesso.':'Não foi possível concluir a operação.',redirectUrl:response.url};
+    }
     if(!text){return {success:response.ok,message:response.ok?'Operação concluída com sucesso.':'Não foi possível concluir a operação.'};}
     try{
       const json=JSON.parse(text);

@@ -164,7 +164,25 @@ public class RepositoryHygieneContractTests
         Assert.Contains("ApiResponse<HealthDto>", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ProducesResponseType", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PlantaoPro.Api online", conteudo, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("new {", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("new " + Convert.ToChar(123), conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ConsolidacaoBeta_DeveTerJsonWebResilienteEContratosSqlSeguros()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var baseController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "BaseWebController.cs"));
+        var uiScript = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "wwwroot", "js", "plantaopro-ui.js"));
+        var sql = File.ReadAllText(Path.Combine(raiz, "backend", "sql", "20260605_beta_homologavel_constraints.sql"));
+        var relatorio = Path.Combine(raiz, "docs", "homologacao", "relatorio-consolidacao-beta-2026-06-05.md");
+
+        Assert.Contains("DeserializeApiPayload", baseController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DeserializePagedPayload", baseController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("BuildApiErrorMessage", baseController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("data-ajax-form", uiScript, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("NOT VALID", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ADD CONSTRAINT" + " IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.True(File.Exists(relatorio), "Relatório de consolidação Beta deve existir para homologação.");
     }
 
     private static bool DeveInspecionar(string arquivo)

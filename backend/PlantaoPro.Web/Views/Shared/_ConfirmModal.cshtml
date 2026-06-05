@@ -1,4 +1,4 @@
-@model PlantaoPro.Web.Models.ConfirmModalViewModel
+@model PlantaoPro.Web.Models.ConfirmModalViewModel?
 @{
     var modal = Model ?? new PlantaoPro.Web.Models.ConfirmModalViewModel();
 
@@ -22,9 +22,18 @@
         ? "Cancelar"
         : modal.CancelText;
 
-    var type = string.IsNullOrWhiteSpace(modal.Type)
+    var requestedType = string.IsNullOrWhiteSpace(modal.Type)
         ? "warning"
-        : modal.Type;
+        : modal.Type.Trim().ToLowerInvariant();
+
+    var allowedTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "primary", "secondary", "success", "danger", "warning", "info"
+    };
+
+    var type = allowedTypes.Contains(requestedType)
+        ? requestedType
+        : "warning";
 }
 
 <div class="modal fade" id="@id" tabindex="-1" aria-hidden="true">

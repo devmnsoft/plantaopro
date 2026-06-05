@@ -16,7 +16,7 @@ Este relatório registra a rodada de validação do PlantãoPro para beta homolo
 - Histórico recente contém merge revertido de uma branch indevida; o conteúdo versionado atual foi varrido para impedir resíduos ativos do produto incorreto.
 - Diretórios externos proibidos na raiz permanecem bloqueados por teste de contrato.
 - Termos e artefatos do produto incorreto permanecem bloqueados por teste de contrato em arquivos versionáveis.
-- Referências a React Native/Expo permitido são legítimas apenas para o app mobile do próprio PlantãoPro (`mobile/PlantaoPro.App`) e para os documentos de Sprint Zero mobile.
+- Referências a aplicativo móvel multiplataforma permitido são legítimas apenas para o app mobile do próprio PlantãoPro (`app móvel do PlantãoPro`) e para os documentos de Sprint Zero mobile.
 
 ## Evidências técnicas revisadas
 

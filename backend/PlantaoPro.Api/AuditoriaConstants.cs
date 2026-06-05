@@ -31,7 +31,7 @@ public static class AuditoriaConstants
         public const string ContestarPagamento = "CONTESTAR_PAGAMENTO";
         public const string AlterarPermissao = "ALTERAR_PERMISSAO";
         public const string AlterarConfiguracao = "ALTERAR_CONFIGURACAO";
-        public const string ExportarRelatorio = "EXPORTAR_RELATORIO";
+        public const string BaixarRelatorio = "BAIXAR_RELATORIO";
         public const string DownloadDocumento = "DOWNLOAD_DOCUMENTO";
         public const string BloqueioTenant = "BLOQUEIO_TENANT";
         public const string BloqueioPermissao = "BLOQUEIO_PERMISSAO";

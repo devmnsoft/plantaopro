@@ -51,7 +51,7 @@ Use este checklist antes de liberar ambiente para cliente piloto ou demonstraç�
 
 ## 5. Relatórios, auditoria e observabilidade
 - [ ] Relatórios essenciais abrem com filtros.
-- [ ] Exportação CSV respeita `cliente_id` e registra auditoria.
+- [ ] Download CSV respeita `cliente_id` e registra auditoria.
 - [ ] Auditoria mostra ações críticas sem payload sensível.
 - [ ] Observabilidade mostra erros do dia, endpoints lentos, últimos logins e acessos negados apenas para admin global.
 

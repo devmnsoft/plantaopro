@@ -22,7 +22,7 @@
   3. Confirmar pagamento.
   4. Cancelar pagamento.
   5. Ver atrasados.
-  6. Exportar relatório.
+  6. Baixar relatório.
 - **Resultado esperado:** Regras de negócio respeitadas e rastreabilidade em auditoria.
 - **Resultado obtido:**
 - **Status:** Pendente

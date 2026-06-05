@@ -75,7 +75,7 @@ public class MobileAndSecurityContractTests
     }
 
     [Fact]
-    public void MobileController_DeveExporEndpointsMvpObrigatorios()
+    public void MobileController_DeveListarEndpointsMvpObrigatorios()
     {
         var rotas = typeof(MobileController)
             .GetMethods()
@@ -122,7 +122,7 @@ public class MobileAndSecurityContractTests
     }
 
     [Fact]
-    public void MobileConvites_NaoDeveExporCamposSensiveisNoDto()
+    public void MobileConvites_NaoDeveListarCamposSensiveisNoDto()
     {
         var dto = typeof(MobileController).GetNestedType("MobileConviteDto");
         var propriedades = dto!.GetProperties().Select(p => p.Name).ToArray();

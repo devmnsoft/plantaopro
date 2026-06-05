@@ -27,7 +27,7 @@ public sealed class ActionToolbarViewModel
     public string? NewController { get; set; }
     public string? NewAction { get; set; }
     public bool NewDisabled { get; set; }
-    public string? ExportFormId { get; set; }
+    public string? DownloadFormId { get; set; }
 }
 
 public sealed class ConfirmModalViewModel

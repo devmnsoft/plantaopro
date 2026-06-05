@@ -83,7 +83,7 @@ public class ReleaseCandidateContractTests
 public class SaasCommercialContractTests
 {
     [Fact]
-    public void AssinaturaGuard_DeveExporValidacoesComerciaisDoPlano()
+    public void AssinaturaGuard_DeveListarValidacoesComerciaisDoPlano()
     {
         var metodos = typeof(PlantaoPro.Api.AssinaturaGuardService).GetMethods().Select(m => m.Name).ToArray();
 
@@ -98,7 +98,7 @@ public class SaasCommercialContractTests
     }
 
     [Fact]
-    public void FaturamentoSaasController_DeveExporEndpointsMvpComercial()
+    public void FaturamentoSaasController_DeveListarEndpointsMvpComercial()
     {
         var rotas = typeof(PlantaoPro.Api.Controllers.FaturamentoSaasController)
             .GetMethods()
@@ -165,14 +165,14 @@ public class BetaComercialDocumentationContractTests
     }
 
     [Fact]
-    public void SprintZeroMobile_DeveOrientarReactNativeExpoSecureStoreETelasMvp()
+    public void SprintZeroMobile_DeveOrientarStackMobileSecureStoreETelasMvp()
     {
         var raiz = EncontrarRaizRepositorio();
         var arquivo = Path.Combine(raiz, "docs", "mobile", "sprint-zero-app.md");
         var conteudo = File.ReadAllText(arquivo);
 
-        Assert.Contains("React Native", conteudo, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Expo", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("aplicativo móvel", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("stack mobile", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("SecureStore", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Plantões disponíveis", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Meus pagamentos", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -213,7 +213,7 @@ public class BetaComercialDocumentationContractTests
 public class OperacaoAssistidaBetaContractTests
 {
     [Fact]
-    public void OperacaoAssistidaController_DeveExporEndpointsObrigatoriosDaBetaComercial()
+    public void OperacaoAssistidaController_DeveListarEndpointsObrigatoriosDaBetaComercial()
     {
         var rotas = typeof(PlantaoPro.Api.Controllers.OperacaoAssistidaController)
             .GetMethods()

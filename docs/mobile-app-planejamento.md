@@ -1,5 +1,5 @@
 # Planejamento do App Mobile
-- **Stack recomendada:** React Native com Expo.
+- **Stack recomendada:** aplicativo móvel multiplataforma.
 - **Alternativa:** .NET MAUI.
 - **Autenticação:** JWT com refresh controlado por backend.
 - **Armazenamento seguro:** SecureStore/Keychain/Keystore para token.

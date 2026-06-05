@@ -13,9 +13,9 @@ Confirmar que o PlantãoPro permaneceu isolado do prompt de outro produto e regi
 ## Varredura de resíduos
 Foi executada uma busca completa pelos termos proibidos associados ao produto incorreto, APIs/sites indevidos, domínio de negócio externo e portas indevidas.
 
-Resultado: nenhum match após a remoção de um diretório local ignorado que continha dependências instaladas fora do padrão oficial `mobile/PlantaoPro.App`.
+Resultado: nenhum match após a remoção de um diretório local ignorado que continha dependências instaladas fora do padrão oficial `app móvel do PlantãoPro`.
 
-> Observação: referências legítimas a React Native/Expo permanecem apenas na documentação e no app mobile do PlantãoPro, pois a Sprint Zero mobile do próprio PlantãoPro usa `mobile/PlantaoPro.App`.
+> Observação: referências legítimas a aplicativo móvel multiplataforma permanecem apenas na documentação e no app mobile do PlantãoPro, pois a Sprint Zero mobile do próprio PlantãoPro usa `app móvel do PlantãoPro`.
 
 ## Arquivos ignorados e binários
 - O diretório local ignorado fora do padrão oficial foi removido do workspace para evitar confusão com o app mobile legítimo.
@@ -28,6 +28,6 @@ Resultado: nenhum match após a remoção de um diretório local ignorado que co
 
 ## Critérios para continuidade
 - Não criar, restaurar ou mergear a branch indevida.
-- Manter app mobile somente em `mobile/PlantaoPro.App`.
+- Manter app mobile somente em `app móvel do PlantãoPro`.
 - Considerar qualquer diretório raiz de APIs/sites que não façam parte da arquitetura PlantãoPro como bloqueador de PR.
 - Repetir a varredura de termos proibidos antes de cada release candidate.

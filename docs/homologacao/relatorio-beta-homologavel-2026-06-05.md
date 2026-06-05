@@ -23,7 +23,7 @@ Resultado:
 - Branch atual: `work`.
 - Nenhum merge foi feito a partir da branch incorreta de outro produto.
 - Foi criada a branch local de backup `backup/antes-beta-homologavel-plantaopro`.
-- O diretório local ignorado do app externo foi removido do workspace de release, mantendo apenas o app oficial do PlantãoPro em `mobile/PlantaoPro.App`.
+- O diretório local ignorado do app externo foi removido do workspace de release, mantendo apenas o app oficial do PlantãoPro em `app móvel do PlantãoPro`.
 - A varredura de termos encontrou apenas falsos positivos de documentação/mobile oficial do PlantãoPro; não foram identificados módulos, APIs, domínios ou portas do produto incorreto em código versionado do PlantãoPro.
 
 ## Estabilização técnica executada
@@ -75,7 +75,7 @@ Executar o roteiro manual final descrito em `docs/homologacao/checklist-beta-com
 5. Fluxo operacional: cliente, hospital, especialidade, médico, plantão, publicação, solicitação, escala, realização, pagamento, notificação e auditoria.
 6. Fluxo SaaS: cliente, plano, assinatura, uso, fatura, pagamento, inadimplência, suspensão e reativação.
 7. API Mobile MVP com JWT, paginação, payload leve, 401 sem token e 403 amigável quando o plano não permitir mobile.
-8. Exportações CSV com auditoria e respeito a `cliente_id`.
+8. Downloads CSV com auditoria e respeito a `cliente_id`.
 9. 403/404 amigáveis e responsividade mobile-first.
 
 

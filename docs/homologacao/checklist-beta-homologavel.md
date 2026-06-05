@@ -12,7 +12,7 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 - [ ] `git log --oneline --decorate -10` revisado para confirmar histórico recente esperado.
 - [ ] Varredura de termos externos executada com `rg` no repositório completo.
 - [ ] Nenhum módulo, rota, controller, script, porta, domínio de negócio ou diretório raiz externo permanece no PlantãoPro.
-- [ ] Referências a app mobile permanecem somente como artefatos legítimos do PlantãoPro em `mobile/PlantaoPro.App` e documentação mobile oficial.
+- [ ] Referências a app mobile permanecem somente como artefatos legítimos do PlantãoPro em `app móvel do PlantãoPro` e documentação mobile oficial.
 
 ## Gate 1 — Build, smoke test e UX global
 
@@ -106,7 +106,7 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 30. Abrir chamado.
 31. Resolver chamado.
 32. Ver Customer Success.
-33. Exportar relatório CSV.
+33. Baixar relatório CSV.
 34. Ver auditoria.
 35. Ver observabilidade.
 36. Abrir API mobile no Swagger.

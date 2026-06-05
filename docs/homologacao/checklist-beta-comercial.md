@@ -58,7 +58,7 @@ Consolidar o PlantãoPro como **Beta Comercial Controlada**: demonstrável para 
 - [ ] Admin global vê todos os clientes; usuários comuns respeitam `cliente_id`; médico vê apenas dados próprios.
 - [ ] Acessos negados retornam 403 amigável e registram auditoria.
 - [ ] Erros não expõem stack trace, SQL, senha, hash, token ou segredo.
-- [ ] Exportações/downloads registram auditoria.
+- [ ] Downloads/downloads registram auditoria.
 - [ ] Observabilidade mostra erros do dia, endpoints lentos, últimos erros, últimos logins, acessos negados, faturas vencidas e chamados críticos.
 
 ## Critérios de aprovação
@@ -90,7 +90,7 @@ Consolidar o PlantãoPro como **Beta Comercial Controlada**: demonstrável para 
 - [ ] Branch atual confirmada antes de iniciar alterações.
 - [ ] Branch indevida de outro produto não foi mergeada novamente.
 - [ ] Varredura sem termos, módulos, domínios de negócio e portas pertencentes ao produto incorreto.
-- [ ] App mobile legítimo mantido somente em `mobile/PlantaoPro.App`.
+- [ ] App mobile legítimo mantido somente em `app móvel do PlantãoPro`.
 - [ ] Nenhum diretório raiz de app externo, ignorado ou não versionado, permanece no workspace de release.
 
 ## Roteiro manual final da Beta Controlada
@@ -127,7 +127,7 @@ Execute em homologação, registrando evidência de tela, usuário, horário e r
 28. Gerar fatura SaaS mensal.
 29. Marcar fatura como paga e validar inadimplência quando simulada.
 30. Suspender e reativar cliente com justificativa, validando bloqueio/liberação operacional.
-31. Exportar relatório CSV e conferir registro de auditoria.
+31. Baixar relatório CSV e conferir registro de auditoria.
 32. Abrir Auditoria e validar ações críticas, acessos negados e exportações.
 33. Abrir Observabilidade e validar erros do dia, endpoints lentos, últimos logins e acessos negados.
 34. Abrir Swagger, testar `/api/health` e os endpoints da tag Mobile.

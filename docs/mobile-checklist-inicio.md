@@ -1,5 +1,5 @@
 # Checklist de Início — Mobile
-- [ ] Criar projeto (React Native Expo)
+- [ ] Criar projeto (aplicativo móvel multiplataforma)
 - [ ] Configurar navegação
 - [ ] Configurar Axios/fetch
 - [ ] Configurar armazenamento seguro do token

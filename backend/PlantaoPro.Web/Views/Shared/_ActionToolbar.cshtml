@@ -4,7 +4,7 @@
     var newController = Model?.NewController ?? string.Empty;
     var newAction = Model?.NewAction ?? string.Empty;
     var newDisabled = Model?.NewDisabled ?? true;
-    var exportFormId = Model?.ExportFormId ?? string.Empty;
+    var downloadFormId = Model?.DownloadFormId ?? string.Empty;
 }
 <div class="action-toolbar mb-3">
     <div class="d-flex gap-2 flex-wrap">
@@ -17,7 +17,7 @@
             else { <button class="btn btn-primary" disabled title="Em breve">@newText</button> }
         }
         <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#globalFilterPanel"><i class="bi bi-funnel me-1"></i>Filtros</button>
-        <button type="submit" form="@exportFormId" class="btn btn-outline-success" @(string.IsNullOrWhiteSpace(exportFormId) ? "disabled" : null) title="@(string.IsNullOrWhiteSpace(exportFormId) ? "Em breve" : "Exportar")"><i class="bi bi-download me-1"></i>Exportar</button>
+        <button type="submit" form="@downloadFormId" class="btn btn-outline-success" @(string.IsNullOrWhiteSpace(downloadFormId) ? "disabled" : null) title="@(string.IsNullOrWhiteSpace(downloadFormId) ? "Em breve" : "Baixar")"><i class="bi bi-download me-1"></i>Baixar</button>
         <a class="btn btn-outline-primary" href="@Context.Request.Path@Context.Request.QueryString"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</a>
     </div>
 </div>

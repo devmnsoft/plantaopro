@@ -4,7 +4,7 @@
     var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
     var resumo = ViewBag.Resumo as PlantaoPro.Web.Models.AuditoriaResumoDto;
     var queryString = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value : string.Empty;
-    var exportUrl = Url.Action("ExportarCsv", "Auditoria") + queryString;
+    var downloadUrl = Url.Action("BaixarCsv", "Auditoria") + queryString;
     var filtroDataInicio = Context.Request.Query["dataInicio"].ToString();
     var filtroDataFim = Context.Request.Query["dataFim"].ToString();
     var filtroPerfil = Context.Request.Query["perfil"].ToString();
@@ -13,13 +13,13 @@
     var filtroTexto = Context.Request.Query["texto"].ToString();
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria", "Rastreabilidade enterprise de ações críticas, falhas e acessos negados.", "bi-shield-check")' />
-<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="@exportUrl"><i class="bi bi-download"></i> Exportar CSV</a></div>
+<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="@downloadUrl"><i class="bi bi-download"></i> Baixar CSV</a></div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Ações hoje</span><h3>@(resumo?.AcoesHoje ?? 0)</h3></div></div></div>
     <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Falhas hoje</span><h3 class="text-danger">@(resumo?.FalhasHoje ?? 0)</h3></div></div></div>
     <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Acessos negados</span><h3 class="text-warning">@(resumo?.AcessosNegados ?? 0)</h3></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Exportações</span><h3 class="text-primary">@(resumo?.Exportacoes ?? 0)</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Downloads</span><h3 class="text-primary">@(resumo?.Downloads ?? 0)</h3></div></div></div>
 </div>
 
 <form method="get" class="card border-0 shadow-sm mb-4">

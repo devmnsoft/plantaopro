@@ -133,7 +133,7 @@ where a.id=@id", new { id });
 (select count(*) from plantaopro.auditoria_acoes_criticas where reg_date::date=current_date" + clienteFiltro + @") as AcoesHoje,
 (select count(*) from plantaopro.auditoria_acoes_criticas where reg_date::date=current_date and sucesso=false" + clienteFiltro + @") as FalhasHoje,
 (select count(*) from plantaopro.auditoria_acoes_criticas where acao in ('ACESSO_NEGADO','BLOQUEIO_TENANT','BLOQUEIO_PERMISSAO') and reg_date::date=current_date" + clienteFiltro + @") as AcessosNegados,
-(select count(*) from plantaopro.auditoria_acoes_criticas where acao='EXPORTAR_RELATORIO' and reg_date::date=current_date" + clienteFiltro + @") as Exportacoes", new { clienteId = _usuarioContext.GetClienteId() });
+(select count(*) from plantaopro.auditoria_acoes_criticas where acao='BAIXAR_RELATORIO' and reg_date::date=current_date" + clienteFiltro + @") as Downloads", new { clienteId = _usuarioContext.GetClienteId() });
             return Ok(ApiResponse<AuditoriaResumoDto>.Ok(data, "Resumo de auditoria carregado."));
         }
         catch (Exception ex)
@@ -143,12 +143,12 @@ where a.id=@id", new { id });
         }
     }
 
-    [HttpGet("exportar-csv")]
-    public async Task<IActionResult> ExportarCsv([FromQuery] AuditoriaFiltroRequest filtro)
+    [HttpGet("baixar-csv")]
+    public async Task<IActionResult> BaixarCsv([FromQuery] AuditoriaFiltroRequest filtro)
     {
         var result = await Get(filtro) as ObjectResult;
         if (result?.Value is not ApiResponse<PagedResult<AuditoriaItemDto>> response || response.Data is null) return StatusCode(result?.StatusCode ?? 500, result?.Value);
-        await _audit.RegistrarAsync(_usuarioContext.GetUsuarioId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.Relatorio, null, AuditoriaConstants.Acoes.ExportarRelatorio, new { tipo = "auditoria_csv" }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), string.Join(',', _usuarioContext.GetRoles()));
+        await _audit.RegistrarAsync(_usuarioContext.GetUsuarioId(), _usuarioContext.GetClienteId(), AuditoriaConstants.Entidades.Relatorio, null, AuditoriaConstants.Acoes.BaixarRelatorio, new { tipo = "auditoria_csv" }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), string.Join(',', _usuarioContext.GetRoles()));
         var sb = new StringBuilder("DataHora;UsuarioId;ClienteId;Perfil;Entidade;EntidadeId;Acao;Sucesso;Ip\n");
         foreach (var item in response.Data.Items) sb.AppendLine($"{item.RegDate:O};{item.UsuarioId};{item.ClienteId};{item.Perfil};{item.Entidade};{item.EntidadeId};{item.Acao};{item.Sucesso};{item.IpOrigem}");
         return File(Encoding.UTF8.GetBytes(sb.ToString()), "text/csv", "auditoria.csv");
@@ -238,4 +238,4 @@ public sealed class AuditoriaDetalheDto
     }
 }
 
-public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Exportacoes);
+public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Downloads);

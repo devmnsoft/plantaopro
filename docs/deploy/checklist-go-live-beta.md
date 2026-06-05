@@ -31,7 +31,7 @@
 - [ ] Solicitar plantão, confirmar escala, marcar realizada e gerar pagamento.
 - [ ] Gerar fatura SaaS e marcar como paga.
 - [ ] Criar/resolver chamado de suporte.
-- [ ] Exportar relatório CSV e validar auditoria.
+- [ ] Baixar relatório CSV e validar auditoria.
 
 ## Rollback
 - Reverter pacote API/Web anterior.

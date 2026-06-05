@@ -44,7 +44,7 @@ public class PlantaoRulesTests
 public class EnterpriseSecurityConstantsTests
 {
     [Fact]
-    public void Auditoria_DeveExporEventosCriticosPadronizados()
+    public void Auditoria_DeveListarEventosCriticosPadronizados()
     {
         Assert.Equal("LOGIN_SUCESSO", PlantaoPro.Api.AuditoriaConstants.Acoes.LoginSucesso);
         Assert.Equal("ACESSO_NEGADO", PlantaoPro.Api.AuditoriaConstants.Acoes.AcessoNegado);
@@ -52,7 +52,7 @@ public class EnterpriseSecurityConstantsTests
     }
 
     [Fact]
-    public void Permissoes_DeveExporPermissoesMinimas()
+    public void Permissoes_DeveListarPermissoesMinimas()
     {
         Assert.Equal("AUDITORIA_VER", PlantaoPro.Api.PermissionConstants.AuditoriaVer);
         Assert.Equal("OBSERVABILIDADE_VER", PlantaoPro.Api.PermissionConstants.ObservabilidadeVer);
@@ -72,7 +72,7 @@ public class AuthContractTests
     }
 
     [Fact]
-    public void Auditoria_DeveExporEntidadesSaasCriticas()
+    public void Auditoria_DeveListarEntidadesSaasCriticas()
     {
         Assert.Equal("FATURA_SAAS", PlantaoPro.Api.AuditoriaConstants.Entidades.FaturaSaas);
         Assert.Equal("ASSINATURA", PlantaoPro.Api.AuditoriaConstants.Entidades.Assinatura);

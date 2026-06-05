@@ -22,7 +22,7 @@ O PlantãoPro reduz risco de plantões descobertos, melhora governança financei
 - Médico vê apenas seus dados; cliente vê apenas seu tenant; admin global tem visão consolidada.
 - Cliente suspenso ou sem limite disponível é bloqueado antes de gerar risco operacional.
 - Toda ação crítica tem rastreabilidade de auditoria e feedback amigável.
-- App mobile pode iniciar com React Native Expo usando endpoints já documentados.
+- App mobile pode iniciar com aplicativo móvel multiplataforma usando endpoints já documentados.
 
 ## Resultado esperado
 Stakeholders entendem valor comercial, limites da beta, fluxo ponta a ponta e próximos passos para homologação com cliente real.

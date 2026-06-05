@@ -16,7 +16,7 @@ Rodada executada para proteger o PlantãoPro após a execução indevida de um p
 
 A varredura de termos do produto incorreto não encontrou referências de domínio proibidas versionadas. As ocorrências remanescentes são legítimas do PlantãoPro:
 
-- Referências a React Native/Expo pertencem ao app mobile oficial em `mobile/PlantaoPro.App` e à documentação da Sprint Zero mobile do PlantãoPro.
+- Referências a aplicativo móvel multiplataforma pertencem ao app mobile oficial em `app móvel do PlantãoPro` e à documentação da Sprint Zero mobile do PlantãoPro.
 - Referências a exportação são do módulo de auditoria/relatórios do PlantãoPro, não de outro produto.
 - Um diretório raiz de app externo, local e ignorado pelo Git, continha `node_modules` no workspace e foi removido; ele não estava versionado.
 

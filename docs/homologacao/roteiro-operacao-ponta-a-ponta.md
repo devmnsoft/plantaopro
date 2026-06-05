@@ -24,7 +24,7 @@ Documento de homologação e demonstração para o PlantãoPro como MVP comercia
 8. Entrar como MEDICO, conferir pagamento confirmado, notificação e histórico de agenda.
 9. Gerar fatura SaaS mensal, marcar paga, contestar/cancelar com motivo quando aplicável e consultar inadimplência.
 10. Criar chamado de suporte, responder/resolver com descrição, registrar contato de Customer Success e plano de ação.
-11. Exportar relatório CSV permitido e verificar auditoria de exportação.
+11. Baixar relatório CSV permitido e verificar auditoria de exportação.
 12. Abrir Swagger, validar /api/health, login JWT, endpoints Mobile e retorno 401 sem token.
 
 ## Resultado esperado

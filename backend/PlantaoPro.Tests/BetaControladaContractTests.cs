@@ -6,7 +6,7 @@ namespace PlantaoPro.Tests;
 public class BetaControladaContractTests
 {
     [Fact]
-    public void OperacaoAssistida_DeveExporEndpointsObrigatoriosDaBetaControlada()
+    public void OperacaoAssistida_DeveListarEndpointsObrigatoriosDaBetaControlada()
     {
         var rotas = typeof(OperacaoAssistidaController)
             .GetMethods()
@@ -33,7 +33,7 @@ public class BetaControladaContractTests
     }
 
     [Fact]
-    public void MobileApi_DeveExporEndpointsMvpSprintZero()
+    public void MobileApi_DeveListarEndpointsMvpSprintZero()
     {
         var rotas = typeof(MobileController)
             .GetMethods()

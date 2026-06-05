@@ -149,7 +149,7 @@ public class RepositoryHygieneContractTests
         Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("branch work", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("produto incorreto", conteudo, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("React Native/Expo permitido", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("aplicativo móvel multiplataforma permitido", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("/api/health", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("pendências", conteudo, StringComparison.OrdinalIgnoreCase);
     }

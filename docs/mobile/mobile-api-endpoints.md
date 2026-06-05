@@ -61,7 +61,7 @@
 - Listagens têm paginação/limite.
 - Logs não exibem senha, hash, token completo ou payload sensível.
 
-## Integração Expo consolidada nesta revisão
+## Integração do app móvel consolidada nesta revisão
 - O app consome a base `EXPO_PUBLIC_API_BASE_URL` quando configurada; caso contrário usa `http://localhost:5000/api` para desenvolvimento local.
 - Todas as chamadas passam por `request<T>` em `src/services/api.ts`, que normaliza propriedades PascalCase/camelCase antes de devolver `ApiResponse<T>` ao app.
 - Serviços mobile normalizam DTOs específicos da API (`plantaoId`, `escalaId`, `pagamentoId`, `valorPrevisto`) para campos estáveis usados pelas telas (`id`, `valor`, `vagas`).

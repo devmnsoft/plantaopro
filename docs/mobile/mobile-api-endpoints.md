@@ -20,7 +20,8 @@
 | POST | `/convites/{id}/aceitar` | Aceitar convite | Revalida vaga e conflito. |
 | POST | `/convites/{id}/recusar` | Recusar convite | Pode exigir motivo; registra auditoria/notificação. |
 | GET | `/minhas-escalas` | Agenda escalada | Apenas escalas do médico autenticado, paginado. |
-| GET | `/meus-pagamentos` | Pagamentos | Apenas pagamentos do médico autenticado. |
+| GET | `/meus-pagamentos` | Pagamentos | Apenas pagamentos do médico autenticado, com paginação. |
+| GET | `/meus-pagamentos/{id}` | Detalhe do pagamento | Revalida titularidade do médico antes de retornar dados financeiros. |
 | GET | `/notificacoes` | Feed | Paginação e somente notificações do usuário. |
 | PUT | `/notificacoes/{id}/lida` | Marcar lida | Notificação deve pertencer ao usuário. |
 | GET | `/perfil` | Perfil | Dados leves do médico/usuário. |
@@ -39,6 +40,7 @@
 - `GET /convites/{id}`: detalhe do convite.
 - `GET /recomendacoes`: recomendações/lembretes para o médico.
 - `GET /suporte/chamados/{id}`: detalhe do chamado.
+- `GET /meus-pagamentos/{id}`: detalhe financeiro do médico autenticado com validação de titularidade.
 
 ## Como testar API mobile
 1. Autenticar em `POST /api/mobile/auth/login`.
@@ -62,6 +64,7 @@
 ## Integração Expo consolidada nesta revisão
 - O app consome a base `EXPO_PUBLIC_API_BASE_URL` quando configurada; caso contrário usa `http://localhost:5000/api` para desenvolvimento local.
 - Todas as chamadas passam por `request<T>` em `src/services/api.ts`, que normaliza propriedades PascalCase/camelCase antes de devolver `ApiResponse<T>` ao app.
+- Serviços mobile normalizam DTOs específicos da API (`plantaoId`, `escalaId`, `pagamentoId`, `valorPrevisto`) para campos estáveis usados pelas telas (`id`, `valor`, `vagas`).
 - Listagens usam `getPaged<T>` com `page` e `pageSize`, sempre retornando `items: []` quando a API falhar ou o endpoint ainda não existir.
 - Endpoints ausentes retornam fallback amigável: `Endpoint mobile não disponível nesta versão.`, sem quebrar a tela.
 - O JWT é armazenado pelo helper `storage` e reaplicado automaticamente no header `Authorization: Bearer <token>`.

@@ -94,6 +94,7 @@ public class MobileAndSecurityContractTests
         Assert.Contains("convites/{id:guid}/recusar", rotas);
         Assert.Contains("minhas-escalas", rotas);
         Assert.Contains("meus-pagamentos", rotas);
+        Assert.Contains("meus-pagamentos/{id:guid}", rotas);
         Assert.Contains("notificacoes", rotas);
         Assert.Contains("notificacoes/{id:guid}/lida", rotas);
         Assert.Contains("perfil", rotas);

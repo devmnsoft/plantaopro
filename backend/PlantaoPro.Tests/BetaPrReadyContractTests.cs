@@ -79,6 +79,24 @@ public class BetaPrReadyContractTests
         Assert.Contains("pendências reais", conteudo, StringComparison.OrdinalIgnoreCase);
     }
 
+
+    [Fact]
+    public void RelatorioFechamentoTecnicoFuncional_DeveRegistrarBranchComandosPendenciasEQa()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-fechamento-tecnico-funcional-2026-06-05.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("codex/plantaopro-beta-homologavel-fechamento", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("backup/antes-plantaopro-beta-homologavel-fechamento", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("dotnet build backend/PlantaoPro.Api/PlantaoPro.Api.csproj", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("dotnet build backend/PlantaoPro.Web/PlantaoPro.Web.csproj", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("dotnet test", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Pendências reais", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("fluxo médico ponta a ponta", conteudo, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static HashSet<string> ObterRotasApi(params Type[] controllers)
     {
         var rotas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

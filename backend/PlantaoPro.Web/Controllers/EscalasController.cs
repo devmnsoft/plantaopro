@@ -23,13 +23,13 @@ public class EscalasController : BaseWebController
         return View(model);
     }
 
-    [HttpPost] public async Task<IActionResult> Confirmar(Guid id) => await PostStatus($"api/escalas/{id}/confirmar", new { justificativa = "Confirmada pela coordenação" }, "Escala confirmada.", id);
-    [HttpPost] public async Task<IActionResult> Recusar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/recusar", new { justificativa }, "Escala recusada.", id);
-    [HttpPost] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/cancelar", new { justificativa }, "Escala cancelada.", id);
-    [HttpPost] public async Task<IActionResult> MarcarRealizado(Guid id) => await PostStatus($"api/escalas/{id}/marcar-realizado", new { justificativa = "Escala concluída" }, "Escala marcada como realizada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Confirmar(Guid id) => await PostStatus($"api/escalas/{id}/confirmar", new { justificativa = "Confirmada pela coordenação" }, "Escala confirmada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Recusar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/recusar", new { justificativa }, "Escala recusada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/cancelar", new { justificativa }, "Escala cancelada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> MarcarRealizado(Guid id) => await PostStatus($"api/escalas/{id}/marcar-realizado", new { justificativa = "Escala concluída" }, "Escala marcada como realizada.", id);
 
     [HttpGet] public IActionResult Substituir(Guid id) => View(model: new StatusActionViewModel(id, string.Empty));
-    [HttpPost] public async Task<IActionResult> Substituir(Guid id, Guid novoMedicoId, string justificativa)
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Substituir(Guid id, Guid novoMedicoId, string justificativa)
         => await PostStatus($"api/escalas/{id}/substituir", new { novoMedicoId, justificativa }, "Escala substituída.", id);
 
     private async Task<IActionResult> PostStatus(string endpoint, object payload, string success, Guid id)

@@ -72,6 +72,14 @@ Este checklist consolida o aceite final da **Beta Homologável Final** do Plant�
 - [ ] API Mobile MVP expõe endpoints documentados, exige JWT, usa `ApiResponse<T>`, payload leve, paginação e 403 amigável quando o plano não permite mobile.
 - [ ] Sprint Zero do app está documentada em `docs/mobile/sprint-zero-app.md`, `docs/mobile/arquitetura-app.md`, `docs/mobile/telas-mvp-app.md`, `docs/mobile/mobile-api-endpoints.md` e `docs/mobile/mobile-fluxos.md`.
 
+## Incremento 2026-06-05 — AJAX seguro em ações críticas Web
+
+- [x] Escalas com confirmação, recusa, conclusão e substituição protegidas por antiforgery, modal, AJAX e toast.
+- [x] Plantões com publicação/cancelamento usando confirmação contextual e envio AJAX com fallback seguro.
+- [x] Pagamentos com confirmação/cancelamento protegidos por antiforgery, modal, AJAX e feedback visual.
+- [x] Solicitação médica de plantão com confirmação explícita, validação visual e toast.
+- [x] Relatório incremental registrado em `docs/homologacao/relatorio-crud-ajax-seguro-2026-06-05.md`.
+
 ## Roteiro manual final obrigatório
 
 1. Confirmar ausência de resíduos externos.

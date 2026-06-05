@@ -1,8 +1,17 @@
 @model PlantaoPro.Web.Models.StatusActionViewModel
-<h2>Substituir Escala</h2>
-<form method="post">
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Substituir Escala", "Registre substituições com justificativa, confirmação, toast e auditoria.", "bi-arrow-repeat")' />
+
+<form method="post" class="card card-body shadow-sm" data-ajax-form="true" data-confirm="true" data-confirm-title="Substituir escala" data-confirm-message="Confirma substituir o médico desta escala? O sistema validará conflitos críticos e registrará a justificativa." data-confirm-type="warning">
+    @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
-    <div class="mb-3"><label class="form-label">Novo Médico (ID)</label><input name="novoMedicoId" class="form-control" required /></div>
-    <div class="mb-3"><label class="form-label">Justificativa</label><textarea name="justificativa" class="form-control" required></textarea></div>
-    <button class="btn btn-primary">Substituir</button>
+    <div class="mb-3">
+        <label class="form-label">Novo Médico (ID)</label>
+        <input name="novoMedicoId" class="form-control" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Justificativa</label>
+        <textarea name="justificativa" class="form-control" required></textarea>
+    </div>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Substituir</button>
 </form>

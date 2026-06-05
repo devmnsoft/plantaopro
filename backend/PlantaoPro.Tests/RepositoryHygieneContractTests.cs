@@ -10,6 +10,7 @@ public class RepositoryHygieneContractTests
         {
             "Admin" + "Web",
             "Public" + "Web",
+            "Kio" + "sk",
             "Kio" + "skWeb",
             "Admin" + "Api",
             "Public" + "Api",
@@ -33,15 +34,29 @@ public class RepositoryHygieneContractTests
         {
             "Barber" + "Sync",
             "barber" + "sync",
+            "Admin" + "Api",
+            "Public" + "Api",
+            "Kio" + "skApi",
+            "KIO" + "SK",
+            "Public" + "Web",
+            "Admin" + "Web",
+            "Mobile" + "App",
             "bar" + "bearia",
             "sala" + "o",
+            "sal" + "ao",
             "est" + "etica",
             "P" + "DV",
             "com" + "anda",
             "fideli" + "dade",
+            "api:" + "8080",
+            "80" + "81",
+            "80" + "82",
+            "80" + "83",
             "admin-demo" + "-store",
             "admin-event" + "-bus",
-            "kio" + "sk-flow"
+            "kio" + "sk-flow",
+            "kio" + "sk.js",
+            "public" + ".js"
         };
 
         var arquivos = Directory.EnumerateFiles(raiz, "*", SearchOption.AllDirectories)
@@ -70,6 +85,39 @@ public class RepositoryHygieneContractTests
         Assert.Contains("*.apk", gitignore, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("*.aab", gitignore, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("node_modules/", gitignore, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void DocumentacaoBetaHomologavel_DeveConterArtefatosObrigatoriosDeAceite()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var documentosObrigatorios = new[]
+        {
+            Path.Combine("docs", "homologacao", "checklist-beta-comercial.md"),
+            Path.Combine("docs", "homologacao", "roteiro-operacao-ponta-a-ponta.md"),
+            Path.Combine("docs", "homologacao", "roteiro-saas-basico.md"),
+            Path.Combine("docs", "homologacao", "roteiro-operacao-assistida.md"),
+            Path.Combine("docs", "demo", "roteiro-demo-comercial.md"),
+            Path.Combine("docs", "demo", "usuarios-demonstracao.md"),
+            Path.Combine("docs", "deploy", "checklist-go-live-beta.md"),
+            Path.Combine("docs", "deploy", "deploy-producao-controlada.md"),
+            Path.Combine("docs", "mobile", "mobile-api-endpoints.md"),
+            Path.Combine("docs", "mobile", "mobile-fluxos.md"),
+            Path.Combine("docs", "mobile", "sprint-zero-app.md"),
+            Path.Combine("docs", "saas", "faturamento-saas.md"),
+            Path.Combine("docs", "suporte", "chamados.md"),
+            Path.Combine("docs", "customer-success", "customer-success.md"),
+            Path.Combine("docs", "operacao-assistida", "operacao-assistida.md"),
+            Path.Combine("docs", "homologacao", "relatorio-beta-homologavel-2026-06-05.md")
+        };
+
+        foreach (var documento in documentosObrigatorios)
+        {
+            var caminho = Path.Combine(raiz, documento);
+            Assert.True(File.Exists(caminho), $"Documento obrigatório ausente: {documento}");
+            var conteudo = File.ReadAllText(caminho);
+            Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
+        }
     }
 
     private static bool DeveInspecionar(string arquivo)

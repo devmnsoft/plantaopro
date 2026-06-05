@@ -76,29 +76,15 @@ public abstract class BaseWebController : Controller
     [NonAction]
     public async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponseAsync<T>(HttpClient client, string endpoint)
     {
-        var response = await client.GetAsync(endpoint);
-        var content = await response.Content.ReadAsStringAsync();
-        var user = User.Identity?.Name ?? "anônimo";
-        var sample = content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
-
-        Logger.LogInformation("API call BaseUrl:{BaseUrl} Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario}", client.BaseAddress, endpoint, (int)response.StatusCode, user);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            Logger.LogWarning("Falha ao consultar API. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
-            var apiError = TryParseMessage(content);
-            return (default, apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
-        }
-
         try
         {
-            var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
-            return (apiResult is not null ? apiResult.Data : default, apiResult?.Message, response.StatusCode);
+            var response = await client.GetAsync(endpoint);
+            return await ReadApiResponsePayloadAsync<T>(endpoint, response, setTempDataOnError: false);
         }
-        catch (JsonException ex)
+        catch (Exception ex)
         {
-            Logger.LogError(ex, "Erro de desserialização. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
-            return (default, "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
+            Logger.LogError(ex, "Erro ao consultar API. Endpoint:{Endpoint}", endpoint);
+            return (default, "Falha de comunicação com a API.", HttpStatusCode.InternalServerError);
         }
     }
 
@@ -156,35 +142,33 @@ public abstract class BaseWebController : Controller
     [NonAction]
     public async Task<(PagedResult<T> Data, string? Error, HttpStatusCode StatusCode)> ReadApiPagedResponseAsync<T>(HttpClient client, string endpoint, int page = 1, int pageSize = 20)
     {
-        var response = await client.GetAsync(endpoint);
-        var content = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-        {
-            var apiError = TryParseMessage(content);
-            return (PagedResult<T>.Empty(page, pageSize), apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
-        }
-
         try
         {
-            using var doc = JsonDocument.Parse(content);
-            if (!doc.RootElement.TryGetProperty("data", out var data))
-                return (PagedResult<T>.Empty(page, pageSize), null, response.StatusCode);
+            var response = await client.GetAsync(endpoint);
+            var content = await response.Content.ReadAsStringAsync();
+            var sample = content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
 
-            if (data.ValueKind == JsonValueKind.Array)
+            Logger.LogInformation("API paged call BaseUrl:{BaseUrl} Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario}", client.BaseAddress, endpoint, (int)response.StatusCode, User.Identity?.Name ?? "anônimo");
+
+            if (!response.IsSuccessStatusCode)
             {
-                var items = JsonSerializer.Deserialize<List<T>>(data.GetRawText(), JsonOptions) ?? new List<T>();
-                return (new PagedResult<T> { Items = items, Page = page, PageSize = pageSize, TotalItems = items.Count, TotalPages = items.Count == 0 ? 0 : 1 }, null, response.StatusCode);
+                var apiError = TryParseMessage(content);
+                Logger.LogWarning("Falha ao consultar API paginada. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
+                return (PagedResult<T>.Empty(page, pageSize), apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
             }
 
-            var paged = JsonSerializer.Deserialize<PagedResult<T>>(data.GetRawText(), JsonOptions) ?? PagedResult<T>.Empty(page, pageSize);
-            if (paged.TotalPages <= 0 && paged.PageSize > 0)
-                paged.TotalPages = (int)Math.Ceiling((double)paged.TotalItems / paged.PageSize);
-            return (paged, null, response.StatusCode);
+            var paged = DeserializePagedPayload<T>(content, page, pageSize);
+            return (NormalizePagedResult(paged, page, pageSize), null, response.StatusCode);
         }
         catch (JsonException ex)
         {
             Logger.LogError(ex, "Erro de desserialização paginada. Endpoint:{Endpoint}", endpoint);
             return (PagedResult<T>.Empty(page, pageSize), "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao consultar API paginada. Endpoint:{Endpoint}", endpoint);
+            return (PagedResult<T>.Empty(page, pageSize), "Falha de comunicação com a API.", HttpStatusCode.InternalServerError);
         }
     }
 
@@ -213,33 +197,64 @@ public abstract class BaseWebController : Controller
 
     private static string? TryParseMessage(string content)
     {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
         try
         {
-            var parsed = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(content, JsonOptions);
-            return parsed?.Message;
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
+
+            if (TryGetStringProperty(root, "message", out var message) ||
+                TryGetStringProperty(root, "mensagem", out message) ||
+                TryGetStringProperty(root, "error", out message) ||
+                TryGetStringProperty(root, "detail", out message) ||
+                TryGetStringProperty(root, "title", out message))
+            {
+                return message;
+            }
+
+            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("errors", out var errors))
+            {
+                if (errors.ValueKind == JsonValueKind.Array)
+                {
+                    var messages = errors.EnumerateArray()
+                        .Select(error => error.ValueKind == JsonValueKind.String ? error.GetString() : error.ToString())
+                        .Where(error => !string.IsNullOrWhiteSpace(error));
+                    return string.Join(" ", messages);
+                }
+
+                if (errors.ValueKind == JsonValueKind.Object)
+                {
+                    var messages = errors.EnumerateObject()
+                        .SelectMany(error => error.Value.ValueKind == JsonValueKind.Array
+                            ? error.Value.EnumerateArray().Select(item => item.GetString())
+                            : new[] { error.Value.ToString() })
+                        .Where(error => !string.IsNullOrWhiteSpace(error));
+                    return string.Join(" ", messages);
+                }
+            }
         }
-        catch { return null; }
+        catch (JsonException)
+        {
+            return content.Length > MaxLogContentLength ? content[..MaxLogContentLength] : content;
+        }
+
+        return null;
     }
 
     [NonAction]
     public string HandleApiError(HttpStatusCode statusCode, string? apiMessage = null)
     {
-        var message = statusCode switch
-        {
-            HttpStatusCode.BadRequest => apiMessage ?? "Não foi possível processar a solicitação. Revise os dados e tente novamente.",
-            HttpStatusCode.Unauthorized => "Sessão expirada. Faça login novamente.",
-            HttpStatusCode.Forbidden => "Você não possui permissão para realizar esta ação.",
-            HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
-            HttpStatusCode.Conflict => apiMessage ?? "Conflito de dados detectado. Atualize a tela e tente novamente.",
-            HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
-            _ => apiMessage ?? "Não foi possível concluir a operação agora."
-        };
+        var message = BuildApiErrorMessage(statusCode, apiMessage);
 
         TempData["Error"] = message;
         return message;
     }
 
-    private async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponsePayloadAsync<T>(string endpoint, HttpResponseMessage response)
+    private async Task<(T? Data, string? Error, HttpStatusCode StatusCode)> ReadApiResponsePayloadAsync<T>(string endpoint, HttpResponseMessage response, bool setTempDataOnError = true)
     {
         var content = await response.Content.ReadAsStringAsync();
         var user = User.Identity?.Name ?? "anônimo";
@@ -251,23 +266,120 @@ public abstract class BaseWebController : Controller
         {
             Logger.LogWarning("Falha ao consultar API. Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, user, sample);
             var parsedMessage = TryParseMessage(content);
-            var message = HandleApiError(response.StatusCode, parsedMessage);
+            var message = setTempDataOnError
+                ? HandleApiError(response.StatusCode, parsedMessage)
+                : BuildApiErrorMessage(response.StatusCode, parsedMessage);
             return (default, message, response.StatusCode);
         }
 
         try
         {
-            var apiResult = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
-            return (apiResult is not null ? apiResult.Data : default, apiResult?.Message, response.StatusCode);
+            return (DeserializeApiPayload<T>(content), TryParseMessage(content), response.StatusCode);
         }
         catch (JsonException ex)
         {
             Logger.LogError(ex, "Erro de desserialização. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
             var message = "A API retornou dados em formato inesperado. Tente novamente em instantes.";
-            TempData["Error"] = message;
+            if (setTempDataOnError)
+            {
+                TempData["Error"] = message;
+            }
             return (default, message, HttpStatusCode.InternalServerError);
         }
     }
+
+    private static T? DeserializeApiPayload<T>(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return default;
+        }
+
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+
+        if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var data))
+        {
+            if (data.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            {
+                return default;
+            }
+
+            return JsonSerializer.Deserialize<T>(data.GetRawText(), JsonOptions);
+        }
+
+        return JsonSerializer.Deserialize<T>(content, JsonOptions);
+    }
+
+    private static PagedResult<T> DeserializePagedPayload<T>(string content, int page, int pageSize)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return PagedResult<T>.Empty(page, pageSize);
+        }
+
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+        var data = root.ValueKind == JsonValueKind.Object && root.TryGetProperty("data", out var wrappedData)
+            ? wrappedData
+            : root;
+
+        if (data.ValueKind == JsonValueKind.Array)
+        {
+            var items = JsonSerializer.Deserialize<List<T>>(data.GetRawText(), JsonOptions) ?? new List<T>();
+            return new PagedResult<T> { Items = items, Page = page, PageSize = pageSize, TotalItems = items.Count };
+        }
+
+        if (data.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return PagedResult<T>.Empty(page, pageSize);
+        }
+
+        return JsonSerializer.Deserialize<PagedResult<T>>(data.GetRawText(), JsonOptions) ?? PagedResult<T>.Empty(page, pageSize);
+    }
+
+    private static PagedResult<T> NormalizePagedResult<T>(PagedResult<T>? paged, int fallbackPage, int fallbackPageSize)
+    {
+        paged ??= PagedResult<T>.Empty(fallbackPage, fallbackPageSize);
+        paged.Items ??= Array.Empty<T>();
+        paged.Page = paged.Page <= 0 ? fallbackPage : paged.Page;
+        paged.PageSize = paged.PageSize <= 0 ? fallbackPageSize : paged.PageSize;
+
+        if (paged.TotalItems <= 0)
+        {
+            paged.TotalItems = paged.Items.LongCount();
+        }
+
+        paged.TotalPages = paged.PageSize <= 0
+            ? 0
+            : (int)Math.Ceiling((double)paged.TotalItems / paged.PageSize);
+
+        return paged;
+    }
+
+    private static bool TryGetStringProperty(JsonElement root, string name, out string? value)
+    {
+        value = null;
+        if (root.ValueKind != JsonValueKind.Object || !root.TryGetProperty(name, out var property))
+        {
+            return false;
+        }
+
+        value = property.ValueKind == JsonValueKind.String ? property.GetString() : property.ToString();
+        return !string.IsNullOrWhiteSpace(value);
+    }
+
+    private static string BuildApiErrorMessage(HttpStatusCode statusCode, string? apiMessage = null)
+        => statusCode switch
+        {
+            HttpStatusCode.BadRequest => apiMessage ?? "Não foi possível processar a solicitação. Revise os dados e tente novamente.",
+            HttpStatusCode.Unauthorized => "Sessão expirada. Faça login novamente.",
+            HttpStatusCode.Forbidden => "Você não possui permissão para realizar esta ação.",
+            HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
+            HttpStatusCode.Conflict => apiMessage ?? "Conflito de dados detectado. Atualize a tela e tente novamente.",
+            HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",
+            _ => apiMessage ?? "Não foi possível concluir a operação agora."
+        };
 
     private sealed class DateOnlyJsonConverter : JsonConverter<DateOnly>
     {

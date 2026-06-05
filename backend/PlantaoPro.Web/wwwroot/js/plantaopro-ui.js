@@ -74,7 +74,6 @@
       if(el.tagName==='FORM'){
         el.addEventListener('submit',(event)=>{
           if(el.dataset.ppConfirmApproved==='1'){
-            delete el.dataset.ppConfirmApproved;
             return;
           }
           openModal(el,event);
@@ -111,6 +110,104 @@
     }
   }
 
+
+  async function parseAjaxResponse(response){
+    const text=await response.text();
+    if(!text){return {success:response.ok,message:response.ok?'Operação concluída com sucesso.':'Não foi possível concluir a operação.'};}
+    try{
+      const json=JSON.parse(text);
+      return {
+        success:json.success!==undefined?Boolean(json.success):response.ok,
+        message:json.message||json.mensagem||json.error||json.title||'',
+        redirectUrl:json.redirectUrl||json.redirect||json.url||'',
+        errors:json.errors||null
+      };
+    }catch(e){
+      return {success:response.ok,message:response.ok?'Operação concluída com sucesso.':text};
+    }
+  }
+
+  function renderAjaxErrors(form,errors,message){
+    let box=form.querySelector('[data-ajax-errors]');
+    if(!box){
+      box=document.createElement('div');
+      box.className='alert alert-danger d-none';
+      box.setAttribute('data-ajax-errors','true');
+      form.prepend(box);
+    }
+
+    const list=[];
+    if(message){list.push(message);}
+    if(Array.isArray(errors)){errors.forEach(error=>{if(error){list.push(String(error));}});}
+    else if(errors&&typeof errors==='object'){
+      Object.keys(errors).forEach(key=>{
+        const value=errors[key];
+        if(Array.isArray(value)){value.forEach(item=>{if(item){list.push(String(item));}});}
+        else if(value){list.push(String(value));}
+      });
+    }
+
+    box.innerHTML=list.length?list.map(error=>'<div>'+sanitize(error)+'</div>').join(''):'';
+    box.classList.toggle('d-none',list.length===0);
+  }
+
+  function setFormBusy(form,isBusy){
+    form.querySelectorAll('button[type="submit"], .btn-submit').forEach(btn=>{
+      if(isBusy){
+        if(!btn.dataset.originalHtml){btn.dataset.originalHtml=btn.innerHTML;}
+        btn.classList.add('is-loading');
+        btn.setAttribute('aria-busy','true');
+        btn.innerHTML='<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Processando...';
+        btn.disabled=true;
+      }else{
+        if(btn.dataset.originalHtml){btn.innerHTML=btn.dataset.originalHtml;}
+        btn.classList.remove('is-loading');
+        btn.removeAttribute('aria-busy');
+        btn.disabled=false;
+      }
+    });
+  }
+
+  function wireAjaxForms(){
+    document.querySelectorAll('form[data-ajax-form="true"]').forEach(form=>{
+      if(form.dataset.ppAjaxBound==='1'){return;}
+      form.dataset.ppAjaxBound='1';
+      form.addEventListener('submit',async(event)=>{
+        if(form.dataset.confirm==='true'&&form.dataset.ppConfirmApproved!=='1'){return;}
+        event.preventDefault();
+
+        renderAjaxErrors(form,null,'');
+        setFormBusy(form,true);
+        try{
+          const response=await fetch(form.action||window.location.href,{
+            method:(form.method||'POST').toUpperCase(),
+            body:new FormData(form),
+            headers:{'X-Requested-With':'XMLHttpRequest'}
+          });
+          const payload=await parseAjaxResponse(response);
+          if(response.ok&&payload.success!==false){
+            showToast('success',payload.message||'Operação concluída com sucesso.');
+            if(payload.redirectUrl){window.location.assign(payload.redirectUrl);return;}
+            form.dispatchEvent(new CustomEvent('plantaopro:ajax-success',{bubbles:true,detail:payload}));
+            return;
+          }
+
+          const message=payload.message||'Revise os dados e tente novamente.';
+          renderAjaxErrors(form,payload.errors,message);
+          showToast('error',message);
+          form.dispatchEvent(new CustomEvent('plantaopro:ajax-error',{bubbles:true,detail:payload}));
+        }catch(error){
+          const message='Falha de comunicação. Verifique sua conexão e tente novamente.';
+          renderAjaxErrors(form,null,message);
+          showToast('error',message);
+        }finally{
+          setFormBusy(form,false);
+          delete form.dataset.ppConfirmApproved;
+        }
+      });
+    });
+  }
+
   function wireSubmitLoading(){
     document.querySelectorAll('form').forEach(form=>{
       if(form.dataset.ppLoadingBound==='1'){return;}
@@ -137,6 +234,6 @@
     document.querySelectorAll('[data-mask="crmuf"]').forEach(input=>input.addEventListener('input',()=>{input.value=sanitize(input.value).toUpperCase().slice(0,20);}));
   }
 
-  window.PlantaoProUi={copyText,refresh:()=>{initTooltips();wireConfirmActions();wireSubmitLoading();applyMasks();}};
-  document.addEventListener('DOMContentLoaded',()=>{initTooltips();autoCloseAlerts();wireConfirmActions();wireSubmitLoading();applyMasks();markActiveMenu();});
+  window.PlantaoProUi={copyText,refresh:()=>{initTooltips();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();}};
+  document.addEventListener('DOMContentLoaded',()=>{initTooltips();autoCloseAlerts();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();markActiveMenu();});
 })();

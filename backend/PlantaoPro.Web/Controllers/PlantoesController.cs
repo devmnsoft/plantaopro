@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using System.Net;
-using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
@@ -71,28 +70,69 @@ public class PlantoesController : BaseWebController
 
     private async Task<IActionResult> SendPlantao(PlantaoFormViewModel model, Guid? id)
     {
-        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
-        var payload = new { model.HospitalId, model.EspecialidadeId, model.DataInicio, model.DataFim, model.Valor, model.Vagas, model.Tipo, Observacoes = model.Observacoes ?? string.Empty };
-        var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-        var response = id.HasValue ? await client.PutAsync($"api/plantoes/{id}", content) : await client.PostAsync("api/plantoes", content);
-        var body = await response.Content.ReadAsStringAsync();
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        var api = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        if (!response.IsSuccessStatusCode || api?.Success != true) { TempData["Error"] = api?.Message ?? "Falha ao salvar plantão."; return View(id.HasValue ? "Edit" : "Create", await BuildForm(model)); }
-        TempData["Success"] = api.Message;
-        return RedirectToAction(nameof(Index));
+        var endpoint = id.HasValue ? $"api/plantoes/{id}" : "api/plantoes";
+        var method = id.HasValue ? HttpMethod.Put : HttpMethod.Post;
+
+        try
+        {
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+
+            var payload = new
+            {
+                model.HospitalId,
+                model.EspecialidadeId,
+                model.DataInicio,
+                model.DataFim,
+                model.Valor,
+                model.Vagas,
+                model.Tipo,
+                Observacoes = model.Observacoes ?? string.Empty
+            };
+
+            var (_, error, statusCode) = await SendApiAsync<object, JsonElement>(client, method, endpoint, payload);
+            LogRequestContext(id.HasValue ? "plantao.atualizar" : "plantao.criar", endpoint, (int)statusCode);
+
+            if (statusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (statusCode is < HttpStatusCode.OK or >= HttpStatusCode.Ambiguous)
+            {
+                TempData["Error"] = error ?? "Falha ao salvar plantão.";
+                return View(id.HasValue ? "Edit" : "Create", await BuildForm(model));
+            }
+
+            TempData["Success"] = id.HasValue ? "Plantão atualizado com sucesso." : "Plantão cadastrado com sucesso.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro crítico ao salvar plantão. Endpoint:{Endpoint} PlantaoId:{PlantaoId}", endpoint, id);
+            TempData["Error"] = "Não foi possível salvar o plantão agora. Tente novamente.";
+            return View(id.HasValue ? "Edit" : "Create", await BuildForm(model));
+        }
     }
 
     private async Task<IActionResult> SendStatusAction(Guid id, string endpointFmt, string success, string error, string justificativa = "")
     {
-        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
-        var content = new StringContent(JsonSerializer.Serialize(new { Justificativa = justificativa }), Encoding.UTF8, "application/json");
-        var response = await client.PostAsync(string.Format(endpointFmt, id), content);
-        var body = await response.Content.ReadAsStringAsync();
-        if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
-        var api = JsonSerializer.Deserialize<ApiResponse<JsonElement>>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-        TempData[api?.Success == true ? "Success" : "Error"] = api?.Message ?? (api?.Success == true ? success : error);
-        return RedirectToAction(nameof(Details), new { id });
+        var endpoint = string.Format(endpointFmt, id);
+
+        try
+        {
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+
+            var result = await SendApiWithoutResponseAsync(client, HttpMethod.Post, endpoint, new { Justificativa = justificativa });
+            LogRequestContext("plantao.status", endpoint, (int)result.StatusCode);
+
+            if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            TempData[result.Success ? "Success" : "Error"] = result.Success ? success : result.Error ?? error;
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro crítico ao alterar status do plantão. Endpoint:{Endpoint} PlantaoId:{PlantaoId}", endpoint, id);
+            TempData["Error"] = error;
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 
     private async Task<PlantaoFormViewModel> BuildForm(PlantaoFormViewModel? model = null)

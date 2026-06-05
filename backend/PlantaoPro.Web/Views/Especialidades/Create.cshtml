@@ -1,0 +1,7 @@
+@model PlantaoPro.Web.Models.EspecialidadeFormViewModel
+@{
+    ViewData["Title"] = "Nova Especialidade";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Nova Especialidade", "Cadastre a especialidade para classificar plantões, médicos e relatórios.", "bi-journal-medical")' />
+<partial name="_EspecialidadeForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,5 @@
+@model PlantaoPro.Web.Models.HospitalFormViewModel
+@{ ViewData["Title"] = "Editar Hospital"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Editar Hospital", "Atualize dados da unidade com rastreabilidade.", "bi-pencil-square")' />
+<partial name="_HospitalForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

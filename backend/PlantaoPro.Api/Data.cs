@@ -464,6 +464,44 @@ values
             logger.LogInformation("Médico {Id}", id);
             return ApiResponse<MedicoDto>.Ok(new(id, req.Nome, req.Cpf, req.Crm, req.UfCrm, req.Email, req.Telefone, req.Cidade, req.Estado, req.EspecialidadeId, "A"));
         }
+        public async Task<ApiResponse<string>> AtualizarAsync(Guid id, UpdateMedicoRequest req, Guid userId, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(req.Nome) || string.IsNullOrWhiteSpace(req.Cpf) || string.IsNullOrWhiteSpace(req.Crm) || string.IsNullOrWhiteSpace(req.UfCrm))
+                return ApiResponse<string>.Fail("Campos obrigatórios inválidos.");
+
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync(@"update plantaopro.medicos
+set nome=@n,cpf=@cpf,crm=@crm,uf_crm=@uf,email=@e,telefone=@t,cidade=@c,estado=@es,especialidade_id=@esp,reg_status=@st,reg_update=now(),updated_by=@u
+where id=@id", new
+            {
+                id,
+                n = req.Nome,
+                cpf = req.Cpf,
+                crm = req.Crm,
+                uf = req.UfCrm,
+                e = req.Email,
+                t = req.Telefone,
+                c = req.Cidade,
+                es = req.Estado,
+                esp = req.EspecialidadeId,
+                st = string.IsNullOrWhiteSpace(req.RegStatus) ? "A" : req.RegStatus,
+                u = userId
+            });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(userId, "UPDATE", "medicos", id, "Atualização médico", ip: ip, userAgent: ua);
+            logger.LogInformation("Médico atualizado {Id}", id);
+            return ApiResponse<string>.Ok("ok", "Médico atualizado com sucesso.");
+        }
+
+        public async Task<ApiResponse<string>> InativarAsync(Guid id, Guid userId, string? ip, string? ua)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync("update plantaopro.medicos set reg_status='I',reg_update=now(),updated_by=@u where id=@id", new { id, u = userId });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(userId, "DELETE", "medicos", id, "Inativação médico", ip: ip, userAgent: ua);
+            logger.LogInformation("Médico inativado {Id}", id);
+            return ApiResponse<string>.Ok("ok", "Médico inativado com sucesso.");
+        }
     }
 
     public record UserListVM(Guid Id, string Username, string Email, string Role, bool Locked);
@@ -643,6 +681,33 @@ values
             });
             await audit.LogAsync(u, "CREATE", "especialidades", id, "Criação", ip: ip, userAgent: ua);
             return ApiResponse<EspecialidadeDto>.Ok(new(id, r.Nome, r.Descricao, "A"));
+        }
+        public async Task<ApiResponse<string>> UpdateAsync(Guid id, UpdateEspecialidadeRequest r, Guid u, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(r.Nome)) return ApiResponse<string>.Fail("Informe o nome da especialidade.");
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync(@"update plantaopro.especialidades
+set nome=@n,descricao=@d,reg_status=@st,reg_update=now(),updated_by=@u
+where id=@id", new
+            {
+                id,
+                n = r.Nome,
+                d = r.Descricao,
+                st = string.IsNullOrWhiteSpace(r.RegStatus) ? "A" : r.RegStatus,
+                u
+            });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(u, "UPDATE", "especialidades", id, "Atualização", ip: ip, userAgent: ua);
+            return ApiResponse<string>.Ok("ok", "Especialidade atualizada com sucesso.");
+        }
+
+        public async Task<ApiResponse<string>> DeleteAsync(Guid id, Guid u, string? ip, string? ua)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync("update plantaopro.especialidades set reg_status='I',reg_update=now(),updated_by=@u where id=@id", new { id, u });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(u, "DELETE", "especialidades", id, "Inativação", ip: ip, userAgent: ua);
+            return ApiResponse<string>.Ok("ok", "Especialidade inativada com sucesso.");
         }
     }
     public sealed class PlantaoService

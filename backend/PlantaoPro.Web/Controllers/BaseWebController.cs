@@ -299,22 +299,36 @@ public abstract class BaseWebController : Controller
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
 
-        if (root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var data, "data", "Data"))
+        if (root.ValueKind == JsonValueKind.Object)
         {
-            if (data.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+            if (TryGetProperty(root, out var data, "data", "Data", "payload", "Payload", "result", "Result", "value", "Value"))
             {
-                return default;
+                return DeserializeElement<T>(data);
             }
 
-            if (IsEnumerableTarget<T>() && data.ValueKind == JsonValueKind.Object && TryGetProperty(data, out var items, "items", "Items", "results", "Results"))
+            if (IsEnumerableTarget<T>() && TryGetProperty(root, out var rootItems, "items", "Items", "results", "Results", "records", "Records"))
             {
-                return JsonSerializer.Deserialize<T>(items.GetRawText(), JsonOptions);
+                return JsonSerializer.Deserialize<T>(rootItems.GetRawText(), JsonOptions);
             }
-
-            return JsonSerializer.Deserialize<T>(data.GetRawText(), JsonOptions);
         }
 
         return JsonSerializer.Deserialize<T>(content, JsonOptions);
+    }
+
+
+    private static T? DeserializeElement<T>(JsonElement element)
+    {
+        if (element.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return default;
+        }
+
+        if (IsEnumerableTarget<T>() && element.ValueKind == JsonValueKind.Object && TryGetProperty(element, out var items, "items", "Items", "results", "Results", "records", "Records"))
+        {
+            return JsonSerializer.Deserialize<T>(items.GetRawText(), JsonOptions);
+        }
+
+        return JsonSerializer.Deserialize<T>(element.GetRawText(), JsonOptions);
     }
 
     private static PagedResult<T> DeserializePagedPayload<T>(string content, int page, int pageSize)
@@ -326,9 +340,18 @@ public abstract class BaseWebController : Controller
 
         using var doc = JsonDocument.Parse(content);
         var root = doc.RootElement;
-        var data = root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var wrappedData, "data", "Data")
+        var data = root.ValueKind == JsonValueKind.Object && TryGetProperty(root, out var wrappedData, "data", "Data", "payload", "Payload", "result", "Result", "value", "Value")
             ? wrappedData
             : root;
+
+        if (data.ValueKind == JsonValueKind.Object && TryGetProperty(data, out var nestedItems, "items", "Items", "results", "Results", "records", "Records"))
+        {
+            var nestedPage = TryGetIntProperty(data, page, "page", "Page", "pagina", "Pagina");
+            var nestedPageSize = TryGetIntProperty(data, pageSize, "pageSize", "PageSize", "limit", "Limit");
+            var nestedTotal = TryGetLongProperty(data, "total", "Total", "totalItems", "TotalItems", "count", "Count") ?? 0;
+            var items = JsonSerializer.Deserialize<List<T>>(nestedItems.GetRawText(), JsonOptions) ?? new List<T>();
+            return NormalizePagedResult(new PagedResult<T> { Items = items, Page = nestedPage, PageSize = nestedPageSize, TotalItems = nestedTotal }, page, pageSize);
+        }
 
         if (data.ValueKind == JsonValueKind.Array)
         {
@@ -361,6 +384,23 @@ public abstract class BaseWebController : Controller
             : (int)Math.Ceiling((double)paged.TotalItems / paged.PageSize);
 
         return paged;
+    }
+
+
+    private static int TryGetIntProperty(JsonElement root, int fallback, params string[] names)
+    {
+        if (!TryGetProperty(root, out var property, names)) return fallback;
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var number)) return number;
+        if (property.ValueKind == JsonValueKind.String && int.TryParse(property.GetString(), out number)) return number;
+        return fallback;
+    }
+
+    private static long? TryGetLongProperty(JsonElement root, params string[] names)
+    {
+        if (!TryGetProperty(root, out var property, names)) return null;
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetInt64(out var number)) return number;
+        if (property.ValueKind == JsonValueKind.String && long.TryParse(property.GetString(), out number)) return number;
+        return null;
     }
 
     private static bool TryGetStringProperty(JsonElement root, string name, out string? value)

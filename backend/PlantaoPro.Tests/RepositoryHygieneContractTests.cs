@@ -94,6 +94,7 @@ public class RepositoryHygieneContractTests
         var documentosObrigatorios = new[]
         {
             Path.Combine("docs", "homologacao", "checklist-beta-comercial.md"),
+            Path.Combine("docs", "homologacao", "checklist-beta-homologavel.md"),
             Path.Combine("docs", "homologacao", "roteiro-operacao-ponta-a-ponta.md"),
             Path.Combine("docs", "homologacao", "roteiro-saas-basico.md"),
             Path.Combine("docs", "homologacao", "roteiro-operacao-assistida.md"),
@@ -118,6 +119,23 @@ public class RepositoryHygieneContractTests
             var conteudo = File.ReadAllText(caminho);
             Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
         }
+    }
+
+    [Fact]
+    public void ChecklistBetaHomologavel_DeveConsolidarGatesDaHomologacaoFinal()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-beta-homologavel.md");
+        var conteudo = File.ReadAllText(arquivo);
+
+        Assert.Contains("Beta Homologável Final", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Gate 0", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Gate 1", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Operação médica ponta a ponta", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SaaS, faturamento e operação assistida", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("API Mobile MVP", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Roteiro manual final obrigatório", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Pendências reais", conteudo, StringComparison.OrdinalIgnoreCase);
     }
 
 

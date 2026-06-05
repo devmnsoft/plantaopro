@@ -182,10 +182,14 @@
         renderAjaxErrors(form,null,'');
         setFormBusy(form,true);
         try{
+          const formData=new FormData(form);
+          const antiForgeryToken=formData.get('__RequestVerificationToken');
+          const headers={'X-Requested-With':'XMLHttpRequest'};
+          if(antiForgeryToken){headers.RequestVerificationToken=antiForgeryToken;}
           const response=await fetch(form.action||window.location.href,{
             method:(form.method||'POST').toUpperCase(),
-            body:new FormData(form),
-            headers:{'X-Requested-With':'XMLHttpRequest'}
+            body:formData,
+            headers
           });
           const payload=await parseAjaxResponse(response);
           if(response.ok&&payload.success!==false){

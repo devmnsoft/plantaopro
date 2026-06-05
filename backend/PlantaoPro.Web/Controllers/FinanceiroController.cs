@@ -20,7 +20,7 @@ public class FinanceiroController : BaseWebController
         return View(model);
     }
 
-    [HttpPost]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> GerarPagamento(Guid escalaId)
     {
         try
@@ -46,7 +46,7 @@ public class FinanceiroController : BaseWebController
         }
     }
 
-    [HttpPost]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ConfirmarPagamento(Guid id, decimal valorPago, DateOnly dataPagamento, string formaPagamento, string? observacoes)
     {
         try
@@ -66,7 +66,7 @@ public class FinanceiroController : BaseWebController
         }
     }
 
-    [HttpPost]
+    [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CancelarPagamento(Guid id, string justificativa)
     {
         try

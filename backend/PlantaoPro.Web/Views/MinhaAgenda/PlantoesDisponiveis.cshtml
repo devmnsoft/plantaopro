@@ -23,7 +23,7 @@ else
             <td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td>@p.DataFim.ToString("dd/MM/yyyy HH:mm")</td><td>@p.Valor.ToString("C")</td><td>@p.VagasDisponiveis</td><td>@(p.Tipo ?? "-")</td><td>@(p.Status ?? "-")</td>
             <td>@(p.TemConflitoHorario?"Conflito":"Disponível")</td>
             <td>
-                <form asp-action="SolicitarPlantao" method="post">
+                <form asp-action="SolicitarPlantao" method="post" data-ajax-form="true" data-confirm="true" data-confirm-title="Solicitar plantão" data-confirm-message="Confirma solicitar este plantão? O sistema validará vagas e conflito de horário antes de registrar a escala." data-confirm-type="primary">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="plantaoId" value="@p.PlantaoId" />
                     <button class="btn btn-sm btn-primary" type="submit" disabled="@dis" title="@title">Solicitar</button>

@@ -150,7 +150,7 @@ else
                     </button>
                 }
 
-                <form asp-action="Publicar" method="post" class="d-inline">
+                <form asp-action="Publicar" method="post" class="d-inline" data-ajax-form="true" data-confirm="true" data-confirm-title="Publicar plantão" data-confirm-message="Confirma publicar este plantão? O sistema validará vagas, assinatura e conflitos antes de abrir a escala." data-confirm-type="success">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@plantao.Id" />
 
@@ -179,7 +179,7 @@ else
     <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form asp-action="Cancelar" method="post">
+                <form asp-action="Cancelar" method="post" data-ajax-form="true" data-confirm="true" data-confirm-title="Cancelar plantão" data-confirm-message="Confirma cancelar este plantão? A justificativa será registrada no histórico e auditoria." data-confirm-type="danger">
                     @Html.AntiForgeryToken()
 
                     <div class="modal-header">

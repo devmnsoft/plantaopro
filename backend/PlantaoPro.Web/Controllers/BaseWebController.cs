@@ -143,11 +143,15 @@ public abstract class BaseWebController : Controller
     [NonAction]
     public async Task<(PagedResult<T> Data, string? Error, HttpStatusCode StatusCode)> ReadApiPagedResponseAsync<T>(HttpClient client, string endpoint, int page = 1, int pageSize = 20)
     {
+        var content = string.Empty;
+        var statusCode = HttpStatusCode.InternalServerError;
+
         try
         {
             var response = await client.GetAsync(endpoint);
-            var content = await response.Content.ReadAsStringAsync();
-            var sample = content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
+            statusCode = response.StatusCode;
+            content = await response.Content.ReadAsStringAsync();
+            var sample = CreateResponseSample(content);
 
             Logger.LogInformation("API paged call BaseUrl:{BaseUrl} Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario}", client.BaseAddress, endpoint, (int)response.StatusCode, User.Identity?.Name ?? "anônimo");
 
@@ -158,12 +162,19 @@ public abstract class BaseWebController : Controller
                 return (PagedResult<T>.Empty(page, pageSize), apiError ?? $"Falha ao consultar API ({(int)response.StatusCode}).", response.StatusCode);
             }
 
+            var envelopeStatus = TryReadEnvelopeStatus(content);
+            if (envelopeStatus.HasValue && !envelopeStatus.Value.Success)
+            {
+                Logger.LogWarning("API paginada retornou envelope sem sucesso. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, sample);
+                return (PagedResult<T>.Empty(page, pageSize), BuildApiErrorMessage(response.StatusCode, envelopeStatus.Value.Message), response.StatusCode);
+            }
+
             var paged = DeserializePagedPayload<T>(content, page, pageSize);
             return (NormalizePagedResult(paged, page, pageSize), null, response.StatusCode);
         }
         catch (JsonException ex)
         {
-            Logger.LogError(ex, "Erro de desserialização paginada. Endpoint:{Endpoint}", endpoint);
+            Logger.LogError(ex, "Erro de desserialização paginada. Endpoint:{Endpoint} Status:{Status} ResponseSample:{ResponseSample}", endpoint, (int)statusCode, CreateResponseSample(content));
             return (PagedResult<T>.Empty(page, pageSize), "A API retornou dados em formato inesperado. Tente novamente em instantes.", HttpStatusCode.InternalServerError);
         }
         catch (Exception ex)
@@ -259,7 +270,7 @@ public abstract class BaseWebController : Controller
     {
         var content = await response.Content.ReadAsStringAsync();
         var user = User.Identity?.Name ?? "anônimo";
-        var sample = content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
+        var sample = CreateResponseSample(content);
 
         Logger.LogInformation("API call BaseUrl:{BaseUrl} Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario}", response.RequestMessage?.RequestUri?.GetLeftPart(UriPartial.Authority), endpoint, (int)response.StatusCode, user);
 
@@ -446,8 +457,14 @@ public abstract class BaseWebController : Controller
     private static bool LooksLikeApiResponseEnvelope(JsonElement root)
         => root.ValueKind == JsonValueKind.Object &&
            TryGetProperty(root, out _, "success", "Success") &&
-           TryGetProperty(root, out _, "message", "Message") &&
-           TryGetProperty(root, out _, "data", "Data");
+           (TryGetProperty(root, out _, "data", "Data") ||
+            TryGetProperty(root, out _, "message", "Message", "mensagem", "Mensagem") ||
+            TryGetProperty(root, out _, "errors", "Errors"));
+
+    private static string CreateResponseSample(string content)
+        => string.IsNullOrEmpty(content)
+            ? string.Empty
+            : content.Length > MaxLogContentLength ? content[..MaxLogContentLength] + "..." : content;
 
     private static bool TryGetStringProperty(JsonElement root, string name, out string? value)
     {

@@ -14,7 +14,7 @@
 
 <div class="card mb-3"><div class="card-body">
     <h5>Nova ocorrência</h5>
-    <form asp-action="CriarOcorrencia" method="post" class="row g-2" data-confirm="true" data-confirm-title="Registrar ocorrência" data-confirm-message="Confirma registrar esta ocorrência da homologação assistida? Ocorrências críticas geram alerta operacional." data-confirm-type="warning">
+    <form asp-action="CriarOcorrencia" method="post" class="row g-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Registrar ocorrência" data-confirm-message="Confirma registrar esta ocorrência da homologação assistida? Ocorrências críticas geram alerta operacional." data-confirm-type="warning">
         @Html.AntiForgeryToken()
         <input type="hidden" name="ClienteId" value="@(Model?.ClienteId ?? Guid.Empty)" />
         <div class="col-md-2"><select name="Tipo" class="form-select"><option>BUG</option><option>DUVIDA</option><option>MELHORIA</option><option>TREINAMENTO</option><option>CONFIGURACAO</option></select></div>
@@ -45,7 +45,7 @@ else
                     <p class="small text-muted mb-2">Responsável: @item.Responsavel · Aberta em @item.DataAbertura.ToString("dd/MM/yyyy HH:mm")</p>
                     @if (item.Status != "RESOLVIDA")
                     {
-                        <form asp-action="ResolverOcorrencia" method="post" class="d-flex gap-2" data-confirm="true" data-confirm-title="Resolver ocorrência" data-confirm-message="Confirma resolver esta ocorrência? Informe a solução aplicada antes de continuar." data-confirm-type="success">
+                        <form asp-action="ResolverOcorrencia" method="post" class="d-flex gap-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Resolver ocorrência" data-confirm-message="Confirma resolver esta ocorrência? Informe a solução aplicada antes de continuar." data-confirm-type="success">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
                             <input type="hidden" name="clienteId" value="@item.ClienteId" />

@@ -1,6 +1,4 @@
 using System.Net;
-using System.Text;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -8,8 +6,6 @@ namespace PlantaoPro.Web.Controllers;
 
 public class ComunicacaoController : BaseWebController
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-
     public ComunicacaoController(IHttpClientFactory httpClientFactory, ILogger<ComunicacaoController> logger) : base(httpClientFactory, logger) { }
 
     public async Task<IActionResult> Index(int page = 1, int pageSize = 20, string? search = null, string? tipo = null, string? status = null)
@@ -87,24 +83,15 @@ public class ComunicacaoController : BaseWebController
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var response = await client.GetAsync("api/usuarios/opcoes-conversa");
-            if (response.StatusCode == HttpStatusCode.NotFound)
-            {
-                model.UsuariosDisponiveis = Array.Empty<UsuarioConversaOpcaoDto>();
-                model.ErrorMessage = "Lista de participantes indisponível no momento.";
-                return View(model);
-            }
+            var (users, error, statusCode) = await ReadApiListResponseAsync<UsuarioConversaOpcaoDto>(client, "api/usuarios/opcoes-conversa");
+            model.UsuariosDisponiveis = users.ToList();
 
-            var payload = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
+            if (!string.IsNullOrWhiteSpace(error) && statusCode != HttpStatusCode.OK)
             {
-                model.UsuariosDisponiveis = Array.Empty<UsuarioConversaOpcaoDto>();
-                model.ErrorMessage = "Não foi possível carregar os usuários disponíveis.";
-                return View(model);
+                model.ErrorMessage = statusCode == HttpStatusCode.NotFound
+                    ? "Lista de participantes indisponível no momento."
+                    : error;
             }
-
-            var users = JsonSerializer.Deserialize<ApiResponse<IEnumerable<UsuarioConversaOpcaoDto>>>(payload, JsonOptions)?.Data;
-            model.UsuariosDisponiveis = users ?? Array.Empty<UsuarioConversaOpcaoDto>();
         }
         catch (Exception ex)
         {
@@ -141,20 +128,16 @@ public class ComunicacaoController : BaseWebController
                 MensagemInicial = model.MensagemInicial
             };
 
-            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync("api/comunicacao/conversas", content);
-            var responseContent = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
+            var (id, error, statusCode) = await SendApiAsync<object, Guid>(client, HttpMethod.Post, "api/comunicacao/conversas", payload);
+            if (statusCode != HttpStatusCode.OK || id == Guid.Empty)
             {
-                TempData["Error"] = "Não foi possível criar a conversa.";
+                TempData["Error"] = string.IsNullOrWhiteSpace(error) ? "Não foi possível criar a conversa." : error;
                 model.UsuariosDisponiveis = await ObterUsuariosDisponiveisFallbackSeguro();
                 return View(model);
             }
 
-            var id = JsonSerializer.Deserialize<ApiResponse<Guid>>(responseContent, JsonOptions)?.Data ?? Guid.Empty;
-            if (id != Guid.Empty) return RedirectToAction(nameof(Details), new { id });
-
-            return RedirectToAction(nameof(Index));
+            TempData["Success"] = "Conversa criada com sucesso.";
+            return RedirectToAction(nameof(Details), new { id });
         }
         catch (Exception ex)
         {
@@ -181,12 +164,11 @@ public class ComunicacaoController : BaseWebController
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
             var payload = new { model.Mensagem, Tipo = model.Tipo ?? "TEXTO", model.AnexoUrl };
-            var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync($"api/comunicacao/conversas/{model.ConversaId}/mensagens", content);
+            var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, $"api/comunicacao/conversas/{model.ConversaId}/mensagens", payload);
 
-            TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode
+            TempData[success ? "Success" : "Error"] = success
                 ? "Mensagem enviada com sucesso."
-                : "Não foi possível enviar a mensagem.";
+                : string.IsNullOrWhiteSpace(error) ? "Não foi possível enviar a mensagem." : error;
         }
         catch (Exception ex)
         {
@@ -206,10 +188,10 @@ public class ComunicacaoController : BaseWebController
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var response = await client.PutAsync($"api/comunicacao/mensagens/{id}/lida", content: null);
-            TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode
+            var (success, error, _) = await SendApiWithoutResponseAsync<object?>(client, HttpMethod.Put, $"api/comunicacao/mensagens/{id}/lida", null);
+            TempData[success ? "Success" : "Error"] = success
                 ? "Mensagem marcada como lida."
-                : "Não foi possível marcar a mensagem como lida.";
+                : string.IsNullOrWhiteSpace(error) ? "Não foi possível marcar a mensagem como lida." : error;
         }
         catch (Exception ex)
         {
@@ -226,12 +208,8 @@ public class ComunicacaoController : BaseWebController
         {
             var client = CreateApiClient();
             if (!AddBearerToken(client)) return Array.Empty<UsuarioConversaOpcaoDto>();
-            var response = await client.GetAsync("api/usuarios/opcoes-conversa");
-            if (!response.IsSuccessStatusCode) return Array.Empty<UsuarioConversaOpcaoDto>();
-
-            var content = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize<ApiResponse<IEnumerable<UsuarioConversaOpcaoDto>>>(content, JsonOptions)?.Data
-                ?? Array.Empty<UsuarioConversaOpcaoDto>();
+            var (usuarios, _, _) = await ReadApiListResponseAsync<UsuarioConversaOpcaoDto>(client, "api/usuarios/opcoes-conversa");
+            return usuarios.ToList();
         }
         catch
         {

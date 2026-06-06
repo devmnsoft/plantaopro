@@ -275,6 +275,19 @@ public abstract class BaseWebController : Controller
 
         try
         {
+            var envelopeStatus = TryReadEnvelopeStatus(content);
+            if (envelopeStatus.HasValue && !envelopeStatus.Value.Success)
+            {
+                Logger.LogWarning("API retornou envelope sem sucesso. Endpoint:{Endpoint} Status:{Status} Usuario:{Usuario} ResponseSample:{ResponseSample}", endpoint, (int)response.StatusCode, user, sample);
+                var envelopeMessage = BuildApiErrorMessage(response.StatusCode, envelopeStatus.Value.Message);
+                if (setTempDataOnError)
+                {
+                    TempData["Error"] = envelopeMessage;
+                }
+
+                return (default, envelopeMessage, response.StatusCode);
+            }
+
             return (DeserializeApiPayload<T>(content), TryParseMessage(content), response.StatusCode);
         }
         catch (JsonException ex)
@@ -301,6 +314,12 @@ public abstract class BaseWebController : Controller
 
         if (root.ValueKind == JsonValueKind.Object)
         {
+            var envelope = JsonSerializer.Deserialize<ApiResponse<T>>(content, JsonOptions);
+            if (envelope is not null && LooksLikeApiResponseEnvelope(root))
+            {
+                return envelope.Data;
+            }
+
             if (TryGetProperty(root, out var data, "data", "Data", "payload", "Payload", "result", "Result", "value", "Value"))
             {
                 return DeserializeElement<T>(data);
@@ -402,6 +421,33 @@ public abstract class BaseWebController : Controller
         if (property.ValueKind == JsonValueKind.String && long.TryParse(property.GetString(), out number)) return number;
         return null;
     }
+
+    private static (bool Success, string? Message)? TryReadEnvelopeStatus(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            return null;
+        }
+
+        using var doc = JsonDocument.Parse(content);
+        var root = doc.RootElement;
+        if (!LooksLikeApiResponseEnvelope(root) || !TryGetProperty(root, out var successProperty, "success", "Success"))
+        {
+            return null;
+        }
+
+        var success = successProperty.ValueKind == JsonValueKind.True ||
+            (successProperty.ValueKind == JsonValueKind.String && bool.TryParse(successProperty.GetString(), out var parsed) && parsed);
+
+        TryGetStringProperty(root, "message", out var message);
+        return (success, message);
+    }
+
+    private static bool LooksLikeApiResponseEnvelope(JsonElement root)
+        => root.ValueKind == JsonValueKind.Object &&
+           TryGetProperty(root, out _, "success", "Success") &&
+           TryGetProperty(root, out _, "message", "Message") &&
+           TryGetProperty(root, out _, "data", "Data");
 
     private static bool TryGetStringProperty(JsonElement root, string name, out string? value)
     {

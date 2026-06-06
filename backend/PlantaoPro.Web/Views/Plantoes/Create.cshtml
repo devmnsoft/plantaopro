@@ -1,3 +1,7 @@
 @model PlantaoPro.Web.Models.PlantaoFormViewModel
-<h1 class="h4">Novo Plantão</h1>
+@{
+    ViewData["Title"] = "Novo Plantão";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Novo Plantão", "Crie rascunhos com validação de período, vagas, valor e elegibilidade operacional.", "bi-calendar-plus")' />
 <partial name="_PlantaoForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -27,3 +27,6 @@
   .pp-mobile-stack td{border:0!important;padding:.35rem 0!important}
   .pp-mobile-stack td[data-label]::before{content:attr(data-label) ": ";font-weight:700;color:var(--pp-muted)}
 }
+.pp-section-kicker{display:inline-flex;margin-bottom:.25rem;color:#1f5ea8;font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.pp-section-card .input-group-text{background:#f8fbff;color:#23406a;font-weight:700;border-color:var(--pp-border)}
+.pp-section-card textarea{resize:vertical}

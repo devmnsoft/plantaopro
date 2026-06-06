@@ -33,7 +33,11 @@ public class PlantoesController : BaseWebController
     public async Task<IActionResult> Create(PlantaoFormViewModel model)
     {
         if (model.DataFim <= model.DataInicio) ModelState.AddModelError(nameof(model.DataFim), "Data fim deve ser maior que data início.");
-        if (!ModelState.IsValid) return View(await BuildForm(model));
+        if (!ModelState.IsValid)
+        {
+            if (IsAjaxRequest()) return AjaxError("Revise os campos obrigatórios do plantão.", 400);
+            return View(await BuildForm(model));
+        }
         return await SendPlantao(model, null);
     }
 
@@ -51,7 +55,11 @@ public class PlantoesController : BaseWebController
     public async Task<IActionResult> Edit(Guid id, PlantaoFormViewModel model)
     {
         if (model.DataFim <= model.DataInicio) ModelState.AddModelError(nameof(model.DataFim), "Data fim deve ser maior que data início.");
-        if (!ModelState.IsValid) return View(await BuildForm(model));
+        if (!ModelState.IsValid)
+        {
+            if (IsAjaxRequest()) return AjaxError("Revise os campos obrigatórios do plantão.", 400);
+            return View(await BuildForm(model));
+        }
         return await SendPlantao(model, id);
     }
 
@@ -76,7 +84,11 @@ public class PlantoesController : BaseWebController
         try
         {
             var client = CreateApiClient();
-            if (!AddBearerToken(client)) return HandleUnauthorized();
+            if (!AddBearerToken(client))
+            {
+                if (IsAjaxRequest()) return AjaxError("Sessão expirada. Faça login novamente.", 401);
+                return HandleUnauthorized();
+            }
 
             var payload = new
             {
@@ -93,22 +105,44 @@ public class PlantoesController : BaseWebController
             var (_, error, statusCode) = await SendApiAsync<object, JsonElement>(client, method, endpoint, payload);
             LogRequestContext(id.HasValue ? "plantao.atualizar" : "plantao.criar", endpoint, (int)statusCode);
 
-            if (statusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (statusCode == HttpStatusCode.Unauthorized)
+            {
+                if (IsAjaxRequest()) return AjaxError("Sessão expirada. Faça login novamente.", 401);
+                return HandleUnauthorized();
+            }
             if (statusCode is < HttpStatusCode.OK or >= HttpStatusCode.Ambiguous)
             {
-                TempData["Error"] = error ?? "Falha ao salvar plantão.";
+                var message = error ?? "Falha ao salvar plantão.";
+                if (IsAjaxRequest()) return AjaxError(message, (int)statusCode);
+                TempData["Error"] = message;
                 return View(id.HasValue ? "Edit" : "Create", await BuildForm(model));
             }
 
-            TempData["Success"] = id.HasValue ? "Plantão atualizado com sucesso." : "Plantão cadastrado com sucesso.";
+            var successMessage = id.HasValue ? "Plantão atualizado com sucesso." : "Plantão cadastrado com sucesso.";
+            if (IsAjaxRequest()) return Json(new { success = true, message = successMessage, redirectUrl = Url.Action(nameof(Index)) });
+            TempData["Success"] = successMessage;
             return RedirectToAction(nameof(Index));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro crítico ao salvar plantão. Endpoint:{Endpoint} PlantaoId:{PlantaoId}", endpoint, id);
-            TempData["Error"] = "Não foi possível salvar o plantão agora. Tente novamente.";
+            var message = "Não foi possível salvar o plantão agora. Tente novamente.";
+            if (IsAjaxRequest()) return AjaxError(message, 500);
+            TempData["Error"] = message;
             return View(id.HasValue ? "Edit" : "Create", await BuildForm(model));
         }
+    }
+
+    private IActionResult AjaxError(string message, int statusCode)
+    {
+        Response.StatusCode = statusCode;
+        var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Where(e => !string.IsNullOrWhiteSpace(e)).ToArray();
+        return Json(new { success = false, message, errors });
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<IActionResult> SendStatusAction(Guid id, string endpointFmt, string success, string error, string justificativa = "")

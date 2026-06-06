@@ -1,3 +1,7 @@
 @model PlantaoPro.Web.Models.PlantaoFormViewModel
-<h1 class="h4">Editar Plantão</h1>
+@{
+    ViewData["Title"] = "Editar Plantão";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Editar Plantão", "Ajuste informações do plantão respeitando status, regras de negócio e auditoria.", "bi-calendar2-check")' />
 <partial name="_PlantaoForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

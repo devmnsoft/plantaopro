@@ -188,7 +188,7 @@ public record DashboardChartItem(string Label, decimal Valor);
         [Required] public Guid EspecialidadeId { get; set; }
         [Required] public DateTime DataInicio { get; set; }
         [Required] public DateTime DataFim { get; set; }
-        [Range(0.01, double.MaxValue, ErrorMessage = "Valor deve ser maior que zero.")] public decimal Valor { get; set; }
+        [Range(0, double.MaxValue, ErrorMessage = "Valor não pode ser negativo.")] public decimal Valor { get; set; }
         [Range(1, int.MaxValue, ErrorMessage = "Vagas deve ser maior que zero.")] public int Vagas { get; set; }
         [Required] public string Tipo { get; set; } = "Presencial";
         public string? Observacoes { get; set; }

@@ -32,7 +32,7 @@ else
                     <span class="badge @(item.Concluido ? "text-bg-success" : "text-bg-warning")">@(item.Concluido ? "Concluído" : "Pendente")</span>
                     @if (item.Concluido)
                     {
-                        <form asp-action="ReabrirChecklist" method="post" class="mt-2" data-confirm="true" data-confirm-title="Reabrir item do checklist" data-confirm-message="Confirma reabrir este item? A justificativa será registrada na auditoria da operação assistida." data-confirm-type="warning">
+                        <form asp-action="ReabrirChecklist" method="post" class="mt-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Reabrir item do checklist" data-confirm-message="Confirma reabrir este item? A justificativa será registrada na auditoria da operação assistida." data-confirm-type="warning">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
                             <input type="hidden" name="clienteId" value="@item.ClienteId" />
@@ -42,7 +42,7 @@ else
                     }
                     else
                     {
-                        <form asp-action="ConcluirChecklist" method="post" class="mt-2" data-confirm="true" data-confirm-title="Concluir item do checklist" data-confirm-message="Confirma concluir este item da implantação assistida? Esta ação atualiza o progresso do cliente." data-confirm-type="success">
+                        <form asp-action="ConcluirChecklist" method="post" class="mt-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Concluir item do checklist" data-confirm-message="Confirma concluir este item da implantação assistida? Esta ação atualiza o progresso do cliente." data-confirm-type="success">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@item.Id" />
                             <input type="hidden" name="clienteId" value="@item.ClienteId" />

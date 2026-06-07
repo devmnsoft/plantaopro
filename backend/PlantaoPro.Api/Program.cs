@@ -105,6 +105,7 @@ builder.Services.AddScoped<UsuarioContextService>();
 builder.Services.AddScoped<TenantGuardService>();
 builder.Services.AddScoped<PermissionGuardService>();
 builder.Services.AddScoped<AssinaturaGuardService>();
+builder.Services.AddScoped<SaasIntelligenceService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

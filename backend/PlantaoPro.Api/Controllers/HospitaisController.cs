@@ -10,9 +10,15 @@ namespace PlantaoPro.Api.Controllers
     [Route("api/hospitais")]
     public class HospitaisController : ControllerBase
     {
-        private readonly HospitalService service; public HospitaisController(HospitalService service)
+        private readonly HospitalService service;
+        private readonly AssinaturaGuardService assinaturaGuard;
+        private readonly UsuarioContextService usuarioContext;
+
+        public HospitaisController(HospitalService service, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext)
         {
             this.service = service;
+            this.assinaturaGuard = assinaturaGuard;
+            this.usuarioContext = usuarioContext;
         }
         [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]
         [HttpGet]
@@ -32,8 +38,16 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(CreateHospitalRequest req)
         {
+            var clienteId = usuarioContext.GetClienteId();
+            if (clienteId.HasValue)
+            {
+                var permissao = await assinaturaGuard.PodeCadastrarHospitalAsync(clienteId.Value);
+                if (!permissao.Success) return StatusCode(permissao.StatusCode, permissao);
+            }
+
             var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
             var r = await service.CreateAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            if (r.Success && clienteId.HasValue) await assinaturaGuard.RegistrarUsoAsync(clienteId.Value, "HOSPITAIS", 1);
             return StatusCode(r.StatusCode, r);
         }
         [Authorize(Roles = RolesConstants.CadastrosCoordenacao)]

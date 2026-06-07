@@ -102,4 +102,74 @@ public class ClientesController : ControllerBase
         }
         catch (Exception ex) { logger.LogError(ex, "Erro ao cancelar cliente {ClienteId}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível cancelar cliente.", 500)); }
     }
+
+    [HttpGet("lookup")]
+    public async Task<IActionResult> Lookup()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.QueryAsync<object>(@"select id as ""Id"", coalesce(nome_fantasia, razao_social, '') as ""Nome"", coalesce(status,'') as ""Status""
+from plantaopro.clientes
+where reg_status='A'
+order by coalesce(nome_fantasia, razao_social, '')
+limit 200");
+            return Ok(ApiResponse<IEnumerable<object>>.Ok(rows));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao carregar lookup de clientes");
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível carregar clientes.", 500));
+        }
+    }
+
+    [HttpGet("{id:guid}/resumo-saas")]
+    public async Task<IActionResult> ResumoSaas(Guid id, [FromServices] SaasIntelligenceService inteligencia, [FromServices] AssinaturaGuardService guard)
+    {
+        var saude = await inteligencia.CalcularSaudeClienteAsync(id);
+        var uso = await guard.ObterUsoPlanoAsync(id);
+        return Ok(ApiResponse<object>.Ok(new { saude = saude.Data, uso = uso.Data }, "Resumo SaaS carregado."));
+    }
+
+    [HttpGet("{id:guid}/saude")]
+    public async Task<IActionResult> Saude(Guid id, [FromServices] SaasIntelligenceService inteligencia)
+    {
+        var response = await inteligencia.CalcularSaudeClienteAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("{id:guid}/uso-plano")]
+    public async Task<IActionResult> UsoPlano(Guid id, [FromServices] AssinaturaGuardService guard)
+    {
+        var response = await guard.ObterUsoPlanoAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("{id:guid}/bloqueios")]
+    public async Task<IActionResult> Bloqueios(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.QueryAsync<object>(@"select id as ""Id"", tipo as ""Tipo"", motivo as ""Motivo"", origem as ""Origem"", reg_date as ""RegDate""
+from plantaopro.cliente_bloqueios
+where cliente_id=@id and reg_status='A'
+order by reg_date desc
+limit 100", new { id });
+            return Ok(ApiResponse<IEnumerable<object>>.Ok(rows));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar bloqueios do cliente {ClienteId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível listar bloqueios do cliente.", 500));
+        }
+    }
+
+    [HttpGet("{id:guid}/alertas")]
+    public async Task<IActionResult> Alertas(Guid id, [FromServices] SaasIntelligenceService inteligencia)
+    {
+        var response = await inteligencia.ListarAlertasClienteAsync(id);
+        return StatusCode(response.StatusCode, response);
+    }
+
 }

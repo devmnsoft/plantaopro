@@ -254,13 +254,28 @@ values (gen_random_uuid(), @usuarioId, @clienteId, @permissao, @autorizado, @mot
 public sealed class AssinaturaGuardService
 {
     private readonly IConfiguration cfg;
+    private readonly IAuditService audit;
     private readonly ILogger<AssinaturaGuardService> logger;
 
-    public AssinaturaGuardService(IConfiguration cfg, ILogger<AssinaturaGuardService> logger)
+    public AssinaturaGuardService(IConfiguration cfg, IAuditService audit, ILogger<AssinaturaGuardService> logger)
     {
         this.cfg = cfg;
+        this.audit = audit;
         this.logger = logger;
     }
+
+    public Task<ApiResponse<AssinaturaAtualDto>> ObterAssinaturaAtualAsync(Guid clienteId) => ObterAssinaturaAtual(clienteId);
+    public Task<ApiResponse<UsoPlanoDto>> ObterUsoPlanoAsync(Guid clienteId) => ObterUsoPlano(clienteId);
+    public Task<ApiResponse<bool>> PodeCadastrarMedicoAsync(Guid clienteId) => PodeCadastrarMedico(clienteId);
+    public Task<ApiResponse<bool>> PodeCadastrarHospitalAsync(Guid clienteId) => PodeCadastrarHospital(clienteId);
+    public Task<ApiResponse<bool>> PodeCadastrarUsuarioAsync(Guid clienteId) => ValidarLimiteAsync(clienteId, "usuarios", "Limite de usuários do plano atingido.");
+    public Task<ApiResponse<bool>> PodePublicarPlantaoAsync(Guid clienteId) => PodePublicarPlantao(clienteId);
+    public Task<ApiResponse<bool>> PodeEnviarConviteAsync(Guid clienteId) => ValidarLimiteAsync(clienteId, "convites", "Limite mensal de convites do plano atingido.");
+    public Task<ApiResponse<bool>> PodeUsarMobileAsync(Guid clienteId) => PodeUsarMobile(clienteId);
+    public Task<ApiResponse<bool>> PodeUsarBIAsync(Guid clienteId) => PodeUsarBi(clienteId);
+    public Task<ApiResponse<bool>> PodeUsarAPIAsync(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "api", "Seu plano atual não permite acesso via API.");
+    public Task<ApiResponse<bool>> PodeUsarIntegracoesAsync(Guid clienteId) => PodeUsarIntegracoes(clienteId);
+    public Task<ApiResponse<bool>> PodeUsarRelatoriosAvancadosAsync(Guid clienteId) => PodeUsarRelatoriosAvancados(clienteId);
 
     public Task<ApiResponse<bool>> PodeCadastrarMedico(Guid clienteId) => ValidarLimiteAsync(clienteId, "medicos", "Limite de médicos do plano atingido.");
 
@@ -275,6 +290,28 @@ public sealed class AssinaturaGuardService
     public Task<ApiResponse<bool>> PodeUsarRelatoriosAvancados(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "relatorios", "Seu plano atual não permite relatórios avançados.");
 
     public Task<ApiResponse<bool>> PodeUsarIntegracoes(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "integracoes", "Seu plano atual não permite integrações.");
+
+    public async Task<ApiResponse<AssinaturaAtualDto>> ObterAssinaturaAtual(Guid clienteId)
+    {
+        try
+        {
+            using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var assinatura = await cn.QueryFirstOrDefaultAsync<AssinaturaAtualDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"",
+       coalesce(a.status,'') as ""Status"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"", a.data_trial_fim as ""DataTrialFim"",
+       a.valor_contratado as ""ValorContratado"", a.dia_vencimento as ""DiaVencimento"", coalesce(a.periodicidade,'MENSAL') as ""Periodicidade""
+from plantaopro.assinaturas a
+join plantaopro.planos p on p.id=a.plano_id
+where a.cliente_id=@clienteId and a.reg_status='A'
+order by case when upper(a.status) in ('ATIVA','TRIAL') then 0 else 1 end, a.reg_date desc
+limit 1", new { clienteId });
+            return assinatura is null ? ApiResponse<AssinaturaAtualDto>.Fail("Cliente sem assinatura cadastrada.", 404) : ApiResponse<AssinaturaAtualDto>.Ok(assinatura);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao obter assinatura atual. cliente:{ClienteId}", clienteId);
+            return ApiResponse<AssinaturaAtualDto>.Fail("Não foi possível obter a assinatura atual.", 500);
+        }
+    }
 
     public async Task<ApiResponse<UsoPlanoDto>> ObterUsoPlano(Guid clienteId)
     {
@@ -325,12 +362,15 @@ limit 1", new { clienteId });
         {
             "mobile" => uso.PermiteMobile,
             "bi" => uso.PermiteBi,
+            "api" => uso.PermiteIntegracoes || uso.PermiteMobile,
             "relatorios" => uso.PermiteRelatoriosAvancados,
             "integracoes" => uso.PermiteIntegracoes,
             _ => false
         };
 
-        return permitido ? ApiResponse<bool>.Ok(true, "Funcionalidade permitida.") : ApiResponse<bool>.Fail(mensagemBloqueio, 403);
+        if (permitido) return ApiResponse<bool>.Ok(true, "Funcionalidade permitida.");
+        await RegistrarBloqueioAsync(clienteId, funcionalidade.ToUpperInvariant(), mensagemBloqueio);
+        return ApiResponse<bool>.Fail(mensagemBloqueio, 403);
     }
 
     private async Task<ApiResponse<bool>> ValidarLimiteAsync(Guid clienteId, string limite, string mensagemBloqueio)
@@ -345,9 +385,78 @@ limit 1", new { clienteId });
             "medicos" => uso.MedicosLimite <= 0 || uso.MedicosUsados < uso.MedicosLimite,
             "hospitais" => uso.HospitaisLimite <= 0 || uso.HospitaisUsados < uso.HospitaisLimite,
             "plantoes" => uso.PlantoesMesLimite <= 0 || uso.PlantoesMesUsados < uso.PlantoesMesLimite,
+            "usuarios" => true,
+            "convites" => true,
             _ => false
         };
 
-        return permitido ? ApiResponse<bool>.Ok(true, "Limite disponível.") : ApiResponse<bool>.Fail(mensagemBloqueio, 403);
+        if (permitido)
+        {
+            await RegistrarAlertaUsoAltoAsync(clienteId, limite, uso);
+            return ApiResponse<bool>.Ok(true, "Limite disponível.");
+        }
+
+        await RegistrarBloqueioAsync(clienteId, limite.ToUpperInvariant(), mensagemBloqueio);
+        return ApiResponse<bool>.Fail(mensagemBloqueio, 403);
+    }
+
+    public async Task RegistrarBloqueioAsync(Guid clienteId, string tipo, string motivo)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            await cn.ExecuteAsync(@"insert into plantaopro.cliente_bloqueios(id, cliente_id, tipo, motivo, origem, reg_status, reg_date)
+values(gen_random_uuid(), @clienteId, @tipo, @motivo, 'ASSINATURA_GUARD', 'A', now())", new { clienteId, tipo, motivo }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.cliente_alertas(id, cliente_id, tipo, severidade, titulo, mensagem, resolvido, reg_status, reg_date)
+select gen_random_uuid(), @clienteId, @tipo, 'ALTA', 'Ação bloqueada pelo plano', @motivo, false, 'A', now()
+where not exists (
+    select 1 from plantaopro.cliente_alertas
+    where cliente_id=@clienteId and tipo=@tipo and resolvido=false and reg_date::date=current_date
+)", new { clienteId, tipo, motivo }, tx);
+            await tx.CommitAsync();
+            await audit.RegistrarAsync(null, clienteId, AuditoriaConstants.Entidades.Tenant, null, AuditoriaConstants.Acoes.BloqueioTenant, new { tipo, motivo }, false, null, "SISTEMA");
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao registrar bloqueio SaaS cliente:{ClienteId} tipo:{Tipo}", clienteId, tipo);
+        }
+    }
+
+    public async Task RegistrarUsoAsync(Guid clienteId, string recurso, int quantidade)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.ExecuteAsync(@"insert into plantaopro.assinatura_uso(id, cliente_id, recurso, quantidade, competencia, reg_status, reg_date)
+values(gen_random_uuid(), @clienteId, @recurso, @quantidade, date_trunc('month', now())::date, 'A', now())", new { clienteId, recurso, quantidade });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao registrar uso SaaS cliente:{ClienteId} recurso:{Recurso}", clienteId, recurso);
+        }
+    }
+
+    private async Task RegistrarAlertaUsoAltoAsync(Guid clienteId, string limite, UsoPlanoDto uso)
+    {
+        decimal percentual = 0;
+        if (limite == "medicos" && uso.MedicosLimite > 0) percentual = (decimal)uso.MedicosUsados / uso.MedicosLimite;
+        if (limite == "hospitais" && uso.HospitaisLimite > 0) percentual = (decimal)uso.HospitaisUsados / uso.HospitaisLimite;
+        if (limite == "plantoes" && uso.PlantoesMesLimite > 0) percentual = (decimal)uso.PlantoesMesUsados / uso.PlantoesMesLimite;
+        if (percentual < 0.8m) return;
+
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.ExecuteAsync(@"insert into plantaopro.cliente_alertas(id, cliente_id, tipo, severidade, titulo, mensagem, resolvido, reg_status, reg_date)
+select gen_random_uuid(), @clienteId, 'USO_ALTO', 'MEDIA', 'Cliente próximo do limite do plano', @mensagem, false, 'A', now()
+where not exists (select 1 from plantaopro.cliente_alertas where cliente_id=@clienteId and tipo='USO_ALTO' and resolvido=false and reg_date::date=current_date)",
+                new { clienteId, mensagem = $"Uso de {limite} acima de 80% do limite contratado." });
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Falha ao registrar alerta de uso alto cliente:{ClienteId}", clienteId);
+        }
     }
 }

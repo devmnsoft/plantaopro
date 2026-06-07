@@ -428,4 +428,76 @@ public record CriarOcorrenciaOperacaoRequest(string Tipo, string Prioridade, str
 public record ResolverOcorrenciaOperacaoRequest(string Solucao, string? Responsavel);
 public record RegistrarTreinamentoOperacaoRequest(string Tema, string? Perfil, string? Responsavel, string? Participantes, DateTime? RealizadoEm, string? Observacoes);
 
+public sealed class AssinaturaAtualDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public Guid PlanoId { get; set; }
+    public string PlanoNome { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public DateTime? DataFim { get; set; }
+    public DateTime? DataTrialFim { get; set; }
+    public decimal ValorContratado { get; set; }
+    public int DiaVencimento { get; set; }
+    public string Periodicidade { get; set; } = string.Empty;
+}
+
+public sealed class ClienteSaudeDto
+{
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Classificacao { get; set; } = string.Empty;
+    public int Score { get; set; }
+    public bool Inadimplente { get; set; }
+    public bool UsoAlto { get; set; }
+    public bool Inativo { get; set; }
+    public bool ElegivelUpgrade { get; set; }
+    public IEnumerable<string> Riscos { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> Oportunidades { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> AcoesRecomendadas { get; set; } = Array.Empty<string>();
+}
+
+public sealed class ClienteAlertaSaasDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Severidade { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
+    public string Mensagem { get; set; } = string.Empty;
+    public bool Resolvido { get; set; }
+    public DateTime RegDate { get; set; }
+}
+
+public sealed class SaasResumoExecutivoDto
+{
+    public long ClientesAtivos { get; set; }
+    public long ClientesTrial { get; set; }
+    public long ClientesSuspensos { get; set; }
+    public long ClientesCancelados { get; set; }
+    public long ClientesRisco { get; set; }
+    public long ClientesCriticos { get; set; }
+    public decimal ReceitaPrevistaMes { get; set; }
+    public decimal ReceitaRecebidaMes { get; set; }
+    public long FaturasAbertas { get; set; }
+    public long FaturasVencidas { get; set; }
+    public decimal MrrEstimado { get; set; }
+    public decimal ChurnEstimado { get; set; }
+    public long ClientesProximosLimite { get; set; }
+    public long OportunidadesUpgrade { get; set; }
+    public long AlertasAbertos { get; set; }
+}
+
+public sealed class SaasRecomendacaoDto
+{
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Tipo { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Prioridade { get; set; } = string.Empty;
+}
+
 }

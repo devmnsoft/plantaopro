@@ -199,8 +199,16 @@ namespace PlantaoPro.Api.Controllers
         {
             try
             {
+                var clienteId = usuarioContext.GetClienteId();
+                if (clienteId.HasValue)
+                {
+                    var permissaoPlano = await assinaturaGuard.PodeEnviarConviteAsync(clienteId.Value);
+                    if (!permissaoPlano.Success) return StatusCode(permissaoPlano.StatusCode, permissaoPlano);
+                }
+
                 var uid = GetUserId();
                 var response = await recomendacaoService.ConvidarRecomendadosAsync(id, request.MedicoIds, request.Mensagem, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+                if (response.Success && clienteId.HasValue) await assinaturaGuard.RegistrarUsoAsync(clienteId.Value, "CONVITES", request.MedicoIds?.Count() ?? 0);
                 return StatusCode(response.StatusCode, response);
             }
             catch (Exception ex)

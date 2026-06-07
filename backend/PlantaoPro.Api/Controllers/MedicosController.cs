@@ -11,11 +11,15 @@ namespace PlantaoPro.Api.Controllers
 public class MedicosController : ControllerBase
 {
     private readonly MedicoService service;
+    private readonly AssinaturaGuardService assinaturaGuard;
+    private readonly UsuarioContextService usuarioContext;
     private readonly ILogger<MedicosController> logger;
 
-    public MedicosController(MedicoService service, ILogger<MedicosController> logger)
+    public MedicosController(MedicoService service, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext, ILogger<MedicosController> logger)
     {
         this.service = service;
+        this.assinaturaGuard = assinaturaGuard;
+        this.usuarioContext = usuarioContext;
         this.logger = logger;
     }
 
@@ -57,8 +61,16 @@ public class MedicosController : ControllerBase
     {
         try
         {
+            var clienteId = usuarioContext.GetClienteId();
+            if (clienteId.HasValue)
+            {
+                var permissao = await assinaturaGuard.PodeCadastrarMedicoAsync(clienteId.Value);
+                if (!permissao.Success) return StatusCode(permissao.StatusCode, permissao);
+            }
+
             var uid = Guid.Parse(User.Claims.First(x => x.Type == "uid").Value);
             var r = await service.CriarAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+            if (r.Success && clienteId.HasValue) await assinaturaGuard.RegistrarUsoAsync(clienteId.Value, "MEDICOS", 1);
             return StatusCode(r.StatusCode, r);
         }
         catch (Exception ex)

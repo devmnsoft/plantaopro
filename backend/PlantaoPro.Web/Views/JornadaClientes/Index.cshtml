@@ -1,0 +1,6 @@
+@{ ViewData["Title"] = "Jornada do Cliente"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Jornada do Cliente SaaS", "Acompanhe funil, etapa atual, responsável e próxima ação de Customer Success.", "bi-signpost-split")' />
+<div class="row g-3">
+@foreach (var etapa in new[] { "Lead cadastrado", "Demonstração agendada", "Proposta enviada", "Negociação", "Convertido", "Implantação", "Treinamento", "Operação assistida", "Ativo", "Expansão", "Risco", "Cancelado" })
+{<div class="col-md-3"><div class="card h-100"><div class="card-body"><span class="badge text-bg-primary">@etapa</span><p class="small text-muted mt-2 mb-0">Cards desta etapa são carregados pela API <code>/api/jornada-clientes</code>.</p></div></div></div>}
+</div>

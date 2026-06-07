@@ -1,20 +1,3 @@
-# Limites e Bloqueios
+# Limites e bloqueios
 
-O `AssinaturaGuardService` valida assinatura, status contratual, recursos e limites antes de ações operacionais.
-
-## Validações disponíveis
-
-- Cadastrar médico.
-- Cadastrar hospital.
-- Cadastrar usuário.
-- Publicar plantão.
-- Enviar convite.
-- Usar Mobile, BI, API, integrações e relatórios avançados.
-
-## Como testar
-
-1. Crie plano com limite baixo.
-2. Crie assinatura ativa para o cliente.
-3. Cadastre recursos até atingir o limite.
-4. Tente cadastrar novo recurso.
-5. Confirme resposta amigável, registro em `cliente_bloqueios` e alerta em `cliente_alertas`.
+Os limites de plano existentes continuam sendo fonte de verdade para médicos, hospitais, plantões e recursos. Esta rodada adiciona sinais comerciais de upgrade quando o cliente se aproxima do limite ou apresenta uso recorrente.

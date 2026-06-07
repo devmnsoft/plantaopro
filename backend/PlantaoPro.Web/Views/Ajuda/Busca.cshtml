@@ -1,0 +1,3 @@
+@{ ViewData["Title"] = "Buscar Ajuda"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Buscar no manual", "Encontre artigos por termo, perfil e etapa da jornada.", "bi-search")' />
+<form asp-action="Busca" method="get" class="card card-body mb-3"><div class="input-group"><input name="termo" class="form-control" value="@ViewBag.Termo" placeholder="Digite o que deseja encontrar" /><button class="btn btn-primary" type="submit">Buscar</button></div></form><div class="alert alert-info">Resultados são fornecidos por <code>/api/ajuda/buscar?termo=@ViewBag.Termo</code>. EmptyState exibido quando não houver retorno.</div>

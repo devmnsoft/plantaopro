@@ -89,6 +89,8 @@
                 <a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
                 <a class="nav-link-app @(currentController=="Comunicacao"?"active":"")" asp-controller="Comunicacao" asp-action="Index"><i class="bi bi-chat-dots"></i><span>Comunicação</span></a>
                 <a class="nav-link-app @(currentController=="Usuario"?"active":"")" asp-controller="Usuario" asp-action="Index"><i class="bi bi-person-gear"></i><span>Minha Conta</span></a>
+                <a class="nav-link-app @(currentController=="Lgpd"?"active":"")" asp-controller="Lgpd" asp-action="Index"><i class="bi bi-shield-lock"></i><span>Privacidade LGPD</span></a>
+                <a class="nav-link-app @(currentController=="Ajuda"?"active":"")" asp-controller="Ajuda" asp-action="Index"><i class="bi bi-question-circle"></i><span>Ajuda</span></a>
 
                 @if (isAdmin)
                 {
@@ -104,6 +106,9 @@
                 @if (isAdmin)
                 {
                     <div class="nav-section-title">Sistema</div>
+                    <a class="nav-link-app @(currentController=="Comercial"?"active":"")" asp-controller="Comercial" asp-action="Funil"><i class="bi bi-funnel"></i><span>Comercial SaaS</span></a>
+                    <a class="nav-link-app @(currentController=="JornadaClientes"?"active":"")" asp-controller="JornadaClientes" asp-action="Index"><i class="bi bi-signpost-split"></i><span>Jornada Cliente</span></a>
+                    <a class="nav-link-app @(currentController=="SaasDashboard" || currentController=="CustomerSuccess"?"active":"")" asp-controller="SaasDashboard" asp-action="Index"><i class="bi bi-stars"></i><span>Inteligência SaaS</span></a>
                     <a class="nav-link-app @(currentController=="Configuracoes"?"active":"")" asp-controller="Configuracoes" asp-action="Index"><i class="bi bi-gear"></i><span>Configurações</span></a>
                     <a class="nav-link-app @(currentController=="Configuracoes" && currentAction=="Saude"?"active":"")" asp-controller="Configuracoes" asp-action="Saude"><i class="bi bi-activity"></i><span>Saúde do Sistema</span></a>
                 }

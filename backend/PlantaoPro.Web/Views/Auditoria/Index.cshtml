@@ -1,6 +1,68 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
-@{ ViewData["Title"] = "Auditoria"; var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>(); }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria","Rastreabilidade de ações e eventos operacionais.","bi-shield-check","Exportar",null,null,true)' />
-<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Data/hora</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Descrição</th></tr></thead><tbody>
-@if(items.Any()){foreach(var log in items){<tr><td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td><td>@log.Usuario</td><td><partial name="_StatusBadge" model="log.Acao" /></td><td>@log.Entidade</td><td>@log.Ip</td><td>@log.Descricao</td></tr>}}else{<tr><td colspan="6" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x","Sem registros de auditoria","Não houve eventos no período selecionado.")' /></td></tr>}
-</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div></div>
+@{
+    ViewData["Title"] = "Auditoria";
+    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
+    var resumo = ViewBag.Resumo as PlantaoPro.Web.Models.AuditoriaResumoDto;
+    var queryString = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value : string.Empty;
+    var downloadUrl = Url.Action("BaixarCsv", "Auditoria") + queryString;
+    var filtroDataInicio = Context.Request.Query["dataInicio"].ToString();
+    var filtroDataFim = Context.Request.Query["dataFim"].ToString();
+    var filtroPerfil = Context.Request.Query["perfil"].ToString();
+    var filtroEntidade = Context.Request.Query["entidade"].ToString();
+    var filtroAcao = Context.Request.Query["acao"].ToString();
+    var filtroTexto = Context.Request.Query["texto"].ToString();
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria", "Rastreabilidade enterprise de ações críticas, falhas e acessos negados.", "bi-shield-check")' />
+<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="@downloadUrl"><i class="bi bi-download"></i> Baixar CSV</a></div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Ações hoje</span><h3>@(resumo?.AcoesHoje ?? 0)</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Falhas hoje</span><h3 class="text-danger">@(resumo?.FalhasHoje ?? 0)</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Acessos negados</span><h3 class="text-warning">@(resumo?.AcessosNegados ?? 0)</h3></div></div></div>
+    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Downloads</span><h3 class="text-primary">@(resumo?.Downloads ?? 0)</h3></div></div></div>
+</div>
+
+<form method="get" class="card border-0 shadow-sm mb-4">
+    <div class="card-body row g-3">
+        <div class="col-md-2"><label class="form-label">Início</label><input class="form-control" type="date" name="dataInicio" value="@filtroDataInicio" /></div>
+        <div class="col-md-2"><label class="form-label">Fim</label><input class="form-control" type="date" name="dataFim" value="@filtroDataFim" /></div>
+        <div class="col-md-2"><label class="form-label">Perfil</label><input class="form-control" name="perfil" value="@filtroPerfil" placeholder="ADMINISTRADOR" /></div>
+        <div class="col-md-2"><label class="form-label">Entidade</label><input class="form-control" name="entidade" value="@filtroEntidade" placeholder="PLANTAO" /></div>
+        <div class="col-md-2"><label class="form-label">Ação</label><input class="form-control" name="acao" value="@filtroAcao" placeholder="CRIAR" /></div>
+        <div class="col-md-2"><label class="form-label">Texto</label><input class="form-control" name="texto" value="@filtroTexto" placeholder="Busca livre" /></div>
+        <div class="col-md-2"><label class="form-label">Sucesso</label><select class="form-select" name="sucesso"><option value="">Todos</option><option value="true">Sucesso</option><option value="false">Falha</option></select></div>
+        <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light"><tr><th>Data/hora</th><th>Usuário</th><th>Cliente</th><th>Perfil</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @if (items.Any())
+            {
+                foreach (var log in items)
+                {
+                    <tr>
+                        <td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td><div>@(string.IsNullOrWhiteSpace(log.UsuarioNome) ? "-" : log.UsuarioNome)</div><code class="small">@(log.UsuarioId?.ToString() ?? "-")</code></td>
+                        <td><div>@(string.IsNullOrWhiteSpace(log.ClienteNome) ? "-" : log.ClienteNome)</div><code class="small">@(log.ClienteId?.ToString() ?? "-")</code></td>
+                        <td><span class="badge bg-secondary">@log.Perfil</span></td>
+                        <td><span class="badge bg-info text-dark">@log.Acao</span></td>
+                        <td>@log.Entidade</td>
+                        <td>@(string.IsNullOrWhiteSpace(log.IpOrigem) ? "-" : log.IpOrigem)</td>
+                        <td>@if (log.Sucesso) { <span class="badge bg-success">Sucesso</span> } else { <span class="badge bg-danger">Falha</span> }</td>
+                        <td><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@log.Id">Detalhes</a></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="9" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x", "Sem registros de auditoria", "Não houve eventos no período selecionado.")' /></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div>
+</div>

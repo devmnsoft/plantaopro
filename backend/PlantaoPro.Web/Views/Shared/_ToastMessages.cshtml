@@ -1,11 +1,68 @@
-<div class="toast-container position-fixed top-0 end-0 p-3">
-    @foreach (var toast in new[] { ("Success", "success"), ("Error", "danger"), ("Warning", "warning"), ("Info", "info") })
+@using System.Text.Json
+
+@{
+    var toasts = new List<object>();
+
+    if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
     {
-        if (TempData[toast.Item1] is string msg && !string.IsNullOrWhiteSpace(msg))
-        {
-            <div class="toast align-items-center text-bg-@toast.Item2 border-0 show mb-2" role="alert">
-                <div class="d-flex"><div class="toast-body">@msg</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>
-            </div>
-        }
+        toasts.Add(new { Type = "success", Message = success });
     }
-</div>
+
+    if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+    {
+        toasts.Add(new { Type = "error", Message = error });
+    }
+
+    if (TempData["Warning"] is string warning && !string.IsNullOrWhiteSpace(warning))
+    {
+        toasts.Add(new { Type = "warning", Message = warning });
+    }
+
+    if (TempData["Info"] is string info && !string.IsNullOrWhiteSpace(info))
+    {
+        toasts.Add(new { Type = "info", Message = info });
+    }
+
+    var toastJson = JsonSerializer.Serialize(toasts);
+}
+
+@if (toasts.Count > 0)
+{
+    <script type="application/json" id="pp-toast-data">@Html.Raw(toastJson)</script>
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            const el = document.getElementById('pp-toast-data');
+
+            if (!el || !window.PlantaoProToast) {
+                return;
+            }
+
+            let parsedToasts = new Array();
+
+            try {
+                parsedToasts = JSON.parse(el.textContent || 'null') || new Array();
+            } catch (e) {
+                parsedToasts = new Array();
+            }
+
+            parsedToasts.forEach(function (toast) {
+                if (!toast) {
+                    return;
+                }
+
+                const type = String(toast.type || toast.Type || 'info').toLowerCase();
+                const message = toast.message || toast.Message || '';
+
+                if (!message) {
+                    return;
+                }
+
+                if (typeof window.PlantaoProToast[type] === 'function') {
+                    window.PlantaoProToast[type](message);
+                } else {
+                    window.PlantaoProToast.info(message);
+                }
+            });
+        });
+    </script>
+}

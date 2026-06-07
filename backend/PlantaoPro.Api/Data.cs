@@ -1,41 +1,259 @@
 using Dapper;
+using System.Data;
 using Npgsql;
 using PlantaoPro.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
     {
+        Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default);
+
         Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null);
     }
     public sealed class AuditService : IAuditService
     {
-        private readonly IConfiguration cfg; public AuditService(IConfiguration cfg)
+        private readonly IConfiguration cfg;
+        private readonly ILogger<AuditService> logger;
+
+        public AuditService(IConfiguration cfg, ILogger<AuditService> logger)
         {
             this.cfg = cfg;
+            this.logger = logger;
         }
+
+        public async Task RegistrarAsync(
+            Guid? usuarioId,
+            Guid? clienteId,
+            string entidade,
+            Guid? entidadeId,
+            string acao,
+            object? detalhes,
+            bool sucesso,
+            string? ipOrigem,
+            string? perfil,
+            CancellationToken ct = default)
+        {
+            try
+            {
+                var detalhesJson = SanitizarDetalhes(detalhes);
+                using IDbConnection cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.auditoria_acoes_criticas
+    (usuario_id, cliente_id, entidade, entidade_id, acao, detalhes, sucesso, ip_origem, perfil, reg_date)
+values
+    (@UsuarioId, @ClienteId, @Entidade, @EntidadeId, @Acao, cast(@Detalhes as jsonb), @Sucesso, @IpOrigem, @Perfil, now())",
+                    new
+                    {
+                        UsuarioId = usuarioId,
+                        ClienteId = clienteId,
+                        Entidade = entidade,
+                        EntidadeId = entidadeId,
+                        Acao = acao,
+                        Detalhes = detalhesJson,
+                        Sucesso = sucesso,
+                        IpOrigem = ipOrigem,
+                        Perfil = perfil
+                    },
+                    cancellationToken: ct));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Falha ao registrar auditoria central. UsuarioId={UsuarioId} ClienteId={ClienteId} Acao={Acao} Entidade={Entidade} EntidadeId={EntidadeId}",
+                    usuarioId,
+                    clienteId,
+                    acao,
+                    entidade,
+                    entidadeId);
+            }
+        }
+
         public async Task LogAsync(Guid? userId, string acao, string entidade, Guid? registroId, string descricao, string? valorAnterior = null, string? valorNovo = null, string? ip = null, string? userAgent = null)
         {
-            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
+            var entidadeCentral = NormalizarEntidade(entidade);
+            var acaoCentral = NormalizarAcao(acao, entidadeCentral, descricao);
+            var clienteId = await ResolverClienteIdAsync(entidade, registroId);
+            await RegistrarAsync(userId, clienteId, entidadeCentral, registroId, acaoCentral, new
             {
-                u = userId,
-                a = acao,
-                e = entidade,
-                r = registroId,
-                ip,
-                d = descricao,
-                va = valorAnterior,
-                vn = valorNovo,
-                ua = userAgent
-            });
+                descricao,
+                valorAnterior = MascararTexto(valorAnterior),
+                valorNovo = MascararTexto(valorNovo),
+                userAgent = MascararTexto(userAgent)
+            }, true, ip, null);
+
+            try
+            {
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                await cn.ExecuteAsync("insert into plantaopro.auditoria(id,usuario_id,acao,entidade,registro_id,ip,descricao,valor_anterior,valor_novo,user_agent,reg_date,reg_status) values (gen_random_uuid(),@u,@a,@e,@r,@ip,@d,@va,@vn,@ua,now(),'A')", new
+                {
+                    u = userId,
+                    a = acao,
+                    e = entidade,
+                    r = registroId,
+                    ip,
+                    d = descricao,
+                    va = MascararTexto(valorAnterior),
+                    vn = MascararTexto(valorNovo),
+                    ua = MascararTexto(userAgent)
+                });
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex,
+                    "Falha ao registrar auditoria legada. UsuarioId={UsuarioId} Acao={Acao} Entidade={Entidade} RegistroId={RegistroId}",
+                    userId,
+                    acao,
+                    entidade,
+                    registroId);
+            }
+        }
+
+
+        private async Task<Guid?> ResolverClienteIdAsync(string entidade, Guid? registroId)
+        {
+            if (!registroId.HasValue) return null;
+            var tabela = entidade?.Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(tabela)) return null;
+
+            var tabelasPermitidas = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["clientes"] = "clientes",
+                ["medicos"] = "medicos",
+                ["hospitais"] = "hospitais",
+                ["especialidades"] = "especialidades",
+                ["plantoes"] = "plantoes",
+                ["escalas"] = "escalas",
+                ["convites"] = "convites",
+                ["pagamentos"] = "pagamentos",
+                ["assinaturas"] = "assinaturas",
+                ["faturas_saas"] = "faturas_saas"
+            };
+
+            if (!tabelasPermitidas.TryGetValue(tabela, out var tabelaSql)) return null;
+
+            try
+            {
+                using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+                if (string.Equals(tabelaSql, "clientes", StringComparison.OrdinalIgnoreCase))
+                {
+                    return await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.clientes where id=@id", new { id = registroId.Value });
+                }
+
+                return await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro." + tabelaSql + " where id=@id", new { id = registroId.Value });
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Falha ao resolver cliente da auditoria Entidade={Entidade} RegistroId={RegistroId}", entidade, registroId);
+                return null;
+            }
+        }
+
+        private static string NormalizarEntidade(string? entidade)
+        {
+            var valor = (entidade ?? string.Empty).Trim().ToLowerInvariant();
+            return valor switch
+            {
+                "usuarios" or "app_user" => AuditoriaConstants.Entidades.Usuario,
+                "clientes" => AuditoriaConstants.Entidades.Cliente,
+                "medicos" => AuditoriaConstants.Entidades.Medico,
+                "hospitais" => AuditoriaConstants.Entidades.Hospital,
+                "especialidades" => AuditoriaConstants.Entidades.Especialidade,
+                "plantoes" => AuditoriaConstants.Entidades.Plantao,
+                "escalas" => AuditoriaConstants.Entidades.Escala,
+                "convites" => AuditoriaConstants.Entidades.Convite,
+                "pagamentos" => AuditoriaConstants.Entidades.Pagamento,
+                "notificacoes" => AuditoriaConstants.Entidades.Notificacao,
+                "conversas" or "mensagens" => AuditoriaConstants.Entidades.Comunicacao,
+                "relatorios" or "bi" or "operacao" => AuditoriaConstants.Entidades.Relatorio,
+                _ => string.IsNullOrWhiteSpace(valor) ? "SISTEMA" : valor.ToUpperInvariant()
+            };
+        }
+
+        private static string NormalizarAcao(string? acao, string entidade, string? descricao)
+        {
+            var valor = (acao ?? string.Empty).Trim().ToUpperInvariant();
+            if (valor == "CREATE")
+            {
+                if (entidade == AuditoriaConstants.Entidades.Convite) return AuditoriaConstants.Acoes.CriarConvite;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento) return AuditoriaConstants.Acoes.GerarPagamento;
+                return AuditoriaConstants.Acoes.Criar;
+            }
+            if (valor == "UPDATE") return AuditoriaConstants.Acoes.Editar;
+            if (valor == "DELETE") return AuditoriaConstants.Acoes.Inativar;
+            if (valor == "LOGIN") return AuditoriaConstants.Acoes.LoginSucesso;
+            if (valor == "ACEITAR") return AuditoriaConstants.Acoes.ConfirmarEscala;
+            if (valor == "UNLOCK_USER") return AuditoriaConstants.Acoes.Reativar;
+            if (valor == "USUARIO_UPDATE") return AuditoriaConstants.Acoes.Editar;
+            if (valor == "USUARIO_ALTERAR_SENHA" || valor == "PASSWORD_FORGOT" || valor == "PASSWORD_RESET") return AuditoriaConstants.Acoes.AlterarConfiguracao;
+            if (valor == "STATUS_CHANGE")
+            {
+                var desc = descricao ?? string.Empty;
+                if (entidade == AuditoriaConstants.Entidades.Plantao && desc.IndexOf("publicado", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.PublicarPlantao;
+                if (entidade == AuditoriaConstants.Entidades.Plantao && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarPlantao;
+                if (entidade == AuditoriaConstants.Entidades.Escala && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarEscala;
+                if (entidade == AuditoriaConstants.Entidades.Escala && desc.IndexOf("realiz", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.RealizarEscala;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento && desc.IndexOf("pago", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.ConfirmarPagamento;
+                if (entidade == AuditoriaConstants.Entidades.Pagamento && desc.IndexOf("cancel", StringComparison.OrdinalIgnoreCase) >= 0) return AuditoriaConstants.Acoes.CancelarPagamento;
+                return AuditoriaConstants.Acoes.Editar;
+            }
+
+            return string.IsNullOrWhiteSpace(valor) ? "EVENTO" : valor;
+        }
+
+        private static string SanitizarDetalhes(object? detalhes)
+        {
+            if (detalhes is null) return "{}";
+            var json = detalhes is string texto ? texto : JsonSerializer.Serialize(detalhes);
+            var sanitizado = MascararTexto(json) ?? "{}";
+            if (string.Equals(sanitizado, "[DADO_SENSIVEL_MASCARADO]", StringComparison.Ordinal))
+            {
+                return "{\"mascarado\":true}";
+            }
+
+            try
+            {
+                using var parsed = JsonDocument.Parse(sanitizado);
+                return sanitizado;
+            }
+            catch (JsonException)
+            {
+                return JsonSerializer.Serialize(new { descricao = sanitizado });
+            }
+        }
+
+        private static string? MascararTexto(string? valor)
+        {
+            if (string.IsNullOrWhiteSpace(valor)) return valor;
+            var sensiveis = new[] { "senha", "password", "token", "hash", "secret", "segredo", "authorization" };
+            var texto = valor;
+            foreach (var termo in sensiveis)
+            {
+                if (texto.IndexOf(termo, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return "[DADO_SENSIVEL_MASCARADO]";
+                }
+            }
+            return texto.Length > 4000 ? texto.Substring(0, 4000) : texto;
         }
     }
     public sealed class AuthService
     {
+        private const int MaxTentativasFalhas = 5;
+        private const int BloqueioMinutos = 15;
         private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger)
         {
             this.cfg = cfg;
@@ -49,37 +267,84 @@ namespace PlantaoPro.Api.Data
             try
             {
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
+                await GarantirTabelaTentativasAsync(cn);
+                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
                     Email = normalizedEmail
                 });
                 if (user is null)
                 {
+                    await RegistrarTentativaAsync(cn, null, normalizedEmail, ip, ua, false, "USER_NOT_FOUND");
                     logger.LogWarning("Login negado: usuário não encontrado Email:{Email} IP:{Ip}", normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                }
+                var usuarioId = (Guid)user.id;
+                var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
+                    @"select bloqueado_ate from plantaopro.login_tentativas
+                      where usuario_id=@usuarioId and sucesso=false and bloqueado_ate is not null
+                      order by reg_date desc limit 1", new
+                    {
+                        usuarioId
+                    });
+                if (bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
+                {
+                    var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
+                    logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
+                    return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
                 var regStatus = ((string?)user.reg_status) ?? "";
                 if (!string.Equals(regStatus, "A", StringComparison.OrdinalIgnoreCase))
                 {
-                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "USER_INACTIVE");
+                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário inativo. Contate o administrador.", 403);
                 }
                 var senhaHash = (string?)user.senha_hash;
                 if (string.IsNullOrWhiteSpace(senhaHash))
                 {
-                    logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "PASSWORD_HASH_EMPTY");
+                    logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
                 bool senhaValida = false;
                 try
                 {
+                    // Compatibilidade com bases legadas que armazenavam senha em texto plano
+                    // (ou em formato não BCrypt). Ao autenticar com sucesso em legado, o hash
+                    // é atualizado imediatamente para BCrypt.
                     senhaValida = BCrypt.Net.BCrypt.Verify(req.Senha, senhaHash);
                 }
-                catch (Exception ex) { logger.LogError(ex, "Falha na verificação BCrypt UsuarioId:{UsuarioId} Email:{Email} HashLength:{HashLength} IP:{Ip}", (Guid)user.id, normalizedEmail, senhaHash.Length, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
+                catch
+                {
+                    senhaValida = string.Equals(req.Senha, senhaHash, StringComparison.Ordinal);
+                    if (senhaValida)
+                    {
+                        var senhaMigradaHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
+                        await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new
+                        {
+                            hash = senhaMigradaHash,
+                            id = (Guid)user.id
+                        });
+                        logger.LogInformation("Senha legada migrada para BCrypt UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
+                    }
+                }
                 if (!senhaValida)
                 {
-                    logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    var tentativasFalhas = await cn.QueryFirstAsync<int>(
+                        @"select count(*) from plantaopro.login_tentativas
+                          where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - interval '24 hours'",
+                        new
+                        {
+                            usuarioId
+                        });
+                    var proximaTentativa = tentativasFalhas + 1;
+                    DateTime? novoBloqueio = proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
+                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
+                    logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Tentativa:{Tentativa} Email:{Email} IP:{Ip}", usuarioId, proximaTentativa, normalizedEmail, ip);
+                    if (novoBloqueio.HasValue)
+                        return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
+                    return ApiResponse<LoginResponse>.Fail($"E-mail ou senha inválidos. Tentativa {proximaTentativa}/{MaxTentativasFalhas}.", 401);
                 }
                 var roles = (await cn.QueryAsync<string>("select p.nome from plantaopro.perfis p join plantaopro.usuarios_perfis up on up.perfil_id=p.id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A'", new
                 {
@@ -90,15 +355,43 @@ namespace PlantaoPro.Api.Data
                     logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
                     return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles);
-                await audit.LogAsync((Guid)user.id, "LOGIN", "usuarios", (Guid)user.id, "Login", ip: ip, userAgent: ua);
-                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", (Guid)user.id, normalizedEmail, string.Join(',', roles), ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), (Guid)user.id, (string)user.nome, roles), "Login realizado com sucesso.");
+                Guid? clienteId = null;
+                object? usuarioCliente = user.cliente_id;
+                if (usuarioCliente is Guid usuarioClienteId) clienteId = usuarioClienteId;
+                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteId);
+                await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
+                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles, clienteId), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
-        string GenerateToken(Guid uid, string email, string[] roles)
+        private static Task GarantirTabelaTentativasAsync(NpgsqlConnection cn) =>
+            cn.ExecuteAsync(@"create table if not exists plantaopro.login_tentativas(
+                id uuid primary key default gen_random_uuid(),
+                usuario_id uuid null,
+                email text not null,
+                ip text null,
+                user_agent text null,
+                sucesso boolean not null,
+                motivo text not null,
+                bloqueado_ate timestamp null,
+                reg_date timestamp not null default now()
+            )");
+        private static Task RegistrarTentativaAsync(NpgsqlConnection cn, Guid? usuarioId, string email, string? ip, string? ua, bool sucesso, string motivo, DateTime? bloqueadoAte = null) =>
+            cn.ExecuteAsync(@"insert into plantaopro.login_tentativas(usuario_id,email,ip,user_agent,sucesso,motivo,bloqueado_ate,reg_date)
+                values(@usuarioId,@email,@ip,@ua,@sucesso,@motivo,@bloqueadoAte,now())",
+                new
+                {
+                    usuarioId,
+                    email,
+                    ip,
+                    ua,
+                    sucesso,
+                    motivo,
+                    bloqueadoAte
+                });
+        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId)
         {
             var jwt = cfg.GetSection("Jwt");
             var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
@@ -107,7 +400,28 @@ namespace PlantaoPro.Api.Data
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(jwt["Issuer"], jwt["Audience"], claims, expires: DateTime.UtcNow.AddHours(8), signingCredentials: creds));
         }
+
+        private static string? NormalizeRole(string? role)
+        {
+            if (string.IsNullOrWhiteSpace(role))
+                return null;
+            var value = role.Trim().ToUpperInvariant()
+                .Replace("Á", "A").Replace("À", "A").Replace("Â", "A").Replace("Ã", "A")
+                .Replace("É", "E").Replace("Ê", "E")
+                .Replace("Í", "I")
+                .Replace("Ó", "O").Replace("Ô", "O").Replace("Õ", "O")
+                .Replace("Ú", "U")
+                .Replace("Ç", "C");
+
+            return value switch
+            {
+                "ADMIN" or "ADMINISTRADOR" => RolesConstants.Administrador,
+                "COORDENADOR" or "COORDENACAO" => RolesConstants.Coordenacao,
+                _ => value
+            };
+        }
     }
+
     public sealed class MedicoService
     {
         private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<MedicoService> logger; public MedicoService(IConfiguration cfg, IAuditService audit, ILogger<MedicoService> logger)
@@ -120,6 +434,12 @@ namespace PlantaoPro.Api.Data
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             return ApiResponse<IEnumerable<MedicoDto>>.Ok(await cn.QueryAsync<MedicoDto>("select id,nome,cpf,crm,uf_crm as UfCrm,email,telefone,cidade,estado,especialidade_id as EspecialidadeId,reg_status as RegStatus from plantaopro.medicos where reg_status='A' order by nome"));
+        }
+        public async Task<ApiResponse<MedicoDto>> GetByIdAsync(Guid id)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var medico = await cn.QueryFirstOrDefaultAsync<MedicoDto>("select id,nome,cpf,crm,uf_crm as UfCrm,email,telefone,cidade,estado,especialidade_id as EspecialidadeId,reg_status as RegStatus from plantaopro.medicos where id=@id and reg_status='A'", new { id });
+            return medico is null ? ApiResponse<MedicoDto>.Fail("Registro não encontrado.", 404) : ApiResponse<MedicoDto>.Ok(medico);
         }
         public async Task<ApiResponse<MedicoDto>> CriarAsync(CreateMedicoRequest req, Guid userId, string? ip, string? ua)
         {
@@ -142,6 +462,111 @@ namespace PlantaoPro.Api.Data
             await audit.LogAsync(userId, "CREATE", "medicos", id, "Criação médico", ip: ip, userAgent: ua);
             logger.LogInformation("Médico {Id}", id);
             return ApiResponse<MedicoDto>.Ok(new(id, req.Nome, req.Cpf, req.Crm, req.UfCrm, req.Email, req.Telefone, req.Cidade, req.Estado, req.EspecialidadeId, "A"));
+        }
+        public async Task<ApiResponse<string>> AtualizarAsync(Guid id, UpdateMedicoRequest req, Guid userId, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(req.Nome) || string.IsNullOrWhiteSpace(req.Cpf) || string.IsNullOrWhiteSpace(req.Crm) || string.IsNullOrWhiteSpace(req.UfCrm))
+                return ApiResponse<string>.Fail("Campos obrigatórios inválidos.");
+
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync(@"update plantaopro.medicos
+set nome=@n,cpf=@cpf,crm=@crm,uf_crm=@uf,email=@e,telefone=@t,cidade=@c,estado=@es,especialidade_id=@esp,reg_status=@st,reg_update=now(),updated_by=@u
+where id=@id", new
+            {
+                id,
+                n = req.Nome,
+                cpf = req.Cpf,
+                crm = req.Crm,
+                uf = req.UfCrm,
+                e = req.Email,
+                t = req.Telefone,
+                c = req.Cidade,
+                es = req.Estado,
+                esp = req.EspecialidadeId,
+                st = string.IsNullOrWhiteSpace(req.RegStatus) ? "A" : req.RegStatus,
+                u = userId
+            });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(userId, "UPDATE", "medicos", id, "Atualização médico", ip: ip, userAgent: ua);
+            logger.LogInformation("Médico atualizado {Id}", id);
+            return ApiResponse<string>.Ok("ok", "Médico atualizado com sucesso.");
+        }
+
+        public async Task<ApiResponse<string>> InativarAsync(Guid id, Guid userId, string? ip, string? ua)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync("update plantaopro.medicos set reg_status='I',reg_update=now(),updated_by=@u where id=@id", new { id, u = userId });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(userId, "DELETE", "medicos", id, "Inativação médico", ip: ip, userAgent: ua);
+            logger.LogInformation("Médico inativado {Id}", id);
+            return ApiResponse<string>.Ok("ok", "Médico inativado com sucesso.");
+        }
+    }
+
+    public record UserListVM(Guid Id, string Username, string Email, string Role, bool Locked);
+
+    public sealed class UserService
+    {
+        private readonly IConfiguration cfg;
+        private readonly IAuditService audit;
+
+        public UserService(IConfiguration cfg, IAuditService audit)
+        {
+            this.cfg = cfg;
+            this.audit = audit;
+        }
+
+        public async Task<IEnumerable<UserListVM>> ListAsync()
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            return await cn.QueryAsync<UserListVM>(
+                @"select
+                    u.id as Id,
+                    u.nome as Username,
+                    u.email as Email,
+                    coalesce(string_agg(distinct p.nome, ', '), 'SEM_PERFIL') as Role,
+                    exists(
+                        select 1 from plantaopro.login_tentativas lt
+                        where lt.usuario_id = u.id
+                          and lt.sucesso = false
+                          and lt.bloqueado_ate is not null
+                          and lt.bloqueado_ate > now()
+                    ) as Locked
+                  from plantaopro.usuarios u
+                  left join plantaopro.usuarios_perfis up on up.usuario_id = u.id and up.reg_status = 'A'
+                  left join plantaopro.perfis p on p.id = up.perfil_id and p.reg_status = 'A'
+                  where u.reg_status = 'A'
+                  group by u.id, u.nome, u.email
+                  order by u.nome");
+        }
+
+        public async Task<bool> UnlockUserAsync(Guid userId, Guid adminId, string? ipAddress, string? userAgent)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+
+            var exists = await cn.ExecuteScalarAsync<int>(
+                "select count(1) from plantaopro.usuarios where id=@id and reg_status='A'",
+                new
+                {
+                    id = userId
+                }, tx);
+            if (exists == 0)
+                return false;
+
+            await cn.ExecuteAsync(
+                @"update plantaopro.login_tentativas
+                  set bloqueado_ate = null
+                  where usuario_id = @id and sucesso = false",
+                new
+                {
+                    id = userId
+                }, tx);
+
+            await tx.CommitAsync();
+            await audit.LogAsync(adminId, "UNLOCK_USER", "APP_USER", userId, "Usuário desbloqueado por administrador", ip: ipAddress, userAgent: userAgent);
+            return true;
         }
     }
     public sealed class HospitalService
@@ -236,6 +661,12 @@ namespace PlantaoPro.Api.Data
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             return ApiResponse<IEnumerable<EspecialidadeDto>>.Ok(await cn.QueryAsync<EspecialidadeDto>("select id,nome,descricao,reg_status as RegStatus from plantaopro.especialidades where reg_status='A' order by nome"));
         }
+        public async Task<ApiResponse<EspecialidadeDto>> GetByIdAsync(Guid id)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var especialidade = await cn.QueryFirstOrDefaultAsync<EspecialidadeDto>("select id,nome,descricao,reg_status as RegStatus from plantaopro.especialidades where id=@id and reg_status='A'", new { id });
+            return especialidade is null ? ApiResponse<EspecialidadeDto>.Fail("Registro não encontrado.", 404) : ApiResponse<EspecialidadeDto>.Ok(especialidade);
+        }
         public async Task<ApiResponse<EspecialidadeDto>> CreateAsync(CreateEspecialidadeRequest r, Guid u, string? ip, string? ua)
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
@@ -250,14 +681,44 @@ namespace PlantaoPro.Api.Data
             await audit.LogAsync(u, "CREATE", "especialidades", id, "Criação", ip: ip, userAgent: ua);
             return ApiResponse<EspecialidadeDto>.Ok(new(id, r.Nome, r.Descricao, "A"));
         }
+        public async Task<ApiResponse<string>> UpdateAsync(Guid id, UpdateEspecialidadeRequest r, Guid u, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(r.Nome)) return ApiResponse<string>.Fail("Informe o nome da especialidade.");
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync(@"update plantaopro.especialidades
+set nome=@n,descricao=@d,reg_status=@st,reg_update=now(),updated_by=@u
+where id=@id", new
+            {
+                id,
+                n = r.Nome,
+                d = r.Descricao,
+                st = string.IsNullOrWhiteSpace(r.RegStatus) ? "A" : r.RegStatus,
+                u
+            });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(u, "UPDATE", "especialidades", id, "Atualização", ip: ip, userAgent: ua);
+            return ApiResponse<string>.Ok("ok", "Especialidade atualizada com sucesso.");
+        }
+
+        public async Task<ApiResponse<string>> DeleteAsync(Guid id, Guid u, string? ip, string? ua)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var n = await cn.ExecuteAsync("update plantaopro.especialidades set reg_status='I',reg_update=now(),updated_by=@u where id=@id", new { id, u });
+            if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            await audit.LogAsync(u, "DELETE", "especialidades", id, "Inativação", ip: ip, userAgent: ua);
+            return ApiResponse<string>.Ok("ok", "Especialidade inativada com sucesso.");
+        }
     }
     public sealed class PlantaoService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<PlantaoService> logger; private readonly PlantaoRegraService _regra; private readonly PlantaoHistoricoService _historico; private readonly PlantaoTransicaoService _transicao; public PlantaoService(IConfiguration cfg, IAuditService audit, ILogger<PlantaoService> logger, PlantaoRegraService regra, PlantaoHistoricoService historico, PlantaoTransicaoService transicao)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            _regra = regra;
+            _historico = historico;
+            _transicao = transicao;
         }
         public async Task<ApiResponse<PagedResult<PlantaoResumoDto>>> GetAllAsync(PlantaoFilterRequest f)
         {
@@ -304,7 +765,7 @@ namespace PlantaoPro.Api.Data
             dp.Add("off", (page - 1) * size);
             dp.Add("lim", size);
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id" + where, dp);
-            var items = await cn.QueryAsync<PlantaoResumoDto>("select p.id,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,coalesce(p.observacoes,'') as Observacoes from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id" + where + " order by p.data_inicio desc limit @lim offset @off", dp);
+            var items = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(esp.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id" + where + " order by p.data_inicio desc limit @lim offset @off", dp);
             return ApiResponse<PagedResult<PlantaoResumoDto>>.Ok(new(items, page, size, total));
         }
         public async Task<ApiResponse<PlantaoDetailsDto>> GetByIdAsync(Guid id)
@@ -316,10 +777,32 @@ namespace PlantaoPro.Api.Data
             });
             return d is null ? ApiResponse<PlantaoDetailsDto>.Fail("Plantão não encontrado", 404) : ApiResponse<PlantaoDetailsDto>.Ok(d);
         }
+        public async Task<ApiResponse<IEnumerable<EscalaResumoDto>>> ListarEscalasAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<EscalaResumoDto>("select e.id as \"Id\",e.plantao_id as \"PlantaoId\",e.medico_id as \"MedicoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(m.uf_crm,'') as \"MedicoUfCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataInicio\",pl.data_fim as \"DataFim\",coalesce(pl.valor,0) as \"Valor\",coalesce(pl.tipo,'') as \"TipoPlantao\",coalesce(e.status,'') as \"Status\",coalesce(e.justificativa,'') as \"Justificativa\",e.reg_date as \"RegDate\" from plantaopro.escalas e join plantaopro.medicos m on m.id=e.medico_id join plantaopro.plantoes pl on pl.id=e.plantao_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where e.plantao_id=@plantaoId and e.reg_status='A' order by e.reg_date desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<EscalaResumoDto>>.Ok(items);
+        }
+
+        public async Task<ApiResponse<IEnumerable<PlantaoHistoricoDto>>> ListarHistoricoAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<PlantaoHistoricoDto>("select id as \"Id\",plantao_id as \"PlantaoId\",coalesce(status_anterior,'') as \"StatusAnterior\",coalesce(status_novo,'') as \"StatusNovo\",coalesce(justificativa,'') as \"Justificativa\",usuario_id as \"UsuarioId\",reg_date as \"RegDate\" from plantaopro.plantao_historico where plantao_id=@plantaoId and reg_status='A' order by reg_date desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<PlantaoHistoricoDto>>.Ok(items);
+        }
+
+        public async Task<ApiResponse<IEnumerable<PlantaoConviteDto>>> ListarConvitesAsync(Guid plantaoId)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var items = await cn.QueryAsync<PlantaoConviteDto>("select c.id as \"Id\",c.plantao_id as \"PlantaoId\",c.medico_id as \"MedicoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(c.status,'') as \"Status\",coalesce(c.mensagem,'') as \"Mensagem\",c.data_envio as \"DataEnvio\",c.data_resposta as \"DataResposta\",coalesce(c.motivo_recusa,'') as \"MotivoRecusa\" from plantaopro.plantao_convites c join plantaopro.medicos m on m.id=c.medico_id where c.plantao_id=@plantaoId and c.reg_status='A' order by c.data_envio desc limit 100", new { plantaoId });
+            return ApiResponse<IEnumerable<PlantaoConviteDto>>.Ok(items);
+        }
+
         public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua)
         {
-            if (r.DataFim <= r.DataInicio || r.Valor <= 0 || r.Vagas <= 0)
-                return ApiResponse<PlantaoDto>.Fail("Dados inválidos");
+            var validaCriacao = _regra.ValidarCriacao(r);
+            if (!validaCriacao.Success)
+                return ApiResponse<PlantaoDto>.Fail(validaCriacao.Message);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var hospitalAtivo = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.hospitais where id=@id and reg_status='A'", new
             {
@@ -370,10 +853,9 @@ namespace PlantaoPro.Api.Data
             });
             if (status is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            if (status != "rascunho")
-                return ApiResponse<string>.Fail("Somente plantão em rascunho pode ser editado");
-            if (r.DataFim <= r.DataInicio || r.Valor <= 0 || r.Vagas <= 0)
-                return ApiResponse<string>.Fail("Dados inválidos");
+            var validacaoEdicao = _regra.ValidarEdicao(status, r);
+            if (!validacaoEdicao.Success)
+                return ApiResponse<string>.Fail(validacaoEdicao.Message);
             await cn.ExecuteAsync("update plantaopro.plantoes set hospital_id=@h,especialidade_id=@e,data_inicio=@di,data_fim=@df,valor=@v,vagas=@vg,vagas_disponiveis=@vg,tipo=@t,observacoes=@o,reg_update=now(),updated_by=@u where id=@id", new
             {
                 id,
@@ -403,19 +885,7 @@ namespace PlantaoPro.Api.Data
             }, tx);
             if (old is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-            var valid = (old, novo) switch
-            {
-                ("rascunho", "aberto") => true,
-                ("rascunho", "cancelado") => true,
-                ("aberto", "cancelado") => true,
-                ("aberto", "reservado") => true,
-                ("reservado", "confirmado") => true,
-                ("reservado", "aberto") => true,
-                ("confirmado", "realizado") => true,
-                ("confirmado", "cancelado") => true,
-                ("realizado", "pago") => true,
-                _ => false
-            };
+            var valid = _transicao.PodeTransicionar(old, novo);
             if (!valid)
                 return ApiResponse<string>.Fail($"Transição inválida: {old} -> {novo}");
             await cn.ExecuteAsync("update plantaopro.plantoes set status=@s,reg_update=now(),updated_by=@u where id=@id", new
@@ -424,14 +894,7 @@ namespace PlantaoPro.Api.Data
                 s = novo,
                 u
             }, tx);
-            await cn.ExecuteAsync("insert into plantaopro.historico_plantao(id,plantao_id,status_anterior,status_novo,justificativa,usuario_id,reg_date) values(gen_random_uuid(),@id,@a,@n,@j,@u,now())", new
-            {
-                id,
-                a = old,
-                n = novo,
-                j = just,
-                u
-            }, tx);
+            await _historico.RegistrarAsync(cn, tx, id, old, novo, just, u);
             await tx.CommitAsync();
             await audit.LogAsync(u, "STATUS_CHANGE", "plantoes", id, $"{old}->{novo}", ip: ip, userAgent: ua);
             return ApiResponse<string>.Ok("ok", "Status atualizado.");
@@ -439,12 +902,14 @@ namespace PlantaoPro.Api.Data
     }
     public sealed class EscalaService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ILogger<EscalaService> logger; public EscalaService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ILogger<EscalaService> logger)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ILogger<EscalaService> logger; private readonly MedicoElegibilidadeService elegibilidade; private readonly ConflitoHorarioService conflitoService; public EscalaService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ILogger<EscalaService> logger, MedicoElegibilidadeService elegibilidade, ConflitoHorarioService conflitoService)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.notificacao = notificacao;
             this.logger = logger;
+            this.elegibilidade = elegibilidade;
+            this.conflitoService = conflitoService;
         }
         private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
         private async Task<(Guid Id, string C, string U, bool A)> ValidarMedicoAsync(Guid medicoId, NpgsqlConnection cn, NpgsqlTransaction tx)
@@ -552,8 +1017,11 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (p.Id == Guid.Empty)
                     return ApiResponse<string>.Fail("Plantão não encontrado", 404);
-                if (p.Status != "aberto" || p.Vagas <= 0)
-                    return ApiResponse<string>.Fail("Plantão indisponível para aceite");
+                if (!(p.Status == "aberto" || p.Status == "em_escala") || p.Vagas <= 0)
+                    return ApiResponse<string>.Fail("Plantão indisponível para solicitação");
+                var eleg = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(medicoId, plantaoId);
+                if (eleg.Bloqueado)
+                    return ApiResponse<string>.Fail(string.Join("; ", eleg.MotivosBloqueio));
                 var dup = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas where plantao_id=@p and medico_id=@m and status in ('solicitado','confirmado','realizado') and reg_status='A'", new
                 {
                     p = plantaoId,
@@ -561,14 +1029,39 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (dup > 0)
                     return ApiResponse<string>.Fail("Médico já possui escala nesse plantão");
-                var conflito = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas e join plantaopro.plantoes pl on pl.id=e.plantao_id where e.medico_id=@m and e.status in ('solicitado','confirmado','realizado') and e.reg_status='A' and tsrange(pl.data_inicio,pl.data_fim,'[]') && tsrange(@di,@df,'[]')", new
+                var conflito = await conflitoService.ExisteConflitoAsync(medicoId, p.Di, p.Df);
+                if (conflito)
+                {
+                    await cn.ExecuteAsync("update plantaopro.plantoes set conflito_detectado=true,updated_by=@u,reg_update=now() where id=@id", new
+                    {
+                        id = plantaoId,
+                        u = userId
+                    }, tx);
+                    return ApiResponse<string>.Fail("Conflito de horário para médico");
+                }
+                var horasSemana = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (pl.data_fim-pl.data_inicio))/3600.0),0)
+                    from plantaopro.escalas e
+                    join plantaopro.plantoes pl on pl.id=e.plantao_id
+                    where e.medico_id=@m and e.reg_status='A' and e.status in ('solicitado','confirmado','realizado')
+                      and date_trunc('week',pl.data_inicio)=date_trunc('week',@di)", new
                 {
                     m = medicoId,
-                    di = p.Di,
-                    df = p.Df
+                    di = p.Di
                 }, tx);
-                if (conflito > 0)
-                    return ApiResponse<string>.Fail("Conflito de horário para médico");
+                var horasPlantao = (decimal)(p.Df - p.Di).TotalHours;
+                const decimal limiteSemanalHoras = 60m;
+                if ((horasSemana + horasPlantao) > limiteSemanalHoras)
+                    return ApiResponse<string>.Fail($"Limite semanal de {limiteSemanalHoras}h excedido para o médico.");
+                var escalasRecentes = await cn.ExecuteScalarAsync<int>(@"select count(1)
+                    from plantaopro.escalas e
+                    join plantaopro.plantoes pl on pl.id=e.plantao_id
+                    where e.medico_id=@m and e.reg_status='A'
+                      and e.status in ('confirmado','realizado')
+                      and pl.data_inicio >= (now() - interval '30 days')", new
+                {
+                    m = medicoId
+                }, tx);
+                var scorePrioridade = Math.Round(100m / (1m + escalasRecentes), 2);
                 var escalaId = Guid.NewGuid();
                 await cn.ExecuteAsync("insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date) values(@id,@p,@m,'solicitado',null,@u,'A',now())", new
                 {
@@ -577,9 +1070,16 @@ namespace PlantaoPro.Api.Data
                     m = medicoId,
                     u = userId
                 }, tx);
-                await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis-1,status=case when vagas_disponiveis-1<=0 then 'reservado' else status end,updated_by=@u,reg_update=now() where id=@id", new
+                await cn.ExecuteAsync(@"update plantaopro.plantoes
+                    set status=case when status='aberto' then 'em_escala' else status end,
+                        conflito_detectado=false,
+                        score_prioridade=@score,
+                        updated_by=@u,
+                        reg_update=now()
+                    where id=@id", new
                 {
                     id = plantaoId,
+                    score = scorePrioridade,
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, escalaId, null, "solicitado", "Aceite de plantão", userId);
@@ -587,7 +1087,7 @@ namespace PlantaoPro.Api.Data
                 await audit.LogAsync(userId, "ACEITAR", "escalas", escalaId, "Aceite de plantão", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 logger.LogInformation("Escala {EscalaId} aceita", escalaId);
-                return ApiResponse<string>.Ok("ok", "Plantão aceito.");
+                return ApiResponse<string>.Ok("ok", "Solicitação registrada. A vaga será consumida na confirmação da escala.");
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao aceitar plantão {PlantaoId}", plantaoId); return ApiResponse<string>.Fail("Erro ao aceitar plantão", 500); }
         }
@@ -608,12 +1108,24 @@ namespace PlantaoPro.Api.Data
                 {
                     if (e.Status != "solicitado")
                         return ApiResponse<string>.Fail("Somente escala solicitada pode ser confirmada");
+                    var dadosPlantao = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new { id = e.PlantaoId }, tx);
+                    var elegibilidadeConfirmacao = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(e.MedicoId, e.PlantaoId);
+                    if (elegibilidadeConfirmacao.Bloqueado) return ApiResponse<string>.Fail(string.Join("; ", elegibilidadeConfirmacao.MotivosBloqueio));
+                    if (await conflitoService.ExisteConflitoAsync(e.MedicoId, dadosPlantao.Di, dadosPlantao.Df, id)) return ApiResponse<string>.Fail("Conflito de horário detectado na confirmação.");
                     await cn.ExecuteAsync("update plantaopro.escalas set status='confirmado',updated_by=@u,reg_update=now() where id=@id", new
                     {
                         id,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set status='confirmado',updated_by=@u,reg_update=now() where id=@p", new
+                    var vagasDisponiveis = await cn.ExecuteScalarAsync<int>("select coalesce(vagas_disponiveis,0) from plantaopro.plantoes where id=@p for update", new { p = e.PlantaoId }, tx);
+                    if (vagasDisponiveis <= 0)
+                        return ApiResponse<string>.Fail("Não há vagas disponíveis para confirmar esta escala.");
+                    await cn.ExecuteAsync(@"update plantaopro.plantoes
+                        set vagas_disponiveis=vagas_disponiveis-1,
+                            status=case when vagas_disponiveis-1<=0 then 'preenchido' else 'em_escala' end,
+                            updated_by=@u,
+                            reg_update=now()
+                        where id=@p and vagas_disponiveis>0", new
                     {
                         p = e.PlantaoId,
                         u = userId
@@ -631,7 +1143,11 @@ namespace PlantaoPro.Api.Data
                         j = justificativa,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis+1,status=case when status='reservado' then 'aberto' else status end,updated_by=@u,reg_update=now() where id=@p", new
+                    await cn.ExecuteAsync(@"update plantaopro.plantoes
+                        set status=case when exists(select 1 from plantaopro.escalas where plantao_id=@p and reg_status='A' and status='solicitado') then 'em_escala' else 'aberto' end,
+                            updated_by=@u,
+                            reg_update=now()
+                        where id=@p", new
                     {
                         p = e.PlantaoId,
                         u = userId
@@ -649,11 +1165,19 @@ namespace PlantaoPro.Api.Data
                         j = justificativa,
                         u = userId
                     }, tx);
-                    await cn.ExecuteAsync("update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis+1,status=case when status in ('reservado','confirmado') then 'aberto' else status end,updated_by=@u,reg_update=now() where id=@p", new
+                    if (e.Status == "confirmado")
                     {
-                        p = e.PlantaoId,
-                        u = userId
-                    }, tx);
+                        await cn.ExecuteAsync(@"update plantaopro.plantoes
+                            set vagas_disponiveis=least(vagas, vagas_disponiveis+1),
+                                status=case when exists(select 1 from plantaopro.escalas where plantao_id=@p and reg_status='A' and status='solicitado') then 'em_escala' else 'aberto' end,
+                                updated_by=@u,
+                                reg_update=now()
+                            where id=@p", new
+                        {
+                            p = e.PlantaoId,
+                            u = userId
+                        }, tx);
+                    }
                     await AddHistoricoAsync(cn, tx, id, e.Status, "cancelado", justificativa, userId);
                     await notificacao.CriarNotificacaoAsync(userId, "Escala cancelada", justificativa!, "escala", tx);
                 }
@@ -664,17 +1188,12 @@ namespace PlantaoPro.Api.Data
                     var med = await ValidarMedicoAsync(novoMedicoId.Value, cn, tx);
                     if (med.Id == Guid.Empty || !med.A || string.IsNullOrWhiteSpace(med.C) || string.IsNullOrWhiteSpace(med.U))
                         return ApiResponse<string>.Fail("Novo médico inválido");
-                    var pl = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio,data_fim from plantaopro.plantoes where id=@id", new
+                    var pl = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new
                     {
                         id = e.PlantaoId
                     }, tx);
-                    var conflito = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.escalas e join plantaopro.plantoes pl on pl.id=e.plantao_id where e.medico_id=@m and e.status in ('solicitado','confirmado','realizado') and e.reg_status='A' and tsrange(pl.data_inicio,pl.data_fim,'[]') && tsrange(@di,@df,'[]')", new
-                    {
-                        m = novoMedicoId,
-                        di = pl.Di,
-                        df = pl.Df
-                    }, tx);
-                    if (conflito > 0)
+                    var conflito = await conflitoService.ExisteConflitoAsync(novoMedicoId.Value, pl.Di, pl.Df);
+                    if (conflito)
                         return ApiResponse<string>.Fail("Novo médico com conflito de horário");
                     await cn.ExecuteAsync("update plantaopro.escalas set status='substituido',justificativa=@j,updated_by=@u,reg_update=now() where id=@id", new
                     {
@@ -712,6 +1231,19 @@ namespace PlantaoPro.Api.Data
                     await AddHistoricoAsync(cn, tx, id, e.Status, "realizado", justificativa, userId);
                     await notificacao.CriarNotificacaoAsync(userId, "Escala realizada", "Escala marcada como realizada", "escala", tx);
                 }
+                else if (novo == "nao_compareceu")
+                {
+                    if (e.Status != "confirmado")
+                        return ApiResponse<string>.Fail("Somente escala confirmada pode ser marcada como não compareceu");
+                    await cn.ExecuteAsync("update plantaopro.escalas set status='nao_compareceu',justificativa=@j,updated_by=@u,reg_update=now() where id=@id", new
+                    {
+                        id,
+                        j = justificativa,
+                        u = userId
+                    }, tx);
+                    await AddHistoricoAsync(cn, tx, id, e.Status, "nao_compareceu", justificativa, userId);
+                    await notificacao.CriarNotificacaoAsync(userId, "Não comparecimento registrado", justificativa ?? "Escala marcada como não compareceu", "escala", tx);
+                }
                 else
                     return ApiResponse<string>.Fail("Status não suportado");
                 await audit.LogAsync(userId, "STATUS_CHANGE", "escalas", id, $"{e.Status}->{novo}", ip: ip, userAgent: ua);
@@ -719,7 +1251,8 @@ namespace PlantaoPro.Api.Data
                 logger.LogInformation("Escala {EscalaId} status {Status}", id, novo);
                 return ApiResponse<string>.Ok("ok", "Status atualizado");
             }
-            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro status escala {EscalaId}", id); return ApiResponse<string>.Fail("Erro ao alterar status da escala", 500); }
+            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro status escala {EscalaId}", id); 
+                return ApiResponse<string>.Fail("Erro ao alterar status da escala", 500); }
         }
     }
 
@@ -775,7 +1308,7 @@ namespace PlantaoPro.Api.Data
             dp.Add("off", (p - 1) * s);
             dp.Add("lim", s);
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id" + w, dp);
-            var items = await cn.QueryAsync<PagamentoResumoDto>("select pg.id,pg.escala_id as EscalaId,pg.medico_id as MedicoId,pg.plantao_id as PlantaoId,m.nome as MedicoNome,m.crm as MedicoCrm,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,pl.data_inicio as DataPlantao,pg.valor_previsto as ValorPrevisto,pg.valor_pago as ValorPago,pg.status,pg.data_prevista as DataPrevista,pg.data_pagamento as DataPagamento,pg.forma_pagamento as FormaPagamento,null::text as ChavePix,pg.observacoes from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id" + w + " order by pg.reg_date desc limit @lim offset @off", dp);
+            var items = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",coalesce(pg.valor_pago,0) as \"ValorPago\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id" + w + " order by pg.reg_date desc limit @lim offset @off", dp);
             return ApiResponse<PagedResult<PagamentoResumoDto>>.Ok(new(items, p, s, total));
         }
         public async Task<ApiResponse<PagamentoDetailsDto>> GetByIdAsync(Guid id)
@@ -800,7 +1333,7 @@ namespace PlantaoPro.Api.Data
                 }, tx);
                 if (ex > 0)
                     return ApiResponse<Guid>.Fail("Pagamento já gerado para a escala");
-                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A'", new
+                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, DateTime DataInicio, DateTime DataFim, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,p.data_inicio,p.data_fim,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A'", new
                 {
                     id = req.EscalaId
                 }, tx);
@@ -808,13 +1341,15 @@ namespace PlantaoPro.Api.Data
                     return ApiResponse<Guid>.Fail("Somente escala realizada pode gerar pagamento");
                 var id = Guid.NewGuid();
                 var dataPrevista = req.DataPrevista ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
+                var horas = Math.Max(1m, (decimal)(row.DataFim - row.DataInicio).TotalHours);
+                var valorProporcional = Math.Round((row.Valor / 12m) * horas, 2);
                 await cn.ExecuteAsync("insert into plantaopro.pagamentos(id,escala_id,medico_id,plantao_id,valor_previsto,valor_pago,status,data_prevista,observacoes,reg_date,reg_status,created_by) values(@id,@e,@m,@p,@v,null,'pendente',@d,@o,now(),'A',@u)", new
                 {
                     id,
                     e = row.EscalaId,
                     m = row.MedicoId,
                     p = row.PlantaoId,
-                    v = row.Valor,
+                    v = valorProporcional,
                     d = dataPrevista,
                     o = req.Observacoes,
                     u = userId
@@ -1068,28 +1603,54 @@ namespace PlantaoPro.Api.Data
         private readonly IConfiguration cfg;
         private readonly IAuditService audit;
         private readonly ILogger<MedicoAreaService> logger;
-        public MedicoAreaService(IConfiguration cfg, IAuditService audit, ILogger<MedicoAreaService> logger){this.cfg=cfg;this.audit=audit;this.logger=logger;}
-        private NpgsqlConnection Cn()=>new(cfg.GetConnectionString("Default"));
+        public MedicoAreaService(IConfiguration cfg, IAuditService audit, ILogger<MedicoAreaService> logger)
+        {
+            this.cfg = cfg;
+            this.audit = audit;
+            this.logger = logger;
+        }
+        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
 
-        private async Task<(Guid? Id,string? Nome,string? Crm,string? UfCrm)> GetMedicoAsync(NpgsqlConnection cn, Guid uid)
-            => await cn.QueryFirstOrDefaultAsync<(Guid?,string?,string?,string?)>("select id,nome,crm,uf_crm from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new { uid });
+        private async Task<(Guid? Id, string? Nome, string? Crm, string? UfCrm)> GetMedicoAsync(NpgsqlConnection cn, Guid uid)
+            => await cn.QueryFirstOrDefaultAsync<(Guid?, string?, string?, string?)>("select id,nome,crm,uf_crm from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new
+            {
+                uid
+            });
 
         public async Task<ApiResponse<MedicoAreaResumoDto>> ResumoAsync(Guid uid)
         {
-            await using var cn=Cn();
-            var med=await GetMedicoAsync(cn,uid);
-            if(med.Id is null) return ApiResponse<MedicoAreaResumoDto>.Fail("Médico não encontrado para o usuário autenticado.",404);
-            var dto=await cn.QueryFirstAsync<MedicoAreaResumoDto>(@"select @nome as MedicoNome,@crm as Crm,@uf as UfCrm,
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null)
+                return ApiResponse<MedicoAreaResumoDto>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var dto = await cn.QueryFirstAsync<MedicoAreaResumoDto>(@"select @nome as MedicoNome,@crm as Crm,@uf as UfCrm,
             (select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0) as PlantoesDisponiveis,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='solicitado' and e.reg_status='A') as SolicitacoesPendentes,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='confirmado' and e.reg_status='A') as EscalasConfirmadas,
             (select count(1) from plantaopro.escalas e where e.medico_id=@mid and e.status='realizado' and e.reg_status='A') as PlantoesRealizados,
             (select count(1) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as PagamentosPendentes,
             (select coalesce(sum(pg.valor_previsto),0) from plantaopro.pagamentos pg where pg.medico_id=@mid and pg.status='pendente' and pg.reg_status='A') as ValorPendente,
-            (select count(1) from plantaopro.notificacoes n where n.usuario_id=@uid and n.lida=false and n.reg_status='A') as NotificacoesNaoLidas",new{uid,mid=med.Id,nome=med.Nome,crm=med.Crm,uf=med.UfCrm});
+            (select count(1) from plantaopro.notificacoes n where n.usuario_id=@uid and n.lida=false and n.reg_status='A') as NotificacoesNaoLidas", new
+            {
+                uid,
+                mid = med.Id,
+                nome = med.Nome,
+                crm = med.Crm,
+                uf = med.UfCrm
+            });
             return ApiResponse<MedicoAreaResumoDto>.Ok(dto);
         }
-        public async Task<ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>> PlantoesDisponiveisAsync(Guid uid,int page,int pageSize){await using var cn=Cn();var med=await GetMedicoAsync(cn,uid);if(med.Id is null) return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Fail("Médico não encontrado para o usuário autenticado.",404);var p=Math.Max(1,page);var s=Math.Clamp(pageSize,1,100);var off=(p-1)*s;var total=await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0");var items=await cn.QueryAsync<MedicoPlantaoDisponivelDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,
+        public async Task<ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>> PlantoesDisponiveisAsync(Guid uid, int page, int pageSize)
+        {
+            await using var cn = Cn();
+            var med = await GetMedicoAsync(cn, uid);
+            if (med.Id is null)
+                return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+            var p = Math.Max(1, page);
+            var s = Math.Clamp(pageSize, 1, 100);
+            var off = (p - 1) * s;
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0");
+            var items = await cn.QueryAsync<MedicoPlantaoDisponivelDto>(@"select p.id as PlantaoId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,
 exists(select 1 from plantaopro.escalas e where e.plantao_id=p.id and e.medico_id=@mid and e.reg_status='A') as JaSolicitado,
 exists(select 1 from plantaopro.escalas e2 join plantaopro.plantoes p2 on p2.id=e2.plantao_id where e2.medico_id=@mid and e2.reg_status='A' and e2.status in ('solicitado','confirmado') and (p.data_inicio,p.data_fim) overlaps (p2.data_inicio,p2.data_fim)) as TemConflitoHorario
 from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id where p.reg_status='A' and p.status='aberto' and p.vagas_disponiveis>0 order by p.data_inicio asc limit @s offset @off",new{mid=med.Id,s,off});return ApiResponse<PagedResult<MedicoPlantaoDisponivelDto>>.Ok(new(items,p,s,total));}
@@ -1144,8 +1705,8 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
             {
                 uid
             });
-            var prox = await cn.QueryAsync<PlantaoResumoDto>("select p.id,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,e.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,p.observacoes from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.data_inicio>=now() and p.reg_status='A' order by p.data_inicio asc limit 5");
-            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id,pg.escala_id as EscalaId,pg.medico_id as MedicoId,pg.plantao_id as PlantaoId,m.nome as MedicoNome,m.crm as MedicoCrm,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,pl.data_inicio as DataPlantao,pg.valor_previsto as ValorPrevisto,pg.valor_pago as ValorPago,pg.status,pg.data_prevista as DataPrevista,pg.data_pagamento as DataPagamento,pg.forma_pagamento as FormaPagamento,null::text as ChavePix,pg.observacoes from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' order by pg.reg_date desc limit 5");
+            var prox = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(e.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.data_inicio>=now() and p.reg_status='A' order by p.data_inicio asc limit 5");
+            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",coalesce(pg.valor_pago,0) as \"ValorPago\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' order by pg.reg_date desc limit 5");
             var nots = await cn.QueryAsync<NotificacaoDto>("select id,titulo,mensagem,tipo,lida,reg_date as RegDate from plantaopro.notificacoes where usuario_id=@uid and reg_status='A' order by reg_date desc limit 5", new
             {
                 uid

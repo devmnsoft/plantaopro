@@ -1,10 +1,53 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.PagamentoDetailsDto>
-@{ var pg = Model.Data; ViewData["Title"]="Detalhes do pagamento"; }
-@if (pg is null){<div class="alert alert-warning">Pagamento não encontrado.</div> <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a> return;}
-<h2>Pagamento</h2>
-<div class="card p-3 mb-3"><div><strong>Médico:</strong> @pg.MedicoNome (CRM @pg.MedicoCrm/@pg.MedicoUfCrm)</div><div><strong>Contato:</strong> @pg.MedicoEmail | @pg.MedicoTelefone</div><div><strong>Hospital:</strong> @pg.HospitalNome - @pg.HospitalCidade/@pg.HospitalEstado</div><div><strong>Especialidade:</strong> @pg.EspecialidadeNome</div><div><strong>Plantão:</strong> @pg.DataInicioPlantao.ToString("dd/MM/yyyy HH:mm") - @pg.DataFimPlantao.ToString("dd/MM/yyyy HH:mm")</div><div><strong>Status:</strong> <partial name="_StatusBadge" model="pg.Status"/></div><div><strong>Valor previsto:</strong> @pg.ValorPrevisto.ToString("C")</div><div><strong>Valor pago:</strong> @((pg.ValorPago ?? 0).ToString("C"))</div><div><strong>Data prevista:</strong> @(pg.DataPrevista?.ToString("dd/MM/yyyy")??"-")</div><div><strong>Data pagamento:</strong> @(pg.DataPagamento?.ToString("dd/MM/yyyy")??"-")</div><div><strong>Forma:</strong> @(pg.FormaPagamento??"-")</div><div><strong>Observações:</strong> @(pg.Observacoes??"-")</div></div>
-@if(pg.Status=="pendente"){
-<form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="mb-2"><input name="valorPago" type="number" step="0.01" value="@pg.ValorPrevisto" class="form-control mb-2" required /><input name="dataPagamento" type="date" class="form-control mb-2" required /><input name="formaPagamento" class="form-control mb-2" value="PIX" required /><input name="observacoes" class="form-control mb-2" placeholder="Observações" /><button class="btn btn-success">Confirmar pagamento</button></form>
-<form asp-action="CancelarPagamento" asp-route-id="@pg.Id" method="post"><textarea name="justificativa" class="form-control mb-2" required></textarea><button class="btn btn-danger">Cancelar pagamento</button></form>
+@{ var pg = Model.Data; ViewData["Title"] = "Detalhes do pagamento"; }
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Detalhes do Pagamento", "Confirme ou cancele pagamentos com validação, confirmação e rastreabilidade.", "bi-cash-coin")' />
+
+@if (pg is null)
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Pagamento não encontrado", "O lançamento financeiro não está disponível ou você não possui acesso.", "Voltar", "Index", "Financeiro")' />
+    return;
 }
+
+<div class="card p-3 mb-3 shadow-sm">
+    <div><strong>Médico:</strong> @pg.MedicoNome (CRM @pg.MedicoCrm/@pg.MedicoUfCrm)</div>
+    <div><strong>Contato:</strong> @pg.MedicoEmail | @pg.MedicoTelefone</div>
+    <div><strong>Hospital:</strong> @pg.HospitalNome - @pg.HospitalCidade/@pg.HospitalEstado</div>
+    <div><strong>Especialidade:</strong> @pg.EspecialidadeNome</div>
+    <div><strong>Plantão:</strong> @pg.DataInicioPlantao.ToString("dd/MM/yyyy HH:mm") - @pg.DataFimPlantao.ToString("dd/MM/yyyy HH:mm")</div>
+    <div><strong>Status:</strong> <partial name="_StatusBadge" model="pg.Status" /></div>
+    <div><strong>Valor previsto:</strong> @pg.ValorPrevisto.ToString("C")</div>
+    <div><strong>Valor pago:</strong> @((pg.ValorPago ?? 0).ToString("C"))</div>
+    <div><strong>Data prevista:</strong> @(pg.DataPrevista?.ToString("dd/MM/yyyy") ?? "-")</div>
+    <div><strong>Data pagamento:</strong> @(pg.DataPagamento?.ToString("dd/MM/yyyy") ?? "-")</div>
+    <div><strong>Forma:</strong> @(pg.FormaPagamento ?? "-")</div>
+    <div><strong>Observações:</strong> @(pg.Observacoes ?? "-")</div>
+</div>
+
+@if (pg.Status == "pendente")
+{
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="card card-body shadow-sm" data-ajax-form="true" data-confirm="true" data-confirm-title="Confirmar pagamento" data-confirm-message="Confirma a baixa deste pagamento? A ação será auditada e atualizará o financeiro do médico." data-confirm-type="success">
+                @Html.AntiForgeryToken()
+                <h5 class="mb-3"><i class="bi bi-check2-circle me-1"></i>Confirmar pagamento</h5>
+                <input name="valorPago" type="number" step="0.01" value="@pg.ValorPrevisto" class="form-control mb-2" required />
+                <input name="dataPagamento" type="date" class="form-control mb-2" required />
+                <input name="formaPagamento" class="form-control mb-2" value="PIX" required />
+                <input name="observacoes" class="form-control mb-2" placeholder="Observações" />
+                <button class="btn btn-success" type="submit">Confirmar pagamento</button>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <form asp-action="CancelarPagamento" asp-route-id="@pg.Id" method="post" class="card card-body shadow-sm border-danger-subtle" data-ajax-form="true" data-confirm="true" data-confirm-title="Cancelar pagamento" data-confirm-message="Confirma cancelar este pagamento? Informe a justificativa para histórico e auditoria." data-confirm-type="danger">
+                @Html.AntiForgeryToken()
+                <h5 class="mb-3"><i class="bi bi-x-circle me-1"></i>Cancelar pagamento</h5>
+                <textarea name="justificativa" class="form-control mb-2" required placeholder="Justificativa"></textarea>
+                <button class="btn btn-danger" type="submit">Cancelar pagamento</button>
+            </form>
+        </div>
+    </div>
+}
+
 <a asp-action="Index" class="btn btn-outline-secondary mt-3">Voltar</a>

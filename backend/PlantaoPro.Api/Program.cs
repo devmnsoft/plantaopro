@@ -13,8 +13,10 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpLogging(_ => { });
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSwaggerGen(c =>
 {
+    c.OperationFilter<DefaultApiResponseOperationFilter>();
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "PlantaoPro API",
@@ -78,24 +80,59 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MedicoService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PlantaoService>();
+builder.Services.AddScoped<PlantaoRegraService>();
+builder.Services.AddScoped<PlantaoHistoricoService>();
+builder.Services.AddScoped<PlantaoTransicaoService>();
 builder.Services.AddScoped<EspecialidadeService>();
 builder.Services.AddScoped<HospitalService>();
 builder.Services.AddScoped<EscalaService>();
+builder.Services.AddScoped<ConflitoHorarioService>();
+builder.Services.AddScoped<MedicoElegibilidadeService>();
+builder.Services.AddScoped<MedicoRecomendacaoService>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<PermissionService>();
+builder.Services.AddScoped<NotificationPreferenceService>();
+builder.Services.AddScoped<PremiumOperacoesService>();
+builder.Services.AddScoped<OperacaoService>();
+builder.Services.AddScoped<ClienteService>();
+builder.Services.AddScoped<OnboardingService>();
+builder.Services.AddScoped<BiService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
+builder.Services.AddScoped<UsuarioContextService>();
+builder.Services.AddScoped<TenantGuardService>();
+builder.Services.AddScoped<PermissionGuardService>();
+builder.Services.AddScoped<AssinaturaGuardService>();
+builder.Services.AddScoped<SaasIntelligenceService>();
+builder.Services.AddScoped<ILogOperacionalService, LogOperacionalService>();
+builder.Services.AddScoped<ILgpdAuditService, LgpdAuditService>();
+builder.Services.AddScoped<IEventoSistemaService, EventoSistemaService>();
+builder.Services.AddScoped<LgpdService>();
+builder.Services.AddScoped<JornadaClienteService>();
+builder.Services.AddScoped<ComercialSaasService>();
+builder.Services.AddScoped<AjudaInterativaService>();
 
 var app = builder.Build();
 app.UseHttpLogging();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-
 if (app.Environment.IsDevelopment())
 {
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    app.MapGet("/", () => Results.Redirect("/swagger"));
+
     await DevelopmentSeed.RunAsync(app.Services);
     app.UseCors("DevelopmentCors");
+}
+else
+{
+    app.MapGet("/", () => Results.Ok(new
+    {
+        application = "PlantaoPro.Api",
+        status = "online"
+    }));
 }
 
 app.UseExceptionHandler(a => a.Run(async ctx =>
@@ -106,6 +143,7 @@ app.UseExceptionHandler(a => a.Run(async ctx =>
 }));
 
 app.UseAuthentication();
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

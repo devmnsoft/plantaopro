@@ -1,0 +1,23 @@
+@model PlantaoPro.Web.Models.MedicoFormViewModel
+<form method="post" data-ajax-form="true">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div data-ajax-errors class="alert alert-danger d-none" role="alert"></div>
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6"><label asp-for="Nome" class="form-label">Nome <span class="text-danger">*</span></label><input asp-for="Nome" class="form-control" /><span asp-validation-for="Nome" class="text-danger small"></span></div>
+                <div class="col-md-3"><label asp-for="Cpf" class="form-label">CPF <span class="text-danger">*</span></label><input asp-for="Cpf" class="form-control" data-mask="cpf" /><span asp-validation-for="Cpf" class="text-danger small"></span></div>
+                <div class="col-md-2"><label asp-for="Crm" class="form-label">CRM <span class="text-danger">*</span></label><input asp-for="Crm" class="form-control" /><span asp-validation-for="Crm" class="text-danger small"></span></div>
+                <div class="col-md-1"><label asp-for="UfCrm" class="form-label">UF <span class="text-danger">*</span></label><input asp-for="UfCrm" class="form-control text-uppercase" maxlength="2" /><span asp-validation-for="UfCrm" class="text-danger small"></span></div>
+                <div class="col-md-4"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control" type="email" /><span asp-validation-for="Email" class="text-danger small"></span></div>
+                <div class="col-md-4"><label asp-for="Telefone" class="form-label">Telefone</label><input asp-for="Telefone" class="form-control" data-mask="phone" /><span asp-validation-for="Telefone" class="text-danger small"></span></div>
+                <div class="col-md-3"><label asp-for="Cidade" class="form-label">Cidade</label><input asp-for="Cidade" class="form-control" /></div>
+                <div class="col-md-1"><label asp-for="Estado" class="form-label">UF</label><input asp-for="Estado" class="form-control text-uppercase" maxlength="2" /></div>
+                <div class="col-md-8"><label asp-for="EspecialidadeId" class="form-label">Especialidade <span class="text-danger">*</span></label><select asp-for="EspecialidadeId" class="form-select" asp-items="@(new SelectList(Model.Especialidades, "Id", "Nome"))"><option value="">Selecione...</option></select><span asp-validation-for="EspecialidadeId" class="text-danger small"></span></div>
+                <div class="col-md-4"><label asp-for="RegStatus" class="form-label">Status</label><select asp-for="RegStatus" class="form-select"><option value="A">Ativo</option><option value="I">Inativo</option></select></div>
+            </div>
+        </div>
+        <div class="card-footer bg-white d-flex gap-2 justify-content-end"><a asp-action="Index" class="btn btn-outline-secondary">Voltar</a><button class="btn btn-primary btn-submit" type="submit"><i class="bi bi-check2-circle me-1"></i>Salvar</button></div>
+    </div>
+</form>

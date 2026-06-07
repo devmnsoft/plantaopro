@@ -1,0 +1,28 @@
+@model PlantaoPro.Web.Models.PilotoResumoViewModel
+@{
+    var vm = Model ?? new PlantaoPro.Web.Models.PilotoResumoViewModel();
+    ViewData["Title"] = "Painel do Piloto";
+}
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Painel do Piloto","Acompanhamento da implantação piloto.","bi-speedometer2",null,null,null,true)' />
+
+<div class="row g-3">
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Cliente piloto</div><div class="metric-value">@(string.IsNullOrWhiteSpace(vm.ClientePiloto) ? "-" : vm.ClientePiloto)</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Usuários ativos</div><div class="metric-value">@vm.UsuariosAtivos</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Plantões publicados</div><div class="metric-value">@vm.PlantoesPublicados</div></div></div>
+</div>
+<div class="row g-3 mt-1">
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Ocorrências abertas</div><div class="metric-value">@vm.OcorrenciasAbertas</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Ocorrências resolvidas</div><div class="metric-value">@vm.OcorrenciasResolvidas</div></div></div>
+    <div class="col-md-4"><div class="metric-card"><div class="metric-label">Pendências implantação</div><div class="metric-value">@vm.PendenciasImplantacao</div></div></div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(vm.ErrorMessage))
+{
+    <div class="alert alert-warning mt-3">@vm.ErrorMessage</div>
+}
+
+<div class="mt-4 d-flex gap-2">
+    <a asp-action="Checklist" class="btn btn-primary">Checklist</a>
+    <a asp-action="Ocorrencias" class="btn btn-outline-primary">Ocorrências</a>
+</div>

@@ -1,13 +1,47 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PagamentoResumoDto>
 
-@{
+@{ 
     ViewData["Title"] = "Financeiro";
     var items = Model?.Items ?? Array.Empty<PlantaoPro.Web.Models.PagamentoResumoDto>();
+    var totalPrevisto = items.Sum(x => x.ValorPrevisto);
+    var totalPago = items.Where(x => x.ValorPago.HasValue).Sum(x => x.ValorPago ?? 0);
+    var pendentes = items.Count(x => string.Equals(x.Status, "Pendente", StringComparison.OrdinalIgnoreCase));
+    var cancelados = items.Count(x => string.Equals(x.Status, "Cancelado", StringComparison.OrdinalIgnoreCase));
+    var porStatus = items.GroupBy(x => x.Status).Select(g => new { Status = g.Key, Total = g.Sum(v => v.ValorPrevisto) }).ToList();
+    var maiorValor = porStatus.Any() ? porStatus.Max(x => x.Total) : 0;
 }
 
 <div class="page-header">
     <h2>Financeiro</h2>
     <p class="text-muted">Controle pagamentos previstos, pendentes, pagos e cancelados.</p>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Total Previsto</div><div class="metric-value">@totalPrevisto.ToString("C")</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Total Pago</div><div class="metric-value text-success">@totalPago.ToString("C")</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Pendentes</div><div class="metric-value text-warning">@pendentes</div></div></div>
+    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Cancelados</div><div class="metric-value text-danger">@cancelados</div></div></div>
+</div>
+
+<div class="card border-0 mb-3">
+    <div class="card-header">Consolidação por status (amostra da página)</div>
+    <div class="card-body">
+        @if (!porStatus.Any())
+        {
+            <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart","Sem dados para consolidar","Ajuste os filtros para analisar a consolidação financeira.")' />
+        }
+        else
+        {
+            @foreach (var item in porStatus)
+            {
+                var percentual = maiorValor <= 0 ? 0 : Math.Round((item.Total / maiorValor) * 100, 0);
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between small"><span>@item.Status</span><strong>@item.Total.ToString("C")</strong></div>
+                    <div class="progress"><div class="progress-bar" style="width:@percentual%"></div></div>
+                </div>
+            }
+        }
+    </div>
 </div>
 
 @if (!items.Any())

@@ -1,16 +1,99 @@
 @model PlantaoPro.Web.Models.PlantaoFormViewModel
-<form method="post">
+@{
+    var status = string.IsNullOrWhiteSpace(Model.Status) ? "RASCUNHO" : Model.Status;
+}
+<form method="post" data-ajax-form="true" class="pp-page-grid">
     @Html.AntiForgeryToken()
-    <div class="row g-3">
-        <div class="col-md-6"><label>Hospital</label><select asp-for="HospitalId" class="form-select" asp-items="@(new SelectList(Model.Hospitais, "Id", "NomeFantasia"))"></select></div>
-        <div class="col-md-6"><label>Especialidade</label><select asp-for="EspecialidadeId" class="form-select" asp-items="@(new SelectList(Model.Especialidades, "Id", "Nome"))"></select></div>
-        <div class="col-md-3"><label>Data início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
-        <div class="col-md-3"><label>Data fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>
-        <div class="col-md-2"><label>Valor</label><input asp-for="Valor" class="form-control" /></div>
-        <div class="col-md-2"><label>Vagas</label><input asp-for="Vagas" class="form-control" /></div>
-        <div class="col-md-2"><label>Tipo</label><input asp-for="Tipo" class="form-control" /></div>
-        <div class="col-12"><label>Observações</label><textarea asp-for="Observacoes" class="form-control"></textarea></div>
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div data-ajax-errors class="alert alert-danger d-none" role="alert"></div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage
+        </div>
+    }
+
+    <div class="pp-section-card">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+            <div>
+                <span class="pp-section-kicker">Dados operacionais</span>
+                <h2 class="h5 mb-1">Plantão médico</h2>
+                <p class="text-muted mb-0">Informe hospital, especialidade, período, vagas e valor. O plantão será salvo como rascunho até a publicação.</p>
+            </div>
+            <partial name="_StatusBadge" model="status" />
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <label asp-for="HospitalId" class="form-label form-required">Hospital</label>
+                <select asp-for="HospitalId" class="form-select" asp-items="@(new SelectList(Model.Hospitais, "Id", "NomeFantasia"))">
+                    <option value="">Selecione o hospital...</option>
+                </select>
+                <span class="form-help">A publicação valida se o hospital está ativo e pertence ao cliente permitido.</span>
+                <span asp-validation-for="HospitalId" class="text-danger small"></span>
+            </div>
+            <div class="col-lg-6">
+                <label asp-for="EspecialidadeId" class="form-label form-required">Especialidade</label>
+                <select asp-for="EspecialidadeId" class="form-select" asp-items="@(new SelectList(Model.Especialidades, "Id", "Nome"))">
+                    <option value="">Selecione a especialidade...</option>
+                </select>
+                <span class="form-help">Usada para elegibilidade de médicos, convites e relatórios.</span>
+                <span asp-validation-for="EspecialidadeId" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DataInicio" class="form-label form-required">Data início</label>
+                <input asp-for="DataInicio" type="datetime-local" class="form-control" />
+                <span class="form-help">Início previsto do plantão.</span>
+                <span asp-validation-for="DataInicio" class="text-danger small"></span>
+            </div>
+            <div class="col-md-3">
+                <label asp-for="DataFim" class="form-label form-required">Data fim</label>
+                <input asp-for="DataFim" type="datetime-local" class="form-control" />
+                <span class="form-help">Deve ser maior que a data inicial.</span>
+                <span asp-validation-for="DataFim" class="text-danger small"></span>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Valor" class="form-label form-required">Valor</label>
+                <div class="input-group">
+                    <span class="input-group-text">R$</span>
+                    <input asp-for="Valor" class="form-control" inputmode="decimal" />
+                </div>
+                <span class="form-help">Valor previsto para pagamento.</span>
+                <span asp-validation-for="Valor" class="text-danger small"></span>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Vagas" class="form-label form-required">Vagas</label>
+                <input asp-for="Vagas" class="form-control" type="number" min="1" step="1" />
+                <span class="form-help">Disponíveis iniciam iguais ao total.</span>
+                <span asp-validation-for="Vagas" class="text-danger small"></span>
+            </div>
+            <div class="col-md-2">
+                <label asp-for="Tipo" class="form-label form-required">Tipo</label>
+                <select asp-for="Tipo" class="form-select">
+                    <option value="Presencial">Presencial</option>
+                    <option value="Remoto">Remoto</option>
+                    <option value="Sobreaviso">Sobreaviso</option>
+                    <option value="Híbrido">Híbrido</option>
+                </select>
+                <span asp-validation-for="Tipo" class="text-danger small"></span>
+            </div>
+            <div class="col-12">
+                <label asp-for="Observacoes" class="form-label">Observações</label>
+                <textarea asp-for="Observacoes" class="form-control" rows="4" maxlength="1000" placeholder="Oriente acesso, setor, equipe de referência, requisitos e observações financeiras."></textarea>
+                <span class="form-help">Não informe senhas, tokens ou dados sensíveis.</span>
+                <span asp-validation-for="Observacoes" class="text-danger small"></span>
+            </div>
+        </div>
     </div>
-    <div asp-validation-summary="All" class="text-danger mt-2"></div>
-    <div class="mt-3"><button class="btn btn-primary" type="submit">Salvar</button> <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a></div>
+
+    <div class="pp-section-card d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <div class="text-muted small">
+            <i class="bi bi-shield-check me-1"></i>Ações críticas de publicação, cancelamento e confirmação são validadas pela API e registradas para auditoria.
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
+            <button class="btn btn-primary btn-submit" type="submit"><i class="bi bi-check2-circle me-1"></i>Salvar plantão</button>
+        </div>
+    </div>
 </form>

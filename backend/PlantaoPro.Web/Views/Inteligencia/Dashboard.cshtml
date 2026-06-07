@@ -1,0 +1,101 @@
+@model PlantaoPro.Web.Models.InteligenciaDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard Inteligente";
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="mb-0">Dashboard Executivo Inteligente</h2>
+    <span class="badge text-bg-info" data-bs-toggle="tooltip" title="Filtros de período, hospital, especialidade e médico ativos">KPI em tempo real</span>
+</div>
+
+<form method="get" class="dashboard-filters mb-3">
+    <div class="filter-item"><label class="form-label">Início</label><input class="form-control" type="date" name="inicio" value="@Model.FiltroAplicado.Inicio.ToString("yyyy-MM-dd")" /></div>
+    <div class="filter-item"><label class="form-label">Fim</label><input class="form-control" type="date" name="fim" value="@Model.FiltroAplicado.Fim.ToString("yyyy-MM-dd")" /></div>
+    <div class="filter-item"><label class="form-label">Hospital</label><input class="form-control" name="hospital" value="@Model.FiltroAplicado.Hospital" placeholder="Hospital A"/></div>
+    <div class="filter-item"><label class="form-label">Especialidade</label><input class="form-control" name="especialidade" value="@Model.FiltroAplicado.Especialidade" placeholder="Clínica"/></div>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button>
+    <button class="btn btn-outline-secondary" type="button" disabled data-bs-toggle="tooltip" title="Em breve"><i class="bi bi-file-earmark-pdf"></i> Baixar PDF/Excel</button>
+</form>
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Escalas Ativas</div><div class="metric-value">@Model.Executivo.EscalasAtivas</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Conflitos</div><div class="metric-value text-danger">@Model.Executivo.EscalasComConflito</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Total a Pagar</div><div class="metric-value">@Model.Executivo.TotalPagar.ToString("C")</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Média h/semana</div><div class="metric-value">@Model.Executivo.MediaHorasSemanaPorMedico</div></div></div>
+    <div class="col-6 col-lg-3"><div class="metric-card"><div class="kpi-title">Acima de 40h</div><div class="metric-value text-warning">@Model.Executivo.MedicosAcimaLimiteSemanal</div></div></div>
+</div>
+
+@if (!Model.TotalPorEspecialidade.Any())
+{
+    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem dados para o período", "Aplique filtros diferentes para visualizar os KPIs.", "Ir para Escalas", "Index", "Escalas");
+    <partial name="_EmptyState" model="@emptyState" />
+}
+else
+{
+    <div class="data-card p-3 mb-3">
+        <h5>Ranking de prioridade de médicos (menor carga recente)</h5>
+        <div class="table-responsive">
+            <table class="table table-modern mb-0">
+                <thead><tr><th>Médico</th><th>Escalas (7d)</th><th>Horas (7d)</th><th>Score</th></tr></thead>
+                <tbody>
+                @{ var posicaoMedico = 1; }
+                @foreach (var item in Model.Executivo.RankingPrioridade)
+                {
+                    <tr>
+                        <td>Médico Prioridade #@posicaoMedico</td>
+                        <td>@item.EscalasUltimos7Dias</td>
+                        <td>@item.HorasUltimos7Dias</td>
+                        <td><span class="badge text-bg-success">@item.ScorePrioridade</span></td>
+                    </tr>
+                    posicaoMedico++;
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+    <div class="row g-3 mb-3">
+        <div class="col-12 col-xl-6">
+            <div class="data-card p-3 h-100">
+                <h5>Sugestões inteligentes de plantão</h5>
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead><tr><th>Médico</th><th>Hospital</th><th>Janela</th><th>Score</th></tr></thead>
+                        <tbody>
+                        @foreach (var sugestao in Model.Executivo.SugestoesPlantoes.Take(5))
+                        {
+                            <tr>
+                                <td>@sugestao.MedicoNome<br /><small class="text-muted">@sugestao.Justificativa</small></td>
+                                <td>@sugestao.Hospital<br /><small class="text-muted">@sugestao.Especialidade</small></td>
+                                <td>@sugestao.InicioUtc.ToLocalTime().ToString("dd/MM HH:mm") - @sugestao.FimUtc.ToLocalTime().ToString("HH:mm")</td>
+                                <td><span class="badge text-bg-primary">@sugestao.ScoreAderencia.ToString("P0")</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-6">
+            <div class="data-card p-3 h-100">
+                <h5>Alertas financeiros automáticos</h5>
+                @if (Model.Executivo.AlertasFinanceiros.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                    @foreach (var alerta in Model.Executivo.AlertasFinanceiros)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div><strong>@alerta.Medico</strong><br /><small class="text-muted">@alerta.DiasEmAtraso dias em atraso</small></div>
+                            <span class="badge text-bg-danger">@alerta.ValorPendente.ToString("C")</span>
+                        </li>
+                    }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">Sem pendências financeiras acima do SLA.</p>
+                }
+            </div>
+        </div>
+    </div>

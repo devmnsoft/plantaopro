@@ -1,0 +1,37 @@
+@model PlantaoPro.Web.Models.PilotoChecklistViewModel
+@{
+    var vm = Model ?? new PlantaoPro.Web.Models.PilotoChecklistViewModel();
+    var itens = vm.Itens ?? new List<PlantaoPro.Web.Models.PilotoChecklistItemViewModel>();
+    ViewData["Title"] = "Checklist do Piloto";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist do Piloto","Acompanhe os itens de implantação.","bi-check2-square",null,null,null,true)' />
+
+<div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@vm.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-value">@vm.Concluidos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Percentual</div><div class="metric-value">@vm.Percentual%</div></div></div></div>
+
+@if (!itens.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square","Nenhum item no checklist","Não há itens de checklist para exibir.")' />
+}
+else
+{
+    <ul class="list-group">
+    @foreach (var item in itens)
+    {
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>@item.Titulo</span>
+            @if (item.Concluido)
+            {
+                <span class="badge text-bg-success">Concluído</span>
+            }
+            else
+            {
+                <form asp-action="ConcluirChecklist" method="post" class="m-0">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@item.Id" />
+                    <button type="submit" class="btn btn-sm btn-outline-primary">Concluir</button>
+                </form>
+            }
+        </li>
+    }
+    </ul>
+}

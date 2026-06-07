@@ -1,0 +1,3 @@
+@{ ViewData["Title"] = "Checklist de Primeiros Passos"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist por perfil", "Primeiros passos para administrador, coordenação, médico, financeiro e hospital.", "bi-ui-checks")' />
+<div class="card"><div class="card-body"><h2 class="h5">Perfil: @ViewBag.Perfil</h2><ol><li>Acessar o dashboard.</li><li>Conferir cadastros principais.</li><li>Executar a primeira ação operacional do perfil.</li><li>Consultar auditoria/privacidade quando aplicável.</li></ol></div></div>

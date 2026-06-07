@@ -1,0 +1,5 @@
+@model PlantaoPro.Web.Models.MedicoFormViewModel
+@{ ViewData["Title"] = "Novo Médico"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Novo Médico", "Cadastre profissionais habilitados para convites, escalas e pagamentos.", "bi-person-plus")' />
+<partial name="_MedicoForm" model="Model" />
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -46,12 +46,12 @@ public static class WebListControllerExtensions
         if (!controller.AddBearerToken(client))
             return controller.HandleUnauthorized();
 
-        var result = await controller.ReadApiResponse<PagedResult<T>>(client, endpoint);
+        var result = await controller.ReadApiPagedResponseAsync<T>(client, endpoint);
 
         if (result.StatusCode == HttpStatusCode.Unauthorized)
             return controller.HandleUnauthorized();
 
-        var data = result.Data;
+        var data = result.Data ?? PagedResult<T>.Empty();
 
         var errorMessage = result.StatusCode == HttpStatusCode.OK ? null : result.Error;
 

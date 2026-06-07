@@ -1,5 +1,9 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
-export const placeholder = false;
->>>>>>> pr-2
+export interface MedicoPerfil {
+  id?: string;
+  nome: string;
+  email: string;
+  crm?: string;
+  ufCrm?: string;
+  telefone?: string;
+  especialidades?: string[];
+}

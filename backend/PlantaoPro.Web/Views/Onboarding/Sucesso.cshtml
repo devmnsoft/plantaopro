@@ -1,0 +1,18 @@
+@model PlantaoPro.Web.Models.OnboardingResumoDto
+@{
+    ViewData["Title"] = "Onboarding concluído";
+}
+<div class="container py-4">
+    <div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>Cliente criado com sucesso.</div>
+    <div class="card shadow-sm"><div class="card-body">
+        <h4>@Model.ClienteNome</h4>
+        <ul>
+            <li>Plano: @Model.PlanoNome</li>
+            <li>Unidade: @Model.UnidadeNome</li>
+            <li>Usuário administrador: @Model.UsuarioNome (@Model.UsuarioEmail)</li>
+            <li>Assinatura: @Model.AssinaturaStatus</li>
+            <li>Criado em: @Model.DataCriacaoAssinatura.ToString("dd/MM/yyyy HH:mm")</li>
+        </ul>
+        <a asp-controller="Clientes" asp-action="Index" class="btn btn-primary">Ir para clientes</a>
+    </div></div>
+</div>

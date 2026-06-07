@@ -1,7 +1,4 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
 import React from 'react';
-import { View, Text } from 'react-native';
-export default function Loading(){return <View style={{padding:12}}><Text>Loading</Text></View>;}
->>>>>>> pr-2
+import { ActivityIndicator, View } from 'react-native';
+import colors from '../theme/colors';
+export default function Loading() { return <View style={{ padding: 24 }}><ActivityIndicator color={colors.primary} /></View>; }

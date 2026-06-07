@@ -1,0 +1,75 @@
+@model PlantaoPro.Web.Models.FaturamentoSaasIndexViewModel
+@{
+    ViewData["Title"] = "Faturamento SaaS";
+    var faturas = Model.Faturas.Items ?? Array.Empty<PlantaoPro.Web.Models.FaturaSaasViewModel>();
+}
+
+<div class="container-fluid py-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h1 class="h3 mb-1">Faturamento SaaS</h1>
+            <p class="text-muted mb-0">Resumo comercial, faturas, inadimplência e ações controladas.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-danger" asp-action="Inadimplencia">Inadimplência</a>
+            <a class="btn btn-primary" asp-action="GerarMensal">Gerar mensal</a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Receita prevista</span><h2 class="h4 mb-0">@Model.Resumo.ReceitaPrevista.ToString("C")</h2></div></div></div>
+        <div class="col-12 col-md-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Receita recebida</span><h2 class="h4 mb-0">@Model.Resumo.ReceitaRecebida.ToString("C")</h2></div></div></div>
+        <div class="col-12 col-md-2"><div class="card h-100"><div class="card-body"><span class="text-muted">Abertas</span><h2 class="h4 mb-0">@Model.Resumo.FaturasAbertas</h2></div></div></div>
+        <div class="col-12 col-md-2"><div class="card h-100"><div class="card-body"><span class="text-muted">Vencidas</span><h2 class="h4 mb-0 text-danger">@Model.Resumo.FaturasVencidas</h2></div></div></div>
+        <div class="col-12 col-md-2"><div class="card h-100"><div class="card-body"><span class="text-muted">Contestação</span><h2 class="h4 mb-0 text-warning">@Model.Resumo.FaturasEmContestacao</h2></div></div></div>
+    </div>
+
+    <form method="get" class="card card-body mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">Todos</option>
+                    @foreach (var status in new[] { "ABERTA", "PAGA", "VENCIDA", "CANCELADA", "EM_CONTESTACAO" })
+                    {
+                        <option value="@status" selected="@(Model.Status == status)">@status</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label" for="competencia">Competência</label>
+                <input class="form-control" id="competencia" name="competencia" type="date" value="@Model.Competencia" />
+            </div>
+            <div class="col-12 col-md-4 d-flex gap-2">
+                <button type="submit" class="btn btn-outline-primary">Filtrar</button>
+                <a class="btn btn-outline-secondary" asp-action="Index">Limpar</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!faturas.Any())
+    {
+        <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Nenhuma fatura encontrada", "Ajuste os filtros ou gere faturas mensais para assinaturas ativas.")' />
+    }
+    else
+    {
+        <div class="table-responsive card">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th>Cliente</th><th>Competência</th><th>Vencimento</th><th>Status</th><th class="text-end">Valor</th><th></th></tr></thead>
+                <tbody>
+                @foreach (var item in faturas)
+                {
+                    <tr>
+                        <td>@item.ClienteNome</td>
+                        <td>@item.Competencia.ToString("MM/yyyy")</td>
+                        <td>@item.Vencimento.ToString("dd/MM/yyyy")</td>
+                        <td><span class="badge bg-secondary">@item.Status</span></td>
+                        <td class="text-end">@item.Valor.ToString("C")</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Detalhes</a></td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

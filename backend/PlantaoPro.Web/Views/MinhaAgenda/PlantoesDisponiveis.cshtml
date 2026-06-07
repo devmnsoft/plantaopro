@@ -1,6 +1,38 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoPlantaoDisponivelDto>
 @{ ViewData["Title"]="Plantões Disponíveis"; }
-<table class="table"><thead><tr><th>Hospital</th><th>Cidade/UF</th><th>Especialidade</th><th>Início</th><th>Fim</th><th>Valor</th><th>Vagas</th><th>Tipo</th><th>Status</th><th>Situação</th><th>Ações</th></tr></thead><tbody>
-@foreach(var p in Model.Items){ var dis = p.JaSolicitado || p.TemConflitoHorario || p.VagasDisponiveis<=0; var title = p.JaSolicitado?"Você já solicitou este plantão.":(p.TemConflitoHorario?"Você possui conflito de horário.":(p.VagasDisponiveis<=0?"Sem vagas disponíveis.":"Solicitar plantão"));
-<tr><td>@p.HospitalNome</td><td>@p.HospitalCidade/@p.HospitalEstado</td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td>@p.DataFim.ToString("dd/MM/yyyy HH:mm")</td><td>@p.Valor.ToString("C")</td><td>@p.VagasDisponiveis</td><td>@p.Tipo</td><td>@p.Status</td><td>@(p.TemConflitoHorario?"Conflito":"Disponível")</td><td><button class="btn btn-sm btn-primary" disabled="@dis" title="@title">Solicitar</button></td></tr>}
-</tbody></table><partial name="_Pagination" model="Model" />
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+@if (Model.Items is null || !Model.Items.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Sem plantões no momento", "Quando houver oportunidades compatíveis, elas aparecerão aqui.")' />
+}
+else
+{
+<table class="table table-hover align-middle">
+    <thead><tr><th>Hospital</th><th>Cidade/UF</th><th>Especialidade</th><th>Início</th><th>Fim</th><th>Valor</th><th>Vagas</th><th>Tipo</th><th>Status</th><th>Situação</th><th>Ações</th></tr></thead>
+    <tbody>
+    @foreach(var p in Model.Items){
+        var dis = p.JaSolicitado || p.TemConflitoHorario || p.VagasDisponiveis<=0;
+        var title = p.JaSolicitado?"Você já solicitou este plantão.":(p.TemConflitoHorario?"Você possui conflito de horário.":(p.VagasDisponiveis<=0?"Sem vagas disponíveis.":"Solicitar plantão"));
+        <tr>
+            <td>@(p.HospitalNome ?? "-")</td><td>@(p.HospitalCidade ?? "-")/@(p.HospitalEstado ?? "-")</td><td>@(p.EspecialidadeNome ?? "-")</td>
+            <td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td>@p.DataFim.ToString("dd/MM/yyyy HH:mm")</td><td>@p.Valor.ToString("C")</td><td>@p.VagasDisponiveis</td><td>@(p.Tipo ?? "-")</td><td>@(p.Status ?? "-")</td>
+            <td>@(p.TemConflitoHorario?"Conflito":"Disponível")</td>
+            <td>
+                <form asp-action="SolicitarPlantao" method="post" data-ajax-form="true" data-confirm="true" data-confirm-title="Solicitar plantão" data-confirm-message="Confirma solicitar este plantão? O sistema validará vagas e conflito de horário antes de registrar a escala." data-confirm-type="primary">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="plantaoId" value="@p.PlantaoId" />
+                    <button class="btn btn-sm btn-primary" type="submit" disabled="@dis" title="@title">Solicitar</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+}
+
+<partial name="_Pagination" model="Model" />

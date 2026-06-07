@@ -1,0 +1,34 @@
+@model PlantaoPro.Web.Models.PilotoOcorrenciasViewModel
+@{
+    var page = Model ?? new PlantaoPro.Web.Models.PilotoOcorrenciasViewModel();
+    var ocorrencias = page.Ocorrencias ?? new List<PlantaoPro.Web.Models.PilotoOcorrenciaViewModel>();
+    var nova = page.NovaOcorrencia ?? new PlantaoPro.Web.Models.NovaPilotoOcorrenciaViewModel();
+    ViewData["Title"] = "Ocorrências do Piloto";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Ocorrências do Piloto","Registre e acompanhe ocorrências da implantação.","bi-exclamation-circle",null,null,null,true)' />
+
+<form asp-action="CriarOcorrencia" method="post" class="row g-2 mb-3">
+    @Html.AntiForgeryToken()
+    <div class="col-md-3"><input asp-for="NovaOcorrencia.Tipo" class="form-control" placeholder="Tipo" value="@nova.Tipo" /></div>
+    <div class="col-md-2"><input asp-for="NovaOcorrencia.Prioridade" class="form-control" placeholder="Prioridade" value="@nova.Prioridade" /></div>
+    <div class="col-md-4"><input asp-for="NovaOcorrencia.Descricao" class="form-control" placeholder="Descrição" value="@nova.Descricao" /></div>
+    <div class="col-md-2"><input asp-for="NovaOcorrencia.Responsavel" class="form-control" placeholder="Responsável" value="@nova.Responsavel" /></div>
+    <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Salvar</button></div>
+</form>
+
+@if (!ocorrencias.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-exclamation-circle","Nenhuma ocorrência registrada","Não há ocorrências para exibir no momento.")' />
+}
+else
+{
+<table class="table table-striped table-responsive">
+    <thead><tr><th>Tipo</th><th>Prioridade</th><th>Status</th><th>Descrição</th><th>Responsável</th></tr></thead>
+    <tbody>
+    @foreach (var item in ocorrencias)
+    {
+        <tr><td>@item.Tipo</td><td>@item.Prioridade</td><td><span class="badge text-bg-secondary">@item.Status</span></td><td>@item.Descricao</td><td>@item.Responsavel</td></tr>
+    }
+    </tbody>
+</table>
+}

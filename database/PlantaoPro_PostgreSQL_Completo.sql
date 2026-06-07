@@ -32,3 +32,55 @@ CREATE INDEX IF NOT EXISTS idx_pagamentos_medico ON pagamentos(medico_id);
 CREATE INDEX IF NOT EXISTS idx_pagamentos_plantao ON pagamentos(plantao_id);
 CREATE INDEX IF NOT EXISTS idx_historico_escala_escala ON historico_escala(escala_id);
 CREATE INDEX IF NOT EXISTS idx_historico_pagamento_pagamento ON historico_pagamento(pagamento_id);
+
+-- Evolução comercial 2026: inteligência operacional e financeira
+ALTER TABLE plantaopro.escalas
+    ADD COLUMN IF NOT EXISTS data_inicio timestamp,
+    ADD COLUMN IF NOT EXISTS data_fim timestamp,
+    ADD COLUMN IF NOT EXISTS horas_previstas numeric(6,2),
+    ADD COLUMN IF NOT EXISTS score_prioridade numeric(8,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS conflito_detectado boolean NOT NULL DEFAULT false;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_escalas_horas_previstas_positivas'
+          AND conrelid = 'plantaopro.escalas'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.escalas
+        ADD CONSTRAINT ck_escalas_horas_previstas_positivas CHECK (horas_previstas IS NULL OR (horas_previstas > 0 AND horas_previstas <= 24));
+    END IF;
+END $$;
+
+ALTER TABLE plantaopro.pagamentos
+    ADD COLUMN IF NOT EXISTS horas_referencia numeric(6,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS valor_hora numeric(10,2) NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS processado_automaticamente boolean NOT NULL DEFAULT false;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_valor_hora_nao_negativo'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_valor_hora_nao_negativo CHECK (valor_hora >= 0);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pagamentos_horas_referencia_nao_negativa'
+          AND conrelid = 'plantaopro.pagamentos'::regclass
+    ) THEN
+        ALTER TABLE plantaopro.pagamentos
+        ADD CONSTRAINT ck_pagamentos_horas_referencia_nao_negativa CHECK (horas_referencia >= 0);
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS ix_escalas_medico_data_inicio_data_fim ON plantaopro.escalas (medico_id, data_inicio, data_fim);
+CREATE INDEX IF NOT EXISTS ix_pagamentos_status_data_prevista ON plantaopro.pagamentos (status, data_prevista);
+
+COMMENT ON COLUMN plantaopro.escalas.score_prioridade IS 'Score para priorização inteligente de médicos com menor carga recente.';
+COMMENT ON COLUMN plantaopro.escalas.conflito_detectado IS 'Flag operacional para alertas visuais e auditoria de conflitos.';

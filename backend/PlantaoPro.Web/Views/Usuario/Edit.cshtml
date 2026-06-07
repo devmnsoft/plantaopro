@@ -1,17 +1,45 @@
-@model PlantaoPro.Web.Controllers.UserSettingsViewModel
+@using PlantaoPro.Web.Models.ViewModels
+@model UserSettingsViewModel
 @{ ViewData["Title"] = "Editar Configurações"; }
+
 <div class="data-card p-4">
     <h4 class="mb-3">Dados do usuário</h4>
     <form asp-action="Edit" method="post" novalidate>
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
         <div class="row g-3">
-            <div class="col-md-6"><label asp-for="Nome" class="form-label"></label><input asp-for="Nome" class="form-control"/><span asp-validation-for="Nome" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="Email" class="form-label"></label><input asp-for="Email" class="form-control"/><span asp-validation-for="Email" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="Telefone" class="form-label"></label><input asp-for="Telefone" class="form-control"/><span asp-validation-for="Telefone" class="text-danger"></span></div>
-            <div class="col-md-6"><label asp-for="PreferenciasNotificacao" class="form-label">Preferência de notificação</label><select asp-for="PreferenciasNotificacao" class="form-select"><option>Email</option><option>SMS</option><option>Push</option><option>Todos</option></select></div>
+            <div class="col-md-6">
+                <label asp-for="Nome" class="form-label"></label>
+                <input asp-for="Nome" class="form-control" />
+                <span asp-validation-for="Nome" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Telefone" class="form-label"></label>
+                <input asp-for="Telefone" class="form-control" />
+                <span asp-validation-for="Telefone" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="PreferenciasNotificacao" class="form-label">Preferência de notificação</label>
+                <select asp-for="PreferenciasNotificacao" class="form-select">
+                    <option>Email</option>
+                    <option>SMS</option>
+                    <option>Push</option>
+                    <option>Todos</option>
+                </select>
+            </div>
         </div>
-        <div class="mt-3 d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar alterações</button><a class="btn btn-light" asp-action="Index">Cancelar</a></div>
+
+        <div class="mt-3 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Salvar alterações</button>
+            <a class="btn btn-light" asp-action="Index">Cancelar</a>
+        </div>
     </form>
 </div>
+
 @section Scripts {<partial name="_ValidationScriptsPartial"/>}

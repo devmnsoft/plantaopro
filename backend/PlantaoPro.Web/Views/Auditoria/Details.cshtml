@@ -1,0 +1,24 @@
+@model PlantaoPro.Web.Models.AuditoriaDetalheDto
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Detalhes da auditoria";
+    var detalhes = Model?.DetalhesJson ?? "{}";
+    try { detalhes = JsonSerializer.Serialize(JsonSerializer.Deserialize<object>(detalhes), new JsonSerializerOptions { WriteIndented = true }); } catch { }
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Detalhes da auditoria", "Evento crítico registrado com rastreabilidade.", "bi-card-checklist")' />
+<div class="row g-4">
+    <div class="col-lg-5"><div class="card border-0 shadow-sm"><div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Data/hora</dt><dd class="col-sm-8">@(Model is null ? "-" : Model.RegDate.ToString("dd/MM/yyyy HH:mm:ss"))</dd>
+            <dt class="col-sm-4">Usuário</dt><dd class="col-sm-8"><div>@(string.IsNullOrWhiteSpace(Model?.UsuarioNome) ? "-" : Model.UsuarioNome)</div><code>@(Model?.UsuarioId?.ToString() ?? "-")</code></dd>
+            <dt class="col-sm-4">Cliente</dt><dd class="col-sm-8"><div>@(string.IsNullOrWhiteSpace(Model?.ClienteNome) ? "-" : Model.ClienteNome)</div><code>@(Model?.ClienteId?.ToString() ?? "-")</code></dd>
+            <dt class="col-sm-4">Perfil</dt><dd class="col-sm-8"><span class="badge bg-secondary">@(Model?.Perfil ?? string.Empty)</span></dd>
+            <dt class="col-sm-4">Ação</dt><dd class="col-sm-8"><span class="badge bg-info text-dark">@(Model?.Acao ?? string.Empty)</span></dd>
+            <dt class="col-sm-4">Entidade</dt><dd class="col-sm-8">@(Model?.Entidade ?? string.Empty)</dd>
+            <dt class="col-sm-4">Entidade ID</dt><dd class="col-sm-8"><code>@(Model?.EntidadeId?.ToString() ?? "-")</code></dd>
+            <dt class="col-sm-4">IP</dt><dd class="col-sm-8">@(Model?.IpOrigem ?? string.Empty)</dd>
+            <dt class="col-sm-4">Status</dt><dd class="col-sm-8">@(Model?.Sucesso == true ? "Sucesso" : "Falha")</dd>
+        </dl>
+    </div></div></div>
+    <div class="col-lg-7"><div class="card border-0 shadow-sm"><div class="card-header bg-white fw-semibold">Detalhes JSON</div><div class="card-body"><pre class="small mb-0"><code>@detalhes</code></pre></div></div></div>
+</div>

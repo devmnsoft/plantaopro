@@ -1,6 +1,7 @@
-using Dapper;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
+using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -8,59 +9,24 @@ namespace PlantaoPro.Api.Controllers;
 [Route("api/health")]
 public class HealthController : ControllerBase
 {
-    private readonly IWebHostEnvironment _env;
-    private readonly IConfiguration _cfg;
-    private readonly ILogger<HealthController> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public HealthController(IWebHostEnvironment env, IConfiguration cfg, ILogger<HealthController> logger)
+    public HealthController(IWebHostEnvironment environment)
     {
-        _env = env;
-        _cfg = cfg;
-        _logger = logger;
+        _environment = environment;
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    [ProducesResponseType(typeof(ApiResponse<HealthDto>), StatusCodes.Status200OK)]
+    public IActionResult Get()
     {
-        var now = DateTime.UtcNow;
-        var dbOk = false;
-        string? dbError = null;
+        var health = new HealthDto(
+            "PlantaoPro.Api",
+            "Healthy",
+            _environment.EnvironmentName,
+            DateTime.UtcNow,
+            typeof(HealthController).Assembly.GetName().Version?.ToString() ?? string.Empty);
 
-        try
-        {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            await cn.OpenAsync();
-            await cn.ExecuteScalarAsync<int>("select 1");
-            dbOk = true;
-        }
-        catch (Exception ex)
-        {
-            dbError = ex.Message;
-            _logger.LogError(ex, "Falha no health check do banco.");
-        }
-
-        var jwtSection = _cfg.GetSection("Jwt");
-        var jwtOk = !string.IsNullOrWhiteSpace(jwtSection["Issuer"]) && !string.IsNullOrWhiteSpace(jwtSection["Audience"]) && !string.IsNullOrWhiteSpace(jwtSection["Key"]);
-
-        var healthy = dbOk && jwtOk;
-        return StatusCode(healthy ? 200 : 503, new
-        {
-            success = healthy,
-            message = healthy ? "ok" : "degraded",
-            data = new
-            {
-                status = healthy ? "Healthy" : "Degraded",
-                ambiente = _env.EnvironmentName,
-                dataHora = now,
-                servicos = new
-                {
-                    banco = new { status = dbOk ? "up" : "down", erro = dbError },
-                    jwt = new { status = jwtOk ? "up" : "down" }
-                },
-                schema = "plantaopro",
-                versao = "1.1.0",
-                nomeAplicacao = "PlantaoPro"
-            }
-        });
+        return Ok(ApiResponse<HealthDto>.Ok(health, "PlantaoPro.Api online"));
     }
 }

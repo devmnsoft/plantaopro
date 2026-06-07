@@ -1,5 +1,45 @@
-<h2 class="mb-3">Configurações</h2>
-<div class="card p-4">
-    <p>Painel de configurações do sistema.</p>
-    <a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Saude">Saúde do Sistema</a>
+@model PlantaoPro.Web.Controllers.UserSettingsSummaryViewModel
+@{ ViewData["Title"] = "Configurações"; }
+
+<div class="row g-3">
+    <div class="col-12 col-xl-7">
+        <div class="data-card p-4 h-100">
+            <h4 class="mb-3">Conta do usuário</h4>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+            {
+                @* Feedback visual amigável quando a API retornar erro ou estiver indisponível. *@
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    @ViewBag.ErrorMessage
+                </div>
+            }
+            @if (string.IsNullOrWhiteSpace(Model.Email))
+            {
+                <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-person-x", "Dados indisponíveis", "Não foi possível carregar os dados da conta.", "Tentar novamente", "Index", "Configuracoes")' />
+            }
+            else
+            {
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Nome</dt><dd class="col-sm-8">@Model.Nome</dd>
+                    <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Telefone) ? "Não informado" : Model.Telefone)</dd>
+                    <dt class="col-sm-4">Notificações</dt><dd class="col-sm-8">@Model.PreferenciasNotificacao</dd>
+                </dl>
+            }
+            <div class="d-flex gap-2 mt-3">
+                <a class="btn btn-primary" asp-controller="Usuario" asp-action="Edit"><i class="bi bi-pencil-square"></i> Editar perfil</a>
+                <a class="btn btn-outline-primary" asp-controller="Usuario" asp-action="AlterarSenha"><i class="bi bi-key"></i> Alterar senha</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-xl-5">
+        <div class="data-card p-4 h-100">
+            <h4 class="mb-3">Sistema</h4>
+            <p class="text-muted">Acesse monitoramento e documentação interativa da API.</p>
+            <div class="d-grid gap-2">
+                <a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Saude">Saúde do Sistema</a>
+                <a class="btn btn-outline-secondary" href="/swagger" target="_blank" rel="noopener">Swagger API</a>
+            </div>
+        </div>
+    </div>
 </div>

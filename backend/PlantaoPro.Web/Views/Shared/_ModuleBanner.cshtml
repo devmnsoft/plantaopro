@@ -1,0 +1,29 @@
+@model PlantaoPro.Web.Models.ModuleBannerViewModel?
+@{
+    var title = Model?.Title ?? "Módulo";
+    var description = Model?.Description ?? "Gerencie este módulo com produtividade e visibilidade.";
+    var icon = Model?.Icon ?? "bi-grid";
+    var actionText = Model?.ActionText ?? string.Empty;
+    var actionController = Model?.ActionController ?? string.Empty;
+    var actionName = Model?.ActionName ?? string.Empty;
+    var actionDisabled = Model?.ActionDisabled ?? false;
+}
+<section class="module-banner mb-4">
+    <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+            <div class="module-banner-title"><i class="bi @icon me-2"></i>@title</div>
+            <p class="module-banner-description mb-0">@description</p>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(actionText))
+        {
+            if (!string.IsNullOrWhiteSpace(actionController) && !string.IsNullOrWhiteSpace(actionName) && !actionDisabled)
+            {
+                <a class="btn btn-primary" asp-controller="@actionController" asp-action="@actionName">@actionText</a>
+            }
+            else
+            {
+                <button class="btn btn-primary" disabled title="Em breve">@actionText</button>
+            }
+        }
+    </div>
+</section>

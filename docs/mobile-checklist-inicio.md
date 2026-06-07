@@ -1,0 +1,11 @@
+# Checklist de Início — Mobile
+- [ ] Criar projeto (aplicativo móvel multiplataforma)
+- [ ] Configurar navegação
+- [ ] Configurar Axios/fetch
+- [ ] Configurar armazenamento seguro do token
+- [ ] Implementar tela de login
+- [ ] Implementar dashboard médico
+- [ ] Implementar listagem de plantões
+- [ ] Implementar tela de convites
+- [ ] Implementar tela de pagamentos
+- [ ] Implementar notificações

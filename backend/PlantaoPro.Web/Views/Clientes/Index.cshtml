@@ -1,0 +1,62 @@
+@model IEnumerable<PlantaoPro.Web.Models.ClienteDto>
+@{
+    ViewData["Title"] = "Clientes";
+    var ativos = Model.Count(x => x.Status == "ATIVO");
+    var suspensos = Model.Count(x => x.Status == "SUSPENSO");
+    var teste = Model.Count(x => x.Status == "TESTE");
+    var cancelados = Model.Count(x => x.Status == "CANCELADO");
+}
+
+<div class="container-fluid">
+    <div class="alert alert-info mb-3"><i class="bi bi-buildings"></i> Gerencie empresas contratantes e seus limites de assinatura.</div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Ativos</h6><h3>@ativos</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Suspensos</h6><h3>@suspensos</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Em teste</h6><h3>@teste</h3></div></div></div>
+        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Cancelados</h6><h3>@cancelados</h3></div></div></div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped align-middle">
+            <thead><tr><th>Cliente</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
+            <tbody>
+            @if (!Model.Any())
+            {
+                <tr><td colspan="5" class="text-center py-4"><i class="bi bi-inboxes fs-3 d-block"></i>Nenhum cliente cadastrado ainda.</td></tr>
+            }
+            else
+            {
+                foreach (var c in Model)
+                {
+                    <tr>
+                        <td><strong>@c.NomeFantasia</strong><div class="text-muted small">@c.RazaoSocial</div></td>
+                        <td>@c.Cnpj</td>
+                        <td>@c.Cidade/@c.Estado</td>
+                        <td><span class="badge bg-@(c.Status=="ATIVO"?"success":c.Status=="TESTE"?"warning text-dark":c.Status=="SUSPENSO"?"danger":"secondary")">@c.Status</span></td>
+                        <td class="text-end">
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Confirma suspender este cliente?" data-confirm-type="warning">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <input type="hidden" name="acao" value="SUSPENDER" />
+                                <button type="submit" class="btn btn-sm btn-outline-warning" @(c.Status == "SUSPENSO" || c.Status == "CANCELADO" ? "disabled" : null)>Suspender</button>
+                            </form>
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Reativar cliente" data-confirm-message="Confirma reativar este cliente?" data-confirm-type="success">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <input type="hidden" name="acao" value="REATIVAR" />
+                                <button type="submit" class="btn btn-sm btn-outline-success" @(c.Status == "ATIVO" ? "disabled" : null)>Reativar</button>
+                            </form>
+                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Cancelar cliente" data-confirm-message="Confirma cancelar este cliente?" data-confirm-type="danger">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <input type="hidden" name="acao" value="CANCELAR" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" @(c.Status == "CANCELADO" ? "disabled" : null)>Cancelar</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

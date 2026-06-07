@@ -1,28 +1,71 @@
 @model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.EscalaDetailsDto>
 @{ var e = Model.Data; }
-<h2>Detalhes da Escala</h2>
-@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Detalhes da Escala", "Confirme, recuse, conclua ou substitua escalas com validação, confirmação e feedback visual.", "bi-diagram-3")' />
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
 @if (e is not null)
 {
-    <div class="card"><div class="card-body">
-        <h5>@e.MedicoNome</h5>
-        <p>CRM: @e.MedicoCrm/@e.MedicoUfCrm • @e.MedicoEmail • @e.MedicoTelefone</p>
-        <p>@e.HospitalNome - @e.HospitalCidade/@e.HospitalEstado</p>
-        <p>@e.EspecialidadeNome | @e.DataInicio.ToString("dd/MM/yyyy HH:mm") - @e.DataFim.ToString("HH:mm") | @e.Valor.ToString("C")</p>
-        <p>Status: <partial name="_StatusBadge" model="e.Status" /> </p>
-        <p>Justificativa: @(string.IsNullOrWhiteSpace(e.Justificativa)?"-":e.Justificativa)</p>
-        <div class="d-flex gap-2">
-            @if (e.Status == "solicitado")
-            {
-                <form method="post" asp-action="Confirmar" asp-route-id="@e.Id"><button class="btn btn-success">Confirmar</button></form>
-                <form method="post" asp-action="Recusar" asp-route-id="@e.Id"><input name="justificativa" class="form-control" placeholder="Justificativa" required /><button class="btn btn-danger mt-2">Recusar</button></form>
-            }
-            @if (e.Status == "confirmado")
-            {
-                <form method="post" asp-action="MarcarRealizado" asp-route-id="@e.Id"><button class="btn btn-primary">Marcar realizado</button></form>
-                <a class="btn btn-outline-secondary" asp-action="Substituir" asp-route-id="@e.Id">Substituir</a>
-            }
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-3">
+                <div>
+                    <h5 class="mb-1">@e.MedicoNome</h5>
+                    <p class="text-muted mb-0">CRM: @e.MedicoCrm/@e.MedicoUfCrm • @e.MedicoEmail • @e.MedicoTelefone</p>
+                </div>
+                <partial name="_StatusBadge" model="e.Status" />
+            </div>
+
+            <hr />
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Hospital</dt><dd class="col-sm-9">@e.HospitalNome - @e.HospitalCidade/@e.HospitalEstado</dd>
+                <dt class="col-sm-3">Especialidade</dt><dd class="col-sm-9">@e.EspecialidadeNome</dd>
+                <dt class="col-sm-3">Período</dt><dd class="col-sm-9">@e.DataInicio.ToString("dd/MM/yyyy HH:mm") - @e.DataFim.ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-3">Valor</dt><dd class="col-sm-9">@e.Valor.ToString("C")</dd>
+                <dt class="col-sm-3">Justificativa</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(e.Justificativa) ? "-" : e.Justificativa)</dd>
+            </dl>
         </div>
-    </div></div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold"><i class="bi bi-shield-check me-1"></i>Ações críticas da escala</div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 align-items-start">
+                @if (e.Status == "solicitado")
+                {
+                    <form method="post" asp-action="Confirmar" asp-route-id="@e.Id" data-ajax-form="true" data-confirm="true" data-confirm-title="Confirmar escala" data-confirm-message="Confirma esta escala? A ação validará conflitos, vagas e ficará registrada em auditoria." data-confirm-type="success">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-success" type="submit"><i class="bi bi-check2-circle me-1"></i>Confirmar</button>
+                    </form>
+
+                    <form method="post" asp-action="Recusar" asp-route-id="@e.Id" class="d-flex flex-column flex-md-row gap-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Recusar escala" data-confirm-message="Confirma recusar esta escala? Informe a justificativa para registrar o histórico." data-confirm-type="danger">
+                        @Html.AntiForgeryToken()
+                        <input name="justificativa" class="form-control" placeholder="Justificativa" required />
+                        <button class="btn btn-danger" type="submit"><i class="bi bi-x-circle me-1"></i>Recusar</button>
+                    </form>
+                }
+
+                @if (e.Status == "confirmado")
+                {
+                    <form method="post" asp-action="MarcarRealizado" asp-route-id="@e.Id" data-ajax-form="true" data-confirm="true" data-confirm-title="Marcar escala como realizada" data-confirm-message="Confirma a conclusão da escala? Esta ação libera o fluxo financeiro e histórico operacional." data-confirm-type="primary">
+                        @Html.AntiForgeryToken()
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-check-all me-1"></i>Marcar realizado</button>
+                    </form>
+
+                    <a class="btn btn-outline-secondary" asp-action="Substituir" asp-route-id="@e.Id"><i class="bi bi-arrow-repeat me-1"></i>Substituir</a>
+                }
+            </div>
+        </div>
+    </div>
 }
+else
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-x", "Escala não encontrada", "A escala solicitada não está disponível para o perfil atual.", "Voltar", "Index", "Escalas")' />
+}
+
 <a asp-action="Index" class="btn btn-outline-secondary mt-3">Voltar</a>

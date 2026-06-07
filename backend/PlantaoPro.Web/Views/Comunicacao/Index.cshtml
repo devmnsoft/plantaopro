@@ -1,0 +1,64 @@
+@model PlantaoPro.Web.Models.ConversaListViewModel
+@using PlantaoPro.Web.Models
+@{
+    ViewData["Title"] = "Comunicação";
+    var header = new PageHeaderViewModel("Comunicação", "Central de conversas com times assistenciais e operacionais.", "bi-chat-dots", "Nova Conversa", "NovaConversa", "Comunicacao");
+    var conversas = Model?.Conversas ?? Array.Empty<ConversaResumoDto>();
+}
+
+<partial name="_PageHeader" model="header" />
+
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+{
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-12 col-md-4"><input class="form-control" name="search" value="@Model?.Search" placeholder="Buscar por título" /></div>
+            <div class="col-6 col-md-3"><input class="form-control" name="tipo" value="@Model?.Tipo" placeholder="Tipo" /></div>
+            <div class="col-6 col-md-3"><input class="form-control" name="status" value="@Model?.Status" placeholder="Status" /></div>
+            <div class="col-12 col-md-2 d-grid"><button class="btn btn-outline-primary" type="submit">Filtrar</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        @if (conversas.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead><tr><th>Título</th><th>Tipo</th><th>Status</th><th>Última mensagem</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    @foreach (var conversa in conversas)
+                    {
+                        <tr>
+                            <td><div class="fw-semibold">@conversa.Titulo</div><div class="small text-muted">@conversa.Entidade</div></td>
+                            <td><span class="badge text-bg-light border">@conversa.Tipo</span></td>
+                            <td><span class="badge text-bg-secondary">@conversa.Status</span></td>
+                            <td>
+                                <div>@(string.IsNullOrWhiteSpace(conversa.UltimaMensagem) ? "Sem mensagens" : conversa.UltimaMensagem)</div>
+                                <div class="small text-muted">@(conversa.UltimaMensagemEm?.ToString("dd/MM/yyyy HH:mm") ?? conversa.RegDate.ToString("dd/MM/yyyy HH:mm"))</div>
+                            </td>
+                            <td class="text-end">
+                                @if (conversa.NaoLidas > 0)
+                                {
+                                    <span class="badge text-bg-primary me-2">@conversa.NaoLidas não lidas</span>
+                                }
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@conversa.Id">Abrir</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            var emptyState = new EmptyStateViewModel("bi-chat-square-dots", "Nenhuma conversa encontrada", "Inicie uma nova conversa para centralizar a comunicação.", "Nova Conversa", "NovaConversa", "Comunicacao");
+            <div class="p-4"><partial name="_EmptyState" model="emptyState" /></div>
+        }
+    </div>
+</div>

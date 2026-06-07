@@ -1,0 +1,58 @@
+@model PlantaoPro.Web.Models.OperacaoAssistidaChecklistPageViewModel
+@{
+    ViewData["Title"] = "Checklist da Operação Assistida";
+    var itens = Model?.Itens ?? Array.Empty<PlantaoPro.Web.Models.OperacaoAssistidaChecklistItemViewModel>();
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist de Operação Assistida", Model?.ClienteNome ?? "Cliente", "bi-check2-square", null, null, null, true)' />
+
+<div class="progress mb-3" role="progressbar" aria-label="Progresso" aria-valuenow="@(Model?.Percentual ?? 0)" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar" style="width: @(Model?.Percentual ?? 0)%">@(Model?.Percentual ?? 0)%</div>
+</div>
+
+@if (!itens.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square", "Checklist vazio", "Nenhum item de checklist encontrado para este cliente.")' />
+}
+else
+{
+    <div class="list-group">
+    @foreach (var item in itens.OrderBy(x => x.Ordem))
+    {
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between gap-3">
+                <div>
+                    <strong>@item.Ordem. @item.Titulo</strong>
+                    <div class="text-muted small">@item.Descricao</div>
+                    @if (!string.IsNullOrWhiteSpace(item.Justificativa))
+                    {
+                        <div class="small text-secondary">Justificativa/observação: @item.Justificativa</div>
+                    }
+                </div>
+                <div class="text-end">
+                    <span class="badge @(item.Concluido ? "text-bg-success" : "text-bg-warning")">@(item.Concluido ? "Concluído" : "Pendente")</span>
+                    @if (item.Concluido)
+                    {
+                        <form asp-action="ReabrirChecklist" method="post" class="mt-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Reabrir item do checklist" data-confirm-message="Confirma reabrir este item? A justificativa será registrada na auditoria da operação assistida." data-confirm-type="warning">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="clienteId" value="@item.ClienteId" />
+                            <input type="text" name="justificativa" class="form-control form-control-sm mb-1" placeholder="Justificativa" required />
+                            <button type="submit" class="btn btn-sm btn-outline-warning">Reabrir</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <form asp-action="ConcluirChecklist" method="post" class="mt-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Concluir item do checklist" data-confirm-message="Confirma concluir este item da implantação assistida? Esta ação atualiza o progresso do cliente." data-confirm-type="success">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@item.Id" />
+                            <input type="hidden" name="clienteId" value="@item.ClienteId" />
+                            <input type="text" name="observacao" class="form-control form-control-sm mb-1" placeholder="Observação" />
+                            <button type="submit" class="btn btn-sm btn-outline-success">Concluir</button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    </div>
+}

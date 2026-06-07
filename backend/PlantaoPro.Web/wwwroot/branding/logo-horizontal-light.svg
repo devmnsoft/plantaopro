@@ -1,0 +1,10 @@
+<svg width="720" height="172" viewBox="0 0 720 172" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="172" rx="18" fill="none"/>
+  <g transform="translate(18,12)">
+    <rect x="0" y="0" width="148" height="148" rx="36" fill="#0B2A52"/>
+    <path d="M74 27c-25 0-45 20-45 45 0 31 31 49 43 69a2.8 2.8 0 0 0 4 0c12-20 43-38 43-69 0-25-20-45-45-45Z" fill="#D9ECFF"/>
+    <path d="M73 50v20H53v16h20v20h16V86h20V70H89V50H73Z" fill="#1F73F1"/>
+  </g>
+  <text x="192" y="92" fill="#EAF4FF" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="62" font-weight="800">PlantãoPro</text>
+  <text x="196" y="130" fill="#9EC2EB" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="26" font-weight="500">Escalas médicas • Operação • Financeiro</text>
+</svg>

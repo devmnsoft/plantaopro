@@ -1,0 +1,7 @@
+@{ ViewData["Title"] = "Minha Privacidade"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("LGPD e Privacidade", "Consulte consentimentos, solicite exportação, correção ou anonimização quando permitido por lei.", "bi-shield-lock")' />
+<div class="row g-3">
+  <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Direitos do titular</h2><p class="text-muted">Acesse seus consentimentos, histórico de solicitações e avisos sobre retenção legal.</p><a class="btn btn-primary" asp-action="Solicitacoes">Criar solicitação</a></div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Exportação</h2><p class="text-muted">Registre uma exportação dos seus dados com auditoria e rastreabilidade.</p><a class="btn btn-outline-primary" asp-action="ExportarDados">Exportar meus dados</a></div></div></div>
+  <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Política</h2><p class="text-muted">Veja finalidades, bases legais e limites de exclusão por obrigação legal.</p><a class="btn btn-outline-secondary" asp-action="Politica">Ver política</a></div></div></div>
+</div>

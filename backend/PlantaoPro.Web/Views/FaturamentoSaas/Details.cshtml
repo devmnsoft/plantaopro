@@ -1,0 +1,37 @@
+@model PlantaoPro.Web.Models.FaturaSaasViewModel
+@{
+    ViewData["Title"] = "Detalhe da fatura SaaS";
+}
+<div class="container py-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="h3 mb-1">Fatura SaaS</h1>
+            <p class="text-muted mb-0">@Model.ClienteNome · @Model.Competencia.ToString("MM/yyyy")</p>
+        </div>
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+    </div>
+    <div class="card mb-3"><div class="card-body row g-3">
+        <div class="col-md-3"><span class="text-muted">Status</span><div class="fw-bold">@Model.Status</div></div>
+        <div class="col-md-3"><span class="text-muted">Valor</span><div class="fw-bold">@Model.Valor.ToString("C")</div></div>
+        <div class="col-md-3"><span class="text-muted">Vencimento</span><div class="fw-bold">@Model.Vencimento.ToString("dd/MM/yyyy")</div></div>
+        <div class="col-md-3"><span class="text-muted">Pagamento</span><div class="fw-bold">@(Model.DataPagamento?.ToString("dd/MM/yyyy") ?? "Pendente")</div></div>
+    </div></div>
+    <div class="card"><div class="card-body">
+        <h2 class="h5">Timeline</h2>
+        <ol class="mb-0">
+            <li>Fatura criada em @Model.CriadoEm.ToString("dd/MM/yyyy HH:mm").</li>
+            @if (Model.ValorPago.HasValue)
+            {
+                <li>Pagamento confirmado: @Model.ValorPago.Value.ToString("C") via @Model.FormaPagamento.</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.MotivoContestacao))
+            {
+                <li>Contestação registrada: @Model.MotivoContestacao</li>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.MotivoCancelamento))
+            {
+                <li>Cancelamento registrado: @Model.MotivoCancelamento</li>
+            }
+        </ol>
+    </div></div>
+</div>

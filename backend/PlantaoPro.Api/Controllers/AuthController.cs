@@ -3,6 +3,7 @@ using System.Text;
 using Dapper;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
+using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 
@@ -28,8 +29,30 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
-            var r = await _service.LoginAsync(req, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-            return StatusCode(r.StatusCode, r);
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+            try
+            {
+                var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString());
+                var perfil = r.Data?.Roles is { Length: > 0 } ? string.Join(',', r.Data.Roles) : "sem-perfil";
+                await _auditService.RegistrarAsync(
+                    r.Data?.UsuarioId,
+                    r.Data?.ClienteId,
+                    AuditoriaConstants.Entidades.Usuario,
+                    r.Data?.UsuarioId,
+                    r.Success ? AuditoriaConstants.Acoes.LoginSucesso : AuditoriaConstants.Acoes.LoginFalha,
+                    new { email = req.Email, statusCode = r.StatusCode },
+                    r.Success,
+                    ip,
+                    perfil);
+                _logger.LogInformation("Login processado Email:{Email} IP:{Ip} Status:{Status} Perfil:{Perfil} DataHoraUtc:{DataHoraUtc}", req.Email, ip, r.StatusCode, perfil, DateTime.UtcNow);
+                return StatusCode(r.StatusCode, r);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Falha inesperada no login Email:{Email} IP:{Ip}", req.Email, ip);
+                await _auditService.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Usuario, null, AuditoriaConstants.Acoes.LoginFalha, new { email = req.Email, motivo = "erro_interno" }, false, ip, "sem-perfil");
+                return StatusCode(500, ApiResponse<object>.Fail("Não foi possível processar o login no momento.", 500));
+            }
         }
 
         [HttpPost("forgot-password")]

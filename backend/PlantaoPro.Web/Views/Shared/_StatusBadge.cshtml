@@ -1,5 +1,26 @@
-@model string
+@model string?
 @{
-    var normalizedStatus = (Model ?? string.Empty).Trim().ToLowerInvariant();
+    var rawStatus = (Model ?? string.Empty).Trim();
+    var normalizedStatus = rawStatus.ToLowerInvariant();
+    normalizedStatus = normalizedStatus
+        .Replace(" ", "-")
+        .Replace("_", "-")
+        .Replace("á", "a")
+        .Replace("à", "a")
+        .Replace("ã", "a")
+        .Replace("â", "a")
+        .Replace("é", "e")
+        .Replace("ê", "e")
+        .Replace("í", "i")
+        .Replace("ó", "o")
+        .Replace("õ", "o")
+        .Replace("ô", "o")
+        .Replace("ú", "u")
+        .Replace("ç", "c");
+    if (string.IsNullOrWhiteSpace(normalizedStatus))
+    {
+        normalizedStatus = "indefinido";
+    }
+    var label = string.IsNullOrWhiteSpace(rawStatus) ? "N/A" : rawStatus;
 }
-<span class="status-badge status-@normalizedStatus">@(string.IsNullOrWhiteSpace(Model) ? "N/A" : Model)</span>
+<span class="status-badge status-@normalizedStatus" role="status" aria-label="Status: @label">@label</span>

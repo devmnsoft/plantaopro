@@ -1,0 +1,22 @@
+@model PlantaoPro.Web.Models.FilterPanelViewModel?
+@{
+    var formId = Model?.FormId ?? string.Empty;
+    var canSubmit = !string.IsNullOrWhiteSpace(formId);
+}
+<div id="globalFilterPanel" class="collapse mb-3">
+    <div class="filter-panel card card-body">
+        <p class="text-muted mb-2">@(Model?.Description ?? "Use os filtros para refinar os dados da listagem.")</p>
+        <p class="small text-muted mb-3">Os campos de filtro são exibidos no formulário da página.</p>
+        <div class="d-flex gap-2 justify-content-end">
+            <a class="btn btn-outline-secondary" href="@Context.Request.Path">Limpar</a>
+            @if (canSubmit)
+            {
+                <button type="submit" form="@formId" class="btn btn-primary">Aplicar</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-primary" disabled title="Em breve">Aplicar</button>
+            }
+        </div>
+    </div>
+</div>

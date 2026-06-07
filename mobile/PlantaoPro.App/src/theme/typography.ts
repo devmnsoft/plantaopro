@@ -1,5 +1,7 @@
-<<<<<<< HEAD
-export default {} as any;
-=======
-export const placeholder = false;
->>>>>>> pr-2
+export const typography = {
+  title: { fontSize: 24, fontWeight: '700' as const },
+  subtitle: { fontSize: 18, fontWeight: '600' as const },
+  body: { fontSize: 15, fontWeight: '400' as const },
+  caption: { fontSize: 12, fontWeight: '400' as const },
+};
+export default typography;

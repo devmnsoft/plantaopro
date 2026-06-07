@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api;
+using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -11,8 +12,15 @@ namespace PlantaoPro.Api.Controllers;
 public class MedicoAreaController : ControllerBase
 {
     private readonly MedicoAreaService service;
-    public MedicoAreaController(MedicoAreaService service){this.service=service;}
-    private Guid Uid()=>Guid.Parse(User.Claims.First(c=>c.Type=="uid").Value);
+    public MedicoAreaController(MedicoAreaService service)
+    {
+        this.service = service;
+    }
+    private Guid Uid()
+    {
+        var uidClaim = User.FindFirst("uid")?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
 
     [HttpGet("resumo")] public async Task<IActionResult> Resumo()=>StatusCode((await service.ResumoAsync(Uid())).StatusCode, await service.ResumoAsync(Uid()));
     [HttpGet("plantoes-disponiveis")] public async Task<IActionResult> PlantoesDisponiveis([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.PlantoesDisponiveisAsync(Uid(),page,pageSize)).StatusCode, await service.PlantoesDisponiveisAsync(Uid(),page,pageSize));

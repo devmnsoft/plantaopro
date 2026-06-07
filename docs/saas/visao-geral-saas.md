@@ -1,21 +1,15 @@
-# PlantãoPro SaaS Inteligente
+# Visão geral SaaS PlantãoPro
 
-O módulo SaaS centraliza gestão comercial multiempresa do PlantãoPro: clientes, planos, recursos, assinaturas, limites, faturamento, saúde do cliente, alertas e recomendações de upgrade.
+Esta rodada adiciona módulos funcionais para LGPD, jornada do cliente, comercial SaaS, inteligência baseada em regras e ajuda interativa.
 
-## Fluxo principal
+## Módulos implementados
 
-1. Cadastre o cliente em **Clientes**.
-2. Cadastre ou revise o plano em **Planos**.
-3. Crie uma assinatura **TRIAL** ou **ATIVA**.
-4. Acompanhe uso do plano em **Uso do Plano**.
-5. Gere faturas mensais em **Faturamento SaaS**.
-6. Recalcule saúde em **Inteligência SaaS**.
-7. Trate alertas e registre interações de Customer Success.
+- API LGPD em `/api/lgpd` com política, consentimentos, solicitações, exportação e anonimização controlada.
+- API Jornada do Cliente em `/api/jornada-clientes` com avanço, retrocesso, eventos, tarefas e funil.
+- API Comercial em `/api/comercial` com leads, oportunidades, propostas, funil, previsão de receita e sugestão de plano.
+- API Ajuda em `/api/ajuda` com tópicos, artigos, busca, checklists e feedback.
+- Web MVC para `Lgpd`, `JornadaClientes`, `Comercial` e `Ajuda`.
 
-## Regras inteligentes
+## Banco
 
-- Cliente **SUSPENSO** ou **CANCELADO** é bloqueado para operação.
-- Assinatura sem status operacional bloqueia publicação e uso de recursos contratados.
-- Uso acima de 80% gera alerta comercial.
-- Uso acima de 100% bloqueia ação e registra bloqueio.
-- Faturas vencidas reduzem score de saúde e geram risco.
+A migração incremental `backend/sql/20260607_saas_lgpd_jornada_comercial_ajuda.sql` cria as tabelas no schema `plantaopro` e seeds mínimos para política LGPD, bases legais, retenção e ajuda.

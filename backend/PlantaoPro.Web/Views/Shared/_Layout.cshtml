@@ -88,6 +88,8 @@
                 <div class="nav-section-title">Gestão</div>
                 <a class="nav-link-app @(currentController=="Notificacoes"?"active":"")" asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span>Notificações</span></a>
                 <a class="nav-link-app @(currentController=="Comunicacao"?"active":"")" asp-controller="Comunicacao" asp-action="Index"><i class="bi bi-chat-dots"></i><span>Comunicação</span></a>
+                <a class="nav-link-app @(currentController=="Lgpd"?"active":"")" asp-controller="Lgpd" asp-action="Index"><i class="bi bi-shield-lock"></i><span>Privacidade LGPD</span></a>
+                <a class="nav-link-app @(currentController=="Ajuda"?"active":"")" asp-controller="Ajuda" asp-action="Index"><i class="bi bi-question-circle"></i><span>Ajuda interativa</span></a>
                 <a class="nav-link-app @(currentController=="Usuario"?"active":"")" asp-controller="Usuario" asp-action="Index"><i class="bi bi-person-gear"></i><span>Minha Conta</span></a>
 
                 @if (isAdmin)
@@ -98,6 +100,8 @@
                 @if (isAdmin || isCoord || isOper || isFin)
                 {
                     <a class="nav-link-app @(currentController=="Relatorios"?"active":"")" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>
+                    <a class="nav-link-app @(currentController=="Comercial"?"active":"")" asp-controller="Comercial" asp-action="Funil"><i class="bi bi-funnel"></i><span>Comercial SaaS</span></a>
+                    <a class="nav-link-app @(currentController=="JornadaClientes"?"active":"")" asp-controller="JornadaClientes" asp-action="Index"><i class="bi bi-kanban"></i><span>Jornada Cliente</span></a>
                     <a class="nav-link-app @(currentController=="Home" && currentAction=="Produto"?"active":"")" asp-controller="Home" asp-action="Produto"><i class="bi bi-megaphone"></i><span>Produto</span></a>
                 }
 

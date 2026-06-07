@@ -1,0 +1,3 @@
+@model IEnumerable<PlantaoPro.Web.Models.LgpdRetencaoViewModel>
+@{ ViewData["Title"] = "Retenção de dados"; }
+<div class="card shadow-sm"><div class="card-body"><h2 class="h5">Política prática de retenção</h2><table class="table"><thead><tr><th>Categoria</th><th>Base legal</th><th>Prazo</th><th>Observações</th></tr></thead><tbody>@foreach (var item in Model) { <tr><td>@item.Categoria</td><td>@item.BaseLegal</td><td>@item.PrazoMeses meses</td><td>@item.Observacoes</td></tr> }</tbody></table></div></div>

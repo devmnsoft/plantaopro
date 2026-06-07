@@ -1,0 +1,7 @@
+@model IEnumerable<PlantaoPro.Web.Models.JornadaClienteViewModel>
+@{ ViewData["Title"] = "Jornada do cliente"; }
+<div class="d-flex justify-content-between align-items-center mb-3"><div><h2 class="h4">Jornada do cliente SaaS</h2><p class="text-muted">Acompanhe implantação, treinamento, operação assistida, risco e expansão.</p></div><a class="btn btn-outline-primary" asp-action="Funil">Ver funil</a></div>
+<div class="row g-3">
+@foreach (var item in Model) { <div class="col-md-6 col-xl-4"><div class="card shadow-sm h-100"><div class="card-body"><span class="badge text-bg-primary">@item.Etapa</span><h3 class="h5 mt-2">@item.ClienteNome</h3><div class="progress mb-2"><div class="progress-bar" style="width:@Math.Min(item.Score,100)%">@item.Score</div></div><p class="small text-muted">Próxima ação: @(string.IsNullOrWhiteSpace(item.ProximaAcao) ? "Definir próximo passo" : item.ProximaAcao)</p><a class="btn btn-sm btn-primary" asp-action="Details" asp-route-clienteId="@item.ClienteId">Abrir jornada</a></div></div></div> }
+</div>
+@if (!Model.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-diagram-3", "Sem jornadas", "Nenhuma jornada de cliente encontrada.")' /> }

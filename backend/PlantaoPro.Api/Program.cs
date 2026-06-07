@@ -106,6 +106,13 @@ builder.Services.AddScoped<TenantGuardService>();
 builder.Services.AddScoped<PermissionGuardService>();
 builder.Services.AddScoped<AssinaturaGuardService>();
 builder.Services.AddScoped<SaasIntelligenceService>();
+builder.Services.AddScoped<ILogOperacionalService, EventoSistemaService>();
+builder.Services.AddScoped<IEventoSistemaService, EventoSistemaService>();
+builder.Services.AddScoped<ILgpdAuditService, LgpdAuditService>();
+builder.Services.AddScoped<LgpdService>();
+builder.Services.AddScoped<JornadaClienteService>();
+builder.Services.AddScoped<ComercialService>();
+builder.Services.AddScoped<AjudaInterativaService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

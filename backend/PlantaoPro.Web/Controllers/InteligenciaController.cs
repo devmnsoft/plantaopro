@@ -42,4 +42,27 @@ public class InteligenciaController : Controller
         var vm = _service.ConstruirDashboard(historico, auditoria, filtro);
         return View(vm);
     }
+
+    public IActionResult Index()
+    {
+        ViewBag.Mensagem = "Motor determinístico de inteligência SaaS baseado em regras de uso, faturas, limites, atividade operacional e Customer Success.";
+        return View();
+    }
+
+    public IActionResult ClientesRisco(Guid? clienteId)
+    {
+        ViewBag.ClienteId = clienteId;
+        return View();
+    }
+
+    public IActionResult Oportunidades()
+    {
+        return View();
+    }
+
+    public IActionResult Alertas()
+    {
+        return View();
+    }
+
 }

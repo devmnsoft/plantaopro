@@ -1,0 +1,3 @@
+@model IEnumerable<PlantaoPro.Web.Models.LgpdEventoViewModel>
+@{ ViewData["Title"] = "Eventos de privacidade"; }
+<div class="card shadow-sm"><div class="card-body"><h2 class="h5">Eventos LGPD auditados</h2><table class="table"><thead><tr><th>Data</th><th>Evento</th><th>Entidade</th></tr></thead><tbody>@foreach (var item in Model) { <tr><td>@item.RegDate.ToLocalTime()</td><td>@item.Evento</td><td>@item.Entidade</td></tr> }</tbody></table></div></div>

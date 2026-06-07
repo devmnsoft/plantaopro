@@ -1,0 +1,37 @@
+@using PlantaoPro.Web.Models
+@{
+    ViewData["Title"] = "Minha privacidade";
+    var consentimentos = (ViewBag.Consentimentos as IEnumerable<LgpdConsentimentoViewModel>) ?? Array.Empty<LgpdConsentimentoViewModel>();
+    var solicitacoes = (ViewBag.Solicitacoes as IEnumerable<LgpdSolicitacaoViewModel>) ?? Array.Empty<LgpdSolicitacaoViewModel>();
+}
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm"><div class="card-body">
+            <h2 class="h5">Direitos do titular de dados</h2>
+            <p class="text-muted">Consulte consentimentos, solicite exportação, correção ou anonimização. Dados financeiros, auditoria e obrigações legais possuem retenção específica.</p>
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-primary" asp-action="ExportarDados">Exportar meus dados</a>
+                <a class="btn btn-outline-primary" asp-action="Solicitacoes">Solicitar correção</a>
+                <a class="btn btn-outline-danger" asp-action="Solicitacoes">Solicitar exclusão/anonimização</a>
+                <a class="btn btn-outline-secondary" asp-action="Politica">Ver política</a>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm"><div class="card-body">
+            <h3 class="h6">Resumo</h3>
+            <div class="display-6">@solicitacoes.Count()</div>
+            <span class="text-muted">solicitações registradas</span>
+        </div></div>
+    </div>
+</div>
+<div class="row g-3 mt-1">
+    <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h3 class="h6">Consentimentos recentes</h3>
+        @if (!consentimentos.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-shield-lock", "Sem consentimentos", "Nenhum consentimento encontrado para seu contexto.")' /> }
+        else { <ul class="list-group list-group-flush">@foreach (var item in consentimentos.Take(5)) { <li class="list-group-item"><strong>@item.Finalidade</strong><br /><small>@item.BaseLegal • @item.VersaoPolitica • @item.DataConsentimento.ToLocalTime()</small></li> }</ul> }
+    </div></div></div>
+    <div class="col-lg-6"><div class="card shadow-sm"><div class="card-body"><h3 class="h6">Solicitações recentes</h3>
+        @if (!solicitacoes.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-inbox", "Sem solicitações", "Use os botões acima para abrir uma solicitação LGPD.")' /> }
+        else { <ul class="list-group list-group-flush">@foreach (var item in solicitacoes.Take(5)) { <li class="list-group-item"><span class="badge text-bg-info">@item.Status</span> <strong>@item.Tipo</strong><br /><small>@item.Resumo</small></li> }</ul> }
+    </div></div></div>
+</div>

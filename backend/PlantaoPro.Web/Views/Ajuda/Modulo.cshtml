@@ -1,15 +1,2 @@
-@{
-    ViewData["Title"] = "Módulo de Ajuda";
-    var modulo = (string?)ViewBag.Modulo ?? "geral";
-}
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Guia do Módulo", "Entenda o objetivo da tela, ações e próximos passos.", "bi-book")' />
-<div class="card"><div class="card-body">
-    <h5 class="mb-3 text-capitalize">@modulo</h5>
-    <ol>
-        <li>Acesse o menu correspondente no sidebar.</li>
-        <li>Preencha os dados obrigatórios com atenção.</li>
-        <li>Revise alertas, confirmações e salve.</li>
-        <li>Acompanhe notificações e indicadores no dashboard.</li>
-    </ol>
-    <a asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Voltar ao centro de ajuda</a>
-</div></div>
+@{ ViewData["Title"] = "Ajuda do módulo"; }
+<div class="card shadow-sm"><div class="card-body"><h2 class="h5">Ajuda contextual</h2><p class="text-muted">Módulo: @ViewBag.Modulo</p><a class="btn btn-primary" asp-action="Index">Buscar no manual</a></div></div>

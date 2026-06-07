@@ -1,25 +1,14 @@
-# Inteligência SaaS
+# Inteligência SaaS baseada em regras
 
-A inteligência SaaS calcula score e classificação de saúde do cliente.
+O motor não usa IA externa. Ele calcula saúde do cliente com base em faturas vencidas, status contratual, plantões recentes e uso dos limites do plano.
 
 ## Classificações
 
-- `SAUDAVEL`: score igual ou superior a 80.
-- `ATENCAO`: score entre 60 e 79.
-- `RISCO`: score entre 35 e 59.
-- `CRITICO`: score abaixo de 35.
+- `SAUDAVEL`: uso recorrente, faturas em dia e atividade operacional.
+- `ATENCAO`: sinais de queda, uso alto ou pouca atividade.
+- `RISCO`: inadimplência, inatividade ou assinatura ausente.
+- `CRITICO`: suspensão, cancelamento, inadimplência recorrente ou operação parada.
 
-## Critérios avaliados
+## Alertas
 
-- Inadimplência.
-- Status suspenso ou cancelado.
-- Inatividade operacional.
-- Uso acima de 80% dos limites.
-- Ausência de assinatura operacional.
-
-## Endpoints
-
-- `GET /api/saas-inteligencia/clientes/{clienteId}/saude`.
-- `GET /api/saas-inteligencia/clientes/{clienteId}/alertas`.
-- `GET /api/saas-inteligencia/clientes/{clienteId}/recomendacoes`.
-- `POST /api/saas-inteligencia/clientes/{clienteId}/recalcular`.
+Alertas incluem limite próximo, sem uso, inadimplência, oportunidade de upgrade e necessidade de contato de Customer Success.

@@ -1,12 +1,8 @@
 # Customer Success
 
-Customer Success deve usar os alertas e recomendações para priorizar clientes em risco, clientes críticos e oportunidades de expansão.
+Customer Success atua sobre a jornada e a inteligência SaaS.
 
-## Rotina recomendada
-
-1. Abrir dashboard SaaS.
-2. Filtrar clientes em risco e críticos.
-3. Recalcular saúde quando houver mudança recente.
-4. Registrar interação em `customer_success_interacoes`.
-5. Criar plano de ação em `customer_success_planos_acao`.
-6. Resolver alertas tratados.
+- Clientes em implantação recebem tarefas de operação assistida.
+- Clientes em risco recebem ação recomendada e tarefa de contato.
+- Clientes com uso acima de 80% são elegíveis para oferta de upgrade.
+- Clientes sem plantões recentes demandam treinamento ou plano de adoção.

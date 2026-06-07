@@ -1,0 +1,9 @@
+@model IEnumerable<PlantaoPro.Web.Models.LgpdConsentimentoViewModel>
+@{ ViewData["Title"] = "Consentimentos LGPD"; }
+<div class="card shadow-sm"><div class="card-body">
+<h2 class="h5">Consentimentos</h2>
+<table class="table table-hover"><thead><tr><th>Finalidade</th><th>Base legal</th><th>Política</th><th>Data</th><th>Status</th></tr></thead><tbody>
+@foreach (var item in Model) { <tr><td>@item.Finalidade</td><td>@item.BaseLegal</td><td>@item.VersaoPolitica</td><td>@item.DataConsentimento.ToLocalTime()</td><td><span class="badge @(item.Consentido ? "text-bg-success" : "text-bg-secondary")">@(item.Consentido ? "Consentido" : "Revogado")</span></td></tr> }
+</tbody></table>
+@if (!Model.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-shield", "Sem consentimentos", "Nenhum registro encontrado.")' /> }
+</div></div>

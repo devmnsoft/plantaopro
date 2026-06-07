@@ -75,4 +75,15 @@ public class ClientesController : BaseWebController
             return RedirectToAction(nameof(Index));
         }
     }
+
+    public IActionResult Jornada(Guid id)
+    {
+        return RedirectToAction("Details", "JornadaClientes", new { clienteId = id });
+    }
+
+    public IActionResult Inteligencia(Guid id)
+    {
+        return RedirectToAction("ClientesRisco", "Inteligencia", new { clienteId = id });
+    }
+
 }

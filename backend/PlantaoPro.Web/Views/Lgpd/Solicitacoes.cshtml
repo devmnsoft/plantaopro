@@ -1,0 +1,14 @@
+@model IEnumerable<PlantaoPro.Web.Models.LgpdSolicitacaoViewModel>
+@{ ViewData["Title"] = "Solicitações LGPD"; }
+<div class="row g-3">
+<div class="col-lg-4"><div class="card shadow-sm"><div class="card-body"><h2 class="h5">Nova solicitação</h2>
+<form asp-action="CriarSolicitacao" method="post" data-ajax-form="true" data-confirm="true" data-confirm-title="Criar solicitação LGPD" data-confirm-message="Confirma registrar esta solicitação de privacidade?" data-confirm-type="warning">
+    @Html.AntiForgeryToken()
+    <label class="form-label">Tipo</label><select name="Tipo" class="form-select mb-2"><option value="EXPORTACAO">Exportação</option><option value="CORRECAO">Correção</option><option value="ANONIMIZACAO">Anonimização</option><option value="EXCLUSAO">Exclusão</option><option value="INFORMACAO">Informação</option></select>
+    <label class="form-label">Resumo</label><textarea name="Resumo" class="form-control mb-2" rows="4" required></textarea>
+    <button class="btn btn-primary w-100" type="submit">Registrar solicitação</button>
+</form></div></div></div>
+<div class="col-lg-8"><div class="card shadow-sm"><div class="card-body"><h2 class="h5">Histórico</h2>
+<table class="table table-hover"><thead><tr><th>Tipo</th><th>Status</th><th>Resumo</th><th>Resposta</th></tr></thead><tbody>@foreach (var item in Model) { <tr><td>@item.Tipo</td><td><span class="badge text-bg-info">@item.Status</span></td><td>@item.Resumo</td><td>@item.Resposta</td></tr> }</tbody></table>
+@if (!Model.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-inbox", "Sem solicitações", "Nenhuma solicitação registrada.")' /> }
+</div></div></div></div>

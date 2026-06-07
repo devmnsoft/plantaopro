@@ -112,7 +112,38 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
     public Task<ApiResponse<ClienteSaudeDto>> DetectarInatividadeAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> DetectarUsoAltoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> DetectarInadimplenciaAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> DetectarUsoAnormalAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> DetectarQuedaDeUsoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> GerarResumoExecutivoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> GerarResumoExecutivoClienteAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+
+    public Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> GerarAlertasInteligentesAsync()
+    {
+        return Task.FromResult(ApiResponse<IEnumerable<ClienteAlertaSaasDto>>.Ok(Array.Empty<ClienteAlertaSaasDto>(), "Alertas globais disponíveis por cliente nesta versão."));
+    }
+
+    public Task<ApiResponse<IEnumerable<SaasRecomendacaoDto>>> GerarProximasAcoesComerciaisAsync()
+    {
+        return Task.FromResult(ApiResponse<IEnumerable<SaasRecomendacaoDto>>.Ok(Array.Empty<SaasRecomendacaoDto>(), "Próximas ações comerciais calculadas por cliente nesta versão."));
+    }
+
+    public Task<ApiResponse<PlanoSugeridoDto>> SugerirPlanoParaLeadAsync(SugerirPlanoRequest input)
+    {
+        var recursos = new List<string>();
+        if (input.PrecisaMobile) recursos.Add("Aplicativo mobile");
+        if (input.PrecisaBi) recursos.Add("BI e relatórios avançados");
+        if (input.SuportePrioritario) recursos.Add("Suporte prioritário");
+        if (input.OperacaoAssistida) recursos.Add("Operação assistida");
+        var plano = input.MedicosDesejados > 80 || input.Hospitais > 8 || input.PlantoesMes > 500 || input.SuportePrioritario || input.OperacaoAssistida
+            ? "Enterprise"
+            : input.MedicosDesejados > 25 || input.Hospitais > 3 || input.PlantoesMes > 150 || input.PrecisaBi ? "Profissional" : "Essencial";
+        return Task.FromResult(ApiResponse<PlanoSugeridoDto>.Ok(new PlanoSugeridoDto
+        {
+            Plano = plano,
+            Justificativa = "Sugestão determinística baseada em porte, volume e necessidades SaaS.",
+            RecursosRecomendados = recursos
+        }));
+    }
 
     public async Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> GerarAlertasClienteAsync(Guid clienteId)
     {
@@ -133,6 +164,8 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
         var alertas = await ListarAlertasClienteAsync(clienteId);
         return alertas;
     }
+
+    public Task<ApiResponse<IEnumerable<SaasRecomendacaoDto>>> SugerirAcoesCustomerSuccessAsync(Guid clienteId) => GerarAcoesRecomendadasAsync(clienteId);
 
     public async Task<ApiResponse<IEnumerable<SaasRecomendacaoDto>>> GerarAcoesRecomendadasAsync(Guid clienteId)
     {

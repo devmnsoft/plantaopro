@@ -1,0 +1,9 @@
+@model PlantaoPro.Web.Models.LgpdPoliticaViewModel
+@{ ViewData["Title"] = "Política de privacidade"; }
+<div class="card shadow-sm"><div class="card-body">
+    <span class="badge text-bg-primary">Versão @Model.Versao</span>
+    <h2 class="h4 mt-2">@Model.Titulo</h2>
+    <p class="text-muted">Vigente desde @Model.VigenteDesde.ToLocalTime()</p>
+    <p>@Model.Conteudo</p>
+    <a class="btn btn-outline-secondary" asp-action="Retencao">Ver retenção de dados</a>
+</div></div>

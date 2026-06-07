@@ -1,0 +1,4 @@
+@model IEnumerable<PlantaoPro.Web.Models.FunilItemViewModel>
+@{ ViewData["Title"] = "Funil da jornada"; }
+<div class="row g-3">@foreach (var item in Model) { <div class="col-md-3"><div class="card shadow-sm"><div class="card-body"><span class="text-muted small">@item.Etapa</span><div class="display-6">@item.Quantidade</div><span class="badge text-bg-light">clientes</span></div></div></div> }</div>
+@if (!Model.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-funnel", "Funil vazio", "Nenhuma etapa com clientes encontrada.")' /> }

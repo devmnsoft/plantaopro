@@ -112,7 +112,19 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
     public Task<ApiResponse<ClienteSaudeDto>> DetectarInatividadeAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> DetectarUsoAltoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> DetectarInadimplenciaAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> DetectarUsoAnormalAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> DetectarQuedaDeUsoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
     public Task<ApiResponse<ClienteSaudeDto>> GerarResumoExecutivoAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<ClienteSaudeDto>> GerarResumoExecutivoClienteAsync(Guid clienteId) => CalcularSaudeClienteAsync(clienteId);
+    public Task<ApiResponse<IEnumerable<SaasRecomendacaoDto>>> SugerirAcoesCustomerSuccessAsync(Guid clienteId) => GerarAcoesRecomendadasAsync(clienteId);
+
+    public Task<ApiResponse<PlanoSugeridoDto>> SugerirPlanoParaLeadAsync(SugerirPlanoRequest input)
+    {
+        var pontos = input.MedicosDesejados + input.HospitaisDesejados * 5 + input.PlantoesMes / 10 + (input.PrecisaBi ? 20 : 0) + (input.PrecisaMobile ? 10 : 0) + (input.SuportePrioritario ? 15 : 0) + (input.OperacaoAssistida ? 15 : 0);
+        var plano = pontos >= 80 ? "Enterprise" : pontos >= 35 ? "Profissional" : "Essencial";
+        var dto = new PlanoSugeridoDto { Plano = plano, Score = pontos, Justificativa = "Motor determinístico por volume, recursos e necessidade de atendimento." };
+        return Task.FromResult(ApiResponse<PlanoSugeridoDto>.Ok(dto));
+    }
 
     public async Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> GerarAlertasClienteAsync(Guid clienteId)
     {
@@ -150,6 +162,9 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
         }).ToArray();
         return ApiResponse<IEnumerable<SaasRecomendacaoDto>>.Ok(recomendacoes);
     }
+
+    public Task<ApiResponse<SaasResumoExecutivoDto>> GerarAlertasInteligentesAsync() => GerarResumoSaasAsync();
+    public Task<ApiResponse<SaasResumoExecutivoDto>> GerarProximasAcoesComerciaisAsync() => GerarResumoSaasAsync();
 
     public async Task<ApiResponse<SaasResumoExecutivoDto>> GerarResumoSaasAsync()
     {

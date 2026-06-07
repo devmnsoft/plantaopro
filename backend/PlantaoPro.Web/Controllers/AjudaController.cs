@@ -26,4 +26,27 @@ public class AjudaController : BaseWebController
         ViewBag.Modulo = id;
         return View();
     }
+
+    public IActionResult Artigo(Guid id)
+    {
+        ViewBag.ArtigoId = id;
+        return View();
+    }
+
+    public IActionResult Busca(string? termo = null)
+    {
+        ViewBag.Termo = termo;
+        return View();
+    }
+
+    public IActionResult Checklist(string? perfil = null)
+    {
+        ViewBag.Perfil = perfil ?? User.FindFirst("perfil")?.Value ?? "TODOS";
+        return View();
+    }
+
+    public IActionResult PrimeirosPassos()
+    {
+        return View();
+    }
 }

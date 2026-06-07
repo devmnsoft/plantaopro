@@ -1,0 +1,3 @@
+@{ ViewData["Title"] = "Funil Comercial"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Funil comercial", "Cards por etapa, previsão de receita e CTAs de conversão.", "bi-funnel")' />
+<div class="row g-3">@foreach (var etapa in new[] { "Lead", "Oportunidade", "Proposta", "Negociação", "Ganha", "Perdida" }) { <div class="col-md-2"><div class="card"><div class="card-body text-center"><strong>@etapa</strong><p class="small text-muted mb-0">API /api/comercial/funil</p></div></div></div> }</div>

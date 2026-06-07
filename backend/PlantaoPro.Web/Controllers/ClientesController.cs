@@ -31,6 +31,18 @@ public class ClientesController : BaseWebController
         }
     }
 
+    public IActionResult Jornada(Guid id)
+    {
+        ViewBag.ClienteId = id;
+        return View();
+    }
+
+    public IActionResult Inteligencia(Guid id)
+    {
+        ViewBag.ClienteId = id;
+        return View();
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AlterarStatus(Guid id, string acao)

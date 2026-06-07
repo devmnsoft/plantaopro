@@ -1,0 +1,3 @@
+@{ ViewData["Title"] = "Exportar meus dados"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Exportar meus dados", "Gere um registro auditado de exportação dos seus dados pessoais.", "bi-download")' />
+<div class="card"><div class="card-body"><p>Ao exportar, o sistema registra auditoria, IP, data e finalidade. Dados sujeitos a obrigação legal permanecem retidos conforme política.</p><form asp-action="Exportar" method="post"><button class="btn btn-primary" type="submit">Exportar meus dados</button></form></div></div>

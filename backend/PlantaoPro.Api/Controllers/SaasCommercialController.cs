@@ -136,6 +136,68 @@ where id=@id and reg_status='A'", new { id, request.Nome, request.Descricao, req
     [HttpPost("{id:guid}/reativar")]
     public Task<IActionResult> Reativar(Guid id) => AlterarStatus(id, "ATIVO", "Plano reativado com sucesso.");
 
+
+    [HttpGet("{id:guid}/recursos")]
+    public async Task<IActionResult> Recursos(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var existe = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.planos where id=@id and reg_status='A')", new { id });
+            if (!existe) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
+            var recursos = await cn.QueryAsync<PlanoRecursoDto>(@"select id as ""Id"", plano_id as ""PlanoId"", coalesce(codigo,'') as ""Codigo"", coalesce(nome,'') as ""Nome"",
+       coalesce(descricao,'') as ""Descricao"", habilitado as ""Habilitado"", limite as ""Limite""
+from plantaopro.plano_recursos
+where plano_id=@id and reg_status='A'
+order by codigo", new { id });
+            return Ok(ApiResponse<IEnumerable<PlanoRecursoDto>>.Ok(recursos));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao listar recursos do plano {PlanoId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível carregar recursos do plano.", 500));
+        }
+    }
+
+    [HttpPut("{id:guid}/recursos")]
+    public async Task<IActionResult> AtualizarRecursos(Guid id, [FromBody] IEnumerable<PlanoRecursoRequest> request)
+    {
+        try
+        {
+            var recursos = request?.ToArray() ?? Array.Empty<PlanoRecursoRequest>();
+            if (recursos.Any(x => string.IsNullOrWhiteSpace(x.Codigo) || string.IsNullOrWhiteSpace(x.Nome)))
+                return BadRequest(ApiResponse<string>.Fail("Código e nome dos recursos são obrigatórios.", 400));
+            if (recursos.Any(x => x.Limite.HasValue && x.Limite.Value < 0))
+                return BadRequest(ApiResponse<string>.Fail("Limite do recurso não pode ser negativo.", 400));
+
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var existe = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.planos where id=@id and reg_status='A')", new { id }, tx);
+            if (!existe)
+            {
+                await tx.RollbackAsync();
+                return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
+            }
+
+            await cn.ExecuteAsync("update plantaopro.plano_recursos set reg_status='I', reg_update=now() where plano_id=@id and reg_status='A'", new { id }, tx);
+            foreach (var recurso in recursos)
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.plano_recursos(id, plano_id, codigo, nome, descricao, habilitado, limite, reg_status, reg_date)
+values(gen_random_uuid(), @id, upper(@Codigo), @Nome, @Descricao, @Habilitado, @Limite, 'A', now())", new { id, recurso.Codigo, recurso.Nome, recurso.Descricao, recurso.Habilitado, recurso.Limite }, tx);
+            }
+
+            await tx.CommitAsync();
+            await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Editar, new { recursos = recursos.Length });
+            return Ok(ApiResponse<string>.Ok("ok", "Recursos do plano atualizados com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao atualizar recursos do plano {PlanoId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível atualizar recursos do plano.", 500));
+        }
+    }
+
     private async Task<IActionResult> AlterarStatus(Guid id, string status, string mensagem)
     {
         try
@@ -287,8 +349,8 @@ where id=@id and cliente_id=@ClienteId and reg_status='A'", new { id, request.Cl
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var planoAtivo = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.planos where id=@PlanoId and reg_status='A' and upper(status)='ATIVO')", request);
             if (!planoAtivo) return BadRequest(ApiResponse<string>.Fail("Plano inativo não pode gerar nova assinatura.", 400));
-            var jaAtiva = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.assinaturas where cliente_id=@ClienteId and reg_status='A' and upper(status)='ATIVA')", request);
-            if (jaAtiva) return BadRequest(ApiResponse<string>.Fail("Cliente já possui uma assinatura ativa.", 400));
+            var jaAtiva = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.assinaturas where cliente_id=@ClienteId and reg_status='A' and upper(status) in ('ATIVA','TRIAL'))", request);
+            if (jaAtiva) return BadRequest(ApiResponse<string>.Fail("Cliente já possui uma assinatura ativa ou trial.", 400));
 
             var id = Guid.NewGuid();
             await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,reg_status,reg_date)
@@ -307,10 +369,54 @@ values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@Di
     public Task<IActionResult> Suspender(Guid id, [FromBody] JustificativaRequest request) => AlterarStatus(id, "SUSPENSA", request.Justificativa, "Assinatura suspensa com sucesso.");
 
     [HttpPost("{id:guid}/reativar")]
-    public Task<IActionResult> Reativar(Guid id) => AlterarStatus(id, "ATIVA", "reativação comercial", "Assinatura reativada com sucesso.");
+    public Task<IActionResult> Reativar(Guid id, [FromBody] JustificativaRequest request) => AlterarStatus(id, "ATIVA", request.Justificativa, "Assinatura reativada com sucesso.");
 
     [HttpPost("{id:guid}/cancelar")]
     public Task<IActionResult> Cancelar(Guid id, [FromBody] JustificativaRequest request) => AlterarStatus(id, "CANCELADA", request.Justificativa, "Assinatura cancelada com sucesso.");
+
+
+    [HttpPost("{id:guid}/alterar-plano")]
+    public async Task<IActionResult> AlterarPlano(Guid id, [FromBody] AlterarPlanoAssinaturaRequest request)
+    {
+        try
+        {
+            if (request.PlanoId == Guid.Empty) return BadRequest(ApiResponse<string>.Fail("Informe o novo plano.", 400));
+            if (string.IsNullOrWhiteSpace(request.Justificativa)) return BadRequest(ApiResponse<string>.Fail("Justificativa obrigatória para alterar plano.", 400));
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var atual = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, Guid PlanoId)>("select cliente_id as ClienteId, plano_id as PlanoId from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
+            if (atual == default)
+            {
+                await tx.RollbackAsync();
+                return NotFound(ApiResponse<string>.Fail("Assinatura não encontrada.", 404));
+            }
+            var planoAtivo = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.planos where id=@PlanoId and reg_status='A' and upper(status)='ATIVO')", request, tx);
+            if (!planoAtivo)
+            {
+                await tx.RollbackAsync();
+                return BadRequest(ApiResponse<string>.Fail("Plano inativo não pode ser usado na assinatura.", 400));
+            }
+            await cn.ExecuteAsync("update plantaopro.assinaturas set plano_id=@PlanoId, reg_update=now() where id=@id", new { id, request.PlanoId }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.assinatura_historico(id, assinatura_id, cliente_id, plano_id_anterior, plano_id_novo, acao, justificativa, reg_status, reg_date)
+values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_PLANO', @Justificativa, 'A', now())", new { id, atual.ClienteId, PlanoAnterior = atual.PlanoId, PlanoNovo = request.PlanoId, request.Justificativa }, tx);
+            await tx.CommitAsync();
+            await AuditarAsync(atual.ClienteId, id, AuditoriaConstants.Acoes.Editar, new { request.PlanoId, request.Justificativa });
+            return Ok(ApiResponse<string>.Ok("ok", "Plano da assinatura alterado com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao alterar plano da assinatura {AssinaturaId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível alterar o plano da assinatura.", 500));
+        }
+    }
+
+    [HttpGet("cliente/{clienteId:guid}/atual")]
+    public async Task<IActionResult> AtualPorCliente(Guid clienteId)
+    {
+        var response = await _guard.ObterAssinaturaAtualAsync(clienteId);
+        return StatusCode(response.StatusCode, response);
+    }
 
     private async Task<IActionResult> AlterarStatus(Guid id, string status, string justificativa, string mensagem)
     {
@@ -455,21 +561,43 @@ returning id", new { competencia })).ToArray();
     {
         if (request.ValorPago <= 0) return BadRequest(ApiResponse<string>.Fail("Valor pago deve ser maior que zero.", 400));
         if (string.IsNullOrWhiteSpace(request.FormaPagamento)) return BadRequest(ApiResponse<string>.Fail("Forma de pagamento é obrigatória.", 400));
-        return await AtualizarFatura(id, "PAGA", new { valorPago = (decimal?)request.ValorPago, dataPagamento = (DateOnly?)request.DataPagamento, formaPagamento = request.FormaPagamento, motivoCancelamento = (string?)null, motivoContestacao = (string?)null }, "Fatura marcada como paga.");
+        return await AtualizarFatura(id, "PAGA", new { valorPago = (decimal?)request.ValorPago, dataPagamento = (DateOnly?)request.DataPagamento, formaPagamento = request.FormaPagamento, observacoes = request.Observacoes, motivoCancelamento = (string?)null, motivoContestacao = (string?)null }, "Fatura marcada como paga.");
     }
 
     [HttpPost("faturas/{id:guid}/cancelar")]
     public async Task<IActionResult> Cancelar(Guid id, [FromBody] JustificativaRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Justificativa)) return BadRequest(ApiResponse<string>.Fail("Justificativa obrigatória para cancelar fatura.", 400));
-        return await AtualizarFatura(id, "CANCELADA", new { valorPago = (decimal?)null, dataPagamento = (DateOnly?)null, formaPagamento = (string?)null, motivoCancelamento = request.Justificativa, motivoContestacao = (string?)null }, "Fatura cancelada com sucesso.");
+        return await AtualizarFatura(id, "CANCELADA", new { valorPago = (decimal?)null, dataPagamento = (DateOnly?)null, formaPagamento = (string?)null, observacoes = (string?)null, motivoCancelamento = request.Justificativa, motivoContestacao = (string?)null }, "Fatura cancelada com sucesso.");
     }
 
     [HttpPost("faturas/{id:guid}/contestar")]
     public async Task<IActionResult> Contestar(Guid id, [FromBody] MotivoRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Motivo)) return BadRequest(ApiResponse<string>.Fail("Motivo obrigatório para contestação.", 400));
-        return await AtualizarFatura(id, "EM_CONTESTACAO", new { valorPago = (decimal?)null, dataPagamento = (DateOnly?)null, formaPagamento = (string?)null, motivoCancelamento = (string?)null, motivoContestacao = request.Motivo }, "Fatura enviada para contestação.");
+        return await AtualizarFatura(id, "EM_CONTESTACAO", new { valorPago = (decimal?)null, dataPagamento = (DateOnly?)null, formaPagamento = (string?)null, observacoes = (string?)null, motivoCancelamento = (string?)null, motivoContestacao = request.Motivo }, "Fatura enviada para contestação.");
+    }
+
+
+    [HttpPost("faturas/{id:guid}/resolver-contestacao")]
+    public async Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoFaturaRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Resposta)) return BadRequest(ApiResponse<string>.Fail("Resposta obrigatória para resolver contestação.", 400));
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id });
+            if (fatura == default) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
+            if (!string.Equals(fatura.Status, "EM_CONTESTACAO", StringComparison.OrdinalIgnoreCase)) return BadRequest(ApiResponse<string>.Fail("Apenas faturas em contestação podem ser resolvidas.", 400));
+            await cn.ExecuteAsync("update plantaopro.faturas_saas set status='ABERTA', resposta_contestacao=@Resposta, atualizado_em=now() where id=@id and reg_status='A'", new { id, request.Resposta });
+            await _audit.RegistrarAsync(null, fatura.ClienteId, AuditoriaConstants.Entidades.FaturaSaas, id, AuditoriaConstants.Acoes.Editar, new { request.Resposta }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
+            return Ok(ApiResponse<string>.Ok("ok", "Contestação resolvida com sucesso."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao resolver contestação da fatura SaaS {FaturaId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível resolver contestação.", 500));
+        }
     }
 
     [HttpPost("faturas/{id:guid}/notificar")]
@@ -533,6 +661,20 @@ limit @s offset @offset", new { s, offset = (p - 1) * s });
 set status=@status, valor_pago=coalesce(@valorPago, valor_pago), data_pagamento=coalesce(@dataPagamento, data_pagamento), forma_pagamento=coalesce(@formaPagamento, forma_pagamento),
     motivo_cancelamento=coalesce(@motivoCancelamento, motivo_cancelamento), motivo_contestacao=coalesce(@motivoContestacao, motivo_contestacao), atualizado_em=now()
 where id=@id and reg_status='A'", p);
+            if (string.Equals(status, "PAGA", StringComparison.OrdinalIgnoreCase))
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.pagamentos_saas(id, fatura_id, cliente_id, valor_pago, data_pagamento, forma_pagamento, observacoes, reg_status, reg_date, criado_em)
+select gen_random_uuid(), @id, @clienteId, @valorPago, @dataPagamento, @formaPagamento, @observacoes, 'A', now(), now()
+where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id and reg_status='A')", new
+                {
+                    id,
+                    clienteId = fatura.ClienteId,
+                    valorPago = p.Get<decimal?>("valorPago") ?? 0,
+                    dataPagamento = p.Get<DateOnly?>("dataPagamento") ?? DateOnly.FromDateTime(DateTime.UtcNow),
+                    formaPagamento = p.Get<string?>("formaPagamento") ?? string.Empty,
+                    observacoes = p.Get<string?>("observacoes")
+                });
+            }
             await _audit.RegistrarAsync(null, fatura.ClienteId, AuditoriaConstants.Entidades.FaturaSaas, id, AuditoriaConstants.Acoes.AlterarStatus, new { status }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
             return Ok(ApiResponse<string>.Ok("ok", mensagem));
         }

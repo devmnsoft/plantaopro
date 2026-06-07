@@ -22,52 +22,8 @@ public class MedicoAreaController : ControllerBase
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
 
-        return Guid.TryParse(uidClaim, out var uid) ? uid : Guid.Empty;
-    }
-
-    [HttpGet("resumo")]
-    public async Task<IActionResult> Resumo()
-    {
-        var uid = Uid();
-        if (uid == Guid.Empty)
-            return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
-        var r = await service.ResumoAsync(uid);
-        return StatusCode(r.StatusCode, r);
-    }
-    [HttpGet("plantoes-disponiveis")]
-    public async Task<IActionResult> PlantoesDisponiveis([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-    {
-        var uid = Uid();
-        if (uid == Guid.Empty)
-            return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
-        var r = await service.PlantoesDisponiveisAsync(uid, page, pageSize);
-        return StatusCode(r.StatusCode, r);
-    }
-    [HttpGet("plantoes-recomendados")]
-    public async Task<IActionResult> PlantoesRecomendados([FromQuery] int top = 5)
-    {
-        var uid = Uid();
-        if (uid == Guid.Empty)
-            return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
-        var r = await service.PlantoesRecomendadosAsync(uid, top);
-        return StatusCode(r.StatusCode, r);
-    }
-    [HttpGet("minhas-escalas")]
-    public async Task<IActionResult> MinhasEscalas([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-    {
-        var uid = Uid();
-        if (uid == Guid.Empty)
-            return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
-        var r = await service.MinhasEscalasAsync(uid, page, pageSize);
-        return StatusCode(r.StatusCode, r);
-    }
-    [HttpGet("meus-pagamentos")]
-    public async Task<IActionResult> MeusPagamentos([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-    {
-        var uid = Uid();
-        if (uid == Guid.Empty)
-            return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
-        var r = await service.MeusPagamentosAsync(uid, page, pageSize);
-        return StatusCode(r.StatusCode, r);
-    }
+    [HttpGet("resumo")] public async Task<IActionResult> Resumo()=>StatusCode((await service.ResumoAsync(Uid())).StatusCode, await service.ResumoAsync(Uid()));
+    [HttpGet("plantoes-disponiveis")] public async Task<IActionResult> PlantoesDisponiveis([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.PlantoesDisponiveisAsync(Uid(),page,pageSize)).StatusCode, await service.PlantoesDisponiveisAsync(Uid(),page,pageSize));
+    [HttpGet("minhas-escalas")] public async Task<IActionResult> MinhasEscalas([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MinhasEscalasAsync(Uid(),page,pageSize)).StatusCode, await service.MinhasEscalasAsync(Uid(),page,pageSize));
+    [HttpGet("meus-pagamentos")] public async Task<IActionResult> MeusPagamentos([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MeusPagamentosAsync(Uid(),page,pageSize)).StatusCode, await service.MeusPagamentosAsync(Uid(),page,pageSize));
 }

@@ -1,8 +1,9 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PlantaoPro.Api.Data;
 using PlantaoPro.Api;
+using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using System.Security.Claims;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -12,18 +13,67 @@ namespace PlantaoPro.Api.Controllers;
 public class MedicoAreaController : ControllerBase
 {
     private readonly MedicoAreaService service;
+
     public MedicoAreaController(MedicoAreaService service)
     {
         this.service = service;
     }
-    private Guid Uid()
+
+    private Guid? Uid()
     {
         var uidClaim = User.FindFirst("uid")?.Value
-            ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+            ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst(ClaimTypes.Name)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? User.FindFirst("user_id")?.Value;
 
-    [HttpGet("resumo")] public async Task<IActionResult> Resumo()=>StatusCode((await service.ResumoAsync(Uid())).StatusCode, await service.ResumoAsync(Uid()));
-    [HttpGet("plantoes-disponiveis")] public async Task<IActionResult> PlantoesDisponiveis([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.PlantoesDisponiveisAsync(Uid(),page,pageSize)).StatusCode, await service.PlantoesDisponiveisAsync(Uid(),page,pageSize));
-    [HttpGet("minhas-escalas")] public async Task<IActionResult> MinhasEscalas([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MinhasEscalasAsync(Uid(),page,pageSize)).StatusCode, await service.MinhasEscalasAsync(Uid(),page,pageSize));
-    [HttpGet("meus-pagamentos")] public async Task<IActionResult> MeusPagamentos([FromQuery]int page=1,[FromQuery]int pageSize=20)=>StatusCode((await service.MeusPagamentosAsync(Uid(),page,pageSize)).StatusCode, await service.MeusPagamentosAsync(Uid(),page,pageSize));
+        if (Guid.TryParse(uidClaim, out var id))
+            return id;
+
+        return null;
+    }
+
+    [HttpGet("resumo")]
+    public async Task<IActionResult> Resumo()
+    {
+        var uid = Uid();
+        if (uid is null)
+            return Unauthorized();
+
+        var response = await service.ResumoAsync(uid.Value);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("plantoes-disponiveis")]
+    public async Task<IActionResult> PlantoesDisponiveis([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var uid = Uid();
+        if (uid is null)
+            return Unauthorized();
+
+        var response = await service.PlantoesDisponiveisAsync(uid.Value, page, pageSize);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("minhas-escalas")]
+    public async Task<IActionResult> MinhasEscalas([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var uid = Uid();
+        if (uid is null)
+            return Unauthorized();
+
+        var response = await service.MinhasEscalasAsync(uid.Value, page, pageSize);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("meus-pagamentos")]
+    public async Task<IActionResult> MeusPagamentos([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        var uid = Uid();
+        if (uid is null)
+            return Unauthorized();
+
+        var response = await service.MeusPagamentosAsync(uid.Value, page, pageSize);
+        return StatusCode(response.StatusCode, response);
+    }
 }

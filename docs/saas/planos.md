@@ -9,3 +9,9 @@ Planos definem limites de médicos, hospitais, usuários, plantões e convites m
 - Use `ARQUIVADO` para planos legados.
 - Valores e limites não podem ser negativos.
 - Limite nulo ou zero pode representar ilimitado conforme regra do serviço.
+
+## Funcionalidade entregue nesta rodada
+
+- CRUD Web em `Planos/Index`, `Planos/Create`, `Planos/Edit`, `Planos/Details`, `Planos/Recursos` e `Planos/Comparativo`.
+- API de recursos do plano em `GET /api/planos/{id}/recursos` e `PUT /api/planos/{id}/recursos`.
+- Alterações de recursos usam transação, inativação lógica dos recursos anteriores e auditoria comercial.

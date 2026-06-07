@@ -15,7 +15,8 @@ public class SaasInteligenteContractTests
             typeof(AssinaturasController),
             typeof(FaturamentoSaasController),
             typeof(SaasInteligenciaController),
-            typeof(SaasDashboardController));
+            typeof(SaasDashboardController),
+            typeof(RelatoriosSaasController));
 
         var esperadas = new[]
         {
@@ -35,7 +36,18 @@ public class SaasInteligenteContractTests
             "api/saas-inteligencia/clientes/{clienteId:guid}/recomendacoes",
             "api/saas-inteligencia/resumo",
             "api/saas-inteligencia/clientes/{clienteId:guid}/recalcular",
-            "api/saas-dashboard/resumo"
+            "api/saas-dashboard/resumo",
+            "api/planos/{id:guid}/recursos",
+            "api/assinaturas/{id:guid}/alterar-plano",
+            "api/assinaturas/cliente/{clienteId:guid}/atual",
+            "api/faturamento-saas/faturas/{id:guid}/resolver-contestacao",
+            "api/relatorios/saas/clientes",
+            "api/relatorios/saas/assinaturas",
+            "api/relatorios/saas/faturamento",
+            "api/relatorios/saas/inadimplencia",
+            "api/relatorios/saas/uso-planos",
+            "api/relatorios/saas/clientes-risco",
+            "api/relatorios/saas/upgrade"
         };
 
         foreach (var rota in esperadas)

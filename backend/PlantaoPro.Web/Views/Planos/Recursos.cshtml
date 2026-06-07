@@ -1,0 +1,3 @@
+@model IEnumerable<PlantaoPro.Web.Models.PlanoRecursoSaasViewModel>
+@{ ViewData["Title"] = "Recursos do plano"; var itens = Model ?? Array.Empty<PlantaoPro.Web.Models.PlanoRecursoSaasViewModel>(); }
+<div class="container py-3"><h1 class="h3">Recursos do plano</h1><div class="card"><div class="table-responsive"><table class="table mb-0"><thead><tr><th>Código</th><th>Nome</th><th>Limite</th><th>Status</th></tr></thead><tbody>@foreach (var item in itens){<tr><td>@item.Codigo</td><td>@item.Nome</td><td>@(item.Limite?.ToString() ?? "Ilimitado")</td><td><span class="badge bg-secondary">@(item.Habilitado ? "Habilitado" : "Bloqueado")</span></td></tr>}</tbody></table></div></div><a class="btn btn-outline-secondary mt-3" asp-action="Index">Voltar</a></div>

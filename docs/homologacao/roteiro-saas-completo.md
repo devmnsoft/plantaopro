@@ -20,3 +20,11 @@
 18. Reativar cliente.
 19. Exportar relatório SaaS.
 20. Conferir auditoria, alertas, bloqueios e dashboard.
+
+## Complemento da rodada
+
+26. Abrir `Planos/Recursos` e validar badges de recursos por plano.
+27. Alterar plano de uma assinatura com justificativa e conferir histórico/auditoria.
+28. Contestar e resolver uma fatura SaaS.
+29. Exportar relatório SaaS em CSV e conferir registro de auditoria de exportação.
+30. Abrir `SaasDashboard/Index` e `CustomerSuccess/Index` para validar KPIs, alertas e CTAs.

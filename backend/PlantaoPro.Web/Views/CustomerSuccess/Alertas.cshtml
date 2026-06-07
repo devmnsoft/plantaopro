@@ -1,0 +1,3 @@
+@model IEnumerable<PlantaoPro.Web.Models.ClienteAlertaSaasViewModel>
+@{ ViewData["Title"] = "Alertas SaaS"; var itens = Model ?? Array.Empty<PlantaoPro.Web.Models.ClienteAlertaSaasViewModel>(); }
+<div class="container py-3"><h1 class="h3">Alertas SaaS</h1><div class="list-group">@foreach(var item in itens){<div class="list-group-item"><div class="d-flex justify-content-between"><strong>@item.Titulo</strong><span class="badge bg-secondary">@item.Severidade</span></div><p class="mb-0">@item.Mensagem</p></div>}</div></div>

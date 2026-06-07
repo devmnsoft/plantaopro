@@ -215,6 +215,33 @@ public record AssinaturaComercialRequest(Guid ClienteId,Guid PlanoId,DateTime Da
 public record JustificativaRequest(string Justificativa);
 public record MotivoRequest(string Motivo);
 
+
+public sealed class PlanoRecursoDto
+{
+    public Guid Id { get; set; }
+    public Guid PlanoId { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public bool Habilitado { get; set; }
+    public int? Limite { get; set; }
+}
+
+public record PlanoRecursoRequest(string Codigo, string Nome, string? Descricao, bool Habilitado, int? Limite);
+public record AlterarPlanoAssinaturaRequest(Guid PlanoId, string Justificativa);
+public record ResolverContestacaoFaturaRequest(string Resposta);
+
+public sealed class RelatorioSaasLinhaDto
+{
+    public Guid? ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string Classificacao { get; set; } = string.Empty;
+    public long Quantidade { get; set; }
+    public decimal Valor { get; set; }
+    public DateOnly? Competencia { get; set; }
+}
+
 public sealed class UsoPlanoDto
 {
     public Guid ClienteId { get; set; }

@@ -124,7 +124,26 @@ public sealed class CommercialProposalDto : CommercialProposalRequest
     public string Status { get; set; } = string.Empty;
     public decimal TotalPrimeiroMes { get; set; }
     public DateTime RegDate { get; set; }
+    public Guid? TenantProvisionadoId { get; set; }
+    public Guid? ClienteProvisionadoId { get; set; }
+    public Guid? AssinaturaProvisionadaId { get; set; }
+    public Guid? AdminClienteProvisionadoId { get; set; }
+    public Guid? OnboardingProvisionadoId { get; set; }
     public IEnumerable<string> Timeline { get; set; } = Array.Empty<string>();
+}
+
+public sealed class CommercialProposalConversionDto
+{
+    public Guid PropostaId { get; set; }
+    public Guid TenantId { get; set; }
+    public Guid ClienteId { get; set; }
+    public Guid AssinaturaId { get; set; }
+    public Guid AdminClienteId { get; set; }
+    public Guid OnboardingId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string ModoPagamento { get; set; } = string.Empty;
+    public string Observacao { get; set; } = string.Empty;
+    public IEnumerable<string> EtapasProvisionadas { get; set; } = Array.Empty<string>();
 }
 
 public sealed class RejectProposalRequest
@@ -199,6 +218,16 @@ public sealed class DemoStatusDto
 {
     public bool DadosGerados { get; set; }
     public long TenantsDemo { get; set; }
+    public long ClientesDemo { get; set; }
+    public long MedicosDemo { get; set; }
+    public long HospitaisDemo { get; set; }
+    public long PlantoesDemo { get; set; }
+    public long ConvitesDemo { get; set; }
+    public long EscalasDemo { get; set; }
+    public long PagamentosDemo { get; set; }
+    public long FaturasDemo { get; set; }
+    public long PropostasDemo { get; set; }
+    public long ParceirosDemo { get; set; }
     public long LeadsDemo { get; set; }
     public DateTime? UltimaGeracao { get; set; }
     public IEnumerable<string> Roteiros { get; set; } = Array.Empty<string>();

@@ -10,7 +10,8 @@ public sealed class CommercialDemoService
     private static readonly Dictionary<Guid, CommercialProposalDto> Proposals = new();
     private static readonly Dictionary<Guid, ModuleDto> Modules = SeedModules().ToDictionary(x => x.Id);
     private static readonly Dictionary<Guid, FeatureFlagDto> FeatureFlags = SeedFlags().ToDictionary(x => x.Id);
-    private static readonly HashSet<string> DemoMarkers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, long> DemoMarkers = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, Guid> ConvertedCompanies = new(StringComparer.OrdinalIgnoreCase);
     private static DateTime? LastDemoGeneration;
     private readonly IAuditService _audit;
     private readonly ILogger<CommercialDemoService> _logger;
@@ -188,6 +189,11 @@ public sealed class CommercialDemoService
                     Status = id.HasValue && existing is not null ? existing.Status : "RASCUNHO",
                     TotalPrimeiroMes = request.TaxaSetup + request.Mensalidade * (1 - request.DescontoPercentual / 100m),
                     RegDate = id.HasValue && existing is not null ? existing.RegDate : DateTime.UtcNow,
+                    TenantProvisionadoId = id.HasValue && existing is not null ? existing.TenantProvisionadoId : null,
+                    ClienteProvisionadoId = id.HasValue && existing is not null ? existing.ClienteProvisionadoId : null,
+                    AssinaturaProvisionadaId = id.HasValue && existing is not null ? existing.AssinaturaProvisionadaId : null,
+                    AdminClienteProvisionadoId = id.HasValue && existing is not null ? existing.AdminClienteProvisionadoId : null,
+                    OnboardingProvisionadoId = id.HasValue && existing is not null ? existing.OnboardingProvisionadoId : null,
                     Timeline = timeline
                 };
                 Proposals[proposalId] = dto;
@@ -247,11 +253,52 @@ public sealed class CommercialDemoService
         return ApiResponse<CommercialProposalDto>.Ok(updated, "Itens comerciais gerados.");
     }
 
-    public async Task<ApiResponse<CommercialProposalDto>> ConvertProposalAsync(Guid id, string? ip)
+    public async Task<ApiResponse<CommercialProposalConversionDto>> ConvertProposalAsync(Guid id, string? ip)
     {
-        var result = await ChangeProposalStatusAsync(id, "CONVERTIDA_CLIENTE", "Tenant, cliente, assinatura e onboarding gerados em modo demonstrável.", ip);
-        if (result.Success) await AuditAsync("CONVERSAO_CLIENTE", id, "CRIAR_TENANT_ASSINATURA_ONBOARDING", new { PropostaId = id }, ip);
-        return result;
+        try
+        {
+            CommercialProposalConversionDto conversion;
+            CommercialProposalDto proposal;
+            lock (Gate)
+            {
+                if (!Proposals.TryGetValue(id, out proposal)) return ApiResponse<CommercialProposalConversionDto>.Fail("Proposta não encontrada.", 404);
+                if (proposal.Validade.Date < DateTime.UtcNow.Date) return ApiResponse<CommercialProposalConversionDto>.Fail("Proposta vencida não pode ser convertida.", 400);
+                if (!string.Equals(proposal.Status, "APROVADA", StringComparison.OrdinalIgnoreCase) && !string.Equals(proposal.Status, "CONVERTIDA_CLIENTE", StringComparison.OrdinalIgnoreCase)) return ApiResponse<CommercialProposalConversionDto>.Fail("Apenas propostas aprovadas podem ser convertidas em cliente.", 400);
+                var companyKey = NormalizeCompanyKey(proposal.Empresa);
+                if (ConvertedCompanies.TryGetValue(companyKey, out var existingProposalId) && existingProposalId != id) return ApiResponse<CommercialProposalConversionDto>.Fail("Já existe cliente provisionado para esta empresa/CNPJ informado.", 409);
+
+                proposal.TenantProvisionadoId = proposal.TenantProvisionadoId.GetValueOrDefault(Guid.NewGuid());
+                proposal.ClienteProvisionadoId = proposal.ClienteProvisionadoId.GetValueOrDefault(Guid.NewGuid());
+                proposal.AssinaturaProvisionadaId = proposal.AssinaturaProvisionadaId.GetValueOrDefault(Guid.NewGuid());
+                proposal.AdminClienteProvisionadoId = proposal.AdminClienteProvisionadoId.GetValueOrDefault(Guid.NewGuid());
+                proposal.OnboardingProvisionadoId = proposal.OnboardingProvisionadoId.GetValueOrDefault(Guid.NewGuid());
+                proposal.Status = "CONVERTIDA_CLIENTE";
+                proposal.Timeline = proposal.Timeline.Concat(new[] { $"{DateTime.UtcNow:O} - CONVERTIDA_CLIENTE: tenant, cliente, assinatura, administrador e onboarding provisionados" }).ToList();
+                Proposals[id] = proposal;
+                ConvertedCompanies[companyKey] = id;
+
+                conversion = new CommercialProposalConversionDto
+                {
+                    PropostaId = id,
+                    TenantId = proposal.TenantProvisionadoId.Value,
+                    ClienteId = proposal.ClienteProvisionadoId.Value,
+                    AssinaturaId = proposal.AssinaturaProvisionadaId.Value,
+                    AdminClienteId = proposal.AdminClienteProvisionadoId.Value,
+                    OnboardingId = proposal.OnboardingProvisionadoId.Value,
+                    Status = proposal.Status,
+                    ModoPagamento = "MANUAL_SANDBOX",
+                    Observacao = "Provisionamento demonstrável; gateway real não configurado nesta versão.",
+                    EtapasProvisionadas = new List<string> { "tenant", "cliente", "assinatura", "admin_cliente", "onboarding", "aceite_comercial_auditado" }
+                };
+            }
+            await AuditAsync("CONVERSAO_CLIENTE", id, "CRIAR_TENANT_ASSINATURA_ONBOARDING", new { conversion.PropostaId, conversion.TenantId, conversion.ClienteId, conversion.AssinaturaId, conversion.AdminClienteId, conversion.OnboardingId, conversion.ModoPagamento }, ip);
+            return ApiResponse<CommercialProposalConversionDto>.Ok(conversion, "Proposta convertida em cliente demonstrável.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao converter proposta comercial {Id}", id);
+            return ApiResponse<CommercialProposalConversionDto>.Fail("Não foi possível converter proposta em cliente.", 500);
+        }
     }
 
     public Task<ApiResponse<string>> PreviewProposalAsync(Guid id)
@@ -325,12 +372,20 @@ public sealed class CommercialDemoService
     {
         lock (Gate)
         {
-            DemoMarkers.Add("Hospital São Lucas Demo");
-            DemoMarkers.Add("Clínica Vida Demo");
-            DemoMarkers.Add("Rede White Label Demo");
+            DemoMarkers["tenants"] = 3;
+            DemoMarkers["clientes"] = 3;
+            DemoMarkers["medicos"] = 12;
+            DemoMarkers["hospitais"] = 4;
+            DemoMarkers["plantoes"] = 18;
+            DemoMarkers["convites"] = 24;
+            DemoMarkers["escalas"] = 9;
+            DemoMarkers["pagamentos"] = 6;
+            DemoMarkers["faturas"] = 3;
+            DemoMarkers["propostas"] = 2;
+            DemoMarkers["parceiros"] = 1;
             LastDemoGeneration = DateTime.UtcNow;
         }
-        await AuditAsync("DEMO_MODE", Guid.Empty, "GERAR_DADOS", new { Total = 3 }, ip);
+        await AuditAsync("DEMO_MODE", Guid.Empty, "GERAR_DADOS", new { IsDemo = true, TotalTenants = 3, TotalMedicos = 12, TotalPlantoes = 18 }, ip);
         return await DemoStatusAsync();
     }
 
@@ -343,7 +398,7 @@ public sealed class CommercialDemoService
 
     public Task<ApiResponse<DemoStatusDto>> DemoStatusAsync()
     {
-        lock (Gate) return Task.FromResult(ApiResponse<DemoStatusDto>.Ok(new DemoStatusDto { DadosGerados = DemoMarkers.Count > 0, TenantsDemo = DemoMarkers.Count, LeadsDemo = Leads.Values.LongCount(x => x.Empresa.Contains("Demo", StringComparison.OrdinalIgnoreCase)), UltimaGeracao = LastDemoGeneration, Roteiros = DemoRoutes() }));
+        lock (Gate) return Task.FromResult(ApiResponse<DemoStatusDto>.Ok(new DemoStatusDto { DadosGerados = DemoMarkers.Count > 0, TenantsDemo = CountDemo("tenants"), ClientesDemo = CountDemo("clientes"), MedicosDemo = CountDemo("medicos"), HospitaisDemo = CountDemo("hospitais"), PlantoesDemo = CountDemo("plantoes"), ConvitesDemo = CountDemo("convites"), EscalasDemo = CountDemo("escalas"), PagamentosDemo = CountDemo("pagamentos"), FaturasDemo = CountDemo("faturas"), PropostasDemo = CountDemo("propostas"), ParceirosDemo = CountDemo("parceiros"), LeadsDemo = Leads.Values.LongCount(x => x.Empresa.Contains("Demo", StringComparison.OrdinalIgnoreCase)), UltimaGeracao = LastDemoGeneration, Roteiros = DemoRoutes() }));
     }
 
     public Task<ApiResponse<IEnumerable<string>>> DemoRoutesAsync() => Task.FromResult(ApiResponse<IEnumerable<string>>.Ok(DemoRoutes()));
@@ -356,6 +411,8 @@ public sealed class CommercialDemoService
     private static LandingSectionDto Section(string key, string title, string description, params string[] benefits) => new LandingSectionDto { Chave = key, Titulo = title, Descricao = description, Beneficios = benefits };
     private static SimulatorQuestionDto Question(string key, string text, string type, params string[] options) => new SimulatorQuestionDto { Chave = key, Pergunta = text, Tipo = type, Opcoes = options };
     private static string Normalize(string? value, string fallback) => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim().ToUpperInvariant();
+    private static string NormalizeCompanyKey(string? value) => Normalize(value, "SEM_EMPRESA").Replace(".", string.Empty).Replace("/", string.Empty).Replace("-", string.Empty);
+    private static long CountDemo(string key) => DemoMarkers.TryGetValue(key, out var count) ? count : 0;
     private static List<string> ValidateLead(PublicLeadRequest request)
     {
         var errors = new List<string>();

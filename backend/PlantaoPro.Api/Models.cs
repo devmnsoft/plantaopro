@@ -187,14 +187,18 @@ public sealed class PlanoComercialDto
     public int LimiteMedicos { get; set; }
     public int LimiteHospitais { get; set; }
     public int LimitePlantoesMes { get; set; }
+    public int LimiteUsuarios { get; set; }
+    public int LimiteConvitesMes { get; set; }
     public bool PermiteMobile { get; set; }
     public bool PermiteBi { get; set; }
     public bool PermiteRelatoriosAvancados { get; set; }
     public bool PermiteIntegracoes { get; set; }
+    public bool PermiteOperacaoAssistida { get; set; }
+    public bool PermiteSuportePrioritario { get; set; }
     public string Status { get; set; } = string.Empty;
 }
 
-public record PlanoComercialRequest(string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteMobile,bool PermiteBi,bool PermiteRelatoriosAvancados,bool PermiteIntegracoes);
+public record PlanoComercialRequest(string Nome,string Descricao,decimal ValorMensal,int LimiteMedicos,int LimiteHospitais,int LimitePlantoesMes,bool PermiteMobile,bool PermiteBi,bool PermiteRelatoriosAvancados,bool PermiteIntegracoes,int LimiteUsuarios = 0,int LimiteConvitesMes = 0,bool PermiteOperacaoAssistida = false,bool PermiteSuportePrioritario = false);
 
 public sealed class AssinaturaComercialDto
 {
@@ -256,10 +260,16 @@ public sealed class UsoPlanoDto
     public int HospitaisLimite { get; set; }
     public int PlantoesMesUsados { get; set; }
     public int PlantoesMesLimite { get; set; }
+    public int UsuariosUsados { get; set; }
+    public int UsuariosLimite { get; set; }
+    public int ConvitesMesUsados { get; set; }
+    public int ConvitesMesLimite { get; set; }
     public bool PermiteMobile { get; set; }
     public bool PermiteBi { get; set; }
     public bool PermiteRelatoriosAvancados { get; set; }
     public bool PermiteIntegracoes { get; set; }
+    public bool PermiteOperacaoAssistida { get; set; }
+    public bool PermiteSuportePrioritario { get; set; }
 }
 
 public record GerarFaturasSaasRequest(DateOnly Competencia);

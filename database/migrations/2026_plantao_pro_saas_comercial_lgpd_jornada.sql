@@ -25,10 +25,14 @@ create table if not exists plantaopro.planos (
     limite_medicos int not null default 0,
     limite_hospitais int not null default 0,
     limite_plantoes_mes int not null default 0,
+    limite_usuarios int not null default 0,
+    limite_convites_mes int not null default 0,
     permite_mobile boolean not null default false,
     permite_bi boolean not null default false,
     permite_relatorios_avancados boolean not null default false,
     permite_integracoes boolean not null default false,
+    permite_operacao_assistida boolean not null default false,
+    permite_suporte_prioritario boolean not null default false,
     status varchar(40) not null default 'ATIVO',
     reg_status char(1) not null default 'A',
     reg_date timestamp not null default now(),
@@ -40,10 +44,14 @@ alter table plantaopro.planos add column if not exists valor_mensal numeric(12,2
 alter table plantaopro.planos add column if not exists limite_medicos int not null default 0;
 alter table plantaopro.planos add column if not exists limite_hospitais int not null default 0;
 alter table plantaopro.planos add column if not exists limite_plantoes_mes int not null default 0;
+alter table plantaopro.planos add column if not exists limite_usuarios int not null default 0;
+alter table plantaopro.planos add column if not exists limite_convites_mes int not null default 0;
 alter table plantaopro.planos add column if not exists permite_mobile boolean not null default false;
 alter table plantaopro.planos add column if not exists permite_bi boolean not null default false;
 alter table plantaopro.planos add column if not exists permite_relatorios_avancados boolean not null default false;
 alter table plantaopro.planos add column if not exists permite_integracoes boolean not null default false;
+alter table plantaopro.planos add column if not exists permite_operacao_assistida boolean not null default false;
+alter table plantaopro.planos add column if not exists permite_suporte_prioritario boolean not null default false;
 alter table plantaopro.planos add column if not exists status varchar(40) not null default 'ATIVO';
 alter table plantaopro.planos add column if not exists reg_status char(1) not null default 'A';
 alter table plantaopro.planos add column if not exists reg_date timestamp not null default now();

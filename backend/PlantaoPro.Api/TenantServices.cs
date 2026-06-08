@@ -276,6 +276,8 @@ public sealed class AssinaturaGuardService
     public Task<ApiResponse<bool>> PodeUsarAPIAsync(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "api", "Seu plano atual não permite acesso via API.");
     public Task<ApiResponse<bool>> PodeUsarIntegracoesAsync(Guid clienteId) => PodeUsarIntegracoes(clienteId);
     public Task<ApiResponse<bool>> PodeUsarRelatoriosAvancadosAsync(Guid clienteId) => PodeUsarRelatoriosAvancados(clienteId);
+    public Task<ApiResponse<bool>> PodeUsarOperacaoAssistidaAsync(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "operacao_assistida", "Seu plano atual não inclui operação assistida.");
+    public Task<ApiResponse<bool>> PodeUsarSuportePrioritarioAsync(Guid clienteId) => ValidarFuncionalidadeAsync(clienteId, "suporte_prioritario", "Seu plano atual não inclui suporte prioritário.");
 
     public Task<ApiResponse<bool>> PodeCadastrarMedico(Guid clienteId) => ValidarLimiteAsync(clienteId, "medicos", "Limite de médicos do plano atingido.");
 
@@ -337,10 +339,16 @@ limit 1", new { clienteId });
        coalesce(p.limite_hospitais,0) as ""HospitaisLimite"",
        (select count(1)::int from plantaopro.plantoes pl where pl.cliente_id=a.cliente_id and pl.reg_status='A' and date_trunc('month',pl.data_inicio)=date_trunc('month',now())) as ""PlantoesMesUsados"",
        coalesce(p.limite_plantoes_mes,0) as ""PlantoesMesLimite"",
+       (select count(1)::int from plantaopro.usuarios u where u.cliente_id=a.cliente_id and u.reg_status='A') as ""UsuariosUsados"",
+       coalesce(p.limite_usuarios,0) as ""UsuariosLimite"",
+       (select coalesce(sum(au.quantidade),0)::int from plantaopro.assinatura_uso au where au.cliente_id=a.cliente_id and upper(au.recurso)='CONVITES' and au.reg_status='A' and date_trunc('month',au.competencia)=date_trunc('month',now())) as ""ConvitesMesUsados"",
+       coalesce(p.limite_convites_mes,0) as ""ConvitesMesLimite"",
        coalesce(p.permite_mobile,p.permite_api,false) as ""PermiteMobile"",
        coalesce(p.permite_bi,p.permite_relatorios,false) as ""PermiteBi"",
        coalesce(p.permite_relatorios_avancados,p.permite_relatorios,false) as ""PermiteRelatoriosAvancados"",
-       coalesce(p.permite_integracoes,p.permite_api,false) as ""PermiteIntegracoes""
+       coalesce(p.permite_integracoes,p.permite_api,false) as ""PermiteIntegracoes"",
+       coalesce(p.permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"",
+       coalesce(p.permite_suporte_prioritario,false) as ""PermiteSuportePrioritario""
 from plantaopro.assinaturas a
 join plantaopro.planos p on p.id=a.plano_id
 where a.cliente_id=@clienteId and a.reg_status='A'
@@ -393,6 +401,8 @@ limit 1", new { clienteId });
             "api" => uso.PermiteIntegracoes || uso.PermiteMobile,
             "relatorios" => uso.PermiteRelatoriosAvancados,
             "integracoes" => uso.PermiteIntegracoes,
+            "operacao_assistida" => uso.PermiteOperacaoAssistida,
+            "suporte_prioritario" => uso.PermiteSuportePrioritario,
             _ => false
         };
 
@@ -417,8 +427,8 @@ limit 1", new { clienteId });
             "medicos" => uso.MedicosLimite <= 0 || uso.MedicosUsados < uso.MedicosLimite,
             "hospitais" => uso.HospitaisLimite <= 0 || uso.HospitaisUsados < uso.HospitaisLimite,
             "plantoes" => uso.PlantoesMesLimite <= 0 || uso.PlantoesMesUsados < uso.PlantoesMesLimite,
-            "usuarios" => true,
-            "convites" => true,
+            "usuarios" => uso.UsuariosLimite <= 0 || uso.UsuariosUsados < uso.UsuariosLimite,
+            "convites" => uso.ConvitesMesLimite <= 0 || uso.ConvitesMesUsados < uso.ConvitesMesLimite,
             _ => false
         };
 
@@ -476,6 +486,8 @@ values(gen_random_uuid(), @clienteId, @recurso, @quantidade, date_trunc('month',
         if (limite == "medicos" && uso.MedicosLimite > 0) percentual = (decimal)uso.MedicosUsados / uso.MedicosLimite;
         if (limite == "hospitais" && uso.HospitaisLimite > 0) percentual = (decimal)uso.HospitaisUsados / uso.HospitaisLimite;
         if (limite == "plantoes" && uso.PlantoesMesLimite > 0) percentual = (decimal)uso.PlantoesMesUsados / uso.PlantoesMesLimite;
+        if (limite == "usuarios" && uso.UsuariosLimite > 0) percentual = (decimal)uso.UsuariosUsados / uso.UsuariosLimite;
+        if (limite == "convites" && uso.ConvitesMesLimite > 0) percentual = (decimal)uso.ConvitesMesUsados / uso.ConvitesMesLimite;
         if (percentual < 0.8m) return;
 
         try

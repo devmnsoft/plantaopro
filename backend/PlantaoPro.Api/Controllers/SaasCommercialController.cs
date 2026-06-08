@@ -41,10 +41,14 @@ public sealed class PlanosController : ControllerBase
        limite_medicos as ""LimiteMedicos"",
        limite_hospitais as ""LimiteHospitais"",
        limite_plantoes_mes as ""LimitePlantoesMes"",
+       coalesce(limite_usuarios,0) as ""LimiteUsuarios"",
+       coalesce(limite_convites_mes,0) as ""LimiteConvitesMes"",
        coalesce(permite_mobile, permite_api, false) as ""PermiteMobile"",
        coalesce(permite_bi, permite_relatorios, false) as ""PermiteBi"",
        coalesce(permite_relatorios_avancados, permite_relatorios, false) as ""PermiteRelatoriosAvancados"",
        coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
+       coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"",
+       coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos
 where {where}
@@ -68,8 +72,10 @@ limit @s offset @offset", new { status, s, offset = (p - 1) * s });
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var item = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"",
        limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"",
+       coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(limite_convites_mes,0) as ""LimiteConvitesMes"",
        coalesce(permite_mobile, permite_api, false) as ""PermiteMobile"", coalesce(permite_bi, permite_relatorios, false) as ""PermiteBi"",
        coalesce(permite_relatorios_avancados, permite_relatorios, false) as ""PermiteRelatoriosAvancados"", coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
+       coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"", coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos where id=@id and reg_status='A'", new { id });
             return item is null ? NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404)) : Ok(ApiResponse<PlanoComercialDto>.Ok(item));
@@ -91,8 +97,8 @@ from plantaopro.planos where id=@id and reg_status='A'", new { id });
 
             var id = Guid.NewGuid();
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync(@"insert into plantaopro.planos(id,nome,descricao,valor_mensal,limite_medicos,limite_hospitais,limite_plantoes_mes,permite_relatorios,permite_api,permite_mobile,permite_bi,permite_relatorios_avancados,permite_integracoes,status,reg_status,reg_date)
-values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@LimitePlantoesMes,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteMobile,@PermiteBi,@PermiteRelatoriosAvancados,@PermiteIntegracoes,'ATIVO','A',now())", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes });
+            await cn.ExecuteAsync(@"insert into plantaopro.planos(id,nome,descricao,valor_mensal,limite_medicos,limite_hospitais,limite_plantoes_mes,limite_usuarios,limite_convites_mes,permite_relatorios,permite_api,permite_mobile,permite_bi,permite_relatorios_avancados,permite_integracoes,permite_operacao_assistida,permite_suporte_prioritario,status,reg_status,reg_date)
+values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@LimitePlantoesMes,@LimiteUsuarios,@LimiteConvitesMes,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteMobile,@PermiteBi,@PermiteRelatoriosAvancados,@PermiteIntegracoes,@PermiteOperacaoAssistida,@PermiteSuportePrioritario,'ATIVO','A',now())", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
             await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Criar, new { request.Nome, request.ValorMensal });
             return Ok(ApiResponse<Guid>.Ok(id, "Plano criado com sucesso."));
         }
@@ -114,11 +120,13 @@ values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@Limite
             var rows = await cn.ExecuteAsync(@"update plantaopro.planos
 set nome=@Nome, descricao=@Descricao, valor_mensal=@ValorMensal, limite_medicos=@LimiteMedicos,
     limite_hospitais=@LimiteHospitais, limite_plantoes_mes=@LimitePlantoesMes,
+    limite_usuarios=@LimiteUsuarios, limite_convites_mes=@LimiteConvitesMes,
     permite_relatorios=@PermiteRelatoriosAvancados, permite_api=@PermiteIntegracoes,
     permite_mobile=@PermiteMobile, permite_bi=@PermiteBi,
     permite_relatorios_avancados=@PermiteRelatoriosAvancados, permite_integracoes=@PermiteIntegracoes,
+    permite_operacao_assistida=@PermiteOperacaoAssistida, permite_suporte_prioritario=@PermiteSuportePrioritario,
     reg_update=now()
-where id=@id and reg_status='A'", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes });
+where id=@id and reg_status='A'", new { id, request.Nome, request.Descricao, request.ValorMensal, request.LimiteMedicos, request.LimiteHospitais, request.LimitePlantoesMes, request.LimiteUsuarios, request.LimiteConvitesMes, request.PermiteMobile, request.PermiteBi, request.PermiteRelatoriosAvancados, request.PermiteIntegracoes, request.PermiteOperacaoAssistida, request.PermiteSuportePrioritario });
             if (rows == 0) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
             await AuditarAsync(AuditoriaConstants.Entidades.Plano, id, AuditoriaConstants.Acoes.Editar, new { request.Nome });
             return Ok(ApiResponse<string>.Ok("ok", "Plano atualizado com sucesso."));
@@ -220,7 +228,7 @@ values(gen_random_uuid(), @id, upper(@Codigo), @Nome, @Descricao, @Habilitado, @
         var erros = new List<string>();
         if (string.IsNullOrWhiteSpace(request.Nome)) erros.Add("Nome do plano é obrigatório.");
         if (request.ValorMensal < 0) erros.Add("Valor mensal não pode ser negativo.");
-        if (request.LimiteMedicos < 0 || request.LimiteHospitais < 0 || request.LimitePlantoesMes < 0) erros.Add("Limites não podem ser negativos.");
+        if (request.LimiteMedicos < 0 || request.LimiteHospitais < 0 || request.LimitePlantoesMes < 0 || request.LimiteUsuarios < 0 || request.LimiteConvitesMes < 0) erros.Add("Limites não podem ser negativos.");
         return erros.Count == 0 ? ApiResponse<string>.Ok("ok") : ApiResponse<string>.Fail("Verifique os dados do plano.", 400, erros);
     }
 

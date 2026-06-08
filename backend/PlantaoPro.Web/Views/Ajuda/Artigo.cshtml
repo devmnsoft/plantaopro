@@ -1,3 +1,37 @@
-@{ ViewData["Title"] = "Artigo de Ajuda"; }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Artigo de ajuda", "Passo a passo com linguagem simples e links diretos para telas do sistema.", "bi-journal-text")' />
-<div class="card"><div class="card-body"><p class="text-muted">Artigo carregável pela API <code>/api/ajuda/artigos/@ViewBag.ArtigoId</code>.</p><form method="post" action="/api/ajuda/artigos/@ViewBag.ArtigoId/feedback"><button class="btn btn-outline-success" type="submit">Foi útil</button></form></div></div>
+@model PlantaoPro.Web.Models.AjudaInterativaArtigoViewModel
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel(Model.Titulo, "Passo a passo com linguagem simples, validações e link direto para a tela do sistema.", "bi-journal-text")' />
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-body">
+                <span class="badge bg-primary-subtle text-primary border mb-3">@Model.Perfil</span>
+                <p class="lead">@Model.Resumo</p>
+                <ol class="list-group list-group-numbered mb-3">
+                @foreach (var passo in Model.Passos)
+                {
+                    <li class="list-group-item">@passo</li>
+                }
+                </ol>
+                <a class="btn btn-primary" asp-controller="@Model.Controller" asp-action="@Model.Action"><i class="bi bi-box-arrow-up-right"></i> Abrir tela relacionada</a>
+                <a class="btn btn-outline-secondary" asp-action="Index"><i class="bi bi-arrow-left"></i> Voltar</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h5">Foi útil?</h2>
+                <p class="text-muted">Seu feedback ajuda Customer Success a melhorar o manual.</p>
+                <form asp-action="Feedback" method="post" class="d-grid gap-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ArtigoId" value="@Model.Id" />
+                    <button class="btn btn-outline-success" type="submit" name="Util" value="true"><i class="bi bi-hand-thumbs-up"></i> Sim, foi útil</button>
+                    <button class="btn btn-outline-secondary" type="submit" name="Util" value="false"><i class="bi bi-hand-thumbs-down"></i> Precisa melhorar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,18 +1,20 @@
-# Manual de Uso Interativo
+# Manual de uso interativo
 
-O manual foi implementado como módulo Web/API, não apenas documentação estática.
+O PlantãoPro possui o módulo Web **Ajuda** com busca, artigos por perfil, checklist de primeiros passos, links diretos para telas e feedback de utilidade.
 
-## Recursos
+## Perfis cobertos
 
-- Tópicos por perfil.
-- Artigos com links para telas do sistema.
-- Busca por termo.
-- Checklists de primeiros passos.
-- Feedback “Foi útil?”.
-- Conteúdos para administrador global, coordenação, médico, financeiro e hospital.
+- ADMINISTRADOR_GLOBAL: cliente, plano, assinatura, fatura, clientes em risco e inteligência SaaS.
+- COORDENACAO: criação/publicação de plantões, convites e confirmação de escala.
+- MEDICO: plantões disponíveis, agenda e pagamentos.
+- FINANCEIRO: pagamentos e conciliação.
+- HOSPITAL: acompanhamento de plantões e escalas.
+- TODOS: privacidade LGPD e direitos do titular.
 
-Endpoints principais: `GET /api/ajuda/topicos`, `GET /api/ajuda/artigos`, `GET /api/ajuda/buscar`, `POST /api/ajuda/artigos/{id}/feedback`.
+## Fluxo
 
-## Complemento 2026-06-08 — ajuda contextual SaaS
-
-O SQL incremental da rodada inclui tópicos e artigos iniciais por perfil para o manual interativo: administrador global, coordenação, médico, financeiro e hospital. Os artigos orientam uso do dashboard SaaS, inteligência, publicação de plantões, aceite de convites, confirmação de pagamentos e acompanhamento hospitalar, com links diretos para telas do sistema.
+1. Acesse **Ajuda** no menu lateral ou na topbar.
+2. Busque por termo ou selecione o perfil.
+3. Abra um artigo para ver passos orientados.
+4. Use **Abrir tela relacionada** para navegar ao módulo real.
+5. Registre feedback em **Foi útil?**.

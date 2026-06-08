@@ -1,19 +1,63 @@
+@model PlantaoPro.Web.Models.AjudaInterativaIndexViewModel
 @{
     ViewData["Title"] = "Centro de Ajuda";
-    var busca = (string?)ViewBag.Busca;
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Centro de Ajuda", "Guias rápidos para acelerar sua operação SaaS.", "bi-life-preserver")' />
-<div class="alert alert-info"><i class="bi bi-info-circle me-2"></i>Selecione um módulo para ver passo a passo e próximos passos esperados.</div>
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-8"><input name="busca" value="@busca" class="form-control" placeholder="Buscar tema" /></div>
-    <div class="col-md-4"><button class="btn btn-primary w-100"><i class="bi bi-search"></i> Buscar</button></div>
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Centro de Ajuda", "Manual interativo por perfil, com busca, checklists e links diretos para as telas.", "bi-life-preserver")' />
+
+<div class="alert alert-info d-flex align-items-start gap-2">
+    <i class="bi bi-info-circle fs-5"></i>
+    <div>O manual mostra conteúdos do perfil <strong>@Model.Perfil</strong>. Use a busca para localizar rotinas de SaaS, operação, financeiro, médico, hospital e LGPD.</div>
+</div>
+
+<form asp-action="Index" method="get" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-md-7"><input name="busca" value="@Model.Busca" class="form-control" placeholder="Buscar tema, tela ou passo" /></div>
+        <div class="col-md-3">
+            <select name="perfil" class="form-select">
+                @foreach (var perfil in new List<string> { "TODOS", "ADMINISTRADOR_GLOBAL", "COORDENACAO", "MEDICO", "FINANCEIRO", "HOSPITAL" })
+                {
+                    <option value="@perfil">@perfil</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Buscar</button></div>
+    </div>
 </form>
-<div class="row g-3">
-@foreach (var item in new[]{("plantoes","Como criar plantão","bi-calendar-plus"),("escalas","Como confirmar escala","bi-check2-square"),("pagamentos","Como gerar pagamento","bi-cash-stack"),("medicos","Como configurar médico","bi-person-badge"),("medico-area","Como usar área do médico","bi-heart-pulse"),("operacao","Como usar central operacional","bi-speedometer2"),("alertas","Como entender alertas","bi-exclamation-triangle"),("assinatura","Como acompanhar assinatura","bi-receipt")})
+
+<div class="row g-3 mb-4">
+@foreach (var topico in Model.Topicos)
 {
-    if(!string.IsNullOrWhiteSpace(busca) && !item.Item2.Contains(busca, StringComparison.OrdinalIgnoreCase)){ continue; }
-    <div class="col-lg-3 col-md-6"><a asp-action="Modulo" asp-route-id="@item.Item1" class="card text-decoration-none h-100"><div class="card-body"><i class="bi @item.Item3 fs-2 text-primary"></i><h6 class="mt-2">@item.Item2</h6></div></a></div>
+    <div class="col-lg-4 col-md-6">
+        <a asp-action="Modulo" asp-route-id="@topico.Slug" class="card text-decoration-none h-100">
+            <div class="card-body">
+                <i class="bi @topico.Icone fs-2 text-primary"></i>
+                <h2 class="h5 mt-2">@topico.Titulo</h2>
+                <p class="text-muted mb-0">@topico.Descricao</p>
+            </div>
+        </a>
+    </div>
 }
 </div>
 
-<div class="mt-3 d-flex gap-2 flex-wrap"><a class="btn btn-primary" asp-controller="Ajuda" asp-action="PrimeirosPassos">Primeiros passos</a><a class="btn btn-outline-primary" asp-controller="Ajuda" asp-action="Busca">Buscar ajuda</a><a class="btn btn-outline-secondary" asp-controller="Ajuda" asp-action="Checklist">Checklist</a></div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">Artigos recomendados</h2>
+    <div class="d-flex gap-2"><a class="btn btn-sm btn-outline-primary" asp-action="PrimeirosPassos">Primeiros passos</a><a class="btn btn-sm btn-outline-secondary" asp-action="Checklist" asp-route-perfil="@Model.Perfil">Checklist</a></div>
+</div>
+@if (Model.Artigos.Any())
+{
+    <div class="list-group">
+    @foreach (var artigo in Model.Artigos)
+    {
+        <a class="list-group-item list-group-item-action" asp-action="Artigo" asp-route-id="@artigo.Id">
+            <div class="d-flex justify-content-between gap-3">
+                <div><strong>@artigo.Titulo</strong><div class="text-muted small">@artigo.Resumo</div></div>
+                <span class="badge bg-light text-dark border align-self-start">@artigo.Perfil</span>
+            </div>
+        </a>
+    }
+    </div>
+}
+else
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-search", "Nenhum artigo encontrado", "Tente outro termo ou selecione o perfil TODOS.")' />
+}

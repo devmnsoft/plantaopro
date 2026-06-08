@@ -1,3 +1,25 @@
-@{ ViewData["Title"] = "Buscar Ajuda"; }
+@model PlantaoPro.Web.Models.AjudaInterativaIndexViewModel
+@{
+    ViewData["Title"] = "Buscar Ajuda";
+}
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Buscar no manual", "Encontre artigos por termo, perfil e etapa da jornada.", "bi-search")' />
-<form asp-action="Busca" method="get" class="card card-body mb-3"><div class="input-group"><input name="termo" class="form-control" value="@ViewBag.Termo" placeholder="Digite o que deseja encontrar" /><button class="btn btn-primary" type="submit">Buscar</button></div></form><div class="alert alert-info">Resultados são fornecidos por <code>/api/ajuda/buscar?termo=@ViewBag.Termo</code>. EmptyState exibido quando não houver retorno.</div>
+<form asp-action="Busca" method="get" class="card card-body mb-3">
+    <div class="row g-2">
+        <div class="col-md-8"><input name="termo" class="form-control" value="@Model.Busca" placeholder="Digite o que deseja encontrar" /></div>
+        <div class="col-md-3"><input name="perfil" class="form-control" value="@Model.Perfil" placeholder="Perfil" /></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i></button></div>
+    </div>
+</form>
+@if (Model.Artigos.Any())
+{
+    <div class="row g-3">
+    @foreach (var artigo in Model.Artigos)
+    {
+        <div class="col-md-6"><div class="card h-100"><div class="card-body"><span class="badge bg-light text-dark border mb-2">@artigo.Perfil</span><h2 class="h5">@artigo.Titulo</h2><p>@artigo.Resumo</p><a class="btn btn-outline-primary btn-sm" asp-action="Artigo" asp-route-id="@artigo.Id">Abrir artigo</a></div></div></div>
+    }
+    </div>
+}
+else
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-search", "Sem resultados", "O manual não encontrou artigos para este termo.")' />
+}

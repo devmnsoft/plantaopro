@@ -1,14 +1,7 @@
 # LGPD no PlantãoPro
 
-O módulo LGPD implementa direitos do titular e rastreabilidade operacional.
+Finalidades: gestão de plantões, financeiro, comunicação operacional, auditoria, segurança, suporte, faturamento SaaS, Customer Success e cumprimento legal/regulatório.
 
-## Funcionalidades
+Bases legais: execução de contrato, obrigação legal, legítimo interesse, consentimento e exercício regular de direitos.
 
-- Política atual em `GET /api/lgpd/politica-atual`.
-- Registro de consentimento com usuário, IP, finalidade, base legal e versão da política.
-- Solicitações de titular com status e resposta.
-- Exportação dos próprios dados com auditoria.
-- Anonimização administrativa quando permitida.
-- Eventos de privacidade para rastreabilidade.
-
-Dados financeiros, auditoria e obrigações legais não devem ser apagados indevidamente.
+O sistema registra consentimentos, solicitações do titular, exportações, anonimizações permitidas e eventos de privacidade com auditoria.

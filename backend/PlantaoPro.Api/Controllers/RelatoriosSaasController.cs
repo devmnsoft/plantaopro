@@ -16,12 +16,16 @@ public sealed class RelatoriosSaasController : ControllerBase
 {
     private readonly IConfiguration cfg;
     private readonly IAuditService audit;
+    private readonly AssinaturaGuardService assinaturaGuard;
+    private readonly UsuarioContextService usuarioContext;
     private readonly ILogger<RelatoriosSaasController> logger;
 
-    public RelatoriosSaasController(IConfiguration cfg, IAuditService audit, ILogger<RelatoriosSaasController> logger)
+    public RelatoriosSaasController(IConfiguration cfg, IAuditService audit, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext, ILogger<RelatoriosSaasController> logger)
     {
         this.cfg = cfg;
         this.audit = audit;
+        this.assinaturaGuard = assinaturaGuard;
+        this.usuarioContext = usuarioContext;
         this.logger = logger;
     }
 
@@ -94,6 +98,9 @@ order by a.reg_date desc", new { }, page, pageSize);
     [HttpGet("{tipo}/exportar")]
     public async Task<IActionResult> Exportar(string tipo)
     {
+        var bloqueio = await ValidarRelatorioAvancadoAsync(tipo);
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+
         var response = await ObterDadosAsync(tipo, new { }, 1, 500);
         if (!response.Success || response.Data is null) return StatusCode(response.StatusCode, response);
         await audit.RegistrarAsync(null, null, "RELATORIO_SAAS", Guid.Empty, "EXPORTAR", new { tipo }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
@@ -104,6 +111,24 @@ order by a.reg_date desc", new { }, page, pageSize);
             csv.AppendLine($"{SanitizarCsv(item.ClienteNome)};{SanitizarCsv(item.Status)};{SanitizarCsv(item.Classificacao)};{item.Quantidade};{item.Valor};{item.Competencia}");
         }
         return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "relatorio-saas-" + tipo + ".csv");
+    }
+
+    private async Task<ApiResponse<bool>?> ValidarRelatorioAvancadoAsync(string tipo)
+    {
+        var clienteId = usuarioContext.GetClienteId();
+        if (!clienteId.HasValue)
+        {
+            return ApiResponse<bool>.Fail("Cliente do usuário não identificado para exportar relatórios avançados.", 403);
+        }
+
+        var permissao = await assinaturaGuard.PodeUsarRelatoriosAvancadosAsync(clienteId.Value);
+        if (!permissao.Success)
+        {
+            await audit.RegistrarAsync(usuarioContext.GetUsuarioId(), clienteId, "RELATORIO_SAAS", null, AuditoriaConstants.Acoes.AcessoNegado, new { tipo, motivo = permissao.Message }, false, HttpContext.Connection.RemoteIpAddress?.ToString(), string.Join(",", usuarioContext.GetRoles()));
+            return permissao;
+        }
+
+        return null;
     }
 
     private async Task<IActionResult> ExecutarRelatorioAsync(string tipo, string sql, object parametros, int page, int pageSize)

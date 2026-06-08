@@ -55,6 +55,56 @@ public class SaasInteligenteFuncionalRoundContractTests
         Assert.DoesNotContain("Informe o cliente para listar alertas", controller, StringComparison.OrdinalIgnoreCase);
     }
 
+
+    [Fact]
+    public void SqlAuditavel_DeveExistirComNomeDaRodadaEConterTodasAsAreas()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var caminho = Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_inteligente_auditavel.sql");
+        Assert.True(File.Exists(caminho), "Migração da rodada SaaS inteligente auditável ausente.");
+        var sql = File.ReadAllText(caminho);
+
+        foreach (var tabela in new[]
+        {
+            "plantaopro.clientes",
+            "plantaopro.planos",
+            "plantaopro.plano_recursos",
+            "plantaopro.assinaturas",
+            "plantaopro.faturas_saas",
+            "plantaopro.comercial_leads",
+            "plantaopro.comercial_oportunidades",
+            "plantaopro.comercial_propostas",
+            "plantaopro.jornada_cliente",
+            "plantaopro.customer_success_riscos",
+            "plantaopro.lgpd_solicitacoes_titular",
+            "plantaopro.ajuda_feedbacks",
+            "plantaopro.logs_operacionais",
+            "plantaopro.auditoria_lgpd_eventos"
+        })
+        {
+            Assert.Contains("create table if not exists " + tabela, sql, StringComparison.OrdinalIgnoreCase);
+        }
+
+        Assert.Contains("DO $$", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE INDEX IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void FluxosOperacionais_DeveBloquearBiERelatoriosAvancadosPorPlano()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var biController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "BiController.cs"));
+        var relatoriosController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "RelatoriosSaasController.cs"));
+
+        Assert.Contains("PodeUsarBIAsync", biController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ValidarPlanoBiAsync", biController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("AcessoNegado", biController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PodeUsarRelatoriosAvancadosAsync", relatoriosController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ValidarRelatorioAvancadoAsync", relatoriosController, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("AcessoNegado", relatoriosController, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static HashSet<string> ObterRotasApi(params Type[] controllers)
     {
         var rotas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

@@ -27,8 +27,9 @@ public sealed class SaasDashboardController : ControllerBase
     [HttpGet("alertas")]
     public async Task<IActionResult> Alertas([FromQuery] Guid? clienteId)
     {
-        if (!clienteId.HasValue) return BadRequest(ApiResponse<string>.Fail("Informe o cliente para listar alertas.", 400));
-        var response = await service.ListarAlertasClienteAsync(clienteId.Value);
+        var response = clienteId.HasValue
+            ? await service.ListarAlertasClienteAsync(clienteId.Value)
+            : await service.ListarAlertasAbertosAsync();
         return StatusCode(response.StatusCode, response);
     }
 

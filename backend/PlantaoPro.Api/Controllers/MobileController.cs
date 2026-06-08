@@ -710,6 +710,13 @@ limit 50", new { id });
             return BadRequest(ApiResponse<object>.Fail("Informe título e descrição do chamado.", 400));
         }
 
+        var prioridadeSolicitada = string.IsNullOrWhiteSpace(request.Prioridade) ? "NORMAL" : request.Prioridade.Trim().ToUpperInvariant();
+        if (clienteId.HasValue && (prioridadeSolicitada == "ALTA" || prioridadeSolicitada == "CRITICA"))
+        {
+            var permissaoSuporte = await _assinaturaGuard.PodeUsarSuportePrioritarioAsync(clienteId.Value);
+            if (!permissaoSuporte.Success) return StatusCode(permissaoSuporte.StatusCode, permissaoSuporte);
+        }
+
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
@@ -727,7 +734,7 @@ values
                 titulo = request.Titulo.Trim(),
                 descricao = request.Descricao.Trim(),
                 categoria = string.IsNullOrWhiteSpace(request.Categoria) ? "GERAL" : request.Categoria.Trim().ToUpperInvariant(),
-                prioridade = string.IsNullOrWhiteSpace(request.Prioridade) ? "NORMAL" : request.Prioridade.Trim().ToUpperInvariant()
+                prioridade = prioridadeSolicitada
             });
             await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Suporte, id, AuditoriaConstants.Acoes.Criar, new { origem = "mobile", protocolo }, true, GetIp(), GetPerfil());
             return StatusCode(201, new ApiResponse<object>(true, "Chamado criado com sucesso.", new { id, protocolo, status = "ABERTO" }, null, 201, DateTime.UtcNow));

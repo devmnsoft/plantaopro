@@ -20,6 +20,7 @@ public sealed class OperacaoAssistidaController : ControllerBase
     private readonly IAuditService _audit;
     private readonly UsuarioContextService _usuarioContext;
     private readonly TenantGuardService _tenantGuard;
+    private readonly AssinaturaGuardService _assinaturaGuard;
     private readonly ILogger<OperacaoAssistidaController> _logger;
 
     public OperacaoAssistidaController(
@@ -27,12 +28,14 @@ public sealed class OperacaoAssistidaController : ControllerBase
         IAuditService audit,
         UsuarioContextService usuarioContext,
         TenantGuardService tenantGuard,
+        AssinaturaGuardService assinaturaGuard,
         ILogger<OperacaoAssistidaController> logger)
     {
         _cfg = cfg;
         _audit = audit;
         _usuarioContext = usuarioContext;
         _tenantGuard = tenantGuard;
+        _assinaturaGuard = assinaturaGuard;
         _logger = logger;
     }
 
@@ -335,7 +338,9 @@ where c.id = @clienteId and c.reg_status = 'A'", new { clienteId });
     private async Task<ApiResponse<bool>> ValidarClienteAsync(Guid clienteId)
     {
         if (_usuarioContext.IsAdminGlobal()) return ApiResponse<bool>.Ok(true);
-        return await _tenantGuard.ValidarAcessoClienteAsync(clienteId);
+        var acesso = await _tenantGuard.ValidarAcessoClienteAsync(clienteId);
+        if (!acesso.Success) return acesso;
+        return await _assinaturaGuard.PodeUsarOperacaoAssistidaAsync(clienteId);
     }
 
     private async Task<List<OperacaoAssistidaChecklistDto>> ObterChecklistClienteAsync(NpgsqlConnection cn, Guid clienteId)

@@ -9,10 +9,14 @@ public sealed class PlanoSaasViewModel
     public int LimiteMedicos { get; set; }
     public int LimiteHospitais { get; set; }
     public int LimitePlantoesMes { get; set; }
+    public int LimiteUsuarios { get; set; }
+    public int LimiteConvitesMes { get; set; }
     public bool PermiteMobile { get; set; }
     public bool PermiteBi { get; set; }
     public bool PermiteRelatoriosAvancados { get; set; }
     public bool PermiteIntegracoes { get; set; }
+    public bool PermiteOperacaoAssistida { get; set; }
+    public bool PermiteSuportePrioritario { get; set; }
     public string Status { get; set; } = string.Empty;
 }
 
@@ -131,10 +135,16 @@ public sealed class UsoPlanoViewModel
     public int HospitaisLimite { get; set; }
     public int PlantoesMesUsados { get; set; }
     public int PlantoesMesLimite { get; set; }
+    public int UsuariosUsados { get; set; }
+    public int UsuariosLimite { get; set; }
+    public int ConvitesMesUsados { get; set; }
+    public int ConvitesMesLimite { get; set; }
     public bool PermiteMobile { get; set; }
     public bool PermiteBi { get; set; }
     public bool PermiteRelatoriosAvancados { get; set; }
     public bool PermiteIntegracoes { get; set; }
+    public bool PermiteOperacaoAssistida { get; set; }
+    public bool PermiteSuportePrioritario { get; set; }
 }
 
 public sealed class SaasRecomendacaoViewModel

@@ -94,7 +94,7 @@ public sealed class PlanosController : BaseWebController
     {
         try
         {
-            if (model.ValorMensal < 0 || model.LimiteMedicos < 0 || model.LimiteHospitais < 0 || model.LimitePlantoesMes < 0)
+            if (model.ValorMensal < 0 || model.LimiteMedicos < 0 || model.LimiteHospitais < 0 || model.LimitePlantoesMes < 0 || model.LimiteUsuarios < 0 || model.LimiteConvitesMes < 0)
             {
                 ModelState.AddModelError(string.Empty, "Valores e limites não podem ser negativos.");
                 return View(model);

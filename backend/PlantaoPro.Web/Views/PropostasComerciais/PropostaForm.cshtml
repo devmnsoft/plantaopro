@@ -1,0 +1,16 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-page-head"><span class="pp-badge">Proposta comercial</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
+<form class="pp-form" method="post" asp-controller="PropostasComerciais" asp-action="Index">
+    @Html.AntiForgeryToken()
+    <label>Cliente/lead<input name="cliente" required /></label>
+    <label>Empresa<input name="empresa" required /></label>
+    <label>Plano<input name="plano" value="Profissional" required /></label>
+    <label>Taxa de setup<input type="number" name="setup" min="0" value="1500" /></label>
+    <label>Mensalidade<input type="number" name="mensalidade" min="0" value="1290" /></label>
+    <label>Condições<textarea name="condicoes">Validade de 15 dias. Implantação em até 15 dias úteis.</textarea></label>
+    <button class="btn btn-primary" type="submit">Salvar proposta</button>
+</form>
+<partial name="_CommercialStyles" />

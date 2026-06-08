@@ -1,0 +1,12 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-page-head"><span class="pp-badge">Propostas</span><h1>@Model.Title</h1><p>@Model.Subtitle</p><a class="btn btn-primary" asp-controller="PropostasComerciais" asp-action="Create">Nova proposta</a></section>
+<section class="pp-grid">
+@foreach (var card in Model.Cards)
+{
+    <article class="pp-card"><h2>@card.Title</h2><p>@card.Description</p><a class="btn btn-outline-primary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a></article>
+}
+</section>
+<partial name="_CommercialStyles" />

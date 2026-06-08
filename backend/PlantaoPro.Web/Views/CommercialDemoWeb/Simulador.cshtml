@@ -1,0 +1,18 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-page-head"><span class="pp-badge">Simulador</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
+<form class="pp-form" asp-controller="CommercialDemoWeb" asp-action="SimuladorResultado" method="post">
+    @Html.AntiForgeryToken()
+    <div class="pp-progress"><span style="width: 75%"></span></div>
+    <label>Médicos cadastrados<input type="number" name="medicos" min="1" value="60" required /></label>
+    <label>Hospitais/unidades<input type="number" name="unidades" min="1" value="3" required /></label>
+    <label>Plantões por mês<input type="number" name="plantoesMes" min="1" value="220" required /></label>
+    <label><input type="checkbox" name="whiteLabel" value="true" /> Deseja white label?</label>
+    <label><input type="checkbox" name="api" value="true" /> Deseja API?</label>
+    <label><input type="checkbox" name="bi" value="true" /> Deseja BI?</label>
+    <label><input type="checkbox" name="revenda" value="true" /> Deseja revender para outros clientes?</label>
+    <button class="btn btn-primary btn-lg" type="submit">Calcular plano ideal</button>
+</form>
+<partial name="_CommercialStyles" />

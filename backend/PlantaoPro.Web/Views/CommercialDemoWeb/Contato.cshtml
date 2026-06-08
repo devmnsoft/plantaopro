@@ -1,0 +1,17 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-page-head"><span class="pp-badge">Comercial</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
+@if (TempData["Success"] is not null) { <div class="alert alert-success">@TempData["Success"]</div> }
+@if (TempData["Error"] is not null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+<form class="pp-form" asp-controller="CommercialDemoWeb" asp-action="EnviarContato" method="post">
+    @Html.AntiForgeryToken()
+    <input type="text" name="website" class="pp-hp" tabindex="-1" autocomplete="off" />
+    <label>Nome<input name="nome" required /></label>
+    <label>E-mail<input name="email" type="email" required /></label>
+    <label>Telefone<input name="telefone" required minlength="8" /></label>
+    <label>Empresa<input name="empresa" required /></label>
+    <button class="btn btn-primary btn-lg" type="submit">Enviar para comercial</button>
+</form>
+<partial name="_CommercialStyles" />

@@ -1,0 +1,43 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-hero">
+    <div>
+        <span class="pp-badge">PlantãoPro SaaS B2B</span>
+        <h1>@Model.Title</h1>
+        <p>@Model.Subtitle</p>
+        <div class="pp-actions">
+            <a class="btn btn-primary btn-lg" asp-controller="Cadastro" asp-action="Index">Começar agora</a>
+            <a class="btn btn-outline-primary btn-lg" asp-controller="CommercialDemoWeb" asp-action="Demo">Agendar demonstração</a>
+            <a class="btn btn-success btn-lg" asp-controller="PlanosPublicos" asp-action="Index">Ver planos</a>
+        </div>
+    </div>
+    <div class="pp-panel">
+        <strong>Operação demonstrável</strong>
+        <ul>
+            @foreach (var item in Model.Checklist)
+            {
+                <li>@item</li>
+            }
+        </ul>
+    </div>
+</section>
+<section class="pp-grid">
+@foreach (var card in Model.Cards)
+{
+    <article class="pp-card">
+        <h2>@card.Title</h2>
+        <p>@card.Description</p>
+        <a class="btn btn-outline-secondary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a>
+    </article>
+}
+</section>
+<section class="pp-grid pp-grid-2">
+    <article class="pp-card"><h2>Segurança e LGPD</h2><p>Autenticação, perfis, auditoria e registros operacionais sem exposição de dados sensíveis.</p></article>
+    <article class="pp-card"><h2>Multi-tenant e white label</h2><p>Clientes, parceiros e MNSOFT navegam por experiências segregadas e configuráveis.</p></article>
+    <article class="pp-card"><h2>Planos e módulos</h2><p>Governança comercial para limites, feature flags, adicionais e upgrades.</p></article>
+    <article class="pp-card"><h2>Dashboards</h2><p>Visões executivas para operação, comercial, billing e Customer Success.</p></article>
+</section>
+<div class="pp-mobile-cta"><a asp-controller="Cadastro" asp-action="Index">Começar agora</a></div>
+<partial name="_CommercialStyles" />

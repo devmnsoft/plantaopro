@@ -1,0 +1,13 @@
+@model CommercialDemoPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<section class="pp-page-head"><span class="pp-badge">Resultado</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
+<section class="pp-grid">
+@foreach (var card in Model.Cards)
+{
+    <article class="pp-card"><h2>@card.Title</h2><p>@card.Description</p><a class="btn btn-success" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a></article>
+}
+</section>
+<aside class="pp-card"><h2>Resumo informado</h2><ul>@foreach (var item in Model.Checklist) { <li>@item</li> }</ul></aside>
+<partial name="_CommercialStyles" />

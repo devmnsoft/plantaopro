@@ -39,6 +39,16 @@ public sealed class PlanoComparativoDto
     public Dictionary<string, string> ValoresPorPlano { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 }
 
+
+public sealed class PlanoFaqDto
+{
+    public Guid? PlanoId { get; set; }
+    public string PlanoNome { get; set; } = string.Empty;
+    public string Pergunta { get; set; } = string.Empty;
+    public string Resposta { get; set; } = string.Empty;
+    public int Ordem { get; set; }
+}
+
 public sealed class CadastroEmpresaRequest
 {
     [Required] public string NomeFantasia { get; set; } = string.Empty;
@@ -214,5 +224,22 @@ public sealed class MinhaAssinaturaDto
 public sealed class SolicitacaoMudancaPlanoRequest
 {
     public Guid PlanoDestinoId { get; set; }
+    public string Motivo { get; set; } = string.Empty;
+}
+
+
+public sealed class MinhaAssinaturaFaturaDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public Guid AssinaturaId { get; set; }
+    public DateTime Vencimento { get; set; }
+    public decimal Valor { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+}
+
+public sealed class SolicitacaoCancelamentoAssinaturaRequest
+{
     public string Motivo { get; set; } = string.Empty;
 }

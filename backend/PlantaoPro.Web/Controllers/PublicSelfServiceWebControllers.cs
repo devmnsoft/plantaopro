@@ -14,6 +14,19 @@ public sealed class PlanosPublicosController : Controller
     [HttpGet("comparar")]
     public IActionResult Comparar() => View(Planos());
 
+    [HttpGet("duvidas")]
+    public IActionResult Duvidas() => View(Faq());
+
+    internal static IEnumerable<PlanoFaqWebViewModel> Faq()
+    {
+        return new List<PlanoFaqWebViewModel>
+        {
+            new PlanoFaqWebViewModel { Pergunta = "Posso começar sem implantação manual?", Resposta = "Sim. O cadastro self-service provisiona tenant, cliente, assinatura, administrador, LGPD, white label padrão e onboarding." },
+            new PlanoFaqWebViewModel { Pergunta = "White label está disponível em todos os planos?", Resposta = "White label depende do plano contratado e tem fallback visual seguro." },
+            new PlanoFaqWebViewModel { Pergunta = "Como funcionam upgrade e downgrade?", Resposta = "Upgrade registra solicitação comercial; downgrade valida limites atuais antes de prosseguir." }
+        };
+    }
+
     internal static IEnumerable<PlanoPublicoWebViewModel> Planos()
     {
         return new List<PlanoPublicoWebViewModel>
@@ -143,4 +156,6 @@ public sealed class MinhaAssinaturaController : Controller
     public IActionResult Downgrade() => View("Downgrade", PlanosPublicosController.Planos());
     [HttpGet("MinhaAssinatura/Faturas")]
     public IActionResult Faturas() => View("Faturas");
+    [HttpGet("MinhaAssinatura/Cancelamento")]
+    public IActionResult Cancelamento() => View("Cancelamento");
 }

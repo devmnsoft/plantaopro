@@ -176,6 +176,32 @@ from plantaopro.planos where reg_status='A' and coalesce(publico,true)=true and 
         return ApiResponse<IEnumerable<PlanoComparativoDto>>.Ok(linhas);
     }
 
+    public async Task<ApiResponse<IEnumerable<PlanoFaqDto>>> FaqPlanosAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var rows = (await cn.QueryAsync<PlanoFaqDto>(@"select f.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(f.pergunta,'') as ""Pergunta"", coalesce(f.resposta,'') as ""Resposta"", f.ordem as ""Ordem""
+from plantaopro.plano_faq f
+left join plantaopro.planos p on p.id=f.plano_id
+where f.reg_status='A' and upper(coalesce(f.status,'ATIVO'))='ATIVO'
+order by f.ordem, f.reg_date
+limit 50")).ToList();
+            if (rows.Count == 0)
+            {
+                rows.Add(new PlanoFaqDto { Pergunta = "Posso começar sem implantação manual?", Resposta = "Sim. O cadastro self-service provisiona tenant, cliente, assinatura, administrador, LGPD, white label padrão e onboarding.", Ordem = 1 });
+                rows.Add(new PlanoFaqDto { Pergunta = "White label está disponível em todos os planos?", Resposta = "White label é liberado conforme regra comercial do plano, com fallback visual PlantãoPro quando indisponível.", Ordem = 2 });
+                rows.Add(new PlanoFaqDto { Pergunta = "Como funcionam upgrade e downgrade?", Resposta = "Upgrade registra solicitação comercial; downgrade valida limites para evitar perda operacional.", Ordem = 3 });
+            }
+            return ApiResponse<IEnumerable<PlanoFaqDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar FAQ público de planos");
+            return ApiResponse<IEnumerable<PlanoFaqDto>>.Fail("Não foi possível carregar as dúvidas de planos.", 500);
+        }
+    }
+
     public async Task<ApiResponse<CadastroSelfServiceResultadoDto>> FinalizarCadastroAsync(CadastroSelfServiceRequest request, string? ip, string? userAgent)
     {
         try
@@ -419,6 +445,48 @@ on conflict (tenant_id) where reg_status='A' do update set nome_plataforma=exclu
         var ctx = await _tenantContext.ObterAtualAsync();
         if (!ctx.Success || ctx.Data?.ClienteId is null) return ApiResponse<UsoPlanoDto>.Fail(ctx.Message, ctx.StatusCode);
         return await _assinaturaGuard.ObterUsoPlanoAsync(ctx.Data.ClienteId.Value);
+    }
+
+    public async Task<ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>> FaturasMinhaAssinaturaAsync()
+    {
+        try
+        {
+            var assinatura = await MinhaAssinaturaAsync();
+            if (!assinatura.Success || assinatura.Data is null) return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Fail(assinatura.Message, assinatura.StatusCode);
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var rows = await cn.QueryAsync<MinhaAssinaturaFaturaDto>(@"select id as ""Id"", cliente_id as ""ClienteId"", assinatura_id as ""AssinaturaId"", vencimento as ""Vencimento"", valor as ""Valor"", coalesce(status,'') as ""Status"", coalesce(descricao,'Fatura SaaS') as ""Descricao""
+from plantaopro.cadastro_cliente_pagamentos_iniciais
+where cliente_id=@clienteId and assinatura_id=@assinaturaId and reg_status='A'
+order by vencimento desc
+limit 24", new { clienteId = assinatura.Data.ClienteId, assinaturaId = assinatura.Data.AssinaturaId });
+            return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar faturas da minha assinatura");
+            return ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>.Fail("Não foi possível carregar as faturas.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<string>> SolicitarCancelamentoAssinaturaAsync(SolicitacaoCancelamentoAssinaturaRequest request, string? ip)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Motivo) || request.Motivo.Trim().Length < 10) return ApiResponse<string>.Fail("Informe um motivo com pelo menos 10 caracteres.", 400);
+            var assinatura = await MinhaAssinaturaAsync();
+            if (!assinatura.Success || assinatura.Data is null) return ApiResponse<string>.Fail(assinatura.Message, assinatura.StatusCode);
+            var ctx = await _tenantContext.ObterAtualAsync();
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            await cn.ExecuteAsync(@"insert into plantaopro.downgrade_solicitacoes(id,tenant_id,cliente_id,assinatura_id,plano_atual_id,plano_destino_id,motivo,impacto_validado,status,solicitado_por,reg_date,reg_status)
+values(gen_random_uuid(),@tenantId,@clienteId,@assinaturaId,@planoAtualId,@planoAtualId,@motivo,true,'CANCELAMENTO_SOLICITADO',@usuarioId,now(),'A')", new { tenantId = ctx.Data?.TenantId, clienteId = assinatura.Data.ClienteId, assinaturaId = assinatura.Data.AssinaturaId, planoAtualId = assinatura.Data.PlanoId, motivo = request.Motivo.Trim(), usuarioId = _tenantContext.ObterUsuarioId() });
+            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), assinatura.Data.ClienteId, "ASSINATURA", assinatura.Data.AssinaturaId, "SOLICITAR_CANCELAMENTO", new { motivoInformado = true }, true, ip, "ADMINISTRADOR_CLIENTE");
+            return ApiResponse<string>.Ok("ok", "Solicitação de cancelamento registrada para avaliação comercial.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao solicitar cancelamento de assinatura");
+            return ApiResponse<string>.Fail("Não foi possível solicitar cancelamento.", 500);
+        }
     }
 
     private async Task<Guid> GarantirPerfilAdminClienteAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction tx, Guid tenantId, Guid clienteId)

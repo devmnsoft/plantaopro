@@ -20,6 +20,12 @@ public sealed class PlanoPublicoWebViewModel
     public IEnumerable<string> Recursos { get; set; } = Array.Empty<string>();
 }
 
+public sealed class PlanoFaqWebViewModel
+{
+    public string Pergunta { get; set; } = string.Empty;
+    public string Resposta { get; set; } = string.Empty;
+}
+
 public sealed class CadastroSelfServiceWebViewModel
 {
     [Required] public string NomeFantasia { get; set; } = string.Empty;

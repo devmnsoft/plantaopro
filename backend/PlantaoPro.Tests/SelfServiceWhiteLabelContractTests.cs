@@ -11,6 +11,7 @@ public class SelfServiceWhiteLabelContractTests
         var rotas = ObterRotas(typeof(PublicSelfServiceController));
         Assert.Contains("api/public/planos", rotas);
         Assert.Contains("api/public/planos/comparativo", rotas);
+        Assert.Contains("api/public/planos/faq", rotas);
         Assert.Contains("api/public/cadastro/iniciar", rotas);
         Assert.Contains("api/public/cadastro/empresa", rotas);
         Assert.Contains("api/public/cadastro/plano", rotas);
@@ -38,13 +39,15 @@ public class SelfServiceWhiteLabelContractTests
         Assert.Contains("api/minha-assinatura/uso", rotas);
         Assert.Contains("api/minha-assinatura/solicitar-upgrade", rotas);
         Assert.Contains("api/minha-assinatura/solicitar-downgrade", rotas);
+        Assert.Contains("api/minha-assinatura/faturas", rotas);
+        Assert.Contains("api/minha-assinatura/solicitar-cancelamento", rotas);
     }
 
     [Fact]
     public void MigracaoWhiteLabelSelfService_DeveCriarTabelasCriticasEUsarConstraintsSeguras()
     {
         var raiz = EncontrarRaizRepositorio();
-        var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_white_label_self_service.sql"));
+        var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_self_service_white_label.sql"));
 
         foreach (var tabela in new[] { "tenants", "tenant_white_label", "tenant_onboarding", "planos", "assinatura_uso", "cadastro_cliente_solicitacoes", "perfis", "permissoes", "white_label_assets", "lgpd_consentimentos" })
         {
@@ -67,6 +70,8 @@ public class SelfServiceWhiteLabelContractTests
         Assert.Contains("lgpd_consentimentos", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("tenant_onboarding_checklist", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("BCrypt.Net.BCrypt.HashPassword", service, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("FaqPlanosAsync", service, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("SolicitarCancelamentoAssinaturaAsync", service, StringComparison.OrdinalIgnoreCase);
     }
 
     private static HashSet<string> ObterRotas(Type controller)

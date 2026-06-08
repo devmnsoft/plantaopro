@@ -10,3 +10,9 @@
 - Executar a migração em ambiente PostgreSQL de homologação.
 - Conectar as telas MVC ao endpoint real de finalização self-service em ambiente com API disponível.
 - Validar manualmente upload físico de assets em storage definitivo.
+
+## Complemento 2026-06-08 — migração consolidada
+
+A rodada adiciona a migração incremental `database/migrations/2026_plantao_pro_self_service_white_label.sql`, mantendo o padrão idempotente com schema `plantaopro`, `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, índices por tenant/cliente/status/data e constraints seguras via `DO $$`.
+
+Pendências reais: homologação ponta a ponta com PostgreSQL de homologação e gateway de pagamento conectado.

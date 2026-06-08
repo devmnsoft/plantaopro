@@ -10,3 +10,9 @@
 - Executar a migração em ambiente PostgreSQL de homologação.
 - Conectar as telas MVC ao endpoint real de finalização self-service em ambiente com API disponível.
 - Validar manualmente upload físico de assets em storage definitivo.
+
+## Complemento 2026-06-08 — FAQ público e decisão comercial
+
+A página pública de planos expõe cards, comparativo e FAQ em `/planos`, `/planos/comparar` e `/planos/duvidas`. A API pública correspondente oferece `/api/public/planos`, `/api/public/planos/comparativo` e `/api/public/planos/faq`, permitindo que Web, mobile ou landing pages white label consumam a mesma fonte comercial.
+
+Pendências reais: integração com gateway de pagamento e CRM externo continuam dependentes de credenciais de produção.

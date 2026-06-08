@@ -115,6 +115,8 @@ builder.Services.AddScoped<ComercialSaasService>();
 builder.Services.AddScoped<AjudaInterativaService>();
 builder.Services.AddScoped<TenantContextService>();
 builder.Services.AddScoped<SelfServiceSaasService>();
+builder.Services.AddScoped<TenantIsolationValidatorService>();
+builder.Services.AddScoped<B2BLaunchService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

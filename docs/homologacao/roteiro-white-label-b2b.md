@@ -1,8 +1,8 @@
-# Self Service
+# Roteiro White Label B2B
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Roteiro: configurar marca, publicar, validar layout/login/mobile, API key, SLA, suporte e isolamento.
 
 ## Componentes relacionados
 

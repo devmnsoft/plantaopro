@@ -1,8 +1,8 @@
-# Self Service
+# Go To Market
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Área de go-to-market organiza casos de uso, materiais, campanhas e decisores.
 
 ## Componentes relacionados
 

@@ -1,8 +1,8 @@
-# Self Service
+# Monitoramento Ativo
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Monitoramento acompanha health, tenants, performance, erros, alertas e uso por tenant.
 
 ## Componentes relacionados
 

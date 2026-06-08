@@ -1,8 +1,8 @@
-# Self Service
+# Suporte B2B
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Suporte B2B separa atendimento MNSOFT ao contratante e atendimento interno ao usuário final.
 
 ## Componentes relacionados
 

@@ -1,15 +1,17 @@
-# Roteiro de homologação self-service
+# Roteiro Self Service
 
-1. Abrir `/planos`.
-2. Comparar planos em `/planos/comparar`.
-3. Iniciar `/cadastro/empresa`.
-4. Preencher empresa, plano, administrador, termos, privacidade e LGPD.
-5. Finalizar cadastro pela API `/api/public/cadastro/finalizar`.
-6. Confirmar criação de tenant, cliente, assinatura, usuário administrador, white label padrão, consentimento LGPD e checklist.
-7. Fazer login como administrador cliente.
-8. Validar `/api/onboarding/status`, checklist e próxima ação.
-9. Configurar white label, parametrizações, perfis e uso do plano.
-10. Solicitar upgrade e downgrade, validando bloqueio quando uso excede limite.
+## Implementado nesta rodada
+
+Roteiro: plano público, cadastro empresa/plano/admin, aceite, tenant, assinatura, onboarding e login.
+
+## Componentes relacionados
+
+- Migração: `database/migrations/2026_plantao_pro_white_label_b2b_launch.sql`.
+- APIs B2B: `backend/PlantaoPro.Api/Controllers/B2BLaunchController.cs`.
+- Serviços B2B: `backend/PlantaoPro.Api/B2BLaunchServices.cs`.
+- Web B2B: `backend/PlantaoPro.Web/Controllers/B2BLaunchWebControllers.cs`.
 
 ## Pendências reais
-- Roteiro depende de PostgreSQL com a migração `2026_plantao_pro_white_label_self_service.sql` aplicada.
+
+- Validar manualmente em ambiente com PostgreSQL e SDK .NET instalado.
+- Conectar as telas genéricas aos formulários AJAX finais quando o design system definitivo estiver homologado.

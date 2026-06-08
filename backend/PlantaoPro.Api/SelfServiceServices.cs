@@ -72,6 +72,13 @@ limit 1", new { tenantId, clienteId, headerTenant = headerTenant ?? string.Empty
         return Guid.TryParse(valor, out parsed) ? parsed : null;
     }
 
+    public bool UsuarioEhAdminGlobal()
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.IsInRole("ADMINISTRADOR_GLOBAL") == true ||
+            user?.Claims.Any(c => (c.Type == ClaimTypes.Role || c.Type == "role") && string.Equals(c.Value, "ADMINISTRADOR_GLOBAL", StringComparison.OrdinalIgnoreCase)) == true;
+    }
+
     private Guid? LerGuidClaim(string tipo)
     {
         var user = _httpContextAccessor.HttpContext?.User;

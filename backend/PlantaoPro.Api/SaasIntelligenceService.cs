@@ -279,6 +279,28 @@ order by f.vencimento asc limit 100");
         }
     }
 
+    public async Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> ListarAlertasAbertosAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var alertas = await cn.QueryAsync<ClienteAlertaSaasDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
+       coalesce(a.tipo,'') as ""Tipo"", coalesce(a.severidade,'') as ""Severidade"", coalesce(a.titulo,'') as ""Titulo"", coalesce(a.mensagem,'') as ""Mensagem"",
+       a.resolvido as ""Resolvido"", a.reg_date as ""RegDate""
+from plantaopro.cliente_alertas a
+join plantaopro.clientes c on c.id=a.cliente_id
+where a.reg_status='A' and a.resolvido=false
+order by case coalesce(a.severidade,'') when 'CRITICA' then 1 when 'ALTA' then 2 when 'MEDIA' then 3 else 4 end, a.reg_date desc
+limit 100");
+            return ApiResponse<IEnumerable<ClienteAlertaSaasDto>>.Ok(alertas);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar alertas SaaS abertos");
+            return ApiResponse<IEnumerable<ClienteAlertaSaasDto>>.Fail("Não foi possível listar alertas abertos.", 500);
+        }
+    }
+
     public async Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> ListarAlertasClienteAsync(Guid clienteId)
     {
         try

@@ -1,0 +1,42 @@
+@model IEnumerable<PlantaoPro.Web.Models.PlanoPublicoWebViewModel>
+@{
+    ViewData["Title"] = "Planos PlantãoPro";
+}
+<section class="container py-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-primary-subtle text-primary">SaaS multiempresa e white label</span>
+        <h1 class="display-5 fw-bold mt-3">Escolha o plano ideal para sua operação de plantões</h1>
+        <p class="lead text-muted">Compare recursos, limites e comece o cadastro self-service sem intervenção manual da MNSOFT.</p>
+        <a class="btn btn-primary btn-lg" asp-controller="Cadastro" asp-action="Empresa">Começar agora</a>
+        <a class="btn btn-outline-secondary btn-lg" asp-controller="PlanosPublicos" asp-action="Comparar">Comparar planos</a>
+    </div>
+    <div class="row g-4">
+        @foreach (var plano in Model)
+        {
+            <div class="col-md-6 col-xl-3">
+                <div class="card h-100 shadow-sm border-@(plano.Destaque ? "primary" : "light")">
+                    <div class="card-body d-flex flex-column">
+                        @if (plano.Destaque)
+                        {
+                            <span class="badge bg-primary align-self-start mb-2">Mais escolhido</span>
+                        }
+                        <h2 class="h4">@plano.Nome</h2>
+                        <p class="text-muted">@plano.Descricao</p>
+                        <div class="display-6 fw-bold">@(plano.ValorMensal <= 0 ? "Sob proposta" : plano.ValorMensal.ToString("C"))</div>
+                        <small class="text-muted">por mês</small>
+                        <ul class="list-unstyled mt-3 mb-4">
+                            <li><strong>@(plano.LimiteMedicos <= 0 ? "Ilimitados" : plano.LimiteMedicos.ToString())</strong> médicos</li>
+                            <li><strong>@(plano.LimiteHospitais <= 0 ? "Ilimitadas" : plano.LimiteHospitais.ToString())</strong> unidades</li>
+                            <li><strong>@(plano.LimitePlantoesMes <= 0 ? "Custom" : plano.LimitePlantoesMes.ToString())</strong> plantões/mês</li>
+                            @foreach (var recurso in plano.Recursos)
+                            {
+                                <li>✓ @recurso</li>
+                            }
+                        </ul>
+                        <a class="btn btn-primary mt-auto" asp-controller="Cadastro" asp-action="Plano" asp-route-plano="@plano.Slug">Começar com @plano.Nome</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

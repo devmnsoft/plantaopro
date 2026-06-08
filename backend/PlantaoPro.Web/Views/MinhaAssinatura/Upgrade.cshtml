@@ -1,0 +1,2 @@
+@model IEnumerable<PlantaoPro.Web.Models.PlanoPublicoWebViewModel>
+<section class="container py-4"><h1>Solicitar upgrade</h1><p class="text-muted">Solicitação gera evento comercial, notificação global e auditoria.</p>@foreach (var plano in Model){<div class="card card-body mb-2"><div class="d-flex justify-content-between"><strong>@plano.Nome</strong><button type="button" class="btn btn-primary btn-sm">Solicitar</button></div></div>}</section>

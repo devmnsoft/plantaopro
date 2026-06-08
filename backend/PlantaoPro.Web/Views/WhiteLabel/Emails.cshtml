@@ -1,0 +1,20 @@
+@model PlantaoPro.Web.Models.WhiteLabelWebViewModel
+@{
+    ViewData["Title"] = "White label";
+}
+<section class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3"><div><h1>White label por cliente</h1><p class="text-muted">Configure identidade visual do tenant com preview em tempo real.</p></div><a class="btn btn-outline-primary" asp-controller="WhiteLabel" asp-action="Preview">Preview</a></div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <form class="card shadow-sm"><div class="card-body">
+                <div class="mb-3"><label class="form-label">Nome da plataforma</label><input class="form-control" asp-for="NomePlataforma" /></div>
+                <div class="mb-3"><label class="form-label">Nome do cliente</label><input class="form-control" asp-for="ClienteNome" /></div>
+                <div class="mb-3"><label class="form-label">Slogan</label><input class="form-control" asp-for="Slogan" /></div>
+                <div class="row"><div class="col"><label class="form-label">Cor primária</label><input type="color" class="form-control form-control-color" asp-for="CorPrimaria" /></div><div class="col"><label class="form-label">Cor secundária</label><input type="color" class="form-control form-control-color" asp-for="CorSecundaria" /></div></div>
+                <div class="mt-3"><label class="form-label">Logo URL</label><input class="form-control" asp-for="LogoUrl" /></div>
+            </div><div class="card-footer"><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmWhiteLabel">Salvar identidade</button><a class="btn btn-outline-secondary" asp-action="Index">Restaurar padrão</a></div></form>
+        </div>
+        <div class="col-lg-6"><div class="card shadow-sm" style="background:@Model.CorFundo"><div class="card-body"><div class="p-3 rounded text-white" style="background:@Model.CorMenu"><strong>@Model.NomePlataforma</strong></div><h2 class="mt-4" style="color:@Model.CorPrimaria">@Model.ClienteNome</h2><p>@Model.Slogan</p><button class="btn text-white" style="background:@Model.CorPrimaria" type="button">Botão principal</button></div></div></div>
+    </div>
+</section>
+<div class="modal fade" id="confirmWhiteLabel" tabindex="-1" aria-labelledby="confirmWhiteLabelLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="confirmWhiteLabelLabel">Confirmar alteração visual</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">As alterações serão aplicadas ao layout do tenant.</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Revisar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirmar</button></div></div></div></div>

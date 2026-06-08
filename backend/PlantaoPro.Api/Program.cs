@@ -113,6 +113,8 @@ builder.Services.AddScoped<LgpdService>();
 builder.Services.AddScoped<JornadaClienteService>();
 builder.Services.AddScoped<ComercialSaasService>();
 builder.Services.AddScoped<AjudaInterativaService>();
+builder.Services.AddScoped<TenantContextService>();
+builder.Services.AddScoped<SelfServiceSaasService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

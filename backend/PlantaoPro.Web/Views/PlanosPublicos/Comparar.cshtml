@@ -1,0 +1,24 @@
+@model IEnumerable<PlantaoPro.Web.Models.PlanoPublicoWebViewModel>
+@{
+    ViewData["Title"] = "Comparativo de planos";
+    var planos = Model.ToArray();
+}
+<section class="container py-5">
+    <h1>Comparativo de planos</h1>
+    <p class="text-muted">Visão clara de limites, módulos e recursos para escolha self-service.</p>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead><tr><th>Recurso</th>@foreach (var plano in planos){<th>@plano.Nome</th>}</tr></thead>
+            <tbody>
+                <tr><td>Médicos</td>@foreach (var plano in planos){<td>@(plano.LimiteMedicos <= 0 ? "Ilimitado/custom" : plano.LimiteMedicos.ToString())</td>}</tr>
+                <tr><td>Hospitais/unidades</td>@foreach (var plano in planos){<td>@(plano.LimiteHospitais <= 0 ? "Ilimitado/custom" : plano.LimiteHospitais.ToString())</td>}</tr>
+                <tr><td>Plantões/mês</td>@foreach (var plano in planos){<td>@(plano.LimitePlantoesMes <= 0 ? "Custom" : plano.LimitePlantoesMes.ToString())</td>}</tr>
+                <tr><td>Usuários administrativos</td>@foreach (var plano in planos){<td>@(plano.LimiteUsuarios <= 0 ? "Custom" : plano.LimiteUsuarios.ToString())</td>}</tr>
+                <tr><td>API Mobile</td>@foreach (var plano in planos){<td>@(plano.PermiteMobile ? "Incluído" : "Não incluído")</td>}</tr>
+                <tr><td>BI</td>@foreach (var plano in planos){<td>@(plano.PermiteBi ? "Incluído" : "Não incluído")</td>}</tr>
+                <tr><td>White label</td>@foreach (var plano in planos){<td>@(plano.PermiteWhiteLabel ? "Incluído" : "Não incluído")</td>}</tr>
+            </tbody>
+        </table>
+    </div>
+    <a class="btn btn-primary" asp-controller="Cadastro" asp-action="Empresa">Começar agora</a>
+</section>

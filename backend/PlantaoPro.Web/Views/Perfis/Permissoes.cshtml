@@ -1,0 +1,6 @@
+@model PlantaoPro.Web.Models.PerfilWebViewModel
+@{
+    var modulos = new[] { "Dashboard", "Médicos", "Hospitais", "Plantões", "Financeiro", "LGPD", "White Label" };
+    var acoes = new[] { "Visualizar", "Criar", "Editar", "Inativar", "Configurar", "VerDadosSensiveis" };
+}
+<section class="container-fluid py-4"><h1>Matriz de permissões</h1><p class="text-muted">Use checkboxes por módulo e ação; bloqueios de plano prevalecem sobre permissões.</p><div class="card shadow-sm"><div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Módulo</th>@foreach (var acao in acoes){<th>@acao</th>}</tr></thead><tbody>@foreach (var modulo in modulos){<tr><th>@modulo</th>@foreach (var acao in acoes){<td><input class="form-check-input" type="checkbox" aria-label="@modulo @acao" /></td>}</tr>}</tbody></table></div><div class="card-footer"><button type="button" class="btn btn-outline-secondary">Usar modelo</button><button type="button" class="btn btn-outline-secondary">Copiar perfil</button><button type="button" class="btn btn-primary">Salvar permissões</button></div></div></section>

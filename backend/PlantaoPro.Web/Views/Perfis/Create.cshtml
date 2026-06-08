@@ -1,0 +1,5 @@
+@model PlantaoPro.Web.Models.PerfilWebViewModel
+@{
+    ViewData["Title"] = "Novo perfil";
+}
+<section class="container py-4"><h1>Novo perfil</h1><form class="card card-body"><label class="form-label">Nome</label><input class="form-control" asp-for="Nome" /><label class="form-label mt-3">Descrição</label><textarea class="form-control" asp-for="Descricao"></textarea><button type="button" class="btn btn-primary mt-3">Salvar perfil</button></form></section>

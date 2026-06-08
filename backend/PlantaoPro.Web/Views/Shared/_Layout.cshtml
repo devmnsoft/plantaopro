@@ -140,7 +140,7 @@
                     <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="Manual interativo"><i class="bi bi-question-circle"></i></a>
                     <a class="btn btn-light btn-icon position-relative" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">@((ViewBag.NotificationCount as int?) ?? 0)</span></a>
                     <span class="badge text-bg-light border d-none d-md-inline-flex align-items-center gap-1"><i class="bi bi-building"></i>@(User.FindFirst("cliente")?.Value ?? "Cliente padrão")</span>
-                    <button class="btn btn-light btn-icon" type="button" disabled data-bs-toggle="tooltip" title="Automação (em breve)"><i class="bi bi-lightning-charge"></i></button>
+                    <button class="btn btn-light btn-icon" type="button" disabled data-bs-toggle="tooltip" title="Automação indisponível"><i class="bi bi-lightning-charge"></i></button>
                     <div class="user-pill">
                         <div class="user-avatar"><i class="bi bi-person"></i></div>
                         <div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>@(User.FindFirst("perfil")?.Value ?? "Usuário") • <a asp-controller="Usuario" asp-action="Index" class="text-decoration-none">Configurações</a></small></div>

@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Minha Privacidade";
+}
+
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Minha Privacidade", "Central do titular para consentimentos, solicitações, exportação e histórico LGPD.", "bi-shield-check")' />
+
+<div class="row g-3">
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="text-primary fs-3 mb-2"><i class="bi bi-file-earmark-lock"></i></div>
+                <h2 class="h5">Política vigente</h2>
+                <p class="text-muted flex-grow-1">Consulte finalidades, bases legais e regras de retenção aplicadas pelo PlantãoPro.</p>
+                <a class="btn btn-outline-primary mt-auto" asp-action="Politica">Abrir política</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="text-success fs-3 mb-2"><i class="bi bi-check2-square"></i></div>
+                <h2 class="h5">Consentimentos</h2>
+                <p class="text-muted flex-grow-1">Veja e registre consentimentos com rastreabilidade para operações baseadas em autorização.</p>
+                <a class="btn btn-outline-success mt-auto" asp-action="Consentimentos">Ver consentimentos</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="text-info fs-3 mb-2"><i class="bi bi-download"></i></div>
+                <h2 class="h5">Exportação</h2>
+                <p class="text-muted flex-grow-1">Solicite a exportação dos seus dados pessoais com registro de auditoria LGPD.</p>
+                <a class="btn btn-outline-info mt-auto" asp-action="ExportarDados">Exportar dados</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body d-flex flex-column">
+                <div class="text-warning fs-3 mb-2"><i class="bi bi-clock-history"></i></div>
+                <h2 class="h5">Solicitações</h2>
+                <p class="text-muted flex-grow-1">Acompanhe pedidos de acesso, correção, portabilidade e anonimização quando aplicável.</p>
+                <a class="btn btn-outline-warning mt-auto" asp-action="Solicitacoes">Acompanhar</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h2 class="h5">Eventos LGPD</h2>
+        <p class="text-muted mb-3">Toda exportação, consentimento e atendimento de solicitação sensível deve aparecer no histórico auditável.</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Eventos">Ver eventos</a>
+            <a class="btn btn-sm btn-outline-secondary" asp-action="Retencao">Regras de retenção</a>
+        </div>
+    </div>
+</div>

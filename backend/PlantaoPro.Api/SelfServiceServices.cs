@@ -124,7 +124,7 @@ where upe.usuario_id=@usuarioId and upe.tenant_id=@tenantId and upe.permitido=tr
 
     public static string Slug(string valor)
     {
-        var normalizado = new string((valor ?? string.Empty).Trim().ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-').ToArray());
+        var normalizado = string.Concat((valor ?? string.Empty).Trim().ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-'));
         while (normalizado.Contains("--", StringComparison.Ordinal)) normalizado = normalizado.Replace("--", "-", StringComparison.Ordinal);
         return string.IsNullOrWhiteSpace(normalizado.Trim('-')) ? "tenant" : normalizado.Trim('-');
     }
@@ -569,7 +569,7 @@ select gen_random_uuid(),@id,p.id,true,now(),'A' from plantaopro.permissoes p wh
 
     private static string LimiteTexto(int valor) => valor <= 0 ? "Ilimitado" : valor.ToString();
     private static string SimNao(bool valor) => valor ? "Incluído" : "Não incluído";
-    private static string SomenteDigitos(string valor) => new string((valor ?? string.Empty).Where(char.IsDigit).ToArray());
+    private static string SomenteDigitos(string valor) => string.Concat((valor ?? string.Empty).Where(char.IsDigit));
     private static bool CorValida(string valor) => !string.IsNullOrWhiteSpace(valor) && valor.Length == 7 && valor[0] == '#' && valor.Skip(1).All(Uri.IsHexDigit);
 
     private static Dictionary<string, string> Categoria(ParametrizacoesClienteDto dto, string categoria)

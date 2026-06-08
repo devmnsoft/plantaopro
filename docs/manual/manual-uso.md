@@ -1,11 +1,14 @@
-# Manual de uso interativo
+# Manual de Uso Interativo
 
-O manual agora existe dentro do sistema Web em `Ajuda/Index`, `Ajuda/Busca`, `Ajuda/Checklist`, `Ajuda/PrimeirosPassos` e `Ajuda/Artigo`.
+O manual foi implementado como módulo Web/API, não apenas documentação estática.
 
-## Conteúdos por perfil
+## Recursos
 
-- Administrador global: cliente, plano, assinatura, fatura, risco e inteligência SaaS.
-- Coordenação: criar plantão, publicar, convidar médico, confirmar escala e central de escala.
-- Médico: plantões disponíveis, convite, agenda, pagamentos e disponibilidade.
-- Financeiro: gerar/confirmar pagamento, contestação e relatório financeiro.
-- Hospital: acompanhar plantões, consultar escalas e comunicação.
+- Tópicos por perfil.
+- Artigos com links para telas do sistema.
+- Busca por termo.
+- Checklists de primeiros passos.
+- Feedback “Foi útil?”.
+- Conteúdos para administrador global, coordenação, médico, financeiro e hospital.
+
+Endpoints principais: `GET /api/ajuda/topicos`, `GET /api/ajuda/artigos`, `GET /api/ajuda/buscar`, `POST /api/ajuda/artigos/{id}/feedback`.

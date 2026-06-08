@@ -1,37 +1,134 @@
 @model PlantaoPro.Web.Models.FaturaSaasViewModel
 @{
     ViewData["Title"] = "Detalhe da fatura SaaS";
+    var podePagar = Model.Status == "ABERTA" || Model.Status == "VENCIDA";
+    var podeCancelar = Model.Status != "CANCELADA" && Model.Status != "PAGA";
+    var podeContestar = Model.Status == "ABERTA" || Model.Status == "VENCIDA";
+    var podeResolver = Model.Status == "EM_CONTESTACAO";
 }
 <div class="container py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
             <h1 class="h3 mb-1">Fatura SaaS</h1>
             <p class="text-muted mb-0">@Model.ClienteNome · @Model.Competencia.ToString("MM/yyyy")</p>
         </div>
-        <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+        <div class="d-flex flex-wrap gap-2">
+            <form asp-action="Notificar" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-primary">Notificar cobrança</button>
+            </form>
+            @if (podePagar)
+            {
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPagar">Marcar paga</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-success" disabled title="Disponível apenas para faturas abertas ou vencidas">Marcar paga</button>
+            }
+            @if (podeContestar)
+            {
+                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalContestar">Contestar</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-warning" disabled title="Disponível apenas para faturas abertas ou vencidas">Contestar</button>
+            }
+            @if (podeCancelar)
+            {
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalCancelar">Cancelar</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-outline-danger" disabled title="Faturas pagas ou já canceladas não podem ser canceladas">Cancelar</button>
+            }
+            <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+        </div>
     </div>
-    <div class="card mb-3"><div class="card-body row g-3">
-        <div class="col-md-3"><span class="text-muted">Status</span><div class="fw-bold">@Model.Status</div></div>
-        <div class="col-md-3"><span class="text-muted">Valor</span><div class="fw-bold">@Model.Valor.ToString("C")</div></div>
-        <div class="col-md-3"><span class="text-muted">Vencimento</span><div class="fw-bold">@Model.Vencimento.ToString("dd/MM/yyyy")</div></div>
-        <div class="col-md-3"><span class="text-muted">Pagamento</span><div class="fw-bold">@(Model.DataPagamento?.ToString("dd/MM/yyyy") ?? "Pendente")</div></div>
-    </div></div>
-    <div class="card"><div class="card-body">
-        <h2 class="h5">Timeline</h2>
-        <ol class="mb-0">
-            <li>Fatura criada em @Model.CriadoEm.ToString("dd/MM/yyyy HH:mm").</li>
-            @if (Model.ValorPago.HasValue)
-            {
-                <li>Pagamento confirmado: @Model.ValorPago.Value.ToString("C") via @Model.FormaPagamento.</li>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.MotivoContestacao))
-            {
-                <li>Contestação registrada: @Model.MotivoContestacao</li>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.MotivoCancelamento))
-            {
-                <li>Cancelamento registrado: @Model.MotivoCancelamento</li>
-            }
-        </ol>
-    </div></div>
+
+    <div class="card mb-3">
+        <div class="card-body row g-3">
+            <div class="col-md-3"><span class="text-muted">Status</span><div class="fw-bold">@Model.Status</div></div>
+            <div class="col-md-3"><span class="text-muted">Valor</span><div class="fw-bold">@Model.Valor.ToString("C")</div></div>
+            <div class="col-md-3"><span class="text-muted">Vencimento</span><div class="fw-bold">@Model.Vencimento.ToString("dd/MM/yyyy")</div></div>
+            <div class="col-md-3"><span class="text-muted">Pagamento</span><div class="fw-bold">@(Model.DataPagamento?.ToString("dd/MM/yyyy") ?? "Pendente")</div></div>
+        </div>
+    </div>
+
+    @if (podeResolver)
+    {
+        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>Esta fatura está em contestação e exige resposta do financeiro/comercial.</span>
+            <button type="button" class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#modalResolver">Resolver contestação</button>
+        </div>
+    }
+
+    <div class="card">
+        <div class="card-body">
+            <h2 class="h5">Timeline</h2>
+            <ol class="mb-0">
+                <li>Fatura criada em @Model.CriadoEm.ToString("dd/MM/yyyy HH:mm").</li>
+                @if (Model.ValorPago.HasValue)
+                {
+                    <li>Pagamento confirmado: @Model.ValorPago.Value.ToString("C") via @Model.FormaPagamento.</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.MotivoContestacao))
+                {
+                    <li>Contestação registrada: @Model.MotivoContestacao</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.MotivoCancelamento))
+                {
+                    <li>Cancelamento registrado: @Model.MotivoCancelamento</li>
+                }
+            </ol>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPagar" tabindex="-1" aria-labelledby="modalPagarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" asp-action="MarcarPaga" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-header"><h2 class="modal-title h5" id="modalPagarLabel">Confirmar pagamento</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+            <div class="modal-body">
+                <div class="mb-3"><label class="form-label" for="valorPago">Valor pago</label><input class="form-control" id="valorPago" name="valorPago" type="number" min="0.01" step="0.01" value="@Model.Valor" required /></div>
+                <div class="mb-3"><label class="form-label" for="dataPagamento">Data do pagamento</label><input class="form-control" id="dataPagamento" name="dataPagamento" type="date" value="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" required /></div>
+                <div class="mb-3"><label class="form-label" for="formaPagamento">Forma de pagamento</label><input class="form-control" id="formaPagamento" name="formaPagamento" maxlength="60" required /></div>
+                <div><label class="form-label" for="observacoes">Observações</label><textarea class="form-control" id="observacoes" name="observacoes" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" class="btn btn-success">Confirmar pagamento</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalContestar" tabindex="-1" aria-labelledby="modalContestarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" asp-action="Contestar" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-header"><h2 class="modal-title h5" id="modalContestarLabel">Contestar fatura</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+            <div class="modal-body"><label class="form-label" for="motivo">Motivo da contestação</label><textarea class="form-control" id="motivo" name="motivo" rows="4" required></textarea><div class="form-text">A contestação registra evento de cobrança, alerta financeiro e auditoria.</div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" class="btn btn-warning">Enviar contestação</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalResolver" tabindex="-1" aria-labelledby="modalResolverLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" asp-action="ResolverContestacao" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-header"><h2 class="modal-title h5" id="modalResolverLabel">Resolver contestação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+            <div class="modal-body"><label class="form-label" for="resposta">Resposta</label><textarea class="form-control" id="resposta" name="resposta" rows="4" required></textarea></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" class="btn btn-primary">Resolver</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="modalCancelarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form class="modal-content" asp-action="Cancelar" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="modal-header"><h2 class="modal-title h5" id="modalCancelarLabel">Cancelar fatura</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+            <div class="modal-body"><label class="form-label" for="justificativa">Justificativa</label><textarea class="form-control" id="justificativa" name="justificativa" rows="4" required></textarea><div class="form-text">Cancelamentos exigem justificativa e são auditados.</div></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" class="btn btn-danger">Cancelar fatura</button></div>
+        </form>
+    </div>
 </div>

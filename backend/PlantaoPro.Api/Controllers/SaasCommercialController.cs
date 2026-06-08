@@ -555,7 +555,7 @@ from plantaopro.assinaturas a
 join plantaopro.clientes c on c.id=a.cliente_id
 where a.reg_status='A' and upper(a.status)='ATIVA' and c.reg_status='A' and upper(c.status) not in ('SUSPENSO','CANCELADO')
   and not exists (select 1 from plantaopro.faturas_saas f where f.assinatura_id=a.id and f.competencia=@competencia and f.reg_status='A')
-returning id as "Id", cliente_id as "ClienteId"", new { competencia }, tx)).ToArray();
+returning id as ""Id"", cliente_id as ""ClienteId""", new { competencia }, tx)).ToArray();
             foreach (var fatura in faturas)
             {
                 await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, fatura.Id, "FATURA_GERADA", "Fatura mensal gerada para a competência " + competencia.ToString("MM/yyyy") + ".");

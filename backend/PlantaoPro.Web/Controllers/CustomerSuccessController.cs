@@ -56,4 +56,12 @@ public sealed class CustomerSuccessController : BaseWebController
         TempData[(int)status >= 200 && (int)status <= 299 ? "SuccessMessage" : "ErrorMessage"] = (int)status >= 200 && (int)status <= 299 ? "Saúde recalculada." : error ?? "Não foi possível recalcular saúde.";
         return RedirectToAction(nameof(Details), new { clienteId });
     }
+
+    public IActionResult Contas() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Contas Customer Success", "Health score, adoção, faturas, onboarding e plantões publicados.", "CustomerSuccess", "Riscos"));
+    public IActionResult ContaDetails(Guid tenantId) => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Detalhes da conta CS", "Interações, plano de ação, NPS, riscos e oportunidades do tenant.", "CustomerSuccess", "Contas"));
+    public IActionResult Riscos() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Riscos e churn", "Sinais determinísticos de risco, inadimplência, NPS baixo e cancelamento provável.", "CustomerSuccess", "PlanosAcao"));
+    public IActionResult Oportunidades() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Oportunidades de expansão", "Uso acima de 80%, módulos adicionais e upgrade de plano.", "CustomerSuccess", "Contas"));
+    public IActionResult Nps() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("NPS por período", "Registro de satisfação e geração de risco quando nota baixa.", "CustomerSuccess", "Riscos"));
+    public IActionResult Playbooks() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Playbooks CS", "Ações padronizadas para onboarding, risco, expansão e retenção.", "CustomerSuccess", "PlanosAcao"));
+    public IActionResult PlanosAcao() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Planos de ação", "Tarefas, responsáveis e prazos para recuperação de saúde do cliente.", "CustomerSuccess", "Contas"));
 }

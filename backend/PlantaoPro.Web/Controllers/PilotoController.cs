@@ -159,4 +159,12 @@ public sealed class PilotoController : BaseWebController
             return RedirectToAction(nameof(Ocorrencias));
         }
     }
+
+    public IActionResult Programas() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Programas piloto", "Período, objetivo, critérios de sucesso e responsável do piloto comercial.", "Piloto", "Clientes"));
+    public IActionResult ProgramaDetails(Guid id) => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Detalhes do programa piloto", "Indicadores, critérios e clientes vinculados ao programa.", "Piloto", "Programas"));
+    public IActionResult Clientes() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Clientes piloto", "Trial especial, desconto, andamento, conclusão e conversão para cliente pago.", "Piloto", "Feedbacks"));
+    public IActionResult ClienteDetails(Guid id) => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Detalhes do cliente piloto", "Adoção, feedbacks, bugs, reuniões e decisão final de conversão.", "Piloto", "Clientes"));
+    public IActionResult Feedbacks() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Feedbacks do beta", "Severidade, categoria, tarefa de produto e resolução auditada.", "Piloto", "Indicadores"));
+    public IActionResult Bugs() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Bugs do piloto", "Bugs críticos geram alerta operacional e acompanhamento de resolução.", "Piloto", "Feedbacks"));
+    public IActionResult Indicadores() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Indicadores do piloto", "Conversão, feedback crítico, NPS e critérios de sucesso.", "Piloto", "Programas"));
 }

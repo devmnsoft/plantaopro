@@ -1,8 +1,8 @@
-# Customer Success
+# Operação assistida
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Fluxo guiado com 16 etapas implementado via /api/operacao-assistida/planos, iniciar, concluir/pular etapas, pendências, evidências e atrasadas.
 
 ## Validações manuais sugeridas
 

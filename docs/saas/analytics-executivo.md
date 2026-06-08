@@ -1,8 +1,8 @@
-# Customer Success
+# Analytics executivo
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Dashboard executivo implementado em /api/executivo para resumo, receita, clientes, operação, comercial, produto, alertas e metas, com Web Executivo/*.
 
 ## Validações manuais sugeridas
 

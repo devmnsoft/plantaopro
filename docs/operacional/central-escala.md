@@ -1,8 +1,8 @@
-# Customer Success
+# Central de escala
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Evolução implementada com endpoints de plantões descobertos, risco, médicos disponíveis, convidar e substituir. Dados respeitam ação auditável.
 
 ## Validações manuais sugeridas
 

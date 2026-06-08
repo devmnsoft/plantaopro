@@ -1,8 +1,8 @@
-# Customer Success
+# Piloto/Beta comercial
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Módulo implementado com API /api/piloto/programas, /api/piloto/clientes, /api/piloto/feedbacks e /api/piloto/indicadores. A Web expõe Piloto/Programas, Piloto/Clientes, Piloto/Feedbacks, Piloto/Bugs e Piloto/Indicadores. O fluxo cobre cadastro do programa, vínculo do tenant, início, pausa, conclusão, conversão, classificação e resolução de feedback.
 
 ## Validações manuais sugeridas
 

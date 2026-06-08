@@ -1,8 +1,8 @@
-# Customer Success
+# Templates white label
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Templates reutilizáveis implementados via /api/white-label/templates, criação, edição, duplicação e aplicação por tenant com auditoria e bloqueio quando não liberado.
 
 ## Validações manuais sugeridas
 

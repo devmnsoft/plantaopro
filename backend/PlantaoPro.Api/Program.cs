@@ -117,6 +117,7 @@ builder.Services.AddScoped<TenantContextService>();
 builder.Services.AddScoped<SelfServiceSaasService>();
 builder.Services.AddScoped<TenantIsolationValidatorService>();
 builder.Services.AddScoped<B2BLaunchService>();
+builder.Services.AddScoped<B2BCommercialOpsService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

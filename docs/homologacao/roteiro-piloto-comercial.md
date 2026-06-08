@@ -1,8 +1,8 @@
-# Customer Success
+# Roteiro de homologação do piloto comercial
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Validar login admin, criação de programa, cliente piloto, feedback, classificação, resolução, conversão, CS, NPS, health, operação assistida, template, treinamento, escala, agenda, renovação, expansão, auditoria e build.
 
 ## Validações manuais sugeridas
 

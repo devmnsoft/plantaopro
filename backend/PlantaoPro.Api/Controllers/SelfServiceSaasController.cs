@@ -36,6 +36,13 @@ public sealed class PublicSelfServiceController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
+    [HttpGet("planos/faq")]
+    public async Task<IActionResult> Faq()
+    {
+        var result = await _service.FaqPlanosAsync();
+        return StatusCode(result.StatusCode, result);
+    }
+
     [HttpPost("cadastro/iniciar")]
     public IActionResult Iniciar()
     {
@@ -100,6 +107,13 @@ public sealed class PlanosPublicosApiController : ControllerBase
     public async Task<IActionResult> Comparativo()
     {
         var result = await _service.ComparativoAsync();
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpGet("faq")]
+    public async Task<IActionResult> Faq()
+    {
+        var result = await _service.FaqPlanosAsync();
         return StatusCode(result.StatusCode, result);
     }
 }
@@ -368,6 +382,13 @@ public sealed class MinhaAssinaturaController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
+    [HttpGet("faturas")]
+    public async Task<IActionResult> Faturas()
+    {
+        var result = await _service.FaturasMinhaAssinaturaAsync();
+        return StatusCode(result.StatusCode, result);
+    }
+
     [HttpPost("solicitar-upgrade")]
     public async Task<IActionResult> Upgrade([FromBody] SolicitacaoMudancaPlanoRequest request)
     {
@@ -379,6 +400,13 @@ public sealed class MinhaAssinaturaController : ControllerBase
     public async Task<IActionResult> Downgrade([FromBody] SolicitacaoMudancaPlanoRequest request)
     {
         var result = await _service.SolicitarMudancaPlanoAsync("DOWNGRADE", request, HttpContext.Connection.RemoteIpAddress?.ToString());
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpPost("solicitar-cancelamento")]
+    public async Task<IActionResult> Cancelamento([FromBody] SolicitacaoCancelamentoAssinaturaRequest request)
+    {
+        var result = await _service.SolicitarCancelamentoAssinaturaAsync(request, HttpContext.Connection.RemoteIpAddress?.ToString());
         return StatusCode(result.StatusCode, result);
     }
 }

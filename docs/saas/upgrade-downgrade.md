@@ -10,3 +10,9 @@
 - Executar a migração em ambiente PostgreSQL de homologação.
 - Conectar as telas MVC ao endpoint real de finalização self-service em ambiente com API disponível.
 - Validar manualmente upload físico de assets em storage definitivo.
+
+## Complemento 2026-06-08 — cancelamento assistido
+
+Além de upgrade e downgrade, a área Minha Assinatura passa a expor solicitação de cancelamento em `/MinhaAssinatura/Cancelamento` e no endpoint `POST /api/minha-assinatura/solicitar-cancelamento`. A operação exige motivo, registra auditoria e mantém avaliação comercial/Customer Success antes de qualquer encerramento operacional.
+
+Pendências reais: automatizar regras financeiras de multa/aviso prévio quando contratos reais forem parametrizados.

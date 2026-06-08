@@ -1,0 +1,33 @@
+@model PlantaoPro.Web.Models.B2BLaunchPageViewModel
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+<div class="container py-4">
+    <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <p class="text-uppercase text-primary fw-semibold mb-1">PlantãoPro White Label B2B</p>
+            <h1 class="h3 mb-2">@Model.Titulo</h1>
+            <p class="text-muted mb-0">@Model.Subtitulo</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Dashboard">Voltar ao dashboard</a>
+    </div>
+
+    <div class="row g-3">
+        @foreach (var card in Model.Cards)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <span class="badge bg-primary-subtle text-primary mb-2">@card.Codigo</span>
+                        <h2 class="h5">@card.Titulo</h2>
+                        <p class="text-muted">@card.Descricao</p>
+                        <span class="badge bg-success">@card.Status</span>
+                    </div>
+                    <div class="card-footer bg-white">
+                        <a class="btn btn-sm btn-primary" asp-controller="@card.Controller" asp-action="@card.Acao">Abrir fluxo</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

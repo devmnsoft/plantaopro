@@ -1,8 +1,8 @@
-# Self Service
+# Developer Portal Api
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Developer Portal expõe overview, auth, endpoints, webhooks, exemplos, uso e API keys.
 
 ## Componentes relacionados
 

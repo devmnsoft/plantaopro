@@ -1,8 +1,8 @@
-# Self Service
+# Roteiro Demo Revenda
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Demo: parceiro cria pipeline, acompanha tenants, comissões, repasses e materiais comerciais.
 
 ## Componentes relacionados
 

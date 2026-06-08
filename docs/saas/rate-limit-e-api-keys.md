@@ -1,8 +1,8 @@
-# Self Service
+# Rate Limit E Api Keys
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+API keys usam hash SHA-256, escopos, exibição única, revogação e rate limit por tenant.
 
 ## Componentes relacionados
 

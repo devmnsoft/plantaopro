@@ -1,8 +1,8 @@
-# Self Service
+# Revenda Parceiros
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Parceiros têm tenants vinculados, comissões, repasses, contratos e materiais liberados.
 
 ## Componentes relacionados
 

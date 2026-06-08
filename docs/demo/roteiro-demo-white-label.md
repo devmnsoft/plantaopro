@@ -1,12 +1,17 @@
-# Roteiro demo white label
+# Roteiro Demo White Label
 
-1. Acessar `/planos` e destacar plano Profissional como mais escolhido.
-2. Mostrar comparativo de limites e recursos.
-3. Simular cadastro self-service e aceite LGPD.
-4. Entrar em White Label e alterar nome da plataforma, cliente, cores, logo e textos.
-5. Abrir Preview para demonstrar identidade visual aplicada ao tenant.
-6. Abrir Perfis e matriz de permissões.
-7. Abrir Minha Assinatura, Uso e Upgrade.
+## Implementado nesta rodada
+
+Demo: página pública, cadastro, painel white label, preview, publicação e dashboard com marca.
+
+## Componentes relacionados
+
+- Migração: `database/migrations/2026_plantao_pro_white_label_b2b_launch.sql`.
+- APIs B2B: `backend/PlantaoPro.Api/Controllers/B2BLaunchController.cs`.
+- Serviços B2B: `backend/PlantaoPro.Api/B2BLaunchServices.cs`.
+- Web B2B: `backend/PlantaoPro.Web/Controllers/B2BLaunchWebControllers.cs`.
 
 ## Pendências reais
-- Upload físico de imagem requer storage configurado.
+
+- Validar manualmente em ambiente com PostgreSQL e SDK .NET instalado.
+- Conectar as telas genéricas aos formulários AJAX finais quando o design system definitivo estiver homologado.

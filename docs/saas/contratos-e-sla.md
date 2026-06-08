@@ -1,8 +1,8 @@
-# Self Service
+# Contratos E Sla
 
 ## Implementado nesta rodada
 
-Cadastro self-service cria solicitação, tenant, cliente, assinatura, admin, aceite LGPD e onboarding.
+Contratos definem plano, vigência, setup, SLA, propriedade, exportação e aceite digital.
 
 ## Componentes relacionados
 

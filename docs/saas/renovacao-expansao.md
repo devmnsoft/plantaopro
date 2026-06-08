@@ -1,8 +1,8 @@
-# Customer Success
+# Renovação e expansão
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+APIs /api/renovacoes e /api/expansoes implementam iniciar, contato, renovar, marcar risco, criar oportunidade, ganhar e perder com motivo.
 
 ## Validações manuais sugeridas
 

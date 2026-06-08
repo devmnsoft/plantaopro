@@ -1,8 +1,8 @@
-# Customer Success
+# Churn e retenção
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+NPS baixo gera risco, riscos aparecem em Customer Success e renovações podem ser marcadas em risco com justificativa. Expansões perdidas exigem motivo.
 
 ## Validações manuais sugeridas
 

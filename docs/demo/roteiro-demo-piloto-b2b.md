@@ -1,8 +1,8 @@
-# Customer Success
+# Roteiro de demo piloto B2B
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Demonstração sugerida: Dashboard Executivo, Piloto/Beta, Customer Success, Operação Assistida, Templates White Label, Treinamento, Central de Escala, Agenda Médica, Renovação e Expansão.
 
 ## Validações manuais sugeridas
 

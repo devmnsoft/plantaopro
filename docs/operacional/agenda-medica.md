@@ -1,8 +1,8 @@
-# Customer Success
+# Agenda médica
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Área médica implementada com agenda, disponibilidade, indisponibilidade e solicitação de substituição em /api/medicos/me.
 
 ## Validações manuais sugeridas
 

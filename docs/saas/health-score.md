@@ -1,8 +1,8 @@
-# Customer Success
+# Health Score
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Cálculo determinístico implementado: NPS baixo, muitos chamados, ausência de login e uso acima de 80% ajustam o score e categorizam SAUDAVEL, ATENCAO, RISCO ou CRITICO.
 
 ## Validações manuais sugeridas
 

@@ -1,8 +1,8 @@
-# Customer Success
+# Treinamento B2B
 
 ## Implementado nesta rodada
 
-Módulo implementado com /api/customer-success/contas, health, interações, planos de ação, tarefas, NPS, riscos, oportunidades e playbooks. A Web expõe CustomerSuccess/Contas, ContaDetails, Riscos, Oportunidades, Nps, Playbooks e PlanosAcao.
+Trilhas, artigos, busca, conclusão e feedback de artigo implementados via /api/treinamento. Trilhas cobrem admin cliente, coordenação, médico, financeiro e revendedor.
 
 ## Validações manuais sugeridas
 

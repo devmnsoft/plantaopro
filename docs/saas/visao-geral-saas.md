@@ -1,13 +1,12 @@
-# Visão Geral SaaS PlantãoPro
+# Visão geral SaaS
 
-Esta rodada consolida o PlantãoPro como SaaS multiempresa com jornada comercial, LGPD prática, auditoria, faturamento, inteligência por regras e manual interativo.
+Esta evolução consolida PlantãoPro como SaaS multiempresa com tabelas incrementais para clientes, planos, recursos, assinaturas, uso, faturas, cobranças, bloqueios, alertas, saúde do cliente, jornada comercial, comercial SaaS, Customer Success, LGPD, ajuda e auditoria.
 
-## Módulos
+## Componentes funcionais
 
-- Clientes, planos e assinaturas.
-- Faturamento SaaS com faturas, itens, pagamentos e cobrança.
-- Comercial SaaS com leads, oportunidades e propostas.
-- Jornada do cliente com funil, timeline, tarefas e eventos.
-- Customer Success com saúde, riscos, tarefas e planos de ação.
-- LGPD com consentimentos, solicitações, exportações e anonimizações.
-- Ajuda Interativa com tópicos, artigos, checklists e feedback.
+- API de jornada do cliente em `/api/jornada-clientes`.
+- API comercial em `/api/comercial`.
+- API LGPD em `/api/lgpd`.
+- API de inteligência em `/api/inteligencia` e dashboard SaaS.
+- Web com JornadaClientes, Comercial, Lgpd, Inteligência, SaaS Dashboard e Ajuda.
+- Guardas SaaS para limites de médicos, hospitais, plantões, mobile, BI e relatórios avançados.

@@ -1,18 +1,7 @@
-# Inteligência SaaS baseada em regras
+# Inteligência SaaS
 
-O motor `SaasIntelligenceService` usa regras determinísticas; não há chamada para IA externa.
+O motor é determinístico e calcula saúde por inadimplência, status contratual, uso operacional e proximidade de limites.
 
-## Sinais avaliados
+Classificações: SAUDAVEL, ATENCAO, RISCO e CRITICO.
 
-- Faturas vencidas.
-- Cliente suspenso ou cancelado.
-- Ausência de plantões recentes.
-- Uso acima de 80% dos limites do plano.
-- Ausência de assinatura ativa.
-
-## Saídas
-
-- Saúde do cliente: `SAUDAVEL`, `ATENCAO`, `RISCO` ou `CRITICO`.
-- Alertas de risco e upgrade.
-- Recomendações de Customer Success.
-- Listas executivas para dashboard: clientes em risco, faturas vencidas, oportunidades de upgrade e funil comercial.
+Alertas indicam inadimplência, inatividade, uso acima de 80%, oportunidade de upgrade e necessidade de ação de Customer Success.

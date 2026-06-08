@@ -1,15 +1,18 @@
+@model PlantaoPro.Web.Models.AjudaInterativaArtigoViewModel
 @{
-    ViewData["Title"] = "Módulo de Ajuda";
-    var modulo = (string?)ViewBag.Modulo ?? "geral";
+    ViewData["Title"] = Model.Titulo;
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Guia do Módulo", "Entenda o objetivo da tela, ações e próximos passos.", "bi-book")' />
-<div class="card"><div class="card-body">
-    <h5 class="mb-3 text-capitalize">@modulo</h5>
-    <ol>
-        <li>Acesse o menu correspondente no sidebar.</li>
-        <li>Preencha os dados obrigatórios com atenção.</li>
-        <li>Revise alertas, confirmações e salve.</li>
-        <li>Acompanhe notificações e indicadores no dashboard.</li>
-    </ol>
-    <a asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-arrow-left"></i> Voltar ao centro de ajuda</a>
-</div></div>
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel(Model.Titulo, "Passo a passo do módulo selecionado no manual interativo.", "bi-book")' />
+<div class="card">
+    <div class="card-body">
+        <p class="lead">@Model.Resumo</p>
+        <ol>
+        @foreach (var passo in Model.Passos)
+        {
+            <li>@passo</li>
+        }
+        </ol>
+        <a class="btn btn-primary" asp-controller="@Model.Controller" asp-action="@Model.Action">Abrir tela relacionada</a>
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar</a>
+    </div>
+</div>

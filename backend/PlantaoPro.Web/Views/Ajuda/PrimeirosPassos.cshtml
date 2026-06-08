@@ -1,3 +1,11 @@
-@{ ViewData["Title"] = "Primeiros Passos"; }
+@model PlantaoPro.Web.Models.AjudaInterativaChecklistViewModel
+@{
+    ViewData["Title"] = "Primeiros Passos";
+}
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Primeiros passos", "Roteiro rápido para começar a usar o PlantãoPro com segurança.", "bi-rocket-takeoff")' />
-<div class="row g-3"><div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Admin global</h2><p>Cadastre cliente, plano, assinatura e acompanhe inteligência SaaS.</p><a class="btn btn-sm btn-outline-primary" asp-controller="Comercial" asp-action="Funil">Ver funil</a></div></div></div><div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Coordenação</h2><p>Crie, publique e acompanhe plantões, convites e escalas.</p><a class="btn btn-sm btn-outline-primary" asp-controller="Plantoes" asp-action="Index">Ver plantões</a></div></div></div><div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Médico</h2><p>Acesse oportunidades, agenda e pagamentos.</p><a class="btn btn-sm btn-outline-primary" asp-controller="MinhaAgenda" asp-action="Index">Minha agenda</a></div></div></div></div>
+<div class="row g-3">
+@foreach (var artigo in Model.Artigos)
+{
+    <div class="col-md-4"><div class="card h-100"><div class="card-body"><span class="badge bg-light text-dark border mb-2">@artigo.Perfil</span><h2 class="h5">@artigo.Titulo</h2><p>@artigo.Resumo</p><a class="btn btn-sm btn-outline-primary" asp-action="Artigo" asp-route-id="@artigo.Id">Começar</a></div></div></div>
+}
+</div>

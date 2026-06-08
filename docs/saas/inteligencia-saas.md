@@ -1,12 +1,18 @@
-# Inteligência SaaS
+# Inteligência SaaS baseada em regras
 
-O motor é determinístico, sem IA externa. Ele usa regras para calcular saúde, riscos, oportunidades e próximas ações.
+O motor `SaasIntelligenceService` usa regras determinísticas; não há chamada para IA externa.
 
-## Endpoints
+## Sinais avaliados
 
-- `GET /api/inteligencia/saas/resumo`
-- `GET /api/inteligencia/clientes/{clienteId}/saude`
-- `GET /api/inteligencia/clientes/{clienteId}/alertas`
-- `GET /api/inteligencia/clientes/{clienteId}/proximas-acoes`
-- `POST /api/inteligencia/sugerir-plano`
-- `POST /api/inteligencia/recalcular`
+- Faturas vencidas.
+- Cliente suspenso ou cancelado.
+- Ausência de plantões recentes.
+- Uso acima de 80% dos limites do plano.
+- Ausência de assinatura ativa.
+
+## Saídas
+
+- Saúde do cliente: `SAUDAVEL`, `ATENCAO`, `RISCO` ou `CRITICO`.
+- Alertas de risco e upgrade.
+- Recomendações de Customer Success.
+- Listas executivas para dashboard: clientes em risco, faturas vencidas, oportunidades de upgrade e funil comercial.

@@ -33,22 +33,42 @@ public sealed class SaasDashboardController : ControllerBase
     }
 
     [HttpGet("clientes-risco")]
-    public async Task<IActionResult> ClientesRisco([FromQuery] Guid clienteId)
+    public async Task<IActionResult> ClientesRisco([FromQuery] Guid? clienteId)
     {
-        var response = await service.CalcularSaudeClienteAsync(clienteId);
-        return StatusCode(response.StatusCode, response);
+        if (clienteId.HasValue)
+        {
+            var response = await service.CalcularSaudeClienteAsync(clienteId.Value);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        var lista = await service.ListarClientesRiscoAsync();
+        return StatusCode(lista.StatusCode, lista);
     }
 
     [HttpGet("faturas-vencidas")]
-    public IActionResult FaturasVencidas()
+    public async Task<IActionResult> FaturasVencidas()
     {
-        return Ok(ApiResponse<string>.Ok("Use GET /api/faturamento-saas/inadimplencia para a lista paginada de faturas vencidas."));
+        var response = await service.ListarFaturasVencidasAsync();
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpGet("oportunidades-upgrade")]
-    public async Task<IActionResult> OportunidadesUpgrade([FromQuery] Guid clienteId)
+    public async Task<IActionResult> OportunidadesUpgrade([FromQuery] Guid? clienteId)
     {
-        var response = await service.GerarAcoesRecomendadasAsync(clienteId);
+        if (clienteId.HasValue)
+        {
+            var response = await service.GerarAcoesRecomendadasAsync(clienteId.Value);
+            return StatusCode(response.StatusCode, response);
+        }
+
+        var lista = await service.ListarOportunidadesUpgradeAsync();
+        return StatusCode(lista.StatusCode, lista);
+    }
+
+    [HttpGet("funil-comercial")]
+    public async Task<IActionResult> FunilComercial()
+    {
+        var response = await service.GerarFunilComercialAsync();
         return StatusCode(response.StatusCode, response);
     }
 }

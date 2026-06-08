@@ -196,6 +196,89 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
         }
     }
 
+
+    public async Task<ApiResponse<IEnumerable<ClienteSaudeDto>>> ListarClientesRiscoAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var clientes = await cn.QueryAsync<Guid>(@"select id from plantaopro.clientes where reg_status='A' and status in ('ATIVO','SUSPENSO','CANCELADO') order by reg_date desc limit 50");
+            var lista = new List<ClienteSaudeDto>();
+            foreach (var clienteId in clientes)
+            {
+                var saude = await CalcularSaudeClienteAsync(clienteId);
+                if (saude.Success && saude.Data is not null && (saude.Data.Classificacao == "RISCO" || saude.Data.Classificacao == "CRITICO"))
+                {
+                    lista.Add(saude.Data);
+                }
+            }
+            return ApiResponse<IEnumerable<ClienteSaudeDto>>.Ok(lista);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar clientes em risco SaaS");
+            return ApiResponse<IEnumerable<ClienteSaudeDto>>.Fail("Não foi possível listar clientes em risco.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<SaasFaturaVencidaDto>>> ListarFaturasVencidasAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.QueryAsync<SaasFaturaVencidaDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", f.valor as ""Valor"", f.vencimento as ""Vencimento"", coalesce(f.status,'') as ""Status""
+from plantaopro.faturas_saas f
+join plantaopro.clientes c on c.id=f.cliente_id
+where f.reg_status='A' and f.status in ('VENCIDA','ABERTA') and f.vencimento < current_date
+order by f.vencimento asc limit 100");
+            return ApiResponse<IEnumerable<SaasFaturaVencidaDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar faturas vencidas SaaS");
+            return ApiResponse<IEnumerable<SaasFaturaVencidaDto>>.Fail("Não foi possível listar faturas vencidas.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<SaasRecomendacaoDto>>> ListarOportunidadesUpgradeAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var clientes = await cn.QueryAsync<Guid>(@"select distinct cliente_id from plantaopro.cliente_alertas where reg_status='A' and resolvido=false and tipo in ('UPGRADE','USO_ALTO') order by cliente_id limit 50");
+            var lista = new List<SaasRecomendacaoDto>();
+            foreach (var clienteId in clientes)
+            {
+                var recomendacoes = await GerarAcoesRecomendadasAsync(clienteId);
+                if (recomendacoes.Success && recomendacoes.Data is not null)
+                {
+                    lista.AddRange(recomendacoes.Data.Where(x => x.Tipo == "UPGRADE"));
+                }
+            }
+            return ApiResponse<IEnumerable<SaasRecomendacaoDto>>.Ok(lista);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar oportunidades de upgrade SaaS");
+            return ApiResponse<IEnumerable<SaasRecomendacaoDto>>.Fail("Não foi possível listar oportunidades de upgrade.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<ComercialFunilEtapaDto>>> GerarFunilComercialAsync()
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await cn.QueryAsync<ComercialFunilEtapaDto>(@"select coalesce(etapa,'SEM_ETAPA') as ""Etapa"", count(1)::bigint as ""Total"", coalesce(sum(valor_estimado),0) as ""ValorEstimado"" from plantaopro.comercial_oportunidades where reg_status='A' group by coalesce(etapa,'SEM_ETAPA') order by ""Total"" desc limit 50");
+            return ApiResponse<IEnumerable<ComercialFunilEtapaDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao carregar funil comercial SaaS");
+            return ApiResponse<IEnumerable<ComercialFunilEtapaDto>>.Fail("Não foi possível carregar funil comercial.", 500);
+        }
+    }
+
     public async Task<ApiResponse<IEnumerable<ClienteAlertaSaasDto>>> ListarAlertasClienteAsync(Guid clienteId)
     {
         try

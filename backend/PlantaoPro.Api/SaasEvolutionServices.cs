@@ -306,27 +306,44 @@ public sealed class ComercialSaasService
         return ApiResponse<IEnumerable<ComercialOportunidadeDto>>.Ok(rows);
     }
 
-    public async Task<ApiResponse<Guid>> SalvarOportunidadeAsync(Guid? id, ComercialOportunidadeRequest request)
+    public async Task<ApiResponse<Guid>> SalvarOportunidadeAsync(Guid? id, ComercialOportunidadeRequest request, Guid? usuarioId, string? ip, string? perfil)
     {
         if (string.IsNullOrWhiteSpace(request.Nome)) return ApiResponse<Guid>.Fail("Nome da oportunidade é obrigatório.", 400);
         var oppId = id ?? Guid.NewGuid();
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        await cn.ExecuteAsync(@"insert into plantaopro.comercial_oportunidades(id,lead_id,nome,etapa,valor_estimado,plano_recomendado,reg_status,reg_date) values(@oppId,@LeadId,@Nome,'NEGOCIACAO',@ValorEstimado,@PlanoRecomendado,'A',now()) on conflict (id) do update set nome=@Nome,valor_estimado=@ValorEstimado,plano_recomendado=@PlanoRecomendado,reg_update=now()", new { oppId, request.LeadId, request.Nome, request.ValorEstimado, request.PlanoRecomendado });
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync();
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_oportunidades(id,lead_id,nome,etapa,valor_estimado,plano_recomendado,reg_status,reg_date) values(@oppId,@LeadId,@Nome,'NEGOCIACAO',@ValorEstimado,@PlanoRecomendado,'A',now()) on conflict (id) do update set nome=@Nome,valor_estimado=@ValorEstimado,plano_recomendado=@PlanoRecomendado,reg_update=now()", new { oppId, request.LeadId, request.Nome, request.ValorEstimado, request.PlanoRecomendado }, tx);
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_interacoes(id,oportunidade_id,lead_id,tipo,resumo,reg_status,reg_date) values(gen_random_uuid(),@oppId,@LeadId,@tipo,@resumo,'A',now())", new { oppId, request.LeadId, tipo = id.HasValue ? "OPORTUNIDADE_EDITADA" : "OPORTUNIDADE_CRIADA", resumo = request.Nome }, tx);
+        await tx.CommitAsync();
+        await audit.RegistrarAsync(usuarioId, null, "comercial_oportunidades", oppId, id.HasValue ? "EDITAR" : "CRIAR", new { request.Nome, request.ValorEstimado, request.PlanoRecomendado }, true, ip, perfil);
         return ApiResponse<Guid>.Ok(oppId, id.HasValue ? "Oportunidade atualizada." : "Oportunidade criada.");
     }
 
-    public async Task<ApiResponse<string>> GanharOportunidadeAsync(Guid id)
+    public async Task<ApiResponse<string>> GanharOportunidadeAsync(Guid id, Guid? usuarioId, string? ip, string? perfil)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        await cn.ExecuteAsync("update plantaopro.comercial_oportunidades set etapa='GANHA', reg_update=now() where id=@id and reg_status='A'", new { id });
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync();
+        var rows = await cn.ExecuteAsync("update plantaopro.comercial_oportunidades set etapa='GANHA', reg_update=now() where id=@id and reg_status='A'", new { id }, tx);
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_interacoes(id,oportunidade_id,tipo,resumo,reg_status,reg_date) values(gen_random_uuid(),@id,'OPORTUNIDADE_GANHA','Oportunidade ganha; conversão exige cliente, plano e assinatura.','A',now())", new { id }, tx);
+        await tx.CommitAsync();
+        if (rows == 0) return ApiResponse<string>.Fail("Oportunidade não encontrada.", 404);
+        await audit.RegistrarAsync(usuarioId, null, "comercial_oportunidades", id, "GANHAR", new { Status = "GANHA" }, true, ip, perfil);
         return ApiResponse<string>.Ok("ok", "Oportunidade marcada como ganha. Conversão exige criação de cliente, plano e assinatura no fluxo SaaS.");
     }
 
-    public async Task<ApiResponse<string>> PerderOportunidadeAsync(Guid id, StatusComMotivoRequest request)
+    public async Task<ApiResponse<string>> PerderOportunidadeAsync(Guid id, StatusComMotivoRequest request, Guid? usuarioId, string? ip, string? perfil)
     {
         if (string.IsNullOrWhiteSpace(request.Motivo)) return ApiResponse<string>.Fail("Oportunidade perdida exige motivo.", 400);
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        await cn.ExecuteAsync("update plantaopro.comercial_oportunidades set etapa='PERDIDA', motivo_perda=@Motivo, reg_update=now() where id=@id and reg_status='A'", new { id, request.Motivo });
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync();
+        var rows = await cn.ExecuteAsync("update plantaopro.comercial_oportunidades set etapa='PERDIDA', motivo_perda=@Motivo, reg_update=now() where id=@id and reg_status='A'", new { id, request.Motivo }, tx);
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_interacoes(id,oportunidade_id,tipo,resumo,reg_status,reg_date) values(gen_random_uuid(),@id,'OPORTUNIDADE_PERDIDA',@Motivo,'A',now())", new { id, request.Motivo }, tx);
+        await tx.CommitAsync();
+        if (rows == 0) return ApiResponse<string>.Fail("Oportunidade não encontrada.", 404);
+        await audit.RegistrarAsync(usuarioId, null, "comercial_oportunidades", id, "PERDER", new { request.Motivo }, true, ip, perfil);
         return ApiResponse<string>.Ok("ok", "Oportunidade marcada como perdida.");
     }
 
@@ -337,26 +354,64 @@ public sealed class ComercialSaasService
         return ApiResponse<IEnumerable<ComercialPropostaDto>>.Ok(rows);
     }
 
-    public async Task<ApiResponse<Guid>> CriarPropostaAsync(ComercialPropostaRequest request, bool adminGlobal)
+    public async Task<ApiResponse<Guid>> CriarPropostaAsync(ComercialPropostaRequest request, bool adminGlobal, Guid? usuarioId, string? ip, string? perfil)
     {
         if (request.OportunidadeId == Guid.Empty || request.ValorTotal <= 0 || request.Validade.Date < DateTime.UtcNow.Date) return ApiResponse<Guid>.Fail("Proposta exige oportunidade, valor positivo e validade futura.", 400);
-        if (request.DescontoPercentual > 15m && !adminGlobal) return ApiResponse<Guid>.Fail("Desconto acima de 15% exige ADMINISTRADOR_GLOBAL.", 403);
+        if (request.DescontoPercentual > 15m && !adminGlobal)
+        {
+            await audit.RegistrarAsync(usuarioId, null, "comercial_propostas", request.OportunidadeId, "DESCONTO_BLOQUEADO", new { request.DescontoPercentual }, false, ip, perfil);
+            return ApiResponse<Guid>.Fail("Desconto acima de 15% exige ADMINISTRADOR_GLOBAL.", 403);
+        }
         var id = Guid.NewGuid();
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        await cn.ExecuteAsync(@"insert into plantaopro.comercial_propostas(id,oportunidade_id,numero,valor_total,desconto_percentual,validade,status,reg_status,reg_date) values(@id,@OportunidadeId,@numero,@ValorTotal,@DescontoPercentual,@Validade,'RASCUNHO','A',now())", new { id, request.OportunidadeId, numero = "PROP-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss"), request.ValorTotal, request.DescontoPercentual, request.Validade });
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync();
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_propostas(id,oportunidade_id,numero,valor_total,desconto_percentual,validade,status,reg_status,reg_date) values(@id,@OportunidadeId,@numero,@ValorTotal,@DescontoPercentual,@Validade,'RASCUNHO','A',now())", new { id, request.OportunidadeId, numero = "PROP-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss"), request.ValorTotal, request.DescontoPercentual, request.Validade }, tx);
+        await cn.ExecuteAsync(@"insert into plantaopro.comercial_interacoes(id,oportunidade_id,tipo,resumo,reg_status,reg_date) values(gen_random_uuid(),@OportunidadeId,'PROPOSTA_CRIADA',@resumo,'A',now())", new { request.OportunidadeId, resumo = "Proposta criada com valor " + request.ValorTotal.ToString("0.00") }, tx);
+        await tx.CommitAsync();
+        await audit.RegistrarAsync(usuarioId, null, "comercial_propostas", id, "CRIAR", new { request.ValorTotal, request.DescontoPercentual, request.Validade }, true, ip, perfil);
         return ApiResponse<Guid>.Ok(id, "Proposta criada.");
     }
 
-    public async Task<ApiResponse<string>> AlterarStatusPropostaAsync(Guid id, string status)
+    public async Task<ApiResponse<string>> AlterarStatusPropostaAsync(Guid id, string status, Guid? usuarioId, string? ip, string? perfil)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        await cn.OpenAsync();
         if (status == "APROVADA")
         {
             var vencida = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.comercial_propostas where id=@id and validade < current_date)", new { id });
             if (vencida) return ApiResponse<string>.Fail("Proposta vencida não pode ser aprovada.", 400);
         }
-        var rows = await cn.ExecuteAsync("update plantaopro.comercial_propostas set status=@status, reg_update=now() where id=@id and reg_status='A'", new { id, status });
-        return rows == 0 ? ApiResponse<string>.Fail("Proposta não encontrada.", 404) : ApiResponse<string>.Ok("ok", "Status da proposta atualizado.");
+        await using var tx = await cn.BeginTransactionAsync();
+        var oportunidadeId = await cn.ExecuteScalarAsync<Guid?>("select oportunidade_id from plantaopro.comercial_propostas where id=@id and reg_status='A'", new { id }, tx);
+        var rows = await cn.ExecuteAsync("update plantaopro.comercial_propostas set status=@status, reg_update=now() where id=@id and reg_status='A'", new { id, status }, tx);
+        if (oportunidadeId.HasValue)
+        {
+            await cn.ExecuteAsync(@"insert into plantaopro.comercial_interacoes(id,oportunidade_id,tipo,resumo,reg_status,reg_date) values(gen_random_uuid(),@oportunidadeId,@tipo,@resumo,'A',now())", new { oportunidadeId, tipo = "PROPOSTA_" + status, resumo = "Proposta alterada para " + status }, tx);
+        }
+        await tx.CommitAsync();
+        if (rows == 0) return ApiResponse<string>.Fail("Proposta não encontrada.", 404);
+        await audit.RegistrarAsync(usuarioId, null, "comercial_propostas", id, status, new { Status = status }, true, ip, perfil);
+        return ApiResponse<string>.Ok("ok", "Status da proposta atualizado.");
+    }
+
+    public async Task<ApiResponse<IEnumerable<ComercialFunilEtapaDto>>> FunilAsync()
+    {
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var rows = await cn.QueryAsync<ComercialFunilEtapaDto>(@"select coalesce(etapa,'SEM_ETAPA') as ""Etapa"", count(1)::bigint as ""Total"", coalesce(sum(valor_estimado),0) as ""ValorEstimado"" from plantaopro.comercial_oportunidades where reg_status='A' group by coalesce(etapa,'SEM_ETAPA') order by ""Total"" desc limit 50");
+        return ApiResponse<IEnumerable<ComercialFunilEtapaDto>>.Ok(rows);
+    }
+
+    public async Task<ApiResponse<ComercialPrevisaoReceitaDto>> PrevisaoReceitaAsync()
+    {
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var row = await cn.QuerySingleAsync<ComercialPrevisaoReceitaDto>(@"select
+    coalesce(sum(valor_total) filter (where status in ('RASCUNHO','ENVIADA')),0) as ""ReceitaAberta"",
+    coalesce(sum(valor_total) filter (where status='ENVIADA'),0) as ""ReceitaEnviada"",
+    coalesce(sum(valor_total) filter (where status='APROVADA'),0) as ""ReceitaAprovada"",
+    count(1) filter (where validade < current_date and status not in ('APROVADA','RECUSADA'))::bigint as ""PropostasVencidas""
+from plantaopro.comercial_propostas where reg_status='A'");
+        return ApiResponse<ComercialPrevisaoReceitaDto>.Ok(row);
     }
 }
 

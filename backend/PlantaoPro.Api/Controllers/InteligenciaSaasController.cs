@@ -23,7 +23,19 @@ public sealed class InteligenciaSaasController : ControllerBase
     [HttpGet("clientes/{clienteId:guid}/proximas-acoes")]
     public async Task<IActionResult> ProximasAcoes(Guid clienteId) { var r = await intelligence.GerarAcoesRecomendadasAsync(clienteId); return StatusCode(r.StatusCode, r); }
     [HttpPost("sugerir-plano")]
-    public IActionResult SugerirPlano([FromBody] SugerirPlanoRequest request) { var dto = comercial.SugerirPlano(request); return Ok(ApiResponse<PlanoSugeridoDto>.Ok(dto)); }
+    public IActionResult SugerirPlano([FromBody] SugerirPlanoRequest request)
+    {
+        try
+        {
+            var dto = comercial.SugerirPlano(request);
+            return Ok(ApiResponse<PlanoSugeridoDto>.Ok(dto));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao sugerir plano pela inteligência SaaS");
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível sugerir plano.", 500));
+        }
+    }
     [HttpPost("recalcular")]
     public async Task<IActionResult> Recalcular([FromQuery] Guid? clienteId)
     {

@@ -1,16 +1,13 @@
-# Visão geral SaaS PlantãoPro
+# Visão Geral SaaS PlantãoPro
 
-Esta rodada adiciona módulos funcionais para venda, jornada do cliente, inteligência SaaS baseada em regras, LGPD prática e ajuda interativa.
+Esta rodada consolida o PlantãoPro como SaaS multiempresa com jornada comercial, LGPD prática, auditoria, faturamento, inteligência por regras e manual interativo.
 
-## Módulos entregues
+## Módulos
 
-- API LGPD em `/api/lgpd`.
-- API comercial em `/api/comercial`.
-- API jornada em `/api/jornada-clientes`.
-- API inteligência compatível em `/api/inteligencia`.
-- API ajuda em `/api/ajuda`.
-- Web: `Lgpd`, `Comercial`, `JornadaClientes`, `Ajuda` e atalhos no layout.
-
-## Banco
-
-A migration `database/migrations/20260607_saas_lgpd_jornada_comercial_ajuda.sql` cria tabelas incrementais no schema `plantaopro` com seeds mínimos de LGPD, desconto e manual.
+- Clientes, planos e assinaturas.
+- Faturamento SaaS com faturas, itens, pagamentos e cobrança.
+- Comercial SaaS com leads, oportunidades e propostas.
+- Jornada do cliente com funil, timeline, tarefas e eventos.
+- Customer Success com saúde, riscos, tarefas e planos de ação.
+- LGPD com consentimentos, solicitações, exportações e anonimizações.
+- Ajuda Interativa com tópicos, artigos, checklists e feedback.

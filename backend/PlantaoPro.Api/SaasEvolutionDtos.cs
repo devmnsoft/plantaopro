@@ -197,6 +197,32 @@ public sealed class SugerirPlanoRequest
     public bool OperacaoAssistida { get; set; }
 }
 
+
+public sealed class ComercialFunilEtapaDto
+{
+    public string Etapa { get; set; } = string.Empty;
+    public long Total { get; set; }
+    public decimal ValorEstimado { get; set; }
+}
+
+public sealed class ComercialPrevisaoReceitaDto
+{
+    public decimal ReceitaAberta { get; set; }
+    public decimal ReceitaEnviada { get; set; }
+    public decimal ReceitaAprovada { get; set; }
+    public long PropostasVencidas { get; set; }
+}
+
+public sealed class SaasFaturaVencidaDto
+{
+    public Guid Id { get; set; }
+    public Guid ClienteId { get; set; }
+    public string ClienteNome { get; set; } = string.Empty;
+    public decimal Valor { get; set; }
+    public DateTime Vencimento { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
 public sealed class PlanoSugeridoDto
 {
     public string Plano { get; set; } = string.Empty;

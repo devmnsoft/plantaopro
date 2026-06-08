@@ -539,13 +539,22 @@ from plantaopro.faturas_saas f join plantaopro.clientes c on c.id=f.cliente_id w
         {
             var competencia = new DateOnly(request.Competencia.Year, request.Competencia.Month, 1);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var ids = (await cn.QueryAsync<Guid>(@"insert into plantaopro.faturas_saas(id, cliente_id, assinatura_id, competencia, valor, vencimento, status, criado_em, atualizado_em, reg_status)
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var faturas = (await cn.QueryAsync<FaturaGeradaRow>(@"insert into plantaopro.faturas_saas(id, cliente_id, assinatura_id, competencia, valor, vencimento, status, criado_em, atualizado_em, reg_status)
 select gen_random_uuid(), a.cliente_id, a.id, @competencia, a.valor_contratado, make_date(extract(year from @competencia::date)::int, extract(month from @competencia::date)::int, least(greatest(a.dia_vencimento,1),28)), 'ABERTA', now(), now(), 'A'
 from plantaopro.assinaturas a
 join plantaopro.clientes c on c.id=a.cliente_id
 where a.reg_status='A' and upper(a.status)='ATIVA' and c.reg_status='A' and upper(c.status) not in ('SUSPENSO','CANCELADO')
   and not exists (select 1 from plantaopro.faturas_saas f where f.assinatura_id=a.id and f.competencia=@competencia and f.reg_status='A')
-returning id", new { competencia })).ToArray();
+returning id as "Id", cliente_id as "ClienteId"", new { competencia }, tx)).ToArray();
+            foreach (var fatura in faturas)
+            {
+                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, fatura.Id, "FATURA_GERADA", "Fatura mensal gerada para a competência " + competencia.ToString("MM/yyyy") + ".");
+            }
+            await tx.CommitAsync();
+
+            var ids = faturas.Select(x => x.Id).ToArray();
             await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.FaturaSaas, null, AuditoriaConstants.Acoes.Criar, new { competencia, total = ids.Length }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
             return Ok(ApiResponse<IEnumerable<Guid>>.Ok(ids, ids.Length == 0 ? "Nenhuma nova fatura gerada para a competência." : "Faturas geradas com sucesso."));
         }
@@ -586,10 +595,14 @@ returning id", new { competencia })).ToArray();
         {
             if (string.IsNullOrWhiteSpace(request.Resposta)) return BadRequest(ApiResponse<string>.Fail("Resposta obrigatória para resolver contestação.", 400));
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id });
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
             if (fatura == default) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
             if (!string.Equals(fatura.Status, "EM_CONTESTACAO", StringComparison.OrdinalIgnoreCase)) return BadRequest(ApiResponse<string>.Fail("Apenas faturas em contestação podem ser resolvidas.", 400));
-            await cn.ExecuteAsync("update plantaopro.faturas_saas set status='ABERTA', resposta_contestacao=@Resposta, atualizado_em=now() where id=@id and reg_status='A'", new { id, request.Resposta });
+            await cn.ExecuteAsync("update plantaopro.faturas_saas set status='ABERTA', resposta_contestacao=@Resposta, atualizado_em=now() where id=@id and reg_status='A'", new { id, request.Resposta }, tx);
+            await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "CONTESTACAO_RESOLVIDA", "Contestação resolvida e fatura retornada para cobrança aberta.");
+            await tx.CommitAsync();
             await _audit.RegistrarAsync(null, fatura.ClienteId, AuditoriaConstants.Entidades.FaturaSaas, id, AuditoriaConstants.Acoes.Editar, new { request.Resposta }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
             return Ok(ApiResponse<string>.Ok("ok", "Contestação resolvida com sucesso."));
         }
@@ -606,8 +619,13 @@ returning id", new { competencia })).ToArray();
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var clienteId = await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id });
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var clienteId = await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
             if (!clienteId.HasValue) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
+            await RegistrarEventoCobrancaAsync(cn, tx, clienteId.Value, id, "COBRANCA_NOTIFICADA", "Notificação de cobrança registrada no canal in_app.");
+            await RegistrarAlertaFinanceiroAsync(cn, tx, clienteId.Value, "COBRANCA", "Cobrança SaaS notificada", "Existe uma cobrança SaaS pendente de acompanhamento financeiro.", "MEDIA");
+            await tx.CommitAsync();
             await _audit.RegistrarAsync(null, clienteId, AuditoriaConstants.Entidades.FaturaSaas, id, AuditoriaConstants.Acoes.Notificar, new { canal = "in_app", origem = "faturamento_saas" }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
             return Ok(ApiResponse<string>.Ok("ok", "Notificação de cobrança registrada."));
         }
@@ -650,7 +668,9 @@ limit @s offset @offset", new { s, offset = (p - 1) * s });
         try
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id });
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
             if (fatura == default) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
             if (fatura.Status == "CANCELADA") return BadRequest(ApiResponse<string>.Fail("Fatura cancelada não pode ser alterada.", 400));
 
@@ -660,7 +680,7 @@ limit @s offset @offset", new { s, offset = (p - 1) * s });
             await cn.ExecuteAsync(@"update plantaopro.faturas_saas
 set status=@status, valor_pago=coalesce(@valorPago, valor_pago), data_pagamento=coalesce(@dataPagamento, data_pagamento), forma_pagamento=coalesce(@formaPagamento, forma_pagamento),
     motivo_cancelamento=coalesce(@motivoCancelamento, motivo_cancelamento), motivo_contestacao=coalesce(@motivoContestacao, motivo_contestacao), atualizado_em=now()
-where id=@id and reg_status='A'", p);
+where id=@id and reg_status='A'", p, tx);
             if (string.Equals(status, "PAGA", StringComparison.OrdinalIgnoreCase))
             {
                 await cn.ExecuteAsync(@"insert into plantaopro.pagamentos_saas(id, fatura_id, cliente_id, valor_pago, data_pagamento, forma_pagamento, observacoes, reg_status, reg_date, criado_em)
@@ -673,8 +693,25 @@ where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id a
                     dataPagamento = p.Get<DateOnly?>("dataPagamento") ?? DateOnly.FromDateTime(DateTime.UtcNow),
                     formaPagamento = p.Get<string?>("formaPagamento") ?? string.Empty,
                     observacoes = p.Get<string?>("observacoes")
-                });
+                }, tx);
+                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "FATURA_PAGA", "Pagamento SaaS confirmado pelo financeiro.");
+                await ResolverAlertasFinanceirosAsync(cn, tx, fatura.ClienteId);
             }
+            else if (string.Equals(status, "VENCIDA", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "FATURA_VENCIDA", "Fatura SaaS vencida identificada no faturamento.");
+                await RegistrarAlertaFinanceiroAsync(cn, tx, fatura.ClienteId, "INADIMPLENCIA", "Fatura SaaS vencida", "Cliente possui fatura vencida e deve ser acompanhado pelo financeiro.", "ALTA");
+            }
+            else if (string.Equals(status, "CANCELADA", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "FATURA_CANCELADA", "Fatura SaaS cancelada mediante justificativa.");
+            }
+            else if (string.Equals(status, "EM_CONTESTACAO", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarEventoCobrancaAsync(cn, tx, fatura.ClienteId, id, "FATURA_CONTESTADA", "Fatura SaaS enviada para contestação.");
+                await RegistrarAlertaFinanceiroAsync(cn, tx, fatura.ClienteId, "CONTESTACAO", "Contestação de fatura SaaS", "Existe uma contestação de faturamento pendente de resposta.", "MEDIA");
+            }
+            await tx.CommitAsync();
             await _audit.RegistrarAsync(null, fatura.ClienteId, AuditoriaConstants.Entidades.FaturaSaas, id, AuditoriaConstants.Acoes.AlterarStatus, new { status }, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
             return Ok(ApiResponse<string>.Ok("ok", mensagem));
         }
@@ -687,4 +724,34 @@ where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id a
 
     private static Task AtualizarVencidasAsync(NpgsqlConnection cn)
         => cn.ExecuteAsync("update plantaopro.faturas_saas set status='VENCIDA', atualizado_em=now() where status='ABERTA' and vencimento < current_date and reg_status='A'");
+
+    private static Task RegistrarEventoCobrancaAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId, Guid faturaId, string tipo, string mensagem)
+    {
+        return cn.ExecuteAsync(@"insert into plantaopro.cobranca_eventos(id, cliente_id, fatura_id, tipo, mensagem, reg_status, reg_date)
+values(gen_random_uuid(), @clienteId, @faturaId, @tipo, @mensagem, 'A', now())", new { clienteId, faturaId, tipo, mensagem }, tx);
+    }
+
+    private static Task RegistrarAlertaFinanceiroAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId, string tipo, string titulo, string mensagem, string severidade)
+    {
+        return cn.ExecuteAsync(@"insert into plantaopro.cliente_alertas(id, cliente_id, tipo, severidade, titulo, mensagem, resolvido, reg_status, reg_date)
+select gen_random_uuid(), @clienteId, @tipo, @severidade, @titulo, @mensagem, false, 'A', now()
+where not exists (
+    select 1 from plantaopro.cliente_alertas
+    where cliente_id=@clienteId and tipo=@tipo and titulo=@titulo and resolvido=false and reg_status='A'
+)", new { clienteId, tipo, titulo, mensagem, severidade }, tx);
+    }
+
+    private static Task ResolverAlertasFinanceirosAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId)
+    {
+        return cn.ExecuteAsync(@"update plantaopro.cliente_alertas
+set resolvido=true, reg_update=now()
+where cliente_id=@clienteId and tipo in ('INADIMPLENCIA','COBRANCA','CONTESTACAO') and resolvido=false and reg_status='A'
+  and not exists (select 1 from plantaopro.faturas_saas where cliente_id=@clienteId and status in ('VENCIDA','EM_CONTESTACAO') and reg_status='A')", new { clienteId }, tx);
+    }
+
+    private sealed class FaturaGeradaRow
+    {
+        public Guid Id { get; set; }
+        public Guid ClienteId { get; set; }
+    }
 }

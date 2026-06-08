@@ -222,12 +222,44 @@ public sealed class JornadaClienteService
             if (novaEtapa == "CANCELADO" && string.IsNullOrWhiteSpace(request.Motivo)) return ApiResponse<string>.Fail("Cliente cancelado exige motivo.", 400);
             await cn.ExecuteAsync(@"insert into plantaopro.jornada_cliente(id, cliente_id, etapa, responsavel, proxima_acao, reg_status, reg_date) values(gen_random_uuid(),@clienteId,@novaEtapa,'Customer Success','Definir próxima ação','A',now()) on conflict (cliente_id) do update set etapa=@novaEtapa, proxima_acao='Definir próxima ação', reg_update=now()", new { clienteId, novaEtapa }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.jornada_cliente_eventos(id, cliente_id, tipo, resumo, usuario_id, reg_status, reg_date) values(gen_random_uuid(),@clienteId,@tipo,@resumo,@usuarioId,'A',now())", new { clienteId, tipo = avancar ? "AVANCOU_ETAPA" : "RETROCEDEU_ETAPA", resumo = request.Motivo, usuarioId }, tx);
-            if (novaEtapa == "RISCO") await cn.ExecuteAsync(@"insert into plantaopro.jornada_cliente_tarefas(id, cliente_id, titulo, responsavel, status, vencimento, reg_status, reg_date) values(gen_random_uuid(),@clienteId,'Ação de Customer Success para cliente em risco','Customer Success','PENDENTE',now() + interval '2 days','A',now())", new { clienteId }, tx);
+            if (novaEtapa == "IMPLANTACAO")
+            {
+                await CriarTarefaJornadaSeNaoExistirAsync(cn, tx, clienteId, "Abrir checklist de operação assistida", "Customer Success", "OPERACAO_ASSISTIDA", "2 days");
+            }
+            if (novaEtapa == "OPERACAO_ASSISTIDA")
+            {
+                await CriarTarefaJornadaSeNaoExistirAsync(cn, tx, clienteId, "Validar primeiros plantões em operação assistida", "Customer Success", "OPERACAO_ASSISTIDA", "3 days");
+            }
+            if (novaEtapa == "RISCO")
+            {
+                await CriarTarefaJornadaSeNaoExistirAsync(cn, tx, clienteId, "Ação de Customer Success para cliente em risco", "Customer Success", "CUSTOMER_SUCCESS", "2 days");
+            }
+            await RegistrarAlertaJornadaAsync(cn, tx, clienteId, novaEtapa, request.Motivo);
             await tx.CommitAsync();
             await audit.RegistrarAsync(usuarioId, clienteId, "jornada_cliente", clienteId, avancar ? "AVANCAR" : "RETROCEDER", new { De = atual, Para = novaEtapa, request.Motivo }, true, ip, perfil);
             return ApiResponse<string>.Ok(novaEtapa, "Etapa atualizada com sucesso.");
         }
         catch (Exception ex) { logger.LogError(ex, "Erro mudar etapa jornada"); return ApiResponse<string>.Fail("Não foi possível atualizar etapa da jornada.", 500); }
+    }
+
+    private static Task CriarTarefaJornadaSeNaoExistirAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId, string titulo, string responsavel, string tipo, string prazo)
+    {
+        return cn.ExecuteAsync(@"insert into plantaopro.jornada_cliente_tarefas(id, cliente_id, titulo, responsavel, status, vencimento, tipo, reg_status, reg_date)
+select gen_random_uuid(), @clienteId, @titulo, @responsavel, 'PENDENTE', now() + cast(@prazo as interval), @tipo, 'A', now()
+where not exists (
+    select 1 from plantaopro.jornada_cliente_tarefas
+    where cliente_id=@clienteId and titulo=@titulo and status='PENDENTE' and reg_status='A'
+)", new { clienteId, titulo, responsavel, tipo, prazo }, tx);
+    }
+
+    private static Task RegistrarAlertaJornadaAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId, string etapa, string motivo)
+    {
+        var severidade = etapa == "RISCO" || etapa == "CANCELADO" ? "ALTA" : "MEDIA";
+        var titulo = "Jornada do cliente atualizada";
+        var mensagem = "Cliente movido para " + etapa + ": " + motivo;
+        return cn.ExecuteAsync(@"insert into plantaopro.cliente_alertas(id, cliente_id, tipo, severidade, titulo, mensagem, resolvido, reg_status, reg_date)
+values(gen_random_uuid(), @clienteId, @tipo, @severidade, @titulo, @mensagem, false, 'A', now())",
+            new { clienteId, tipo = "JORNADA_" + etapa, severidade, titulo, mensagem }, tx);
     }
 
     public async Task<ApiResponse<Guid>> CriarEventoAsync(Guid clienteId, CriarJornadaEventoRequest request, Guid? usuarioId)

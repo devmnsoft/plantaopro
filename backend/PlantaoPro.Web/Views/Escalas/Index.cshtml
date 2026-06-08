@@ -8,7 +8,7 @@
 <div class="page-header">
     <h2>Escalas Médicas</h2>
     <p class="text-muted">Acompanhe solicitações, confirmações e execução dos plantões.</p>
-    <button class="btn btn-primary" disabled title="Em breve">Nova Escala</button>
+    <button class="btn btn-primary" disabled title="Ação indisponível">Nova Escala</button>
 </div>
 
 @if (!items.Any())
@@ -49,11 +49,11 @@ else
                         <td class="text-end">
                             <div class="action-buttons">
                                 <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@e.Id">Detalhes</a>
-                                <button class="btn btn-sm btn-soft-success" disabled title="Em breve">Confirmar</button>
-                                <button class="btn btn-sm btn-soft-danger" disabled title="Em breve">Recusar</button>
-                                <button class="btn btn-sm btn-soft-warning" disabled title="Em breve">Cancelar</button>
-                                <button class="btn btn-sm btn-outline-success" disabled title="Em breve">Realizado</button>
-                                <button class="btn btn-sm btn-outline-primary" disabled title="Em breve">Pagamentos</button>
+                                <button class="btn btn-sm btn-soft-success" disabled title="Ação indisponível">Confirmar</button>
+                                <button class="btn btn-sm btn-soft-danger" disabled title="Ação indisponível">Recusar</button>
+                                <button class="btn btn-sm btn-soft-warning" disabled title="Ação indisponível">Cancelar</button>
+                                <button class="btn btn-sm btn-outline-success" disabled title="Ação indisponível">Realizado</button>
+                                <button class="btn btn-sm btn-outline-primary" disabled title="Ação indisponível">Pagamentos</button>
                             </div>
                         </td>
                     </tr>

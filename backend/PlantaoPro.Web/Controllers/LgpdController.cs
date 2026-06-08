@@ -9,7 +9,7 @@ public sealed class LgpdController : BaseWebController
 {
     public LgpdController(IHttpClientFactory f, ILogger<LgpdController> logger) : base(f, logger) { }
     public IActionResult Index() => View();
-    public IActionResult MinhaPrivacidade() => View("Index");
+    public IActionResult MinhaPrivacidade() => View();
     public IActionResult Politica() => View();
     public IActionResult Consentimentos() => View();
     public IActionResult Solicitacoes() => View();
@@ -59,10 +59,19 @@ public sealed class LgpdController : BaseWebController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Exportar()
     {
-        var client = CreateApiClient();
-        if (!AddBearerToken(client)) return HandleUnauthorized();
-        var result = await ReadApiResponseAsync<object>(client, "api/lgpd/exportar-meus-dados");
-        TempData[result.Error is null ? "Success" : "Error"] = result.Error is null ? "Exportação registrada. Consulte o histórico LGPD." : result.Error;
+        try
+        {
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+            var result = await ReadApiResponseAsync<object>(client, "api/lgpd/exportar-meus-dados");
+            TempData[result.Error is null ? "Success" : "Error"] = result.Error is null ? "Exportação registrada. Consulte o histórico LGPD." : result.Error;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao solicitar exportação LGPD via Web");
+            TempData["Error"] = "Não foi possível solicitar a exportação dos dados.";
+        }
+
         return RedirectToAction("ExportarDados");
     }
 }

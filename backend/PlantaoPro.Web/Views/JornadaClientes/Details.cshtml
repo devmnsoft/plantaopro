@@ -1,4 +1,108 @@
-@model PlantaoPro.Web.Models.JornadaClienteFormViewModel
-@{ ViewData["Title"] = "Detalhe da Jornada"; var clienteId = (Guid?)ViewBag.ClienteId ?? Guid.Empty; }
+@model PlantaoPro.Web.Models.JornadaClienteDetalheViewModel
+@{
+    ViewData["Title"] = "Detalhe da Jornada";
+    var jornada = Model?.Jornada ?? new PlantaoPro.Web.Models.JornadaClienteResumoViewModel();
+    var eventos = Model?.Eventos ?? Array.Empty<PlantaoPro.Web.Models.JornadaClienteEventoViewModel>();
+    var tarefas = Model?.Tarefas ?? Array.Empty<PlantaoPro.Web.Models.JornadaClienteTarefaViewModel>();
+}
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Detalhe da jornada", "Timeline, tarefas pendentes e mudança de etapa auditada.", "bi-clock-history")' />
-<div class="row g-3"><div class="col-lg-8"><div class="card"><div class="card-body"><h2 class="h5">Timeline</h2><p class="text-muted">Eventos são registrados em <code>jornada_cliente_eventos</code>. Avanços e retrocessos exigem motivo.</p><form asp-action="Avancar" method="post" class="row g-3"><input type="hidden" name="ClienteId" value="@clienteId" /><div class="col-md-9"><label class="form-label">Motivo/resumo</label><input name="Motivo" class="form-control" required /></div><div class="col-md-3 d-flex align-items-end"><button type="submit" class="btn btn-primary w-100">Avançar etapa</button></div></form></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body"><h2 class="h5">Regras</h2><ul class="small mb-0"><li>Conversão exige plano e assinatura.</li><li>Risco cria ação de Customer Success.</li><li>Cancelamento exige motivo.</li></ul></div></div></div></div>
+<div class="row g-3 mb-3">
+    <div class="col-lg-8">
+        <div class="card h-100"><div class="card-body">
+            <div class="d-flex justify-content-between gap-3 flex-wrap">
+                <div><h2 class="h5 mb-1">@jornada.ClienteNome</h2><small class="text-muted">@jornada.ClienteId</small></div>
+                <partial name="_StatusBadge" model="jornada.Etapa" />
+            </div>
+            <dl class="row mt-3 mb-0">
+                <dt class="col-sm-3">Responsável</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(jornada.Responsavel) ? "Customer Success" : jornada.Responsavel)</dd>
+                <dt class="col-sm-3">Próxima ação</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(jornada.ProximaAcao) ? "Definir próxima ação" : jornada.ProximaAcao)</dd>
+                <dt class="col-sm-3">Atualização</dt><dd class="col-sm-9">@jornada.RegDate.ToString("dd/MM/yyyy HH:mm")</dd>
+            </dl>
+        </div></div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100"><div class="card-body"><h2 class="h6">Regras aplicadas</h2><ul class="small mb-0"><li>Avançar/retroceder exige motivo.</li><li>Implantação e risco criam tarefas de CS.</li><li>Mudanças geram evento, alerta e auditoria.</li></ul></div></div>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header fw-semibold">Mudar etapa</div><div class="card-body">
+            <form asp-action="Avancar" method="post" class="mb-3" data-loading="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
+                <label class="form-label">Motivo/resumo para avançar</label>
+                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500"></textarea>
+                <div class="form-text">Informe a evidência comercial, operacional ou de Customer Success.</div>
+                <button type="submit" class="btn btn-primary mt-2"><i class="bi bi-arrow-right-circle"></i> Avançar etapa</button>
+            </form>
+            <form asp-action="Retroceder" method="post" data-confirm="true" data-confirm-message="Retroceder a etapa desta jornada?" data-loading="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
+                <label class="form-label">Justificativa para retroceder</label>
+                <textarea name="Motivo" class="form-control" rows="2" required maxlength="500"></textarea>
+                <button type="submit" class="btn btn-outline-secondary mt-2"><i class="bi bi-arrow-left-circle"></i> Retroceder etapa</button>
+            </form>
+        </div></div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100"><div class="card-header fw-semibold">Nova tarefa de CS</div><div class="card-body">
+            <form asp-action="CriarTarefa" method="post" data-loading="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
+                <div class="mb-2"><label class="form-label">Título</label><input name="Titulo" class="form-control" required maxlength="180" /></div>
+                <div class="mb-2"><label class="form-label">Responsável</label><input name="Responsavel" class="form-control" maxlength="160" placeholder="Customer Success" /></div>
+                <div class="mb-2"><label class="form-label">Vencimento</label><input name="Vencimento" class="form-control" type="datetime-local" /></div>
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-check2-square"></i> Criar tarefa</button>
+            </form>
+        </div></div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card h-100"><div class="card-header fw-semibold">Timeline</div><div class="list-group list-group-flush">
+        @if (eventos.Any())
+        {
+            foreach (var evento in eventos)
+            {
+                <div class="list-group-item"><div class="d-flex justify-content-between"><strong>@evento.Tipo</strong><small>@evento.RegDate.ToString("dd/MM/yyyy HH:mm")</small></div><div class="text-muted">@evento.Resumo</div></div>
+            }
+        }
+        else
+        {
+            <div class="p-4"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-clock", "Sem eventos", "Registre interações para formar a linha do tempo.")' /></div>
+        }
+        </div><div class="card-body border-top">
+            <form asp-action="RegistrarEvento" method="post" data-loading="true">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ClienteId" value="@jornada.ClienteId" />
+                <div class="row g-2"><div class="col-md-4"><label class="form-label">Tipo</label><input name="Tipo" class="form-control" value="INTERACAO_CS" required /></div><div class="col-md-8"><label class="form-label">Resumo</label><input name="Resumo" class="form-control" required maxlength="500" /></div></div>
+                <button class="btn btn-outline-primary mt-2" type="submit"><i class="bi bi-plus-circle"></i> Registrar evento</button>
+            </form>
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100"><div class="card-header fw-semibold">Tarefas</div><div class="list-group list-group-flush">
+        @if (tarefas.Any())
+        {
+            foreach (var tarefa in tarefas)
+            {
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between gap-2"><strong>@tarefa.Titulo</strong><partial name="_StatusBadge" model="tarefa.Status" /></div>
+                    <small class="text-muted">@(string.IsNullOrWhiteSpace(tarefa.Responsavel) ? "Sem responsável" : tarefa.Responsavel) · @(tarefa.Vencimento.HasValue ? tarefa.Vencimento.Value.ToString("dd/MM/yyyy HH:mm") : "Sem vencimento")</small>
+                    @if (!string.Equals(tarefa.Status, "CONCLUIDA", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <form asp-action="ConcluirTarefa" method="post" class="mt-2" data-confirm="true" data-confirm-message="Concluir esta tarefa da jornada?">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@tarefa.Id" />
+                            <input type="hidden" name="clienteId" value="@jornada.ClienteId" />
+                            <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle"></i> Concluir</button>
+                        </form>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-4"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square", "Sem tarefas", "Crie tarefas para Customer Success acompanhar a evolução.")' /></div>
+        }
+        </div></div>
+    </div>
+</div>

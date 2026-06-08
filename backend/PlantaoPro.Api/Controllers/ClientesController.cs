@@ -8,7 +8,7 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
 [Route("api/clientes")]
-[Authorize(Roles = RolesConstants.Administrador)]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador)]
 public class ClientesController : ControllerBase
 {
     private readonly ClienteService service;

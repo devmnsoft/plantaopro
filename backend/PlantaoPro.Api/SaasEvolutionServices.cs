@@ -195,15 +195,67 @@ public sealed class JornadaClienteService
         catch (Exception ex) { logger.LogError(ex, "Erro jornada clientes"); return ApiResponse<IEnumerable<JornadaClienteDto>>.Fail("Não foi possível listar jornadas.", 500); }
     }
 
-    public async Task<ApiResponse<JornadaClienteDto>> DetalharAsync(Guid clienteId)
+    public async Task<ApiResponse<JornadaClienteDetalheDto>> DetalharAsync(Guid clienteId)
     {
         try
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var row = await cn.QueryFirstOrDefaultAsync<JornadaClienteDto>(@"select j.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", coalesce(j.etapa,'LEAD_CADASTRADO') as ""Etapa"", coalesce(j.responsavel,'') as ""Responsavel"", coalesce(j.proxima_acao,'') as ""ProximaAcao"", j.reg_date as ""RegDate"" from plantaopro.jornada_cliente j left join plantaopro.clientes c on c.id=j.cliente_id where j.cliente_id=@clienteId and j.reg_status='A'", new { clienteId });
-            return row is null ? ApiResponse<JornadaClienteDto>.Fail("Jornada não encontrada.", 404) : ApiResponse<JornadaClienteDto>.Ok(row);
+            if (row is null) return ApiResponse<JornadaClienteDetalheDto>.Fail("Jornada não encontrada.", 404);
+
+            var eventos = await ListarEventosJornadaAsync(cn, clienteId);
+            var tarefas = await ListarTarefasJornadaAsync(cn, clienteId);
+            return ApiResponse<JornadaClienteDetalheDto>.Ok(new JornadaClienteDetalheDto { Jornada = row, Eventos = eventos, Tarefas = tarefas });
         }
-        catch (Exception ex) { logger.LogError(ex, "Erro detalhar jornada"); return ApiResponse<JornadaClienteDto>.Fail("Não foi possível carregar jornada.", 500); }
+        catch (Exception ex) { logger.LogError(ex, "Erro detalhar jornada"); return ApiResponse<JornadaClienteDetalheDto>.Fail("Não foi possível carregar jornada.", 500); }
+    }
+
+    public async Task<ApiResponse<IEnumerable<JornadaEventoDto>>> ListarEventosAsync(Guid clienteId)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await ListarEventosJornadaAsync(cn, clienteId);
+            return ApiResponse<IEnumerable<JornadaEventoDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar eventos da jornada {ClienteId}", clienteId);
+            return ApiResponse<IEnumerable<JornadaEventoDto>>.Fail("Não foi possível listar eventos da jornada.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<IEnumerable<JornadaTarefaDto>>> ListarTarefasAsync(Guid clienteId)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var rows = await ListarTarefasJornadaAsync(cn, clienteId);
+            return ApiResponse<IEnumerable<JornadaTarefaDto>>.Ok(rows);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao listar tarefas da jornada {ClienteId}", clienteId);
+            return ApiResponse<IEnumerable<JornadaTarefaDto>>.Fail("Não foi possível listar tarefas da jornada.", 500);
+        }
+    }
+
+    private static async Task<IEnumerable<JornadaEventoDto>> ListarEventosJornadaAsync(NpgsqlConnection cn, Guid clienteId)
+    {
+        return await cn.QueryAsync<JornadaEventoDto>(@"select id as ""Id"", cliente_id as ""ClienteId"", coalesce(tipo,'') as ""Tipo"", coalesce(resumo,'') as ""Resumo"", reg_date as ""RegDate""
+from plantaopro.jornada_cliente_eventos
+where cliente_id=@clienteId and reg_status='A'
+order by reg_date desc
+limit 100", new { clienteId });
+    }
+
+    private static async Task<IEnumerable<JornadaTarefaDto>> ListarTarefasJornadaAsync(NpgsqlConnection cn, Guid clienteId)
+    {
+        return await cn.QueryAsync<JornadaTarefaDto>(@"select id as ""Id"", cliente_id as ""ClienteId"", coalesce(titulo,'') as ""Titulo"", coalesce(responsavel,'') as ""Responsavel"", coalesce(status,'PENDENTE') as ""Status"", vencimento as ""Vencimento""
+from plantaopro.jornada_cliente_tarefas
+where cliente_id=@clienteId and reg_status='A'
+order by case when status='PENDENTE' then 0 else 1 end, vencimento nulls last, reg_date desc
+limit 100", new { clienteId });
     }
 
     public async Task<ApiResponse<string>> MudarEtapaAsync(Guid clienteId, MudarEtapaJornadaRequest request, bool avancar, Guid? usuarioId, string? ip, string? perfil)

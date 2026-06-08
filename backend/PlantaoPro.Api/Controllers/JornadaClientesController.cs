@@ -19,6 +19,10 @@ public sealed class JornadaClientesController : ControllerBase
     public async Task<IActionResult> Listar() { var r = await service.ListarAsync(); return StatusCode(r.StatusCode, r); }
     [HttpGet("{clienteId:guid}")]
     public async Task<IActionResult> Detalhar(Guid clienteId) { var r = await service.DetalharAsync(clienteId); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{clienteId:guid}/eventos")]
+    public async Task<IActionResult> Eventos(Guid clienteId) { var r = await service.ListarEventosAsync(clienteId); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{clienteId:guid}/tarefas")]
+    public async Task<IActionResult> Tarefas(Guid clienteId) { var r = await service.ListarTarefasAsync(clienteId); return StatusCode(r.StatusCode, r); }
     [HttpPost("{clienteId:guid}/avancar")]
     public async Task<IActionResult> Avancar(Guid clienteId, [FromBody] MudarEtapaJornadaRequest request) { try { var r = await service.MudarEtapaAsync(clienteId, request, true, UserId(), Ip(), Perfil()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { logger.LogError(ex, "Erro avançar jornada"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível avançar etapa.", 500)); } }
     [HttpPost("{clienteId:guid}/retroceder")]

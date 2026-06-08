@@ -39,11 +39,11 @@ public sealed class PropostasComerciaisController : ControllerBase
     [HttpGet("{id:guid}")] public async Task<IActionResult> Obter(Guid id) { var r = await _service.GetProposalAsync(id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Criar([FromBody] CommercialProposalRequest request) { try { var r = await _service.SaveProposalAsync(null, request, IsGlobalAdmin(), Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro no POST proposta"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível criar proposta.", 500)); } }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Atualizar(Guid id, [FromBody] CommercialProposalRequest request) { try { var r = await _service.SaveProposalAsync(id, request, IsGlobalAdmin(), Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro no PUT proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível atualizar proposta.", 500)); } }
-    [HttpPost("{id:guid}/gerar-itens")] public async Task<IActionResult> GerarItens(Guid id) { var r = await _service.GenerateItemsAsync(id, Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/enviar")] public async Task<IActionResult> Enviar(Guid id) { var r = await _service.ChangeProposalStatusAsync(id, "ENVIADA", null, Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/aprovar")] public async Task<IActionResult> Aprovar(Guid id) { var r = await _service.ChangeProposalStatusAsync(id, "APROVADA", null, Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/recusar")] public async Task<IActionResult> Recusar(Guid id, [FromBody] RejectProposalRequest request) { var r = await _service.ChangeProposalStatusAsync(id, "RECUSADA", request.Motivo, Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/converter-em-cliente")] public async Task<IActionResult> Converter(Guid id) { var r = await _service.ConvertProposalAsync(id, Ip()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/gerar-itens")] public async Task<IActionResult> GerarItens(Guid id) { try { var r = await _service.GenerateItemsAsync(id, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao gerar itens da proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível gerar itens da proposta.", 500)); } }
+    [HttpPost("{id:guid}/enviar")] public async Task<IActionResult> Enviar(Guid id) { try { var r = await _service.ChangeProposalStatusAsync(id, "ENVIADA", null, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao enviar proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível enviar proposta.", 500)); } }
+    [HttpPost("{id:guid}/aprovar")] public async Task<IActionResult> Aprovar(Guid id) { try { var r = await _service.ChangeProposalStatusAsync(id, "APROVADA", null, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao aprovar proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível aprovar proposta.", 500)); } }
+    [HttpPost("{id:guid}/recusar")] public async Task<IActionResult> Recusar(Guid id, [FromBody] RejectProposalRequest request) { try { var r = await _service.ChangeProposalStatusAsync(id, "RECUSADA", request.Motivo, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao recusar proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível recusar proposta.", 500)); } }
+    [HttpPost("{id:guid}/converter-em-cliente")] public async Task<IActionResult> Converter(Guid id) { try { var r = await _service.ConvertProposalAsync(id, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao converter proposta {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível converter proposta em cliente.", 500)); } }
     [HttpGet("{id:guid}/preview")] public async Task<IActionResult> Preview(Guid id) { var r = await _service.PreviewProposalAsync(id); return StatusCode(r.StatusCode, r); }
     private bool IsGlobalAdmin() => User.IsInRole("ADMINISTRADOR_GLOBAL");
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -110,8 +110,8 @@ public sealed class ModulosApiController : ControllerBase
     [HttpGet("{id:guid}")] public async Task<IActionResult> Obter(Guid id) { var r = await _service.GetModuleAsync(id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Criar([FromBody] UpsertModuleRequest request) { try { var r = await _service.SaveModuleAsync(null, request, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao criar módulo"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível criar módulo.", 500)); } }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Atualizar(Guid id, [FromBody] UpsertModuleRequest request) { try { var r = await _service.SaveModuleAsync(id, request, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao atualizar módulo {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível atualizar módulo.", 500)); } }
-    [HttpPost("{id:guid}/habilitar-tenant")] public async Task<IActionResult> Habilitar(Guid id, [FromBody] TenantModuleRequest request) { var r = await _service.ToggleModuleForTenantAsync(id, request, true, Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/desabilitar-tenant")] public async Task<IActionResult> Desabilitar(Guid id, [FromBody] TenantModuleRequest request) { var r = await _service.ToggleModuleForTenantAsync(id, request, false, Ip()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/habilitar-tenant")] public async Task<IActionResult> Habilitar(Guid id, [FromBody] TenantModuleRequest request) { try { var r = await _service.ToggleModuleForTenantAsync(id, request, true, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao habilitar módulo {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível habilitar módulo.", 500)); } }
+    [HttpPost("{id:guid}/desabilitar-tenant")] public async Task<IActionResult> Desabilitar(Guid id, [FromBody] TenantModuleRequest request) { try { var r = await _service.ToggleModuleForTenantAsync(id, request, false, Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao desabilitar módulo {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível desabilitar módulo.", 500)); } }
     [HttpGet("tenant/{tenantId:guid}")] public async Task<IActionResult> Tenant(Guid tenantId) { var r = await _service.ListModulesAsync(); return StatusCode(r.StatusCode, r); }
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 }
@@ -123,9 +123,10 @@ public sealed class ModulosApiController : ControllerBase
 public sealed class FeatureFlagsApiController : ControllerBase
 {
     private readonly CommercialDemoService _service;
-    public FeatureFlagsApiController(CommercialDemoService service) { _service = service; }
+    private readonly ILogger<FeatureFlagsApiController> _logger;
+    public FeatureFlagsApiController(CommercialDemoService service, ILogger<FeatureFlagsApiController> logger) { _service = service; _logger = logger; }
     [HttpGet] public async Task<IActionResult> Listar() { var r = await _service.ListFeatureFlagsAsync(); return StatusCode(r.StatusCode, r); }
-    [HttpPut("{id:guid}")] public async Task<IActionResult> Atualizar(Guid id, [FromBody] UpdateFeatureFlagRequest request) { var r = await _service.UpdateFeatureFlagAsync(id, request, HttpContext.Connection.RemoteIpAddress?.ToString()); return StatusCode(r.StatusCode, r); }
+    [HttpPut("{id:guid}")] public async Task<IActionResult> Atualizar(Guid id, [FromBody] UpdateFeatureFlagRequest request) { try { var r = await _service.UpdateFeatureFlagAsync(id, request, HttpContext.Connection.RemoteIpAddress?.ToString()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao atualizar feature flag {Id}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível atualizar feature flag.", 500)); } }
 }
 
 [ApiController]
@@ -135,9 +136,10 @@ public sealed class FeatureFlagsApiController : ControllerBase
 public sealed class DemoApiController : ControllerBase
 {
     private readonly CommercialDemoService _service;
-    public DemoApiController(CommercialDemoService service) { _service = service; }
-    [HttpPost("gerar-dados")] public async Task<IActionResult> Gerar() { var r = await _service.GenerateDemoDataAsync(Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("limpar-dados")] public async Task<IActionResult> Limpar() { var r = await _service.ClearDemoDataAsync(Ip()); return StatusCode(r.StatusCode, r); }
+    private readonly ILogger<DemoApiController> _logger;
+    public DemoApiController(CommercialDemoService service, ILogger<DemoApiController> logger) { _service = service; _logger = logger; }
+    [HttpPost("gerar-dados")] public async Task<IActionResult> Gerar() { try { var r = await _service.GenerateDemoDataAsync(Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao gerar dados demo"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível gerar dados demo.", 500)); } }
+    [HttpPost("limpar-dados")] public async Task<IActionResult> Limpar() { try { var r = await _service.ClearDemoDataAsync(Ip()); return StatusCode(r.StatusCode, r); } catch (Exception ex) { _logger.LogError(ex, "Erro ao limpar dados demo"); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível limpar dados demo.", 500)); } }
     [HttpGet("status")] public async Task<IActionResult> Status() { var r = await _service.DemoStatusAsync(); return StatusCode(r.StatusCode, r); }
     [HttpGet("roteiros")] public async Task<IActionResult> Roteiros() { var r = await _service.DemoRoutesAsync(); return StatusCode(r.StatusCode, r); }
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();

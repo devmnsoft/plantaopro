@@ -36,6 +36,8 @@ public class SaasInteligenteContractTests
             "api/saas-inteligencia/clientes/{clienteId:guid}/recomendacoes",
             "api/saas-inteligencia/resumo",
             "api/saas-inteligencia/clientes/{clienteId:guid}/recalcular",
+            "api/jornada-clientes/{clienteId:guid}/eventos",
+            "api/jornada-clientes/{clienteId:guid}/tarefas",
             "api/saas-dashboard/resumo",
             "api/planos/{id:guid}/recursos",
             "api/assinaturas/{id:guid}/alterar-plano",
@@ -133,6 +135,26 @@ public class SaasInteligenteContractTests
             Assert.True(File.Exists(arquivo), "Documento obrigatório ausente: " + arquivo);
             var conteudo = File.ReadAllText(arquivo);
             Assert.Contains("SaaS", conteudo, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public void JornadaWeb_DeveTerViewsFuncionaisSemPlaceholdersDeEndpoint()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var arquivos = new[]
+        {
+            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "JornadaClientes", "Index.cshtml"),
+            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "JornadaClientes", "Details.cshtml"),
+            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Clientes", "Inteligencia.cshtml"),
+            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Clientes", "Jornada.cshtml")
+        };
+
+        foreach (var arquivo in arquivos)
+        {
+            var conteudo = File.ReadAllText(arquivo);
+            Assert.DoesNotContain("/api/", conteudo, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("href=\"#\"", conteudo, StringComparison.OrdinalIgnoreCase);
         }
     }
 

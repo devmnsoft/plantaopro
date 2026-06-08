@@ -1,6 +1,32 @@
-@{ ViewData["Title"] = "Jornada do Cliente"; }
+@model PlantaoPro.Web.Models.JornadaClientesIndexViewModel
+@{ ViewData["Title"] = "Jornada do Cliente"; var jornadas = Model?.Jornadas ?? Array.Empty<PlantaoPro.Web.Models.JornadaClienteResumoViewModel>(); }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Jornada do Cliente SaaS", "Acompanhe funil, etapa atual, responsável e próxima ação de Customer Success.", "bi-signpost-split")' />
-<div class="row g-3">
-@foreach (var etapa in new[] { "Lead cadastrado", "Demonstração agendada", "Proposta enviada", "Negociação", "Convertido", "Implantação", "Treinamento", "Operação assistida", "Ativo", "Expansão", "Risco", "Cancelado" })
-{<div class="col-md-3"><div class="card h-100"><div class="card-body"><span class="badge text-bg-primary">@etapa</span><p class="small text-muted mt-2 mb-0">Cards desta etapa são carregados pela API <code>/api/jornada-clientes</code>.</p></div></div></div>}
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" asp-action="Funil"><i class="bi bi-kanban"></i> Ver funil</a></div>
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0 align-middle">
+            <thead><tr><th>Cliente</th><th>Etapa</th><th>Responsável</th><th>Próxima ação</th><th>Atualização</th><th class="text-end">Ações</th></tr></thead>
+            <tbody>
+            @if (jornadas.Any())
+            {
+                foreach (var item in jornadas)
+                {
+                    <tr>
+                        <td><div class="fw-semibold">@item.ClienteNome</div><small class="text-muted">@item.ClienteId</small></td>
+                        <td><partial name="_StatusBadge" model="item.Etapa" /></td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Responsavel) ? "Não definido" : item.Responsavel)</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.ProximaAcao) ? "Definir próxima ação" : item.ProximaAcao)</td>
+                        <td>@item.RegDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.ClienteId"><i class="bi bi-eye"></i> Detalhes</a></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr><td colspan="6" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-signpost", "Nenhuma jornada encontrada", "Converta leads e clientes para acompanhar a jornada aqui.")' /></td></tr>
+            }
+            </tbody>
+        </table>
+    </div>
 </div>

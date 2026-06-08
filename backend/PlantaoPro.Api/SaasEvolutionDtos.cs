@@ -74,6 +74,13 @@ public sealed class JornadaClienteDto
     public DateTime RegDate { get; set; }
 }
 
+public sealed class JornadaClienteDetalheDto
+{
+    public JornadaClienteDto Jornada { get; set; } = new JornadaClienteDto();
+    public IEnumerable<JornadaEventoDto> Eventos { get; set; } = Array.Empty<JornadaEventoDto>();
+    public IEnumerable<JornadaTarefaDto> Tarefas { get; set; } = Array.Empty<JornadaTarefaDto>();
+}
+
 public sealed class JornadaEventoDto
 {
     public Guid Id { get; set; }

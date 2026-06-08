@@ -1,3 +1,16 @@
-@{ ViewData["Title"] = "Tarefas da Jornada"; }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Tarefas da jornada", "Próximas ações, responsáveis e pendências de Customer Success.", "bi-list-check")' />
-<div class="card"><div class="card-body"><p class="text-muted mb-0">Tarefas criadas por implantação, operação assistida, treinamento e risco de churn.</p></div></div>
+@model IEnumerable<PlantaoPro.Web.Models.JornadaClienteTarefaViewModel>
+@{ ViewData["Title"] = "Tarefas da Jornada"; var tarefas = Model ?? Array.Empty<PlantaoPro.Web.Models.JornadaClienteTarefaViewModel>(); var clienteId = (Guid?)ViewBag.ClienteId ?? Guid.Empty; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Tarefas da jornada", "Pendências de Customer Success para o cliente selecionado.", "bi-check2-square")' />
+<div class="card"><div class="list-group list-group-flush">
+@if (tarefas.Any())
+{
+    foreach (var tarefa in tarefas)
+    {
+        <div class="list-group-item d-flex justify-content-between align-items-center"><div><strong>@tarefa.Titulo</strong><br /><small class="text-muted">@tarefa.Responsavel · @(tarefa.Vencimento.HasValue ? tarefa.Vencimento.Value.ToString("dd/MM/yyyy HH:mm") : "Sem vencimento")</small></div><partial name="_StatusBadge" model="tarefa.Status" /></div>
+    }
+}
+else
+{
+    <div class="p-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square", "Sem tarefas", "Não há tarefas para este cliente.", "Voltar para jornada", "Details", "JornadaClientes")' /></div>
+}
+</div><div class="card-footer bg-white"><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@clienteId">Voltar</a></div></div>

@@ -1,3 +1,18 @@
-@{ ViewData["Title"] = "Funil da Jornada"; }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Funil da jornada", "Visão visual das etapas comerciais, implantação, operação assistida e retenção.", "bi-kanban")' />
-<div class="alert alert-info">Use a API <code>/api/jornada-clientes/funil</code> para alimentar os indicadores por etapa.</div>
+@model PlantaoPro.Web.Models.JornadaClientesFunilViewModel
+@{ ViewData["Title"] = "Funil da Jornada"; var etapas = Model?.Etapas ?? Array.Empty<PlantaoPro.Web.Models.FunilEtapaViewModel>(); var total = etapas.Sum(x => x.Total); }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Funil da jornada", "Distribuição dos clientes por etapa comercial, implantação, operação assistida e risco.", "bi-kanban")' />
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+<div class="row g-3">
+@if (etapas.Any())
+{
+    foreach (var etapa in etapas)
+    {
+        var percentual = total == 0 ? 0 : (int)Math.Round((decimal)etapa.Total * 100 / total);
+        <div class="col-md-4 col-xl-3"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><span class="badge text-bg-primary">@etapa.Etapa</span><strong>@etapa.Total</strong></div><div class="progress mt-3" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:@percentual%">@percentual%</div></div></div></div></div>
+    }
+}
+else
+{
+    <div class="col-12"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-kanban", "Funil sem dados", "Quando clientes entrarem na jornada, os totais aparecerão aqui.")' /></div>
+}
+</div>

@@ -1,3 +1,59 @@
-@{ ViewData["Title"] = "Inteligência do Cliente"; }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Inteligência do cliente", "Score de saúde, risco de cancelamento e oportunidades de upgrade.", "bi-stars")' />
-<div class="card"><div class="card-body"><p>Motor determinístico baseado em uso, faturas, plantões, chamados e operação assistida.</p><code>/api/inteligencia/clientes/@ViewBag.ClienteId/saude</code></div></div>
+@model PlantaoPro.Web.Models.ClienteInteligenciaPageViewModel
+@{
+    ViewData["Title"] = "Inteligência do Cliente";
+    var saude = Model?.Saude ?? new PlantaoPro.Web.Models.ClienteSaudeSaasViewModel();
+    var uso = Model?.Uso ?? new PlantaoPro.Web.Models.UsoPlanoViewModel();
+    var alertas = Model?.Alertas ?? Array.Empty<PlantaoPro.Web.Models.ClienteAlertaSaasViewModel>();
+    decimal Percentual(int usados, int limite) => limite <= 0 ? 0 : Math.Min(100, Math.Round((decimal)usados * 100 / limite));
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Inteligência do cliente", "Score de saúde, risco de cancelamento, uso de limites e oportunidades de upgrade.", "bi-stars")' />
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage)) { <div class="alert alert-warning">@Model.ErrorMessage</div> }
+<div class="row g-3 mb-3">
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Score", saude.Score.ToString(), "Saúde determinística", "bi-activity", "primary")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Classificação", string.IsNullOrWhiteSpace(saude.Classificacao) ? "Sem dados" : saude.Classificacao, "Risco consolidado", "bi-heart-pulse", "success")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Alertas", alertas.Count().ToString(), "Abertos e gerados por regra", "bi-bell", "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Upgrade", saude.ElegivelUpgrade ? "Elegível" : "Não elegível", "Baseado em uso e recursos", "bi-rocket", "info")' /></div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card h-100"><div class="card-header fw-semibold">Uso do plano</div><div class="card-body">
+            <h2 class="h6">@uso.PlanoNome <small class="text-muted">@uso.AssinaturaStatus</small></h2>
+            @foreach (var limite in new[] { new { Nome = "Médicos", Usados = uso.MedicosUsados, Limite = uso.MedicosLimite }, new { Nome = "Hospitais", Usados = uso.HospitaisUsados, Limite = uso.HospitaisLimite }, new { Nome = "Plantões/mês", Usados = uso.PlantoesMesUsados, Limite = uso.PlantoesMesLimite } })
+            {
+                var percentual = Percentual(limite.Usados, limite.Limite);
+                <div class="mb-3"><div class="d-flex justify-content-between"><span>@limite.Nome</span><strong>@limite.Usados / @(limite.Limite <= 0 ? "ilimitado" : limite.Limite.ToString())</strong></div><div class="progress" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar @(percentual >= 80 ? "bg-warning" : "bg-primary")" style="width:@percentual%">@percentual%</div></div></div>
+            }
+            <div class="row g-2 small">
+                <div class="col-sm-6"><span class="badge @(uso.PermiteMobile ? "text-bg-success" : "text-bg-secondary")">Mobile @(uso.PermiteMobile ? "habilitado" : "bloqueado")</span></div>
+                <div class="col-sm-6"><span class="badge @(uso.PermiteBi ? "text-bg-success" : "text-bg-secondary")">BI @(uso.PermiteBi ? "habilitado" : "bloqueado")</span></div>
+                <div class="col-sm-6"><span class="badge @(uso.PermiteRelatoriosAvancados ? "text-bg-success" : "text-bg-secondary")">Relatórios avançados @(uso.PermiteRelatoriosAvancados ? "sim" : "não")</span></div>
+                <div class="col-sm-6"><span class="badge @(uso.PermiteIntegracoes ? "text-bg-success" : "text-bg-secondary")">Integrações @(uso.PermiteIntegracoes ? "sim" : "não")</span></div>
+            </div>
+        </div></div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100"><div class="card-header fw-semibold">Recomendações</div><div class="card-body">
+            <h3 class="h6">Riscos</h3>
+            @if (saude.Riscos.Any()) { <ul>@foreach (var risco in saude.Riscos) { <li>@risco</li> }</ul> } else { <p class="text-muted">Nenhum risco crítico detectado.</p> }
+            <h3 class="h6">Oportunidades</h3>
+            @if (saude.Oportunidades.Any()) { <ul>@foreach (var oportunidade in saude.Oportunidades) { <li>@oportunidade</li> }</ul> } else { <p class="text-muted">Sem oportunidade imediata de upgrade.</p> }
+            <h3 class="h6">Próximas ações</h3>
+            @if (saude.AcoesRecomendadas.Any()) { <ul>@foreach (var acao in saude.AcoesRecomendadas) { <li>@acao</li> }</ul> } else { <p class="text-muted mb-0">Acompanhar evolução no próximo ciclo.</p> }
+        </div></div>
+    </div>
+    <div class="col-12">
+        <div class="card"><div class="card-header fw-semibold">Alertas do cliente</div><div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>Severidade</th><th>Tipo</th><th>Título</th><th>Mensagem</th><th>Data</th></tr></thead><tbody>
+        @if (alertas.Any())
+        {
+            foreach (var alerta in alertas)
+            {
+                <tr><td><partial name="_StatusBadge" model="alerta.Severidade" /></td><td>@alerta.Tipo</td><td>@alerta.Titulo</td><td>@alerta.Mensagem</td><td>@alerta.RegDate.ToString("dd/MM/yyyy HH:mm")</td></tr>
+            }
+        }
+        else
+        {
+            <tr><td colspan="5" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bell", "Sem alertas", "O motor de regras não encontrou alertas abertos para este cliente.")' /></td></tr>
+        }
+        </tbody></table></div></div>
+    </div>
+</div>

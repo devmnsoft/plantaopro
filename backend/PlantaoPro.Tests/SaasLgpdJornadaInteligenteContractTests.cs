@@ -103,6 +103,84 @@ public class SaasLgpdJornadaInteligenteContractTests
         Assert.Contains("GerarFunilComercialAsync", metodos);
     }
 
+    [Fact]
+    public void SqlExatoDaRodadaSolicitada_DeveConterTodasAsFamiliasEColunaTipoDaTarefa()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql"));
+
+        foreach (var tabela in new[]
+        {
+            "plantaopro.clientes",
+            "plantaopro.planos",
+            "plantaopro.plano_recursos",
+            "plantaopro.assinaturas",
+            "plantaopro.assinatura_historico",
+            "plantaopro.assinatura_uso",
+            "plantaopro.faturas_saas",
+            "plantaopro.fatura_itens",
+            "plantaopro.pagamentos_saas",
+            "plantaopro.cobranca_eventos",
+            "plantaopro.cliente_bloqueios",
+            "plantaopro.cliente_alertas",
+            "plantaopro.cliente_limites_uso",
+            "plantaopro.cliente_saude_historico",
+            "plantaopro.jornada_cliente",
+            "plantaopro.jornada_cliente_eventos",
+            "plantaopro.jornada_cliente_tarefas",
+            "plantaopro.jornada_cliente_observacoes",
+            "plantaopro.jornada_cliente_responsaveis",
+            "plantaopro.comercial_leads",
+            "plantaopro.comercial_oportunidades",
+            "plantaopro.comercial_propostas",
+            "plantaopro.comercial_proposta_itens",
+            "plantaopro.comercial_interacoes",
+            "plantaopro.comercial_motivos_perda",
+            "plantaopro.comercial_regras_desconto",
+            "plantaopro.customer_success_interacoes",
+            "plantaopro.customer_success_planos_acao",
+            "plantaopro.customer_success_riscos",
+            "plantaopro.customer_success_tarefas",
+            "plantaopro.lgpd_consentimentos",
+            "plantaopro.lgpd_solicitacoes_titular",
+            "plantaopro.lgpd_eventos_privacidade",
+            "plantaopro.lgpd_politicas",
+            "plantaopro.lgpd_bases_legais",
+            "plantaopro.lgpd_retencao_dados",
+            "plantaopro.lgpd_exportacoes_dados",
+            "plantaopro.lgpd_anonimizacoes",
+            "plantaopro.ajuda_topicos",
+            "plantaopro.ajuda_artigos",
+            "plantaopro.ajuda_passos",
+            "plantaopro.ajuda_checklists",
+            "plantaopro.ajuda_feedbacks"
+        })
+        {
+            Assert.Contains("CREATE TABLE IF NOT EXISTS " + tabela, sql, StringComparison.OrdinalIgnoreCase);
+        }
+
+        Assert.Contains("ALTER TABLE plantaopro.jornada_cliente_tarefas ADD COLUMN IF NOT EXISTS tipo", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CREATE INDEX IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("DO $$", sql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", sql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void JornadaEGuardSaas_DevemRegistrarChecklistAlertasEBloqueiosCriticos()
+    {
+        var raiz = EncontrarRaizRepositorio();
+        var jornada = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "SaasEvolutionServices.cs"));
+        var guard = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "TenantServices.cs"));
+
+        Assert.Contains("Abrir checklist de operação assistida", jornada, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Validar primeiros plantões em operação assistida", jornada, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("JORNADA_", jornada, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CLIENTE_SUSPENSO", guard, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("CLIENTE_CANCELADO", guard, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ASSINATURA_CANCELADA", guard, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ASSINATURA_VENCIDA", guard, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static HashSet<string> ObterRotasApi(params Type[] controllers)
     {
         var rotas = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

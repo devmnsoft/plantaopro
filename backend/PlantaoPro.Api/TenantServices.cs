@@ -319,10 +319,18 @@ limit 1", new { clienteId });
         {
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var clienteStatus = await cn.ExecuteScalarAsync<string?>("select upper(coalesce(status,'')) from plantaopro.clientes where id=@clienteId and reg_status='A'", new { clienteId });
-            if (string.Equals(clienteStatus, "SUSPENSO", StringComparison.OrdinalIgnoreCase)) return ApiResponse<UsoPlanoDto>.Fail("Cliente suspenso não pode operar até regularização.", 403);
-            if (string.Equals(clienteStatus, "CANCELADO", StringComparison.OrdinalIgnoreCase)) return ApiResponse<UsoPlanoDto>.Fail("Cliente cancelado não pode operar.", 403);
+            if (string.Equals(clienteStatus, "SUSPENSO", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarBloqueioAsync(clienteId, "CLIENTE_SUSPENSO", "Cliente suspenso não pode operar até regularização.");
+                return ApiResponse<UsoPlanoDto>.Fail("Cliente suspenso não pode operar até regularização.", 403);
+            }
+            if (string.Equals(clienteStatus, "CANCELADO", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarBloqueioAsync(clienteId, "CLIENTE_CANCELADO", "Cliente cancelado não pode operar.");
+                return ApiResponse<UsoPlanoDto>.Fail("Cliente cancelado não pode operar.", 403);
+            }
 
-            var uso = await cn.QueryFirstOrDefaultAsync<UsoPlanoDto>(@"select a.cliente_id as ""ClienteId"", a.id as ""AssinaturaId"", p.id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""AssinaturaStatus"",
+            var uso = await cn.QueryFirstOrDefaultAsync<UsoPlanoDto>(@"select a.cliente_id as ""ClienteId"", a.id as ""AssinaturaId"", p.id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""AssinaturaStatus"", a.data_fim as ""DataFim"",
        (select count(1)::int from plantaopro.medicos m where m.cliente_id=a.cliente_id and m.reg_status='A') as ""MedicosUsados"",
        coalesce(p.limite_medicos,0) as ""MedicosLimite"",
        (select count(1)::int from plantaopro.hospitais h where h.cliente_id=a.cliente_id and h.reg_status='A') as ""HospitaisUsados"",
@@ -339,9 +347,25 @@ where a.cliente_id=@clienteId and a.reg_status='A'
 order by case when upper(a.status)='ATIVA' then 0 else 1 end, a.reg_date desc
 limit 1", new { clienteId });
 
-            return uso is null
-                ? ApiResponse<UsoPlanoDto>.Fail("Cliente sem assinatura cadastrada.", 403)
-                : ApiResponse<UsoPlanoDto>.Ok(uso, "Uso do plano carregado.");
+            if (uso is null)
+            {
+                await RegistrarBloqueioAsync(clienteId, "SEM_ASSINATURA", "Cliente sem assinatura cadastrada.");
+                return ApiResponse<UsoPlanoDto>.Fail("Cliente sem assinatura cadastrada.", 403);
+            }
+
+            if (string.Equals(uso.AssinaturaStatus, "CANCELADA", StringComparison.OrdinalIgnoreCase))
+            {
+                await RegistrarBloqueioAsync(clienteId, "ASSINATURA_CANCELADA", "Assinatura cancelada não permite operação.");
+                return ApiResponse<UsoPlanoDto>.Fail("Assinatura cancelada não permite operação.", 403);
+            }
+
+            if (uso.DataFim.Date < DateTime.UtcNow.Date)
+            {
+                await RegistrarBloqueioAsync(clienteId, "ASSINATURA_VENCIDA", "Assinatura vencida. Regularize para continuar operando.");
+                return ApiResponse<UsoPlanoDto>.Fail("Assinatura vencida. Regularize para continuar operando.", 403);
+            }
+
+            return ApiResponse<UsoPlanoDto>.Ok(uso, "Uso do plano carregado.");
         }
         catch (Exception ex)
         {
@@ -356,7 +380,11 @@ limit 1", new { clienteId });
         if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
         var uso = usoResponse.Data;
         var statusOk = string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase);
-        if (!statusOk) return ApiResponse<bool>.Fail("Assinatura sem permissão de operação no momento.", 403);
+        if (!statusOk)
+        {
+            await RegistrarBloqueioAsync(clienteId, "ASSINATURA_INATIVA", "Assinatura sem permissão de operação no momento.");
+            return ApiResponse<bool>.Fail("Assinatura sem permissão de operação no momento.", 403);
+        }
 
         var permitido = funcionalidade switch
         {
@@ -378,7 +406,11 @@ limit 1", new { clienteId });
         var usoResponse = await ObterUsoPlano(clienteId);
         if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
         var uso = usoResponse.Data;
-        if (!string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase)) return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para operar.", 403);
+        if (!string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase))
+        {
+            await RegistrarBloqueioAsync(clienteId, "ASSINATURA_INATIVA", "Cliente sem assinatura ativa para operar.");
+            return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para operar.", 403);
+        }
 
         var permitido = limite switch
         {

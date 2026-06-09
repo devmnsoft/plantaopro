@@ -125,3 +125,22 @@ public sealed class PermissionModuleViewModel
     public IList<string> Acoes { get; set; } = new List<string>();
     public Dictionary<string, IList<string>> PermissoesPorPerfil { get; set; } = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
 }
+
+public sealed class LockedResourceViewModel
+{
+    public string Recurso { get; set; } = "Recurso";
+    public string Motivo { get; set; } = "Plano ou módulo não contratado.";
+    public string PlanoAtual { get; set; } = "Profissional";
+    public string PlanoNecessario { get; set; } = "Enterprise";
+    public string UsoAtual { get; set; } = "0";
+    public string LimiteContratado { get; set; } = "0";
+}
+
+public sealed class QuickActionViewModel
+{
+    public string Titulo { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public string Icone { get; set; } = "bi-lightning-charge";
+    public string Controller { get; set; } = "Home";
+    public string Action { get; set; } = "Dashboard";
+}

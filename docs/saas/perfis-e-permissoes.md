@@ -1,17 +1,5 @@
-# Perfis E Permissoes
+# Perfis e permissões
 
-## Implementado nesta rodada
+Perfis base: ADMINISTRADOR_GLOBAL, ADMINISTRADOR_CLIENTE, ADMINISTRADOR, DIRETOR, COORDENADOR, OPERADOR, FINANCEIRO, MEDICO, HOSPITAL, PARCEIRO, SUPORTE, AUDITOR, COMERCIAL e CUSTOMER_SUCCESS.
 
-Perfis base e customizados por cliente com permissões e módulos vinculados.
-
-## Componentes relacionados
-
-- Migração: `database/migrations/2026_plantao_pro_white_label_b2b_launch.sql`.
-- APIs B2B: `backend/PlantaoPro.Api/Controllers/B2BLaunchController.cs`.
-- Serviços B2B: `backend/PlantaoPro.Api/B2BLaunchServices.cs`.
-- Web B2B: `backend/PlantaoPro.Web/Controllers/B2BLaunchWebControllers.cs`.
-
-## Pendências reais
-
-- Validar manualmente em ambiente com PostgreSQL e SDK .NET instalado.
-- Conectar as telas genéricas aos formulários AJAX finais quando o design system definitivo estiver homologado.
+ADMINISTRADOR_GLOBAL tem acesso global. Administradores de cliente não acessam Admin SaaS global. Coordenação acessa escala/plantões/convites. Financeiro acessa financeiro e relatórios. Médico acessa agenda, convites, disponibilidade, substituições e pagamentos próprios. Parceiro acessa leads, propostas e comissões sem dados clínicos sensíveis.

@@ -6,15 +6,20 @@ public interface ICurrentUserService
 {
     Guid? UserId { get; }
     Guid? TenantId { get; }
+    Guid? ClienteId { get; }
     string[] Roles { get; }
+    bool IsAuthenticated();
     bool IsGlobalAdmin();
     bool IsTenantAdmin();
+    bool IsPartner();
+    bool IsDoctor();
     bool HasRole(string role);
 }
 
 public interface IPermissionService
 {
     bool HasPermission(string module, string action);
+    bool CanManageSaas();
     bool CanManageUsers();
     bool CanManageBilling();
     bool CanManageWhiteLabel();
@@ -42,10 +47,14 @@ public sealed class CurrentUserService : ICurrentUserService
     }
 
     public Guid? UserId => ReadGuid("uid") ?? ReadGuid(ClaimTypes.NameIdentifier);
-    public Guid? TenantId => ReadGuid("cliente_id") ?? ReadGuid("tenant_id");
+    public Guid? TenantId => ReadGuid("tenant_id") ?? ReadGuid("cliente_id");
+    public Guid? ClienteId => ReadGuid("cliente_id") ?? TenantId;
     public string[] Roles => httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role).Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray() ?? Array.Empty<string>();
+    public bool IsAuthenticated() => httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true;
     public bool IsGlobalAdmin() => HasRole(RolesConstants.AdministradorGlobal);
     public bool IsTenantAdmin() => HasRole(RolesConstants.Administrador) || HasRole(RolesConstants.AdministradorCliente) || HasRole(RolesConstants.Diretor);
+    public bool IsPartner() => HasRole(RolesConstants.Parceiro);
+    public bool IsDoctor() => HasRole(RolesConstants.Medico);
     public bool HasRole(string role) => Roles.Any(r => string.Equals(r, role, StringComparison.OrdinalIgnoreCase));
 
     private Guid? ReadGuid(string claimType)
@@ -69,7 +78,7 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
     {
         if (currentUser.IsGlobalAdmin()) return true;
         var code = (module ?? string.Empty).Trim().ToUpperInvariant();
-        if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS";
+        if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL";
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code is "PLANTOES" or "ESCALAS" or "CONVITES" or "CENTRAL_ESCALA" or "MEDICOS";
         if (currentUser.HasRole(RolesConstants.Financeiro)) return code is "FINANCEIRO" or "RELATORIOS" or "FATURAS";
         if (currentUser.HasRole(RolesConstants.Medico)) return code is "MEDICO_AREA" or "AGENDA" or "CONVITES" or "PAGAMENTOS";
@@ -82,6 +91,7 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         return false;
     }
 
+    public bool CanManageSaas() => currentUser.IsGlobalAdmin();
     public bool CanAccessModule(string moduleCode) => HasPermission(moduleCode, "VER");
     public bool CanAccessFeature(string featureCode) => HasPermission(featureCode, "USAR");
     public bool CanAccessTenant(Guid tenantId) => currentUser.IsGlobalAdmin() || (currentUser.TenantId.HasValue && currentUser.TenantId.Value == tenantId);

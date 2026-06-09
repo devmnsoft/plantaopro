@@ -1,22 +1,7 @@
-# Design System SaaS PlantãoPro
+# Design system SaaS PlantãoPro
 
-## Componentes adicionados/consolidados
+CSS ativos: `plantaopro-design-system.css`, `plantao-saas.css`, `plantao-components.css`, `plantao-layout.css`, `plantao-theme.css`, `plantao-white-label.css`, `plantao-dashboard.css` e `plantao-forms.css`.
 
-- `_PageHeader`: cabeçalho padrão de página com título, descrição, ícone e ação segura.
-- `_KpiCard`: indicadores com semântica visual.
-- `_StatusBadge`: status normalizados.
-- `_EmptyState`: estados vazios com mensagem e ação opcional.
-- `_ConfirmModal`: modal de confirmação reutilizável.
-- `_ToastMessages`: mensagens de sucesso, alerta, erro e informação.
-- `_TenantContextBadge`: contexto de tenant e troca de contexto para admin global.
-- `_PlanUsageMiniCard`: plano atual e saúde de uso.
-- `_ModuleLockedNotice`: bloqueio comercial por plano/módulo com CTA de upgrade.
-- `_ActionBar` e `_FilterBar`: padrões para ações e filtros.
+Partials ativos: `_PageHeader`, `_Breadcrumb`, `_KpiCard`, `_StatusBadge`, `_EmptyState`, `_ActionBar`, `_FilterBar`, `_ConfirmModal`, `_ToastMessages`, `_TenantContextBadge`, `_PlanUsageMiniCard`, `_ModuleLockedNotice`, `_PlanLimitReachedNotice`, `_UpgradeCta`, `_ProfileHomeCard` e `_QuickActions`.
 
-## Diretrizes visuais
-
-- Aparência SaaS B2B moderna, com cards, badges, hierarquia de navegação e estados claros.
-- Sidebar profissional com grupos por contexto e ícones.
-- Topbar com busca, tenant, plano, ajuda, notificações, upgrade e usuário.
-- Layout responsivo com sidebar off-canvas em mobile.
-- White label aplicado por cores e fallback visual seguro.
+Padrão: cards com sombra leve, KPIs claros, badges de status, botões primários/secundários, alertas comerciais, empty states explicativos e tabelas responsivas.

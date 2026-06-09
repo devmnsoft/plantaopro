@@ -1,12 +1,5 @@
-@model PlantaoPro.Web.Models.LockedResourceViewModel
-<div class="module-locked-notice plan-limit-notice">
-    <div class="d-flex align-items-start gap-3">
-        <div class="module-locked-icon"><i class="bi bi-speedometer2"></i></div>
-        <div>
-            <strong>Limite do plano atingido: @Model.Recurso</strong>
-            <p class="mb-2">@Model.Motivo Plano atual: <b>@Model.PlanoAtual</b>. Plano necessário: <b>@Model.PlanoNecessario</b>. Uso atual: <b>@Model.UsoAtual</b> de <b>@Model.LimiteContratado</b>.</p>
-            <a class="btn btn-sm btn-primary" asp-controller="MinhaAssinatura" asp-action="Upgrade">Solicitar upgrade</a>
-            <a class="btn btn-sm btn-outline-secondary" asp-controller="Suporte" asp-action="Index">Falar com suporte</a>
-        </div>
-    </div>
+@model string
+<div class="alert alert-danger" role="alert">
+    <div class="fw-semibold"><i class="bi bi-speedometer2 me-2"></i>Limite do plano atingido</div>
+    <div>@(string.IsNullOrWhiteSpace(Model) ? "Revise o uso atual ou solicite upgrade antes de continuar." : Model)</div>
 </div>

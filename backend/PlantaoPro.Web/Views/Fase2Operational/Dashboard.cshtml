@@ -1,0 +1,169 @@
+@model PlantaoPro.Web.Models.Fase2OperationalPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    var statusClass = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["OK"] = "success",
+        ["ATENÇÃO"] = "warning",
+        ["RISCO"] = "danger"
+    };
+}
+
+<section class="pp-page-head d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+    <div>
+        <span class="badge rounded-pill text-bg-primary mb-2">@Model.Persona</span>
+        <h1 class="mb-2">@Model.Title</h1>
+        <p class="text-muted mb-1">@Model.Subtitle</p>
+        <small class="text-muted">Escopo: @Model.TenantScope • Seção: @Model.CurrentSection</small>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (var action in Model.PrimaryActions)
+        {
+            if (action.Blocked)
+            {
+                <button type="button" class="btn btn-outline-secondary" disabled title="@action.BlockReason">@action.Label</button>
+            }
+            else if (string.Equals(action.Method, "POST", StringComparison.OrdinalIgnoreCase))
+            {
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#fase2ConfirmModal">@action.Label</button>
+            }
+            else
+            {
+                <a class="btn btn-primary" asp-controller="@action.Controller" asp-action="@action.Action">@action.Label</a>
+            }
+        }
+    </div>
+</section>
+
+@if (Model.HasPlanBlock)
+{
+    <partial name="_ModuleLockedNotice" model="Model.PlanBlockMessage" />
+}
+
+@if (Model.Alerts.Any())
+{
+    <div class="alert alert-info" role="alert">
+        @foreach (var alert in Model.Alerts)
+        {
+            <div>@alert</div>
+        }
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    @foreach (var kpi in Model.Kpis)
+    {
+        var cls = statusClass.ContainsKey(kpi.Status) ? statusClass[kpi.Status] : "secondary";
+        <div class="col-12 col-md-6 col-xl-3">
+            <article class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <span class="text-muted small">@kpi.Label</span>
+                        <i class="bi @kpi.Icon text-@cls"></i>
+                    </div>
+                    <div class="display-6 fw-bold mt-2">@kpi.Value</div>
+                    <p class="text-muted mb-2">@kpi.Hint</p>
+                    <span class="badge text-bg-@cls">@kpi.Status</span>
+                </div>
+            </article>
+        </div>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-12 col-xl-5">
+        <article class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white">
+                <h2 class="h5 mb-0">Fluxo operacional</h2>
+            </div>
+            <div class="card-body">
+                @if (!Model.Steps.Any())
+                {
+                    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-diagram-3", "Sem etapas", "Nenhuma etapa configurada para este perfil.")' />
+                }
+                else
+                {
+                    <ol class="list-group list-group-numbered">
+                        @foreach (var step in Model.Steps.OrderBy(s => s.Order))
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div class="ms-2 me-auto">
+                                    <div class="fw-semibold">@step.Title</div>
+                                    <span class="text-muted">@step.Description</span>
+                                </div>
+                                <span class="badge text-bg-light text-dark">@step.Status</span>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+        </article>
+    </div>
+    <div class="col-12 col-xl-7">
+        <article class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h2 class="h5 mb-0">Fila de trabalho</h2>
+                <span class="badge text-bg-secondary">@Model.WorkItems.Count item(ns)</span>
+            </div>
+            <div class="card-body">
+                @if (!Model.WorkItems.Any())
+                {
+                    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Nada pendente", "Quando houver ações, elas aparecerão aqui com botões funcionais.")' />
+                }
+                else
+                {
+                    <div class="vstack gap-3">
+                        @foreach (var item in Model.WorkItems)
+                        {
+                            <div class="border rounded-3 p-3">
+                                <div class="d-flex flex-wrap justify-content-between gap-2">
+                                    <div>
+                                        <h3 class="h6 mb-1">@item.Title</h3>
+                                        <p class="text-muted mb-2">@item.Description</p>
+                                        <span class="badge text-bg-light text-dark">@item.Status</span>
+                                        <span class="small text-muted ms-2">Responsável: @item.Owner • Prazo: @item.Due</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap gap-2 align-content-start">
+                                        @foreach (var action in item.Actions)
+                                        {
+                                            if (action.Blocked)
+                                            {
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="@action.BlockReason">@action.Label</button>
+                                            }
+                                            else if (action.RequiresConfirmation)
+                                            {
+                                                <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#fase2ConfirmModal">@action.Label</button>
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-outline-primary btn-sm" asp-controller="@action.Controller" asp-action="@action.Action">@action.Label</a>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </article>
+    </div>
+</div>
+
+<div class="modal fade" id="fase2ConfirmModal" tabindex="-1" aria-labelledby="fase2ConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title h5" id="fase2ConfirmModalLabel">Confirmar ação crítica</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                A ação será validada por tenant, perfil, limite de plano e auditoria antes de ser concluída.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Revisar</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
+            </div>
+        </div>
+    </div>
+</div>

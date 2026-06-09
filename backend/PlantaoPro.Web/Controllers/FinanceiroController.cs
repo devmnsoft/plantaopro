@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Security;
 namespace PlantaoPro.Web.Controllers;
-[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Financeiro)]
+[Authorize(Roles = RolesConstants.FinanceiroArea)]
 public class FinanceiroController : BaseWebController
 {
     public FinanceiroController(IHttpClientFactory f, ILogger<FinanceiroController> l) : base(f, l) { }

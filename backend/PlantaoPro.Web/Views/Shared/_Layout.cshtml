@@ -2,6 +2,7 @@
 @using PlantaoPro.Web.Services.Security
 @inject IModuleAccessService ModuleAccess
 @inject IPermissionService Permissions
+@inject IMenuBuilderService MenuBuilder
 @{
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
@@ -61,95 +62,21 @@
                 </div>
             </div>
             <nav class="sidebar-nav" aria-label="Menu principal">
-                @if (isGlobalAdmin || isSuporte || isAuditor)
+                @foreach (var group in MenuBuilder.Build(currentController, currentAction))
                 {
-                    <div class="nav-section-title">Admin SaaS</div>
-                    <a class="nav-link-app @active("AdminSaas", string.Empty)" asp-controller="AdminSaas" asp-action="Index"><i class="bi bi-buildings"></i><span>Central SaaS</span></a>
-                    <a class="nav-link-app @active("Clientes", string.Empty)" asp-controller="Clientes" asp-action="Index"><i class="bi bi-building-check"></i><span>Clientes/Tenants</span></a>
-                    <a class="nav-link-app @active("Planos", string.Empty)" asp-controller="Planos" asp-action="Index"><i class="bi bi-columns-gap"></i><span>Planos</span></a>
-                    <a class="nav-link-app @active("Assinaturas", string.Empty)" asp-controller="Assinaturas" asp-action="Index"><i class="bi bi-receipt"></i><span>Assinaturas</span></a>
-                    <a class="nav-link-app @active("Permissoes", string.Empty)" asp-controller="Permissoes" asp-action="Index"><i class="bi bi-shield-lock"></i><span>Permissões</span></a>
-                    <a class="nav-link-app @active("Observabilidade", string.Empty)" asp-controller="Observabilidade" asp-action="Index"><i class="bi bi-activity"></i><span>Observabilidade</span></a>
-                }
-
-                @if (isTenantAdmin)
-                {
-                    <div class="nav-section-title">Portal Cliente</div>
-                    <a class="nav-link-app @active("ClientePortal", string.Empty)" asp-controller="ClientePortal" asp-action="Index"><i class="bi bi-window-sidebar"></i><span>Home Cliente</span></a>
-                    <a class="nav-link-app @active("MinhaAssinatura", string.Empty)" asp-controller="MinhaAssinatura" asp-action="Index"><i class="bi bi-card-checklist"></i><span>Minha assinatura</span></a>
-                    <a class="nav-link-app @active("Usuarios", string.Empty)" asp-controller="Usuarios" asp-action="Index"><i class="bi bi-person-gear"></i><span>Usuários</span></a>
-                    <a class="nav-link-app @active("Perfis", string.Empty)" asp-controller="Perfis" asp-action="Index"><i class="bi bi-person-lock"></i><span>Perfis</span></a>
-                    @if (Permissions.CanManageWhiteLabel())
+                    <div class="nav-section-title"><i class="bi @group.Icon"></i><span>@group.Title</span></div>
+                    @foreach (var item in group.Items)
                     {
-                        <a class="nav-link-app @active("WhiteLabel", string.Empty)" asp-controller="WhiteLabel" asp-action="Index"><i class="bi bi-palette"></i><span>White label</span></a>
-                    }
-                    <a class="nav-link-app @active("Marketplace", string.Empty)" asp-controller="Marketplace" asp-action="Index"><i class="bi bi-bag-plus"></i><span>Marketplace</span></a>
-                }
-
-                @if (isCoord || isOper || isHospital || isTenantAdmin || isGlobalAdmin)
-                {
-                    <div class="nav-section-title">Operação</div>
-                    <a class="nav-link-app @active("Coordenacao", string.Empty)" asp-controller="Coordenacao" asp-action="Index"><i class="bi bi-kanban"></i><span>Central de Escala</span></a>
-                    <a class="nav-link-app @active("CentralEscala", string.Empty)" asp-controller="CentralEscala" asp-action="Index"><i class="bi bi-diagram-3"></i><span>Convites e cobertura</span></a>
-                    <a class="nav-link-app @active("Plantoes", string.Empty)" asp-controller="Plantoes" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Plantões</span></a>
-                    <a class="nav-link-app @active("Escalas", string.Empty)" asp-controller="Escalas" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Escalas</span></a>
-                    <a class="nav-link-app @active("Agenda", string.Empty)" asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i><span>Agenda</span></a>
-                    @if (!isHospital)
-                    {
-                        <a class="nav-link-app @active("Medicos", string.Empty)" asp-controller="Medicos" asp-action="Index"><i class="bi bi-people"></i><span>Médicos</span></a>
-                        <a class="nav-link-app @active("Hospitais", string.Empty)" asp-controller="Hospitais" asp-action="Index"><i class="bi bi-hospital"></i><span>Hospitais</span></a>
+                        if (item.IsLocked)
+                        {
+                            <span class="nav-link-app locked" title="@item.LockedReason" aria-disabled="true"><i class="bi @item.Icon"></i><span>@item.Title</span><small>Bloqueado</small></span>
+                        }
+                        else
+                        {
+                            <a class="nav-link-app @(item.IsActive ? "active" : string.Empty)" asp-controller="@item.Controller" asp-action="@item.Action"><i class="bi @item.Icon"></i><span>@item.Title</span></a>
+                        }
                     }
                 }
-
-                @if (isMed)
-                {
-                    <div class="nav-section-title">Área do Médico</div>
-                    <a class="nav-link-app @active("MedicoArea", string.Empty)" asp-controller="MedicoArea" asp-action="Index"><i class="bi bi-person-heart"></i><span>Resumo</span></a>
-                    <a class="nav-link-app @active("MinhaAgenda", string.Empty)" asp-controller="MinhaAgenda" asp-action="Index"><i class="bi bi-calendar-check"></i><span>Minha agenda</span></a>
-                    <a class="nav-link-app @active("Financeiro", string.Empty)" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Meus pagamentos</span></a>
-                }
-
-                @if (isFin || isTenantAdmin || isGlobalAdmin)
-                {
-                    <div class="nav-section-title">Financeiro</div>
-                    <a class="nav-link-app @active("Financeiro", string.Empty)" asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-stack"></i><span>Pagamentos</span></a>
-                    <a class="nav-link-app @active("FaturamentoSaas", string.Empty)" asp-controller="FaturamentoSaas" asp-action="Index"><i class="bi bi-receipt-cutoff"></i><span>Billing/Faturas</span></a>
-                    <a class="nav-link-app @active("Relatorios", string.Empty)" asp-controller="Relatorios" asp-action="Index"><i class="bi bi-file-earmark-bar-graph"></i><span>Relatórios</span></a>
-                }
-
-                @if (isParceiro)
-                {
-                    <div class="nav-section-title">Parceiro</div>
-                    <a class="nav-link-app @active("ParceiroPortal", string.Empty)" asp-controller="ParceiroPortal" asp-action="Index"><i class="bi bi-handshake"></i><span>Portal Parceiro</span></a>
-                    <a class="nav-link-app @active("PropostasComerciais", string.Empty)" asp-controller="PropostasComerciais" asp-action="Dashboard"><i class="bi bi-file-earmark-richtext"></i><span>Propostas</span></a>
-                }
-
-                @if (isComercial || isCs)
-                {
-                    <div class="nav-section-title">Crescimento</div>
-                    @if (isComercial)
-                    {
-                        <a class="nav-link-app @active("Comercial", string.Empty)" asp-controller="Comercial" asp-action="Funil"><i class="bi bi-funnel"></i><span>Comercial</span></a>
-                        <a class="nav-link-app @active("PropostasComerciais", string.Empty)" asp-controller="PropostasComerciais" asp-action="Dashboard"><i class="bi bi-file-earmark-text"></i><span>Propostas</span></a>
-                    }
-                    @if (isCs)
-                    {
-                        <a class="nav-link-app @active("CustomerSuccess", string.Empty)" asp-controller="CustomerSuccess" asp-action="Index"><i class="bi bi-heart-pulse"></i><span>Customer Success</span></a>
-                    }
-                }
-
-                <div class="nav-section-title">Suporte e governança</div>
-                <a class="nav-link-app @active("Ajuda", string.Empty)" asp-controller="Ajuda" asp-action="Index"><i class="bi bi-question-circle"></i><span>Ajuda/Treinamento</span></a>
-                <a class="nav-link-app @active("Lgpd", string.Empty)" asp-controller="Lgpd" asp-action="Index"><i class="bi bi-shield-check"></i><span>LGPD</span></a>
-                @if (isAdmin || isAuditor || isSuporte)
-                {
-                    <a class="nav-link-app @active("Auditoria", string.Empty)" asp-controller="Auditoria" asp-action="Index"><i class="bi bi-journal-check"></i><span>Auditoria</span></a>
-                }
-                @if (isSuporte || isAdmin)
-                {
-                    <a class="nav-link-app @active("Suporte", string.Empty)" asp-controller="Suporte" asp-action="Index"><i class="bi bi-life-preserver"></i><span>Suporte</span></a>
-                }
-                <a class="nav-link-app @active("Usuario", string.Empty)" asp-controller="Usuario" asp-action="Index"><i class="bi bi-person-circle"></i><span>Minha conta</span></a>
                 <a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
             </nav>
         </aside>
@@ -191,6 +118,7 @@ else
 <script src="~/js/site.js" asp-append-version="true"></script>
 <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
 <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>
+<script src="~/js/plantao-saas.js" asp-append-version="true"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function(){ navigator.serviceWorker.register("/service-worker.js").catch(function(){}); });

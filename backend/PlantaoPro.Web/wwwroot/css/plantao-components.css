@@ -1,2 +1,16 @@
 /* PlantãoPro SaaS design-system layer: plantao-components */
 @import url('./plantaopro-design-system.css');
+
+/* Bloqueios de plano e módulos */
+.module-locked-notice, .plan-limit-notice, .upgrade-cta {
+    border-radius: 18px;
+    border: 1px solid rgba(245, 158, 11, .28);
+    background: linear-gradient(135deg, #fff7ed, #ffffff);
+    box-shadow: 0 14px 40px rgba(146, 64, 14, .08);
+}
+.saas-card {
+    border: 1px solid rgba(15, 23, 42, .08);
+    border-radius: 20px;
+    box-shadow: 0 18px 55px rgba(15, 23, 42, .08);
+    background: #fff;
+}

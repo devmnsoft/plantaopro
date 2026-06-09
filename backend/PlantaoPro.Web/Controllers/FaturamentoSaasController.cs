@@ -4,7 +4,7 @@ using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,FINANCEIRO")]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,DIRETOR,FINANCEIRO")]
 public sealed class FaturamentoSaasController : BaseWebController
 {
     public FaturamentoSaasController(IHttpClientFactory httpClientFactory, ILogger<FaturamentoSaasController> logger) : base(httpClientFactory, logger) { }

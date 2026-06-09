@@ -10,7 +10,7 @@ public interface ICurrentUserService
     Guid? TenantId { get; }
     Guid? ClienteId { get; }
     string UserName { get; }
-    string[] Roles();
+    IReadOnlyCollection<string> Roles();
     bool IsAuthenticated();
     bool IsGlobalAdmin();
     bool IsTenantAdmin();
@@ -27,17 +27,27 @@ public interface IPermissionService
     bool CanManageBilling();
     bool CanManageWhiteLabel();
     bool CanViewSensitiveData();
+    bool CanAccessAdminArea();
+    bool CanAccessClientPortal();
+    bool CanAccessPartnerPortal();
+    bool CanAccessMedicalArea();
+    bool CanAccessFinancialArea();
 }
 
 public interface IModuleAccessService
 {
     bool CanAccessModule(string moduleCode);
+    bool IsModuleEnabled(string moduleCode);
+    bool IsFeatureEnabled(string featureCode);
     bool CanAccessFeature(string featureCode);
 }
 
 public interface ITenantAccessService
 {
     bool CanAccessTenant(Guid tenantId);
+    bool CanAccessCliente(Guid clienteId);
+    bool CanSwitchTenant();
+    Task RegistrarTrocaContextoAsync(Guid tenantId, string motivo, CancellationToken cancellationToken = default);
 }
 
 public sealed class CurrentUserService : ICurrentUserService
@@ -54,13 +64,22 @@ public sealed class CurrentUserService : ICurrentUserService
     public Guid? TenantId => ReadGuid("tenant_id") ?? ReadGuid("cliente_id");
     public Guid? ClienteId => ReadGuid("cliente_id") ?? TenantId;
     public string UserName => User.Identity?.Name ?? string.Empty;
-    public string[] Roles() => User.FindAll(ClaimTypes.Role).Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+    public IReadOnlyCollection<string> Roles()
+    {
+        return User.FindAll(ClaimTypes.Role)
+            .Select(c => Normalize(c.Value))
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
     public bool IsAuthenticated() => User.Identity?.IsAuthenticated == true;
-    public bool IsGlobalAdmin() => User.IsGlobalAdmin();
-    public bool IsTenantAdmin() => User.IsTenantAdmin();
+    public bool IsGlobalAdmin() => HasRole(RolesConstants.AdministradorGlobal);
+    public bool IsTenantAdmin() => HasRole(RolesConstants.Administrador) || HasRole(RolesConstants.AdministradorCliente) || HasRole(RolesConstants.Diretor);
     public bool IsPartner() => HasRole(RolesConstants.Parceiro);
     public bool IsDoctor() => HasRole(RolesConstants.Medico);
-    public bool HasRole(string role) => User.IsInRole(role);
+    public bool HasRole(string role) => Roles().Any(r => string.Equals(r, Normalize(role), StringComparison.OrdinalIgnoreCase));
 
     private Guid? ReadGuid(string claimType)
     {
@@ -68,6 +87,8 @@ public sealed class CurrentUserService : ICurrentUserService
         var raw = User.FindFirst(claimType)?.Value;
         return Guid.TryParse(raw, out value) ? value : null;
     }
+
+    private static string Normalize(string? role) => (role ?? string.Empty).Trim().ToUpperInvariant();
 }
 
 public sealed class PermissionService : IPermissionService
@@ -81,20 +102,62 @@ public sealed class PermissionService : IPermissionService
 
     public bool HasPermission(string module, string action)
     {
+        if (!currentUser.IsAuthenticated()) return false;
         if (currentUser.IsGlobalAdmin()) return true;
-        var moduleCode = (module ?? string.Empty).Trim().ToUpperInvariant();
-        var actionCode = (action ?? string.Empty).Trim().ToUpperInvariant();
 
-        if (currentUser.IsTenantAdmin()) return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL";
-        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return moduleCode is "PLANTOES" or "ESCALAS" or "CONVITES" or "CENTRAL_ESCALA" or "MEDICOS" or "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Financeiro)) return moduleCode is "FINANCEIRO" or "RELATORIOS" or "FATURAS";
-        if (currentUser.HasRole(RolesConstants.Medico)) return moduleCode is "MEDICO_AREA" or "MINHA_AGENDA" or "CONVITES" or "PAGAMENTOS";
-        if (currentUser.HasRole(RolesConstants.Hospital)) return moduleCode is "PLANTOES" or "ESCALAS" or "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Parceiro)) return moduleCode is "PARCEIRO" or "PROPOSTAS" or "COMERCIAL";
-        if (currentUser.HasRole(RolesConstants.Suporte)) return moduleCode is "SUPORTE" or "AJUDA" or "AUDITORIA";
-        if (currentUser.HasRole(RolesConstants.Auditor)) return actionCode == "VER" || moduleCode is "AUDITORIA" or "RELATORIOS";
-        if (currentUser.HasRole(RolesConstants.Comercial)) return moduleCode is "COMERCIAL" or "PROPOSTAS" or "PLANOS";
-        if (currentUser.HasRole(RolesConstants.CustomerSuccess)) return moduleCode is "CUSTOMER_SUCCESS" or "ONBOARDING" or "CLIENTES";
+        var moduleCode = Normalize(module);
+        var actionCode = Normalize(action);
+
+        if (currentUser.IsTenantAdmin())
+        {
+            return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador))
+        {
+            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Financeiro))
+        {
+            return moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Medico))
+        {
+            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Hospital))
+        {
+            return moduleCode == "HOSPITAL_AREA" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "AGENDA";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Parceiro))
+        {
+            return moduleCode == "PARCEIRO" || moduleCode == "LEADS" || moduleCode == "PROPOSTAS" || moduleCode == "COMISSOES" || moduleCode == "REPASSES" || moduleCode == "MATERIAIS";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Suporte))
+        {
+            return moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Auditor))
+        {
+            return actionCode == "VER" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD";
+        }
+
+        if (currentUser.HasRole(RolesConstants.Comercial))
+        {
+            return moduleCode == "COMERCIAL" || moduleCode == "PROPOSTAS" || moduleCode == "PLANOS" || moduleCode == "MARKETPLACE";
+        }
+
+        if (currentUser.HasRole(RolesConstants.CustomerSuccess))
+        {
+            return moduleCode == "CUSTOMER_SUCCESS" || moduleCode == "ONBOARDING" || moduleCode == "CLIENTES" || moduleCode == "JORNADA" || moduleCode == "SUPORTE";
+        }
+
         return false;
     }
 
@@ -103,29 +166,50 @@ public sealed class PermissionService : IPermissionService
     public bool CanManageBilling() => currentUser.IsGlobalAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.IsTenantAdmin();
     public bool CanManageWhiteLabel() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();
     public bool CanViewSensitiveData() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Auditor);
+    public bool CanAccessAdminArea() => currentUser.IsGlobalAdmin();
+    public bool CanAccessClientPortal() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();
+    public bool CanAccessPartnerPortal() => currentUser.IsGlobalAdmin() || currentUser.IsPartner();
+    public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor();
+    public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
+
+    private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
 }
 
 public sealed class ModuleAccessService : IModuleAccessService
 {
     private readonly IPermissionService permissions;
+    private readonly ICurrentUserService currentUser;
 
-    public ModuleAccessService(IPermissionService permissions)
+    public ModuleAccessService(IPermissionService permissions, ICurrentUserService currentUser)
     {
         this.permissions = permissions;
+        this.currentUser = currentUser;
     }
 
-    public bool CanAccessModule(string moduleCode) => permissions.HasPermission(moduleCode, "VER");
-    public bool CanAccessFeature(string featureCode) => permissions.HasPermission(featureCode, "USAR");
+    public bool CanAccessModule(string moduleCode) => IsModuleEnabled(moduleCode) && permissions.HasPermission(moduleCode, "VER");
+    public bool CanAccessFeature(string featureCode) => IsFeatureEnabled(featureCode) && permissions.HasPermission(featureCode, "USAR");
+    public bool IsModuleEnabled(string moduleCode) => currentUser.IsGlobalAdmin() || !string.Equals((moduleCode ?? string.Empty).Trim(), "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
+    public bool IsFeatureEnabled(string featureCode) => currentUser.IsGlobalAdmin() || !string.Equals((featureCode ?? string.Empty).Trim(), "WHITE_LABEL_AVANCADO", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed class TenantAccessService : ITenantAccessService
 {
     private readonly ICurrentUserService currentUser;
+    private readonly ILogger<TenantAccessService> logger;
 
-    public TenantAccessService(ICurrentUserService currentUser)
+    public TenantAccessService(ICurrentUserService currentUser, ILogger<TenantAccessService> logger)
     {
         this.currentUser = currentUser;
+        this.logger = logger;
     }
 
     public bool CanAccessTenant(Guid tenantId) => currentUser.IsGlobalAdmin() || (currentUser.TenantId.HasValue && currentUser.TenantId.Value == tenantId);
+    public bool CanAccessCliente(Guid clienteId) => currentUser.IsGlobalAdmin() || (currentUser.ClienteId.HasValue && currentUser.ClienteId.Value == clienteId);
+    public bool CanSwitchTenant() => currentUser.IsGlobalAdmin();
+
+    public Task RegistrarTrocaContextoAsync(Guid tenantId, string motivo, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Troca de contexto solicitada. Usuario:{UsuarioId} TenantDestino:{TenantId} Motivo:{Motivo} Permitido:{Permitido}", currentUser.UserId, tenantId, motivo, CanSwitchTenant());
+        return Task.CompletedTask;
+    }
 }

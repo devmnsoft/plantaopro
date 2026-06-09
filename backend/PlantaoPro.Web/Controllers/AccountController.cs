@@ -131,7 +131,7 @@ public sealed class AccountController : Controller
                 return Redirect(returnUrl);
             }
 
-            return RedirectToActionByPerfil(perfil);
+            return RedirectToActionByPerfil(login.Roles ?? Array.Empty<string>());
         }
         catch (Exception ex)
         {
@@ -160,30 +160,40 @@ public sealed class AccountController : Controller
         }
     }
 
-    private IActionResult RedirectToActionByPerfil(string? perfil)
+    private IActionResult RedirectToActionByPerfil(IEnumerable<string> roles)
     {
-        var normalized = NormalizeRole(perfil) ?? string.Empty;
-        var destination = normalized switch
+        var normalizedRoles = roles
+            .Select(NormalizeRole)
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        // Prioridade explícita para evitar 404, loop de login e destinos inconsistentes quando o usuário possui múltiplos perfis.
+        var priority = new List<(string Role, string Controller, string Action)>
         {
-            "ADMINISTRADOR_GLOBAL" => (Action: "Index", Controller: "AdminSaas"),
-            "ADMINISTRADOR" => (Action: "Index", Controller: "ClientePortal"),
-            "ADMINISTRADOR_CLIENTE" => (Action: "Index", Controller: "ClientePortal"),
-            "DIRETOR" => (Action: "Index", Controller: "ClientePortal"),
-            "COORDENADOR" => (Action: "Index", Controller: "Coordenacao"),
-            "COORDENACAO" => (Action: "Index", Controller: "Coordenacao"),
-            "OPERADOR" => (Action: "Index", Controller: "Coordenacao"),
-            "FINANCEIRO" => (Action: "Index", Controller: "Financeiro"),
-            "MEDICO" => (Action: "Index", Controller: "MedicoArea"),
-            "HOSPITAL" => (Action: "Index", Controller: "HospitalArea"),
-            "PARCEIRO" => (Action: "Index", Controller: "ParceiroPortal"),
-            "SUPORTE" => (Action: "Index", Controller: "Suporte"),
-            "AUDITOR" => (Action: "Index", Controller: "Auditoria"),
-            "COMERCIAL" => (Action: "Funil", Controller: "Comercial"),
-            "CUSTOMER_SUCCESS" => (Action: "Index", Controller: "CustomerSuccess"),
-            _ => (Action: "Dashboard", Controller: "Home")
+            (RolesConstants.AdministradorGlobal, "AdminSaas", "Index"),
+            (RolesConstants.AdministradorCliente, "ClientePortal", "Index"),
+            (RolesConstants.Administrador, "ClientePortal", "Index"),
+            (RolesConstants.Diretor, "ClientePortal", "Index"),
+            (RolesConstants.Coordenador, "CentralEscala", "Index"),
+            (RolesConstants.Coordenacao, "CentralEscala", "Index"),
+            (RolesConstants.Financeiro, "Financeiro", "Index"),
+            (RolesConstants.Medico, "MedicoArea", "Index"),
+            (RolesConstants.Hospital, "HospitalArea", "Index"),
+            (RolesConstants.Parceiro, "ParceiroPortal", "Index"),
+            (RolesConstants.Suporte, "Suporte", "Index"),
+            (RolesConstants.Auditor, "Auditoria", "Index"),
+            (RolesConstants.Comercial, "Comercial", "Index"),
+            (RolesConstants.CustomerSuccess, "CustomerSuccess", "Index")
         };
 
-        _logger.LogInformation("Redirecionando usuário após login. Perfil:{Perfil} Destino:{Controller}/{Action}", normalized, destination.Controller, destination.Action);
+        var destination = priority.FirstOrDefault(p => normalizedRoles.Any(r => string.Equals(r, p.Role, StringComparison.OrdinalIgnoreCase)));
+        if (string.IsNullOrWhiteSpace(destination.Controller))
+        {
+            destination = ("USUARIO", "Home", "Dashboard");
+        }
+
+        _logger.LogInformation("Redirecionando usuário após login. Perfis:{Perfis} Destino:{Controller}/{Action}", string.Join(',', normalizedRoles), destination.Controller, destination.Action);
         return RedirectToAction(destination.Action, destination.Controller);
     }
 

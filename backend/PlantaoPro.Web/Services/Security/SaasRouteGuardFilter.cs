@@ -15,6 +15,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Assinaturas"] = "ASSINATURAS",
         ["Billing"] = "BILLING",
         ["FaturamentoSaas"] = "BILLING",
+        ["MinhaAssinatura"] = "ASSINATURAS",
         ["Marketplace"] = "MARKETPLACE",
         ["WhiteLabel"] = "WHITE_LABEL",
         ["Permissoes"] = "PERMISSOES",
@@ -45,6 +46,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["PropostasComerciais"] = "PROPOSTAS",
         ["CustomerSuccess"] = "CUSTOMER_SUCCESS",
         ["Onboarding"] = "ONBOARDING",
+        ["Treinamento"] = "TREINAMENTO",
         ["Lgpd"] = "LGPD",
         ["Suporte"] = "SUPORTE"
     };

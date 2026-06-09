@@ -108,11 +108,11 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = Normalize(module);
         var actionCode = Normalize(action);
 
-        if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA") return true;
+        if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
 
         if (currentUser.IsTenantAdmin())
         {
-            return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO";
+            return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO" && moduleCode != "MARKETPLACE";
         }
 
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador))
@@ -142,12 +142,12 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Suporte))
         {
-            return moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE";
+            return moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE" || moduleCode == "OBSERVABILIDADE_GLOBAL" || moduleCode == "ADMIN_SAAS";
         }
 
         if (currentUser.HasRole(RolesConstants.Auditor))
         {
-            return actionCode == "VER" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD";
+            return actionCode == "VER" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD" || moduleCode == "OBSERVABILIDADE_GLOBAL";
         }
 
         if (currentUser.HasRole(RolesConstants.Comercial))

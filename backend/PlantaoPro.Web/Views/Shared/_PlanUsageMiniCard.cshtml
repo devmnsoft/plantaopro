@@ -1,4 +1,8 @@
 @{
     var planName = User.FindFirst("plano")?.Value ?? "Profissional";
 }
-<span class="plan-usage-mini d-none d-lg-inline-flex"><i class="bi bi-speedometer2"></i><span>@planName</span><small>uso saudável</small></span>
+<span class="plan-usage-mini d-none d-lg-inline-flex" title="Plano e uso atual">
+    <i class="bi bi-speedometer2"></i>
+    <span>@planName</span>
+    <small>uso monitorado</small>
+</span>

@@ -174,7 +174,7 @@ public sealed class AccountController : Controller
             "OPERADOR" => (Action: "Index", Controller: "Coordenacao"),
             "FINANCEIRO" => (Action: "Index", Controller: "Financeiro"),
             "MEDICO" => (Action: "Index", Controller: "MedicoArea"),
-            "HOSPITAL" => (Action: "Index", Controller: "Agenda"),
+            "HOSPITAL" => (Action: "Index", Controller: "HospitalArea"),
             "PARCEIRO" => (Action: "Index", Controller: "ParceiroPortal"),
             "SUPORTE" => (Action: "Index", Controller: "Suporte"),
             "AUDITOR" => (Action: "Index", Controller: "Auditoria"),

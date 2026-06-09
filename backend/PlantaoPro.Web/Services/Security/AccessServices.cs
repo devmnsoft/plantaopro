@@ -8,15 +8,21 @@ public interface ICurrentUserService
     ClaimsPrincipal User { get; }
     Guid? UserId { get; }
     Guid? TenantId { get; }
+    Guid? ClienteId { get; }
     string UserName { get; }
+    string[] Roles();
+    bool IsAuthenticated();
     bool IsGlobalAdmin();
     bool IsTenantAdmin();
+    bool IsPartner();
+    bool IsDoctor();
     bool HasRole(string role);
 }
 
 public interface IPermissionService
 {
     bool HasPermission(string module, string action);
+    bool CanManageSaas();
     bool CanManageUsers();
     bool CanManageBilling();
     bool CanManageWhiteLabel();
@@ -45,10 +51,15 @@ public sealed class CurrentUserService : ICurrentUserService
 
     public ClaimsPrincipal User => httpContextAccessor.HttpContext?.User ?? new ClaimsPrincipal(new ClaimsIdentity());
     public Guid? UserId => ReadGuid("uid") ?? ReadGuid(ClaimTypes.NameIdentifier);
-    public Guid? TenantId => ReadGuid("cliente_id") ?? ReadGuid("tenant_id");
+    public Guid? TenantId => ReadGuid("tenant_id") ?? ReadGuid("cliente_id");
+    public Guid? ClienteId => ReadGuid("cliente_id") ?? TenantId;
     public string UserName => User.Identity?.Name ?? string.Empty;
+    public string[] Roles() => User.FindAll(ClaimTypes.Role).Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+    public bool IsAuthenticated() => User.Identity?.IsAuthenticated == true;
     public bool IsGlobalAdmin() => User.IsGlobalAdmin();
     public bool IsTenantAdmin() => User.IsTenantAdmin();
+    public bool IsPartner() => HasRole(RolesConstants.Parceiro);
+    public bool IsDoctor() => HasRole(RolesConstants.Medico);
     public bool HasRole(string role) => User.IsInRole(role);
 
     private Guid? ReadGuid(string claimType)
@@ -74,7 +85,7 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = (module ?? string.Empty).Trim().ToUpperInvariant();
         var actionCode = (action ?? string.Empty).Trim().ToUpperInvariant();
 
-        if (currentUser.IsTenantAdmin()) return moduleCode != "ADMIN_SAAS";
+        if (currentUser.IsTenantAdmin()) return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL";
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return moduleCode is "PLANTOES" or "ESCALAS" or "CONVITES" or "CENTRAL_ESCALA" or "MEDICOS" or "AGENDA";
         if (currentUser.HasRole(RolesConstants.Financeiro)) return moduleCode is "FINANCEIRO" or "RELATORIOS" or "FATURAS";
         if (currentUser.HasRole(RolesConstants.Medico)) return moduleCode is "MEDICO_AREA" or "MINHA_AGENDA" or "CONVITES" or "PAGAMENTOS";
@@ -87,6 +98,7 @@ public sealed class PermissionService : IPermissionService
         return false;
     }
 
+    public bool CanManageSaas() => currentUser.IsGlobalAdmin();
     public bool CanManageUsers() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();
     public bool CanManageBilling() => currentUser.IsGlobalAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.IsTenantAdmin();
     public bool CanManageWhiteLabel() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();

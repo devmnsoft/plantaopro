@@ -1,0 +1,7 @@
+@model IEnumerable<PlantaoPro.Web.Models.QuickActionViewModel>
+<div class="quick-actions-grid">
+@foreach (var action in Model)
+{
+    <partial name="_ProfileHomeCard" model="action" />
+}
+</div>

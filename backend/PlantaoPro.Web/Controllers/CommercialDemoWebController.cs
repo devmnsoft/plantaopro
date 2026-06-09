@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -77,7 +78,7 @@ public sealed class CommercialDemoWebController : Controller
     private static CommercialCardViewModel Card(string title, string description, string actionText, string controller, string action) => new CommercialCardViewModel { Title = title, Description = description, ActionText = actionText, ActionController = controller, ActionName = action };
 }
 
-[Authorize]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
 public sealed class AdminSaasController : Controller
 {
     public IActionResult Index() => View("Dashboard", Dashboard("Admin SaaS MNSOFT", "Leads do mês, propostas, clientes, MRR, implantação, billing e alertas críticos."));
@@ -95,14 +96,14 @@ public sealed class AdminSaasController : Controller
     private static CommercialDemoPageViewModel Dashboard(string title, string subtitle) => CommercialDemoWebControllerPageFactory.Build(title, subtitle);
 }
 
-[Authorize]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor)]
 public sealed class ClientePortalController : Controller
 {
     public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Portal do cliente", "Meu plano, uso, faturas, usuários, white label, onboarding e suporte."));
     public IActionResult MeuPlano() => Index(); public IActionResult Uso() => Index(); public IActionResult Faturas() => Index(); public IActionResult Usuarios() => Index(); public IActionResult Perfis() => Index(); public IActionResult WhiteLabel() => Index(); public IActionResult Parametrizacoes() => Index(); public IActionResult Onboarding() => Index(); public IActionResult Suporte() => Index(); public IActionResult Treinamento() => Index();
 }
 
-[Authorize]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Parceiro)]
 public sealed class ParceiroPortalController : Controller
 {
     public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Portal do parceiro", "Leads, clientes, propostas, comissões, repasses, materiais e suporte."));

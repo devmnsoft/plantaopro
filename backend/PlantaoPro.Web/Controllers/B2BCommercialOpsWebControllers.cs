@@ -38,9 +38,10 @@ public sealed class TreinamentoController : Controller
     public IActionResult MeuProgresso() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Meu progresso", "Conclusão das trilhas obrigatórias por perfil.", "Treinamento", "Trilhas"));
 }
 
-[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR")]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,MEDICO")]
 public sealed class MedicoAreaController : Controller
 {
+    public IActionResult Index() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Área do médico", "Convites, agenda, disponibilidade, substituições e pagamentos próprios em uma jornada simples.", "MedicoArea", "Agenda"));
     public IActionResult Agenda() => View("~/Views/B2BLaunch/Index.cshtml", B2BLaunchPages.Pagina("Agenda médica", "Calendário mensal, próximos plantões, convites, histórico e pagamentos previstos.", "MedicoArea", "Disponibilidade"));
     public IActionResult Disponibilidade() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Disponibilidade médica", "Disponibilidades e indisponibilidades influenciam sugestão de convite.", "MedicoArea", "Agenda"));
     public IActionResult Substituicoes() => View("~/Views/B2BLaunch/Form.cshtml", B2BLaunchPages.Pagina("Substituições médicas", "Solicitação de substituição com aprovação da coordenação.", "MedicoArea", "Agenda"));

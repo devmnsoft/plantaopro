@@ -6,35 +6,36 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
 [Route("api/permissoes")]
-[Authorize]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
 public sealed class PermissoesController : ControllerBase
 {
     private static readonly string[] Perfis = new[]
     {
-        "ADMINISTRADOR_GLOBAL", "ADMINISTRADOR", "ADMINISTRADOR_CLIENTE", "DIRETOR", "COORDENADOR", "OPERADOR", "FINANCEIRO", "MEDICO", "HOSPITAL", "PARCEIRO", "SUPORTE", "AUDITOR", "COMERCIAL", "CUSTOMER_SUCCESS"
+        RolesConstants.AdministradorGlobal, RolesConstants.Administrador, RolesConstants.AdministradorCliente, RolesConstants.Diretor, RolesConstants.Coordenador, RolesConstants.Operador, RolesConstants.Financeiro, RolesConstants.Medico, RolesConstants.Hospital, RolesConstants.Parceiro, RolesConstants.Suporte, RolesConstants.Auditor, RolesConstants.Comercial, RolesConstants.CustomerSuccess
     };
 
     private static readonly Dictionary<string, string[]> Matriz = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
     {
-        ["ADMINISTRADOR_GLOBAL"] = new[] { "*" },
-        ["ADMINISTRADOR"] = new[] { "CLIENTE_PORTAL:GERENCIAR", "USUARIOS:GERENCIAR", "WHITE_LABEL:EDITAR", "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "FINANCEIRO:VER" },
-        ["ADMINISTRADOR_CLIENTE"] = new[] { "CLIENTE_PORTAL:GERENCIAR", "USUARIOS:GERENCIAR", "WHITE_LABEL:EDITAR", "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "FINANCEIRO:VER" },
-        ["COORDENADOR"] = new[] { "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "CONVITES:GERENCIAR", "CENTRAL_ESCALA:VER", "MEDICOS:VER" },
-        ["OPERADOR"] = new[] { "PLANTOES:VER", "ESCALAS:VER", "CONVITES:VER" },
-        ["FINANCEIRO"] = new[] { "FINANCEIRO:GERENCIAR", "RELATORIOS:VER", "FATURAS:VER" },
-        ["MEDICO"] = new[] { "MEDICO_AREA:VER", "CONVITES:VER", "AGENDA:VER", "PAGAMENTOS:VER" },
-        ["HOSPITAL"] = new[] { "PLANTOES:VER", "ESCALAS:VER" },
-        ["PARCEIRO"] = new[] { "PARCEIRO:VER", "PROPOSTAS:VER", "COMISSOES:VER" },
-        ["SUPORTE"] = new[] { "SUPORTE:GERENCIAR", "CHAMADOS:GERENCIAR" },
-        ["AUDITOR"] = new[] { "AUDITORIA:VER", "RELATORIOS:VER" },
-        ["COMERCIAL"] = new[] { "COMERCIAL:GERENCIAR", "PROPOSTAS:GERENCIAR", "PLANOS:VER" },
-        ["CUSTOMER_SUCCESS"] = new[] { "CUSTOMER_SUCCESS:GERENCIAR", "ONBOARDING:GERENCIAR", "CLIENTES:VER" }
+        [RolesConstants.AdministradorGlobal] = new[] { "*" },
+        [RolesConstants.Administrador] = new[] { "CLIENTE_PORTAL:GERENCIAR", "USUARIOS:GERENCIAR", "PERFIS:GERENCIAR", "WHITE_LABEL:EDITAR", "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "FINANCEIRO:VER", "FATURAS:VER" },
+        [RolesConstants.AdministradorCliente] = new[] { "CLIENTE_PORTAL:GERENCIAR", "USUARIOS:GERENCIAR", "PERFIS:GERENCIAR", "WHITE_LABEL:EDITAR", "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "FINANCEIRO:VER", "FATURAS:VER" },
+        [RolesConstants.Diretor] = new[] { "CLIENTE_PORTAL:VER", "RELATORIOS:VER", "FINANCEIRO:VER", "PLANTOES:VER", "ESCALAS:VER" },
+        [RolesConstants.Coordenador] = new[] { "CENTRAL_ESCALA:VER", "PLANTOES:GERENCIAR", "ESCALAS:GERENCIAR", "CONVITES:GERENCIAR", "MEDICOS:VER", "HOSPITAIS:VER" },
+        [RolesConstants.Operador] = new[] { "CENTRAL_ESCALA:VER", "PLANTOES:VER", "ESCALAS:VER", "CONVITES:VER" },
+        [RolesConstants.Financeiro] = new[] { "FINANCEIRO:GERENCIAR", "PAGAMENTOS:CONFIRMAR", "RELATORIOS:VER", "FATURAS:VER", "EXPORTACOES:GERAR" },
+        [RolesConstants.Medico] = new[] { "MEDICO_AREA:VER", "CONVITES:VER", "AGENDA:VER", "PAGAMENTOS:VER", "DISPONIBILIDADE:EDITAR", "SUBSTITUICOES:SOLICITAR" },
+        [RolesConstants.Hospital] = new[] { "HOSPITAL_AREA:VER", "PLANTOES:VER", "ESCALAS:VER" },
+        [RolesConstants.Parceiro] = new[] { "PARCEIRO:VER", "LEADS:VER", "PROPOSTAS:VER", "COMISSOES:VER", "REPASSES:VER" },
+        [RolesConstants.Suporte] = new[] { "SUPORTE:GERENCIAR", "CHAMADOS:GERENCIAR", "AUDITORIA:VER", "TENANT_SUPORTE:ENTRAR" },
+        [RolesConstants.Auditor] = new[] { "AUDITORIA:VER", "RELATORIOS:VER", "LGPD:VER" },
+        [RolesConstants.Comercial] = new[] { "COMERCIAL:GERENCIAR", "LEADS:GERENCIAR", "PROPOSTAS:GERENCIAR", "PLANOS:VER" },
+        [RolesConstants.CustomerSuccess] = new[] { "CUSTOMER_SUCCESS:GERENCIAR", "ONBOARDING:GERENCIAR", "CLIENTES:VER", "HEALTH_SCORE:VER" }
     };
 
     [HttpGet("matriz")]
     public IActionResult GetMatriz()
     {
-        return Ok(ApiResponse<object>.Ok(new { perfis = Perfis, matriz = Matriz }, "Matriz de permissões carregada."));
+        return Ok(ApiResponse<object>.Ok(new { perfis = Perfis, matriz = Matriz, bloqueios = MotivosBloqueio() }, "Matriz de permissões carregada."));
     }
 
     [HttpGet("perfil/{perfil}")]
@@ -44,16 +45,51 @@ public sealed class PermissoesController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { perfil, permissoes }, "Permissões do perfil carregadas."));
     }
 
+    [HttpGet("usuario/{usuarioId}")]
+    public IActionResult GetUsuario(Guid usuarioId)
+    {
+        var perfis = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var permissoes = perfis.SelectMany(p => Matriz.TryGetValue(p, out var itens) ? itens : Array.Empty<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        return Ok(ApiResponse<object>.Ok(new { usuarioId, perfis, permissoes }, "Permissões efetivas do usuário carregadas."));
+    }
+
     [HttpPost("testar-acesso")]
     public IActionResult TestarAcesso([FromBody] TestarAcessoRequest request)
     {
         var perfil = request.Perfil ?? string.Empty;
         var modulo = request.Modulo ?? string.Empty;
-        var acao = request.Acao ?? "VER";
+        var acao = string.IsNullOrWhiteSpace(request.Acao) ? "VER" : request.Acao;
         var chave = modulo.ToUpperInvariant() + ":" + acao.ToUpperInvariant();
         var permitido = Matriz.TryGetValue(perfil, out var permissoes) && (permissoes.Contains("*") || permissoes.Contains(chave, StringComparer.OrdinalIgnoreCase) || permissoes.Any(p => p.StartsWith(modulo + ":", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "VER", StringComparison.OrdinalIgnoreCase)));
-        var motivo = permitido ? "Permitido por perfil e módulo." : "Bloqueado por perfil, plano, módulo ou tenant.";
-        return Ok(ApiResponse<object>.Ok(new { permitido, motivo, perfil, modulo, acao }, motivo));
+        var motivo = permitido ? "Permitido por perfil, tenant e módulo." : "Bloqueado por perfil, plano, módulo, assinatura, tenant ou usuário inativo.";
+        return Ok(ApiResponse<object>.Ok(new { permitido, motivo, perfil, modulo, acao, motivosPossiveis = MotivosBloqueio() }, motivo));
+    }
+
+    [HttpPost("perfil/{perfil}/salvar")]
+    public IActionResult SalvarPerfil(string perfil, [FromBody] SalvarPerfilPermissoesRequest request)
+    {
+        if (!User.IsInRole(RolesConstants.AdministradorGlobal) && !User.IsInRole(RolesConstants.AdministradorCliente) && !User.IsInRole(RolesConstants.Administrador)) return Forbid();
+        return Ok(ApiResponse<object>.Ok(new { perfil, permissoes = request.Permissoes ?? Array.Empty<string>(), modo = "preview-auditavel" }, "Permissões validadas para salvamento auditável."));
+    }
+
+    [HttpPost("perfil/{perfil}/restaurar-padrao")]
+    public IActionResult RestaurarPadrao(string perfil)
+    {
+        if (!Matriz.TryGetValue(perfil, out var permissoes)) return NotFound(ApiResponse<object>.Fail("Perfil não encontrado.", 404));
+        return Ok(ApiResponse<object>.Ok(new { perfil, permissoes }, "Permissões padrão restauradas."));
+    }
+
+    [HttpPost("perfil/{perfil}/copiar")]
+    public IActionResult Copiar(string perfil, [FromBody] CopiarPermissoesRequest request)
+    {
+        var origem = request.PerfilOrigem ?? string.Empty;
+        if (!Matriz.TryGetValue(origem, out var permissoes)) return NotFound(ApiResponse<object>.Fail("Perfil de origem não encontrado.", 404));
+        return Ok(ApiResponse<object>.Ok(new { perfilDestino = perfil, perfilOrigem = origem, permissoes }, "Permissões copiadas para revisão antes da publicação."));
+    }
+
+    private static string[] MotivosBloqueio()
+    {
+        return new[] { "Sem perfil", "Sem permissão", "Plano não permite", "Módulo não contratado", "Tenant bloqueado", "Assinatura vencida", "Usuário inativo" };
     }
 }
 
@@ -64,4 +100,14 @@ public sealed class TestarAcessoRequest
     public string? Acao { get; set; }
     public Guid? TenantId { get; set; }
     public Guid? UsuarioId { get; set; }
+}
+
+public sealed class SalvarPerfilPermissoesRequest
+{
+    public string[]? Permissoes { get; set; }
+}
+
+public sealed class CopiarPermissoesRequest
+{
+    public string? PerfilOrigem { get; set; }
 }

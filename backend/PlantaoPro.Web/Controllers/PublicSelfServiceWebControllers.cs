@@ -85,7 +85,7 @@ public sealed class CadastroController : Controller
     }
 }
 
-[Authorize]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE")]
 public sealed class WhiteLabelController : Controller
 {
     [HttpGet("WhiteLabel")]
@@ -96,7 +96,7 @@ public sealed class WhiteLabelController : Controller
     public IActionResult Emails() => View("Emails", new WhiteLabelWebViewModel());
 }
 
-[Authorize]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE")]
 public sealed class PerfisController : Controller
 {
     [HttpGet("Perfis")]

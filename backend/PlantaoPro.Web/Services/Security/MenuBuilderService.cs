@@ -32,7 +32,7 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Tenants", "bi-diagram-3", "Clientes", "Index", "CLIENTES", RolesConstants.AdministradorGlobal),
             Item("Planos", "bi-columns-gap", "Planos", "Index", "PLANOS", RolesConstants.AdministradorGlobal),
             Item("Assinaturas", "bi-receipt", "Assinaturas", "Index", "ASSINATURAS", RolesConstants.AdministradorGlobal),
-            Item("Billing", "bi-credit-card", "FaturamentoSaas", "Index", "BILLING_GLOBAL", RolesConstants.AdministradorGlobal),
+            Item("Billing", "bi-credit-card", "Billing", "Faturas", "BILLING_GLOBAL", RolesConstants.AdministradorGlobal),
             Item("Propostas", "bi-file-earmark-richtext", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.AdministradorGlobal),
             Item("Parceiros", "bi-handshake", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.AdministradorGlobal),
             Item("Marketplace", "bi-shop", "Marketplace", "Index", "MARKETPLACE", RolesConstants.AdministradorGlobal, true),
@@ -59,7 +59,7 @@ public sealed class MenuBuilderService : IMenuBuilderService
         AddGroup(groups, "FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
         {
             Item("Pagamentos", "bi-cash-coin", "Pagamentos", "Index", "PAGAMENTOS", RolesConstants.Financeiro),
-            Item("Faturas", "bi-receipt-cutoff", "FaturamentoSaas", "Index", "FATURAS", RolesConstants.Financeiro),
+            Item("Faturas", "bi-receipt-cutoff", "Billing", "Faturas", "FATURAS", RolesConstants.Financeiro),
             Item("Relatórios", "bi-file-earmark-bar-graph", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro),
             Item("Exportações", "bi-download", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro)
         });
@@ -90,12 +90,12 @@ public sealed class MenuBuilderService : IMenuBuilderService
         AddGroup(groups, "PARCEIRO", "bi-handshake", currentController, currentAction, new List<MenuItemViewModel>
         {
             Item("Portal Parceiro", "bi-house-door", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
-            Item("Leads", "bi-bullseye", "Comercial", "Funil", "LEADS", RolesConstants.Parceiro),
-            Item("Propostas", "bi-file-earmark-text", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.Parceiro),
+            Item("Leads", "bi-bullseye", "ParceiroPortal", "Leads", "LEADS", RolesConstants.Parceiro),
+            Item("Propostas", "bi-file-earmark-text", "ParceiroPortal", "Propostas", "PROPOSTAS", RolesConstants.Parceiro),
             Item("Clientes", "bi-buildings", "ParceiroPortal", "Clientes", "PARCEIRO", RolesConstants.Parceiro),
-            Item("Comissões", "bi-percent", "ParceiroPortal", "Index", "COMISSOES", RolesConstants.Parceiro),
-            Item("Repasses", "bi-bank", "ParceiroPortal", "Index", "REPASSES", RolesConstants.Parceiro),
-            Item("Materiais", "bi-folder2-open", "ParceiroPortal", "Index", "MATERIAIS", RolesConstants.Parceiro)
+            Item("Comissões", "bi-percent", "ParceiroPortal", "Comissoes", "COMISSOES", RolesConstants.Parceiro),
+            Item("Repasses", "bi-bank", "ParceiroPortal", "Repasses", "REPASSES", RolesConstants.Parceiro),
+            Item("Materiais", "bi-folder2-open", "ParceiroPortal", "Materiais", "MATERIAIS", RolesConstants.Parceiro)
         });
 
         AddGroup(groups, "SUPORTE E GOVERNANÇA", "bi-shield-check", currentController, currentAction, new List<MenuItemViewModel>

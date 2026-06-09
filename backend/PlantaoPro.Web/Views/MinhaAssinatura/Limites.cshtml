@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Limites do plano";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Limites e uso", "Acompanhe usuários, médicos, unidades, plantões/mês e alertas de aproximação de limite.", "bi-speedometer2")' />
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Usuários", "18/25", "72% usado", "bi-people", null, "primary")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Médicos", "146/200", "73% usado", "bi-person-heart", null, "success")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Hospitais", "4/5", "Próximo do limite", "bi-hospital", null, "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Plantões/mês", "820/1000", "Alerta comercial", "bi-calendar-check", null, "warning")' /></div>
+</div>
+<partial name="_ModuleLockedNotice" model='@("Ao atingir limite contratado, ações de criação exibem motivo claro, plano atual e CTA de upgrade antes de bloquear a operação.")' />

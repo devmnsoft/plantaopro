@@ -101,3 +101,27 @@ public sealed class FilterPanelViewModel
     public string? Description { get; set; }
     public string? FormId { get; set; }
 }
+
+public sealed class PermissionMatrixViewModel
+{
+    public PermissionMatrixViewModel()
+    {
+        Perfis = new List<string>();
+        Modulos = new List<PermissionModuleViewModel>();
+    }
+
+    public IList<string> Perfis { get; set; }
+    public IList<PermissionModuleViewModel> Modulos { get; set; }
+    public string PerfilTeste { get; set; } = string.Empty;
+    public string ModuloTeste { get; set; } = string.Empty;
+    public string AcaoTeste { get; set; } = string.Empty;
+    public string ResultadoTeste { get; set; } = string.Empty;
+}
+
+public sealed class PermissionModuleViewModel
+{
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public IList<string> Acoes { get; set; } = new List<string>();
+    public Dictionary<string, IList<string>> PermissoesPorPerfil { get; set; } = new Dictionary<string, IList<string>>(StringComparer.OrdinalIgnoreCase);
+}

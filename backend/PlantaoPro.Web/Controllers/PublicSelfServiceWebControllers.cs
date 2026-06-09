@@ -150,6 +150,10 @@ public sealed class MinhaAssinaturaController : Controller
     public IActionResult Index() => View("Index");
     [HttpGet("MinhaAssinatura/Uso")]
     public IActionResult Uso() => View("Uso");
+    [HttpGet("MinhaAssinatura/Modulos")]
+    public IActionResult Modulos() => View("Modulos");
+    [HttpGet("MinhaAssinatura/Limites")]
+    public IActionResult Limites() => View("Limites");
     [HttpGet("MinhaAssinatura/Upgrade")]
     public IActionResult Upgrade() => View("Upgrade", PlanosPublicosController.Planos());
     [HttpGet("MinhaAssinatura/Downgrade")]

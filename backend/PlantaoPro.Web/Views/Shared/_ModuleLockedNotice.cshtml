@@ -1,0 +1,7 @@
+@model string?
+<div class="module-locked-notice">
+    <div class="d-flex align-items-start gap-3">
+        <div class="module-locked-icon"><i class="bi bi-lock"></i></div>
+        <div><strong>Recurso bloqueado pelo plano atual</strong><p class="mb-2">@(string.IsNullOrWhiteSpace(Model) ? "Este módulo exige contratação ou upgrade de plano." : Model)</p><a class="btn btn-sm btn-primary" asp-controller="MinhaAssinatura" asp-action="Upgrade">Solicitar upgrade</a></div>
+    </div>
+</div>

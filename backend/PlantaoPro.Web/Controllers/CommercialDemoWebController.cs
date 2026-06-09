@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Security;
+using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -99,15 +100,48 @@ public sealed class AdminSaasController : Controller
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor)]
 public sealed class ClientePortalController : Controller
 {
-    public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Portal do cliente", "Meu plano, uso, faturas, usuários, white label, onboarding e suporte."));
-    public IActionResult MeuPlano() => Index(); public IActionResult Uso() => Index(); public IActionResult Faturas() => Index(); public IActionResult Usuarios() => Index(); public IActionResult Perfis() => Index(); public IActionResult WhiteLabel() => Index(); public IActionResult Parametrizacoes() => Index(); public IActionResult Onboarding() => Index(); public IActionResult Suporte() => Index(); public IActionResult Treinamento() => Index();
+    private readonly IFase2OperationalFlowService flowService;
+
+    public ClientePortalController(IFase2OperationalFlowService flowService)
+    {
+        this.flowService = flowService;
+    }
+
+    public IActionResult Index() => Render(nameof(Index));
+    public IActionResult MeuPlano() => Render(nameof(MeuPlano));
+    public IActionResult Uso() => Render(nameof(Uso));
+    public IActionResult Faturas() => Render(nameof(Faturas));
+    public IActionResult Usuarios() => Render(nameof(Usuarios));
+    public IActionResult Perfis() => Render(nameof(Perfis));
+    public IActionResult WhiteLabel() => Render(nameof(WhiteLabel));
+    public IActionResult Parametrizacoes() => Render(nameof(Parametrizacoes));
+    public IActionResult Onboarding() => Render(nameof(Onboarding));
+    public IActionResult Suporte() => Render(nameof(Suporte));
+    public IActionResult Treinamento() => Render(nameof(Treinamento));
+
+    private IActionResult Render(string section) => View("~/Views/Fase2Operational/Dashboard.cshtml", flowService.Build("CLIENTE", section));
 }
 
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Parceiro)]
 public sealed class ParceiroPortalController : Controller
 {
-    public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Portal do parceiro", "Leads, clientes, propostas, comissões, repasses, materiais e suporte."));
-    public IActionResult Leads() => Index(); public IActionResult Clientes() => Index(); public IActionResult Propostas() => Index(); public IActionResult Comissoes() => Index(); public IActionResult Repasses() => Index(); public IActionResult Materiais() => Index(); public IActionResult Suporte() => Index();
+    private readonly IFase2OperationalFlowService flowService;
+
+    public ParceiroPortalController(IFase2OperationalFlowService flowService)
+    {
+        this.flowService = flowService;
+    }
+
+    public IActionResult Index() => Render(nameof(Index));
+    public IActionResult Leads() => Render(nameof(Leads));
+    public IActionResult Clientes() => Render(nameof(Clientes));
+    public IActionResult Propostas() => Render(nameof(Propostas));
+    public IActionResult Comissoes() => Render(nameof(Comissoes));
+    public IActionResult Repasses() => Render(nameof(Repasses));
+    public IActionResult Materiais() => Render(nameof(Materiais));
+    public IActionResult Suporte() => Render(nameof(Suporte));
+
+    private IActionResult Render(string section) => View("~/Views/Fase2Operational/Dashboard.cshtml", flowService.Build("PARCEIRO", section));
 }
 
 [Authorize]

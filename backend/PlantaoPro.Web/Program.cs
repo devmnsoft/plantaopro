@@ -12,6 +12,7 @@ builder.Services.AddControllersWithViews(options =>
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
+builder.Services.AddScoped<IFase2OperationalFlowService, Fase2OperationalFlowService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();

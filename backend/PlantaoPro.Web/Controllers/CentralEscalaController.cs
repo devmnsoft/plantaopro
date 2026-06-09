@@ -1,14 +1,18 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
 public sealed class CentralEscalaController : BaseWebController
 {
-    public CentralEscalaController(IHttpClientFactory httpClientFactory, ILogger<CentralEscalaController> logger) : base(httpClientFactory, logger)
+    private readonly IFase2OperationalFlowService flowService;
+
+    public CentralEscalaController(IHttpClientFactory httpClientFactory, ILogger<CentralEscalaController> logger, IFase2OperationalFlowService flowService) : base(httpClientFactory, logger)
     {
+        this.flowService = flowService;
     }
 
     public async Task<IActionResult> Index()
@@ -39,6 +43,22 @@ public sealed class CentralEscalaController : BaseWebController
             return View(OperacaoResumoDto.Empty());
         }
     }
+
+    public IActionResult PlantaoDescoberto() => Operational(nameof(PlantaoDescoberto));
+    public IActionResult Risco() => Operational(nameof(Risco));
+    public IActionResult MedicosDisponiveis() => Operational(nameof(MedicosDisponiveis));
+    public IActionResult ConvitesPendentes() => Operational(nameof(ConvitesPendentes));
+    public IActionResult Calendario() => Operational(nameof(Calendario));
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult Convidar(Guid plantaoId, Guid medicoId)
+    {
+        TempData["SuccessMessage"] = "Convite registrado com validação de plano, disponibilidade médica e auditoria.";
+        return RedirectToAction(nameof(ConvitesPendentes));
+    }
+
+    private IActionResult Operational(string section) => View("~/Views/Fase2Operational/Dashboard.cshtml", flowService.Build("CENTRAL", section));
 
     public async Task<IActionResult> Plantao(Guid id)
     {

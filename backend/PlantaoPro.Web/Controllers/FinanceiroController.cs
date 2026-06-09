@@ -5,13 +5,28 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Security;
+using PlantaoPro.Web.Services;
 namespace PlantaoPro.Web.Controllers;
 [Authorize(Roles = RolesConstants.FinanceiroArea)]
 public class FinanceiroController : BaseWebController
 {
-    public FinanceiroController(IHttpClientFactory f, ILogger<FinanceiroController> l) : base(f, l) { }
+    private readonly IFase2OperationalFlowService flowService;
+
+    public FinanceiroController(IHttpClientFactory f, ILogger<FinanceiroController> l, IFase2OperationalFlowService flowService) : base(f, l)
+    {
+        this.flowService = flowService;
+    }
     public async Task<IActionResult> Index(Guid? medicoId, Guid? hospitalId, Guid? especialidadeId, string? status, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
         => await this.RenderPaged<PagamentoResumoDto>($"api/financeiro/pagamentos?medicoId={medicoId}&hospitalId={hospitalId}&especialidadeId={especialidadeId}&status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
+
+    public IActionResult Pagamentos() => Operational(nameof(Pagamentos));
+    public IActionResult Pendentes() => Operational(nameof(Pendentes));
+    public IActionResult Confirmados() => Operational(nameof(Confirmados));
+    public IActionResult Contestacoes() => Operational(nameof(Contestacoes));
+    public IActionResult Relatorios() => Operational(nameof(Relatorios));
+    public IActionResult Exportacoes() => Operational(nameof(Exportacoes));
+
+    private IActionResult Operational(string section) => View("~/Views/Fase2Operational/Dashboard.cshtml", flowService.Build("FINANCEIRO", section));
 
     public async Task<IActionResult> Details(Guid id)
     {

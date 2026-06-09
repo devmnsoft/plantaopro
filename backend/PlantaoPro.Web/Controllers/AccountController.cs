@@ -96,7 +96,11 @@ public sealed class AccountController : Controller
 
             if (login.ClienteId.HasValue)
             {
-                claims.Add(new Claim("cliente_id", login.ClienteId.Value.ToString()));
+                var clienteId = login.ClienteId.Value.ToString();
+                claims.Add(new Claim("cliente_id", clienteId));
+                claims.Add(new Claim("tenant_id", clienteId));
+                claims.Add(new Claim("tenant", login.ClienteNome ?? "Tenant PlantãoPro"));
+                claims.Add(new Claim("cliente", login.ClienteNome ?? "Cliente PlantãoPro"));
             }
 
             foreach (var role in login.Roles ?? Array.Empty<string>())

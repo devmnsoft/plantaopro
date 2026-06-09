@@ -11,6 +11,7 @@ public sealed class ComercialController : BaseWebController
     public IActionResult Leads() => View();
     public IActionResult Oportunidades() => View();
     public IActionResult Propostas() => View();
+    public IActionResult Index() => RedirectToAction(nameof(Funil));
     public IActionResult Funil() => View();
     public IActionResult PrevisaoReceita() => View();
 

@@ -21,6 +21,7 @@ public static class RolesConstants
     public const string AdminSaas = AdministradorGlobal + "," + Suporte + "," + Auditor;
     public const string TenantAdmin = Administrador + "," + AdministradorCliente + "," + Diretor;
     public const string Operacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador + "," + Operador + "," + Hospital;
-    public const string FinanceiroArea = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Financeiro;
+    public const string FinanceiroArea = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Financeiro;
     public const string ComercialArea = AdministradorGlobal + "," + Comercial;
+    public const string CadastrosCoordenacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador + "," + Operador;
 }

@@ -1,0 +1,151 @@
+using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
+
+namespace PlantaoPro.Web.Services.Security;
+
+public interface IMenuBuilderService
+{
+    IReadOnlyCollection<MenuGroupViewModel> Build(string currentController, string currentAction);
+}
+
+public sealed class MenuBuilderService : IMenuBuilderService
+{
+    private readonly ICurrentUserService currentUser;
+    private readonly IPermissionService permissions;
+    private readonly IModuleAccessService modules;
+
+    public MenuBuilderService(ICurrentUserService currentUser, IPermissionService permissions, IModuleAccessService modules)
+    {
+        this.currentUser = currentUser;
+        this.permissions = permissions;
+        this.modules = modules;
+    }
+
+    public IReadOnlyCollection<MenuGroupViewModel> Build(string currentController, string currentAction)
+    {
+        var groups = new List<MenuGroupViewModel>();
+
+        AddGroup(groups, "ADMIN SAAS", "bi-buildings", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Visão Geral", "bi-speedometer2", "AdminSaas", "Index", "ADMIN_SAAS", RolesConstants.AdministradorGlobal),
+            Item("Clientes", "bi-building-check", "Clientes", "Index", "CLIENTES", RolesConstants.AdministradorGlobal),
+            Item("Tenants", "bi-diagram-3", "Clientes", "Index", "CLIENTES", RolesConstants.AdministradorGlobal),
+            Item("Planos", "bi-columns-gap", "Planos", "Index", "PLANOS", RolesConstants.AdministradorGlobal),
+            Item("Assinaturas", "bi-receipt", "Assinaturas", "Index", "ASSINATURAS", RolesConstants.AdministradorGlobal),
+            Item("Billing", "bi-credit-card", "FaturamentoSaas", "Index", "BILLING_GLOBAL", RolesConstants.AdministradorGlobal),
+            Item("Propostas", "bi-file-earmark-richtext", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.AdministradorGlobal),
+            Item("Parceiros", "bi-handshake", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.AdministradorGlobal),
+            Item("Marketplace", "bi-shop", "Marketplace", "Index", "MARKETPLACE", RolesConstants.AdministradorGlobal, true),
+            Item("White Label", "bi-palette", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorGlobal),
+            Item("Permissões", "bi-shield-lock", "Permissoes", "Index", "PERMISSOES", RolesConstants.AdministradorGlobal),
+            Item("Auditoria", "bi-journal-check", "Auditoria", "Index", "AUDITORIA", RolesConstants.AdministradorGlobal),
+            Item("Observabilidade", "bi-activity", "Observabilidade", "Index", "OBSERVABILIDADE_GLOBAL", RolesConstants.AdministradorGlobal)
+        });
+
+        AddGroup(groups, "OPERAÇÃO", "bi-calendar2-week", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Dashboard", "bi-speedometer", "Home", "Dashboard", "DASHBOARD", RolesConstants.Coordenador),
+            Item("Central de Escala", "bi-kanban", "CentralEscala", "Index", "CENTRAL_ESCALA", RolesConstants.Coordenador),
+            Item("Plantões", "bi-calendar-event", "Plantoes", "Index", "PLANTOES", RolesConstants.Coordenador),
+            Item("Convites", "bi-envelope-paper", "Convites", "Index", "CONVITES", RolesConstants.Coordenador),
+            Item("Escalas", "bi-calendar-check", "Escalas", "Index", "ESCALAS", RolesConstants.Coordenador),
+            Item("Médicos", "bi-person-vcard", "Medicos", "Index", "MEDICOS", RolesConstants.Coordenador),
+            Item("Hospitais", "bi-hospital", "Hospitais", "Index", "HOSPITAIS", RolesConstants.Coordenador),
+            Item("Especialidades", "bi-tags", "Especialidades", "Index", "ESPECIALIDADES", RolesConstants.Coordenador),
+            Item("Agenda", "bi-calendar3", "Agenda", "Index", "AGENDA", RolesConstants.Coordenador),
+            Item("Comunicação", "bi-chat-dots", "Comunicacao", "Index", "COMUNICACAO", RolesConstants.Coordenador)
+        });
+
+        AddGroup(groups, "FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Pagamentos", "bi-cash-coin", "Pagamentos", "Index", "PAGAMENTOS", RolesConstants.Financeiro),
+            Item("Faturas", "bi-receipt-cutoff", "FaturamentoSaas", "Index", "FATURAS", RolesConstants.Financeiro),
+            Item("Relatórios", "bi-file-earmark-bar-graph", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro),
+            Item("Exportações", "bi-download", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro)
+        });
+
+        AddGroup(groups, "CLIENTE", "bi-window-sidebar", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Meu Portal", "bi-house-heart", "ClientePortal", "Index", "CLIENTE_PORTAL", RolesConstants.AdministradorCliente),
+            Item("Meu Plano", "bi-card-checklist", "MinhaAssinatura", "Index", "ASSINATURAS", RolesConstants.AdministradorCliente),
+            Item("Uso", "bi-graph-up", "MinhaAssinatura", "Uso", "ASSINATURAS", RolesConstants.AdministradorCliente),
+            Item("Usuários", "bi-person-gear", "Usuarios", "Index", "USUARIOS", RolesConstants.AdministradorCliente),
+            Item("Perfis", "bi-people", "Perfis", "Index", "PERFIS", RolesConstants.AdministradorCliente),
+            Item("Parametrizações", "bi-sliders", "Configuracoes", "Index", "CONFIGURACOES", RolesConstants.AdministradorCliente),
+            Item("White Label", "bi-palette2", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorCliente, true),
+            Item("Onboarding", "bi-rocket", "Onboarding", "Index", "ONBOARDING", RolesConstants.AdministradorCliente),
+            Item("Suporte", "bi-life-preserver", "Suporte", "Index", "SUPORTE", RolesConstants.AdministradorCliente),
+            Item("Treinamento", "bi-mortarboard", "Treinamento", "Index", "TREINAMENTO", RolesConstants.AdministradorCliente)
+        });
+
+        AddGroup(groups, "MÉDICO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Minha Agenda", "bi-calendar-heart", "MedicoArea", "Index", "MEDICO_AREA", RolesConstants.Medico),
+            Item("Convites", "bi-envelope-open", "Convites", "Index", "CONVITES", RolesConstants.Medico),
+            Item("Disponibilidade", "bi-clock-history", "MedicoArea", "Index", "DISPONIBILIDADE", RolesConstants.Medico),
+            Item("Substituições", "bi-arrow-left-right", "MedicoArea", "Index", "SUBSTITUICOES", RolesConstants.Medico),
+            Item("Meus Pagamentos", "bi-wallet2", "Pagamentos", "Index", "PAGAMENTOS_PROPRIOS", RolesConstants.Medico)
+        });
+
+        AddGroup(groups, "PARCEIRO", "bi-handshake", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Portal Parceiro", "bi-house-door", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
+            Item("Leads", "bi-bullseye", "Comercial", "Funil", "LEADS", RolesConstants.Parceiro),
+            Item("Propostas", "bi-file-earmark-text", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.Parceiro),
+            Item("Clientes", "bi-buildings", "ClientePortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
+            Item("Comissões", "bi-percent", "ParceiroPortal", "Index", "COMISSOES", RolesConstants.Parceiro),
+            Item("Repasses", "bi-bank", "ParceiroPortal", "Index", "REPASSES", RolesConstants.Parceiro),
+            Item("Materiais", "bi-folder2-open", "ParceiroPortal", "Index", "MATERIAIS", RolesConstants.Parceiro)
+        });
+
+        AddGroup(groups, "SUPORTE E GOVERNANÇA", "bi-shield-check", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Ajuda", "bi-question-circle", "Ajuda", "Index", "AJUDA", string.Empty, false, false),
+            Item("LGPD", "bi-shield-lock", "Lgpd", "Index", "LGPD", string.Empty, false, false),
+            Item("Auditoria", "bi-journal-check", "Auditoria", "Index", "AUDITORIA", RolesConstants.Auditor),
+            Item("Suporte", "bi-life-preserver", "Suporte", "Index", "SUPORTE", RolesConstants.Suporte),
+            Item("Minha conta", "bi-person-circle", "Usuario", "Index", "CONTA", string.Empty, false, false)
+        });
+
+        return groups;
+    }
+
+    private void AddGroup(IList<MenuGroupViewModel> groups, string title, string icon, string currentController, string currentAction, IList<MenuItemViewModel> items)
+    {
+        var visible = new List<MenuItemViewModel>();
+        foreach (var item in items)
+        {
+            var permitted = string.IsNullOrWhiteSpace(item.Module) || permissions.HasPermission(item.Module, item.Permission);
+            var enabled = !item.RequiresModule || modules.IsModuleEnabled(item.Module);
+            item.IsLocked = permitted && !enabled;
+            item.LockedReason = item.IsLocked ? "Módulo disponível mediante contratação ou liberação do plano." : string.Empty;
+            item.IsActive = string.Equals(currentController, item.Controller, StringComparison.OrdinalIgnoreCase) && (string.IsNullOrWhiteSpace(item.Action) || string.Equals(currentAction, item.Action, StringComparison.OrdinalIgnoreCase));
+
+            if (permitted || item.IsLocked)
+            {
+                visible.Add(item);
+            }
+        }
+
+        if (visible.Count > 0)
+        {
+            groups.Add(new MenuGroupViewModel { Title = title, Icon = icon, Items = visible });
+        }
+    }
+
+    private static MenuItemViewModel Item(string title, string icon, string controller, string action, string module, string minimumRole, bool requiresPlan = false, bool requiresModule = true)
+    {
+        return new MenuItemViewModel
+        {
+            Title = title,
+            Icon = icon,
+            Controller = controller,
+            Action = action,
+            Module = module,
+            Permission = "VER",
+            MinimumRole = minimumRole,
+            RequiresPlan = requiresPlan,
+            RequiresModule = requiresModule
+        };
+    }
+}

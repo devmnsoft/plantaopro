@@ -7,7 +7,7 @@ using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.Coordenacao + "," + RolesConstants.Operador + "," + RolesConstants.Hospital)]
+[Authorize(Roles = RolesConstants.Operacao)]
 public class HospitaisController : BaseWebController
 {
     public HospitaisController(IHttpClientFactory f, ILogger<HospitaisController> l) : base(f, l) { }

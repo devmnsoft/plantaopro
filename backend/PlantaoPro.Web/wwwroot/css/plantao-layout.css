@@ -1,2 +1,32 @@
 /* PlantãoPro SaaS design-system layer: plantao-layout */
 @import url('./plantaopro-design-system.css');
+
+/* Fase 1 SaaS profissional: menu centralizado por perfil/plano/módulo */
+.nav-section-title {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: 1rem;
+}
+.nav-link-app.locked {
+    opacity: .72;
+    cursor: not-allowed;
+    border: 1px dashed rgba(255,255,255,.18);
+}
+.nav-link-app.locked small {
+    margin-left: auto;
+    font-size: .68rem;
+    color: #fbbf24;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.app-sidebar {
+    background: linear-gradient(180deg, var(--tenant-primary, #12315f), var(--tenant-secondary, #0f172a));
+}
+.sidebar-brand .brand-subtitle {
+    color: rgba(255,255,255,.78);
+}
+.app-topbar {
+    border-bottom: 1px solid rgba(15, 23, 42, .08);
+    box-shadow: 0 14px 35px rgba(15, 23, 42, .06);
+}

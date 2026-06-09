@@ -144,3 +144,32 @@ public sealed class QuickActionViewModel
     public string Controller { get; set; } = "Home";
     public string Action { get; set; } = "Dashboard";
 }
+
+public sealed class MenuGroupViewModel
+{
+    public MenuGroupViewModel()
+    {
+        Items = new List<MenuItemViewModel>();
+    }
+
+    public string Title { get; set; } = string.Empty;
+    public string Icon { get; set; } = "bi-folder";
+    public IList<MenuItemViewModel> Items { get; set; }
+}
+
+public sealed class MenuItemViewModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string Icon { get; set; } = "bi-circle";
+    public string Controller { get; set; } = "Home";
+    public string Action { get; set; } = "Dashboard";
+    public string Area { get; set; } = string.Empty;
+    public string Module { get; set; } = string.Empty;
+    public string Permission { get; set; } = "VER";
+    public string MinimumRole { get; set; } = string.Empty;
+    public bool RequiresPlan { get; set; }
+    public bool RequiresModule { get; set; } = true;
+    public bool IsActive { get; set; }
+    public bool IsLocked { get; set; }
+    public string LockedReason { get; set; } = string.Empty;
+}

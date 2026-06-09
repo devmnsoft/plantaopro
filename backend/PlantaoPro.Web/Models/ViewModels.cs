@@ -38,7 +38,7 @@ namespace PlantaoPro.Web.Models
 
     public record ApiResponse<T>(bool Success, string Message, T? Data, IEnumerable<string>? Errors, int StatusCode, DateTime Timestamp);
     public record LoginRequest(string Email, string Senha);
-    public record LoginResponse(string Token, DateTime ExpiresAt, Guid UsuarioId, string Nome, string[] Roles, Guid? ClienteId = null);
+    public record LoginResponse(string Token, DateTime ExpiresAt, Guid UsuarioId, string Nome, string[] Roles, Guid? ClienteId = null, string? ClienteNome = null);
     public record ForgotPasswordRequest(string Email);
     public record ResetPasswordRequest(string Email, string Token, string NovaSenha);
     public record DashboardDto(long TotalMedicos, long TotalHospitais, long TotalEspecialidades, long TotalPlantoes, long PlantoesAbertos, long PlantoesConfirmados, long PlantoesRealizados, long PlantoesCancelados, long PagamentosPendentes, long PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, long NotificacoesNaoLidas);

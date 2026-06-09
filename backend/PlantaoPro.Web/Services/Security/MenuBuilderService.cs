@@ -92,7 +92,7 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Portal Parceiro", "bi-house-door", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
             Item("Leads", "bi-bullseye", "Comercial", "Funil", "LEADS", RolesConstants.Parceiro),
             Item("Propostas", "bi-file-earmark-text", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.Parceiro),
-            Item("Clientes", "bi-buildings", "ClientePortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
+            Item("Clientes", "bi-buildings", "ParceiroPortal", "Clientes", "PARCEIRO", RolesConstants.Parceiro),
             Item("Comissões", "bi-percent", "ParceiroPortal", "Index", "COMISSOES", RolesConstants.Parceiro),
             Item("Repasses", "bi-bank", "ParceiroPortal", "Index", "REPASSES", RolesConstants.Parceiro),
             Item("Materiais", "bi-folder2-open", "ParceiroPortal", "Index", "MATERIAIS", RolesConstants.Parceiro)
@@ -115,7 +115,8 @@ public sealed class MenuBuilderService : IMenuBuilderService
         var visible = new List<MenuItemViewModel>();
         foreach (var item in items)
         {
-            var permitted = string.IsNullOrWhiteSpace(item.Module) || permissions.HasPermission(item.Module, item.Permission);
+            var hasMinimumRole = HasMinimumRole(item.MinimumRole);
+            var permitted = hasMinimumRole && (string.IsNullOrWhiteSpace(item.Module) || permissions.HasPermission(item.Module, item.Permission));
             var enabled = !item.RequiresModule || modules.IsModuleEnabled(item.Module);
             item.IsLocked = permitted && !enabled;
             item.LockedReason = item.IsLocked ? "Módulo disponível mediante contratação ou liberação do plano." : string.Empty;
@@ -131,6 +132,19 @@ public sealed class MenuBuilderService : IMenuBuilderService
         {
             groups.Add(new MenuGroupViewModel { Title = title, Icon = icon, Items = visible });
         }
+    }
+
+    private bool HasMinimumRole(string minimumRole)
+    {
+        if (string.IsNullOrWhiteSpace(minimumRole)) return true;
+        if (currentUser.IsGlobalAdmin()) return true;
+        if (string.Equals(minimumRole, RolesConstants.AdministradorGlobal, StringComparison.OrdinalIgnoreCase)) return false;
+        if (string.Equals(minimumRole, RolesConstants.AdministradorCliente, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Administrador, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin();
+        if (string.Equals(minimumRole, RolesConstants.Coordenador, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Coordenacao, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Operador);
+        if (string.Equals(minimumRole, RolesConstants.Financeiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
+        if (string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase)) return currentUser.IsDoctor();
+        if (string.Equals(minimumRole, RolesConstants.Parceiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsPartner();
+        return currentUser.HasRole(minimumRole);
     }
 
     private static MenuItemViewModel Item(string title, string icon, string controller, string action, string module, string minimumRole, bool requiresPlan = false, bool requiresModule = true)

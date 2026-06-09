@@ -50,3 +50,19 @@ O ambiente desta execução não possui SDK `dotnet` instalado. Os comandos obri
 - Evoluir filtros tenant/cliente/médico diretamente em todas as queries operacionais legadas.
 - Persistir permissões customizadas por tenant em banco e ligar ao `PermissionService`.
 - Implementar auditoria automática para todos os eventos de acesso negado via middleware/filtro.
+
+## Implementação real complementar — permissões, menus e rotas protegidas
+
+Nesta rodada, a Fase 1 deixou de depender apenas de especificação e passou a ter enforcement no código MVC:
+
+- O Web agora registra um filtro global de guarda SaaS para telas conhecidas da plataforma.
+- O filtro bloqueia acesso por módulo/ação antes da execução da action, registra log de auditoria operacional em acesso negado e redireciona para a tela amigável de acesso negado.
+- O menu lateral passou a validar perfil mínimo além da permissão do módulo, evitando que administradores de cliente vejam o grupo **Admin SaaS** global.
+- O login passa a popular `tenant_id`, `cliente_id`, nome do tenant e nome do cliente nos claims quando a API retorna cliente vinculado.
+- A rota `/Billing/Faturas` foi consolidada como alias funcional para o faturamento SaaS existente, sem criar tela falsa ou controller duplicado de cobrança.
+
+### Pendências reais
+
+- Validar em ambiente com SDK .NET instalado, pois o container desta execução não possui `dotnet` disponível.
+- Evoluir o guard para carregar matriz de permissões persistida quando o cadastro de permissões por tenant estiver completo.
+- Conectar bloqueios por módulo/plano a dados reais de assinatura em vez de regras locais de demonstração.

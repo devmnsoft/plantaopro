@@ -108,6 +108,8 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = Normalize(module);
         var actionCode = Normalize(action);
 
+        if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA") return true;
+
         if (currentUser.IsTenantAdmin())
         {
             return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO";
@@ -115,7 +117,7 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador))
         {
-            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO";
+            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "ESPECIALIDADES" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO";
         }
 
         if (currentUser.HasRole(RolesConstants.Financeiro))
@@ -125,7 +127,7 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Medico))
         {
-            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
+            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
         }
 
         if (currentUser.HasRole(RolesConstants.Hospital))

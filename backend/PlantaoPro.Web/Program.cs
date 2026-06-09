@@ -6,7 +6,10 @@ using PlantaoPro.Web.Services.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.AddService<SaasRouteGuardFilter>();
+});
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -14,6 +17,7 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
 builder.Services.AddScoped<ITenantAccessService, TenantAccessService>();
 builder.Services.AddScoped<IMenuBuilderService, MenuBuilderService>();
+builder.Services.AddScoped<SaasRouteGuardFilter>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSession();
 builder.Services.AddSwaggerGen(options =>

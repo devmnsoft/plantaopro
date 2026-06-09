@@ -102,10 +102,12 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         var code = Normalize(module);
         var actionCode = Normalize(action);
 
+        if (code == "AJUDA" || code == "LGPD" || code == "CONTA") return true;
+
         if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL" && code != "PARCEIRO";
-        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "AGENDA";
+        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA";
         if (currentUser.HasRole(RolesConstants.Financeiro)) return code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";
-        if (currentUser.HasRole(RolesConstants.Medico)) return code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
+        if (currentUser.HasRole(RolesConstants.Medico)) return code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
         if (currentUser.HasRole(RolesConstants.Hospital)) return code == "HOSPITAL_AREA" || code == "PLANTOES" || code == "ESCALAS" || code == "AGENDA";
         if (currentUser.HasRole(RolesConstants.Parceiro)) return code == "PARCEIRO" || code == "LEADS" || code == "PROPOSTAS" || code == "COMISSOES" || code == "REPASSES" || code == "MATERIAIS";
         if (currentUser.HasRole(RolesConstants.Suporte)) return code == "SUPORTE" || code == "AJUDA" || code == "AUDITORIA" || code == "OBSERVABILIDADE";

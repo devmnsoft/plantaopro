@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Central de Escala";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Central de Escala", "Priorize plantões descobertos, convites pendentes e médicos disponíveis para reduzir risco operacional.", "bi-kanban")' />
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Plantões pendentes", "12", "Aguardando composição", "bi-calendar-event", null, "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Descobertos", "3", "Exigem ação hoje", "bi-exclamation-triangle", null, "danger")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Convites", "28", "Aguardando resposta", "bi-send", null, "primary")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Médicos disponíveis", "46", "Com agenda compatível", "bi-person-check", null, "success")' /></div>
+</div>
+<div class="row g-4">
+    <div class="col-lg-8"><div class="card"><div class="card-header bg-white fw-bold">Fila operacional priorizada</div><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Plantão</th><th>Unidade</th><th>Risco</th><th>Ação recomendada</th></tr></thead><tbody><tr><td>UTI Adulto • Hoje 19h</td><td>Hospital Central</td><td><partial name="_StatusBadge" model='@("crítico")' /></td><td><a class="btn btn-sm btn-primary" asp-controller="CentralEscala" asp-action="Index">Abrir cobertura</a></td></tr><tr><td>PS Pediátrico • Amanhã 07h</td><td>Unidade Norte</td><td><partial name="_StatusBadge" model='@("pendente")' /></td><td><a class="btn btn-sm btn-outline-primary" asp-controller="Plantoes" asp-action="Index">Ver plantões</a></td></tr></tbody></table></div></div></div>
+    <div class="col-lg-4"><div class="card card-body"><h2 class="h5">Ações rápidas</h2><div class="d-grid gap-2"><a class="btn btn-primary" asp-controller="Plantoes" asp-action="Create">Novo plantão</a><a class="btn btn-outline-primary" asp-controller="CentralEscala" asp-action="Index">Enviar convites</a><a class="btn btn-outline-secondary" asp-controller="Agenda" asp-action="Index">Ver agenda</a></div></div></div>
+</div>

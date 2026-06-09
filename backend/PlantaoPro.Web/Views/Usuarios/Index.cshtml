@@ -1,0 +1,11 @@
+@{
+    ViewData["Title"] = "Usuários";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Usuários", "Gestão de acessos do tenant com perfil, status, último acesso e ações seguras.", "bi-person-gear", "Novo usuário", "Create", "Usuarios", true)' />
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Ativos", "18", "Dentro do limite contratado", "bi-person-check", null, "success")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Administradores", "2", "Permissões elevadas", "bi-shield-lock", null, "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Convites", "4", "Pendentes", "bi-envelope", null, "primary")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Bloqueados", "0", "Sem risco imediato", "bi-lock", null, "success")' /></div>
+</div>
+<div class="data-table table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Usuário</th><th>Perfil</th><th>Tenant</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody><tr><td><div class="fw-bold">Admin Cliente</div><div class="text-muted small">admin-cliente@demo.com</div></td><td>ADMINISTRADOR_CLIENTE</td><td>Tenant demonstração</td><td><partial name="_StatusBadge" model='@("ativo")' /></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Permissoes" asp-action="TestarAcesso">Testar acesso</a></td></tr></tbody></table></div>

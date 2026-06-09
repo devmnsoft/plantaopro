@@ -2,12 +2,17 @@ using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.OpenApi.Models;
 using PlantaoPro.Web.Services;
+using PlantaoPro.Web.Services.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
+builder.Services.AddScoped<ITenantAccessService, TenantAccessService>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSession();
 builder.Services.AddSwaggerGen(options =>

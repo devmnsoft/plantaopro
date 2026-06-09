@@ -1,0 +1,43 @@
+@model PlantaoPro.Web.Models.PermissionMatrixViewModel
+@{
+    ViewData["Title"] = "Matriz de permissões";
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Matriz de permissões", "Teste visual de acesso por perfil, módulo, plano e tenant, com explicação do bloqueio.", "bi-shield-lock")' />
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Perfis", Model.Perfis.Count.ToString(), "Perfis avaliados", "bi-people", null, "primary")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Módulos", Model.Modulos.Count.ToString(), "Cobertura de navegação", "bi-grid", null, "success")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Bloqueios", "4", "Perfil, plano, módulo e tenant", "bi-lock", null, "warning")' /></div>
+    <div class="col-md-3"><partial name="_KpiCard" model='new PlantaoPro.Web.Models.KpiCardViewModel("Auditoria", "Ativa", "Acessos negados rastreados", "bi-journal-check", null, "success")' /></div>
+</div>
+<div class="card card-body mb-4">
+    <form asp-action="TestarAcesso" method="post" class="row g-3 align-items-end">
+        @Html.AntiForgeryToken()
+        <div class="col-md-3"><label class="form-label">Perfil</label><select class="form-select" name="perfil">@foreach (var perfil in Model.Perfis){<option value="@perfil" selected="@(perfil == Model.PerfilTeste)">@perfil</option>}</select></div>
+        <div class="col-md-3"><label class="form-label">Módulo</label><select class="form-select" name="modulo">@foreach (var modulo in Model.Modulos){<option value="@modulo.Codigo" selected="@(modulo.Codigo == Model.ModuloTeste)">@modulo.Nome</option>}</select></div>
+        <div class="col-md-3"><label class="form-label">Ação</label><select class="form-select" name="acao"><option>VER</option><option>CRIAR</option><option>EDITAR</option><option>GERENCIAR</option><option>EXPORTAR</option></select></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-play-circle me-1"></i>Testar acesso</button></div>
+    </form>
+    @if (!string.IsNullOrWhiteSpace(Model.ResultadoTeste))
+    {
+        <div class="alert alert-info mt-3 mb-0">@Model.ResultadoTeste</div>
+    }
+</div>
+<div class="data-table table-responsive">
+    <table class="table table-hover align-middle mb-0 permission-matrix">
+        <thead><tr><th>Módulo</th><th>Ações</th>@foreach (var perfil in Model.Perfis){<th>@perfil</th>}</tr></thead>
+        <tbody>
+        @foreach (var modulo in Model.Modulos)
+        {
+            <tr>
+                <td><div class="fw-bold">@modulo.Nome</div><div class="text-muted small">@modulo.Codigo</div></td>
+                <td>@foreach (var acao in modulo.Acoes){<span class="badge text-bg-light border me-1">@acao</span>}</td>
+                @foreach (var perfil in Model.Perfis)
+                {
+                    var allowed = modulo.PermissoesPorPerfil.ContainsKey(perfil);
+                    <td class="permission-cell @(allowed ? "allowed" : "blocked")"><i class="bi @(allowed ? "bi-check-circle" : "bi-x-circle")"></i> @(allowed ? "Permitido" : "Bloqueado")</td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

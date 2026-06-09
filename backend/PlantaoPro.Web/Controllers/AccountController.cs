@@ -165,13 +165,21 @@ public sealed class AccountController : Controller
         var normalized = NormalizeRole(perfil) ?? string.Empty;
         var destination = normalized switch
         {
-            "MEDICO" => (Action: "Index", Controller: "MinhaAgenda"),
+            "ADMINISTRADOR_GLOBAL" => (Action: "Index", Controller: "AdminSaas"),
+            "ADMINISTRADOR" => (Action: "Index", Controller: "ClientePortal"),
+            "ADMINISTRADOR_CLIENTE" => (Action: "Index", Controller: "ClientePortal"),
+            "DIRETOR" => (Action: "Index", Controller: "ClientePortal"),
+            "COORDENADOR" => (Action: "Index", Controller: "Coordenacao"),
+            "COORDENACAO" => (Action: "Index", Controller: "Coordenacao"),
+            "OPERADOR" => (Action: "Index", Controller: "Coordenacao"),
             "FINANCEIRO" => (Action: "Index", Controller: "Financeiro"),
-            "COORDENACAO" => (Action: "Dashboard", Controller: "Home"),
-            "OPERADOR" => (Action: "Dashboard", Controller: "Home"),
+            "MEDICO" => (Action: "Index", Controller: "MedicoArea"),
             "HOSPITAL" => (Action: "Index", Controller: "Agenda"),
-            "ADMINISTRADOR_GLOBAL" => (Action: "Dashboard", Controller: "Home"),
-            "ADMINISTRADOR" => (Action: "Dashboard", Controller: "Home"),
+            "PARCEIRO" => (Action: "Index", Controller: "ParceiroPortal"),
+            "SUPORTE" => (Action: "Index", Controller: "Suporte"),
+            "AUDITOR" => (Action: "Index", Controller: "Auditoria"),
+            "COMERCIAL" => (Action: "Funil", Controller: "Comercial"),
+            "CUSTOMER_SUCCESS" => (Action: "Index", Controller: "CustomerSuccess"),
             _ => (Action: "Dashboard", Controller: "Home")
         };
 
@@ -194,7 +202,9 @@ public sealed class AccountController : Controller
         return value switch
         {
             "ADMIN" or "ADMINISTRADOR" => RolesConstants.Administrador,
-            "COORDENADOR" or "COORDENACAO" => RolesConstants.Coordenacao,
+            "COORDENADOR" => RolesConstants.Coordenador,
+            "COORDENACAO" => RolesConstants.Coordenacao,
+            "ADMIN_CLIENTE" or "ADMINISTRADOR_CLIENTE" => RolesConstants.AdministradorCliente,
             _ => value
         };
     }

@@ -1,6 +1,8 @@
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
+using Fase4MedicoDisponivelDto = PlantaoPro.Api.Models.MedicoDisponivelDto;
+using Fase4EscalaSugestaoDto = PlantaoPro.Api.Models.EscalaSugestaoDto;
 using System.Text;
 using System.Text.Json;
 
@@ -156,12 +158,12 @@ on conflict (medico_id) do update set hospitais_preferidos=@hospitais, especiali
         return await ObterPreferenciasAsync(uid);
     }
 
-    public async Task<ApiResponse<IEnumerable<MedicoDisponivelDto>>> ListarMedicosDisponiveisAsync(Guid? clienteId, DateTime dataInicio, DateTime dataFim, Guid? hospitalId, Guid? especialidadeId)
+    public async Task<ApiResponse<IEnumerable<Fase4MedicoDisponivelDto>>> ListarMedicosDisponiveisAsync(Guid? clienteId, DateTime dataInicio, DateTime dataFim, Guid? hospitalId, Guid? especialidadeId)
     {
         var erro = ValidarPeriodo(dataInicio, dataFim);
-        if (erro is not null) return ApiResponse<IEnumerable<MedicoDisponivelDto>>.Fail(erro);
+        if (erro is not null) return ApiResponse<IEnumerable<Fase4MedicoDisponivelDto>>.Fail(erro);
         await using var cn = Cn();
-        var rows = await cn.QueryAsync<MedicoDisponivelDto>(@"select m.id as ""MedicoId"", coalesce(m.nome,'') as ""Nome"", coalesce(m.crm,'') as ""Crm"", coalesce(e.nome,'') as ""Especialidade"",
+        var rows = await cn.QueryAsync<Fase4MedicoDisponivelDto>(@"select m.id as ""MedicoId"", coalesce(m.nome,'') as ""Nome"", coalesce(m.crm,'') as ""Crm"", coalesce(e.nome,'') as ""Especialidade"",
 exists(select 1 from plantaopro.medico_disponibilidades d where d.medico_id=m.id and d.reg_status='A' and d.status='ATIVA' and d.data_inicio <= @inicio and d.data_fim >= @fim and (@hospitalId is null or d.hospital_id is null or d.hospital_id=@hospitalId) and (@especialidadeId is null or d.especialidade_id is null or d.especialidade_id=@especialidadeId)) as ""Disponivel"",
 exists(select 1 from plantaopro.medico_indisponibilidades i where i.medico_id=m.id and i.reg_status='A' and i.status='ATIVA' and i.data_inicio < @fim and i.data_fim > @inicio) as ""Indisponivel"",
 exists(select 1 from plantaopro.escalas es join plantaopro.plantoes p on p.id=es.plantao_id where es.medico_id=m.id and es.reg_status='A' and es.status in ('confirmado','solicitado') and p.data_inicio < @fim and p.data_fim > @inicio) as ""PossuiConflito"",
@@ -171,7 +173,7 @@ left join plantaopro.especialidades e on e.id=m.especialidade_id
 where m.reg_status='A' and (@clienteId is null or m.cliente_id=@clienteId) and (@especialidadeId is null or m.especialidade_id=@especialidadeId)
 order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim, hospitalId, especialidadeId });
         var result = rows.Select(r => AplicarScore(r)).Where(r => r.Disponivel && !r.Indisponivel).ToArray();
-        return ApiResponse<IEnumerable<MedicoDisponivelDto>>.Ok(result, "Médicos disponíveis listados.");
+        return ApiResponse<IEnumerable<Fase4MedicoDisponivelDto>>.Ok(result, "Médicos disponíveis listados.");
     }
 
     public async Task<ApiResponse<EscalaSugestaoDto>> GerarSugestaoAsync(Guid plantaoId, Guid? uid, Guid? clienteId, string? ip, string? ua)
@@ -181,7 +183,7 @@ order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim,
         if (plantao is null) return ApiResponse<EscalaSugestaoDto>.Fail("Plantão não encontrado.", 404);
         Guid pClienteId = (Guid)(plantao.cliente_id ?? Guid.Empty);
         var medicosResponse = await ListarMedicosDisponiveisAsync(clienteId ?? (pClienteId == Guid.Empty ? null : pClienteId), (DateTime)plantao.data_inicio, (DateTime)plantao.data_fim, (Guid?)plantao.hospital_id, (Guid?)plantao.especialidade_id);
-        var medicos = (medicosResponse.Data ?? Array.Empty<MedicoDisponivelDto>()).OrderByDescending(m => m.Score).Take(20).ToArray();
+        var medicos = (medicosResponse.Data ?? Array.Empty<Fase4MedicoDisponivelDto>()).OrderByDescending(m => m.Score).Take(20).ToArray();
         var sugestaoId = Guid.NewGuid();
         await cn.ExecuteAsync(@"insert into plantaopro.escala_sugestoes(id,cliente_id,plantao_id,hospital_id,especialidade_id,status,score_medio,gerada_por,criterios,reg_date,reg_status) values(@id,@clienteId,@plantaoId,@hospitalId,@especialidadeId,'GERADA',@score,@uid,cast(@criterios as jsonb),now(),'A')", new { id = sugestaoId, clienteId = pClienteId == Guid.Empty ? clienteId : pClienteId, plantaoId, hospitalId = (Guid?)plantao.hospital_id, especialidadeId = (Guid?)plantao.especialidade_id, score = medicos.Length == 0 ? 0 : medicos.Average(x => x.Score), uid, criterios = JsonSerializer.Serialize(new[] { "ativo", "tenant", "especialidade", "disponibilidade", "indisponibilidade", "conflito", "limite", "preferencia" }) });
         foreach (var m in medicos)
@@ -198,7 +200,7 @@ order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim,
         await using var cn = Cn();
         var s = await cn.QueryFirstOrDefaultAsync<dynamic>(@"select s.id, s.plantao_id, s.status, p.data_inicio, p.data_fim, coalesce(h.nome_fantasia,h.razao_social,'') hospital_nome, coalesce(e.nome,'') especialidade_nome from plantaopro.escala_sugestoes s join plantaopro.plantoes p on p.id=s.plantao_id left join plantaopro.hospitais h on h.id=p.hospital_id left join plantaopro.especialidades e on e.id=p.especialidade_id where s.plantao_id=@plantaoId and s.reg_status='A' and (@clienteId is null or s.cliente_id=@clienteId) order by s.reg_date desc limit 1", new { plantaoId, clienteId });
         if (s is null) return await GerarSugestaoAsync(plantaoId, null, clienteId, null, null);
-        var medicos = await cn.QueryAsync<MedicoDisponivelDto>(@"select m.id as ""MedicoId"", coalesce(m.nome,'') as ""Nome"", coalesce(m.crm,'') as ""Crm"", coalesce(e.nome,'') as ""Especialidade"", true as ""Disponivel"", false as ""Indisponivel"", false as ""PossuiConflito"", sm.score as ""Score"", coalesce(sm.motivos,'') as ""Motivos"", coalesce(sm.alertas,'') as ""Alertas"" from plantaopro.escala_sugestao_medicos sm join plantaopro.medicos m on m.id=sm.medico_id left join plantaopro.especialidades e on e.id=m.especialidade_id where sm.sugestao_id=@id and sm.reg_status='A' order by sm.score desc", new { id = (Guid)s.id });
+        var medicos = await cn.QueryAsync<Fase4MedicoDisponivelDto>(@"select m.id as ""MedicoId"", coalesce(m.nome,'') as ""Nome"", coalesce(m.crm,'') as ""Crm"", coalesce(e.nome,'') as ""Especialidade"", true as ""Disponivel"", false as ""Indisponivel"", false as ""PossuiConflito"", sm.score as ""Score"", coalesce(sm.motivos,'') as ""Motivos"", coalesce(sm.alertas,'') as ""Alertas"" from plantaopro.escala_sugestao_medicos sm join plantaopro.medicos m on m.id=sm.medico_id left join plantaopro.especialidades e on e.id=m.especialidade_id where sm.sugestao_id=@id and sm.reg_status='A' order by sm.score desc", new { id = (Guid)s.id });
         return ApiResponse<EscalaSugestaoDto>.Ok(new EscalaSugestaoDto { Id = (Guid)s.id, PlantaoId = plantaoId, HospitalNome = (string)s.hospital_nome, EspecialidadeNome = (string)s.especialidade_nome, DataInicio = (DateTime)s.data_inicio, DataFim = (DateTime)s.data_fim, Status = (string)s.status, Medicos = medicos }, "Sugestões carregadas.");
     }
 
@@ -408,7 +410,7 @@ order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim,
 
     private static string SanitizarCsv(string value) => (value ?? string.Empty).Replace(";", ",", StringComparison.OrdinalIgnoreCase).Replace("\r", " ", StringComparison.OrdinalIgnoreCase).Replace("\n", " ", StringComparison.OrdinalIgnoreCase);
 
-    private static MedicoDisponivelDto AplicarScore(MedicoDisponivelDto dto)
+    private static Fase4MedicoDisponivelDto AplicarScore(Fase4MedicoDisponivelDto dto)
     {
         decimal score = 50;
         var motivos = new List<string>();

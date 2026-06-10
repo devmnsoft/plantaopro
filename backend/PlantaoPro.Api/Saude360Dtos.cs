@@ -77,6 +77,8 @@ public sealed class Saude360CreateRequest
     public decimal? Glicemia { get; set; }
     public decimal? Valor { get; set; }
     public bool Principal { get; set; }
+    public bool ConsentimentoLgpd { get; set; }
+    public string ConsentimentoLgpdCanal { get; set; } = string.Empty;
 }
 
 public sealed class Saude360ActionRequest

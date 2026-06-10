@@ -51,6 +51,7 @@ public sealed class Saude360ClinicalService
     public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null)
     {
         var table = ResolveTable(tableKey);
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo);
         var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
@@ -60,6 +61,7 @@ public sealed class Saude360ClinicalService
     public async Task<ApiResponse<Saude360RegistroDto>> ObterAsync(string tableKey, Guid id)
     {
         var table = ResolveTable(tableKey);
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         var row = await cn.QueryFirstOrDefaultAsync($"select * from plantaopro.{table} where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
         if (row is null) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado.", 404);
@@ -73,6 +75,7 @@ public sealed class Saude360ClinicalService
         var validation = ValidateCreate(tableKey, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
 
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase))
         {
@@ -106,6 +109,7 @@ public sealed class Saude360ClinicalService
         var table = ResolveTable(tableKey);
         var validation = ValidateUpdate(tableKey, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
         {
@@ -127,6 +131,7 @@ public sealed class Saude360ClinicalService
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         var validation = ValidateAction(tableKey, acao, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "checkin", StringComparison.OrdinalIgnoreCase))
         {
@@ -148,6 +153,7 @@ public sealed class Saude360ClinicalService
 
     public async Task<ApiResponse<object>> DashboardResumoAsync()
     {
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         var resumo = await cn.QueryFirstAsync(@"select
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and data_inicio::date=current_date) as agendamentos_hoje,
@@ -164,6 +170,7 @@ public sealed class Saude360ClinicalService
 
     public async Task<ApiResponse<object>> ResumoFinanceiroAsync()
     {
+        await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         var resumo = await cn.QueryFirstAsync(@"select
 coalesce(sum(case when status='ABERTA' then valor else 0 end),0) as aberto,
@@ -171,6 +178,13 @@ coalesce(sum(case when status='RECEBIDO' then valor else 0 end),0) as recebido,
 count(1) as total
 from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { tenantId = TenantId, isGlobal = IsGlobal });
         return ApiResponse<object>.Ok(resumo, "Resumo financeiro carregado.");
+    }
+
+
+    private async Task GarantirBaseClinicaAsync()
+    {
+        await using var cn = Cn();
+        await Saude360ClinicalSchema.GarantirBaseClinicaAsync(cn, logger);
     }
 
     private static string BuildListSql(string table, string key, Guid? pacienteId, Guid? medicoId, Guid? agendamentoId, Guid? consultaId, string? termo)
@@ -212,7 +226,7 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
     {
         var tenantId = TenantId;
         var uid = currentUser.UserId;
-        if (key == "pacientes") return ("insert into plantaopro.pacientes(id,cliente_id,nome,nome_social,data_nascimento,sexo_genero,cpf,cns,documento_alternativo,email,telefone,endereco,responsavel_nome,observacoes,status,created_by) values(@id,@tenantId,@nome,@nomeSocial,@nascimento,@sexo,@cpf,@cns,@doc,@email,@telefone,@endereco,@responsavel,@observacoes,@status,@uid)", new { id, tenantId, nome = r.Nome, nomeSocial = r.NomeSocial, nascimento = r.DataNascimento, sexo = r.SexoGenero, cpf = r.Cpf, cns = r.Cns, doc = r.DocumentoAlternativo, email = r.Email, telefone = r.Telefone, endereco = r.Endereco, responsavel = r.ResponsavelNome, observacoes = r.Observacoes, status = Default(r.Status, "ATIVO"), uid });
+        if (key == "pacientes") return ("insert into plantaopro.pacientes(id,cliente_id,nome,nome_social,data_nascimento,sexo_genero,cpf,cns,documento_alternativo,email,telefone,endereco,responsavel_nome,observacoes,consentimento_lgpd,consentimento_lgpd_em,consentimento_lgpd_canal,status,created_by) values(@id,@tenantId,@nome,@nomeSocial,@nascimento,@sexo,@cpf,@cns,@doc,@email,@telefone,@endereco,@responsavel,@observacoes,@consentimento,case when @consentimento then now() else null end,@canalConsentimento,@status,@uid)", new { id, tenantId, nome = r.Nome, nomeSocial = r.NomeSocial, nascimento = r.DataNascimento, sexo = r.SexoGenero, cpf = r.Cpf, cns = r.Cns, doc = r.DocumentoAlternativo, email = r.Email, telefone = r.Telefone, endereco = r.Endereco, responsavel = r.ResponsavelNome, observacoes = r.Observacoes, consentimento = r.ConsentimentoLgpd, canalConsentimento = r.ConsentimentoLgpdCanal, status = Default(r.Status, "ATIVO"), uid });
         if (key == "painel") return ("insert into plantaopro.painel_chamada_fila(id,cliente_id,painel_id,paciente_id,agendamento_id,setor_id,sala_id,guiche_id,senha,paciente_nome,status,created_by) values(@id,@tenantId,@painelId,@pacienteId,@agendamentoId,@setorId,@salaId,@guicheId,@senha,@pacienteNome,'AGUARDANDO',@uid)", new { id, tenantId, r.PainelId, r.PacienteId, r.AgendamentoId, r.SetorId, r.SalaId, r.GuicheId, r.Senha, pacienteNome = r.PacienteNome, uid });
         if (key == "agendamentos") return ("insert into plantaopro.agendamentos(id,cliente_id,paciente_id,medico_id,unidade_id,sala_id,data_inicio,data_fim,tipo,especialidade,status,observacoes,valor,created_by) values(@id,@tenantId,@pacienteId,@medicoId,@unidadeId,@salaId,@inicio,@fim,@tipo,@especialidade,'AGENDADO',@obs,@valor,@uid)", new { id, tenantId, r.PacienteId, r.MedicoId, r.UnidadeId, r.SalaId, inicio = r.DataInicio, fim = r.DataFim, tipo = Default(r.Tipo, "CONSULTA"), especialidade = r.Especialidade, obs = r.Observacoes, valor = r.Valor ?? 0, uid });
         if (key == "triagens") return ("insert into plantaopro.triagens(id,cliente_id,paciente_id,agendamento_id,enfermeiro_id,classificacao_risco,queixa_principal,pressao_sistolica,pressao_diastolica,frequencia_cardiaca,frequencia_respiratoria,temperatura,saturacao,peso,altura,imc,glicemia,alergias_relatadas,medicamentos_uso,observacoes,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@uid,@classificacao,@queixa,@pas,@pad,@fc,@fr,@temp,@sat,@peso,@altura,case when @peso > 0 and @altura > 0 then round((@peso / (@altura * @altura))::numeric,2) else null end,@glicemia,@alergias,@medicamentos,@obs,'AGUARDANDO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, uid, classificacao = Default(r.ClassificacaoRisco, r.Tipo), queixa = Default(r.QueixaPrincipal, r.Descricao), pas = r.PressaoSistolica, pad = r.PressaoDiastolica, fc = r.FrequenciaCardiaca, fr = r.FrequenciaRespiratoria, temp = r.Temperatura, sat = r.Saturacao, peso = r.Peso, altura = r.Altura, glicemia = r.Glicemia, alergias = r.Alergias, medicamentos = r.MedicamentosUso, obs = r.Observacoes });
@@ -345,7 +359,7 @@ select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA
         }
     }
 
-    private static object SafeRequest(Saude360CreateRequest r) => new { r.PacienteId, r.MedicoId, r.AgendamentoId, r.ConsultaId, r.Nome, r.Codigo, r.Status, r.Tipo, r.Valor };
+    private static object SafeRequest(Saude360CreateRequest r) => new { r.PacienteId, r.MedicoId, r.AgendamentoId, r.ConsultaId, r.Codigo, r.Status, r.Tipo, r.Valor, r.ConsentimentoLgpd };
     private static string Default(string value, string fallback) => string.IsNullOrWhiteSpace(value) ? fallback : value;
 
     private static Saude360RegistroDto ToDto(dynamic row)

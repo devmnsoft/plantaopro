@@ -1162,3 +1162,65 @@ values
 ('enterprise','automacao_escala','Automação de escala','Recursos avançados de automação operacional.',true),
 ('revendedor','portal_parceiro','Portal parceiro','Revenda, comissões e tenants vinculados.',true)
 on conflict (plano_slug,recurso_codigo) do update set nome=excluded.nome, descricao=excluded.descricao, habilitado=excluded.habilitado, reg_update=now();
+
+-- Consolidação das conversas internas usadas pelo módulo de comunicação operacional.
+create table if not exists plantaopro.conversas (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid,
+    titulo varchar(180) not null,
+    tipo varchar(40) not null,
+    entidade varchar(80),
+    entidade_id uuid,
+    status varchar(30) not null default 'ABERTA',
+    created_by uuid,
+    updated_by uuid,
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now(),
+    reg_update timestamp
+);
+alter table plantaopro.conversas add column if not exists tenant_id uuid;
+alter table plantaopro.conversas add column if not exists cliente_id uuid;
+alter table plantaopro.conversas add column if not exists created_by uuid;
+alter table plantaopro.conversas add column if not exists updated_by uuid;
+alter table plantaopro.conversas add column if not exists reg_update timestamp;
+create index if not exists ix_conversas_tenant_id on plantaopro.conversas(tenant_id);
+create index if not exists ix_conversas_cliente_id on plantaopro.conversas(cliente_id);
+create index if not exists ix_conversas_status on plantaopro.conversas(status);
+create index if not exists ix_conversas_reg_date on plantaopro.conversas(reg_date);
+
+create table if not exists plantaopro.conversa_participantes (
+    id uuid primary key default gen_random_uuid(),
+    conversa_id uuid not null,
+    usuario_id uuid not null,
+    papel varchar(30),
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now()
+);
+create index if not exists ix_conversa_participantes_conversa_id on plantaopro.conversa_participantes(conversa_id);
+create index if not exists ix_conversa_participantes_usuario_id on plantaopro.conversa_participantes(usuario_id);
+
+create table if not exists plantaopro.mensagens (
+    id uuid primary key default gen_random_uuid(),
+    conversa_id uuid not null,
+    remetente_usuario_id uuid not null,
+    mensagem text not null,
+    tipo varchar(30) not null default 'TEXTO',
+    anexo_url text,
+    lida boolean not null default false,
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now()
+);
+create index if not exists ix_mensagens_conversa_id on plantaopro.mensagens(conversa_id);
+create index if not exists ix_mensagens_remetente_usuario_id on plantaopro.mensagens(remetente_usuario_id);
+create index if not exists ix_mensagens_reg_date on plantaopro.mensagens(reg_date);
+
+create table if not exists plantaopro.mensagem_leituras (
+    id uuid primary key default gen_random_uuid(),
+    mensagem_id uuid not null,
+    usuario_id uuid not null,
+    lida_em timestamp not null default now(),
+    reg_status char(1) not null default 'A'
+);
+create index if not exists ix_mensagem_leituras_mensagem_id on plantaopro.mensagem_leituras(mensagem_id);
+create index if not exists ix_mensagem_leituras_usuario_id on plantaopro.mensagem_leituras(usuario_id);

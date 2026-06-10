@@ -1,0 +1,113 @@
+create schema if not exists plantaopro;
+create extension if not exists pgcrypto;
+create sequence if not exists plantaopro.seq_painel_senhas start 1;
+
+-- PlantãoPro Saúde 360 — Fase 5.1: base clínica idempotente.
+-- Todas as tabelas operacionais usam cliente_id como escopo tenant, reg_status e reg_date.
+
+create table if not exists plantaopro.pacientes (
+    id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null,
+    nome text not null, nome_social text null, data_nascimento date null, sexo_genero text null,
+    cpf text null, cns text null, documento_alternativo text null, telefone text null, email text null,
+    endereco text null, responsavel_nome text null, observacoes text null,
+    finalidade_tratamento text not null default 'ASSISTENCIA_SAUDE', ver_dados_sensiveis boolean not null default false,
+    status text not null default 'ATIVO', created_by uuid null, updated_by uuid null,
+    created_at timestamptz not null default now(), updated_at timestamptz null, reg_update timestamptz null,
+    reg_date timestamptz not null default now(), reg_status char(1) not null default 'A'
+);
+alter table plantaopro.pacientes add column if not exists nome_social text null;
+alter table plantaopro.pacientes add column if not exists sexo_genero text null;
+alter table plantaopro.pacientes add column if not exists cns text null;
+alter table plantaopro.pacientes add column if not exists documento_alternativo text null;
+alter table plantaopro.pacientes add column if not exists endereco text null;
+alter table plantaopro.pacientes add column if not exists responsavel_nome text null;
+alter table plantaopro.pacientes add column if not exists observacoes text null;
+alter table plantaopro.pacientes add column if not exists finalidade_tratamento text not null default 'ASSISTENCIA_SAUDE';
+alter table plantaopro.pacientes add column if not exists ver_dados_sensiveis boolean not null default false;
+create unique index if not exists ux_pacientes_cliente_cpf_informado on plantaopro.pacientes (cliente_id, regexp_replace(coalesce(cpf,''), '[^0-9]', '', 'g')) where cpf is not null and btrim(cpf) <> '' and reg_status='A';
+create index if not exists ix_pacientes_cliente_id on plantaopro.pacientes (cliente_id);
+create index if not exists ix_pacientes_tenant_id on plantaopro.pacientes (tenant_id);
+create index if not exists ix_pacientes_status on plantaopro.pacientes (status);
+create index if not exists ix_pacientes_reg_date on plantaopro.pacientes (reg_date);
+
+create table if not exists plantaopro.paciente_contatos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, nome text null, tipo text not null default 'PRINCIPAL', telefone text null, email text null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.paciente_enderecos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, logradouro text null, numero text null, bairro text null, cidade text null, estado text null, cep text null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.paciente_documentos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, tipo text not null, numero text not null, emissor text null, validade date null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.paciente_historico (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.paciente_observacoes (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, tipo text not null default 'ADMINISTRATIVA', observacao text not null, sensivel boolean not null default false, status text not null default 'ATIVA', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.paciente_consentimentos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, finalidade text not null, concedido boolean not null default true, canal text null, ip text null, usuario_id uuid null, status text not null default 'VIGENTE', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+
+create table if not exists plantaopro.paineis_chamada (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, unidade_id uuid null, nome text not null, token_publico text not null default encode(gen_random_bytes(24),'hex'), permite_tv_publica boolean not null default false, exibir_nome_completo boolean not null default false, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_configuracoes (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, painel_id uuid not null, tema text not null default 'WHITE_LABEL', exibir_nome_completo boolean not null default false, exibir_somente_senha boolean not null default true, tempo_exibicao_segundos int not null default 20, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_setores (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, painel_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_salas (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, setor_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_guiches (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, setor_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_fila (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, painel_id uuid null, paciente_id uuid null, agendamento_id uuid null, triagem_id uuid null, atendimento_id uuid null, setor_id uuid null, sala_id uuid null, guiche_id uuid null, senha text null, paciente_nome text null, status text not null default 'AGUARDANDO', prioridade int not null default 0, chamada_em timestamptz null, created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.painel_chamada_historico (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, fila_id uuid null, painel_id uuid null, paciente_id uuid null, agendamento_id uuid null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+
+create table if not exists plantaopro.agendamentos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, medico_id uuid not null, unidade_id uuid null, sala_id uuid null, especialidade text null, tipo text not null default 'CONSULTA', data_inicio timestamptz not null, data_fim timestamptz not null, convenio_id uuid null, plano_saude_id uuid null, observacoes text null, valor numeric(14,2) not null default 0, status text not null default 'AGENDADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+alter table plantaopro.agendamentos add column if not exists sala_id uuid null;
+alter table plantaopro.agendamentos add column if not exists especialidade text null;
+alter table plantaopro.agendamentos add column if not exists convenio_id uuid null;
+alter table plantaopro.agendamentos add column if not exists plano_saude_id uuid null;
+create table if not exists plantaopro.agendamento_historico (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, agendamento_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.agendamento_bloqueios (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, medico_id uuid null, unidade_id uuid null, data_inicio timestamptz not null, data_fim timestamptz not null, motivo text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.agendamento_cancelamentos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, agendamento_id uuid not null, motivo text not null, usuario_id uuid null, status text not null default 'CANCELADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.agendamento_checkins (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, agendamento_id uuid not null, paciente_id uuid not null, usuario_id uuid null, observacoes text null, status text not null default 'REALIZADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.agendamento_tipos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, nome text not null, codigo text not null, duracao_minutos int not null default 30, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.agendamento_status_historico (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, agendamento_id uuid not null, status_anterior text null, status_novo text not null, motivo text null, usuario_id uuid null, created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+
+create table if not exists plantaopro.triagens (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, agendamento_id uuid null, enfermeiro_id uuid null, queixa_principal text null, pressao_sistolica numeric(6,2) null, pressao_diastolica numeric(6,2) null, frequencia_cardiaca numeric(6,2) null, frequencia_respiratoria numeric(6,2) null, temperatura numeric(6,2) null, saturacao numeric(6,2) null, peso numeric(8,2) null, altura numeric(5,2) null, imc numeric(8,2) null, glicemia numeric(8,2) null, alergias_relatadas text null, medicamentos_uso text null, classificacao_risco text null, observacoes text null, status text not null default 'AGUARDANDO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+alter table plantaopro.triagens add column if not exists pressao_sistolica numeric(6,2) null;
+alter table plantaopro.triagens add column if not exists pressao_diastolica numeric(6,2) null;
+alter table plantaopro.triagens add column if not exists medicamentos_uso text null;
+create table if not exists plantaopro.triagem_sinais_vitais (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, triagem_id uuid not null, pressao_sistolica numeric(6,2) null, pressao_diastolica numeric(6,2) null, frequencia_cardiaca numeric(6,2) null, frequencia_respiratoria numeric(6,2) null, temperatura numeric(6,2) null, saturacao numeric(6,2) null, peso numeric(8,2) null, altura numeric(5,2) null, imc numeric(8,2) null, glicemia numeric(8,2) null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.triagem_classificacoes_risco (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, codigo text not null, nome text not null, cor_hex text not null, prioridade int not null, tempo_alvo_minutos int null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.triagem_historico (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, triagem_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.triagem_fila (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, paciente_id uuid not null, agendamento_id uuid null, triagem_id uuid null, classificacao_risco text null, prioridade int not null default 0, status text not null default 'AGUARDANDO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.triagem_encaminhamentos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, triagem_id uuid not null, paciente_id uuid not null, agendamento_id uuid null, destino text not null default 'CONSULTA', status text not null default 'ENCAMINHADA', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+
+create table if not exists plantaopro.clinica_parametros (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, chave text not null, valor text null, modulo text not null default 'CLINICA', status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.clinica_unidades_atendimento (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.clinica_salas_atendimento (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, unidade_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.clinica_setores_atendimento (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, unidade_id uuid null, nome text not null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.clinica_permissoes_modulos (id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, perfil text not null, modulo text not null, permissao text not null, plano_minimo text not null default 'ESSENCIAL', habilitado boolean not null default true, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, reg_update timestamptz null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+
+
+-- Compatibilidade com serviços existentes que atualizam updated_at.
+do $$
+declare t text;
+begin
+  foreach t in array array['pacientes','paciente_contatos','paciente_enderecos','paciente_documentos','paciente_historico','paciente_observacoes','paciente_consentimentos','paineis_chamada','painel_chamada_configuracoes','painel_chamada_setores','painel_chamada_salas','painel_chamada_guiches','painel_chamada_fila','painel_chamada_historico','agendamentos','agendamento_historico','agendamento_bloqueios','agendamento_cancelamentos','agendamento_checkins','agendamento_tipos','agendamento_status_historico','triagens','triagem_sinais_vitais','triagem_classificacoes_risco','triagem_historico','triagem_fila','triagem_encaminhamentos','clinica_parametros','clinica_unidades_atendimento','clinica_salas_atendimento','clinica_setores_atendimento','clinica_permissoes_modulos'] loop
+    execute format('alter table plantaopro.%I add column if not exists created_at timestamptz not null default now()', t);
+    execute format('alter table plantaopro.%I add column if not exists updated_at timestamptz null', t);
+  end loop;
+end $$;
+
+-- Índices padronizados por tenant, vínculos, status e datas.
+do $$
+declare t text;
+begin
+  foreach t in array array['paciente_contatos','paciente_enderecos','paciente_documentos','paciente_historico','paciente_observacoes','paciente_consentimentos','paineis_chamada','painel_chamada_configuracoes','painel_chamada_setores','painel_chamada_salas','painel_chamada_guiches','painel_chamada_fila','painel_chamada_historico','agendamentos','agendamento_historico','agendamento_bloqueios','agendamento_cancelamentos','agendamento_checkins','agendamento_tipos','agendamento_status_historico','triagens','triagem_sinais_vitais','triagem_classificacoes_risco','triagem_historico','triagem_fila','triagem_encaminhamentos','clinica_parametros','clinica_unidades_atendimento','clinica_salas_atendimento','clinica_setores_atendimento','clinica_permissoes_modulos'] loop
+    execute format('create index if not exists ix_%s_cliente_id on plantaopro.%I (cliente_id)', t, t);
+    execute format('create index if not exists ix_%s_status on plantaopro.%I (status)', t, t);
+    execute format('create index if not exists ix_%s_reg_date on plantaopro.%I (reg_date)', t, t);
+  end loop;
+end $$;
+
+create index if not exists ix_painel_fila_paciente_id on plantaopro.painel_chamada_fila (paciente_id);
+create index if not exists ix_painel_fila_agendamento_id on plantaopro.painel_chamada_fila (agendamento_id);
+create index if not exists ix_agendamentos_paciente_id on plantaopro.agendamentos (paciente_id);
+create index if not exists ix_agendamentos_medico_id on plantaopro.agendamentos (medico_id);
+create index if not exists ix_agendamentos_periodo on plantaopro.agendamentos (cliente_id, medico_id, data_inicio, data_fim);
+create index if not exists ix_triagens_paciente_id on plantaopro.triagens (paciente_id);
+create index if not exists ix_triagens_agendamento_id on plantaopro.triagens (agendamento_id);
+create index if not exists ix_triagem_fila_agendamento_id on plantaopro.triagem_fila (agendamento_id);
+
+insert into plantaopro.clinica_permissoes_modulos (cliente_id, perfil, modulo, permissao, plano_minimo)
+select null, perfil, modulo, permissao, plano from (values
+('RECEPCAO','PACIENTES','Visualizar','ESSENCIAL'),('RECEPCAO','PACIENTES','Criar','ESSENCIAL'),('RECEPCAO','PACIENTES','Editar','ESSENCIAL'),('RECEPCAO','AGENDAMENTO','CheckIn','ESSENCIAL'),('RECEPCAO','PAINEL_CHAMADA','Chamar','ESSENCIAL'),
+('TRIAGEM','TRIAGEM','Criar','PROFISSIONAL'),('TRIAGEM','TRIAGEM','Iniciar','PROFISSIONAL'),('TRIAGEM','TRIAGEM','Finalizar','PROFISSIONAL'),('ENFERMAGEM','TRIAGEM','VerHistorico','PROFISSIONAL'),
+('MEDICO','AGENDAMENTO','Visualizar','ESSENCIAL'),('MEDICO','TRIAGEM','Visualizar','PROFISSIONAL'),('COORDENADOR_CLINICO','TRIAGEM','Visualizar','PROFISSIONAL'),('ADMINISTRADOR_CLINICA','PAINEL_CHAMADA','Configurar','PROFISSIONAL'),('AUDITOR_CLINICO','TRIAGEM','VerHistorico','ENTERPRISE')
+) as v(perfil,modulo,permissao,plano)
+where not exists (select 1 from plantaopro.clinica_permissoes_modulos p where p.cliente_id is null and p.perfil=v.perfil and p.modulo=v.modulo and p.permissao=v.permissao);

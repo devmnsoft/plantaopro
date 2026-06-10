@@ -6,7 +6,7 @@ using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = RolesConstants.Operacao + "," + RolesConstants.Financeiro + "," + RolesConstants.Medico + "," + RolesConstants.Recepcao + "," + RolesConstants.Triagem + "," + RolesConstants.FinanceiroClinica + "," + RolesConstants.FaturamentoConvenio + "," + RolesConstants.AdministradorClinica)]
+[Authorize(Roles = RolesConstants.Saude360Assistencial + "," + RolesConstants.Saude360Financeiro + "," + RolesConstants.Saude360Convenios)]
 public abstract class Saude360WebControllerBase : BaseWebController
 {
     private readonly Saude360WebService service;
@@ -62,6 +62,12 @@ public abstract class Saude360WebControllerBase : BaseWebController
     private static string PermissaoModulo(string modulo) { return "Permissão por tenant, perfil e plano para " + modulo + "."; }
 }
 
+public sealed class ClinicaDashboardController : Saude360WebControllerBase
+{
+    public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s) : base(f, l, s) { }
+    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta futura.", "api/clinica-dashboard/resumo", Links(Link("Pacientes", "Index", "bi-people"), Link("Agendamentos", "Index", "bi-calendar3"), Link("Triagem", "Index", "bi-clipboard2-pulse"))); }
+}
+
 public sealed class PainelChamadaController : Saude360WebControllerBase
 {
     public PainelChamadaController(IHttpClientFactory f, ILogger<PainelChamadaController> l, Saude360WebService s) : base(f, l, s) { }
@@ -72,6 +78,7 @@ public sealed class PainelChamadaController : Saude360WebControllerBase
     public Task<IActionResult> Setores() { return Configuracoes(); }
     public Task<IActionResult> Salas() { return Configuracoes(); }
     public Task<IActionResult> Guiches() { return Configuracoes(); }
+    public Task<IActionResult> Fila() { return Index(); }
 }
 
 public sealed class AgendamentosController : Saude360WebControllerBase
@@ -85,6 +92,7 @@ public sealed class AgendamentosController : Saude360WebControllerBase
     public Task<IActionResult> AgendaDia() { return Index(); }
     public Task<IActionResult> AgendaMedico() { return Index(); }
     public Task<IActionResult> CheckIn() { return ModuloAsync("Check-in", "Agendamento", "Check-in altera status e pode enviar o paciente para painel e triagem.", "api/agendamentos", Links(Link("Agenda", "Index", "bi-calendar"))); }
+    public Task<IActionResult> Cancelamentos() { return ModuloAsync("Cancelamentos", "Agendamento", "Cancelamentos exigem motivo e geram histórico auditável.", "api/agendamentos?status=CANCELADO", Links(Link("Agenda", "Index", "bi-calendar"))); }
 }
 
 public sealed class TriagemController : Saude360WebControllerBase
@@ -183,4 +191,7 @@ public sealed class PacientesController : Saude360WebControllerBase
     public IActionResult Create() { return Formulario("Novo paciente", "api/pacientes"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar paciente", "api/pacientes/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do paciente", "Pacientes", "Identificação operacional do paciente com dados mínimos.", "api/pacientes/" + id, Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
+    public Task<IActionResult> Historico(Guid id) { return ModuloAsync("Histórico do paciente", "Pacientes", "Histórico administrativo e assistencial auditado.", "api/pacientes/" + id + "/historico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
+    public Task<IActionResult> ResumoClinico(Guid id) { return ModuloAsync("Resumo clínico", "Pacientes", "Resumo clínico com auditoria de acesso e controle VerDadosSensiveis.", "api/pacientes/" + id + "/resumo-clinico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
+    public Task<IActionResult> Buscar(string termo) { return ModuloAsync("Buscar pacientes", "Pacientes", "Busca por nome, CPF, telefone e status respeitando tenant.", "api/pacientes/buscar?termo=" + Uri.EscapeDataString(termo ?? string.Empty), Links(Link("Novo", "Create", "bi-person-plus"))); }
 }

@@ -45,12 +45,36 @@ public sealed class Saude360CreateRequest
     public string Tipo { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Senha { get; set; } = string.Empty;
+    public string Cpf { get; set; } = string.Empty;
+    public string Cns { get; set; } = string.Empty;
+    public string DocumentoAlternativo { get; set; } = string.Empty;
+    public string NomeSocial { get; set; } = string.Empty;
+    public string SexoGenero { get; set; } = string.Empty;
+    public string Telefone { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Endereco { get; set; } = string.Empty;
+    public string ResponsavelNome { get; set; } = string.Empty;
+    public string Especialidade { get; set; } = string.Empty;
+    public string ClassificacaoRisco { get; set; } = string.Empty;
+    public string QueixaPrincipal { get; set; } = string.Empty;
+    public string Alergias { get; set; } = string.Empty;
+    public string MedicamentosUso { get; set; } = string.Empty;
     public string FormaPagamento { get; set; } = string.Empty;
     public string NumeroCarteirinha { get; set; } = string.Empty;
     public DateTime? DataInicio { get; set; }
     public DateTime? DataFim { get; set; }
+    public DateOnly? DataNascimento { get; set; }
     public DateOnly? Vencimento { get; set; }
     public DateOnly? Validade { get; set; }
+    public decimal? PressaoSistolica { get; set; }
+    public decimal? PressaoDiastolica { get; set; }
+    public decimal? FrequenciaCardiaca { get; set; }
+    public decimal? FrequenciaRespiratoria { get; set; }
+    public decimal? Temperatura { get; set; }
+    public decimal? Saturacao { get; set; }
+    public decimal? Peso { get; set; }
+    public decimal? Altura { get; set; }
+    public decimal? Glicemia { get; set; }
     public decimal? Valor { get; set; }
     public bool Principal { get; set; }
 }

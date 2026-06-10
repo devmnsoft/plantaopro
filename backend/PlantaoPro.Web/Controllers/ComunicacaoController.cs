@@ -216,4 +216,6 @@ public class ComunicacaoController : BaseWebController
             return Array.Empty<UsuarioConversaOpcaoDto>();
         }
     }
+
+    public IActionResult Templates() => View();
 }

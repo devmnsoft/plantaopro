@@ -14,6 +14,9 @@ public class RelatoriosController : BaseWebController
     public IActionResult Cobertura() => View();
     public IActionResult ProdutividadeMedica() => View();
     public IActionResult FaturamentoSaas() => View();
+    public IActionResult Operacional() => View("Index");
+    public IActionResult Financeiro() => View("Index");
+    public IActionResult FiltrosSalvos() => View("Index");
     public async Task<IActionResult> Saas(int page = 1) => await RelatorioSaasAsync("clientes", "SaaS", page);
     public async Task<IActionResult> SaasFaturamento(int page = 1) => await RelatorioSaasAsync("faturamento", "Faturamento SaaS", page);
     public async Task<IActionResult> SaasClientesRisco(int page = 1) => await RelatorioSaasAsync("clientes-risco", "Clientes em risco", page);

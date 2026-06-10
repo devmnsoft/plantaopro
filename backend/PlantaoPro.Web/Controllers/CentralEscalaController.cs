@@ -47,6 +47,10 @@ public sealed class CentralEscalaController : BaseWebController
     public IActionResult PlantaoDescoberto() => Operational(nameof(PlantaoDescoberto));
     public IActionResult Risco() => Operational(nameof(Risco));
     public IActionResult MedicosDisponiveis() => Operational(nameof(MedicosDisponiveis));
+    public IActionResult Sugestoes() => Operational(nameof(Sugestoes));
+    public IActionResult MedicosSugeridos() => Operational(nameof(MedicosSugeridos));
+    public IActionResult Substituicoes() => Operational(nameof(Substituicoes));
+    public IActionResult SubstituicaoDetails(Guid id) => Operational(nameof(SubstituicaoDetails));
     public IActionResult ConvitesPendentes() => Operational(nameof(ConvitesPendentes));
     public IActionResult Calendario() => Operational(nameof(Calendario));
 

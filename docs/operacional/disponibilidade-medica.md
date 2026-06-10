@@ -1,10 +1,10 @@
-# Disponibilidade médica
+# Disponibilidade médica avançada
 
-## Implementado
-Roteiro de demo contempla disponibilidade, indisponibilidade e sugestão de médico disponível via módulos operacionais já expostos.
+Médicos autenticados podem manter janelas de disponibilidade, indisponibilidades e preferências em endpoints próprios:
 
-## Operação e segurança
-As rotas usam controllers e services registrados no DI quando há API. As ações críticas registram auditoria via serviço central e não expõem stack trace ao usuário.
+- `GET/POST/PUT/DELETE /api/medicos/me/disponibilidade`
+- `GET/POST/DELETE /api/medicos/me/indisponibilidade`
+- `GET/PUT /api/medicos/me/preferencias`
+- `GET /api/coordenacao/medicos-disponiveis`
 
-## Pendências reais
-Pendências reais: persistência granular de preferências por médico.
+Regras implementadas: médico só altera o próprio cadastro; indisponibilidade bloqueia disponibilidade no mesmo período; coordenação consulta médicos do tenant; histórico e auditoria são registrados.

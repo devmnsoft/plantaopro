@@ -123,6 +123,7 @@ builder.Services.AddScoped<TenantIsolationValidatorService>();
 builder.Services.AddScoped<B2BLaunchService>();
 builder.Services.AddScoped<B2BCommercialOpsService>();
 builder.Services.AddScoped<CommercialDemoService>();
+builder.Services.AddScoped<OperationalAutomationService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

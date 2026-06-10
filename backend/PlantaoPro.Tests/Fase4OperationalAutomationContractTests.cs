@@ -16,6 +16,9 @@ public sealed class Fase4OperationalAutomationContractTests
         Assert.Contains("create table if not exists plantaopro.notificacao_regras", sql);
         Assert.Contains("create table if not exists plantaopro.pendencias_operacionais", sql);
         Assert.Contains("create table if not exists plantaopro.relatorios_exportacoes", sql);
+        Assert.Contains("create table if not exists plantaopro.conversas", sql);
+        Assert.Contains("create table if not exists plantaopro.mensagem_leituras", sql);
+        Assert.Contains("add column if not exists updated_by", sql);
         Assert.Contains("create index if not exists", sql);
         Assert.DoesNotContain("add constraint if not exists", sql, StringComparison.OrdinalIgnoreCase);
     }
@@ -33,6 +36,23 @@ public sealed class Fase4OperationalAutomationContractTests
         Assert.Contains("api/substituicoes", controller);
         Assert.Contains("api/pendencias", controller);
         Assert.Contains("api/relatorios", controller);
+    }
+
+    [Fact]
+    public void ComunicacaoApiSupportsOperationalConversationLifecycleUsedByWeb()
+    {
+        var controller = Read("backend/PlantaoPro.Api/Controllers/ComunicacaoController.cs");
+        var detalhes = Read("backend/PlantaoPro.Api/Controllers/Fase4ComunicacaoNotificacoesController.cs");
+        var models = Read("backend/PlantaoPro.Api/Models.cs");
+
+        Assert.Contains("MensagemInicial", models);
+        Assert.Contains("pageSize", controller);
+        Assert.Contains("search", controller);
+        Assert.Contains("api/comunicacao/conversas", Read("backend/PlantaoPro.Web/Controllers/ComunicacaoController.cs"));
+        Assert.Contains("mensagens/{id:guid}/lida", controller);
+        Assert.Contains("ComunicacaoConversaDetalheDto", detalhes);
+        Assert.Contains("Participantes", detalhes);
+        Assert.Contains("MinhaMensagem", detalhes);
     }
 
     [Fact]

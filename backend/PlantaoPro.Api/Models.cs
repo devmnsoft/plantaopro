@@ -364,7 +364,7 @@ public sealed class ConversaListDto
     public DateTime UltimaAtualizacao { get; set; }
     public long NaoLidas { get; set; }
 }
-public record CriarConversaRequest(string Titulo,string? Tipo,string? Entidade,Guid? EntidadeId,Guid[] Participantes);
+public record CriarConversaRequest(string Titulo,string? Tipo,string? Entidade,Guid? EntidadeId,Guid[] Participantes,string? MensagemInicial);
 public record EnviarMensagemRequest(string Mensagem);
 
 public record OnboardingResumoDto(

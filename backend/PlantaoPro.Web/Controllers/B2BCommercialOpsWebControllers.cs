@@ -54,6 +54,9 @@ public sealed class MedicoAreaController : Controller
     public IActionResult Agenda() => Render(nameof(Agenda));
     public IActionResult Convites() => Render(nameof(Convites));
     public IActionResult Disponibilidade() => Render(nameof(Disponibilidade));
+    public IActionResult Indisponibilidades() => Render(nameof(Indisponibilidades));
+    public IActionResult Preferencias() => Render(nameof(Preferencias));
+    public IActionResult SolicitarSubstituicao() => Render(nameof(SolicitarSubstituicao));
     public IActionResult Substituicoes() => Render(nameof(Substituicoes));
     public IActionResult Pagamentos() => Render(nameof(Pagamentos));
     public IActionResult Perfil() => Render(nameof(Perfil));

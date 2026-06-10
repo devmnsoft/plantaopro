@@ -64,6 +64,46 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Exportações", "bi-download", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro)
         });
 
+        AddGroup(groups, "SAÚDE 360 - RECEPÇÃO", "bi-person-lines-fill", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Painel de chamada", "bi-megaphone", "PainelChamada", "Index", "SAUDE360_PAINEL", string.Empty),
+            Item("Agendamento", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", string.Empty),
+            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "SAUDE360_AGENDAMENTO", string.Empty),
+            Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", string.Empty)
+        });
+
+        AddGroup(groups, "SAÚDE 360 - TRIAGEM", "bi-clipboard2-pulse", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Fila de triagem", "bi-people", "Triagem", "Fila", "SAUDE360_TRIAGEM", string.Empty),
+            Item("Nova triagem", "bi-plus-circle", "Triagem", "Create", "SAUDE360_TRIAGEM", string.Empty),
+            Item("Histórico de triagem", "bi-clock-history", "Triagem", "HistoricoPaciente", "SAUDE360_TRIAGEM", string.Empty)
+        });
+
+        AddGroup(groups, "SAÚDE 360 - MÉDICO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Consultas", "bi-journal-medical", "Consultas", "Index", "SAUDE360_CONSULTAS", string.Empty),
+            Item("Prescrições", "bi-capsule", "Prescricoes", "Index", "SAUDE360_PRESCRICAO", string.Empty),
+            Item("CID", "bi-search-heart", "Cid", "Index", "SAUDE360_CID", string.Empty),
+            Item("Histórico do paciente", "bi-folder2-open", "Consultas", "HistoricoPaciente", "SAUDE360_CONSULTAS", string.Empty)
+        });
+
+        AddGroup(groups, "SAÚDE 360 - FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Contas a receber", "bi-receipt", "ClinicaFinanceiro", "ContasReceber", "SAUDE360_FINANCEIRO", string.Empty),
+            Item("Caixa", "bi-box", "ClinicaFinanceiro", "Caixa", "SAUDE360_FINANCEIRO", string.Empty),
+            Item("Repasses", "bi-bank", "ClinicaFinanceiro", "Repasses", "SAUDE360_FINANCEIRO", string.Empty),
+            Item("Relatórios", "bi-graph-up", "ClinicaFinanceiro", "Relatorios", "SAUDE360_FINANCEIRO", string.Empty)
+        });
+
+        AddGroup(groups, "SAÚDE 360 - CONVÊNIOS", "bi-shield-plus", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Convênios", "bi-building", "Convenios", "Index", "SAUDE360_CONVENIOS", string.Empty),
+            Item("Autorizações", "bi-check2-square", "Convenios", "Autorizacoes", "SAUDE360_CONVENIOS", string.Empty),
+            Item("Glosas", "bi-exclamation-octagon", "Convenios", "Glosas", "SAUDE360_CONVENIOS", string.Empty),
+            Item("Faturamento", "bi-file-earmark-bar-graph", "Convenios", "Faturamento", "SAUDE360_CONVENIOS", string.Empty),
+            Item("Planos de saúde", "bi-card-checklist", "PlanosSaude", "Index", "SAUDE360_PLANOS_SAUDE", string.Empty)
+        });
+
         AddGroup(groups, "CLIENTE", "bi-window-sidebar", currentController, currentAction, new List<MenuItemViewModel>
         {
             Item("Meu Portal", "bi-house-heart", "ClientePortal", "Index", "CLIENTE_PORTAL", RolesConstants.AdministradorCliente),
@@ -138,6 +178,7 @@ public sealed class MenuBuilderService : IMenuBuilderService
     {
         if (string.IsNullOrWhiteSpace(minimumRole)) return true;
         if (currentUser.IsGlobalAdmin()) return true;
+        if (currentUser.HasRole(RolesConstants.AdministradorClinica) && (string.Equals(minimumRole, RolesConstants.Recepcao, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Triagem, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FinanceiroClinica, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FaturamentoConvenio, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase))) return true;
         if (string.Equals(minimumRole, RolesConstants.AdministradorGlobal, StringComparison.OrdinalIgnoreCase)) return false;
         if (string.Equals(minimumRole, RolesConstants.AdministradorCliente, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Administrador, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin();
         if (string.Equals(minimumRole, RolesConstants.Coordenador, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Coordenacao, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Operador);

@@ -104,10 +104,21 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
 
         if (code == "AJUDA" || code == "LGPD" || code == "CONTA") return true;
 
+        var saude360Recepcao = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES" };
+        var saude360Triagem = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_TRIAGEM" };
+        var saude360Medico = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID" };
+        var saude360Financeiro = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_FINANCEIRO" };
+        var saude360Convenios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE" };
+        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return code.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || code != "ADMIN_SAAS";
+        if (currentUser.HasRole(RolesConstants.Recepcao) && saude360Recepcao.Contains(code)) return true;
+        if (currentUser.HasRole(RolesConstants.Triagem) && saude360Triagem.Contains(code)) return true;
+        if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(code)) return true;
+        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(code)) return true;
+
         if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL" && code != "PARCEIRO";
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Financeiro)) return code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";
-        if (currentUser.HasRole(RolesConstants.Medico)) return code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
+        if (currentUser.HasRole(RolesConstants.Financeiro)) return saude360Financeiro.Contains(code) || code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";
+        if (currentUser.HasRole(RolesConstants.Medico)) return saude360Medico.Contains(code) || code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
         if (currentUser.HasRole(RolesConstants.Hospital)) return code == "HOSPITAL_AREA" || code == "PLANTOES" || code == "ESCALAS" || code == "AGENDA";
         if (currentUser.HasRole(RolesConstants.Parceiro)) return code == "PARCEIRO" || code == "LEADS" || code == "PROPOSTAS" || code == "COMISSOES" || code == "REPASSES" || code == "MATERIAIS";
         if (currentUser.HasRole(RolesConstants.Suporte)) return code == "SUPORTE" || code == "AJUDA" || code == "AUDITORIA" || code == "OBSERVABILIDADE";
@@ -132,8 +143,8 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
     public bool CanAccessAdminArea() => currentUser.IsGlobalAdmin();
     public bool CanAccessClientPortal() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();
     public bool CanAccessPartnerPortal() => currentUser.IsGlobalAdmin() || currentUser.IsPartner();
-    public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor();
-    public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
+    public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor() || currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Recepcao) || currentUser.HasRole(RolesConstants.AdministradorClinica);
+    public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.HasRole(RolesConstants.FinanceiroClinica) || currentUser.HasRole(RolesConstants.FaturamentoConvenio) || currentUser.HasRole(RolesConstants.AdministradorClinica);
 
     public Task RegistrarTrocaContextoAsync(Guid tenantId, string motivo, CancellationToken cancellationToken = default)
     {

@@ -1,0 +1,74 @@
+@model PlantaoPro.Web.Models.Saude360PageViewModel
+@{
+    var vm = Model ?? new PlantaoPro.Web.Models.Saude360PageViewModel();
+    ViewData["Title"] = vm.Titulo;
+    var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
+        <h1 class="h3 mb-1">@vm.Titulo</h1>
+        <p class="text-muted mb-0">@vm.Descricao</p>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
+        {
+            <a asp-controller="@vm.Controller" asp-action="@acao.Action" class="btn btn-outline-primary">
+                <i class="bi @acao.Icone me-1"></i>@acao.Titulo
+            </a>
+        }
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(vm.ErrorMessage) && !string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase))
+{
+    <div class="alert alert-warning" role="alert">@vm.ErrorMessage</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Plano mínimo</div><div class="h5 mb-0">@vm.Plano</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Registros</div><div class="h5 mb-0">@registros.Count</div></div></div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Controle de acesso</div><div class="fw-semibold">Tenant + perfil + auditoria</div></div></div>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <strong>@vm.Modulo</strong>
+        <span class="badge bg-light text-dark">@vm.Permissao</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Identificação</th><th>Código</th><th>Descrição</th><th>Status</th><th>Registro</th></tr></thead>
+            <tbody>
+            @if (!registros.Any())
+            {
+                <tr><td colspan="5" class="text-center text-muted py-4">Nenhum registro encontrado para este tenant.</td></tr>
+            }
+            else
+            {
+                @foreach (var item in registros)
+                {
+                    <tr>
+                        <td><span class="fw-semibold">@(string.IsNullOrWhiteSpace(item.Nome) ? item.Id.ToString() : item.Nome)</span></td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Codigo) ? "—" : item.Codigo)</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.Descricao) ? "—" : item.Descricao)</td>
+                        <td><span class="badge bg-primary-subtle text-primary">@item.Status</span></td>
+                        <td>@item.RegDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="alert alert-info" role="status">
+    <strong>LGPD e auditoria:</strong> as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.
+</div>

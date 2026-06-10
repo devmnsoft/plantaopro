@@ -110,6 +110,17 @@ public sealed class PermissionService : IPermissionService
 
         if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
 
+        var saude360Recepcao = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES" };
+        var saude360Triagem = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_TRIAGEM" };
+        var saude360Medico = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID" };
+        var saude360Financeiro = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_FINANCEIRO" };
+        var saude360Convenios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE" };
+        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return moduleCode.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || moduleCode != "ADMIN_SAAS";
+        if (currentUser.HasRole(RolesConstants.Recepcao) && saude360Recepcao.Contains(moduleCode)) return true;
+        if (currentUser.HasRole(RolesConstants.Triagem) && saude360Triagem.Contains(moduleCode)) return true;
+        if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(moduleCode)) return true;
+        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(moduleCode)) return true;
+
         if (currentUser.IsTenantAdmin())
         {
             return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO" && moduleCode != "MARKETPLACE";
@@ -122,12 +133,12 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Financeiro))
         {
-            return moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING";
+            return saude360Financeiro.Contains(moduleCode) || moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING";
         }
 
         if (currentUser.HasRole(RolesConstants.Medico))
         {
-            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
+            return saude360Medico.Contains(moduleCode) || moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
         }
 
         if (currentUser.HasRole(RolesConstants.Hospital))
@@ -171,8 +182,8 @@ public sealed class PermissionService : IPermissionService
     public bool CanAccessAdminArea() => currentUser.IsGlobalAdmin();
     public bool CanAccessClientPortal() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();
     public bool CanAccessPartnerPortal() => currentUser.IsGlobalAdmin() || currentUser.IsPartner();
-    public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor();
-    public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
+    public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor() || currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Recepcao) || currentUser.HasRole(RolesConstants.AdministradorClinica);
+    public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.HasRole(RolesConstants.FinanceiroClinica) || currentUser.HasRole(RolesConstants.FaturamentoConvenio) || currentUser.HasRole(RolesConstants.AdministradorClinica);
 
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
 }

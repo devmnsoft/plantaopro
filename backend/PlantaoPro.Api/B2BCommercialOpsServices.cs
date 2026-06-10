@@ -449,11 +449,11 @@ public sealed class B2BCommercialOpsService
         return Task.FromResult(ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Ok(Disponibilidades.Values.Where(x => x.MedicoUsuarioId == usuarioId).OrderBy(x => x.DataInicio).Take(100)));
     }
 
-    public async Task<ApiResponse<Guid>> RegistrarDisponibilidadeAsync(Guid usuarioId, MedicoDisponibilidadeRequest request, string tipo, string? ip)
+    public async Task<ApiResponse<Guid>> RegistrarDisponibilidadeAsync(Guid usuarioId, PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request, string tipo, string? ip)
     {
         if (request.DataFim <= request.DataInicio) return ApiResponse<Guid>.Fail("Data final deve ser maior que a inicial.", 400);
         var id = Guid.NewGuid();
-        Disponibilidades[id] = new MedicoDisponibilidadeDto { Id = id, MedicoUsuarioId = usuarioId, Tipo = tipo, DataInicio = request.DataInicio, DataFim = request.DataFim, Observacao = request.Observacao?.Trim() ?? string.Empty };
+        Disponibilidades[id] = new MedicoDisponibilidadeDto { Id = id, MedicoUsuarioId = usuarioId, Tipo = tipo, DataInicio = request.DataInicio, DataFim = request.DataFim, Observacao = request.Observacoes?.Trim() ?? string.Empty };
         await AuditarAsync("MEDICO_DISPONIBILIDADE", id, tipo, new { usuarioId, request.DataInicio, request.DataFim }, ip);
         return ApiResponse<Guid>.Ok(id, "Disponibilidade registrada.");
     }

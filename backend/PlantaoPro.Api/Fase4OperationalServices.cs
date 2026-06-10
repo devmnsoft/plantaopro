@@ -54,7 +54,7 @@ where d.medico_id=@medicoId and d.reg_status='A' order by d.data_inicio desc lim
         return ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Ok(rows, "Disponibilidades listadas.");
     }
 
-    public async Task<ApiResponse<Guid>> CriarDisponibilidadeAsync(Guid uid, MedicoDisponibilidadeRequest request, string? ip, string? ua)
+    public async Task<ApiResponse<Guid>> CriarDisponibilidadeAsync(Guid uid, PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request, string? ip, string? ua)
     {
         var erro = ValidarPeriodo(request.DataInicio, request.DataFim);
         if (erro is not null) return ApiResponse<Guid>.Fail(erro);
@@ -71,7 +71,7 @@ values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno
         return ApiResponse<Guid>.Ok(id, "Disponibilidade cadastrada.");
     }
 
-    public async Task<ApiResponse<string>> AtualizarDisponibilidadeAsync(Guid uid, Guid id, MedicoDisponibilidadeRequest request, string? ip, string? ua)
+    public async Task<ApiResponse<string>> AtualizarDisponibilidadeAsync(Guid uid, Guid id, PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request, string? ip, string? ua)
     {
         var erro = ValidarPeriodo(request.DataInicio, request.DataFim);
         if (erro is not null) return ApiResponse<string>.Fail(erro);

@@ -18,10 +18,10 @@ public sealed class MedicosMeDisponibilidadeController : ControllerBase
     public async Task<IActionResult> Disponibilidade() { var r = await service.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
 
     [HttpPost("api/medicos/me/disponibilidade")]
-    public async Task<IActionResult> CriarDisponibilidade([FromBody] MedicoDisponibilidadeRequest request) { var r = await service.CriarDisponibilidadeAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> CriarDisponibilidade([FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await service.CriarDisponibilidadeAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 
     [HttpPut("api/medicos/me/disponibilidade/{id:guid}")]
-    public async Task<IActionResult> AtualizarDisponibilidade(Guid id, [FromBody] MedicoDisponibilidadeRequest request) { var r = await service.AtualizarDisponibilidadeAsync(Uid(), id, request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> AtualizarDisponibilidade(Guid id, [FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await service.AtualizarDisponibilidadeAsync(Uid(), id, request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 
     [HttpDelete("api/medicos/me/disponibilidade/{id:guid}")]
     public async Task<IActionResult> RemoverDisponibilidade(Guid id) { var r = await service.RemoverDisponibilidadeAsync(Uid(), id, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }

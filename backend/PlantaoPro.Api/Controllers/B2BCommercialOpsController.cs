@@ -157,8 +157,8 @@ public sealed class MedicoAgendaMeController : ControllerBase
     public MedicoAgendaMeController(B2BCommercialOpsService service) { _service = service; }
     [HttpGet("agenda")] public async Task<IActionResult> Agenda() => Ok(await _service.AgendaMedicaAsync(Uid()));
     [HttpGet("disponibilidade")] public async Task<IActionResult> Disponibilidade() => Ok(await _service.DisponibilidadeMedicaAsync(Uid()));
-    [HttpPost("disponibilidade")] public async Task<IActionResult> RegistrarDisponibilidade([FromBody] MedicoDisponibilidadeRequest request) { var r = await _service.RegistrarDisponibilidadeAsync(Uid(), request, "DISPONIVEL", Ip()); return StatusCode(r.StatusCode, r); }
-    [HttpPost("indisponibilidade")] public async Task<IActionResult> RegistrarIndisponibilidade([FromBody] MedicoDisponibilidadeRequest request) { var r = await _service.RegistrarDisponibilidadeAsync(Uid(), request, "INDISPONIVEL", Ip()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("disponibilidade")] public async Task<IActionResult> RegistrarDisponibilidade([FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await _service.RegistrarDisponibilidadeAsync(Uid(), request, "DISPONIVEL", Ip()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("indisponibilidade")] public async Task<IActionResult> RegistrarIndisponibilidade([FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await _service.RegistrarDisponibilidadeAsync(Uid(), request, "INDISPONIVEL", Ip()); return StatusCode(r.StatusCode, r); }
     [HttpPost("substituicao")] public async Task<IActionResult> Substituicao([FromBody] MedicoSubstituicaoRequest request) { var r = await _service.SolicitarSubstituicaoAsync(Uid(), request, Ip()); return StatusCode(r.StatusCode, r); }
     private Guid Uid() { var uid = User.FindFirst("uid")?.Value; return Guid.TryParse(uid, out var parsed) ? parsed : Guid.Empty; }
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();

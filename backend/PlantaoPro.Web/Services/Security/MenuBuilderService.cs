@@ -64,12 +64,15 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Exportações", "bi-download", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro)
         });
 
-        AddGroup(groups, "SAÚDE 360 - RECEPÇÃO", "bi-person-lines-fill", currentController, currentAction, new List<MenuItemViewModel>
+        AddGroup(groups, "CLÍNICA", "bi-hospital", currentController, currentAction, new List<MenuItemViewModel>
         {
-            Item("Painel de chamada", "bi-megaphone", "PainelChamada", "Index", "SAUDE360_PAINEL", string.Empty),
-            Item("Agendamento", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", string.Empty),
-            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "SAUDE360_AGENDAMENTO", string.Empty),
-            Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", string.Empty)
+            Item("Dashboard clínico", "bi-speedometer2", "ClinicaDashboard", "Index", "SAUDE360_DASHBOARD", string.Empty),
+            Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", string.Empty),
+            Item("Agendamentos", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", string.Empty),
+            Item("Painel de Chamada", "bi-megaphone", "PainelChamada", "Index", "SAUDE360_PAINEL", string.Empty),
+            Item("Triagem", "bi-clipboard2-pulse", "Triagem", "Index", "SAUDE360_TRIAGEM", string.Empty),
+            Item("Fila de Atendimento", "bi-list-ol", "PainelChamada", "Fila", "SAUDE360_PAINEL", string.Empty),
+            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "SAUDE360_AGENDAMENTO", string.Empty)
         });
 
         AddGroup(groups, "SAÚDE 360 - TRIAGEM", "bi-clipboard2-pulse", currentController, currentAction, new List<MenuItemViewModel>

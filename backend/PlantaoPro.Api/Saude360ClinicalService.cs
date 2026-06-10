@@ -17,6 +17,7 @@ public sealed class Saude360ClinicalService
     private static readonly Dictionary<string, string> Tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
         { "pacientes", "pacientes" },
+        { "pacienteHistorico", "paciente_historico" },
         { "painel", "painel_chamada_fila" },
         { "painelHistorico", "painel_chamada_historico" },
         { "agendamentos", "agendamentos" },
@@ -78,6 +79,11 @@ public sealed class Saude360ClinicalService
             var conflict = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.agendamentos where reg_status='A' and status not in ('CANCELADO','FINALIZADO') and medico_id=@medicoId and cliente_id=@tenantId and data_inicio < @fim and data_fim > @inicio", new { medicoId = request.MedicoId, tenantId = TenantId, inicio = request.DataInicio, fim = request.DataFim });
             if (conflict > 0) return ApiResponse<Saude360RegistroDto>.Fail("Já existe agendamento para o médico no horário informado.", 409);
         }
+        if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
+        {
+            var cpfExists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.pacientes where reg_status='A' and cliente_id=@tenantId and regexp_replace(coalesce(cpf,''), '[^0-9]', '', 'g')=regexp_replace(@cpf, '[^0-9]', '', 'g')", new { tenantId = TenantId, cpf = request.Cpf });
+            if (cpfExists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CPF já cadastrado para este tenant.", 409);
+        }
         if (string.Equals(tableKey, "cid", StringComparison.OrdinalIgnoreCase))
         {
             var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.cid_tabela where codigo=@codigo and reg_status='A'", new { codigo = request.Codigo });
@@ -101,9 +107,13 @@ public sealed class Saude360ClinicalService
         var validation = ValidateUpdate(tableKey, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await using var cn = Cn();
-        var affected = await cn.ExecuteAsync($@"update plantaopro.{table}
-set status = coalesce(nullif(@status,''), status), updated_by=@uid, updated_at=now()
-where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { id, status = request.Status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal });
+        if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
+        {
+            var cpfExists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.pacientes where id<>@id and reg_status='A' and cliente_id=@tenantId and regexp_replace(coalesce(cpf,''), '[^0-9]', '', 'g')=regexp_replace(@cpf, '[^0-9]', '', 'g')", new { id, tenantId = TenantId, cpf = request.Cpf });
+            if (cpfExists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CPF já cadastrado para este tenant.", 409);
+        }
+        var update = BuildUpdate(tableKey, table);
+        var affected = await cn.ExecuteAsync(update, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId, request.Nome, request.Descricao, request.Codigo, request.Status, request.Tipo, request.Observacoes, request.Cpf, request.Cns, request.DocumentoAlternativo, request.NomeSocial, request.SexoGenero, request.Telefone, request.Email, request.Endereco, request.ResponsavelNome, request.DataNascimento, request.PacienteId, request.MedicoId, request.UnidadeId, request.SalaId, request.DataInicio, request.DataFim, request.Especialidade, request.Valor, request.ClassificacaoRisco, request.QueixaPrincipal, request.Alergias, request.MedicamentosUso });
         if (affected == 0) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para atualização.", 404);
         await AuditAsync(table, id, "ATUALIZAR", new { table });
         return await ObterAsync(tableKey, id);
@@ -113,14 +123,43 @@ where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or 
     {
         var table = ResolveTable(tableKey);
         var status = StatusForAction(acao);
+        if (string.Equals(tableKey, "painel", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADO";
+        if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         var validation = ValidateAction(tableKey, acao, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await using var cn = Cn();
+        if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "checkin", StringComparison.OrdinalIgnoreCase))
+        {
+            var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.agendamentos where id=@id and reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (currentStatus != "AGENDADO" && currentStatus != "CONFIRMADO") return ApiResponse<Saude360RegistroDto>.Fail("Check-in permitido apenas para AGENDADO ou CONFIRMADO.", 409);
+        }
+        if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase))
+        {
+            var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (currentStatus == "FINALIZADA") return ApiResponse<Saude360RegistroDto>.Fail("Triagem finalizada não pode ser reiniciada sem permissão especial.", 409);
+        }
         var affected = await cn.ExecuteAsync($"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { id, status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal });
         if (affected == 0) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para ação.", 404);
         await InsertHistoricoAsync(cn, tableKey, id, acao, request);
+        await AplicarEfeitosClinicosAsync(cn, tableKey, id, acao, request);
         await AuditAsync(table, id, acao.ToUpperInvariant(), new { table, motivo = request.Motivo, justificativa = request.Justificativa });
         return await ObterAsync(tableKey, id);
+    }
+
+    public async Task<ApiResponse<object>> DashboardResumoAsync()
+    {
+        await using var cn = Cn();
+        var resumo = await cn.QueryFirstAsync(@"select
+(select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and data_inicio::date=current_date) as agendamentos_hoje,
+(select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='CHECKIN_REALIZADO' and data_inicio::date=current_date) as checkins_realizados,
+(select count(1) from plantaopro.painel_chamada_fila where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='AGUARDANDO') as pacientes_aguardando,
+(select count(1) from plantaopro.painel_chamada_fila where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('CHAMADO','RECHAMADO')) as pacientes_chamados,
+(select count(1) from plantaopro.triagens where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('AGUARDANDO','EM_TRIAGEM')) as triagens_pendentes,
+(select count(1) from plantaopro.triagens where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('FINALIZADA','ENCAMINHADA_CONSULTA')) as triagens_finalizadas,
+(select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='FALTOU' and data_inicio::date=current_date) as faltas_dia,
+(select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='CANCELADO' and data_inicio::date=current_date) as cancelamentos_dia", new { tenantId = TenantId, isGlobal = IsGlobal });
+        await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });
+        return ApiResponse<object>.Ok(resumo, "Dashboard clínico carregado.");
     }
 
     public async Task<ApiResponse<object>> ResumoFinanceiroAsync()
@@ -144,7 +183,8 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");
         if (HasColumn(key, "agendamento_id")) where.Add("(@agendamentoId is null or agendamento_id = @agendamentoId)");
         if (HasColumn(key, "consulta_id")) where.Add("(@consultaId is null or consulta_id = @consultaId)");
-        if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
+        if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
+        else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
         return "select * from plantaopro." + table + " where " + string.Join(" and ", where) + " order by reg_date desc limit 200";
     }
 
@@ -159,22 +199,23 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
             { "prescricoes", new[] { "paciente_id", "medico_id", "consulta_id" } },
             { "contasReceber", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
             { "convenioAutorizacoes", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
-            { "planoSaudePacientes", new[] { "paciente_id" } }
+            { "planoSaudePacientes", new[] { "paciente_id" } },
+            { "pacienteHistorico", new[] { "paciente_id" } }
         };
         string[] cols;
         return map.TryGetValue(key, out cols) && cols.Any(c => string.Equals(c, column, StringComparison.OrdinalIgnoreCase));
     }
 
-    private static bool HasSearchColumns(string key) => key == "cid" || key == "prescricaoModelos";
+    private static bool HasSearchColumns(string key) => key == "pacientes" || key == "cid" || key == "prescricaoModelos";
 
     private (string Sql, object Args) BuildInsert(string key, Saude360CreateRequest r, Guid id)
     {
         var tenantId = TenantId;
         var uid = currentUser.UserId;
-        if (key == "pacientes") return ("insert into plantaopro.pacientes(id,cliente_id,nome,email,telefone,status,created_by) values(@id,@tenantId,@nome,@email,@telefone,@status,@uid)", new { id, tenantId, nome = r.Nome, email = r.Descricao, telefone = r.Observacoes, status = Default(r.Status, "ATIVO"), uid });
+        if (key == "pacientes") return ("insert into plantaopro.pacientes(id,cliente_id,nome,nome_social,data_nascimento,sexo_genero,cpf,cns,documento_alternativo,email,telefone,endereco,responsavel_nome,observacoes,status,created_by) values(@id,@tenantId,@nome,@nomeSocial,@nascimento,@sexo,@cpf,@cns,@doc,@email,@telefone,@endereco,@responsavel,@observacoes,@status,@uid)", new { id, tenantId, nome = r.Nome, nomeSocial = r.NomeSocial, nascimento = r.DataNascimento, sexo = r.SexoGenero, cpf = r.Cpf, cns = r.Cns, doc = r.DocumentoAlternativo, email = r.Email, telefone = r.Telefone, endereco = r.Endereco, responsavel = r.ResponsavelNome, observacoes = r.Observacoes, status = Default(r.Status, "ATIVO"), uid });
         if (key == "painel") return ("insert into plantaopro.painel_chamada_fila(id,cliente_id,painel_id,paciente_id,agendamento_id,setor_id,sala_id,guiche_id,senha,paciente_nome,status,created_by) values(@id,@tenantId,@painelId,@pacienteId,@agendamentoId,@setorId,@salaId,@guicheId,@senha,@pacienteNome,'AGUARDANDO',@uid)", new { id, tenantId, r.PainelId, r.PacienteId, r.AgendamentoId, r.SetorId, r.SalaId, r.GuicheId, r.Senha, pacienteNome = r.PacienteNome, uid });
-        if (key == "agendamentos") return ("insert into plantaopro.agendamentos(id,cliente_id,paciente_id,medico_id,unidade_id,data_inicio,data_fim,tipo,status,observacoes,valor,created_by) values(@id,@tenantId,@pacienteId,@medicoId,@unidadeId,@inicio,@fim,@tipo,'AGENDADO',@obs,@valor,@uid)", new { id, tenantId, r.PacienteId, r.MedicoId, r.UnidadeId, inicio = r.DataInicio, fim = r.DataFim, tipo = Default(r.Tipo, "CONSULTA"), obs = r.Observacoes, valor = r.Valor ?? 0, uid });
-        if (key == "triagens") return ("insert into plantaopro.triagens(id,cliente_id,paciente_id,agendamento_id,enfermeiro_id,classificacao_risco,queixa_principal,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@uid,@classificacao,@queixa,'ABERTA',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, uid, classificacao = r.Tipo, queixa = r.Descricao });
+        if (key == "agendamentos") return ("insert into plantaopro.agendamentos(id,cliente_id,paciente_id,medico_id,unidade_id,sala_id,data_inicio,data_fim,tipo,especialidade,status,observacoes,valor,created_by) values(@id,@tenantId,@pacienteId,@medicoId,@unidadeId,@salaId,@inicio,@fim,@tipo,@especialidade,'AGENDADO',@obs,@valor,@uid)", new { id, tenantId, r.PacienteId, r.MedicoId, r.UnidadeId, r.SalaId, inicio = r.DataInicio, fim = r.DataFim, tipo = Default(r.Tipo, "CONSULTA"), especialidade = r.Especialidade, obs = r.Observacoes, valor = r.Valor ?? 0, uid });
+        if (key == "triagens") return ("insert into plantaopro.triagens(id,cliente_id,paciente_id,agendamento_id,enfermeiro_id,classificacao_risco,queixa_principal,pressao_sistolica,pressao_diastolica,frequencia_cardiaca,frequencia_respiratoria,temperatura,saturacao,peso,altura,imc,glicemia,alergias_relatadas,medicamentos_uso,observacoes,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@uid,@classificacao,@queixa,@pas,@pad,@fc,@fr,@temp,@sat,@peso,@altura,case when @peso > 0 and @altura > 0 then round((@peso / (@altura * @altura))::numeric,2) else null end,@glicemia,@alergias,@medicamentos,@obs,'AGUARDANDO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, uid, classificacao = Default(r.ClassificacaoRisco, r.Tipo), queixa = Default(r.QueixaPrincipal, r.Descricao), pas = r.PressaoSistolica, pad = r.PressaoDiastolica, fc = r.FrequenciaCardiaca, fr = r.FrequenciaRespiratoria, temp = r.Temperatura, sat = r.Saturacao, peso = r.Peso, altura = r.Altura, glicemia = r.Glicemia, alergias = r.Alergias, medicamentos = r.MedicamentosUso, obs = r.Observacoes });
         if (key == "consultas") return ("insert into plantaopro.consultas(id,cliente_id,paciente_id,agendamento_id,triagem_id,medico_id,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@triagemId,@medicoId,'ABERTA',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.TriagemId, r.MedicoId, uid });
         if (key == "cid") return ("insert into plantaopro.cid_tabela(id,cliente_id,codigo,descricao,status,created_by) values(@id,@tenantId,@codigo,@descricao,'ATIVO',@uid)", new { id, tenantId, codigo = r.Codigo, descricao = r.Descricao, uid });
         if (key == "prescricoes") return ("insert into plantaopro.prescricoes(id,cliente_id,paciente_id,consulta_id,medico_id,modelo_id,status,created_by) values(@id,@tenantId,@pacienteId,@consultaId,@medicoId,@modeloId,'RASCUNHO',@uid)", new { id, tenantId, r.PacienteId, r.ConsultaId, r.MedicoId, r.ModeloId, uid });
@@ -189,11 +230,48 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
         return ("insert into plantaopro.plano_saude_pacientes(id,cliente_id,plano_saude_id,paciente_id,numero_carteirinha,principal,validade,status,created_by) values(@id,@tenantId,@planoSaudeId,@pacienteId,@carteira,@principal,@validade,'ATIVO',@uid)", new { id, tenantId, r.PlanoSaudeId, r.PacienteId, carteira = r.NumeroCarteirinha, r.Principal, r.Validade, uid });
     }
 
+    private static string BuildUpdate(string key, string table)
+    {
+        if (key == "pacientes") return $@"update plantaopro.{table} set
+nome=coalesce(nullif(@Nome,''),nome), nome_social=coalesce(nullif(@NomeSocial,''),nome_social), data_nascimento=coalesce(@DataNascimento,data_nascimento), sexo_genero=coalesce(nullif(@SexoGenero,''),sexo_genero), cpf=coalesce(nullif(@Cpf,''),cpf), cns=coalesce(nullif(@Cns,''),cns), documento_alternativo=coalesce(nullif(@DocumentoAlternativo,''),documento_alternativo), email=coalesce(nullif(@Email,''),email), telefone=coalesce(nullif(@Telefone,''),telefone), endereco=coalesce(nullif(@Endereco,''),endereco), responsavel_nome=coalesce(nullif(@ResponsavelNome,''),responsavel_nome), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now()
+where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "agendamentos") return $@"update plantaopro.{table} set
+paciente_id=coalesce(@PacienteId,paciente_id), medico_id=coalesce(@MedicoId,medico_id), unidade_id=coalesce(@UnidadeId,unidade_id), sala_id=coalesce(@SalaId,sala_id), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), tipo=coalesce(nullif(@Tipo,''),tipo), especialidade=coalesce(nullif(@Especialidade,''),especialidade), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), valor=coalesce(@Valor,valor), updated_by=@uid, updated_at=now()
+where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "triagens") return $@"update plantaopro.{table} set
+classificacao_risco=coalesce(nullif(@ClassificacaoRisco,''),nullif(@Tipo,''),classificacao_risco), queixa_principal=coalesce(nullif(@QueixaPrincipal,''),nullif(@Descricao,''),queixa_principal), alergias_relatadas=coalesce(nullif(@Alergias,''),alergias_relatadas), medicamentos_uso=coalesce(nullif(@MedicamentosUso,''),medicamentos_uso), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now()
+where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+    }
+
+    private async Task AplicarEfeitosClinicosAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request)
+    {
+        var tenantId = TenantId;
+        var uid = currentUser.UserId;
+        if (key == "agendamentos" && acao.Equals("checkin", StringComparison.OrdinalIgnoreCase))
+        {
+            await cn.ExecuteAsync(@"insert into plantaopro.agendamento_checkins(id,cliente_id,agendamento_id,paciente_id,usuario_id,observacoes)
+select gen_random_uuid(), cliente_id, id, paciente_id, @uid, @obs from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.agendamento_checkins c where c.agendamento_id=@id and c.reg_status='A')", new { id, uid, obs = request.Observacoes });
+            await cn.ExecuteAsync(@"insert into plantaopro.painel_chamada_fila(id,cliente_id,paciente_id,agendamento_id,senha,paciente_nome,status,created_by)
+select gen_random_uuid(), a.cliente_id, a.paciente_id, a.id, 'P' || lpad((nextval('plantaopro.seq_painel_senhas') % 10000)::text,4,'0'), coalesce(p.nome,'Paciente'), 'AGUARDANDO', @uid
+from plantaopro.agendamentos a left join plantaopro.pacientes p on p.id=a.paciente_id where a.id=@id and not exists (select 1 from plantaopro.painel_chamada_fila f where f.agendamento_id=@id and f.reg_status='A')", new { id, uid });
+            await cn.ExecuteAsync(@"insert into plantaopro.triagem_fila(id,cliente_id,paciente_id,agendamento_id,status,created_by)
+select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.triagem_fila f where f.agendamento_id=@id and f.reg_status='A')", new { id, uid });
+        }
+        if (key == "triagens" && acao.Equals("finalizar", StringComparison.OrdinalIgnoreCase))
+        {
+            await cn.ExecuteAsync("update plantaopro.agendamentos set status='AGUARDANDO_CONSULTA', updated_by=@uid, updated_at=now() where id=(select agendamento_id from plantaopro.triagens where id=@id) and reg_status='A'", new { id, uid });
+            await cn.ExecuteAsync(@"insert into plantaopro.triagem_encaminhamentos(id,cliente_id,triagem_id,paciente_id,agendamento_id,destino,status,created_by)
+select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA', 'ENCAMINHADA', @uid from plantaopro.triagens where id=@id", new { id, uid });
+        }
+    }
+
     private async Task InsertHistoricoAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request)
     {
         var detalhes = JsonSerializer.Serialize(new { acao, request.Motivo, request.Justificativa, request.Valor, request.FormaPagamento });
         var tenantId = TenantId;
         var uid = currentUser.UserId;
+        if (key == "pacientes") await cn.ExecuteAsync("insert into plantaopro.paciente_historico(id,cliente_id,paciente_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
         if (key == "painel") await cn.ExecuteAsync("insert into plantaopro.painel_chamada_historico(id,cliente_id,fila_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
         if (key == "agendamentos") await cn.ExecuteAsync("insert into plantaopro.agendamento_historico(id,cliente_id,agendamento_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
         if (key == "triagens") await cn.ExecuteAsync("insert into plantaopro.triagem_historico(id,cliente_id,triagem_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
@@ -240,11 +318,13 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
         if (a == "finalizar") return "FINALIZADO";
         if (a == "ausente") return "AUSENTE";
         if (a == "confirmar") return "CONFIRMADO";
-        if (a == "checkin") return "CHECKIN";
+        if (a == "checkin") return "CHECKIN_REALIZADO";
         if (a == "cancelar") return "CANCELADO";
         if (a == "reagendar") return "REAGENDADO";
-        if (a == "iniciar") return "EM_ATENDIMENTO";
+        if (a == "iniciar") return "EM_TRIAGEM";
         if (a == "inativar") return "INATIVO";
+        if (a == "reativar") return "ATIVO";
+        if (a == "marcar-falta") return "FALTOU";
         if (a == "aprovar") return "APROVADA";
         if (a == "negar") return "NEGADA";
         if (a == "receber") return "RECEBIDO";

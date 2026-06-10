@@ -8,6 +8,7 @@
     <div>
         <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
         <h1 class="h3 mb-0">@vm.Titulo</h1>
+        <p class="text-muted mb-0">Formulário auditável com escopo por tenant e sem exposição de dados clínicos em logs.</p>
     </div>
     <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
@@ -18,23 +19,63 @@
     <input type="hidden" asp-for="Controller" />
     <input type="hidden" asp-for="Action" />
     <input type="hidden" asp-for="Id" />
-    <div class="card-body row g-3">
-        <div class="col-md-6"><label asp-for="Nome" class="form-label">Nome</label><input asp-for="Nome" class="form-control" maxlength="180" /></div>
-        <div class="col-md-3"><label asp-for="Codigo" class="form-label">Código</label><input asp-for="Codigo" class="form-control" maxlength="80" /></div>
-        <div class="col-md-3"><label asp-for="Valor" class="form-label">Valor</label><input asp-for="Valor" type="number" step="0.01" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="PacienteId" class="form-label">Paciente ID</label><input asp-for="PacienteId" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="MedicoId" class="form-label">Médico ID</label><input asp-for="MedicoId" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="AgendamentoId" class="form-label">Agendamento ID</label><input asp-for="AgendamentoId" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="ConsultaId" class="form-label">Consulta ID</label><input asp-for="ConsultaId" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="PlanoSaudeId" class="form-label">Plano de saúde ID</label><input asp-for="PlanoSaudeId" class="form-control" /></div>
-        <div class="col-md-3"><label asp-for="DataInicio" class="form-label">Início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
-        <div class="col-md-3"><label asp-for="DataFim" class="form-label">Fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>
-        <div class="col-md-6"><label asp-for="FormaPagamento" class="form-label">Forma de pagamento</label><input asp-for="FormaPagamento" class="form-control" maxlength="80" /></div>
-        <div class="col-md-6"><label asp-for="NumeroCarteirinha" class="form-label">Carteirinha</label><input asp-for="NumeroCarteirinha" class="form-control" maxlength="80" /></div>
-        <div class="col-12"><label asp-for="Descricao" class="form-label">Descrição / queixa / observação</label><textarea asp-for="Descricao" class="form-control" rows="4" maxlength="2000"></textarea></div>
-        <div class="col-md-6"><label asp-for="Motivo" class="form-label">Motivo</label><input asp-for="Motivo" class="form-control" maxlength="300" /></div>
-        <div class="col-md-6"><label asp-for="Justificativa" class="form-label">Justificativa</label><input asp-for="Justificativa" class="form-control" maxlength="300" /></div>
-        <div class="col-12 form-check ms-2"><input asp-for="Principal" class="form-check-input" /><label asp-for="Principal" class="form-check-label">Marcar como principal</label></div>
+    <div class="card-body">
+        <h2 class="h6 text-uppercase text-primary">Dados pessoais</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-5"><label asp-for="Nome" class="form-label">Nome completo</label><input asp-for="Nome" class="form-control" maxlength="180" /></div>
+            <div class="col-md-3"><label asp-for="NomeSocial" class="form-label">Nome social</label><input asp-for="NomeSocial" class="form-control" maxlength="180" /></div>
+            <div class="col-md-2"><label asp-for="DataNascimento" class="form-label">Nascimento</label><input asp-for="DataNascimento" type="date" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="SexoGenero" class="form-label">Sexo/gênero</label><input asp-for="SexoGenero" class="form-control" maxlength="40" /></div>
+            <div class="col-md-3"><label asp-for="Cpf" class="form-label">CPF opcional</label><input asp-for="Cpf" class="form-control" maxlength="20" /></div>
+            <div class="col-md-3"><label asp-for="Cns" class="form-label">CNS</label><input asp-for="Cns" class="form-control" maxlength="30" /></div>
+            <div class="col-md-3"><label asp-for="DocumentoAlternativo" class="form-label">Documento alternativo</label><input asp-for="DocumentoAlternativo" class="form-control" maxlength="80" /></div>
+            <div class="col-md-3"><label asp-for="ResponsavelNome" class="form-label">Responsável</label><input asp-for="ResponsavelNome" class="form-control" maxlength="180" /></div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-primary">Contato e endereço</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label asp-for="Telefone" class="form-label">Telefone</label><input asp-for="Telefone" class="form-control" maxlength="40" /></div>
+            <div class="col-md-4"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" type="email" class="form-control" maxlength="180" /></div>
+            <div class="col-md-4"><label asp-for="Endereco" class="form-label">Endereço</label><input asp-for="Endereco" class="form-control" maxlength="300" /></div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-primary">Agendamento e vínculos</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label asp-for="PacienteId" class="form-label">Paciente ID</label><input asp-for="PacienteId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="MedicoId" class="form-label">Médico/profissional ID</label><input asp-for="MedicoId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="AgendamentoId" class="form-label">Agendamento ID</label><input asp-for="AgendamentoId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="ConsultaId" class="form-label">Consulta ID</label><input asp-for="ConsultaId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="PlanoSaudeId" class="form-label">Plano de saúde ID</label><input asp-for="PlanoSaudeId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="Especialidade" class="form-label">Especialidade</label><input asp-for="Especialidade" class="form-control" maxlength="120" /></div>
+            <div class="col-md-3"><label asp-for="DataInicio" class="form-label">Início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="DataFim" class="form-label">Fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>
+            <div class="col-md-3"><label asp-for="Codigo" class="form-label">Código</label><input asp-for="Codigo" class="form-control" maxlength="80" /></div>
+            <div class="col-md-3"><label asp-for="Valor" class="form-label">Valor</label><input asp-for="Valor" type="number" step="0.01" class="form-control" /></div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-primary">Triagem e sinais vitais</h2>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label asp-for="QueixaPrincipal" class="form-label">Queixa principal</label><input asp-for="QueixaPrincipal" class="form-control" maxlength="500" /></div>
+            <div class="col-md-4"><label asp-for="ClassificacaoRisco" class="form-label">Classificação de risco</label><select asp-for="ClassificacaoRisco" class="form-select"><option value="">Selecione</option><option>EMERGENCIA</option><option>MUITO_URGENTE</option><option>URGENTE</option><option>POUCO_URGENTE</option><option>NAO_URGENTE</option></select></div>
+            <div class="col-md-2"><label asp-for="PressaoSistolica" class="form-label">PAS</label><input asp-for="PressaoSistolica" type="number" step="1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="PressaoDiastolica" class="form-label">PAD</label><input asp-for="PressaoDiastolica" type="number" step="1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="FrequenciaCardiaca" class="form-label">FC</label><input asp-for="FrequenciaCardiaca" type="number" step="1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="FrequenciaRespiratoria" class="form-label">FR</label><input asp-for="FrequenciaRespiratoria" type="number" step="1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="Temperatura" class="form-label">Temperatura</label><input asp-for="Temperatura" type="number" step="0.1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="Saturacao" class="form-label">Saturação</label><input asp-for="Saturacao" type="number" step="1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="Peso" class="form-label">Peso</label><input asp-for="Peso" type="number" step="0.1" class="form-control" /></div>
+            <div class="col-md-2"><label asp-for="Altura" class="form-label">Altura</label><input asp-for="Altura" type="number" step="0.01" class="form-control" /></div>
+        </div>
+
+        <h2 class="h6 text-uppercase text-primary">Observações e cobrança</h2>
+        <div class="row g-3">
+            <div class="col-md-6"><label asp-for="FormaPagamento" class="form-label">Forma de pagamento</label><input asp-for="FormaPagamento" class="form-control" maxlength="80" /></div>
+            <div class="col-md-6"><label asp-for="NumeroCarteirinha" class="form-label">Carteirinha</label><input asp-for="NumeroCarteirinha" class="form-control" maxlength="80" /></div>
+            <div class="col-12"><label asp-for="Descricao" class="form-label">Descrição / observações administrativas</label><textarea asp-for="Descricao" class="form-control" rows="4" maxlength="2000"></textarea></div>
+            <div class="col-md-6"><label asp-for="Motivo" class="form-label">Motivo</label><input asp-for="Motivo" class="form-control" maxlength="300" /></div>
+            <div class="col-md-6"><label asp-for="Justificativa" class="form-label">Justificativa</label><input asp-for="Justificativa" class="form-control" maxlength="300" /></div>
+            <div class="col-12 form-check ms-2"><input asp-for="Principal" class="form-check-input" /><label asp-for="Principal" class="form-check-label">Marcar como principal</label></div>
+        </div>
     </div>
     <div class="card-footer bg-white d-flex justify-content-end gap-2">
         <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>

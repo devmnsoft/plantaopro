@@ -1,25 +1,16 @@
-# Saúde 360 — agendamento
+# Agendamento clínico
 
-## Objetivo
+Agendamentos vinculam paciente, médico/profissional, unidade, sala, especialidade, tipo, início, fim e status.
 
-Este módulo faz parte da Fase 5 do PlantãoPro Saúde 360 e opera com escopo por tenant, permissões por perfil/plano e auditoria.
+## Status
 
-## Implementação
+AGENDADO, CONFIRMADO, CHECKIN_REALIZADO, EM_TRIAGEM, AGUARDANDO_CONSULTA, EM_ATENDIMENTO, ATENDIDO, FALTOU, CANCELADO e REAGENDADO.
 
-- API autenticada no backend ASP.NET Core.
-- Controller Web MVC com ações reais e service HTTP registrado em DI.
-- Tabelas PostgreSQL no schema `plantaopro` com auditoria mínima (`created_by`, `updated_by`, `created_at`, `updated_at`, `reg_date`, `reg_status`).
-- Índices por campos operacionais relevantes, incluindo `cliente_id`, `status` e `reg_date`.
+## Regras implementadas
 
-## Segurança e LGPD
-
-- Dados são filtrados por `cliente_id`/tenant.
-- Ações sensíveis registram auditoria central.
-- Conteúdo clínico sensível não deve ser escrito em logs técnicos.
-- Perfil financeiro não deve acessar evolução clínica.
-
-## Pendências reais
-
-- Homologar jornada completa em ambiente com banco aplicado.
-- Refinar campos específicos por clínica e protocolo assistencial.
-- Adicionar integrações externas somente após validação jurídica/operacional.
+- Escopo obrigatório por tenant.
+- Bloqueio de conflito de horário para o mesmo médico.
+- Fim deve ser maior que início.
+- Cancelamento exige motivo/justificativa.
+- Check-in somente para AGENDADO ou CONFIRMADO.
+- Check-in gera registro de check-in, fila do painel e fila de triagem quando a migration da fase está aplicada.

@@ -109,6 +109,7 @@ public sealed class PermissionService : IPermissionService
         var actionCode = Normalize(action);
 
         if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
+        if (IsSaude360(moduleCode) && currentUser.HasRole(RolesConstants.AdministradorClinica)) return true;
 
         if (currentUser.IsTenantAdmin())
         {
@@ -117,17 +118,17 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador))
         {
-            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "ESPECIALIDADES" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO";
+            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "ESPECIALIDADES" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO" || moduleCode == "PAINEL_CHAMADA" || moduleCode == "AGENDAMENTO" || moduleCode == "PACIENTES";
         }
 
         if (currentUser.HasRole(RolesConstants.Financeiro))
         {
-            return moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING";
+            return moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING" || moduleCode == "FINANCEIRO_CLINICA";
         }
 
         if (currentUser.HasRole(RolesConstants.Medico))
         {
-            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
+            return moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES" || moduleCode == "CONSULTAS" || moduleCode == "PRESCRICAO" || moduleCode == "CID";
         }
 
         if (currentUser.HasRole(RolesConstants.Hospital))
@@ -160,8 +161,14 @@ public sealed class PermissionService : IPermissionService
             return moduleCode == "CUSTOMER_SUCCESS" || moduleCode == "ONBOARDING" || moduleCode == "CLIENTES" || moduleCode == "JORNADA" || moduleCode == "SUPORTE";
         }
 
+        if (currentUser.HasRole(RolesConstants.Recepcao)) return moduleCode == "PAINEL_CHAMADA" || moduleCode == "AGENDAMENTO" || moduleCode == "PACIENTES";
+        if (currentUser.HasRole(RolesConstants.Triagem)) return moduleCode == "TRIAGEM";
+        if (currentUser.HasRole(RolesConstants.FinanceiroClinica)) return moduleCode == "FINANCEIRO_CLINICA";
+        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio)) return moduleCode == "CONVENIOS" || moduleCode == "PLANOS_SAUDE";
         return false;
     }
+
+    private static bool IsSaude360(string moduleCode) => moduleCode == "PAINEL_CHAMADA" || moduleCode == "AGENDAMENTO" || moduleCode == "PACIENTES" || moduleCode == "TRIAGEM" || moduleCode == "CONSULTAS" || moduleCode == "CID" || moduleCode == "PRESCRICAO" || moduleCode == "FINANCEIRO_CLINICA" || moduleCode == "CONVENIOS" || moduleCode == "PLANOS_SAUDE";
 
     public bool CanManageSaas() => currentUser.IsGlobalAdmin();
     public bool CanManageUsers() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin();

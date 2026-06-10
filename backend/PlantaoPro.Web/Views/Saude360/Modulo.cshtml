@@ -1,0 +1,63 @@
+@model PlantaoPro.Web.Models.Saude360ModulePageViewModel
+@{
+    ViewData["Title"] = Model.ModuleTitle + " - " + Model.ActionTitle;
+}
+
+<section class="container-fluid py-4 saude360-page">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <p class="text-uppercase text-primary fw-semibold mb-1">PlantãoPro Saúde 360</p>
+            <h1 class="h3 mb-1">@Model.ModuleTitle</h1>
+            <p class="text-muted mb-0">@Model.ActionTitle · módulo @Model.ModuleCode</p>
+        </div>
+        <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Dashboard">Voltar ao dashboard</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <strong>Operação integrada</strong>
+                </div>
+                <div class="card-body">
+                    <p>Esta tela usa endpoints reais do módulo para operação clínica, respeitando tenant, permissões, auditoria e white label do PlantãoPro.</p>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Endpoint API</dt>
+                        <dd class="col-sm-9"><code>@Model.Endpoint</code></dd>
+                        <dt class="col-sm-3">Ação</dt>
+                        <dd class="col-sm-9">@Model.ActionTitle</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white"><strong>Ações do módulo</strong></div>
+                <div class="list-group list-group-flush">
+                    @foreach (var item in Model.Actions)
+                    {
+                        <a class="list-group-item list-group-item-action" asp-controller="@item.Controller" asp-action="@item.Action">@item.Title</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white"><strong>Controles de segurança, LGPD e operação clínica</strong></div>
+        <div class="card-body">
+            <ul class="mb-0">
+                @foreach (var rule in Model.Rules)
+                {
+                    <li>@rule</li>
+                }
+            </ul>
+        </div>
+    </div>
+</section>
+
+<style>
+@@media (max-width: 768px) {
+    .saude360-page .card { border-radius: 1rem; }
+}
+</style>

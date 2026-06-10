@@ -104,18 +104,26 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
 
         if (code == "AJUDA" || code == "LGPD" || code == "CONTA") return true;
 
+        if (IsSaude360(code) && currentUser.HasRole(RolesConstants.AdministradorClinica)) return true;
+
         if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL" && code != "PARCEIRO";
-        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Financeiro)) return code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";
-        if (currentUser.HasRole(RolesConstants.Medico)) return code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
+        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA" || code == "PAINEL_CHAMADA" || code == "AGENDAMENTO" || code == "PACIENTES";
+        if (currentUser.HasRole(RolesConstants.Financeiro)) return code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING" || code == "FINANCEIRO_CLINICA";
+        if (currentUser.HasRole(RolesConstants.Medico)) return code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES" || code == "CONSULTAS" || code == "PRESCRICAO" || code == "CID";
         if (currentUser.HasRole(RolesConstants.Hospital)) return code == "HOSPITAL_AREA" || code == "PLANTOES" || code == "ESCALAS" || code == "AGENDA";
         if (currentUser.HasRole(RolesConstants.Parceiro)) return code == "PARCEIRO" || code == "LEADS" || code == "PROPOSTAS" || code == "COMISSOES" || code == "REPASSES" || code == "MATERIAIS";
         if (currentUser.HasRole(RolesConstants.Suporte)) return code == "SUPORTE" || code == "AJUDA" || code == "AUDITORIA" || code == "OBSERVABILIDADE";
         if (currentUser.HasRole(RolesConstants.Auditor)) return actionCode == "VER" || code == "AUDITORIA" || code == "RELATORIOS" || code == "LGPD";
         if (currentUser.HasRole(RolesConstants.Comercial)) return code == "COMERCIAL" || code == "PROPOSTAS" || code == "PLANOS" || code == "MARKETPLACE";
         if (currentUser.HasRole(RolesConstants.CustomerSuccess)) return code == "CUSTOMER_SUCCESS" || code == "ONBOARDING" || code == "CLIENTES" || code == "JORNADA" || code == "SUPORTE";
+        if (currentUser.HasRole(RolesConstants.Recepcao)) return code == "PAINEL_CHAMADA" || code == "AGENDAMENTO" || code == "PACIENTES";
+        if (currentUser.HasRole(RolesConstants.Triagem)) return code == "TRIAGEM";
+        if (currentUser.HasRole(RolesConstants.FinanceiroClinica)) return code == "FINANCEIRO_CLINICA";
+        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio)) return code == "CONVENIOS" || code == "PLANOS_SAUDE";
         return false;
     }
+
+    private static bool IsSaude360(string code) => code == "PAINEL_CHAMADA" || code == "AGENDAMENTO" || code == "PACIENTES" || code == "TRIAGEM" || code == "CONSULTAS" || code == "CID" || code == "PRESCRICAO" || code == "FINANCEIRO_CLINICA" || code == "CONVENIOS" || code == "PLANOS_SAUDE";
 
     public bool CanManageSaas() => currentUser.IsGlobalAdmin();
     public bool CanAccessModule(string moduleCode) => IsModuleEnabled(moduleCode) && HasPermission(moduleCode, "VER");

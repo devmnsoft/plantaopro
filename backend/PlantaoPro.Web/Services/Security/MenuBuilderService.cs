@@ -56,6 +56,30 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Comunicação", "bi-chat-dots", "Comunicacao", "Index", "COMUNICACAO", RolesConstants.Coordenador)
         });
 
+
+        AddGroup(groups, "SAÚDE 360", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Painel de chamada", "bi-megaphone", "PainelChamada", "Index", "PAINEL_CHAMADA", RolesConstants.Recepcao),
+            Item("Agendamentos", "bi-calendar-plus", "Agendamentos", "Index", "AGENDAMENTO", RolesConstants.Recepcao),
+            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "AGENDAMENTO", RolesConstants.Recepcao),
+            Item("Pacientes", "bi-people", "Pacientes", "Index", "PACIENTES", RolesConstants.Recepcao),
+            Item("Fila de triagem", "bi-clipboard2-pulse", "Triagem", "Fila", "TRIAGEM", RolesConstants.Triagem),
+            Item("Nova triagem", "bi-clipboard2-plus", "Triagem", "Create", "TRIAGEM", RolesConstants.Triagem),
+            Item("Histórico triagem", "bi-clock-history", "Triagem", "HistoricoPaciente", "TRIAGEM", RolesConstants.Triagem),
+            Item("Consultas", "bi-journal-medical", "Consultas", "Index", "CONSULTAS", RolesConstants.Medico),
+            Item("Prescrições", "bi-prescription2", "Prescricoes", "Index", "PRESCRICAO", RolesConstants.Medico),
+            Item("CID", "bi-search-heart", "Cid", "Index", "CID", RolesConstants.Medico),
+            Item("Contas a receber", "bi-wallet2", "ClinicaFinanceiro", "ContasReceber", "FINANCEIRO_CLINICA", RolesConstants.FinanceiroClinica),
+            Item("Caixa", "bi-cash", "ClinicaFinanceiro", "Caixa", "FINANCEIRO_CLINICA", RolesConstants.FinanceiroClinica),
+            Item("Repasses", "bi-bank", "ClinicaFinanceiro", "Repasses", "FINANCEIRO_CLINICA", RolesConstants.FinanceiroClinica),
+            Item("Relatórios clínica", "bi-graph-up-arrow", "ClinicaFinanceiro", "Relatorios", "FINANCEIRO_CLINICA", RolesConstants.FinanceiroClinica),
+            Item("Convênios", "bi-building-heart", "Convenios", "Index", "CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Autorizações", "bi-patch-check", "Convenios", "Autorizacoes", "CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Glosas", "bi-exclamation-octagon", "Convenios", "Glosas", "CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Faturamento convênio", "bi-receipt", "Convenios", "Faturamento", "CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Planos de saúde", "bi-card-checklist", "PlanosSaude", "Index", "PLANOS_SAUDE", RolesConstants.FaturamentoConvenio)
+        });
+
         AddGroup(groups, "FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
         {
             Item("Pagamentos", "bi-cash-coin", "Pagamentos", "Index", "PAGAMENTOS", RolesConstants.Financeiro),
@@ -142,6 +166,10 @@ public sealed class MenuBuilderService : IMenuBuilderService
         if (string.Equals(minimumRole, RolesConstants.AdministradorCliente, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Administrador, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin();
         if (string.Equals(minimumRole, RolesConstants.Coordenador, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Coordenacao, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Operador);
         if (string.Equals(minimumRole, RolesConstants.Financeiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
+        if (string.Equals(minimumRole, RolesConstants.Recepcao, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Recepcao) || currentUser.HasRole(RolesConstants.AdministradorClinica);
+        if (string.Equals(minimumRole, RolesConstants.Triagem, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.AdministradorClinica);
+        if (string.Equals(minimumRole, RolesConstants.FinanceiroClinica, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.FinanceiroClinica) || currentUser.HasRole(RolesConstants.AdministradorClinica);
+        if (string.Equals(minimumRole, RolesConstants.FaturamentoConvenio, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.FaturamentoConvenio) || currentUser.HasRole(RolesConstants.AdministradorClinica);
         if (string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase)) return currentUser.IsDoctor();
         if (string.Equals(minimumRole, RolesConstants.Parceiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsPartner();
         return currentUser.HasRole(minimumRole);

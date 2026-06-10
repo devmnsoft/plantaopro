@@ -17,6 +17,11 @@ public static class RolesConstants
     public const string Auditor = "AUDITOR";
     public const string Comercial = "COMERCIAL";
     public const string CustomerSuccess = "CUSTOMER_SUCCESS";
+    public const string Recepcao = "RECEPCAO";
+    public const string Triagem = "TRIAGEM";
+    public const string FinanceiroClinica = "FINANCEIRO_CLINICA";
+    public const string FaturamentoConvenio = "FATURAMENTO_CONVENIO";
+    public const string AdministradorClinica = "ADMINISTRADOR_CLINICA";
 
     public const string AdminSaas = AdministradorGlobal + "," + Suporte + "," + Auditor;
     public const string TenantAdmin = Administrador + "," + AdministradorCliente + "," + Diretor;

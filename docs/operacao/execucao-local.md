@@ -50,9 +50,16 @@ http://localhost:52976/Account/Login
 
 ## Login de teste
 
-E-mail: `admin@plantaopro.com`
+Usuários de teste em ambiente de desenvolvimento:
 
-Senha: `Admin@123`
+- `admin@plantaopro.com` / `123456`
+- `coordenacao@plantaopro.com` / `123456`
+- `operador@plantaopro.com` / `123456`
+- `financeiro@plantaopro.com` / `123456`
+- `medico@plantaopro.com` / `123456`
+- `hospital@plantaopro.com` / `123456`
+
+Em ambiente Development, o `DevelopmentSeed` atualiza a senha dos usuários de teste para `123456` a cada execução.
 
 ## Configuração Web -> API
 

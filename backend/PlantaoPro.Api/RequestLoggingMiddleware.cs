@@ -62,8 +62,16 @@ public sealed class RequestLoggingMiddleware
             var ipOrigem = context.Connection.RemoteIpAddress?.ToString();
             var userAgent = MascararTexto(context.Request.Headers["User-Agent"].ToString());
             var queryString = MascararTexto(context.Request.QueryString.HasValue ? context.Request.QueryString.Value : null);
+            var errorMessage = exception?.Message;
+            if (string.IsNullOrWhiteSpace(errorMessage))
+            {
+                errorMessage = statusCode >= 400
+                    ? $"Request finalizado com status HTTP {statusCode}."
+                    : string.Empty;
+            }
+
+            errorMessage = MascararTexto(errorMessage) ?? string.Empty;
             var erro = ObterMensagemErro(statusCode, exception);
-            var errorMessage = GarantirMensagemErro(erro);
 
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await GarantirCompatibilidadeLogsAsync(cn);
@@ -88,25 +96,28 @@ values
                 ErrorMessage = errorMessage
             });
 
-            if (exception is not null || statusCode >= 500)
+            if (exception is not null || statusCode >= 400)
             {
                 await cn.ExecuteAsync(@"insert into plantaopro.api_error_logs
-    (endpoint, metodo, method, status_code, usuario_id, cliente_id, email, perfil, ip_origem, ip, user_agent, mensagem, error_message, exception_type, stack_trace, reg_date)
+    (endpoint, metodo, method, status_code, success, usuario_id, cliente_id, email, perfil, ip_origem, ip, user_agent, query_string, duration_ms, mensagem, error_message, exception_type, stack_trace, reg_date)
 values
-    (@Endpoint, @Metodo, @Metodo, @StatusCode, @UsuarioId, @ClienteId, @Email, @Perfil, @IpOrigem, @IpOrigem, @UserAgent, @Mensagem, @Mensagem, @ExceptionType, @StackTrace, now())", new
+    (@Endpoint, @Metodo, @Metodo, @StatusCode, @Sucesso, @UsuarioId, @ClienteId, @Email, @Perfil, @IpOrigem, @IpOrigem, @UserAgent, @QueryString, @DuracaoMs, @Mensagem, @Mensagem, @ExceptionType, @StackTrace, now())", new
                 {
                     Endpoint = endpoint,
                     Metodo = metodo,
                     StatusCode = statusCode,
+                    Sucesso = false,
+                    DuracaoMs = durationMs,
                     UsuarioId = usuarioId,
                     ClienteId = clienteId,
                     Email = email,
                     Perfil = perfilSeguro,
                     IpOrigem = ipOrigem,
                     UserAgent = userAgent,
+                    QueryString = queryString,
                     Mensagem = errorMessage,
                     ExceptionType = exception?.GetType().Name ?? string.Empty,
-                    StackTrace = (string?)null
+                    StackTrace = string.Empty
                 });
             }
 
@@ -141,19 +152,14 @@ values
         }
     }
 
-    private static string? ObterMensagemErro(int statusCode, Exception? exception)
+    private static string ObterMensagemErro(int statusCode, Exception? exception)
     {
         if (exception is not null)
         {
-            return string.IsNullOrWhiteSpace(exception.Message) ? "erro_interno" : "erro_interno";
+            return "erro_interno";
         }
 
-        return statusCode >= 400 ? "HTTP " + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) : null;
-    }
-
-    private static string GarantirMensagemErro(string? erro)
-    {
-        return string.IsNullOrWhiteSpace(erro) ? string.Empty : erro;
+        return statusCode >= 400 ? "HTTP " + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
     }
 
     private static async Task GarantirCompatibilidadeLogsAsync(NpgsqlConnection cn)
@@ -200,7 +206,10 @@ create table if not exists plantaopro.api_error_logs (
     mensagem text not null default '',
     error_message text not null default '',
     exception_type varchar(255) null,
-    stack_trace text null,
+    stack_trace text not null default '',
+    success boolean not null default false,
+    query_string text not null default '',
+    duration_ms bigint not null default 0,
     reg_date timestamptz not null default now(),
     reg_status char(1) not null default 'A'
 );
@@ -231,16 +240,28 @@ alter table if exists plantaopro.api_error_logs
     add column if not exists ip varchar(80) null,
     add column if not exists mensagem text not null default '',
     add column if not exists error_message text not null default '',
+    add column if not exists stack_trace text not null default '',
+    add column if not exists success boolean not null default false,
+    add column if not exists query_string text not null default '',
+    add column if not exists duration_ms bigint not null default 0,
     add column if not exists reg_status char(1) not null default 'A';
 
 alter table if exists plantaopro.api_error_logs
     alter column id set default gen_random_uuid(),
     alter column mensagem set default '',
     alter column error_message set default '',
-    alter column method set default 'GET';
+    alter column stack_trace set default '',
+    alter column method set default 'GET',
+    alter column success set default false,
+    alter column query_string set default '',
+    alter column duration_ms set default 0;
 
 update plantaopro.api_error_logs set mensagem = '' where mensagem is null;
-update plantaopro.api_error_logs set error_message = '' where error_message is null;");
+update plantaopro.api_error_logs set error_message = '' where error_message is null;
+update plantaopro.api_error_logs set stack_trace = '' where stack_trace is null;
+update plantaopro.api_error_logs set success = false where success is null;
+update plantaopro.api_error_logs set query_string = '' where query_string is null;
+update plantaopro.api_error_logs set duration_ms = 0 where duration_ms is null;");
     }
 
     private static Guid? GetGuidClaim(HttpContext context, string claimType)

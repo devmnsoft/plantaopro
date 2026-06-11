@@ -54,10 +54,13 @@ public sealed class AccountController : Controller
             return View(model);
         }
 
+        Uri? apiBaseUrl = null;
+
         try
         {
             using var client = _httpClientFactory.CreateClient("PlantaoProApi");
-            _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", client.BaseAddress);
+            apiBaseUrl = client.BaseAddress;
+            _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", apiBaseUrl);
 
             var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(normalizedEmail, model.Senha ?? string.Empty));
             var body = await response.Content.ReadAsStringAsync();
@@ -137,12 +140,36 @@ public sealed class AccountController : Controller
 
             return RedirectToActionByPerfil(login.Roles ?? Array.Empty<string>());
         }
+        catch (HttpRequestException ex)
+        {
+            return HandleApiConnectionFailure(model, normalizedEmail, apiBaseUrl, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            return HandleApiConnectionFailure(model, normalizedEmail, apiBaseUrl, ex);
+        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro inesperado no login Web. Email:{Email}", normalizedEmail);
+            _logger.LogError(ex, "Erro inesperado no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}", normalizedEmail, apiBaseUrl, ex.Message);
             TempData["Error"] = "Não foi possível realizar o login no momento.";
             return View(model);
         }
+    }
+
+    private IActionResult HandleApiConnectionFailure(LoginViewModel model, string email, Uri? apiBaseUrl, Exception exception)
+    {
+        const string message = "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
+
+        _logger.LogError(
+            exception,
+            "Falha de conexão com a API no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}",
+            email,
+            apiBaseUrl,
+            exception.Message);
+
+        TempData["Error"] = message;
+        ModelState.AddModelError(string.Empty, message);
+        return View(model);
     }
 
     private ApiResponse<T>? DeserializeApiResponse<T>(string body)

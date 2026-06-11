@@ -1,14 +1,25 @@
 {
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "PlantaoPro.Web": {
+    "http": {
       "commandName": "Project",
+      "dotnetRunMessages": true,
       "launchBrowser": true,
+      "launchUrl": "Account/Login",
+      "applicationUrl": "http://localhost:52976",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:58285;http://localhost:58286",
+      }
+    },
+    "https": {
+      "commandName": "Project",
       "dotnetRunMessages": true,
-      "launchUrl": "Account/Login"
+      "launchBrowser": true,
+      "launchUrl": "Account/Login",
+      "applicationUrl": "https://localhost:52977;http://localhost:52976",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

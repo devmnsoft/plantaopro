@@ -1,23 +1,36 @@
 # Execução local — PlantãoPro
 
+> Documento operacional atualizado: consulte também `docs/operacao/execucao-local.md`.
+
 ## Portas padrão
-- API: `https://localhost:51977` (`http://localhost:51978`).
-- Web MVC: `https://localhost:58285` (`http://localhost:58286`).
+
+- API HTTP: `http://localhost:51976`.
+- API HTTPS: `https://localhost:51977`.
+- Web HTTP: `http://localhost:52976`.
+- Web HTTPS: `https://localhost:52977`.
 
 ## Rodar a API
-1. Abra `backend/PlantaoPro.Api`.
-2. Execute o projeto `PlantaoPro.Api`.
-3. Acesse:
-   - `https://localhost:51977/` (redireciona para Swagger em Development)
-   - `https://localhost:51977/swagger`
-   - `https://localhost:51977/api/health`
+
+```powershell
+dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj --urls "http://localhost:51976"
+```
+
+Acesse:
+
+- `http://localhost:51976/swagger`
+- `https://localhost:51977/swagger` quando usar o profile HTTPS.
+- `http://localhost:51976/api/health`
 
 ## Rodar o Web
-1. Abra `backend/PlantaoPro.Web`.
-2. Execute o projeto `PlantaoPro.Web`.
-3. Acesse `https://localhost:58285/Account/Login`.
+
+```powershell
+dotnet run --project backend/PlantaoPro.Web/PlantaoPro.Web.csproj --urls "http://localhost:52976"
+```
+
+Acesse `http://localhost:52976/Account/Login`.
 
 ## Visual Studio — startup múltiplo
+
 1. Solution > **Configure Startup Projects**.
 2. Selecione **Multiple startup projects**.
 3. Defina **Start** para:
@@ -25,26 +38,60 @@
    - `PlantaoPro.Web`
 
 ## Configuração Web -> API
+
 No arquivo `backend/PlantaoPro.Web/appsettings.Development.json`, configure:
 
 ```json
 "ApiSettings": {
-  "BaseUrl": "https://localhost:51977/"
+  "BaseUrl": "https://localhost:51977"
 }
 ```
 
-## Testes rápidos esperados
-1. `GET https://localhost:51977/` abre Swagger (Development).
-2. `GET https://localhost:51977/swagger` retorna UI do Swagger.
-3. `GET https://localhost:51977/api/health` retorna 200 com status Healthy.
-4. Abrir Web em `/Account/Login`.
-5. Login admin redireciona para dashboard interno.
-6. Login médico redireciona para `MinhaAgenda`.
-7. Sem autenticação em rota protegida, volta para `/Account/Login?returnUrl=...`.
-8. Após login, volta para `returnUrl` local.
-9. Nunca redirecionar para a raiz da API após login.
+Para uso temporário em HTTP, configure `http://localhost:51976` e mantenha qualquer chave legada equivalente com o mesmo valor.
 
-## Se `https://localhost:51977/` abrir 404
+## Resolver SocketException 10013
+
+1. Verifique processo preso na porta:
+
+   ```cmd
+   netstat -ano | findstr :52976
+   netstat -ano | findstr :52977
+   netstat -ano | findstr :51976
+   netstat -ano | findstr :51977
+   ```
+
+2. Finalize o PID encontrado, se necessário:
+
+   ```cmd
+   taskkill /PID <PID> /F
+   ```
+
+3. Verifique portas reservadas pelo Windows:
+
+   ```cmd
+   netsh interface ipv4 show excludedportrange protocol=tcp
+   ```
+
+4. Se houver problema com certificado HTTPS local:
+
+   ```powershell
+   dotnet dev-certs https --clean
+   dotnet dev-certs https --trust
+   ```
+
+## Testes rápidos esperados
+
+1. `GET http://localhost:51976/swagger` retorna UI do Swagger.
+2. `GET http://localhost:51976/api/health` retorna 200 com status Healthy.
+3. Abrir Web em `http://localhost:52976/Account/Login`.
+4. Login admin redireciona para dashboard interno.
+5. Login médico redireciona para `MinhaAgenda`.
+6. Sem autenticação em rota protegida, volta para `/Account/Login?returnUrl=...`.
+7. Após login, volta para `returnUrl` local.
+8. Nunca redirecionar para a raiz da API após login.
+
+## Se Swagger não abrir
+
 - Verifique se o profile da API usa `launchUrl: "swagger"` em `launchSettings.json`.
-- Verifique se `Program.cs` da API mapeia `app.MapGet("/", ...)`.
-- Confirme que o ambiente está como `Development` para redirecionar automaticamente ao Swagger.
+- Verifique se `Program.cs` da API mapeia Swagger em `Development`.
+- Confirme que o ambiente está como `Development`.

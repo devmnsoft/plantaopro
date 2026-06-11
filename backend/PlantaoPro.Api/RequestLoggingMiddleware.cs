@@ -37,7 +37,14 @@ public sealed class RequestLoggingMiddleware
             finally
             {
                 sw.Stop();
-                await RegistrarAsync(context, cfg, sw.ElapsedMilliseconds, exception);
+                try
+                {
+                    await RegistrarAsync(context, cfg, sw.ElapsedMilliseconds, exception);
+                }
+                catch (Exception logEx)
+                {
+                    _logger.LogError(logEx, "Falha ao registrar log estruturado de request");
+                }
             }
         }
         catch when (exception is null)
@@ -51,17 +58,38 @@ public sealed class RequestLoggingMiddleware
     {
         try
         {
-            var statusCode = exception is null ? context.Response.StatusCode : 500;
-            var endpoint = context.Request.Path.Value ?? "/";
-            var metodo = context.Request.Method;
+            var statusCode = context.Response?.StatusCode ?? 0;
+            if (exception is not null)
+            {
+                statusCode = statusCode >= 400 ? statusCode : 500;
+            }
+
+            var endpoint = context.Request.Path.HasValue
+                ? context.Request.Path.Value ?? string.Empty
+                : string.Empty;
+            var metodo = context.Request.Method ?? string.Empty;
             var usuarioId = GetGuidClaim(context, "uid") ?? GetGuidClaim(context, ClaimTypes.NameIdentifier);
             var clienteId = GetGuidClaim(context, "cliente_id");
-            var email = MascararTexto(context.User.FindFirst(ClaimTypes.Email)?.Value ?? context.User.FindFirst("email")?.Value);
-            var perfil = string.Join(',', context.User.FindAll(ClaimTypes.Role).Select(x => x.Value));
-            var perfilSeguro = string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : MascararTexto(perfil);
-            var ipOrigem = context.Connection.RemoteIpAddress?.ToString();
-            var userAgent = MascararTexto(context.Request.Headers["User-Agent"].ToString());
-            var queryString = MascararTexto(context.Request.QueryString.HasValue ? context.Request.QueryString.Value : null);
+            var email = context.User?.FindFirst("email")?.Value
+                ?? context.User?.FindFirst(ClaimTypes.Email)?.Value
+                ?? string.Empty;
+            email = MascararTexto(email) ?? string.Empty;
+
+            var perfil = context.User?.FindFirst("perfil")?.Value
+                ?? context.User?.FindFirst(ClaimTypes.Role)?.Value
+                ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(perfil))
+            {
+                perfil = string.Join(',', context.User?.FindAll(ClaimTypes.Role).Select(x => x.Value) ?? Enumerable.Empty<string>());
+            }
+
+            var perfilSeguro = MascararTexto(perfil) ?? string.Empty;
+            var ipOrigem = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+            var userAgent = MascararTexto(context.Request.Headers["User-Agent"].ToString()) ?? string.Empty;
+            var rawQueryString = context.Request.QueryString.HasValue
+                ? context.Request.QueryString.Value ?? string.Empty
+                : string.Empty;
+            var queryString = SanitizarQueryString(rawQueryString);
             var errorMessage = exception?.Message;
             if (string.IsNullOrWhiteSpace(errorMessage))
             {
@@ -71,7 +99,11 @@ public sealed class RequestLoggingMiddleware
             }
 
             errorMessage = MascararTexto(errorMessage) ?? string.Empty;
-            var erro = ObterMensagemErro(statusCode, exception);
+            var stackTrace = MascararTexto(exception?.StackTrace) ?? string.Empty;
+            var exceptionType = exception?.GetType().Name ?? string.Empty;
+            var success = exception is null && statusCode < 400;
+            var duration = durationMs < 0 ? 0 : durationMs;
+            var erro = ObterMensagemErro(statusCode, exception) ?? string.Empty;
 
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await GarantirCompatibilidadeLogsAsync(cn);
@@ -83,8 +115,8 @@ values
                 Endpoint = endpoint,
                 Metodo = metodo,
                 StatusCode = statusCode,
-                Sucesso = exception is null && statusCode < 400,
-                DuracaoMs = durationMs,
+                Sucesso = success,
+                DuracaoMs = duration,
                 UsuarioId = usuarioId,
                 ClienteId = clienteId,
                 Email = email,
@@ -96,30 +128,37 @@ values
                 ErrorMessage = errorMessage
             });
 
-            if (exception is not null || statusCode >= 400)
+            if (duration >= 2000)
             {
-                await cn.ExecuteAsync(@"insert into plantaopro.api_error_logs
+                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, metodo, statusCode, duration, usuarioId, clienteId, perfilSeguro, ipOrigem);
+            }
+
+            if (success)
+            {
+                return;
+            }
+
+            await cn.ExecuteAsync(@"insert into plantaopro.api_error_logs
     (endpoint, metodo, method, status_code, success, usuario_id, cliente_id, email, perfil, ip_origem, ip, user_agent, query_string, duration_ms, mensagem, error_message, exception_type, stack_trace, reg_date)
 values
     (@Endpoint, @Metodo, @Metodo, @StatusCode, @Sucesso, @UsuarioId, @ClienteId, @Email, @Perfil, @IpOrigem, @IpOrigem, @UserAgent, @QueryString, @DuracaoMs, @Mensagem, @Mensagem, @ExceptionType, @StackTrace, now())", new
-                {
-                    Endpoint = endpoint,
-                    Metodo = metodo,
-                    StatusCode = statusCode,
-                    Sucesso = false,
-                    DuracaoMs = durationMs,
-                    UsuarioId = usuarioId,
-                    ClienteId = clienteId,
-                    Email = email,
-                    Perfil = perfilSeguro,
-                    IpOrigem = ipOrigem,
-                    UserAgent = userAgent,
-                    QueryString = queryString,
-                    Mensagem = errorMessage,
-                    ExceptionType = exception?.GetType().Name ?? string.Empty,
-                    StackTrace = string.Empty
-                });
-            }
+            {
+                Endpoint = endpoint,
+                Metodo = metodo,
+                StatusCode = statusCode,
+                Sucesso = false,
+                DuracaoMs = duration,
+                UsuarioId = usuarioId,
+                ClienteId = clienteId,
+                Email = email,
+                Perfil = perfilSeguro,
+                IpOrigem = ipOrigem,
+                UserAgent = userAgent,
+                QueryString = queryString,
+                Mensagem = errorMessage,
+                ExceptionType = exceptionType,
+                StackTrace = stackTrace
+            });
 
             if (statusCode == 403 || (statusCode == 401 && !endpoint.Contains("/auth/login", StringComparison.OrdinalIgnoreCase)))
             {
@@ -139,11 +178,6 @@ values
                     Perfil = perfilSeguro,
                     UserAgent = userAgent
                 });
-            }
-
-            if (durationMs >= 2000)
-            {
-                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, metodo, statusCode, durationMs, usuarioId, clienteId, perfilSeguro, ipOrigem);
             }
         }
         catch (Exception ex)
@@ -248,17 +282,32 @@ alter table if exists plantaopro.api_error_logs
 
 alter table if exists plantaopro.api_error_logs
     alter column id set default gen_random_uuid(),
+    alter column endpoint set default '',
+    alter column metodo set default '',
     alter column mensagem set default '',
     alter column error_message set default '',
     alter column stack_trace set default '',
-    alter column method set default 'GET',
+    alter column method set default '',
+    alter column email set default '',
+    alter column perfil set default '',
+    alter column ip set default '',
+    alter column ip_origem set default '',
+    alter column user_agent set default '',
     alter column success set default false,
     alter column query_string set default '',
     alter column duration_ms set default 0;
 
+update plantaopro.api_error_logs set endpoint = '' where endpoint is null;
+update plantaopro.api_error_logs set metodo = '' where metodo is null;
+update plantaopro.api_error_logs set method = '' where method is null;
 update plantaopro.api_error_logs set mensagem = '' where mensagem is null;
 update plantaopro.api_error_logs set error_message = '' where error_message is null;
 update plantaopro.api_error_logs set stack_trace = '' where stack_trace is null;
+update plantaopro.api_error_logs set email = '' where email is null;
+update plantaopro.api_error_logs set perfil = '' where perfil is null;
+update plantaopro.api_error_logs set ip = '' where ip is null;
+update plantaopro.api_error_logs set ip_origem = '' where ip_origem is null;
+update plantaopro.api_error_logs set user_agent = '' where user_agent is null;
 update plantaopro.api_error_logs set success = false where success is null;
 update plantaopro.api_error_logs set query_string = '' where query_string is null;
 update plantaopro.api_error_logs set duration_ms = 0 where duration_ms is null;");
@@ -269,6 +318,40 @@ update plantaopro.api_error_logs set duration_ms = 0 where duration_ms is null;"
         var value = context.User.FindFirst(claimType)?.Value;
         Guid id;
         return Guid.TryParse(value, out id) ? id : null;
+    }
+
+
+    private static string SanitizarQueryString(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var query = value.Trim();
+
+        var termosSensiveis = new[]
+        {
+            "token",
+            "access_token",
+            "refresh_token",
+            "password",
+            "senha",
+            "secret",
+            "api_key",
+            "apikey",
+            "authorization"
+        };
+
+        foreach (var termo in termosSensiveis)
+        {
+            if (query.Contains(termo, StringComparison.OrdinalIgnoreCase))
+            {
+                return "[query_string_sensivel_omitida]";
+            }
+        }
+
+        return query.Length > 1000 ? query.Substring(0, 1000) : query;
     }
 
     private static string? MascararTexto(string? valor)

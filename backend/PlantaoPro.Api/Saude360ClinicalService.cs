@@ -51,11 +51,19 @@ public sealed class Saude360ClinicalService
     public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null)
     {
         var table = ResolveTable(tableKey);
-        await GarantirBaseClinicaAsync();
-        await using var cn = Cn();
-        var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo);
-        var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
-        return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(rows.Select(ToDto).ToArray(), "Registros carregados.");
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo);
+            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
+            return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(rows.Select(ToDto).ToArray(), "Registros carregados.");
+        }
+        catch (PostgresException ex) when (IsUndefinedTable(ex))
+        {
+            logger.LogError(ex, "Tabela clínica não encontrada para {TableKey}", tableKey);
+            return ApiResponse<IEnumerable<Saude360RegistroDto>>.Fail("A base clínica ainda não foi inicializada. Execute as migrations do Saúde 360.", 500);
+        }
     }
 
     public async Task<ApiResponse<Saude360RegistroDto>> ObterAsync(string tableKey, Guid id)
@@ -153,9 +161,11 @@ public sealed class Saude360ClinicalService
 
     public async Task<ApiResponse<object>> DashboardResumoAsync()
     {
-        await GarantirBaseClinicaAsync();
-        await using var cn = Cn();
-        var resumo = await cn.QueryFirstAsync(@"select
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            var resumo = await cn.QueryFirstAsync(@"select
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and data_inicio::date=current_date) as agendamentos_hoje,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='CHECKIN_REALIZADO' and data_inicio::date=current_date) as checkins_realizados,
 (select count(1) from plantaopro.painel_chamada_fila where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='AGUARDANDO') as pacientes_aguardando,
@@ -164,8 +174,14 @@ public sealed class Saude360ClinicalService
 (select count(1) from plantaopro.triagens where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('FINALIZADA','ENCAMINHADA_CONSULTA')) as triagens_finalizadas,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='FALTOU' and data_inicio::date=current_date) as faltas_dia,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='CANCELADO' and data_inicio::date=current_date) as cancelamentos_dia", new { tenantId = TenantId, isGlobal = IsGlobal });
-        await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });
-        return ApiResponse<object>.Ok(resumo, "Dashboard clínico carregado.");
+            await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });
+            return ApiResponse<object>.Ok(resumo, "Dashboard clínico carregado.");
+        }
+        catch (PostgresException ex) when (IsUndefinedTable(ex))
+        {
+            logger.LogError(ex, "Tabela clínica não encontrada para dashboard clínico");
+            return ApiResponse<object>.Fail("A base clínica ainda não foi inicializada. Execute as migrations do Saúde 360.", 500);
+        }
     }
 
     public async Task<ApiResponse<object>> ResumoFinanceiroAsync()
@@ -316,6 +332,11 @@ select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA
     }
 
     private static string? ValidateUpdate(string key, Saude360CreateRequest r) => null;
+
+    private static bool IsUndefinedTable(PostgresException ex)
+    {
+        return ex.SqlState == "42P01";
+    }
 
     private static string? ValidateAction(string key, string acao, Saude360ActionRequest r)
     {

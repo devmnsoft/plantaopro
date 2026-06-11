@@ -79,6 +79,20 @@ Profiles HTTPS padronizados:
 - API: `https://localhost:51977/swagger`
 - Web: `https://localhost:52977/Account/Login`
 
+
+## Verificação local
+
+Antes de testar o login, valide que os dois projetos compilam nas portas padronizadas:
+
+```bash
+dotnet clean backend/PlantaoPro.Api/PlantaoPro.Api.csproj
+dotnet clean backend/PlantaoPro.Web/PlantaoPro.Web.csproj
+dotnet build backend/PlantaoPro.Api/PlantaoPro.Api.csproj
+dotnet build backend/PlantaoPro.Web/PlantaoPro.Web.csproj
+```
+
+Depois suba a API, confirme o Swagger em `http://localhost:51976/swagger`, suba o Web e acesse `http://localhost:52976/Account/Login`.
+
 ## Checklist rápido
 
 - API HTTP abre em `http://localhost:51976/swagger`.

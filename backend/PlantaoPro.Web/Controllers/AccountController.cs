@@ -159,12 +159,14 @@ public sealed class AccountController : Controller
     private IActionResult HandleApiConnectionFailure(LoginViewModel model, string email, Uri? apiBaseUrl, Exception exception)
     {
         const string message = "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
+        var failureType = exception is TaskCanceledException ? "Timeout" : exception.GetType().Name;
 
         _logger.LogError(
             exception,
-            "Falha de conexão com a API no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}",
+            "Falha de conexão com a API no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Tipo:{FailureType} Mensagem:{ExceptionMessage}",
             email,
             apiBaseUrl,
+            failureType,
             exception.Message);
 
         TempData["Error"] = message;

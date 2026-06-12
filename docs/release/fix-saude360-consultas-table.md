@@ -72,3 +72,7 @@ psql "$ConnectionStrings__Default" -f database/migrations/2026_saude360_consulta
 
 - Completar integração de CID no fluxo de diagnóstico da consulta.
 - Completar módulo de Prescrição com itens, modelos e histórico auditável.
+
+## Segurança de tenant na listagem
+
+Na listagem de consultas, o serviço exige contexto de `tenant_id` ou `cliente_id` para retornar registros clínicos. Quando a requisição autenticada não possui tenant resolvido, o endpoint responde com `ApiResponse<T>` e lista vazia, evitando vazamento cross-tenant e mantendo a auditoria técnica do acesso sem registrar conteúdo clínico sensível.

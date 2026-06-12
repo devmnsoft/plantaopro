@@ -78,3 +78,7 @@ Todas as consultas devem retornar o nome qualificado da tabela.
 
 - Evoluir o vínculo estruturado com CID, incluindo busca, seleção e histórico clínico por diagnóstico.
 - Implementar Prescrição clínica com modelos, itens, orientações e histórico auditável.
+
+## Segurança de tenant na listagem
+
+Na listagem de consultas, o serviço exige contexto de `tenant_id` ou `cliente_id` para retornar registros clínicos. Quando a requisição autenticada não possui tenant resolvido, o endpoint responde com `ApiResponse<T>` e lista vazia, evitando vazamento cross-tenant e mantendo a auditoria técnica do acesso sem registrar conteúdo clínico sensível.

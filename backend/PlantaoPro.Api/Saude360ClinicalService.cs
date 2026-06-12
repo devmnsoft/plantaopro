@@ -53,6 +53,13 @@ public sealed class Saude360ClinicalService
         var table = ResolveTable(tableKey);
         try
         {
+            if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && !TenantId.HasValue)
+            {
+                logger.LogInformation("Listagem de consultas sem contexto de tenant retornou vazia para {TableKey}", tableKey);
+                await AuditAsync(table, Guid.Empty, "LISTAR_SEM_TENANT", new { tableKey });
+                return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(Array.Empty<Saude360RegistroDto>(), "Registros carregados.");
+            }
+
             await GarantirBaseClinicaAsync();
             await using var cn = Cn();
             var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo);
@@ -224,7 +231,14 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
     {
         var where = new List<string>();
         where.Add("reg_status = 'A'");
-        where.Add("(@tenantId is null or cliente_id is null or cliente_id = @tenantId or @isGlobal)");
+        if (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase))
+        {
+            where.Add("(@tenantId is not null and (cliente_id = @tenantId or tenant_id = @tenantId))");
+        }
+        else
+        {
+            where.Add("(@tenantId is null or cliente_id is null or cliente_id = @tenantId or @isGlobal)");
+        }
         where.Add("(@status is null or status = @status)");
         if (HasColumn(key, "paciente_id")) where.Add("(@pacienteId is null or paciente_id = @pacienteId)");
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");

@@ -53,11 +53,17 @@ public abstract class Saude360WebControllerBase : BaseWebController
         if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
         var result = await service.EnviarAsync(token, form.ApiEndpoint, form);
         TempData[result.Success ? "Success" : "Error"] = result.Message;
+        if (!result.Success)
+        {
+            form.Titulo = string.IsNullOrWhiteSpace(form.Titulo) ? "Revise os dados do formulário" : form.Titulo;
+            return View("~/Views/Saude360/Formulario.cshtml", form);
+        }
         return RedirectToAction("Index");
     }
 
     protected static IEnumerable<Saude360ActionLinkViewModel> Links(params Saude360ActionLinkViewModel[] links) { return links; }
     protected static Saude360ActionLinkViewModel Link(string title, string action, string icon) { return new Saude360ActionLinkViewModel { Titulo = title, Action = action, Icone = icon }; }
+    protected static Saude360ActionLinkViewModel LinkTo(string title, string controller, string action, string icon) { return new Saude360ActionLinkViewModel { Titulo = title, Controller = controller, Action = action, Icone = icon }; }
     private static string PlanoModulo(string modulo) { return modulo == "Convênios" || modulo == "Planos de saúde" ? "Enterprise" : modulo == "Triagem" || modulo == "Prescrição médica" || modulo == "CID" || modulo == "Financeiro clínica" ? "Profissional" : "Essencial"; }
     private static string PermissaoModulo(string modulo) { return "Permissão por tenant, perfil e plano para " + modulo + "."; }
 }
@@ -65,7 +71,14 @@ public abstract class Saude360WebControllerBase : BaseWebController
 public sealed class ClinicaDashboardController : Saude360WebControllerBase
 {
     public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s) : base(f, l, s) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta futura.", "api/clinica-dashboard/resumo", Links(Link("Pacientes", "Index", "bi-people"), Link("Agendamentos", "Index", "bi-calendar3"), Link("Triagem", "Index", "bi-clipboard2-pulse"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta futura.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), Link("Pacientes", "Index", "bi-people"), Link("Agendamentos", "Index", "bi-calendar3"), Link("Triagem", "Index", "bi-clipboard2-pulse"))); }
+    public IActionResult FluxoAtendimento() { return View("~/Views/ClinicaDashboard/FluxoAtendimento.cshtml"); }
+}
+
+public sealed class PendenciasClinicasController : Saude360WebControllerBase
+{
+    public PendenciasClinicasController(IHttpClientFactory f, ILogger<PendenciasClinicasController> l, Saude360WebService s) : base(f, l, s) { }
+    public Task<IActionResult> Index() { return ModuloAsync("Pendências do Dia", "Pendências clínicas", "Próxima ação recomendada para recepção, triagem, médico e financeiro.", "api/pendencias-clinicas", Links(LinkTo("Fluxo de Atendimento", "ClinicaDashboard", "FluxoAtendimento", "bi-signpost-2"))); }
 }
 
 public sealed class PainelChamadaController : Saude360WebControllerBase

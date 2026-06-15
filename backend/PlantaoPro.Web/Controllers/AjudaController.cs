@@ -74,6 +74,16 @@ public sealed class AjudaController : Controller
         return View(model);
     }
 
+    public IActionResult FluxoAtendimento()
+    {
+        return View();
+    }
+
+    public IActionResult PerguntasFrequentes()
+    {
+        return View();
+    }
+
     public IActionResult Modulo(string id)
     {
         if (string.IsNullOrWhiteSpace(id))

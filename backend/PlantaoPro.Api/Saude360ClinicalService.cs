@@ -105,21 +105,6 @@ public sealed class Saude360ClinicalService
 
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
-        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
-        {
-            var missing = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and (paciente_id is null or medico_id is null) and (@tenantId is null or cliente_id=@tenantId or tenant_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
-            if (missing > 0) return ApiResponse<Saude360RegistroDto>.Fail("Finalizar consulta exige paciente e médico vinculados.", 400);
-        }
-        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
-        {
-            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
-            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Consulta finalizada não pode ser alterada sem permissão especial.", 409);
-        }
-        if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
-        {
-            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.prescricoes where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
-            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Prescrição finalizada não pode ser alterada sem permissão especial.", 409);
-        }
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase))
         {
             var conflict = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.agendamentos where reg_status='A' and status not in ('CANCELADO','FINALIZADO') and medico_id=@medicoId and cliente_id=@tenantId and data_inicio < @fim and data_fim > @inicio", new { medicoId = request.MedicoId, tenantId = TenantId, inicio = request.DataInicio, fim = request.DataFim });
@@ -384,17 +369,17 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
     {
         var map = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            { "painel", new[] { "paciente_id", "agendamento_id" } },
-            { "agendamentos", new[] { "paciente_id", "medico_id" } },
-            { "triagens", new[] { "paciente_id", "agendamento_id" } },
-            { "consultas", new[] { "paciente_id", "medico_id", "agendamento_id" } },
-            { "consultaHistorico", new[] { "paciente_id", "consulta_id" } },
-            { "prescricoes", new[] { "paciente_id", "medico_id", "consulta_id" } },
-            { "prescricaoHistorico", new[] { "prescricao_id" } },
-            { "contasReceber", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
-            { "convenioAutorizacoes", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
-            { "planoSaudePacientes", new[] { "paciente_id" } },
-            { "pacienteHistorico", new[] { "paciente_id" } }
+            { "painel", new string[] { "paciente_id", "agendamento_id" } },
+            { "agendamentos", new string[] { "paciente_id", "medico_id" } },
+            { "triagens", new string[] { "paciente_id", "agendamento_id" } },
+            { "consultas", new string[] { "paciente_id", "medico_id", "agendamento_id" } },
+            { "consultaHistorico", new string[] { "paciente_id", "consulta_id" } },
+            { "prescricoes", new string[] { "paciente_id", "medico_id", "consulta_id" } },
+            { "prescricaoHistorico", new string[] { "prescricao_id" } },
+            { "contasReceber", new string[] { "paciente_id", "agendamento_id", "consulta_id" } },
+            { "convenioAutorizacoes", new string[] { "paciente_id", "agendamento_id", "consulta_id" } },
+            { "planoSaudePacientes", new string[] { "paciente_id" } },
+            { "pacienteHistorico", new string[] { "paciente_id" } }
         };
         string[] cols;
         return map.TryGetValue(key, out cols) && cols.Any(c => string.Equals(c, column, StringComparison.OrdinalIgnoreCase));

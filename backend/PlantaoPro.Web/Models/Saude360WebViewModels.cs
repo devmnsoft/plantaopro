@@ -82,3 +82,12 @@ public sealed class Saude360FormViewModel
     public decimal? Valor { get; set; }
     public bool Principal { get; set; }
 }
+
+public sealed class FriendlyErrorViewModel
+{
+    public string Title { get; set; } = "Não foi possível carregar esta tela";
+    public string Message { get; set; } = string.Empty;
+    public string ActionText { get; set; } = "Voltar ao fluxo";
+    public string Controller { get; set; } = "ClinicaDashboard";
+    public string Action { get; set; } = "FluxoAtendimento";
+}

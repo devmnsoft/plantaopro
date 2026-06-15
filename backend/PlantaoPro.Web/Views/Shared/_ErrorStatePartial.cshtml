@@ -1,0 +1,9 @@
+@model PlantaoPro.Web.Models.FriendlyErrorViewModel
+<div class="alert alert-warning d-flex gap-3 align-items-start" role="alert">
+    <i class="bi bi-exclamation-triangle fs-3"></i>
+    <div>
+        <h2 class="h6 mb-1">@Model.Title</h2>
+        <p class="mb-2">@Model.Message</p>
+        <a class="btn btn-sm btn-outline-primary" asp-controller="@Model.Controller" asp-action="@Model.Action">@Model.ActionText</a>
+    </div>
+</div>

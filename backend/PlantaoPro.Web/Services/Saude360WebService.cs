@@ -25,14 +25,14 @@ public sealed class Saude360WebService
             var client = CreateClient(token);
             var response = await client.GetAsync(endpoint);
             var content = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode) return (Array.Empty<Saude360RegistroViewModel>(), "API retornou falha ao carregar registros clínicos.");
+            if (!response.IsSuccessStatusCode) return (Array.Empty<Saude360RegistroViewModel>(), ApiErrorPresenter.ToFriendlyMessage(content));
             var parsed = ParseRegistros(content);
             return (parsed.Registros, parsed.Message);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao carregar endpoint Saúde 360 {Endpoint}", endpoint);
-            return (Array.Empty<Saude360RegistroViewModel>(), "Falha de comunicação com a API Saúde 360.");
+            return (Array.Empty<Saude360RegistroViewModel>(), ApiErrorPresenter.ToFriendlyMessage(ex.Message));
         }
     }
 
@@ -85,12 +85,12 @@ public sealed class Saude360WebService
             var response = form.Id.HasValue ? await client.PutAsync(endpoint, contentPayload) : await client.PostAsync(endpoint, contentPayload);
             var content = await response.Content.ReadAsStringAsync();
             var envelope = JsonSerializer.Deserialize<Saude360ApiEnvelope<Saude360RegistroViewModel>>(content, JsonOptions);
-            return (response.IsSuccessStatusCode && (envelope == null || envelope.Success), envelope?.Message ?? (response.IsSuccessStatusCode ? "Operação concluída." : "Operação não concluída."));
+            return (response.IsSuccessStatusCode && (envelope == null || envelope.Success), ApiErrorPresenter.ToFriendlyMessage(envelope?.Message ?? (response.IsSuccessStatusCode ? "Operação concluída." : "Operação não concluída.")));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Erro ao enviar endpoint Saúde 360 {Endpoint}", endpoint);
-            return (false, "Falha de comunicação com a API Saúde 360.");
+            return (false, ApiErrorPresenter.ToFriendlyMessage(ex.Message));
         }
     }
 

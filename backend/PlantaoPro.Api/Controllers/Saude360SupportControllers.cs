@@ -32,6 +32,10 @@ public sealed class LookupsController : ControllerBase
     private async Task<IActionResult> Lookup(string key, string? termo)
     {
         var result = await service.ListarAsync(key, termo: termo);
+        if (!result.Success)
+        {
+            return StatusCode(result.StatusCode, ApiResponse<IEnumerable<LookupItemDto>>.Fail(result.Message, result.StatusCode));
+        }
         var itens = (result.Data ?? Array.Empty<Saude360RegistroDto>()).Take(50).Select(x => new LookupItemDto { Id = x.Id, Text = string.IsNullOrWhiteSpace(x.Nome) ? x.Descricao : x.Nome, Description = x.Descricao, Extra = x.Codigo, Status = x.Status }).ToList();
         return StatusCode(result.StatusCode, ApiResponse<IEnumerable<LookupItemDto>>.Ok(itens, result.Message));
     }

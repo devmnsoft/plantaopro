@@ -1,24 +1,7 @@
-# CID — Saúde 360 Fase 5.2
+# CID no Saúde 360
 
-O módulo CID permite cadastro, busca, favoritos por médico/tenant e acompanhamento de códigos mais usados. A base pode conter registros globais (`cliente_id` nulo) e registros específicos do tenant.
+A tabela oficial do módulo é `plantaopro.cid_tabela`. A listagem usa `codigo` e `descricao`; não existe dependência de coluna `nome`.
 
-## Endpoints
+Campos mínimos: `id`, `codigo`, `descricao`, `categoria`, `capitulo`, `status`, `reg_status` e `reg_date`.
 
-- `GET /api/cid`
-- `GET /api/cid/{id}`
-- `GET /api/cid/buscar?termo=`
-- `POST /api/cid`
-- `PUT /api/cid/{id}`
-- `POST /api/cid/{id}/inativar`
-- `POST /api/cid/importar`
-- `POST /api/cid/{id}/favoritar`
-- `GET /api/cid/favoritos`
-- `GET /api/cid/mais-usados`
-
-## Regras
-
-- Código CID não pode duplicar.
-- Busca considera código e descrição.
-- Favoritos são vinculados ao médico/tenant.
-- Uso em consulta pode registrar histórico em `cid_uso_historico`.
-- Importações são auditadas e idempotentes no banco.
+A migration `database/migrations/2026_fix_cid_tabela_schema.sql` padroniza o schema e adiciona CIDs demo de forma idempotente.

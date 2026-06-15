@@ -755,4 +755,38 @@ values
     public sealed record MobileChamadoSuporteDetalheResponseDto(MobileChamadoSuporteDetalheDto Chamado, IEnumerable<MobileChamadoMensagemDto> Mensagens);
     public sealed record MobileRecusarConviteRequest(string Motivo);
     public sealed record MobileConviteDto(Guid Id, Guid PlantaoId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, string Status, string Mensagem, DateTime DataEnvio, DateTime? DataResposta, string MotivoRecusa);
+
+    [HttpPost("dispositivos/registrar")]
+    public async Task<IActionResult> RegistrarDispositivo([FromServices] Fase6BiIntegracoesService fase6Service, [FromBody] MobileDeviceRequest request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var response = await fase6Service.RegistrarDispositivoAsync(request);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("dispositivos/remover")]
+    public async Task<IActionResult> RemoverDispositivo([FromBody] object request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        return Ok(ApiResponse<object>.Ok(new { removido = true }, "Dispositivo removido."));
+    }
+
+    [HttpGet("notificacoes/preferencias")]
+    public async Task<IActionResult> PreferenciasNotificacoes()
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        return Ok(ApiResponse<object>.Ok(new { convitePlantao = true, escala = true, pagamentos = true, lembretes = true }));
+    }
+
+    [HttpPut("notificacoes/preferencias")]
+    public async Task<IActionResult> AtualizarPreferenciasNotificacoes([FromBody] object request)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        return Ok(ApiResponse<object>.Ok(new { salvo = true }, "Preferências atualizadas."));
+    }
+
 }

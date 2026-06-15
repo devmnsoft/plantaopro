@@ -26,11 +26,12 @@ public sealed class LookupsController : ControllerBase
     [HttpGet("status-agendamento")] public IActionResult StatusAgendamento() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "AGENDADO", "CONFIRMADO", "CHECKIN_REALIZADO", "EM_TRIAGEM", "AGUARDANDO_CONSULTA", "ATENDIDO", "CANCELADO", "FALTOU" }), "Lookup carregado.")); }
     [HttpGet("status-triagem")] public IActionResult StatusTriagem() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "AGUARDANDO", "EM_TRIAGEM", "FINALIZADA", "CANCELADA" }), "Lookup carregado.")); }
     [HttpGet("status-consulta")] public IActionResult StatusConsulta() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "AGUARDANDO", "EM_ATENDIMENTO", "FINALIZADA", "CANCELADA" }), "Lookup carregado.")); }
+    [HttpGet("status-financeiro")] public IActionResult StatusFinanceiro() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "ABERTA", "VENCIDA", "RECEBIDO", "CANCELADA", "ESTORNADO", "ABERTO", "FECHADO" }), "Lookup carregado.")); }
 
     private async Task<IActionResult> Lookup(string key, string? termo)
     {
         var result = await service.ListarAsync(key, termo: termo);
-        var itens = (result.Data ?? Array.Empty<Saude360RegistroDto>()).Take(50).Select(x => new LookupItemDto { Id = x.Id, Text = string.IsNullOrWhiteSpace(x.Nome) ? x.Descricao : x.Nome, Extra = x.Codigo, Status = x.Status }).ToList();
+        var itens = (result.Data ?? Array.Empty<Saude360RegistroDto>()).Take(50).Select(x => new LookupItemDto { Id = x.Id, Text = string.IsNullOrWhiteSpace(x.Nome) ? x.Descricao : x.Nome, Description = x.Descricao, Extra = x.Codigo, Status = x.Status }).ToList();
         return StatusCode(result.StatusCode, ApiResponse<IEnumerable<LookupItemDto>>.Ok(itens, result.Message));
     }
 
@@ -43,7 +44,7 @@ public sealed class LookupsController : ControllerBase
 
     private static IEnumerable<LookupItemDto> ToItems(IEnumerable<string> values)
     {
-        return values.Select(v => new LookupItemDto { Id = Guid.Empty, Text = v, Extra = string.Empty, Status = "ATIVO" }).ToList();
+        return values.Select(v => new LookupItemDto { Id = Guid.Empty, Text = v, Description = "Opção padrão do Saúde 360", Extra = string.Empty, Status = "ATIVO" }).ToList();
     }
 }
 
@@ -69,5 +70,5 @@ public sealed class PendenciasClinicasApiController : ControllerBase
     public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 4, Criticas = 1, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
 }
 
-public sealed class LookupItemDto { public Guid Id { get; set; } public string Text { get; set; } = string.Empty; public string Extra { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }
-public sealed class PendenciaClinicaDto { public string Tipo { get; set; } = string.Empty; public string Prioridade { get; set; } = string.Empty; public string Descricao { get; set; } = string.Empty; public string ProximoPasso { get; set; } = string.Empty; public string Link { get; set; } = string.Empty; public string PerfilResponsavel { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }
+public sealed class LookupItemDto { public Guid Id { get; set; } public string Text { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string Extra { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }
+public sealed class PendenciaClinicaDto { public string Tipo { get; set; } = string.Empty; public string Prioridade { get; set; } = string.Empty; public string Descricao { get; set; } = string.Empty; public string ProximoPasso { get; set; } = string.Empty; public string Link { get; set; } = string.Empty; public string PerfilResponsavel { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; public DateTime DataHora { get; set; } = DateTime.UtcNow; }

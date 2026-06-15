@@ -103,6 +103,11 @@ public sealed class CidController : ControllerBase
 {
     private readonly Saude360ClinicalService service;
     public CidController(Saude360ClinicalService service) { this.service = service; }
+    [HttpGet("capitulos")] public async Task<IActionResult> Capitulos() { var r = await service.CidCapitulosAsync(); return StatusCode(r.StatusCode, r); }
+    [HttpGet("grupos")] public async Task<IActionResult> Grupos([FromQuery] string? capitulo) { var r = await service.CidGruposAsync(capitulo); return StatusCode(r.StatusCode, r); }
+    [HttpGet("importacoes")] public async Task<IActionResult> Importacoes() { var r = await service.CidImportacoesAsync(); return StatusCode(r.StatusCode, r); }
+    [HttpPost("importar-csv")] public async Task<IActionResult> ImportarCsv([FromBody] CidImportacaoRequest request) { var r = await service.ImportarCidCsvAsync(request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("importar-url")] public async Task<IActionResult> ImportarUrl([FromBody] CidImportacaoUrlRequest request) { var r = await service.ImportarCidUrlAsync(request); return StatusCode(r.StatusCode, r); }
     [HttpGet] public async Task<IActionResult> Get([FromQuery] string? termo) { var r = await service.ListarAsync("cid", termo: termo); return StatusCode(r.StatusCode, r); }
     [HttpGet("buscar")] public async Task<IActionResult> Buscar([FromQuery] string termo) { var r = await service.ListarAsync("cid", termo: termo); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("cid", id); return StatusCode(r.StatusCode, r); }
@@ -206,3 +211,6 @@ public sealed class PacientesController : ControllerBase
     [HttpGet("buscar")] public async Task<IActionResult> Buscar([FromQuery] string? termo) { var r = await service.ListarAsync("pacientes", termo: termo); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}/resumo-clinico")] public async Task<IActionResult> ResumoClinico(Guid id) { var r = await service.ObterAsync("pacientes", id); return StatusCode(r.StatusCode, r); }
 }
+
+public sealed class CidImportacaoRequest { public string Csv { get; set; } = string.Empty; public string ArquivoNome { get; set; } = string.Empty; public string Fonte { get; set; } = string.Empty; public string FonteUrl { get; set; } = string.Empty; public string Versao { get; set; } = "CID-10"; }
+public sealed class CidImportacaoUrlRequest { public string Url { get; set; } = string.Empty; public string Fonte { get; set; } = string.Empty; public string Versao { get; set; } = "CID-10"; }

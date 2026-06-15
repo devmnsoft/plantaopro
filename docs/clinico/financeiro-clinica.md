@@ -1,5 +1,13 @@
-# Financeiro clínico mínimo
+# Saúde 360
 
-A base mínima é criada por `database/migrations/2026_fix_clinica_financeiro_minimo.sql` com contas a receber, recebimentos, caixa, fechamentos e histórico financeiro.
+Documento atualizado nesta consolidação para registrar a estabilização de banco, seeds demo, APIs e jornada guiada. Consulte também:
 
-As tabelas usam `tenant_id`/`cliente_id`, `reg_status`, status operacional e dados demo fictícios para homologação comercial.
+- `docs/operacao/ordem-migrations-seeds.md`
+- `docs/clinico/importacao-cid.md`
+- `docs/release/consolidacao-saude360-convenios-cid-financeiro.md`
+
+## Pendências reais
+
+- Validar contra uma base PostgreSQL local com migrations aplicadas.
+- Homologar fluxo visual completo no navegador com login admin.
+- Configurar fonte oficial de CID via ambiente/segredo operacional quando disponível.

@@ -1,8 +1,13 @@
-# Jornada do cliente leigo — Saúde 360
+# Saúde 360
 
-A navegação principal conduz o usuário pela sequência: Paciente → Agendamento → Check-in → Painel → Triagem → Consulta → Prescrição → Financeiro.
+Documento atualizado nesta consolidação para registrar a estabilização de banco, seeds demo, APIs e jornada guiada. Consulte também:
 
-A página **ClinicaDashboard/FluxoAtendimento** apresenta cards numerados, próxima ação recomendada e atalhos sem `href="#"`.
+- `docs/operacao/ordem-migrations-seeds.md`
+- `docs/clinico/importacao-cid.md`
+- `docs/release/consolidacao-saude360-convenios-cid-financeiro.md`
 
-## Ajuste de fechamento da jornada
-A página `/ClinicaDashboard/FluxoAtendimento` deve apresentar nove passos navegáveis. O último passo direciona o usuário para o dashboard clínico e para Pendências do Dia, evitando que a operação termine no financeiro sem acompanhamento gerencial.
+## Pendências reais
+
+- Validar contra uma base PostgreSQL local com migrations aplicadas.
+- Homologar fluxo visual completo no navegador com login admin.
+- Configurar fonte oficial de CID via ambiente/segredo operacional quando disponível.

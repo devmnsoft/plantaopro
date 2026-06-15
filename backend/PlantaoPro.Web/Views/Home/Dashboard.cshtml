@@ -1,7 +1,7 @@
 @model DashboardOverviewDto
 @using PlantaoPro.Web.Security
 @{
-    ViewData["Title"] = "Dashboard Executivo";
+    ViewData["Title"] = "Visão Geral Saúde 360";
     var i = Model?.Indicadores;
     var proximos = Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>();
     var porEspecialidade = Model?.PlantoesPorEspecialidade ?? Enumerable.Empty<DashboardChartItem>();
@@ -25,12 +25,13 @@
 <div class="page-header mb-4 d-flex flex-wrap justify-content-between gap-3 align-items-start">
     <div>
         <img src="~/branding/logo-horizontal-dark.svg" class="dashboard-brand mb-2" alt="PlantãoPro" />
-        <h2 class="page-title">Dashboard • @perfilLabel</h2>
-        <p class="page-subtitle mb-0">@tituloVisao com indicadores atualizados, alertas visuais e ações rápidas.</p>
+        <h2 class="page-title">Olá, Administrador. Veja o resumo da sua operação hoje.</h2>
+        <p class="page-subtitle mb-0">PlantãoPro Saúde 360 centraliza atendimento, plantões, financeiro, convênios, relatórios e gestão SaaS em uma jornada pronta para demonstração comercial.</p>
     </div>
     <div class="d-flex gap-2 align-items-center flex-wrap">
         <span class="badge text-bg-light border">Perfil: @perfilLabel</span>
-        <button class="btn btn-outline-secondary btn-sm" type="button" title="Exportação avançada condicionada ao plano">Baixar BI</button>
+        <a asp-controller="ClinicaDashboard" asp-action="FluxoAtendimento" class="btn btn-primary btn-sm"><i class="bi bi-signpost-2 me-1"></i>Iniciar jornada guiada</a>
+        <a asp-controller="MinhaAssinatura" asp-action="Upgrade" class="btn btn-outline-warning btn-sm"><i class="bi bi-rocket-takeoff me-1"></i>Upgrade</a>
     </div>
 </div>
 <div class="card border-0 shadow-sm mb-3">
@@ -44,6 +45,28 @@
             <div class="col-12 col-md-3 d-grid"><a asp-action="Dashboard" class="btn btn-light btn-sm">Limpar</a></div>
         </form>
     </div>
+</div>
+
+
+<div class="row g-3 mb-4">
+@foreach (var a in new[] {
+("Cadastrar paciente","Pacientes","Create","bi-person-plus","Cadastre ou localize o paciente antes de iniciar o atendimento."),
+("Criar agendamento","Agendamentos","Create","bi-calendar2-plus","Agende consulta, retorno, procedimento ou encaixe."),
+("Fazer check-in","Agendamentos","CheckIn","bi-person-check","Confirme a chegada do paciente."),
+("Abrir painel","PainelChamada","Index","bi-megaphone","Chame para sala, guichê ou triagem."),
+("Realizar triagem","Triagem","Create","bi-clipboard2-pulse","Classifique risco e sinais vitais."),
+("Iniciar consulta","Consultas","Atendimento","bi-journal-medical","Registre atendimento e conduta."),
+("Emitir prescrição","Prescricoes","Create","bi-capsule","Gere prescrição auditável."),
+("Receber pagamento","ClinicaFinanceiro","Receber","bi-cash-coin","Finalize cobrança particular ou coparticipação.")
+})
+{
+    <div class="col-12 col-md-6 col-xl-3"><a asp-controller="@a.Item2" asp-action="@a.Item3" class="card border-0 shadow-sm h-100 text-decoration-none text-reset"><div class="card-body"><div class="d-flex align-items-start gap-3"><div class="kpi-icon"><i class="bi @a.Item4"></i></div><div><strong>@a.Item1</strong><p class="text-muted small mb-0">@a.Item5</p></div></div></div></a></div>
+}
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white"><strong>O que fazer agora?</strong></div><div class="card-body"><ol class="mb-0"><li>Verificar pacientes aguardando e realizar chamadas pendentes.</li><li>Finalizar triagens em aberto antes de iniciar novas consultas.</li><li>Conferir pagamentos e autorizações pendentes do dia.</li></ol></div></div></div>
+    <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white d-flex justify-content-between"><strong>Plano atual</strong><span class="badge text-bg-primary">Profissional</span></div><div class="card-body"><p class="mb-2">Recursos liberados: atendimento, plantões, financeiro, CID e prescrições.</p><p class="text-muted small mb-3">Premium: convênios avançados, BI SaaS e white label completo.</p><a asp-controller="MinhaAssinatura" asp-action="Upgrade" class="btn btn-warning btn-sm">Ver upgrade</a></div></div></div>
 </div>
 
 <div class="row g-3 mb-4 kpi-grid">

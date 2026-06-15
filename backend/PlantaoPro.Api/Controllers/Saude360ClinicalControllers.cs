@@ -165,6 +165,7 @@ public sealed class ConveniosController : ControllerBase
 {
     private readonly Saude360ClinicalService service;
     public ConveniosController(Saude360ClinicalService service) { this.service = service; }
+    [HttpGet("resumo")] public async Task<IActionResult> Resumo() { var r = await service.ResumoConveniosAsync(); return StatusCode(r.StatusCode, r); }
     [HttpGet] public async Task<IActionResult> Get() { var r = await service.ListarAsync("convenios"); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("convenios", id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("convenios", request); return StatusCode(r.StatusCode, r); }

@@ -71,7 +71,7 @@ public abstract class Saude360WebControllerBase : BaseWebController
 public sealed class ClinicaDashboardController : Saude360WebControllerBase
 {
     public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s) : base(f, l, s) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta futura.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), Link("Pacientes", "Index", "bi-people"), Link("Agendamentos", "Index", "bi-calendar3"), Link("Triagem", "Index", "bi-clipboard2-pulse"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs reais da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> Prescrição.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), LinkTo("Pacientes", "Pacientes", "Index", "bi-people"), LinkTo("Agendamentos", "Agendamentos", "Index", "bi-calendar3"), LinkTo("Triagem", "Triagem", "Index", "bi-clipboard2-pulse"), LinkTo("Consultas", "Consultas", "Index", "bi-journal-medical"))); }
     public IActionResult FluxoAtendimento() { return View("~/Views/ClinicaDashboard/FluxoAtendimento.cshtml"); }
 }
 
@@ -160,7 +160,7 @@ public sealed class PrescricoesController : Saude360WebControllerBase
 public sealed class ClinicaFinanceiroController : Saude360WebControllerBase
 {
     public ClinicaFinanceiroController(IHttpClientFactory f, ILogger<ClinicaFinanceiroController> l, Saude360WebService s) : base(f, l, s) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Financeiro da clínica", "Financeiro clínica", "Contas a receber, recebimentos, caixa, repasses, glosas e relatórios por tenant.", "api/clinica-financeiro/contas-receber", Links(Link("Receber", "Receber", "bi-cash-coin"), Link("Caixa", "Caixa", "bi-box"), Link("Relatórios", "Relatorios", "bi-graph-up"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Dashboard financeiro", "Financeiro clínica", "Contas a receber, recebimentos, caixa, repasses, glosas e relatórios por tenant.", "api/clinica-financeiro/resumo", Links(Link("Receber pagamento", "Receber", "bi-cash-coin"), Link("Caixa", "Caixa", "bi-box"), Link("Contas a receber", "ContasReceber", "bi-receipt"), Link("Relatórios", "Relatorios", "bi-graph-up"))); }
     public IActionResult Receber() { return Formulario("Receber pagamento", "api/clinica-financeiro/receber"); }
     public Task<IActionResult> ContasReceber() { return Index(); }
     public Task<IActionResult> Caixa() { return ModuloAsync("Caixa clínico", "Financeiro clínica", "Abertura, movimentação e fechamento de caixa auditados.", "api/clinica-financeiro/caixa", Links(Link("Fechamento", "FechamentoCaixa", "bi-lock"))); }
@@ -173,7 +173,8 @@ public sealed class ClinicaFinanceiroController : Saude360WebControllerBase
 public sealed class ConveniosController : Saude360WebControllerBase
 {
     public ConveniosController(IHttpClientFactory f, ILogger<ConveniosController> l, Saude360WebService s) : base(f, l, s) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Convênios", "Convênios", "Contratos, planos, tabelas, autorizações, glosas e faturamento integrados ao financeiro.", "api/convenios", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"), Link("Faturamento", "Faturamento", "bi-file-earmark-bar-graph"))); }
+    public Task<IActionResult> Index() { return Dashboard(); }
+    public Task<IActionResult> Dashboard() { return ModuloAsync("Dashboard de convênios", "Convênios", "Contratos, planos, autorizações, glosas e faturamento integrados ao financeiro.", "api/convenios/resumo", Links(Link("Novo convênio", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"), Link("Faturamento", "Faturamento", "bi-file-earmark-bar-graph"), LinkTo("Planos de saúde", "PlanosSaude", "Index", "bi-card-checklist"))); }
     public IActionResult Create() { return Formulario("Novo convênio", "api/convenios"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar convênio", "api/convenios/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do convênio", "Convênios", "Cadastro e status do convênio por tenant.", "api/convenios/" + id, Links(Link("Convênios", "Index", "bi-arrow-left"))); }

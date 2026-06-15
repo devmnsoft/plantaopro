@@ -13,4 +13,10 @@ public class BiController : BaseWebController
     public IActionResult Medicos() => View();
     public IActionResult Clientes() => View();
     public IActionResult Sla() => View();
+    public IActionResult Operacional() => View("Index");
+    public IActionResult Clinico() => View("Index");
+    public IActionResult Convenios() => View("Index");
+    public IActionResult Saas() => View("Index");
+    public IActionResult Widgets() => View("Index");
+    public IActionResult Alertas() => View("Index");
 }

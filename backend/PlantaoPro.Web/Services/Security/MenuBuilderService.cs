@@ -66,6 +66,8 @@ public sealed class MenuBuilderService : IMenuBuilderService
 
         AddGroup(groups, "CLÍNICA", "bi-hospital", currentController, currentAction, new List<MenuItemViewModel>
         {
+            Item("Fluxo de Atendimento", "bi-signpost-2", "ClinicaDashboard", "FluxoAtendimento", "SAUDE360_DASHBOARD", string.Empty),
+            Item("Pendências do Dia", "bi-lightning-charge", "PendenciasClinicas", "Index", "SAUDE360_DASHBOARD", string.Empty),
             Item("Dashboard clínico", "bi-speedometer2", "ClinicaDashboard", "Index", "SAUDE360_DASHBOARD", string.Empty),
             Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", string.Empty),
             Item("Agendamentos", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", string.Empty),

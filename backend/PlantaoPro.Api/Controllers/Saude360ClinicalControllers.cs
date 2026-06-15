@@ -92,6 +92,8 @@ public sealed class ConsultasController : ControllerBase
     [HttpPost("{id:guid}/finalizar")] public async Task<IActionResult> Finalizar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("consultas", id, "finalizar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("consultas", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("consultas", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{id:guid}/historico")] public async Task<IActionResult> Historico(Guid id) { var r = await service.HistoricoConsultaAsync(id); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{id:guid}/resumo")] public async Task<IActionResult> Resumo(Guid id) { var r = await service.ResumoConsultaAsync(id); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]
@@ -108,7 +110,9 @@ public sealed class CidController : ControllerBase
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("cid", id, request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/inativar")] public async Task<IActionResult> Inativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("cid", id, "inativar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("importar")] public async Task<IActionResult> Importar([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("cid", request); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/favoritar")] public async Task<IActionResult> Favoritar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("cid", id, "favoritar", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/favoritar")] public async Task<IActionResult> Favoritar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.FavoritarCidAsync(id, request); return StatusCode(r.StatusCode, r); }
+    [HttpGet("favoritos")] public async Task<IActionResult> Favoritos() { var r = await service.CidFavoritosAsync(); return StatusCode(r.StatusCode, r); }
+    [HttpGet("mais-usados")] public async Task<IActionResult> MaisUsados() { var r = await service.CidMaisUsadosAsync(); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]
@@ -118,15 +122,17 @@ public sealed class PrescricoesController : ControllerBase
 {
     private readonly Saude360ClinicalService service;
     public PrescricoesController(Saude360ClinicalService service) { this.service = service; }
-    [HttpGet] public async Task<IActionResult> Get() { var r = await service.ListarAsync("prescricoes"); return StatusCode(r.StatusCode, r); }
+    [HttpGet] public async Task<IActionResult> Get([FromQuery] Guid? consultaId, [FromQuery] Guid? pacienteId) { var r = await service.ListarAsync("prescricoes", consultaId: consultaId, pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("prescricoes", id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("prescricoes", request); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("prescricoes", id, request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/finalizar")] public async Task<IActionResult> Finalizar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("prescricoes", id, "finalizar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("prescricoes", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("prescricoes", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }
+    [HttpGet("consulta/{consultaId:guid}")] public async Task<IActionResult> Consulta(Guid consultaId) { var r = await service.ListarAsync("prescricoes", consultaId: consultaId); return StatusCode(r.StatusCode, r); }
     [HttpGet("modelos")] public async Task<IActionResult> Modelos() { var r = await service.ListarAsync("prescricaoModelos"); return StatusCode(r.StatusCode, r); }
     [HttpPost("modelos")] public async Task<IActionResult> CriarModelo([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("prescricaoModelos", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("modelos/{id:guid}/usar")] public async Task<IActionResult> UsarModelo(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.UsarModeloPrescricaoAsync(id, request); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]

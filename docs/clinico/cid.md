@@ -1,25 +1,24 @@
-# Saúde 360 — cid
+# CID — Saúde 360 Fase 5.2
 
-## Objetivo
+O módulo CID permite cadastro, busca, favoritos por médico/tenant e acompanhamento de códigos mais usados. A base pode conter registros globais (`cliente_id` nulo) e registros específicos do tenant.
 
-Este módulo faz parte da Fase 5 do PlantãoPro Saúde 360 e opera com escopo por tenant, permissões por perfil/plano e auditoria.
+## Endpoints
 
-## Implementação
+- `GET /api/cid`
+- `GET /api/cid/{id}`
+- `GET /api/cid/buscar?termo=`
+- `POST /api/cid`
+- `PUT /api/cid/{id}`
+- `POST /api/cid/{id}/inativar`
+- `POST /api/cid/importar`
+- `POST /api/cid/{id}/favoritar`
+- `GET /api/cid/favoritos`
+- `GET /api/cid/mais-usados`
 
-- API autenticada no backend ASP.NET Core.
-- Controller Web MVC com ações reais e service HTTP registrado em DI.
-- Tabelas PostgreSQL no schema `plantaopro` com auditoria mínima (`created_by`, `updated_by`, `created_at`, `updated_at`, `reg_date`, `reg_status`).
-- Índices por campos operacionais relevantes, incluindo `cliente_id`, `status` e `reg_date`.
+## Regras
 
-## Segurança e LGPD
-
-- Dados são filtrados por `cliente_id`/tenant.
-- Ações sensíveis registram auditoria central.
-- Conteúdo clínico sensível não deve ser escrito em logs técnicos.
-- Perfil financeiro não deve acessar evolução clínica.
-
-## Pendências reais
-
-- Homologar jornada completa em ambiente com banco aplicado.
-- Refinar campos específicos por clínica e protocolo assistencial.
-- Adicionar integrações externas somente após validação jurídica/operacional.
+- Código CID não pode duplicar.
+- Busca considera código e descrição.
+- Favoritos são vinculados ao médico/tenant.
+- Uso em consulta pode registrar histórico em `cid_uso_historico`.
+- Importações são auditadas e idempotentes no banco.

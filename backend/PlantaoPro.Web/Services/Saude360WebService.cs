@@ -107,10 +107,44 @@ public sealed class Saude360WebService
         }
         if (data.ValueKind == JsonValueKind.Object)
         {
-            var registro = JsonSerializer.Deserialize<Saude360RegistroViewModel>(data.GetRawText(), JsonOptions);
-            return (registro is null ? Array.Empty<Saude360RegistroViewModel>() : new[] { registro }, message);
+            if (data.TryGetProperty("id", out _))
+            {
+                var registro = JsonSerializer.Deserialize<Saude360RegistroViewModel>(data.GetRawText(), JsonOptions);
+                return (registro is null ? Array.Empty<Saude360RegistroViewModel>() : new[] { registro }, message);
+            }
+
+            var registrosResumo = new List<Saude360RegistroViewModel>();
+            foreach (var property in data.EnumerateObject())
+            {
+                registrosResumo.Add(new Saude360RegistroViewModel
+                {
+                    Id = Guid.Empty,
+                    Nome = FormatLabel(property.Name),
+                    Codigo = "KPI",
+                    Descricao = FormatValue(property.Value),
+                    Status = "ATUAL",
+                    RegDate = DateTime.UtcNow
+                });
+            }
+            return (registrosResumo, message);
         }
         return (Array.Empty<Saude360RegistroViewModel>(), message);
+    }
+
+    private static string FormatLabel(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+        return value.Replace("_", " ").Trim();
+    }
+
+    private static string FormatValue(JsonElement value)
+    {
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number)) return number.ToString("N0");
+        if (value.ValueKind == JsonValueKind.String) return value.GetString() ?? string.Empty;
+        if (value.ValueKind == JsonValueKind.True) return "Sim";
+        if (value.ValueKind == JsonValueKind.False) return "Não";
+        if (value.ValueKind == JsonValueKind.Null) return "0";
+        return value.ToString();
     }
 
     private HttpClient CreateClient(string token)

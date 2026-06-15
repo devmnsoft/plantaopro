@@ -397,6 +397,33 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
     }
 
 
+    public async Task<ApiResponse<object>> ResumoConveniosAsync()
+    {
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            var resumo = await cn.QueryFirstAsync(@"select
+(select count(1) from plantaopro.convenios where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as convenios_ativos,
+(select count(1) from plantaopro.planos_saude where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as planos_ativos,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='PENDENTE' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_pendentes,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='APROVADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_aprovadas,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='NEGADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_negadas,
+0 as glosas_abertas,
+0 as valor_glosado,
+0 as faturamentos_em_aberto,
+(select count(1) from plantaopro.plano_saude_pacientes where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as pacientes_com_plano_ativo", new { tenantId = TenantId, isGlobal = IsGlobal });
+            await AuditAsync("convenios", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CONVENIOS" });
+            return ApiResponse<object>.Ok(resumo, "Dashboard de convênios carregado.");
+        }
+        catch (PostgresException ex) when (IsUndefinedTable(ex))
+        {
+            logger.LogError(ex, "Tabela clínica não encontrada para dashboard de convênios");
+            return ApiResponse<object>.Fail("A base do Saúde 360 ainda não foi inicializada. Execute as migrations.", 500);
+        }
+    }
+
+
     private async Task GarantirBaseClinicaAsync()
     {
         await using var cn = Cn();

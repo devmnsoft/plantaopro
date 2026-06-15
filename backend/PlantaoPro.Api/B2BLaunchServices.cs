@@ -69,6 +69,19 @@ public sealed class TenantIsolationValidatorService
 
 public sealed class B2BLaunchService
 {
+    private static readonly string[] EscoposPermitidos =
+    {
+        "plantoes:read",
+        "plantoes:write",
+        "medicos:read",
+        "escalas:read",
+        "webhooks:write",
+        "pacientes:read",
+        "agendamentos:read",
+        "consultas:read",
+        "financeiro:read"
+    };
+
     private readonly IConfiguration _cfg;
     private readonly TenantContextService _tenantContext;
     private readonly IAuditService _audit;
@@ -88,7 +101,7 @@ public sealed class B2BLaunchService
         {
             Titulo = "Developer Portal PlantãoPro",
             Autenticacao = "Envie Authorization: Bearer {token} ou X-Api-Key para integrações servidor-servidor.",
-            EscoposDisponiveis = new[] { "plantoes:read", "plantoes:write", "medicos:read", "escalas:read", "webhooks:write" },
+            EscoposDisponiveis = EscoposPermitidos,
             EndpointsLiberados = new[] { "/api/plantoes", "/api/medicos", "/api/escalas", "/api/developer/webhooks" },
             LimiteRequisicoesMinuto = 120
         };
@@ -100,7 +113,23 @@ public sealed class B2BLaunchService
         try
         {
             if (string.IsNullOrWhiteSpace(request.Nome)) return ApiResponse<ApiKeyCreateResultDto>.Fail("Nome da chave é obrigatório.", 400);
-            if (request.Escopos is null || request.Escopos.Length == 0) return ApiResponse<ApiKeyCreateResultDto>.Fail("Informe ao menos um escopo.", 400);
+
+            var escopos = request.Escopos?
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim().ToLowerInvariant())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray() ?? Array.Empty<string>();
+
+            if (escopos.Length == 0) return ApiResponse<ApiKeyCreateResultDto>.Fail("Informe ao menos um escopo.", 400);
+
+            var invalidos = escopos
+                .Where(x => !EscoposPermitidos.Contains(x, StringComparer.OrdinalIgnoreCase))
+                .ToArray();
+
+            if (invalidos.Length > 0)
+            {
+                return ApiResponse<ApiKeyCreateResultDto>.Fail("Existem escopos inválidos para a chave de API.", 400, invalidos);
+            }
 
             var ctx = await _tenantContext.ObterAtualAsync();
             if (!ctx.Success || ctx.Data?.TenantId is null) return ApiResponse<ApiKeyCreateResultDto>.Fail(ctx.Message, ctx.StatusCode);
@@ -113,19 +142,50 @@ public sealed class B2BLaunchService
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
             await cn.ExecuteAsync(@"insert into plantaopro.api_chaves(id,tenant_id,cliente_id,nome,api_key_hash,escopos,status,reg_date,reg_status)
-values(@id,@tenantId,@clienteId,@nome,@hash,@escopos,'ATIVA',now(),'A')", new { id, tenantId = ctx.Data.TenantId.Value, clienteId = ctx.Data.ClienteId, nome = request.Nome.Trim(), hash, escopos = string.Join(',', request.Escopos.Distinct(StringComparer.OrdinalIgnoreCase)) }, tx);
+values(@id,@tenantId,@clienteId,@nome,@hash,@escopos,'ATIVA',now(),'A')", new { id, tenantId = ctx.Data.TenantId.Value, clienteId = ctx.Data.ClienteId, nome = request.Nome.Trim(), hash, escopos = string.Join(',', escopos) }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.api_rate_limits(id,tenant_id,cliente_id,api_chave_id,limite_minuto,limite_dia,status,reg_date,reg_status)
 values(gen_random_uuid(),@tenantId,@clienteId,@id,120,10000,'ATIVO',now(),'A')", new { id, tenantId = ctx.Data.TenantId.Value, clienteId = ctx.Data.ClienteId }, tx);
             await tx.CommitAsync();
 
-            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data.ClienteId, "API_KEY", id, "CRIAR", new { request.Nome, escopos = request.Escopos }, true, ip, "ADMINISTRADOR_CLIENTE");
-            return ApiResponse<ApiKeyCreateResultDto>.Ok(new ApiKeyCreateResultDto { Id = id, Nome = request.Nome, ChaveExibicaoUnica = chave, Aviso = "Copie agora. A chave não será exibida novamente." }, "API key criada com sucesso.");
+            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data.ClienteId, "API_KEY", id, "CRIAR", new { Nome = request.Nome.Trim(), escopos }, true, ip, "ADMINISTRADOR_CLIENTE");
+            return ApiResponse<ApiKeyCreateResultDto>.Ok(new ApiKeyCreateResultDto { Id = id, Nome = request.Nome.Trim(), ChaveExibicaoUnica = chave, Aviso = "Copie agora. A chave não será exibida novamente." }, "API key criada com sucesso.");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao criar API key");
             return ApiResponse<ApiKeyCreateResultDto>.Fail("Não foi possível criar a API key.", 500);
         }
+    }
+
+    public Task<ApiResponse<IEnumerable<string>>> ListarEscoposAsync()
+    {
+        return Task.FromResult(ApiResponse<IEnumerable<string>>.Ok(EscoposPermitidos));
+    }
+
+    public async Task<ApiResponse<IEnumerable<object>>> ListarApiKeysAsync()
+    {
+        var ctx = await _tenantContext.ObterAtualAsync();
+        if (!ctx.Success) return ApiResponse<IEnumerable<object>>.Fail(ctx.Message, ctx.StatusCode);
+
+        await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+        var rows = await cn.QueryAsync(@"select id, nome, escopos, status, reg_date as CriadoEm, ultimo_uso_em as UltimoUsoEm
+from plantaopro.api_chaves
+where (@tenantId is null or tenant_id = @tenantId) and reg_status = 'A'
+order by reg_date desc", new { tenantId = ctx.Data?.TenantId });
+        return ApiResponse<IEnumerable<object>>.Ok(rows.Cast<object>());
+    }
+
+    public Task<ApiResponse<IEnumerable<object>>> ListarApiKeyLogsAsync(Guid id)
+    {
+        var logs = new List<object>();
+        return Task.FromResult(ApiResponse<IEnumerable<object>>.Ok(logs));
+    }
+
+    public async Task<ApiResponse<ApiKeyCreateResultDto>> RotacionarApiKeyAsync(Guid id, string? ip)
+    {
+        var revogar = await RevogarApiKeyAsync(id, ip);
+        if (!revogar.Success) return ApiResponse<ApiKeyCreateResultDto>.Fail(revogar.Message, revogar.StatusCode, revogar.Errors);
+        return ApiResponse<ApiKeyCreateResultDto>.Ok(new ApiKeyCreateResultDto { Id = id, Aviso = "Chave revogada. Crie uma nova chave para concluir a rotação." }, "Rotação iniciada com segurança.");
     }
 
     public async Task<ApiResponse<string>> RevogarApiKeyAsync(Guid id, string? ip)

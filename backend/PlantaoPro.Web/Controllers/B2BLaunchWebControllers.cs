@@ -12,6 +12,21 @@ public sealed class DeveloperController : Controller
     public IActionResult Endpoints() => View("~/Views/B2BLaunch/Index.cshtml", Pagina("Endpoints liberados", "Contratos de API disponíveis por plano e módulo.", "ApiKeys"));
     public IActionResult Webhooks() => View("~/Views/B2BLaunch/Index.cshtml", Pagina("Webhooks", "Eventos configuráveis para plantões, escalas, pagamentos e suporte.", "ApiKeys"));
     public IActionResult ApiKeys() => View("~/Views/B2BLaunch/Form.cshtml", Pagina("API keys", "Criação e revogação auditadas; chave exibida apenas uma vez.", "ApiKeys"));
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult CreateApiKey(string nome, string[] escopos)
+    {
+        if (string.IsNullOrWhiteSpace(nome) || escopos.Length == 0)
+        {
+            TempData["Error"] = "Informe o nome da integração e ao menos um escopo.";
+            return RedirectToAction(nameof(ApiKeys));
+        }
+
+        TempData["Success"] = "Solicitação validada. A criação efetiva deve ser concluída pela API do Developer Portal.";
+        return RedirectToAction(nameof(ApiKeys));
+    }
+
     public IActionResult RateLimits() => View("~/Views/B2BLaunch/Index.cshtml", Pagina("Rate limits", "Limites por tenant, plano, chave e escopo.", "ApiKeys"));
     public IActionResult Exemplos() => View("~/Views/B2BLaunch/Index.cshtml", Pagina("Exemplos", "Curl, respostas, erros comuns e guia de integração.", "ApiKeys"));
     public IActionResult Uso() => View("~/Views/B2BLaunch/Index.cshtml", Pagina("Uso da API", "Consumo mensal, chamadas, erros e bloqueios por limite.", "ApiKeys"));

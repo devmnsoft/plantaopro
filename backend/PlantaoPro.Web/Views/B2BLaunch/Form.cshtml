@@ -1,43 +1,71 @@
 @model PlantaoPro.Web.Models.B2BLaunchPageViewModel
 @{
     ViewData["Title"] = Model.Titulo;
+    var escopos = new List<(string Codigo, string Texto)>
+    {
+        ("plantoes:read", "Ler plantões"),
+        ("plantoes:write", "Criar e atualizar plantões"),
+        ("medicos:read", "Ler médicos"),
+        ("escalas:read", "Ler escalas"),
+        ("webhooks:write", "Configurar webhooks"),
+        ("pacientes:read", "Ler pacientes"),
+        ("agendamentos:read", "Ler agendamentos"),
+        ("consultas:read", "Ler consultas"),
+        ("financeiro:read", "Ler financeiro")
+    };
 }
 <div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Início</a></li>
+            <li class="breadcrumb-item active" aria-current="page">API Keys</li>
+        </ol>
+    </nav>
     <div class="row g-4">
         <div class="col-lg-5">
-            <p class="text-uppercase text-primary fw-semibold mb-1">Fluxo auditável</p>
+            <p class="text-uppercase text-primary fw-semibold mb-1">Developer Portal</p>
             <h1 class="h3">@Model.Titulo</h1>
             <p class="text-muted">@Model.Subtitulo</p>
-            <div class="alert alert-info">Ao salvar, a operação deve chamar a API correspondente, validar tenant/plano/perfil e registrar auditoria.</div>
+            <div class="alert alert-warning"><strong>Atenção:</strong> a API Key completa aparece apenas uma vez após a criação. Guarde em cofre seguro; depois disso o sistema mantém somente o hash.</div>
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5">Boas práticas</h2>
+                    <ul class="mb-0">
+                        <li>Use uma chave por integração.</li>
+                        <li>Escolha apenas os escopos necessários.</li>
+                        <li>Revogue imediatamente chaves suspeitas.</li>
+                        <li>Rotacione periodicamente sem expor segredos em logs.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
         <div class="col-lg-7">
-            <form method="get" asp-controller="Home" asp-action="Dashboard" class="card shadow-sm">
+            <form method="post" asp-controller="Developer" asp-action="CreateApiKey" class="card shadow-sm">
+                @Html.AntiForgeryToken()
                 <div class="card-body">
                     <div class="mb-3">
-                        <label class="form-label" for="nome">Nome ou título</label>
-                        <input id="nome" name="nome" class="form-control" required maxlength="180" />
+                        <label class="form-label" for="nome">Nome da integração</label>
+                        <input id="nome" name="Nome" class="form-control" required maxlength="120" placeholder="Ex.: ERP financeiro produção" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="prioridade">Prioridade/visibilidade</label>
-                        <select id="prioridade" name="prioridade" class="form-select">
-                            <option value="NORMAL">Normal</option>
-                            <option value="ALTA">Alta</option>
-                            <option value="CRITICA">Crítica</option>
-                            <option value="PARCEIRO">Parceiro</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="descricao">Descrição</label>
-                        <textarea id="descricao" name="descricao" class="form-control" rows="5" maxlength="1200"></textarea>
-                    </div>
-                    <div class="form-check">
-                        <input id="confirmacao" name="confirmacao" class="form-check-input" type="checkbox" required />
-                        <label class="form-check-label" for="confirmacao">Confirmo que a operação deve respeitar tenant, permissões, LGPD e limites do plano.</label>
-                    </div>
+                    <fieldset class="mb-3">
+                        <legend class="h6">Escopos disponíveis</legend>
+                        <div class="row g-2">
+                            @foreach (var escopo in escopos)
+                            {
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded p-3 h-100">
+                                        <input id="scope_@escopo.Codigo.Replace(":", "_")" name="Escopos" class="form-check-input" type="checkbox" value="@escopo.Codigo" />
+                                        <label class="form-check-label" for="scope_@escopo.Codigo.Replace(":", "_")"><strong>@escopo.Codigo</strong><br /><span class="text-muted small">@escopo.Texto</span></label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </fieldset>
+                    <div class="alert alert-info mb-0">Após criar, copie a chave exibida no retorno. O hash não será mostrado no portal.</div>
                 </div>
                 <div class="card-footer d-flex justify-content-between bg-white">
-                    <a class="btn btn-outline-secondary" asp-controller="Home" asp-action="Dashboard">Cancelar</a>
-                    <button type="submit" class="btn btn-primary">Validar fluxo</button>
+                    <a class="btn btn-outline-secondary" asp-controller="Developer" asp-action="Index">Voltar</a>
+                    <button type="submit" class="btn btn-primary">Criar API Key</button>
                 </div>
             </form>
         </div>

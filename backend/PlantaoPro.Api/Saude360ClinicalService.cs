@@ -23,9 +23,13 @@ public sealed class Saude360ClinicalService
         { "agendamentos", "agendamentos" },
         { "triagens", "triagens" },
         { "consultas", "consultas" },
+        { "consultaHistorico", "consulta_historico" },
         { "cid", "cid_tabela" },
+        { "cidFavoritos", "cid_favoritos" },
+        { "cidMaisUsados", "cid_uso_historico" },
         { "prescricoes", "prescricoes" },
         { "prescricaoModelos", "prescricao_modelos" },
+        { "prescricaoHistorico", "prescricao_historico" },
         { "contasReceber", "clinica_contas_receber" },
         { "recebimentos", "clinica_recebimentos" },
         { "caixa", "clinica_caixa" },
@@ -62,8 +66,8 @@ public sealed class Saude360ClinicalService
 
             await GarantirBaseClinicaAsync();
             await using var cn = Cn();
-            var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo);
-            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
+            var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo, currentUser.IsDoctor());
+            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, isDoctor = currentUser.IsDoctor(), uid = currentUser.UserId, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
             if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
             {
                 await AuditAsync(table, Guid.Empty, "LISTAR", new { tableKey });
@@ -86,7 +90,8 @@ public sealed class Saude360ClinicalService
         var table = ResolveTable(tableKey);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
-        var row = await cn.QueryFirstOrDefaultAsync($"select * from plantaopro.{table} where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+        var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)) ? " and (medico_id=@uid or created_by=@uid)" : string.Empty;
+        var row = await cn.QueryFirstOrDefaultAsync($"select * from plantaopro.{table} where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)" + ownDoctorSql, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId });
         if (row is null) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado.", 404);
         await AuditAsync(table, id, "VISUALIZAR", new { table });
         return ApiResponse<Saude360RegistroDto>.Ok(ToDto(row), "Registro encontrado.");
@@ -100,6 +105,21 @@ public sealed class Saude360ClinicalService
 
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
+        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
+        {
+            var missing = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and (paciente_id is null or medico_id is null) and (@tenantId is null or cliente_id=@tenantId or tenant_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (missing > 0) return ApiResponse<Saude360RegistroDto>.Fail("Finalizar consulta exige paciente e médico vinculados.", 400);
+        }
+        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
+        {
+            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
+            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Consulta finalizada não pode ser alterada sem permissão especial.", 409);
+        }
+        if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
+        {
+            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.prescricoes where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
+            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Prescrição finalizada não pode ser alterada sem permissão especial.", 409);
+        }
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase))
         {
             var conflict = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.agendamentos where reg_status='A' and status not in ('CANCELADO','FINALIZADO') and medico_id=@medicoId and cliente_id=@tenantId and data_inicio < @fim and data_fim > @inicio", new { medicoId = request.MedicoId, tenantId = TenantId, inicio = request.DataInicio, fim = request.DataFim });
@@ -112,7 +132,7 @@ public sealed class Saude360ClinicalService
         }
         if (string.Equals(tableKey, "cid", StringComparison.OrdinalIgnoreCase))
         {
-            var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.cid_tabela where codigo=@codigo and reg_status='A'", new { codigo = request.Codigo });
+            var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.cid_tabela where upper(codigo)=upper(@codigo) and reg_status='A'", new { codigo = request.Codigo });
             if (exists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CID já cadastrado para o código informado.", 409);
         }
         if (string.Equals(tableKey, "planoSaudePacientes", StringComparison.OrdinalIgnoreCase) && request.Principal && request.PacienteId.HasValue)
@@ -140,7 +160,7 @@ public sealed class Saude360ClinicalService
             if (cpfExists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CPF já cadastrado para este tenant.", 409);
         }
         var update = BuildUpdate(tableKey, table);
-        var affected = await cn.ExecuteAsync(update, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId, request.Nome, request.Descricao, request.Codigo, request.Status, request.Tipo, request.Observacoes, request.Cpf, request.Cns, request.DocumentoAlternativo, request.NomeSocial, request.SexoGenero, request.Telefone, request.Email, request.Endereco, request.ResponsavelNome, request.DataNascimento, request.PacienteId, request.MedicoId, request.UnidadeId, request.SalaId, request.DataInicio, request.DataFim, request.Especialidade, request.Valor, request.ClassificacaoRisco, request.QueixaPrincipal, request.Alergias, request.MedicamentosUso });
+        var affected = await cn.ExecuteAsync(update, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId, request.Nome, request.Descricao, request.Codigo, request.Status, request.Tipo, request.Observacoes, request.Cpf, request.Cns, request.DocumentoAlternativo, request.NomeSocial, request.SexoGenero, request.Telefone, request.Email, request.Endereco, request.ResponsavelNome, request.DataNascimento, request.PacienteId, request.MedicoId, request.UnidadeId, request.SalaId, request.DataInicio, request.DataFim, request.Especialidade, request.Valor, request.ClassificacaoRisco, request.QueixaPrincipal, request.Alergias, request.MedicamentosUso, request.CodigoCid, request.Justificativa });
         if (affected == 0) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para atualização.", 404);
         await AuditAsync(table, id, "ATUALIZAR", new { table });
         return await ObterAsync(tableKey, id);
@@ -155,10 +175,27 @@ public sealed class Saude360ClinicalService
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase)) status = "EM_ATENDIMENTO";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "cancelar", StringComparison.OrdinalIgnoreCase)) status = "CANCELADA";
+        if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
+        if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "cancelar", StringComparison.OrdinalIgnoreCase)) status = "CANCELADA";
         var validation = ValidateAction(tableKey, acao, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
+        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
+        {
+            var missing = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and (paciente_id is null or medico_id is null) and (@tenantId is null or cliente_id=@tenantId or tenant_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (missing > 0) return ApiResponse<Saude360RegistroDto>.Fail("Finalizar consulta exige paciente e médico vinculados.", 400);
+        }
+        if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
+        {
+            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
+            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Consulta finalizada não pode ser alterada sem permissão especial.", 409);
+        }
+        if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
+        {
+            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.prescricoes where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
+            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Prescrição finalizada não pode ser alterada sem permissão especial.", 409);
+        }
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "checkin", StringComparison.OrdinalIgnoreCase))
         {
             var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.agendamentos where id=@id and reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
@@ -170,9 +207,11 @@ public sealed class Saude360ClinicalService
             if (currentStatus == "FINALIZADA") return ApiResponse<Saude360RegistroDto>.Fail("Triagem finalizada não pode ser reiniciada sem permissão especial.", 409);
         }
         var actionUpdateSql = string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase)
-            ? $"update plantaopro.{table} set status=@status, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)"
-            : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
-        var affected = await cn.ExecuteAsync(actionUpdateSql, new { id, status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal });
+            ? $"update plantaopro.{table} set status=@status, data_inicio=case when @status='EM_ATENDIMENTO' then coalesce(data_inicio, now()) else data_inicio end, data_fim=case when @status='FINALIZADA' then coalesce(data_fim, now()) else data_fim end, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, motivo_cancelamento=case when @status='CANCELADA' then coalesce(nullif(@motivo,''), nullif(@justificativa,''), motivo_cancelamento) else motivo_cancelamento end, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)"
+            : string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)
+                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)"
+                : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        var affected = await cn.ExecuteAsync(actionUpdateSql, new { id, status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal, motivo = request.Motivo, justificativa = request.Justificativa });
         if (affected == 0) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para ação.", 404);
         await InsertHistoricoAsync(cn, tableKey, id, acao, request);
         await AplicarEfeitosClinicosAsync(cn, tableKey, id, acao, request);
@@ -181,6 +220,83 @@ public sealed class Saude360ClinicalService
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
         await AuditAsync(table, id, acao.ToUpperInvariant(), auditDetalhes);
         return await ObterAsync(tableKey, id);
+    }
+
+
+    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> HistoricoConsultaAsync(Guid consultaId)
+    {
+        await AuditAsync("consulta_historico", consultaId, "HISTORICO", new { consultaId });
+        return await ListarAsync("consultaHistorico", consultaId: consultaId);
+    }
+
+    public async Task<ApiResponse<Saude360RegistroDto>> ResumoConsultaAsync(Guid consultaId)
+    {
+        await AuditAsync("consultas", consultaId, "RESUMO_IMPRESSAO", new { consultaId });
+        return await ObterAsync("consultas", consultaId);
+    }
+
+    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> CidFavoritosAsync()
+    {
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync(@"select c.* from plantaopro.cid_favoritos f join plantaopro.cid_tabela c on c.id=f.cid_id
+where f.reg_status='A' and c.reg_status='A' and (@tenantId is null or f.cliente_id=@tenantId or @isGlobal) and (@uid is null or f.usuario_id=@uid or f.medico_id=@uid)
+order by f.reg_date desc limit 100", new { tenantId = TenantId, uid = currentUser.UserId, isGlobal = IsGlobal });
+        await AuditAsync("cid_favoritos", Guid.Empty, "LISTAR", new { escopo = "favoritos" });
+        return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(rows.Select(ToDto).ToArray(), "Favoritos carregados.");
+    }
+
+    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> CidMaisUsadosAsync()
+    {
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync(@"select c.*, count(u.id)::text as uso_total from plantaopro.cid_tabela c left join plantaopro.cid_uso_historico u on u.cid_id=c.id and u.reg_status='A' and (@tenantId is null or u.cliente_id=@tenantId or @isGlobal)
+where c.reg_status='A' and (@tenantId is null or c.cliente_id is null or c.cliente_id=@tenantId or @isGlobal)
+group by c.id order by count(u.id) desc, c.codigo limit 100", new { tenantId = TenantId, isGlobal = IsGlobal });
+        await AuditAsync("cid_uso_historico", Guid.Empty, "MAIS_USADOS", new { escopo = "tenant" });
+        return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(rows.Select(ToDto).ToArray(), "CID mais usados carregados.");
+    }
+
+    public async Task<ApiResponse<Saude360RegistroDto>> FavoritarCidAsync(Guid cidId, Saude360ActionRequest request)
+    {
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            await cn.ExecuteAsync(@"update plantaopro.cid_favoritos set status='ATIVO', reg_status='A', updated_by=@uid, updated_at=now() where cid_id=@cidId and coalesce(medico_id, usuario_id)=coalesce(@medicoId,@uid) and (@tenantId is null or cliente_id=@tenantId)", new { tenantId = TenantId, cidId, medicoId = request.MedicoId, uid = currentUser.UserId });
+            await cn.ExecuteAsync(@"insert into plantaopro.cid_favoritos(id,cliente_id,tenant_id,cid_id,medico_id,usuario_id,status,created_by)
+select gen_random_uuid(),@tenantId,@tenantId,@cidId,coalesce(@medicoId,@uid),@uid,'ATIVO',@uid
+where not exists (select 1 from plantaopro.cid_favoritos where cid_id=@cidId and coalesce(medico_id, usuario_id)=coalesce(@medicoId,@uid) and (@tenantId is null or cliente_id=@tenantId) and reg_status='A')", new { tenantId = TenantId, cidId, medicoId = request.MedicoId, uid = currentUser.UserId });
+            await AuditAsync("cid_favoritos", cidId, "FAVORITAR", new { cidId });
+            return await ObterAsync("cid", cidId);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao favoritar CID {CidId}", cidId);
+            return ApiResponse<Saude360RegistroDto>.Fail("Não foi possível favoritar o CID.", 500);
+        }
+    }
+
+    public async Task<ApiResponse<Saude360RegistroDto>> UsarModeloPrescricaoAsync(Guid modeloId, Saude360ActionRequest request)
+    {
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            var modelo = await cn.QueryFirstOrDefaultAsync("select * from plantaopro.prescricao_modelos where id=@modeloId and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)", new { modeloId, tenantId = TenantId, isGlobal = IsGlobal });
+            if (modelo is null) return ApiResponse<Saude360RegistroDto>.Fail("Modelo de prescrição não encontrado.", 404);
+            var id = Guid.NewGuid();
+            await cn.ExecuteAsync(@"insert into plantaopro.prescricoes(id,cliente_id,tenant_id,paciente_id,consulta_id,medico_id,modelo_id,orientacoes,status,created_by)
+values(@id,@tenantId,@tenantId,@pacienteId,@consultaId,coalesce(@medicoId,@uid),@modeloId,'','RASCUNHO',@uid)", new { id, tenantId = TenantId, request.PacienteId, request.ConsultaId, request.MedicoId, modeloId, uid = currentUser.UserId });
+            await InsertHistoricoAsync(cn, "prescricoes", id, "usar-modelo", request);
+            await AuditAsync("prescricoes", id, "USAR_MODELO", new { modeloId });
+            return await ObterAsync("prescricoes", id);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao usar modelo de prescrição {ModeloId}", modeloId);
+            return ApiResponse<Saude360RegistroDto>.Fail("Não foi possível usar o modelo de prescrição.", 500);
+        }
     }
 
     public async Task<ApiResponse<object>> DashboardResumoAsync()
@@ -225,15 +341,29 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
     {
         await using var cn = Cn();
         await Saude360ClinicalSchema.GarantirBaseClinicaAsync(cn, logger);
+        await cn.ExecuteAsync(@"create table if not exists plantaopro.cid_tabela(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, codigo text not null default '', descricao text not null default '', categoria text not null default '', status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
+create table if not exists plantaopro.cid_favoritos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, cid_id uuid null, medico_id uuid null, usuario_id uuid null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
+create table if not exists plantaopro.cid_uso_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, cid_id uuid null, consulta_id uuid null, paciente_id uuid null, medico_id uuid null, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+alter table if exists plantaopro.consultas add column if not exists anamnese text not null default '', add column if not exists exame_fisico text not null default '', add column if not exists diagnostico text not null default '', add column if not exists cid_id uuid null, add column if not exists codigo_cid text not null default '', add column if not exists conduta text not null default '', add column if not exists orientacoes text not null default '', add column if not exists finalizada_em timestamptz null, add column if not exists cancelada_em timestamptz null;
+create table if not exists plantaopro.consulta_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, consulta_id uuid not null, paciente_id uuid null, acao text not null, detalhe text not null default '', detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.prescricoes(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, paciente_id uuid null, consulta_id uuid null, medico_id uuid null, modelo_id uuid null, orientacoes text not null default '', status text not null default 'RASCUNHO', finalizada_em timestamptz null, cancelada_em timestamptz null, created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
+create table if not exists plantaopro.prescricao_itens(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, medicamento text not null default '', posologia text not null default '', frequencia text not null default '', duracao text not null default '', orientacoes text not null default '', ordem integer not null default 1, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
+create table if not exists plantaopro.prescricao_modelos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, nome text not null default '', medico_id uuid null, descricao text not null default '', conteudo jsonb not null default '{}'::jsonb, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
+create table if not exists plantaopro.prescricao_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.prescricao_cancelamentos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, justificativa text not null default '', usuario_id uuid null, status text not null default 'CANCELADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create index if not exists ix_cid_tabela_codigo on plantaopro.cid_tabela(codigo);
+create index if not exists ix_consulta_historico_consulta_id on plantaopro.consulta_historico(consulta_id);
+create index if not exists ix_prescricoes_consulta_id on plantaopro.prescricoes(consulta_id);
+create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao_modelos(cliente_id, medico_id);");
     }
 
-    private static string BuildListSql(string table, string key, Guid? pacienteId, Guid? medicoId, Guid? agendamentoId, Guid? consultaId, string? termo)
+    private static string BuildListSql(string table, string key, Guid? pacienteId, Guid? medicoId, Guid? agendamentoId, Guid? consultaId, string? termo, bool isDoctor)
     {
         var where = new List<string>();
         where.Add("reg_status = 'A'");
         if (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase))
         {
-            where.Add("(@tenantId is not null and (cliente_id = @tenantId or tenant_id = @tenantId))");
+            where.Add("(@tenantId is not null and (cliente_id = @tenantId or tenant_id = @tenantId or @isGlobal))");
         }
         else
         {
@@ -244,6 +374,7 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");
         if (HasColumn(key, "agendamento_id")) where.Add("(@agendamentoId is null or agendamento_id = @agendamentoId)");
         if (HasColumn(key, "consulta_id")) where.Add("(@consultaId is null or consulta_id = @consultaId)");
+        if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase))) where.Add("(medico_id = @uid or created_by = @uid)");
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
         return "select * from plantaopro." + table + " where " + string.Join(" and ", where) + " order by reg_date desc limit 200";
@@ -257,7 +388,9 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
             { "agendamentos", new[] { "paciente_id", "medico_id" } },
             { "triagens", new[] { "paciente_id", "agendamento_id" } },
             { "consultas", new[] { "paciente_id", "medico_id", "agendamento_id" } },
+            { "consultaHistorico", new[] { "paciente_id", "consulta_id" } },
             { "prescricoes", new[] { "paciente_id", "medico_id", "consulta_id" } },
+            { "prescricaoHistorico", new[] { "prescricao_id" } },
             { "contasReceber", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
             { "convenioAutorizacoes", new[] { "paciente_id", "agendamento_id", "consulta_id" } },
             { "planoSaudePacientes", new[] { "paciente_id" } },
@@ -277,9 +410,9 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
         if (key == "painel") return ("insert into plantaopro.painel_chamada_fila(id,cliente_id,painel_id,paciente_id,agendamento_id,setor_id,sala_id,guiche_id,senha,paciente_nome,status,created_by) values(@id,@tenantId,@painelId,@pacienteId,@agendamentoId,@setorId,@salaId,@guicheId,@senha,@pacienteNome,'AGUARDANDO',@uid)", new { id, tenantId, r.PainelId, r.PacienteId, r.AgendamentoId, r.SetorId, r.SalaId, r.GuicheId, r.Senha, pacienteNome = r.PacienteNome, uid });
         if (key == "agendamentos") return ("insert into plantaopro.agendamentos(id,cliente_id,paciente_id,medico_id,unidade_id,sala_id,data_inicio,data_fim,tipo,especialidade,status,observacoes,valor,created_by) values(@id,@tenantId,@pacienteId,@medicoId,@unidadeId,@salaId,@inicio,@fim,@tipo,@especialidade,'AGENDADO',@obs,@valor,@uid)", new { id, tenantId, r.PacienteId, r.MedicoId, r.UnidadeId, r.SalaId, inicio = r.DataInicio, fim = r.DataFim, tipo = Default(r.Tipo, "CONSULTA"), especialidade = r.Especialidade, obs = r.Observacoes, valor = r.Valor ?? 0, uid });
         if (key == "triagens") return ("insert into plantaopro.triagens(id,cliente_id,paciente_id,agendamento_id,enfermeiro_id,classificacao_risco,queixa_principal,pressao_sistolica,pressao_diastolica,frequencia_cardiaca,frequencia_respiratoria,temperatura,saturacao,peso,altura,imc,glicemia,alergias_relatadas,medicamentos_uso,observacoes,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@uid,@classificacao,@queixa,@pas,@pad,@fc,@fr,@temp,@sat,@peso,@altura,case when @peso > 0 and @altura > 0 then round((@peso / (@altura * @altura))::numeric,2) else null end,@glicemia,@alergias,@medicamentos,@obs,'AGUARDANDO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, uid, classificacao = Default(r.ClassificacaoRisco, r.Tipo), queixa = Default(r.QueixaPrincipal, r.Descricao), pas = r.PressaoSistolica, pad = r.PressaoDiastolica, fc = r.FrequenciaCardiaca, fr = r.FrequenciaRespiratoria, temp = r.Temperatura, sat = r.Saturacao, peso = r.Peso, altura = r.Altura, glicemia = r.Glicemia, alergias = r.Alergias, medicamentos = r.MedicamentosUso, obs = r.Observacoes });
-        if (key == "consultas") return ("insert into plantaopro.consultas(id,cliente_id,paciente_id,agendamento_id,triagem_id,medico_id,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@triagemId,@medicoId,'AGUARDANDO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.TriagemId, r.MedicoId, uid });
+        if (key == "consultas") return ("insert into plantaopro.consultas(id,cliente_id,paciente_id,agendamento_id,triagem_id,medico_id,status,tipo,motivo_atendimento,observacoes,anamnese,exame_fisico,diagnostico,codigo_cid,conduta,orientacoes,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@triagemId,@medicoId,'AGUARDANDO',@tipo,@motivo,@obs,@anamnese,@exame,@diagnostico,@cid,@conduta,@orientacoes,@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.TriagemId, r.MedicoId, tipo = Default(r.Tipo, "CONSULTA"), motivo = r.Motivo, obs = r.Observacoes, anamnese = r.QueixaPrincipal, exame = r.Descricao, diagnostico = r.CodigoCid, cid = r.CodigoCid, conduta = r.Justificativa, orientacoes = r.Observacoes, uid });
         if (key == "cid") return ("insert into plantaopro.cid_tabela(id,cliente_id,codigo,descricao,status,created_by) values(@id,@tenantId,@codigo,@descricao,'ATIVO',@uid)", new { id, tenantId, codigo = r.Codigo, descricao = r.Descricao, uid });
-        if (key == "prescricoes") return ("insert into plantaopro.prescricoes(id,cliente_id,paciente_id,consulta_id,medico_id,modelo_id,status,created_by) values(@id,@tenantId,@pacienteId,@consultaId,@medicoId,@modeloId,'RASCUNHO',@uid)", new { id, tenantId, r.PacienteId, r.ConsultaId, r.MedicoId, r.ModeloId, uid });
+        if (key == "prescricoes") return ("insert into plantaopro.prescricoes(id,cliente_id,paciente_id,consulta_id,medico_id,modelo_id,orientacoes,status,created_by) values(@id,@tenantId,@pacienteId,@consultaId,@medicoId,@modeloId,@orientacoes,'RASCUNHO',@uid)", new { id, tenantId, r.PacienteId, r.ConsultaId, r.MedicoId, r.ModeloId, orientacoes = r.Observacoes, uid });
         if (key == "prescricaoModelos") return ("insert into plantaopro.prescricao_modelos(id,cliente_id,nome,medico_id,descricao,status,created_by) values(@id,@tenantId,@nome,@medicoId,@descricao,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, r.MedicoId, descricao = r.Descricao, uid });
         if (key == "contasReceber") return ("insert into plantaopro.clinica_contas_receber(id,cliente_id,paciente_id,agendamento_id,consulta_id,descricao,valor,vencimento,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@consultaId,@descricao,@valor,@vencimento,'ABERTA',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.ConsultaId, descricao = r.Descricao, valor = r.Valor ?? 0, vencimento = r.Vencimento, uid });
         if (key == "recebimentos") return ("insert into plantaopro.clinica_recebimentos(id,cliente_id,conta_receber_id,valor,forma_pagamento,status,created_by) values(@id,@tenantId,@contaId,@valor,@forma,'RECEBIDO',@uid)", new { id, tenantId, contaId = r.AgendamentoId, valor = r.Valor ?? 0, forma = r.FormaPagamento, uid });
@@ -302,7 +435,10 @@ where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or 
         if (key == "triagens") return $@"update plantaopro.{table} set
 classificacao_risco=coalesce(nullif(@ClassificacaoRisco,''),nullif(@Tipo,''),classificacao_risco), queixa_principal=coalesce(nullif(@QueixaPrincipal,''),nullif(@Descricao,''),queixa_principal), alergias_relatadas=coalesce(nullif(@Alergias,''),alergias_relatadas), medicamentos_uso=coalesce(nullif(@MedicamentosUso,''),medicamentos_uso), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now()
 where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
-        if (key == "consultas") return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), tipo=coalesce(nullif(@Tipo,''),tipo), observacoes=coalesce(nullif(@Observacoes,''),observacoes), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "consultas") return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), tipo=coalesce(nullif(@Tipo,''),tipo), observacoes=coalesce(nullif(@Observacoes,''),observacoes), anamnese=coalesce(nullif(@QueixaPrincipal,''),anamnese), exame_fisico=coalesce(nullif(@Descricao,''),exame_fisico), diagnostico=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),diagnostico), codigo_cid=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),codigo_cid), conduta=coalesce(nullif(@Justificativa,''),conduta), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "cid") return $@"update plantaopro.{table} set codigo=coalesce(nullif(@Codigo,''),codigo), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "prescricoes") return $@"update plantaopro.{table} set orientacoes=coalesce(nullif(@Observacoes,''),orientacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
+        if (key == "prescricaoModelos") return $@"update plantaopro.{table} set nome=coalesce(nullif(@Nome,''),nome), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
         return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)";
     }
 
@@ -358,7 +494,7 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
         if (key == "triagens" && !r.PacienteId.HasValue) return "Triagem exige paciente vinculado.";
         if (key == "consultas" && (!r.PacienteId.HasValue || !r.MedicoId.HasValue)) return "Consulta exige paciente e médico.";
         if (key == "cid" && (string.IsNullOrWhiteSpace(r.Codigo) || string.IsNullOrWhiteSpace(r.Descricao))) return "CID exige código e descrição.";
-        if (key == "prescricoes" && (!r.PacienteId.HasValue || !r.MedicoId.HasValue)) return "Prescrição exige paciente e médico.";
+        if (key == "prescricoes" && (!r.PacienteId.HasValue || !r.MedicoId.HasValue || !r.ConsultaId.HasValue)) return "Prescrição exige consulta, paciente e médico.";
         if (key == "contasReceber" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.Descricao))) return "Conta a receber exige valor e descrição.";
         if (key == "recebimentos" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento))) return "Recebimento exige valor e forma de pagamento.";
         if ((key == "convenios" || key == "planosSaude" || key == "prescricaoModelos") && string.IsNullOrWhiteSpace(r.Nome)) return "Nome é obrigatório.";

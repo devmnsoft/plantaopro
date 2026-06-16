@@ -10,13 +10,16 @@ namespace PlantaoPro.Web.Controllers;
 public abstract class Saude360WebControllerBase : BaseWebController
 {
     private readonly Saude360WebService service;
-    protected Saude360WebControllerBase(IHttpClientFactory factory, ILogger logger, Saude360WebService service) : base(factory, logger) { this.service = service; }
+    private readonly IAssistenteContextualService assistente;
+    protected Saude360WebControllerBase(IHttpClientFactory factory, ILogger logger, Saude360WebService service, IAssistenteContextualService assistente) : base(factory, logger) { this.service = service; this.assistente = assistente; }
 
     protected async Task<IActionResult> ModuloAsync(string titulo, string modulo, string descricao, string endpoint, IEnumerable<Saude360ActionLinkViewModel> acoes)
     {
         var token = GetJwtToken();
         if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
         var result = await service.ListarAsync(token, endpoint);
+        var registros = result.Registros ?? Array.Empty<Saude360RegistroViewModel>();
+        ViewBag.AssistenteContextual = assistente.Obter(ControllerContext.ActionDescriptor.ControllerName, ControllerContext.ActionDescriptor.ActionName, User.PrimaryRole(), registros.Count());
         return View("~/Views/Saude360/Modulo.cshtml", new Saude360PageViewModel
         {
             Titulo = titulo,
@@ -25,7 +28,7 @@ public abstract class Saude360WebControllerBase : BaseWebController
             Controller = ControllerContext.ActionDescriptor.ControllerName,
             Action = ControllerContext.ActionDescriptor.ActionName,
             Endpoint = endpoint,
-            Registros = result.Registros,
+            Registros = registros,
             ErrorMessage = result.Error,
             Acoes = acoes,
             Plano = PlanoModulo(modulo),
@@ -35,6 +38,7 @@ public abstract class Saude360WebControllerBase : BaseWebController
 
     protected IActionResult Formulario(string titulo, string endpoint, Guid? id = null)
     {
+        ViewBag.AssistenteContextual = assistente.Obter(ControllerContext.ActionDescriptor.ControllerName, ControllerContext.ActionDescriptor.ActionName, User.PrimaryRole(), 0);
         return View("~/Views/Saude360/Formulario.cshtml", new Saude360FormViewModel
         {
             Titulo = titulo,
@@ -70,20 +74,20 @@ public abstract class Saude360WebControllerBase : BaseWebController
 
 public sealed class ClinicaDashboardController : Saude360WebControllerBase
 {
-    public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s) : base(f, l, s) { }
+    public ClinicaDashboardController(IHttpClientFactory f, ILogger<ClinicaDashboardController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Dashboard clínico", "Dashboard clínico", "KPIs reais da jornada Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> Prescrição.", "api/clinica-dashboard/resumo", Links(Link("Fluxo de Atendimento", "FluxoAtendimento", "bi-signpost-2"), LinkTo("Pacientes", "Pacientes", "Index", "bi-people"), LinkTo("Agendamentos", "Agendamentos", "Index", "bi-calendar3"), LinkTo("Triagem", "Triagem", "Index", "bi-clipboard2-pulse"), LinkTo("Consultas", "Consultas", "Index", "bi-journal-medical"))); }
     public IActionResult FluxoAtendimento() { return View("~/Views/ClinicaDashboard/FluxoAtendimento.cshtml"); }
 }
 
 public sealed class PendenciasClinicasController : Saude360WebControllerBase
 {
-    public PendenciasClinicasController(IHttpClientFactory f, ILogger<PendenciasClinicasController> l, Saude360WebService s) : base(f, l, s) { }
+    public PendenciasClinicasController(IHttpClientFactory f, ILogger<PendenciasClinicasController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Pendências do Dia", "Pendências clínicas", "Próxima ação recomendada para recepção, triagem, médico e financeiro.", "api/pendencias-clinicas", Links(LinkTo("Fluxo de Atendimento", "ClinicaDashboard", "FluxoAtendimento", "bi-signpost-2"))); }
 }
 
 public sealed class PainelChamadaController : Saude360WebControllerBase
 {
-    public PainelChamadaController(IHttpClientFactory f, ILogger<PainelChamadaController> l, Saude360WebService s) : base(f, l, s) { }
+    public PainelChamadaController(IHttpClientFactory f, ILogger<PainelChamadaController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Painel de chamada", "Painel de chamada", "Fila, chamada, rechamada, ausentes e histórico sem expor dados sensíveis na TV.", "api/painel-chamada", Links(Link("Configurações", "Configuracoes", "bi-gear"), Link("TV", "Tv", "bi-tv"), Link("Histórico", "Historico", "bi-clock-history"))); }
     public Task<IActionResult> Tv() { return ModuloAsync("TV do painel", "Painel de chamada", "Visualização white label para sala de espera com token público seguro quando habilitado.", "api/painel-chamada", Links(Link("Fila", "Index", "bi-list"))); }
     public Task<IActionResult> Configuracoes() { return ModuloAsync("Configurações do painel", "Painel de chamada", "Setores, salas, guichês, token seguro e regras de exibição.", "api/painel-chamada", Links(Link("Setores", "Setores", "bi-diagram-3"), Link("Salas", "Salas", "bi-door-open"), Link("Guichês", "Guiches", "bi-window"))); }
@@ -96,7 +100,7 @@ public sealed class PainelChamadaController : Saude360WebControllerBase
 
 public sealed class AgendamentosController : Saude360WebControllerBase
 {
-    public AgendamentosController(IHttpClientFactory f, ILogger<AgendamentosController> l, Saude360WebService s) : base(f, l, s) { }
+    public AgendamentosController(IHttpClientFactory f, ILogger<AgendamentosController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Agendamentos", "Agendamento", "Agenda clínica por tenant, médico, paciente e status, com bloqueio de conflito de horário.", "api/agendamentos", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Calendário", "Calendario", "bi-calendar3"), Link("Check-in", "CheckIn", "bi-person-check"))); }
     public IActionResult Create() { return Formulario("Novo agendamento", "api/agendamentos"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar agendamento", "api/agendamentos/" + id, id); }
@@ -110,7 +114,7 @@ public sealed class AgendamentosController : Saude360WebControllerBase
 
 public sealed class TriagemController : Saude360WebControllerBase
 {
-    public TriagemController(IHttpClientFactory f, ILogger<TriagemController> l, Saude360WebService s) : base(f, l, s) { }
+    public TriagemController(IHttpClientFactory f, ILogger<TriagemController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Triagens", "Triagem", "Fila assistencial com classificação de risco, sinais vitais e encaminhamento para consulta.", "api/triagens", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Fila", "Fila", "bi-people"), Link("Classificação", "ClassificacaoRisco", "bi-flag"))); }
     public IActionResult Create() { return Formulario("Nova triagem", "api/triagens"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar triagem", "api/triagens/" + id, id); }
@@ -122,7 +126,7 @@ public sealed class TriagemController : Saude360WebControllerBase
 
 public sealed class ConsultasController : Saude360WebControllerBase
 {
-    public ConsultasController(IHttpClientFactory f, ILogger<ConsultasController> l, Saude360WebService s) : base(f, l, s) { }
+    public ConsultasController(IHttpClientFactory f, ILogger<ConsultasController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Consultas", "Consultas", "Atendimento médico com vínculo a triagem, CID, prescrição e auditoria de impressão.", "api/consultas", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Atendimento", "Atendimento", "bi-clipboard2-pulse"), Link("Histórico", "HistoricoPaciente", "bi-journal-medical"))); }
     public IActionResult Create() { return Formulario("Nova consulta", "api/consultas"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar consulta", "api/consultas/" + id, id); }
@@ -135,7 +139,7 @@ public sealed class ConsultasController : Saude360WebControllerBase
 
 public sealed class CidController : Saude360WebControllerBase
 {
-    public CidController(IHttpClientFactory f, ILogger<CidController> l, Saude360WebService s) : base(f, l, s) { }
+    public CidController(IHttpClientFactory f, ILogger<CidController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Tabela CID", "CID", "Busca rápida, favoritos por médico/tenant e histórico de uso em consulta.", "api/cid", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Importar", "Importar", "bi-upload"), Link("Favoritos", "Favoritos", "bi-star"))); }
     public IActionResult Create() { return Formulario("Novo CID", "api/cid"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar CID", "api/cid/" + id, id); }
@@ -147,7 +151,7 @@ public sealed class CidController : Saude360WebControllerBase
 
 public sealed class PrescricoesController : Saude360WebControllerBase
 {
-    public PrescricoesController(IHttpClientFactory f, ILogger<PrescricoesController> l, Saude360WebService s) : base(f, l, s) { }
+    public PrescricoesController(IHttpClientFactory f, ILogger<PrescricoesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Prescrições", "Prescrição médica", "Prescrição por médico, modelos reutilizáveis, finalização, cancelamento justificado e impressão auditada.", "api/prescricoes", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Modelos", "Modelos", "bi-files"), Link("Histórico", "HistoricoPaciente", "bi-clock-history"))); }
     public IActionResult Create() { return Formulario("Nova prescrição", "api/prescricoes"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar prescrição", "api/prescricoes/" + id, id); }
@@ -159,7 +163,7 @@ public sealed class PrescricoesController : Saude360WebControllerBase
 
 public sealed class ClinicaFinanceiroController : Saude360WebControllerBase
 {
-    public ClinicaFinanceiroController(IHttpClientFactory f, ILogger<ClinicaFinanceiroController> l, Saude360WebService s) : base(f, l, s) { }
+    public ClinicaFinanceiroController(IHttpClientFactory f, ILogger<ClinicaFinanceiroController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Dashboard financeiro", "Financeiro clínica", "Contas a receber, recebimentos, caixa, repasses, glosas e relatórios por tenant.", "api/clinica-financeiro/resumo", Links(Link("Receber pagamento", "Receber", "bi-cash-coin"), Link("Caixa", "Caixa", "bi-box"), Link("Contas a receber", "ContasReceber", "bi-receipt"), Link("Relatórios", "Relatorios", "bi-graph-up"))); }
     public IActionResult Receber() { return Formulario("Receber pagamento", "api/clinica-financeiro/receber"); }
     public Task<IActionResult> ContasReceber() { return Index(); }
@@ -172,7 +176,7 @@ public sealed class ClinicaFinanceiroController : Saude360WebControllerBase
 
 public sealed class ConveniosController : Saude360WebControllerBase
 {
-    public ConveniosController(IHttpClientFactory f, ILogger<ConveniosController> l, Saude360WebService s) : base(f, l, s) { }
+    public ConveniosController(IHttpClientFactory f, ILogger<ConveniosController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return Dashboard(); }
     public Task<IActionResult> Dashboard() { return ModuloAsync("Dashboard de convênios", "Convênios", "Contratos, planos, autorizações, glosas e faturamento integrados ao financeiro.", "api/convenios/resumo", Links(Link("Novo convênio", "Create", "bi-plus-circle"), Link("Autorizações", "Autorizacoes", "bi-check2-square"), Link("Faturamento", "Faturamento", "bi-file-earmark-bar-graph"), LinkTo("Planos de saúde", "PlanosSaude", "Index", "bi-card-checklist"))); }
     public IActionResult Create() { return Formulario("Novo convênio", "api/convenios"); }
@@ -188,7 +192,7 @@ public sealed class ConveniosController : Saude360WebControllerBase
 
 public sealed class PlanosSaudeController : Saude360WebControllerBase
 {
-    public PlanosSaudeController(IHttpClientFactory f, ILogger<PlanosSaudeController> l, Saude360WebService s) : base(f, l, s) { }
+    public PlanosSaudeController(IHttpClientFactory f, ILogger<PlanosSaudeController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Planos de saúde", "Planos de saúde", "Planos, coberturas, pacientes, carteirinha, plano principal e autorizações.", "api/planos-saude", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Pacientes", "Pacientes", "bi-people"), Link("Coberturas", "Coberturas", "bi-shield-plus"))); }
     public IActionResult Create() { return Formulario("Novo plano de saúde", "api/planos-saude"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar plano de saúde", "api/planos-saude/" + id, id); }
@@ -200,7 +204,7 @@ public sealed class PlanosSaudeController : Saude360WebControllerBase
 
 public sealed class PacientesController : Saude360WebControllerBase
 {
-    public PacientesController(IHttpClientFactory f, ILogger<PacientesController> l, Saude360WebService s) : base(f, l, s) { }
+    public PacientesController(IHttpClientFactory f, ILogger<PacientesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Pacientes", "Pacientes", "Cadastro assistencial de pacientes por tenant para agendamento, triagem, consulta e financeiro.", "api/pacientes", Links(Link("Novo", "Create", "bi-person-plus"))); }
     public IActionResult Create() { return Formulario("Novo paciente", "api/pacientes"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar paciente", "api/pacientes/" + id, id); }

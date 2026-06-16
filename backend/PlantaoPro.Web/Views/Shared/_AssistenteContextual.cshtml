@@ -1,0 +1,54 @@
+@model PlantaoPro.Web.Models.AssistenteContextualViewModel
+@{
+    var vm = Model ?? new PlantaoPro.Web.Models.AssistenteContextualViewModel();
+    var storageKey = "pp-assistente-contextual-recolhido";
+}
+<aside class="pp-assistente-contextual card border-0 shadow-sm mb-4" data-assistente-contextual data-storage-key="@storageKey">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+                <div class="text-uppercase small fw-semibold text-primary"><i class="bi bi-stars me-1"></i>@(string.IsNullOrWhiteSpace(vm.Titulo) ? "Assistente PlantãoPro" : vm.Titulo)</div>
+                <h2 class="h6 mb-1">@vm.Modulo</h2>
+                <p class="mb-2 text-muted">@vm.Mensagem</p>
+            </div>
+            <button class="btn btn-sm btn-light" type="button" data-assistente-toggle aria-expanded="true">Recolher</button>
+        </div>
+        <div data-assistente-body>
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                <span class="badge text-bg-primary">Perfil: @vm.Perfil</span>
+                <span class="badge text-bg-light">Prioridade: @vm.Prioridade</span>
+                @if (!string.IsNullOrWhiteSpace(vm.LinkProximaAcao))
+                {
+                    <a class="btn btn-sm btn-primary" href="@vm.LinkProximaAcao"><i class="bi bi-arrow-right-circle me-1"></i>@vm.ProximaAcao</a>
+                }
+            </div>
+            @if ((vm.Dicas ?? Array.Empty<string>()).Any())
+            {
+                <ul class="mb-2 small text-muted">
+                    @foreach (var dica in vm.Dicas) { <li>@dica</li> }
+                </ul>
+            }
+            @if ((vm.Alertas ?? Array.Empty<string>()).Any())
+            {
+                <div class="alert alert-warning py-2 mb-2">
+                    @foreach (var alerta in vm.Alertas) { <div>@alerta</div> }
+                </div>
+            }
+            <button class="btn btn-sm btn-outline-secondary" type="button" data-assistente-entendi>Entendi</button>
+        </div>
+    </div>
+</aside>
+<script>
+(function(){
+  var box = document.querySelector('[data-assistente-contextual]');
+  if (!box) return;
+  var key = box.getAttribute('data-storage-key');
+  var body = box.querySelector('[data-assistente-body]');
+  var toggle = box.querySelector('[data-assistente-toggle]');
+  function setCollapsed(value){ if(!body || !toggle) return; body.hidden = value; toggle.textContent = value ? 'Expandir' : 'Recolher'; toggle.setAttribute('aria-expanded', value ? 'false' : 'true'); localStorage.setItem(key, value ? '1' : '0'); }
+  setCollapsed(localStorage.getItem(key) === '1');
+  if (toggle) toggle.addEventListener('click', function(){ setCollapsed(!body.hidden); });
+  var ok = box.querySelector('[data-assistente-entendi]');
+  if (ok) ok.addEventListener('click', function(){ setCollapsed(true); });
+})();
+</script>

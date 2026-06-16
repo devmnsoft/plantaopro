@@ -9,6 +9,12 @@ public class RelatoriosController : BaseWebController
 {
     public RelatoriosController(IHttpClientFactory f, ILogger<RelatoriosController> l) : base(f, l) { }
     public IActionResult Index() => View();
+    public IActionResult Executivo() => View("Index");
+    public IActionResult OperacaoClinica() => View("Index");
+    public IActionResult FinanceiroClinica() => View("Index");
+    public IActionResult Plantoes() => View("Index");
+    public IActionResult Produtividade() => View("Index");
+
     public IActionResult Sla() => View();
     public IActionResult Convites() => View();
     public IActionResult Cobertura() => View();

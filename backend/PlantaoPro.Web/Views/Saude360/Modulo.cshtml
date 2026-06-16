@@ -5,6 +5,11 @@
     var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
 }
 
+@if (ViewBag.AssistenteContextual is PlantaoPro.Web.Models.AssistenteContextualViewModel assistenteContextual)
+{
+    @await Html.PartialAsync("_AssistenteContextual", assistenteContextual)
+}
+
 @await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
 {
     Title = vm.Titulo,

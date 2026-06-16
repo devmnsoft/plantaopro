@@ -1,0 +1,16 @@
+@model PlantaoPro.Web.Models.SaasComercialPageViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel(Model.Title, Model.Description, "bi-building-check")' />
+<section class="module-card mb-4">
+    <h2 class="h5">Operação SaaS comercial</h2>
+    <p class="text-muted">Esta tela centraliza a operação real do PlantãoPro Saúde 360 com dados filtrados por cliente, tenant, plano, cobrança, implantação e suporte.</p>
+    <p><strong>API:</strong> <code>@Model.ApiPath</code></p>
+</section>
+<div class="row g-3">
+@foreach (var action in Model.Actions)
+{
+    <div class="col-md-4"><div class="module-card h-100"><span class="badge bg-primary mb-2">SaaS</span><h3 class="h6">@action</h3><p class="text-muted mb-0">Fluxo operacional com auditoria, validação de tenant e rastreabilidade.</p></div></div>
+}
+</div>

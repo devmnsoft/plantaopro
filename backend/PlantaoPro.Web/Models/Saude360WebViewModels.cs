@@ -91,3 +91,15 @@ public sealed class FriendlyErrorViewModel
     public string Controller { get; set; } = "ClinicaDashboard";
     public string Action { get; set; } = "FluxoAtendimento";
 }
+
+public sealed class PageHelpViewModel
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string WhenToUse { get; set; } = string.Empty;
+    public IEnumerable<string> StepByStep { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> Tips { get; set; } = Array.Empty<string>();
+    public IEnumerable<Saude360ActionLinkViewModel> RelatedActions { get; set; } = Array.Empty<Saude360ActionLinkViewModel>();
+    public string ProfileNotes { get; set; } = string.Empty;
+    public string DocumentationUrl { get; set; } = string.Empty;
+}

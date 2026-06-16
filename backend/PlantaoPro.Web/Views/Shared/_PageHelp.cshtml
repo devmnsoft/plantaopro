@@ -1,0 +1,54 @@
+@model PlantaoPro.Web.Models.PageHelpViewModel
+@{
+    var vm = Model ?? new PlantaoPro.Web.Models.PageHelpViewModel();
+    var steps = (vm.StepByStep ?? Array.Empty<string>()).ToList();
+    var tips = (vm.Tips ?? Array.Empty<string>()).ToList();
+    var actions = (vm.RelatedActions ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>()).ToList();
+}
+<section class="saude360-help-panel" aria-label="Ajuda contextual da tela">
+    <div class="help-main">
+        <span class="help-kicker"><i class="bi bi-compass"></i> Você está aqui</span>
+        <h2>@vm.Title</h2>
+        <p>@vm.Description</p>
+        @if (!string.IsNullOrWhiteSpace(vm.WhenToUse))
+        {
+            <div class="saude360-infobox"><strong>Quando usar:</strong> @vm.WhenToUse</div>
+        }
+    </div>
+    <div class="help-side">
+        @if (steps.Any())
+        {
+            <h3>Próximos passos</h3>
+            <ol class="saude360-steps-mini">
+            @foreach (var step in steps)
+            {
+                <li>@step</li>
+            }
+            </ol>
+        }
+        @if (tips.Any())
+        {
+            <h3>Dicas rápidas</h3>
+            <ul class="saude360-tips">
+            @foreach (var tip in tips)
+            {
+                <li>@tip</li>
+            }
+            </ul>
+        }
+        @if (!string.IsNullOrWhiteSpace(vm.ProfileNotes))
+        {
+            <p class="profile-note"><i class="bi bi-person-badge"></i> @vm.ProfileNotes</p>
+        }
+        <div class="d-flex flex-wrap gap-2 mt-2">
+            @foreach (var action in actions)
+            {
+                <a class="btn btn-sm btn-outline-primary" asp-controller="@action.Controller" asp-action="@action.Action"><i class="bi @action.Icone me-1"></i>@action.Titulo</a>
+            }
+            @if (!string.IsNullOrWhiteSpace(vm.DocumentationUrl))
+            {
+                <a class="btn btn-sm btn-light" href="@vm.DocumentationUrl"><i class="bi bi-book me-1"></i>Manual</a>
+            }
+        </div>
+    </div>
+</section>

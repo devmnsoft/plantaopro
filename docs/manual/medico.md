@@ -1,35 +1,23 @@
-# Manual medico — PlantãoPro Saúde 360
+# Manual do perfil — medico
 
-## O que esse perfil faz
-Opera a parte da jornada compatível com seu papel, com menus reduzidos, segurança por tenant e auditoria.
+## O que faz
+Opera a jornada Saúde 360 conforme permissões do perfil, mantendo segregação por tenant e trilha de auditoria.
 
-## Menus usados
-- Início e Fluxo de Atendimento.
-- Telas específicas do perfil.
-- Ajuda, Manual do meu perfil e suporte.
+## Menus disponíveis
+Início, Atendimento, Financeiro, Convênios, Configurações ou Gestão SaaS conforme escopo do perfil.
 
 ## Jornada principal
-Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> CID -> Prescrição -> Financeiro -> Convênios -> Relatórios.
+Entrar no sistema, revisar pendências, executar a próxima ação recomendada, registrar resultado e consultar dashboards.
 
 ## Passo a passo
-1. Abra a tela indicada pelo fluxo.
-2. Leia a ajuda contextual no topo.
-3. Preencha formulários com validação e seletores integrados.
-4. Salve e confirme o toast.
-5. Siga a próxima ação recomendada.
+1. Acesse com usuário de teste do perfil.
+2. Abra a Home executiva e valide alertas.
+3. Use o menu da jornada do perfil.
+4. Preencha formulários obrigatórios.
+5. Confirme toasts e auditoria das ações críticas.
 
-## O que não pode acessar
-Dados fora do tenant, dados clínicos sem permissão, configurações SaaS fora do papel e ações destrutivas sem confirmação.
+## Permissões e restrições
+Acesso mínimo necessário. Dados clínicos sensíveis ficam restritos a perfis assistenciais autorizados; financeiro não vê evolução clínica; recepção não vê diagnóstico completo.
 
-## Dúvidas frequentes
-- Onde estou? Veja o breadcrumb e o painel “Você está aqui”.
-- O que faço agora? Veja Próximos passos e a próxima ação.
-- Como corrigir erro? Revise as mensagens do formulário e tente novamente.
-
-## Erros comuns
-- Criar agendamento sem paciente cadastrado.
-- Esquecer de fazer check-in antes da triagem.
-- Registrar dados clínicos em observações administrativas.
-
-## Suporte
-Envie o nome da tela, horário, perfil utilizado e mensagem exibida.
+## Dicas, FAQ e suporte
+Use Ajuda > Primeiros passos para dúvidas frequentes. Em erro, capture rota, horário, perfil e mensagem amigável exibida.

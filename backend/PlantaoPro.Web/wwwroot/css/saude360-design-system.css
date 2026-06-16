@@ -2,3 +2,60 @@
 .saude360-page-header{background:linear-gradient(135deg,#fff,#f6fbff);border:1px solid var(--s360-border);border-radius:var(--s360-radius);box-shadow:var(--s360-shadow);padding:1.25rem}
 .saude360-help-panel{display:grid;grid-template-columns:1.1fr .9fr;gap:1rem;margin-bottom:1.25rem;padding:1.25rem;border:1px solid var(--s360-border);border-radius:24px;background:linear-gradient(135deg,#eef7ff 0%,#fff 58%,#f2fff8 100%);box-shadow:var(--s360-shadow)}
 .help-kicker{display:inline-flex;gap:.4rem;align-items:center;color:var(--s360-primary);font-weight:800;text-transform:uppercase;font-size:.75rem;letter-spacing:.05em}.saude360-help-panel h2{font-weight:850;color:var(--s360-ink);margin:.35rem 0}.saude360-help-panel p{color:var(--s360-muted);margin-bottom:.5rem}.help-side{background:rgba(255,255,255,.75);border:1px solid rgba(21,94,239,.12);border-radius:18px;padding:1rem}.help-side h3{font-size:.85rem;text-transform:uppercase;color:var(--s360-primary);font-weight:800}.saude360-infobox{background:#e9f9f2;border-left:4px solid var(--s360-health);border-radius:12px;padding:.75rem;color:#14533b}.saude360-steps-mini{counter-reset:step;list-style:none;margin:0;padding:0}.saude360-steps-mini li{position:relative;padding:.35rem 0 .35rem 2rem}.saude360-steps-mini li:before{counter-increment:step;content:counter(step);position:absolute;left:0;top:.25rem;width:1.35rem;height:1.35rem;border-radius:999px;background:var(--s360-primary);color:#fff;text-align:center;font-size:.75rem;font-weight:800}.saude360-tips{padding-left:1.1rem;color:var(--s360-muted)}.profile-note{font-size:.9rem;color:#24556f}.saude360-empty-state{display:flex;flex-direction:column;align-items:center;gap:.35rem;padding:2.25rem;text-align:center;color:var(--s360-muted);background:#f8fbff;border:1px dashed var(--s360-border);border-radius:18px}.saude360-empty-state i{font-size:2rem;color:var(--s360-primary)}.saude360-form .form-label{font-weight:700;color:#344054}.saude360-form .form-control,.saude360-form .form-select{border-radius:12px;border-color:#c9d7ea}.s360-toast{position:fixed;right:1rem;bottom:1rem;z-index:1080;min-width:280px}.s360-tour-highlight{outline:3px solid #11a36a;outline-offset:4px;border-radius:16px}@media(max-width:991px){.saude360-help-panel{grid-template-columns:1fr}.topbar-actions{flex-wrap:wrap}.app-sidebar{max-width:88vw}}
+
+/* Release Candidate premium: acessibilidade, foco e responsividade mínimos. */
+.saude360-page-header {
+    scroll-margin-top: 5rem;
+}
+
+.saude360-page-header:focus-within,
+.saude360-form:focus-within,
+.saude360-empty-state:focus-within {
+    outline: 3px solid rgba(13, 110, 253, .35);
+    outline-offset: 4px;
+}
+
+.saude360-form .form-control:focus,
+.saude360-form .form-select:focus,
+.btn:focus-visible,
+a:focus-visible {
+    outline: 3px solid rgba(13, 110, 253, .45);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .15);
+}
+
+.saude360-empty-state {
+    min-height: 9rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    color: #475569;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(14, 165, 233, .08), rgba(16, 185, 129, .08));
+    border-radius: 1rem;
+}
+
+.saude360-empty-state .bi {
+    font-size: 2rem;
+    color: #0d6efd;
+}
+
+@media (max-width: 767.98px) {
+    .saude360-page-header,
+    .saude360-form .card-footer {
+        align-items: stretch !important;
+        flex-direction: column;
+    }
+
+    .saude360-page-header .btn,
+    .saude360-form .btn {
+        width: 100%;
+    }
+
+    .saude360-form .card-body {
+        padding: 1rem;
+    }
+}

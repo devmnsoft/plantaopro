@@ -27,7 +27,7 @@
         @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
         {
             <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-outline-primary">
-                <i class="bi @acao.Icone me-1"></i>@acao.Titulo
+                <i class="bi @acao.Icone me-1" aria-hidden="true"></i>@acao.Titulo
             </a>
         }
     </div>
@@ -56,12 +56,12 @@
         <span class="badge bg-light text-dark">@vm.Permissao</span>
     </div>
     <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead><tr><th>Identificação</th><th>Código</th><th>Descrição</th><th>Status</th><th>Registro</th></tr></thead>
+        <table class="table align-middle mb-0" aria-label="Registros do módulo @vm.Modulo">
+            <thead><tr><th scope="col">Identificação</th><th scope="col">Código</th><th scope="col">Descrição</th><th scope="col">Status</th><th scope="col">Registro</th></tr></thead>
             <tbody>
             @if (!registros.Any())
             {
-                <tr><td colspan="5"><div class="saude360-empty-state"><i class="bi bi-inbox"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou cadastre dados demo para validar a jornada.</span></div></td></tr>
+                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou cadastre dados demo para validar a jornada.</span></div></td></tr>
             }
             else
             {

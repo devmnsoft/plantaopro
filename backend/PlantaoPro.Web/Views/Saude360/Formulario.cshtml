@@ -4,7 +4,18 @@
     ViewData["Title"] = vm.Titulo;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+@await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
+{
+    Title = vm.Titulo,
+    Description = "Preencha os campos com orientação contextual, validação server-side e envio para a API configurada.",
+    WhenToUse = "Use este formulário para registrar uma etapa real da jornada Paciente -> Agendamento -> Check-in -> Triagem -> Consulta -> Financeiro.",
+    StepByStep = new List<string> { "Preencha os dados obrigatórios do contexto.", "Use os identificadores ou seletores integrados aos lookups.", "Clique em Salvar e aguarde o toast de confirmação.", "Em caso de erro, os dados preenchidos permanecem na tela." },
+    Tips = new List<string> { "Não informe dados clínicos sensíveis em campos administrativos.", "Todo POST usa antiforgery e endpoint API real.", "Campos opcionais ajudam em casos sem CPF ou convênio." },
+    ProfileNotes = "Recepção, triagem, médico e financeiro visualizam somente o que o perfil permitir.",
+    DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
+})
+
+<div class="d-flex justify-content-between align-items-center mb-4 saude360-page-header">
     <div>
         <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
         <h1 class="h3 mb-0">@vm.Titulo</h1>
@@ -13,7 +24,7 @@
     <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
 
-<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="card border-0 shadow-sm">
+<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="card border-0 shadow-sm saude360-form" data-saude360-form>
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ApiEndpoint" />
     <input type="hidden" asp-for="Controller" />
@@ -79,6 +90,6 @@
     </div>
     <div class="card-footer bg-white d-flex justify-content-end gap-2">
         <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Salvar</button>
+        <button type="submit" class="btn btn-primary" data-loading-text="Salvando..."><i class="bi bi-check2-circle me-1"></i>Salvar</button>
     </div>
 </form>

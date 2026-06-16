@@ -5,7 +5,19 @@
     var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+@await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
+{
+    Title = vm.Titulo,
+    Description = vm.Descricao,
+    WhenToUse = "Use esta tela para conduzir a jornada assistencial com dados reais da API e contexto por tenant.",
+    StepByStep = new List<string> { "Revise os indicadores e registros.", "Use os botões de ação para avançar no fluxo.", "Se não houver dados, siga a próxima ação recomendada.", "Consulte o manual do perfil em caso de dúvida." },
+    Tips = new List<string> { "Acesso clínico é auditado.", "Registros respeitam o tenant atual.", "Dados sensíveis não aparecem em logs técnicos." },
+    RelatedActions = vm.Acoes,
+    ProfileNotes = "A tela adapta a operação para recepção, triagem, médico, financeiro e convênios.",
+    DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
+})
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 saude360-page-header">
     <div>
         <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
         <h1 class="h3 mb-1">@vm.Titulo</h1>
@@ -49,7 +61,7 @@
             <tbody>
             @if (!registros.Any())
             {
-                <tr><td colspan="5" class="text-center text-muted py-4">Nenhum registro encontrado para este tenant.</td></tr>
+                <tr><td colspan="5"><div class="saude360-empty-state"><i class="bi bi-inbox"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou cadastre dados demo para validar a jornada.</span></div></td></tr>
             }
             else
             {

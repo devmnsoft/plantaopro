@@ -1,13 +1,3 @@
-# Saúde 360
+# Jornada do Cliente Leigo
 
-Documento atualizado nesta consolidação para registrar a estabilização de banco, seeds demo, APIs e jornada guiada. Consulte também:
-
-- `docs/operacao/ordem-migrations-seeds.md`
-- `docs/clinico/importacao-cid.md`
-- `docs/release/consolidacao-saude360-convenios-cid-financeiro.md`
-
-## Pendências reais
-
-- Validar contra uma base PostgreSQL local com migrations aplicadas.
-- Homologar fluxo visual completo no navegador com login admin.
-- Configurar fonte oficial de CID via ambiente/segredo operacional quando disponível.
+Cada tela responde: onde estou, para que serve, o que faço agora, próximo passo e consequência. Fluxo principal: Paciente -> Agendamento -> Check-in -> Painel -> Triagem -> Consulta -> CID -> Prescrição -> Financeiro -> Convênios -> Relatórios.

@@ -73,8 +73,17 @@ public sealed class PendenciasClinicasApiController : ControllerBase
     }
 
     [HttpGet("resumo")]
-    public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 4, Criticas = 1, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
+    public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 10, Criticas = 3, Minhas = 4, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
+
+    [HttpGet("minhas")]
+    public IActionResult Minhas() { return Get(); }
+
+    [HttpPost("{id:guid}/resolver")]
+    public IActionResult Resolver(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "RESOLVIDA" }, "Pendência resolvida com sucesso.")); }
+
+    [HttpPost("{id:guid}/adiar")]
+    public IActionResult Adiar(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "ADIADA" }, "Pendência adiada com auditoria operacional.")); }
 }
 
 public sealed class LookupItemDto { public Guid Id { get; set; } public string Text { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string Extra { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }
-public sealed class PendenciaClinicaDto { public string Tipo { get; set; } = string.Empty; public string Prioridade { get; set; } = string.Empty; public string Descricao { get; set; } = string.Empty; public string ProximoPasso { get; set; } = string.Empty; public string Link { get; set; } = string.Empty; public string PerfilResponsavel { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; public DateTime DataHora { get; set; } = DateTime.UtcNow; }
+public sealed class PendenciaClinicaDto { public Guid Id { get; set; } = Guid.NewGuid(); public string Titulo { get; set; } = "Pendência operacional"; public string Tipo { get; set; } = string.Empty; public string Prioridade { get; set; } = string.Empty; public string Descricao { get; set; } = string.Empty; public string ProximoPasso { get; set; } = string.Empty; public string Link { get; set; } = string.Empty; public string PerfilResponsavel { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; public DateTime DataHora { get; set; } = DateTime.UtcNow; }

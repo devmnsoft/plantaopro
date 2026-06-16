@@ -1,17 +1,25 @@
-# White Label
+# PlantãoPro Saúde 360 — SaaS comercial operacional
 
-## Implementado nesta rodada
+## Escopo entregue
 
-White label sem deploy por tenant, com cores, textos, assets, publicação e histórico.
+Esta documentação descreve a evolução SaaS comercial do PlantãoPro: clientes, tenants, planos, limites, billing interno, onboarding, white label, marketplace, suporte, observabilidade, Customer Success e QA de homologação.
 
-## Componentes relacionados
+## Operação principal
 
-- Migração: `database/migrations/2026_plantao_pro_white_label_b2b_launch.sql`.
-- APIs B2B: `backend/PlantaoPro.Api/Controllers/B2BLaunchController.cs`.
-- Serviços B2B: `backend/PlantaoPro.Api/B2BLaunchServices.cs`.
-- Web B2B: `backend/PlantaoPro.Web/Controllers/B2BLaunchWebControllers.cs`.
+1. Admin Global cadastra o cliente SaaS.
+2. Admin Global cria o tenant com subdomínio e plano.
+3. O plano libera módulos e limites.
+4. Billing registra assinatura, faturas e eventos sem armazenar cartão ou dados bancários sensíveis.
+5. Onboarding orienta implantação por etapas.
+6. White label aplica marca, cores, domínio e comunicação do cliente quando contratado.
+7. Marketplace permite solicitação e aprovação de módulos.
+8. Suporte registra chamados por tenant com SLA.
+9. Operação monitora health, erros, uso e auditoria.
+10. Customer Success acompanha health score, riscos e oportunidades.
 
 ## Pendências reais
 
-- Validar manualmente em ambiente com PostgreSQL e SDK .NET instalado.
-- Conectar as telas genéricas aos formulários AJAX finais quando o design system definitivo estiver homologado.
+- Aplicar migrations no banco de homologação antes de validar endpoints conectados.
+- Conectar telas a formulários ricos para todas as entidades quando houver design final aprovado.
+- Integrar billing a provedor externo apenas via tokenização/checkout hospedado, sem persistir cartão.
+- Executar QA manual em ambiente com .NET SDK disponível.

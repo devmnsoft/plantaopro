@@ -1,19 +1,14 @@
 # QA do menu global
 
-## Objetivo
-Validar que o menu do PlantãoPro siga jornada lógica, perfil de acesso e não aponte para 404.
+## Resultado
+Menu reorganizado em: Início, Atendimento, Plantões, Financeiro, Convênios, Relatórios, Gestão do Cliente, Admin SaaS, Parceiro e Ajuda e Governança.
 
-## Checklist
-- [ ] Admin Global visualiza Admin SaaS, Relatórios, Ajuda e Governança.
-- [ ] Admin Cliente visualiza Gestão do Cliente, Atendimento, Plantões, Financeiro, Convênios, Relatórios e Ajuda.
-- [ ] Recepção visualiza Início, Pacientes, Agendamentos, Check-in, Painel e Ajuda.
-- [ ] Triagem visualiza Fila, Triagem, Painel e Ajuda.
-- [ ] Médico visualiza agenda, consultas, prescrições, CID e plantões próprios.
-- [ ] Financeiro visualiza financeiro clínica e convênios financeiros, sem anamnese/evolução.
-- [ ] Auditor visualiza relatórios, auditoria e LGPD.
-- [ ] Módulo bloqueado mostra CTA comercial, não 404.
-- [ ] Nenhum item usa `href="#"`.
-- [ ] Nenhum item aponta para action vazia.
+## Critérios validados por inspeção
+- Itens apontam para controllers/actions existentes ou para telas consolidadas sem 404 conhecido.
+- Grupos duplicados de Clínica/Saúde 360 foram consolidados.
+- Módulos premium permanecem bloqueáveis por `RequiresModule` e exibem motivo de bloqueio.
+- Perfis usam papéis mínimos existentes em `RolesConstants`.
 
-## Rotas Saúde 360 ajustadas
-As actions de Atendimento, Histórico, Favoritos, Mais Usados, Contas a Receber, Repasses, Glosas, Contratos, Planos, Faturamento, Coberturas e Autorizações possuem título, descrição, endpoint e ações próprias.
+## QA pendente de ambiente
+- Login admin e navegação real do menu inteiro.
+- Validação com usuários recepção, triagem, médico, financeiro, parceiro, auditor e suporte.

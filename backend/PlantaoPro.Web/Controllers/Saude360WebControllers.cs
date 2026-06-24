@@ -20,7 +20,7 @@ public abstract class Saude360WebControllerBase : BaseWebController
         var result = await service.ListarAsync(token, endpoint);
         var registros = result.Registros ?? Array.Empty<Saude360RegistroViewModel>();
         ViewBag.AssistenteContextual = assistente.Obter(ControllerContext.ActionDescriptor.ControllerName, ControllerContext.ActionDescriptor.ActionName, User.PrimaryRole(), registros.Count());
-        return View("~/Views/Saude360/Modulo.cshtml", new Saude360PageViewModel
+        var model = new Saude360PageViewModel
         {
             Titulo = titulo,
             Modulo = modulo,
@@ -33,20 +33,24 @@ public abstract class Saude360WebControllerBase : BaseWebController
             Acoes = acoes,
             Plano = PlanoModulo(modulo),
             Permissao = PermissaoModulo(modulo)
-        });
+        };
+        var specificView = $"~/Views/{ControllerContext.ActionDescriptor.ControllerName}/{ControllerContext.ActionDescriptor.ActionName}.cshtml";
+        return View(specificView, model);
     }
 
     protected IActionResult Formulario(string titulo, string endpoint, Guid? id = null)
     {
         ViewBag.AssistenteContextual = assistente.Obter(ControllerContext.ActionDescriptor.ControllerName, ControllerContext.ActionDescriptor.ActionName, User.PrimaryRole(), 0);
-        return View("~/Views/Saude360/Formulario.cshtml", new Saude360FormViewModel
+        var model = new Saude360FormViewModel
         {
             Titulo = titulo,
             Controller = ControllerContext.ActionDescriptor.ControllerName,
             Action = ControllerContext.ActionDescriptor.ActionName,
             ApiEndpoint = endpoint,
             Id = id
-        });
+        };
+        var specificView = $"~/Views/{ControllerContext.ActionDescriptor.ControllerName}/{ControllerContext.ActionDescriptor.ActionName}.cshtml";
+        return View(specificView, model);
     }
 
     [HttpPost]
@@ -60,7 +64,8 @@ public abstract class Saude360WebControllerBase : BaseWebController
         if (!result.Success)
         {
             form.Titulo = string.IsNullOrWhiteSpace(form.Titulo) ? "Revise os dados do formulário" : form.Titulo;
-            return View("~/Views/Saude360/Formulario.cshtml", form);
+            var specificView = $"~/Views/{form.Controller}/{form.Action}.cshtml";
+            return View(specificView, form);
         }
         return RedirectToAction("Index");
     }

@@ -1,11 +1,8 @@
 # QA final da consolidação
 
-Escopo: PlantãoPro Saúde 360.
+## Automatizado
+- `dotnet clean/build/test` bloqueado por ausência do SDK .NET no container.
+- Varreduras `rg` executadas para localizar padrões proibidos e telas genéricas remanescentes.
 
-## Execução
-- Build API: pendente por ausência de SDK dotnet no container.
-- Build Web: pendente por ausência de SDK dotnet no container.
-- Testes: pendente por ausência de SDK dotnet no container.
-
-## QA manual obrigatório
-Login admin, menu completo sem 404, pacientes, agendamento, check-in, painel, triagem, consulta, CID, prescrição, financeiro, convênios, plano de saúde, manual, ajuda contextual e responsividade.
+## Manual pendente
+Login admin, Swagger, menus sem 404, cadastros Saúde 360, manual, ajuda contextual e responsivo devem ser validados em homologação.

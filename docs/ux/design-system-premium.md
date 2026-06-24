@@ -1,12 +1,3 @@
-# Design system premium PlantãoPro
+# Design system premium
 
-## Componentes
-PageHeader, Breadcrumb, PageHelp, AssistenteContextual, EmptyState, ErrorState, ToastHost, ConfirmModal, StatusBadge, KpiCard, FormSection, PremiumLockCard e NextActionCard.
-
-## Padrões
-- Cards com hierarquia clara.
-- Status com cor e texto.
-- Tabelas responsivas.
-- Toast para ações importantes.
-- Modal para ação destrutiva.
-- Nunca usar `alert()`, `confirm()` ou link morto.
+Padrões: cards com sombra leve, headers claros, breadcrumbs, ajuda contextual, EmptyState, toasts, modais para destruição, badges por status e linguagem orientada ao próximo passo.

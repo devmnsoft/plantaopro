@@ -1,6 +1,3 @@
-# Jornada do cliente leigo
+# Jornada do usuário leigo
 
-1. Entrar pela Visão Geral.
-2. Seguir a Próxima Ação no Fluxo de Atendimento.
-3. Cadastrar paciente, agendar, fazer check-in, chamar, triar, consultar, prescrever e faturar.
-4. Usar Ajuda da tela atual, Manual do Perfil e Iniciar tour quando houver dúvida.
+Toda tela principal deve explicar onde o usuário está, para que serve, quando usar, dados necessários e próximo passo. Campos técnicos como GUID devem ficar ocultos atrás de selects/lookups por nome.

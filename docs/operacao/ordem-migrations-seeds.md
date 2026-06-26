@@ -1,10 +1,10 @@
 # Ordem de migrations e seeds
 
-1. Scripts base em `database/PlantaoPro_PostgreSQL_Completo.sql` quando aplicável.
-2. Migrations SaaS core.
-3. Migrations Saúde 360 base clínica.
-4. Migrations módulos clínicos, CID, prescrições, financeiro, convênios e planos.
-5. Migrations LGPD, jornada, observabilidade e white label.
-6. Seeds idempotentes de demonstração.
+1. Criar estrutura base/tenants/usuários/perfis.
+2. Criar tabelas assistenciais: pacientes, agendamentos, painel_chamada, triagens, consultas, cid_tabela e prescricoes.
+3. Criar financeiro clínica: contas a receber, recebimentos, caixa, repasses e glosas.
+4. Criar convênios e planos de saúde antes de seeds que referenciam planos.
+5. Criar plantões, escalas, médicos, hospitais e especialidades.
+6. Executar seeds idempotentes demo por último.
 
-Regras: não apagar dados, usar `CREATE TABLE IF NOT EXISTS`, constraints via blocos `DO $$` quando necessário e seeds após tabelas existentes.
+Regras: usar `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, constraints em bloco `DO $$`, índices de busca e nunca inserir seed antes da tabela existir.

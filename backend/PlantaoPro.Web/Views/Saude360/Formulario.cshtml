@@ -14,7 +14,7 @@
     Title = vm.Titulo,
     Description = "Preencha os campos com orientação contextual, validação server-side e envio para a API configurada.",
     WhenToUse = "Use este formulário para registrar uma etapa real da jornada Paciente -> Agendamento -> Check-in -> Triagem -> Consulta -> Financeiro.",
-    StepByStep = new List<string> { "Preencha os dados obrigatórios do contexto.", "Use os identificadores ou seletores integrados aos lookups.", "Clique em Salvar e aguarde o toast de confirmação.", "Em caso de erro, os dados preenchidos permanecem na tela." },
+    StepByStep = new List<string> { "Preencha os dados obrigatórios do contexto.", "Use os seletores por nome; o sistema grava o identificador internamente sem expor GUID ao usuário.", "Clique em Salvar e aguarde o toast de confirmação.", "Em caso de erro, os dados preenchidos permanecem na tela." },
     Tips = new List<string> { "Não informe dados clínicos sensíveis em campos administrativos.", "Todo POST usa antiforgery e endpoint API real.", "Campos opcionais ajudam em casos sem CPF ou convênio." },
     ProfileNotes = "Recepção, triagem, médico e financeiro visualizam somente o que o perfil permitir.",
     DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
@@ -58,11 +58,11 @@
 
         <h2 class="h6 text-uppercase text-primary">Agendamento e vínculos</h2>
         <div class="row g-3 mb-4">
-            <div class="col-md-4"><label asp-for="PacienteId" class="form-label">Paciente ID</label><input asp-for="PacienteId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="MedicoId" class="form-label">Médico/profissional ID</label><input asp-for="MedicoId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="AgendamentoId" class="form-label">Agendamento ID</label><input asp-for="AgendamentoId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="ConsultaId" class="form-label">Consulta ID</label><input asp-for="ConsultaId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="PlanoSaudeId" class="form-label">Plano de saúde ID</label><input asp-for="PlanoSaudeId" class="form-control" /></div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PacienteId), Label = "Paciente", Endpoint = "/api/lookups/pacientes", Value = vm.PacienteId?.ToString() ?? string.Empty, Placeholder = "Busque o paciente pelo nome" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.MedicoId), Label = "Médico/profissional", Endpoint = "/api/lookups/medicos", Value = vm.MedicoId?.ToString() ?? string.Empty, Placeholder = "Selecione pelo nome do profissional" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.AgendamentoId), Label = "Agendamento", Endpoint = "/api/lookups/agendamentos", Value = vm.AgendamentoId?.ToString() ?? string.Empty, Placeholder = "Selecione paciente, data ou status" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.ConsultaId), Label = "Consulta", Endpoint = "/api/lookups/consultas", Value = vm.ConsultaId?.ToString() ?? string.Empty, Placeholder = "Selecione a consulta vinculada" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PlanoSaudeId), Label = "Plano de saúde", Endpoint = "/api/lookups/planos-saude", Value = vm.PlanoSaudeId?.ToString() ?? string.Empty, Placeholder = "Selecione convênio ou plano" })</div>
             <div class="col-md-4"><label asp-for="Especialidade" class="form-label">Especialidade</label><input asp-for="Especialidade" class="form-control" maxlength="120" /></div>
             <div class="col-md-3"><label asp-for="DataInicio" class="form-label">Início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
             <div class="col-md-3"><label asp-for="DataFim" class="form-label">Fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>

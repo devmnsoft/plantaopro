@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Primeiros Passos";
+    var perfis = new Dictionary<string, string[]> {
+        { "Admin Cliente", new[] { "Configurar unidade", "Cadastrar médicos", "Cadastrar pacientes", "Configurar agenda", "Publicar primeiro plantão", "Revisar plano", "Configurar white label" } },
+        { "Recepção", new[] { "Cadastrar paciente", "Criar agendamento", "Fazer check-in", "Chamar paciente" } },
+        { "Triagem", new[] { "Abrir fila", "Iniciar triagem", "Classificar risco", "Finalizar triagem" } },
+        { "Médico", new[] { "Ver agenda", "Aceitar convite", "Iniciar consulta", "Finalizar prescrição", "Consultar pagamentos" } },
+        { "Financeiro", new[] { "Ver contas a receber", "Receber pagamento", "Fechar caixa", "Confirmar pagamento médico" } }
+    };
+}
+<h1>Primeiros Passos</h1>
+<p class="lead">Jornada guiada para usuários leigos operarem o PlantãoPro sem depender de treinamento técnico.</p>
+<div class="row g-3">
+@foreach (var perfil in perfis)
+{
+    <div class="col-md-6 col-xl-4"><div class="card h-100 shadow-sm"><div class="card-body">
+        <h2 class="h5">@perfil.Key</h2>
+        <ol>@foreach (var passo in perfil.Value) { <li>@passo</li> }</ol>
+        <a class="btn btn-outline-primary btn-sm" href="/OperacaoInteligente/Index">Ver próximo passo</a>
+    </div></div></div>
+}
+</div>

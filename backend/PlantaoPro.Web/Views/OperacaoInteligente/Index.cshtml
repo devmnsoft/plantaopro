@@ -1,0 +1,41 @@
+@model PlantaoPro.Web.Models.OperacaoInteligenteViewModel
+@{
+    ViewData["Title"] = "Operação Inteligente";
+}
+<section class="pp-hero premium-hero">
+    <p class="text-uppercase text-primary fw-bold">Cockpit operacional</p>
+    <h1>@Model.Titulo</h1>
+    <p>@Model.Subtitulo</p>
+    <a class="btn btn-primary" href="/PrimeirosPassos/Index">Comece por aqui</a>
+</section>
+@if (!Model.Pendencias.Any())
+{
+    <div class="alert alert-info">Nenhuma pendência crítica encontrada. Continue acompanhando a agenda do dia e os plantões publicados.</div>
+}
+<div class="row g-3 mt-2">
+@foreach (var item in Model.Pendencias)
+{
+    <div class="col-md-6 col-xl-4">
+        <article class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <span class="badge bg-danger">@item.Prioridade</span>
+                <span class="badge bg-light text-dark">@item.Status</span>
+                <h2 class="h5 mt-3">@item.Titulo</h2>
+                <p>@item.Motivo</p>
+                <p class="small text-muted">Responsável: @item.PerfilResponsavel</p>
+                <a class="btn btn-outline-primary btn-sm" href="@item.UrlOrigem">@item.Cta</a>
+            </div>
+        </article>
+    </div>
+}
+</div>
+<h2 class="h4 mt-4">Recomendações determinísticas</h2>
+<div class="list-group">
+@foreach (var rec in Model.Recomendacoes)
+{
+    <a class="list-group-item list-group-item-action" href="@rec.UrlAcao">
+        <strong>@rec.Severidade</strong> · @rec.Modulo · @rec.PerfilAlvo<br />
+        @rec.Mensagem <span class="text-primary">@rec.AcaoSugerida</span>
+    </a>
+}
+</div>

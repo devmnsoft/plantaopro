@@ -1,0 +1,21 @@
+@model string
+@{
+    var partes = Model.Split('|');
+    ViewData["Title"] = "Dashboard " + partes[0];
+}
+<section class="pp-hero premium-hero">
+    <p class="text-uppercase text-primary fw-bold">Dashboard executivo</p>
+    <h1>Dashboard @partes[0]</h1>
+    <p>KPIs filtrados por tenant, perfil, plano e módulos contratados, com próximos passos e atalhos seguros.</p>
+</section>
+<div class="row g-3">
+@for (var i = 1; i < partes.Length; i++)
+{
+    <div class="col-md-3"><div class="card shadow-sm h-100"><div class="card-body">
+        <span class="badge bg-primary">KPI</span><h2 class="h6 mt-2">@partes[i]</h2><strong>@(i * 7)</strong>
+        <p class="small text-muted">Indicador demonstrativo para decisão operacional.</p>
+    </div></div></div>
+}
+</div>
+<div class="alert alert-info mt-3">Próximo passo: abra a Operação Inteligente para resolver pendências críticas.</div>
+<a class="btn btn-primary" href="/OperacaoInteligente/Index">Ir para Operação Inteligente</a>

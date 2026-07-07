@@ -20,3 +20,10 @@
 
 - Secure storage nativo persistente para JWT quando for permitido instalar dependências Expo adicionais.
 - Testes automatizados mobile.
+
+## Atualização homologação real 2026-07-07
+
+- MVP mantém Login, Home, Plantões, Convites, Detalhe convite, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- API base deve ser configurada por `EXPO_PUBLIC_API_BASE_URL`; não usar URL fixa de produção.
+- Segurança parcial: token em storage em memória até homologar `expo-secure-store` em ambiente interativo.
+- Pendência: executar `npm install` e `npm run start` com Expo/Metro aberto para evidência visual.

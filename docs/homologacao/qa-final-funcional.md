@@ -39,3 +39,9 @@
 - Sanitização de appsettings com placeholders.
 - Criação de CI .NET.
 - Navegação mobile MVP por inspeção estática.
+
+## Atualização homologação real 2026-07-07
+
+- **Implementado:** CI .NET 10 preview, docker-compose PostgreSQL, scripts únicos de banco, endpoints `/`, `/api/health` e `/api/health/db`, roteiro QA executável e checklist demo.
+- **Bloqueado por ambiente:** build/test locais porque `dotnet` não está instalado no container; validação Docker/psql depende de daemon e cliente PostgreSQL; Metro/Expo exige sessão interativa.
+- **Classificação:** Release Candidate parcial até GitHub Actions e QA real confirmarem build, testes, banco e fluxos ponta a ponta.

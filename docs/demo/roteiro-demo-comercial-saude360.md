@@ -1,17 +1,22 @@
-# Roteiro de demonstração comercial Saúde 360
+# Roteiro demo comercial Saúde 360
 
-1. Login como administrador da clínica.
-2. Abrir Visão Geral e explicar KPIs, pendências e plano atual.
-3. Abrir Fluxo de Atendimento.
-4. Cadastrar paciente fictício.
-5. Criar agendamento.
+Status: **demo funcional guiada**; não declarar produção sem build/test/banco/QA reais.
+
+1. Login como administrador.
+2. Mostrar dashboard SaaS e white label.
+3. Apresentar menu organizado.
+4. Abrir paciente demo ou cadastrar paciente novo.
+5. Agendar consulta.
 6. Fazer check-in.
-7. Abrir Painel de Chamada.
+7. Chamar paciente no painel.
 8. Registrar triagem.
-9. Iniciar consulta.
-10. Buscar CID.
+9. Executar consulta.
+10. Informar CID.
 11. Emitir prescrição.
-12. Receber pagamento.
-13. Mostrar dashboard financeiro.
-14. Mostrar convênios e autorizações.
-15. Mostrar relatórios, white label e planos SaaS.
+12. Demonstrar financeiro clínica.
+13. Demonstrar convênio/plano de saúde.
+14. Demonstrar plantão médico.
+15. Demonstrar escala.
+16. Demonstrar pagamento médico.
+17. Mostrar auditoria/LGPD.
+18. Abrir mobile médico.

@@ -2,7 +2,8 @@ declare const process: { env?: Record<string, string | undefined> };
 import { ApiResponse, PagedResult } from '../types/auth.types';
 import storage from '../utils/storage';
 
-export const apiBaseUrl = (typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_API_BASE_URL : undefined) ?? 'http://localhost:5000/api';
+const developmentApiBaseUrl = 'http://localhost:5000/api';
+export const apiBaseUrl = (typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_API_BASE_URL : undefined) ?? developmentApiBaseUrl;
 const tokenKey = 'plantaopro.jwt';
 
 function lowerFirst(key: string) { return key.length ? key.charAt(0).toLowerCase() + key.slice(1) : key; }

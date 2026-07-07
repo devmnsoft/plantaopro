@@ -1,22 +1,23 @@
-# Ordem de migrations e seeds
+# Ordem oficial de banco, migrations e seeds
 
-1. Criar estrutura base/tenants/usuários/perfis.
-2. Criar tabelas assistenciais: pacientes, agendamentos, painel_chamada, triagens, consultas, cid_tabela e prescricoes.
-3. Criar financeiro clínica: contas a receber, recebimentos, caixa, repasses e glosas.
-4. Criar convênios e planos de saúde antes de seeds que referenciam planos.
-5. Criar plantões, escalas, médicos, hospitais e especialidades.
-6. Executar seeds idempotentes demo por último.
+Status: **preparado para homologação local**.
 
-Regras: usar `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, constraints em bloco `DO $$`, índices de busca e nunca inserir seed antes da tabela existir.
+A aplicação de banco local deve parar no primeiro erro e seguir exatamente esta ordem:
 
-## Ordem validada para RC
+1. `database/PlantaoPro_PostgreSQL_Completo.sql`
+2. `database/migrations/*.sql` em ordem alfabética
+3. `database/seeds.sql`
+4. `database/seeds/*.sql` em ordem alfabética
 
-1. Estrutura base (`database/PlantaoPro_PostgreSQL_Completo.sql`).
-2. SaaS, tenants, planos, assinaturas e white label.
-3. Plantões, médicos, hospitais, especialidades, escalas e financeiro médico.
-4. Saúde 360: pacientes, agendamentos, painel, triagem, consultas, CID e prescrições.
-5. Financeiro clínica.
-6. Convênios e planos de saúde.
-7. Seeds demo (`database/seeds.sql` e `database/seeds/*.sql`).
+Use `scripts/database/apply-local-postgres.sh` ou `scripts/database/apply-local-postgres.ps1`. Ambos aceitam host, porta, banco, usuário e senha e exigem `psql` instalado.
 
-Use somente migrations incrementais com `IF NOT EXISTS`, `ADD COLUMN IF NOT EXISTS`, `CREATE INDEX IF NOT EXISTS` e constraints protegidas por consulta a `pg_constraint`.
+Checklist mínimo de validação após aplicar:
+
+- [ ] tabelas base no schema `plantaopro`;
+- [ ] SaaS comercial;
+- [ ] Saúde 360;
+- [ ] plantões/escalas;
+- [ ] financeiro;
+- [ ] convênios e planos de saúde;
+- [ ] auditoria e LGPD;
+- [ ] seeds demo idempotentes.

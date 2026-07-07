@@ -44,3 +44,19 @@ Foram adicionados endpoints reais para hospitais, especialidades, plantões, esc
 - O app Expo possui fluxo autenticado com Login, Dashboard, Plantões Disponíveis, Convites, Detalhe do Convite, Minhas Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
 - A API base deve ser informada por `EXPO_PUBLIC_API_BASE_URL`; não há URL fixa de produção.
 - O armazenamento de JWT está encapsulado em storage compatível e documentado como parcial para hardening com secure storage nativo quando a política do registry permitir instalar dependências adicionais.
+
+## Homologação local Saúde 360
+
+Status em 2026-07-07: **Release Candidate parcial** até validação real de build/test/banco/QA em ambiente completo.
+
+Comandos esperados:
+
+```bash
+docker compose up -d
+scripts/database/apply-local-postgres.sh --host localhost --port 5432 --database plantaopro --user postgres --password 123456
+dotnet restore backend/PlantaoPro.sln
+dotnet build backend/PlantaoPro.sln -c Release
+dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
+```
+
+Health checks: `GET /`, `GET /api/health`, `GET /api/health/db`. O mobile usa `EXPO_PUBLIC_API_BASE_URL` e deve ser validado em sessão Expo/Metro interativa.

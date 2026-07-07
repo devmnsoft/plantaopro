@@ -141,11 +141,14 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.MapGet("/", () => Results.Ok(new
-    {
-        application = "PlantaoPro.Api",
-        status = "online"
-    }));
+    app.MapGet("/", (IWebHostEnvironment environment) => Results.Ok(ApiResponse<HealthDto>.Ok(
+        new HealthDto(
+            "PlantaoPro.Api",
+            "Healthy",
+            environment.EnvironmentName,
+            DateTime.UtcNow,
+            typeof(Program).Assembly.GetName().Version?.ToString() ?? string.Empty),
+        "PlantaoPro.Api online")));
 }
 
 app.UseExceptionHandler(a => a.Run(async ctx =>

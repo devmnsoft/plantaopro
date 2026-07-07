@@ -16,3 +16,10 @@
 
 - Evidência de Swagger, `/api/health`, login Web e menus sem 404 em ambiente executável.
 - Relatório SQL com aplicação real das migrations/seeds e correção de eventuais 42P01/42703.
+
+## Pendências reais pós-homologação 2026-07-07
+
+- Validar `dotnet restore`, `dotnet build` e `dotnet test` no GitHub Actions com SDK 10 preview.
+- Executar PostgreSQL local via Docker e aplicar `scripts/database/apply-local-postgres.*` com `psql`.
+- Executar roteiro QA completo por perfil e registrar evidências.
+- Homologar Expo/Metro em ambiente interativo e substituir storage em memória por secure storage quando possível.

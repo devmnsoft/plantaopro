@@ -29,3 +29,13 @@
 | Saúde 360 | Parcial | Fluxos documentados para QA; validação ponta a ponta depende de API/Web e banco. |
 | Plantões/escalas/financeiro médico | Parcial | Fluxo documentado; validar duplicidades, conflitos e auditoria em runtime. |
 | Mobile médico MVP | Parcial | Navegação mínima implementada; start Expo depende de npm/ambiente liberado. |
+
+## Status de homologação 2026-07-07
+
+| Área | Status | Observação |
+| --- | --- | --- |
+| CI/build/test | Parcial | CI configurado; execução local bloqueada por ausência de `dotnet`. |
+| Banco PostgreSQL | Parcial | Compose e scripts criados; aplicação real depende de Docker/psql. |
+| Web/API | Parcial | Health real preparado; QA ponta a ponta pendente. |
+| Mobile MVP | Parcial | Navegação MVP existe; Expo interativo pendente. |
+| Demo comercial | Implementado sem validação real | Roteiro e checklist criados para execução guiada. |

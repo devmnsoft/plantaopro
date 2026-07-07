@@ -37,7 +37,7 @@ function ConvitesScreen({ openDetail }: { openDetail: () => void }) {
 }
 
 function ConviteDetalheScreen() {
-  return <PartialScreen title="Detalhe do convite" message="Aceitar/recusar será enviado aos endpoints reais com modal de confirmação, sem confirm() nativo." />;
+  return <PartialScreen title="Detalhe do convite" message="Aceitar/recusar será enviado aos endpoints reais com modal de confirmação, sem diálogo nativo do sistema." />;
 }
 
 function renderRoute(route: RouteKey, setRoute: (route: RouteKey) => void) {

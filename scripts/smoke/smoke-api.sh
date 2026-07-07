@@ -57,10 +57,10 @@ if [[ -z "$TOKEN" ]]; then
   exit 1
 fi
 
-auth_status="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/api/me" -H "Authorization: Bearer ${TOKEN}")"
+auth_status="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}/api/usuarios/me" -H "Authorization: Bearer ${TOKEN}")"
 case "$auth_status" in
-  200|204) echo "OK GET /api/me autenticado -> ${auth_status}" ;;
-  *) echo "Falha em endpoint autenticado /api/me: HTTP ${auth_status}" >&2; exit 1 ;;
+  200|204) echo "OK GET /api/usuarios/me autenticado -> ${auth_status}" ;;
+  *) echo "Falha em endpoint autenticado /api/usuarios/me: HTTP ${auth_status}" >&2; exit 1 ;;
 esac
 
 echo "Smoke API concluído sem expor token."

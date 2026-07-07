@@ -21,6 +21,6 @@ $login = Invoke-RestMethod -Method Post -Uri "$BaseUrl/api/auth/login" -ContentT
 $token = $login.token
 if (-not $token -and $login.data) { $token = $login.data.token }
 if (-not $token) { throw 'Login respondeu sem token em campo conhecido.' }
-$response = Invoke-WebRequest -Method GET -Uri "$BaseUrl/api/me" -Headers @{ Authorization = "Bearer $token" } -UseBasicParsing -SkipHttpErrorCheck
-if ([int]$response.StatusCode -notin @(200,204)) { throw "Falha em /api/me autenticado: HTTP $($response.StatusCode)" }
+$response = Invoke-WebRequest -Method GET -Uri "$BaseUrl/api/usuarios/me" -Headers @{ Authorization = "Bearer $token" } -UseBasicParsing -SkipHttpErrorCheck
+if ([int]$response.StatusCode -notin @(200,204)) { throw "Falha em /api/usuarios/me autenticado: HTTP $($response.StatusCode)" }
 Write-Host "Smoke API concluído sem expor token."

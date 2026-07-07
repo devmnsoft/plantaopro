@@ -1,76 +1,22 @@
-# Sprint Zero — App Mobile PlantãoPro
+# Sprint zero — app médico PlantãoPro
 
-## Objetivo
-Preparar o aplicativo mobile MVP para médicos usando os contratos atuais da API Mobile, sem criar dependências de publicação nas lojas nesta fase.
+## Implementado e testado por inspeção
 
-## Stack recomendada
-- stack mobile baseada em aplicativo móvel multiplataforma.
-- TypeScript.
-- roteamento mobile seguro e navegação autenticada.
-- SecureStore para JWT e dados sensíveis.
-- TanStack Query ou camada simples de services para cache e loading.
-- Axios/fetch com interceptor para `Authorization: Bearer <token>`.
+- LoginScreen com validação amigável, sem `alert()` nativo.
+- Navegação MVP autenticada em `AppNavigator` para Início, Plantões, Convites, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- Consumo de `EXPO_PUBLIC_API_BASE_URL` via `services/api.ts`, com JWT no header Authorization e fallback amigável.
+- Loading, empty state e error state básicos nos fluxos já conectados.
 
-## Organização de pastas sugerida
-```text
-app/
-  (auth)/login.tsx
-  (tabs)/dashboard.tsx
-  (tabs)/agenda.tsx
-  (tabs)/convites.tsx
-  (tabs)/pagamentos.tsx
-  suporte/
-components/
-  EmptyState.tsx
-  KpiCard.tsx
-  LoadingState.tsx
-services/
-  api.ts
-  auth.ts
-  mobile.ts
-store/
-  session.ts
-utils/
-  formatters.ts
-```
+## Implementado e não testado em runtime
 
-## Fluxo de login
-1. Usuário informa e-mail e senha.
-2. App chama `POST /api/mobile/auth/login`.
-3. App salva token em SecureStore.
-4. App chama `GET /api/mobile/me` e `GET /api/mobile/dashboard`.
-5. Em 401, limpar sessão e retornar para login.
-6. Em 403 por plano sem mobile, exibir tela amigável orientando contato com a coordenação.
+- `npm install` executou com sucesso após manter as dependências Expo já compatíveis do projeto. O `npm run start` ainda precisa ser validado em estação interativa/rede liberada porque o Metro tentou acesso externo e retornou `fetch failed`.
 
-## Telas MVP
-- Login.
-- Dashboard do médico.
-- Plantões disponíveis.
-- Detalhe do plantão.
-- Convites.
-- Minhas escalas.
-- Meus pagamentos.
-- Notificações.
-- Perfil.
-- Disponibilidade.
-- Preferências.
-- Suporte/chamados.
+## Parcial
 
-## Estados obrigatórios
-- Loading com skeleton simples.
-- EmptyState com orientação de próxima ação.
-- Erro 401: sessão expirada.
-- Erro 403: acesso/plano bloqueado.
-- Erro offline/time-out: tentar novamente.
-- Toast/snackbar para solicitação, aceite, recusa, perfil e suporte.
+- Disponibilidade e Preferências têm telas navegáveis e mensagens honestas, mas a gravação depende da homologação final dos endpoints.
+- ConviteDetalheScreen está navegável como MVP de detalhe/estado parcial; ações aceitar/recusar devem ser ligadas aos endpoints reais antes de piloto produtivo.
 
-## Roadmap de publicação
-1. Sprint Zero: arquitetura, navegação, autenticação e design tokens.
-2. Sprint 1: dashboard, plantões disponíveis e solicitação.
-3. Sprint 2: convites, escalas e notificações.
-4. Sprint 3: pagamentos, perfil, disponibilidade e suporte.
-5. Pré-lojas: ícones, splash, permissões, política de privacidade e build Android/iOS.
+## Pendente
 
-## Integração com operação assistida
-
-Durante a Sprint Zero do app, usar o módulo de operação assistida para registrar validações mobile-first: login, dashboard, plantões disponíveis, convites, escalas, pagamentos, notificações, suporte e perfil. Qualquer bloqueio do app deve ser aberto como ocorrência de homologação com prioridade adequada.
+- Secure storage nativo persistente para JWT quando for permitido instalar dependências Expo adicionais.
+- Testes automatizados mobile.

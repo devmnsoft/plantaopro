@@ -14,3 +14,18 @@
 | Plantões | Plantões/Escalas | Operação | Plantoes/Escalas | /api/plantoes /api/escalas | Plantoes/Escalas | Index/Create/Edit | Views/Plantoes/Escalas | Sim | Não | Não | Não | Sim | Sim | Parcial | Parcial | Sim | Sim | Sim | Sim | Sim | Sim | Sim | Parcial | QA conflitos |
 | Gestão | Usuários/Perfis | Acesso | Usuarios/Permissoes | /api/usuarios | Usuarios/Perfis | Index | Views/Usuarios/Perfis | Sim | Não | Não | Não | N/A | Sim | Parcial | Parcial | Sim | Sim | Sim | Sim | Sim | Sim | Sim | Parcial | Revisar RBAC por perfil |
 | Ajuda | Manual | Jornada leiga | Ajuda/Manual | /api/ajuda | Ajuda/Manual | Index/Perfil | Views/Ajuda/Manual | N/A | Não | Não | Não | N/A | N/A | N/A | N/A | Sim | Sim | Sim | Sim | Sim | N/A | N/A | Completo | Manter por release |
+
+
+## Consolidação RC técnica — julho/2026
+
+| Área | Status | Critério honesto |
+| --- | --- | --- |
+| Build backend | Bloqueado | SDK .NET ausente no container; CI criado para validar em runner com .NET 10. |
+| Testes backend | Bloqueado | Dependem do build em ambiente com SDK. |
+| CI GitHub Actions | Pronto | Workflow `dotnet-ci.yml` criado para push e pull_request. |
+| Segurança de configuração | Pronto | Segredos substituídos por placeholders e banco padronizado como `plantaopro`. |
+| Banco/migrations/seeds | Parcial | Ordem documentada; execução PostgreSQL real pendente neste ambiente. |
+| Menus/RBAC | Parcial | Varredura estática Web/API sem padrões proibidos; navegação real pendente. |
+| Saúde 360 | Parcial | Fluxos documentados para QA; validação ponta a ponta depende de API/Web e banco. |
+| Plantões/escalas/financeiro médico | Parcial | Fluxo documentado; validar duplicidades, conflitos e auditoria em runtime. |
+| Mobile médico MVP | Parcial | Navegação mínima implementada; start Expo depende de npm/ambiente liberado. |

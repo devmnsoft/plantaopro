@@ -1,13 +1,18 @@
-# Pendências reais pós-auditoria
+# Pendências reais pós-auditoria — RC julho/2026
 
-## Críticas
-- Reexecutar build/test em ambiente com SDK .NET; o container atual não possui `dotnet`.
+## Bloqueado por ambiente
 
-## Altas
-- Validar POSTs Saúde 360 contra banco PostgreSQL real e conferir auditoria de cadastros críticos.
+- Instalar SDK .NET 10 no runner/local para executar `dotnet restore`, `dotnet build` e `dotnet test`.
+- Executar PostgreSQL real e aplicar `database/PlantaoPro_PostgreSQL_Completo.sql`, migrations e seeds.
+- Liberar registry npm para validar `npm install` e `npm run start` do app Expo.
 
-## Médias
-- Evoluir view models específicos por formulário clínico para substituir campos genéricos progressivamente.
+## Parcial
 
-## Baixas
-- Adicionar testes E2E visuais e screenshots em homologação.
+- Homologação ponta a ponta Saúde 360 em Web/API com perfis RECEPCAO, TRIAGEM, MEDICO, FINANCEIRO_CLINICA, COORDENADOR_CLINICO, ADMINISTRADOR_CLINICA e AUDITOR_CLINICO.
+- Homologação de plantões/escalas/financeiro médico com validação de conflitos, duplicidade de pagamento, justificativas, auditoria e notificações.
+- Secure storage nativo no mobile para persistência criptografada de JWT.
+
+## Pendente antes de piloto produtivo
+
+- Evidência de Swagger, `/api/health`, login Web e menus sem 404 em ambiente executável.
+- Relatório SQL com aplicação real das migrations/seeds e correção de eventuais 42P01/42703.

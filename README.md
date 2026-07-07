@@ -23,3 +23,24 @@ Foram adicionados endpoints reais para hospitais, especialidades, plantões, esc
 - Endpoints notificações: `/api/notificacoes`, `/api/notificacoes/nao-lidas`, `PUT /api/notificacoes/{id}/lida`, `PUT /api/notificacoes/lidas`.
 - Dashboard: `GET /api/dashboard` e `GET /api/mobile/home` com indicadores/listas/gráficos.
 - Operações críticas devem sempre usar transação explícita, histórico de status e auditoria.
+
+## Release Candidate técnico — julho/2026
+
+### Build, testes e CI
+
+- A solution oficial é `backend/PlantaoPro.sln` e o projeto de testes esperado é `backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj`.
+- O CI `.github/workflows/dotnet-ci.yml` executa restore, build Release e testes em push e pull request com SDK `10.0.x` preview, necessário para projetos `net10.0`.
+- No ambiente desta consolidação local, o comando `dotnet --info` ficou bloqueado porque o SDK .NET não está instalado no container; a validação executável fica coberta pelo GitHub Actions até o SDK estar disponível na estação.
+
+### Configuração segura
+
+- O banco padronizado para desenvolvimento e homologação é `plantaopro`.
+- `appsettings.json` e `appsettings.example.json` usam placeholders (`Password=CHANGE_ME` e `Jwt:Key=CHANGE_ME_WITH_32+_CHARS`).
+- Em desenvolvimento, use `dotnet user-secrets` para sobrescrever `ConnectionStrings:Default` e `Jwt:Key`.
+- Em produção, use variáveis de ambiente/secret manager. Não versionar senha, token, JWT real, connection string real ou chaves de integrações.
+
+### Mobile médico MVP
+
+- O app Expo possui fluxo autenticado com Login, Dashboard, Plantões Disponíveis, Convites, Detalhe do Convite, Minhas Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- A API base deve ser informada por `EXPO_PUBLIC_API_BASE_URL`; não há URL fixa de produção.
+- O armazenamento de JWT está encapsulado em storage compatível e documentado como parcial para hardening com secure storage nativo quando a política do registry permitir instalar dependências adicionais.

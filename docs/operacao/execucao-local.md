@@ -106,3 +106,16 @@ Depois suba a API, confirme o Swagger em `http://localhost:51976/swagger`, suba 
 - Web HTTP abre em `http://localhost:52976/Account/Login`.
 - `PlantaoPro.Web` aponta para `http://localhost:51976` em desenvolvimento.
 - PostgreSQL está em execução antes da API.
+
+## Segredos e banco padronizado
+
+- O banco local padrão é `plantaopro`; evite `Database=postgres` nos appsettings do projeto.
+- Não grave senha real, JWT real, token ou connection string produtiva no repositório.
+- Para desenvolvimento, configure segredos com:
+
+```bash
+dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=plantaopro;Username=postgres;Password=CHANGE_ME;Search Path=plantaopro" --project backend/PlantaoPro.Api
+dotnet user-secrets set "Jwt:Key" "CHANGE_ME_WITH_32+_CHARS" --project backend/PlantaoPro.Api
+```
+
+- Em produção/homologação, prefira variáveis de ambiente ou secret manager da plataforma.

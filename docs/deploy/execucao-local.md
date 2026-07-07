@@ -95,3 +95,9 @@ Para uso temporário em HTTP, configure `http://localhost:51976` e mantenha qual
 - Verifique se o profile da API usa `launchUrl: "swagger"` em `launchSettings.json`.
 - Verifique se `Program.cs` da API mapeia Swagger em `Development`.
 - Confirme que o ambiente está como `Development`.
+
+## Segurança de configuração
+
+- Use `backend/PlantaoPro.Api/appsettings.example.json` e `backend/PlantaoPro.Web/appsettings.example.json` como referência.
+- O banco correto é `plantaopro`; a antiga referência a `Database=postgres` foi substituída por placeholder seguro.
+- Segredos devem ser fornecidos por user-secrets em desenvolvimento e variáveis de ambiente/secret manager em produção.

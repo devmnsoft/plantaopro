@@ -1,0 +1,19 @@
+@model string
+@{
+    var partes = Model.Split('|');
+    ViewData["Title"] = partes[0];
+}
+<h1>@partes[0]</h1>
+<p class="lead">Agenda clínica visual com filtros por data, médico, especialidade, status e unidade.</p>
+<form class="row g-2 mb-3"><input class="form-control col" name="data" type="date" /><input class="form-control col" name="medico" placeholder="Médico" /><input class="form-control col" name="unidade" placeholder="Unidade" /><button class="btn btn-primary col-auto" type="submit">Filtrar</button></form>
+<div class="row g-3">
+@for (var i = 1; i < partes.Length; i++)
+{
+    <div class="col-md-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body">
+        <span class="badge bg-success">@partes[i]</span><h2 class="h5 mt-2">Paciente demo @(i)</h2>
+        <p>Especialidade, médico e unidade aparecem em cards para reduzir tabela crua.</p>
+        <a class="btn btn-outline-primary btn-sm" href="/Agendamentos/CheckIn">Check-in</a>
+        <a class="btn btn-outline-secondary btn-sm" href="/Triagem/Fila">Enviar para triagem</a>
+    </div></article></div>
+}
+</div>

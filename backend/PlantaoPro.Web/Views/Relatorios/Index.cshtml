@@ -1,25 +1,17 @@
 @{
-    ViewData["Title"] = "Relatórios";
+    ViewData["Title"] = "Relatórios gerenciais";
+    var relatorios = new[] { "Plantões por período", "Escalas por médico", "Pagamentos médicos", "Produtividade médica", "Agendamentos", "Atendimentos clínicos", "Financeiro da Clínica", "Convênios e glosas", "Uso do Plano SaaS", "Auditoria" };
 }
-<div class="page-header mb-4"><h2 class="page-title">Relatórios Gerenciais</h2><p class="page-subtitle">Acesso rápido aos pacotes executivos em PDF e planilhas Excel (UX nesta etapa).</p></div>
+<h1>Relatórios gerenciais vendáveis</h1>
+<p class="lead">Visões executivas com filtros, cards de resumo, tabela responsiva e bloqueio comercial para exportações ainda não auditadas.</p>
+<div class="alert alert-warning">LGPD: relatórios clínicos exibem apenas o mínimo necessário por perfil e tenant.</div>
 <div class="row g-3">
-    @foreach (var r in new[]{
-        ("Produção de Plantões","Acompanhamento operacional por período.","bi-calendar2-week"),
-        ("Performance Médica","Resumo de adesão, presença e volume assistencial.","bi-person-badge"),
-        ("Conciliação Financeira","Pagamentos pendentes, pagos e projeções.","bi-cash-stack"),
-        ("Auditoria e Compliance","Logs e rastreabilidade para governança.","bi-shield-check")
-    })
-    {
-        <div class="col-12 col-md-6 col-xl-3">
-            <div class="data-card card h-100 p-3">
-                <div class="metric-icon"><i class="bi @r.Item3"></i></div>
-                <h6 class="mb-1">@r.Item1</h6>
-                <p class="text-muted small mb-3">@r.Item2</p>
-                <div class="d-flex gap-2 mt-auto">
-                    <button class="btn btn-soft-primary btn-sm" disabled title="Disponível na próxima versão">PDF</button>
-                    <button class="btn btn-soft-secondary btn-sm" disabled title="Disponível na próxima versão">Excel</button>
-                </div>
-            </div>
-        </div>
-    }
+@foreach (var relatorio in relatorios)
+{
+    <div class="col-md-6"><article class="card h-100 shadow-sm"><div class="card-body">
+        <h2 class="h5">Relatório de @relatorio</h2>
+        <p>Filtros por período, unidade, médico, status e perfil responsável quando aplicável.</p>
+        <button class="btn btn-secondary" type="button" disabled>Exportação futura bloqueada até auditoria</button>
+    </div></article></div>
+}
 </div>

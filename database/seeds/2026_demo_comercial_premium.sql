@@ -1,0 +1,5 @@
+-- Seed idempotente para demo comercial premium PlantãoPro.
+CREATE TABLE IF NOT EXISTS plantao_pro_demo_premium (chave text PRIMARY KEY, valor text NOT NULL, atualizado_em timestamptz NOT NULL DEFAULT now());
+INSERT INTO plantao_pro_demo_premium (chave, valor) VALUES
+('cliente_demo','Clínica Horizonte Saúde'),('tenant_demo','tenant-horizonte-demo'),('usuarios_por_perfil','admin,coordenacao,medico,recepcao,triagem,financeiro'),('medicos','médicos demo'),('hospitais_unidades','unidades demo'),('especialidades','clínica médica, pediatria, ortopedia'),('pacientes','pacientes demo'),('agendamentos','agenda do dia'),('triagens','fila e classificação'),('consultas','consultas em andamento'),('prescricoes','prescrições emitidas'),('convenios','convênios e autorizações'),('planos','Plano Enterprise demo'),('plantoes','plantões publicados'),('escalas','escalas confirmadas'),('pagamentos','pagamentos médicos'),('notificacoes','notificações operacionais'),('pendencias_operacionais','plantões sem médico, contas vencidas, triagem pendente')
+ON CONFLICT (chave) DO UPDATE SET valor = EXCLUDED.valor, atualizado_em = now();

@@ -12,3 +12,9 @@ Status: **demo funcional guiada**, dependente de ambiente local com API, banco e
 - [ ] Plantão, escala e pagamento médico.
 - [ ] Auditoria/LGPD.
 - [ ] Mobile médico com `EXPO_PUBLIC_API_BASE_URL`.
+
+## Rodada 2026-07-07 — prontidão para demo
+
+Classificação: **Demo funcional não comprovada neste executor** / **Bloqueado por ambiente**.
+
+Não usar esta rodada como evidência de demo ao vivo sem antes executar build, banco, API, Web, smoke API, smoke Web e QA mínimo em ambiente com .NET 10 SDK preview, Docker e psql.

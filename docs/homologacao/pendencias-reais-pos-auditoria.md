@@ -23,3 +23,35 @@
 - Executar PostgreSQL local via Docker e aplicar `scripts/database/apply-local-postgres.*` com `psql`.
 - Executar roteiro QA completo por perfil e registrar evidências.
 - Homologar Expo/Metro em ambiente interativo e substituir storage em memória por secure storage quando possível.
+
+## Rodada 2026-07-07 — CI/runtime/homologação final
+
+Classificação honesta desta rodada: **Bloqueado por ambiente**.
+
+### Execuções realizadas
+
+- `dotnet --info`, `dotnet restore backend/PlantaoPro.sln`, `dotnet build backend/PlantaoPro.sln -c Release` e `dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release`: bloqueados porque `dotnet não encontrado` no executor.
+- `docker compose config`, `docker compose up -d` e `docker compose ps`: bloqueados porque `docker não encontrado` no executor.
+- `bash scripts/database/apply-local-postgres.sh`: bloqueado porque `psql não encontrado` no executor.
+- `npm install` em `mobile/PlantaoPro.App`: executado com sucesso.
+- `CI=1 npm run start` em `mobile/PlantaoPro.App`: Expo/Metro iniciou, mas falhou com `TypeError: fetch failed` no ambiente não interativo/rede.
+
+### Correções aplicadas
+
+- Corrigido arquivo `backend/PlantaoPro.sln`, removendo bloco duplicado inválido após `EndGlobal`.
+- Atualizado workflow `.github/workflows/dotnet-ci.yml` para incluir diagnóstico `dotnet --info` antes do restore/build/test.
+- Criados scripts reproduzíveis `scripts/smoke/smoke-api.sh` e `scripts/smoke/smoke-api.ps1` para `/`, `/api/health`, `/api/health/db`, `/swagger`, login admin e endpoint autenticado sem expor token.
+
+### Comandos de revalidação
+
+```bash
+dotnet --info
+dotnet restore backend/PlantaoPro.sln
+dotnet build backend/PlantaoPro.sln -c Release
+dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
+docker compose config
+docker compose up -d
+bash scripts/database/apply-local-postgres.sh
+bash scripts/smoke/smoke-api.sh
+cd mobile/PlantaoPro.App && npm install && CI=1 npm run start
+```

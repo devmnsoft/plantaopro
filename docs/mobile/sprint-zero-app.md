@@ -27,3 +27,22 @@
 - API base deve ser configurada por `EXPO_PUBLIC_API_BASE_URL`; não usar URL fixa de produção.
 - Segurança parcial: token em storage em memória até homologar `expo-secure-store` em ambiente interativo.
 - Pendência: executar `npm install` e `npm run start` com Expo/Metro aberto para evidência visual.
+
+## Rodada 2026-07-07 — status de homologação mobile
+
+Classificação mobile: **Bloqueado por ambiente** para execução Metro completa no executor atual.
+
+Evidência:
+
+- `npm install` concluiu com sucesso em `mobile/PlantaoPro.App`.
+- `CI=1 npm run start` iniciou Metro, mas encerrou com `TypeError: fetch failed`, compatível com limitação de ambiente não interativo/rede para Expo.
+
+Próximo passo reproduzível:
+
+```bash
+cd mobile/PlantaoPro.App
+npm install
+CI=1 npm run start
+```
+
+Em máquina com emulador ou Expo Go, repetir sem `CI=1` e validar Login, Home, Plantões, Convites, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.

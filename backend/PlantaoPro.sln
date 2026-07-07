@@ -54,6 +54,4 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-EndProject("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Tests", "PlantaoPro.Tests\PlantaoPro.Tests.csproj", "{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}"
-EndProject
-Global
+EndGlobal

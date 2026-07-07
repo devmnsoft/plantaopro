@@ -60,3 +60,22 @@ dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
 ```
 
 Health checks: `GET /`, `GET /api/health`, `GET /api/health/db`. O mobile usa `EXPO_PUBLIC_API_BASE_URL` e deve ser validado em sessão Expo/Metro interativa.
+
+## Status de homologação — rodada 2026-07-07
+
+Classificação atual: **Bloqueado por ambiente**.
+
+Nesta rodada foram preparados CI e scripts de smoke para validação real, mas o executor não possui `dotnet`, `docker` nem `psql`. Por isso, build/test, PostgreSQL, migrations/seeds, API, Web e smoke funcional completo não puderam ser aprovados localmente. O mobile executou `npm install`, mas `CI=1 npm run start` falhou com `TypeError: fetch failed` durante inicialização do Expo/Metro.
+
+Revalidação mínima:
+
+```bash
+dotnet --info
+dotnet restore backend/PlantaoPro.sln
+dotnet build backend/PlantaoPro.sln -c Release
+dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
+docker compose config
+docker compose up -d
+bash scripts/database/apply-local-postgres.sh
+bash scripts/smoke/smoke-api.sh
+```

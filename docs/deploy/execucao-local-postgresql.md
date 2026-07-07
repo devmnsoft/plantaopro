@@ -25,3 +25,19 @@ PowerShell:
 ```powershell
 ./scripts/database/apply-local-postgres.ps1 -HostName localhost -Port 5432 -Database plantaopro -User postgres -Password 123456
 ```
+
+## Rodada 2026-07-07 — validação local PostgreSQL
+
+Resultado: **Bloqueado por ambiente**.
+
+- `docker compose config`: não executou porque `docker não encontrado`.
+- `docker compose up -d`: não executou porque `docker não encontrado`.
+- `bash scripts/database/apply-local-postgres.sh`: iniciou validação e falhou corretamente com `psql não encontrado`.
+
+Comando reproduzível em ambiente preparado:
+
+```bash
+docker compose config
+docker compose up -d
+bash scripts/database/apply-local-postgres.sh
+```

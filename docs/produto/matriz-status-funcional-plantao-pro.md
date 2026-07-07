@@ -39,3 +39,9 @@
 | Web/API | Parcial | Health real preparado; QA ponta a ponta pendente. |
 | Mobile MVP | Parcial | Navegação MVP existe; Expo interativo pendente. |
 | Demo comercial | Implementado sem validação real | Roteiro e checklist criados para execução guiada. |
+
+## Status 2026-07-07
+
+Classificação geral: **Bloqueado por ambiente**.
+
+Motivo: o executor não contém `dotnet`, `docker` nem `psql`, impedindo build/test, PostgreSQL, migrations/seeds, API, Web, smoke API/Web e QA funcional real. O mobile executou `npm install`, mas o Metro falhou com `TypeError: fetch failed` em ambiente não interativo/rede.

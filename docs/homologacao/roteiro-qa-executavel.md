@@ -24,3 +24,22 @@ Criar paciente, agendar consulta, confirmar, check-in, painel de chamada, triage
 ## Fluxo 4 — Permissões
 
 Médico não acessa dados de outro médico; recepção não acessa evolução/prescrição; financeiro não vê conteúdo clínico sensível; tenant não acessa outro tenant; módulo bloqueado exibe bloqueio amigável.
+
+## Rodada 2026-07-07 — roteiro de reexecução obrigatório
+
+Antes de promover para Homologável, executar nesta ordem:
+
+```bash
+dotnet --info
+docker compose config
+docker compose up -d
+bash scripts/database/apply-local-postgres.sh
+dotnet restore backend/PlantaoPro.sln
+dotnet build backend/PlantaoPro.sln -c Release
+dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
+dotnet run --project backend/PlantaoPro.Api
+bash scripts/smoke/smoke-api.sh
+dotnet run --project backend/PlantaoPro.Web
+```
+
+Registrar evidências HTTP reais para `/Account/Login`, dashboard e menus principais descritos em `docs/homologacao/smoke-web.md`.

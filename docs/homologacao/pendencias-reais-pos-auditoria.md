@@ -40,7 +40,7 @@ Classificação honesta desta rodada: **Bloqueado por ambiente**.
 
 - Corrigido arquivo `backend/PlantaoPro.sln`, removendo bloco duplicado inválido após `EndGlobal`.
 - Atualizado workflow `.github/workflows/dotnet-ci.yml` para incluir diagnóstico `dotnet --info` antes do restore/build/test.
-- Criados scripts reproduzíveis `scripts/smoke/smoke-api.sh` e `scripts/smoke/smoke-api.ps1` para `/`, `/api/health`, `/api/health/db`, `/swagger`, login admin e endpoint autenticado sem expor token.
+- Criados scripts reproduzíveis `scripts/smoke/smoke-api.sh` e `scripts/smoke/smoke-api.ps1` para `/`, `/api/health`, `/api/health/db`, `/swagger`, login admin e endpoint autenticado `/api/usuarios/me` sem expor token.
 
 ### Comandos de revalidação
 

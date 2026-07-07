@@ -31,7 +31,7 @@ public class HomologacaoFinalRuntimeContractTests
             Assert.Contains("/api/health/db", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("/swagger", content, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("/api/auth/login", content, StringComparison.OrdinalIgnoreCase);
-            Assert.Contains("/api/me", content, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("/api/usuarios/me", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("echo $TOKEN", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("Write-Host $token", content, StringComparison.OrdinalIgnoreCase);
         }

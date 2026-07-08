@@ -65,3 +65,12 @@ cd mobile/PlantaoPro.App && npm install && CI=1 npm run start
 - Demo premium documentada com usuários por perfil e seed idempotente `database/seeds/2026_demo_comercial_premium.sql`.
 - Mobile médico mantém telas mínimas, fallback amigável, uso de `EXPO_PUBLIC_API_BASE_URL` e sem log de token.
 - Classificação: Evolução funcional parcial no ambiente atual quando SDK .NET ou Docker não estiverem disponíveis; Demo premium navegável para apresentação.
+
+## Rodada runtime real — 2026-07-08
+
+- Corrigida a duplicidade de `AgendamentosController`: permanece apenas o controller consolidado em `Saude360WebControllers.cs`, herdando `Saude360WebControllerBase` e consumindo `Saude360WebService`.
+- Operação Inteligente deixou de usar demo como fonte padrão na Web e agora consome `GET /api/operacao-inteligente/resumo`; fallback demo somente com `DemoMode=true`.
+- `OperacaoRecomendacaoService` foi direcionado para PostgreSQL/Dapper com consultas reais e tratamento amigável quando tabelas/colunas ainda não existirem no ambiente.
+- Dashboards por perfil receberam contratos API reais em `/api/dashboards/*`; a camada Web premium ainda deve ser evoluída para visualização rica completa.
+- Validação de build/test permanece bloqueada neste container por ausência de SDK `dotnet`.
+- PR #222 deve ser considerada superada por esta rodada para os itens de Agendamentos e Operação Inteligente; trechos úteis devem ser reaproveitados manualmente apenas após rebase/validação, pois a PR estava antiga e não mergeável.

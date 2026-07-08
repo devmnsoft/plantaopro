@@ -127,6 +127,7 @@ builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<Fase6BiIntegracoesService>();
 builder.Services.AddScoped<OperacaoRecomendacaoService>();
+builder.Services.AddScoped<DashboardPremiumService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

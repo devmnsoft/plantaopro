@@ -79,3 +79,9 @@ As validações de isolamento por médico, recepção, financeiro, tenant e mód
 - Demo premium documentada com usuários por perfil e seed idempotente `database/seeds/2026_demo_comercial_premium.sql`.
 - Mobile médico mantém telas mínimas, fallback amigável, uso de `EXPO_PUBLIC_API_BASE_URL` e sem log de token.
 - Classificação: Evolução funcional parcial no ambiente atual quando SDK .NET ou Docker não estiverem disponíveis; Demo premium navegável para apresentação.
+
+## Evidência adicional — 2026-07-08
+
+- `dotnet --info`, `restore`, `build` e `test` não puderam ser executados porque o SDK .NET não está instalado no container (`dotnet: command not found`).
+- A varredura de controller confirma correção esperada quando executada após a alteração: apenas `Saude360WebControllers.cs` deve conter `class AgendamentosController`.
+- Classificação: evolução funcional implementada, pendente de validação em ambiente com SDK .NET, Docker e PostgreSQL.

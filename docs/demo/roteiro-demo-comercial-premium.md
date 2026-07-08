@@ -21,3 +21,7 @@
 
 ## Pendências reais
 Build, banco e smoke dependem do SDK .NET e Docker disponíveis no ambiente de homologação. Exportação real de relatórios permanece bloqueada até trilha de auditoria específica.
+
+## Nota de status real — 2026-07-08
+
+Esta documentação diferencia demonstração comercial de runtime real: dados demo só devem ser usados com `DemoMode=true`. Fluxos marcados como parciais exigem validação em ambiente com API, PostgreSQL, Docker/Expo e massa de homologação antes de qualquer declaração de produção.

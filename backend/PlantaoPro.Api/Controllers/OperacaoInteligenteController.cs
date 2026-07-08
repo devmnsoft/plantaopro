@@ -19,12 +19,12 @@ public sealed class OperacaoInteligenteController : ControllerBase
     }
 
     [HttpGet("resumo")]
-    public ActionResult<ApiResponse<OperacaoInteligenteResumoDto>> Resumo()
+    public async Task<ActionResult<ApiResponse<OperacaoInteligenteResumoDto>>> Resumo()
     {
         try
         {
             var perfil = User.Claims.FirstOrDefault(c => c.Type.EndsWith("role", StringComparison.OrdinalIgnoreCase))?.Value;
-            var resumo = _service.GerarResumo(null, null, perfil);
+            var resumo = await _service.GerarResumoAsync(null, null, perfil);
             return Ok(ApiResponse<OperacaoInteligenteResumoDto>.Ok(resumo, "Resumo da operação inteligente carregado."));
         }
         catch (Exception ex)

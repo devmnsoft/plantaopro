@@ -89,3 +89,10 @@ bash scripts/smoke/smoke-api.sh
 - Demo premium documentada com usuários por perfil e seed idempotente `database/seeds/2026_demo_comercial_premium.sql`.
 - Mobile médico mantém telas mínimas, fallback amigável, uso de `EXPO_PUBLIC_API_BASE_URL` e sem log de token.
 - Classificação: Evolução funcional parcial no ambiente atual quando SDK .NET ou Docker não estiverem disponíveis; Demo premium navegável para apresentação.
+
+### Atualização runtime real (2026-07-08)
+
+- Operação Inteligente Web agora prioriza a API real `/api/operacao-inteligente/resumo`; modo demo exige `DemoMode=true`.
+- Recomendações operacionais consultam PostgreSQL via Dapper e registram pendências amigáveis quando a estrutura de banco do ambiente ainda não estiver disponível.
+- Dashboards premium por perfil possuem endpoints API iniciais em `/api/dashboards/admin-global`, `/admin-cliente`, `/coordenacao`, `/medico`, `/financeiro` e `/saude360`.
+- O controller duplicado de Agendamentos foi removido; a rota Web permanece centralizada no controller Saúde 360.

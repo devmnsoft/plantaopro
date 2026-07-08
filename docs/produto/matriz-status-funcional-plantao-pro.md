@@ -55,3 +55,14 @@ Motivo: o executor não contém `dotnet`, `docker` nem `psql`, impedindo build/t
 - Demo premium documentada com usuários por perfil e seed idempotente `database/seeds/2026_demo_comercial_premium.sql`.
 - Mobile médico mantém telas mínimas, fallback amigável, uso de `EXPO_PUBLIC_API_BASE_URL` e sem log de token.
 - Classificação: Evolução funcional parcial no ambiente atual quando SDK .NET ou Docker não estiverem disponíveis; Demo premium navegável para apresentação.
+
+## Atualização runtime real — 2026-07-08
+
+| Área | Status honesto | Observação |
+| --- | --- | --- |
+| Agendamentos Web | Funcional/pendente QA | Controller duplicado removido; agenda segue no controller Saúde 360 real. |
+| Operação Inteligente | Funcional/pendente QA banco | Web consome API real; service consulta PostgreSQL com fallback de pendência ambiental por tabela ausente. |
+| Dashboards premium API | Parcial funcional | Endpoints por perfil criados com KPIs reais agregados; Web rica ainda parcial. |
+| Agenda visual premium | Parcial | Sem dados demo no controller duplicado removido; requer refinamento visual completo em cima do fluxo Saúde 360. |
+| Mobile médico | Parcial | Contratos existentes mantidos; evolução visual completa depende de validação Expo/API. |
+| Relatórios | Parcial | Exportação sensível segue bloqueada até trilha de auditoria específica. |

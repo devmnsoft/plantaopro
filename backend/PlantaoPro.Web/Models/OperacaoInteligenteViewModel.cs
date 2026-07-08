@@ -31,3 +31,32 @@ public sealed class OperacaoInteligenteViewModel
 
 public record OperacaoPendenciaViewModel(string Titulo,string Motivo,string Prioridade,string PerfilResponsavel,string Cta,string UrlOrigem,string Status);
 public record OperacaoRecomendacaoViewModel(string Severidade,string PerfilAlvo,string Modulo,string Mensagem,string AcaoSugerida,string UrlAcao);
+
+public sealed class OperacaoInteligenteResumoApiDto
+{
+    public IEnumerable<OperacaoPendenciaApiDto> Pendencias { get; set; } = Array.Empty<OperacaoPendenciaApiDto>();
+    public IEnumerable<OperacaoRecomendacaoApiDto> Recomendacoes { get; set; } = Array.Empty<OperacaoRecomendacaoApiDto>();
+    public string MensagemGuia { get; set; } = string.Empty;
+    public string ProximoPasso { get; set; } = string.Empty;
+}
+
+public sealed class OperacaoPendenciaApiDto
+{
+    public string Titulo { get; set; } = string.Empty;
+    public string Motivo { get; set; } = string.Empty;
+    public string Prioridade { get; set; } = string.Empty;
+    public string PerfilResponsavel { get; set; } = string.Empty;
+    public string Cta { get; set; } = string.Empty;
+    public string UrlOrigem { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+}
+
+public sealed class OperacaoRecomendacaoApiDto
+{
+    public string Severidade { get; set; } = string.Empty;
+    public string PerfilAlvo { get; set; } = string.Empty;
+    public string Modulo { get; set; } = string.Empty;
+    public string Mensagem { get; set; } = string.Empty;
+    public string AcaoSugerida { get; set; } = string.Empty;
+    public string UrlAcao { get; set; } = string.Empty;
+}

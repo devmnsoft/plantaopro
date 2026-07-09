@@ -101,3 +101,13 @@ bash scripts/smoke/smoke-api.sh
 ## Status pós-RC UX/QA
 
 Classificação atual: **Funcional pendente QA** para versão homologável/demonstrável, sem declaração de produção. Dashboards Web premium consomem `/api/dashboards/*`; agenda clínica premium consome `/api/agendamentos*`; smoke cobre health, login, `/api/usuarios/me`, Operação Inteligente e dashboards. PR #222 foi considerada superada/documentada nesta rodada porque o repositório local não expõe remoto/branch da PR para fechamento automático.
+
+## Homologação funcional CRUDs, ações e jornadas — 2026-07-09
+
+Classificação: **Funcional pendente QA / Bloqueado por ambiente local**. A rodada reforça contratos, smoke e documentação para validar CRUDs de Pacientes, Agendamentos, Painel de Chamada, Triagem, Consultas, CID, Prescrições, Financeiro Clínica, Convênios, Planos de Saúde, Plantões, Escalas, Financeiro Médico, Notificações e Mobile Médico.
+
+- Smoke `scripts/smoke/smoke-api.sh` cobre API e Web principais; rotas protegidas podem retornar `302`, mas `404` e `500` falham.
+- Testes contratuais verificam controllers Web, endpoints principais, menu sem rota órfã conhecida, ausência de padrões MVC proibidos, ausência de segredos em `appsettings`, mobile com `EXPO_PUBLIC_API_BASE_URL` e sem `Alert.alert`.
+- Não declarar produção até executar build/test, Docker/PostgreSQL, migrations/seeds e QA manual por perfil.
+
+Homologação funcional implementada e preparada para validação em ambiente com SDK .NET, Docker e PostgreSQL.

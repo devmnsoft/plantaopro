@@ -69,7 +69,19 @@ for endpoint in \
   /api/dashboards/coordenacao \
   /api/dashboards/medico \
   /api/dashboards/financeiro \
-  /api/dashboards/saude360; do
+  /api/dashboards/saude360 \
+  /api/agendamentos \
+  /api/triagens \
+  /api/consultas \
+  /api/cid \
+  /api/prescricoes \
+  /api/clinica-financeiro \
+  /api/convenios \
+  /api/planos-saude \
+  /api/plantoes \
+  /api/escalas \
+  /api/financeiro/pagamentos \
+  /api/notificacoes; do
   status="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}${endpoint}" -H "Authorization: Bearer ${TOKEN}")"
   case "$status" in
     200|204) echo "OK GET ${endpoint} autenticado -> ${status}" ;;
@@ -77,4 +89,35 @@ for endpoint in \
   esac
 done
 
-echo "Smoke API concluído sem expor token."
+WEB_BASE_URL="${PLANTAOPRO_WEB_BASE_URL:-${BASE_URL}}"
+for route in \
+  /Dashboard \
+  /DashboardsPremium/AdministradorCliente \
+  /OperacaoInteligente \
+  /Pacientes \
+  /Pacientes/Create \
+  /Agendamentos \
+  /Agendamentos/AgendaDia \
+  /Agendamentos/CheckIn \
+  /PainelChamada \
+  /Triagem \
+  /Consultas \
+  /Prescricoes \
+  /Cid \
+  /ClinicaFinanceiro \
+  /Convenios \
+  /PlanosSaude \
+  /Plantoes \
+  /Escalas \
+  /Financeiro \
+  /Notificacoes \
+  /Relatorios; do
+  status="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE_URL}${route}")"
+  case "$status" in
+    200|204|302) echo "OK GET ${route} web -> ${status}" ;;
+    404|500) echo "Falha em rota Web ${route}: HTTP ${status}" >&2; exit 1 ;;
+    *) echo "Aviso GET ${route} web -> ${status}" ;;
+  esac
+done
+
+echo "Smoke API/Web concluído sem expor token."

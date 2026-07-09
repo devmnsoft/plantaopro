@@ -30,3 +30,13 @@ Esta documentação diferencia demonstração comercial de runtime real: dados d
 ## Roteiro demonstrável pós-RC UX/QA
 
 Classificação: **Demo explícito / Funcional pendente QA**. Demonstrar dashboards premium com badge de fonte, agenda clínica premium sem pacientes fictícios por padrão, Operação Inteligente, fluxo Saúde 360 documentado, fluxo Plantões/Escalas/Financeiro e mobile médico com `EXPO_PUBLIC_API_BASE_URL`. Não declarar produção.
+
+## Atualização homologação CRUDs, ações e jornadas — 2026-07-09
+
+Classificação geral desta rodada: **Funcional pendente QA** com execução runtime **Bloqueado por ambiente** quando não houver SDK .NET, Docker e PostgreSQL.
+
+- CRUDs e rotas principais mapeados para validação: Pacientes, Agendamentos, Painel de Chamada, Triagem, Consultas, CID, Prescrições, Financeiro Clínica, Convênios, Planos de Saúde, Plantões, Escalas, Financeiro Médico, Notificações, Relatórios, Ajuda e Primeiros Passos.
+- Smoke Web/API ampliado para endpoints e telas principais; o critério bloqueia `404` e `500` e aceita `302` em rotas protegidas sem sessão.
+- Testes contratuais adicionados para controllers, actions Create/Edit/Details, endpoints API, rotas de menu, padrões proibidos, segredos, mobile e docs.
+- Pendências reais: executar QA ponta a ponta com massa PostgreSQL por perfil, validar auditoria de ações críticas, restrições LGPD/RBAC e transições de status em runtime.
+- Não declarar produção.

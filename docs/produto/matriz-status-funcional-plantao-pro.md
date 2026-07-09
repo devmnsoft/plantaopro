@@ -80,3 +80,13 @@ Motivo: o executor não contém `dotnet`, `docker` nem `psql`, impedindo build/t
 | RBAC/menus | Funcional pendente QA | Teste contratual de padrões e rotas visíveis reforçado. |
 | Relatórios/exportação | Parcial | Exportação sensível deve permanecer bloqueada sem auditoria. |
 | PR #222 | Bloqueado por ambiente | Sem remoto/metadata local para fechar via CLI; documentada como superada. |
+
+## Atualização homologação CRUDs, ações e jornadas — 2026-07-09
+
+Classificação geral desta rodada: **Funcional pendente QA** com execução runtime **Bloqueado por ambiente** quando não houver SDK .NET, Docker e PostgreSQL.
+
+- CRUDs e rotas principais mapeados para validação: Pacientes, Agendamentos, Painel de Chamada, Triagem, Consultas, CID, Prescrições, Financeiro Clínica, Convênios, Planos de Saúde, Plantões, Escalas, Financeiro Médico, Notificações, Relatórios, Ajuda e Primeiros Passos.
+- Smoke Web/API ampliado para endpoints e telas principais; o critério bloqueia `404` e `500` e aceita `302` em rotas protegidas sem sessão.
+- Testes contratuais adicionados para controllers, actions Create/Edit/Details, endpoints API, rotas de menu, padrões proibidos, segredos, mobile e docs.
+- Pendências reais: executar QA ponta a ponta com massa PostgreSQL por perfil, validar auditoria de ações críticas, restrições LGPD/RBAC e transições de status em runtime.
+- Não declarar produção.

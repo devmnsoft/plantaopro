@@ -85,3 +85,8 @@ As validações de isolamento por médico, recepção, financeiro, tenant e mód
 - `dotnet --info`, `restore`, `build` e `test` não puderam ser executados porque o SDK .NET não está instalado no container (`dotnet: command not found`).
 - A varredura de controller confirma correção esperada quando executada após a alteração: apenas `Saude360WebControllers.cs` deve conter `class AgendamentosController`.
 - Classificação: evolução funcional implementada, pendente de validação em ambiente com SDK .NET, Docker e PostgreSQL.
+
+
+## Atualização pós-RC UX/QA
+
+Status: **Funcional pendente QA**. A rodada reforçou dashboards Web reais, agenda premium sem dados falsos por padrão, smoke ampliado e roteiros E2E. Build/Docker/PostgreSQL devem ser classificados como **Bloqueado por ambiente** quando indisponíveis.

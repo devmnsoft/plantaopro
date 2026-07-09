@@ -1,19 +1,65 @@
-@model string
+@model PlantaoPro.Web.Models.AgendaClinicaViewModel
 @{
-    var partes = Model.Split('|');
-    ViewData["Title"] = partes[0];
+    ViewData["Title"] = Model.Titulo;
 }
-<h1>@partes[0]</h1>
-<p class="lead">Agenda clínica visual com filtros por data, médico, especialidade, status e unidade.</p>
-<form class="row g-2 mb-3"><input class="form-control col" name="data" type="date" /><input class="form-control col" name="medico" placeholder="Médico" /><input class="form-control col" name="unidade" placeholder="Unidade" /><button class="btn btn-primary col-auto" type="submit">Filtrar</button></form>
-<div class="row g-3">
-@for (var i = 1; i < partes.Length; i++)
+<section class="pp-hero premium-hero">
+    <p class="text-uppercase text-primary fw-bold">Saúde 360</p>
+    <h1>@Model.Titulo</h1>
+    <p>Agenda clínica por cards, filtros, status e ações rápidas. Fonte: <code>@Model.Endpoint</code>.</p>
+    <span class="badge bg-success">Fonte: @Model.Fonte</span>
+</section>
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {
-    <div class="col-md-6 col-xl-3"><article class="card h-100 shadow-sm"><div class="card-body">
-        <span class="badge bg-success">@partes[i]</span><h2 class="h5 mt-2">Paciente demo @(i)</h2>
-        <p>Especialidade, médico e unidade aparecem em cards para reduzir tabela crua.</p>
-        <a class="btn btn-outline-primary btn-sm" href="/Agendamentos/CheckIn">Check-in</a>
-        <a class="btn btn-outline-secondary btn-sm" href="/Triagem/Fila">Enviar para triagem</a>
-    </div></article></div>
+    <div class="alert alert-warning">@Model.ErrorMessage</div>
+}
+<form class="row g-2 mb-3" method="get">
+    <div class="col-md-2"><input class="form-control" name="data" type="date" /></div>
+    <div class="col-md-2"><input class="form-control" name="medico" placeholder="Médico" /></div>
+    <div class="col-md-2"><input class="form-control" name="unidade" placeholder="Unidade" /></div>
+    <div class="col-md-2"><input class="form-control" name="especialidade" placeholder="Especialidade" /></div>
+    <div class="col-md-2"><input class="form-control" name="status" placeholder="Status" /></div>
+    <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">Filtrar</button></div>
+</form>
+<div class="d-flex gap-2 flex-wrap mb-3">
+@foreach (var card in Model.StatusCards)
+{
+    <span class="badge @card.CssClass p-2">@card.Status: @card.Total</span>
+}
+@if (!Model.StatusCards.Any())
+{
+    <span class="badge bg-secondary p-2">Sem status retornado</span>
 }
 </div>
+@if (!Model.Itens.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-check", "Agenda sem registros", "Nenhum agendamento real retornado para os filtros atuais. A tela não exibe pacientes demonstrativos por padrão.")' />
+}
+else
+{
+    <div class="row g-3">
+    @foreach (var grupo in Model.Itens.GroupBy(i => i.Horario.ToString("HH:mm")).OrderBy(g => g.Key))
+    {
+        <div class="col-12"><h2 class="h5">@grupo.Key</h2></div>
+        @foreach (var item in grupo)
+        {
+            <div class="col-md-6 col-xl-4"><article class="card h-100 shadow-sm"><div class="card-body">
+                <span class="badge bg-secondary">@item.Status</span>
+                <h3 class="h5 mt-2">@item.Paciente</h3>
+                <p class="mb-1"><strong>Médico:</strong> @item.Medico</p>
+                <p class="mb-1"><strong>Especialidade:</strong> @item.Especialidade</p>
+                <p class="mb-3"><strong>Unidade:</strong> @item.Unidade</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Confirmar">Confirmar</button>
+                    <button class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Check-in">Check-in</button>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="PainelChamada" asp-action="Fila">Chamar no painel</a>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Fila">Enviar para triagem</a>
+                    <a class="btn btn-outline-primary btn-sm" asp-controller="Consultas" asp-action="Create">Iniciar consulta</a>
+                    <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Cancelar com motivo">Cancelar</button>
+                </div>
+            </div></article></div>
+        }
+    }
+    </div>
+}
+<div class="modal fade" id="agendaActionModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5">Confirmar ação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">A ação será enviada para a API real do agendamento e registrada em auditoria quando disponível.</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirmar</button></div></div></div></div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast" role="status" aria-live="polite" aria-atomic="true"><div class="toast-body">Ação preparada para envio seguro.</div></div></div>

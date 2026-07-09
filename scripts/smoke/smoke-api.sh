@@ -63,4 +63,18 @@ case "$auth_status" in
   *) echo "Falha em endpoint autenticado /api/usuarios/me: HTTP ${auth_status}" >&2; exit 1 ;;
 esac
 
+for endpoint in \
+  /api/operacao-inteligente/resumo \
+  /api/dashboards/admin-cliente \
+  /api/dashboards/coordenacao \
+  /api/dashboards/medico \
+  /api/dashboards/financeiro \
+  /api/dashboards/saude360; do
+  status="$(curl -sS -o /dev/null -w '%{http_code}' "${BASE_URL}${endpoint}" -H "Authorization: Bearer ${TOKEN}")"
+  case "$status" in
+    200|204) echo "OK GET ${endpoint} autenticado -> ${status}" ;;
+    *) echo "Falha em endpoint autenticado ${endpoint}: HTTP ${status}" >&2; exit 1 ;;
+  esac
+done
+
 echo "Smoke API concluído sem expor token."

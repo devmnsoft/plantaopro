@@ -9,8 +9,8 @@ namespace PlantaoPro.Web.Controllers;
 [Authorize(Roles = RolesConstants.Saude360Assistencial + "," + RolesConstants.Saude360Financeiro + "," + RolesConstants.Saude360Convenios)]
 public abstract class Saude360WebControllerBase : BaseWebController
 {
-    private readonly Saude360WebService service;
-    private readonly IAssistenteContextualService assistente;
+    protected readonly Saude360WebService service;
+    protected readonly IAssistenteContextualService assistente;
     protected Saude360WebControllerBase(IHttpClientFactory factory, ILogger logger, Saude360WebService service, IAssistenteContextualService assistente) : base(factory, logger) { this.service = service; this.assistente = assistente; }
 
     protected async Task<IActionResult> ModuloAsync(string titulo, string modulo, string descricao, string endpoint, IEnumerable<Saude360ActionLinkViewModel> acoes)
@@ -106,15 +106,50 @@ public sealed class PainelChamadaController : Saude360WebControllerBase
 public sealed class AgendamentosController : Saude360WebControllerBase
 {
     public AgendamentosController(IHttpClientFactory f, ILogger<AgendamentosController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Agendamentos", "Agendamento", "Agenda clínica por tenant, médico, paciente e status, com bloqueio de conflito de horário.", "api/agendamentos", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Calendário", "Calendario", "bi-calendar3"), Link("Check-in", "CheckIn", "bi-person-check"))); }
+    public Task<IActionResult> Index() { return AgendaPremiumAsync("Agenda clínica premium", "api/agendamentos"); }
     public IActionResult Create() { return Formulario("Novo agendamento", "api/agendamentos"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar agendamento", "api/agendamentos/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do agendamento", "Agendamento", "Dados operacionais e status do agendamento.", "api/agendamentos/" + id, Links(Link("Agenda", "Index", "bi-arrow-left"))); }
-    public Task<IActionResult> Calendario() { return ModuloAsync("Calendário clínico", "Agendamento", "Visão de calendário para recepção e gestão clínica.", "api/agendamentos/calendario", Links(Link("Novo", "Create", "bi-plus-circle"))); }
-    public Task<IActionResult> AgendaDia() { return ModuloAsync("Agenda do dia", "Agendamento", "Agenda operacional do dia para recepção, check-in e encaixes.", "api/agendamentos?periodo=hoje", Links(Link("Novo", "Create", "bi-plus-circle"), Link("Check-in", "CheckIn", "bi-person-check"))); }
-    public Task<IActionResult> AgendaMedico() { return ModuloAsync("Agenda por médico", "Agendamento", "Consulta de agenda por profissional, especialidade e status.", "api/agendamentos/agenda-medico", Links(Link("Agenda do dia", "AgendaDia", "bi-calendar-day"))); }
-    public Task<IActionResult> CheckIn() { return ModuloAsync("Check-in", "Agendamento", "Check-in altera status e pode enviar o paciente para painel e triagem.", "api/agendamentos", Links(Link("Agenda", "Index", "bi-calendar"))); }
+    public Task<IActionResult> Calendario() { return AgendaPremiumAsync("Calendário clínico", "api/agendamentos/calendario"); }
+    public Task<IActionResult> AgendaDia() { return AgendaPremiumAsync("Agenda do dia", "api/agendamentos?periodo=hoje"); }
+    public Task<IActionResult> AgendaMedico() { return AgendaPremiumAsync("Agenda por médico", "api/agendamentos/medico/{medicoId}"); }
+    public Task<IActionResult> CheckIn() { return AgendaPremiumAsync("Check-in", "api/agendamentos"); }
     public Task<IActionResult> Cancelamentos() { return ModuloAsync("Cancelamentos", "Agendamento", "Cancelamentos exigem motivo e geram histórico auditável.", "api/agendamentos?status=CANCELADO", Links(Link("Agenda", "Index", "bi-calendar"))); }
+
+    private async Task<IActionResult> AgendaPremiumAsync(string titulo, string endpoint)
+    {
+        var token = GetJwtToken() ?? string.Empty;
+        var result = await service.ListarAsync(token, endpoint.Replace("/{medicoId}", string.Empty));
+        var itens = result.Registros.Select(r => new PlantaoPro.Web.Models.AgendaClinicaItemViewModel
+        {
+            Id = r.Id,
+            Horario = r.RegDate == default ? DateTime.UtcNow : r.RegDate,
+            Paciente = string.IsNullOrWhiteSpace(r.Nome) ? "Paciente não informado pela API" : r.Nome,
+            Medico = r.MedicoId.HasValue ? "Médico vinculado" : "Médico a definir",
+            Especialidade = string.IsNullOrWhiteSpace(r.Codigo) ? "Especialidade a definir" : r.Codigo,
+            Unidade = "Unidade do tenant",
+            Status = string.IsNullOrWhiteSpace(r.Status) ? "PENDENTE" : r.Status
+        }).ToList();
+        var statusCards = itens.GroupBy(i => i.Status).Select(g => new PlantaoPro.Web.Models.AgendaStatusBadgeViewModel { Status = g.Key, Total = g.Count(), CssClass = BadgeClass(g.Key) }).ToList();
+        var model = new PlantaoPro.Web.Models.AgendaClinicaViewModel
+        {
+            Titulo = titulo,
+            Endpoint = endpoint,
+            ErrorMessage = result.Error,
+            Itens = itens,
+            StatusCards = statusCards
+        };
+        return View("AgendaPremium", model);
+    }
+
+    private static string BadgeClass(string status)
+    {
+        if (status.Contains("CONFIRM", StringComparison.OrdinalIgnoreCase)) return "bg-primary";
+        if (status.Contains("CHECK", StringComparison.OrdinalIgnoreCase)) return "bg-info text-dark";
+        if (status.Contains("CANCEL", StringComparison.OrdinalIgnoreCase)) return "bg-danger";
+        if (status.Contains("FINAL", StringComparison.OrdinalIgnoreCase)) return "bg-success";
+        return "bg-secondary";
+    }
 }
 
 public sealed class TriagemController : Saude360WebControllerBase

@@ -74,3 +74,11 @@ cd mobile/PlantaoPro.App && npm install && CI=1 npm run start
 - Dashboards por perfil receberam contratos API reais em `/api/dashboards/*`; a camada Web premium ainda deve ser evoluída para visualização rica completa.
 - Validação de build/test permanece bloqueada neste container por ausência de SDK `dotnet`.
 - PR #222 deve ser considerada superada por esta rodada para os itens de Agendamentos e Operação Inteligente; trechos úteis devem ser reaproveitados manualmente apenas após rebase/validação, pois a PR estava antiga e não mergeável.
+
+
+## Pendências reais pós-RC UX/QA
+
+- Validar `dotnet restore/build/test` em ambiente com SDK .NET.
+- Validar Docker Compose, migrations, seeds e smoke com PostgreSQL.
+- Fechar QA real dos fluxos Saúde 360, Plantões/Escalas/Financeiro e Mobile Expo.
+- PR #222: sem acesso local a remoto/metadata para fechamento; considerada superada pela evolução atual e deve ser encerrada no GitHub com comentário.

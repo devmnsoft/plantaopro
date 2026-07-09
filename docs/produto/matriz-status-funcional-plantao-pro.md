@@ -66,3 +66,17 @@ Motivo: o executor não contém `dotnet`, `docker` nem `psql`, impedindo build/t
 | Agenda visual premium | Parcial | Sem dados demo no controller duplicado removido; requer refinamento visual completo em cima do fluxo Saúde 360. |
 | Mobile médico | Parcial | Contratos existentes mantidos; evolução visual completa depende de validação Expo/API. |
 | Relatórios | Parcial | Exportação sensível segue bloqueada até trilha de auditoria específica. |
+
+
+## Classificação final pós-RC UX/QA
+
+| Área | Classificação | Observação |
+|---|---|---|
+| Dashboards Web premium | Funcional pendente QA | Consumo real de `/api/dashboards/*`, sem números falsos por padrão. |
+| Agenda clínica premium | Funcional pendente QA | Cards/filtros/status/ações, sem paciente demo por padrão. |
+| Saúde 360 E2E | Funcional pendente QA | Roteiro documentado; validação real depende de SDK/Docker/PostgreSQL. |
+| Plantões/Escalas/Financeiro | Funcional pendente QA | Regras críticas roteirizadas para QA. |
+| Mobile médico | Parcial | Endpoints reais preparados; Expo interativo pendente. |
+| RBAC/menus | Funcional pendente QA | Teste contratual de padrões e rotas visíveis reforçado. |
+| Relatórios/exportação | Parcial | Exportação sensível deve permanecer bloqueada sem auditoria. |
+| PR #222 | Bloqueado por ambiente | Sem remoto/metadata local para fechar via CLI; documentada como superada. |

@@ -1,21 +1,44 @@
-@model string
+@model PlantaoPro.Web.Models.DashboardPremiumPageViewModel
 @{
-    var partes = Model.Split('|');
-    ViewData["Title"] = "Dashboard " + partes[0];
+    ViewData["Title"] = "Dashboard " + Model.Titulo;
+    var badgeClass = Model.Fonte == "Real" ? "bg-success" : Model.Fonte == "Parcial" ? "bg-warning text-dark" : "bg-secondary";
 }
 <section class="pp-hero premium-hero">
     <p class="text-uppercase text-primary fw-bold">Dashboard executivo</p>
-    <h1>Dashboard @partes[0]</h1>
-    <p>KPIs filtrados por tenant, perfil, plano e módulos contratados, com próximos passos e atalhos seguros.</p>
+    <h1>Dashboard @Model.Titulo</h1>
+    <p>KPIs carregados da API <code>/api/dashboards/@Model.PerfilApi</code>, respeitando tenant, perfil, plano e módulos contratados.</p>
+    <span class="badge @badgeClass">Fonte: @Model.Fonte</span>
 </section>
-<div class="row g-3">
-@for (var i = 1; i < partes.Length; i++)
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
 {
-    <div class="col-md-3"><div class="card shadow-sm h-100"><div class="card-body">
-        <span class="badge bg-primary">KPI</span><h2 class="h6 mt-2">@partes[i]</h2><strong>@(i * 7)</strong>
-        <p class="small text-muted">Indicador demonstrativo para decisão operacional.</p>
-    </div></div></div>
+    <div class="alert alert-warning mt-3">@Model.ErrorMessage</div>
 }
+@if (!Model.Kpis.Any())
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Sem indicadores reais", "A API não retornou KPIs para este contexto. Nenhum número demonstrativo foi exibido.")' />
+}
+else
+{
+    <div class="row g-3">
+    @foreach (var kpi in Model.Kpis)
+    {
+        <div class="col-md-3"><div class="card shadow-sm h-100"><div class="card-body">
+            <span class="badge bg-primary">KPI real</span><h2 class="h6 mt-2">@kpi.Titulo</h2><strong>@kpi.Valor @kpi.Unidade</strong>
+            <p class="small text-muted">@kpi.Tendencia</p>
+        </div></div></div>
+    }
+    </div>
+}
+<div class="row g-3 mt-1">
+    <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Alertas</h2>@foreach (var alerta in Model.Alertas){<div class="alert alert-danger py-2">@alerta</div>}@if (!Model.Alertas.Any()){<p class="text-muted">Sem alertas retornados pela API.</p>}</div></div></div>
+    <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Próximos passos</h2><ol>@foreach (var passo in Model.ProximosPassos){<li>@passo</li>}</ol>@if (!Model.ProximosPassos.Any()){<p class="text-muted">Sem próximos passos retornados.</p>}</div></div></div>
+    <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Gráfico simples</h2>@foreach (var item in Model.Series){<div class="mb-2"><span>@item.Label</span><div class="progress"><div class="progress-bar" style="width:@Math.Min(100, (int)item.Valor)%">@item.Valor</div></div></div>}@if (!Model.Series.Any()){<p class="text-muted">Sem série temporal retornada.</p>}</div></div></div>
 </div>
-<div class="alert alert-info mt-3">Próximo passo: abra a Operação Inteligente para resolver pendências críticas.</div>
-<a class="btn btn-primary" href="/OperacaoInteligente/Index">Ir para Operação Inteligente</a>
+<div class="mt-3 d-flex gap-2 flex-wrap">
+@foreach (var atalho in Model.Atalhos)
+{
+    <a class="btn btn-outline-primary" href="@(string.IsNullOrWhiteSpace(atalho.Url) ? Url.Action("Index", "Home") : atalho.Url)">@atalho.Texto</a>
+}
+<a class="btn btn-primary" asp-controller="OperacaoInteligente" asp-action="Index">Ir para Operação Inteligente</a>
+</div>
+<p class="small text-muted mt-3">@Model.StatusPlanoModulo</p>

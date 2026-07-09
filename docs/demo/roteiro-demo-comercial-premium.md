@@ -25,3 +25,8 @@ Build, banco e smoke dependem do SDK .NET e Docker disponíveis no ambiente de h
 ## Nota de status real — 2026-07-08
 
 Esta documentação diferencia demonstração comercial de runtime real: dados demo só devem ser usados com `DemoMode=true`. Fluxos marcados como parciais exigem validação em ambiente com API, PostgreSQL, Docker/Expo e massa de homologação antes de qualquer declaração de produção.
+
+
+## Roteiro demonstrável pós-RC UX/QA
+
+Classificação: **Demo explícito / Funcional pendente QA**. Demonstrar dashboards premium com badge de fonte, agenda clínica premium sem pacientes fictícios por padrão, Operação Inteligente, fluxo Saúde 360 documentado, fluxo Plantões/Escalas/Financeiro e mobile médico com `EXPO_PUBLIC_API_BASE_URL`. Não declarar produção.

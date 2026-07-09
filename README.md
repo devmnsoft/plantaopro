@@ -96,3 +96,8 @@ bash scripts/smoke/smoke-api.sh
 - Recomendações operacionais consultam PostgreSQL via Dapper e registram pendências amigáveis quando a estrutura de banco do ambiente ainda não estiver disponível.
 - Dashboards premium por perfil possuem endpoints API iniciais em `/api/dashboards/admin-global`, `/admin-cliente`, `/coordenacao`, `/medico`, `/financeiro` e `/saude360`.
 - O controller duplicado de Agendamentos foi removido; a rota Web permanece centralizada no controller Saúde 360.
+
+
+## Status pós-RC UX/QA
+
+Classificação atual: **Funcional pendente QA** para versão homologável/demonstrável, sem declaração de produção. Dashboards Web premium consomem `/api/dashboards/*`; agenda clínica premium consome `/api/agendamentos*`; smoke cobre health, login, `/api/usuarios/me`, Operação Inteligente e dashboards. PR #222 foi considerada superada/documentada nesta rodada porque o repositório local não expõe remoto/branch da PR para fechamento automático.

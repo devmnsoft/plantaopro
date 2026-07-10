@@ -31,6 +31,8 @@ public static class DevelopmentSeed
                 desc = $"Perfil {nome.ToLowerInvariant()}"
             });
 
+        var demoPassword = cfg["PLANTAOPRO_DEMO_PASSWORD"] ?? cfg["Demo:Password"] ?? Environment.GetEnvironmentVariable("PLANTAOPRO_DEMO_PASSWORD") ?? "CHANGE_ME_DEMO_PASSWORD";
+
         // Usuários de teste
         var usuariosSeed = new[]
         {
@@ -55,14 +57,14 @@ public static class DevelopmentSeed
                     id = userId,
                     nome,
                     email,
-                    hash = BCrypt.Net.BCrypt.HashPassword("123456")
+                    hash = BCrypt.Net.BCrypt.HashPassword(demoPassword)
                 });
             else
                 await cn.ExecuteAsync("update plantaopro.usuarios set nome=@nome,senha_hash=@hash,reg_status='A',reg_update=now() where id=@id", new
                 {
                     id = userId,
                     nome,
-                    hash = BCrypt.Net.BCrypt.HashPassword("123456")
+                    hash = BCrypt.Net.BCrypt.HashPassword(demoPassword)
                 });
 
             var perfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where upper(nome)=upper(@perfilNome) limit 1", new

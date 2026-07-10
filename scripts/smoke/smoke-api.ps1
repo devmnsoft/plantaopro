@@ -6,7 +6,7 @@ param(
 $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($BaseUrl)) { $BaseUrl = 'http://localhost:5000' }
 if ([string]::IsNullOrWhiteSpace($AdminEmail)) { $AdminEmail = 'admin@plantaopro.local' }
-if ([string]::IsNullOrWhiteSpace($AdminPassword)) { $AdminPassword = 'admin123' }
+if ([string]::IsNullOrWhiteSpace($AdminPassword)) { $AdminPassword = 'CHANGE_ME_DEMO_PASSWORD' }
 Write-Host "Smoke API PlantãoPro em $BaseUrl"
 function Test-Endpoint($Method, $Path, $Expected) {
   $response = Invoke-WebRequest -Method $Method -Uri "$BaseUrl$Path" -UseBasicParsing -SkipHttpErrorCheck

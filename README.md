@@ -12,7 +12,7 @@ Projeto full-stack para gestão de plantões médicos com backend ASP.NET Core (
 4. Backend API: `dotnet run --project backend/PlantaoPro.Api`.
 5. Web: `dotnet run --project backend/PlantaoPro.Web`.
 6. Mobile: `cd mobile/PlantaoPro.App && npm install && npm run dev`.
-Usuário admin: admin@plantaopro.com / 123456
+Usuário admin demo: configure por variáveis de ambiente/segredo local; não versionar senha real ou senha fixa.
 
 ## Backend MVP (rodada atual)
 Foram adicionados endpoints reais para hospitais, especialidades, plantões, escalas (aceitar), financeiro (gerar pagamento), notificações e dashboard usando Dapper/PostgreSQL.
@@ -53,7 +53,7 @@ Comandos esperados:
 
 ```bash
 docker compose up -d
-scripts/database/apply-local-postgres.sh --host localhost --port 5432 --database plantaopro --user postgres --password 123456
+scripts/database/apply-local-postgres.sh --host localhost --port 5432 --database plantaopro --user postgres --password "$PGPASSWORD"
 dotnet restore backend/PlantaoPro.sln
 dotnet build backend/PlantaoPro.sln -c Release
 dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release
@@ -111,3 +111,7 @@ Classificação: **Funcional pendente QA / Bloqueado por ambiente local**. A rod
 - Não declarar produção até executar build/test, Docker/PostgreSQL, migrations/seeds e QA manual por perfil.
 
 Homologação funcional implementada e preparada para validação em ambiente com SDK .NET, Docker e PostgreSQL.
+
+## Homologação runtime real — 2026-07-09
+
+Classificação final: **Bloqueado por ambiente / Funcional pendente QA**. A preparação de runtime foi registrada em `docs/homologacao/evidencia-runtime-real.md`; neste executor não há SDK .NET, Docker, PostgreSQL/psql nem `gh`, então a validação real permanece pendente em ambiente homologável. Não declarar produção.

@@ -40,3 +40,7 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 - Testes contratuais adicionados para controllers, actions Create/Edit/Details, endpoints API, rotas de menu, padrões proibidos, segredos, mobile e docs.
 - Pendências reais: executar QA ponta a ponta com massa PostgreSQL por perfil, validar auditoria de ações críticas, restrições LGPD/RBAC e transições de status em runtime.
 - Não declarar produção.
+
+## Nota runtime real — 2026-07-09
+
+Classificação para demo: **Demo explícito / Funcional pendente QA**. Demonstrar apenas fluxos mapeados e informar que a validação runtime real ficou bloqueada por ambiente nesta rodada. Não declarar produção.

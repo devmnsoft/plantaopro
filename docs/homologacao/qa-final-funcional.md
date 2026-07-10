@@ -100,3 +100,7 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 - Testes contratuais adicionados para controllers, actions Create/Edit/Details, endpoints API, rotas de menu, padrões proibidos, segredos, mobile e docs.
 - Pendências reais: executar QA ponta a ponta com massa PostgreSQL por perfil, validar auditoria de ações críticas, restrições LGPD/RBAC e transições de status em runtime.
 - Não declarar produção.
+
+## Rodada runtime real — 2026-07-09
+
+Status final: **Bloqueado por ambiente**. A homologação runtime foi preparada e documentada, mas segue pendente de ambiente com SDK .NET, Docker, PostgreSQL/psql, API e Web em execução. Não declarar produção.

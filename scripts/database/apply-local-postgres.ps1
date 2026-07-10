@@ -3,7 +3,7 @@ param(
   [int]$Port = $(if ($env:PGPORT) { [int]$env:PGPORT } else { 5432 }),
   [string]$Database = $(if ($env:PGDATABASE) { $env:PGDATABASE } else { "plantaopro" }),
   [string]$User = $(if ($env:PGUSER) { $env:PGUSER } else { "postgres" }),
-  [string]$Password = $(if ($env:PGPASSWORD) { $env:PGPASSWORD } else { "123456" })
+  [string]$Password = $(if ($env:PGPASSWORD) { $env:PGPASSWORD } else { "CHANGE_ME_LOCAL_POSTGRES" })
 )
 $ErrorActionPreference = "Stop"
 if (-not (Get-Command psql -ErrorAction SilentlyContinue)) { throw "psql não encontrado. Instale o cliente PostgreSQL antes de aplicar o banco." }

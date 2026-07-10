@@ -5,7 +5,7 @@ HOST="${PGHOST:-localhost}"
 PORT="${PGPORT:-5432}"
 DATABASE="${PGDATABASE:-plantaopro}"
 USER="${PGUSER:-postgres}"
-PASSWORD="${PGPASSWORD:-123456}"
+PASSWORD="${PGPASSWORD:-CHANGE_ME_LOCAL_POSTGRES}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

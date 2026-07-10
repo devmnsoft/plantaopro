@@ -90,3 +90,13 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 - Testes contratuais adicionados para controllers, actions Create/Edit/Details, endpoints API, rotas de menu, padrões proibidos, segredos, mobile e docs.
 - Pendências reais: executar QA ponta a ponta com massa PostgreSQL por perfil, validar auditoria de ações críticas, restrições LGPD/RBAC e transições de status em runtime.
 - Não declarar produção.
+
+## Atualização runtime real — 2026-07-09
+
+| Área | Classificação | Observação |
+| --- | --- | --- |
+| API/Web/Smoke real | Bloqueado por ambiente | Executor sem SDK .NET, Docker e PostgreSQL/psql. |
+| CRUDs Saúde 360 | Funcional pendente QA | Rotas e contratos preparados; validação runtime pendente. |
+| Plantões/Escalas/Financeiro | Funcional pendente QA | Smoke preparado; execução real pendente. |
+| Mobile médico | Funcional pendente QA | Uso de `EXPO_PUBLIC_API_BASE_URL`; runtime Expo pendente. |
+| Provedores externos | Dependente de provedor | Integrações reais exigem credenciais/ambiente próprios. |

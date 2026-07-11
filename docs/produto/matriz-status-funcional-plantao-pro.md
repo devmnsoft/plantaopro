@@ -100,3 +100,16 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 | Plantões/Escalas/Financeiro | Funcional pendente QA | Smoke preparado; execução real pendente. |
 | Mobile médico | Funcional pendente QA | Uso de `EXPO_PUBLIC_API_BASE_URL`; runtime Expo pendente. |
 | Provedores externos | Dependente de provedor | Integrações reais exigem credenciais/ambiente próprios. |
+
+## Adendo v1.13 — Persistência real operacional
+
+| Módulo | Status v1.13 | Observação |
+| --- | --- | --- |
+| Clientes | Homologável | CRUD persistido em PostgreSQL via `/api/v113/customers`. |
+| Produtos | Homologável | CRUD persistido e saldo calculado por movimentos. |
+| Estoque | Homologável | Movimentos persistidos, com baixa por confirmação de pedido. |
+| Pedidos | Homologável | Pedido, itens, confirmação e cancelamento persistidos. |
+| Faturamento | Homologável | Faturas e títulos persistidos. |
+| Boleto | Demo explícito | Sem valor financeiro real. |
+| Outbox | Homologável | Eventos e logs em tabelas reais, sem envio externo de produção. |
+| Web operacional | Homologável | Telas apontam para endpoints v1.13 reais. |

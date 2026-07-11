@@ -12,7 +12,10 @@
     </div>
     <div id="v112Toast" class="alert alert-success d-none" role="status">Ação executada com sucesso.</div>
     <div id="v112Error" class="alert alert-danger d-none" role="alert"></div>
-    <div id="v112Loading" class="alert alert-info">Carregando dados reais...</div>
+    <div id="v112Loading" class="alert alert-info">Carregando dados reais PostgreSQL...</div>
+    <div class="mb-3"><span class="badge bg-success">Dados reais PostgreSQL</span> <span class="badge bg-info text-dark">Demo explícito quando indicado</span></div>
+    <div class="row g-2 mb-3"><div class="col-sm-8"><input class="form-control" id="v112Filter" placeholder="Filtro local" /></div><div class="col-sm-4"><button class="btn btn-outline-secondary w-100" id="v112Refresh" type="button">Atualizar</button></div></div>
+    <div id="v112Empty" class="alert alert-warning d-none">Nenhum dado retornado para os filtros atuais.</div>
     <pre id="v112Payload" class="border rounded p-3 bg-light text-break">Estado vazio: clique em "@action" para consultar a API.</pre>
     <p class="mt-3"><a href="/journey/what-to-do-now">Ver próxima ação na jornada</a></p>
 </section>
@@ -31,11 +34,14 @@
             const text = await response.text();
             if (!response.ok) throw new Error(text || response.statusText);
             payload.textContent = text ? JSON.stringify(JSON.parse(text), null, 2) : 'Sem dados.';
+            document.getElementById('v112Empty').classList.toggle('d-none', !!text && text !== '[]');
             toast.classList.remove('d-none');
         } catch (ex) { error.textContent = ex.message; error.classList.remove('d-none'); }
         finally { loading.classList.add('d-none'); }
     }
     document.getElementById('v112PrimaryAction').addEventListener('click', load);
+    document.getElementById('v112Refresh').addEventListener('click', load);
+    document.getElementById('v112Filter').addEventListener('input', function () { payload.dataset.filter = this.value; });
     await load();
 })();
 </script>

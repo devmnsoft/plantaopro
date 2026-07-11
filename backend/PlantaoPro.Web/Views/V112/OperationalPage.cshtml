@@ -1,0 +1,41 @@
+@{
+    var title = (string)(ViewData["Title"] ?? "Homologação v1.12");
+    var description = (string)(ViewData["Description"] ?? "Tela operacional");
+    var endpoint = (string)(ViewData["Endpoint"] ?? "/api/dashboard");
+    var action = (string)(ViewData["PrimaryAction"] ?? "Executar");
+}
+<section class="container py-4" data-v112-page="true" data-endpoint="@endpoint">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">@title</li></ol></nav>
+    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+        <div><h1>@title</h1><p class="text-muted">@description</p></div>
+        <button class="btn btn-primary" id="v112PrimaryAction" type="button">@action</button>
+    </div>
+    <div id="v112Toast" class="alert alert-success d-none" role="status">Ação executada com sucesso.</div>
+    <div id="v112Error" class="alert alert-danger d-none" role="alert"></div>
+    <div id="v112Loading" class="alert alert-info">Carregando dados reais...</div>
+    <pre id="v112Payload" class="border rounded p-3 bg-light text-break">Estado vazio: clique em "@action" para consultar a API.</pre>
+    <p class="mt-3"><a href="/journey/what-to-do-now">Ver próxima ação na jornada</a></p>
+</section>
+<script>
+(async function () {
+    const root = document.querySelector('[data-v112-page]');
+    const endpoint = root.dataset.endpoint;
+    const loading = document.getElementById('v112Loading');
+    const payload = document.getElementById('v112Payload');
+    const error = document.getElementById('v112Error');
+    const toast = document.getElementById('v112Toast');
+    async function load() {
+        loading.classList.remove('d-none'); error.classList.add('d-none'); toast.classList.add('d-none');
+        try {
+            const response = await fetch(endpoint, { headers: { 'Accept': 'application/json' } });
+            const text = await response.text();
+            if (!response.ok) throw new Error(text || response.statusText);
+            payload.textContent = text ? JSON.stringify(JSON.parse(text), null, 2) : 'Sem dados.';
+            toast.classList.remove('d-none');
+        } catch (ex) { error.textContent = ex.message; error.classList.remove('d-none'); }
+        finally { loading.classList.add('d-none'); }
+    }
+    document.getElementById('v112PrimaryAction').addEventListener('click', load);
+    await load();
+})();
+</script>

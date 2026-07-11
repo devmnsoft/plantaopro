@@ -115,3 +115,15 @@ Homologação funcional implementada e preparada para validação em ambiente co
 ## Homologação runtime real — 2026-07-09
 
 Classificação final: **Bloqueado por ambiente / Funcional pendente QA**. A preparação de runtime foi registrada em `docs/homologacao/evidencia-runtime-real.md`; neste executor não há SDK .NET, Docker, PostgreSQL/psql nem `gh`, então a validação real permanece pendente em ambiente homologável. Não declarar produção.
+
+## v1.13 — persistência real para homologação funcional
+
+A v1.13 mantém compatibilidade com as rotas operacionais v1.12, mas direciona o fluxo para endpoints versionados `/api/v113/*` com `ApiResponse<T>`, autenticação e persistência PostgreSQL via Dapper. O módulo não declara produção: o status é homologável, com boleto demonstrativo explícito e outbox persistida sem envio externo real.
+
+Arquivos principais:
+
+- Migration idempotente: `database/migrations/2026_v113_operacional_real.sql`.
+- Seed demo seguro: `database/seeds/2026_demo_v113_operacional.sql`.
+- Serviço operacional: `backend/PlantaoPro.Api/V113OperationalService.cs`.
+- Smoke: `scripts/smoke-test-v113.sh` e `scripts/smoke-test-v113.ps1`.
+- CI runtime: job `runtime-e2e-v113` em `.github/workflows/dotnet-ci.yml`.

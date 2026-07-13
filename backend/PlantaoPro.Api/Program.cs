@@ -130,6 +130,9 @@ builder.Services.AddScoped<OperacaoRecomendacaoService>();
 builder.Services.AddScoped<DashboardPremiumService>();
 builder.Services.AddScoped<V113OperationalService>();
 builder.Services.AddScoped<V114ProdutoService>();
+builder.Services.AddScoped<V115FaturamentoRegraService>();
+builder.Services.AddScoped<V115RepasseMedicoService>();
+builder.Services.AddScoped<V115GlosaService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

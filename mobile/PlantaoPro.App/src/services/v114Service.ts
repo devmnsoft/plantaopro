@@ -5,6 +5,10 @@ export type MedicoDashboardV114 = {
   proximosPlantoes?: number;
   convites?: number;
   pagamentos?: number;
+  pagamentosPendentes?: number;
+  pagamentosConfirmados?: number;
+  repassesPrevistos?: number;
+  contestacoes?: number;
   atalhos?: string[];
 };
 

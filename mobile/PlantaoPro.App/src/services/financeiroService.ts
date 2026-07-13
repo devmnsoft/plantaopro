@@ -51,3 +51,17 @@ export async function getPagamento(id: string) {
   const response = await request<PagamentoApiDto>(`mobile/meus-pagamentos/${id}`);
   return response.data ? { ...response, data: normalizePagamento(response.data) } : response as ApiResponse<PagamentoMedico>;
 }
+
+
+export async function contestarPagamentoV115(id: string, motivo: string) {
+  return request<Record<string, unknown>>(`v115/repasses-medicos/${id}/contestar`, { method: 'POST', body: JSON.stringify({ motivo }) });
+}
+
+export async function responderContestacaoV115(id: string, motivo: string) {
+  return request<Record<string, unknown>>(`v115/repasses-medicos/${id}/resolver`, { method: 'POST', body: JSON.stringify({ motivo }) });
+}
+
+export async function getRepassesV115(page = 1, pageSize = 20) {
+  const response = await getPaged<PagamentoApiDto>('v115/repasses-medicos', page, pageSize);
+  return mapPagedPagamentos(response);
+}

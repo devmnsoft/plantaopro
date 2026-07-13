@@ -65,3 +65,19 @@ export async function getRepassesV115(page = 1, pageSize = 20) {
   const response = await getPaged<PagamentoApiDto>('v115/repasses-medicos', page, pageSize);
   return mapPagedPagamentos(response);
 }
+
+export async function getDashboardMedicoV116() {
+  return request<Record<string, unknown>>('v116/relatorios/operacional');
+}
+
+export async function getTimelineFinanceiraV116(repasseId: string) {
+  return request<Record<string, unknown>>(`v116/timelines/repasse/${repasseId}`);
+}
+
+export async function getNotificacoesOperacionaisV116() {
+  return request<Record<string, unknown>>('v116/notificacoes-operacionais');
+}
+
+export async function registrarContestacaoHistoricoV116(repasseId: string, motivo: string) {
+  return request<Record<string, unknown>>(`v116/timelines/repasse/${repasseId}/comentario`, { method: 'POST', body: JSON.stringify({ observacao: motivo }) });
+}

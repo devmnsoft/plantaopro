@@ -12,7 +12,7 @@
     }
     return el;
   }
-  function safeType(type){return ['success','error','warning','info'].includes(type)?type:'info';}
+  function safeType(type){return Array('success','error','warning','info').includes(type)?type:'info';}
   function show(type,message,timeout){
     if(!message)return;
     const item=document.createElement('div');

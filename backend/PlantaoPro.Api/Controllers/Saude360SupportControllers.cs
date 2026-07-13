@@ -12,15 +12,17 @@ public sealed class LookupsController : ControllerBase
     private readonly Saude360ClinicalService service;
     public LookupsController(Saude360ClinicalService service) { this.service = service; }
 
-    [HttpGet("pacientes")] public async Task<IActionResult> Pacientes([FromQuery] string? termo) { return await Lookup("pacientes", termo); }
-    [HttpGet("medicos")] public IActionResult Medicos([FromQuery] string? termo) { return Static("Médicos", termo, "MEDICO"); }
-    [HttpGet("hospitais")] public IActionResult Hospitais([FromQuery] string? termo) { return Static("Hospitais", termo, "HOSPITAL"); }
+    [HttpGet("pacientes")] public async Task<IActionResult> Pacientes([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("pacientes", NormalizeTerm(termo, term)); }
+    [HttpGet("medicos")] public IActionResult Medicos([FromQuery] string? termo, [FromQuery] string? term) { return Static("Médicos", NormalizeTerm(termo, term), "MEDICO"); }
+    [HttpGet("hospitais")] public IActionResult Hospitais([FromQuery] string? termo, [FromQuery] string? term) { return Static("Hospitais", NormalizeTerm(termo, term), "HOSPITAL"); }
     [HttpGet("unidades")] public IActionResult Unidades([FromQuery] string? termo) { return Static("Unidades", termo, "UNIDADE"); }
-    [HttpGet("especialidades")] public IActionResult Especialidades([FromQuery] string? termo) { return Static("Clínica médica", termo, "ESPECIALIDADE"); }
+    [HttpGet("especialidades")] public IActionResult Especialidades([FromQuery] string? termo, [FromQuery] string? term) { return Static("Clínica médica", NormalizeTerm(termo, term), "ESPECIALIDADE"); }
     [HttpGet("salas")] public IActionResult Salas([FromQuery] string? termo) { return Static("Sala 1", termo, "SALA"); }
-    [HttpGet("convenios")] public async Task<IActionResult> Convenios([FromQuery] string? termo) { return await Lookup("convenios", termo); }
-    [HttpGet("planos-saude")] public async Task<IActionResult> PlanosSaude([FromQuery] string? termo) { return await Lookup("planosSaude", termo); }
-    [HttpGet("cid")] public async Task<IActionResult> Cid([FromQuery] string? termo) { return await Lookup("cid", termo); }
+    [HttpGet("convenios")] public async Task<IActionResult> Convenios([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("convenios", NormalizeTerm(termo, term)); }
+    [HttpGet("planos-saude")] public async Task<IActionResult> PlanosSaude([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("planosSaude", NormalizeTerm(termo, term)); }
+    [HttpGet("agendamentos")] public async Task<IActionResult> Agendamentos([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("agendamentos", NormalizeTerm(termo, term)); }
+    [HttpGet("consultas")] public async Task<IActionResult> Consultas([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("consultas", NormalizeTerm(termo, term)); }
+    [HttpGet("cid")] public async Task<IActionResult> Cid([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("cid", NormalizeTerm(termo, term)); }
     [HttpGet("classificacoes-risco")] public IActionResult ClassificacoesRisco() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "EMERGENCIA", "MUITO_URGENTE", "URGENTE", "POUCO_URGENTE", "NAO_URGENTE" }), "Lookup carregado.")); }
     [HttpGet("formas-pagamento")] public IActionResult FormasPagamento() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "DINHEIRO", "PIX", "CARTAO_CREDITO", "CARTAO_DEBITO", "CONVENIO" }), "Lookup carregado.")); }
     [HttpGet("status-agendamento")] public IActionResult StatusAgendamento() { return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(ToItems(new List<string> { "AGENDADO", "CONFIRMADO", "CHECKIN_REALIZADO", "EM_TRIAGEM", "AGUARDANDO_CONSULTA", "ATENDIDO", "CANCELADO", "FALTOU" }), "Lookup carregado.")); }
@@ -67,7 +69,16 @@ public sealed class PendenciasClinicasApiController : ControllerBase
     }
 
     [HttpGet("resumo")]
-    public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 4, Criticas = 1, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
+    public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 10, Criticas = 3, Minhas = 4, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
+
+    [HttpGet("minhas")]
+    public IActionResult Minhas() { return Get(); }
+
+    [HttpPost("{id:guid}/resolver")]
+    public IActionResult Resolver(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "RESOLVIDA" }, "Pendência resolvida com sucesso.")); }
+
+    [HttpPost("{id:guid}/adiar")]
+    public IActionResult Adiar(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "ADIADA" }, "Pendência adiada com auditoria operacional.")); }
 }
 
 public sealed class LookupItemDto { public Guid Id { get; set; } public string Text { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string Extra { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }

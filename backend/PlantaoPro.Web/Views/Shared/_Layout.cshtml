@@ -47,6 +47,11 @@
     <link rel="stylesheet" href="~/css/plantao-dashboard.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/plantao-forms.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/plantaopro-toast.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/saude360-design-system.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/saude360-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/saude360-components.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/saude360-forms.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/saude360-dashboard.css" asp-append-version="true" />
 </head>
 <body class="app-body">
 @if (isAuthenticated)
@@ -95,6 +100,7 @@
                     <partial name="_TenantContextBadge" />
                     <partial name="_PlanUsageMiniCard" />
                     <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="Ajuda"><i class="bi bi-question-circle"></i></a>
+                    <a class="btn btn-light btn-icon" asp-controller="Manual" asp-action="Perfil" title="Manual do meu perfil"><i class="bi bi-book"></i></a>
                     <a class="btn btn-light btn-icon position-relative" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">@((ViewBag.NotificationCount as int?) ?? 0)</span></a>
                     <a class="btn btn-warning btn-sm d-none d-md-inline-flex" asp-controller="MinhaAssinatura" asp-action="Upgrade"><i class="bi bi-rocket-takeoff me-1"></i>Upgrade</a>
                     <div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>@User.PrimaryRole()</small></div></div>
@@ -119,6 +125,11 @@ else
 <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
 <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>
 <script src="~/js/plantao-saas.js" asp-append-version="true"></script>
+<script src="~/js/saude360-ui.js" asp-append-version="true"></script>
+<script src="~/js/saude360-tooltips.js" asp-append-version="true"></script>
+<script src="~/js/saude360-modals.js" asp-append-version="true"></script>
+<script src="~/js/saude360-tour.js" asp-append-version="true"></script>
+<script src="~/js/lookup.js" asp-append-version="true"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function(){ navigator.serviceWorker.register("/service-worker.js").catch(function(){}); });

@@ -2,6 +2,8 @@ using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Controllers;
+using System.Net.Http;
 using System.Data;
 using System.Text.Json;
 
@@ -74,14 +76,10 @@ public sealed class Saude360ClinicalService
             }
             return ApiResponse<IEnumerable<Saude360RegistroDto>>.Ok(rows.Select(ToDto).ToArray(), "Registros carregados.");
         }
-        catch (PostgresException ex) when (IsUndefinedTable(ex))
+        catch (PostgresException ex) when (IsUndefinedTable(ex) || IsUndefinedColumn(ex))
         {
-            logger.LogError(ex, "Tabela clínica não encontrada para {TableKey}", tableKey);
-            if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
-            {
-                return ApiResponse<IEnumerable<Saude360RegistroDto>>.Fail("A tabela clínica de consultas ainda não foi inicializada. Execute as migrations do Saúde 360.", 500);
-            }
-            return ApiResponse<IEnumerable<Saude360RegistroDto>>.Fail("A base clínica ainda não foi inicializada. Execute as migrations do Saúde 360.", 500);
+            logger.LogError(ex, "Schema clínico inválido para {TableKey}", tableKey);
+            return SchemaFail<IEnumerable<Saude360RegistroDto>>(ex);
         }
     }
 
@@ -219,6 +217,83 @@ public sealed class Saude360ClinicalService
         await AuditAsync("consultas", consultaId, "RESUMO_IMPRESSAO", new { consultaId });
         return await ObterAsync("consultas", consultaId);
     }
+    public async Task<ApiResponse<IEnumerable<object>>> CidCapitulosAsync()
+    {
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync<object>("select codigo, nome, descricao, status from plantaopro.cid_capitulos where reg_status='A' order by codigo limit 200");
+        return ApiResponse<IEnumerable<object>>.Ok(rows.ToList(), "Capítulos CID carregados.");
+    }
+
+    public async Task<ApiResponse<IEnumerable<object>>> CidGruposAsync(string? capitulo)
+    {
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync<object>("select codigo, nome, capitulo_codigo, status from plantaopro.cid_grupos where reg_status='A' and (@capitulo is null or capitulo_codigo=@capitulo) order by codigo limit 500", new { capitulo });
+        return ApiResponse<IEnumerable<object>>.Ok(rows.ToList(), "Grupos CID carregados.");
+    }
+
+    public async Task<ApiResponse<IEnumerable<object>>> CidImportacoesAsync()
+    {
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync<object>("select id, versao, fonte, fonte_url, arquivo_nome, total_linhas, total_inseridos, total_atualizados, total_erros, status, reg_date from plantaopro.cid_importacoes where reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal) order by reg_date desc limit 100", new { tenantId = TenantId, isGlobal = IsGlobal });
+        return ApiResponse<IEnumerable<object>>.Ok(rows.ToList(), "Importações CID carregadas.");
+    }
+
+    public async Task<ApiResponse<object>> ImportarCidUrlAsync(CidImportacaoUrlRequest request)
+    {
+        var url = string.IsNullOrWhiteSpace(request.Url) ? cfg["CidSettings:FonteOficialUrl"] : request.Url;
+        if (string.IsNullOrWhiteSpace(url)) return ApiResponse<object>.Fail("Configure a URL oficial ou envie uma URL para importação.", 400);
+        try
+        {
+            using var http = new HttpClient();
+            var csv = await http.GetStringAsync(url);
+            return await ImportarCidCsvAsync(new CidImportacaoRequest { Csv = csv, ArquivoNome = "fonte-url.csv", Fonte = string.IsNullOrWhiteSpace(request.Fonte) ? "URL configurável" : request.Fonte, FonteUrl = url, Versao = string.IsNullOrWhiteSpace(request.Versao) ? "CID-10" : request.Versao });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao importar CID por URL configurável");
+            return ApiResponse<object>.Fail("Não foi possível importar a CID pela URL informada. Use upload CSV manual.", 502);
+        }
+    }
+
+    public async Task<ApiResponse<object>> ImportarCidCsvAsync(CidImportacaoRequest request)
+    {
+        await GarantirBaseClinicaAsync();
+        if (string.IsNullOrWhiteSpace(request.Csv)) return ApiResponse<object>.Fail("CSV obrigatório.", 400);
+        var lines = request.Csv.Replace("\r\n", "\n").Split('\n').Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+        if (lines.Count < 2) return ApiResponse<object>.Fail("CSV deve conter cabeçalho e ao menos uma linha.", 400);
+        var sep = lines[0].Contains(';') ? ';' : ',';
+        var headers = lines[0].Split(sep).Select(h => h.Trim().Trim('"').ToLowerInvariant()).ToList();
+        var codigoIdx = headers.IndexOf("codigo");
+        var descricaoIdx = headers.IndexOf("descricao");
+        if (codigoIdx < 0 || descricaoIdx < 0) return ApiResponse<object>.Fail("CSV deve conter as colunas codigo e descricao.", 400);
+        var capCodIdx = headers.IndexOf("capitulo_codigo"); var capNomeIdx = headers.IndexOf("capitulo_nome"); var grupoCodIdx = headers.IndexOf("grupo_codigo"); var grupoNomeIdx = headers.IndexOf("grupo_nome"); var categoriaIdx = headers.IndexOf("categoria");
+        var inseridos = 0; var atualizados = 0; var erros = 0;
+        await using var cn = Cn();
+        foreach (var line in lines.Skip(1))
+        {
+            var cols = line.Split(sep).Select(c => c.Trim().Trim('"')).ToArray();
+            if (cols.Length <= Math.Max(codigoIdx, descricaoIdx)) { erros++; continue; }
+            var codigo = cols[codigoIdx]; var descricao = cols[descricaoIdx];
+            if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(descricao)) { erros++; continue; }
+            var affected = await cn.ExecuteAsync(@"insert into plantaopro.cid_tabela(versao,codigo,descricao,descricao_normalizada,capitulo_codigo,capitulo_nome,grupo_codigo,grupo_nome,categoria,fonte,fonte_url,created_by)
+values(@versao,@codigo,@descricao,upper(@descricao),@capituloCodigo,@capituloNome,@grupoCodigo,@grupoNome,@categoria,@fonte,@fonteUrl,@uid)
+on conflict (versao, upper(codigo)) where reg_status='A' and codigo <> '' do update set descricao=excluded.descricao, descricao_normalizada=excluded.descricao_normalizada, capitulo_codigo=excluded.capitulo_codigo, capitulo_nome=excluded.capitulo_nome, grupo_codigo=excluded.grupo_codigo, grupo_nome=excluded.grupo_nome, categoria=excluded.categoria, fonte=excluded.fonte, fonte_url=excluded.fonte_url, reg_update=now(), updated_by=@uid", new { versao = string.IsNullOrWhiteSpace(request.Versao) ? "CID-10" : request.Versao, codigo, descricao, capituloCodigo = Get(cols, capCodIdx), capituloNome = Get(cols, capNomeIdx), grupoCodigo = Get(cols, grupoCodIdx), grupoNome = Get(cols, grupoNomeIdx), categoria = Get(cols, categoriaIdx), fonte = request.Fonte, fonteUrl = request.FonteUrl, uid = currentUser.UserId });
+            if (affected > 0) inseridos++; else atualizados++;
+        }
+        await cn.ExecuteAsync("insert into plantaopro.cid_importacoes(cliente_id,versao,fonte,fonte_url,arquivo_nome,total_linhas,total_inseridos,total_atualizados,total_erros,status,created_by) values(@tenantId,@versao,@fonte,@fonteUrl,@arquivo,@linhas,@inseridos,@atualizados,@erros,'PROCESSADA',@uid)", new { tenantId = TenantId, versao = string.IsNullOrWhiteSpace(request.Versao) ? "CID-10" : request.Versao, fonte = request.Fonte, fonteUrl = request.FonteUrl, arquivo = request.ArquivoNome, linhas = lines.Count - 1, inseridos, atualizados, erros, uid = currentUser.UserId });
+        await AuditAsync("cid_tabela", Guid.Empty, "IMPORTAR_CSV", new { linhas = lines.Count - 1, inseridos, atualizados, erros });
+        return ApiResponse<object>.Ok(new { TotalLinhas = lines.Count - 1, Inseridos = inseridos, Atualizados = atualizados, Erros = erros }, "Importação CID processada.");
+    }
+
+    private static string Get(string[] values, int index)
+    {
+        if (index < 0 || index >= values.Length) return string.Empty;
+        return values[index];
+    }
+
 
     public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> CidFavoritosAsync()
     {
@@ -322,6 +397,33 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is nu
     }
 
 
+    public async Task<ApiResponse<object>> ResumoConveniosAsync()
+    {
+        try
+        {
+            await GarantirBaseClinicaAsync();
+            await using var cn = Cn();
+            var resumo = await cn.QueryFirstAsync(@"select
+(select count(1) from plantaopro.convenios where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as convenios_ativos,
+(select count(1) from plantaopro.planos_saude where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as planos_ativos,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='PENDENTE' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_pendentes,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='APROVADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_aprovadas,
+(select count(1) from plantaopro.convenio_autorizacoes where reg_status='A' and status='NEGADA' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as autorizacoes_negadas,
+0 as glosas_abertas,
+0 as valor_glosado,
+0 as faturamentos_em_aberto,
+(select count(1) from plantaopro.plano_saude_pacientes where reg_status='A' and status='ATIVO' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal)) as pacientes_com_plano_ativo", new { tenantId = TenantId, isGlobal = IsGlobal });
+            await AuditAsync("convenios", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CONVENIOS" });
+            return ApiResponse<object>.Ok(resumo, "Dashboard de convênios carregado.");
+        }
+        catch (PostgresException ex) when (IsUndefinedTable(ex))
+        {
+            logger.LogError(ex, "Tabela clínica não encontrada para dashboard de convênios");
+            return ApiResponse<object>.Fail("A base do Saúde 360 ainda não foi inicializada. Execute as migrations.", 500);
+        }
+    }
+
+
     private async Task GarantirBaseClinicaAsync()
     {
         await using var cn = Cn();
@@ -336,6 +438,19 @@ create table if not exists plantaopro.prescricao_itens(id uuid primary key defau
 create table if not exists plantaopro.prescricao_modelos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, nome text not null default '', medico_id uuid null, descricao text not null default '', conteudo jsonb not null default '{}'::jsonb, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
 create table if not exists plantaopro.prescricao_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
 create table if not exists plantaopro.prescricao_cancelamentos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, justificativa text not null default '', usuario_id uuid null, status text not null default 'CANCELADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+alter table if exists plantaopro.cid_tabela add column if not exists versao text not null default 'CID-10';
+alter table if exists plantaopro.cid_tabela add column if not exists descricao_normalizada text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists capitulo_codigo text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists capitulo_nome text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists grupo_codigo text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists grupo_nome text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists fonte text not null default '';
+alter table if exists plantaopro.cid_tabela add column if not exists fonte_url text not null default '';
+create table if not exists plantaopro.cid_capitulos(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', codigo text not null default '', nome text not null default '', descricao text not null default '', status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.cid_grupos(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', capitulo_codigo text not null default '', codigo text not null default '', nome text not null default '', descricao text not null default '', status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.cid_importacoes(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, versao text not null default 'CID-10', fonte text not null default '', fonte_url text not null default '', arquivo_nome text not null default '', total_linhas int not null default 0, total_inseridos int not null default 0, total_atualizados int not null default 0, total_erros int not null default 0, status text not null default 'PROCESSADA', detalhes text not null default '', created_by uuid null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create table if not exists plantaopro.cid_fontes(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', nome text not null default '', url text not null default '', oficial boolean not null default false, status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
+create unique index if not exists ux_cid_tabela_versao_codigo_ativo on plantaopro.cid_tabela(versao, upper(codigo)) where reg_status='A' and codigo <> '';
 create index if not exists ix_cid_tabela_codigo on plantaopro.cid_tabela(codigo);
 create index if not exists ix_consulta_historico_consulta_id on plantaopro.consulta_historico(consulta_id);
 create index if not exists ix_prescricoes_consulta_id on plantaopro.prescricoes(consulta_id);
@@ -344,6 +459,11 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
 
     private static string BuildListSql(string table, string key, Guid? pacienteId, Guid? medicoId, Guid? agendamentoId, Guid? consultaId, string? termo, bool isDoctor)
     {
+        if (string.Equals(key, "cid", StringComparison.OrdinalIgnoreCase))
+        {
+            return "select id, codigo, descricao, categoria, capitulo_nome as capitulo, status, reg_status, reg_date from plantaopro.cid_tabela where reg_status = 'A' and (@likeTermo is null or codigo ilike @likeTermo or descricao ilike @likeTermo) order by codigo limit 200";
+        }
+
         var where = new List<string>();
         where.Add("reg_status = 'A'");
         if (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase))
@@ -399,13 +519,13 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (key == "cid") return ("insert into plantaopro.cid_tabela(id,cliente_id,codigo,descricao,status,created_by) values(@id,@tenantId,@codigo,@descricao,'ATIVO',@uid)", new { id, tenantId, codigo = r.Codigo, descricao = r.Descricao, uid });
         if (key == "prescricoes") return ("insert into plantaopro.prescricoes(id,cliente_id,paciente_id,consulta_id,medico_id,modelo_id,orientacoes,status,created_by) values(@id,@tenantId,@pacienteId,@consultaId,@medicoId,@modeloId,@orientacoes,'RASCUNHO',@uid)", new { id, tenantId, r.PacienteId, r.ConsultaId, r.MedicoId, r.ModeloId, orientacoes = r.Observacoes, uid });
         if (key == "prescricaoModelos") return ("insert into plantaopro.prescricao_modelos(id,cliente_id,nome,medico_id,descricao,status,created_by) values(@id,@tenantId,@nome,@medicoId,@descricao,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, r.MedicoId, descricao = r.Descricao, uid });
-        if (key == "contasReceber") return ("insert into plantaopro.clinica_contas_receber(id,cliente_id,paciente_id,agendamento_id,consulta_id,descricao,valor,vencimento,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@consultaId,@descricao,@valor,@vencimento,'ABERTA',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.ConsultaId, descricao = r.Descricao, valor = r.Valor ?? 0, vencimento = r.Vencimento, uid });
-        if (key == "recebimentos") return ("insert into plantaopro.clinica_recebimentos(id,cliente_id,conta_receber_id,valor,forma_pagamento,status,created_by) values(@id,@tenantId,@contaId,@valor,@forma,'RECEBIDO',@uid)", new { id, tenantId, contaId = r.AgendamentoId, valor = r.Valor ?? 0, forma = r.FormaPagamento, uid });
+        if (key == "contasReceber") return ("insert into plantaopro.clinica_contas_receber(id,cliente_id,paciente_id,agendamento_id,consulta_id,descricao,valor_total,valor_pendente,vencimento,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@consultaId,@descricao,@valor,@valor,@vencimento,'ABERTO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.ConsultaId, descricao = r.Descricao, valor = r.Valor ?? 0, vencimento = r.Vencimento, uid });
+        if (key == "recebimentos") return ("insert into plantaopro.clinica_recebimentos(id,cliente_id,conta_receber_id,valor,forma_pagamento,status,created_by) values(@id,@tenantId,@contaId,@valor,@forma,'CONFIRMADO',@uid)", new { id, tenantId, contaId = r.AgendamentoId, valor = r.Valor ?? 0, forma = r.FormaPagamento, uid });
         if (key == "caixa") return ("insert into plantaopro.clinica_caixa(id,cliente_id,saldo_inicial,status,created_by) values(@id,@tenantId,@valor,'ABERTO',@uid)", new { id, tenantId, valor = r.Valor ?? 0, uid });
-        if (key == "convenios") return ("insert into plantaopro.convenios(id,cliente_id,nome,codigo_ans,status,created_by) values(@id,@tenantId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, codigo = r.Codigo, uid });
-        if (key == "convenioPlanos") return ("insert into plantaopro.convenio_planos(id,cliente_id,convenio_id,nome,registro_ans,status,created_by) values(@id,@tenantId,@convenioId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, r.ConvenioId, nome = r.Nome, codigo = r.Codigo, uid });
-        if (key == "convenioAutorizacoes") return ("insert into plantaopro.convenio_autorizacoes(id,cliente_id,convenio_id,paciente_id,agendamento_id,consulta_id,procedimento_id,motivo,status,created_by) values(@id,@tenantId,@convenioId,@pacienteId,@agendamentoId,@consultaId,@procedimentoId,@motivo,'SOLICITADA',@uid)", new { id, tenantId, r.ConvenioId, r.PacienteId, r.AgendamentoId, r.ConsultaId, r.ProcedimentoId, motivo = r.Motivo, uid });
-        if (key == "planosSaude") return ("insert into plantaopro.planos_saude(id,cliente_id,nome,operadora,registro_ans,status,created_by) values(@id,@tenantId,@nome,@operadora,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, operadora = r.Descricao, codigo = r.Codigo, uid });
+        if (key == "convenios") return ("insert into plantaopro.convenios(id,cliente_id,nome,codigo,status,created_by) values(@id,@tenantId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, codigo = r.Codigo, uid });
+        if (key == "convenioPlanos") return ("insert into plantaopro.convenio_planos(id,cliente_id,convenio_id,nome,codigo,status,created_by) values(@id,@tenantId,@convenioId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, r.ConvenioId, nome = r.Nome, codigo = r.Codigo, uid });
+        if (key == "convenioAutorizacoes") return ("insert into plantaopro.convenio_autorizacoes(id,cliente_id,convenio_id,paciente_id,agendamento_id,consulta_id,procedimento_id,motivo,procedimento,status,created_by) values(@id,@tenantId,@convenioId,@pacienteId,@agendamentoId,@consultaId,@procedimentoId,@motivo,@motivo,'PENDENTE',@uid)", new { id, tenantId, r.ConvenioId, r.PacienteId, r.AgendamentoId, r.ConsultaId, r.ProcedimentoId, motivo = r.Motivo, uid });
+        if (key == "planosSaude") return ("insert into plantaopro.planos_saude(id,cliente_id,nome,operadora,codigo,status,created_by) values(@id,@tenantId,@nome,@operadora,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, operadora = r.Descricao, codigo = r.Codigo, uid });
         return ("insert into plantaopro.plano_saude_pacientes(id,cliente_id,plano_saude_id,paciente_id,numero_carteirinha,principal,validade,status,created_by) values(@id,@tenantId,@planoSaudeId,@pacienteId,@carteira,@principal,@validade,'ATIVO',@uid)", new { id, tenantId, r.PlanoSaudeId, r.PacienteId, carteira = r.NumeroCarteirinha, r.Principal, r.Validade, uid });
     }
 
@@ -494,6 +614,17 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
         return ex.SqlState == "42P01";
     }
 
+    private static bool IsUndefinedColumn(PostgresException ex)
+    {
+        return ex.SqlState == "42703";
+    }
+
+    private static ApiResponse<T> SchemaFail<T>(PostgresException ex)
+    {
+        if (IsUndefinedTable(ex)) return ApiResponse<T>.Fail("A base clínica ainda não foi inicializada. Execute as migrations do Saúde 360.", 500);
+        return ApiResponse<T>.Fail("A estrutura da base clínica está desatualizada. Execute as migrations do Saúde 360.", 500);
+    }
+
     private static string? ValidateAction(string key, string acao, Saude360ActionRequest r)
     {
         var normalized = acao.ToLowerInvariant();
@@ -551,7 +682,7 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
             MedicoId = GetNullable<Guid>(dict, "medico_id"),
             AgendamentoId = GetNullable<Guid>(dict, "agendamento_id"),
             ConsultaId = GetNullable<Guid>(dict, "consulta_id"),
-            Nome = GetString(dict, "nome", GetString(dict, "paciente_nome", string.Empty)),
+            Nome = BuildNome(dict),
             Descricao = GetString(dict, "descricao", GetString(dict, "queixa_principal", string.Empty)),
             Codigo = GetString(dict, "codigo", GetString(dict, "codigo_cid", string.Empty)),
             Status = GetString(dict, "status", string.Empty),
@@ -574,6 +705,16 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
         if (!dict.TryGetValue(key, out value) || value is null) return null;
         if (value is T t) return t;
         return (T)Convert.ChangeType(value, typeof(T));
+    }
+
+    private static string BuildNome(Dictionary<string, object?> dict)
+    {
+        var nome = GetString(dict, "nome", GetString(dict, "paciente_nome", string.Empty));
+        if (!string.IsNullOrWhiteSpace(nome)) return nome;
+        var codigo = GetString(dict, "codigo", string.Empty);
+        var descricao = GetString(dict, "descricao", string.Empty);
+        if (!string.IsNullOrWhiteSpace(codigo) && !string.IsNullOrWhiteSpace(descricao)) return codigo + " - " + descricao;
+        return !string.IsNullOrWhiteSpace(codigo) ? codigo : descricao;
     }
 
     private static string GetString(Dictionary<string, object?> dict, string key, string fallback)

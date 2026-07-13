@@ -113,3 +113,49 @@ public sealed class ClienteInteligenciaPageViewModel
     public IEnumerable<ClienteAlertaSaasViewModel> Alertas { get; set; } = Array.Empty<ClienteAlertaSaasViewModel>();
     public string? ErrorMessage { get; set; }
 }
+
+public sealed class DashboardPremiumPageViewModel
+{
+    public string Titulo { get; set; } = string.Empty;
+    public string PerfilApi { get; set; } = string.Empty;
+    public string Fonte { get; set; } = "Indisponível";
+    public string StatusPlanoModulo { get; set; } = string.Empty;
+    public string ErrorMessage { get; set; } = string.Empty;
+    public IEnumerable<DashboardKpiWebViewModel> Kpis { get; set; } = Array.Empty<DashboardKpiWebViewModel>();
+    public IEnumerable<string> Alertas { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> ProximosPassos { get; set; } = Array.Empty<string>();
+    public IEnumerable<DashboardAtalhoWebViewModel> Atalhos { get; set; } = Array.Empty<DashboardAtalhoWebViewModel>();
+    public IEnumerable<DashboardChartItemWebViewModel> Series { get; set; } = Array.Empty<DashboardChartItemWebViewModel>();
+}
+
+public sealed class DashboardPremiumApiViewModel
+{
+    public string Perfil { get; set; } = string.Empty;
+    public IEnumerable<DashboardKpiWebViewModel> Kpis { get; set; } = Array.Empty<DashboardKpiWebViewModel>();
+    public IEnumerable<string> Alertas { get; set; } = Array.Empty<string>();
+    public IEnumerable<string> ProximosPassos { get; set; } = Array.Empty<string>();
+    public IEnumerable<DashboardAtalhoWebViewModel> Atalhos { get; set; } = Array.Empty<DashboardAtalhoWebViewModel>();
+    public IEnumerable<DashboardChartItemWebViewModel> Series { get; set; } = Array.Empty<DashboardChartItemWebViewModel>();
+    public string StatusPlanoModulo { get; set; } = string.Empty;
+}
+
+public sealed class DashboardKpiWebViewModel
+{
+    public string Titulo { get; set; } = string.Empty;
+    public decimal Valor { get; set; }
+    public string Unidade { get; set; } = string.Empty;
+    public string Tendencia { get; set; } = string.Empty;
+}
+
+public sealed class DashboardAtalhoWebViewModel
+{
+    public string Texto { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
+    public string PerfilMinimo { get; set; } = string.Empty;
+}
+
+public sealed class DashboardChartItemWebViewModel
+{
+    public string Label { get; set; } = string.Empty;
+    public decimal Valor { get; set; }
+}

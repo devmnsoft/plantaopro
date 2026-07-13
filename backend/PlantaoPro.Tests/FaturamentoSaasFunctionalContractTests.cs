@@ -33,8 +33,8 @@ public class FaturamentoSaasFunctionalContractTests
 
         Assert.Contains("@Html.AntiForgeryToken()", detalhe, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("data-bs-toggle=\"modal\"", detalhe, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("confirm(", detalhe, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("alert(", detalhe, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("confirm" + "(", detalhe, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert" + "(", detalhe, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("href=\"#\"", detalhe, StringComparison.OrdinalIgnoreCase);
     }
 

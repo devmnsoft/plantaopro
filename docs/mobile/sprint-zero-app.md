@@ -1,76 +1,62 @@
-# Sprint Zero — App Mobile PlantãoPro
+# Sprint zero — app médico PlantãoPro
 
-## Objetivo
-Preparar o aplicativo mobile MVP para médicos usando os contratos atuais da API Mobile, sem criar dependências de publicação nas lojas nesta fase.
+## Implementado e testado por inspeção
 
-## Stack recomendada
-- stack mobile baseada em aplicativo móvel multiplataforma.
-- TypeScript.
-- roteamento mobile seguro e navegação autenticada.
-- SecureStore para JWT e dados sensíveis.
-- TanStack Query ou camada simples de services para cache e loading.
-- Axios/fetch com interceptor para `Authorization: Bearer <token>`.
+- LoginScreen com validação amigável, sem `alert()` nativo.
+- Navegação MVP autenticada em `AppNavigator` para Início, Plantões, Convites, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- Consumo de `EXPO_PUBLIC_API_BASE_URL` via `services/api.ts`, com JWT no header Authorization e fallback amigável.
+- Loading, empty state e error state básicos nos fluxos já conectados.
 
-## Organização de pastas sugerida
-```text
-app/
-  (auth)/login.tsx
-  (tabs)/dashboard.tsx
-  (tabs)/agenda.tsx
-  (tabs)/convites.tsx
-  (tabs)/pagamentos.tsx
-  suporte/
-components/
-  EmptyState.tsx
-  KpiCard.tsx
-  LoadingState.tsx
-services/
-  api.ts
-  auth.ts
-  mobile.ts
-store/
-  session.ts
-utils/
-  formatters.ts
+## Implementado e não testado em runtime
+
+- `npm install` executou com sucesso após manter as dependências Expo já compatíveis do projeto. O `npm run start` ainda precisa ser validado em estação interativa/rede liberada porque o Metro tentou acesso externo e retornou `fetch failed`.
+
+## Parcial
+
+- Disponibilidade e Preferências têm telas navegáveis e mensagens honestas, mas a gravação depende da homologação final dos endpoints.
+- ConviteDetalheScreen está navegável como MVP de detalhe/estado parcial; ações aceitar/recusar devem ser ligadas aos endpoints reais antes de piloto produtivo.
+
+## Pendente
+
+- Secure storage nativo persistente para JWT quando for permitido instalar dependências Expo adicionais.
+- Testes automatizados mobile.
+
+## Atualização homologação real 2026-07-07
+
+- MVP mantém Login, Home, Plantões, Convites, Detalhe convite, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- API base deve ser configurada por `EXPO_PUBLIC_API_BASE_URL`; não usar URL fixa de produção.
+- Segurança parcial: token em storage em memória até homologar `expo-secure-store` em ambiente interativo.
+- Pendência: executar `npm install` e `npm run start` com Expo/Metro aberto para evidência visual.
+
+## Rodada 2026-07-07 — status de homologação mobile
+
+Classificação mobile: **Bloqueado por ambiente** para execução Metro completa no executor atual.
+
+Evidência:
+
+- `npm install` concluiu com sucesso em `mobile/PlantaoPro.App`.
+- `CI=1 npm run start` iniciou Metro, mas encerrou com `TypeError: fetch failed`, compatível com limitação de ambiente não interativo/rede para Expo.
+
+Próximo passo reproduzível:
+
+```bash
+cd mobile/PlantaoPro.App
+npm install
+CI=1 npm run start
 ```
 
-## Fluxo de login
-1. Usuário informa e-mail e senha.
-2. App chama `POST /api/mobile/auth/login`.
-3. App salva token em SecureStore.
-4. App chama `GET /api/mobile/me` e `GET /api/mobile/dashboard`.
-5. Em 401, limpar sessão e retornar para login.
-6. Em 403 por plano sem mobile, exibir tela amigável orientando contato com a coordenação.
+Em máquina com emulador ou Expo Go, repetir sem `CI=1` e validar Login, Home, Plantões, Convites, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
 
-## Telas MVP
-- Login.
-- Dashboard do médico.
-- Plantões disponíveis.
-- Detalhe do plantão.
-- Convites.
-- Minhas escalas.
-- Meus pagamentos.
-- Notificações.
-- Perfil.
-- Disponibilidade.
-- Preferências.
-- Suporte/chamados.
+## Evolução operação inteligente e demo comercial premium — 2026-07-07
+- Evoluído dashboard executivo por perfil: Admin Global, Administrador Cliente, Coordenação, Médico, Financeiro e Saúde 360.
+- Criado cockpit Operação Inteligente com pendências por prioridade, perfil responsável, CTA seguro e recomendações determinísticas sem IA externa.
+- Criada jornada Primeiros Passos por perfil para implantação do tenant e operação diária.
+- Agenda clínica recebeu visão comercial por cards para Calendário, AgendaDia, AgendaMedico e CheckIn.
+- Relatórios gerenciais priorizam filtros, cards, LGPD e exportação futura bloqueada até auditoria.
+- Demo premium documentada com usuários por perfil e seed idempotente `database/seeds/2026_demo_comercial_premium.sql`.
+- Mobile médico mantém telas mínimas, fallback amigável, uso de `EXPO_PUBLIC_API_BASE_URL` e sem log de token.
+- Classificação: Evolução funcional parcial no ambiente atual quando SDK .NET ou Docker não estiverem disponíveis; Demo premium navegável para apresentação.
 
-## Estados obrigatórios
-- Loading com skeleton simples.
-- EmptyState com orientação de próxima ação.
-- Erro 401: sessão expirada.
-- Erro 403: acesso/plano bloqueado.
-- Erro offline/time-out: tentar novamente.
-- Toast/snackbar para solicitação, aceite, recusa, perfil e suporte.
+## Nota de status real — 2026-07-08
 
-## Roadmap de publicação
-1. Sprint Zero: arquitetura, navegação, autenticação e design tokens.
-2. Sprint 1: dashboard, plantões disponíveis e solicitação.
-3. Sprint 2: convites, escalas e notificações.
-4. Sprint 3: pagamentos, perfil, disponibilidade e suporte.
-5. Pré-lojas: ícones, splash, permissões, política de privacidade e build Android/iOS.
-
-## Integração com operação assistida
-
-Durante a Sprint Zero do app, usar o módulo de operação assistida para registrar validações mobile-first: login, dashboard, plantões disponíveis, convites, escalas, pagamentos, notificações, suporte e perfil. Qualquer bloqueio do app deve ser aberto como ocorrência de homologação com prioridade adequada.
+Esta documentação diferencia demonstração comercial de runtime real: dados demo só devem ser usados com `DemoMode=true`. Fluxos marcados como parciais exigem validação em ambiente com API, PostgreSQL, Docker/Expo e massa de homologação antes de qualquer declaração de produção.

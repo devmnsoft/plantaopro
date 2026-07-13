@@ -1,4 +1,4 @@
-# Jornada do cliente leigo — Saúde 360
+# Jornada do Cliente Leigo
 
 A navegação principal conduz o usuário pela sequência: Paciente → Agendamento → Check-in → Painel → Triagem → Consulta → Prescrição → Financeiro.
 

@@ -1,0 +1,14 @@
+@model PlantaoPro.Web.Models.LookupSelectViewModel
+@{
+    var id = "lookup_" + (Model.FieldName ?? string.Empty).Replace(".", "_").Replace("[", "_").Replace("]", "_");
+}
+<label for="@id" class="form-label">@Model.Label</label>
+<select id="@id" name="@Model.FieldName" class="form-select" data-lookup-select data-lookup-endpoint="@Model.Endpoint" data-current-value="@Model.Value">
+    <option value="">@Model.Placeholder</option>
+    @if (!string.IsNullOrWhiteSpace(Model.Value))
+    {
+        <option value="@Model.Value" selected>Registro selecionado</option>
+    }
+</select>
+<div class="form-text">@Model.HelpText</div>
+<a class="small text-decoration-none" asp-controller="Ajuda" asp-action="PrimeirosPassos">Não encontrou? Veja como cadastrar novo.</a>

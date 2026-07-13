@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.CrossCutting", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Api", "PlantaoPro.Api\PlantaoPro.Api.csproj", "{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Tests", "PlantaoPro.Tests\PlantaoPro.Tests.csproj", "{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,6 +46,10 @@ Global
 		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAFF08D0-FB2C-0AD0-50E7-B22025C15101}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E0B52D9-BC7A-4D4E-9216-20CB4F992A25}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

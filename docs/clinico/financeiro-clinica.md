@@ -1,25 +1,13 @@
-# Saúde 360 — financeiro clinica
+# Saúde 360
 
-## Objetivo
+Documento atualizado nesta consolidação para registrar a estabilização de banco, seeds demo, APIs e jornada guiada. Consulte também:
 
-Este módulo faz parte da Fase 5 do PlantãoPro Saúde 360 e opera com escopo por tenant, permissões por perfil/plano e auditoria.
-
-## Implementação
-
-- API autenticada no backend ASP.NET Core.
-- Controller Web MVC com ações reais e service HTTP registrado em DI.
-- Tabelas PostgreSQL no schema `plantaopro` com auditoria mínima (`created_by`, `updated_by`, `created_at`, `updated_at`, `reg_date`, `reg_status`).
-- Índices por campos operacionais relevantes, incluindo `cliente_id`, `status` e `reg_date`.
-
-## Segurança e LGPD
-
-- Dados são filtrados por `cliente_id`/tenant.
-- Ações sensíveis registram auditoria central.
-- Conteúdo clínico sensível não deve ser escrito em logs técnicos.
-- Perfil financeiro não deve acessar evolução clínica.
+- `docs/operacao/ordem-migrations-seeds.md`
+- `docs/clinico/importacao-cid.md`
+- `docs/release/consolidacao-saude360-convenios-cid-financeiro.md`
 
 ## Pendências reais
 
-- Homologar jornada completa em ambiente com banco aplicado.
-- Refinar campos específicos por clínica e protocolo assistencial.
-- Adicionar integrações externas somente após validação jurídica/operacional.
+- Validar contra uma base PostgreSQL local com migrations aplicadas.
+- Homologar fluxo visual completo no navegador com login admin.
+- Configurar fonte oficial de CID via ambiente/segredo operacional quando disponível.

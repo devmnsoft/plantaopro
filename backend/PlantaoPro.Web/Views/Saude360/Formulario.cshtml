@@ -4,7 +4,23 @@
     ViewData["Title"] = vm.Titulo;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+@if (ViewBag.AssistenteContextual is PlantaoPro.Web.Models.AssistenteContextualViewModel assistenteContextual)
+{
+    @await Html.PartialAsync("_AssistenteContextual", assistenteContextual)
+}
+
+@await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
+{
+    Title = vm.Titulo,
+    Description = "Preencha os campos com orientação contextual, validação server-side e envio para a API configurada.",
+    WhenToUse = "Use este formulário para registrar uma etapa real da jornada Paciente -> Agendamento -> Check-in -> Triagem -> Consulta -> Financeiro.",
+    StepByStep = new List<string> { "Preencha os dados obrigatórios do contexto.", "Use os seletores por nome; o sistema grava o identificador internamente sem expor GUID ao usuário.", "Clique em Salvar e aguarde o toast de confirmação.", "Em caso de erro, os dados preenchidos permanecem na tela." },
+    Tips = new List<string> { "Não informe dados clínicos sensíveis em campos administrativos.", "Todo POST usa antiforgery e endpoint API real.", "Campos opcionais ajudam em casos sem CPF ou convênio." },
+    ProfileNotes = "Recepção, triagem, médico e financeiro visualizam somente o que o perfil permitir.",
+    DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
+})
+
+<div class="d-flex justify-content-between align-items-center mb-4 saude360-page-header">
     <div>
         <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
         <h1 class="h3 mb-0">@vm.Titulo</h1>
@@ -13,13 +29,14 @@
     <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
 
-<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="card border-0 shadow-sm">
+<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="card border-0 shadow-sm saude360-form" data-saude360-form aria-describedby="saude360-form-hint">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ApiEndpoint" />
     <input type="hidden" asp-for="Controller" />
     <input type="hidden" asp-for="Action" />
     <input type="hidden" asp-for="Id" />
     <div class="card-body">
+        <p id="saude360-form-hint" class="visually-hidden">Formulário Saúde 360 com validação, antiforgery e preservação dos dados em caso de erro.</p>
         <h2 class="h6 text-uppercase text-primary">Dados pessoais</h2>
         <div class="row g-3 mb-4">
             <div class="col-md-5"><label asp-for="Nome" class="form-label">Nome completo</label><input asp-for="Nome" class="form-control" maxlength="180" /></div>
@@ -41,11 +58,11 @@
 
         <h2 class="h6 text-uppercase text-primary">Agendamento e vínculos</h2>
         <div class="row g-3 mb-4">
-            <div class="col-md-4"><label asp-for="PacienteId" class="form-label">Paciente ID</label><input asp-for="PacienteId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="MedicoId" class="form-label">Médico/profissional ID</label><input asp-for="MedicoId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="AgendamentoId" class="form-label">Agendamento ID</label><input asp-for="AgendamentoId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="ConsultaId" class="form-label">Consulta ID</label><input asp-for="ConsultaId" class="form-control" /></div>
-            <div class="col-md-4"><label asp-for="PlanoSaudeId" class="form-label">Plano de saúde ID</label><input asp-for="PlanoSaudeId" class="form-control" /></div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PacienteId), Label = "Paciente", Endpoint = "/api/lookups/pacientes", Value = vm.PacienteId?.ToString() ?? string.Empty, Placeholder = "Busque o paciente pelo nome" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.MedicoId), Label = "Médico/profissional", Endpoint = "/api/lookups/medicos", Value = vm.MedicoId?.ToString() ?? string.Empty, Placeholder = "Selecione pelo nome do profissional" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.AgendamentoId), Label = "Agendamento", Endpoint = "/api/lookups/agendamentos", Value = vm.AgendamentoId?.ToString() ?? string.Empty, Placeholder = "Selecione paciente, data ou status" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.ConsultaId), Label = "Consulta", Endpoint = "/api/lookups/consultas", Value = vm.ConsultaId?.ToString() ?? string.Empty, Placeholder = "Selecione a consulta vinculada" })</div>
+            <div class="col-md-4">@await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(vm.PlanoSaudeId), Label = "Plano de saúde", Endpoint = "/api/lookups/planos-saude", Value = vm.PlanoSaudeId?.ToString() ?? string.Empty, Placeholder = "Selecione convênio ou plano" })</div>
             <div class="col-md-4"><label asp-for="Especialidade" class="form-label">Especialidade</label><input asp-for="Especialidade" class="form-control" maxlength="120" /></div>
             <div class="col-md-3"><label asp-for="DataInicio" class="form-label">Início</label><input asp-for="DataInicio" type="datetime-local" class="form-control" /></div>
             <div class="col-md-3"><label asp-for="DataFim" class="form-label">Fim</label><input asp-for="DataFim" type="datetime-local" class="form-control" /></div>
@@ -79,6 +96,6 @@
     </div>
     <div class="card-footer bg-white d-flex justify-content-end gap-2">
         <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-        <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle me-1"></i>Salvar</button>
+        <button type="submit" class="btn btn-primary" data-loading-text="Salvando..."><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Salvar</button>
     </div>
 </form>

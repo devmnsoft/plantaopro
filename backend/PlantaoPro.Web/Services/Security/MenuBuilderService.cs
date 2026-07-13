@@ -25,111 +25,98 @@ public sealed class MenuBuilderService : IMenuBuilderService
     {
         var groups = new List<MenuGroupViewModel>();
 
+        AddGroup(groups, "INÍCIO", "bi-house-heart", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Visão Geral", "bi-speedometer2", "Home", "Index", "DASHBOARD", string.Empty, false, false),
+            Item("Fluxo de Atendimento", "bi-signpost-2", "ClinicaDashboard", "FluxoAtendimento", "SAUDE360_DASHBOARD", string.Empty),
+            Item("Pendências do Dia", "bi-lightning-charge", "PendenciasClinicas", "Index", "SAUDE360_DASHBOARD", string.Empty),
+            Item("Assistente PlantãoPro", "bi-stars", "Ajuda", "PrimeirosPassos", "AJUDA", string.Empty, false, false),
+            Item("Jornada", "bi-signpost", "Jornada", "Index", "JORNADA_V114", string.Empty, false, false),
+            Item("Operação v1.14", "bi-cpu", "Operacao", "Index", "OPERACAO_V114", string.Empty, false, false)
+        });
+
+        AddGroup(groups, "ATENDIMENTO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Minha Agenda", "bi-calendar-heart", "MinhaAgenda", "Index", "MEDICO_AREA", RolesConstants.Medico),
+            Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", RolesConstants.Recepcao),
+            Item("Agendamentos", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", RolesConstants.Recepcao),
+            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "SAUDE360_AGENDAMENTO", RolesConstants.Recepcao),
+            Item("Painel de Chamada", "bi-megaphone", "PainelChamada", "Index", "SAUDE360_PAINEL", RolesConstants.Recepcao),
+            Item("Triagem", "bi-clipboard2-pulse", "Triagem", "Index", "SAUDE360_TRIAGEM", RolesConstants.Triagem),
+            Item("Consultas", "bi-journal-medical", "Consultas", "Index", "SAUDE360_CONSULTAS", RolesConstants.Medico),
+            Item("Prescrições", "bi-capsule", "Prescricoes", "Index", "SAUDE360_PRESCRICAO", RolesConstants.Medico),
+            Item("CID", "bi-search-heart", "Cid", "Index", "SAUDE360_CID", RolesConstants.Medico)
+        });
+
+        AddGroup(groups, "PLANTÕES", "bi-calendar2-week", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Dashboard de Plantões", "bi-speedometer", "Home", "Dashboard", "DASHBOARD", RolesConstants.Coordenador),
+            Item("Plantões", "bi-calendar-event", "Plantoes", "Index", "PLANTOES", RolesConstants.Coordenador),
+            Item("Escalas", "bi-calendar-check", "Escalas", "Index", "ESCALAS", RolesConstants.Coordenador),
+            Item("Convites", "bi-envelope-paper", "Convites", "Index", "CONVITES", RolesConstants.Coordenador),
+            Item("Médicos", "bi-person-vcard", "Medicos", "Index", "MEDICOS", RolesConstants.Coordenador),
+            Item("Hospitais", "bi-hospital", "Hospitais", "Index", "HOSPITAIS", RolesConstants.Coordenador),
+            Item("Especialidades", "bi-tags", "Especialidades", "Index", "ESPECIALIDADES", RolesConstants.Coordenador),
+            Item("Disponibilidade Médica", "bi-clock-history", "MedicoArea", "Index", "DISPONIBILIDADE", RolesConstants.Medico),
+            Item("Substituições", "bi-arrow-left-right", "MedicoArea", "Index", "SUBSTITUICOES", RolesConstants.Medico)
+        });
+
+        AddGroup(groups, "FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Dashboard Financeiro", "bi-graph-up", "ClinicaFinanceiro", "Index", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Pagamentos Médicos", "bi-cash-coin", "Pagamentos", "Index", "PAGAMENTOS", RolesConstants.Financeiro),
+            Item("Contas a Receber", "bi-receipt", "ClinicaFinanceiro", "ContasReceber", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Recebimentos", "bi-wallet2", "ClinicaFinanceiro", "Receber", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Caixa", "bi-box", "ClinicaFinanceiro", "Caixa", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Repasses", "bi-bank", "ClinicaFinanceiro", "Repasses", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Relatórios Financeiros", "bi-file-earmark-bar-graph", "ClinicaFinanceiro", "Relatorios", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Faturamento Clínico", "bi-receipt-cutoff", "FaturamentoClinico", "Index", "FATURAMENTO_CLINICO_V114", RolesConstants.FinanceiroClinica),
+            Item("Itens Faturáveis", "bi-tags", "ItensFaturaveis", "Index", "ITENS_FATURAVEIS_V114", RolesConstants.FinanceiroClinica)
+        });
+
+        AddGroup(groups, "CONVÊNIOS", "bi-shield-plus", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Dashboard Convênios", "bi-speedometer2", "Convenios", "Dashboard", "SAUDE360_CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Convênios", "bi-building", "Convenios", "Index", "SAUDE360_CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Planos de Saúde", "bi-card-checklist", "PlanosSaude", "Index", "SAUDE360_PLANOS_SAUDE", RolesConstants.FaturamentoConvenio),
+            Item("Autorizações", "bi-check2-square", "Convenios", "Autorizacoes", "SAUDE360_CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Glosas", "bi-exclamation-octagon", "Convenios", "Glosas", "SAUDE360_CONVENIOS", RolesConstants.FaturamentoConvenio),
+            Item("Faturamento", "bi-file-earmark-bar-graph", "Convenios", "Faturamento", "SAUDE360_CONVENIOS", RolesConstants.FaturamentoConvenio)
+        });
+
+        AddGroup(groups, "RELATÓRIOS", "bi-bar-chart", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Executivo", "bi-graph-up-arrow", "Relatorios", "Index", "RELATORIOS", RolesConstants.Auditor),
+            Item("Operação Clínica", "bi-clipboard2-pulse", "ClinicaDashboard", "Index", "SAUDE360_DASHBOARD", RolesConstants.Auditor),
+            Item("Plantões", "bi-calendar2-week", "Relatorios", "ProdutividadeMedica", "RELATORIOS", RolesConstants.Auditor),
+            Item("Financeiro", "bi-cash-stack", "Relatorios", "FaturamentoSaas", "RELATORIOS", RolesConstants.Auditor),
+            Item("Convênios", "bi-shield-plus", "Convenios", "Faturamento", "SAUDE360_CONVENIOS", RolesConstants.Auditor),
+            Item("Auditoria", "bi-journal-check", "Auditoria", "Index", "AUDITORIA", RolesConstants.Auditor)
+        });
+
+        AddGroup(groups, "GESTÃO DO CLIENTE", "bi-window-sidebar", currentController, currentAction, new List<MenuItemViewModel>
+        {
+            Item("Usuários", "bi-person-gear", "Usuarios", "Index", "USUARIOS", RolesConstants.AdministradorCliente),
+            Item("Perfis", "bi-people", "Perfis", "Index", "PERFIS", RolesConstants.AdministradorCliente),
+            Item("Permissões", "bi-shield-lock", "Permissoes", "Index", "PERMISSOES", RolesConstants.AdministradorCliente),
+            Item("White Label", "bi-palette2", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorCliente, true),
+            Item("Onboarding", "bi-rocket", "Onboarding", "Index", "ONBOARDING", RolesConstants.AdministradorCliente),
+            Item("Meu Plano", "bi-card-checklist", "MinhaAssinatura", "Index", "ASSINATURAS", RolesConstants.AdministradorCliente),
+            Item("Uso do Plano", "bi-graph-up", "MinhaAssinatura", "Uso", "ASSINATURAS", RolesConstants.AdministradorCliente),
+            Item("Suporte", "bi-life-preserver", "Suporte", "Index", "SUPORTE", RolesConstants.AdministradorCliente)
+        });
+
         AddGroup(groups, "ADMIN SAAS", "bi-buildings", currentController, currentAction, new List<MenuItemViewModel>
         {
-            Item("Visão Geral", "bi-speedometer2", "AdminSaas", "Index", "ADMIN_SAAS", RolesConstants.AdministradorGlobal),
             Item("Clientes", "bi-building-check", "Clientes", "Index", "CLIENTES", RolesConstants.AdministradorGlobal),
             Item("Tenants", "bi-diagram-3", "Clientes", "Index", "CLIENTES", RolesConstants.AdministradorGlobal),
             Item("Planos", "bi-columns-gap", "Planos", "Index", "PLANOS", RolesConstants.AdministradorGlobal),
             Item("Assinaturas", "bi-receipt", "Assinaturas", "Index", "ASSINATURAS", RolesConstants.AdministradorGlobal),
             Item("Billing", "bi-credit-card", "Billing", "Faturas", "BILLING_GLOBAL", RolesConstants.AdministradorGlobal),
-            Item("Propostas", "bi-file-earmark-richtext", "PropostasComerciais", "Index", "PROPOSTAS", RolesConstants.AdministradorGlobal),
-            Item("Parceiros", "bi-handshake", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.AdministradorGlobal),
             Item("Marketplace", "bi-shop", "Marketplace", "Index", "MARKETPLACE", RolesConstants.AdministradorGlobal, true),
-            Item("White Label", "bi-palette", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorGlobal),
-            Item("Permissões", "bi-shield-lock", "Permissoes", "Index", "PERMISSOES", RolesConstants.AdministradorGlobal),
-            Item("Auditoria", "bi-journal-check", "Auditoria", "Index", "AUDITORIA", RolesConstants.AdministradorGlobal),
-            Item("Observabilidade", "bi-activity", "Observabilidade", "Index", "OBSERVABILIDADE_GLOBAL", RolesConstants.AdministradorGlobal)
-        });
-
-        AddGroup(groups, "OPERAÇÃO", "bi-calendar2-week", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Dashboard", "bi-speedometer", "Home", "Dashboard", "DASHBOARD", RolesConstants.Coordenador),
-            Item("Central de Escala", "bi-kanban", "CentralEscala", "Index", "CENTRAL_ESCALA", RolesConstants.Coordenador),
-            Item("Plantões", "bi-calendar-event", "Plantoes", "Index", "PLANTOES", RolesConstants.Coordenador),
-            Item("Convites", "bi-envelope-paper", "Convites", "Index", "CONVITES", RolesConstants.Coordenador),
-            Item("Escalas", "bi-calendar-check", "Escalas", "Index", "ESCALAS", RolesConstants.Coordenador),
-            Item("Médicos", "bi-person-vcard", "Medicos", "Index", "MEDICOS", RolesConstants.Coordenador),
-            Item("Hospitais", "bi-hospital", "Hospitais", "Index", "HOSPITAIS", RolesConstants.Coordenador),
-            Item("Especialidades", "bi-tags", "Especialidades", "Index", "ESPECIALIDADES", RolesConstants.Coordenador),
-            Item("Agenda", "bi-calendar3", "Agenda", "Index", "AGENDA", RolesConstants.Coordenador),
-            Item("Comunicação", "bi-chat-dots", "Comunicacao", "Index", "COMUNICACAO", RolesConstants.Coordenador)
-        });
-
-        AddGroup(groups, "FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Pagamentos", "bi-cash-coin", "Pagamentos", "Index", "PAGAMENTOS", RolesConstants.Financeiro),
-            Item("Faturas", "bi-receipt-cutoff", "Billing", "Faturas", "FATURAS", RolesConstants.Financeiro),
-            Item("Relatórios", "bi-file-earmark-bar-graph", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro),
-            Item("Exportações", "bi-download", "Relatorios", "Index", "RELATORIOS", RolesConstants.Financeiro)
-        });
-
-        AddGroup(groups, "CLÍNICA", "bi-hospital", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Fluxo de Atendimento", "bi-signpost-2", "ClinicaDashboard", "FluxoAtendimento", "SAUDE360_DASHBOARD", string.Empty),
-            Item("Pendências do Dia", "bi-lightning-charge", "PendenciasClinicas", "Index", "SAUDE360_DASHBOARD", string.Empty),
-            Item("Dashboard clínico", "bi-speedometer2", "ClinicaDashboard", "Index", "SAUDE360_DASHBOARD", string.Empty),
-            Item("Pacientes", "bi-people", "Pacientes", "Index", "SAUDE360_PACIENTES", string.Empty),
-            Item("Agendamentos", "bi-calendar2-plus", "Agendamentos", "Index", "SAUDE360_AGENDAMENTO", string.Empty),
-            Item("Painel de Chamada", "bi-megaphone", "PainelChamada", "Index", "SAUDE360_PAINEL", string.Empty),
-            Item("Triagem", "bi-clipboard2-pulse", "Triagem", "Index", "SAUDE360_TRIAGEM", string.Empty),
-            Item("Fila de Atendimento", "bi-list-ol", "PainelChamada", "Fila", "SAUDE360_PAINEL", string.Empty),
-            Item("Check-in", "bi-person-check", "Agendamentos", "CheckIn", "SAUDE360_AGENDAMENTO", string.Empty)
-        });
-
-        AddGroup(groups, "SAÚDE 360 - TRIAGEM", "bi-clipboard2-pulse", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Fila de triagem", "bi-people", "Triagem", "Fila", "SAUDE360_TRIAGEM", string.Empty),
-            Item("Nova triagem", "bi-plus-circle", "Triagem", "Create", "SAUDE360_TRIAGEM", string.Empty),
-            Item("Histórico de triagem", "bi-clock-history", "Triagem", "HistoricoPaciente", "SAUDE360_TRIAGEM", string.Empty)
-        });
-
-        AddGroup(groups, "SAÚDE 360 - MÉDICO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Consultas", "bi-journal-medical", "Consultas", "Index", "SAUDE360_CONSULTAS", string.Empty),
-            Item("Prescrições", "bi-capsule", "Prescricoes", "Index", "SAUDE360_PRESCRICAO", string.Empty),
-            Item("CID", "bi-search-heart", "Cid", "Index", "SAUDE360_CID", string.Empty),
-            Item("Histórico do paciente", "bi-folder2-open", "Consultas", "HistoricoPaciente", "SAUDE360_CONSULTAS", string.Empty)
-        });
-
-        AddGroup(groups, "SAÚDE 360 - FINANCEIRO", "bi-cash-stack", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Contas a receber", "bi-receipt", "ClinicaFinanceiro", "ContasReceber", "SAUDE360_FINANCEIRO", string.Empty),
-            Item("Caixa", "bi-box", "ClinicaFinanceiro", "Caixa", "SAUDE360_FINANCEIRO", string.Empty),
-            Item("Repasses", "bi-bank", "ClinicaFinanceiro", "Repasses", "SAUDE360_FINANCEIRO", string.Empty),
-            Item("Relatórios", "bi-graph-up", "ClinicaFinanceiro", "Relatorios", "SAUDE360_FINANCEIRO", string.Empty)
-        });
-
-        AddGroup(groups, "SAÚDE 360 - CONVÊNIOS", "bi-shield-plus", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Convênios", "bi-building", "Convenios", "Index", "SAUDE360_CONVENIOS", string.Empty),
-            Item("Autorizações", "bi-check2-square", "Convenios", "Autorizacoes", "SAUDE360_CONVENIOS", string.Empty),
-            Item("Glosas", "bi-exclamation-octagon", "Convenios", "Glosas", "SAUDE360_CONVENIOS", string.Empty),
-            Item("Faturamento", "bi-file-earmark-bar-graph", "Convenios", "Faturamento", "SAUDE360_CONVENIOS", string.Empty),
-            Item("Planos de saúde", "bi-card-checklist", "PlanosSaude", "Index", "SAUDE360_PLANOS_SAUDE", string.Empty)
-        });
-
-        AddGroup(groups, "CLIENTE", "bi-window-sidebar", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Meu Portal", "bi-house-heart", "ClientePortal", "Index", "CLIENTE_PORTAL", RolesConstants.AdministradorCliente),
-            Item("Meu Plano", "bi-card-checklist", "MinhaAssinatura", "Index", "ASSINATURAS", RolesConstants.AdministradorCliente),
-            Item("Uso", "bi-graph-up", "MinhaAssinatura", "Uso", "ASSINATURAS", RolesConstants.AdministradorCliente),
-            Item("Usuários", "bi-person-gear", "Usuarios", "Index", "USUARIOS", RolesConstants.AdministradorCliente),
-            Item("Perfis", "bi-people", "Perfis", "Index", "PERFIS", RolesConstants.AdministradorCliente),
-            Item("Parametrizações", "bi-sliders", "Configuracoes", "Index", "CONFIGURACOES", RolesConstants.AdministradorCliente),
-            Item("White Label", "bi-palette2", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorCliente, true),
-            Item("Onboarding", "bi-rocket", "Onboarding", "Index", "ONBOARDING", RolesConstants.AdministradorCliente),
-            Item("Suporte", "bi-life-preserver", "Suporte", "Index", "SUPORTE", RolesConstants.AdministradorCliente),
-            Item("Treinamento", "bi-mortarboard", "Treinamento", "Index", "TREINAMENTO", RolesConstants.AdministradorCliente)
-        });
-
-        AddGroup(groups, "MÉDICO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
-        {
-            Item("Minha Agenda", "bi-calendar-heart", "MedicoArea", "Index", "MEDICO_AREA", RolesConstants.Medico),
-            Item("Convites", "bi-envelope-open", "Convites", "Index", "CONVITES", RolesConstants.Medico),
-            Item("Disponibilidade", "bi-clock-history", "MedicoArea", "Index", "DISPONIBILIDADE", RolesConstants.Medico),
-            Item("Substituições", "bi-arrow-left-right", "MedicoArea", "Index", "SUBSTITUICOES", RolesConstants.Medico),
-            Item("Meus Pagamentos", "bi-wallet2", "Pagamentos", "Index", "PAGAMENTOS_PROPRIOS", RolesConstants.Medico)
+            Item("Parceiros", "bi-handshake", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.AdministradorGlobal),
+            Item("Observabilidade", "bi-activity", "Observabilidade", "Index", "OBSERVABILIDADE_GLOBAL", RolesConstants.AdministradorGlobal),
+            Item("Customer Success", "bi-emoji-smile", "CustomerSuccess", "Index", "CUSTOMER_SUCCESS", RolesConstants.AdministradorGlobal)
         });
 
         AddGroup(groups, "PARCEIRO", "bi-handshake", currentController, currentAction, new List<MenuItemViewModel>
@@ -137,19 +124,17 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Portal Parceiro", "bi-house-door", "ParceiroPortal", "Index", "PARCEIRO", RolesConstants.Parceiro),
             Item("Leads", "bi-bullseye", "ParceiroPortal", "Leads", "LEADS", RolesConstants.Parceiro),
             Item("Propostas", "bi-file-earmark-text", "ParceiroPortal", "Propostas", "PROPOSTAS", RolesConstants.Parceiro),
-            Item("Clientes", "bi-buildings", "ParceiroPortal", "Clientes", "PARCEIRO", RolesConstants.Parceiro),
-            Item("Comissões", "bi-percent", "ParceiroPortal", "Comissoes", "COMISSOES", RolesConstants.Parceiro),
-            Item("Repasses", "bi-bank", "ParceiroPortal", "Repasses", "REPASSES", RolesConstants.Parceiro),
-            Item("Materiais", "bi-folder2-open", "ParceiroPortal", "Materiais", "MATERIAIS", RolesConstants.Parceiro)
+            Item("Comissões", "bi-percent", "ParceiroPortal", "Comissoes", "COMISSOES", RolesConstants.Parceiro)
         });
 
-        AddGroup(groups, "SUPORTE E GOVERNANÇA", "bi-shield-check", currentController, currentAction, new List<MenuItemViewModel>
+        AddGroup(groups, "AJUDA E GOVERNANÇA", "bi-shield-check", currentController, currentAction, new List<MenuItemViewModel>
         {
-            Item("Ajuda", "bi-question-circle", "Ajuda", "Index", "AJUDA", string.Empty, false, false),
+            Item("Manual do Perfil", "bi-journal-bookmark", "Manual", "Perfil", "AJUDA", string.Empty, false, false),
+            Item("Primeiros Passos", "bi-rocket-takeoff", "Ajuda", "PrimeirosPassos", "AJUDA", string.Empty, false, false),
+            Item("Base de Conhecimento", "bi-question-circle", "Ajuda", "Index", "AJUDA", string.Empty, false, false),
             Item("LGPD", "bi-shield-lock", "Lgpd", "Index", "LGPD", string.Empty, false, false),
             Item("Auditoria", "bi-journal-check", "Auditoria", "Index", "AUDITORIA", RolesConstants.Auditor),
-            Item("Suporte", "bi-life-preserver", "Suporte", "Index", "SUPORTE", RolesConstants.Suporte),
-            Item("Minha conta", "bi-person-circle", "Usuario", "Index", "CONTA", string.Empty, false, false)
+            Item("Minha Conta", "bi-person-circle", "Usuario", "Index", "CONTA", string.Empty, false, false)
         });
 
         return groups;
@@ -186,9 +171,10 @@ public sealed class MenuBuilderService : IMenuBuilderService
         if (currentUser.HasRole(RolesConstants.AdministradorClinica) && (string.Equals(minimumRole, RolesConstants.Recepcao, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Triagem, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FinanceiroClinica, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FaturamentoConvenio, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase))) return true;
         if (string.Equals(minimumRole, RolesConstants.AdministradorGlobal, StringComparison.OrdinalIgnoreCase)) return false;
         if (string.Equals(minimumRole, RolesConstants.AdministradorCliente, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Administrador, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin();
+        if (string.Equals(minimumRole, RolesConstants.Recepcao, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Triagem, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FinanceiroClinica, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.FaturamentoConvenio, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(minimumRole);
         if (string.Equals(minimumRole, RolesConstants.Coordenador, StringComparison.OrdinalIgnoreCase) || string.Equals(minimumRole, RolesConstants.Coordenacao, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Operador);
         if (string.Equals(minimumRole, RolesConstants.Financeiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro);
-        if (string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase)) return currentUser.IsDoctor();
+        if (string.Equals(minimumRole, RolesConstants.Medico, StringComparison.OrdinalIgnoreCase)) return currentUser.IsTenantAdmin() || currentUser.IsDoctor();
         if (string.Equals(minimumRole, RolesConstants.Parceiro, StringComparison.OrdinalIgnoreCase)) return currentUser.IsPartner();
         return currentUser.HasRole(minimumRole);
     }

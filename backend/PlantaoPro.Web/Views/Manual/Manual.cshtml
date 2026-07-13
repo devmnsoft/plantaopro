@@ -1,0 +1,29 @@
+@model PlantaoPro.Web.Controllers.ManualPage
+@{
+    ViewData["Title"] = Model.Title;
+    var perfis = new List<string> { "Recepcao", "Triagem", "Medico", "Financeiro", "AdminClinica", "AdminSaas", "Convenios", "Parceiro", "Auditor" };
+}
+@await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
+{
+    Title = Model.Title,
+    Description = Model.Description,
+    WhenToUse = "Abra este manual quando quiser confirmar o próximo passo, entender o que o perfil pode acessar ou treinar um novo usuário.",
+    StepByStep = new List<string> { "Identifique seu perfil.", "Siga a jornada principal.", "Use os atalhos para abrir a tela correta.", "Em caso de dúvida, peça suporte com o contexto da tela." },
+    Tips = new List<string> { "Parceiros não visualizam dados clínicos.", "Auditores atuam em modo leitura.", "Ações sensíveis são auditadas e protegidas por permissão." },
+    ProfileNotes = "O menu do sistema muda conforme perfil, plano e módulos habilitados."
+})
+<div class="row g-3">
+    @foreach (var perfil in perfis)
+    {
+        <div class="col-md-4">
+            <a class="card h-100 border-0 shadow-sm text-decoration-none" asp-controller="Manual" asp-action="@perfil">
+                <div class="card-body">
+                    <span class="badge bg-primary-subtle text-primary mb-2">Manual</span>
+                    <h2 class="h5 text-dark">@perfil</h2>
+                    <p class="text-muted mb-0">Jornada, menus usados, o que pode acessar, erros comuns, FAQ e suporte.</p>
+                </div>
+            </a>
+        </div>
+    }
+</div>
+<div class="card border-0 shadow-sm mt-4"><div class="card-body"><h2 class="h5">Jornada Saúde 360</h2><p class="mb-0 text-muted">Paciente -> Agendamento -> Check-in -> Painel de Chamada -> Triagem -> Consulta -> CID -> Prescrição -> Financeiro -> Convênios -> Relatórios.</p></div></div>

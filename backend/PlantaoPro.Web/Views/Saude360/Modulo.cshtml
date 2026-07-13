@@ -5,7 +5,24 @@
     var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
 }
 
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+@if (ViewBag.AssistenteContextual is PlantaoPro.Web.Models.AssistenteContextualViewModel assistenteContextual)
+{
+    @await Html.PartialAsync("_AssistenteContextual", assistenteContextual)
+}
+
+@await Html.PartialAsync("_PageHelp", new PlantaoPro.Web.Models.PageHelpViewModel
+{
+    Title = vm.Titulo,
+    Description = vm.Descricao,
+    WhenToUse = "Use esta tela para conduzir a jornada assistencial com dados reais da API e contexto por tenant.",
+    StepByStep = new List<string> { "Revise os indicadores e registros.", "Use os botões de ação para avançar no fluxo.", "Se não houver dados, siga a próxima ação recomendada.", "Consulte o manual do perfil em caso de dúvida." },
+    Tips = new List<string> { "Acesso clínico é auditado.", "Registros respeitam o tenant atual.", "Dados sensíveis não aparecem em logs técnicos." },
+    RelatedActions = vm.Acoes,
+    ProfileNotes = "A tela adapta a operação para recepção, triagem, médico, financeiro e convênios.",
+    DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
+})
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 saude360-page-header">
     <div>
         <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
         <h1 class="h3 mb-1">@vm.Titulo</h1>
@@ -15,7 +32,7 @@
         @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
         {
             <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-outline-primary">
-                <i class="bi @acao.Icone me-1"></i>@acao.Titulo
+                <i class="bi @acao.Icone me-1" aria-hidden="true"></i>@acao.Titulo
             </a>
         }
     </div>
@@ -44,12 +61,12 @@
         <span class="badge bg-light text-dark">@vm.Permissao</span>
     </div>
     <div class="table-responsive">
-        <table class="table align-middle mb-0">
-            <thead><tr><th>Identificação</th><th>Código</th><th>Descrição</th><th>Status</th><th>Registro</th></tr></thead>
+        <table class="table align-middle mb-0" aria-label="Registros do módulo @vm.Modulo">
+            <thead><tr><th scope="col">Identificação</th><th scope="col">Código</th><th scope="col">Descrição</th><th scope="col">Status</th><th scope="col">Registro</th></tr></thead>
             <tbody>
             @if (!registros.Any())
             {
-                <tr><td colspan="5" class="text-center text-muted py-4">Nenhum registro encontrado para este tenant.</td></tr>
+                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou cadastre dados demo para validar a jornada.</span></div></td></tr>
             }
             else
             {

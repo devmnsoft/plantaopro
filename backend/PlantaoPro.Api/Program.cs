@@ -126,6 +126,10 @@ builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<Fase6BiIntegracoesService>();
+builder.Services.AddScoped<OperacaoRecomendacaoService>();
+builder.Services.AddScoped<DashboardPremiumService>();
+builder.Services.AddScoped<V113OperationalService>();
+builder.Services.AddScoped<V114ProdutoService>();
 
 var app = builder.Build();
 app.UseHttpLogging();
@@ -141,11 +145,14 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.MapGet("/", () => Results.Ok(new
-    {
-        application = "PlantaoPro.Api",
-        status = "online"
-    }));
+    app.MapGet("/", (IWebHostEnvironment environment) => Results.Ok(ApiResponse<HealthDto>.Ok(
+        new HealthDto(
+            "PlantaoPro.Api",
+            "Healthy",
+            environment.EnvironmentName,
+            DateTime.UtcNow,
+            typeof(Program).Assembly.GetName().Version?.ToString() ?? string.Empty),
+        "PlantaoPro.Api online")));
 }
 
 app.UseExceptionHandler(a => a.Run(async ctx =>

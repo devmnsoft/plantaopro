@@ -35,6 +35,12 @@ public sealed class DeveloperController : ControllerBase
     [HttpGet("exemplos")]
     public async Task<IActionResult> Exemplos() => Ok(await _service.ListarAsync("developer-exemplos"));
 
+    [HttpGet("escopos")]
+    public async Task<IActionResult> Escopos() => Ok(await _service.ListarEscoposAsync());
+
+    [HttpGet("api-keys")]
+    public async Task<IActionResult> ApiKeys() => Ok(await _service.ListarApiKeysAsync());
+
     [HttpPost("api-keys")]
     public async Task<IActionResult> CriarApiKey([FromBody] ApiKeyCreateRequest request)
     {
@@ -48,6 +54,16 @@ public sealed class DeveloperController : ControllerBase
         var result = await _service.RevogarApiKeyAsync(id, HttpContext.Connection.RemoteIpAddress?.ToString());
         return StatusCode(result.StatusCode, result);
     }
+
+    [HttpPost("api-keys/{id:guid}/rotacionar")]
+    public async Task<IActionResult> Rotacionar(Guid id)
+    {
+        var result = await _service.RotacionarApiKeyAsync(id, HttpContext.Connection.RemoteIpAddress?.ToString());
+        return StatusCode(result.StatusCode, result);
+    }
+
+    [HttpGet("api-keys/{id:guid}/logs")]
+    public async Task<IActionResult> Logs(Guid id) => Ok(await _service.ListarApiKeyLogsAsync(id));
 }
 
 [ApiController]

@@ -132,3 +132,7 @@ Arquivos principais:
 ## v1.14 — Consolidação de produto
 
 A v1.14 consolida clientes/produtos/pedidos/faturamento genéricos em linguagem PlantãoPro: Itens Faturáveis, Faturamento Clínico, Operação Inteligente 3.0, Jornada por Perfil, favoritos, timelines e mobile médico. Consulte `docs/v1.14-consolidacao-produto.md`.
+
+## v1.15 — regras reais de faturamento, repasses e jornadas
+
+A v1.15 adiciona migration/seed, motor de faturamento, motor de repasse médico, glosas por convênio, alertas financeiros, smoke e documentação. Boleto real continua fora do escopo; apenas demo-boleto explícito é permitido. Integrações externas são dependentes de provedor e não devem ser apresentadas como produção.

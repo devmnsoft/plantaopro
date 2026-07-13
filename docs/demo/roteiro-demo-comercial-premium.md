@@ -56,3 +56,12 @@ Classificação para demo: **Demo explícito / Funcional pendente QA**. Demonstr
 7. Abrir favoritos, últimos acessados, timelines e histórico de ações.
 8. Mostrar mobile médico com base em `EXPO_PUBLIC_API_BASE_URL`.
 9. Encerrar com matriz honesta: validado, pendente QA, parcial e dependente de provedor.
+
+## v1.15 — roteiro financeiro premium
+
+1. Abrir Regras de Faturamento e explicar consulta particular, convênio e plantão por regra configurável.
+2. Gerar conta de consulta/plantão sem valor fixo hardcoded.
+3. Mostrar recebimento manual auditado.
+4. Mostrar repasse médico por percentual/valor fixo e contestação.
+5. Mostrar glosa por convênio e prazo de recurso.
+6. Reforçar que boleto real e integrações externas dependem de provedor; demo-boleto é explícito.

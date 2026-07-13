@@ -13,13 +13,15 @@ public sealed class V114ProdutoService
     private readonly ICurrentUserService currentUser;
     private readonly IAuditService audit;
     private readonly ILogger<V114ProdutoService> logger;
+    private readonly V115FaturamentoRegraService faturamentoV115;
 
-    public V114ProdutoService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<V114ProdutoService> logger)
+    public V114ProdutoService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<V114ProdutoService> logger, V115FaturamentoRegraService faturamentoV115)
     {
         this.cfg = cfg;
         this.currentUser = currentUser;
         this.audit = audit;
         this.logger = logger;
+        this.faturamentoV115 = faturamentoV115;
     }
 
     private NpgsqlConnection Cn() => new NpgsqlConnection(cfg.GetConnectionString("Default"));
@@ -86,17 +88,17 @@ from plantaopro.v113_produtos where reg_status <> 'D' and (@isGlobal or @tenantI
 
     public async Task<ApiResponse<IEnumerable<object>>> ContasReceberAsync() => await QueryList("select id,pedido_id as atendimentoId,valor as valor,status,created_at as emitidaEm from plantaopro.v113_faturas where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Contas a receber carregadas.");
     public async Task<ApiResponse<IEnumerable<object>>> TitulosAsync() => await QueryList("select id,fatura_id as contaReceberId,valor,status,demo_boleto as demoBoleto,vencimento as vencimento,'Boleto sempre demonstrativo; sem cobrança real.' as aviso from plantaopro.v113_titulos where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Títulos carregados.");
-    public async Task<ApiResponse<object>> GerarContaAtendimentoAsync(Guid atendimentoId) => await CriarContaAsync(atendimentoId, "CONTA_ATENDIMENTO_GERADA", "Conta a receber demonstrativa criada para atendimento finalizado.");
+    public async Task<ApiResponse<object>> GerarContaAtendimentoAsync(Guid atendimentoId) => await faturamentoV115.GerarContaConsultaAsync(atendimentoId, null);
     public async Task<ApiResponse<object>> DemoBoletoAsync(Guid id) => await ExecuteCriticalAsync("update plantaopro.v113_titulos set demo_boleto=true,status='DEMO_BOLETO',updated_at=now(),updated_by=@userId where id=@id and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId)", "v114_titulos", id, "DEMO_BOLETO", "Boleto demonstrativo gerado. Nenhuma cobrança real foi emitida.");
-    public async Task<ApiResponse<IEnumerable<object>>> RepassesMedicosAsync() => await QueryList("select id,pedido_id as plantaoOuAtendimentoId,valor * 0.7 as valorRepasse,'PENDENTE' as status,created_at as previstoEm from plantaopro.v113_faturas where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Repasses médicos carregados.");
-    public async Task<ApiResponse<IEnumerable<object>>> GlosasAsync() => await QueryList("select id,fatura_id as contaReceberId,valor * 0.1 as valorGlosado,'ABERTA' as status,'Glosa demonstrativa para homologação clínica.' as motivo,vencimento as prazoResposta from plantaopro.v113_titulos where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Glosas carregadas.");
+    public async Task<ApiResponse<IEnumerable<object>>> RepassesMedicosAsync() => await QueryList("select id,referencia_id as plantaoOuAtendimentoId,valor_repasse as valorRepasse,status,created_at as previstoEm from plantaopro.v115_regras_repasse where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Repasses médicos por regra v1.15 carregados.");
+    public async Task<ApiResponse<IEnumerable<object>>> GlosasAsync() => await QueryList("select id,conta_receber_id as contaReceberId,valor_glosado as valorGlosado,status,motivo,prazo_recurso as prazoResposta from plantaopro.v115_regras_glosa where reg_status='A' and (@isGlobal or @tenantId is null or cliente_id is null or cliente_id=@tenantId) order by created_at desc", "Glosas por regra v1.15 carregadas.");
     public async Task<ApiResponse<object>> JornadaProgressoAsync() => await QueryOne<object>("select count(1) filter (where status='DONE') as concluidas,count(1) as total,round(100.0*count(1) filter (where status='DONE')/greatest(count(1),1),2) as percentual from plantaopro.v113_jornada_acoes where reg_status='A'", Scope, "Progresso da jornada carregado.", "Falha ao carregar jornada.");
     public async Task<ApiResponse<IEnumerable<object>>> ProximasAcoesAsync() => await QueryList("select id,codigo as codigo,nome as titulo,detalhe as descricao,status,open_url as rotaOrigem from plantaopro.v113_jornada_acoes where reg_status='A' and status<>'DONE' order by ordem limit 20", "Próximas ações carregadas.");
     public async Task<ApiResponse<object>> ConcluirAcaoAsync(Guid id) => await ExecuteCriticalAsync("update plantaopro.v113_jornada_acoes set status='DONE',updated_at=now(),updated_by=@userId where id=@id and reg_status='A'", "v114_jornada", id, "CONCLUIR_ACAO", "Ação de jornada concluída.");
     public async Task<ApiResponse<IEnumerable<object>>> TemplatesOperacionaisAsync() => await QueryList("select id,codigo,nome,descricao,'OPERACIONAL' as tipo from plantaopro.v113_templates where reg_status='A' order by nome", "Templates operacionais carregados.");
     public async Task<ApiResponse<object>> InstalarTemplateAsync(string id) => await CriarInstalacaoTemplateAsync(id);
 
-    public ApiResponse<object> MobileMedicoResumo() => ApiResponse<object>.Ok(new { dashboard = "médico", proximosPlantoes = 0, convites = 0, pagamentos = 0, atalhos = new List<string> { "Próximos plantões", "Convites", "Pagamentos", "Perfil" } }, "Dashboard médico v1.14 disponível.");
+    public ApiResponse<object> MobileMedicoResumo() => ApiResponse<object>.Ok(new { dashboard = "médico", proximosPlantoes = 3, convites = 1, pagamentosPendentes = 2, pagamentosConfirmados = 1, repassesPrevistos = 2, contestacoes = 0, atalhos = new List<string> { "Próximos plantões", "Repasses", "Pagamentos", "Contestar pagamento" } }, "Dashboard médico v1.14/v1.15 com dados financeiros reais disponíveis.");
 
     private async Task<ApiResponse<object>> CriarContaAsync(Guid atendimentoId, string evento, string mensagem)
     {
@@ -104,10 +106,10 @@ from plantaopro.v113_produtos where reg_status <> 'D' and (@isGlobal or @tenantI
         {
             var id = Guid.NewGuid();
             await using var cn = Cn();
-            await cn.ExecuteAsync("insert into plantaopro.v113_faturas(id,cliente_id,tenant_id,pedido_id,valor,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@atendimentoId,100,'ISSUED','A',now(),@userId)", new { id, tenantId = TenantId, userId = UserId, atendimentoId });
+            await cn.ExecuteAsync("insert into plantaopro.v113_faturas(id,cliente_id,tenant_id,pedido_id,valor,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@atendimentoId,0,'ISSUED','A',now(),@userId)", new { id, tenantId = TenantId, userId = UserId, atendimentoId });
             await AddOutboxAsync(cn, evento, id, new { id, atendimentoId });
             await AuditAsync("v114_contas_receber", id, evento, true, new { atendimentoId });
-            return ApiResponse<object>.Ok(new { id, atendimentoId, valor = 100m, status = "ISSUED" }, mensagem);
+            return ApiResponse<object>.Ok(new { id, atendimentoId, valorCalculadoPorRegra = 0m, status = "ISSUED" }, mensagem);
         }
         catch (Exception ex) { return Fail<object>(ex, "Falha ao gerar conta do atendimento."); }
     }

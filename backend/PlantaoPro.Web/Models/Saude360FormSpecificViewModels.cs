@@ -32,8 +32,4 @@ public sealed class ConvenioFormViewModel : Saude360SpecificFormViewModel { }
 public sealed class AutorizacaoConvenioFormViewModel : Saude360SpecificFormViewModel { }
 public sealed class PlanoSaudeFormViewModel : Saude360SpecificFormViewModel { }
 public sealed class PlanoSaudePacienteFormViewModel : Saude360SpecificFormViewModel { }
-public sealed class PlantaoFormViewModel : Saude360SpecificFormViewModel { }
 public sealed class EscalaFormViewModel : Saude360SpecificFormViewModel { }
-public sealed class MedicoFormViewModel : Saude360SpecificFormViewModel { }
-public sealed class HospitalFormViewModel : Saude360SpecificFormViewModel { }
-public sealed class EspecialidadeFormViewModel : Saude360SpecificFormViewModel { }

@@ -2,8 +2,7 @@ declare const process: { env?: Record<string, string | undefined> };
 import { ApiResponse, PagedResult } from '../types/auth.types';
 import storage from '../utils/storage';
 
-const developmentApiBaseUrl = 'http://localhost:5000/api';
-export const apiBaseUrl = (typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_API_BASE_URL : undefined) ?? developmentApiBaseUrl;
+export const apiBaseUrl = (typeof process !== 'undefined' ? process.env?.EXPO_PUBLIC_API_BASE_URL : undefined) ?? '';
 const tokenKey = 'plantaopro.jwt';
 
 function lowerFirst(key: string) { return key.length ? key.charAt(0).toLowerCase() + key.slice(1) : key; }
@@ -43,7 +42,8 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   if (token) headers.Authorization = `Bearer ${token}`;
 
   try {
-    const response = await fetch(`${apiBaseUrl}/${path.replace(/^\/+/, '')}`, { ...options, headers });
+    if (!apiBaseUrl) return friendlyFallback<T>('Configure EXPO_PUBLIC_API_BASE_URL para conectar o mobile médico.', 0);
+    const response = await fetch(`${apiBaseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`, { ...options, headers });
     const payload = normalizeKeys<ApiResponse<T> | T | null>(await readJson(response));
 
     if (payload && typeof payload === 'object' && 'success' in payload) {

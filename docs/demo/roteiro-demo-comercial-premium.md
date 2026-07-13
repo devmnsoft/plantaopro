@@ -44,3 +44,15 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 ## Nota runtime real — 2026-07-09
 
 Classificação para demo: **Demo explícito / Funcional pendente QA**. Demonstrar apenas fluxos mapeados e informar que a validação runtime real ficou bloqueada por ambiente nesta rodada. Não declarar produção.
+
+## Complemento v1.14 — Consolidação premium
+
+1. Entrar no dashboard v1.14 e explicar indicadores por perfil.
+2. Abrir Operação Inteligente 3.0 e mostrar “O que fazer agora”.
+3. Demonstrar Itens Faturáveis com procedimento, plantão, taxa e pacote.
+4. Gerar conta de atendimento e título demonstrativo.
+5. Reforçar que demo-boleto não é cobrança real.
+6. Mostrar Jornada por Perfil para recepção, triagem, médico, financeiro e coordenação.
+7. Abrir favoritos, últimos acessados, timelines e histórico de ações.
+8. Mostrar mobile médico com base em `EXPO_PUBLIC_API_BASE_URL`.
+9. Encerrar com matriz honesta: validado, pendente QA, parcial e dependente de provedor.

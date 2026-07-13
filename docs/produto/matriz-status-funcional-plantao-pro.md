@@ -113,3 +113,18 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 | Boleto | Demo explícito | Sem valor financeiro real. |
 | Outbox | Homologável | Eventos e logs em tabelas reais, sem envio externo de produção. |
 | Web operacional | Homologável | Telas apontam para endpoints v1.13 reais. |
+
+## Complemento v1.14 — Status funcional consolidado
+
+| Funcionalidade | Classificação |
+|---|---|
+| v1.14 APIs de produto | Funcional pendente QA |
+| Itens faturáveis | Funcional pendente QA |
+| Faturamento clínico | Funcional pendente QA |
+| Demo-boleto | Demo explícito |
+| Integração bancária real | Dependente de provedor |
+| Saúde 360 completo | Parcial |
+| Plantões/Escalas completo | Parcial |
+| Mobile médico | Funcional pendente QA |
+| Favoritos, filtros e timelines | Parcial |
+| Smoke local sem API iniciada | Bloqueado por ambiente |

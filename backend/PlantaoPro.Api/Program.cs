@@ -129,6 +129,7 @@ builder.Services.AddScoped<Fase6BiIntegracoesService>();
 builder.Services.AddScoped<OperacaoRecomendacaoService>();
 builder.Services.AddScoped<DashboardPremiumService>();
 builder.Services.AddScoped<V113OperationalService>();
+builder.Services.AddScoped<V114ProdutoService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

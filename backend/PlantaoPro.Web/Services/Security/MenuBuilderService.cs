@@ -30,7 +30,9 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Visão Geral", "bi-speedometer2", "Home", "Index", "DASHBOARD", string.Empty, false, false),
             Item("Fluxo de Atendimento", "bi-signpost-2", "ClinicaDashboard", "FluxoAtendimento", "SAUDE360_DASHBOARD", string.Empty),
             Item("Pendências do Dia", "bi-lightning-charge", "PendenciasClinicas", "Index", "SAUDE360_DASHBOARD", string.Empty),
-            Item("Assistente PlantãoPro", "bi-stars", "Ajuda", "PrimeirosPassos", "AJUDA", string.Empty, false, false)
+            Item("Assistente PlantãoPro", "bi-stars", "Ajuda", "PrimeirosPassos", "AJUDA", string.Empty, false, false),
+            Item("Jornada", "bi-signpost", "Jornada", "Index", "JORNADA_V114", string.Empty, false, false),
+            Item("Operação v1.14", "bi-cpu", "Operacao", "Index", "OPERACAO_V114", string.Empty, false, false)
         });
 
         AddGroup(groups, "ATENDIMENTO", "bi-heart-pulse", currentController, currentAction, new List<MenuItemViewModel>
@@ -67,7 +69,9 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Recebimentos", "bi-wallet2", "ClinicaFinanceiro", "Receber", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
             Item("Caixa", "bi-box", "ClinicaFinanceiro", "Caixa", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
             Item("Repasses", "bi-bank", "ClinicaFinanceiro", "Repasses", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
-            Item("Relatórios Financeiros", "bi-file-earmark-bar-graph", "ClinicaFinanceiro", "Relatorios", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica)
+            Item("Relatórios Financeiros", "bi-file-earmark-bar-graph", "ClinicaFinanceiro", "Relatorios", "SAUDE360_FINANCEIRO", RolesConstants.FinanceiroClinica),
+            Item("Faturamento Clínico", "bi-receipt-cutoff", "FaturamentoClinico", "Index", "FATURAMENTO_CLINICO_V114", RolesConstants.FinanceiroClinica),
+            Item("Itens Faturáveis", "bi-tags", "ItensFaturaveis", "Index", "ITENS_FATURAVEIS_V114", RolesConstants.FinanceiroClinica)
         });
 
         AddGroup(groups, "CONVÊNIOS", "bi-shield-plus", currentController, currentAction, new List<MenuItemViewModel>

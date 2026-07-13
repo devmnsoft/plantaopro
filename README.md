@@ -127,3 +127,8 @@ Arquivos principais:
 - Serviço operacional: `backend/PlantaoPro.Api/V113OperationalService.cs`.
 - Smoke: `scripts/smoke-test-v113.sh` e `scripts/smoke-test-v113.ps1`.
 - CI runtime: job `runtime-e2e-v113` em `.github/workflows/dotnet-ci.yml`.
+
+
+## v1.14 — Consolidação de produto
+
+A v1.14 consolida clientes/produtos/pedidos/faturamento genéricos em linguagem PlantãoPro: Itens Faturáveis, Faturamento Clínico, Operação Inteligente 3.0, Jornada por Perfil, favoritos, timelines e mobile médico. Consulte `docs/v1.14-consolidacao-produto.md`.

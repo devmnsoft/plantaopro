@@ -133,6 +133,12 @@ builder.Services.AddScoped<V114ProdutoService>();
 builder.Services.AddScoped<V115FaturamentoRegraService>();
 builder.Services.AddScoped<V115RepasseMedicoService>();
 builder.Services.AddScoped<V115GlosaService>();
+builder.Services.AddScoped<V116ConvenioService>();
+builder.Services.AddScoped<V116LoteFaturamentoService>();
+builder.Services.AddScoped<V116CaixaService>();
+builder.Services.AddScoped<V116TimelineService>();
+builder.Services.AddScoped<V116NotificacaoOperacionalService>();
+builder.Services.AddScoped<V116RelatorioExecutivoService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

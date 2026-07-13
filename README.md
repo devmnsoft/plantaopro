@@ -136,3 +136,7 @@ A v1.14 consolida clientes/produtos/pedidos/faturamento genéricos em linguagem 
 ## v1.15 — regras reais de faturamento, repasses e jornadas
 
 A v1.15 adiciona migration/seed, motor de faturamento, motor de repasse médico, glosas por convênio, alertas financeiros, smoke e documentação. Boleto real continua fora do escopo; apenas demo-boleto explícito é permitido. Integrações externas são dependentes de provedor e não devem ser apresentadas como produção.
+
+## v1.16 — Consolidação operacional final
+
+A v1.16 adiciona consolidação operacional para convênios, autorizações, guias, lotes de faturamento, caixa, recebimentos parciais, estornos, timelines, notificações operacionais e relatórios executivos. Status: funcional pendente QA; integrações externas permanecem dependentes de provedor e não há declaração de produção.

@@ -1,10 +1,24 @@
-# Matriz de status funcional PlantãoPro
+# PlantãoPro v1.16
 
-| Área | Status v1.15 | Observação |
-| --- | --- | --- |
-| Faturamento clínico | Funcional pendente QA | Regras configuráveis comandam contas de consulta e plantão. |
-| Repasses médicos | Funcional pendente QA | Percentual e valor fixo por regra, com contestação. |
-| Glosas/convênios | Funcional pendente QA | Glosa informada/calculada por regra e prazo de recurso. |
-| Mobile médico | Parcial | Repasses e contestações adicionados; depende de API autenticada. |
-| Boleto | Demo explícito | Boleto real depende de provedor. |
-| Integrações externas | Dependente de provedor | Sem simulação de produção. |
+Status honesto: funcional pendente QA em ambiente integrado. Não declarar produção.
+
+## Escopo
+
+- Convênios com autorizações, guias, vínculo a conta e glosa demonstrativa.
+- Lotes de faturamento com fechamento, reabertura, envio e retorno demonstrativo; integração real dependente de provedor.
+- Caixa com abertura, fechamento, movimentos, recebimento parcial/total, estorno justificado e conciliação manual.
+- Timelines e histórico de ações para registros críticos.
+- Notificações operacionais para pendências reais.
+- Relatórios executivos com auditoria e mascaramento de dados sensíveis.
+- Mobile médico documentado para repasses, timelines, notificações e contestações.
+- RBAC/LGPD: financeiro não acessa evolução clínica; médico acessa dados próprios; faturamento usa dados mínimos.
+
+## Classificação
+
+| Item | Classificação |
+| --- | --- |
+| API v1.16 | funcional pendente QA |
+| Migration/seed demo | demo explícito |
+| Provedores externos | dependente de provedor |
+| Smoke v1.16 | funcional pendente QA |
+| Dashboards e Operação Inteligente 5.0 | parcial |

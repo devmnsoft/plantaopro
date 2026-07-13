@@ -212,3 +212,5 @@ jobs:
             api-v115.log
             docs/homologacao/v115-smoke-result.md
             docs/homologacao/v115-smoke-result.json
+
+  # v1.16 runtime smoke: database/migrations/2026_v116_consolidacao_operacional_final.sql, database/seeds/2026_demo_v116_consolidacao_operacional.sql, scripts/smoke-test-v116.sh

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 

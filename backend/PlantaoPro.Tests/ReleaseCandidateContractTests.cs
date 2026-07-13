@@ -102,7 +102,7 @@ public class SaasCommercialContractTests
     {
         var rotas = typeof(PlantaoPro.Api.Controllers.FaturamentoSaasController)
             .GetMethods()
-            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.HttpMethodAttribute>())
+            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>())
             .SelectMany(a => a.Template is null ? Array.Empty<string>() : new[] { a.Template })
             .ToArray();
 
@@ -217,7 +217,7 @@ public class OperacaoAssistidaBetaContractTests
     {
         var rotas = typeof(PlantaoPro.Api.Controllers.OperacaoAssistidaController)
             .GetMethods()
-            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.HttpMethodAttribute>())
+            .SelectMany(m => m.GetCustomAttributes(typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute), inherit: true).Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>())
             .SelectMany(a => a.Template is null ? Array.Empty<string>() : new[] { a.Template })
             .ToArray();
 

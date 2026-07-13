@@ -19,6 +19,9 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../PlantaoPro.Api/PlantaoPro.Api.csproj" />
   </ItemGroup>
 </Project>

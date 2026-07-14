@@ -140,3 +140,7 @@ A v1.15 adiciona migration/seed, motor de faturamento, motor de repasse médico,
 ## v1.16 — Consolidação operacional final
 
 A v1.16 adiciona consolidação operacional para convênios, autorizações, guias, lotes de faturamento, caixa, recebimentos parciais, estornos, timelines, notificações operacionais e relatórios executivos. Status: funcional pendente QA; integrações externas permanecem dependentes de provedor e não há declaração de produção.
+
+## Configuração JWT obrigatória
+
+A API falha rápido quando `Jwt:Key` está ausente, vazia ou tem menos de 32 caracteres. Configure `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience` por variável de ambiente, user-secrets, Docker `.env` local não versionado, GitHub Actions ou IIS. Consulte `docs/configuracao-jwt-local-ci.md`. Segredos reais não devem ser commitados.

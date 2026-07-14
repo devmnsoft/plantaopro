@@ -61,8 +61,15 @@ builder.Services.AddCors(options =>
 
 var jwt = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwt["Key"];
+var jwtIssuer = jwt["Issuer"];
+var jwtAudience = jwt["Audience"];
+const string jwtKeyConfigurationMessage = "Configuração Jwt:Key não encontrada ou inválida. Configure Jwt__Key com pelo menos 32 caracteres via variável de ambiente, user-secrets ou appsettings.Development.json local. Não versionar segredo real.";
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
-    throw new InvalidOperationException("Configuração Jwt:Key não encontrada ou inválida.");
+    throw new InvalidOperationException(jwtKeyConfigurationMessage);
+if (string.IsNullOrWhiteSpace(jwtIssuer))
+    throw new InvalidOperationException("Configuração Jwt:Issuer não encontrada ou inválida. Configure Jwt__Issuer via variável de ambiente, user-secrets ou appsettings.Development.json local.");
+if (string.IsNullOrWhiteSpace(jwtAudience))
+    throw new InvalidOperationException("Configuração Jwt:Audience não encontrada ou inválida. Configure Jwt__Audience via variável de ambiente, user-secrets ou appsettings.Development.json local.");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
     {
@@ -70,8 +77,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwt["Issuer"],
-        ValidAudience = jwt["Audience"],
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     });
 

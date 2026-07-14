@@ -11,6 +11,10 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    env:
+      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Issuer: PlantaoPro
+      Jwt__Audience: PlantaoPro
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,7 +55,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-v113-with-at-least-32-chars
+      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -110,7 +114,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-v114-with-at-least-32-chars
+      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -171,7 +175,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-v115-with-at-least-32-chars
+      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -214,3 +218,65 @@ jobs:
             docs/homologacao/v115-smoke-result.json
 
   # v1.16 runtime smoke: database/migrations/2026_v116_consolidacao_operacional_final.sql, database/seeds/2026_demo_v116_consolidacao_operacional.sql, scripts/smoke-test-v116.sh
+
+
+  runtime-e2e-v116:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: plantaopro
+          POSTGRES_USER: plantaopro
+          POSTGRES_PASSWORD: plantaopro_demo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U plantaopro -d plantaopro"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
+      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Issuer: PlantaoPro
+      Jwt__Audience: PlantaoPro
+      ASPNETCORE_URLS: http://localhost:5000
+      BASE_URL: http://localhost:5000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'preview'
+      - name: Apply database scripts v1.16
+        run: |
+          psql "$ConnectionStrings__Default" -f database/migrations/2026_v113_operacional_real.sql
+          psql "$ConnectionStrings__Default" -f database/migrations/2026_v114_consolidacao_produto.sql
+          psql "$ConnectionStrings__Default" -f database/migrations/2026_v115_regras_faturamento_repasses.sql
+          psql "$ConnectionStrings__Default" -f database/migrations/2026_v116_consolidacao_operacional_final.sql
+          psql "$ConnectionStrings__Default" -f database/seeds/2026_demo_v116_consolidacao_operacional.sql
+      - name: Restore
+        run: dotnet restore backend/PlantaoPro.sln
+      - name: Build API and Web
+        run: dotnet build backend/PlantaoPro.sln -c Release --no-restore
+      - name: Start API
+        run: dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj -c Release --no-build > api-v116.log 2>&1 &
+      - name: Wait health
+        run: |
+          for i in {1..30}; do curl -fsS http://localhost:5000/api/health && exit 0; sleep 2; done
+          cat api-v116.log
+          exit 1
+      - name: Smoke v1.16
+        run: bash scripts/smoke-test-v116.sh
+      - name: Upload v1.16 evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-e2e-v116-evidence
+          path: |
+            api-v116.log
+            docs/homologacao/v116-smoke-result.md
+            docs/homologacao/v116-smoke-result.json

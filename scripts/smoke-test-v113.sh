@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export Jwt__Key="${Jwt__Key:-ci-demo-key-with-at-least-32-characters}"
+export Jwt__Issuer="${Jwt__Issuer:-PlantaoPro}"
+export Jwt__Audience="${Jwt__Audience:-PlantaoPro}"
 BASE_URL="${BASE_URL:-http://localhost:5000}"
 RESULT_JSON="docs/homologacao/v113-smoke-result.json"
 RESULT_MD="docs/homologacao/v113-smoke-result.md"

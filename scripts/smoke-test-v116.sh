@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
+export Jwt__Key="${Jwt__Key:-ci-demo-key-with-at-least-32-characters}"
+export Jwt__Issuer="${Jwt__Issuer:-PlantaoPro}"
+export Jwt__Audience="${Jwt__Audience:-PlantaoPro}"
 BASE_URL="${BASE_URL:-http://localhost:5000}"
 TOKEN="${TOKEN:-}"
 AUTH=()
 if [ -n "$TOKEN" ]; then AUTH=(-H "Authorization: Bearer $TOKEN"); fi
-curl -fsS "$BASE_URL/health" >/dev/null || true
+curl -fsS "$BASE_URL/api/health" >/dev/null || true
 for path in \
   /api/v116/convenios/autorizacoes \
   /api/v116/convenios/guias \

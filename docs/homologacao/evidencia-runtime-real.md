@@ -43,4 +43,4 @@ Homologação runtime preparada, mas pendente de validação em ambiente com SDK
 
 ## Configuração JWT
 
-A execução local, CI, Docker e IIS exige `Jwt__Key` com pelo menos 32 caracteres, além de `Jwt__Issuer` e `Jwt__Audience`. O erro `Configuração Jwt:Key não encontrada ou inválida` indica chave ausente, vazia ou curta. Use user-secrets ou variáveis de ambiente e nunca versione segredo real. Guia completo: `docs/configuracao-jwt-local-ci.md`.
+A execução local, CI, Docker e IIS exige `Jwt__Key` com pelo menos 32 caracteres, além de `Jwt__Issuer` e `Jwt__Audience`. O erro `Configuração Jwt:Key não encontrada ou inválida` indica chave ausente, vazia ou curta. Use user-secrets ou variáveis de ambiente e nunca versione segredo real. Guia completo: `docs/configuracao-jwt-local-ci-iis.md`.

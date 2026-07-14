@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Security;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,13 +64,7 @@ var jwt = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwt["Key"];
 var jwtIssuer = jwt["Issuer"];
 var jwtAudience = jwt["Audience"];
-const string jwtKeyConfigurationMessage = "Configuração Jwt:Key não encontrada ou inválida. Configure Jwt__Key com pelo menos 32 caracteres via variável de ambiente, user-secrets ou appsettings.Development.json local. Não versionar segredo real.";
-if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
-    throw new InvalidOperationException(jwtKeyConfigurationMessage);
-if (string.IsNullOrWhiteSpace(jwtIssuer))
-    throw new InvalidOperationException("Configuração Jwt:Issuer não encontrada ou inválida. Configure Jwt__Issuer via variável de ambiente, user-secrets ou appsettings.Development.json local.");
-if (string.IsNullOrWhiteSpace(jwtAudience))
-    throw new InvalidOperationException("Configuração Jwt:Audience não encontrada ou inválida. Configure Jwt__Audience via variável de ambiente, user-secrets ou appsettings.Development.json local.");
+JwtConfigurationValidator.Validate(jwtKey, jwtIssuer, jwtAudience);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
     {

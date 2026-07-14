@@ -9,7 +9,7 @@ A API valida `Jwt:Key`, `Jwt:Issuer` e `Jwt:Audience` na inicialização. A chav
 ```bash
 cd backend/PlantaoPro.Api
 dotnet user-secrets init
-dotnet user-secrets set "Jwt:Key" "local-dev-jwt-key-change-me-with-32-chars"
+dotnet user-secrets set "Jwt:Key" "PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS"
 dotnet user-secrets set "Jwt:Issuer" "PlantaoPro"
 dotnet user-secrets set "Jwt:Audience" "PlantaoPro"
 ```
@@ -17,7 +17,7 @@ dotnet user-secrets set "Jwt:Audience" "PlantaoPro"
 ## Linux/macOS por variável de ambiente
 
 ```bash
-export Jwt__Key="local-dev-jwt-key-change-me-with-32-chars"
+export Jwt__Key="PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS"
 export Jwt__Issuer="PlantaoPro"
 export Jwt__Audience="PlantaoPro"
 dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
@@ -26,7 +26,7 @@ dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
 ## Windows PowerShell
 
 ```powershell
-$env:Jwt__Key="local-dev-jwt-key-change-me-with-32-chars"
+$env:Jwt__Key="PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS"
 $env:Jwt__Issuer="PlantaoPro"
 $env:Jwt__Audience="PlantaoPro"
 dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
@@ -35,7 +35,7 @@ dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
 ## Windows CMD
 
 ```cmd
-set Jwt__Key=local-dev-jwt-key-change-me-with-32-chars
+set Jwt__Key=PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS
 set Jwt__Issuer=PlantaoPro
 set Jwt__Audience=PlantaoPro
 dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
@@ -46,7 +46,7 @@ dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj
 Copie `.env.example` para `.env` somente no ambiente local e substitua `PLANTAOPRO_JWT_KEY` por um segredo local com pelo menos 32 caracteres. Não faça commit do `.env`.
 
 ```env
-PLANTAOPRO_JWT_KEY=CHANGE_ME_LOCAL_DEV_JWT_KEY_32_CHARS_MINIMUM
+PLANTAOPRO_JWT_KEY=PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS
 PLANTAOPRO_JWT_ISSUER=PlantaoPro
 PLANTAOPRO_JWT_AUDIENCE=PlantaoPro
 ```
@@ -59,7 +59,7 @@ Jobs que iniciam a API devem declarar variáveis de ambiente não produtivas par
 
 ```yaml
 env:
-  Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+  Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
   Jwt__Issuer: PlantaoPro
   Jwt__Audience: PlantaoPro
 ```

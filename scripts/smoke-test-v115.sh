@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 set -u
+export Jwt__Key="${Jwt__Key:-ci-demo-key-with-at-least-32-characters}"
+export Jwt__Issuer="${Jwt__Issuer:-PlantaoPro}"
+export Jwt__Audience="${Jwt__Audience:-PlantaoPro}"
 BASE_URL="${BASE_URL:-http://localhost:5000}"
 OUT_MD="docs/homologacao/v115-smoke-result.md"
 OUT_JSON="docs/homologacao/v115-smoke-result.json"

@@ -21,7 +21,8 @@ Foram adicionados endpoints reais para hospitais, especialidades, plantões, esc
 - Endpoints de escalas: `/api/escalas`, `/api/escalas/{id}`, `/api/medicos/me/plantoes`, `/api/plantoes/{id}/aceitar`, `/api/escalas/{id}/confirmar|recusar|cancelar|substituir|marcar-realizado`.
 - Endpoints financeiros: `/api/financeiro/pagamentos`, `/api/financeiro/pagamentos/{id}`, `/api/financeiro/pagamentos/gerar`, `/api/financeiro/pagamentos/{id}/confirmar|cancelar`, `/api/financeiro/meus-pagamentos`.
 - Endpoints notificações: `/api/notificacoes`, `/api/notificacoes/nao-lidas`, `PUT /api/notificacoes/{id}/lida`, `PUT /api/notificacoes/lidas`.
-- Dashboard: `GET /api/dashboard` e `GET /api/mobile/home` com indicadores/listas/gráficos.
+- Dashboard principal: `GET /api/dashboard` e `GET /api/mobile/home` com indicadores/listas/gráficos.
+- Dashboard legado v1.12: `GET /api/v112/dashboard`; a rota foi versionada para evitar duplicidade no Swagger/OpenAPI com o dashboard principal.
 - Operações críticas devem sempre usar transação explícita, histórico de status e auditoria.
 
 ## Release Candidate técnico — julho/2026
@@ -140,6 +141,11 @@ A v1.15 adiciona migration/seed, motor de faturamento, motor de repasse médico,
 ## v1.16 — Consolidação operacional final
 
 A v1.16 adiciona consolidação operacional para convênios, autorizações, guias, lotes de faturamento, caixa, recebimentos parciais, estornos, timelines, notificações operacionais e relatórios executivos. Status: funcional pendente QA; integrações externas permanecem dependentes de provedor e não há declaração de produção.
+
+
+### Swagger/OpenAPI e rotas de dashboard
+
+O contrato OpenAPI exige uma única action por combinação de método HTTP e rota. Por isso, `GET /api/dashboard` fica reservado ao `DashboardController` principal. Rotas legadas de homologação devem ser versionadas, como `GET /api/v112/dashboard`, evitando conflitos como `Conflicting method/path combination "GET api/dashboard"`. Consulte `docs/homologacao/correcao-swagger-rotas-duplicadas.md`.
 
 ## Configuração JWT obrigatória
 

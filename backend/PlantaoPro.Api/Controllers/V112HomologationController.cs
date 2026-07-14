@@ -156,7 +156,7 @@ public sealed class V112HomologationController : ControllerBase
     [HttpPost("api/v113/templates/{id}/install")]
     public async Task<ActionResult<ApiResponse<object>>> Install(string id) => ToAction(await service.InstallTemplateAsync(id));
 
-    [HttpGet("api/dashboard")]
+    [HttpGet("api/v112/dashboard")]
     [HttpGet("api/v113/dashboard")]
     public async Task<ActionResult<ApiResponse<object>>> Dashboard() => ToAction(await service.DashboardAsync());
 

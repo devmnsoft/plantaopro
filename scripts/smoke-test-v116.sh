@@ -8,7 +8,12 @@ TOKEN="${TOKEN:-}"
 AUTH=()
 if [ -n "$TOKEN" ]; then AUTH=(-H "Authorization: Bearer $TOKEN"); fi
 curl -fsS "$BASE_URL/api/health" >/dev/null || true
+curl -fsS "$BASE_URL/swagger/v1/swagger.json" >/dev/null
 for path in \
+  /api/dashboard \
+  /api/v112/dashboard \
+  /api/v114/dashboard \
+  /api/v115/faturamento/regras \
   /api/v116/convenios/autorizacoes \
   /api/v116/convenios/guias \
   /api/v116/faturamento/lotes \

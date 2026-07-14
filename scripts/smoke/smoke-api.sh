@@ -30,6 +30,7 @@ request GET / 200
 request GET /api/health 200
 request GET /api/health/db 200
 request GET /swagger 200
+request GET /swagger/v1/swagger.json 200
 
 login_payload="{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}"
 login_response="$(mktemp)"
@@ -64,6 +65,10 @@ case "$auth_status" in
 esac
 
 for endpoint in \
+  /api/dashboard \
+  /api/v112/dashboard \
+  /api/v114/dashboard \
+  /api/v115/faturamento/regras \
   /api/operacao-inteligente/resumo \
   /api/dashboards/admin-cliente \
   /api/dashboards/coordenacao \

@@ -12,7 +12,7 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     env:
-      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
     steps:
@@ -55,7 +55,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -114,7 +114,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -175,7 +175,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000
@@ -238,7 +238,7 @@ jobs:
           --health-retries 5
     env:
       ConnectionStrings__Default: Host=localhost;Port=5432;Database=plantaopro;Username=plantaopro;Password=plantaopro_demo_ci
-      Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me
+      Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
       Jwt__Issuer: PlantaoPro
       Jwt__Audience: PlantaoPro
       ASPNETCORE_URLS: http://localhost:5000

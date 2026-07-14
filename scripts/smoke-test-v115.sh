@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -u
-export Jwt__Key="${Jwt__Key:-ci-demo-key-with-at-least-32-characters}"
+export Jwt__Key="${Jwt__Key:-PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS}"
 export Jwt__Issuer="${Jwt__Issuer:-PlantaoPro}"
 export Jwt__Audience="${Jwt__Audience:-PlantaoPro}"
 BASE_URL="${BASE_URL:-http://localhost:5000}"

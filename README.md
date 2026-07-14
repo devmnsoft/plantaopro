@@ -143,4 +143,4 @@ A v1.16 adiciona consolidação operacional para convênios, autorizações, gui
 
 ## Configuração JWT obrigatória
 
-A API falha rápido quando `Jwt:Key` está ausente, vazia ou tem menos de 32 caracteres. Configure `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience` por variável de ambiente, user-secrets, Docker `.env` local não versionado, GitHub Actions ou IIS. Consulte `docs/configuracao-jwt-local-ci.md`. Segredos reais não devem ser commitados.
+A API exige `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience`. Em desenvolvimento local, use user-secrets ou variável de ambiente. A chave deve ter pelo menos 32 caracteres. Nunca versione segredo real. Consulte `docs/configuracao-jwt-local-ci-iis.md`.

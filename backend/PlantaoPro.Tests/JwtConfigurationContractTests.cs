@@ -18,10 +18,12 @@ public class JwtConfigurationContractTests
     {
         var program = Read("backend/PlantaoPro.Api/Program.cs");
         Assert.Contains("jwt[\"Key\"]", program);
-        Assert.Contains("jwtKey.Length < 32", program);
         Assert.Contains("jwt[\"Issuer\"]", program);
         Assert.Contains("jwt[\"Audience\"]", program);
-        Assert.Contains("Configure Jwt__Key com pelo menos 32 caracteres", program);
+        Assert.Contains("JwtConfigurationValidator.Validate(jwtKey, jwtIssuer, jwtAudience)", program);
+        var validator = Read("backend/PlantaoPro.Api/Security/JwtConfigurationValidator.cs");
+        Assert.Contains("MinimumKeyLength = 32", validator);
+        Assert.Contains("Configure Jwt__Key com pelo menos 32 caracteres", validator);
         Assert.DoesNotContain("Jwt__Key=", program);
         Assert.DoesNotContain("Console.WriteLine(jwtKey", program);
     }
@@ -30,11 +32,11 @@ public class JwtConfigurationContractTests
     public void DocumentacaoCiEnvExampleDevemConfigurarJwtSeguro()
     {
         Assert.Contains("Jwt__Key", Read("README.md"));
-        Assert.Contains("Jwt__Key", Read("docs/configuracao-jwt-local-ci.md"));
-        Assert.Contains("Jwt__Key: ci-demo-key-with-at-least-32-characters-change-me", Read(".github/workflows/dotnet-ci.yml"));
+        Assert.Contains("Jwt__Key", Read("docs/configuracao-jwt-local-ci-iis.md"));
+        Assert.Contains("Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS", Read(".github/workflows/dotnet-ci.yml"));
         Assert.True(File.Exists(Path.Combine(Root(), ".env.example")));
         var envExample = Read(".env.example");
-        Assert.Contains("PLANTAOPRO_JWT_KEY=CHANGE_ME_LOCAL_DEV_JWT_KEY_32_CHARS_MINIMUM", envExample);
+        Assert.Contains("PLANTAOPRO_JWT_KEY=PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS", envExample);
         Assert.DoesNotContain("local-dev-jwt-key-change-me-with-32-chars", envExample);
     }
 
@@ -50,6 +52,7 @@ public class JwtConfigurationContractTests
             Assert.DoesNotContain("local-dev-jwt-key-change-me-with-32-chars", content);
             Assert.DoesNotContain("ci-demo-key-with-at-least-32-characters-change-me", content);
             Assert.DoesNotContain("CHANGE_ME_WITH_32+_CHARS", content);
+            Assert.DoesNotContain("PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS", content);
         }
     }
 }

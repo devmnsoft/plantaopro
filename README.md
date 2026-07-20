@@ -150,3 +150,7 @@ O contrato OpenAPI exige uma única action por combinação de método HTTP e ro
 ## Configuração JWT obrigatória
 
 A API exige `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience`. Em desenvolvimento local, use user-secrets ou variável de ambiente. A chave deve ter pelo menos 32 caracteres. Nunca versione segredo real. Consulte `docs/configuracao-jwt-local-ci-iis.md`.
+
+## v1.17 hardening runtime
+
+A v1.17 fortalece a base v1.16 sem declarar produção: Swagger sem conflito de dashboard, logging de status final por middleware, claims `uid` robustas, serviços v1.16 persistidos via PostgreSQL/Dapper, smoke bloqueante v1.16/v1.17, rotas legadas versionadas e documentação honesta de QA por perfil.

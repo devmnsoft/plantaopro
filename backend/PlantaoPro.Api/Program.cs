@@ -151,7 +151,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
     app.MapGet("/", () => Results.Redirect("/swagger"));
 
-    await DevelopmentSeed.RunAsync(app.Services);
+    if (app.Configuration.GetValue<bool>("DevelopmentSeed:Enabled"))
+    {
+        await DevelopmentSeed.RunAsync(app.Services);
+    }
     app.UseCors("DevelopmentCors");
 }
 else

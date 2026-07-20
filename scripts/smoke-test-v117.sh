@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 BASE_URL="${BASE_URL:-http://localhost:5000}"
-RESULT_JSON="${RESULT_JSON:-docs/homologacao/v116-smoke-result.json}"
-RESULT_MD="${RESULT_MD:-docs/homologacao/v116-smoke-result.md}"
+RESULT_JSON="${RESULT_JSON:-docs/homologacao/v117-smoke-result.json}"
+RESULT_MD="${RESULT_MD:-docs/homologacao/v117-smoke-result.md}"
 SMOKE_EMAIL="${SMOKE_EMAIL:-admin.demo@plantaopro.local}"
 SMOKE_PASSWORD="${SMOKE_PASSWORD:-PlantaoProDemo!2026}"
 mkdir -p "$(dirname "$RESULT_JSON")"
@@ -21,9 +21,9 @@ if [[ -z "$TOKEN" ]]; then echo "FAILED token ausente para endpoints autenticado
 for path in /api/dashboard /api/v112/dashboard /api/v113/dashboard /api/v114/dashboard /api/v115/faturamento/regras /api/v116/convenios/autorizacoes /api/v116/convenios/guias /api/v116/faturamento/lotes /api/v116/caixa/status /api/v116/caixa/movimentos /api/v116/notificacoes-operacionais /api/v116/relatorios/faturamento /api/v116/relatorios/recebimentos /api/v116/relatorios/repasses /api/v116/relatorios/glosas /api/v116/relatorios/lotes /api/v116/relatorios/produtividade-medica /api/v116/relatorios/auditoria-financeira /api/v116/relatorios/operacional; do check api "$path" "200" yes; done
 fi
 status="PASSED"; [[ "$failures" -eq 0 ]] || status="FAILED"
-printf '{"version":"v1.16","status":"%s","baseUrl":"%s","generatedAt":"%s","failures":%s,"results":[%s]}\n' "$status" "$BASE_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$failures" "$(IFS=,; echo "${results[*]}")" > "$RESULT_JSON"
+printf '{"version":"v1.17","status":"%s","baseUrl":"%s","generatedAt":"%s","failures":%s,"results":[%s]}\n' "$status" "$BASE_URL" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$failures" "$(IFS=,; echo "${results[*]}")" > "$RESULT_JSON"
 cat > "$RESULT_MD" <<MD
-# Smoke v1.16
+# Smoke v1.17
 
 Status: $status
 

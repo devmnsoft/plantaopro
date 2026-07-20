@@ -1,24 +1,11 @@
-# PlantãoPro v1.16
+# Matriz de Status Funcional PlantãoPro
 
-Status honesto: funcional pendente QA em ambiente integrado. Não declarar produção.
-
-## Escopo
-
-- Convênios com autorizações, guias, vínculo a conta e glosa demonstrativa.
-- Lotes de faturamento com fechamento, reabertura, envio e retorno demonstrativo; integração real dependente de provedor.
-- Caixa com abertura, fechamento, movimentos, recebimento parcial/total, estorno justificado e conciliação manual.
-- Timelines e histórico de ações para registros críticos.
-- Notificações operacionais para pendências reais.
-- Relatórios executivos com auditoria e mascaramento de dados sensíveis.
-- Mobile médico documentado para repasses, timelines, notificações e contestações.
-- RBAC/LGPD: financeiro não acessa evolução clínica; médico acessa dados próprios; faturamento usa dados mínimos.
-
-## Classificação
-
-| Item | Classificação |
-| --- | --- |
-| API v1.16 | funcional pendente QA |
-| Migration/seed demo | demo explícito |
-| Provedores externos | dependente de provedor |
-| Smoke v1.16 | funcional pendente QA |
-| Dashboards e Operação Inteligente 5.0 | parcial |
+| Área | Status v1.17 | Observação |
+| --- | --- | --- |
+| Swagger/API | funcional validado por contrato | Sem declarar produção. |
+| Logging HTTP | funcional pendente E2E | Status final registrado por middleware. |
+| v1.16 operacional | parcial | Persistência real no caminho principal; seeds demo explícitos. |
+| Rotas legadas | funcional validado por contrato | Contrato público versionado em v1.13. |
+| Smoke | funcional pendente execução | Scripts bloqueantes v1.16/v1.17. |
+| Mobile médico | funcional pendente QA | Deve consumir notificações/timelines reais. |
+| QA navegada por perfil | funcional pendente QA | Matriz definida em docs v1.17. |

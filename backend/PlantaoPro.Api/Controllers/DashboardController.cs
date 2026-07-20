@@ -23,7 +23,12 @@ namespace PlantaoPro.Api.Controllers
         {
             try
             {
-                var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+                var uidClaim = User.FindFirst("uid")?.Value;
+                Guid uid;
+                if (!Guid.TryParse(uidClaim, out uid))
+                {
+                    return Unauthorized(ApiResponse<string>.Fail("Sessão inválida ou expirada.", 401));
+                }
                 var r = await service.GetAsync(uid);
                 return StatusCode(r.StatusCode, r);
             }
@@ -37,7 +42,12 @@ namespace PlantaoPro.Api.Controllers
         [HttpGet("mobile/home")]
         public async Task<IActionResult> MobileHome()
         {
-            var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
+            var uidClaim = User.FindFirst("uid")?.Value;
+            Guid uid;
+            if (!Guid.TryParse(uidClaim, out uid))
+            {
+                return Unauthorized(ApiResponse<string>.Fail("Sessão inválida ou expirada.", 401));
+            }
             var r = await service.GetAsync(uid);
             return StatusCode(r.StatusCode, r);
         }

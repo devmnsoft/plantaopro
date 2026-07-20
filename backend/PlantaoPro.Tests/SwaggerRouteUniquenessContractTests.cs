@@ -70,6 +70,23 @@ public sealed class SwaggerRouteUniquenessContractTests
         Assert.DoesNotContain("GET api/dashboard", duplicadas);
     }
 
+
+    [Fact]
+    public void TodasRotasPublicasDoSwaggerDevemSerUnicasPorMetodoERota()
+    {
+        var controllerAssembly = typeof(DashboardController).Assembly;
+        var controllers = controllerAssembly.GetTypes()
+            .Where(t => typeof(ControllerBase).IsAssignableFrom(t) && t.Name.EndsWith("Controller", StringComparison.Ordinal))
+            .ToArray();
+
+        var duplicadas = ObterRotasApi(controllers)
+            .GroupBy(x => x.Method + " " + x.Route)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key + " => " + string.Join(",", g.Select(x => x.Controller).Distinct()))
+            .ToList();
+
+        Assert.True(duplicadas.Count == 0, "Rotas duplicadas no contrato: " + string.Join("; ", duplicadas));
+    }
     private static List<ApiRoute> ObterRotasApi(params Type[] controllers)
     {
         var rotas = new List<ApiRoute>();

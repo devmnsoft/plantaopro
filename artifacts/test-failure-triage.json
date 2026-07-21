@@ -1,0 +1,9 @@
+[
+  {"gate":"database-complete-script-clean-install","classification":"PRODUCT_GAP"},
+  {"gate":"database-complete-script-idempotency","classification":"PRODUCT_GAP"},
+  {"gate":"database-upgrade","classification":"PRODUCT_GAP"},
+  {"gate":"database-schema-equivalence","classification":"DOCUMENTATION_GAP"},
+  {"gate":"database-legacy-compatibility","classification":"PRODUCT_GAP"},
+  {"gate":"build-test","classification":"PATH_BUG"},
+  {"gate":"repository-security","classification":"SECURITY_VIOLATION"}
+]

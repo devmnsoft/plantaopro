@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "v1.18.8",
+  "generatedAt": "2026-07-21",
+  "migrations": [
+    {
+      "version": "v1.18.8",
+      "source": "database/migrations/2026_v1188_implantacao_go_live.sql",
+      "status": "active",
+      "checksum": "calculated-by-ci"
+    }
+  ]
+}

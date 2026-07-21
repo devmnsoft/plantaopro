@@ -3,7 +3,7 @@ import hashlib,json,re
 from collections import defaultdict
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
-manifest=json.loads((ROOT/'database/schema-manifest.json').read_text(encoding='utf-8'))
+manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
 out=[]; seen=set(); objects={}; conflicts=[]; canonical_sources=set(); canonical_tables=set(manifest.get('canonicalTables', []))
 for section in manifest['sections']:
     for obj in section.get('objects',[]):
@@ -73,6 +73,8 @@ def write_reports():
     dlines=['# Dependências de schema','']
     for d in deps: dlines.append(f"- `{d['object']}` depende de: {', '.join(d['dependsOn']) if d['dependsOn'] else 'nenhuma'}")
     (art/'schema-dependencies.md').write_text('\n'.join(dlines)+"\n",encoding='utf-8')
+    (art/'schema-install-plan.json').write_text(json.dumps(deps,ensure_ascii=False,indent=2)+"\n",encoding='utf-8')
+    (art/'schema-install-plan.md').write_text('\n'.join(dlines)+"\n",encoding='utf-8')
 header=f"""-- PlantãoPro - script completo oficial de instalação limpa
 -- Versão do schema: {manifest.get('schemaVersion','v1.18.6')}
 -- PostgreSQL suportado: 16

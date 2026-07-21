@@ -1,0 +1,41 @@
+# Dependências de schema
+
+- `plantaopro.extensions` depende de: nenhuma
+- `plantaopro.identity_access` depende de: nenhuma
+- `plantaopro.saas_tenants` depende de: nenhuma
+- `plantaopro.operacao_plantoes` depende de: nenhuma
+- `plantaopro.saude360` depende de: nenhuma
+- `plantaopro.financeiro` depende de: nenhuma
+- `plantaopro.auditoria_observabilidade` depende de: nenhuma
+- `plantaopro.relatorios` depende de: nenhuma
+- `plantaopro.constraints` depende de: nenhuma
+- `plantaopro.indexes` depende de: nenhuma
+- `plantaopro.reference_data` depende de: nenhuma
+- `plantaopro.planos` depende de: nenhuma
+- `plantaopro.clientes` depende de: plantaopro.planos
+- `plantaopro.tenants` depende de: plantaopro.clientes, plantaopro.planos
+- `plantaopro.assinaturas` depende de: plantaopro.tenants, plantaopro.clientes, plantaopro.planos
+- `database/PlantaoPro_PostgreSQL_Completo.sql` depende de: nenhuma
+- `database/20260525_evolucao_saas_premium.sql` depende de: nenhuma
+- `backend/sql/20260522_saas_multiempresa.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_self_service_white_label.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_white_label_self_service.sql` depende de: nenhuma
+- `database/migrations/2026_saude360_base_clinica_minima.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_saude360_base_clinica.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql` depende de: nenhuma
+- `database/migrations/2026_saude360_consultas_base.sql` depende de: nenhuma
+- `database/migrations/2026_saude360_cid_prescricao.sql` depende de: nenhuma
+- `database/migrations/2026_saude360_convenios_planos_saude.sql` depende de: nenhuma
+- `database/migrations/2026_saude360_financeiro_clinica.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_saas_inteligente.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql` depende de: nenhuma
+- `database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql` depende de: nenhuma
+- `database/migrations/2026_saas_comercial_core.sql` depende de: nenhuma
+- `database/migrations/2026_v113_operacional_real.sql` depende de: nenhuma
+- `database/migrations/2026_v114_consolidacao_produto.sql` depende de: nenhuma
+- `database/migrations/2026_v115_regras_faturamento_repasses.sql` depende de: nenhuma
+- `database/migrations/2026_v116_consolidacao_operacional_final.sql` depende de: nenhuma
+- `database/migrations/2026_v117_hardening_v116_runtime.sql` depende de: nenhuma
+- `plantaopro.permissoes` depende de: nenhuma
+- `plantaopro.relatorio_exportacoes` depende de: plantaopro.tenants, plantaopro.clientes, plantaopro.usuarios
+- `planos_padrao` depende de: nenhuma

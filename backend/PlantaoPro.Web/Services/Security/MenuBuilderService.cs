@@ -99,6 +99,7 @@ public sealed class MenuBuilderService : IMenuBuilderService
             Item("Usuários", "bi-person-gear", "Usuarios", "Index", "USUARIOS", RolesConstants.AdministradorCliente),
             Item("Perfis", "bi-people", "Perfis", "Index", "PERFIS", RolesConstants.AdministradorCliente),
             Item("Permissões", "bi-shield-lock", "Permissoes", "Index", "PERMISSOES", RolesConstants.AdministradorCliente),
+            Item("Central de Segurança", "bi-shield-lock-fill", "Seguranca", "Index", "SEGURANCA", RolesConstants.AdministradorCliente),
             Item("White Label", "bi-palette2", "WhiteLabel", "Index", "WHITE_LABEL", RolesConstants.AdministradorCliente, true),
             Item("Onboarding", "bi-rocket", "Onboarding", "Index", "ONBOARDING", RolesConstants.AdministradorCliente),
             Item("Meu Plano", "bi-card-checklist", "MinhaAssinatura", "Index", "ASSINATURAS", RolesConstants.AdministradorCliente),

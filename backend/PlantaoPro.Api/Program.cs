@@ -79,7 +79,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis" };
+    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
     foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
 });
 
@@ -148,6 +148,12 @@ builder.Services.AddScoped<V116CaixaService>();
 builder.Services.AddScoped<V116TimelineService>();
 builder.Services.AddScoped<V116NotificacaoOperacionalService>();
 builder.Services.AddScoped<V116RelatorioExecutivoService>();
+builder.Services.AddSingleton<IReportCatalogService, ReportCatalogService>();
+builder.Services.AddScoped<IReportQueryService, ReportQueryService>();
+builder.Services.AddScoped<IReportExportService, ReportExportService>();
+builder.Services.AddScoped<IReportPermissionService, ReportPermissionService>();
+builder.Services.AddScoped<IReportAuditService, ReportAuditService>();
+builder.Services.AddScoped<CsvExportService>();
 
 var app = builder.Build();
 app.UseHttpLogging();
@@ -187,4 +193,7 @@ app.UseAuthentication();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
+ApiRouteStartupValidator.Validate(app);
 app.Run();
+
+public partial class Program { }

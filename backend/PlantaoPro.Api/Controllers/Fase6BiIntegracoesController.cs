@@ -30,7 +30,7 @@ public sealed class Fase6BiIntegracoesController : ControllerBase
     [HttpPost("api/relatorios/filtros-salvos")] public IActionResult SalvarFiltro([FromBody] object request) => Ok(ApiResponse<object>.Ok(new { id = Guid.NewGuid() }, "Filtro salvo."));
     [HttpDelete("api/relatorios/filtros-salvos/{id:guid}")] public IActionResult ExcluirFiltro(Guid id) => Ok(ApiResponse<object>.Ok(new { id }, "Filtro removido."));
     [HttpGet("api/relatorios/execucoes")] public IActionResult Execucoes() => Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() }));
-    [HttpGet("api/relatorios/exportacoes")] public IActionResult Exportacoes() => Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() }));
+    [HttpGet("api/relatorios/fase6/exportacoes")] public IActionResult Exportacoes() => Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() }));
 
     [HttpGet("api/integracoes/api-keys")] public async Task<IActionResult> ApiKeys() { var r = await service.ListarApiKeysAsync(); return StatusCode(r.StatusCode, r); }
     [HttpPost("api/integracoes/api-keys")] public async Task<IActionResult> CriarApiKey([FromBody] ApiKeyCreateRequest request) { var r = await service.CriarApiKeyAsync(request); return StatusCode(r.StatusCode, r); }

@@ -160,11 +160,12 @@ public sealed class PendenciasFase4Controller : ControllerBase
 
 [ApiController]
 [Authorize]
-[Route("api/relatorios")]
+[Route("api/relatorios/executivos")]
 public sealed class RelatoriosExecutivosFase4Controller : ControllerBase
 {
     private readonly OperationalAutomationService service;
-    public RelatoriosExecutivosFase4Controller(OperationalAutomationService service) { this.service = service; }
+    private readonly IReportExportService reportExport;
+    public RelatoriosExecutivosFase4Controller(OperationalAutomationService service, IReportExportService reportExport) { this.service = service; this.reportExport = reportExport; }
     private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
 
     [HttpGet("operacional")]
@@ -175,7 +176,7 @@ public sealed class RelatoriosExecutivosFase4Controller : ControllerBase
     public async Task<IActionResult> Saas([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim) { var r = await service.RelatorioAsync("SAAS", null, inicio, fim); return StatusCode(r.StatusCode, r); }
 
     [HttpGet("exportar-csv")]
-    public async Task<IActionResult> Exportar([FromQuery] string tipo = "operacional", [FromQuery] DateTime? inicio = null, [FromQuery] DateTime? fim = null) { var ctx = await service.ObterContextoUsuarioAsync(User); var bytes = await service.ExportarCsvAsync(tipo, ctx.ClienteId, ctx.UsuarioId, inicio, fim); return File(bytes, "text/csv; charset=utf-8", "relatorio-" + tipo + ".csv"); }
+    public async Task<IActionResult> Exportar([FromQuery] string tipo = "operacional", [FromQuery] DateTime? inicio = null, [FromQuery] DateTime? fim = null, CancellationToken cancellationToken = default) { var ctx = await service.ObterContextoUsuarioAsync(User); var result = await reportExport.ExportarCsvAsync("EXECUTIVO_GERAL", new ReportFilterRequest { Inicio = inicio, Fim = fim, Status = tipo }, ctx.ClienteId, ctx.UsuarioId, HttpContext.Connection.RemoteIpAddress?.ToString(), cancellationToken); return File(result.Content, result.ContentType, result.FileName); }
 
     [HttpPost("filtros-salvar")]
     public async Task<IActionResult> SalvarFiltro([FromBody] SalvarFiltroRelatorioRequest request) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.SalvarFiltroAsync(Uid(), ctx.ClienteId, request); return StatusCode(r.StatusCode, r); }

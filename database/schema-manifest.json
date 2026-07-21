@@ -1,41 +1,192 @@
 {
-  "schemaVersion": "v1.18.4",
+  "schemaVersion": "v1.18.6",
   "generatedAt": "2026-07-21",
   "sections": [
-    {"order": 4, "name": "Tabelas fundamentais e SaaS mínimo antes de ALTERs", "objects": [
-      {"name":"plantaopro.planos", "type":"table", "category":"BASE", "required":true, "dependsOn":[], "historicalOrigin":"backend/sql/20260522_saas_multiempresa.sql", "sql":"CREATE TABLE IF NOT EXISTS plantaopro.planos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nome varchar(120) NOT NULL, slug text, descricao text, valor_mensal numeric(14,2) NOT NULL DEFAULT 0, valor_anual numeric(14,2) NOT NULL DEFAULT 0, limite_medicos int NOT NULL DEFAULT 0, limite_hospitais int NOT NULL DEFAULT 0, limite_plantoes_mes int NOT NULL DEFAULT 0, limite_usuarios int NOT NULL DEFAULT 0, limite_convites_mes int, permite_mobile boolean NOT NULL DEFAULT false, permite_bi boolean NOT NULL DEFAULT false, permite_api boolean NOT NULL DEFAULT false, permite_integracoes boolean NOT NULL DEFAULT false, permite_relatorios boolean NOT NULL DEFAULT true, permite_relatorios_avancados boolean NOT NULL DEFAULT true, permite_white_label boolean NOT NULL DEFAULT false, permite_trial boolean NOT NULL DEFAULT true, dias_trial int NOT NULL DEFAULT 14, permite_perfis_customizados boolean NOT NULL DEFAULT true, permite_suporte_prioritario boolean NOT NULL DEFAULT false, permite_operacao_assistida boolean NOT NULL DEFAULT false, destaque boolean NOT NULL DEFAULT false, publico boolean NOT NULL DEFAULT true, ordem int NOT NULL DEFAULT 0, ordem_exibicao int NOT NULL DEFAULT 0, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"},
-      {"name":"plantaopro.clientes", "type":"table", "category":"BASE", "required":true, "dependsOn":["plantaopro.planos"], "historicalOrigin":"backend/sql/20260522_saas_multiempresa.sql", "sql":"CREATE TABLE IF NOT EXISTS plantaopro.clientes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), razao_social varchar(200), nome_fantasia varchar(200), cnpj varchar(30), email varchar(180), telefone varchar(40), cidade varchar(100), estado char(2), plano_id uuid, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"},
-      {"name":"plantaopro.tenants", "type":"table", "category":"BASE", "required":true, "dependsOn":["plantaopro.clientes","plantaopro.planos"], "historicalOrigin":"database/migrations/2026_plantao_pro_self_service_white_label.sql", "sql":"CREATE TABLE IF NOT EXISTS plantaopro.tenants (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid, plano_id uuid, nome varchar(180) NOT NULL, slug text NOT NULL, subdominio text, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"},
-      {"name":"plantaopro.assinaturas", "type":"table", "category":"BASE", "required":true, "dependsOn":["plantaopro.tenants","plantaopro.clientes","plantaopro.planos"], "historicalOrigin":"backend/sql/20260522_saas_multiempresa.sql", "sql":"CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid, cliente_id uuid NOT NULL, plano_id uuid NOT NULL, status varchar(40) NOT NULL DEFAULT 'ATIVA', data_inicio date NOT NULL DEFAULT current_date, data_fim date, data_trial_fim date, valor_contratado numeric(14,2) NOT NULL DEFAULT 0, valor_mensal numeric(14,2) NOT NULL DEFAULT 0, dia_vencimento int NOT NULL DEFAULT 5, periodicidade varchar(20) NOT NULL DEFAULT 'MENSAL', observacoes text, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"}
-    ]},
-    {"order":5, "name":"Schema histórico canônico ordenado por dependência", "objects":[
-      {"source":"database/PlantaoPro_PostgreSQL_Completo.sql"},
-      {"source":"database/20260525_evolucao_saas_premium.sql"},
-      {"source":"backend/sql/20260522_saas_multiempresa.sql"},
-      {"source":"database/migrations/2026_plantao_pro_self_service_white_label.sql"},
-      {"source":"database/migrations/2026_plantao_pro_white_label_self_service.sql"},
-      {"source":"database/migrations/2026_saude360_base_clinica_minima.sql"},
-      {"source":"database/migrations/2026_plantao_pro_saude360_base_clinica.sql"},
-      {"source":"database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql"},
-      {"source":"database/migrations/2026_saude360_consultas_base.sql"},
-      {"source":"database/migrations/2026_saude360_cid_prescricao.sql"},
-      {"source":"database/migrations/2026_saude360_convenios_planos_saude.sql"},
-      {"source":"database/migrations/2026_saude360_financeiro_clinica.sql"},
-      {"source":"database/migrations/2026_plantao_pro_saas_inteligente.sql"},
-      {"source":"database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql"},
-      {"source":"database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql"},
-      {"source":"database/migrations/2026_saas_comercial_core.sql"},
-      {"source":"database/migrations/2026_v113_operacional_real.sql"},
-      {"source":"database/migrations/2026_v114_consolidacao_produto.sql"},
-      {"source":"database/migrations/2026_v115_regras_faturamento_repasses.sql"},
-      {"source":"database/migrations/2026_v116_consolidacao_operacional_final.sql"},
-      {"source":"database/migrations/2026_v117_hardening_v116_runtime.sql"}
-    ]},
-    {"order":9, "name":"Auditoria de relatórios v1.18.4", "objects":[
-      {"name":"plantaopro.relatorio_exportacoes", "type":"table", "category":"BASE", "required":true, "dependsOn":["plantaopro.tenants","plantaopro.clientes","plantaopro.usuarios"], "sql":"CREATE TABLE IF NOT EXISTS plantaopro.relatorio_exportacoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid, tenant_id uuid NOT NULL, usuario_id uuid, codigo_relatorio varchar(80) NOT NULL, formato varchar(20) NOT NULL, filtros_sanitizados jsonb NOT NULL DEFAULT '{}'::jsonb, quantidade_registros int NOT NULL DEFAULT 0, contem_dados_sensiveis boolean NOT NULL DEFAULT false, status varchar(30) NOT NULL DEFAULT 'SUCESSO', duracao_ms bigint NOT NULL DEFAULT 0, nome_arquivo varchar(260), ip_origem varchar(80), reg_date timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A');\nCREATE INDEX IF NOT EXISTS idx_relatorio_exportacoes_tenant_data ON plantaopro.relatorio_exportacoes(tenant_id, reg_date DESC);\nCREATE INDEX IF NOT EXISTS idx_relatorio_exportacoes_cliente_status_data ON plantaopro.relatorio_exportacoes(cliente_id, status, reg_date DESC);"}
-    ]},
-    {"order":14, "name":"Dados referenciais mínimos", "objects":[
-      {"name":"planos_padrao", "type":"seed", "category":"SEED_REFERENCIAL", "required":true, "sql":"INSERT INTO plantaopro.planos(nome, slug, descricao, valor_mensal, limite_medicos, limite_hospitais, limite_plantoes_mes, limite_usuarios, permite_relatorios, permite_relatorios_avancados, publico, status) SELECT 'Essencial', 'essencial', 'Plano inicial PlantãoPro', 0, 10, 3, 100, 5, true, true, true, 'ATIVO' WHERE NOT EXISTS (SELECT 1 FROM plantaopro.planos WHERE slug='essencial');"}
-    ]}
+    {
+      "order": 3,
+      "name": "Schema canônico v1.18.6 antes de legados",
+      "objects": [
+        {
+          "name": "plantaopro.permissoes",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/000_schema_canonico_base.sql"
+        }
+      ]
+    },
+    {
+      "order": 4,
+      "name": "Tabelas fundamentais e SaaS mínimo antes de ALTERs",
+      "objects": [
+        {
+          "name": "plantaopro.planos",
+          "type": "table",
+          "category": "BASE",
+          "required": true,
+          "dependsOn": [],
+          "historicalOrigin": "backend/sql/20260522_saas_multiempresa.sql",
+          "sql": "CREATE TABLE IF NOT EXISTS plantaopro.planos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nome varchar(120) NOT NULL, slug text, descricao text, valor_mensal numeric(14,2) NOT NULL DEFAULT 0, valor_anual numeric(14,2) NOT NULL DEFAULT 0, limite_medicos int NOT NULL DEFAULT 0, limite_hospitais int NOT NULL DEFAULT 0, limite_plantoes_mes int NOT NULL DEFAULT 0, limite_usuarios int NOT NULL DEFAULT 0, limite_convites_mes int, permite_mobile boolean NOT NULL DEFAULT false, permite_bi boolean NOT NULL DEFAULT false, permite_api boolean NOT NULL DEFAULT false, permite_integracoes boolean NOT NULL DEFAULT false, permite_relatorios boolean NOT NULL DEFAULT true, permite_relatorios_avancados boolean NOT NULL DEFAULT true, permite_white_label boolean NOT NULL DEFAULT false, permite_trial boolean NOT NULL DEFAULT true, dias_trial int NOT NULL DEFAULT 14, permite_perfis_customizados boolean NOT NULL DEFAULT true, permite_suporte_prioritario boolean NOT NULL DEFAULT false, permite_operacao_assistida boolean NOT NULL DEFAULT false, destaque boolean NOT NULL DEFAULT false, publico boolean NOT NULL DEFAULT true, ordem int NOT NULL DEFAULT 0, ordem_exibicao int NOT NULL DEFAULT 0, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"
+        },
+        {
+          "name": "plantaopro.clientes",
+          "type": "table",
+          "category": "BASE",
+          "required": true,
+          "dependsOn": [
+            "plantaopro.planos"
+          ],
+          "historicalOrigin": "backend/sql/20260522_saas_multiempresa.sql",
+          "sql": "CREATE TABLE IF NOT EXISTS plantaopro.clientes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), razao_social varchar(200), nome_fantasia varchar(200), cnpj varchar(30), email varchar(180), telefone varchar(40), cidade varchar(100), estado char(2), plano_id uuid, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"
+        },
+        {
+          "name": "plantaopro.tenants",
+          "type": "table",
+          "category": "BASE",
+          "required": true,
+          "dependsOn": [
+            "plantaopro.clientes",
+            "plantaopro.planos"
+          ],
+          "historicalOrigin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
+          "sql": "CREATE TABLE IF NOT EXISTS plantaopro.tenants (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid, plano_id uuid, nome varchar(180) NOT NULL, slug text NOT NULL, subdominio text, status varchar(40) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"
+        },
+        {
+          "name": "plantaopro.assinaturas",
+          "type": "table",
+          "category": "BASE",
+          "required": true,
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.clientes",
+            "plantaopro.planos"
+          ],
+          "historicalOrigin": "backend/sql/20260522_saas_multiempresa.sql",
+          "sql": "CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid, cliente_id uuid NOT NULL, plano_id uuid NOT NULL, status varchar(40) NOT NULL DEFAULT 'ATIVA', data_inicio date NOT NULL DEFAULT current_date, data_fim date, data_trial_fim date, valor_contratado numeric(14,2) NOT NULL DEFAULT 0, valor_mensal numeric(14,2) NOT NULL DEFAULT 0, dia_vencimento int NOT NULL DEFAULT 5, periodicidade varchar(20) NOT NULL DEFAULT 'MENSAL', observacoes text, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);"
+        }
+      ]
+    },
+    {
+      "order": 8,
+      "name": "Compatibilidade de permissões v1.18.6",
+      "objects": [
+        {
+          "name": "plantaopro.permissoes",
+          "type": "migration",
+          "category": "CANONICAL_COMPAT",
+          "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql"
+        }
+      ]
+    },
+    {
+      "order": 5,
+      "name": "Schema histórico canônico ordenado por dependência",
+      "objects": [
+        {
+          "source": "database/PlantaoPro_PostgreSQL_Completo.sql"
+        },
+        {
+          "source": "database/20260525_evolucao_saas_premium.sql"
+        },
+        {
+          "source": "backend/sql/20260522_saas_multiempresa.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_white_label_self_service.sql"
+        },
+        {
+          "source": "database/migrations/2026_saude360_base_clinica_minima.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql"
+        },
+        {
+          "source": "database/migrations/2026_saude360_consultas_base.sql"
+        },
+        {
+          "source": "database/migrations/2026_saude360_cid_prescricao.sql"
+        },
+        {
+          "source": "database/migrations/2026_saude360_convenios_planos_saude.sql"
+        },
+        {
+          "source": "database/migrations/2026_saude360_financeiro_clinica.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_saas_inteligente.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql"
+        },
+        {
+          "source": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql"
+        },
+        {
+          "source": "database/migrations/2026_saas_comercial_core.sql"
+        },
+        {
+          "source": "database/migrations/2026_v113_operacional_real.sql"
+        },
+        {
+          "source": "database/migrations/2026_v114_consolidacao_produto.sql"
+        },
+        {
+          "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql"
+        },
+        {
+          "source": "database/migrations/2026_v116_consolidacao_operacional_final.sql"
+        },
+        {
+          "source": "database/migrations/2026_v117_hardening_v116_runtime.sql"
+        }
+      ]
+    },
+    {
+      "order": 9,
+      "name": "Auditoria de relatórios v1.18.4",
+      "objects": [
+        {
+          "name": "plantaopro.relatorio_exportacoes",
+          "type": "table",
+          "category": "BASE",
+          "required": true,
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.clientes",
+            "plantaopro.usuarios"
+          ],
+          "sql": "CREATE TABLE IF NOT EXISTS plantaopro.relatorio_exportacoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid, tenant_id uuid NOT NULL, usuario_id uuid, codigo_relatorio varchar(80) NOT NULL, formato varchar(20) NOT NULL, filtros_sanitizados jsonb NOT NULL DEFAULT '{}'::jsonb, quantidade_registros int NOT NULL DEFAULT 0, contem_dados_sensiveis boolean NOT NULL DEFAULT false, status varchar(30) NOT NULL DEFAULT 'SUCESSO', duracao_ms bigint NOT NULL DEFAULT 0, nome_arquivo varchar(260), ip_origem varchar(80), reg_date timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A');\nCREATE INDEX IF NOT EXISTS idx_relatorio_exportacoes_tenant_data ON plantaopro.relatorio_exportacoes(tenant_id, reg_date DESC);\nCREATE INDEX IF NOT EXISTS idx_relatorio_exportacoes_cliente_status_data ON plantaopro.relatorio_exportacoes(cliente_id, status, reg_date DESC);"
+        }
+      ]
+    },
+    {
+      "order": 14,
+      "name": "Dados referenciais mínimos",
+      "objects": [
+        {
+          "name": "planos_padrao",
+          "type": "seed",
+          "category": "SEED_REFERENCIAL",
+          "required": true,
+          "sql": "INSERT INTO plantaopro.planos(nome, slug, descricao, valor_mensal, limite_medicos, limite_hospitais, limite_plantoes_mes, limite_usuarios, permite_relatorios, permite_relatorios_avancados, publico, status) SELECT 'Essencial', 'essencial', 'Plano inicial PlantãoPro', 0, 10, 3, 100, 5, true, true, true, 'ATIVO' WHERE NOT EXISTS (SELECT 1 FROM plantaopro.planos WHERE slug='essencial');"
+        }
+      ]
+    }
+  ],
+  "canonicalTables": [
+    "modulos_sistema",
+    "acoes_sistema",
+    "permissoes",
+    "perfil_permissoes",
+    "usuarios_perfis",
+    "usuario_permissoes_especiais",
+    "login_tentativas",
+    "recuperacao_senha",
+    "perfis"
   ]
 }

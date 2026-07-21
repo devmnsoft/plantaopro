@@ -384,6 +384,37 @@ values
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(jwt["Issuer"], jwt["Audience"], claims, expires: DateTime.UtcNow.AddHours(8), signingCredentials: creds));
         }
 
+        private static Task RegistrarTentativaAsync(
+            NpgsqlConnection connection,
+            Guid? usuarioId,
+            string email,
+            string? ip,
+            string? userAgent,
+            bool sucesso,
+            string motivo,
+            DateTime? bloqueadoAte = null,
+            CancellationToken cancellationToken = default)
+        {
+            var command = new CommandDefinition(
+                @"insert into plantaopro.login_tentativas
+                    (usuario_id, email, ip, user_agent, sucesso, motivo, bloqueado_ate)
+                  values
+                    (@UsuarioId, @Email, @Ip, @UserAgent, @Sucesso, @Motivo, @BloqueadoAte)",
+                new
+                {
+                    UsuarioId = usuarioId,
+                    Email = email,
+                    Ip = ip,
+                    UserAgent = userAgent,
+                    Sucesso = sucesso,
+                    Motivo = motivo,
+                    BloqueadoAte = bloqueadoAte
+                },
+                cancellationToken: cancellationToken);
+
+            return connection.ExecuteAsync(command);
+        }
+
         private static string? NormalizeRole(string? role)
         {
             if (string.IsNullOrWhiteSpace(role))

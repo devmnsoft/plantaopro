@@ -169,3 +169,9 @@ A API exige `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience`. Em desenvolvimento loca
 ## v1.17 hardening runtime
 
 A v1.17 fortalece a base v1.16 sem declarar produção: Swagger sem conflito de dashboard, logging de status final por middleware, claims `uid` robustas, serviços v1.16 persistidos via PostgreSQL/Dapper, smoke bloqueante v1.16/v1.17, rotas legadas versionadas e documentação honesta de QA por perfil.
+
+## v1.18.5 — Login, bootstrap e banco local
+
+Instalações novas devem executar `database/scrpt_completo.sql` no banco `plantaopro` e, em seguida, criar o primeiro Administrador Global pela CLI `backend/PlantaoPro.Tools.Bootstrap`. A senha inicial é informada por prompt ou variável de ambiente local e nunca é versionada.
+
+Em desenvolvimento, habilite `DevelopmentSeed:Enabled=true` apenas com `ASPNETCORE_ENVIRONMENT=Development` e configure `Demo:Password` por user-secrets ou variável local. A documentação não assume mais senha `123456`.

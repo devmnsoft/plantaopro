@@ -65,14 +65,6 @@ namespace PlantaoPro.Api.Controllers
 
             if (usuario.Id != Guid.Empty)
             {
-                await cn.ExecuteAsync(@"create table if not exists plantaopro.recuperacao_senha(
-                    id uuid primary key,
-                    usuario_id uuid not null,
-                    token_hash text not null,
-                    expiracao timestamp not null,
-                    utilizado boolean not null default false,
-                    reg_date timestamp not null default now())");
-
                 await cn.ExecuteAsync("insert into plantaopro.recuperacao_senha(id,usuario_id,token_hash,expiracao,utilizado,reg_date) values(gen_random_uuid(),@u,@h,now()+interval '30 minutes',false,now())", new { u = usuario.Id, h = tokenHash });
                 await _auditService.LogAsync(usuario.Id, "PASSWORD_FORGOT", "usuarios", usuario.Id, "Solicitação de recuperação de senha", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
             }

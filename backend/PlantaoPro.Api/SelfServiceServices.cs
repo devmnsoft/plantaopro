@@ -111,7 +111,7 @@ on conflict do nothing", new { tenantId, clienteId, nome = cliente.Nome, slug, p
         var usuarioId = ObterUsuarioId();
         if (!usuarioId.HasValue) return Array.Empty<string>();
         return (await cn.QueryAsync<string>(@"select distinct coalesce(pm.codigo,'')
-from plantaopro.usuario_perfis up
+from plantaopro.usuarios_perfis up
 join plantaopro.perfil_permissoes pp on pp.perfil_id=up.perfil_id and pp.permitido=true and pp.reg_status='A'
 join plantaopro.permissoes pm on pm.id=pp.permissao_id and pm.reg_status='A'
 where up.usuario_id=@usuarioId and up.tenant_id=@tenantId and up.reg_status='A'
@@ -247,7 +247,7 @@ values(@assinaturaId,@tenantId,@clienteId,@PlanoId,now(),now()+interval '1 month
 values(@usuarioId,@Nome,@Email,@Telefone,@SenhaHash,@clienteId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId }, tx);
 
             var perfilId = await GarantirPerfilAdminClienteAsync(cn, tx, tenantId, clienteId);
-            await cn.ExecuteAsync("insert into plantaopro.usuario_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_date,reg_status) values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@perfilId,now(),'A')", new { tenantId, clienteId, usuarioId, perfilId }, tx);
+            await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_date,reg_status) values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@perfilId,now(),'A')", new { tenantId, clienteId, usuarioId, perfilId }, tx);
             await CriarWhiteLabelPadraoAsync(cn, tx, tenantId, request.Empresa.NomeFantasia);
             await CriarOnboardingAsync(cn, tx, tenantId, clienteId);
             await cn.ExecuteAsync(@"insert into plantaopro.lgpd_consentimentos(id,tenant_id,cliente_id,usuario_id,titular_email,finalidade,versao_politica,aceito,origem,ip_origem,user_agent,reg_date,reg_status)

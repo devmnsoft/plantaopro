@@ -6,7 +6,7 @@ public record ApiResponse<T>(bool Success,string Message,T? Data,IEnumerable<str
 }
 public record HealthDto(string Application,string Status,string Environment,DateTime TimestampUtc,string Version);
 public record LoginRequest(string Email,string Senha);
-public record LoginResponse(string Token,DateTime ExpiresAt,Guid UsuarioId,string Nome,string Email,string[] Roles, Guid? ClienteId = null, string? ClienteNome = null, Guid? TenantId = null, string? TenantNome = null, bool MustChangePassword = false);
+public record LoginResponse(string Token,DateTime ExpiresAt,Guid UsuarioId,string Nome,string Email,string[] Roles, Guid? ClienteId = null, string? ClienteNome = null, Guid? TenantId = null, string? TenantNome = null, bool MustChangePassword = false, string? PrimaryRole = null, string? AccessScope = null, bool TenantContextRequired = false, bool TenantContextSelected = false, Guid? TenantContextId = null, string? ContextMode = null, string? SessionId = null);
 public record MedicoDto(Guid Id,string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,string RegStatus);
 public record CreateMedicoRequest(string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId);
 public record UpdateMedicoRequest(string Nome,string Cpf,string Crm,string UfCrm,string Email,string Telefone,string Cidade,string Estado,Guid EspecialidadeId,string RegStatus);

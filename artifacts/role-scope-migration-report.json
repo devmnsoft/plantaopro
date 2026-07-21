@@ -1,0 +1,1 @@
+{"version":"v1.19.0","status":"generated","notes":["Migration is idempotent and preserves global and tenant role links.","ADMINISTRADOR_GLOBAL is not assigned to a tenant by this migration."]}

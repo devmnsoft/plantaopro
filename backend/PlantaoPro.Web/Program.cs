@@ -1,6 +1,5 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.OpenApi.Models;  
 using PlantaoPro.Web.Services;
 using PlantaoPro.Web.Services.Security;
 
@@ -20,17 +19,7 @@ builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
 builder.Services.AddScoped<ITenantAccessService, TenantAccessService>();
 builder.Services.AddScoped<IMenuBuilderService, MenuBuilderService>();
 builder.Services.AddScoped<SaasRouteGuardFilter>();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSession();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "PlantãoPro Web API",
-        Version = "v1"
-    });
-});
-
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -46,7 +35,11 @@ builder.Services
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis" };
+    foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
+});
 
 builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
 {
@@ -71,12 +64,6 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/erro");
     app.UseHsts();
 }
-else
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseStatusCodePagesWithReExecute("/erro/{0}");

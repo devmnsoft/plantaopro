@@ -1,0 +1,48 @@
+@model PlantaoPro.Web.Models.CentralAtendimentoViewModel
+@{
+    ViewData["Title"] = "Central de Atendimento";
+}
+<section class="container-fluid py-3" aria-labelledby="central-title">
+    <div class="d-flex flex-column flex-lg-row justify-content-between gap-3 mb-3">
+        <div>
+            <h1 id="central-title" class="h3 mb-1">Central de Atendimento</h1>
+            <p class="text-muted mb-0">Recepção, painel de chamada, triagem e consulta em uma visão operacional.</p>
+        </div>
+        <form method="get" class="row g-2" aria-label="Filtros da Central de Atendimento">
+            <div class="col-6 col-md-auto"><label class="form-label" for="data">Data</label><input class="form-control" id="data" name="data" type="date" value="@Model.Data.ToString("yyyy-MM-dd")" /></div>
+            <div class="col-6 col-md-auto"><label class="form-label" for="status">Status</label><input class="form-control" id="status" name="status" value="@Model.Status" /></div>
+            <div class="col-6 col-md-auto"><label class="form-label" for="prioridade">Prioridade</label><input class="form-control" id="prioridade" name="prioridade" value="@Model.Prioridade" /></div>
+            <div class="col-6 col-md-auto"><label class="form-label" for="paciente">Paciente</label><input class="form-control" id="paciente" name="paciente" value="@Model.Paciente" /></div>
+            <div class="col-12 col-md-auto align-self-end"><button type="submit" class="btn btn-primary w-100">Aplicar filtros</button></div>
+        </form>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-warning" role="status">@Model.ErrorMessage</div> }
+    <div class="row g-2 mb-3" aria-label="Indicadores da operação">
+        <div class="col-6 col-md-3"><div class="card"><div class="card-body"><span class="text-muted">Agendados</span><strong class="d-block fs-4">@Model.Kpis.TotalAgendado</strong></div></div></div>
+        <div class="col-6 col-md-3"><div class="card"><div class="card-body"><span class="text-muted">Presentes</span><strong class="d-block fs-4">@Model.Kpis.Presentes</strong></div></div></div>
+        <div class="col-6 col-md-3"><div class="card"><div class="card-body"><span class="text-muted">Aguardando</span><strong class="d-block fs-4">@Model.Kpis.PacientesAguardando</strong></div></div></div>
+        <div class="col-6 col-md-3"><div class="card"><div class="card-body"><span class="text-muted">Atrasos</span><strong class="d-block fs-4 text-danger">@Model.Kpis.AtrasosAcimaLimite</strong></div></div></div>
+    </div>
+    <div class="row g-3" data-refresh-url="@Url.Action("Index", "CentralAtendimento")">
+        @foreach (var grupo in Model.Grupos)
+        {
+            <div class="col-12 col-xl-4">
+                <article class="card h-100" aria-labelledby="grupo-@grupo.Status">
+                    <div class="card-header d-flex justify-content-between"><strong id="grupo-@grupo.Status">@grupo.Titulo</strong><span class="badge bg-secondary">@grupo.Itens.Count()</span></div>
+                    <div class="list-group list-group-flush">
+                        @if (!grupo.Itens.Any()) { <div class="list-group-item text-muted">Nenhum paciente neste status.</div> }
+                        @foreach (var item in grupo.Itens)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between gap-2"><strong>@(string.IsNullOrWhiteSpace(item.NomeSocial) ? item.Paciente : item.NomeSocial)</strong><span class="badge bg-info text-dark">@item.Prioridade</span></div>
+                                <div class="small text-muted">@item.Horario.ToString("HH:mm") · @item.TempoEsperaMinutos min · @item.Medico</div>
+                                <div class="small">@item.Especialidade · @item.Unidade · @item.Sala · @item.Convenio</div>
+                                <a class="btn btn-sm btn-outline-primary mt-2" asp-controller="Agendamentos" asp-action="Details" asp-route-id="@item.AgendamentoId">@item.ProximaAcaoPermitida</a>
+                            </div>
+                        }
+                    </div>
+                </article>
+            </div>
+        }
+    </div>
+</section>

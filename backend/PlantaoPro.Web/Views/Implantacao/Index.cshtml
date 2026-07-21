@@ -1,15 +1,74 @@
 @{
     ViewData["Title"] = "Central de Implantação e Go-Live";
 }
-<section class="container py-4" aria-labelledby="implantacao-title">
+<section class="container py-4" aria-labelledby="implantacao-title" id="implantacao-app">
     <div class="p-4 rounded-3 bg-light border">
-        <p class="text-uppercase text-muted mb-1">PlantãoPro v1.18.8</p>
+        <p class="text-uppercase text-muted mb-1">PlantãoPro v1.18.9</p>
         <h1 id="implantacao-title">Central de Implantação, Diagnóstico e Go-Live</h1>
-        <p class="lead">Acompanhe banco, schema, administrador, tenant, módulos, integrações, auditoria, LGPD, backup e prontidão operacional.</p>
+        <p class="lead">Painel responsivo para acompanhar KPIs, prontidão, etapas, pendências, evidências, histórico, alertas e relatório de Go-Live.</p>
+        <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmarValidacaoModal">Validar tudo</button>
+            <button class="btn btn-outline-secondary" onclick="carregarImplantacao()">Atualizar</button>
+        </div>
     </div>
-    <div class="row g-3 mt-3">
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Diagnóstico</h2><p>Consulta segura em <code>/api/implantacao/diagnostico</code>, sem senha, JWT, hash ou tokens.</p></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Assistente</h2><p>17 etapas para banco, administrador, tenant, plano, usuários, permissões, operação, LGPD, testes e Go-Live.</p></div></div></div>
-        <div class="col-md-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Relatório</h2><p>Relatório de decisão final exportável por integrações controladas e auditáveis.</p></div></div></div>
+
+    <div id="implantacao-loading" class="alert alert-info mt-3" role="status">Carregando informações reais da API...</div>
+    <div id="implantacao-error" class="alert alert-danger mt-3 d-none" role="alert"></div>
+
+    <div class="row g-3 mt-1" aria-label="KPIs da implantação">
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Prontidão</span><strong class="d-block fs-3" id="kpi-prontidao">--%</strong></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Etapas</span><strong class="d-block fs-3" id="kpi-etapas">17</strong></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Pendências</span><strong class="d-block fs-3" id="kpi-pendencias">--</strong></div></div></div>
+        <div class="col-6 col-lg-3"><div class="card h-100"><div class="card-body"><span class="text-muted">Alertas</span><strong class="d-block fs-3" id="kpi-alertas">--</strong></div></div></div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-body">
+            <label for="filtro-status" class="form-label">Filtro por status</label>
+            <select id="filtro-status" class="form-select mb-3" onchange="renderizarEtapas()"><option value="">Todos</option><option>PENDENTE</option><option>OK</option></select>
+            <div class="progress mb-3" aria-label="Barra de progresso"><div id="barra-prontidao" class="progress-bar" style="width:0%">0%</div></div>
+            <div id="empty-state" class="text-center text-muted py-4 d-none">Nenhuma etapa encontrada para o filtro selecionado.</div>
+            <div id="lista-etapas" class="row g-3"></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body"><h2 class="h5">Timeline e histórico</h2><ol id="timeline" class="mb-0"></ol></div></div></div>
+        <div class="col-lg-6"><div class="card h-100"><div class="card-body"><h2 class="h5">Evidências e relatório</h2><pre id="relatorio" class="small bg-light p-3 rounded overflow-auto">Aguardando carregamento.</pre></div></div></div>
     </div>
 </section>
+
+<div class="modal fade" id="confirmarValidacaoModal" tabindex="-1" aria-labelledby="confirmarValidacaoTitle" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="confirmarValidacaoTitle">Confirmar validação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">Executar validação completa de implantação agora?</div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button class="btn btn-primary" onclick="validarTudo()" data-bs-dismiss="modal">Validar tudo</button></div></div></div>
+</div>
+
+<script>
+let etapas = [];
+async function carregarImplantacao(){
+  document.getElementById('implantacao-loading').classList.remove('d-none');
+  document.getElementById('implantacao-error').classList.add('d-none');
+  try {
+    const [prontidao, etapasResp, relatorio] = await Promise.all([fetch('/api/implantacao/prontidao'), fetch('/api/implantacao/etapas'), fetch('/api/implantacao/relatorio')]);
+    if(!prontidao.ok || !etapasResp.ok) throw new Error('API de implantação indisponível ou usuário sem autorização.');
+    const p = await prontidao.json(); const e = await etapasResp.json(); const r = await relatorio.json();
+    etapas = e.data || []; const pct = p.data?.prontidaoPercentual || 0;
+    document.getElementById('kpi-prontidao').textContent = pct + '%';
+    document.getElementById('barra-prontidao').style.width = pct + '%'; document.getElementById('barra-prontidao').textContent = pct + '%';
+    document.getElementById('kpi-etapas').textContent = etapas.length;
+    document.getElementById('kpi-pendencias').textContent = etapas.reduce((a,x)=>a+(x.pendencias?.length||0),0);
+    document.getElementById('kpi-alertas').textContent = etapas.filter(x=>x.status!=='OK').length;
+    document.getElementById('relatorio').textContent = JSON.stringify(r.data, null, 2);
+    renderizarEtapas();
+  } catch(err) { document.getElementById('implantacao-error').textContent = err.message; document.getElementById('implantacao-error').classList.remove('d-none'); }
+  finally { document.getElementById('implantacao-loading').classList.add('d-none'); }
+}
+function renderizarEtapas(){
+  const filtro = document.getElementById('filtro-status').value; const alvo = document.getElementById('lista-etapas'); alvo.innerHTML='';
+  const filtradas = etapas.filter(e=>!filtro || e.status===filtro); document.getElementById('empty-state').classList.toggle('d-none', filtradas.length>0);
+  document.getElementById('timeline').innerHTML = etapas.map(e=>`<li>${e.ordem}. ${e.nome} — ${e.status}</li>`).join('');
+  filtradas.forEach(e=> alvo.insertAdjacentHTML('beforeend', `<div class="col-md-6 col-xl-4"><article class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><h3 class="h6">${e.ordem}. ${e.nome}</h3><span class="badge text-bg-warning">${e.status}</span></div><p>Responsável: ${e.responsavel}</p><p>Prazo: ${new Date(e.prazo).toLocaleDateString()}</p><button class="btn btn-sm btn-outline-primary" onclick="validarEtapa('${e.codigo}')">Validar etapa</button></div></article></div>`));
+}
+async function validarEtapa(codigo){ await fetch('/api/implantacao/etapas/'+codigo+'/validar',{method:'POST'}); await carregarImplantacao(); }
+async function validarTudo(){ await fetch('/api/implantacao/validar-tudo',{method:'POST'}); await carregarImplantacao(); }
+carregarImplantacao();
+</script>

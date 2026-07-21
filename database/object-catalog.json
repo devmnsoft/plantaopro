@@ -1,0 +1,1296 @@
+{
+  "schemaVersion": "v1.18.9",
+  "generatedAt": "2026-07-21",
+  "objects": [
+    {
+      "schema": "plantaopro",
+      "name": "modulos_sistema",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "acoes_sistema",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "permissoes",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "perfil_permissoes",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuarios_perfis",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuario_permissoes_especiais",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "login_tentativas",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "recuperacao_senha",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "schema_migrations",
+      "type": "table",
+      "module": "SCHEMA_CANONICO_BASE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/000_schema_canonico_base.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "perfis",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuarios",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auth_sessoes",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auth_refresh_tokens",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auth_revogacoes",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "senha_historico",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "politicas_senha",
+      "type": "table",
+      "module": "IDENTITY_ACCESS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/010_identity_access.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "planos",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "clientes",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenants",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "assinaturas",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "assinatura_historico",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "assinatura_uso",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "assinatura_modulos",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "assinatura_bloqueios",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_modulos",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_parametros",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_configuracoes",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_white_label",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_onboarding",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "tenant_onboarding_checklist",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "upgrade_solicitacoes",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "downgrade_solicitacoes",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "faturas_saas",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "pagamentos_saas",
+      "type": "table",
+      "module": "SAAS_TENANTS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/020_saas_tenants.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "especialidades",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "hospitais",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "medicos",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "plantoes",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "plantao_historico",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "plantao_convites",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "convites",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "escalas",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "historico_escala",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "substituicoes_plantao",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "substituicao_candidatos",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "substituicao_aprovacoes",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "substituicao_historico",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "medico_disponibilidades",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "medico_indisponibilidades",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "medico_preferencias_plantao",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "notificacoes",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "conversas",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "mensagens",
+      "type": "table",
+      "module": "OPERACAO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/030_operacao_plantoes.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "pacientes",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "agendamentos",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "checkins",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "painel_chamadas",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "triagens",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "consultas",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "cid",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "prescricoes",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "convenios",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "planos_saude",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "financeiro_clinico",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "unidades",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "salas",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "consentimentos",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "historico_clinico",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auditoria_clinica",
+      "type": "table",
+      "module": "SAUDE360",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/040_saude360.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "pagamentos_medicos",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "pagamento_medico_historico",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "regras_faturamento",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "regras_repasse",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "regras_glosa",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "contas_receber",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "recebimentos",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "caixa",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "lotes",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "faturas",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "itens_faturaveis",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "eventos_financeiros",
+      "type": "table",
+      "module": "FINANCEIRO",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/050_financeiro.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auditoria",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auditoria_acoes_criticas",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "auditoria_eventos",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "api_request_logs",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "api_error_logs",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "background_job_logs",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "logs_operacionais",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "eventos_sistema",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "acessos_negados_log",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "permissao_logs",
+      "type": "table",
+      "module": "AUDITORIA_OBSERVABILIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/060_auditoria_observabilidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "relatorio_exportacoes",
+      "type": "table",
+      "module": "RELATORIOS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/070_relatorios.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "relatorios_exportacoes",
+      "type": "table",
+      "module": "RELATORIOS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/070_relatorios.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "relatorios_filtros_salvos",
+      "type": "table",
+      "module": "RELATORIOS",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/070_relatorios.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_status",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_etapas",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_validacoes",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_pendencias",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_execucoes",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "implantacao_evidencias",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "go_live_checklists",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "go_live_aprovacoes",
+      "type": "table",
+      "module": "IMPLANTACAO_GO_LIVE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/110_implantacao_go_live.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_incidentes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_incidente_eventos",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_incidente_responsaveis",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_incidente_comentarios",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_alertas",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "operacao_outbox",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "backup_politicas",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "backup_execucoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "backup_arquivos",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "backup_verificacoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "restore_testes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "dr_execucoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "job_definicoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "job_execucoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "job_tentativas",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "job_bloqueios",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "release_versoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "release_implantacoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "release_evidencias",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "release_aprovacoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "release_rollbacks",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "runbooks",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "runbook_passos",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "manutencao_janelas",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "manutencao_tarefas",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "manutencao_comunicacoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "manutencao_aprovacoes",
+      "type": "table",
+      "module": "OPERACOES_CONTINUIDADE",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
+      "references": []
+    }
+  ]
+}

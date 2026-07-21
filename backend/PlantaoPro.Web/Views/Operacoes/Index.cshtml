@@ -1,0 +1,5 @@
+@{ ViewData["Title"] = "Central de Operações e Continuidade"; }
+<section class="container py-4"><div class="p-4 bg-light border rounded-3"><p class="text-uppercase text-muted">PlantãoPro v1.18.9</p><h1>Central de Operações e Continuidade</h1><p class="lead">Monitoramento de saúde, incidentes, alertas, jobs, backups, releases, runbooks e janelas de manutenção.</p></div><div id="ops" class="row g-3 mt-2"></div></section>
+<script>
+fetch('/api/operacoes/dashboard').then(r=>r.json()).then(x=>{ const d=x.data||{}; document.getElementById('ops').innerHTML=Object.entries(d).map(([k,v])=>`<div class="col-md-3"><div class="card h-100"><div class="card-body"><span class="text-muted">${k}</span><strong class="d-block">${Array.isArray(v)?v.length:v}</strong></div></div></div>`).join(''); }).catch(()=>{document.getElementById('ops').innerHTML='<div class="alert alert-warning">Dashboard indisponível ou acesso não autorizado.</div>';});
+</script>

@@ -5,6 +5,11 @@
     "source": "database/schema/000_extensions_schema.sql"
   },
   {
+    "object": "plantaopro.schema_canonico_base",
+    "dependsOn": [],
+    "source": "database/schema/000_schema_canonico_base.sql"
+  },
+  {
     "object": "plantaopro.identity_access",
     "dependsOn": [],
     "source": "database/schema/010_identity_access.sql"
@@ -58,5 +63,10 @@
     "object": "plantaopro.implantacao_go_live",
     "dependsOn": [],
     "source": "database/schema/110_implantacao_go_live.sql"
+  },
+  {
+    "object": "plantaopro.operacoes_continuidade",
+    "dependsOn": [],
+    "source": "database/schema/120_operacoes_continuidade.sql"
   }
 ]

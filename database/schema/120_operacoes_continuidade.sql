@@ -1,8 +1,8 @@
--- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
+-- Operações e continuidade v1.18.9
 SET search_path TO plantaopro, public;
 
 -- DDL canônico idempotente v1.18.9
-CREATE TABLE IF NOT EXISTS plantaopro.planos (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_incidentes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.planos (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.clientes (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_incidente_eventos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.clientes (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenants (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_incidente_responsaveis (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenants (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_incidente_comentarios (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.assinatura_historico (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_alertas (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinatura_historico (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.assinatura_uso (
+CREATE TABLE IF NOT EXISTS plantaopro.operacao_outbox (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinatura_uso (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.assinatura_modulos (
+CREATE TABLE IF NOT EXISTS plantaopro.backup_politicas (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinatura_modulos (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.assinatura_bloqueios (
+CREATE TABLE IF NOT EXISTS plantaopro.backup_execucoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -82,7 +82,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinatura_bloqueios (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_modulos (
+CREATE TABLE IF NOT EXISTS plantaopro.backup_arquivos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_modulos (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_parametros (
+CREATE TABLE IF NOT EXISTS plantaopro.backup_verificacoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -102,7 +102,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_parametros (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_configuracoes (
+CREATE TABLE IF NOT EXISTS plantaopro.restore_testes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_configuracoes (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_white_label (
+CREATE TABLE IF NOT EXISTS plantaopro.dr_execucoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -122,7 +122,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_white_label (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_onboarding (
+CREATE TABLE IF NOT EXISTS plantaopro.job_definicoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_onboarding (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.tenant_onboarding_checklist (
+CREATE TABLE IF NOT EXISTS plantaopro.job_execucoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenant_onboarding_checklist (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.upgrade_solicitacoes (
+CREATE TABLE IF NOT EXISTS plantaopro.job_tentativas (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.upgrade_solicitacoes (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.downgrade_solicitacoes (
+CREATE TABLE IF NOT EXISTS plantaopro.job_bloqueios (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.downgrade_solicitacoes (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.faturas_saas (
+CREATE TABLE IF NOT EXISTS plantaopro.release_versoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,
@@ -172,7 +172,97 @@ CREATE TABLE IF NOT EXISTS plantaopro.faturas_saas (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (
+CREATE TABLE IF NOT EXISTS plantaopro.release_implantacoes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.release_evidencias (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.release_aprovacoes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.release_rollbacks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.runbooks (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.runbook_passos (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.manutencao_janelas (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.manutencao_tarefas (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.manutencao_comunicacoes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NULL,
+    codigo text NULL,
+    nome text NULL,
+    status text NOT NULL DEFAULT 'ATIVO',
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    criado_em timestamptz NOT NULL DEFAULT now(),
+    atualizado_em timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.manutencao_aprovacoes (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
     codigo text NULL,

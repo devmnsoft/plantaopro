@@ -5,14 +5,29 @@ Projeto full-stack para gestão de plantões médicos com backend ASP.NET Core (
 - database/ (script completo + seeds)
 - mobile/PlantaoPro.App (TypeScript mobile)
 - docs/
+## Instalação limpa oficial do banco (v1.18.4)
+
+O ponto oficial para banco novo é `database/scrpt_completo.sql` (grafia intencional). Não execute dezenas de migrations manualmente para uma instalação nova.
+
+```bash
+createdb plantaopro
+
+psql \
+  -v ON_ERROR_STOP=1 \
+  -U postgres \
+  -d plantaopro \
+  -f database/scrpt_completo.sql
+```
+
+O banco de dados deve existir antes do `psql`; o script não cria usuários PostgreSQL, não contém senha real, não cria administrador com senha conhecida e não inclui seeds de demonstração.
+
 ## Execução
-1. PostgreSQL: crie DB `plantaopro`.
-2. Execute `database/PlantaoPro_PostgreSQL_Completo.sql` e depois `database/seeds.sql`.
-3. Ajuste connection string em `backend/PlantaoPro.Api/appsettings.json`.
+1. Configure a connection string por variável de ambiente ou user-secrets, por exemplo `ConnectionStrings__Default="Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;Password=<senha>"`.
+2. Configure JWT por segredo seguro (`Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`); não versionar chaves reais.
+3. Crie o administrador inicial por fluxo seguro da aplicação ou comando operacional interno com senha temporária rotacionada fora do repositório.
 4. Backend API: `dotnet run --project backend/PlantaoPro.Api`.
 5. Web: `dotnet run --project backend/PlantaoPro.Web`.
-6. Mobile: `cd mobile/PlantaoPro.App && npm install && npm run dev`.
-Usuário admin demo: configure por variáveis de ambiente/segredo local; não versionar senha real ou senha fixa.
+6. Mobile: `cd mobile/PlantaoPro.App && npm ci && npm run dev`.
 
 ## Backend MVP (rodada atual)
 Foram adicionados endpoints reais para hospitais, especialidades, plantões, escalas (aceitar), financeiro (gerar pagamento), notificações e dashboard usando Dapper/PostgreSQL.

@@ -1,6 +1,8 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using Dapper;
+using Npgsql;
 using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Data;
@@ -73,11 +75,30 @@ public sealed class ReportCatalogService : IReportCatalogService
 
 public sealed class ReportPermissionService : IReportPermissionService
 {
+    private readonly IConfiguration cfg;
+    public ReportPermissionService(IConfiguration cfg) { this.cfg = cfg; }
     public ApiResponse<bool> Validar(ReportDefinition report, Guid? tenantId, Guid? usuarioId, bool exportacao)
     {
         if (!usuarioId.HasValue) return ApiResponse<bool>.Fail("Usuário autenticado é obrigatório.", 401);
         if (!tenantId.HasValue) return ApiResponse<bool>.Fail("Contexto explícito de tenant é obrigatório para relatórios.", 403);
-        if (exportacao && report.ContainsSensitiveData && report.RequiredPermission != "Relatorios.DadosSensiveis") return ApiResponse<bool>.Fail("Exportação de dados sensíveis exige permissão explícita.", 403);
+        var required = new List<string> { "Relatorios.Ver", report.RequiredPermission };
+        if (exportacao) required.Add("Relatorios.Exportar");
+        if (report.ContainsSensitiveData) required.Add("Relatorios.DadosSensiveis");
+        using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var allowed = cn.ExecuteScalar<bool>(@"
+select exists(
+    select 1
+    from plantaopro.usuario_perfis up
+    join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
+    join plantaopro.perfil_permissoes pp on pp.perfil_id=pf.id and pp.permitido=true and pp.reg_status='A'
+    join plantaopro.permissoes pm on pm.id=pp.permissao_id and pm.reg_status='A'
+    where up.usuario_id=@usuarioId and up.tenant_id=@tenantId and up.reg_status='A' and pm.codigo = any(@required)
+) or exists(
+    select 1 from plantaopro.usuario_permissoes_especiais upe
+    join plantaopro.permissoes pm on pm.id=upe.permissao_id and pm.reg_status='A'
+    where upe.usuario_id=@usuarioId and upe.tenant_id=@tenantId and upe.reg_status='A' and coalesce(upe.permitido,true)=true and pm.codigo = any(@required)
+)", new { usuarioId, tenantId, required = required.Distinct().ToArray() });
+        if (!allowed) return ApiResponse<bool>.Fail("Usuário não possui permissão, role, módulo/plano ou autorização suficiente para este relatório.", 403);
         return ApiResponse<bool>.Ok(true, "Permissão validada.");
     }
 }
@@ -85,16 +106,42 @@ public sealed class ReportPermissionService : IReportPermissionService
 public sealed class ReportQueryService : IReportQueryService
 {
     private static readonly HashSet<string> Sortable = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "indicador", "valor", "periodo" };
-    public Task<IReadOnlyCollection<IDictionary<string, object?>>> ConsultarAsync(ReportDefinition report, ReportFilterRequest filtros, Guid? tenantId, CancellationToken cancellationToken)
+    private readonly IConfiguration cfg;
+    public ReportQueryService(IConfiguration cfg) { this.cfg = cfg; }
+    public async Task<IReadOnlyCollection<IDictionary<string, object?>>> ConsultarAsync(ReportDefinition report, ReportFilterRequest filtros, Guid? tenantId, CancellationToken cancellationToken)
     {
-        var inicio = filtros.Inicio ?? DateTime.UtcNow.Date.AddDays(-30); var fim = filtros.Fim ?? DateTime.UtcNow.Date;
+        if (!tenantId.HasValue) throw new InvalidOperationException("Tenant obrigatório.");
+        var inicio = filtros.Inicio ?? DateTime.UtcNow.Date.AddDays(-30);
+        var fim = filtros.Fim ?? DateTime.UtcNow.Date;
         if (fim < inicio) throw new InvalidOperationException("Data final deve ser maior ou igual à data inicial.");
         if ((fim - inicio).TotalDays > 366) throw new InvalidOperationException("Período máximo permitido para relatório é 366 dias.");
         if (!string.IsNullOrWhiteSpace(filtros.OrdenarPor) && !Sortable.Contains(filtros.OrdenarPor)) throw new InvalidOperationException("Coluna de ordenação não permitida.");
-        IReadOnlyCollection<IDictionary<string, object?>> rows = new[] { Row("Periodo", inicio.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + " a " + fim.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)), Row("Relatorio", report.Name), Row("Tenant", tenantId.ToString() ?? "") };
-        return Task.FromResult(rows);
+        var pagina = Math.Max(1, filtros.Pagina);
+        var tamanho = Math.Min(Math.Max(1, filtros.TamanhoPagina), 200);
+        var sql = Sql(report.Code);
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var rows = await cn.QueryAsync(sql, new { tenantId, inicio, fim = fim.Date.AddDays(1), filtros.UnidadeId, filtros.HospitalId, filtros.MedicoId, filtros.EspecialidadeId, filtros.ConvenioId, filtros.Status, filtros.FormaPagamento, limit = tamanho, offset = (pagina - 1) * tamanho });
+        return rows.Select(r => (IDictionary<string, object?>)new Dictionary<string, object?>((IDictionary<string, object?>)r, StringComparer.OrdinalIgnoreCase)).ToArray();
     }
-    private static IDictionary<string, object?> Row(string indicador, object? valor) { return new Dictionary<string, object?> { { "indicador", indicador }, { "valor", valor } }; }
+    private static string Sql(string code)
+    {
+        var table = code switch
+        {
+            "PLANTOES_OPERACIONAL" => "plantoes", "ESCALAS_CONSOLIDADO" => "escalas", "CONVITES_OPERACIONAL" => "cadastro_cliente_convites", "PAGAMENTOS_MEDICOS" => "pagamentos",
+            "ATENDIMENTOS_CLINICOS" => "consultas", "PRODUTIVIDADE_MEDICA" => "consultas", "FINANCEIRO_CLINICA" => "v116_recebimentos_parciais", "CONVENIOS_FATURAMENTO" => "v116_convenio_guias",
+            "AUTORIZACOES_OPERACIONAL" => "v116_convenio_autorizacoes", "GLOSAS_CONSOLIDADO" => "v116_faturamento_lote_itens", "CAIXA_MOVIMENTACOES" => "v116_caixa_movimentos", "REPASSES_MEDICOS" => "pagamentos",
+            "AUDITORIA_OPERACIONAL" => "auditoria_eventos", "EXECUTIVO_GERAL" => "plantoes", _ => "plantoes"
+        };
+        return $@"select @code::text as indicador, count(1)::bigint as valor, to_char(date_trunc('day', coalesce(t.reg_date, now())), 'YYYY-MM-DD') as periodo
+from plantaopro.{table} t
+where coalesce(t.reg_status,'A')='A'
+  and (coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id') is null or coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id')=@tenantId::text)
+  and coalesce(t.reg_date, now()) >= @inicio and coalesce(t.reg_date, now()) < @fim
+  and (@status is null or upper(coalesce(to_jsonb(t)->>'status',''))=upper(@status))
+group by periodo
+order by periodo
+limit @limit offset @offset".Replace("@code", "'" + code.Replace("'", "") + "'");
+    }
 }
 
 public sealed class CsvExportService
@@ -124,12 +171,16 @@ public sealed class CsvExportService
 
 public sealed class ReportAuditService : IReportAuditService
 {
-    private readonly ILogger<ReportAuditService> logger;
-    public ReportAuditService(ILogger<ReportAuditService> logger) { this.logger = logger; }
-    public Task RegistrarAsync(Guid? clienteId, Guid? tenantId, Guid? usuarioId, string codigoRelatorio, string formato, object filtrosSanitizados, int quantidadeRegistros, bool contemDadosSensiveis, string status, long duracaoMs, string nomeArquivo, string? ipOrigem)
+    private readonly ILogger<ReportAuditService> logger; private readonly IConfiguration cfg;
+    public ReportAuditService(ILogger<ReportAuditService> logger, IConfiguration cfg) { this.logger = logger; this.cfg = cfg; }
+    public async Task RegistrarAsync(Guid? clienteId, Guid? tenantId, Guid? usuarioId, string codigoRelatorio, string formato, object filtrosSanitizados, int quantidadeRegistros, bool contemDadosSensiveis, string status, long duracaoMs, string nomeArquivo, string? ipOrigem)
     {
-        logger.LogInformation("Exportação de relatório auditada: codigo={CodigoRelatorio} formato={Formato} quantidade={QuantidadeRegistros} status={Status} duracaoMs={DuracaoMs} arquivo={NomeArquivo}", codigoRelatorio, formato, quantidadeRegistros, status, duracaoMs, nomeArquivo);
-        return Task.CompletedTask;
+        if (!tenantId.HasValue) throw new InvalidOperationException("Tenant obrigatório para auditoria de relatório.");
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        await cn.ExecuteAsync(@"insert into plantaopro.relatorio_exportacoes(id,cliente_id,tenant_id,usuario_id,codigo_relatorio,formato,filtros_sanitizados,quantidade_registros,contem_dados_sensiveis,status,duracao_ms,nome_arquivo,ip_origem,reg_date,reg_status)
+values(gen_random_uuid(),@clienteId,@tenantId,@usuarioId,@codigoRelatorio,@formato,cast(@filtros as jsonb),@quantidadeRegistros,@contemDadosSensiveis,@status,@duracaoMs,@nomeArquivo,@ipOrigem,now(),'A')",
+            new { clienteId, tenantId, usuarioId, codigoRelatorio, formato, filtros = JsonSerializer.Serialize(filtrosSanitizados), quantidadeRegistros, contemDadosSensiveis, status, duracaoMs, nomeArquivo, ipOrigem });
+        logger.LogInformation("Exportação de relatório persistida: codigo={CodigoRelatorio} formato={Formato} quantidade={QuantidadeRegistros} status={Status}", codigoRelatorio, formato, quantidadeRegistros, status);
     }
 }
 

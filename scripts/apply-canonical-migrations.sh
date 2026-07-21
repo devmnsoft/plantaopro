@@ -21,6 +21,28 @@ SQL
 
 sql_literal() { printf "%s" "$1" | sed "s/'/''/g"; }
 
+if [[ "$MODE" == "install" ]]; then
+    echo "Installing from database/scrpt_completo.sql"
+    psql -v ON_ERROR_STOP=1 -f "$ROOT_DIR/database/scrpt_completo.sql"
+    exit 0
+fi
+
+validate_baseline_object() {
+    local object_name="$1"
+    local exists
+    exists="$(psql -v ON_ERROR_STOP=1 -At -c "SELECT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='plantaopro' AND c.relname='${object_name}');")"
+    if [[ "$exists" != "t" ]]; then
+        echo "Baseline validation failed: missing plantaopro.${object_name}" >&2
+        exit 3
+    fi
+}
+
+if [[ "$MODE" == "baseline" ]]; then
+    for required_object in planos clientes tenants assinaturas usuarios perfis permissoes hospitais especialidades medicos plantoes escalas relatorio_exportacoes; do
+        validate_baseline_object "$required_object"
+    done
+fi
+
 MIGRATION_IDS=()
 MIGRATION_PATHS=()
 MIGRATION_TRANSACTIONAL=()

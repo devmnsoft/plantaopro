@@ -124,10 +124,10 @@ public sealed class AgendamentosController : Saude360WebControllerBase
         {
             Id = r.Id,
             Horario = r.RegDate == default ? DateTime.UtcNow : r.RegDate,
-            Paciente = string.IsNullOrWhiteSpace(r.Nome) ? "Paciente não informado pela API" : r.Nome,
-            Medico = r.MedicoId.HasValue ? "Médico vinculado" : "Médico a definir",
+            Paciente = string.IsNullOrWhiteSpace(r.Nome) ? "Paciente" : r.Nome,
+            Medico = r.MedicoId.HasValue ? "Médico informado" : "Médico a definir",
             Especialidade = string.IsNullOrWhiteSpace(r.Codigo) ? "Especialidade a definir" : r.Codigo,
-            Unidade = "Unidade do tenant",
+            Unidade = "Unidade informada",
             Status = string.IsNullOrWhiteSpace(r.Status) ? "PENDENTE" : r.Status
         }).ToList();
         var statusCards = itens.GroupBy(i => i.Status).Select(g => new PlantaoPro.Web.Models.AgendaStatusBadgeViewModel { Status = g.Key, Total = g.Count(), CssClass = BadgeClass(g.Key) }).ToList();

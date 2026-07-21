@@ -31,7 +31,11 @@ printf '# Smoke v1.14 PlantãoPro\n\nExecutado em: %s\n\n' "$(date -u +%FT%TZ)" 
 printf '{"version":"v1.14","results":[' > "$OUT_JSON"
 first=1
 for ep in "${endpoints[@]}"; do
-  code=$(curl -sS -o /tmp/v114-smoke-body -w '%{http_code}' "${headers[@]}" "$BASE_URL$ep" || true)
+  set +e
+  code=$(curl -sS -o /tmp/v114-smoke-body -w '%{http_code}' "${headers[@]}" "$BASE_URL$ep")
+  rc=$?
+  set -e
+  if [ "$rc" -ne 0 ]; then code=000; fi
   status="WARN"
   if [ "$code" = "200" ]; then status="PASS"; fi
   if [ "$first" -eq 0 ]; then printf ',' >> "$OUT_JSON"; fi

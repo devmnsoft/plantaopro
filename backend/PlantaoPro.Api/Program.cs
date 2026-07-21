@@ -77,6 +77,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
     });
 
+builder.Services.AddAuthorization(options =>
+{
+    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis" };
+    foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
+});
+
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MedicoService>();
@@ -127,6 +133,7 @@ builder.Services.AddScoped<B2BCommercialOpsService>();
 builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
+builder.Services.AddScoped<ICentralAtendimentoService, CentralAtendimentoService>();
 builder.Services.AddScoped<Fase6BiIntegracoesService>();
 builder.Services.AddScoped<OperacaoRecomendacaoService>();
 builder.Services.AddScoped<DashboardPremiumService>();

@@ -3,6 +3,11 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APPLY_DEMO_SEEDS="${APPLY_DEMO_SEEDS:-0}"
+MODE="${1:-install}"
+if [[ "$MODE" != "install" && "$MODE" != "baseline" && "$MODE" != "upgrade" ]]; then
+    echo "Usage: $0 install|baseline|upgrade" >&2
+    exit 64
+fi
 
 psql -v ON_ERROR_STOP=1 <<'SQL'
 CREATE SCHEMA IF NOT EXISTS plantaopro;
@@ -16,9 +21,23 @@ SQL
 
 sql_literal() { printf "%s" "$1" | sed "s/'/''/g"; }
 
+MIGRATION_IDS=()
+MIGRATION_PATHS=()
+MIGRATION_TRANSACTIONAL=()
+MIGRATION_CATEGORY=()
+
+register_migration() {
+    MIGRATION_IDS+=("$1")
+    MIGRATION_PATHS+=("$2")
+    MIGRATION_TRANSACTIONAL+=("$3")
+    MIGRATION_CATEGORY+=("$4")
+}
+
 apply_script() {
     local id="$1"
     local relative_path="$2"
+    local transactional="${3:-true}"
+    local category="${4:-operacional}"
     local path="$ROOT_DIR/$relative_path"
 
     if [[ ! -f "$path" ]]; then
@@ -41,38 +60,51 @@ apply_script() {
         return 0
     fi
 
-    echo "Applying migration: $id ($relative_path)"
+    if [[ "$MODE" == "baseline" ]]; then
+        echo "Baselining validated migration: $id ($relative_path, transactional=$transactional, category=$category)"
+        psql -v ON_ERROR_STOP=1 -c "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('$escaped_id', '$escaped_path', '$checksum');"
+        return 0
+    fi
+
+    echo "Applying migration: $id ($relative_path, transactional=$transactional, category=$category)"
     tmp_sql="$(mktemp)"
-    {
-        echo "BEGIN;"
-        printf '\\i %s\n' "$path"
-        printf "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('%s', '%s', '%s');\n" "$escaped_id" "$escaped_path" "$checksum"
-        echo "COMMIT;"
-    } > "$tmp_sql"
+    if [[ "$transactional" == "true" ]]; then
+        {
+            echo "BEGIN;"
+            printf '\\i %s\n' "$path"
+            printf "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('%s', '%s', '%s');\n" "$escaped_id" "$escaped_path" "$checksum"
+            echo "COMMIT;"
+        } > "$tmp_sql"
+    else
+        {
+            printf '\\i %s\n' "$path"
+            printf "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('%s', '%s', '%s');\n" "$escaped_id" "$escaped_path" "$checksum"
+        } > "$tmp_sql"
+    fi
     psql -v ON_ERROR_STOP=1 -f "$tmp_sql"
     rm -f "$tmp_sql"
 }
 
-apply_script "000_base_schema" "database/PlantaoPro_PostgreSQL_Completo.sql"
-apply_script "010_common_saas_premium" "database/20260525_evolucao_saas_premium.sql"
-apply_script "020_common_self_service_white_label" "database/migrations/2026_plantao_pro_self_service_white_label.sql"
-apply_script "030_common_white_label_self_service" "database/migrations/2026_plantao_pro_white_label_self_service.sql"
-apply_script "040_saude360_base_minima" "database/migrations/2026_saude360_base_clinica_minima.sql"
-apply_script "050_saude360_base" "database/migrations/2026_plantao_pro_saude360_base_clinica.sql"
-apply_script "060_saude360_modulos" "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql"
-apply_script "070_saude360_consultas" "database/migrations/2026_saude360_consultas_base.sql"
-apply_script "080_saude360_cid_prescricao" "database/migrations/2026_saude360_cid_prescricao.sql"
-apply_script "090_saude360_convenios" "database/migrations/2026_saude360_convenios_planos_saude.sql"
-apply_script "100_saude360_financeiro" "database/migrations/2026_saude360_financeiro_clinica.sql"
-apply_script "110_saas_inteligente" "database/migrations/2026_plantao_pro_saas_inteligente.sql"
-apply_script "120_saas_inteligente_funcional" "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql"
-apply_script "130_saas_auditavel" "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql"
-apply_script "140_saas_comercial_core" "database/migrations/2026_saas_comercial_core.sql"
-apply_script "200_v113_operacional" "database/migrations/2026_v113_operacional_real.sql"
-apply_script "210_v114_consolidacao" "database/migrations/2026_v114_consolidacao_produto.sql"
-apply_script "220_v115_faturamento" "database/migrations/2026_v115_regras_faturamento_repasses.sql"
-apply_script "230_v116_operacional" "database/migrations/2026_v116_consolidacao_operacional_final.sql"
-apply_script "240_v117_runtime" "database/migrations/2026_v117_hardening_v116_runtime.sql"
+apply_script "000_base_schema" "database/PlantaoPro_PostgreSQL_Completo.sql" false base
+apply_script "010_common_saas_premium" "database/20260525_evolucao_saas_premium.sql" true saas
+apply_script "020_common_self_service_white_label" "database/migrations/2026_plantao_pro_self_service_white_label.sql" true saas
+apply_script "030_common_white_label_self_service" "database/migrations/2026_plantao_pro_white_label_self_service.sql" true saas
+apply_script "040_saude360_base_minima" "database/migrations/2026_saude360_base_clinica_minima.sql" true clinico
+apply_script "050_saude360_base" "database/migrations/2026_plantao_pro_saude360_base_clinica.sql" true clinico
+apply_script "060_saude360_modulos" "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql" true clinico
+apply_script "070_saude360_consultas" "database/migrations/2026_saude360_consultas_base.sql" true clinico
+apply_script "080_saude360_cid_prescricao" "database/migrations/2026_saude360_cid_prescricao.sql" true clinico
+apply_script "090_saude360_convenios" "database/migrations/2026_saude360_convenios_planos_saude.sql" true clinico
+apply_script "100_saude360_financeiro" "database/migrations/2026_saude360_financeiro_clinica.sql" true clinico
+apply_script "110_saas_inteligente" "database/migrations/2026_plantao_pro_saas_inteligente.sql" true saas
+apply_script "120_saas_inteligente_funcional" "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql" true saas
+apply_script "130_saas_auditavel" "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql" true saas
+apply_script "140_saas_comercial_core" "database/migrations/2026_saas_comercial_core.sql" true saas
+apply_script "200_v113_operacional" "database/migrations/2026_v113_operacional_real.sql" true operacional
+apply_script "210_v114_consolidacao" "database/migrations/2026_v114_consolidacao_produto.sql" true operacional
+apply_script "220_v115_faturamento" "database/migrations/2026_v115_regras_faturamento_repasses.sql" true operacional
+apply_script "230_v116_operacional" "database/migrations/2026_v116_consolidacao_operacional_final.sql" true operacional
+apply_script "240_v117_runtime" "database/migrations/2026_v117_hardening_v116_runtime.sql" true operacional
 
 if [[ "$APPLY_DEMO_SEEDS" == "1" ]]; then
     apply_script "900_seed_v113" "database/seeds/2026_demo_v113_operacional.sql"

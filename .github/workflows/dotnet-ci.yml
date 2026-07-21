@@ -29,9 +29,23 @@ jobs:
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build
-        run: dotnet build backend/PlantaoPro.sln -c Release --no-restore
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          dotnet build backend/PlantaoPro.sln -c Release --no-restore 2>&1 | tee artifacts/build.log
       - name: Test
-        run: dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release --no-build --logger "console;verbosity=detailed"
+        run: |
+          mkdir -p artifacts
+          dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release --no-build --logger "trx;LogFileName=tests.trx" --logger "console;verbosity=detailed"
+          cp backend/PlantaoPro.Tests/TestResults/tests.trx artifacts/tests.trx
+      - name: Upload build and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-test-evidence
+          path: |
+            artifacts/build.log
+            artifacts/tests.trx
 
   database-clean-install:
     runs-on: ubuntu-latest
@@ -59,9 +73,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Apply canonical migrations on empty database
-        run: scripts/database-test-clean-install.sh
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          bash -x scripts/database-test-clean-install.sh 2>&1 | tee artifacts/database-clean-install.log
       - name: Verify migration control table
-        run: psql -v ON_ERROR_STOP=1 -c "SELECT id, applied_at FROM plantaopro.schema_migrations ORDER BY id;"
+        run: psql -v ON_ERROR_STOP=1 -c "SELECT id, script_path, checksum, applied_at FROM plantaopro.schema_migrations ORDER BY id;"
+      - name: Upload clean install evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-clean-install-evidence
+          path: artifacts/database-clean-install.log
 
   database-upgrade:
     runs-on: ubuntu-latest
@@ -89,7 +112,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Run real database upgrade test
-        run: scripts/database-test-upgrade.sh
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          bash -x scripts/database-test-upgrade.sh 2>&1 | tee artifacts/database-upgrade.log
+      - name: Upload upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-upgrade-evidence
+          path: artifacts/database-upgrade.log
 
   runtime-e2e:
     runs-on: ubuntu-latest
@@ -130,29 +162,45 @@ jobs:
           dotnet-version: '10.0.x'
           dotnet-quality: 'preview'
       - name: Apply canonical migrations
-        run: scripts/apply-canonical-migrations.sh
+        run: scripts/apply-canonical-migrations.sh install
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build API and Web
         run: dotnet build backend/PlantaoPro.sln -c Release --no-restore
       - name: Start API
-        run: dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj -c Release --no-build > api-v118.log 2>&1 &
+        run: mkdir -p artifacts && dotnet run --project backend/PlantaoPro.Api/PlantaoPro.Api.csproj -c Release --no-build > artifacts/api.log 2>&1 &
       - name: Wait health and swagger
         run: |
           for i in {1..30}; do curl -fsS http://localhost:5000/api/health && curl -fsS http://localhost:5000/swagger/v1/swagger.json >/dev/null && exit 0; sleep 2; done
-          cat api-v118.log
+          cat artifacts/api.log
+          exit 1
+      - name: Start Web
+        env:
+          ASPNETCORE_URLS: http://localhost:5259
+          PlantaoProApi__BaseUrl: http://localhost:5000
+        run: dotnet run --project backend/PlantaoPro.Web/PlantaoPro.Web.csproj -c Release --no-build > artifacts/web.log 2>&1 &
+      - name: Wait Web login
+        run: |
+          for i in {1..30}; do curl -fsS http://localhost:5259/Account/Login >/dev/null && exit 0; sleep 2; done
+          cat artifacts/web.log
           exit 1
       - name: Smoke v1.17 chain
         run: bash scripts/smoke-test-v117.sh
+      - name: Export E2E evidence
+        run: |
+          mkdir -p artifacts
+          cp docs/homologacao/v117-smoke-result.json artifacts/e2e-result.json
+          cp docs/homologacao/v117-smoke-result.md artifacts/e2e-result.md
       - name: Upload runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: runtime-e2e-v118-evidence
           path: |
-            api-v118.log
-            docs/homologacao/v117-smoke-result.md
-            docs/homologacao/v117-smoke-result.json
+            artifacts/api.log
+            artifacts/web.log
+            artifacts/e2e-result.md
+            artifacts/e2e-result.json
 
   mobile-check:
     runs-on: ubuntu-latest
@@ -176,7 +224,10 @@ jobs:
         run: npm run typecheck
       - name: Mobile tests
         working-directory: mobile/PlantaoPro.App
-        run: npm test -- --runInBand
+        run: |
+          set -o pipefail
+          mkdir -p ../../artifacts
+          npm test -- --runInBand 2>&1 | tee ../../artifacts/mobile-check.log
 
 
   repository-security:

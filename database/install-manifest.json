@@ -89,6 +89,12 @@
           "type": "canonical",
           "category": "CANONICAL",
           "source": "database/schema/120_operacoes_continuidade.sql"
+        },
+        {
+          "name": "plantaopro.contexto_multiempresa",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/130_contexto_multiempresa.sql"
         }
       ]
     }

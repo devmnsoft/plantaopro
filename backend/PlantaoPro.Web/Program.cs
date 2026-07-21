@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using PlantaoPro.Web.Services;
 using PlantaoPro.Web.Services.Security;
 
+using PlantaoPro.CrossCutting.Security;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllersWithViews(options =>
@@ -10,6 +12,11 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.AddService<SaasRouteGuardFilter>();
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IRoleCatalog, RoleCatalog>();
+builder.Services.AddSingleton<IPrimaryRoleResolver, PrimaryRoleResolver>();
+builder.Services.AddSingleton<IAccessScopeResolver, AccessScopeResolver>();
+builder.Services.AddSingleton<ITenantContextResolver, TenantContextResolver>();
+
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
 builder.Services.AddScoped<IAssistenteContextualService, AssistenteContextualService>();
 builder.Services.AddScoped<IFase2OperationalFlowService, Fase2OperationalFlowService>();
@@ -37,7 +44,7 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis" };
+    var policies = new[] { "GlobalAccess", "TenantAccess", "HybridAccess", "TenantContextRequired", "TenantContextOptional", "CanSwitchTenant", "CanImpersonateTenant", "CanManageSaas", "CanViewGlobalAudit", "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis" };
     foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
 });
 

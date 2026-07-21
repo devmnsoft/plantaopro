@@ -7,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
+using PlantaoPro.CrossCutting.Security;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
@@ -252,13 +253,19 @@ values
     }
     public sealed class AuthService
     {
-        private const int MaxTentativasFalhas = 5;
-        private const int BloqueioMinutos = 15;
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger)
+        private int MaxTentativasFalhas => cfg.GetValue("Authentication:MaxFailedAttempts", 5);
+        private int BloqueioMinutos => cfg.GetValue("Authentication:LockoutMinutes", 15);
+        private int JanelaTentativasMinutos => cfg.GetValue("Authentication:FailedAttemptWindowMinutes", 30);
+        private bool LoginLockoutEnabled => cfg.GetValue("Authentication:LoginLockoutEnabled", true);
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; private readonly IRoleCatalog roleCatalog; private readonly IPrimaryRoleResolver primaryRoleResolver; private readonly IAccessScopeResolver accessScopeResolver; private readonly ITenantContextResolver tenantContextResolver; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.logger = logger;
+            this.roleCatalog = roleCatalog;
+            this.primaryRoleResolver = primaryRoleResolver;
+            this.accessScopeResolver = accessScopeResolver;
+            this.tenantContextResolver = tenantContextResolver;
         }
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
         {
@@ -286,7 +293,7 @@ values
                     {
                         usuarioId
                     });
-                if (bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
+                if (LoginLockoutEnabled && bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
                 {
                     var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
@@ -333,23 +340,31 @@ values
                 {
                     var tentativasFalhas = await cn.QueryFirstAsync<int>(
                         @"select count(*) from plantaopro.login_tentativas
-                          where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - interval '24 hours'",
+                          where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - (@JanelaTentativasMinutos * interval '1 minute')",
                         new
                         {
-                            usuarioId
+                            usuarioId,
+                            JanelaTentativasMinutos
                         });
                     var proximaTentativa = tentativasFalhas + 1;
-                    DateTime? novoBloqueio = proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
+                    DateTime? novoBloqueio = LoginLockoutEnabled && proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
                     await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
                     logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Tentativa:{Tentativa} Email:{Email} IP:{Ip}", usuarioId, proximaTentativa, normalizedEmail, ip);
                     if (novoBloqueio.HasValue)
                         return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
-                    return ApiResponse<LoginResponse>.Fail($"E-mail ou senha inválidos. Tentativa {proximaTentativa}/{MaxTentativasFalhas}.", 401);
+                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
                 }
-                var roles = (await cn.QueryAsync<string>("select coalesce(p.codigo,p.nome) from plantaopro.perfis p join plantaopro.usuarios_perfis up on up.perfil_id=p.id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A'", new
+                var rolesRaw = await cn.QueryAsync<string>(@"select coalesce(p.codigo,p.nome)
+from plantaopro.perfis p
+join plantaopro.usuarios_perfis up on up.perfil_id=p.id
+where up.usuario_id=@id
+  and up.reg_status='A'
+  and p.reg_status='A'
+  and coalesce(p.status,'ATIVO') not in ('INATIVO','BLOQUEADO')", new
                 {
                     id = (Guid)user.id
-                })).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+                });
+                var roles = rolesRaw.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
                 if (roles.Length == 0)
                 {
                     logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
@@ -362,21 +377,27 @@ values
                 object? usuarioTenant = user.tenant_id;
                 if (usuarioTenant is Guid usuarioTenantId) tenantId = usuarioTenantId;
                 var mustChangePassword = user.senha_alteracao_obrigatoria is bool must && must;
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteId, tenantId);
+                var primaryRole = primaryRoleResolver.Resolve(roles);
+                var tenantContextRequired = tenantContextResolver.RequiresTenant(roles, tenantId);
+                var tenantContextSelected = tenantContextResolver.IsTenantSelected(tenantId);
+                var accessScope = accessScopeResolver.Resolve(roles, tenantContextSelected);
+                var contextMode = tenantContextSelected ? AccessScopes.Tenant : AccessScopes.Global;
+                var sessionId = Guid.NewGuid().ToString("N");
+                var token = GenerateToken((Guid)user.id, (string)user.email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId);
                 await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
                 await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
-                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, (string)user.email, roles, clienteId, null, tenantId, null, mustChangePassword), "Login realizado com sucesso.");
+                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { accessScope, primaryRole, tenantContextSelected }, true, ip, primaryRole);
+                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} Escopo:{Escopo} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), accessScope, ip);
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, (string)user.email, roles, clienteId, null, tenantId, null, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
-        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId, Guid? tenantId)
+        string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId)
         {
             var jwt = cfg.GetSection("Jwt");
-            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email) };
-            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
-            if (roles.Length > 0) claims.Add(new Claim("role", roles[0]));
+            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email), new("role", primaryRole), new("roles", string.Join(',', roles)), new("primary_role", primaryRole), new("access_scope", accessScope), new("context_mode", contextMode), new("session_id", sessionId) };
+            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)).DistinctBy(c => c.Value));
             if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
             if (tenantId.HasValue) claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));

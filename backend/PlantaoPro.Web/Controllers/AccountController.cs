@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Security;
+using PlantaoPro.CrossCutting.Security;
 using System.Net;
 using System.Net.Http.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,17 +19,25 @@ public sealed class AccountController : Controller
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AccountController> _logger;
     private readonly IWebHostEnvironment _environment;
+    private readonly IRoleCatalog _roleCatalog;
+    private readonly IPrimaryRoleResolver _primaryRoleResolver;
+    private readonly IAccessScopeResolver _accessScopeResolver;
+    private readonly ITenantContextResolver _tenantContextResolver;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
         NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
-    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IWebHostEnvironment environment)
+    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IWebHostEnvironment environment, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _environment = environment;
+        _roleCatalog = roleCatalog;
+        _primaryRoleResolver = primaryRoleResolver;
+        _accessScopeResolver = accessScopeResolver;
+        _tenantContextResolver = tenantContextResolver;
     }
 
     [HttpGet]
@@ -85,15 +95,43 @@ public sealed class AccountController : Controller
             }
 
             var login = apiResult.Data;
-            var perfil = NormalizeRole((login.Roles ?? Array.Empty<string>()).FirstOrDefault()) ?? string.Empty;
+            var normalizedRoles = (login.Roles ?? Array.Empty<string>())
+                .Select(_roleCatalog.Normalize)
+                .Where(r => !string.IsNullOrWhiteSpace(r))
+                .Cast<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+            var primaryRole = string.IsNullOrWhiteSpace(login.PrimaryRole) ? _primaryRoleResolver.Resolve(normalizedRoles) : _roleCatalog.Normalize(login.PrimaryRole) ?? _primaryRoleResolver.Resolve(normalizedRoles);
+            var accessScope = string.IsNullOrWhiteSpace(login.AccessScope) ? _accessScopeResolver.Resolve(normalizedRoles, login.TenantContextSelected) : login.AccessScope;
+            var contextMode = string.IsNullOrWhiteSpace(login.ContextMode) ? (login.TenantId.HasValue ? AccessScopes.Tenant : AccessScopes.Global) : login.ContextMode;
+
+            var hasGlobalAccess = normalizedRoles.Any(role => _roleCatalog.IsGlobal(role));
+            var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => _roleCatalog.RequiresTenant(role));
+
+            if (requiresTenant && !login.TenantId.HasValue)
+            {
+                const string tenantMessage = "Conta sem tenant configurado. Contate o administrador.";
+                ModelState.AddModelError(string.Empty, tenantMessage);
+                TempData["Error"] = tenantMessage;
+                return View(model);
+            }
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, login.UsuarioId.ToString()),
+                new Claim("uid", login.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? normalizedEmail : login.Nome),
                 new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),
-                new Claim(ClaimTypes.Role, perfil),
-                new Claim("Perfil", perfil),
+                new Claim("email", string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),
+                new Claim(ClaimTypes.Role, primaryRole),
+                new Claim("role", primaryRole),
+                new Claim("Perfil", primaryRole),
+                new Claim("primary_role", primaryRole),
+                new Claim("roles", string.Join(',', normalizedRoles)),
+                new Claim("access_scope", accessScope),
+                new Claim("context_mode", contextMode),
+                new Claim("session_id", string.IsNullOrWhiteSpace(login.SessionId) ? HttpContext.Session.Id : login.SessionId),
                 new Claim("jwt", login.Token)
             };
 
@@ -108,18 +146,10 @@ public sealed class AccountController : Controller
                 claims.Add(new Claim("tenant_id", login.TenantId.Value.ToString()));
                 claims.Add(new Claim("tenant", login.TenantNome ?? login.ClienteNome ?? "Tenant PlantãoPro"));
             }
-            var tenantRoles = new[] { "ADMINISTRADOR_CLIENTE", "ADMINISTRADOR", "COORDENACAO", "OPERADOR", "FINANCEIRO", "MEDICO", "HOSPITAL", "RECEPCAO", "TRIAGEM" };
-            if ((login.Roles ?? Array.Empty<string>()).Select(NormalizeRole).Any(r => tenantRoles.Contains(r)) && !login.TenantId.HasValue)
-            {
-                const string tenantMessage = "Conta sem tenant configurado. Contate o administrador.";
-                ModelState.AddModelError(string.Empty, tenantMessage);
-                TempData["Error"] = tenantMessage;
-                return View(model);
-            }
 
-            foreach (var role in login.Roles ?? Array.Empty<string>())
+            foreach (var role in normalizedRoles)
             {
-                var normalizedRole = NormalizeRole(role);
+                var normalizedRole = _roleCatalog.Normalize(role);
                 if (!string.IsNullOrWhiteSpace(normalizedRole) && !claims.Any(c => c.Type == ClaimTypes.Role && c.Value == normalizedRole))
                 {
                     claims.Add(new Claim(ClaimTypes.Role, normalizedRole));
@@ -140,8 +170,10 @@ public sealed class AccountController : Controller
             HttpContext.Session.SetString("JwtToken", login.Token);
             HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);
             HttpContext.Session.SetString("UsuarioEmail", normalizedEmail);
-            HttpContext.Session.SetString("UsuarioPerfil", perfil);
-            _logger.LogInformation("Token salvo na sessão. Email:{Email} Perfil:{Perfil}", normalizedEmail, perfil);
+            HttpContext.Session.SetString("UsuarioPerfil", primaryRole);
+            HttpContext.Session.SetString("AccessScope", accessScope);
+            HttpContext.Session.SetString("ContextMode", contextMode);
+            _logger.LogInformation("Token salvo na sessão. Email:{Email} Perfil:{Perfil} Escopo:{Escopo}", normalizedEmail, primaryRole, accessScope);
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
@@ -149,7 +181,7 @@ public sealed class AccountController : Controller
                 return Redirect(returnUrl);
             }
 
-            return RedirectToActionByPerfil(login.Roles ?? Array.Empty<string>());
+            return RedirectToActionByPerfil(normalizedRoles);
         }
         catch (HttpRequestException ex)
         {
@@ -233,7 +265,8 @@ public sealed class AccountController : Controller
             (RolesConstants.CustomerSuccess, "CustomerSuccess", "Index")
         };
 
-        var destination = priority.FirstOrDefault(p => normalizedRoles.Any(r => string.Equals(r, p.Role, StringComparison.OrdinalIgnoreCase)));
+        var primaryRole = _primaryRoleResolver.Resolve(normalizedRoles);
+        var destination = priority.FirstOrDefault(p => string.Equals(primaryRole, p.Role, StringComparison.OrdinalIgnoreCase));
         if (string.IsNullOrWhiteSpace(destination.Controller))
         {
             destination = ("USUARIO", "Home", "Dashboard");

@@ -7,9 +7,16 @@ using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
 using System.Text;
 
+using PlantaoPro.CrossCutting.Security;
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default");
 DatabaseStartupReadinessValidator.Validate(connectionString, builder.Environment, builder.Configuration);
+if (builder.Environment.IsProduction() && !builder.Configuration.GetValue("Authentication:LoginLockoutEnabled", true))
+{
+    throw new InvalidOperationException("Authentication:LoginLockoutEnabled não pode ser desativado em Production.");
+}
+
 
 builder.Services.AddControllers(options =>
 {
@@ -18,6 +25,11 @@ builder.Services.AddControllers(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpLogging(_ => { });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddSingleton<IRoleCatalog, RoleCatalog>();
+builder.Services.AddSingleton<IPrimaryRoleResolver, PrimaryRoleResolver>();
+builder.Services.AddSingleton<IAccessScopeResolver, AccessScopeResolver>();
+builder.Services.AddSingleton<ITenantContextResolver, TenantContextResolver>();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.OperationFilter<DefaultApiResponseOperationFilter>();
@@ -82,7 +94,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    var policies = new[] { "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
+    var policies = new[] { "GlobalAccess", "TenantAccess", "HybridAccess", "TenantContextRequired", "TenantContextOptional", "CanSwitchTenant", "CanImpersonateTenant", "CanManageSaas", "CanViewGlobalAudit", "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
     foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
 });
 

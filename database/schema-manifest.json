@@ -1,0 +1,3516 @@
+{
+  "schemaVersion": "v1.18.4",
+  "generatedAt": "2026-07-21",
+  "objects": [
+    {
+      "object": "planos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 1,
+      "required": true
+    },
+    {
+      "object": "clientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 2,
+      "required": true
+    },
+    {
+      "object": "tenants",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 3,
+      "required": true
+    },
+    {
+      "object": "usuarios",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 4,
+      "required": true
+    },
+    {
+      "object": "roles",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 5,
+      "required": true
+    },
+    {
+      "object": "perfis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 6,
+      "required": true
+    },
+    {
+      "object": "modulos_sistema",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 7,
+      "required": true
+    },
+    {
+      "object": "acoes_sistema",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 8,
+      "required": true
+    },
+    {
+      "object": "permissoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 9,
+      "required": true
+    },
+    {
+      "object": "acessos_negados_log",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 10,
+      "required": true
+    },
+    {
+      "object": "agendamento_checkins",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 11,
+      "required": true
+    },
+    {
+      "object": "agendamento_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 12,
+      "required": true
+    },
+    {
+      "object": "agendamentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 13,
+      "required": true
+    },
+    {
+      "object": "ajuda_artigos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 14,
+      "required": true
+    },
+    {
+      "object": "ajuda_checklists",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 15,
+      "required": true
+    },
+    {
+      "object": "ajuda_feedbacks",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 16,
+      "required": true
+    },
+    {
+      "object": "ajuda_passos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 17,
+      "required": true
+    },
+    {
+      "object": "ajuda_topicos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 18,
+      "required": true
+    },
+    {
+      "object": "alertas_operacionais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 19,
+      "required": true
+    },
+    {
+      "object": "api_chaves",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 20,
+      "required": true
+    },
+    {
+      "object": "api_error_logs",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 21,
+      "required": true
+    },
+    {
+      "object": "api_key_permissoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 22,
+      "required": true
+    },
+    {
+      "object": "api_keys",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 23,
+      "required": true
+    },
+    {
+      "object": "api_rate_limits",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 24,
+      "required": true
+    },
+    {
+      "object": "api_request_logs",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 25,
+      "required": true
+    },
+    {
+      "object": "app_user",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 26,
+      "required": true
+    },
+    {
+      "object": "assinatura_bloqueios",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 27,
+      "required": true
+    },
+    {
+      "object": "assinatura_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 28,
+      "required": true
+    },
+    {
+      "object": "assinatura_uso",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 29,
+      "required": true
+    },
+    {
+      "object": "assinaturas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 30,
+      "required": true
+    },
+    {
+      "object": "auditoria",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 31,
+      "required": true
+    },
+    {
+      "object": "auditoria_acoes_criticas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 32,
+      "required": true
+    },
+    {
+      "object": "auditoria_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 33,
+      "required": true
+    },
+    {
+      "object": "auditoria_lgpd_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 34,
+      "required": true
+    },
+    {
+      "object": "background_job_logs",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 35,
+      "required": true
+    },
+    {
+      "object": "bloqueios_agenda",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 36,
+      "required": true
+    },
+    {
+      "object": "cadastro_cliente_pagamentos_iniciais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 37,
+      "required": true
+    },
+    {
+      "object": "cadastro_cliente_solicitacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 38,
+      "required": true
+    },
+    {
+      "object": "caixa_movimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 39,
+      "required": true
+    },
+    {
+      "object": "chamado_mensagens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 40,
+      "required": true
+    },
+    {
+      "object": "chamados_suporte",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 41,
+      "required": true
+    },
+    {
+      "object": "cid_capitulos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 42,
+      "required": true
+    },
+    {
+      "object": "cid_favoritos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 43,
+      "required": true
+    },
+    {
+      "object": "cid_fontes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 44,
+      "required": true
+    },
+    {
+      "object": "cid_grupos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 45,
+      "required": true
+    },
+    {
+      "object": "cid_importacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 46,
+      "required": true
+    },
+    {
+      "object": "cid_tabela",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 47,
+      "required": true
+    },
+    {
+      "object": "cid_uso_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 48,
+      "required": true
+    },
+    {
+      "object": "classificacoes_risco",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 49,
+      "required": true
+    },
+    {
+      "object": "cliente_alertas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 50,
+      "required": true
+    },
+    {
+      "object": "cliente_bloqueios",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 51,
+      "required": true
+    },
+    {
+      "object": "cliente_limites_uso",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 52,
+      "required": true
+    },
+    {
+      "object": "cliente_saude_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 53,
+      "required": true
+    },
+    {
+      "object": "clinica_caixa",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 54,
+      "required": true
+    },
+    {
+      "object": "clinica_contas_receber",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 55,
+      "required": true
+    },
+    {
+      "object": "clinica_recebimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 56,
+      "required": true
+    },
+    {
+      "object": "clinica_salas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 57,
+      "required": true
+    },
+    {
+      "object": "clinica_unidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 58,
+      "required": true
+    },
+    {
+      "object": "cobranca_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 59,
+      "required": true
+    },
+    {
+      "object": "comercial_interacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 60,
+      "required": true
+    },
+    {
+      "object": "comercial_leads",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 61,
+      "required": true
+    },
+    {
+      "object": "comercial_motivos_perda",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 62,
+      "required": true
+    },
+    {
+      "object": "comercial_oportunidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 63,
+      "required": true
+    },
+    {
+      "object": "comercial_proposta_itens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 64,
+      "required": true
+    },
+    {
+      "object": "comercial_propostas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 65,
+      "required": true
+    },
+    {
+      "object": "comercial_regras_desconto",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 66,
+      "required": true
+    },
+    {
+      "object": "comissoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 67,
+      "required": true
+    },
+    {
+      "object": "comunicacao_templates",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 68,
+      "required": true
+    },
+    {
+      "object": "conflitos_operacionais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 69,
+      "required": true
+    },
+    {
+      "object": "consulta_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 70,
+      "required": true
+    },
+    {
+      "object": "consultas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 71,
+      "required": true
+    },
+    {
+      "object": "contestacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 72,
+      "required": true
+    },
+    {
+      "object": "contratos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 73,
+      "required": true
+    },
+    {
+      "object": "convenio_autorizacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 74,
+      "required": true
+    },
+    {
+      "object": "convenio_planos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 75,
+      "required": true
+    },
+    {
+      "object": "convenios",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 76,
+      "required": true
+    },
+    {
+      "object": "conversa_participantes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 77,
+      "required": true
+    },
+    {
+      "object": "conversas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 78,
+      "required": true
+    },
+    {
+      "object": "convites",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 79,
+      "required": true
+    },
+    {
+      "object": "customer_success_interacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 80,
+      "required": true
+    },
+    {
+      "object": "customer_success_planos_acao",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 81,
+      "required": true
+    },
+    {
+      "object": "customer_success_riscos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 82,
+      "required": true
+    },
+    {
+      "object": "customer_success_tarefas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 83,
+      "required": true
+    },
+    {
+      "object": "downgrade_solicitacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 84,
+      "required": true
+    },
+    {
+      "object": "escala_sugestao_feedback",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 85,
+      "required": true
+    },
+    {
+      "object": "escala_sugestao_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 86,
+      "required": true
+    },
+    {
+      "object": "escala_sugestao_medicos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 87,
+      "required": true
+    },
+    {
+      "object": "escala_sugestoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 88,
+      "required": true
+    },
+    {
+      "object": "escalas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 89,
+      "required": true
+    },
+    {
+      "object": "especialidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 90,
+      "required": true
+    },
+    {
+      "object": "estornos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 91,
+      "required": true
+    },
+    {
+      "object": "eventos_financeiros",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 92,
+      "required": true
+    },
+    {
+      "object": "eventos_sistema",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 93,
+      "required": true
+    },
+    {
+      "object": "fatura_itens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 94,
+      "required": true
+    },
+    {
+      "object": "faturas_saas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 95,
+      "required": true
+    },
+    {
+      "object": "fechamento_caixa",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 96,
+      "required": true
+    },
+    {
+      "object": "financeiro_contas_receber",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 97,
+      "required": true
+    },
+    {
+      "object": "formas_pagamento",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 98,
+      "required": true
+    },
+    {
+      "object": "glosas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 99,
+      "required": true
+    },
+    {
+      "object": "guias",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 100,
+      "required": true
+    },
+    {
+      "object": "guiches",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 101,
+      "required": true
+    },
+    {
+      "object": "historico_escala",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 102,
+      "required": true
+    },
+    {
+      "object": "historico_pagamento",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 103,
+      "required": true
+    },
+    {
+      "object": "hospitais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 104,
+      "required": true
+    },
+    {
+      "object": "jornada_cliente",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 105,
+      "required": true
+    },
+    {
+      "object": "jornada_cliente_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 106,
+      "required": true
+    },
+    {
+      "object": "jornada_cliente_observacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 107,
+      "required": true
+    },
+    {
+      "object": "jornada_cliente_responsaveis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 108,
+      "required": true
+    },
+    {
+      "object": "jornada_cliente_tarefas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 109,
+      "required": true
+    },
+    {
+      "object": "lgpd_anonimizacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 110,
+      "required": true
+    },
+    {
+      "object": "lgpd_bases_legais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 111,
+      "required": true
+    },
+    {
+      "object": "lgpd_consentimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 112,
+      "required": true
+    },
+    {
+      "object": "lgpd_eventos_privacidade",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 113,
+      "required": true
+    },
+    {
+      "object": "lgpd_exportacoes_dados",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 114,
+      "required": true
+    },
+    {
+      "object": "lgpd_politicas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 115,
+      "required": true
+    },
+    {
+      "object": "lgpd_retencao_dados",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 116,
+      "required": true
+    },
+    {
+      "object": "lgpd_solicitacoes_titular",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 117,
+      "required": true
+    },
+    {
+      "object": "login_tentativas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 118,
+      "required": true
+    },
+    {
+      "object": "logs_operacionais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 119,
+      "required": true
+    },
+    {
+      "object": "lotes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 120,
+      "required": true
+    },
+    {
+      "object": "medico_disponibilidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 121,
+      "required": true
+    },
+    {
+      "object": "medico_especialidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 122,
+      "required": true
+    },
+    {
+      "object": "medico_historico_disponibilidade",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 123,
+      "required": true
+    },
+    {
+      "object": "medico_indisponibilidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 124,
+      "required": true
+    },
+    {
+      "object": "medico_preferencias_plantao",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 125,
+      "required": true
+    },
+    {
+      "object": "medicos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 126,
+      "required": true
+    },
+    {
+      "object": "mensagem_leituras",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 127,
+      "required": true
+    },
+    {
+      "object": "mensagens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 128,
+      "required": true
+    },
+    {
+      "object": "mobile_dispositivos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 129,
+      "required": true
+    },
+    {
+      "object": "mobile_push_tokens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 130,
+      "required": true
+    },
+    {
+      "object": "notificacao_filas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 131,
+      "required": true
+    },
+    {
+      "object": "notificacao_preferencias",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 132,
+      "required": true
+    },
+    {
+      "object": "notificacao_regras",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 133,
+      "required": true
+    },
+    {
+      "object": "notificacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 134,
+      "required": true
+    },
+    {
+      "object": "operacao_assistida_checklist",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 135,
+      "required": true
+    },
+    {
+      "object": "operacao_assistida_clientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 136,
+      "required": true
+    },
+    {
+      "object": "operacao_assistida_ocorrencias",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 137,
+      "required": true
+    },
+    {
+      "object": "operacao_assistida_treinamentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 138,
+      "required": true
+    },
+    {
+      "object": "outbox_financeiro",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 139,
+      "required": true
+    },
+    {
+      "object": "paciente_consentimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 140,
+      "required": true
+    },
+    {
+      "object": "paciente_contatos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 141,
+      "required": true
+    },
+    {
+      "object": "paciente_documentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 142,
+      "required": true
+    },
+    {
+      "object": "paciente_enderecos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 143,
+      "required": true
+    },
+    {
+      "object": "paciente_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 144,
+      "required": true
+    },
+    {
+      "object": "paciente_responsaveis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 145,
+      "required": true
+    },
+    {
+      "object": "pacientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 146,
+      "required": true
+    },
+    {
+      "object": "pagamentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 147,
+      "required": true
+    },
+    {
+      "object": "pagamentos_saas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 148,
+      "required": true
+    },
+    {
+      "object": "paineis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 149,
+      "required": true
+    },
+    {
+      "object": "painel_chamada",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 150,
+      "required": true
+    },
+    {
+      "object": "painel_chamada_fila",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 151,
+      "required": true
+    },
+    {
+      "object": "painel_chamada_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 152,
+      "required": true
+    },
+    {
+      "object": "parceiros",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 153,
+      "required": true
+    },
+    {
+      "object": "pendencia_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 154,
+      "required": true
+    },
+    {
+      "object": "pendencia_responsaveis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 155,
+      "required": true
+    },
+    {
+      "object": "pendencias_operacionais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 156,
+      "required": true
+    },
+    {
+      "object": "perfil_permissoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 157,
+      "required": true
+    },
+    {
+      "object": "permissao_logs",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 158,
+      "required": true
+    },
+    {
+      "object": "plano_faq",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 159,
+      "required": true
+    },
+    {
+      "object": "plano_limites",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 160,
+      "required": true
+    },
+    {
+      "object": "plano_precos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 161,
+      "required": true
+    },
+    {
+      "object": "plano_recursos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 162,
+      "required": true
+    },
+    {
+      "object": "plano_saude_pacientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 163,
+      "required": true
+    },
+    {
+      "object": "planos_saude",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 164,
+      "required": true
+    },
+    {
+      "object": "plantao_convites",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 165,
+      "required": true
+    },
+    {
+      "object": "plantao_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 166,
+      "required": true
+    },
+    {
+      "object": "plantoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 167,
+      "required": true
+    },
+    {
+      "object": "prescricao_cancelamentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 168,
+      "required": true
+    },
+    {
+      "object": "prescricao_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 169,
+      "required": true
+    },
+    {
+      "object": "prescricao_itens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 170,
+      "required": true
+    },
+    {
+      "object": "prescricao_modelos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 171,
+      "required": true
+    },
+    {
+      "object": "prescricoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 172,
+      "required": true
+    },
+    {
+      "object": "recuperacao_senha",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 173,
+      "required": true
+    },
+    {
+      "object": "recursos_glosa",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 174,
+      "required": true
+    },
+    {
+      "object": "regras_faturamento",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 175,
+      "required": true
+    },
+    {
+      "object": "relatorio_execucoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 176,
+      "required": true
+    },
+    {
+      "object": "relatorio_exportacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 177,
+      "required": true
+    },
+    {
+      "object": "relatorios_exportacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 178,
+      "required": true
+    },
+    {
+      "object": "relatorios_filtros_salvos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 179,
+      "required": true
+    },
+    {
+      "object": "repasses_medicos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 180,
+      "required": true
+    },
+    {
+      "object": "saas_billing_assinaturas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 181,
+      "required": true
+    },
+    {
+      "object": "saas_billing_faturas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 182,
+      "required": true
+    },
+    {
+      "object": "saas_bloqueios",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 183,
+      "required": true
+    },
+    {
+      "object": "saas_clientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 184,
+      "required": true
+    },
+    {
+      "object": "saas_limites",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 185,
+      "required": true
+    },
+    {
+      "object": "saas_marketplace_contratacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 186,
+      "required": true
+    },
+    {
+      "object": "saas_marketplace_modulos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 187,
+      "required": true
+    },
+    {
+      "object": "saas_planos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 188,
+      "required": true
+    },
+    {
+      "object": "saas_tenants",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 189,
+      "required": true
+    },
+    {
+      "object": "saas_uso_mensal",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 190,
+      "required": true
+    },
+    {
+      "object": "seq_painel_senhas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 191,
+      "required": true
+    },
+    {
+      "object": "setores",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 192,
+      "required": true
+    },
+    {
+      "object": "sinais_vitais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 193,
+      "required": true
+    },
+    {
+      "object": "substituicao_aprovacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 194,
+      "required": true
+    },
+    {
+      "object": "substituicao_candidatos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 195,
+      "required": true
+    },
+    {
+      "object": "substituicao_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 196,
+      "required": true
+    },
+    {
+      "object": "substituicoes_plantao",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 197,
+      "required": true
+    },
+    {
+      "object": "tenant_modulos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 198,
+      "required": true
+    },
+    {
+      "object": "tenant_onboarding",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 199,
+      "required": true
+    },
+    {
+      "object": "tenant_onboarding_checklist",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 200,
+      "required": true
+    },
+    {
+      "object": "tenant_parametros",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 201,
+      "required": true
+    },
+    {
+      "object": "tenant_white_label",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 202,
+      "required": true
+    },
+    {
+      "object": "timeline_operacional",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 203,
+      "required": true
+    },
+    {
+      "object": "triagem_encaminhamentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 204,
+      "required": true
+    },
+    {
+      "object": "triagem_fila",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 205,
+      "required": true
+    },
+    {
+      "object": "triagem_historico",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 206,
+      "required": true
+    },
+    {
+      "object": "triagens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 207,
+      "required": true
+    },
+    {
+      "object": "unidades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 208,
+      "required": true
+    },
+    {
+      "object": "upgrade_solicitacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 209,
+      "required": true
+    },
+    {
+      "object": "usuario_notificacao_preferencias",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 210,
+      "required": true
+    },
+    {
+      "object": "usuario_perfis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 211,
+      "required": true
+    },
+    {
+      "object": "usuario_permissoes_especiais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 212,
+      "required": true
+    },
+    {
+      "object": "usuarios_perfis",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 213,
+      "required": true
+    },
+    {
+      "object": "v113_atividades",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 214,
+      "required": true
+    },
+    {
+      "object": "v113_clientes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 215,
+      "required": true
+    },
+    {
+      "object": "v113_estoque_movimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 216,
+      "required": true
+    },
+    {
+      "object": "v113_faturas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 217,
+      "required": true
+    },
+    {
+      "object": "v113_jornada_acoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 218,
+      "required": true
+    },
+    {
+      "object": "v113_outbox_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 219,
+      "required": true
+    },
+    {
+      "object": "v113_outbox_logs",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 220,
+      "required": true
+    },
+    {
+      "object": "v113_pedido_itens",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 221,
+      "required": true
+    },
+    {
+      "object": "v113_pedidos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 222,
+      "required": true
+    },
+    {
+      "object": "v113_produtos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 223,
+      "required": true
+    },
+    {
+      "object": "v113_tarefas",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 224,
+      "required": true
+    },
+    {
+      "object": "v113_template_instalacoes",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 225,
+      "required": true
+    },
+    {
+      "object": "v113_templates",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 226,
+      "required": true
+    },
+    {
+      "object": "v113_titulos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 227,
+      "required": true
+    },
+    {
+      "object": "v115_alertas_operacionais",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 228,
+      "required": true
+    },
+    {
+      "object": "v115_faturamento_eventos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 229,
+      "required": true
+    },
+    {
+      "object": "v115_recebimentos",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 230,
+      "required": true
+    },
+    {
+      "object": "v115_regras_faturamento",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 231,
+      "required": true
+    },
+    {
+      "object": "v115_regras_glosa",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 232,
+      "required": true
+    },
+    {
+      "object": "v115_regras_repasse",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 233,
+      "required": true
+    },
+    {
+      "object": "webhooks",
+      "type": "table",
+      "domain": "consolidado",
+      "dependencies": [],
+      "criticalColumns": [
+        "id",
+        "cliente_id",
+        "tenant_id",
+        "reg_status"
+      ],
+      "origin": "manifest-generated",
+      "order": 234,
+      "required": true
+    }
+  ]
+}

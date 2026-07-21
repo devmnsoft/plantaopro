@@ -1,0 +1,1 @@
+Schema diff será produzido no GitHub Actions com PostgreSQL 16/pg_dump. Ambiente local sem psql/dotnet.

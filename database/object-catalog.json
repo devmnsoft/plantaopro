@@ -1291,6 +1291,66 @@
       "requiredForInstall": true,
       "sourceCanonical": "database/schema/120_operacoes_continuidade.sql",
       "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuario_tenant_acessos",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuario_contextos_recentes",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "contexto_sessoes",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "contexto_trocas",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "impersonacao_sessoes",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "impersonacao_eventos",
+      "type": "table",
+      "module": "CONTEXTO_MULTIEMPRESA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
+      "references": []
     }
   ]
 }

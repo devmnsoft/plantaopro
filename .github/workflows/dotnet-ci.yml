@@ -59,7 +59,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Apply canonical migrations on empty database
-        run: scripts/apply-canonical-migrations.sh
+        run: scripts/database-test-clean-install.sh
       - name: Verify migration control table
         run: psql -v ON_ERROR_STOP=1 -c "SELECT id, applied_at FROM plantaopro.schema_migrations ORDER BY id;"
 
@@ -88,27 +88,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Simulate previous version
-        run: |
-          psql -v ON_ERROR_STOP=1 -f database/PlantaoPro_PostgreSQL_Completo.sql
-          psql -v ON_ERROR_STOP=1 -f database/migrations/2026_v113_operacional_real.sql
-          psql -v ON_ERROR_STOP=1 <<'SQL'
-          CREATE SCHEMA IF NOT EXISTS plantaopro;
-          CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
-              id text PRIMARY KEY,
-              script_path text NOT NULL,
-              checksum text NOT NULL,
-              applied_at timestamptz NOT NULL DEFAULT now()
-          );
-          INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES
-              ('000_base_schema', 'database/PlantaoPro_PostgreSQL_Completo.sql', 'pre-v118-upgrade-baseline'),
-              ('200_v113_operacional', 'database/migrations/2026_v113_operacional_real.sql', 'pre-v118-upgrade-baseline')
-          ON CONFLICT (id) DO NOTHING;
-          SQL
-      - name: Upgrade through canonical migrations
-        run: scripts/apply-canonical-migrations.sh
-      - name: Re-run canonical migrations to verify idempotency
-        run: scripts/apply-canonical-migrations.sh
+      - name: Run real database upgrade test
+        run: scripts/database-test-upgrade.sh
 
   runtime-e2e:
     runs-on: ubuntu-latest
@@ -178,10 +159,30 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Mobile validation placeholder
-        run: |
-          if [ -f mobile/package.json ]; then
-            echo "mobile/package.json found; add project-specific lint/typecheck commands here."
-          else
-            echo "No mobile/package.json found in this repository snapshot."
-          fi
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/PlantaoPro.App/package-lock.json
+      - name: Install mobile dependencies
+        working-directory: mobile/PlantaoPro.App
+        run: npm ci
+      - name: Mobile lint
+        working-directory: mobile/PlantaoPro.App
+        run: npm run lint
+      - name: Mobile typecheck
+        working-directory: mobile/PlantaoPro.App
+        run: npm run typecheck
+      - name: Mobile tests
+        working-directory: mobile/PlantaoPro.App
+        run: npm test -- --runInBand
+
+
+  repository-security:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Secret and clinical log hygiene
+        run: python3 scripts/repository-security-check.py

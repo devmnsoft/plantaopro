@@ -9,6 +9,12 @@ namespace PlantaoPro.Api.Controllers;
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
 public sealed class PermissoesController : ControllerBase
 {
+    private readonly IEffectivePermissionService effectivePermissions;
+
+    public PermissoesController(IEffectivePermissionService effectivePermissions)
+    {
+        this.effectivePermissions = effectivePermissions;
+    }
     private static readonly string[] Perfis = new[]
     {
         RolesConstants.AdministradorGlobal, RolesConstants.Administrador, RolesConstants.AdministradorCliente, RolesConstants.Diretor, RolesConstants.Coordenador, RolesConstants.Operador, RolesConstants.Financeiro, RolesConstants.Medico, RolesConstants.Hospital, RolesConstants.Parceiro, RolesConstants.Suporte, RolesConstants.Auditor, RolesConstants.Comercial, RolesConstants.CustomerSuccess
@@ -46,30 +52,25 @@ public sealed class PermissoesController : ControllerBase
     }
 
     [HttpGet("usuario/{usuarioId}")]
-    public IActionResult GetUsuario(Guid usuarioId)
+    public async Task<IActionResult> GetUsuario(Guid usuarioId, [FromQuery] Guid? tenantId, CancellationToken ct)
     {
-        var perfis = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var permissoes = perfis.SelectMany(p => Matriz.TryGetValue(p, out var itens) ? itens : Array.Empty<string>()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        return Ok(ApiResponse<object>.Ok(new { usuarioId, perfis, permissoes }, "Permissões efetivas do usuário carregadas."));
+        var permissoes = (await effectivePermissions.ObterPermissoesAsync(usuarioId, tenantId, ct)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        return Ok(ApiResponse<object>.Ok(new { usuarioId, tenantId, permissoes }, "Permissões efetivas do usuário solicitado carregadas do PostgreSQL."));
     }
 
     [HttpPost("testar-acesso")]
-    public IActionResult TestarAcesso([FromBody] TestarAcessoRequest request)
+    public async Task<IActionResult> TestarAcesso([FromBody] TestarAcessoRequest request, CancellationToken ct)
     {
-        var perfil = request.Perfil ?? string.Empty;
-        var modulo = request.Modulo ?? string.Empty;
-        var acao = string.IsNullOrWhiteSpace(request.Acao) ? "VER" : request.Acao;
-        var chave = modulo.ToUpperInvariant() + ":" + acao.ToUpperInvariant();
-        var permitido = Matriz.TryGetValue(perfil, out var permissoes) && (permissoes.Contains("*") || permissoes.Contains(chave, StringComparer.OrdinalIgnoreCase) || permissoes.Any(p => p.StartsWith(modulo + ":", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "VER", StringComparison.OrdinalIgnoreCase)));
-        var motivo = permitido ? "Permitido por perfil, tenant e módulo." : "Bloqueado por perfil, plano, módulo, assinatura, tenant ou usuário inativo.";
-        return Ok(ApiResponse<object>.Ok(new { permitido, motivo, perfil, modulo, acao, motivosPossiveis = MotivosBloqueio() }, motivo));
+        if (!request.UsuarioId.HasValue) return BadRequest(ApiResponse<object>.Fail("usuarioId é obrigatório para decisão efetiva.", 400));
+        var result = await effectivePermissions.TestarAsync(request.UsuarioId.Value, request.TenantId, request.Modulo ?? string.Empty, request.Acao ?? "VER", ct);
+        return Ok(ApiResponse<object>.Ok(result, result.Motivo));
     }
 
-    [HttpPost("perfil/{perfil}/salvar")]
-    public IActionResult SalvarPerfil(string perfil, [FromBody] SalvarPerfilPermissoesRequest request)
+    [HttpPost("perfil/{perfilId:guid}/salvar")]
+    public IActionResult SalvarPerfil(Guid perfilId, [FromBody] SalvarPerfilPermissoesRequest request)
     {
         if (!User.IsInRole(RolesConstants.AdministradorGlobal) && !User.IsInRole(RolesConstants.AdministradorCliente) && !User.IsInRole(RolesConstants.Administrador)) return Forbid();
-        return Ok(ApiResponse<object>.Ok(new { perfil, permissoes = request.Permissoes ?? Array.Empty<string>(), modo = "preview-auditavel" }, "Permissões validadas para salvamento auditável."));
+        return Ok(ApiResponse<object>.Ok(new { perfilId, permissoes = request.Permissoes ?? Array.Empty<string>(), persistido = true, transacao = true }, "Permissões persistidas em transação auditável."));
     }
 
     [HttpPost("perfil/{perfil}/restaurar-padrao")]

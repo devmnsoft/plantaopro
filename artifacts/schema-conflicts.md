@@ -1,7 +1,7 @@
 # Relatório de conflitos de schema
 
 ## plantaopro.usuarios_perfis
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/PlantaoPro_PostgreSQL_Completo.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`
@@ -25,7 +25,7 @@
 - Colunas segunda: cliente_id, criado_por, id, nome, plano_id, reg_date, reg_status, reg_update, slug, status
 
 ## plantaopro.modulos_sistema
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/migrations/2026_plantao_pro_self_service_white_label.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`
@@ -33,7 +33,7 @@
 - Colunas segunda: codigo, descricao, id, nome, ordem, reg_date, reg_status, reg_update, status
 
 ## plantaopro.acoes_sistema
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/migrations/2026_plantao_pro_self_service_white_label.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`
@@ -41,7 +41,7 @@
 - Colunas segunda: codigo, descricao, id, nome, ordem, reg_date, reg_status, reg_update, status
 
 ## plantaopro.permissoes
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/migrations/2026_plantao_pro_self_service_white_label.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`
@@ -57,7 +57,7 @@
 - Colunas segunda: base_sistema, cliente_id, codigo, customizado, descricao, id, nome, reg_date, reg_status, reg_update, status, tenant_id
 
 ## plantaopro.perfil_permissoes
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/migrations/2026_plantao_pro_self_service_white_label.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`
@@ -73,7 +73,7 @@
 - Colunas segunda: cliente_id, id, perfil_id, reg_date, reg_status, reg_update, tenant_id, usuario_id
 
 ## plantaopro.usuario_permissoes_especiais
-- Primeira origem: `database/schema/000_schema_canonico_base.sql`
+- Primeira origem: `database/schema/010_identity_access.sql`
 - Segunda origem: `database/migrations/2026_plantao_pro_self_service_white_label.sql`
 - Canônico no manifesto: `True`
 - ALTER compatibilidade: `True`

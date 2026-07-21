@@ -1,0 +1,210 @@
+[
+  {
+    "object": "plantaopro.extensions",
+    "dependsOn": [],
+    "source": "database/schema/000_extensions_schema.sql"
+  },
+  {
+    "object": "plantaopro.identity_access",
+    "dependsOn": [],
+    "source": "database/schema/010_identity_access.sql"
+  },
+  {
+    "object": "plantaopro.saas_tenants",
+    "dependsOn": [],
+    "source": "database/schema/020_saas_tenants.sql"
+  },
+  {
+    "object": "plantaopro.operacao_plantoes",
+    "dependsOn": [],
+    "source": "database/schema/030_operacao_plantoes.sql"
+  },
+  {
+    "object": "plantaopro.saude360",
+    "dependsOn": [],
+    "source": "database/schema/040_saude360.sql"
+  },
+  {
+    "object": "plantaopro.financeiro",
+    "dependsOn": [],
+    "source": "database/schema/050_financeiro.sql"
+  },
+  {
+    "object": "plantaopro.auditoria_observabilidade",
+    "dependsOn": [],
+    "source": "database/schema/060_auditoria_observabilidade.sql"
+  },
+  {
+    "object": "plantaopro.relatorios",
+    "dependsOn": [],
+    "source": "database/schema/070_relatorios.sql"
+  },
+  {
+    "object": "plantaopro.constraints",
+    "dependsOn": [],
+    "source": "database/schema/080_constraints.sql"
+  },
+  {
+    "object": "plantaopro.indexes",
+    "dependsOn": [],
+    "source": "database/schema/090_indexes.sql"
+  },
+  {
+    "object": "plantaopro.reference_data",
+    "dependsOn": [],
+    "source": "database/schema/100_reference_data.sql"
+  },
+  {
+    "object": "plantaopro.planos",
+    "dependsOn": [],
+    "source": null
+  },
+  {
+    "object": "plantaopro.clientes",
+    "dependsOn": [
+      "plantaopro.planos"
+    ],
+    "source": null
+  },
+  {
+    "object": "plantaopro.tenants",
+    "dependsOn": [
+      "plantaopro.clientes",
+      "plantaopro.planos"
+    ],
+    "source": null
+  },
+  {
+    "object": "plantaopro.assinaturas",
+    "dependsOn": [
+      "plantaopro.tenants",
+      "plantaopro.clientes",
+      "plantaopro.planos"
+    ],
+    "source": null
+  },
+  {
+    "object": "database/PlantaoPro_PostgreSQL_Completo.sql",
+    "dependsOn": [],
+    "source": "database/PlantaoPro_PostgreSQL_Completo.sql"
+  },
+  {
+    "object": "database/20260525_evolucao_saas_premium.sql",
+    "dependsOn": [],
+    "source": "database/20260525_evolucao_saas_premium.sql"
+  },
+  {
+    "object": "backend/sql/20260522_saas_multiempresa.sql",
+    "dependsOn": [],
+    "source": "backend/sql/20260522_saas_multiempresa.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_white_label_self_service.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_white_label_self_service.sql"
+  },
+  {
+    "object": "database/migrations/2026_saude360_base_clinica_minima.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saude360_base_clinica_minima.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql"
+  },
+  {
+    "object": "database/migrations/2026_saude360_consultas_base.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saude360_consultas_base.sql"
+  },
+  {
+    "object": "database/migrations/2026_saude360_cid_prescricao.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saude360_cid_prescricao.sql"
+  },
+  {
+    "object": "database/migrations/2026_saude360_convenios_planos_saude.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saude360_convenios_planos_saude.sql"
+  },
+  {
+    "object": "database/migrations/2026_saude360_financeiro_clinica.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saude360_financeiro_clinica.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_saas_inteligente.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_saas_inteligente.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql"
+  },
+  {
+    "object": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql"
+  },
+  {
+    "object": "database/migrations/2026_saas_comercial_core.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_saas_comercial_core.sql"
+  },
+  {
+    "object": "database/migrations/2026_v113_operacional_real.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v113_operacional_real.sql"
+  },
+  {
+    "object": "database/migrations/2026_v114_consolidacao_produto.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v114_consolidacao_produto.sql"
+  },
+  {
+    "object": "database/migrations/2026_v115_regras_faturamento_repasses.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql"
+  },
+  {
+    "object": "database/migrations/2026_v116_consolidacao_operacional_final.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v116_consolidacao_operacional_final.sql"
+  },
+  {
+    "object": "database/migrations/2026_v117_hardening_v116_runtime.sql",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v117_hardening_v116_runtime.sql"
+  },
+  {
+    "object": "plantaopro.permissoes",
+    "dependsOn": [],
+    "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql"
+  },
+  {
+    "object": "plantaopro.relatorio_exportacoes",
+    "dependsOn": [
+      "plantaopro.tenants",
+      "plantaopro.clientes",
+      "plantaopro.usuarios"
+    ],
+    "source": null
+  },
+  {
+    "object": "planos_padrao",
+    "dependsOn": [],
+    "source": null
+  }
+]

@@ -1,5 +1,5 @@
 -- PlantãoPro - script completo oficial de instalação limpa
--- Versão do schema: v1.18.6
+-- Versão do schema: v1.18.7
 -- PostgreSQL suportado: 16
 -- Data de geração: 2026-07-21
 -- Execução oficial:
@@ -21,10 +21,18 @@ CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
 
 -- ============================================================
--- Seção 03 — Schema canônico v1.18.6 antes de legados
+-- Seção 03 — Schema canônico v1.18.7 por domínios
 -- ============================================================
 
--- Origem histórica: database/schema/000_schema_canonico_base.sql
+-- Origem: database/schema/000_extensions_schema.sql
+-- v1.18.7 extensões e schema canônico
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/010_identity_access.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -92,6 +100,79 @@ CREATE TABLE IF NOT EXISTS plantaopro.recuperacao_senha(
 );
 CREATE INDEX IF NOT EXISTS ix_recuperacao_senha_usuario_token ON plantaopro.recuperacao_senha(usuario_id, token_hash);
 
+-- v1.18.7 Central de Segurança: sessões, refresh tokens, políticas e auditoria.
+CREATE TABLE IF NOT EXISTS plantaopro.auth_sessoes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL,
+    dispositivo_nome text NOT NULL DEFAULT 'Dispositivo não identificado', ip_mascarado text NULL, user_agent_sanitizado text NULL,
+    iniciado_em timestamptz NOT NULL DEFAULT now(), ultimo_uso_em timestamptz NULL, expira_em timestamptz NULL,
+    revogada_em timestamptz NULL, motivo_revogacao text NULL, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.auth_refresh_tokens (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), sessao_id uuid NOT NULL, usuario_id uuid NOT NULL, token_hash text NOT NULL,
+    emitido_em timestamptz NOT NULL DEFAULT now(), expira_em timestamptz NOT NULL, usado_em timestamptz NULL, substituido_por_id uuid NULL,
+    revogado_em timestamptz NULL, motivo_revogacao text NULL, reg_status char(1) NOT NULL DEFAULT 'A'
+);
+CREATE TABLE IF NOT EXISTS plantaopro.auth_revogacoes (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), sessao_id uuid NULL, usuario_id uuid NOT NULL, motivo text NOT NULL,
+    revogado_por uuid NULL, ip_mascarado text NULL, reg_date timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A'
+);
+CREATE TABLE IF NOT EXISTS plantaopro.senha_historico (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), usuario_id uuid NOT NULL, senha_hash text NOT NULL,
+    origem text NOT NULL DEFAULT 'ALTERACAO_SENHA', reg_date timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A'
+);
+CREATE TABLE IF NOT EXISTS plantaopro.politicas_senha (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, tamanho_minimo int NOT NULL DEFAULT 10,
+    exige_maiuscula boolean NOT NULL DEFAULT true, exige_minuscula boolean NOT NULL DEFAULT true, exige_numero boolean NOT NULL DEFAULT true,
+    exige_especial boolean NOT NULL DEFAULT true, historico_quantidade int NOT NULL DEFAULT 5, expiracao_dias int NOT NULL DEFAULT 90,
+    tentativas_permitidas int NOT NULL DEFAULT 5, bloqueio_minutos int NOT NULL DEFAULT 30, troca_obrigatoria boolean NOT NULL DEFAULT false,
+    proibir_senhas_comuns boolean NOT NULL DEFAULT true, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL
+);
+CREATE INDEX IF NOT EXISTS ix_auth_sessoes_usuario_status ON plantaopro.auth_sessoes(usuario_id, reg_status, ultimo_uso_em DESC);
+CREATE INDEX IF NOT EXISTS ix_auth_refresh_tokens_sessao ON plantaopro.auth_refresh_tokens(sessao_id, expira_em DESC);
+CREATE INDEX IF NOT EXISTS ix_auth_revogacoes_usuario ON plantaopro.auth_revogacoes(usuario_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_senha_historico_usuario ON plantaopro.senha_historico(usuario_id, reg_date DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_politicas_senha_tenant ON plantaopro.politicas_senha(coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid)) WHERE reg_status='A';
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_auth_refresh_tokens_sessao') THEN ALTER TABLE plantaopro.auth_refresh_tokens ADD CONSTRAINT fk_auth_refresh_tokens_sessao FOREIGN KEY (sessao_id) REFERENCES plantaopro.auth_sessoes(id); END IF;
+END $$;
+
+-- Origem: database/schema/020_saas_tenants.sql
+-- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/030_operacao_plantoes.sql
+-- Operação de plantões preservada a partir das origens históricas normalizadas pelo gerador.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/040_saude360.sql
+-- Saúde 360 preservado a partir das origens históricas normalizadas pelo gerador.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/050_financeiro.sql
+-- Financeiro preservado a partir das origens históricas normalizadas pelo gerador.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/060_auditoria_observabilidade.sql
+-- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/070_relatorios.sql
+-- Relatórios preservados a partir das origens históricas normalizadas pelo gerador.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/080_constraints.sql
+-- Constraints canônicas complementares são mantidas idempotentes nas respectivas seções.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/090_indexes.sql
+-- Índices canônicos complementares são mantidos idempotentes nas respectivas seções.
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/100_reference_data.sql
+-- Dados referenciais mínimos sem credenciais fixas.
+INSERT INTO plantaopro.politicas_senha(tenant_id)
+SELECT NULL WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
+
 -- ============================================================
 -- Seção 04 — Tabelas fundamentais e SaaS mínimo antes de ALTERs
 -- ============================================================
@@ -108,24 +189,24 @@ CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (id uuid PRIMARY KEY DEFAULT g
 -- Seção 05 — Schema histórico canônico ordenado por dependência
 -- ============================================================
 
--- Origem histórica: database/PlantaoPro_PostgreSQL_Completo.sql
+-- Origem: database/PlantaoPro_PostgreSQL_Completo.sql
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-SET search_path TO plantaopro;
-CREATE TABLE IF NOT EXISTS perfis(id uuid primary key default uuid_generate_v4(),nome varchar(60) unique not null,descricao varchar(255),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS usuarios(id uuid primary key default uuid_generate_v4(),nome varchar(120) not null,email varchar(120) unique not null,senha_hash varchar(255) not null,telefone varchar(20),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS usuarios_perfis(id uuid primary key default uuid_generate_v4(),usuario_id uuid references usuarios(id),perfil_id uuid references perfis(id),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS especialidades(id uuid primary key default uuid_generate_v4(),nome varchar(100) unique not null,descricao text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS hospitais(id uuid primary key default uuid_generate_v4(),razao_social varchar(160),nome_fantasia varchar(160) not null,cnpj varchar(18) unique not null,telefone varchar(20),email varchar(120),endereco text,cidade varchar(80) not null,estado char(2) not null,responsavel varchar(120),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS medicos(id uuid primary key default uuid_generate_v4(),usuario_id uuid references usuarios(id),especialidade_id uuid references especialidades(id),nome varchar(120),cpf varchar(14) unique,crm varchar(20),uf_crm char(2),telefone varchar(20),email varchar(120),cidade varchar(80),estado char(2),pix_chave varchar(120),dados_bancarios jsonb,observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS plantoes(id uuid primary key default uuid_generate_v4(),hospital_id uuid references hospitais(id),especialidade_id uuid references especialidades(id),data_inicio timestamp not null,data_fim timestamp not null,valor numeric(12,2),vagas int,vagas_disponiveis int,tipo varchar(20),status varchar(20),observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS escalas(id uuid primary key default uuid_generate_v4(),plantao_id uuid references plantoes(id),medico_id uuid references medicos(id),status varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS pagamentos(id uuid primary key default uuid_generate_v4(),escala_id uuid references escalas(id),medico_id uuid references medicos(id),plantao_id uuid references plantoes(id),valor_previsto numeric(12,2),valor_pago numeric(12,2),status varchar(20),data_prevista date,data_pagamento date,forma_pagamento varchar(40),chave_pix varchar(120),observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS notificacoes(id uuid primary key default uuid_generate_v4(),usuario_id uuid references usuarios(id),titulo varchar(160),mensagem text,tipo varchar(40),lida boolean default false,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS auditoria(id uuid primary key default uuid_generate_v4(),usuario_id uuid,acao varchar(60),entidade varchar(60),registro_id uuid,ip varchar(50),user_agent varchar(300),valor_anterior text,valor_novo text,descricao text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS historico_plantao(id uuid primary key default uuid_generate_v4(),plantao_id uuid references plantoes(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
-CREATE TABLE IF NOT EXISTS historico_escala(id uuid primary key default uuid_generate_v4(),escala_id uuid references escalas(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+SET search_path TO plantaopro, public;
+CREATE TABLE IF NOT EXISTS perfis(id uuid primary key default gen_random_uuid(),nome varchar(60) unique not null,descricao varchar(255),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS usuarios(id uuid primary key default gen_random_uuid(),nome varchar(120) not null,email varchar(120) unique not null,senha_hash varchar(255) not null,telefone varchar(20),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS usuarios_perfis(id uuid primary key default gen_random_uuid(),usuario_id uuid references usuarios(id),perfil_id uuid references perfis(id),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS especialidades(id uuid primary key default gen_random_uuid(),nome varchar(100) unique not null,descricao text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS hospitais(id uuid primary key default gen_random_uuid(),razao_social varchar(160),nome_fantasia varchar(160) not null,cnpj varchar(18) unique not null,telefone varchar(20),email varchar(120),endereco text,cidade varchar(80) not null,estado char(2) not null,responsavel varchar(120),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS medicos(id uuid primary key default gen_random_uuid(),usuario_id uuid references usuarios(id),especialidade_id uuid references especialidades(id),nome varchar(120),cpf varchar(14) unique,crm varchar(20),uf_crm char(2),telefone varchar(20),email varchar(120),cidade varchar(80),estado char(2),pix_chave varchar(120),dados_bancarios jsonb,observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS plantoes(id uuid primary key default gen_random_uuid(),hospital_id uuid references hospitais(id),especialidade_id uuid references especialidades(id),data_inicio timestamp not null,data_fim timestamp not null,valor numeric(12,2),vagas int,vagas_disponiveis int,tipo varchar(20),status varchar(20),observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS escalas(id uuid primary key default gen_random_uuid(),plantao_id uuid references plantoes(id),medico_id uuid references medicos(id),status varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS pagamentos(id uuid primary key default gen_random_uuid(),escala_id uuid references escalas(id),medico_id uuid references medicos(id),plantao_id uuid references plantoes(id),valor_previsto numeric(12,2),valor_pago numeric(12,2),status varchar(20),data_prevista date,data_pagamento date,forma_pagamento varchar(40),chave_pix varchar(120),observacoes text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS notificacoes(id uuid primary key default gen_random_uuid(),usuario_id uuid references usuarios(id),titulo varchar(160),mensagem text,tipo varchar(40),lida boolean default false,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS auditoria(id uuid primary key default gen_random_uuid(),usuario_id uuid,acao varchar(60),entidade varchar(60),registro_id uuid,ip varchar(50),user_agent varchar(300),valor_anterior text,valor_novo text,descricao text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS historico_plantao(id uuid primary key default gen_random_uuid(),plantao_id uuid references plantoes(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+CREATE TABLE IF NOT EXISTS historico_escala(id uuid primary key default gen_random_uuid(),escala_id uuid references escalas(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
 CREATE INDEX IF NOT EXISTS idx_plantoes_status ON plantoes(status);
 CREATE INDEX IF NOT EXISTS idx_plantoes_data_inicio ON plantoes(data_inicio);
 CREATE INDEX IF NOT EXISTS idx_plantoes_hospital ON plantoes(hospital_id);
@@ -135,7 +216,7 @@ CREATE INDEX IF NOT EXISTS idx_escalas_plantao ON escalas(plantao_id);
 CREATE INDEX IF NOT EXISTS idx_pagamentos_status ON pagamentos(status);
 CREATE INDEX IF NOT EXISTS idx_notificacoes_usuario_lida ON notificacoes(usuario_id,lida);
 
-CREATE TABLE IF NOT EXISTS historico_pagamento(id uuid primary key default uuid_generate_v4(),pagamento_id uuid references pagamentos(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,usuario_id uuid,reg_date timestamp default now());
+CREATE TABLE IF NOT EXISTS historico_pagamento(id uuid primary key default gen_random_uuid(),pagamento_id uuid references pagamentos(id),status_anterior varchar(20),status_novo varchar(20),justificativa text,usuario_id uuid,reg_date timestamp default now());
 
 
 CREATE INDEX IF NOT EXISTS idx_escalas_status ON escalas(status);
@@ -196,7 +277,7 @@ CREATE INDEX IF NOT EXISTS ix_pagamentos_status_data_prevista ON plantaopro.paga
 COMMENT ON COLUMN plantaopro.escalas.score_prioridade IS 'Score para priorização inteligente de médicos com menor carga recente.';
 COMMENT ON COLUMN plantaopro.escalas.conflito_detectado IS 'Flag operacional para alertas visuais e auditoria de conflitos.';
 
--- Origem histórica: database/20260525_evolucao_saas_premium.sql
+-- Origem: database/20260525_evolucao_saas_premium.sql
 -- Evolução SaaS Premium - PlantãoPro
 create schema if not exists plantaopro;
 
@@ -274,7 +355,7 @@ begin
     end if;
 end $$;
 
--- Origem histórica: backend/sql/20260522_saas_multiempresa.sql
+-- Origem: backend/sql/20260522_saas_multiempresa.sql
 create schema if not exists plantaopro;
 
 create table if not exists plantaopro.planos (
@@ -337,7 +418,7 @@ where not exists(select 1 from plantaopro.clientes where nome_fantasia='Cliente 
 
 update plantaopro.usuarios set cliente_id=(select id from plantaopro.clientes where nome_fantasia='Cliente Demonstração PlantãoPro' limit 1) where cliente_id is null;
 
--- Origem histórica: database/migrations/2026_plantao_pro_self_service_white_label.sql
+-- Origem: database/migrations/2026_plantao_pro_self_service_white_label.sql
 -- PlantãoPro SaaS multiempresa, white label e self-service
 -- Idempotente: usa schema plantaopro, CREATE/ALTER IF NOT EXISTS e constraints via pg_constraint.
 CREATE SCHEMA IF NOT EXISTS plantaopro;
@@ -535,7 +616,7 @@ WHERE NOT EXISTS (
     SELECT 1 FROM plantaopro.plano_faq f WHERE lower(f.pergunta)=lower(v.pergunta) AND f.reg_status='A'
 );
 
--- Origem histórica: database/migrations/2026_plantao_pro_white_label_self_service.sql
+-- Origem: database/migrations/2026_plantao_pro_white_label_self_service.sql
 -- PlantãoPro SaaS multiempresa, white label e self-service
 -- Idempotente: usa schema plantaopro, CREATE/ALTER IF NOT EXISTS e constraints via pg_constraint.
 CREATE SCHEMA IF NOT EXISTS plantaopro;
@@ -716,7 +797,7 @@ FROM (VALUES
 ) AS x(nome,descricao,valor,medicos,hospitais,plantoes,usuarios,convites,mobile,bi,rel_avancado,integracoes,operacao,suporte,white_label,destaque,slug,ordem)
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.planos p WHERE lower(coalesce(p.slug,p.nome))=lower(x.slug) AND p.reg_status='A');
 
--- Origem histórica: database/migrations/2026_saude360_base_clinica_minima.sql
+-- Origem: database/migrations/2026_saude360_base_clinica_minima.sql
 set search_path to plantaopro, public;
 
 create schema if not exists plantaopro;
@@ -1175,7 +1256,7 @@ insert into plantaopro.triagem_classificacoes_risco (codigo, nome, cor, priorida
 select 'NAO_URGENTE', 'Não urgente', 'AZUL', 5, 240
 where not exists (select 1 from plantaopro.triagem_classificacoes_risco where codigo = 'NAO_URGENTE' and cliente_id is null);
 
--- Origem histórica: database/migrations/2026_plantao_pro_saude360_base_clinica.sql
+-- Origem: database/migrations/2026_plantao_pro_saude360_base_clinica.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 create sequence if not exists plantaopro.seq_painel_senhas start 1;
@@ -1290,7 +1371,7 @@ select null, perfil, modulo, permissao, plano from (values
 ) as v(perfil,modulo,permissao,plano)
 where not exists (select 1 from plantaopro.clinica_permissoes_modulos p where p.cliente_id is null and p.perfil=v.perfil and p.modulo=v.modulo and p.permissao=v.permissao);
 
--- Origem histórica: database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql
+-- Origem: database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -2529,7 +2610,7 @@ begin
     end if;
 end $$;
 
--- Origem histórica: database/migrations/2026_saude360_consultas_base.sql
+-- Origem: database/migrations/2026_saude360_consultas_base.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -2856,7 +2937,7 @@ begin
     end if;
 end $$;
 
--- Origem histórica: database/migrations/2026_saude360_cid_prescricao.sql
+-- Origem: database/migrations/2026_saude360_cid_prescricao.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -3133,7 +3214,7 @@ begin
     end if;
 end $$;
 
--- Origem histórica: database/migrations/2026_saude360_convenios_planos_saude.sql
+-- Origem: database/migrations/2026_saude360_convenios_planos_saude.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -3184,7 +3265,7 @@ create index if not exists ix_convenio_autorizacoes_cliente_id on plantaopro.con
 create index if not exists ix_planos_saude_cliente_id on plantaopro.planos_saude(cliente_id); create index if not exists ix_planos_saude_convenio_id on plantaopro.planos_saude(convenio_id); create index if not exists ix_planos_saude_codigo on plantaopro.planos_saude(codigo); create index if not exists ix_planos_saude_status on plantaopro.planos_saude(status); create index if not exists ix_planos_saude_reg_date on plantaopro.planos_saude(reg_date);
 create index if not exists ix_plano_saude_pacientes_cliente_id on plantaopro.plano_saude_pacientes(cliente_id); create index if not exists ix_plano_saude_pacientes_paciente_id on plantaopro.plano_saude_pacientes(paciente_id); create index if not exists ix_plano_saude_pacientes_plano on plantaopro.plano_saude_pacientes(plano_saude_id); create index if not exists ix_plano_saude_pacientes_status on plantaopro.plano_saude_pacientes(status); create index if not exists ix_plano_saude_pacientes_reg_date on plantaopro.plano_saude_pacientes(reg_date);
 
--- Origem histórica: database/migrations/2026_saude360_financeiro_clinica.sql
+-- Origem: database/migrations/2026_saude360_financeiro_clinica.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -3202,7 +3283,7 @@ create index if not exists ix_clinica_contas_receber_cliente_id on plantaopro.cl
 create index if not exists ix_clinica_recebimentos_cliente_id on plantaopro.clinica_recebimentos(cliente_id); create index if not exists ix_clinica_recebimentos_paciente_id on plantaopro.clinica_recebimentos(paciente_id); create index if not exists ix_clinica_recebimentos_status on plantaopro.clinica_recebimentos(status); create index if not exists ix_clinica_recebimentos_reg_date on plantaopro.clinica_recebimentos(reg_date);
 create index if not exists ix_clinica_caixa_cliente_id on plantaopro.clinica_caixa(cliente_id); create index if not exists ix_clinica_caixa_status on plantaopro.clinica_caixa(status); create index if not exists ix_clinica_caixa_reg_date on plantaopro.clinica_caixa(reg_date);
 
--- Origem histórica: database/migrations/2026_plantao_pro_saas_inteligente.sql
+-- Origem: database/migrations/2026_plantao_pro_saas_inteligente.sql
 -- ============================================================================
 -- PlantãoPro SaaS Inteligente - regras comerciais, limites, faturamento e CS
 -- Script incremental idempotente para PostgreSQL
@@ -3583,7 +3664,7 @@ BEGIN
     END IF;
 END $$;
 
--- Origem histórica: database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql
+-- Origem: database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql
 -- PlantãoPro — SaaS inteligente funcional e comercialmente vendável
 -- Migração incremental, idempotente e segura para PostgreSQL.
 CREATE SCHEMA IF NOT EXISTS plantaopro;
@@ -3699,7 +3780,7 @@ FROM (VALUES
 ) AS v(perfil,titulo,descricao,ordem)
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.ajuda_topicos t WHERE t.perfil=v.perfil AND t.titulo=v.titulo AND t.reg_status='A');
 
--- Origem histórica: database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql
+-- Origem: database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -4401,7 +4482,7 @@ from (values
 ) as base(nome, descricao)
 where not exists (select 1 from plantaopro.lgpd_bases_legais b where b.nome = base.nome);
 
--- Origem histórica: database/migrations/2026_saas_comercial_core.sql
+-- Origem: database/migrations/2026_saas_comercial_core.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -4449,7 +4530,7 @@ on conflict (codigo) do update set nome=excluded.nome, descricao=excluded.descri
 create table if not exists plantaopro.saas_billing_assinaturas (id uuid primary key default gen_random_uuid(), cliente_id uuid not null, tenant_id uuid, plano_id uuid, valor_mensal numeric(12,2) not null default 0, dia_vencimento int not null default 10, status text not null default 'ATIVA', data_inicio date not null default current_date, data_fim date, renovacao_automatica boolean not null default true, observacoes text, reg_status char(1) not null default 'A', reg_date timestamptz not null default now());
 create index if not exists ix_saas_billing_assinaturas_cliente_tenant on plantaopro.saas_billing_assinaturas(cliente_id,tenant_id,status,reg_date);
 
--- Origem histórica: database/migrations/2026_v113_operacional_real.sql
+-- Origem: database/migrations/2026_v113_operacional_real.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 create table if not exists plantaopro.v113_clientes (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, nome varchar(160), documento varchar(40), email varchar(160), status varchar(40));
@@ -4701,7 +4782,7 @@ create index if not exists ix_v113_auditoria_status on plantaopro.v113_auditoria
 create index if not exists ix_v113_auditoria_created_at on plantaopro.v113_auditoria (created_at);
 create index if not exists ix_v113_auditoria_tenant_id on plantaopro.v113_auditoria (tenant_id);
 
--- Origem histórica: database/migrations/2026_v114_consolidacao_produto.sql
+-- Origem: database/migrations/2026_v114_consolidacao_produto.sql
 -- v1.14 consolida o domínio PlantãoPro sobre as tabelas persistidas da v1.13.
 -- Não cria módulo paralelo; adiciona estruturas pequenas para favoritos, filtros, atalhos e timelines.
 create schema if not exists plantaopro;
@@ -4710,7 +4791,7 @@ create table if not exists plantaopro.v114_filtros_salvos(id uuid primary key de
 create table if not exists plantaopro.v114_timelines(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, entidade text not null, entidade_id uuid null, evento text not null, resumo text not null, perfil text null, dados_minimos jsonb not null default '{}'::jsonb, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
 create table if not exists plantaopro.v114_checklist_implantacao(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, titulo text not null, perfil_responsavel text not null, status text not null default 'PENDENTE', ordem int not null default 0, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
 
--- Origem histórica: database/migrations/2026_v115_regras_faturamento_repasses.sql
+-- Origem: database/migrations/2026_v115_regras_faturamento_repasses.sql
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -4741,7 +4822,7 @@ create index if not exists ix_v115_jornada_tenant_status_data on plantaopro.v115
 create index if not exists ix_v115_alertas_tenant_status_data on plantaopro.v115_alertas_operacionais(tenant_id,reg_status,created_at);
 create index if not exists ix_v115_mobile_tenant_status_data on plantaopro.v115_configuracoes_mobile(tenant_id,reg_status,created_at);
 
--- Origem histórica: database/migrations/2026_v116_consolidacao_operacional_final.sql
+-- Origem: database/migrations/2026_v116_consolidacao_operacional_final.sql
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -5162,7 +5243,7 @@ ALTER TABLE IF EXISTS plantaopro.v116_integracao_provedores ADD COLUMN IF NOT EX
 
 CREATE INDEX IF NOT EXISTS ix_v116_integracao_provedores_tenant_status_data ON plantaopro.v116_integracao_provedores(tenant_id, reg_status, created_at);
 
--- Origem histórica: database/migrations/2026_v117_hardening_v116_runtime.sql
+-- Origem: database/migrations/2026_v117_hardening_v116_runtime.sql
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 ALTER TABLE IF EXISTS plantaopro.v116_timelines ADD COLUMN IF NOT EXISTS entidade varchar(120) NULL;
 ALTER TABLE IF EXISTS plantaopro.v116_timelines ADD COLUMN IF NOT EXISTS entidade_id uuid NULL;
@@ -5175,7 +5256,7 @@ CREATE INDEX IF NOT EXISTS ix_v117_v116_notificacoes_prioridade ON plantaopro.v1
 -- Seção 08 — Compatibilidade de permissões v1.18.6
 -- ============================================================
 
--- Origem histórica: database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql
+-- Origem: database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 

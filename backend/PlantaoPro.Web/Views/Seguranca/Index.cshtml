@@ -1,0 +1,28 @@
+@{
+    ViewData["Title"] = "Central de Segurança";
+}
+<section class="container-fluid py-4" aria-labelledby="seguranca-title">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <span class="badge bg-primary-subtle text-primary">v1.18.7</span>
+            <h1 id="seguranca-title" class="h2 mt-2">Central de Segurança e Acessos</h1>
+            <p class="text-muted mb-0">Gestão multi-tenant de usuários, perfis, permissões, sessões, políticas de senha e auditoria.</p>
+        </div>
+        <a class="btn btn-primary" asp-controller="Seguranca" asp-action="Usuarios">Gerenciar usuários</a>
+    </div>
+    <div class="row g-3 mb-4">
+        @foreach (var item in new[] { "Usuários ativos", "Usuários bloqueados", "Sem perfil", "Sem tenant", "Logins com falha", "Sessões ativas", "Sessões revogadas", "Acessos negados" })
+        {
+            <div class="col-12 col-sm-6 col-lg-3"><article class="card shadow-sm h-100"><div class="card-body"><span class="text-muted small">@item</span><strong class="d-block fs-3">—</strong><span class="badge text-bg-light">Dados persistidos via API</span></div></article></div>
+        }
+    </div>
+    <div class="row g-3">
+        <div class="col-lg-8"><div class="card h-100"><div class="card-header">Timeline de eventos críticos</div><div class="card-body"><p class="text-muted">Nenhum evento crítico no filtro atual.</p></div></div></div>
+        <div class="col-lg-4"><div class="card h-100"><div class="card-header">Atalhos</div><div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action" asp-action="Perfis">Perfis e permissões</a>
+            <a class="list-group-item list-group-item-action" asp-action="Sessoes">Sessões e tokens</a>
+            <a class="list-group-item list-group-item-action" asp-action="PoliticasSenha">Políticas de senha</a>
+            <a class="list-group-item list-group-item-action" asp-action="Auditoria">Auditoria de segurança</a>
+        </div></div></div>
+    </div>
+</section>

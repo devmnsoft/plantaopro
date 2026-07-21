@@ -122,6 +122,8 @@ public sealed class PermissionService : IPermissionService
         if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(moduleCode)) return true;
         if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(moduleCode)) return true;
 
+        if (moduleCode == "SEGURANCA") return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Suporte) || currentUser.HasRole(RolesConstants.Auditor);
+
         if (currentUser.IsTenantAdmin())
         {
             return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO" && moduleCode != "MARKETPLACE";
@@ -154,12 +156,12 @@ public sealed class PermissionService : IPermissionService
 
         if (currentUser.HasRole(RolesConstants.Suporte))
         {
-            return moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE" || moduleCode == "OBSERVABILIDADE_GLOBAL" || moduleCode == "ADMIN_SAAS";
+            return moduleCode == "SEGURANCA" || moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE" || moduleCode == "OBSERVABILIDADE_GLOBAL" || moduleCode == "ADMIN_SAAS";
         }
 
         if (currentUser.HasRole(RolesConstants.Auditor))
         {
-            return actionCode == "VER" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD" || moduleCode == "OBSERVABILIDADE_GLOBAL";
+            return actionCode == "VER" || moduleCode == "SEGURANCA" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD" || moduleCode == "OBSERVABILIDADE_GLOBAL";
         }
 
         if (currentUser.HasRole(RolesConstants.Comercial))

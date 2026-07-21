@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import hashlib,json,re
+from collections import defaultdict
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 manifest=json.loads((ROOT/'database/schema-manifest.json').read_text(encoding='utf-8'))
@@ -10,8 +11,33 @@ for section in manifest['sections']:
             canonical_tables.add(obj['name'].split('.')[-1].lower())
         if obj.get('category','').startswith('CANONICAL') or obj.get('type')=='canonical':
             if obj.get('source'): canonical_sources.add(obj['source'])
-def add(s):
-    s=s.strip()+"\n"
+def normalize_sql(s, origin):
+    normalized=[]
+    for lineno,line in enumerate(s.splitlines(), start=1):
+        if re.search(r'^\s*SET\s+search_path\s+TO\s+plantaopro\s*;\s*$', line, re.I):
+            line='SET search_path TO plantaopro, public;'
+        line=re.sub(r'(?<![\w.])uuid_generate_v4\s*\(', 'gen_random_uuid(', line)
+        line=re.sub(r'(?<![\w.])unaccent\s*\(', 'public.unaccent(', line)
+        normalized.append(line)
+    return '\n'.join(normalized)
+
+def validate_sql(s, origin):
+    errors=[]
+    for lineno,line in enumerate(s.splitlines(), start=1):
+        if re.search(r'^\s*SET\s+search_path\s+TO\s+plantaopro\s*;\s*$', line, re.I):
+            errors.append({'file':origin,'line':lineno,'function':'search_path','correction':'Use SET search_path TO plantaopro, public;'})
+        if re.search(r'(?<![\w.])uuid_generate_v4\s*\(', line):
+            errors.append({'file':origin,'line':lineno,'function':'uuid_generate_v4','correction':'Use gen_random_uuid() or public.uuid_generate_v4().'})
+        if re.search(r'(?<![\w.])unaccent\s*\(', line, re.I):
+            errors.append({'file':origin,'line':lineno,'function':'unaccent','correction':'Use public.unaccent(...).'})
+    if errors:
+        art=ROOT/'artifacts'; art.mkdir(exist_ok=True)
+        (art/'schema-conflicts.json').write_text(json.dumps(errors,ensure_ascii=False,indent=2)+"\n", encoding='utf-8')
+        raise SystemExit('SQL não qualificado encontrado: '+json.dumps(errors,ensure_ascii=False))
+
+def add(s, origin='inline'):
+    s=normalize_sql(s, origin).strip()+"\n"
+    validate_sql(s, origin)
     h=hashlib.sha256(s.encode()).hexdigest()
     if h not in seen:
         seen.add(h); out.append(s)
@@ -36,6 +62,17 @@ def write_reports():
         lines += [f"## {c['table']}",f"- Primeira origem: `{c['first_origin']}`",f"- Segunda origem: `{c['second_origin']}`",f"- Canônico no manifesto: `{c['canonical']}`",f"- ALTER compatibilidade: `{c['compatibility_alter']}`",f"- Colunas primeira: {', '.join(c['first_columns'])}",f"- Colunas segunda: {', '.join(c['second_columns'])}",'']
     if not conflicts: lines.append('Nenhum conflito detectado.')
     (art/'schema-conflicts.md').write_text('\n'.join(lines)+"\n",encoding='utf-8')
+    deps=[]
+    created=set()
+    for section in sorted(manifest['sections'], key=lambda x:x['order']):
+        for obj in section.get('objects',[]):
+            name=(obj.get('name') or obj.get('source') or 'inline')
+            deps.append({'object':name,'dependsOn':obj.get('dependsOn',[]),'source':obj.get('source')})
+            if obj.get('name'): created.add(obj['name'].lower())
+    (art/'schema-dependencies.json').write_text(json.dumps(deps,ensure_ascii=False,indent=2)+"\n",encoding='utf-8')
+    dlines=['# Dependências de schema','']
+    for d in deps: dlines.append(f"- `{d['object']}` depende de: {', '.join(d['dependsOn']) if d['dependsOn'] else 'nenhuma'}")
+    (art/'schema-dependencies.md').write_text('\n'.join(dlines)+"\n",encoding='utf-8')
 header=f"""-- PlantãoPro - script completo oficial de instalação limpa
 -- Versão do schema: {manifest.get('schemaVersion','v1.18.6')}
 -- PostgreSQL suportado: 16
@@ -52,16 +89,16 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
 """
-add(header)
+add(header, 'header')
 for section in sorted(manifest['sections'], key=lambda x:x['order']):
     add(f"\n-- ============================================================\n-- Seção {section['order']:02d} — {section['name']}\n-- ============================================================\n")
     for obj in section.get('objects',[]):
         if 'sql' in obj:
-            scan_conflicts(obj['sql'], obj.get('name','manifest-inline')); add(obj['sql'])
+            sql=normalize_sql(obj['sql'], obj.get('name','manifest-inline')); scan_conflicts(sql, obj.get('name','manifest-inline')); add(sql, obj.get('name','manifest-inline'))
         if 'source' in obj:
             p=ROOT/obj['source']; sql=p.read_text(encoding='utf-8')
             if '\\i ' in sql or '\\ir ' in sql: raise SystemExit(f'Comando include proibido em {p}')
-            scan_conflicts(sql, obj['source']); add(f"-- Origem histórica: {obj['source']}\n"+sql)
+            sql=normalize_sql(sql, obj['source']); scan_conflicts(sql, obj['source']); add(f"-- Origem: {obj['source']}\n"+sql, obj['source'])
 write_reports()
 script='\n'.join(out)
 if re.search(r'^\s*CREATE\s+DATABASE\b', script, re.I|re.M): raise SystemExit('CREATE DATABASE não é permitido')

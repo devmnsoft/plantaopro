@@ -115,6 +115,7 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(code)) return true;
         if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(code)) return true;
 
+        if (code == "SEGURANCA") return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Suporte) || currentUser.HasRole(RolesConstants.Auditor);
         if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL" && code != "PARCEIRO";
         if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA";
         if (currentUser.HasRole(RolesConstants.Financeiro)) return saude360Financeiro.Contains(code) || code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";

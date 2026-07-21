@@ -1,7 +1,7 @@
 [
   {
     "table": "plantaopro.usuarios_perfis",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/PlantaoPro_PostgreSQL_Completo.sql",
     "first_columns": [
       "cliente_id",
@@ -116,7 +116,7 @@
   },
   {
     "table": "plantaopro.modulos_sistema",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
     "first_columns": [
       "codigo",
@@ -147,7 +147,7 @@
   },
   {
     "table": "plantaopro.acoes_sistema",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
     "first_columns": [
       "codigo",
@@ -179,7 +179,7 @@
   },
   {
     "table": "plantaopro.permissoes",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
     "first_columns": [
       "acao",
@@ -247,7 +247,7 @@
   },
   {
     "table": "plantaopro.perfil_permissoes",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
     "first_columns": [
       "bloqueado_por_plano",
@@ -303,7 +303,7 @@
   },
   {
     "table": "plantaopro.usuario_permissoes_especiais",
-    "first_origin": "database/schema/000_schema_canonico_base.sql",
+    "first_origin": "database/schema/010_identity_access.sql",
     "second_origin": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
     "first_columns": [
       "cliente_id",

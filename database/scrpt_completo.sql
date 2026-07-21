@@ -1,38 +1,9 @@
--- PlantãoPro - script completo oficial de instalação limpa
--- Versão do schema: v1.18.9
--- PostgreSQL suportado: 16
--- Data de geração: 2026-07-21
--- Execução oficial:
---   psql \
---     -v ON_ERROR_STOP=1 \
---     -h localhost \
---     -p 5432 \
---     -U postgres \
---     -d plantaopro \
---     -f database/scrpt_completo.sql
--- O banco de dados de destino deve existir antes da execução.
--- Este arquivo não contém credenciais reais, senhas administrativas, tokens ou connection strings.
--- Não use scripts de demonstração em produção.
-
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS unaccent;
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE SCHEMA IF NOT EXISTS plantaopro;
-SET search_path TO plantaopro, public;
-
--- ============================================================
--- Seção 03 — Schema canônico de instalação limpa v1.18.8
--- ============================================================
-
--- Origem: database/schema/000_extensions_schema.sql
 -- v1.18.7 extensões e schema canônico
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS unaccent;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
-
--- Origem: database/schema/000_schema_canonico_base.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -112,8 +83,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
     error_message_sanitized text NULL,
     executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
 );
-
--- Origem: database/schema/010_identity_access.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -147,11 +116,15 @@ ALTER TABLE plantaopro.usuarios
     ADD COLUMN IF NOT EXISTS bloqueado_ate timestamptz,
     ADD COLUMN IF NOT EXISTS senha_alteracao_obrigatoria boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS ultimo_login timestamptz,
-    ADD COLUMN IF NOT EXISTS preferencias_notificacao jsonb DEFAULT '{}'::jsonb;
+    ADD COLUMN IF NOT EXISTS preferencias_notificacao jsonb DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS reg_update timestamptz,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
 UPDATE plantaopro.perfis SET codigo = upper(regexp_replace(public.unaccent(coalesce(nullif(codigo,''), nome, id::text)), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
 UPDATE plantaopro.usuarios SET email_normalizado = upper(email) WHERE email_normalizado IS NULL OR btrim(email_normalizado)='';
 ALTER TABLE plantaopro.perfis ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN base_sistema SET DEFAULT false, ALTER COLUMN customizado SET DEFAULT false, ALTER COLUMN status SET DEFAULT 'ATIVO';
-ALTER TABLE plantaopro.usuarios ALTER COLUMN email_normalizado SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN preferencias_notificacao SET DEFAULT '{}'::jsonb;
+UPDATE plantaopro.usuarios SET status = coalesce(nullif(status,''),'ATIVO'), senha_alteracao_obrigatoria = coalesce(senha_alteracao_obrigatoria,false), preferencias_notificacao = coalesce(preferencias_notificacao,'{}'::jsonb);
+ALTER TABLE plantaopro.usuarios ALTER COLUMN email_normalizado SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN senha_alteracao_obrigatoria SET DEFAULT false, ALTER COLUMN senha_alteracao_obrigatoria SET NOT NULL, ALTER COLUMN preferencias_notificacao SET DEFAULT '{}'::jsonb, ALTER COLUMN preferencias_notificacao SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_perfis_tenant_codigo ON plantaopro.perfis(coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
 CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_email_normalizado ON plantaopro.usuarios(lower(email_normalizado)) WHERE reg_status='A';
 
@@ -212,6 +185,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.login_tentativas(
     reg_date timestamp not null default now(), reg_update timestamp null, reg_status char(1) not null default 'A'
 );
 CREATE INDEX IF NOT EXISTS ix_login_tentativas_usuario_data ON plantaopro.login_tentativas(usuario_id, reg_date desc);
+INSERT INTO plantaopro.perfis(tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status) SELECT NULL,NULL,'ADMINISTRADOR_GLOBAL','Administrador Global','Acesso administrativo global do sistema',true,false,'ATIVO','A' WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE tenant_id IS NULL AND codigo='ADMINISTRADOR_GLOBAL' AND reg_status='A');
+
 CREATE TABLE IF NOT EXISTS plantaopro.recuperacao_senha(
     id uuid primary key default gen_random_uuid(), usuario_id uuid not null, token_hash text not null,
     expiracao timestamp not null, utilizado boolean not null default false, reg_date timestamp not null default now(),
@@ -254,8 +229,6 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_politicas_senha_tenant ON plantaopro.politi
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_auth_refresh_tokens_sessao') THEN ALTER TABLE plantaopro.auth_refresh_tokens ADD CONSTRAINT fk_auth_refresh_tokens_sessao FOREIGN KEY (sessao_id) REFERENCES plantaopro.auth_sessoes(id); END IF;
 END $$;
-
--- Origem: database/schema/020_saas_tenants.sql
 -- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
 SET search_path TO plantaopro, public;
 
@@ -440,8 +413,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/030_operacao_plantoes.sql
 -- Operação de plantões preservada a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -636,8 +607,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.mensagens (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/040_saude360.sql
 -- Saúde 360 preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -802,8 +771,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_clinica (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/050_financeiro.sql
 -- Financeiro preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -928,8 +895,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/060_auditoria_observabilidade.sql
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1034,8 +999,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.permissao_logs (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/070_relatorios.sql
 -- Relatórios preservados a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1070,21 +1033,13 @@ CREATE TABLE IF NOT EXISTS plantaopro.relatorios_filtros_salvos (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
-
--- Origem: database/schema/080_constraints.sql
 -- Constraints canônicas complementares são mantidas idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
-
--- Origem: database/schema/090_indexes.sql
 -- Índices canônicos complementares são mantidos idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
-
--- Origem: database/schema/100_reference_data.sql
 -- Dados referenciais mínimos sem credenciais fixas.
 INSERT INTO plantaopro.politicas_senha(tenant_id)
 SELECT NULL WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
-
--- Origem: database/schema/110_implantacao_go_live.sql
 -- v1.18.8 Central de Implantação, Diagnóstico e Go-Live
 SET search_path TO plantaopro, public;
 CREATE TABLE IF NOT EXISTS plantaopro.implantacao_status (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, classificacao text NOT NULL DEFAULT 'NÃO_CONFIGURADO', prontidao_percentual numeric(5,2) NOT NULL DEFAULT 0, versao text NOT NULL DEFAULT 'v1.18.8', ambiente text NOT NULL DEFAULT 'NAO_INFORMADO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
@@ -1096,8 +1051,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.implantacao_evidencias (id uuid PRIMARY KE
 CREATE TABLE IF NOT EXISTS plantaopro.go_live_checklists (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, decisao_final text NOT NULL DEFAULT 'PENDENTE', relatorio jsonb NOT NULL DEFAULT '{}'::jsonb, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
 CREATE TABLE IF NOT EXISTS plantaopro.go_live_aprovacoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), checklist_id uuid NULL, aprovador_nome text NOT NULL, papel text NOT NULL, decisao text NOT NULL, observacao text NULL, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE UNIQUE INDEX IF NOT EXISTS ux_implantacao_etapas_tenant_codigo ON plantaopro.implantacao_etapas(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
-
--- Origem: database/schema/120_operacoes_continuidade.sql
 -- Operações e continuidade v1.18.9
 SET search_path TO plantaopro, public;
 

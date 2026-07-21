@@ -6,6 +6,12 @@ namespace PlantaoPro.Api;
 public static class DatabaseStartupReadinessValidator
 {
     private static readonly string[] EssentialTables = new[] { "usuarios", "perfis", "usuarios_perfis", "api_request_logs", "api_error_logs" };
+    private static readonly Dictionary<string, string[]> EssentialColumns = new()
+    {
+        ["usuarios"] = new[] { "id", "nome", "email", "senha_hash", "reg_status", "cliente_id", "tenant_id", "email_normalizado", "status", "senha_alteracao_obrigatoria", "bloqueado_ate", "ultimo_login" },
+        ["perfis"] = new[] { "id", "tenant_id", "cliente_id", "codigo", "base_sistema", "customizado", "status" },
+        ["usuarios_perfis"] = new[] { "id", "tenant_id", "cliente_id", "usuario_id", "perfil_id", "reg_status" }
+    };
 
     public static void Validate(string? connectionString, IWebHostEnvironment environment, IConfiguration configuration)
     {
@@ -22,8 +28,17 @@ public static class DatabaseStartupReadinessValidator
 
             foreach (var table in EssentialTables)
             {
-                var exists = cn.ExecuteScalar<int>("select 1 from information_schema.tables where table_schema = 'plantaopro' and table_name = @table", new { table }) == 1;
+                var exists = cn.ExecuteScalar<int>("select count(*) from information_schema.tables where table_schema = 'plantaopro' and table_name = @table", new { table }) == 1;
                 if (!exists) throw new InvalidOperationException($"Tabela essencial plantaopro.{table} não existe. Execute: dotnet run --project backend/PlantaoPro.Tools.Database -- install");
+            }
+
+            foreach (var requirement in EssentialColumns)
+            {
+                foreach (var column in requirement.Value)
+                {
+                    var exists = cn.ExecuteScalar<int>("select count(*) from information_schema.columns where table_schema = 'plantaopro' and table_name = @table and column_name = @column", new { table = requirement.Key, column }) == 1;
+                    if (!exists) throw new InvalidOperationException($"Schema de identidade incompatível: coluna obrigatória plantaopro.{requirement.Key}.{column} ausente. Execute: dotnet run --project backend/PlantaoPro.Tools.Database -- repair-identity-schema");
+                }
             }
         }
         catch (PostgresException ex) when (ex.SqlState == "3D000")

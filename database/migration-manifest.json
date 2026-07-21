@@ -369,6 +369,15 @@
       ],
       "status": "active",
       "transactional": true
+    },
+    {
+      "version": "2026_v1189_identity_schema_login",
+      "source": "database/migrations/2026_v1189_identity_schema_login.sql",
+      "checksum": "9c907952163462e2b63841a52aaed77cfcb34151898e076432c8784af803d6c5",
+      "transactional": true,
+      "dependsOn": [
+        "2026_v1189_operacoes_continuidade"
+      ]
     }
   ]
 }

@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "v1.18.8",
+  "generatedAt": "2026-07-21",
+  "sections": [
+    {
+      "order": 3,
+      "name": "Schema canônico de instalação limpa v1.18.8",
+      "objects": [
+        {
+          "name": "plantaopro.extensions",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/000_extensions_schema.sql"
+        },
+        {
+          "name": "plantaopro.identity_access",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/010_identity_access.sql"
+        },
+        {
+          "name": "plantaopro.saas_tenants",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/020_saas_tenants.sql"
+        },
+        {
+          "name": "plantaopro.operacao_plantoes",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/030_operacao_plantoes.sql"
+        },
+        {
+          "name": "plantaopro.saude360",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/040_saude360.sql"
+        },
+        {
+          "name": "plantaopro.financeiro",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/050_financeiro.sql"
+        },
+        {
+          "name": "plantaopro.auditoria_observabilidade",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/060_auditoria_observabilidade.sql"
+        },
+        {
+          "name": "plantaopro.relatorios",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/070_relatorios.sql"
+        },
+        {
+          "name": "plantaopro.constraints",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/080_constraints.sql"
+        },
+        {
+          "name": "plantaopro.indexes",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/090_indexes.sql"
+        },
+        {
+          "name": "plantaopro.reference_data",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/100_reference_data.sql"
+        },
+        {
+          "name": "plantaopro.implantacao_go_live",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/110_implantacao_go_live.sql"
+        }
+      ]
+    }
+  ],
+  "canonicalTables": [
+    "modulos_sistema",
+    "acoes_sistema",
+    "permissoes",
+    "perfil_permissoes",
+    "usuarios_perfis",
+    "usuario_permissoes_especiais",
+    "login_tentativas",
+    "recuperacao_senha",
+    "perfis",
+    "auth_sessoes",
+    "auth_refresh_tokens",
+    "auth_revogacoes",
+    "senha_historico",
+    "politicas_senha",
+    "implantacao_status",
+    "implantacao_etapas",
+    "implantacao_validacoes",
+    "implantacao_pendencias",
+    "implantacao_execucoes",
+    "implantacao_evidencias",
+    "go_live_checklists",
+    "go_live_aprovacoes"
+  ]
+}

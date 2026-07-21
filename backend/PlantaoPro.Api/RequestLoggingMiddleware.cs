@@ -3,6 +3,7 @@ using Npgsql;
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Text.Json;
+using System.Threading;
 
 namespace PlantaoPro.Api;
 
@@ -10,6 +11,8 @@ public sealed class RequestLoggingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<RequestLoggingMiddleware> _logger;
+    private static long _loggingSuspendedUntilTicks;
+    private static long _lastFallbackLogTicks;
 
     public RequestLoggingMiddleware(RequestDelegate next, ILogger<RequestLoggingMiddleware> logger)
     {
@@ -105,8 +108,14 @@ public sealed class RequestLoggingMiddleware
             var duration = durationMs < 0 ? 0 : durationMs;
             var erro = ObterMensagemErro(statusCode, exception) ?? string.Empty;
 
+            if (LoggingCircuitOpen())
+            {
+                LogFallbackOnce("Persistência de logs temporariamente suspensa; banco indisponível ou schema ausente.");
+                return;
+            }
+
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await GarantirCompatibilidadeLogsAsync(cn);
+            await cn.OpenAsync();
             await cn.ExecuteAsync(@"insert into plantaopro.api_request_logs
     (endpoint, metodo, method, status_code, sucesso, duracao_ms, duration_ms, usuario_id, cliente_id, email, perfil, ip_origem, ip, user_agent, query_string, erro, error_message, reg_date)
 values
@@ -182,7 +191,8 @@ values
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Falha ao registrar log estruturado de request");
+            OpenLoggingCircuit();
+            LogFallbackOnce("Falha ao persistir log estruturado; evento sanitizado descartado até recuperação do banco.");
         }
     }
 
@@ -196,121 +206,28 @@ values
         return statusCode >= 400 ? "HTTP " + statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture) : string.Empty;
     }
 
-    private static async Task GarantirCompatibilidadeLogsAsync(NpgsqlConnection cn)
+    private static bool LoggingCircuitOpen()
     {
-        await cn.ExecuteAsync(@"create schema if not exists plantaopro;
-create extension if not exists pgcrypto;
+        var until = Interlocked.Read(ref _loggingSuspendedUntilTicks);
+        return until > DateTimeOffset.UtcNow.UtcTicks;
+    }
 
-create table if not exists plantaopro.api_request_logs (
-    id uuid primary key default gen_random_uuid(),
-    endpoint text not null default '',
-    metodo varchar(10) not null default 'GET',
-    method varchar(12) not null default 'GET',
-    status_code integer not null default 0,
-    sucesso boolean not null default true,
-    duracao_ms bigint not null default 0,
-    duration_ms bigint not null default 0,
-    usuario_id uuid null,
-    cliente_id uuid null,
-    email varchar(255) null,
-    perfil varchar(120) null,
-    ip_origem varchar(64) null,
-    ip varchar(80) null,
-    user_agent text null,
-    query_string text null,
-    erro text null,
-    error_message text not null default '',
-    reg_date timestamptz not null default now(),
-    reg_status char(1) not null default 'A'
-);
+    private static void OpenLoggingCircuit()
+    {
+        Interlocked.Exchange(ref _loggingSuspendedUntilTicks, DateTimeOffset.UtcNow.AddSeconds(30).UtcTicks);
+    }
 
-create table if not exists plantaopro.api_error_logs (
-    id uuid primary key default gen_random_uuid(),
-    endpoint text not null default '',
-    metodo varchar(10) not null default 'GET',
-    method varchar(12) not null default 'GET',
-    status_code integer not null default 0,
-    usuario_id uuid null,
-    cliente_id uuid null,
-    email varchar(255) null,
-    perfil varchar(120) null,
-    ip_origem varchar(64) null,
-    ip varchar(80) null,
-    user_agent text null,
-    mensagem text not null default '',
-    error_message text not null default '',
-    exception_type varchar(255) null,
-    stack_trace text not null default '',
-    success boolean not null default false,
-    query_string text not null default '',
-    duration_ms bigint not null default 0,
-    reg_date timestamptz not null default now(),
-    reg_status char(1) not null default 'A'
-);
+    private void LogFallbackOnce(string message)
+    {
+        var now = DateTimeOffset.UtcNow.UtcTicks;
+        var last = Interlocked.Read(ref _lastFallbackLogTicks);
+        if (last != 0 && new TimeSpan(now - last) < TimeSpan.FromSeconds(30))
+        {
+            return;
+        }
 
-alter table if exists plantaopro.api_request_logs
-    add column if not exists metodo varchar(10) not null default 'GET',
-    add column if not exists method varchar(12) not null default 'GET',
-    add column if not exists duracao_ms bigint not null default 0,
-    add column if not exists duration_ms bigint not null default 0,
-    add column if not exists ip_origem varchar(64) null,
-    add column if not exists ip varchar(80) null,
-    add column if not exists erro text null,
-    add column if not exists error_message text not null default '',
-    add column if not exists reg_status char(1) not null default 'A';
-
-alter table if exists plantaopro.api_request_logs
-    alter column id set default gen_random_uuid(),
-    alter column error_message set default '',
-    alter column method set default 'GET',
-    alter column duration_ms set default 0;
-
-update plantaopro.api_request_logs set error_message = '' where error_message is null;
-
-alter table if exists plantaopro.api_error_logs
-    add column if not exists metodo varchar(10) not null default 'GET',
-    add column if not exists method varchar(12) not null default 'GET',
-    add column if not exists ip_origem varchar(64) null,
-    add column if not exists ip varchar(80) null,
-    add column if not exists mensagem text not null default '',
-    add column if not exists error_message text not null default '',
-    add column if not exists stack_trace text not null default '',
-    add column if not exists success boolean not null default false,
-    add column if not exists query_string text not null default '',
-    add column if not exists duration_ms bigint not null default 0,
-    add column if not exists reg_status char(1) not null default 'A';
-
-alter table if exists plantaopro.api_error_logs
-    alter column id set default gen_random_uuid(),
-    alter column endpoint set default '',
-    alter column metodo set default '',
-    alter column mensagem set default '',
-    alter column error_message set default '',
-    alter column stack_trace set default '',
-    alter column method set default '',
-    alter column email set default '',
-    alter column perfil set default '',
-    alter column ip set default '',
-    alter column ip_origem set default '',
-    alter column user_agent set default '',
-    alter column success set default false,
-    alter column query_string set default '',
-    alter column duration_ms set default 0;
-
-update plantaopro.api_error_logs set endpoint = '' where endpoint is null;
-update plantaopro.api_error_logs set metodo = '' where metodo is null;
-update plantaopro.api_error_logs set method = '' where method is null;
-update plantaopro.api_error_logs set mensagem = '' where mensagem is null;
-update plantaopro.api_error_logs set error_message = '' where error_message is null;
-update plantaopro.api_error_logs set stack_trace = '' where stack_trace is null;
-update plantaopro.api_error_logs set email = '' where email is null;
-update plantaopro.api_error_logs set perfil = '' where perfil is null;
-update plantaopro.api_error_logs set ip = '' where ip is null;
-update plantaopro.api_error_logs set ip_origem = '' where ip_origem is null;
-update plantaopro.api_error_logs set user_agent = '' where user_agent is null;
-update plantaopro.api_error_logs set success = false where success is null;
-update plantaopro.api_error_logs set query_string = '' where query_string is null;
-update plantaopro.api_error_logs set duration_ms = 0 where duration_ms is null;");
+        Interlocked.Exchange(ref _lastFallbackLogTicks, now);
+        _logger.LogWarning("{Message}", message);
     }
 
     private static Guid? GetGuidClaim(HttpContext context, string claimType)

@@ -1,6 +1,44 @@
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
+
+CREATE TABLE IF NOT EXISTS plantaopro.perfis (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, codigo text NULL,
+    nome text NOT NULL, descricao text NULL, base_sistema boolean NOT NULL DEFAULT false, customizado boolean NOT NULL DEFAULT false,
+    status text NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_update timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+CREATE TABLE IF NOT EXISTS plantaopro.usuarios (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, nome text NOT NULL,
+    email text NOT NULL, email_normalizado text NULL, senha_hash text NOT NULL, telefone text NULL, status text NOT NULL DEFAULT 'ATIVO',
+    reg_status char(1) NOT NULL DEFAULT 'A', bloqueado_ate timestamptz NULL, senha_alteracao_obrigatoria boolean NOT NULL DEFAULT false,
+    ultimo_login timestamptz NULL, preferencias_notificacao jsonb NOT NULL DEFAULT '{}'::jsonb, reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_update timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
+);
+ALTER TABLE plantaopro.perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS codigo text,
+    ADD COLUMN IF NOT EXISTS base_sistema boolean DEFAULT false,
+    ADD COLUMN IF NOT EXISTS customizado boolean DEFAULT false,
+    ADD COLUMN IF NOT EXISTS status text DEFAULT 'ATIVO';
+ALTER TABLE plantaopro.usuarios
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS email_normalizado text,
+    ADD COLUMN IF NOT EXISTS telefone text,
+    ADD COLUMN IF NOT EXISTS status text DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS bloqueado_ate timestamptz,
+    ADD COLUMN IF NOT EXISTS senha_alteracao_obrigatoria boolean DEFAULT false,
+    ADD COLUMN IF NOT EXISTS ultimo_login timestamptz,
+    ADD COLUMN IF NOT EXISTS preferencias_notificacao jsonb DEFAULT '{}'::jsonb;
+UPDATE plantaopro.perfis SET codigo = upper(regexp_replace(public.unaccent(coalesce(nullif(codigo,''), nome, id::text)), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
+UPDATE plantaopro.usuarios SET email_normalizado = upper(email) WHERE email_normalizado IS NULL OR btrim(email_normalizado)='';
+ALTER TABLE plantaopro.perfis ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN base_sistema SET DEFAULT false, ALTER COLUMN customizado SET DEFAULT false, ALTER COLUMN status SET DEFAULT 'ATIVO';
+ALTER TABLE plantaopro.usuarios ALTER COLUMN email_normalizado SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN preferencias_notificacao SET DEFAULT '{}'::jsonb;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_perfis_tenant_codigo ON plantaopro.perfis(coalesce(tenant_id, '00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_email_normalizado ON plantaopro.usuarios(lower(email_normalizado)) WHERE reg_status='A';
+
 CREATE TABLE IF NOT EXISTS plantaopro.modulos_sistema (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), codigo text NOT NULL, nome text NOT NULL, descricao text NOT NULL DEFAULT '', ordem int NOT NULL DEFAULT 0, status text NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL, created_by uuid NULL, updated_by uuid NULL
 );

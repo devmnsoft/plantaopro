@@ -21,6 +21,7 @@ try
         case "install": await ExecuteScript(cs, Path.Combine(root, "database", "scrpt_completo.sql"), "install"); break;
         case "upgrade": await ExecuteManifest(cs, Path.Combine(root, "database", "migration-manifest.json"), "upgrade"); break;
         case "verify": await Verify(cs); break;
+        case "repair-identity-schema": await RepairIdentitySchema(cs, env, options); break;
         case "status": await Status(cs); break;
         case "bootstrap-admin": await BootstrapAdmin(cs, options); break;
         case "seed-demo": Console.WriteLine("Seed demo seguro: nenhum dado sensível gerado por padrão."); break;
@@ -28,7 +29,7 @@ try
         case "restore-verify": Console.WriteLine("restore-verify: comando disponível; restauração apenas em banco temporário."); break;
         case "diagnostics-bundle": Console.WriteLine("diagnostics-bundle: artefatos sanitizados em artifacts/."); break;
         case "reset-development": if (!env.Equals("Development", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("reset-development permitido somente em Development."); Console.WriteLine("Reset development exige confirmação externa; operação destrutiva não executada automaticamente."); break;
-        default: throw new InvalidOperationException("Comando desconhecido. Use doctor, create-database, install, upgrade, verify, status, bootstrap-admin, seed-demo ou reset-development.");
+        default: throw new InvalidOperationException("Comando desconhecido. Use doctor, create-database, install, upgrade, verify, status, bootstrap-admin, repair-identity-schema, seed-demo ou reset-development.");
     }
     return 0;
 }
@@ -150,11 +151,58 @@ static async Task Verify(string cs)
 {
     await using var cn = new NpgsqlConnection(cs);
     await cn.OpenAsync();
-    foreach (var t in new[] { "perfis", "usuarios", "api_request_logs", "implantacao_status" })
+    var root = FindRepoRoot();
+    var contractPath = Path.Combine(root, "database", "contracts", "identity-schema-contract.json");
+    var incomplete = false;
+    if (File.Exists(contractPath))
     {
-        var ok = await cn.ExecuteScalarAsync<int>("select count(*) from information_schema.tables where table_schema='plantaopro' and table_name=@t", new { t });
-        Console.WriteLine($"plantaopro.{t}: {(ok == 1 ? "OK" : "AUSENTE")}");
+        using var doc = JsonDocument.Parse(await File.ReadAllTextAsync(contractPath));
+        foreach (var tableProperty in doc.RootElement.EnumerateObject())
+        {
+            var parts = tableProperty.Name.Split('.', 2);
+            var schema = parts.Length == 2 ? parts[0] : "plantaopro";
+            var table = parts.Length == 2 ? parts[1] : parts[0];
+            var exists = await cn.ExecuteScalarAsync<int>("select count(*) from information_schema.tables where table_schema=@schema and table_name=@table", new { schema, table });
+            if (exists != 1)
+            {
+                incomplete = true;
+                Console.WriteLine($"IDENTITY_SCHEMA_INCOMPLETE MISSING_TABLE {schema}.{table}");
+                continue;
+            }
+            foreach (var column in tableProperty.Value.GetProperty("requiredColumns").EnumerateArray().Select(c => c.GetString()!).Where(c => !string.IsNullOrWhiteSpace(c)))
+            {
+                var ok = await cn.ExecuteScalarAsync<int>("select count(*) from information_schema.columns where table_schema=@schema and table_name=@table and column_name=@column", new { schema, table, column });
+                if (ok != 1)
+                {
+                    incomplete = true;
+                    Console.WriteLine($"IDENTITY_SCHEMA_INCOMPLETE MISSING_COLUMN {schema}.{table}.{column}");
+                }
+            }
+        }
     }
+    var coreTables = await cn.ExecuteScalarAsync<int>("select count(*) from information_schema.tables where table_schema='plantaopro' and table_name in ('usuarios','perfis','usuarios_perfis')");
+    if (coreTables == 3)
+    {
+        var adminRole = await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.perfis where tenant_id is null and codigo='ADMINISTRADOR_GLOBAL' and reg_status='A'");
+        if (adminRole < 1) { incomplete = true; Console.WriteLine("IDENTITY_SCHEMA_INCOMPLETE MISSING_PROFILE ADMINISTRADOR_GLOBAL"); }
+        var missingAdminLink = await cn.ExecuteScalarAsync<int>(@"select count(*) from plantaopro.usuarios u
+where u.reg_status='A' and u.tenant_id is null and lower(coalesce(u.status,'ATIVO'))='ativo'
+  and not exists (
+    select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id
+    where up.usuario_id=u.id and up.tenant_id is null and up.reg_status='A' and p.codigo='ADMINISTRADOR_GLOBAL' and p.tenant_id is null and p.reg_status='A')");
+        if (missingAdminLink > 0) { incomplete = true; Console.WriteLine($"IDENTITY_SCHEMA_INCOMPLETE MISSING_ADMIN_ROLE_LINK count={missingAdminLink}"); }
+    }
+    Console.WriteLine(incomplete ? "IDENTITY_SCHEMA_INCOMPLETE" : "IDENTITY_SCHEMA_READY");
+}
+
+static async Task RepairIdentitySchema(string cs, string env, Dictionary<string,string> opt)
+{
+    var explicitAdmin = opt.ContainsKey("confirm-admin-action") || Environment.GetEnvironmentVariable("PLANTAOPRO_CONFIRM_ADMIN_ACTION") == "repair-identity-schema";
+    if (!env.Equals("Development", StringComparison.OrdinalIgnoreCase) && !explicitAdmin)
+        throw new InvalidOperationException("repair-identity-schema permitido somente em Development ou com --confirm-admin-action repair-identity-schema.");
+    var root = FindRepoRoot();
+    await ExecuteScript(cs, Path.Combine(root, "database", "migrations", "2026_v1189_identity_schema_login.sql"), "repair-identity-schema");
+    await Verify(cs);
 }
 static Task Status(string cs) => Verify(cs);
 
@@ -162,13 +210,51 @@ static async Task BootstrapAdmin(string cs, Dictionary<string,string> opt)
 {
     var email = opt.ContainsKey("email") ? opt["email"] : throw new InvalidOperationException("Informe --email.");
     var name = opt.ContainsKey("name") ? opt["name"] : "Administrador Geral";
+    var rotate = opt.ContainsKey("rotate-password");
     var password = Environment.GetEnvironmentVariable("PLANTAOPRO_BOOTSTRAP_ADMIN_PASSWORD") ?? throw new InvalidOperationException("Defina PLANTAOPRO_BOOTSTRAP_ADMIN_PASSWORD fora do Git.");
+    await using var cn = new NpgsqlConnection(cs);
+    await cn.OpenAsync();
+    await using var tx = await cn.BeginTransactionAsync();
+    await cn.ExecuteAsync(await File.ReadAllTextAsync(Path.Combine(FindRepoRoot(), "database", "migrations", "2026_v1189_identity_schema_login.sql")), transaction: tx, commandTimeout: 0);
+    var perfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where tenant_id is null and codigo='ADMINISTRADOR_GLOBAL' and reg_status='A' limit 1", transaction: tx);
+    var usuarioId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.usuarios where email_normalizado=upper(@email) and reg_status='A' limit 1", new { email }, tx);
     var hash = BCrypt.Net.BCrypt.HashPassword(password);
-    await using var cn = new NpgsqlConnection(cs); await cn.OpenAsync();
-    await cn.ExecuteAsync(@"insert into plantaopro.usuarios(nome,email,email_normalizado,senha_hash,status,reg_status) select @name,@email,upper(@email),@hash,'ATIVO','A' where not exists (select 1 from plantaopro.usuarios where email_normalizado=upper(@email))", new { name, email, hash });
-    Console.WriteLine($"Administrador global garantido para {email}; senha não exibida.");
+    if (usuarioId is null)
+    {
+        usuarioId = await cn.ExecuteScalarAsync<Guid>(@"insert into plantaopro.usuarios(nome,email,email_normalizado,senha_hash,status,reg_status,tenant_id,cliente_id,senha_alteracao_obrigatoria,preferencias_notificacao,reg_date)
+values(@name,@email,upper(@email),@hash,'ATIVO','A',NULL,NULL,true,'{}'::jsonb,now()) returning id", new { name, email, hash }, tx);
+    }
+    else
+    {
+        var sql = rotate
+            ? "update plantaopro.usuarios set nome=coalesce(nullif(@name,''),nome), email_normalizado=upper(email), senha_hash=@hash, senha_alteracao_obrigatoria=true, tenant_id=null, cliente_id=null, status='ATIVO', reg_update=now() where id=@usuarioId"
+            : "update plantaopro.usuarios set nome=coalesce(nullif(@name,''),nome), email_normalizado=upper(email), senha_alteracao_obrigatoria=true, tenant_id=null, cliente_id=null, status='ATIVO', reg_update=now() where id=@usuarioId";
+        await cn.ExecuteAsync(sql, new { name, hash, usuarioId }, tx);
+    }
+    await cn.ExecuteAsync(@"insert into plantaopro.usuarios_perfis(tenant_id,cliente_id,usuario_id,perfil_id,reg_status,reg_date)
+select NULL,NULL,@usuarioId,@perfilId,'A',now()
+where not exists (select 1 from plantaopro.usuarios_perfis where usuario_id=@usuarioId and perfil_id=@perfilId and tenant_id is null and reg_status='A')", new { usuarioId, perfilId }, tx);
+    var auditTable = await cn.ExecuteScalarAsync<int>("select count(*) from information_schema.tables where table_schema='plantaopro' and table_name='auditoria_eventos'", transaction: tx);
+    if (auditTable == 1)
+    {
+        await cn.ExecuteAsync(@"insert into plantaopro.auditoria_eventos(tenant_id,codigo,nome,status,dados,criado_em)
+values(NULL,'BOOTSTRAP_ADMIN','Bootstrap administrador global','ATIVO',jsonb_build_object('usuario_id', @usuarioId::text, 'email_normalizado', upper(@email), 'rotate_password', @rotate),now())", new { usuarioId, email, rotate }, tx);
+    }
+    await tx.CommitAsync();
+    Console.WriteLine($"Administrador global garantido para {email}; senha não exibida; rotate-password={(rotate ? "sim" : "não")}.");
 }
-static Dictionary<string,string> ParseOptions(string[] a){ var d=new Dictionary<string,string>(); for(var i=0;i<a.Length-1;i+=2) if(a[i].StartsWith("--")) d[a[i].Substring(2)]=a[i+1]; return d; }
+static Dictionary<string,string> ParseOptions(string[] a)
+{
+    var d = new Dictionary<string,string>();
+    for (var i = 0; i < a.Length; i++)
+    {
+        if (!a[i].StartsWith("--")) continue;
+        var key = a[i].Substring(2);
+        if (i + 1 < a.Length && !a[i + 1].StartsWith("--")) d[key] = a[++i];
+        else d[key] = "true";
+    }
+    return d;
+}
 static string FindRepoRoot(){ var d=new DirectoryInfo(Directory.GetCurrentDirectory()); while(d!=null && !File.Exists(Path.Combine(d.FullName,"backend","PlantaoPro.sln"))) d=d.Parent; return Path.GetFullPath(d?.FullName ?? Directory.GetCurrentDirectory()); }
 static void ValidateDbName(string name){ if(!Regex.IsMatch(name ?? "", "^[a-zA-Z_][a-zA-Z0-9_]{0,62}$")) throw new InvalidOperationException("Nome do banco inválido para criação segura."); }
 static string QuoteIdentifier(string v)=>"\""+v.Replace("\"","\"\"")+"\"";

@@ -1,0 +1,11 @@
+{
+  "plantaopro.usuarios": { "requiredColumns": ["id", "nome", "email", "senha_hash", "reg_status", "cliente_id", "tenant_id", "email_normalizado", "status", "senha_alteracao_obrigatoria", "bloqueado_ate", "ultimo_login", "preferencias_notificacao", "reg_update", "created_by", "updated_by"] },
+  "plantaopro.perfis": { "requiredColumns": ["id", "tenant_id", "cliente_id", "codigo", "nome", "descricao", "base_sistema", "customizado", "status", "reg_status", "reg_date", "reg_update", "created_by", "updated_by"] },
+  "plantaopro.usuarios_perfis": { "requiredColumns": ["id", "tenant_id", "cliente_id", "usuario_id", "perfil_id", "reg_status", "reg_date", "reg_update", "created_by", "updated_by"] },
+  "plantaopro.login_tentativas": { "requiredColumns": ["id", "usuario_id", "email", "ip", "user_agent", "sucesso", "motivo", "bloqueado_ate", "reg_date", "reg_update", "reg_status"] },
+  "plantaopro.recuperacao_senha": { "requiredColumns": ["id", "usuario_id", "token_hash", "expiracao", "utilizado", "reg_date", "reg_update", "reg_status"] },
+  "plantaopro.auth_sessoes": { "requiredColumns": ["id", "tenant_id", "cliente_id", "usuario_id", "dispositivo_nome", "ip_mascarado", "user_agent_sanitizado", "iniciado_em", "ultimo_uso_em", "expira_em", "revogada_em", "motivo_revogacao", "reg_status", "reg_date", "reg_update"] },
+  "plantaopro.auth_refresh_tokens": { "requiredColumns": ["id", "sessao_id", "usuario_id", "token_hash", "emitido_em", "expira_em", "usado_em", "substituido_por_id", "revogado_em", "motivo_revogacao", "reg_status"] },
+  "plantaopro.senha_historico": { "requiredColumns": ["id", "usuario_id", "senha_hash", "origem", "reg_date", "reg_status"] },
+  "plantaopro.politicas_senha": { "requiredColumns": ["id", "tenant_id", "tamanho_minimo", "exige_maiuscula", "exige_minuscula", "exige_numero", "exige_especial", "historico_quantidade", "expiracao_dias", "tentativas_permitidas", "bloqueio_minutos", "troca_obrigatoria", "proibir_senhas_comuns", "reg_status", "reg_date", "reg_update"] }
+}

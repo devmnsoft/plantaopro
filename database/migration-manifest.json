@@ -1,12 +1,374 @@
 {
-  "schemaVersion": "v1.18.8",
+  "schemaVersion": "v1.18.9",
   "generatedAt": "2026-07-21",
   "migrations": [
     {
-      "version": "v1.18.8",
-      "source": "database/migrations/2026_v1188_implantacao_go_live.sql",
+      "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
+      "source": "database/migrations/20260607_saas_lgpd_jornada_comercial_ajuda.sql",
+      "checksum": "344b376b176e2843c2ee5b3e409794331cd1d879fbdb433f3190211c7ee245db",
+      "dependsOn": [],
       "status": "active",
-      "checksum": "calculated-by-ci"
+      "transactional": true
+    },
+    {
+      "version": "2026_fix_api_error_logs_defaults",
+      "source": "database/migrations/2026_fix_api_error_logs_defaults.sql",
+      "checksum": "192db90a8714e71a41887a647273f53aa416effb84459d6938fa6b9348241052",
+      "dependsOn": [
+        "20260607_saas_lgpd_jornada_comercial_ajuda"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_fix_api_error_logs_not_null",
+      "source": "database/migrations/2026_fix_api_error_logs_not_null.sql",
+      "checksum": "98804b1ff25f0229e85516bc7fc3c1c9418e1583ef36150d14cd32c86b6bc8b5",
+      "dependsOn": [
+        "2026_fix_api_error_logs_defaults"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_fix_cid_tabela_schema",
+      "source": "database/migrations/2026_fix_cid_tabela_schema.sql",
+      "checksum": "0c73d860469067652e8a634815b095d743c199253d29ab219001bfae05d94f91",
+      "dependsOn": [
+        "2026_fix_api_error_logs_not_null"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_fix_clinica_financeiro_minimo",
+      "source": "database/migrations/2026_fix_clinica_financeiro_minimo.sql",
+      "checksum": "407017a905784b6fb1f4329f9e3d162f80cddf4c753bc571f1e398018598a609",
+      "dependsOn": [
+        "2026_fix_cid_tabela_schema"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_automacao_operacional_fase4",
+      "source": "database/migrations/2026_plantao_pro_automacao_operacional_fase4.sql",
+      "checksum": "c1e8d5f274459b29eb58abcdcf2b083f3d06a9933a481bc32e0e15651a0080ce",
+      "dependsOn": [
+        "2026_fix_clinica_financeiro_minimo"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_piloto_comercial_operacao_b2b",
+      "source": "database/migrations/2026_plantao_pro_piloto_comercial_operacao_b2b.sql",
+      "checksum": "7eaf99a4f89ad9ec7ace746b0541e537c2f71f8a3f46da1dcfaafffbbed74635",
+      "dependsOn": [
+        "2026_plantao_pro_automacao_operacional_fase4"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_comercial_lgpd_jornada",
+      "source": "database/migrations/2026_plantao_pro_saas_comercial_lgpd_jornada.sql",
+      "checksum": "405f529b260162bb3851af2b81c40d4222afc2b8c3758b585f7d551f6a6eaab9",
+      "dependsOn": [
+        "2026_plantao_pro_piloto_comercial_operacao_b2b"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_inteligente",
+      "source": "database/migrations/2026_plantao_pro_saas_inteligente.sql",
+      "checksum": "3df8335352e6e703f1a547a76dce55b474e7aca5b515b26a88c7845288d5ff3d",
+      "dependsOn": [
+        "2026_plantao_pro_saas_comercial_lgpd_jornada"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_inteligente_auditavel",
+      "source": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql",
+      "checksum": "405f529b260162bb3851af2b81c40d4222afc2b8c3758b585f7d551f6a6eaab9",
+      "dependsOn": [
+        "2026_plantao_pro_saas_inteligente"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_inteligente_funcional",
+      "source": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql",
+      "checksum": "99a8346ce68d1428a71535163679af44d8ed20f8c082e54302baf3c2d7d003c0",
+      "dependsOn": [
+        "2026_plantao_pro_saas_inteligente_auditavel"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_jornada_lgpd_inteligencia",
+      "source": "database/migrations/2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql",
+      "checksum": "f174b0a29756d3900b129ea732592ee735d75749fc96d0e05e82b1b3368b6ffc",
+      "dependsOn": [
+        "2026_plantao_pro_saas_inteligente_funcional"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saas_lgpd_jornada_inteligente",
+      "source": "database/migrations/2026_plantao_pro_saas_lgpd_jornada_inteligente.sql",
+      "checksum": "7f2e6c7754e33d6500191e2acab8d22280aae3a87af8e5e12e63d394febe20be",
+      "dependsOn": [
+        "2026_plantao_pro_saas_jornada_lgpd_inteligencia"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saude360_base_clinica",
+      "source": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql",
+      "checksum": "751216e62b92ef4213deaca834470babef0263d419715fcd1a7b0601888cbe9f",
+      "dependsOn": [
+        "2026_plantao_pro_saas_lgpd_jornada_inteligente"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_saude360_modulos_clinicos",
+      "source": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql",
+      "checksum": "9e1b13a6420e0c0b975b7d81e7c4ab8092174af4623f4e9b399a6c22d3152cb0",
+      "dependsOn": [
+        "2026_plantao_pro_saude360_base_clinica"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_self_service_white_label",
+      "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
+      "checksum": "e32dd6a46f1f465adf2066377b433f7b488319158fb0cf924c04f228a82ba7d2",
+      "dependsOn": [
+        "2026_plantao_pro_saude360_modulos_clinicos"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_versao_comercial_demo",
+      "source": "database/migrations/2026_plantao_pro_versao_comercial_demo.sql",
+      "checksum": "718af6f67e9800a9a11b1cba6009fb220a37a813032f5852f7792b2216c4e51e",
+      "dependsOn": [
+        "2026_plantao_pro_self_service_white_label"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_white_label_b2b_launch",
+      "source": "database/migrations/2026_plantao_pro_white_label_b2b_launch.sql",
+      "checksum": "d79a649ab2ac9775068ac4819d9f0673cf23418e40cd973d9a0d8b1dea87038b",
+      "dependsOn": [
+        "2026_plantao_pro_versao_comercial_demo"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_plantao_pro_white_label_self_service",
+      "source": "database/migrations/2026_plantao_pro_white_label_self_service.sql",
+      "checksum": "5b2f7326b7f2f0ab426998fcaab85b9a58f6531319a687e7b43e67af317c3e7b",
+      "dependsOn": [
+        "2026_plantao_pro_white_label_b2b_launch"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saas_comercial_core",
+      "source": "database/migrations/2026_saas_comercial_core.sql",
+      "checksum": "50d463de359adb68f3b093aac0b0e3e60e65a4f3595c6991ed8d5a7d6cd4d02f",
+      "dependsOn": [
+        "2026_plantao_pro_white_label_self_service"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_base_clinica_minima",
+      "source": "database/migrations/2026_saude360_base_clinica_minima.sql",
+      "checksum": "f3435d236b9a699e4ee584952ecd485766f7a74ecd165883541942513680e500",
+      "dependsOn": [
+        "2026_saas_comercial_core"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_bi_integracoes_mobile",
+      "source": "database/migrations/2026_saude360_bi_integracoes_mobile.sql",
+      "checksum": "5983ff5599b05351d150a0cdd8787bf5d80d2170551d4dbeea3bc827c2497a64",
+      "dependsOn": [
+        "2026_saude360_base_clinica_minima"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_cid_oficial",
+      "source": "database/migrations/2026_saude360_cid_oficial.sql",
+      "checksum": "4a49f8318e59133f0edec23de47c897bc2d67219cdc3c6bee2223288f908c860",
+      "dependsOn": [
+        "2026_saude360_bi_integracoes_mobile"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_cid_prescricao",
+      "source": "database/migrations/2026_saude360_cid_prescricao.sql",
+      "checksum": "2dfc294adb8feb3741dd180e6a1d1f21717edc0c16139d210c0ee01da825a5b8",
+      "dependsOn": [
+        "2026_saude360_cid_oficial"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_consultas_base",
+      "source": "database/migrations/2026_saude360_consultas_base.sql",
+      "checksum": "f82fdbd61ccf29ab94773f99058d9c93b66e7f307935aca095950527dad88a0f",
+      "dependsOn": [
+        "2026_saude360_cid_prescricao"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_convenios_planos_saude",
+      "source": "database/migrations/2026_saude360_convenios_planos_saude.sql",
+      "checksum": "e3f5a2aeab3492607d76772788eca8a77d424dd3aaad6752641c7d26c58f39e4",
+      "dependsOn": [
+        "2026_saude360_consultas_base"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_financeiro_clinica",
+      "source": "database/migrations/2026_saude360_financeiro_clinica.sql",
+      "checksum": "556d85fbabede82ed9b60470fa9e89d3cbba8352299a925939d04b1f952afb2a",
+      "dependsOn": [
+        "2026_saude360_convenios_planos_saude"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_saude360_indices_performance",
+      "source": "database/migrations/2026_saude360_indices_performance.sql",
+      "checksum": "4b84b24586e3d19da6bec6d05c3b5d841f89964c4776e18f104a5102c3949c69",
+      "dependsOn": [
+        "2026_saude360_financeiro_clinica"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v113_operacional_real",
+      "source": "database/migrations/2026_v113_operacional_real.sql",
+      "checksum": "5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599",
+      "dependsOn": [
+        "2026_saude360_indices_performance"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v114_consolidacao_produto",
+      "source": "database/migrations/2026_v114_consolidacao_produto.sql",
+      "checksum": "a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337",
+      "dependsOn": [
+        "2026_v113_operacional_real"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v115_regras_faturamento_repasses",
+      "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql",
+      "checksum": "a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8",
+      "dependsOn": [
+        "2026_v114_consolidacao_produto"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v116_consolidacao_operacional_final",
+      "source": "database/migrations/2026_v116_consolidacao_operacional_final.sql",
+      "checksum": "1904a36e67fb82235ae70ed2ff9b35246694a5d7867260c97c408b5f7045ea2a",
+      "dependsOn": [
+        "2026_v115_regras_faturamento_repasses"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v117_hardening_v116_runtime",
+      "source": "database/migrations/2026_v117_hardening_v116_runtime.sql",
+      "checksum": "0de388697683e3748ebc1d2f7a0f348bec0ccfb051ad587c0170286bf88b47a3",
+      "dependsOn": [
+        "2026_v116_consolidacao_operacional_final"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v1186_schema_permissoes_compatibilidade",
+      "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
+      "checksum": "0ce82226482671dd31e32dc1d54a50ab29fe5c1d432519a7d06a4f263329ad0e",
+      "dependsOn": [
+        "2026_v117_hardening_v116_runtime"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v1187_central_seguranca_acessos",
+      "source": "database/migrations/2026_v1187_central_seguranca_acessos.sql",
+      "checksum": "3d0f4ba172c1e9aa3b3f8d691c8cc58728d620c4856742add952ea8ab0bcabcf",
+      "dependsOn": [
+        "2026_v1186_schema_permissoes_compatibilidade"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v1188_implantacao_go_live",
+      "source": "database/migrations/2026_v1188_implantacao_go_live.sql",
+      "checksum": "219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c",
+      "dependsOn": [
+        "2026_v1187_central_seguranca_acessos"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v1189_operacoes_continuidade",
+      "source": "database/migrations/2026_v1189_operacoes_continuidade.sql",
+      "checksum": "01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e",
+      "dependsOn": [
+        "2026_v1188_implantacao_go_live"
+      ],
+      "status": "active",
+      "transactional": true
     }
   ]
 }

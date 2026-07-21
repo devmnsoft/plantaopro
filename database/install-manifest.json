@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.18.8",
+  "schemaVersion": "v1.18.9",
   "generatedAt": "2026-07-21",
   "sections": [
     {
@@ -11,6 +11,12 @@
           "type": "canonical",
           "category": "CANONICAL",
           "source": "database/schema/000_extensions_schema.sql"
+        },
+        {
+          "name": "plantaopro.schema_canonico_base",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/000_schema_canonico_base.sql"
         },
         {
           "name": "plantaopro.identity_access",
@@ -77,6 +83,12 @@
           "type": "canonical",
           "category": "CANONICAL",
           "source": "database/schema/110_implantacao_go_live.sql"
+        },
+        {
+          "name": "plantaopro.operacoes_continuidade",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/120_operacoes_continuidade.sql"
         }
       ]
     }

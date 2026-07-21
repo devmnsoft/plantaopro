@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using PlantaoPro.Api.Models;
@@ -5,6 +6,7 @@ using PlantaoPro.Api.Models;
 namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,SUPORTE,ADMINISTRADOR_CLIENTE,AUDITOR")]
 [Route("api/implantacao")]
 public sealed class ImplantacaoController : ControllerBase
 {
@@ -53,15 +55,14 @@ public sealed class ImplantacaoController : ControllerBase
         var ok = checks.Count(x => x.Value == "OK");
         var pct = checks.Count == 0 ? 0 : decimal.Round(ok * 100m / checks.Count, 2);
         var cls = pct >= 95 ? "PRONTO_PARA_GO_LIVE" : pct >= 75 ? "PRONTO_PARA_HOMOLOGAÇÃO" : pct >= 40 ? "ATENÇÃO" : "PENDENTE";
-        return new GoLiveReport(DateTime.UtcNow, "v1.18.8", _environment.EnvironmentName, checks, pct, cls, DefaultSteps());
+        return new GoLiveReport(DateTime.UtcNow, "v1.18.9", _environment.EnvironmentName, checks, pct, cls, DefaultSteps());
     }
 
-    private static object[] DefaultSteps() => new object[]
+    private static object[] DefaultSteps()
     {
-        new { codigo="BANCO", ordem=1, nome="Banco", status="PENDENTE", descricao="PostgreSQL, banco e schema", acaoSugerida="Executar create-database/install", responsavel="DevOps/DBA", linkSeguro="/Implantacao" },
-        new { codigo="ADMIN", ordem=2, nome="Administrador", status="PENDENTE", descricao="Bootstrap administrativo", acaoSugerida="Executar bootstrap-admin", responsavel="Suporte", linkSeguro="/Implantacao" },
-        new { codigo="GO_LIVE", ordem=17, nome="Go-Live", status="PENDENTE", descricao="Decisão final", acaoSugerida="Gerar relatório", responsavel="PM/Sponsor", linkSeguro="/Implantacao" }
-    };
+        var nomes = new[] { "Banco", "Administrador", "Empresa e tenant", "Plano e assinatura", "Usuários", "Perfis e permissões", "Hospitais e unidades", "Especialidades", "Médicos", "Regras de plantão", "Financeiro", "Notificações", "Saúde 360", "White label", "LGPD", "Testes", "Go-Live" };
+        return nomes.Select((nome, index) => new { codigo = $"ETAPA_{index + 1:00}", ordem = index + 1, nome, status = "PENDENTE", progresso = 0, responsavel = index == 0 ? "DevOps/DBA" : "Suporte", prazo = DateTime.UtcNow.Date.AddDays(index + 1), validacoes = Array.Empty<string>(), pendencias = new[] { "Aguardando validação real" }, evidencias = Array.Empty<string>(), ultimaExecucao = (DateTime?)null, auditoria = new { requerido = true, tabela = "implantacao_execucoes" } }).Cast<object>().ToArray();
+    }
 }
 
 public sealed record GoLiveReport(DateTime Data, string Versao, string Ambiente, IDictionary<string,string> Health, decimal ProntidaoPercentual, string Classificacao, object[] Etapas);

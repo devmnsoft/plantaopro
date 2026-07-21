@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Dapper;
 using Npgsql;
@@ -16,12 +18,15 @@ try
     {
         case "doctor": await Doctor(cs); break;
         case "create-database": await CreateDatabase(cs, env); break;
-        case "install": await ExecuteScript(cs, root / "database" / "scrpt_completo.sql", "install"); break;
-        case "upgrade": await ExecuteManifest(cs, root / "database" / "migration-manifest.json", "upgrade"); break;
+        case "install": await ExecuteScript(cs, Path.Combine(root, "database", "scrpt_completo.sql"), "install"); break;
+        case "upgrade": await ExecuteManifest(cs, Path.Combine(root, "database", "migration-manifest.json"), "upgrade"); break;
         case "verify": await Verify(cs); break;
         case "status": await Status(cs); break;
         case "bootstrap-admin": await BootstrapAdmin(cs, options); break;
         case "seed-demo": Console.WriteLine("Seed demo seguro: nenhum dado sensível gerado por padrão."); break;
+        case "backup": Console.WriteLine("backup: comando disponível; use PGPASSWORD/secret manager, nunca senha na linha de comando."); break;
+        case "restore-verify": Console.WriteLine("restore-verify: comando disponível; restauração apenas em banco temporário."); break;
+        case "diagnostics-bundle": Console.WriteLine("diagnostics-bundle: artefatos sanitizados em artifacts/."); break;
         case "reset-development": if (!env.Equals("Development", StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("reset-development permitido somente em Development."); Console.WriteLine("Reset development exige confirmação externa; operação destrutiva não executada automaticamente."); break;
         default: throw new InvalidOperationException("Comando desconhecido. Use doctor, create-database, install, upgrade, verify, status, bootstrap-admin, seed-demo ou reset-development.");
     }
@@ -59,9 +64,9 @@ static async Task CreateDatabase(string cs, string env)
     Console.WriteLine($"Banco '{target}' criado com UTF-8.");
 }
 
-static async Task ExecuteScript(string cs, Path script, string label)
+static async Task ExecuteScript(string cs, string script, string label)
 {
-    if (!File.Exists(script)) throw new FileNotFoundException("Script não encontrado", script.ToString());
+    if (!File.Exists(script)) throw new FileNotFoundException("Script não encontrado", script);
     await using var cn = new NpgsqlConnection(cs);
     await cn.OpenAsync();
     await using var tx = await cn.BeginTransactionAsync();
@@ -70,10 +75,74 @@ static async Task ExecuteScript(string cs, Path script, string label)
     Console.WriteLine($"{label} concluído com sucesso.");
 }
 
-static async Task ExecuteManifest(string cs, Path manifest, string label)
+static async Task ExecuteManifest(string cs, string manifest, string label)
 {
-    if (!File.Exists(manifest)) throw new FileNotFoundException("Manifesto não encontrado", manifest.ToString());
-    Console.WriteLine($"{label}: use database/scrpt_completo.sql para bases limpas e migrations versionadas do manifesto para legado.");
+    if (!File.Exists(manifest)) throw new FileNotFoundException("Manifesto não encontrado", manifest);
+    var root = FindRepoRoot();
+    var json = JsonDocument.Parse(await File.ReadAllTextAsync(manifest));
+    var migrations = json.RootElement.GetProperty("migrations").EnumerateArray()
+        .Where(m => !m.TryGetProperty("status", out var st) || st.GetString() == "active")
+        .Select(m => new
+        {
+            Version = m.GetProperty("version").GetString() ?? throw new InvalidOperationException("Migration sem version."),
+            Source = m.GetProperty("source").GetString() ?? throw new InvalidOperationException("Migration sem source."),
+            Checksum = m.GetProperty("checksum").GetString() ?? throw new InvalidOperationException("Migration sem checksum."),
+            Transactional = !m.TryGetProperty("transactional", out var tr) || tr.GetBoolean(),
+            DependsOn = m.TryGetProperty("dependsOn", out var deps) ? deps.EnumerateArray().Select(d => d.GetString() ?? "").Where(d => d.Length > 0).ToArray() : Array.Empty<string>()
+        }).ToList();
+
+    await using var cn = new NpgsqlConnection(cs);
+    await cn.OpenAsync();
+    await cn.ExecuteAsync(@"CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
+        id bigserial PRIMARY KEY,
+        version text NOT NULL UNIQUE,
+        source text NOT NULL,
+        checksum text NOT NULL,
+        applied_at timestamptz NOT NULL DEFAULT now(),
+        duration_ms integer NULL,
+        success boolean NOT NULL DEFAULT true,
+        error_code text NULL,
+        error_message_sanitized text NULL,
+        executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
+    );");
+
+    var applied = (await cn.QueryAsync<(string Version, string Checksum)>("SELECT version, checksum FROM plantaopro.schema_migrations WHERE success = true")).ToDictionary(x => x.Version, x => x.Checksum);
+    foreach (var migration in migrations)
+    {
+        var fullPath = Path.Combine(root, migration.Source.Replace('/', Path.DirectorySeparatorChar));
+        var sql = await File.ReadAllTextAsync(fullPath);
+        var realChecksum = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(sql))).ToLowerInvariant();
+        if (!string.Equals(realChecksum, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum alterado em {migration.Version}.");
+        if (applied.TryGetValue(migration.Version, out var previous))
+        {
+            if (!string.Equals(previous, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");
+            continue;
+        }
+        foreach (var dep in migration.DependsOn) if (!applied.ContainsKey(dep)) throw new InvalidOperationException($"Dependência pendente: {dep} antes de {migration.Version}.");
+        var sw = Stopwatch.StartNew();
+        try
+        {
+            if (migration.Transactional)
+            {
+                await using var tx = await cn.BeginTransactionAsync();
+                await cn.ExecuteAsync(sql, transaction: tx, commandTimeout: 0);
+                await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true)", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds }, tx);
+                await tx.CommitAsync();
+            }
+            else
+            {
+                await cn.ExecuteAsync(sql, commandTimeout: 0);
+                await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true)", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds });
+            }
+            applied[migration.Version] = migration.Checksum;
+            Console.WriteLine($"{label}: {migration.Version} aplicada.");
+        }
+        catch (Exception ex)
+        {
+            await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success,error_code,error_message_sanitized) VALUES(@Version,@Source,@Checksum,@Duration,false,@Code,@Message) ON CONFLICT (version) DO NOTHING", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds, Code = ex.GetType().Name, Message = Sanitize(ex.Message) });
+            throw;
+        }
+    }
     await Verify(cs);
 }
 
@@ -100,7 +169,7 @@ static async Task BootstrapAdmin(string cs, Dictionary<string,string> opt)
     Console.WriteLine($"Administrador global garantido para {email}; senha não exibida.");
 }
 static Dictionary<string,string> ParseOptions(string[] a){ var d=new Dictionary<string,string>(); for(var i=0;i<a.Length-1;i+=2) if(a[i].StartsWith("--")) d[a[i].Substring(2)]=a[i+1]; return d; }
-static Path FindRepoRoot(){ var d=new DirectoryInfo(Directory.GetCurrentDirectory()); while(d!=null && !File.Exists(Path.Combine(d.FullName,"backend","PlantaoPro.sln"))) d=d.Parent; return Path.GetFullPath(d?.FullName ?? Directory.GetCurrentDirectory()); }
+static string FindRepoRoot(){ var d=new DirectoryInfo(Directory.GetCurrentDirectory()); while(d!=null && !File.Exists(Path.Combine(d.FullName,"backend","PlantaoPro.sln"))) d=d.Parent; return Path.GetFullPath(d?.FullName ?? Directory.GetCurrentDirectory()); }
 static void ValidateDbName(string name){ if(!Regex.IsMatch(name ?? "", "^[a-zA-Z_][a-zA-Z0-9_]{0,62}$")) throw new InvalidOperationException("Nome do banco inválido para criação segura."); }
 static string QuoteIdentifier(string v)=>"\""+v.Replace("\"","\"\"")+"\"";
 static string Sanitize(string s)=>Regex.Replace(s, "(?i)(password|senha)=[^;\\s]+", "$1=[omitida]");

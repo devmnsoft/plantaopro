@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+APPLY_DEMO_SEEDS="${APPLY_DEMO_SEEDS:-0}"
 
 psql -v ON_ERROR_STOP=1 <<'SQL'
 CREATE SCHEMA IF NOT EXISTS plantaopro;
@@ -13,6 +14,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
 );
 SQL
 
+sql_literal() { printf "%s" "$1" | sed "s/'/''/g"; }
+
 apply_script() {
     local id="$1"
     local relative_path="$2"
@@ -23,19 +26,31 @@ apply_script() {
         exit 1
     fi
 
-    local checksum
+    local checksum escaped_id escaped_path stored_checksum tmp_sql
     checksum="$(sha256sum "$path" | awk '{print $1}')"
+    escaped_id="$(sql_literal "$id")"
+    escaped_path="$(sql_literal "$relative_path")"
 
-    local already_applied
-    already_applied="$(psql -v ON_ERROR_STOP=1 -At -c "SELECT 1 FROM plantaopro.schema_migrations WHERE id = '$id' LIMIT 1;")"
-    if [[ "$already_applied" == "1" ]]; then
+    stored_checksum="$(psql -v ON_ERROR_STOP=1 -At -c "SELECT checksum FROM plantaopro.schema_migrations WHERE id = '$escaped_id' LIMIT 1;")"
+    if [[ -n "$stored_checksum" ]]; then
+        if [[ "$stored_checksum" != "$checksum" ]]; then
+            echo "Checksum mismatch for migration $id ($relative_path). Stored=$stored_checksum Current=$checksum" >&2
+            exit 2
+        fi
         echo "Skipping already applied migration: $id ($relative_path)"
         return 0
     fi
 
     echo "Applying migration: $id ($relative_path)"
-    psql -v ON_ERROR_STOP=1 -f "$path"
-    psql -v ON_ERROR_STOP=1 -c "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('$id', '$relative_path', '$checksum');"
+    tmp_sql="$(mktemp)"
+    {
+        echo "BEGIN;"
+        printf '\\i %s\n' "$path"
+        printf "INSERT INTO plantaopro.schema_migrations (id, script_path, checksum) VALUES ('%s', '%s', '%s');\n" "$escaped_id" "$escaped_path" "$checksum"
+        echo "COMMIT;"
+    } > "$tmp_sql"
+    psql -v ON_ERROR_STOP=1 -f "$tmp_sql"
+    rm -f "$tmp_sql"
 }
 
 apply_script "000_base_schema" "database/PlantaoPro_PostgreSQL_Completo.sql"
@@ -58,8 +73,11 @@ apply_script "210_v114_consolidacao" "database/migrations/2026_v114_consolidacao
 apply_script "220_v115_faturamento" "database/migrations/2026_v115_regras_faturamento_repasses.sql"
 apply_script "230_v116_operacional" "database/migrations/2026_v116_consolidacao_operacional_final.sql"
 apply_script "240_v117_runtime" "database/migrations/2026_v117_hardening_v116_runtime.sql"
-apply_script "900_seed_v113" "database/seeds/2026_demo_v113_operacional.sql"
-apply_script "910_seed_v114" "database/seeds/2026_demo_v114_consolidacao_produto.sql"
-apply_script "920_seed_v115" "database/seeds/2026_demo_v115_regras_faturamento.sql"
-apply_script "930_seed_v116" "database/seeds/2026_demo_v116_consolidacao_operacional.sql"
-apply_script "940_seed_v117" "database/seeds/2026_demo_v117_runtime_integrado.sql"
+
+if [[ "$APPLY_DEMO_SEEDS" == "1" ]]; then
+    apply_script "900_seed_v113" "database/seeds/2026_demo_v113_operacional.sql"
+    apply_script "910_seed_v114" "database/seeds/2026_demo_v114_consolidacao_produto.sql"
+    apply_script "920_seed_v115" "database/seeds/2026_demo_v115_regras_faturamento.sql"
+    apply_script "930_seed_v116" "database/seeds/2026_demo_v116_consolidacao_operacional.sql"
+    apply_script "940_seed_v117" "database/seeds/2026_demo_v117_runtime_integrado.sql"
+fi

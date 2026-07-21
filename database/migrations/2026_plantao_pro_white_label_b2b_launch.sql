@@ -905,7 +905,7 @@ create index if not exists ix_perfil_modulos_cliente_id on plantaopro.perfil_mod
 create index if not exists ix_perfil_modulos_status on plantaopro.perfil_modulos(status);
 create index if not exists ix_perfil_modulos_reg_date on plantaopro.perfil_modulos(reg_date desc);
 
-create table if not exists plantaopro.usuario_perfis (
+create table if not exists plantaopro.usuarios_perfis (
     id uuid primary key default gen_random_uuid(),
     tenant_id uuid null,
     cliente_id uuid null,
@@ -920,19 +920,19 @@ create table if not exists plantaopro.usuario_perfis (
     reg_update timestamptz null,
     reg_status char(1) not null default 'A'
 );
-alter table plantaopro.usuario_perfis add column if not exists tenant_id uuid null;
-alter table plantaopro.usuario_perfis add column if not exists cliente_id uuid null;
-alter table plantaopro.usuario_perfis add column if not exists parceiro_id uuid null;
-alter table plantaopro.usuario_perfis add column if not exists plano_id uuid null;
-alter table plantaopro.usuario_perfis add column if not exists status varchar(40) not null default 'ATIVO';
-alter table plantaopro.usuario_perfis add column if not exists metadata jsonb not null default '{}'::jsonb;
-alter table plantaopro.usuario_perfis add column if not exists reg_date timestamptz not null default now();
-alter table plantaopro.usuario_perfis add column if not exists reg_update timestamptz null;
-alter table plantaopro.usuario_perfis add column if not exists reg_status char(1) not null default 'A';
-create index if not exists ix_usuario_perfis_tenant_id on plantaopro.usuario_perfis(tenant_id);
-create index if not exists ix_usuario_perfis_cliente_id on plantaopro.usuario_perfis(cliente_id);
-create index if not exists ix_usuario_perfis_status on plantaopro.usuario_perfis(status);
-create index if not exists ix_usuario_perfis_reg_date on plantaopro.usuario_perfis(reg_date desc);
+alter table plantaopro.usuarios_perfis add column if not exists tenant_id uuid null;
+alter table plantaopro.usuarios_perfis add column if not exists cliente_id uuid null;
+alter table plantaopro.usuarios_perfis add column if not exists parceiro_id uuid null;
+alter table plantaopro.usuarios_perfis add column if not exists plano_id uuid null;
+alter table plantaopro.usuarios_perfis add column if not exists status varchar(40) not null default 'ATIVO';
+alter table plantaopro.usuarios_perfis add column if not exists metadata jsonb not null default '{}'::jsonb;
+alter table plantaopro.usuarios_perfis add column if not exists reg_date timestamptz not null default now();
+alter table plantaopro.usuarios_perfis add column if not exists reg_update timestamptz null;
+alter table plantaopro.usuarios_perfis add column if not exists reg_status char(1) not null default 'A';
+create index if not exists ix_usuarios_perfis_tenant_id on plantaopro.usuarios_perfis(tenant_id);
+create index if not exists ix_usuarios_perfis_cliente_id on plantaopro.usuarios_perfis(cliente_id);
+create index if not exists ix_usuarios_perfis_status on plantaopro.usuarios_perfis(status);
+create index if not exists ix_usuarios_perfis_reg_date on plantaopro.usuarios_perfis(reg_date desc);
 
 create table if not exists plantaopro.usuario_permissoes_especiais (
     id uuid primary key default gen_random_uuid(),

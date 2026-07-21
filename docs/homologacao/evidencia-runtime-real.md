@@ -28,7 +28,7 @@ Homologação runtime preparada, mas pendente de validação em ambiente com SDK
 
 - `docker-compose.yml` passou a exigir/usar placeholder local `CHANGE_ME_LOCAL_POSTGRES` quando `PLANTAOPRO_POSTGRES_PASSWORD` não for informado.
 - `scripts/database/apply-local-postgres.sh` passou a usar o mesmo placeholder local por padrão.
-- `scripts/smoke/smoke-api.sh` passou a usar `CHANGE_ME_DEMO_PASSWORD` por padrão, sem versionar senha real/demo fixa.
+- `scripts/smoke/smoke-api.sh` passou a usar `senha demo definida fora do Git` por padrão, sem versionar senha real/demo fixa.
 - Testes contratuais de runtime foram reforçados para garantir evidências, cobertura de smoke, rotas Web e appsettings sem segredos triviais.
 
 ## Pendências reais

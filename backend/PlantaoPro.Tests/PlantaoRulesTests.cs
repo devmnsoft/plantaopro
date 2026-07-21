@@ -66,7 +66,7 @@ public class AuthContractTests
     public void LoginResponse_DeveCarregarClienteIdParaIsolamentoMultiempresa()
     {
         var clienteId = Guid.NewGuid();
-        var response = new LoginResponse("token", DateTime.UtcNow.AddHours(1), Guid.NewGuid(), "Admin", new[] { "ADMINISTRADOR" }, clienteId);
+        var response = new LoginResponse("token", DateTime.UtcNow.AddHours(1), Guid.NewGuid(), "Admin", "admin@local", new[] { "ADMINISTRADOR" }, clienteId);
 
         Assert.Equal(clienteId, response.ClienteId);
     }

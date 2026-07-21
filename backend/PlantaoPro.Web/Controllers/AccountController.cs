@@ -91,7 +91,7 @@ public sealed class AccountController : Controller
             {
                 new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? normalizedEmail : login.Nome),
-                new Claim(ClaimTypes.Email, normalizedEmail),
+                new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),
                 new Claim(ClaimTypes.Role, perfil),
                 new Claim("Perfil", perfil),
                 new Claim("jwt", login.Token)
@@ -101,9 +101,20 @@ public sealed class AccountController : Controller
             {
                 var clienteId = login.ClienteId.Value.ToString();
                 claims.Add(new Claim("cliente_id", clienteId));
-                claims.Add(new Claim("tenant_id", clienteId));
-                claims.Add(new Claim("tenant", login.ClienteNome ?? "Tenant PlantãoPro"));
                 claims.Add(new Claim("cliente", login.ClienteNome ?? "Cliente PlantãoPro"));
+            }
+            if (login.TenantId.HasValue)
+            {
+                claims.Add(new Claim("tenant_id", login.TenantId.Value.ToString()));
+                claims.Add(new Claim("tenant", login.TenantNome ?? login.ClienteNome ?? "Tenant PlantãoPro"));
+            }
+            var tenantRoles = new[] { "ADMINISTRADOR_CLIENTE", "ADMINISTRADOR", "COORDENACAO", "OPERADOR", "FINANCEIRO", "MEDICO", "HOSPITAL", "RECEPCAO", "TRIAGEM" };
+            if ((login.Roles ?? Array.Empty<string>()).Select(NormalizeRole).Any(r => tenantRoles.Contains(r)) && !login.TenantId.HasValue)
+            {
+                const string tenantMessage = "Conta sem tenant configurado. Contate o administrador.";
+                ModelState.AddModelError(string.Empty, tenantMessage);
+                TempData["Error"] = tenantMessage;
+                return View(model);
             }
 
             foreach (var role in login.Roles ?? Array.Empty<string>())
@@ -213,6 +224,8 @@ public sealed class AccountController : Controller
             (RolesConstants.Financeiro, "Financeiro", "Index"),
             (RolesConstants.Medico, "MedicoArea", "Index"),
             (RolesConstants.Hospital, "HospitalArea", "Index"),
+            ("RECEPCAO", "CentralAtendimento", "Index"),
+            ("TRIAGEM", "Triagem", "Fila"),
             (RolesConstants.Parceiro, "ParceiroPortal", "Index"),
             (RolesConstants.Suporte, "Suporte", "Index"),
             (RolesConstants.Auditor, "Auditoria", "Index"),

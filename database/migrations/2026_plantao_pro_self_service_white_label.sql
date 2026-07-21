@@ -118,8 +118,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.perfil_permissoes(id uuid PRIMARY KEY DEFA
 CREATE INDEX IF NOT EXISTS ix_perfil_permissoes_status_regdate ON plantaopro.perfil_permissoes(perfil_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_modulos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, modulo_id uuid NOT NULL, habilitado boolean NOT NULL DEFAULT true, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_modulos_status_regdate ON plantaopro.perfil_modulos(perfil_id,reg_status,reg_date);
-CREATE TABLE IF NOT EXISTS plantaopro.usuario_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
-CREATE INDEX IF NOT EXISTS ix_usuario_perfis_tenant_cliente_status_regdate ON plantaopro.usuario_perfis(tenant_id,cliente_id,reg_status,reg_date);
+CREATE TABLE IF NOT EXISTS plantaopro.usuarios_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+CREATE INDEX IF NOT EXISTS ix_usuarios_perfis_tenant_cliente_status_regdate ON plantaopro.usuarios_perfis(tenant_id,cliente_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_permissoes_especiais(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, justificativa text NOT NULL DEFAULT '', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_usuario_permissoes_especiais_tenant_cliente_status_regdate ON plantaopro.usuario_permissoes_especiais(tenant_id,cliente_id,reg_status,reg_date);
 

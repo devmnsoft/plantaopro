@@ -8,6 +8,9 @@ using PlantaoPro.Api.Security;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var connectionString = builder.Configuration.GetConnectionString("Default");
+ConnectionStringStartupValidator.Validate(connectionString, builder.Environment, builder.Configuration);
+
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<RequestLogContextFilter>();

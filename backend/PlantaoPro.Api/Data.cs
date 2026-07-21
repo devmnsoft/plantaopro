@@ -267,8 +267,8 @@ values
             try
             {
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-                await GarantirTabelaTentativasAsync(cn);
-                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
+                await cn.OpenAsync();
+                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id,tenant_id,senha_alteracao_obrigatoria from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
                 {
                     Email = normalizedEmail
                 });
@@ -346,7 +346,7 @@ values
                         return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
                     return ApiResponse<LoginResponse>.Fail($"E-mail ou senha inválidos. Tentativa {proximaTentativa}/{MaxTentativasFalhas}.", 401);
                 }
-                var roles = (await cn.QueryAsync<string>("select p.nome from plantaopro.perfis p join plantaopro.usuarios_perfis up on up.perfil_id=p.id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A'", new
+                var roles = (await cn.QueryAsync<string>("select coalesce(p.codigo,p.nome) from plantaopro.perfis p join plantaopro.usuarios_perfis up on up.perfil_id=p.id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A'", new
                 {
                     id = (Guid)user.id
                 })).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
@@ -358,44 +358,27 @@ values
                 Guid? clienteId = null;
                 object? usuarioCliente = user.cliente_id;
                 if (usuarioCliente is Guid usuarioClienteId) clienteId = usuarioClienteId;
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteId);
+                Guid? tenantId = null;
+                object? usuarioTenant = user.tenant_id;
+                if (usuarioTenant is Guid usuarioTenantId) tenantId = usuarioTenantId;
+                var mustChangePassword = user.senha_alteracao_obrigatoria is bool must && must;
+                var token = GenerateToken((Guid)user.id, (string)user.email, roles, clienteId, tenantId);
+                await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
                 await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, roles, clienteId), "Login realizado com sucesso.");
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, (string)user.email, roles, clienteId, null, tenantId, null, mustChangePassword), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
-        private static Task GarantirTabelaTentativasAsync(NpgsqlConnection cn) =>
-            cn.ExecuteAsync(@"create table if not exists plantaopro.login_tentativas(
-                id uuid primary key default gen_random_uuid(),
-                usuario_id uuid null,
-                email text not null,
-                ip text null,
-                user_agent text null,
-                sucesso boolean not null,
-                motivo text not null,
-                bloqueado_ate timestamp null,
-                reg_date timestamp not null default now()
-            )");
-        private static Task RegistrarTentativaAsync(NpgsqlConnection cn, Guid? usuarioId, string email, string? ip, string? ua, bool sucesso, string motivo, DateTime? bloqueadoAte = null) =>
-            cn.ExecuteAsync(@"insert into plantaopro.login_tentativas(usuario_id,email,ip,user_agent,sucesso,motivo,bloqueado_ate,reg_date)
-                values(@usuarioId,@email,@ip,@ua,@sucesso,@motivo,@bloqueadoAte,now())",
-                new
-                {
-                    usuarioId,
-                    email,
-                    ip,
-                    ua,
-                    sucesso,
-                    motivo,
-                    bloqueadoAte
-                });
-        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId)
+        string GenerateToken(Guid uid, string email, string[] roles, Guid? clienteId, Guid? tenantId)
         {
             var jwt = cfg.GetSection("Jwt");
-            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()) };
+            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email) };
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            if (roles.Length > 0) claims.Add(new Claim("role", roles[0]));
+            if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
+            if (tenantId.HasValue) claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(jwt["Issuer"], jwt["Audience"], claims, expires: DateTime.UtcNow.AddHours(8), signingCredentials: creds));

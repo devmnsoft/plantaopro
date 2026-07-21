@@ -42,6 +42,18 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 SET search_path TO plantaopro;
 CREATE TABLE IF NOT EXISTS perfis(id uuid primary key default uuid_generate_v4(),nome varchar(60) unique not null,descricao varchar(255),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
 CREATE TABLE IF NOT EXISTS usuarios(id uuid primary key default uuid_generate_v4(),nome varchar(120) not null,email varchar(120) unique not null,senha_hash varchar(255) not null,telefone varchar(20),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
+
+ALTER TABLE plantaopro.usuarios
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS email_normalizado text,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS bloqueado_ate timestamp NULL,
+    ADD COLUMN IF NOT EXISTS senha_alteracao_obrigatoria boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS ultimo_login timestamp NULL;
+UPDATE plantaopro.usuarios SET email_normalizado = lower(trim(email)) WHERE email_normalizado IS NULL OR trim(email_normalizado) = '';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_email_normalizado_tenant ON plantaopro.usuarios(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(email_normalizado)) WHERE reg_status='A';
+
 CREATE TABLE IF NOT EXISTS usuarios_perfis(id uuid primary key default uuid_generate_v4(),usuario_id uuid references usuarios(id),perfil_id uuid references perfis(id),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
 CREATE TABLE IF NOT EXISTS especialidades(id uuid primary key default uuid_generate_v4(),nome varchar(100) unique not null,descricao text,reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
 CREATE TABLE IF NOT EXISTS hospitais(id uuid primary key default uuid_generate_v4(),razao_social varchar(160),nome_fantasia varchar(160) not null,cnpj varchar(18) unique not null,telefone varchar(20),email varchar(120),endereco text,cidade varchar(80) not null,estado char(2) not null,responsavel varchar(120),reg_date timestamp default now(),reg_update timestamp,reg_status char(1) default 'A' check(reg_status in('A','I')),created_by uuid,updated_by uuid);
@@ -379,14 +391,37 @@ CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_pagamentos_iniciais(id uu
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_pagamentos_status_regdate ON plantaopro.cadastro_cliente_pagamentos_iniciais(cliente_id,status,reg_date);
 
 CREATE TABLE IF NOT EXISTS plantaopro.perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, codigo text NOT NULL, nome text NOT NULL, descricao text NOT NULL DEFAULT '', base_sistema boolean NOT NULL DEFAULT false, customizado boolean NOT NULL DEFAULT false, status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+
+ALTER TABLE plantaopro.perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS codigo text,
+    ADD COLUMN IF NOT EXISTS base_sistema boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS customizado boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO';
+ALTER TABLE plantaopro.perfis ADD COLUMN IF NOT EXISTS created_by uuid;
+ALTER TABLE plantaopro.perfis ADD COLUMN IF NOT EXISTS updated_by uuid;
+UPDATE plantaopro.perfis
+SET codigo = upper(regexp_replace(unaccent(coalesce(nome, 'PERFIL')), '[^A-Za-z0-9]+', '_', 'g'))
+WHERE codigo IS NULL OR trim(codigo) = '';
+ALTER TABLE plantaopro.perfis ALTER COLUMN codigo SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN base_sistema SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN customizado SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN status SET NOT NULL;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_perfis_tenant_codigo ON plantaopro.perfis(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_perfis_tenant_cliente_status_regdate ON plantaopro.perfis(tenant_id,cliente_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_permissoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, bloqueado_por_plano boolean NOT NULL DEFAULT false, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_permissoes_status_regdate ON plantaopro.perfil_permissoes(perfil_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_modulos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, modulo_id uuid NOT NULL, habilitado boolean NOT NULL DEFAULT true, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_modulos_status_regdate ON plantaopro.perfil_modulos(perfil_id,reg_status,reg_date);
-CREATE TABLE IF NOT EXISTS plantaopro.usuario_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
-CREATE INDEX IF NOT EXISTS ix_usuario_perfis_tenant_cliente_status_regdate ON plantaopro.usuario_perfis(tenant_id,cliente_id,reg_status,reg_date);
+CREATE TABLE IF NOT EXISTS plantaopro.usuarios_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+ALTER TABLE plantaopro.usuarios_perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
+CREATE INDEX IF NOT EXISTS ix_usuarios_perfis_tenant_cliente_status_regdate ON plantaopro.usuarios_perfis(tenant_id,cliente_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_permissoes_especiais(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, justificativa text NOT NULL DEFAULT '', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_usuario_permissoes_especiais_tenant_cliente_status_regdate ON plantaopro.usuario_permissoes_especiais(tenant_id,cliente_id,reg_status,reg_date);
 
@@ -577,14 +612,37 @@ CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_pagamentos_iniciais(id uu
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_pagamentos_status_regdate ON plantaopro.cadastro_cliente_pagamentos_iniciais(cliente_id,status,reg_date);
 
 CREATE TABLE IF NOT EXISTS plantaopro.perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, codigo text NOT NULL, nome text NOT NULL, descricao text NOT NULL DEFAULT '', base_sistema boolean NOT NULL DEFAULT false, customizado boolean NOT NULL DEFAULT false, status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+
+ALTER TABLE plantaopro.perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS codigo text,
+    ADD COLUMN IF NOT EXISTS base_sistema boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS customizado boolean NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO';
+ALTER TABLE plantaopro.perfis ADD COLUMN IF NOT EXISTS created_by uuid;
+ALTER TABLE plantaopro.perfis ADD COLUMN IF NOT EXISTS updated_by uuid;
+UPDATE plantaopro.perfis
+SET codigo = upper(regexp_replace(unaccent(coalesce(nome, 'PERFIL')), '[^A-Za-z0-9]+', '_', 'g'))
+WHERE codigo IS NULL OR trim(codigo) = '';
+ALTER TABLE plantaopro.perfis ALTER COLUMN codigo SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN base_sistema SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN customizado SET NOT NULL;
+ALTER TABLE plantaopro.perfis ALTER COLUMN status SET NOT NULL;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_perfis_tenant_codigo ON plantaopro.perfis(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_perfis_tenant_cliente_status_regdate ON plantaopro.perfis(tenant_id,cliente_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_permissoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, bloqueado_por_plano boolean NOT NULL DEFAULT false, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_permissoes_status_regdate ON plantaopro.perfil_permissoes(perfil_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_modulos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, modulo_id uuid NOT NULL, habilitado boolean NOT NULL DEFAULT true, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_modulos_status_regdate ON plantaopro.perfil_modulos(perfil_id,reg_status,reg_date);
-CREATE TABLE IF NOT EXISTS plantaopro.usuario_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
-CREATE INDEX IF NOT EXISTS ix_usuario_perfis_tenant_cliente_status_regdate ON plantaopro.usuario_perfis(tenant_id,cliente_id,reg_status,reg_date);
+CREATE TABLE IF NOT EXISTS plantaopro.usuarios_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+ALTER TABLE plantaopro.usuarios_perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
+CREATE INDEX IF NOT EXISTS ix_usuarios_perfis_tenant_cliente_status_regdate ON plantaopro.usuarios_perfis(tenant_id,cliente_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_permissoes_especiais(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, justificativa text NOT NULL DEFAULT '', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_usuario_permissoes_especiais_tenant_cliente_status_regdate ON plantaopro.usuario_permissoes_especiais(tenant_id,cliente_id,reg_status,reg_date);
 
@@ -5111,3 +5169,30 @@ CREATE INDEX IF NOT EXISTS idx_relatorio_exportacoes_cliente_status_data ON plan
 -- ============================================================
 
 INSERT INTO plantaopro.planos(nome, slug, descricao, valor_mensal, limite_medicos, limite_hospitais, limite_plantoes_mes, limite_usuarios, permite_relatorios, permite_relatorios_avancados, publico, status) SELECT 'Essencial', 'essencial', 'Plano inicial PlantãoPro', 0, 10, 3, 100, 5, true, true, true, 'ATIVO' WHERE NOT EXISTS (SELECT 1 FROM plantaopro.planos WHERE slug='essencial');
+
+
+-- v1.18.5 auth bootstrap canonicalization
+ALTER TABLE plantaopro.usuarios_perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_usuarios_perfis_usuario_perfil_ativo ON plantaopro.usuarios_perfis(usuario_id, perfil_id) WHERE reg_status='A';
+ALTER TABLE plantaopro.usuarios_perfis
+    ADD COLUMN IF NOT EXISTS tenant_id uuid,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
+CREATE INDEX IF NOT EXISTS ix_usuarios_perfis_tenant_cliente_status_regdate ON plantaopro.usuarios_perfis(tenant_id,cliente_id,reg_status,reg_date);
+CREATE TABLE IF NOT EXISTS plantaopro.login_tentativas(
+    id uuid primary key default gen_random_uuid(), usuario_id uuid null, email text not null, ip text null,
+    user_agent text null, sucesso boolean not null, motivo text not null, bloqueado_ate timestamp null,
+    reg_date timestamp not null default now(), reg_update timestamp null, reg_status char(1) not null default 'A'
+);
+CREATE INDEX IF NOT EXISTS ix_login_tentativas_usuario_data ON plantaopro.login_tentativas(usuario_id, reg_date desc);
+CREATE TABLE IF NOT EXISTS plantaopro.recuperacao_senha(
+    id uuid primary key default gen_random_uuid(), usuario_id uuid not null, token_hash text not null,
+    expiracao timestamp not null, utilizado boolean not null default false, reg_date timestamp not null default now(),
+    reg_update timestamp null, reg_status char(1) not null default 'A'
+);
+CREATE INDEX IF NOT EXISTS ix_recuperacao_senha_usuario_token ON plantaopro.recuperacao_senha(usuario_id, token_hash);

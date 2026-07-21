@@ -88,7 +88,7 @@ public sealed class ReportPermissionService : IReportPermissionService
         var allowed = cn.ExecuteScalar<bool>(@"
 select exists(
     select 1
-    from plantaopro.usuario_perfis up
+    from plantaopro.usuarios_perfis up
     join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
     join plantaopro.perfil_permissoes pp on pp.perfil_id=pf.id and pp.permitido=true and pp.reg_status='A'
     join plantaopro.permissoes pm on pm.id=pp.permissao_id and pm.reg_status='A'

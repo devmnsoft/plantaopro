@@ -84,17 +84,31 @@ public sealed class RoleCatalog : IRoleCatalog
 }
 
 public interface IPrimaryRoleResolver { string Resolve(IEnumerable<string> roles); }
-public sealed class PrimaryRoleResolver(IRoleCatalog roleCatalog) : IPrimaryRoleResolver
+public sealed class PrimaryRoleResolver : IPrimaryRoleResolver
 {
-    public string Resolve(IEnumerable<string> roles) => roles.Select(roleCatalog.Find).OfType<RoleDefinition>().OrderByDescending(r => r.Priority).Select(r => r.Code).FirstOrDefault() ?? roleCatalog.Normalize(roles.FirstOrDefault()) ?? "USUARIO";
+    private readonly IRoleCatalog _roleCatalog;
+
+    public PrimaryRoleResolver(IRoleCatalog roleCatalog)
+    {
+        _roleCatalog = roleCatalog;
+    }
+
+    public string Resolve(IEnumerable<string> roles) => roles.Select(_roleCatalog.Find).OfType<RoleDefinition>().OrderByDescending(r => r.Priority).Select(r => r.Code).FirstOrDefault() ?? _roleCatalog.Normalize(roles.FirstOrDefault()) ?? "USUARIO";
 }
 
 public interface IAccessScopeResolver { string Resolve(IEnumerable<string> roles, bool tenantContextSelected = false); }
-public sealed class AccessScopeResolver(IRoleCatalog roleCatalog) : IAccessScopeResolver
+public sealed class AccessScopeResolver : IAccessScopeResolver
 {
+    private readonly IRoleCatalog _roleCatalog;
+
+    public AccessScopeResolver(IRoleCatalog roleCatalog)
+    {
+        _roleCatalog = roleCatalog;
+    }
+
     public string Resolve(IEnumerable<string> roles, bool tenantContextSelected = false)
     {
-        var definitions = roles.Select(roleCatalog.Find).OfType<RoleDefinition>().ToArray();
+        var definitions = roles.Select(_roleCatalog.Find).OfType<RoleDefinition>().ToArray();
         var hasGlobal = definitions.Any(r => r.Scope == AccessScopes.Global || r.Scope == AccessScopes.Hybrid);
         var hasTenant = definitions.Any(r => r.RequiresTenant || r.Scope == AccessScopes.Tenant);
         if (tenantContextSelected && hasGlobal) return AccessScopes.Hybrid;
@@ -105,13 +119,20 @@ public sealed class AccessScopeResolver(IRoleCatalog roleCatalog) : IAccessScope
 }
 
 public interface ITenantContextResolver { bool RequiresTenant(IEnumerable<string> roles, Guid? tenantId); bool IsTenantSelected(Guid? tenantId); }
-public sealed class TenantContextResolver(IRoleCatalog roleCatalog) : ITenantContextResolver
+public sealed class TenantContextResolver : ITenantContextResolver
 {
+    private readonly IRoleCatalog _roleCatalog;
+
+    public TenantContextResolver(IRoleCatalog roleCatalog)
+    {
+        _roleCatalog = roleCatalog;
+    }
+
     public bool RequiresTenant(IEnumerable<string> roles, Guid? tenantId)
     {
-        var normalizedRoles = roles.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var hasGlobalAccess = normalizedRoles.Any(role => roleCatalog.IsGlobal(role));
-        var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => roleCatalog.RequiresTenant(role));
+        var normalizedRoles = roles.Select(_roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        var hasGlobalAccess = normalizedRoles.Any(role => _roleCatalog.IsGlobal(role));
+        var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => _roleCatalog.RequiresTenant(role));
         return requiresTenant && !tenantId.HasValue;
     }
     public bool IsTenantSelected(Guid? tenantId) => tenantId.HasValue;

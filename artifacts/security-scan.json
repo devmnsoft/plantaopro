@@ -1,0 +1,6 @@
+{
+  "tool": "rg",
+  "patterns": "forbidden security literals",
+  "findings": [],
+  "passed": true
+}

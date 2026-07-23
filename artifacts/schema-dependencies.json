@@ -68,5 +68,10 @@
     "object": "plantaopro.operacoes_continuidade",
     "dependsOn": [],
     "source": "database/schema/120_operacoes_continuidade.sql"
+  },
+  {
+    "object": "plantaopro.contexto_multiempresa",
+    "dependsOn": [],
+    "source": "database/schema/130_contexto_multiempresa.sql"
   }
 ]

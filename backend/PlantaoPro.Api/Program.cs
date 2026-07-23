@@ -172,11 +172,21 @@ builder.Services.AddScoped<IReportExportService, ReportExportService>();
 builder.Services.AddScoped<IReportPermissionService, ReportPermissionService>();
 builder.Services.AddScoped<IReportAuditService, ReportAuditService>();
 builder.Services.AddScoped<CsvExportService>();
+builder.Services.AddScoped<IContextoRepository, ContextoRepository>();
+builder.Services.AddScoped<IContextoService, ContextoService>();
+builder.Services.AddScoped<ContextTokenService>();
+builder.Services.AddScoped<ContextAuthorizationService>();
+builder.Services.AddScoped<IImpersonationRepository, ImpersonationRepository>();
+builder.Services.AddScoped<IImpersonationService, ImpersonationService>();
+builder.Services.AddScoped<ImpersonationTokenService>();
+builder.Services.AddScoped<ImpersonationAuthorizationService>();
+builder.Services.AddScoped<IMeuDiaRepository, MeuDiaRepository>();
+builder.Services.AddScoped<IMeuDiaService, MeuDiaService>();
 
 var app = builder.Build();
 app.UseHttpLogging();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
 {
     app.UseSwagger();
     app.UseSwaggerUI();

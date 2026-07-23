@@ -15,6 +15,14 @@ public static class DatabaseStartupReadinessValidator
 
     public static void Validate(string? connectionString, IWebHostEnvironment environment, IConfiguration configuration)
     {
+        if (environment.IsEnvironment("Testing") && configuration.GetValue<bool>("Database:SkipStartupReadinessForTesting"))
+        {
+            return;
+        }
+        if (!environment.IsEnvironment("Testing") && configuration.GetValue<bool>("Database:SkipStartupReadinessForTesting"))
+        {
+            throw new InvalidOperationException("Database:SkipStartupReadinessForTesting é permitido somente no ambiente Testing.");
+        }
         ConnectionStringStartupValidator.Validate(connectionString, environment, configuration);
         if (string.IsNullOrWhiteSpace(connectionString)) return;
 

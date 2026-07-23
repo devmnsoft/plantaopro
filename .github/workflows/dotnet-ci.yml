@@ -179,16 +179,31 @@ jobs:
       PGPASSWORD: plantaopro_demo_ci
     steps:
       - uses: actions/checkout@v4
-      - name: Compare complete script and canonical install schemas
+      - name: Compare clean install and real upgrade schemas
         run: |
           mkdir -p artifacts
           createdb plantaopro_complete
           PGDATABASE=plantaopro_complete psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
           createdb plantaopro_upgrade
-          PGDATABASE=plantaopro_upgrade psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
+          PGDATABASE=plantaopro_upgrade psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-v118.sql
+          PGDATABASE=plantaopro_upgrade bash scripts/apply-canonical-migrations.sh
           pg_dump --schema-only --no-owner --no-acl plantaopro_complete > artifacts/schema-complete.sql
           pg_dump --schema-only --no-owner --no-acl plantaopro_upgrade > artifacts/schema-upgrade.sql
-          diff -u artifacts/schema-complete.sql artifacts/schema-upgrade.sql > artifacts/schema-diff.txt
+          python3 scripts/normalize-schema-dump.py artifacts/schema-complete.sql artifacts/schema-complete.normalized.sql
+          python3 scripts/normalize-schema-dump.py artifacts/schema-upgrade.sql artifacts/schema-upgrade.normalized.sql
+          diff -u artifacts/schema-complete.normalized.sql artifacts/schema-upgrade.normalized.sql > artifacts/schema-diff.txt
+          python3 scripts/catalog-schema.py artifacts/schema-complete.sql artifacts/schema-complete.catalog.json
+          python3 scripts/catalog-schema.py artifacts/schema-upgrade.sql artifacts/schema-upgrade.catalog.json
+          python3 - <<'PYREPORT'
+          import json
+          from pathlib import Path
+          a=json.loads(Path('artifacts/schema-complete.catalog.json').read_text())['objects']
+          b=json.loads(Path('artifacts/schema-upgrade.catalog.json').read_text())['objects']
+          report={'equivalent': a==b, 'missingInUpgrade':[x for x in a if x not in b], 'extraInUpgrade':[x for x in b if x not in a]}
+          Path('artifacts/schema-equivalence-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
+          if not report['equivalent']:
+              raise SystemExit(report)
+          PYREPORT
       - if: always()
         uses: actions/upload-artifact@v4
         with:

@@ -1,2 +1,10 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_ImpersonationBanner"></div>
+@if (User.FindFirst("impersonation")?.Value == "true")
+{
+    <section class="alert alert-warning d-flex align-items-center gap-2 mb-0 rounded-0" role="status" aria-live="polite">
+        <i class="bi bi-person-badge" aria-hidden="true"></i>
+        <div>
+            <strong>Acesso assistido ativo.</strong>
+            Usuário: @User.FindFirst("impersonated_user_id")?.Value • Expira em: @User.FindFirst("impersonation_expires_at")?.Value
+        </div>
+    </section>
+}

@@ -1447,6 +1447,8 @@ JOIN plantaopro.perfis p ON p.id = up.perfil_id
 WHERE up.reg_status='A' AND p.reg_status='A' AND up.tenant_id IS NOT NULL
   AND coalesce(p.codigo,p.nome) <> 'ADMINISTRADOR_GLOBAL'
   AND NOT EXISTS (SELECT 1 FROM plantaopro.usuario_tenant_acessos uta WHERE uta.usuario_id=up.usuario_id AND uta.perfil_id=up.perfil_id AND uta.tenant_id=up.tenant_id AND uta.reg_status='A');
+
+-- Origem: database/schema/140_experiencia_premium_meu_dia.sql
 -- PlantãoPro v1.20.1 - Experiência premium Meu Dia
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_preferencias_interface (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

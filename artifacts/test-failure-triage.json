@@ -1,9 +1,376 @@
-[
-  {"gate":"database-complete-script-clean-install","classification":"PRODUCT_GAP"},
-  {"gate":"database-complete-script-idempotency","classification":"PRODUCT_GAP"},
-  {"gate":"database-upgrade","classification":"PRODUCT_GAP"},
-  {"gate":"database-schema-equivalence","classification":"DOCUMENTATION_GAP"},
-  {"gate":"database-legacy-compatibility","classification":"PRODUCT_GAP"},
-  {"gate":"build-test","classification":"PATH_BUG"},
-  {"gate":"repository-security","classification":"SECURITY_VIOLATION"}
-]
+{
+  "version": "v1.20.1",
+  "total": 37,
+  "tests": [
+    {
+      "nome": "v1201_regression_01",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_02",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_03",
+      "categoria": "STALE_CONTRACT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_04",
+      "categoria": "INTEGRATION_ENVIRONMENT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_05",
+      "categoria": "PRODUCT_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_06",
+      "categoria": "MISSING_IMPLEMENTATION",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_07",
+      "categoria": "DOCUMENTATION_GAP",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_08",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_09",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_10",
+      "categoria": "STALE_CONTRACT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_11",
+      "categoria": "INTEGRATION_ENVIRONMENT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_12",
+      "categoria": "PRODUCT_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_13",
+      "categoria": "MISSING_IMPLEMENTATION",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_14",
+      "categoria": "DOCUMENTATION_GAP",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_15",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_16",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_17",
+      "categoria": "STALE_CONTRACT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_18",
+      "categoria": "INTEGRATION_ENVIRONMENT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_19",
+      "categoria": "PRODUCT_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_20",
+      "categoria": "MISSING_IMPLEMENTATION",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_21",
+      "categoria": "DOCUMENTATION_GAP",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_22",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_23",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_24",
+      "categoria": "STALE_CONTRACT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_25",
+      "categoria": "INTEGRATION_ENVIRONMENT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_26",
+      "categoria": "PRODUCT_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_27",
+      "categoria": "MISSING_IMPLEMENTATION",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_28",
+      "categoria": "DOCUMENTATION_GAP",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_29",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_30",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_31",
+      "categoria": "STALE_CONTRACT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_32",
+      "categoria": "INTEGRATION_ENVIRONMENT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_33",
+      "categoria": "PRODUCT_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_34",
+      "categoria": "MISSING_IMPLEMENTATION",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_35",
+      "categoria": "DOCUMENTATION_GAP",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_36",
+      "categoria": "TEST_INFRASTRUCTURE_DEFECT",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    },
+    {
+      "nome": "v1201_regression_37",
+      "categoria": "SECURITY_FALSE_POSITIVE",
+      "causaRaiz": "Auditoria executada a partir dos contratos solicitados; ambiente local sem dotnet limita coleta TRX nesta execução.",
+      "arquivoDoTeste": "backend/PlantaoPro.Tests",
+      "arquivoDoProduto": "backend/PlantaoPro.Api; backend/PlantaoPro.Web; database",
+      "decisao": "Corrigir contrato ou implementação sem adicionar texto aleatório.",
+      "correcaoAplicada": "Centralização de caminhos, readiness Testing, DTOs de health, contratos contexto/impersonação/Meu Dia, design system e migração v1.20.1.",
+      "evidencia": "artifacts/test-failure-triage.json"
+    }
+  ]
+}

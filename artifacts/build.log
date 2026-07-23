@@ -1,2 +1,1 @@
-dotnet restore backend/PlantaoPro.sln
-/bin/bash: dotnet: command not found
+/bin/bash: line 2: dotnet: command not found

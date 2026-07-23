@@ -1,2 +1,1 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_UserMenu"></div>
+<div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>@User.FindFirst("primary_role")?.Value</small></div></div>

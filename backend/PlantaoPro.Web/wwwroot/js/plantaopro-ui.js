@@ -244,3 +244,16 @@
   window.PlantaoProUi={copyText,refresh:()=>{initTooltips();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();}};
   document.addEventListener('DOMContentLoaded',()=>{initTooltips();autoCloseAlerts();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();markActiveMenu();});
 })();
+
+document.addEventListener("click", function (event) {
+  const btn = event.target.closest("[data-sidebar-collapse]");
+  if (!btn) return;
+  const sidebar = document.getElementById("appSidebar");
+  if (!sidebar) return;
+  sidebar.classList.toggle("is-collapsed");
+  localStorage.setItem("plantaopro.sidebar.collapsed", sidebar.classList.contains("is-collapsed") ? "1" : "0");
+});
+document.addEventListener("DOMContentLoaded", function () {
+  const sidebar = document.getElementById("appSidebar");
+  if (sidebar && localStorage.getItem("plantaopro.sidebar.collapsed") === "1") sidebar.classList.add("is-collapsed");
+});

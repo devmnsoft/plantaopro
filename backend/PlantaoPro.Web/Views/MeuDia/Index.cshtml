@@ -1,8 +1,23 @@
+@model PlantaoPro.Web.Models.MeuDiaViewModel
 @{ ViewData["Title"] = "Meu Dia"; }
 <section class="pp-card p-4" aria-labelledby="meuDiaTitle">
   <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-    <div><p class="text-uppercase text-muted fw-semibold mb-1">Central operacional</p><h1 id="meuDiaTitle">Meu Dia</h1><p class="text-muted">Pendências, agenda, alertas e ações rápidas respeitando perfil, permissões e contexto.</p></div>
-    <span class="badge text-bg-primary">Dados em tempo real via API</span>
+    <div><p class="text-uppercase text-muted fw-semibold mb-1">Central operacional</p><h1 id="meuDiaTitle">@Model.Saudacao</h1><p class="text-muted">@Model.Contexto • Pendências, agenda, alertas e ações rápidas respeitando perfil, permissões e contexto.</p></div>
+    <a class="btn btn-primary" asp-action="Index"><i class="bi bi-arrow-clockwise me-1"></i>Atualizar</a>
   </div>
-  <div class="alert alert-light border mt-3" role="status" aria-live="polite">Carregando resumo operacional...</div>
+  <div class="visually-hidden" role="status" aria-live="polite">Resumo Meu Dia carregado.</div>
+  @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-warning mt-3" role="alert">@Model.ErrorMessage</div> }
+  <div class="row g-3 mt-1" aria-label="Indicadores">
+    @foreach (var i in Model.Indicadores) { <div class="col-6 col-lg-3"><div class="metric-card"><i class="bi @i.Icone"></i><span>@i.Titulo</span><strong>@i.Valor</strong></div></div> }
+  </div>
+  @if (!Model.HasItems)
+  {
+      var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel { Icon = "bi-check2-circle", Title = "Nada crítico para agora", Description = "Seu contexto não possui pendências prioritárias abertas." };
+      <partial name="_EmptyState" model="emptyState" />
+  }
+  <div class="row g-4 mt-1">
+    <div class="col-lg-7"><h2 class="h5">Pendências prioritárias</h2>@await Html.PartialAsync("_MeuDiaItems", Model.Pendencias)</div>
+    <div class="col-lg-5"><h2 class="h5">Alertas</h2>@await Html.PartialAsync("_MeuDiaItems", Model.Alertas)<h2 class="h5 mt-4">Ações rápidas</h2>@await Html.PartialAsync("_MeuDiaItems", Model.AcoesRapidas)</div>
+    <div class="col-12"><h2 class="h5">Agenda</h2>@await Html.PartialAsync("_MeuDiaItems", Model.Agenda)</div>
+  </div>
 </section>

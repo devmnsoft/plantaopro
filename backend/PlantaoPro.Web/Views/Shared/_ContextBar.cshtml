@@ -1,2 +1,6 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_ContextBar"></div>
+@{ var isImp = User.FindFirst("impersonation")?.Value == "true"; var tenant = User.FindFirst("tenant")?.Value ?? User.FindFirst("tenant_nome")?.Value; var cliente = User.FindFirst("cliente")?.Value ?? User.FindFirst("cliente_nome")?.Value; var plano = User.FindFirst("plano")?.Value; }
+<div class="context-bar" role="status" aria-live="polite">
+@if (isImp) { <i class="bi bi-person-badge"></i><span><strong>Acesso assistido ativo</strong><small>Usuário: @User.FindFirst("impersonated_user_id")?.Value • Empresa: @(cliente ?? "não informada") • Expira em: @User.FindFirst("impersonation_expires_at")?.Value</small></span> }
+else if (!string.IsNullOrWhiteSpace(tenant)) { <i class="bi bi-building"></i><span><strong>Empresa: @(cliente ?? "Cliente")</strong><small>Unidade: @tenant @(!string.IsNullOrWhiteSpace(plano) ? $"• Plano: {plano}" : string.Empty)</small></span> }
+else { <i class="bi bi-globe2"></i><span><strong>Contexto global</strong><small>Visualizando toda a plataforma</small></span> }
+</div>

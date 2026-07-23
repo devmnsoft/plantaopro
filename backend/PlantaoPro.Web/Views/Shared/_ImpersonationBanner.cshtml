@@ -1,2 +1,1 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_ImpersonationBanner"></div>
+@if (User.FindFirst("impersonation")?.Value == "true") { <div class="alert alert-warning d-flex gap-2" role="status"><i class="bi bi-shield-exclamation"></i><div><strong>Acesso assistido ativo.</strong> Operações sensíveis estão bloqueadas durante a impersonação.</div></div> }

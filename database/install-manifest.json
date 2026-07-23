@@ -95,6 +95,12 @@
           "type": "canonical",
           "category": "CANONICAL",
           "source": "database/schema/130_contexto_multiempresa.sql"
+        },
+        {
+          "name": "plantaopro.experiencia_premium_meu_dia",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "source": "database/schema/140_experiencia_premium_meu_dia.sql"
         }
       ]
     }
@@ -121,6 +127,9 @@
     "implantacao_execucoes",
     "implantacao_evidencias",
     "go_live_checklists",
-    "go_live_aprovacoes"
+    "go_live_aprovacoes",
+    "usuario_preferencias_interface",
+    "meu_dia_item_estados",
+    "meu_dia_historico"
   ]
 }

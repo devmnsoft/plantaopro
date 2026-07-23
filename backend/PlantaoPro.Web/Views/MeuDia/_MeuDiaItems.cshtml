@@ -1,0 +1,9 @@
+@model IEnumerable<PlantaoPro.Web.Models.MeuDiaItemViewModel>
+<div class="list-group meu-dia-list">
+@foreach (var item in Model) {
+  <article class="list-group-item d-flex justify-content-between gap-3 flex-wrap">
+    <div><h3 class="h6 mb-1"><i class="bi @item.Icone me-1"></i>@item.Titulo</h3><p class="mb-1 text-muted">@item.Descricao</p><small>Prioridade @item.Prioridade • @item.Responsavel @if(item.Prazo.HasValue){<text>• @item.Prazo.Value.ToString("dd/MM/yyyy HH:mm")</text>}</small></div>
+    <div class="d-flex gap-2 align-items-center"><a class="btn btn-sm btn-outline-primary" asp-controller="@item.Controller" asp-action="@item.Action">Abrir</a>@if(item.PodeConcluir){<form asp-action="Concluir" asp-route-id="@item.Id" method="post">@Html.AntiForgeryToken()<button class="btn btn-sm btn-success">Concluir</button></form>}@if(item.PodeAdiar){<form asp-action="Adiar" asp-route-id="@item.Id" method="post">@Html.AntiForgeryToken()<button class="btn btn-sm btn-outline-secondary">Adiar</button></form>}@if(item.Status.Equals("concluido", StringComparison.OrdinalIgnoreCase)){<form asp-action="Reabrir" asp-route-id="@item.Id" method="post">@Html.AntiForgeryToken()<button class="btn btn-sm btn-outline-warning">Reabrir</button></form>}</div>
+  </article>
+}
+</div>

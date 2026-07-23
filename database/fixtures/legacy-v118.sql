@@ -1,0 +1,12 @@
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE TABLE IF NOT EXISTS plantaopro.perfis (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nome text NOT NULL, codigo text NULL);
+CREATE TABLE IF NOT EXISTS plantaopro.permissoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), codigo text NULL, nome text NULL);
+CREATE TABLE IF NOT EXISTS plantaopro.perfis_permissoes (perfil_id uuid NOT NULL, permissao_id uuid NOT NULL);
+CREATE TABLE IF NOT EXISTS plantaopro.usuarios (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nome text NOT NULL, email text NOT NULL, senha_hash text NOT NULL DEFAULT 'legacy-preserved');
+CREATE TABLE IF NOT EXISTS plantaopro.usuario_perfis (usuario_id uuid NOT NULL, perfil_id uuid NOT NULL);
+INSERT INTO plantaopro.perfis(id,nome,codigo) VALUES ('00000000-0000-0000-0000-000000000101','Administrador Global','ADMINISTRADOR_GLOBAL') ON CONFLICT DO NOTHING;
+INSERT INTO plantaopro.permissoes(id,codigo,nome) VALUES ('00000000-0000-0000-0000-000000000201','GLOBAL_ACESSAR','Global acessar') ON CONFLICT DO NOTHING;
+INSERT INTO plantaopro.usuarios(id,nome,email,senha_hash) VALUES ('00000000-0000-0000-0000-000000000301','Admin Legado','admin.legado@example.invalid','legacy-preserved') ON CONFLICT DO NOTHING;
+INSERT INTO plantaopro.perfis_permissoes(perfil_id,permissao_id) VALUES ('00000000-0000-0000-0000-000000000101','00000000-0000-0000-0000-000000000201');
+INSERT INTO plantaopro.usuario_perfis(usuario_id,perfil_id) VALUES ('00000000-0000-0000-0000-000000000301','00000000-0000-0000-0000-000000000101');

@@ -1,7 +1,7 @@
 -- PlantãoPro - script completo oficial de instalação limpa
 -- Versão do schema: v1.18.9
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-07-21
+
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -148,7 +148,6 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
 -- Origem: database/schema/010_identity_access.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
-
 
 CREATE TABLE IF NOT EXISTS plantaopro.perfis (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, codigo text NULL,

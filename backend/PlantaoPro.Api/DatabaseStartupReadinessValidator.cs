@@ -43,7 +43,7 @@ public static class DatabaseStartupReadinessValidator
         }
         catch (PostgresException ex) when (ex.SqlState == "3D000")
         {
-            throw new InvalidOperationException(MissingDatabaseMessage(csb.Database, environment), ex);
+            throw new InvalidOperationException(MissingDatabaseMessage(csb.Database ?? "(não informado)", environment), ex);
         }
         catch (PostgresException ex) when (ex.SqlState == "28P01")
         {

@@ -256,6 +256,6 @@ static Dictionary<string,string> ParseOptions(string[] a)
     return d;
 }
 static string FindRepoRoot(){ var d=new DirectoryInfo(Directory.GetCurrentDirectory()); while(d!=null && !File.Exists(Path.Combine(d.FullName,"backend","PlantaoPro.sln"))) d=d.Parent; return Path.GetFullPath(d?.FullName ?? Directory.GetCurrentDirectory()); }
-static void ValidateDbName(string name){ if(!Regex.IsMatch(name ?? "", "^[a-zA-Z_][a-zA-Z0-9_]{0,62}$")) throw new InvalidOperationException("Nome do banco inválido para criação segura."); }
+static void ValidateDbName(string? name){ if(string.IsNullOrWhiteSpace(name) || !Regex.IsMatch(name, "^[a-zA-Z_][a-zA-Z0-9_]{0,62}$")) throw new InvalidOperationException("Nome do banco inválido para criação segura."); }
 static string QuoteIdentifier(string v)=>"\""+v.Replace("\"","\"\"")+"\"";
 static string Sanitize(string s)=>Regex.Replace(s, "(?i)(password|senha)=[^;\\s]+", "$1=[omitida]");

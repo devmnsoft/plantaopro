@@ -17,7 +17,7 @@ def normalize_sql(s, origin):
         if re.search(r'^\s*SET\s+search_path\s+TO\s+plantaopro\s*;\s*$', line, re.I):
             line='SET search_path TO plantaopro, public;'
         line=re.sub(r'(?<![\w.])uuid_generate_v4\s*\(', 'gen_random_uuid(', line)
-        line=re.sub(r'(?<![\w.])unaccent\s*\(', 'public.unaccent(', line)
+        line=re.sub(r'(?i)public\.unaccent\s*\(', 'unaccent(', line)
         normalized.append(line)
     return '\n'.join(normalized)
 
@@ -28,8 +28,8 @@ def validate_sql(s, origin):
             errors.append({'file':origin,'line':lineno,'function':'search_path','correction':'Use SET search_path TO plantaopro, public;'})
         if re.search(r'(?<![\w.])uuid_generate_v4\s*\(', line):
             errors.append({'file':origin,'line':lineno,'function':'uuid_generate_v4','correction':'Use gen_random_uuid() or public.uuid_generate_v4().'})
-        if re.search(r'(?<![\w.])unaccent\s*\(', line, re.I):
-            errors.append({'file':origin,'line':lineno,'function':'unaccent','correction':'Use public.unaccent(...).'})
+        if 'public.unaccent(' in line.lower():
+            errors.append({'file':origin,'line':lineno,'function':'unaccent','correction':'Use unaccent(...) with resolved extension search_path compatibility.'})
     if errors:
         art=ROOT/'artifacts'; art.mkdir(exist_ok=True)
         (art/'schema-conflicts.json').write_text(json.dumps(errors,ensure_ascii=False,indent=2)+"\n", encoding='utf-8')
@@ -86,7 +86,23 @@ header=f"""-- PlantãoPro - script completo oficial de instalação limpa
 -- Não use scripts de demonstração em produção.
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS unaccent;
+DO $$
+DECLARE
+    v_schema text;
+    v_relocatable boolean;
+BEGIN
+    SELECT n.nspname, e.extrelocatable
+      INTO v_schema, v_relocatable
+      FROM pg_extension e
+      JOIN pg_namespace n ON n.oid = e.extnamespace
+     WHERE e.extname = 'unaccent';
+
+    IF v_schema IS NULL THEN
+        CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+    ELSIF v_schema <> 'public' AND coalesce(v_relocatable, false) THEN
+        ALTER EXTENSION unaccent SET SCHEMA public;
+    END IF;
+END $$;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;

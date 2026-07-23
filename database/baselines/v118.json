@@ -1,0 +1,12 @@
+{
+  "version": "v118",
+  "requiredObjects": [
+    "plantaopro.usuarios",
+    "plantaopro.perfis",
+    "plantaopro.plantoes",
+    "plantaopro.clientes",
+    "plantaopro.tenants",
+    "plantaopro.assinaturas"
+  ],
+  "nextMigration": "2026_v119_contexto_multiempresa_impersonacao.sql"
+}

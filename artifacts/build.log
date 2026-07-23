@@ -1,3 +1,2 @@
-/bin/bash: line 1: dotnet: command not found
-/bin/bash: line 1: dotnet: command not found
-/bin/bash: line 1: dotnet: command not found
+dotnet restore backend/PlantaoPro.sln
+/bin/bash: dotnet: command not found

@@ -11,10 +11,12 @@ public static class RepositoryPathResolver
     public static string DatabaseRoot => Path.Combine(RepoRoot, "database");
     public static string DocsRoot => Path.Combine(RepoRoot, "docs");
     public static string ScriptsRoot => Path.Combine(RepoRoot, "scripts");
+    public static string ArtifactsRoot => Path.Combine(RepoRoot, "artifacts");
 
     public static string ResolveRoot() => RepoRoot;
     public static string BackendProject(string projectName) => Path.Combine(BackendRoot, projectName);
     public static string DatabaseFile(params string[] parts) => Path.Combine(new[] { DatabaseRoot }.Concat(parts).ToArray());
+    public static string ArtifactFile(params string[] parts) => Path.Combine(new[] { ArtifactsRoot }.Concat(parts).ToArray());
 
     private static string FindRepoRoot()
     {

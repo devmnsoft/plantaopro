@@ -15,3 +15,4 @@
 - `plantaopro.implantacao_go_live` depende de: nenhuma
 - `plantaopro.operacoes_continuidade` depende de: nenhuma
 - `plantaopro.contexto_multiempresa` depende de: nenhuma
+- `plantaopro.experiencia_premium_meu_dia` depende de: nenhuma

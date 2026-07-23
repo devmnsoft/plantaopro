@@ -3,13 +3,20 @@
     var icon = Model?.Icon ?? "bi-inbox";
     var title = Model?.Title ?? "Nada por aqui";
     var description = Model?.Description ?? "Sem dados disponíveis no momento.";
-    var buttonText = Model?.ButtonText ?? string.Empty;
-    var buttonAction = Model?.ButtonAction ?? string.Empty;
-    var buttonController = Model?.ButtonController ?? string.Empty;
+    var buttonText = Model?.PrimaryActionText ?? Model?.ButtonText ?? string.Empty;
+    var buttonAction = Model?.PrimaryAction ?? Model?.ButtonAction ?? string.Empty;
+    var buttonController = Model?.PrimaryController ?? Model?.ButtonController ?? string.Empty;
+    var secondaryText = Model?.SecondaryActionText ?? string.Empty;
+    var secondaryAction = Model?.SecondaryAction ?? string.Empty;
+    var secondaryController = Model?.SecondaryController ?? string.Empty;
     var buttonDisabled = Model?.ButtonDisabled ?? true;
 }
 <div class="empty-state text-center">
-    <div class="empty-state-icon"><i class="bi @icon"></i></div>
+    <div class="empty-state-icon"><i class="bi @icon"></i>    @if (!string.IsNullOrWhiteSpace(secondaryText) && !string.IsNullOrWhiteSpace(secondaryAction) && !string.IsNullOrWhiteSpace(secondaryController))
+    {
+        <a class="btn btn-outline-secondary ms-2" asp-action="@secondaryAction" asp-controller="@secondaryController">@secondaryText</a>
+    }
+</div>
     <h5 class="mb-2">@title</h5>
     <p class="text-muted mb-3">@description</p>
     @if (!string.IsNullOrWhiteSpace(buttonText))
@@ -22,5 +29,9 @@
         {
             <button class="btn btn-soft-primary" disabled title="Ação indisponível">@buttonText</button>
         }
+    }
+    @if (!string.IsNullOrWhiteSpace(secondaryText) && !string.IsNullOrWhiteSpace(secondaryAction) && !string.IsNullOrWhiteSpace(secondaryController))
+    {
+        <a class="btn btn-outline-secondary ms-2" asp-action="@secondaryAction" asp-controller="@secondaryController">@secondaryText</a>
     }
 </div>

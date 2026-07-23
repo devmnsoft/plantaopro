@@ -1,29 +1,6 @@
 @using PlantaoPro.Web.Security
-@using PlantaoPro.Web.Services.Security
-@inject IModuleAccessService ModuleAccess
-@inject IPermissionService Permissions
-@inject IMenuBuilderService MenuBuilder
 @{
-    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
-    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
-    var isGlobalAdmin = User.IsGlobalAdmin();
-    var isAdmin = User.IsAdmin();
-    var isTenantAdmin = User.IsTenantAdmin();
-    var isCoord = User.IsCoordenacao();
-    var isOper = User.IsOperador();
-    var isFin = User.IsFinanceiro();
-    var isMed = User.IsMedico();
-    var isHospital = User.IsHospital();
-    var isParceiro = User.IsParceiro();
-    var isSuporte = User.IsSuporte();
-    var isAuditor = User.IsAuditor();
-    var isComercial = User.IsComercial();
-    var isCs = User.IsCustomerSuccess();
-    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global";
-    var planName = User.FindFirst("plano")?.Value ?? "Profissional";
-    var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Demo";
-    Func<string, string, string> active = (controller, action) => string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) && (string.IsNullOrWhiteSpace(action) || string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase)) ? "active" : string.Empty;
 }
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -44,62 +21,19 @@
 @if (isAuthenticated)
 {
     <div class="app-shell">
-        <aside class="app-sidebar">
-            <div class="sidebar-brand">
-                <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="brand-logo" />
-                <div class="brand-subtitle">@tenantName • white label ativo</div>
-                <div class="sidebar-badges">
-                    <span class="pp-pill pp-pill-soft"><i class="bi bi-gem"></i>@planName</span>
-                    <span class="pp-pill pp-pill-env"><i class="bi bi-circle-fill"></i>@environmentName</span>
-                </div>
-            </div>
-            <nav class="sidebar-nav" aria-label="Menu principal">
-                @foreach (var group in MenuBuilder.Build(currentController, currentAction))
-                {
-                    <div class="nav-section-title"><i class="bi @group.Icon"></i><span>@group.Title</span></div>
-                    @foreach (var item in group.Items)
-                    {
-                        if (item.IsLocked)
-                        {
-                            <span class="nav-link-app locked" title="@item.LockedReason" aria-disabled="true"><i class="bi @item.Icon"></i><span>@item.Title</span><small>Bloqueado</small></span>
-                        }
-                        else
-                        {
-                            <a class="nav-link-app @(item.IsActive ? "active" : string.Empty)" asp-controller="@item.Controller" asp-action="@item.Action"><i class="bi @item.Icon"></i><span>@item.Title</span></a>
-                        }
-                    }
-                }
-                <a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a>
-            </nav>
-        </aside>
+        <partial name="_AppSidebar" />
         <section class="app-main" data-app-shell="true">
-            <header class="app-topbar">
-                <div class="topbar-left">
-                    <button class="btn btn-light d-lg-none" id="sidebarToggle" type="button"><i class="bi bi-list"></i></button>
-                    <div>
-                        <div class="topbar-brand-line"><img src="~/branding/logo-icon.svg" alt="PlantãoPro" class="topbar-mini-logo" /><span class="topbar-slogan">SaaS B2B white label para escalas médicas.</span></div>
-                        <h1 class="page-title">@(ViewData["Title"] ?? currentController)</h1>
-                        <nav aria-label="breadcrumb"><ol class="breadcrumb app-breadcrumb mb-0"><li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Home</a></li><li class="breadcrumb-item active" aria-current="page">@currentController</li></ol></nav>
-                    </div>
-                </div>
-                <div class="topbar-actions">
-                    <form class="topbar-search d-none d-xl-flex" asp-controller="Ajuda" asp-action="Busca" method="get"><i class="bi bi-search"></i><input name="q" class="form-control" placeholder="Buscar telas, ajuda e atalhos" /></form>
-                    <partial name="_TenantContextBadge" />
-                    <partial name="_PlanUsageMiniCard" />
-                    <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="Ajuda"><i class="bi bi-question-circle"></i></a>
-                    <a class="btn btn-light btn-icon" asp-controller="Manual" asp-action="Perfil" title="Manual do meu perfil"><i class="bi bi-book"></i></a>
-                    <a class="btn btn-light btn-icon position-relative" asp-controller="Notificacoes" asp-action="Index" title="Notificações"><i class="bi bi-bell"></i><span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger">@((ViewBag.NotificationCount as int?) ?? 0)</span></a>
-                    <a class="btn btn-warning btn-sm d-none d-md-inline-flex" asp-controller="MinhaAssinatura" asp-action="Upgrade"><i class="bi bi-rocket-takeoff me-1"></i>Upgrade</a>
-                    <div class="user-pill"><div class="user-avatar"><i class="bi bi-person"></i></div><div class="user-info"><span class="user-name">@User.Identity?.Name</span><small>@User.PrimaryRole()</small></div></div>
-                </div>
-            </header>
-            <main class="app-content" id="mainContent">
+            <partial name="_AppTopbar" />
+            <main class="app-content" id="mainContent" tabindex="-1">
                 <partial name="_ToastMessages" />
+                <partial name="_ImpersonationBanner" />
                 @RenderBody()
             </main>
-            <footer class="app-footer"><span>PlantãoPro SaaS • v@(System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "dev")</span><span>@environmentName</span><span>Powered by MNSOFT</span></footer>
+            <partial name="_AppFooter" />
         </section>
     </div>
+    <partial name="_MobileNavigation" />
+    <partial name="_NotificationDrawer" />
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
 }
 else

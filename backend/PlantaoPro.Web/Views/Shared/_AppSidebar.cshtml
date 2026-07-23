@@ -1,2 +1,10 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_AppSidebar"></div>
+@using PlantaoPro.Web.Services.Security
+@inject IMenuBuilderService MenuBuilder
+@{ var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home"; var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index"; var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global"; }
+<aside class="app-sidebar" id="appSidebar" aria-label="Menu principal">
+  <div class="sidebar-brand"><img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="brand-logo" /><div class="brand-subtitle">@tenantName</div><button class="btn btn-sm btn-outline-light" type="button" data-sidebar-collapse aria-label="Recolher menu"><i class="bi bi-layout-sidebar-inset"></i></button></div>
+  <nav class="sidebar-nav">
+  @foreach (var group in MenuBuilder.Build(currentController, currentAction)) {<section class="nav-group"><button class="nav-section-title" type="button" data-bs-toggle="collapse" data-bs-target="#grp-@group.Title.GetHashCode()"><i class="bi @group.Icon"></i><span>@group.Title</span></button><div class="collapse show" id="grp-@group.Title.GetHashCode()">@foreach (var item in group.Items) { if (item.IsLocked) { <span class="nav-link-app locked" title="@item.LockedReason" aria-disabled="true"><i class="bi @item.Icon"></i><span>@item.Title</span><small>Bloqueado</small></span> } else { <a class="nav-link-app @(item.IsActive ? "active" : string.Empty)" asp-controller="@item.Controller" asp-action="@item.Action" title="@item.Title"><i class="bi @item.Icon"></i><span>@item.Title</span></a> } }</div></section>}
+  </nav>
+  <div class="sidebar-footer"><partial name="_UserMenu" /><a class="nav-link-app logout-link" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right"></i><span>Sair</span></a></div>
+</aside>

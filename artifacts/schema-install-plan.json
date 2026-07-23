@@ -73,5 +73,10 @@
     "object": "plantaopro.contexto_multiempresa",
     "dependsOn": [],
     "source": "database/schema/130_contexto_multiempresa.sql"
+  },
+  {
+    "object": "plantaopro.experiencia_premium_meu_dia",
+    "dependsOn": [],
+    "source": "database/schema/140_experiencia_premium_meu_dia.sql"
   }
 ]

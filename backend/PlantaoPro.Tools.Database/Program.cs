@@ -9,7 +9,7 @@ var options = ParseOptions(args.Skip(1).ToArray());
 var root = FindRepoRoot();
 var cs = Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
     ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-    ?? "Host=localhost;Port=5432;Database=plantaopro;Username=postgres;Password=__SET_VIA_USER_SECRETS__;Pooling=true;Search Path=plantaopro,public";
+    ?? "__SET_VIA_ENVIRONMENT__";
 var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Development";
 
 try

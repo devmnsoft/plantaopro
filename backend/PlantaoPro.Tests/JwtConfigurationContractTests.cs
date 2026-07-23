@@ -51,8 +51,40 @@ public class JwtConfigurationContractTests
             var content = File.ReadAllText(file);
             Assert.DoesNotContain("local-dev-jwt-key-change-me-with-32-chars", content);
             Assert.DoesNotContain("ci-demo-key-with-at-least-32-characters-change-me", content);
-            Assert.DoesNotContain("CHANGE_ME_WITH_32+_CHARS", content);
+            Assert.DoesNotContain("CHANGE_ME_WITH" + "_32+_CHARS", content);
             Assert.DoesNotContain("PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS", content);
         }
     }
+    [Fact]
+    public void AppsettingsDaApiVersionadoDevePermanecerSemSegredosEFlagsInseguras()
+    {
+        var content = Read("backend/PlantaoPro.Api/appsettings.json");
+        Assert.DoesNotContain("Password=" + "123456", content);
+        Assert.DoesNotContain("Username=postgres;" + "Password=", content);
+        Assert.DoesNotContain("CHANGE_ME_WITH" + "_32", content);
+        Assert.DoesNotContain("\"AllowLegacyPostgresDatabase\": true", content);
+        Assert.Contains("\"Default\": \"\"", content);
+        Assert.Contains("\"Key\": \"\"", content);
+    }
+
+    [Fact]
+    public void AppsettingsVersionadosNaoDevemConterSegredosOperacionaisConhecidos()
+    {
+        var root = Root();
+        var files = Directory.GetFiles(root, "appsettings*.json", SearchOption.AllDirectories)
+            .Where(path => !path.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !path.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar));
+
+        foreach (var file in files)
+        {
+            var content = File.ReadAllText(file);
+            Assert.DoesNotContain("Password=" + "123456", content);
+            Assert.DoesNotContain("Username=postgres;" + "Password=", content);
+            Assert.DoesNotContain("CHANGE_ME_WITH" + "_32", content);
+            if (Path.GetFileName(file).Equals("appsettings.json", StringComparison.OrdinalIgnoreCase))
+            {
+                Assert.DoesNotContain("\"AllowLegacyPostgresDatabase\": true", content);
+            }
+        }
+    }
+
 }

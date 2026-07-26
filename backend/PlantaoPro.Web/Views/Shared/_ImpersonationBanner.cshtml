@@ -1,0 +1,10 @@
+@if (User.FindFirst("impersonation")?.Value == "true")
+{
+    <section class="alert alert-warning d-flex align-items-center gap-2 mb-0 rounded-0" role="status" aria-live="polite">
+        <i class="bi bi-person-badge" aria-hidden="true"></i>
+        <div>
+            <strong>Acesso assistido ativo.</strong>
+            Usuário: @User.FindFirst("impersonated_user_id")?.Value • Expira em: @User.FindFirst("impersonation_expires_at")?.Value
+        </div>
+    </section>
+}

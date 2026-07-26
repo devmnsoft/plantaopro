@@ -1,0 +1,11 @@
+{
+  "version": "v113",
+  "requiredObjects": [
+    "plantaopro.usuarios",
+    "plantaopro.perfis",
+    "plantaopro.plantoes",
+    "plantaopro.v113_clientes",
+    "plantaopro.v113_pedidos"
+  ],
+  "nextMigration": "2026_v114_consolidacao_produto.sql"
+}

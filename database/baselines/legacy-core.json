@@ -1,0 +1,9 @@
+{
+  "version": "legacy-core",
+  "requiredObjects": [
+    "plantaopro.usuarios",
+    "plantaopro.perfis",
+    "plantaopro.plantoes"
+  ],
+  "nextMigration": "2026_v113_operacional_real.sql"
+}

@@ -7,7 +7,6 @@ using PlantaoPro.Web.Security;
 using PlantaoPro.CrossCutting.Security;
 using System.Net;
 using System.Net.Http.Json;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -119,7 +118,7 @@ public sealed class AccountController : Controller
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, login.UsuarioId.ToString()),
+                new Claim("sub", login.UsuarioId.ToString()),
                 new Claim("uid", login.UsuarioId.ToString()),
                 new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? normalizedEmail : login.Nome),
                 new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),

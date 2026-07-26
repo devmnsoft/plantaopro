@@ -1351,6 +1351,36 @@
       "requiredForInstall": true,
       "sourceCanonical": "database/schema/130_contexto_multiempresa.sql",
       "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "usuario_preferencias_interface",
+      "type": "table",
+      "module": "EXPERIENCIA_PREMIUM_MEU_DIA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/140_experiencia_premium_meu_dia.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "meu_dia_item_estados",
+      "type": "table",
+      "module": "EXPERIENCIA_PREMIUM_MEU_DIA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/140_experiencia_premium_meu_dia.sql",
+      "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "meu_dia_historico",
+      "type": "table",
+      "module": "EXPERIENCIA_PREMIUM_MEU_DIA",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/140_experiencia_premium_meu_dia.sql",
+      "references": []
     }
   ]
 }

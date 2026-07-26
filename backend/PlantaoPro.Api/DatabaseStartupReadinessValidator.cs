@@ -15,6 +15,14 @@ public static class DatabaseStartupReadinessValidator
 
     public static void Validate(string? connectionString, IWebHostEnvironment environment, IConfiguration configuration)
     {
+        if (environment.IsEnvironment("Testing") && configuration.GetValue<bool>("Database:SkipStartupReadinessForTesting"))
+        {
+            return;
+        }
+        if (!environment.IsEnvironment("Testing") && configuration.GetValue<bool>("Database:SkipStartupReadinessForTesting"))
+        {
+            throw new InvalidOperationException("Database:SkipStartupReadinessForTesting é permitido somente no ambiente Testing.");
+        }
         ConnectionStringStartupValidator.Validate(connectionString, environment, configuration);
         if (string.IsNullOrWhiteSpace(connectionString)) return;
 
@@ -43,7 +51,7 @@ public static class DatabaseStartupReadinessValidator
         }
         catch (PostgresException ex) when (ex.SqlState == "3D000")
         {
-            throw new InvalidOperationException(MissingDatabaseMessage(csb.Database, environment), ex);
+            throw new InvalidOperationException(MissingDatabaseMessage(csb.Database ?? "(não informado)", environment), ex);
         }
         catch (PostgresException ex) when (ex.SqlState == "28P01")
         {

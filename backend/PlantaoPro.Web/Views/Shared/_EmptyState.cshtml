@@ -7,6 +7,9 @@
     var buttonAction = Model?.ButtonAction ?? string.Empty;
     var buttonController = Model?.ButtonController ?? string.Empty;
     var buttonDisabled = Model?.ButtonDisabled ?? true;
+    var secondaryText = Model?.SecondaryActionText ?? string.Empty;
+    var secondaryAction = Model?.SecondaryAction ?? string.Empty;
+    var secondaryController = Model?.SecondaryController ?? string.Empty;
 }
 <div class="empty-state text-center">
     <div class="empty-state-icon"><i class="bi @icon"></i></div>
@@ -21,6 +24,17 @@
         else
         {
             <button class="btn btn-soft-primary" disabled title="Ação indisponível">@buttonText</button>
+        }
+    }
+    @if (!string.IsNullOrWhiteSpace(secondaryText))
+    {
+        if (!buttonDisabled && !string.IsNullOrWhiteSpace(secondaryAction) && !string.IsNullOrWhiteSpace(secondaryController))
+        {
+            <a class="btn btn-outline-secondary ms-2" asp-action="@secondaryAction" asp-controller="@secondaryController">@secondaryText</a>
+        }
+        else
+        {
+            <button class="btn btn-outline-secondary ms-2" disabled title="Ação indisponível">@secondaryText</button>
         }
     }
 </div>

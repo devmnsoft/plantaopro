@@ -81,8 +81,8 @@ public class HealthController : ControllerBase
         }
     }
     [HttpGet("auth")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType(typeof(ApiResponse<HealthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<HealthResponse>), StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> GetAuth(CancellationToken cancellationToken)
     {
         try
@@ -93,13 +93,20 @@ public class HealthController : ControllerBase
             var admin = await new NpgsqlCommand("select exists(select 1 from plantaopro.usuarios u join plantaopro.usuarios_perfis up on up.usuario_id=u.id and up.reg_status='A' join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A' where u.reg_status='A' and coalesce(p.codigo,p.nome)='ADMINISTRADOR_GLOBAL')", connection).ExecuteScalarAsync(cancellationToken);
             var jwtOk = !string.IsNullOrWhiteSpace(_configuration["Jwt:Key"]) && (_configuration["Jwt:Key"]?.Length ?? 0) >= 32;
             var schemaOk = Convert.ToInt32(tables) == 4;
-            var payload = new { database = "ok", schema = schemaOk ? "ok" : "invalid", jwt = jwtOk ? "ok" : "invalid", adminBootstrap = admin is bool b && b ? "configured" : "pending" };
-            return schemaOk && jwtOk ? Ok(ApiResponse<object>.Ok(payload, "Diagnóstico de autenticação concluído.")) : StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<object>.Fail("Diagnóstico de autenticação falhou.", 503, new[] { "schema/jwt/admin inválido" }));
+            var payload = new HealthResponse(
+                "PlantaoPro.Api",
+                schemaOk && jwtOk ? "Healthy" : "Unhealthy",
+                _environment.EnvironmentName,
+                DateTime.UtcNow,
+                typeof(HealthController).Assembly.GetName().Version?.ToString() ?? string.Empty,
+                new HealthDatabaseResponse("ok", schemaOk ? "ok" : "invalid", admin is bool b && b ? "configured" : "pending"),
+                new HealthDependencyResponse("jwt", jwtOk ? "ok" : "invalid"));
+            return schemaOk && jwtOk ? Ok(ApiResponse<HealthResponse>.Ok(payload, "Diagnóstico de autenticação concluído.")) : StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<HealthResponse>.Fail("Diagnóstico de autenticação falhou.", 503, new[] { "schema/jwt/admin inválido" }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Falha no health auth.");
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<object>.Fail("Autenticação indisponível.", 503));
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, ApiResponse<HealthResponse>.Fail("Autenticação indisponível.", 503));
         }
     }
 

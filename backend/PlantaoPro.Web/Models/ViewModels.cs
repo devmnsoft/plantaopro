@@ -210,17 +210,6 @@ public record DashboardChartItem(string Label, decimal Valor);
         bool ButtonDisabled = false
     );
 
-    public record EmptyStateViewModel(
-        string Icon,
-        string Title,
-        string Description,
-        string? ButtonText = null,
-        string? ButtonAction = null,
-        string? ButtonController = null,
-        bool ButtonDisabled = false
-    );
-
-    
     
     public record ClienteDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus,DateTime RegDate,DateTime? RegUpdate);
     public record CreateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status);

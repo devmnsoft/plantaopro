@@ -1,0 +1,12 @@
+@import url('./design-system/tokens.css');
+@import url('./design-system/foundation.css');
+@import url('./design-system/layout.css');
+@import url('./design-system/navigation.css');
+@import url('./design-system/components.css');
+@import url('./design-system/forms.css');
+@import url('./design-system/tables.css');
+@import url('./design-system/states.css');
+@import url('./design-system/accessibility.css');
+@import url('./design-system/responsive.css');
+@import url('./design-system/white-label.css');
+body.app-body{background:var(--pp-bg-app);color:var(--pp-text-primary)}.skip-link{position:absolute;left:-999px;top:auto}.skip-link:focus{left:1rem;top:1rem;z-index:2000;background:var(--pp-primary);color:#fff;padding:.75rem 1rem;border-radius:.5rem}.app-sidebar{width:288px;background:var(--pp-sidebar-bg);color:var(--pp-sidebar-text)}.app-shell.sidebar-collapsed .app-sidebar{width:80px}.nav-link-app{color:var(--pp-sidebar-text)}.nav-link-app.active{background:var(--pp-sidebar-active);color:#fff}.app-topbar,.app-footer,.pp-card{background:var(--pp-bg-surface);border:1px solid var(--pp-border)}.focus-ring:focus-visible,a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--pp-primary);outline-offset:2px}@media(max-width:991.98px){.app-sidebar{position:fixed;inset:0 auto 0 0;transform:translateX(-100%);z-index:1040}.app-shell.sidebar-open .app-sidebar{transform:none}.app-content{overflow-x:hidden}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}

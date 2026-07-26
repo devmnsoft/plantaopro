@@ -1,9 +1,70 @@
--- v1.18.7 extensões e schema canônico
+-- PlantãoPro - script completo oficial de instalação limpa
+-- Versão do schema: v1.18.9
+-- PostgreSQL suportado: 16
+-- Data de geração: 2026-07-21
+-- Execução oficial:
+--   psql \
+--     -v ON_ERROR_STOP=1 \
+--     -h localhost \
+--     -p 5432 \
+--     -U postgres \
+--     -d plantaopro \
+--     -f database/scrpt_completo.sql
+-- O banco de dados de destino deve existir antes da execução.
+-- Este arquivo não contém credenciais reais, senhas administrativas, tokens ou connection strings.
+-- Não use scripts de demonstração em produção.
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
-CREATE EXTENSION IF NOT EXISTS unaccent;
+DO $$
+DECLARE
+    v_schema text;
+    v_relocatable boolean;
+BEGIN
+    SELECT n.nspname, e.extrelocatable
+      INTO v_schema, v_relocatable
+      FROM pg_extension e
+      JOIN pg_namespace n ON n.oid = e.extnamespace
+     WHERE e.extname = 'unaccent';
+
+    IF v_schema IS NULL THEN
+        CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+    ELSIF v_schema <> 'public' AND coalesce(v_relocatable, false) THEN
+        ALTER EXTENSION unaccent SET SCHEMA public;
+    END IF;
+END $$;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
+
+-- ============================================================
+-- Seção 03 — Schema canônico de instalação limpa v1.18.8
+-- ============================================================
+
+-- Origem: database/schema/000_extensions_schema.sql
+-- v1.18.7 extensões e schema canônico
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+DO $$
+DECLARE
+    v_schema text;
+    v_relocatable boolean;
+BEGIN
+    SELECT n.nspname, e.extrelocatable
+      INTO v_schema, v_relocatable
+      FROM pg_extension e
+      JOIN pg_namespace n ON n.oid = e.extnamespace
+     WHERE e.extname = 'unaccent';
+
+    IF v_schema IS NULL THEN
+        CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;
+    ELSIF v_schema <> 'public' AND coalesce(v_relocatable, false) THEN
+        ALTER EXTENSION unaccent SET SCHEMA public;
+    END IF;
+END $$;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/000_schema_canonico_base.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -34,18 +95,107 @@ ALTER TABLE plantaopro.perfil_permissoes ADD COLUMN IF NOT EXISTS perfil_id uuid
 ALTER TABLE plantaopro.usuarios_perfis ADD COLUMN IF NOT EXISTS tenant_id uuid, ADD COLUMN IF NOT EXISTS cliente_id uuid, ADD COLUMN IF NOT EXISTS usuario_id uuid, ADD COLUMN IF NOT EXISTS perfil_id uuid, ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A', ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(), ADD COLUMN IF NOT EXISTS reg_update timestamptz, ADD COLUMN IF NOT EXISTS created_by uuid, ADD COLUMN IF NOT EXISTS updated_by uuid;
 ALTER TABLE plantaopro.usuario_permissoes_especiais ADD COLUMN IF NOT EXISTS tenant_id uuid, ADD COLUMN IF NOT EXISTS cliente_id uuid, ADD COLUMN IF NOT EXISTS usuario_id uuid, ADD COLUMN IF NOT EXISTS permissao_id uuid, ADD COLUMN IF NOT EXISTS permitido boolean DEFAULT true, ADD COLUMN IF NOT EXISTS justificativa text DEFAULT '', ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A', ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(), ADD COLUMN IF NOT EXISTS reg_update timestamptz, ADD COLUMN IF NOT EXISTS created_by uuid, ADD COLUMN IF NOT EXISTS updated_by uuid;
 
-UPDATE plantaopro.permissoes SET codigo = upper(regexp_replace(public.unaccent(coalesce(nullif(codigo,''), nullif(nome,''), id::text)::text), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
+UPDATE plantaopro.permissoes SET codigo = upper(regexp_replace(unaccent(coalesce(nullif(codigo,''), nullif(nome,''), id::text)::text), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
 UPDATE plantaopro.permissoes SET modulo = coalesce(nullif(modulo,''), split_part(codigo,'_',1), 'GERAL'), acao = coalesce(nullif(acao,''), nullif(array_to_string((regexp_split_to_array(codigo,'_'))[2:array_length(regexp_split_to_array(codigo,'_'),1)], '_'), ''), 'ACESSAR'), nome = coalesce(nullif(nome,''), codigo), descricao = coalesce(descricao,''), sensivel = coalesce(sensivel,false), status = coalesce(nullif(status,''),'ATIVO'), reg_status = coalesce(nullif(reg_status,''),'A'), reg_date = coalesce(reg_date, now());
 WITH dup AS (SELECT id, row_number() OVER (PARTITION BY lower(codigo), reg_status ORDER BY reg_date, id) rn FROM plantaopro.permissoes WHERE reg_status='A') UPDATE plantaopro.permissoes p SET codigo = p.codigo || '_' || left(p.id::text,8), reg_update=now() FROM dup WHERE dup.id=p.id AND dup.rn>1;
-INSERT INTO plantaopro.modulos_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(public.unaccent(modulo::text), '[^A-Za-z0-9]+', '_', 'g')), modulo FROM plantaopro.permissoes p WHERE p.modulo IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(upper(regexp_replace(public.unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A');
-INSERT INTO plantaopro.acoes_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(public.unaccent(acao::text), '[^A-Za-z0-9]+', '_', 'g')), acao FROM plantaopro.permissoes p WHERE p.acao IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(upper(regexp_replace(public.unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A');
-UPDATE plantaopro.permissoes p SET modulo_id=m.id FROM plantaopro.modulos_sistema m WHERE p.modulo_id IS NULL AND lower(m.codigo)=lower(upper(regexp_replace(public.unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A';
-UPDATE plantaopro.permissoes p SET acao_id=a.id FROM plantaopro.acoes_sistema a WHERE p.acao_id IS NULL AND lower(a.codigo)=lower(upper(regexp_replace(public.unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A';
+INSERT INTO plantaopro.modulos_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(unaccent(modulo::text), '[^A-Za-z0-9]+', '_', 'g')), modulo FROM plantaopro.permissoes p WHERE p.modulo IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(upper(regexp_replace(unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A');
+INSERT INTO plantaopro.acoes_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(unaccent(acao::text), '[^A-Za-z0-9]+', '_', 'g')), acao FROM plantaopro.permissoes p WHERE p.acao IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(upper(regexp_replace(unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A');
+UPDATE plantaopro.permissoes p SET modulo_id=m.id FROM plantaopro.modulos_sistema m WHERE p.modulo_id IS NULL AND lower(m.codigo)=lower(upper(regexp_replace(unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A';
+UPDATE plantaopro.permissoes p SET acao_id=a.id FROM plantaopro.acoes_sistema a WHERE p.acao_id IS NULL AND lower(a.codigo)=lower(upper(regexp_replace(unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A';
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM plantaopro.permissoes WHERE codigo IS NULL OR modulo_id IS NULL OR acao_id IS NULL) THEN RAISE EXCEPTION 'Permissões canônicas inválidas: codigo/modulo_id/acao_id nulos'; END IF; END $$;
 ALTER TABLE plantaopro.permissoes ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN modulo_id SET NOT NULL, ALTER COLUMN acao_id SET NOT NULL, ALTER COLUMN nome SET NOT NULL, ALTER COLUMN descricao SET DEFAULT '', ALTER COLUMN sensivel SET DEFAULT false, ALTER COLUMN sensivel SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN reg_status SET DEFAULT 'A', ALTER COLUMN reg_status SET NOT NULL, ALTER COLUMN reg_date SET DEFAULT now(), ALTER COLUMN reg_date SET NOT NULL;
 ALTER TABLE plantaopro.modulos_sistema ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN nome SET NOT NULL, ALTER COLUMN descricao SET DEFAULT '', ALTER COLUMN descricao SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN reg_status SET DEFAULT 'A', ALTER COLUMN reg_status SET NOT NULL;
 ALTER TABLE plantaopro.acoes_sistema ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN nome SET NOT NULL, ALTER COLUMN descricao SET DEFAULT '', ALTER COLUMN descricao SET NOT NULL, ALTER COLUMN sensivel SET DEFAULT false, ALTER COLUMN sensivel SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN reg_status SET DEFAULT 'A', ALTER COLUMN reg_status SET NOT NULL;
-DO $$ BEGIN IF to_regclass('plantaopro.perfis_permissoes') IS NOT NULL THEN INSERT INTO plantaopro.perfil_permissoes(perfil_id,permissao_id,permitido,reg_status,reg_date) SELECT perfil_id,permissao_id,true,coalesce(reg_status,'A'),coalesce(reg_date,now()) FROM plantaopro.perfis_permissoes pp WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfil_permissoes x WHERE x.perfil_id=pp.perfil_id AND x.permissao_id=pp.permissao_id AND x.reg_status='A'); END IF; IF to_regclass('plantaopro.usuario_perfis') IS NOT NULL THEN INSERT INTO plantaopro.usuarios_perfis(usuario_id,perfil_id,reg_status,reg_date) SELECT usuario_id,perfil_id,coalesce(reg_status,'A'),coalesce(reg_date,now()) FROM plantaopro.usuario_perfis up WHERE NOT EXISTS (SELECT 1 FROM plantaopro.usuarios_perfis x WHERE x.usuario_id=up.usuario_id AND x.perfil_id=up.perfil_id AND x.reg_status='A'); END IF; END $$;
+DO $$
+DECLARE
+    v_has_pp_reg_status boolean;
+    v_has_pp_reg_date boolean;
+    v_has_pp_permitido boolean;
+    v_has_pp_bloqueado_por_plano boolean;
+    v_has_up_tenant_id boolean;
+    v_has_up_cliente_id boolean;
+    v_has_up_reg_status boolean;
+    v_has_up_reg_date boolean;
+    v_sql text;
+BEGIN
+    IF to_regclass('plantaopro.perfis_permissoes') IS NOT NULL THEN
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'perfis_permissoes' AND column_name = 'reg_status') INTO v_has_pp_reg_status;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'perfis_permissoes' AND column_name = 'reg_date') INTO v_has_pp_reg_date;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'perfis_permissoes' AND column_name = 'permitido') INTO v_has_pp_permitido;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'perfis_permissoes' AND column_name = 'bloqueado_por_plano') INTO v_has_pp_bloqueado_por_plano;
+
+        v_sql := format($sql$
+            INSERT INTO plantaopro.perfil_permissoes(
+                perfil_id,
+                permissao_id,
+                permitido,
+                bloqueado_por_plano,
+                reg_status,
+                reg_date
+            )
+            SELECT
+                pp.perfil_id,
+                pp.permissao_id,
+                %s,
+                %s,
+                %s,
+                %s
+            FROM plantaopro.perfis_permissoes pp
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM plantaopro.perfil_permissoes x
+                WHERE x.perfil_id = pp.perfil_id
+                  AND x.permissao_id = pp.permissao_id
+                  AND x.reg_status = 'A'
+            )
+        $sql$,
+            CASE WHEN v_has_pp_permitido THEN 'coalesce(pp.permitido, true)' ELSE 'true' END,
+            CASE WHEN v_has_pp_bloqueado_por_plano THEN 'coalesce(pp.bloqueado_por_plano, false)' ELSE 'false' END,
+            CASE WHEN v_has_pp_reg_status THEN 'coalesce(pp.reg_status, ''A'')' ELSE '''A''' END,
+            CASE WHEN v_has_pp_reg_date THEN 'coalesce(pp.reg_date, now())' ELSE 'now()' END
+        );
+        EXECUTE v_sql;
+    END IF;
+
+    IF to_regclass('plantaopro.usuario_perfis') IS NOT NULL THEN
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'usuario_perfis' AND column_name = 'tenant_id') INTO v_has_up_tenant_id;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'usuario_perfis' AND column_name = 'cliente_id') INTO v_has_up_cliente_id;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'usuario_perfis' AND column_name = 'reg_status') INTO v_has_up_reg_status;
+        SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'plantaopro' AND table_name = 'usuario_perfis' AND column_name = 'reg_date') INTO v_has_up_reg_date;
+
+        v_sql := format($sql$
+            INSERT INTO plantaopro.usuarios_perfis(
+                usuario_id,
+                perfil_id,
+                tenant_id,
+                cliente_id,
+                reg_status,
+                reg_date
+            )
+            SELECT
+                up.usuario_id,
+                up.perfil_id,
+                %s,
+                %s,
+                %s,
+                %s
+            FROM plantaopro.usuario_perfis up
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM plantaopro.usuarios_perfis x
+                WHERE x.usuario_id = up.usuario_id
+                  AND x.perfil_id = up.perfil_id
+                  AND x.reg_status = 'A'
+            )
+        $sql$,
+            CASE WHEN v_has_up_tenant_id THEN 'up.tenant_id' ELSE 'NULL::uuid' END,
+            CASE WHEN v_has_up_cliente_id THEN 'up.cliente_id' ELSE 'NULL::uuid' END,
+            CASE WHEN v_has_up_reg_status THEN 'coalesce(up.reg_status, ''A'')' ELSE '''A''' END,
+            CASE WHEN v_has_up_reg_date THEN 'coalesce(up.reg_date, now())' ELSE 'now()' END
+        );
+        EXECUTE v_sql;
+    END IF;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_modulos_sistema_codigo ON plantaopro.modulos_sistema(lower(codigo)) WHERE reg_status='A';
 CREATE UNIQUE INDEX IF NOT EXISTS ux_acoes_sistema_codigo ON plantaopro.acoes_sistema(lower(codigo)) WHERE reg_status='A';
 CREATE UNIQUE INDEX IF NOT EXISTS ux_permissoes_codigo ON plantaopro.permissoes(lower(codigo)) WHERE reg_status='A';
@@ -83,6 +233,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
     error_message_sanitized text NULL,
     executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
 );
+
+-- Origem: database/schema/010_identity_access.sql
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -120,7 +272,7 @@ ALTER TABLE plantaopro.usuarios
     ADD COLUMN IF NOT EXISTS reg_update timestamptz,
     ADD COLUMN IF NOT EXISTS created_by uuid,
     ADD COLUMN IF NOT EXISTS updated_by uuid;
-UPDATE plantaopro.perfis SET codigo = upper(regexp_replace(public.unaccent(coalesce(nullif(codigo,''), nome, id::text)), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
+UPDATE plantaopro.perfis SET codigo = upper(regexp_replace(unaccent(coalesce(nullif(codigo,''), nome, id::text)), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
 UPDATE plantaopro.usuarios SET email_normalizado = upper(email) WHERE email_normalizado IS NULL OR btrim(email_normalizado)='';
 ALTER TABLE plantaopro.perfis ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN base_sistema SET DEFAULT false, ALTER COLUMN customizado SET DEFAULT false, ALTER COLUMN status SET DEFAULT 'ATIVO';
 UPDATE plantaopro.usuarios SET status = coalesce(nullif(status,''),'ATIVO'), senha_alteracao_obrigatoria = coalesce(senha_alteracao_obrigatoria,false), preferencias_notificacao = coalesce(preferencias_notificacao,'{}'::jsonb);
@@ -155,13 +307,13 @@ ALTER TABLE plantaopro.perfil_permissoes ADD COLUMN IF NOT EXISTS perfil_id uuid
 ALTER TABLE plantaopro.usuarios_perfis ADD COLUMN IF NOT EXISTS tenant_id uuid, ADD COLUMN IF NOT EXISTS cliente_id uuid, ADD COLUMN IF NOT EXISTS usuario_id uuid, ADD COLUMN IF NOT EXISTS perfil_id uuid, ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A', ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(), ADD COLUMN IF NOT EXISTS reg_update timestamptz, ADD COLUMN IF NOT EXISTS created_by uuid, ADD COLUMN IF NOT EXISTS updated_by uuid;
 ALTER TABLE plantaopro.usuario_permissoes_especiais ADD COLUMN IF NOT EXISTS tenant_id uuid, ADD COLUMN IF NOT EXISTS cliente_id uuid, ADD COLUMN IF NOT EXISTS usuario_id uuid, ADD COLUMN IF NOT EXISTS permissao_id uuid, ADD COLUMN IF NOT EXISTS permitido boolean DEFAULT true, ADD COLUMN IF NOT EXISTS justificativa text DEFAULT '', ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A', ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(), ADD COLUMN IF NOT EXISTS reg_update timestamptz, ADD COLUMN IF NOT EXISTS created_by uuid, ADD COLUMN IF NOT EXISTS updated_by uuid;
 
-UPDATE plantaopro.permissoes SET codigo = upper(regexp_replace(public.unaccent(coalesce(nullif(codigo,''), nullif(nome,''), id::text)::text), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
+UPDATE plantaopro.permissoes SET codigo = upper(regexp_replace(unaccent(coalesce(nullif(codigo,''), nullif(nome,''), id::text)::text), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
 UPDATE plantaopro.permissoes SET modulo = coalesce(nullif(modulo,''), split_part(codigo,'_',1), 'GERAL'), acao = coalesce(nullif(acao,''), nullif(array_to_string((regexp_split_to_array(codigo,'_'))[2:array_length(regexp_split_to_array(codigo,'_'),1)], '_'), ''), 'ACESSAR'), nome = coalesce(nullif(nome,''), codigo), descricao = coalesce(descricao,''), sensivel = coalesce(sensivel,false), status = coalesce(nullif(status,''),'ATIVO'), reg_status = coalesce(nullif(reg_status,''),'A'), reg_date = coalesce(reg_date, now());
 WITH dup AS (SELECT id, row_number() OVER (PARTITION BY lower(codigo), reg_status ORDER BY reg_date, id) rn FROM plantaopro.permissoes WHERE reg_status='A') UPDATE plantaopro.permissoes p SET codigo = p.codigo || '_' || left(p.id::text,8), reg_update=now() FROM dup WHERE dup.id=p.id AND dup.rn>1;
-INSERT INTO plantaopro.modulos_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(public.unaccent(modulo::text), '[^A-Za-z0-9]+', '_', 'g')), modulo FROM plantaopro.permissoes p WHERE p.modulo IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(upper(regexp_replace(public.unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A');
-INSERT INTO plantaopro.acoes_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(public.unaccent(acao::text), '[^A-Za-z0-9]+', '_', 'g')), acao FROM plantaopro.permissoes p WHERE p.acao IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(upper(regexp_replace(public.unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A');
-UPDATE plantaopro.permissoes p SET modulo_id=m.id FROM plantaopro.modulos_sistema m WHERE p.modulo_id IS NULL AND lower(m.codigo)=lower(upper(regexp_replace(public.unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A';
-UPDATE plantaopro.permissoes p SET acao_id=a.id FROM plantaopro.acoes_sistema a WHERE p.acao_id IS NULL AND lower(a.codigo)=lower(upper(regexp_replace(public.unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A';
+INSERT INTO plantaopro.modulos_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(unaccent(modulo::text), '[^A-Za-z0-9]+', '_', 'g')), modulo FROM plantaopro.permissoes p WHERE p.modulo IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(upper(regexp_replace(unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A');
+INSERT INTO plantaopro.acoes_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(unaccent(acao::text), '[^A-Za-z0-9]+', '_', 'g')), acao FROM plantaopro.permissoes p WHERE p.acao IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(upper(regexp_replace(unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A');
+UPDATE plantaopro.permissoes p SET modulo_id=m.id FROM plantaopro.modulos_sistema m WHERE p.modulo_id IS NULL AND lower(m.codigo)=lower(upper(regexp_replace(unaccent(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A';
+UPDATE plantaopro.permissoes p SET acao_id=a.id FROM plantaopro.acoes_sistema a WHERE p.acao_id IS NULL AND lower(a.codigo)=lower(upper(regexp_replace(unaccent(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A';
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM plantaopro.permissoes WHERE codigo IS NULL OR modulo_id IS NULL OR acao_id IS NULL) THEN RAISE EXCEPTION 'Permissões canônicas inválidas: codigo/modulo_id/acao_id nulos'; END IF; END $$;
 ALTER TABLE plantaopro.permissoes ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN modulo_id SET NOT NULL, ALTER COLUMN acao_id SET NOT NULL, ALTER COLUMN nome SET NOT NULL, ALTER COLUMN descricao SET DEFAULT '', ALTER COLUMN sensivel SET DEFAULT false, ALTER COLUMN sensivel SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN reg_status SET DEFAULT 'A', ALTER COLUMN reg_status SET NOT NULL, ALTER COLUMN reg_date SET DEFAULT now(), ALTER COLUMN reg_date SET NOT NULL;
 ALTER TABLE plantaopro.modulos_sistema ALTER COLUMN codigo SET NOT NULL, ALTER COLUMN nome SET NOT NULL, ALTER COLUMN descricao SET DEFAULT '', ALTER COLUMN descricao SET NOT NULL, ALTER COLUMN status SET DEFAULT 'ATIVO', ALTER COLUMN status SET NOT NULL, ALTER COLUMN reg_status SET DEFAULT 'A', ALTER COLUMN reg_status SET NOT NULL;
@@ -229,6 +381,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_politicas_senha_tenant ON plantaopro.politi
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_auth_refresh_tokens_sessao') THEN ALTER TABLE plantaopro.auth_refresh_tokens ADD CONSTRAINT fk_auth_refresh_tokens_sessao FOREIGN KEY (sessao_id) REFERENCES plantaopro.auth_sessoes(id); END IF;
 END $$;
+
+-- Origem: database/schema/020_saas_tenants.sql
 -- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
 SET search_path TO plantaopro, public;
 
@@ -413,6 +567,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/030_operacao_plantoes.sql
 -- Operação de plantões preservada a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -607,6 +763,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.mensagens (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/040_saude360.sql
 -- Saúde 360 preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -771,6 +929,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_clinica (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/050_financeiro.sql
 -- Financeiro preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -895,6 +1055,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/060_auditoria_observabilidade.sql
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -999,6 +1161,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.permissao_logs (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/070_relatorios.sql
 -- Relatórios preservados a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1033,13 +1197,21 @@ CREATE TABLE IF NOT EXISTS plantaopro.relatorios_filtros_salvos (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/080_constraints.sql
 -- Constraints canônicas complementares são mantidas idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/090_indexes.sql
 -- Índices canônicos complementares são mantidos idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
+
+-- Origem: database/schema/100_reference_data.sql
 -- Dados referenciais mínimos sem credenciais fixas.
 INSERT INTO plantaopro.politicas_senha(tenant_id)
 SELECT NULL WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
+
+-- Origem: database/schema/110_implantacao_go_live.sql
 -- v1.18.8 Central de Implantação, Diagnóstico e Go-Live
 SET search_path TO plantaopro, public;
 CREATE TABLE IF NOT EXISTS plantaopro.implantacao_status (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, classificacao text NOT NULL DEFAULT 'NÃO_CONFIGURADO', prontidao_percentual numeric(5,2) NOT NULL DEFAULT 0, versao text NOT NULL DEFAULT 'v1.18.8', ambiente text NOT NULL DEFAULT 'NAO_INFORMADO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
@@ -1051,6 +1223,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.implantacao_evidencias (id uuid PRIMARY KE
 CREATE TABLE IF NOT EXISTS plantaopro.go_live_checklists (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, decisao_final text NOT NULL DEFAULT 'PENDENTE', relatorio jsonb NOT NULL DEFAULT '{}'::jsonb, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
 CREATE TABLE IF NOT EXISTS plantaopro.go_live_aprovacoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), checklist_id uuid NULL, aprovador_nome text NOT NULL, papel text NOT NULL, decisao text NOT NULL, observacao text NULL, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE UNIQUE INDEX IF NOT EXISTS ux_implantacao_etapas_tenant_codigo ON plantaopro.implantacao_etapas(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
+
+-- Origem: database/schema/120_operacoes_continuidade.sql
 -- Operações e continuidade v1.18.9
 SET search_path TO plantaopro, public;
 
@@ -1325,6 +1499,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.manutencao_aprovacoes (
     criado_em timestamptz NOT NULL DEFAULT now(),
     atualizado_em timestamptz NULL
 );
+
+-- Origem: database/schema/130_contexto_multiempresa.sql
 -- v1.19.0 - Contexto multiempresa e suporte assistido
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_tenant_acessos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), usuario_id uuid NOT NULL, tenant_id uuid NULL, cliente_id uuid NULL, perfil_id uuid NULL,
@@ -1360,3 +1536,44 @@ JOIN plantaopro.perfis p ON p.id = up.perfil_id
 WHERE up.reg_status='A' AND p.reg_status='A' AND up.tenant_id IS NOT NULL
   AND coalesce(p.codigo,p.nome) <> 'ADMINISTRADOR_GLOBAL'
   AND NOT EXISTS (SELECT 1 FROM plantaopro.usuario_tenant_acessos uta WHERE uta.usuario_id=up.usuario_id AND uta.perfil_id=up.perfil_id AND uta.tenant_id=up.tenant_id AND uta.reg_status='A');
+
+-- Origem: database/schema/140_experiencia_premium_meu_dia.sql
+-- PlantãoPro v1.20.1 - Experiência premium Meu Dia
+CREATE TABLE IF NOT EXISTS plantaopro.usuario_preferencias_interface (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id uuid NOT NULL,
+    chave text NOT NULL,
+    valor jsonb NOT NULL DEFAULT '{}'::jsonb,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A',
+    UNIQUE (usuario_id, chave)
+);
+
+CREATE TABLE IF NOT EXISTS plantaopro.meu_dia_item_estados (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id uuid NOT NULL,
+    tenant_id uuid NULL,
+    cliente_id uuid NULL,
+    item_origem_tipo text NOT NULL,
+    item_origem_id uuid NOT NULL,
+    status text NOT NULL DEFAULT 'ABERTO',
+    adiado_ate timestamptz NULL,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A',
+    UNIQUE (usuario_id, item_origem_tipo, item_origem_id)
+);
+
+CREATE TABLE IF NOT EXISTS plantaopro.meu_dia_historico (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    usuario_id uuid NOT NULL,
+    tenant_id uuid NULL,
+    cliente_id uuid NULL,
+    item_estado_id uuid NULL,
+    evento text NOT NULL,
+    detalhes jsonb NOT NULL DEFAULT '{}'::jsonb,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A'
+);
+
+CREATE INDEX IF NOT EXISTS ix_meu_dia_item_estados_usuario ON plantaopro.meu_dia_item_estados(usuario_id, status, reg_status);
+CREATE INDEX IF NOT EXISTS ix_meu_dia_historico_usuario ON plantaopro.meu_dia_historico(usuario_id, reg_date DESC);

@@ -12,15 +12,16 @@
     );
 
     // Criar EmptyStateViewModel antes do partial
-    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel(
-        Icon: "bi-calendar-x",
-        Title: "Agenda indisponível",
-        Description: "Não foi possível carregar sua agenda no momento.",
-        ButtonText: null,
-        ButtonAction: null,
-        ButtonController: null,
-        ButtonDisabled: true
-    );
+    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel
+    {
+        Icon = "bi-calendar-x",
+        Title = "Agenda indisponível",
+        Description = "Não foi possível carregar sua agenda no momento.",
+        PrimaryActionText = null,
+        PrimaryAction = null,
+        PrimaryController = null,
+        ButtonDisabled = true
+    };
 }
 
 <partial name="_PageHeader" model="header" />

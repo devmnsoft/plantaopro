@@ -38,7 +38,19 @@ validate_baseline_object() {
 }
 
 if [[ "$MODE" == "baseline" ]]; then
-    for required_object in planos clientes tenants assinaturas usuarios perfis permissoes hospitais especialidades medicos plantoes escalas relatorio_exportacoes; do
+    BASELINE_VERSION="${BASELINE_VERSION:-legacy-core}"
+    BASELINE_FILE="$ROOT_DIR/database/baselines/${BASELINE_VERSION}.json"
+    if [[ ! -f "$BASELINE_FILE" ]]; then
+        echo "Baseline desconhecido: $BASELINE_VERSION" >&2
+        exit 3
+    fi
+    mapfile -t REQUIRED_OBJECTS < <(python3 - "$BASELINE_FILE" <<'PYBASELINE'
+import json, sys
+for name in json.load(open(sys.argv[1], encoding='utf-8')).get('requiredObjects', []):
+    print(name.split('.')[-1])
+PYBASELINE
+)
+    for required_object in "${REQUIRED_OBJECTS[@]}"; do
         validate_baseline_object "$required_object"
     done
 fi

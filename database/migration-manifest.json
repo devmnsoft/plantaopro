@@ -378,6 +378,16 @@
       "dependsOn": [
         "2026_v1189_operacoes_continuidade"
       ]
+    },
+    {
+      "version": "2026_v1201_experiencia_premium_meu_dia",
+      "source": "database/migrations/2026_v1201_experiencia_premium_meu_dia.sql",
+      "checksum": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
+      "dependsOn": [
+        "2026_v1189_identity_schema_login"
+      ],
+      "status": "active",
+      "transactional": true
     }
   ]
 }

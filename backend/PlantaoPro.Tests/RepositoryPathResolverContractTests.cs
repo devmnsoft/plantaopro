@@ -28,8 +28,25 @@ public sealed class RepositoryPathResolverContractTests
 
         foreach (var caminho in caminhos.Select(c => c.Replace('\\', '/')))
         {
-            Assert.DoesNotContain("backend/backend/", caminho, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("backend" + "/backend/", caminho, StringComparison.OrdinalIgnoreCase);
             Assert.True(Directory.Exists(caminho), $"Caminho canônico ausente: {caminho}");
         }
+    }
+
+    [Fact]
+    public void Suite_NaoDeveConterCaminhoBackendDuplicado()
+    {
+        const string segmentoInvalido = "backend" + "/backend";
+        var ocorrencias = Directory
+            .EnumerateFiles(RepositoryPathResolver.BackendProject("PlantaoPro.Tests"), "*.cs", SearchOption.AllDirectories)
+            .Where(arquivo => !arquivo.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .Where(arquivo => !arquivo.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(arquivo => File.ReadLines(arquivo).Select((linha, indice) => new { arquivo, linha, indice }))
+            .Where(item => item.linha.Contains(segmentoInvalido, StringComparison.OrdinalIgnoreCase))
+            .Select(item => $"{Path.GetRelativePath(RepositoryPathResolver.RepoRoot, item.arquivo)}:{item.indice + 1}")
+            .ToArray();
+
+        Assert.True(ocorrencias.Length == 0,
+            $"A suíte contém caminho duplicado de backend: {string.Join(", ", ocorrencias)}");
     }
 }

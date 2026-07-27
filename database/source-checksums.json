@@ -1,7 +1,7 @@
 {
   "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
   "database/schema/000_schema_canonico_base.sql": "6bb5b3f4d2bb02e0d3f0ddd96aef9d26f2ea0bf70e64fe6e8044128d688ef38f",
-  "database/schema/010_identity_access.sql": "4248e363467340e3915ee16f904614ee77c999af90290b1ef2bf848edcb93003",
+  "database/schema/010_identity_access.sql": "89ce1fe892388b1629ad488eac328025baedeec9a0a4d024c99cc7f6eb16dcea",
   "database/schema/020_saas_tenants.sql": "3e1a57ad9a97798a78ffa3baab8cbad0b5196604240db2dede04f8d472cdf9ef",
   "database/schema/030_operacao_plantoes.sql": "b7e7ba760953e8ed6bd0c3a65b8a828c5866f3ec15901d06d989cb57bfce6881",
   "database/schema/040_saude360.sql": "90eaa5768e2391b2636c62d7b4b3e637a33dc306f2c0d7a841d14b1d2951a6fe",

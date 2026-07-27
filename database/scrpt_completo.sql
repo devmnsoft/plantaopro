@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
 );
 
 -- SOURCE: database/schema/010_identity_access.sql
--- SOURCE-SHA256: 4248e363467340e3915ee16f904614ee77c999af90290b1ef2bf848edcb93003
+-- SOURCE-SHA256: 89ce1fe892388b1629ad488eac328025baedeec9a0a4d024c99cc7f6eb16dcea
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -259,11 +259,14 @@ ALTER TABLE plantaopro.perfis
     ADD COLUMN IF NOT EXISTS tenant_id uuid,
     ADD COLUMN IF NOT EXISTS cliente_id uuid,
     ADD COLUMN IF NOT EXISTS codigo text,
+    ADD COLUMN IF NOT EXISTS descricao text,
     ADD COLUMN IF NOT EXISTS base_sistema boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS customizado boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS status text DEFAULT 'ATIVO',
     ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS reg_update timestamptz;
+    ADD COLUMN IF NOT EXISTS reg_update timestamptz,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
 ALTER TABLE plantaopro.usuarios
     ADD COLUMN IF NOT EXISTS tenant_id uuid,
     ADD COLUMN IF NOT EXISTS cliente_id uuid,

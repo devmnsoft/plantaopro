@@ -19,11 +19,14 @@ ALTER TABLE plantaopro.perfis
     ADD COLUMN IF NOT EXISTS tenant_id uuid,
     ADD COLUMN IF NOT EXISTS cliente_id uuid,
     ADD COLUMN IF NOT EXISTS codigo text,
+    ADD COLUMN IF NOT EXISTS descricao text,
     ADD COLUMN IF NOT EXISTS base_sistema boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS customizado boolean DEFAULT false,
     ADD COLUMN IF NOT EXISTS status text DEFAULT 'ATIVO',
     ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS reg_update timestamptz;
+    ADD COLUMN IF NOT EXISTS reg_update timestamptz,
+    ADD COLUMN IF NOT EXISTS created_by uuid,
+    ADD COLUMN IF NOT EXISTS updated_by uuid;
 ALTER TABLE plantaopro.usuarios
     ADD COLUMN IF NOT EXISTS tenant_id uuid,
     ADD COLUMN IF NOT EXISTS cliente_id uuid,

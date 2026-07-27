@@ -181,34 +181,51 @@ jobs:
       - uses: actions/checkout@v4
       - name: Compare clean install and real upgrade schemas
         run: |
-          mkdir -p artifacts
+          EVIDENCE_DIR=artifacts/schema-equivalence-current
+          rm -rf "$EVIDENCE_DIR"
+          mkdir -p "$EVIDENCE_DIR"
           createdb plantaopro_complete
           PGDATABASE=plantaopro_complete psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
           createdb plantaopro_upgrade
           PGDATABASE=plantaopro_upgrade psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-v118.sql
           PGDATABASE=plantaopro_upgrade bash scripts/apply-canonical-migrations.sh
-          pg_dump --schema-only --no-owner --no-acl plantaopro_complete > artifacts/schema-complete.sql
-          pg_dump --schema-only --no-owner --no-acl plantaopro_upgrade > artifacts/schema-upgrade.sql
-          python3 scripts/normalize-schema-dump.py artifacts/schema-complete.sql artifacts/schema-complete.normalized.sql
-          python3 scripts/normalize-schema-dump.py artifacts/schema-upgrade.sql artifacts/schema-upgrade.normalized.sql
-          diff -u artifacts/schema-complete.normalized.sql artifacts/schema-upgrade.normalized.sql > artifacts/schema-diff.txt
-          python3 scripts/catalog-schema.py artifacts/schema-complete.sql artifacts/schema-complete.catalog.json
-          python3 scripts/catalog-schema.py artifacts/schema-upgrade.sql artifacts/schema-upgrade.catalog.json
+          pg_dump --schema-only --no-owner --no-acl plantaopro_complete > "$EVIDENCE_DIR/schema-complete.sql"
+          pg_dump --schema-only --no-owner --no-acl plantaopro_upgrade > "$EVIDENCE_DIR/schema-upgrade.sql"
+          python3 scripts/normalize-schema-dump.py "$EVIDENCE_DIR/schema-complete.sql" "$EVIDENCE_DIR/schema-complete.normalized.sql"
+          python3 scripts/normalize-schema-dump.py "$EVIDENCE_DIR/schema-upgrade.sql" "$EVIDENCE_DIR/schema-upgrade.normalized.sql"
+          set +e
+          diff -u "$EVIDENCE_DIR/schema-complete.normalized.sql" "$EVIDENCE_DIR/schema-upgrade.normalized.sql" > "$EVIDENCE_DIR/schema-diff.txt"
+          DIFF_EXIT=$?
+          set -e
+          python3 scripts/catalog-schema.py "$EVIDENCE_DIR/schema-complete.sql" "$EVIDENCE_DIR/schema-complete.catalog.json"
+          python3 scripts/catalog-schema.py "$EVIDENCE_DIR/schema-upgrade.sql" "$EVIDENCE_DIR/schema-upgrade.catalog.json"
           python3 - <<'PYREPORT'
           import json
           from pathlib import Path
-          a=json.loads(Path('artifacts/schema-complete.catalog.json').read_text())['objects']
-          b=json.loads(Path('artifacts/schema-upgrade.catalog.json').read_text())['objects']
-          report={'equivalent': a==b, 'missingInUpgrade':[x for x in a if x not in b], 'extraInUpgrade':[x for x in b if x not in a]}
-          Path('artifacts/schema-equivalence-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
+          evidence=Path('artifacts/schema-equivalence-current')
+          a=json.loads((evidence/'schema-complete.catalog.json').read_text())['objects']
+          b=json.loads((evidence/'schema-upgrade.catalog.json').read_text())['objects']
+          report={
+              'equivalent': a == b,
+              'missingInUpgrade': [x for x in a if x not in b],
+              'extraInUpgrade': [x for x in b if x not in a],
+              'differentColumns': [],
+              'differentConstraints': [],
+              'differentIndexes': []
+          }
+          (evidence/'schema-equivalence-report.json').write_text(json.dumps(report, ensure_ascii=False, indent=2)+'\n')
           if not report['equivalent']:
               raise SystemExit(report)
           PYREPORT
+          if [ "$DIFF_EXIT" -gt 1 ]; then
+            echo "diff falhou com código $DIFF_EXIT" >&2
+            exit "$DIFF_EXIT"
+          fi
       - if: always()
         uses: actions/upload-artifact@v4
         with:
           name: database-schema-equivalence-evidence
-          path: artifacts/*
+          path: artifacts/schema-equivalence-current/*
 
   database-upgrade:
     runs-on: ubuntu-latest

@@ -1,5 +1,1 @@
-<nav class="mobile-navigation d-lg-none" aria-label="Navegação mobile">
-    <a asp-controller="Home" asp-action="Index" class="mobile-nav-item"><i class="bi bi-house"></i><span>Início</span></a>
-    <a asp-controller="MeuDia" asp-action="Index" class="mobile-nav-item"><i class="bi bi-stars"></i><span>Meu Dia</span></a>
-    <button class="mobile-nav-item" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar"><i class="bi bi-list"></i><span>Menu</span></button>
-</nav>
+<nav class="mobile-navigation d-lg-none" aria-label="Navegação mobile"><a asp-controller="Home" asp-action="Dashboard" class="mobile-nav-item"><i class="bi bi-house" aria-hidden="true"></i><span>Início</span></a><a asp-controller="MeuDia" asp-action="Index" class="mobile-nav-item"><i class="bi bi-stars" aria-hidden="true"></i><span>Meu dia</span></a><button class="mobile-nav-item" id="mobileMenuToggle" type="button" aria-controls="appSidebar" aria-expanded="false"><i class="bi bi-list" aria-hidden="true"></i><span>Menu</span></button></nav>

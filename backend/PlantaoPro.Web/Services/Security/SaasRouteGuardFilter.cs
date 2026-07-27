@@ -48,7 +48,19 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Onboarding"] = "ONBOARDING",
         ["Treinamento"] = "TREINAMENTO",
         ["Lgpd"] = "LGPD",
-        ["Suporte"] = "SUPORTE"
+        ["Suporte"] = "SUPORTE",
+        ["Pacientes"] = "PACIENTES",
+        ["Agendamentos"] = "AGENDAMENTOS",
+        ["PainelChamada"] = "PAINEL_CHAMADA",
+        ["Triagem"] = "TRIAGEM",
+        ["Consultas"] = "CONSULTAS",
+        ["Cid"] = "CID",
+        ["Prescricoes"] = "PRESCRICOES",
+        ["ClinicaFinanceiro"] = "CLINICA_FINANCEIRO",
+        ["Convenios"] = "CONVENIOS",
+        ["PlanosSaude"] = "PLANOS_SAUDE",
+        ["ClinicaDashboard"] = "CLINICA_DASHBOARD",
+        ["PendenciasClinicas"] = "PENDENCIAS_CLINICAS"
     };
 
     private static readonly ISet<string> PublicControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -86,6 +98,9 @@ public sealed class SaasRouteGuardFilter : IActionFilter
 
         if (!ControllerModules.TryGetValue(descriptor.ControllerName, out var module))
         {
+            logger.LogError("Controller autenticado sem módulo no catálogo SaaS. Controller:{Controller} Action:{Action}", descriptor.ControllerName, descriptor.ActionName);
+            context.HttpContext.Items["SaasAccessDeniedModule"] = "CATALOGO_NAO_CONFIGURADO";
+            context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty });
             return;
         }
 

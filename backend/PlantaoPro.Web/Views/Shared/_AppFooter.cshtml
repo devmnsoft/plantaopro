@@ -1,2 +1,2 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_AppFooter"></div>
+@{ var environmentName = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Ambiente não informado"; }
+<footer class="app-footer"><span>PlantãoPro • v@(System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString() ?? "dev")</span><span>@environmentName</span><span>Powered by MNSOFT</span></footer>

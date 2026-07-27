@@ -8,7 +8,7 @@ public sealed class DatabaseGeneratorIntegrityTests
     [Fact]
     public void ScriptCompleto_DeveReferenciarHashAtualDeCadaFonteCanonica()
     {
-        var root = RepositoryPathResolver.FindRepositoryRoot();
+        var root = RepositoryPathResolver.ResolveRoot();
         var checksumsPath = Path.Combine(root, "database", "source-checksums.json");
         var script = File.ReadAllText(Path.Combine(root, "database", "scrpt_completo.sql"));
         var checksums = JsonSerializer.Deserialize<Dictionary<string, string>>(

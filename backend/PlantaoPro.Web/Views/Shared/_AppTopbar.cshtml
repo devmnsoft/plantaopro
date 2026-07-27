@@ -1,2 +1,14 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_AppTopbar"></div>
+@{
+ var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+ var canUpgrade = User.IsInRole("ADMINISTRADOR_GLOBAL") || User.IsInRole("ADMINISTRADOR") || User.IsInRole("ADMINISTRADOR_CLIENTE") || User.IsInRole("DIRETOR");
+}
+<header class="app-topbar">
+ <div class="topbar-left"><button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu"><i class="bi bi-list" aria-hidden="true"></i></button><div><h1 class="page-title">@(ViewData["Title"] ?? controller)</h1><nav aria-label="Breadcrumb"><ol class="breadcrumb app-breadcrumb mb-0"><li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Início</a></li><li class="breadcrumb-item active" aria-current="page">@controller</li></ol></nav></div></div>
+ <div class="topbar-actions">
+  <form class="topbar-search d-none d-xl-flex" asp-controller="Ajuda" asp-action="Busca" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i><label class="visually-hidden" for="globalSearch">Pesquisar</label><input id="globalSearch" name="q" class="form-control" placeholder="Buscar ajuda e atalhos" /></form>
+  <partial name="_TenantContextBadge" /><partial name="_PlanUsageMiniCard" />
+  <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="Ajuda" aria-label="Ajuda"><i class="bi bi-question-circle"></i></a><partial name="_NotificationMenu" />
+  @if (canUpgrade) { <a class="btn btn-warning btn-sm d-none d-md-inline-flex" asp-controller="MinhaAssinatura" asp-action="Upgrade"><i class="bi bi-rocket-takeoff me-1"></i>Upgrade</a> }
+  <partial name="_UserMenu" />
+ </div>
+</header>

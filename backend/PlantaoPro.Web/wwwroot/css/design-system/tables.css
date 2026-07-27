@@ -1,1 +1,1 @@
-/* PlantãoPro premium design-system module. */
+.table-responsive{max-width:100%;overflow:auto;border:1px solid var(--pp-border);border-radius:var(--pp-radius-lg);-webkit-overflow-scrolling:touch}.table{margin:0;min-width:42rem;vertical-align:middle}.table>:not(caption)>*>*{padding:.85rem 1rem;border-bottom-color:var(--pp-border)}.table thead th{position:sticky;top:0;background:var(--pp-bg-subtle);color:var(--pp-text-secondary);font-size:.75rem;text-transform:uppercase;letter-spacing:.04em}.table tbody tr:hover>*{background:var(--pp-hover-bg)}

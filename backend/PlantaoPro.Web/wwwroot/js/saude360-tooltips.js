@@ -1,1 +1,2 @@
-document.addEventListener('DOMContentLoaded',function(){if(!window.bootstrap)return;document.querySelectorAll('[title]').forEach(function(el){new bootstrap.Tooltip(el);});});
+/* Delegador legado; tooltips são idempotentes e centralizados no PlantaoProUi. */
+window.PlantaoProUi?.refresh();

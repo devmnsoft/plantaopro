@@ -1,1 +1,18 @@
-:root { --pp-bg-app:#f4f7fb; --pp-bg-surface:#ffffff; --pp-bg-subtle:#edf2f8; --pp-text-primary:#10213a; --pp-text-secondary:#465b75; --pp-text-muted:#64748b; --pp-text-inverse:#f8fbff; --pp-border:#d7e0eb; --pp-border-strong:#b7c5d8; --pp-primary:#2563eb; --pp-primary-hover:#1d4ed8; --pp-primary-soft:#e8f0ff; --pp-accent:#0f8276; --pp-success:#087a4d; --pp-warning:#925b0a; --pp-danger:#b42336; --pp-info:#245ea8; --pp-sidebar-bg:#0c2037; --pp-sidebar-bg-secondary:#102d4c; --pp-sidebar-text:#f0f6ff; --pp-sidebar-muted:#b7c8dc; --pp-sidebar-active:#2f6fed; }
+/* Breakpoints: compact <576px; mobile <768px; tablet <992px; desktop <1200px; wide >=1200px. */
+:root{
+ --pp-brand-primary:#2563eb;--pp-brand-secondary:#0f8276;--pp-brand-accent:#f59e0b;
+ --pp-primary:var(--pp-brand-primary);--pp-primary-hover:#1d4ed8;--pp-primary-soft:#e8f0ff;
+ --pp-success:#087a4d;--pp-success-soft:#e8f7f0;--pp-warning:#925b0a;--pp-warning-soft:#fff4d8;--pp-danger:#b42336;--pp-danger-soft:#ffeaed;--pp-info:#245ea8;--pp-info-soft:#e8f2ff;
+ --pp-bg-app:#f4f7fb;--pp-bg-surface:#fff;--pp-bg-subtle:#edf2f8;--pp-bg-elevated:#fff;
+ --pp-text-primary:#10213a;--pp-text-secondary:#465b75;--pp-text-muted:#64748b;--pp-text-inverse:#f8fbff;
+ --pp-border:#d7e0eb;--pp-border-strong:#b7c5d8;--pp-focus:#74a4ff;
+ --pp-sidebar-bg:#0c2037;--pp-sidebar-bg-secondary:#102d4c;--pp-sidebar-text:#f0f6ff;--pp-sidebar-muted:#b7c8dc;--pp-sidebar-active:#2f6fed;
+ --pp-shadow-xs:0 1px 2px rgb(16 33 58/.06);--pp-shadow-sm:0 4px 12px rgb(16 33 58/.08);--pp-shadow-lg:0 20px 45px rgb(16 33 58/.16);
+ --pp-radius-sm:.5rem;--pp-radius-md:.75rem;--pp-radius-lg:1rem;--pp-radius-pill:999px;
+ --pp-space-1:.25rem;--pp-space-2:.5rem;--pp-space-3:.75rem;--pp-space-4:1rem;--pp-space-5:1.5rem;--pp-space-6:2rem;--pp-space-8:3rem;
+ --pp-font-sans:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;--pp-font-size-sm:.875rem;--pp-font-size-base:1rem;--pp-line-height:1.55;
+ --pp-sidebar-width:18rem;--pp-sidebar-collapsed-width:5rem;--pp-topbar-height:5.25rem;--pp-content-max:100rem;
+ --pp-z-sidebar:1040;--pp-z-overlay:1030;--pp-z-topbar:1020;--pp-z-toast:1090;
+ --pp-transition-fast:140ms ease;--pp-transition:220ms cubic-bezier(.2,.8,.2,1);
+ --pp-hover-bg:var(--pp-bg-subtle);--pp-selected-bg:var(--pp-primary-soft);--pp-disabled-opacity:.55;
+}

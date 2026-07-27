@@ -4,7 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
-out=[]; seen=set(); objects={}; conflicts=[]; canonical_sources=set(); canonical_tables=set(manifest.get('canonicalTables', []))
+out=[]; seen=set(); objects={}; conflicts=[]; canonical_sources=set(); canonical_tables=set(manifest.get('canonicalTables', [])); source_checksums={}
 for section in manifest['sections']:
     for obj in section.get('objects',[]):
         if obj.get('name'):
@@ -116,8 +116,14 @@ for section in sorted(manifest['sections'], key=lambda x:x['order']):
         if 'source' in obj:
             p=ROOT/obj['source']; sql=p.read_text(encoding='utf-8')
             if '\\i ' in sql or '\\ir ' in sql: raise SystemExit(f'Comando include proibido em {p}')
-            sql=normalize_sql(sql, obj['source']); scan_conflicts(sql, obj['source']); add(f"-- Origem: {obj['source']}\n"+sql, obj['source'])
+            source_hash=hashlib.sha256(sql.encode()).hexdigest()
+            source_checksums[obj['source']]=source_hash
+            sql=normalize_sql(sql, obj['source']); scan_conflicts(sql, obj['source'])
+            add(f"-- SOURCE: {obj['source']}\n-- SOURCE-SHA256: {source_hash}\n"+sql, obj['source'])
 write_reports()
+(ROOT/'database/source-checksums.json').write_text(
+    json.dumps(dict(sorted(source_checksums.items())),ensure_ascii=False,indent=2)+"\n",
+    encoding='utf-8')
 script='\n'.join(out)
 if re.search(r'^\s*CREATE\s+DATABASE\b', script, re.I|re.M): raise SystemExit('CREATE DATABASE não é permitido')
 if re.search(r'^\s*\\i\b', script, re.M): raise SystemExit('Comando \\i não é permitido')

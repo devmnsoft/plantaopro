@@ -24,5 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../PlantaoPro.Api/PlantaoPro.Api.csproj" />
+    <ProjectReference Include="../PlantaoPro.Domain/PlantaoPro.Domain.csproj" />
   </ItemGroup>
 </Project>

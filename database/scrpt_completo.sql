@@ -40,7 +40,8 @@ SET search_path TO plantaopro, public;
 -- Seção 03 — Schema canônico de instalação limpa v1.18.8
 -- ============================================================
 
--- Origem: database/schema/000_extensions_schema.sql
+-- SOURCE: database/schema/000_extensions_schema.sql
+-- SOURCE-SHA256: c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776
 -- v1.18.7 extensões e schema canônico
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DO $$
@@ -64,7 +65,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
 
--- Origem: database/schema/000_schema_canonico_base.sql
+-- SOURCE: database/schema/000_schema_canonico_base.sql
+-- SOURCE-SHA256: 6bb5b3f4d2bb02e0d3f0ddd96aef9d26f2ea0bf70e64fe6e8044128d688ef38f
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -234,7 +236,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
     executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
 );
 
--- Origem: database/schema/010_identity_access.sql
+-- SOURCE: database/schema/010_identity_access.sql
+-- SOURCE-SHA256: 07b7ba9e78d406f5839208be36013f176b77d130ddd2fe4a623f828fa34cedf4
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -382,7 +385,8 @@ DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_auth_refresh_tokens_sessao') THEN ALTER TABLE plantaopro.auth_refresh_tokens ADD CONSTRAINT fk_auth_refresh_tokens_sessao FOREIGN KEY (sessao_id) REFERENCES plantaopro.auth_sessoes(id); END IF;
 END $$;
 
--- Origem: database/schema/020_saas_tenants.sql
+-- SOURCE: database/schema/020_saas_tenants.sql
+-- SOURCE-SHA256: 3e1a57ad9a97798a78ffa3baab8cbad0b5196604240db2dede04f8d472cdf9ef
 -- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
 SET search_path TO plantaopro, public;
 
@@ -568,7 +572,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/030_operacao_plantoes.sql
+-- SOURCE: database/schema/030_operacao_plantoes.sql
+-- SOURCE-SHA256: b7e7ba760953e8ed6bd0c3a65b8a828c5866f3ec15901d06d989cb57bfce6881
 -- Operação de plantões preservada a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -764,7 +769,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.mensagens (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/040_saude360.sql
+-- SOURCE: database/schema/040_saude360.sql
+-- SOURCE-SHA256: 90eaa5768e2391b2636c62d7b4b3e637a33dc306f2c0d7a841d14b1d2951a6fe
 -- Saúde 360 preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -930,7 +936,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_clinica (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/050_financeiro.sql
+-- SOURCE: database/schema/050_financeiro.sql
+-- SOURCE-SHA256: 43237f61fcffb8cb41244672fe447d9ac00e15fd22f5a40303b4100ab1c94ba6
 -- Financeiro preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1056,7 +1063,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/060_auditoria_observabilidade.sql
+-- SOURCE: database/schema/060_auditoria_observabilidade.sql
+-- SOURCE-SHA256: 34f02c49d3d5bce2beca60a6d16701a3fdf6fb964afffbca1618c1dcc2e07a65
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1162,7 +1170,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.permissao_logs (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/070_relatorios.sql
+-- SOURCE: database/schema/070_relatorios.sql
+-- SOURCE-SHA256: c54ed035de3e7ba1b8f2d94dc64e793c7c0002c7d2492418352ae14d44b2f5ff
 -- Relatórios preservados a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1198,20 +1207,24 @@ CREATE TABLE IF NOT EXISTS plantaopro.relatorios_filtros_salvos (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/080_constraints.sql
+-- SOURCE: database/schema/080_constraints.sql
+-- SOURCE-SHA256: 72e593f065c706c8e02d08284445e3d90dbbf63556e87487c6c103eefdb6ff46
 -- Constraints canônicas complementares são mantidas idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
 
--- Origem: database/schema/090_indexes.sql
+-- SOURCE: database/schema/090_indexes.sql
+-- SOURCE-SHA256: 584210538344133b1bc98359e3db7a64574bb47ddd0acf77ebb960c43f58880f
 -- Índices canônicos complementares são mantidos idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
 
--- Origem: database/schema/100_reference_data.sql
+-- SOURCE: database/schema/100_reference_data.sql
+-- SOURCE-SHA256: 1a6a6637aea031658d332fc131267e111f567c3ad3dc509b7db3115e9cb10b7e
 -- Dados referenciais mínimos sem credenciais fixas.
 INSERT INTO plantaopro.politicas_senha(tenant_id)
 SELECT NULL WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
 
--- Origem: database/schema/110_implantacao_go_live.sql
+-- SOURCE: database/schema/110_implantacao_go_live.sql
+-- SOURCE-SHA256: 219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c
 -- v1.18.8 Central de Implantação, Diagnóstico e Go-Live
 SET search_path TO plantaopro, public;
 CREATE TABLE IF NOT EXISTS plantaopro.implantacao_status (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, classificacao text NOT NULL DEFAULT 'NÃO_CONFIGURADO', prontidao_percentual numeric(5,2) NOT NULL DEFAULT 0, versao text NOT NULL DEFAULT 'v1.18.8', ambiente text NOT NULL DEFAULT 'NAO_INFORMADO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
@@ -1224,7 +1237,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.go_live_checklists (id uuid PRIMARY KEY DE
 CREATE TABLE IF NOT EXISTS plantaopro.go_live_aprovacoes (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), checklist_id uuid NULL, aprovador_nome text NOT NULL, papel text NOT NULL, decisao text NOT NULL, observacao text NULL, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE UNIQUE INDEX IF NOT EXISTS ux_implantacao_etapas_tenant_codigo ON plantaopro.implantacao_etapas(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
 
--- Origem: database/schema/120_operacoes_continuidade.sql
+-- SOURCE: database/schema/120_operacoes_continuidade.sql
+-- SOURCE-SHA256: 01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e
 -- Operações e continuidade v1.18.9
 SET search_path TO plantaopro, public;
 
@@ -1500,7 +1514,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.manutencao_aprovacoes (
     atualizado_em timestamptz NULL
 );
 
--- Origem: database/schema/130_contexto_multiempresa.sql
+-- SOURCE: database/schema/130_contexto_multiempresa.sql
+-- SOURCE-SHA256: deb03f24f6a422ddeabb2074bec8e0e54207d1c4ebf5e6fd7624c472ccaa7e2e
 -- v1.19.0 - Contexto multiempresa e suporte assistido
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_tenant_acessos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), usuario_id uuid NOT NULL, tenant_id uuid NULL, cliente_id uuid NULL, perfil_id uuid NULL,
@@ -1537,7 +1552,8 @@ WHERE up.reg_status='A' AND p.reg_status='A' AND up.tenant_id IS NOT NULL
   AND coalesce(p.codigo,p.nome) <> 'ADMINISTRADOR_GLOBAL'
   AND NOT EXISTS (SELECT 1 FROM plantaopro.usuario_tenant_acessos uta WHERE uta.usuario_id=up.usuario_id AND uta.perfil_id=up.perfil_id AND uta.tenant_id=up.tenant_id AND uta.reg_status='A');
 
--- Origem: database/schema/140_experiencia_premium_meu_dia.sql
+-- SOURCE: database/schema/140_experiencia_premium_meu_dia.sql
+-- SOURCE-SHA256: c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178
 -- PlantãoPro v1.20.1 - Experiência premium Meu Dia
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_preferencias_interface (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

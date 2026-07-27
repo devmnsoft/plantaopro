@@ -1,0 +1,18 @@
+{
+  "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
+  "database/schema/000_schema_canonico_base.sql": "6bb5b3f4d2bb02e0d3f0ddd96aef9d26f2ea0bf70e64fe6e8044128d688ef38f",
+  "database/schema/010_identity_access.sql": "07b7ba9e78d406f5839208be36013f176b77d130ddd2fe4a623f828fa34cedf4",
+  "database/schema/020_saas_tenants.sql": "3e1a57ad9a97798a78ffa3baab8cbad0b5196604240db2dede04f8d472cdf9ef",
+  "database/schema/030_operacao_plantoes.sql": "b7e7ba760953e8ed6bd0c3a65b8a828c5866f3ec15901d06d989cb57bfce6881",
+  "database/schema/040_saude360.sql": "90eaa5768e2391b2636c62d7b4b3e637a33dc306f2c0d7a841d14b1d2951a6fe",
+  "database/schema/050_financeiro.sql": "43237f61fcffb8cb41244672fe447d9ac00e15fd22f5a40303b4100ab1c94ba6",
+  "database/schema/060_auditoria_observabilidade.sql": "34f02c49d3d5bce2beca60a6d16701a3fdf6fb964afffbca1618c1dcc2e07a65",
+  "database/schema/070_relatorios.sql": "c54ed035de3e7ba1b8f2d94dc64e793c7c0002c7d2492418352ae14d44b2f5ff",
+  "database/schema/080_constraints.sql": "72e593f065c706c8e02d08284445e3d90dbbf63556e87487c6c103eefdb6ff46",
+  "database/schema/090_indexes.sql": "584210538344133b1bc98359e3db7a64574bb47ddd0acf77ebb960c43f58880f",
+  "database/schema/100_reference_data.sql": "1a6a6637aea031658d332fc131267e111f567c3ad3dc509b7db3115e9cb10b7e",
+  "database/schema/110_implantacao_go_live.sql": "219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c",
+  "database/schema/120_operacoes_continuidade.sql": "01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e",
+  "database/schema/130_contexto_multiempresa.sql": "deb03f24f6a422ddeabb2074bec8e0e54207d1c4ebf5e6fd7624c472ccaa7e2e",
+  "database/schema/140_experiencia_premium_meu_dia.sql": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178"
+}

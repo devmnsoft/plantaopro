@@ -66,6 +66,4 @@ Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-EndProject("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PlantaoPro.Tools.Bootstrap", "PlantaoPro.Tools.Bootstrap\PlantaoPro.Tools.Bootstrap.csproj", "{D301ED10-8E20-41C7-B36A-9AC88F71B185}"
-EndProject
-Global
+EndGlobal

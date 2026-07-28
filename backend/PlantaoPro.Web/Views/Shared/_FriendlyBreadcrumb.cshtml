@@ -1,0 +1,9 @@
+@model PlantaoPro.Web.Models.PageContextViewModel
+<nav aria-label="Navegação estrutural">
+    <ol class="breadcrumb mb-0">
+        @foreach (var item in Model.Breadcrumb)
+        {
+            <li class="breadcrumb-item">@item</li>
+        }
+    </ol>
+</nav>

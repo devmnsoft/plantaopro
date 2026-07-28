@@ -1,11 +1,10 @@
-using Xunit;
+namespace PlantaoPro.Tests;
 
 public sealed class V112HomologationFlowTests
 {
     [Fact]
     public void V112_Controller_Expose_Required_Functional_Endpoints()
     {
-        var root = RepositoryPathResolver.RepoRoot;
         var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "V112HomologationController.cs"));
         foreach (var endpoint in new[] { "api/customers", "api/products", "api/inventory/entries", "api/orders/{id:guid}/confirm", "api/tasks/{id:guid}/complete", "api/billing/invoices/from-order/{orderId:guid}", "api/billing/titles/{titleId:guid}/fake-boleto", "api/outbox/{id:guid}/process", "api/templates/{id}/install", "api/demo/run-all", "api/homologation/status", "api/validation/worker/status" })
             Assert.Contains(endpoint, controller);

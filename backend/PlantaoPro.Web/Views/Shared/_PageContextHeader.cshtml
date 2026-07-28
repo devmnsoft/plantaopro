@@ -1,0 +1,15 @@
+@model PlantaoPro.Web.Models.PageContextViewModel
+<header class="page-header" aria-labelledby="page-context-title">
+    <partial name="_FriendlyBreadcrumb" model="Model" />
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mt-3">
+        <div>
+            <p class="text-uppercase text-muted small mb-1">@Model.JourneyStep</p>
+            <h1 id="page-context-title" class="h2 mb-2">@Model.Title</h1>
+            <p class="text-muted mb-0">@Model.Description</p>
+            @if (!string.IsNullOrWhiteSpace(Model.TenantName) || !string.IsNullOrWhiteSpace(Model.CurrentRecord))
+            {
+                <p class="small mt-2 mb-0"><span>@Model.TenantName</span><span class="mx-2" aria-hidden="true">•</span><strong>@Model.CurrentRecord</strong></p>
+            }
+        </div>
+    </div>
+</header>

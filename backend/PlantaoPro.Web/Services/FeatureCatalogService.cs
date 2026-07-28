@@ -15,7 +15,7 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
 {
     private static readonly IReadOnlyList<FeatureDefinition> FeatureItems = new List<FeatureDefinition>
     {
-        Feature("MEU_DIA", "Meu Dia", "Prioridades e próximos passos da operação.", "Operação", "MeuDia", "Index", "bi-house-heart", "Coordenação,Recepção,Triagem,Médico,Financeiro,Administrador Cliente,Administrador Global", "MEU_DIA", "MEU_DIA.VER", "Operação diária", "Hoje"),
+        Feature("MEU_DIA", "Meu Dia", "Prioridades e próximos passos da operação.", "Operação", "MeuDia", "Index", "bi-house-heart", "Administrador Global,Administrador Cliente,Administrador Clínica,Coordenação,Operador,Recepção,Triagem,Enfermagem,Médico,Financeiro,Financeiro Clínica,Faturamento Convênio,Hospital,Parceiro,Suporte,Auditor,Auditor Clínico,Comercial,Customer Success", "MEU_DIA", "MEU_DIA.VER", "Operação diária", "Hoje"),
         Feature("PLANTOES", "Plantões", "Planeje, publique e acompanhe a cobertura.", "Plantões", "Plantoes", "Index", "bi-calendar-event", "Coordenação,Médico", "PLANTOES", "PLANTOES.VER", "Plantão e cobertura", "Plantões"),
         Feature("COBERTURA", "Central de Cobertura", "Encontre profissionais e acompanhe convites.", "Plantões", "CentralEscala", "Index", "bi-people", "Coordenação", "CENTRAL_ESCALA", "COBERTURA.VER", "Plantão e cobertura", "Cobertura"),
         Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "bi-people", "Recepção", "SAUDE360_PACIENTES", "PACIENTES.VER", "Atendimento", "Paciente"),
@@ -31,6 +31,22 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
         Nav("Recepção", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1), Nav("Recepção", "Rotina", "Agenda", "bi-calendar2", "AGENDA", 2), Nav("Recepção", "Rotina", "Check-in", "bi-person-check", "CHECK_IN", 3), Nav("Recepção", "Rotina", "Pacientes", "bi-people", "PACIENTES", 4),
         Nav("Coordenação", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1), Nav("Coordenação", "Rotina", "Central de Cobertura", "bi-people", "COBERTURA", 2), Nav("Coordenação", "Rotina", "Plantões", "bi-calendar-event", "PLANTOES", 3),
         Nav("Médico", "Rotina", "Hoje", "bi-house-heart", "MEU_DIA", 1), Nav("Médico", "Rotina", "Minha Agenda", "bi-calendar-heart", "MINHA_AGENDA", 2), Nav("Médico", "Rotina", "Pagamentos", "bi-cash-coin", "PAGAMENTOS", 3)
+        ,Nav("Administrador Global", "Visão geral", "Visão Executiva", "bi-speedometer2", "MEU_DIA", 1)
+        ,Nav("Administrador Cliente", "Visão geral", "Visão Geral", "bi-speedometer2", "MEU_DIA", 1)
+        ,Nav("Administrador Clínica", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Operador", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Triagem", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Enfermagem", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Financeiro", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Financeiro Clínica", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Faturamento Convênio", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Hospital", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Parceiro", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Suporte", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Auditor", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Auditor Clínico", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Comercial", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
+        ,Nav("Customer Success", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1)
     };
 
     private static readonly IReadOnlyList<PageDefinition> PageItems = FeatureItems

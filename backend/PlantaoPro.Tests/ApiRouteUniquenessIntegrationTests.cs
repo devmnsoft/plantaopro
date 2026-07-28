@@ -7,10 +7,10 @@ using Xunit;
 
 namespace PlantaoPro.Tests;
 
-public sealed class ApiRouteUniquenessIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public sealed class ApiRouteUniquenessIntegrationTests : IClassFixture<WebApplicationFactory<ApiAssemblyMarker>>
 {
-    private readonly WebApplicationFactory<Program> factory;
-    public ApiRouteUniquenessIntegrationTests(WebApplicationFactory<Program> factory) { this.factory = factory.WithWebHostBuilder(b => b.UseSetting("environment", "Testing")); }
+    private readonly WebApplicationFactory<ApiAssemblyMarker> factory;
+    public ApiRouteUniquenessIntegrationTests(WebApplicationFactory<ApiAssemblyMarker> factory) { this.factory = factory.WithWebHostBuilder(b => b.UseSetting("environment", "Testing")); }
 
     [Fact]
     public void TodasAsRotasDaApiDevemSerUnicasPorMetodoECaminhoNormalizado()

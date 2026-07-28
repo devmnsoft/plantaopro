@@ -76,9 +76,9 @@ builder.Services.AddCors(options =>
 });
 
 var jwt = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwt["Key"];
-var jwtIssuer = jwt["Issuer"];
-var jwtAudience = jwt["Audience"];
+var jwtKey = jwt["Key"] ?? string.Empty;
+var jwtIssuer = jwt["Issuer"] ?? string.Empty;
+var jwtAudience = jwt["Audience"] ?? string.Empty;
 JwtConfigurationValidator.Validate(jwtKey, jwtIssuer, jwtAudience);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters

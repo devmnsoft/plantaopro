@@ -22,13 +22,13 @@
                     <a class="btn btn-sm btn-primary" href="@vm.LinkProximaAcao"><i class="bi bi-arrow-right-circle me-1"></i>@vm.ProximaAcao</a>
                 }
             </div>
-            @if ((vm.Dicas ?? Array.Empty<string>()).Any())
+            @if (vm.Dicas.Any())
             {
                 <ul class="mb-2 small text-muted">
                     @foreach (var dica in vm.Dicas) { <li>@dica</li> }
                 </ul>
             }
-            @if ((vm.Alertas ?? Array.Empty<string>()).Any())
+            @if (vm.Alertas.Any())
             {
                 <div class="alert alert-warning py-2 mb-2">
                     @foreach (var alerta in vm.Alertas) { <div>@alerta</div> }
@@ -38,17 +38,3 @@
         </div>
     </div>
 </aside>
-<script>
-(function(){
-  var box = document.querySelector('[data-assistente-contextual]');
-  if (!box) return;
-  var key = box.getAttribute('data-storage-key');
-  var body = box.querySelector('[data-assistente-body]');
-  var toggle = box.querySelector('[data-assistente-toggle]');
-  function setCollapsed(value){ if(!body || !toggle) return; body.hidden = value; toggle.textContent = value ? 'Expandir' : 'Recolher'; toggle.setAttribute('aria-expanded', value ? 'false' : 'true'); localStorage.setItem(key, value ? '1' : '0'); }
-  setCollapsed(localStorage.getItem(key) === '1');
-  if (toggle) toggle.addEventListener('click', function(){ setCollapsed(!body.hidden); });
-  var ok = box.querySelector('[data-assistente-entendi]');
-  if (ok) ok.addEventListener('click', function(){ setCollapsed(true); });
-})();
-</script>

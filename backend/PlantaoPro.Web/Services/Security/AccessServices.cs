@@ -115,7 +115,14 @@ public sealed class PermissionService : IPermissionService
         var saude360Medico = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID" };
         var saude360Financeiro = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_FINANCEIRO" };
         var saude360Convenios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE" };
-        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return moduleCode.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || moduleCode != "ADMIN_SAAS";
+        var administradorClinica = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "SAUDE360_DASHBOARD", "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES",
+            "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID",
+            "SAUDE360_FINANCEIRO", "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE", "SEGURANCA",
+            "USUARIOS", "PERFIS", "AUDITORIA", "LGPD", "RELATORIOS", "CONFIGURACOES"
+        };
+        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return administradorClinica.Contains(moduleCode);
         if (currentUser.HasRole(RolesConstants.Recepcao) && saude360Recepcao.Contains(moduleCode)) return true;
         if ((currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Enfermagem) || currentUser.HasRole(RolesConstants.CoordenadorClinico)) && (saude360Triagem.Contains(moduleCode) || moduleCode == "SAUDE360_DASHBOARD")) return true;
         if (currentUser.HasRole(RolesConstants.AuditorClinico) && (moduleCode.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || moduleCode == "AUDITORIA" || moduleCode == "LGPD")) return true;

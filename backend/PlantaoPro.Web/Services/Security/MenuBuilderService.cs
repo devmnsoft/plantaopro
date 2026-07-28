@@ -62,10 +62,22 @@ public sealed class MenuBuilderService : IMenuBuilderService
     {
         if (currentUser.IsGlobalAdmin()) return Contains(profileList, "Administrador Global");
         if (currentUser.IsTenantAdmin()) return Contains(profileList, "Administrador Cliente");
+        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return Contains(profileList, "Administrador Clínica");
         if (currentUser.IsDoctor()) return Contains(profileList, "Médico");
         if (currentUser.HasRole(RolesConstants.Recepcao)) return Contains(profileList, "Recepção");
         if (currentUser.HasRole(RolesConstants.Triagem)) return Contains(profileList, "Triagem");
-        if (currentUser.HasRole(RolesConstants.Financeiro) || currentUser.HasRole(RolesConstants.FinanceiroClinica)) return Contains(profileList, "Financeiro");
+        if (currentUser.HasRole(RolesConstants.Enfermagem)) return Contains(profileList, "Enfermagem");
+        if (currentUser.HasRole(RolesConstants.FinanceiroClinica)) return Contains(profileList, "Financeiro Clínica");
+        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio)) return Contains(profileList, "Faturamento Convênio");
+        if (currentUser.HasRole(RolesConstants.Financeiro)) return Contains(profileList, "Financeiro");
+        if (currentUser.HasRole(RolesConstants.Hospital)) return Contains(profileList, "Hospital");
+        if (currentUser.HasRole(RolesConstants.Parceiro)) return Contains(profileList, "Parceiro");
+        if (currentUser.HasRole(RolesConstants.Suporte)) return Contains(profileList, "Suporte");
+        if (currentUser.HasRole(RolesConstants.AuditorClinico)) return Contains(profileList, "Auditor Clínico");
+        if (currentUser.HasRole(RolesConstants.Auditor)) return Contains(profileList, "Auditor");
+        if (currentUser.HasRole(RolesConstants.Comercial)) return Contains(profileList, "Comercial");
+        if (currentUser.HasRole(RolesConstants.CustomerSuccess)) return Contains(profileList, "Customer Success");
+        if (currentUser.HasRole(RolesConstants.Operador)) return Contains(profileList, "Operador");
         return Contains(profileList, "Coordenação") &&
                (currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Coordenacao));
     }

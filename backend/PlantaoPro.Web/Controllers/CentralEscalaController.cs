@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Services;
 
@@ -56,10 +57,51 @@ public sealed class CentralEscalaController : BaseWebController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Convidar(Guid plantaoId, Guid medicoId)
+    public async Task<IActionResult> Convidar(Guid plantaoId, Guid medicoId)
     {
-        TempData["SuccessMessage"] = "Convite registrado com validação de plano, disponibilidade médica e auditoria.";
-        return RedirectToAction(nameof(ConvitesPendentes));
+        if (plantaoId == Guid.Empty || medicoId == Guid.Empty)
+        {
+            TempData["Error"] = "Selecione um plantão e um médico válidos para enviar o convite.";
+            return RedirectToAction(nameof(ConvitesPendentes));
+        }
+
+        var endpoint = $"api/plantoes/{plantaoId}/convidar-recomendados";
+        try
+        {
+            using var client = CreateApiClient();
+            if (!AddBearerToken(client))
+            {
+                return HandleUnauthorized();
+            }
+
+            var payload = new
+            {
+                MedicoIds = new List<Guid> { medicoId },
+                Mensagem = "Convite enviado pela Central de Cobertura."
+            };
+            var (data, error, statusCode) = await SendApiAsync<object, int>(client, HttpMethod.Post, endpoint, payload);
+            LogRequestContext("cobertura.convite.enviar", endpoint, (int)statusCode);
+
+            if (statusCode == HttpStatusCode.Unauthorized)
+            {
+                return HandleUnauthorized();
+            }
+
+            if (statusCode is < HttpStatusCode.OK or >= HttpStatusCode.Ambiguous || data <= 0)
+            {
+                TempData["Error"] = error ?? "O convite não foi enviado. Verifique a disponibilidade e se já existe um convite pendente.";
+                return RedirectToAction(nameof(Plantao), new { id = plantaoId });
+            }
+
+            TempData["Success"] = "Convite enviado e registrado com sucesso.";
+            return RedirectToAction(nameof(Plantao), new { id = plantaoId });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Falha ao enviar convite pela Central de Cobertura. PlantaoId:{PlantaoId} MedicoId:{MedicoId}", plantaoId, medicoId);
+            TempData["Error"] = "Não foi possível enviar o convite agora. Tente novamente.";
+            return RedirectToAction(nameof(Plantao), new { id = plantaoId });
+        }
     }
 
     private IActionResult Operational(string section) => View("~/Views/Fase2Operational/Dashboard.cshtml", flowService.Build("CENTRAL", section));

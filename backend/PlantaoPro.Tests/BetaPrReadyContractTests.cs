@@ -49,9 +49,9 @@ public class BetaPrReadyContractTests
     [Fact]
     public void AcoesCriticasFinanceirasENotificacoes_DevemTerLoggerTryCatchERespostaPadronizada()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var financeiro = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "FinanceiroController.cs"));
-        var notificacoes = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "NotificacoesController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var financeiro = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "FinanceiroController.cs"));
+        var notificacoes = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "NotificacoesController.cs"));
 
         Assert.Contains("ILogger<FinanceiroController>", financeiro, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ExecutarAcaoCriticaAsync", financeiro, StringComparison.OrdinalIgnoreCase);
@@ -68,7 +68,7 @@ public class BetaPrReadyContractTests
     [Fact]
     public void RelatorioPrReady_DeveRegistrarEvidenciasDaRodadaHomologavel()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-beta-homologavel-pr-ready-final-2026-06-05.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -83,7 +83,7 @@ public class BetaPrReadyContractTests
     [Fact]
     public void RelatorioFechamentoTecnicoFuncional_DeveRegistrarBranchComandosPendenciasEQa()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-fechamento-tecnico-funcional-2026-06-05.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -135,21 +135,5 @@ public class BetaPrReadyContractTests
         }
 
         return (prefixo.Trim('/') + "/" + template.Trim('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

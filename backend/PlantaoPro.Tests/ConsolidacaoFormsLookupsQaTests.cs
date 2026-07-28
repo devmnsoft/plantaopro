@@ -5,8 +5,8 @@ public class ConsolidacaoFormsLookupsQaTests
     [Fact]
     public void FormularioGenerico_NaoDeveExporIdsManuais_EmCamposPrincipais()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var formulario = Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Saude360", "Formulario.cshtml");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var formulario = Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Saude360", "Formulario.cshtml");
         var conteudo = File.ReadAllText(formulario);
 
         Assert.DoesNotContain("Paciente ID", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -20,23 +20,23 @@ public class ConsolidacaoFormsLookupsQaTests
     [Fact]
     public void Lookups_DeveTerEndpointsPrincipais_E_ComponentesWeb()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var api = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "Saude360SupportControllers.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var api = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "Saude360SupportControllers.cs"));
 
         foreach (var rota in new[] { "pacientes", "medicos", "agendamentos", "consultas", "convenios", "planos-saude", "hospitais", "especialidades", "cid", "formas-pagamento", "classificacoes-risco" })
         {
             Assert.Contains("\"" + rota + "\"", api, StringComparison.OrdinalIgnoreCase);
         }
 
-        Assert.True(File.Exists(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Shared", "_LookupSelect.cshtml")));
-        Assert.True(File.Exists(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Shared", "_AutocompleteField.cshtml")));
-        Assert.True(File.Exists(Path.Combine(raiz, "backend", "PlantaoPro.Web", "wwwroot", "js", "lookup.js")));
+        Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Shared", "_LookupSelect.cshtml")));
+        Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Shared", "_AutocompleteField.cshtml")));
+        Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "js", "lookup.js")));
     }
 
     [Fact]
     public void DocumentacaoFinal_DeveExistir()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         foreach (var documento in new[]
         {
             "docs/release/consolidacao-funcional-forms-ux-premium.md",
@@ -56,17 +56,5 @@ public class ConsolidacaoFormsLookupsQaTests
             Assert.True(File.Exists(caminho), "Documento obrigatório ausente: " + documento);
             Assert.Contains("PlantãoPro", File.ReadAllText(caminho), StringComparison.OrdinalIgnoreCase);
         }
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio != null && !File.Exists(Path.Combine(diretorio.FullName, ".gitignore")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        Assert.NotNull(diretorio);
-        return diretorio!.FullName;
     }
 }

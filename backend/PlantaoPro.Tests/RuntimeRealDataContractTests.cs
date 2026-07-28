@@ -10,7 +10,7 @@ public class RuntimeRealDataContractTests
     [Fact]
     public void Web_NaoDeveTerAgendamentosControllerDuplicado()
     {
-        var files = Directory.GetFiles(Path.Combine(Root, "backend", "PlantaoPro.Web"), "*.cs", SearchOption.AllDirectories);
+        var files = Directory.GetFiles(RepositoryPathResolver.WebRoot, "*.cs", SearchOption.AllDirectories);
         var count = files.Sum(f => Regex.Matches(File.ReadAllText(f), "class\\s+AgendamentosController").Count);
         Assert.Equal(1, count);
     }

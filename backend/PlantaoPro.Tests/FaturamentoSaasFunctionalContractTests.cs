@@ -5,8 +5,8 @@ public class FaturamentoSaasFunctionalContractTests
     [Fact]
     public void FaturamentoSaasApi_DeveAuditarTransacionarERegistrarEventosDeCobranca()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var controller = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "SaasCommercialController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "SaasCommercialController.cs"));
 
         Assert.Contains("BeginTransactionAsync", controller, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("RegistrarEventoCobrancaAsync", controller, StringComparison.OrdinalIgnoreCase);
@@ -21,9 +21,9 @@ public class FaturamentoSaasFunctionalContractTests
     [Fact]
     public void FaturamentoSaasWeb_DeveExporAcoesReaisComAntiForgeryEModais()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var controller = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "FaturamentoSaasController.cs"));
-        var detalhe = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "FaturamentoSaas", "Details.cshtml"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "FaturamentoSaasController.cs"));
+        var detalhe = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "FaturamentoSaas", "Details.cshtml"));
 
         foreach (var action in new[] { "MarcarPaga", "Cancelar", "Contestar", "ResolverContestacao", "Notificar" })
         {
@@ -36,13 +36,5 @@ public class FaturamentoSaasFunctionalContractTests
         Assert.DoesNotContain("confirm" + "(", detalhe, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("alert" + "(", detalhe, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("href=\"#\"", detalhe, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        return diretorio.FullName;
     }
 }

@@ -37,7 +37,7 @@ public class CommercialDemoVersionContractTests
     public void Dtos_DeveUsarValidacaoEPadraoApiResponse()
     {
         Assert.Contains(nameof(ApiResponse<string>.Ok), typeof(ApiResponse<string>).GetMethods().Select(x => x.Name));
-        var lead = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "backend", "PlantaoPro.Api", "CommercialDemoDtos.cs"));
+        var lead = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "CommercialDemoDtos.cs"));
         Assert.Contains("[Required] public string Nome", lead, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("[Required, EmailAddress]", lead, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("public string Website", lead, StringComparison.OrdinalIgnoreCase);
@@ -47,7 +47,7 @@ public class CommercialDemoVersionContractTests
     [Fact]
     public void Service_DeveBloquearPropostaVencidaSpamDemoRealEGovernancaAuditada()
     {
-        var service = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "backend", "PlantaoPro.Api", "CommercialDemoService.cs"));
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "CommercialDemoService.cs"));
         Assert.Contains("Proposta vencida não pode ser aprovada", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Website", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ApenasDemo = true", service, StringComparison.OrdinalIgnoreCase);
@@ -59,7 +59,7 @@ public class CommercialDemoVersionContractTests
     [Fact]
     public void Migracao_DeveConterTodasTabelasObrigatoriasEIdempotencia()
     {
-        var sql = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "database", "migrations", "2026_plantao_pro_versao_comercial_demo.sql"));
+        var sql = File.ReadAllText(RepositoryPathResolver.DatabaseFile("migrations", "2026_plantao_pro_versao_comercial_demo.sql"));
         foreach (var tabela in new[]
         {
             "public_landing_secoes", "public_landing_depoimentos", "public_landing_faq", "public_landing_ctas", "public_landing_casos_uso", "public_landing_materiais", "public_landing_leads",
@@ -94,13 +94,5 @@ public class CommercialDemoVersionContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.TrimEnd('/') + "/" + template.TrimStart('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        return diretorio.FullName;
     }
 }

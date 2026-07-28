@@ -5,7 +5,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void Repositorio_NaoDeveVersionarDiretoriosRaizDoProdutoIncorreto()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var diretoriosProibidos = new[]
         {
             "Admin" + "Web",
@@ -29,7 +29,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void Repositorio_NaoDeveConterTermosDoProdutoIncorretoEmArquivosVersionaveis()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var termosProibidos = new[]
         {
             "Barber" + "Sync",
@@ -76,7 +76,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void Gitignore_DeveBloquearBinariosArtefatosEDependenciasLocais()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var gitignore = File.ReadAllText(Path.Combine(raiz, ".gitignore"));
 
         Assert.Contains("*.dll", gitignore, StringComparison.OrdinalIgnoreCase);
@@ -90,7 +90,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void DocumentacaoBetaHomologavel_DeveConterArtefatosObrigatoriosDeAceite()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var documentosObrigatorios = new[]
         {
             Path.Combine("docs", "homologacao", "checklist-beta-comercial.md"),
@@ -124,7 +124,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void ChecklistBetaHomologavel_DeveConsolidarGatesDaHomologacaoFinal()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-beta-homologavel.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -142,7 +142,7 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void SanitizacaoBeta_DeveDocumentarValidacoesObrigatoriasSemResiduosExternos()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-sanitizacao-beta-2026-06-05.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -157,8 +157,8 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void HealthController_DeveRetornarApiResponseTipado()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "HealthController.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "HealthController.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("ApiResponse<HealthDto>", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -170,9 +170,9 @@ public class RepositoryHygieneContractTests
     [Fact]
     public void ConsolidacaoBeta_DeveTerJsonWebResilienteEContratosSqlSeguros()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var baseController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "BaseWebController.cs"));
-        var uiScript = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "wwwroot", "js", "plantaopro-ui.js"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var baseController = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "BaseWebController.cs"));
+        var uiScript = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "js", "plantaopro-ui.js"));
         var sql = File.ReadAllText(Path.Combine(raiz, "backend", "sql", "20260605_beta_homologavel_constraints.sql"));
         var relatorio = Path.Combine(raiz, "docs", "homologacao", "relatorio-consolidacao-beta-2026-06-05.md");
 
@@ -196,21 +196,5 @@ public class RepositoryHygieneContractTests
 
         var extensao = Path.GetExtension(arquivo).ToLowerInvariant();
         return extensao is ".cs" or ".cshtml" or ".md" or ".json" or ".sql" or ".js" or ".ts" or ".tsx" or ".css";
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

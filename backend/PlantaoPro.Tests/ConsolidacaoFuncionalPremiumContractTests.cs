@@ -5,8 +5,8 @@ public class ConsolidacaoFuncionalPremiumContractTests
     [Fact]
     public void Saude360_ActionsPrioritarias_NaoDevemRetornarIndexGenerico()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "Saude360WebControllers.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "Saude360WebControllers.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         var actionsPrioritarias = new[]
@@ -30,7 +30,7 @@ public class ConsolidacaoFuncionalPremiumContractTests
     [Fact]
     public void AuditoriaConsolidacao_DeveDocumentarMatrizQaPendenciasESeguranca()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var documentos = new[]
         {
             Path.Combine("docs", "homologacao", "auditoria-repositorio-plantao-pro.md"),
@@ -51,17 +51,5 @@ public class ConsolidacaoFuncionalPremiumContractTests
             var conteudo = File.ReadAllText(caminho);
             Assert.Contains("PlantãoPro", conteudo, StringComparison.OrdinalIgnoreCase);
         }
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio != null && !File.Exists(Path.Combine(diretorio.FullName, ".gitignore")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        Assert.NotNull(diretorio);
-        return diretorio!.FullName;
     }
 }

@@ -31,7 +31,7 @@ public class WhiteLabelB2BLaunchContractTests
     [Fact]
     public void MigracaoB2BLaunch_DeveConterTabelasWhiteLabelRevendaSlaTelemetriaELgpd()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_white_label_b2b_launch.sql"));
 
         foreach (var tabela in new[] { "tenant_white_label", "white_label_publicacoes", "api_chaves", "api_rate_limits", "parceiros", "parceiro_repasses", "contratos", "contrato_slas", "suporte_chamados", "beta_feedbacks", "telemetria_alertas", "lgpd_solicitacoes_titular", "medico_disponibilidades", "plantao_substituicoes" })
@@ -47,8 +47,8 @@ public class WhiteLabelB2BLaunchContractTests
     [Fact]
     public void ServicosB2B_DeveTerHashApiKeyAuditoriaEValidadorIsolamento()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var service = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "B2BLaunchServices.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "B2BLaunchServices.cs"));
 
         Assert.Contains("SHA256.Create", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ChaveExibicaoUnica", service, StringComparison.OrdinalIgnoreCase);
@@ -77,13 +77,5 @@ public class WhiteLabelB2BLaunchContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.TrimEnd('/') + "/" + template.TrimStart('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        return diretorio.FullName;
     }
 }

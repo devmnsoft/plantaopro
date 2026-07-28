@@ -39,7 +39,7 @@ public class PilotoComercialOperacaoB2BContractTests
     [Fact]
     public void Migracao_DeveConterTabelasObrigatoriasEIdempotencia()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_piloto_comercial_operacao_b2b.sql"));
         foreach (var tabela in new[]
         {
@@ -57,8 +57,8 @@ public class PilotoComercialOperacaoB2BContractTests
     [Fact]
     public void Servico_DeveConterRegrasDeterministicasAuditoriaEValidacoesCriticas()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var service = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "B2BCommercialOpsServices.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "B2BCommercialOpsServices.cs"));
         Assert.Contains("NPS baixo", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Uso acima de 80%", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("RegistrarAsync", service, StringComparison.OrdinalIgnoreCase);
@@ -83,13 +83,5 @@ public class PilotoComercialOperacaoB2BContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.TrimEnd('/') + "/" + template.TrimStart('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        return diretorio.FullName;
     }
 }

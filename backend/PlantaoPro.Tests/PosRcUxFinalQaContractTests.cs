@@ -51,7 +51,7 @@ public sealed class PosRcUxFinalQaContractTests
     [Fact]
     public void MenusNaoDevemApontarParaPadroesMvcProibidos()
     {
-        var files = Directory.EnumerateFiles(Path.Combine(Root, "backend", "PlantaoPro.Web"), "*.cshtml", SearchOption.AllDirectories)
+        var files = Directory.EnumerateFiles(RepositoryPathResolver.WebRoot, "*.cshtml", SearchOption.AllDirectories)
             .Concat(Directory.EnumerateFiles(Path.Combine(Root, "mobile"), "*.tsx", SearchOption.AllDirectories))
             .Where(f => !f.Contains("node_modules"));
         var pattern = new Regex("@" + "page|asp-" + "page|@model " + "dynamic|href=\"" + "#\"|alert" + "\\(|confirm" + "\\(|= " + "\\[\\]|return " + "\\[");

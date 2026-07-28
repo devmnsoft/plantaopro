@@ -4,7 +4,7 @@ namespace PlantaoPro.Tests;
 
 public sealed class V114ConsolidacaoProdutoContractTests
 {
-    private static readonly string Root = FindRoot();
+    private static readonly string Root = RepositoryPathResolver.RepoRoot;
     private static string Read(string relative) => File.ReadAllText(Path.Combine(Root, relative));
     private static bool Exists(string relative) => File.Exists(Path.Combine(Root, relative));
 
@@ -65,12 +65,5 @@ public sealed class V114ConsolidacaoProdutoContractTests
         Assert.DoesNotContain("= " + "[]", apiController);
         Assert.DoesNotContain("return " + "[", apiController);
         Assert.DoesNotContain("href=\"#\"", Read("backend/PlantaoPro.Web/Views/V114/Produto.cshtml"));
-    }
-
-    private static string FindRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "README.md"))) dir = dir.Parent;
-        return dir?.FullName ?? AppContext.BaseDirectory;
     }
 }

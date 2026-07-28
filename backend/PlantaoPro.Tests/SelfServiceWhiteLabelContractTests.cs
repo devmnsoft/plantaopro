@@ -46,7 +46,7 @@ public class SelfServiceWhiteLabelContractTests
     [Fact]
     public void MigracaoWhiteLabelSelfService_DeveCriarTabelasCriticasEUsarConstraintsSeguras()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_self_service_white_label.sql"));
 
         foreach (var tabela in new[] { "tenants", "tenant_white_label", "tenant_onboarding", "planos", "assinatura_uso", "cadastro_cliente_solicitacoes", "perfis", "permissoes", "white_label_assets", "lgpd_consentimentos" })
@@ -60,8 +60,8 @@ public class SelfServiceWhiteLabelContractTests
     [Fact]
     public void CadastroSelfService_DeveRegistrarTenantClienteAssinaturaAdminLgpdEOnboarding()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var service = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "SelfServiceServices.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "SelfServiceServices.cs"));
 
         Assert.Contains("insert into plantaopro.tenants", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("insert into plantaopro.clientes", service, StringComparison.OrdinalIgnoreCase);
@@ -97,13 +97,5 @@ public class SelfServiceWhiteLabelContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.TrimEnd('/') + "/" + template.TrimStart('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        return diretorio.FullName;
     }
 }

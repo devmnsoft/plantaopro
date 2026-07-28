@@ -5,7 +5,7 @@ public class HomologacaoFinalRuntimeContractTests
     [Fact]
     public void WorkflowDotnetCi_DeveDiagnosticarRestaurarBuildarETestarSolutionNet10()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var workflow = File.ReadAllText(Path.Combine(raiz, ".github", "workflows", "dotnet-ci.yml"));
 
         Assert.Contains("actions/checkout@v4", workflow, StringComparison.OrdinalIgnoreCase);
@@ -21,7 +21,7 @@ public class HomologacaoFinalRuntimeContractTests
     [Fact]
     public void SmokeApi_DeveValidarHealthSwaggerLoginEEndpointAutenticadoSemLogarToken()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var shell = File.ReadAllText(Path.Combine(raiz, "scripts", "smoke", "smoke-api.sh"));
         var powershell = File.ReadAllText(Path.Combine(raiz, "scripts", "smoke", "smoke-api.ps1"));
 
@@ -40,7 +40,7 @@ public class HomologacaoFinalRuntimeContractTests
     [Fact]
     public void DocumentacaoFinal_DeveRegistrarBloqueiosReaisEComandosReproduziveis()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var pendencias = File.ReadAllText(Path.Combine(raiz, "docs", "homologacao", "pendencias-reais-pos-auditoria.md"));
         var smokeWeb = File.ReadAllText(Path.Combine(raiz, "docs", "homologacao", "smoke-web.md"));
         var qaMobile = File.ReadAllText(Path.Combine(raiz, "docs", "mobile", "qa-mobile.md"));
@@ -50,21 +50,5 @@ public class HomologacaoFinalRuntimeContractTests
         Assert.Contains("psql não encontrado", pendencias, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("/Account/Login", smokeWeb, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("npm run start", qaMobile, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        }
-
-        return diretorio.FullName;
     }
 }

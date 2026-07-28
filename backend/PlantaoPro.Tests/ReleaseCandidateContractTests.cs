@@ -5,7 +5,7 @@ public class ReleaseCandidateContractTests
     [Fact]
     public void DocumentacaoHomologacao_DeveConterChecklistComercialObrigatorio()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-mvp-comercial.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -19,7 +19,7 @@ public class ReleaseCandidateContractTests
     [Fact]
     public void SqlSuporteMobile_DeveManterContratoTipoAutorUsadoPelaApi()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "backend", "sql", "20260602_suporte_mobile_rc.sql");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -32,7 +32,7 @@ public class ReleaseCandidateContractTests
     [Fact]
     public void DocumentacaoMobile_DeveListarEndpointsMvpObrigatorios()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "mobile", "mobile-api-endpoints.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -61,22 +61,6 @@ public class ReleaseCandidateContractTests
         {
             Assert.Contains(endpoint, conteudo, StringComparison.OrdinalIgnoreCase);
         }
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }
 
@@ -120,7 +104,7 @@ public class SaasCommercialContractTests
     [Fact]
     public void SqlMvpComercial_DeveUsarConstraintsSegurasEStatusDeFatura()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "backend", "sql", "20260603_mvp_comercial_avancado.sql");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -129,22 +113,6 @@ public class SaasCommercialContractTests
         Assert.Contains("EM_CONTESTACAO", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", conteudo, StringComparison.OrdinalIgnoreCase);
     }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
-    }
 }
 
 public class BetaComercialDocumentationContractTests
@@ -152,7 +120,7 @@ public class BetaComercialDocumentationContractTests
     [Fact]
     public void ChecklistBetaComercial_DeveCobrirOperacaoSaasMobileESeguranca()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-beta-comercial.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -167,7 +135,7 @@ public class BetaComercialDocumentationContractTests
     [Fact]
     public void SprintZeroMobile_DeveOrientarStackMobileSecureStoreETelasMvp()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "mobile", "sprint-zero-app.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -182,7 +150,7 @@ public class BetaComercialDocumentationContractTests
     [Fact]
     public void DeployGoLiveBeta_DeveConterSmokeTestRollbackEOperacaoAssistida()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "deploy", "checklist-go-live-beta.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -191,22 +159,6 @@ public class BetaComercialDocumentationContractTests
         Assert.Contains("/api/health", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Fluxo operacional médico", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("operação assistida", conteudo, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }
 
@@ -235,8 +187,8 @@ public class OperacaoAssistidaBetaContractTests
     [Fact]
     public void OperacaoAssistidaController_DevePersistirChecklistPadraoEValidarOcorrencia()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "OperacaoAssistidaController.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "OperacaoAssistidaController.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("GarantirChecklistPadraoAsync", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -250,7 +202,7 @@ public class OperacaoAssistidaBetaContractTests
     [Fact]
     public void SqlOperacaoAssistida_DeveCriarEstruturaIncrementalSegura()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "backend", "sql", "20260603_operacao_assistida_beta.sql");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -262,21 +214,5 @@ public class OperacaoAssistidaBetaContractTests
         Assert.Contains("ux_operacao_assistida_checklist_cliente_ordem", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ck_operacao_assistida_ocorrencias_tipo", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ADD CONSTRAINT IF NOT EXISTS", conteudo, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

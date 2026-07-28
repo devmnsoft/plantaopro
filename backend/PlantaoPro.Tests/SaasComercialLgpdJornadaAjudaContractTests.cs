@@ -8,7 +8,7 @@ public class SaasComercialLgpdJornadaAjudaContractTests
     [Fact]
     public void SqlComercialLgpdJornadaAjuda_DeveConterTabelasObrigatoriasEIndices()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_comercial_lgpd_jornada.sql"));
 
         var tabelas = new[]
@@ -107,10 +107,10 @@ public class SaasComercialLgpdJornadaAjudaContractTests
     [Fact]
     public void ManualInterativoWeb_DeveTerViewsComBuscaChecklistFeedbackELinks()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var index = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Ajuda", "Index.cshtml"));
-        var artigo = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Ajuda", "Artigo.cshtml"));
-        var controller = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "AjudaController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var index = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Ajuda", "Index.cshtml"));
+        var artigo = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Ajuda", "Artigo.cshtml"));
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "AjudaController.cs"));
 
         Assert.Contains("asp-action=\"Index\"", index, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Checklist", index, StringComparison.OrdinalIgnoreCase);
@@ -146,13 +146,5 @@ public class SaasComercialLgpdJornadaAjudaContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.Trim('/') + "/" + template.Trim('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        return diretorio.FullName;
     }
 }

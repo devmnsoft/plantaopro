@@ -29,7 +29,7 @@ public sealed class HomologacaoRuntimeRealContractTests
     [Fact]
     public void Web_DevePossuirCreateEditDetailsEAcoesCriticasDosModulosPrincipais()
     {
-        var controllers = string.Join("\n", Directory.EnumerateFiles(Path.Combine(Root, "backend", "PlantaoPro.Web", "Controllers"), "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
+        var controllers = string.Join("\n", Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
         foreach (var action in new[] { "Create()", "Edit(Guid id)", "Details(Guid id)", "AgendaDia", "CheckIn" })
         {
             Assert.Contains(action, controllers, StringComparison.OrdinalIgnoreCase);
@@ -45,7 +45,7 @@ public sealed class HomologacaoRuntimeRealContractTests
             Assert.Contains(route, menu, StringComparison.OrdinalIgnoreCase);
         }
 
-        var controllerClasses = Directory.EnumerateFiles(Path.Combine(Root, "backend", "PlantaoPro.Web", "Controllers"), "*.cs", SearchOption.AllDirectories)
+        var controllerClasses = Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), "*.cs", SearchOption.AllDirectories)
             .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"class\s+(\w+Controller)").Cast<Match>().Select(match => match.Groups[1].Value))
             .GroupBy(name => name)
             .Where(group => group.Count() > 1)

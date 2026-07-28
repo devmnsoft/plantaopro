@@ -4,8 +4,7 @@ namespace PlantaoPro.Tests;
 
 public class RuntimeRealDataContractTests
 {
-    private static readonly string Root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
-    private static string Read(params string[] parts) => File.ReadAllText(Path.Combine(new[] { Root }.Concat(parts).ToArray()));
+    private static string Read(params string[] parts) => RepositoryPathResolver.ReadRepositoryFile(parts);
 
     [Fact]
     public void Web_NaoDeveTerAgendamentosControllerDuplicado()
@@ -18,7 +17,9 @@ public class RuntimeRealDataContractTests
     [Fact]
     public void OperacaoInteligenteWeb_NaoUsaDemoComoCaminhoPadrao()
     {
-        var controller = Read("backend", "PlantaoPro.Web", "Controllers", "OperacaoInteligenteController.cs");
+        var controller = RepositoryPathResolver.ReadSourceContaining(
+            Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"),
+            "OperacaoInteligenteController");
         Assert.Contains("api/operacao-inteligente/resumo", controller);
         Assert.Contains("DemoMode", controller);
         Assert.DoesNotContain("var model = OperacaoInteligenteViewModel.Demo()", controller);
@@ -37,7 +38,9 @@ public class RuntimeRealDataContractTests
     [Fact]
     public void DashboardsPremium_PossuemEndpointsApiReais()
     {
-        var controller = Read("backend", "PlantaoPro.Api", "Controllers", "DashboardsController.cs");
+        var controller = RepositoryPathResolver.ReadSourceContaining(
+            Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers"),
+            "DashboardsController");
         foreach (var route in new[] { "admin-global", "admin-cliente", "coordenacao", "medico", "financeiro", "saude360" })
         {
             Assert.Contains("[HttpGet(\"" + route + "\")]", controller);

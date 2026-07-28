@@ -5,14 +5,17 @@ namespace PlantaoPro.Tests;
 
 public sealed class EvolucaoProdutoVendavelContractTests
 {
-    private static string Root => Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
-    private static string Read(string path) => File.ReadAllText(Path.Combine(Root, path));
+    private static string Read(string path) => RepositoryPathResolver.ReadRepositoryFile(path.Split('/'));
+    private static string ReadWebController(string typeName) => RepositoryPathResolver.ReadSourceContaining(
+        Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), typeName);
+    private static string ReadApiController(string typeName) => RepositoryPathResolver.ReadSourceContaining(
+        Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers"), typeName);
 
     [Fact]
     public void OperacaoInteligente_DeveTerControllerWebApiEndpointEServicoDeterministico()
     {
-        Assert.Contains("class OperacaoInteligenteController", Read("backend/PlantaoPro.Web/Controllers/OperacaoInteligenteController.cs"));
-        var api = Read("backend/PlantaoPro.Api/Controllers/OperacaoInteligenteController.cs");
+        Assert.Contains("class OperacaoInteligenteController", ReadWebController("OperacaoInteligenteController"));
+        var api = ReadApiController("OperacaoInteligenteController");
         Assert.Contains("api/operacao-inteligente", api);
         Assert.Contains("resumo", api);
         Assert.Contains("ApiResponse<OperacaoInteligenteResumoDto>", api);
@@ -36,7 +39,7 @@ public sealed class EvolucaoProdutoVendavelContractTests
     [Fact]
     public void AgendaVisual_Relatorios_DemoPremium_ESeeds_DeveExistir()
     {
-        var agenda = Read("backend/PlantaoPro.Web/Controllers/AgendamentosController.cs");
+        var agenda = ReadWebController("AgendamentosController");
         foreach (var action in new[] { "Calendario", "AgendaDia", "AgendaMedico", "CheckIn" }) Assert.Contains(action, agenda);
         var relatorios = Read("backend/PlantaoPro.Web/Views/Relatorios/Index.cshtml");
         Assert.Contains("Plantões por período", relatorios);

@@ -3,13 +3,14 @@
     var icon = Model?.Icon ?? "bi-inbox";
     var title = Model?.Title ?? "Nada por aqui";
     var description = Model?.Description ?? "Sem dados disponíveis no momento.";
-    var buttonText = Model?.ButtonText ?? string.Empty;
-    var buttonAction = Model?.ButtonAction ?? string.Empty;
-    var buttonController = Model?.ButtonController ?? string.Empty;
+    var buttonText = Model?.PrimaryActionText ?? string.Empty;
+    var buttonAction = Model?.PrimaryAction ?? string.Empty;
+    var buttonController = Model?.PrimaryController ?? string.Empty;
     var buttonDisabled = Model?.ButtonDisabled ?? true;
     var secondaryText = Model?.SecondaryActionText ?? string.Empty;
     var secondaryAction = Model?.SecondaryAction ?? string.Empty;
     var secondaryController = Model?.SecondaryController ?? string.Empty;
+    var secondaryDisabled = Model?.SecondaryActionDisabled ?? false;
 }
 <div class="empty-state text-center">
     <div class="empty-state-icon"><i class="bi @icon"></i></div>
@@ -28,7 +29,7 @@
     }
     @if (!string.IsNullOrWhiteSpace(secondaryText))
     {
-        if (!buttonDisabled && !string.IsNullOrWhiteSpace(secondaryAction) && !string.IsNullOrWhiteSpace(secondaryController))
+        if (!secondaryDisabled && !string.IsNullOrWhiteSpace(secondaryAction) && !string.IsNullOrWhiteSpace(secondaryController))
         {
             <a class="btn btn-outline-secondary ms-2" asp-action="@secondaryAction" asp-controller="@secondaryController">@secondaryText</a>
         }

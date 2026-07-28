@@ -7,15 +7,21 @@ public sealed record FeatureDefinition(
     string Domain,
     string Controller,
     string Action,
-    string Endpoint,
+    string Route,
+    string Icon,
     string Profile,
+    string Module,
     string Permission,
     string Plan,
     string Status,
     string Journey,
+    string JourneyStep,
+    string PrimaryAction,
+    string SecondaryAction,
     string CanonicalVersion,
     string LegacyAlias,
-    bool IsAvailable);
+    bool IsAvailable,
+    bool IsMobileVisible);
 
 public sealed record NavigationDefinition(
     string Profile,

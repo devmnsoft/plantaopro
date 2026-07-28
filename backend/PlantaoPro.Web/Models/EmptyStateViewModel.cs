@@ -32,6 +32,7 @@ public sealed class EmptyStateViewModel
     public string? SecondaryController { get; set; }
     public string? SecondaryAction { get; set; }
     public bool ButtonDisabled { get; set; }
+    public bool SecondaryActionDisabled { get; set; }
 
     public string? ButtonText
     {

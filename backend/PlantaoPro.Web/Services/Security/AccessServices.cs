@@ -108,6 +108,8 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = Normalize(module);
         var actionCode = Normalize(action);
 
+        if (moduleCode == "MEU_DIA") return true;
+
         if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
 
         var saude360Recepcao = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_DASHBOARD", "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES" };

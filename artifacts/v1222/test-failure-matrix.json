@@ -1,0 +1,332 @@
+{
+  "version": "1.22.2",
+  "baselineExpected": {
+    "total": 207,
+    "passed": 175,
+    "failed": 32
+  },
+  "captured": false,
+  "reason": "dotnet SDK unavailable",
+  "failures": [
+    {
+      "test": "baseline-failure-01",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-02",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-03",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-04",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-05",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-06",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-07",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-08",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-09",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-10",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-11",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-12",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-13",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-14",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-15",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-16",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-17",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-18",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-19",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-20",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-21",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-22",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-23",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-24",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-25",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-26",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-27",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-28",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-29",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-30",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-31",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    },
+    {
+      "test": "baseline-failure-32",
+      "file": "backend/PlantaoPro.Tests (TRX indisponível)",
+      "message": "Baseline informado pelo solicitante; SDK .NET ausente no ambiente de execução.",
+      "category": "ENVIRONMENT_CONFIGURATION",
+      "cause": "O executável dotnet não está instalado no contêiner.",
+      "correction": "Executar a suíte no runner .NET 8 canônico e substituir este identificador pela entrada nominal do TRX.",
+      "evidence": "dotnet: command not found",
+      "finalResult": "NOT_EXECUTED"
+    }
+  ]
+}

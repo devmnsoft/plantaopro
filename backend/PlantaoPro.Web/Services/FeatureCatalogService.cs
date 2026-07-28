@@ -15,15 +15,15 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
 {
     private static readonly IReadOnlyList<FeatureDefinition> FeatureItems = new List<FeatureDefinition>
     {
-        Feature("MEU_DIA", "Meu Dia", "Prioridades e próximos passos da operação.", "Operação", "Home", "Index", "Coordenação,Recepção,Triagem,Médico,Financeiro", "MEU_DIA.VER", "Operação diária", "Hoje"),
-        Feature("PLANTOES", "Plantões", "Planeje, publique e acompanhe a cobertura.", "Plantões", "Plantoes", "Index", "Coordenação", "PLANTOES.VER", "Plantão e cobertura", "Plantões"),
-        Feature("COBERTURA", "Central de Cobertura", "Encontre profissionais e acompanhe convites.", "Plantões", "CentralEscala", "Index", "Coordenação", "COBERTURA.VER", "Plantão e cobertura", "Cobertura"),
-        Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "Recepção", "PACIENTES.VER", "Atendimento", "Paciente"),
-        Feature("AGENDA", "Agenda", "Organize agendamentos e a chegada dos pacientes.", "Atendimento", "Agendamentos", "Index", "Recepção", "AGENDAMENTO.VER", "Atendimento", "Agendamento"),
-        Feature("CHECK_IN", "Check-in", "Registre a chegada e encaminhe o paciente.", "Atendimento", "Agendamentos", "CheckIn", "Recepção", "AGENDAMENTO.CHECKIN", "Atendimento", "Check-in"),
-        Feature("TRIAGEM", "Triagem", "Priorize e encaminhe atendimentos com segurança.", "Atendimento", "Triagem", "Index", "Triagem", "TRIAGEM.VER", "Atendimento", "Triagem"),
-        Feature("MINHA_AGENDA", "Minha Agenda", "Acompanhe plantões, convites e compromissos.", "Área médica", "MinhaAgenda", "Index", "Médico", "AGENDA_PROPRIA.VER", "Área médica", "Hoje"),
-        Feature("PAGAMENTOS", "Meus Pagamentos", "Consulte valores previstos e realizados.", "Área médica", "Pagamentos", "Index", "Médico,Financeiro", "PAGAMENTOS.VER", "Área médica", "Pagamento")
+        Feature("MEU_DIA", "Meu Dia", "Prioridades e próximos passos da operação.", "Operação", "MeuDia", "Index", "bi-house-heart", "Coordenação,Recepção,Triagem,Médico,Financeiro,Administrador Cliente,Administrador Global", "MEU_DIA", "MEU_DIA.VER", "Operação diária", "Hoje"),
+        Feature("PLANTOES", "Plantões", "Planeje, publique e acompanhe a cobertura.", "Plantões", "Plantoes", "Index", "bi-calendar-event", "Coordenação,Médico", "PLANTOES", "PLANTOES.VER", "Plantão e cobertura", "Plantões"),
+        Feature("COBERTURA", "Central de Cobertura", "Encontre profissionais e acompanhe convites.", "Plantões", "CentralEscala", "Index", "bi-people", "Coordenação", "CENTRAL_ESCALA", "COBERTURA.VER", "Plantão e cobertura", "Cobertura"),
+        Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "bi-people", "Recepção", "SAUDE360_PACIENTES", "PACIENTES.VER", "Atendimento", "Paciente"),
+        Feature("AGENDA", "Agenda", "Organize agendamentos e a chegada dos pacientes.", "Atendimento", "Agendamentos", "Index", "bi-calendar2", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.VER", "Atendimento", "Agendamento"),
+        Feature("CHECK_IN", "Check-in", "Registre a chegada e encaminhe o paciente.", "Atendimento", "Agendamentos", "CheckIn", "bi-person-check", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.CHECKIN", "Atendimento", "Check-in"),
+        Feature("TRIAGEM", "Triagem", "Priorize e encaminhe atendimentos com segurança.", "Atendimento", "Triagem", "Index", "bi-clipboard2-pulse", "Triagem", "SAUDE360_TRIAGEM", "TRIAGEM.VER", "Atendimento", "Triagem"),
+        Feature("MINHA_AGENDA", "Minhas Escalas", "Acompanhe plantões, convites e compromissos.", "Área médica", "MinhaAgenda", "Index", "bi-calendar-heart", "Médico", "MINHA_AGENDA", "AGENDA_PROPRIA.VER", "Área médica", "Escalas"),
+        Feature("PAGAMENTOS", "Meus Pagamentos", "Consulte valores previstos e realizados.", "Área médica", "Pagamentos", "Index", "bi-cash-coin", "Médico,Financeiro", "PAGAMENTOS", "PAGAMENTOS.VER", "Área médica", "Pagamento")
     };
 
     private static readonly IReadOnlyList<NavigationDefinition> NavigationItems = new List<NavigationDefinition>
@@ -35,8 +35,8 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
 
     private static readonly IReadOnlyList<PageDefinition> PageItems = FeatureItems
         .Select(feature => new PageDefinition(feature.Code, feature.Name, feature.Description,
-            new List<string> { "Início", feature.Domain, feature.Name }, feature.Journey,
-            PrimaryAction(feature.Code), "Voltar"))
+            new List<string> { "Início", feature.Domain, feature.Name }, feature.JourneyStep,
+            feature.PrimaryAction, "Voltar"))
         .ToList();
 
     public IReadOnlyList<FeatureDefinition> Features => FeatureItems;
@@ -53,8 +53,8 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
         return feature is null ? null : PageItems.FirstOrDefault(item => item.FeatureCode == feature.Code);
     }
 
-    private static FeatureDefinition Feature(string code, string name, string description, string domain, string controller, string action, string profile, string permission, string journey, string journeyStep) =>
-        new FeatureDefinition(code, name, description, domain, controller, action, $"/{controller}/{action}", profile, permission, "Essencial", "CANÔNICO", journey, "1.22.0", string.Empty, true);
+    private static FeatureDefinition Feature(string code, string name, string description, string domain, string controller, string action, string icon, string profile, string module, string permission, string journey, string journeyStep) =>
+        new FeatureDefinition(code, name, description, domain, controller, action, $"/{controller}/{action}", icon, profile, module, permission, "Essencial", "CANONICAL", journey, journeyStep, PrimaryAction(code), "Voltar", "1.22.2", string.Empty, true, true);
 
     private static NavigationDefinition Nav(string profile, string group, string label, string icon, string featureCode, int order) => new NavigationDefinition(profile, group, label, icon, featureCode, order);
 

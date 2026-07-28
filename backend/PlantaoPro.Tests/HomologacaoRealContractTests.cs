@@ -5,7 +5,7 @@ public class HomologacaoRealContractTests
     [Fact]
     public void Solution_DeveConterProjetoDeTestes()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var solution = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.sln"));
         Assert.Contains("PlantaoPro.Tests", solution, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PlantaoPro.Tests\\PlantaoPro.Tests.csproj", solution, StringComparison.OrdinalIgnoreCase);
@@ -14,8 +14,8 @@ public class HomologacaoRealContractTests
     [Fact]
     public void Views_NaoDevemUsarRecursosRazorPagesOuDynamicOuHrefVazio()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var views = Directory.EnumerateFiles(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views"), "*.cshtml", SearchOption.AllDirectories);
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var views = Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Views"), "*.cshtml", SearchOption.AllDirectories);
         foreach (var file in views)
         {
             var content = File.ReadAllText(file);
@@ -29,8 +29,8 @@ public class HomologacaoRealContractTests
     [Fact]
     public void JavascriptProprio_NaoDeveUsarAlertOuConfirmNativo()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivos = Directory.EnumerateFiles(Path.Combine(raiz, "backend", "PlantaoPro.Web", "wwwroot"), "*.js", SearchOption.AllDirectories)
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivos = Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot"), "*.js", SearchOption.AllDirectories)
             .Concat(Directory.EnumerateFiles(Path.Combine(raiz, "mobile", "PlantaoPro.App", "src"), "*.ts*", SearchOption.AllDirectories));
         foreach (var file in arquivos)
         {
@@ -44,7 +44,7 @@ public class HomologacaoRealContractTests
     [Fact]
     public void ArtefatosHomologacaoDevemExistir()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var required = new[]
         {
             Path.Combine(".github", "workflows", "dotnet-ci.yml"),
@@ -65,9 +65,9 @@ public class HomologacaoRealContractTests
     [Fact]
     public void HealthEndpointsDevemExistirSemExporConnectionString()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var program = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Program.cs"));
-        var health = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "HealthController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var program = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Program.cs"));
+        var health = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "HealthController.cs"));
         Assert.Contains("MapGet(\"/\"", program, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("[Route(\"api/health\")]", health, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("[HttpGet(\"db\")]", health, StringComparison.OrdinalIgnoreCase);
@@ -77,7 +77,7 @@ public class HomologacaoRealContractTests
     [Fact]
     public void AppsettingsNaoDevemConterSegredosReais()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var files = Directory.EnumerateFiles(Path.Combine(raiz, "backend"), "appsettings*.json", SearchOption.AllDirectories);
         foreach (var file in files)
         {
@@ -86,13 +86,5 @@ public class HomologacaoRealContractTests
             Assert.DoesNotContain("Password=postgres", content, StringComparison.OrdinalIgnoreCase);
             Assert.True(content.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase) || content.Contains("SUA_SENHA", StringComparison.OrdinalIgnoreCase) || content.Contains("ALTERAR_CHAVE", StringComparison.OrdinalIgnoreCase), $"Appsettings sem placeholder explícito: {file}");
         }
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada.");
-        return diretorio.FullName;
     }
 }

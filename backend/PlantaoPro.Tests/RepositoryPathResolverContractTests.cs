@@ -5,7 +5,7 @@ public sealed class RepositoryPathResolverContractTests
     [Fact]
     public void Resolver_DeveExporTodosOsCaminhosCanonicosDoRepositorio()
     {
-        Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.RepoRoot, "backend", "PlantaoPro.sln")));
+        Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.sln")));
         Assert.EndsWith("backend", RepositoryPathResolver.BackendRoot.Replace('\\', '/'));
         Assert.EndsWith("backend/PlantaoPro.Api", RepositoryPathResolver.ApiRoot.Replace('\\', '/'));
         Assert.EndsWith("backend/PlantaoPro.Web", RepositoryPathResolver.WebRoot.Replace('\\', '/'));

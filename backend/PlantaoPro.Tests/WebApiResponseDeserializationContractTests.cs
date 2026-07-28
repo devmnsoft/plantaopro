@@ -5,8 +5,8 @@ public class WebApiResponseDeserializationContractTests
     [Fact]
     public void BaseWebController_DeveDesserializarEnvelopeApiResponseTipadoERegistrarFalhas()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "BaseWebController.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "BaseWebController.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("JsonSerializer.Deserialize<ApiResponse<T>>", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -22,8 +22,8 @@ public class WebApiResponseDeserializationContractTests
     [Fact]
     public void ComunicacaoController_DeveUsarLeitoresPadronizadosDaBaseParaApiResponse()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "ComunicacaoController.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "ComunicacaoController.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("ReadApiResponse<IEnumerable<ConversaResumoDto>>", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -33,21 +33,5 @@ public class WebApiResponseDeserializationContractTests
         Assert.Contains("SendApiWithoutResponseAsync", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("JsonSerializer.Deserialize<ApiResponse", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("ReadAsStringAsync", conteudo, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

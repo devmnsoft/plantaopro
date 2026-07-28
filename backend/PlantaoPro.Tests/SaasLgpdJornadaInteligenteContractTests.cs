@@ -59,7 +59,7 @@ public class SaasLgpdJornadaInteligenteContractTests
     [Fact]
     public void SqlDaRodadaSaasLgpdJornadaManual_DeveConterTabelasObrigatoriasEConstraintsIdempotentes()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_lgpd_jornada_inteligente.sql"));
 
         foreach (var tabela in new[]
@@ -106,7 +106,7 @@ public class SaasLgpdJornadaInteligenteContractTests
     [Fact]
     public void SqlExatoDaRodadaSolicitada_DeveConterTodasAsFamiliasEColunaTipoDaTarefa()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql"));
 
         foreach (var tabela in new[]
@@ -168,9 +168,9 @@ public class SaasLgpdJornadaInteligenteContractTests
     [Fact]
     public void JornadaEGuardSaas_DevemRegistrarChecklistAlertasEBloqueiosCriticos()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var jornada = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "SaasEvolutionServices.cs"));
-        var guard = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "TenantServices.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var jornada = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "SaasEvolutionServices.cs"));
+        var guard = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "TenantServices.cs"));
 
         Assert.Contains("Abrir checklist de operação assistida", jornada, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Validar primeiros plantões em operação assistida", jornada, StringComparison.OrdinalIgnoreCase);
@@ -198,17 +198,5 @@ public class SaasLgpdJornadaInteligenteContractTests
             }
         }
         return rotas;
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, ".git")))
-        {
-            dir = dir.Parent;
-        }
-
-        Assert.NotNull(dir);
-        return dir!.FullName;
     }
 }

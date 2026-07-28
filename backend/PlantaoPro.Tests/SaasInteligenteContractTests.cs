@@ -83,7 +83,7 @@ public class SaasInteligenteContractTests
     [Fact]
     public void SqlSaasInteligente_DeveSerIncrementalIdempotenteESemConstraintIfNotExists()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var sql = File.ReadAllText(Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_inteligente.sql"));
 
         foreach (var tabela in new[]
@@ -114,7 +114,7 @@ public class SaasInteligenteContractTests
     [Fact]
     public void DocumentacaoSaas_DeveCobrirHomologacaoDemoEOperacao()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivos = new[]
         {
             Path.Combine(raiz, "docs", "saas", "visao-geral-saas.md"),
@@ -141,13 +141,13 @@ public class SaasInteligenteContractTests
     [Fact]
     public void JornadaWeb_DeveTerViewsFuncionaisSemPlaceholdersDeEndpoint()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivos = new[]
         {
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "JornadaClientes", "Index.cshtml"),
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "JornadaClientes", "Details.cshtml"),
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Clientes", "Inteligencia.cshtml"),
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Clientes", "Jornada.cshtml")
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "JornadaClientes", "Index.cshtml"),
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "JornadaClientes", "Details.cshtml"),
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Clientes", "Inteligencia.cshtml"),
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Clientes", "Jornada.cshtml")
         };
 
         foreach (var arquivo in arquivos)
@@ -182,13 +182,5 @@ public class SaasInteligenteContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.Trim('/') + "/" + template.Trim('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        return diretorio.FullName;
     }
 }

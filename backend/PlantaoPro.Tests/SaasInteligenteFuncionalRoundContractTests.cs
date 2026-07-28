@@ -9,7 +9,7 @@ public class SaasInteligenteFuncionalRoundContractTests
     [Fact]
     public void SqlFuncional_DeveConsolidarTabelasERegrasIdempotentes()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var caminho = Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_inteligente_funcional.sql");
         Assert.True(File.Exists(caminho), "Migração funcional obrigatória ausente.");
         var sql = File.ReadAllText(caminho);
@@ -45,9 +45,9 @@ public class SaasInteligenteFuncionalRoundContractTests
         var rotas = ObterRotasApi(typeof(SaasDashboardController));
         Assert.Contains("api/saas-dashboard/alertas", rotas);
 
-        var service = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "backend", "PlantaoPro.Api", "SaasIntelligenceService.cs"));
-        var controller = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "backend", "PlantaoPro.Api", "Controllers", "SaasDashboardController.cs"));
-        var web = File.ReadAllText(Path.Combine(EncontrarRaizRepositorio(), "backend", "PlantaoPro.Web", "Controllers", "CustomerSuccessController.cs"));
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "SaasIntelligenceService.cs"));
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "SaasDashboardController.cs"));
+        var web = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "CustomerSuccessController.cs"));
 
         Assert.Contains("ListarAlertasAbertosAsync", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ListarAlertasAbertosAsync", controller, StringComparison.OrdinalIgnoreCase);
@@ -59,7 +59,7 @@ public class SaasInteligenteFuncionalRoundContractTests
     [Fact]
     public void SqlAuditavel_DeveExistirComNomeDaRodadaEConterTodasAsAreas()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var caminho = Path.Combine(raiz, "database", "migrations", "2026_plantao_pro_saas_inteligente_auditavel.sql");
         Assert.True(File.Exists(caminho), "Migração da rodada SaaS inteligente auditável ausente.");
         var sql = File.ReadAllText(caminho);
@@ -93,9 +93,9 @@ public class SaasInteligenteFuncionalRoundContractTests
     [Fact]
     public void FluxosOperacionais_DeveBloquearBiERelatoriosAvancadosPorPlano()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var biController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "BiController.cs"));
-        var relatoriosController = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "RelatoriosSaasController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var biController = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "BiController.cs"));
+        var relatoriosController = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "RelatoriosSaasController.cs"));
 
         Assert.Contains("PodeUsarBIAsync", biController, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ValidarPlanoBiAsync", biController, StringComparison.OrdinalIgnoreCase);
@@ -128,13 +128,5 @@ public class SaasInteligenteFuncionalRoundContractTests
     {
         if (string.IsNullOrWhiteSpace(template)) return prefixo.Trim('/');
         return (prefixo.Trim('/') + "/" + template.Trim('/')).Trim('/');
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git"))) diretorio = diretorio.Parent;
-        if (diretorio is null) throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        return diretorio.FullName;
     }
 }

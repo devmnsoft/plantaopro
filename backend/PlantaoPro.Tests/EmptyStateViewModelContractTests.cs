@@ -35,8 +35,8 @@ public sealed class EmptyStateViewModelContractTests
     public void Empty_state_partial_supports_primary_and_secondary_actions()
     {
         var root = RepositoryPathResolver.ResolveRoot();
-        var model = File.ReadAllText(Path.Combine(root, "backend", "PlantaoPro.Web", "Models", "EmptyStateViewModel.cs"));
-        var partial = File.ReadAllText(Path.Combine(root, "backend", "PlantaoPro.Web", "Views", "Shared", "_EmptyState.cshtml"));
+        var model = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Models", "EmptyStateViewModel.cs"));
+        var partial = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Shared", "_EmptyState.cshtml"));
 
         Assert.Contains("PrimaryActionText", model);
         Assert.Contains("PrimaryController", model);

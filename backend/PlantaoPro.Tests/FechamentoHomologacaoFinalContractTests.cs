@@ -5,9 +5,9 @@ public class FechamentoHomologacaoFinalContractTests
     [Fact]
     public void LgpdWeb_DeveTerTelaDedicadaDeMinhaPrivacidadeETratamentoSeguroDeExportacao()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var controller = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "LgpdController.cs"));
-        var view = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "Lgpd", "MinhaPrivacidade.cshtml"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "LgpdController.cs"));
+        var view = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Lgpd", "MinhaPrivacidade.cshtml"));
 
         Assert.Contains("public IActionResult MinhaPrivacidade() => View();", controller, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Erro ao solicitar exportação LGPD via Web", controller, StringComparison.OrdinalIgnoreCase);
@@ -20,8 +20,8 @@ public class FechamentoHomologacaoFinalContractTests
     [Fact]
     public void Observabilidade_DeveLimitarConsultasEMapearStringsComCoalesce()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var controller = File.ReadAllText(Path.Combine(raiz, "backend", "PlantaoPro.Api", "Controllers", "ObservabilidadeController.cs"));
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "ObservabilidadeController.cs"));
 
         Assert.Contains("NormalizarLimit", controller, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Math.Clamp(limit, 1, 100)", controller, StringComparison.OrdinalIgnoreCase);
@@ -33,7 +33,7 @@ public class FechamentoHomologacaoFinalContractTests
     [Fact]
     public void DocumentacaoFinal_DeveConterChecklistsDeHomologacaoEDeploy()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var homologacao = File.ReadAllText(Path.Combine(raiz, "docs", "homologacao", "checklist-homologacao-final.md"));
         var deploy = File.ReadAllText(Path.Combine(raiz, "docs", "deploy", "checklist-deploy-homologacao.md"));
 
@@ -43,21 +43,5 @@ public class FechamentoHomologacaoFinalContractTests
         Assert.Contains("Mobile/API", homologacao, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ConnectionStrings:Default", deploy, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Plano de rollback", deploy, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

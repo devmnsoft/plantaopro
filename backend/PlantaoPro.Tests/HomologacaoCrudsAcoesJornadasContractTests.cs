@@ -12,7 +12,7 @@ public sealed class HomologacaoCrudsAcoesJornadasContractTests
     public void ControllersWebPrincipais_DevemExistirComActionsDeCrudERotasDeMenu()
     {
         var saude = Read("backend/PlantaoPro.Web/Controllers/Saude360WebControllers.cs");
-        var controllers = string.Join("\n", Directory.EnumerateFiles(Path.Combine(Root, "backend", "PlantaoPro.Web", "Controllers"), "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
+        var controllers = string.Join("\n", Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), "*.cs", SearchOption.AllDirectories).Select(File.ReadAllText));
         foreach (var controller in new[] { "DashboardController", "PacientesController", "AgendamentosController", "PainelChamadaController", "TriagemController", "ConsultasController", "PrescricoesController", "CidController", "ClinicaFinanceiroController", "ConveniosController", "PlanosSaudeController" })
             Assert.Contains("class " + controller, controllers);
 
@@ -44,7 +44,7 @@ public sealed class HomologacaoCrudsAcoesJornadasContractTests
     [Fact]
     public void Repositorio_NaoDeveConterPadroesProibidosSegredosOuControllerDuplicado()
     {
-        var webControllers = Directory.EnumerateFiles(Path.Combine(Root, "backend", "PlantaoPro.Web", "Controllers"), "*.cs", SearchOption.AllDirectories)
+        var webControllers = Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), "*.cs", SearchOption.AllDirectories)
             .Select(File.ReadAllText).ToArray();
         Assert.Single(webControllers.SelectMany(c => Regex.Matches(c, "class AgendamentosController").Cast<Match>()));
 

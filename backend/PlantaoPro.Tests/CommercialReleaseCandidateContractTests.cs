@@ -21,8 +21,8 @@ public class CommercialReleaseCandidateContractTests
     [Fact]
     public void ConversaoComercial_DeveExigirPropostaAprovadaEIdentificarPagamentoSandboxManual()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Api", "CommercialDemoService.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.ApiRoot, "CommercialDemoService.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("Apenas propostas aprovadas podem ser convertidas em cliente", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -49,21 +49,5 @@ public class CommercialReleaseCandidateContractTests
         Assert.Contains("FaturasDemo", propriedades);
         Assert.Contains("PropostasDemo", propriedades);
         Assert.Contains("ParceirosDemo", propriedades);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

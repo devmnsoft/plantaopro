@@ -5,8 +5,8 @@ public class BetaFechamentoRealContractTests
     [Fact]
     public void BaseWebController_DeveRegistrarAmostraEmFalhasDeDesserializacaoPaginada()
     {
-        var raiz = EncontrarRaizRepositorio();
-        var arquivo = Path.Combine(raiz, "backend", "PlantaoPro.Web", "Controllers", "BaseWebController.cs");
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var arquivo = Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "BaseWebController.cs");
         var conteudo = File.ReadAllText(arquivo);
 
         Assert.Contains("CreateResponseSample", conteudo, StringComparison.OrdinalIgnoreCase);
@@ -19,12 +19,12 @@ public class BetaFechamentoRealContractTests
     [Fact]
     public void OperacaoAssistida_DeveUsarAjaxSeguroEmAcoesCriticasDaUx()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivos = new[]
         {
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "OperacaoAssistida", "Checklist.cshtml"),
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "OperacaoAssistida", "Ocorrencias.cshtml"),
-            Path.Combine(raiz, "backend", "PlantaoPro.Web", "Views", "OperacaoAssistida", "Treinamentos.cshtml")
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "OperacaoAssistida", "Checklist.cshtml"),
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "OperacaoAssistida", "Ocorrencias.cshtml"),
+            Path.Combine(RepositoryPathResolver.WebRoot, "Views", "OperacaoAssistida", "Treinamentos.cshtml")
         };
 
         foreach (var arquivo in arquivos)
@@ -41,7 +41,7 @@ public class BetaFechamentoRealContractTests
     [Fact]
     public void RelatorioFechamentoReal_DeveRegistrarValidacoesPendenciasEPrLimpo()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-fechamento-real-beta-2026-06-06.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -52,21 +52,5 @@ public class BetaFechamentoRealContractTests
         Assert.Contains("dotnet não disponível", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Pendências reais", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("PR limpo", conteudo, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

@@ -71,7 +71,7 @@ public class BetaControladaContractTests
     [Fact]
     public void ChecklistBeta_DeveConterRoteiroManualFinalComPassosCriticos()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "checklist-beta-comercial.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -86,7 +86,7 @@ public class BetaControladaContractTests
     [Fact]
     public void RelatorioEstabilizacao_DeveRegistrarBranchBackupBuildEPendencias()
     {
-        var raiz = EncontrarRaizRepositorio();
+        var raiz = RepositoryPathResolver.RepoRoot;
         var arquivo = Path.Combine(raiz, "docs", "homologacao", "relatorio-estabilizacao-plantao-pro-2026-06-04.md");
         var conteudo = File.ReadAllText(arquivo);
 
@@ -95,21 +95,5 @@ public class BetaControladaContractTests
         Assert.Contains("dotnet: command not found", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("/api/health", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Swagger", conteudo, StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string EncontrarRaizRepositorio()
-    {
-        var diretorio = new DirectoryInfo(AppContext.BaseDirectory);
-        while (diretorio is not null && !Directory.Exists(Path.Combine(diretorio.FullName, ".git")))
-        {
-            diretorio = diretorio.Parent;
-        }
-
-        if (diretorio is null)
-        {
-            throw new InvalidOperationException("Raiz do repositório não encontrada para testes de contrato.");
-        }
-
-        return diretorio.FullName;
     }
 }

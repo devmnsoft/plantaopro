@@ -12,6 +12,6 @@
     "status": "not-executed",
     "reason": "O SDK dotnet não está instalado no ambiente de execução; portanto não há falhas TRX observadas que possam ser classificadas com veracidade.",
     "command": "dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release --logger trx;LogFileName=tests-baseline.trx --logger console;verbosity=detailed",
-    "evidence": "artifacts/tests-baseline-environment.log"
+    "evidence": "artifacts/v1212/tests-baseline-environment.log"
   }
 }

@@ -44,8 +44,8 @@ public sealed class AgendamentosController : ControllerBase
     public AgendamentosController(Saude360ClinicalService service) { this.service = service; }
     [HttpGet] public async Task<IActionResult> Get([FromQuery] string? status, [FromQuery] Guid? pacienteId) { var r = await service.ListarAsync("agendamentos", status, pacienteId); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("agendamentos", id); return StatusCode(r.StatusCode, r); }
-    [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("agendamentos", request); return StatusCode(r.StatusCode, r); }
-    [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("agendamentos", id, request); return StatusCode(r.StatusCode, r); }
+    [HttpPost] public async Task<IActionResult> Post([FromBody] AgendamentoRequest request) { var r = await service.CriarAsync("agendamentos", request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
+    [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] AgendamentoRequest request) { var r = await service.AtualizarAsync("agendamentos", id, request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/confirmar")] public async Task<IActionResult> Confirmar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "confirmar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/checkin")] public async Task<IActionResult> Checkin(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "checkin", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
@@ -204,8 +204,8 @@ public sealed class PacientesController : ControllerBase
     public PacientesController(Saude360ClinicalService service) { this.service = service; }
     [HttpGet] public async Task<IActionResult> Get([FromQuery] string? status) { var r = await service.ListarAsync("pacientes", status); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("pacientes", id); return StatusCode(r.StatusCode, r); }
-    [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("pacientes", request); return StatusCode(r.StatusCode, r); }
-    [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("pacientes", id, request); return StatusCode(r.StatusCode, r); }
+    [HttpPost] public async Task<IActionResult> Post([FromBody] PacienteRequest request) { var r = await service.CriarAsync("pacientes", request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
+    [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] PacienteRequest request) { var r = await service.AtualizarAsync("pacientes", id, request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/inativar")] public async Task<IActionResult> Inativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("pacientes", id, "inativar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/reativar")] public async Task<IActionResult> Reativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("pacientes", id, "reativar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}/historico")] public async Task<IActionResult> Historico(Guid id) { var r = await service.ListarAsync("pacienteHistorico", pacienteId: id); return StatusCode(r.StatusCode, r); }

@@ -42,10 +42,47 @@ public static class RepositoryPathResolver
         };
     }
 
-    private static bool IsGeneratedPath(string path) =>
-        path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-            .Any(part => part.Equals("bin", StringComparison.OrdinalIgnoreCase) ||
-                         part.Equals("obj", StringComparison.OrdinalIgnoreCase));
+    public static IEnumerable<string> EnumerateRepositoryFiles(
+        IEnumerable<string> roots,
+        string searchPattern)
+    {
+        ArgumentNullException.ThrowIfNull(roots);
+        ArgumentException.ThrowIfNullOrWhiteSpace(searchPattern);
+
+        return roots
+            .Where(Directory.Exists)
+            .SelectMany(root => Directory.EnumerateFiles(root, searchPattern, SearchOption.AllDirectories))
+            .Where(path => !IsGeneratedOrIgnoredPath(path));
+    }
+
+    public static IEnumerable<string> EnumerateSourceFiles(string root) =>
+        EnumerateRepositoryFiles(new[] { root }, "*.*")
+            .Where(path => SourceExtensions.Contains(Path.GetExtension(path)));
+
+    public static bool IsGeneratedOrIgnoredPath(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        return parts.Any(part => IgnoredDirectories.Contains(part)) ||
+               IgnoredExtensions.Contains(Path.GetExtension(path));
+    }
+
+    private static readonly HashSet<string> SourceExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".cs", ".cshtml", ".js", ".ts", ".tsx", ".json", ".sql", ".yml", ".yaml", ".md", ".css", ".html"
+    };
+
+    private static readonly HashSet<string> IgnoredExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".dll", ".exe", ".pdb", ".so", ".dylib", ".zip", ".gz", ".png", ".jpg", ".jpeg", ".gif", ".ico", ".woff", ".woff2"
+    };
+
+    private static readonly HashSet<string> IgnoredDirectories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "bin", "obj", "node_modules", ".git", "artifacts", ".vs", ".idea", "TestResults", "tmp", "temp"
+    };
+
+    private static bool IsGeneratedPath(string path) => IsGeneratedOrIgnoredPath(path);
 
     private static string FindRepoRoot()
     {

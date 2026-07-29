@@ -1,5 +1,4 @@
-@model PlantaoPro.Web.Models.Saude360FormViewModel
-@{
-    Layout = "_Layout";
-}
-@await Html.PartialAsync("~/Views/Saude360/Formulario.cshtml", Model)
+@model PlantaoPro.Web.Models.PacienteFormViewModel
+@{ ViewData["Title"] = "Editar paciente"; }
+<h1>Editar paciente</h1>
+@await Html.PartialAsync("_Form", Model)

@@ -94,6 +94,23 @@ public sealed class Saude360WebService
         }
     }
 
+    public async Task<(bool Success, string Message)> EnviarRecepcaoAsync<T>(string token, string endpoint, T form, bool update)
+    {
+        try
+        {
+            var client = CreateClient(token);
+            var payload = new StringContent(JsonSerializer.Serialize(form, JsonOptions), Encoding.UTF8, "application/json");
+            var response = update ? await client.PutAsync(endpoint, payload) : await client.PostAsync(endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+            return (response.IsSuccessStatusCode, ApiErrorPresenter.ToFriendlyMessage(content));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha na operação de recepção {Operation}", typeof(T).Name);
+            return (false, "Não foi possível concluir a operação. Tente novamente.");
+        }
+    }
+
     private static (IEnumerable<Saude360RegistroViewModel> Registros, string Message) ParseRegistros(string content)
     {
         using var document = JsonDocument.Parse(content);

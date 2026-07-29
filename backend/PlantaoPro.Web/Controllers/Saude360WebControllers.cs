@@ -107,8 +107,28 @@ public sealed class AgendamentosController : Saude360WebControllerBase
 {
     public AgendamentosController(IHttpClientFactory f, ILogger<AgendamentosController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return AgendaPremiumAsync("Agenda clínica premium", "api/agendamentos"); }
-    public IActionResult Create() { return Formulario("Novo agendamento", "api/agendamentos"); }
-    public IActionResult Edit(Guid id) { return Formulario("Editar agendamento", "api/agendamentos/" + id, id); }
+    public IActionResult Create() { return View(new AgendamentoFormViewModel()); }
+    public IActionResult Edit(Guid id) { return View(new AgendamentoFormViewModel { Id = id }); }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Save(AgendamentoFormViewModel form)
+    {
+        if (!ModelState.IsValid) return View(form.Id.HasValue ? "Edit" : "Create", form);
+        try
+        {
+            var token = GetJwtToken();
+            if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
+            var endpoint = form.Id.HasValue ? $"api/agendamentos/{form.Id.Value}" : "api/agendamentos";
+            var result = await service.EnviarRecepcaoAsync(token, endpoint, form, form.Id.HasValue);
+            if (!result.Success) { ModelState.AddModelError(string.Empty, result.Message); return View(form.Id.HasValue ? "Edit" : "Create", form); }
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Falha ao salvar agendamento {AgendamentoId}", form.Id);
+            ModelState.AddModelError(string.Empty, "Não foi possível salvar o agendamento.");
+            return View(form.Id.HasValue ? "Edit" : "Create", form);
+        }
+    }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do agendamento", "Agendamento", "Dados operacionais e status do agendamento.", "api/agendamentos/" + id, Links(Link("Agenda", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Calendario() { return AgendaPremiumAsync("Calendário clínico", "api/agendamentos/calendario"); }
     public Task<IActionResult> AgendaDia() { return AgendaPremiumAsync("Agenda do dia", "api/agendamentos?periodo=hoje"); }
@@ -246,8 +266,28 @@ public sealed class PacientesController : Saude360WebControllerBase
 {
     public PacientesController(IHttpClientFactory f, ILogger<PacientesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Pacientes", "Pacientes", "Cadastro assistencial de pacientes por tenant para agendamento, triagem, consulta e financeiro.", "api/pacientes", Links(Link("Novo", "Create", "bi-person-plus"))); }
-    public IActionResult Create() { return Formulario("Novo paciente", "api/pacientes"); }
-    public IActionResult Edit(Guid id) { return Formulario("Editar paciente", "api/pacientes/" + id, id); }
+    public IActionResult Create() { return View(new PacienteFormViewModel()); }
+    public IActionResult Edit(Guid id) { return View(new PacienteFormViewModel { Id = id }); }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Save(PacienteFormViewModel form)
+    {
+        if (!ModelState.IsValid) return View(form.Id.HasValue ? "Edit" : "Create", form);
+        try
+        {
+            var token = GetJwtToken();
+            if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
+            var endpoint = form.Id.HasValue ? $"api/pacientes/{form.Id.Value}" : "api/pacientes";
+            var result = await service.EnviarRecepcaoAsync(token, endpoint, form, form.Id.HasValue);
+            if (!result.Success) { ModelState.AddModelError(string.Empty, result.Message); return View(form.Id.HasValue ? "Edit" : "Create", form); }
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Falha ao salvar cadastro de paciente {PacienteId}", form.Id);
+            ModelState.AddModelError(string.Empty, "Não foi possível salvar o paciente.");
+            return View(form.Id.HasValue ? "Edit" : "Create", form);
+        }
+    }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do paciente", "Pacientes", "Identificação operacional do paciente com dados mínimos.", "api/pacientes/" + id, Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Historico(Guid id) { return ModuloAsync("Histórico do paciente", "Pacientes", "Histórico administrativo e assistencial auditado.", "api/pacientes/" + id + "/historico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> ResumoClinico(Guid id) { return ModuloAsync("Resumo clínico", "Pacientes", "Resumo clínico com auditoria de acesso e controle VerDadosSensiveis.", "api/pacientes/" + id + "/resumo-clinico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }

@@ -62,14 +62,20 @@ public sealed class EvolucaoProdutoVendavelContractTests
     [Fact]
     public void Repositorio_NaoDeveConterPadroesProibidosOuSegredosObvios()
     {
-        var files = Directory.EnumerateFiles(Path.Combine(Root, "backend"), "*.*", SearchOption.AllDirectories)
-            .Concat(Directory.EnumerateFiles(Path.Combine(Root, "mobile"), "*.*", SearchOption.AllDirectories))
+        var files = Directory.EnumerateFiles(RepositoryPathResolver.BackendRoot, "*.*", SearchOption.AllDirectories)
+            .Concat(Directory.EnumerateFiles(
+                Path.Combine(RepositoryPathResolver.RepoRoot, "mobile"),
+                "*.*",
+                SearchOption.AllDirectories))
             .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar) && !f.Contains("node_modules"));
         var pattern = string.Join("|", "@" + "page", "asp-" + "page", "@model " + "dynamic", "href=\"" + "#\"", "alert" + "\\(", "confirm" + "\\(", "= " + "\\[\\]", "return " + "\\[\\]");
         var forbidden = new Regex(pattern, RegexOptions.Compiled);
         foreach (var file in files)
             Assert.False(forbidden.IsMatch(File.ReadAllText(file)), file);
-        foreach (var appsettings in Directory.EnumerateFiles(Path.Combine(Root, "backend"), "appsettings*.json", SearchOption.AllDirectories))
+        foreach (var appsettings in Directory.EnumerateFiles(
+                     RepositoryPathResolver.BackendRoot,
+                     "appsettings*.json",
+                     SearchOption.AllDirectories))
         {
             var content = File.ReadAllText(appsettings);
             Assert.DoesNotContain("senha-real", content, StringComparison.OrdinalIgnoreCase);

@@ -29,10 +29,14 @@ jobs:
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build
+        id: build
         run: |
           set -o pipefail
-          mkdir -p artifacts
-          dotnet build backend/PlantaoPro.sln -c Release --no-restore 2>&1 | tee artifacts/build.log
+          mkdir -p artifacts/TestResults
+          dotnet build backend/PlantaoPro.sln -c Release --no-restore 2>&1 | tee artifacts/TestResults/build-output.log
+      - name: Summarize build failure
+        if: failure() && steps.build.outcome == 'failure'
+        run: python3 scripts/generate-build-failure-summary.py artifacts/TestResults/build-output.log --output artifacts/TestResults/build-failure-summary.json
       - name: Test
         run: |
           mkdir -p artifacts/TestResults
@@ -40,10 +44,13 @@ jobs:
       - name: Generate real test failure matrix
         if: always()
         run: |
-          test -s artifacts/TestResults/tests.trx
-          python3 scripts/generate-test-failure-matrix.py \
-            artifacts/TestResults/tests.trx \
-            --output artifacts/TestResults/test-failure-matrix.json
+          if test -s artifacts/TestResults/tests.trx; then
+            python3 scripts/generate-test-failure-matrix.py \
+              artifacts/TestResults/tests.trx \
+              --output artifacts/TestResults/test-failure-matrix.json
+          else
+            echo 'TRX não gerado porque build/testes não executaram; consulte a evidência da etapa anterior.'
+          fi
       - name: Validate TRX evidence
         run: |
           test -s artifacts/TestResults/tests.trx
@@ -54,7 +61,8 @@ jobs:
         with:
           name: build-test-evidence
           path: |
-            artifacts/build.log
+            artifacts/TestResults/build-output.log
+            artifacts/TestResults/build-failure-summary.json
             artifacts/TestResults/tests.trx
             artifacts/TestResults/test-failure-matrix.json
 
@@ -161,7 +169,7 @@ jobs:
         run: |
           set -o pipefail
           mkdir -p artifacts
-          psql -v ON_ERROR_STOP=1 -c "create schema if not exists plantaopro; create extension if not exists pgcrypto; create table if not exists plantaopro.perfis(id uuid primary key default gen_random_uuid(), nome text, reg_status char(1) default 'A'); create table if not exists plantaopro.usuarios(id uuid primary key default gen_random_uuid(), nome text, email text, senha_hash text, reg_status char(1) default 'A'); create table if not exists plantaopro.usuarios_perfis(id uuid primary key default gen_random_uuid(), usuario_id uuid, perfil_id uuid, reg_status char(1) default 'A'); create table if not exists plantaopro.permissoes(id uuid primary key default gen_random_uuid(), nome text, modulo text, acao text, reg_status char(1) default 'A'); create table if not exists plantaopro.perfis_permissoes(id uuid primary key default gen_random_uuid(), perfil_id uuid, permissao_id uuid, reg_status char(1) default 'A'); create table if not exists plantaopro.planos(id uuid primary key default gen_random_uuid(), nome text); create table if not exists plantaopro.clientes(id uuid primary key default gen_random_uuid(), nome_fantasia text); create table if not exists plantaopro.assinaturas(id uuid primary key default gen_random_uuid(), cliente_id uuid, plano_id uuid);" 2>&1 | tee artifacts/database-legacy-compatibility.log
+          psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-supported.sql 2>&1 | tee artifacts/database-legacy-compatibility.log
           psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql 2>&1 | tee -a artifacts/database-legacy-compatibility.log
       - if: always()
         uses: actions/upload-artifact@v4
@@ -195,7 +203,7 @@ jobs:
           createdb plantaopro_complete
           PGDATABASE=plantaopro_complete psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
           createdb plantaopro_upgrade
-          PGDATABASE=plantaopro_upgrade psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-v118.sql
+          PGDATABASE=plantaopro_upgrade psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-supported.sql
           PGDATABASE=plantaopro_upgrade bash scripts/apply-canonical-migrations.sh
           pg_dump --schema-only --no-owner --no-acl plantaopro_complete > "$EVIDENCE_DIR/schema-complete.sql"
           pg_dump --schema-only --no-owner --no-acl plantaopro_upgrade > "$EVIDENCE_DIR/schema-upgrade.sql"

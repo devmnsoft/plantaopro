@@ -103,6 +103,22 @@
           "source": "database/schema/140_experiencia_premium_meu_dia.sql"
         }
       ]
+    },
+    {
+      "order": 15,
+      "name": "Painel público seguro v1.24.3",
+      "objects": [
+        {
+          "name": "plantaopro.paineis_publicos",
+          "type": "canonical",
+          "category": "CANONICAL_SECURITY",
+          "required": true,
+          "dependsOn": [
+            "plantaopro.clientes"
+          ],
+          "source": "database/schema/150_v1243_painel_publico_seguro.sql"
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -130,6 +146,8 @@
     "go_live_aprovacoes",
     "usuario_preferencias_interface",
     "meu_dia_item_estados",
-    "meu_dia_historico"
+    "meu_dia_historico",
+    "paineis_publicos",
+    "painel_publico_tokens"
   ]
 }

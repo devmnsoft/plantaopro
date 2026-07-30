@@ -121,17 +121,14 @@
     "plantaopro.operacao_assistida_clientes",
     "plantaopro.operacao_assistida_ocorrencias",
     "plantaopro.operacao_assistida_treinamentos",
-    "plantaopro.paciente_consentimentos",
-    "plantaopro.paciente_contatos",
-    "plantaopro.paciente_documentos",
-    "plantaopro.paciente_enderecos",
     "plantaopro.paciente_historico",
     "plantaopro.pacientes",
     "plantaopro.pagamentos",
     "plantaopro.pagamentos_saas",
-    "plantaopro.painel_chamada",
+    "plantaopro.paineis_publicos",
     "plantaopro.painel_chamada_fila",
     "plantaopro.painel_chamada_historico",
+    "plantaopro.painel_publico_tokens",
     "plantaopro.pendencia_historico",
     "plantaopro.pendencia_responsaveis",
     "plantaopro.pendencias_operacionais",
@@ -340,7 +337,16 @@
     "plantaopro.manutencao_janelas",
     "plantaopro.manutencao_tarefas",
     "plantaopro.manutencao_comunicacoes",
-    "plantaopro.manutencao_aprovacoes"
+    "plantaopro.manutencao_aprovacoes",
+    "plantaopro.usuario_tenant_acessos",
+    "plantaopro.usuario_contextos_recentes",
+    "plantaopro.contexto_sessoes",
+    "plantaopro.contexto_trocas",
+    "plantaopro.impersonacao_sessoes",
+    "plantaopro.impersonacao_eventos",
+    "plantaopro.usuario_preferencias_interface",
+    "plantaopro.meu_dia_item_estados",
+    "plantaopro.meu_dia_historico"
   ],
   "missingObjects": [],
   "orphanObjects": [
@@ -358,6 +364,8 @@
     "plantaopro.cid",
     "plantaopro.consentimentos",
     "plantaopro.contas_receber",
+    "plantaopro.contexto_sessoes",
+    "plantaopro.contexto_trocas",
     "plantaopro.dr_execucoes",
     "plantaopro.eventos_financeiros",
     "plantaopro.faturas",
@@ -365,6 +373,8 @@
     "plantaopro.go_live_aprovacoes",
     "plantaopro.go_live_checklists",
     "plantaopro.historico_clinico",
+    "plantaopro.impersonacao_eventos",
+    "plantaopro.impersonacao_sessoes",
     "plantaopro.implantacao_etapas",
     "plantaopro.implantacao_evidencias",
     "plantaopro.implantacao_execucoes",
@@ -381,6 +391,8 @@
     "plantaopro.manutencao_comunicacoes",
     "plantaopro.manutencao_janelas",
     "plantaopro.manutencao_tarefas",
+    "plantaopro.meu_dia_historico",
+    "plantaopro.meu_dia_item_estados",
     "plantaopro.operacao_alertas",
     "plantaopro.operacao_incidente_comentarios",
     "plantaopro.operacao_incidente_eventos",
@@ -404,7 +416,10 @@
     "plantaopro.runbooks",
     "plantaopro.salas",
     "plantaopro.senha_historico",
-    "plantaopro.tenant_configuracoes"
+    "plantaopro.tenant_configuracoes",
+    "plantaopro.usuario_contextos_recentes",
+    "plantaopro.usuario_preferencias_interface",
+    "plantaopro.usuario_tenant_acessos"
   ],
   "legacyObjects": [],
   "manifestSources": [
@@ -421,6 +436,9 @@
     "database/schema/090_indexes.sql",
     "database/schema/100_reference_data.sql",
     "database/schema/110_implantacao_go_live.sql",
-    "database/schema/120_operacoes_continuidade.sql"
+    "database/schema/120_operacoes_continuidade.sql",
+    "database/schema/130_contexto_multiempresa.sql",
+    "database/schema/140_experiencia_premium_meu_dia.sql",
+    "database/schema/150_v1243_painel_publico_seguro.sql"
   ]
 }

@@ -99,6 +99,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<PainelTvService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<MedicoService>();
 builder.Services.AddScoped<DashboardService>();

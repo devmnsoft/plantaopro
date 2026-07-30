@@ -14,5 +14,6 @@
   "database/schema/110_implantacao_go_live.sql": "219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c",
   "database/schema/120_operacoes_continuidade.sql": "01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e",
   "database/schema/130_contexto_multiempresa.sql": "deb03f24f6a422ddeabb2074bec8e0e54207d1c4ebf5e6fd7624c472ccaa7e2e",
-  "database/schema/140_experiencia_premium_meu_dia.sql": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178"
+  "database/schema/140_experiencia_premium_meu_dia.sql": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
+  "database/schema/150_v1243_painel_publico_seguro.sql": "70a98b8b035155c391136e4b76af84b20145f82f570c7d68b35489eb7aa89ff9"
 }

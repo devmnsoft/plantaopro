@@ -78,5 +78,12 @@
     "object": "plantaopro.experiencia_premium_meu_dia",
     "dependsOn": [],
     "source": "database/schema/140_experiencia_premium_meu_dia.sql"
+  },
+  {
+    "object": "plantaopro.paineis_publicos",
+    "dependsOn": [
+      "plantaopro.clientes"
+    ],
+    "source": "database/schema/150_v1243_painel_publico_seguro.sql"
   }
 ]

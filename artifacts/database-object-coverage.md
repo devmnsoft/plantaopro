@@ -136,3 +136,12 @@ OK: True
 - `plantaopro.manutencao_tarefas`
 - `plantaopro.manutencao_comunicacoes`
 - `plantaopro.manutencao_aprovacoes`
+- `plantaopro.usuario_tenant_acessos`
+- `plantaopro.usuario_contextos_recentes`
+- `plantaopro.contexto_sessoes`
+- `plantaopro.contexto_trocas`
+- `plantaopro.impersonacao_sessoes`
+- `plantaopro.impersonacao_eventos`
+- `plantaopro.usuario_preferencias_interface`
+- `plantaopro.meu_dia_item_estados`
+- `plantaopro.meu_dia_historico`

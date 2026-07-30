@@ -3,6 +3,7 @@ using System.Text;
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Data;
 
 namespace PlantaoPro.Api;
 

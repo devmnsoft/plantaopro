@@ -66,7 +66,7 @@ CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
 
 -- SOURCE: database/schema/000_schema_canonico_base.sql
--- SOURCE-SHA256: 6bb5b3f4d2bb02e0d3f0ddd96aef9d26f2ea0bf70e64fe6e8044128d688ef38f
+-- SOURCE-SHA256: f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -224,16 +224,10 @@ CREATE TABLE IF NOT EXISTS plantaopro.recuperacao_senha(
 CREATE INDEX IF NOT EXISTS ix_recuperacao_senha_usuario_token ON plantaopro.recuperacao_senha(usuario_id, token_hash);
 
 CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
-    id bigserial PRIMARY KEY,
-    version text NOT NULL UNIQUE,
-    source text NOT NULL,
+    id text PRIMARY KEY,
+    script_path text NOT NULL,
     checksum text NOT NULL,
-    applied_at timestamptz NOT NULL DEFAULT now(),
-    duration_ms integer NULL,
-    success boolean NOT NULL DEFAULT true,
-    error_code text NULL,
-    error_message_sanitized text NULL,
-    executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
+    applied_at timestamptz NOT NULL DEFAULT now()
 );
 
 -- SOURCE: database/schema/010_identity_access.sql

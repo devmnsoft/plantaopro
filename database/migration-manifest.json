@@ -388,6 +388,16 @@
       ],
       "status": "active",
       "transactional": true
+    },
+    {
+      "version": "2026_v1250_jornada_clinica_operacional",
+      "source": "database/migrations/2026_v1250_jornada_clinica_operacional.sql",
+      "checksum": "68def1a2c6832edfbad1c495503acac1e055c27c2f9fa27c74f987c6a62b8f9c",
+      "dependsOn": [
+        "2026_v1201_experiencia_premium_meu_dia"
+      ],
+      "status": "active",
+      "transactional": true
     }
   ]
 }

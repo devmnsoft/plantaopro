@@ -155,14 +155,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.recuperacao_senha(
 CREATE INDEX IF NOT EXISTS ix_recuperacao_senha_usuario_token ON plantaopro.recuperacao_senha(usuario_id, token_hash);
 
 CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
-    id bigserial PRIMARY KEY,
-    version text NOT NULL UNIQUE,
-    source text NOT NULL,
+    id text PRIMARY KEY,
+    script_path text NOT NULL,
     checksum text NOT NULL,
-    applied_at timestamptz NOT NULL DEFAULT now(),
-    duration_ms integer NULL,
-    success boolean NOT NULL DEFAULT true,
-    error_code text NULL,
-    error_message_sanitized text NULL,
-    executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
+    applied_at timestamptz NOT NULL DEFAULT now()
 );

@@ -83,13 +83,47 @@ public sealed class TriagensController : ControllerBase
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("triagens", id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("triagens", request); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("triagens", id, request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/salvar")]
+    public async Task<IActionResult> Salvar(Guid id, [FromBody] TriagemUpdateRequest request)
+    {
+        if (request.AtendimentoId == Guid.Empty || request.PacienteId == Guid.Empty) return ValidationProblem("Atendimento e paciente são obrigatórios.");
+        var errors = ClinicalMeasurements.Validar(request, false);
+        if (errors.Count > 0) return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), 400));
+        var r = await service.AtualizarAsync("triagens", id, ToClinicalRequest(request));
+        return StatusCode(r.StatusCode, r);
+    }
     [HttpPost("{id:guid}/iniciar")] public async Task<IActionResult> Iniciar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("triagens", id, "iniciar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/finalizar")] public async Task<IActionResult> Finalizar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("triagens", id, "finalizar", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/finalizar-tipado")]
+    public async Task<IActionResult> FinalizarTipado(Guid id, [FromBody] TriagemUpdateRequest request)
+    {
+        var errors = ClinicalMeasurements.Validar(request, true);
+        if (request.AtendimentoId == Guid.Empty || request.PacienteId == Guid.Empty) errors = errors.Concat(new[] { "Atendimento e paciente são obrigatórios." }).ToList();
+        if (errors.Count > 0) return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), 400));
+        var saved = await service.AtualizarAsync("triagens", id, ToClinicalRequest(request));
+        if (!saved.Success) return StatusCode(saved.StatusCode, saved);
+        var result = await service.AcaoAsync("triagens", id, "finalizar", new Saude360ActionRequest());
+        return StatusCode(result.StatusCode, result);
+    }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("triagens", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("fila")] public async Task<IActionResult> Fila() { var r = await service.ListarAsync("triagens", "AGUARDANDO"); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("triagens", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }
     [HttpGet("classificacoes-risco")] public IActionResult ClassificacoesRisco() { return Ok(ApiResponse<object>.Ok(new[] { "EMERGENCIA", "MUITO_URGENTE", "URGENTE", "POUCO_URGENTE", "NAO_URGENTE" }, "Classificações carregadas.")); }
     [HttpPut("classificacoes-risco")] public IActionResult AtualizarClassificacoesRisco([FromBody] object request) { return Ok(ApiResponse<object>.Ok(request, "Classificações recebidas para configuração por tenant.")); }
+
+    private static Saude360CreateRequest ToClinicalRequest(TriagemUpdateRequest request)
+    {
+        return new Saude360CreateRequest
+        {
+            PacienteId = request.PacienteId, QueixaPrincipal = request.QueixaPrincipal,
+            PressaoSistolica = request.PressaoSistolica, PressaoDiastolica = request.PressaoDiastolica,
+            FrequenciaCardiaca = request.FrequenciaCardiaca, FrequenciaRespiratoria = request.FrequenciaRespiratoria,
+            Temperatura = request.Temperatura, Saturacao = request.Saturacao, Glicemia = request.Glicemia,
+            Peso = request.Peso, Altura = request.Altura, Alergias = request.AlergiasRelatadas,
+            MedicamentosUso = request.MedicamentosEmUso, ClassificacaoRisco = request.ClassificacaoRisco,
+            Observacoes = request.Observacoes, Status = "EM_ANDAMENTO"
+        };
+    }
 }
 
 [ApiController]
@@ -104,6 +138,8 @@ public sealed class ConsultasController : ControllerBase
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("consultas", request); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("consultas", id, request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/iniciar")] public async Task<IActionResult> Iniciar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("consultas", id, "iniciar", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/salvar-rascunho")] public async Task<IActionResult> SalvarRascunho(Guid id, [FromBody] Saude360CreateRequest request) { request.Status = "RASCUNHO"; var r = await service.AtualizarAsync("consultas", id, request); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{id:guid}/atendimento")] public async Task<IActionResult> Atendimento(Guid id) { var r = await service.ObterAsync("consultas", id); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/finalizar")] public async Task<IActionResult> Finalizar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("consultas", id, "finalizar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("consultas", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("consultas", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }

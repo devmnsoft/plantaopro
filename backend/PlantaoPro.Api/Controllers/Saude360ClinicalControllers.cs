@@ -20,12 +20,27 @@ public sealed class ClinicaDashboardController : ControllerBase
 public sealed class PainelChamadaController : ControllerBase
 {
     private readonly Saude360ClinicalService service;
-    public PainelChamadaController(Saude360ClinicalService service) { this.service = service; }
+    private readonly PainelTvService painelTv;
+    private readonly ILogger<PainelChamadaController> logger;
+    public PainelChamadaController(Saude360ClinicalService service, PainelTvService painelTv, ILogger<PainelChamadaController> logger) { this.service = service; this.painelTv = painelTv; this.logger = logger; }
     [HttpGet] public async Task<IActionResult> Get([FromQuery] string? status) { var r = await service.ListarAsync("painel", status); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("painel", id); return StatusCode(r.StatusCode, r); }
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("painel", request); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("painel", id, request); return StatusCode(r.StatusCode, r); }
-    [AllowAnonymous, HttpGet("tv/{painelId:guid}")] public async Task<IActionResult> Tv(Guid painelId, [FromQuery] string? token) { var r = await service.ListarAsync("painel", "CHAMADO"); return StatusCode(r.StatusCode, r); }
+    [AllowAnonymous, HttpGet("tv/{painelId:guid}")]
+    public async Task<IActionResult> Tv(Guid painelId, [FromQuery] string? token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await painelTv.ObterAsync(painelId, token, cancellationToken);
+            return StatusCode(result.StatusCode, result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha segura ao consultar TV do painel {PainelId}", painelId);
+            return StatusCode(503, ApiResponse<PainelTvDto>.Fail("Painel temporariamente indisponível.", 503));
+        }
+    }
     [HttpPost("chamar")] public async Task<IActionResult> Chamar([FromBody] Saude360ActionRequest request) { var id = request.FilaId ?? request.Id ?? Guid.Empty; var r = await service.AcaoAsync("painel", id, "chamar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("rechamar")] public async Task<IActionResult> Rechamar([FromBody] Saude360ActionRequest request) { var id = request.FilaId ?? request.Id ?? Guid.Empty; var r = await service.AcaoAsync("painel", id, "rechamar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("cancelar")] public async Task<IActionResult> Cancelar([FromBody] Saude360ActionRequest request) { var id = request.FilaId ?? request.Id ?? Guid.Empty; var r = await service.AcaoAsync("painel", id, "cancelar", request); return StatusCode(r.StatusCode, r); }

@@ -16,3 +16,4 @@
 - `plantaopro.operacoes_continuidade` depende de: nenhuma
 - `plantaopro.contexto_multiempresa` depende de: nenhuma
 - `plantaopro.experiencia_premium_meu_dia` depende de: nenhuma
+- `plantaopro.paineis_publicos` depende de: plantaopro.clientes

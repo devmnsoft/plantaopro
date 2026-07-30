@@ -112,4 +112,9 @@ public static class RepositoryPathResolver
 
         throw new DirectoryNotFoundException("Raiz do repositório PlantãoPro não encontrada procurando backend/PlantaoPro.sln.");
     }
+
+    internal static string ResolveRepositoryRoot()
+    {
+        throw new NotImplementedException();
+    }
 }

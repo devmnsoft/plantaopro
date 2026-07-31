@@ -94,7 +94,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    var policies = new[] { "GlobalAccess", "TenantAccess", "HybridAccess", "TenantContextRequired", "TenantContextOptional", "CanSwitchTenant", "CanImpersonateTenant", "CanManageSaas", "CanViewGlobalAudit", "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.VerDadosSensiveis", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
+    var policies = new[] { "GlobalAccess", "TenantAccess", "HybridAccess", "TenantContextRequired", "TenantContextOptional", "CanSwitchTenant", "CanImpersonateTenant", "CanManageSaas", "CanViewGlobalAudit", "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Visualizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.Cancelar", "Consulta.Reabrir", "Consulta.VerDadosSensiveis", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
     foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
 });
 
@@ -152,6 +152,8 @@ builder.Services.AddScoped<B2BCommercialOpsService>();
 builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
+builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
+builder.Services.AddScoped<IConsultaApplicationService, ConsultaApplicationService>();
 builder.Services.AddScoped<ICentralAtendimentoService, CentralAtendimentoService>();
 builder.Services.AddScoped<Fase6BiIntegracoesService>();
 builder.Services.AddScoped<OperacaoRecomendacaoService>();

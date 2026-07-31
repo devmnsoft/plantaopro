@@ -60,6 +60,7 @@
     "plantaopro.comercial_propostas",
     "plantaopro.comercial_regras_desconto",
     "plantaopro.comunicacao_templates",
+    "plantaopro.consulta_cids",
     "plantaopro.consulta_historico",
     "plantaopro.consultas",
     "plantaopro.convenio_autorizacoes",

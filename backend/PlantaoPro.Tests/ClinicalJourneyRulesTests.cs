@@ -38,3 +38,18 @@ public sealed class ClinicalJourneyRulesTests
         Assert.Equal(3, errors.Count);
     }
 }
+
+public sealed class ConsultaStateMachineV1270Tests
+{
+    [Theory]
+    [InlineData(ConsultaStatus.AGUARDANDO, ConsultaStatus.EM_ATENDIMENTO)]
+    [InlineData(ConsultaStatus.EM_ATENDIMENTO, ConsultaStatus.RASCUNHO)]
+    [InlineData(ConsultaStatus.RASCUNHO, ConsultaStatus.FINALIZADA)]
+    [InlineData(ConsultaStatus.FINALIZADA, ConsultaStatus.RETORNO_SOLICITADO)]
+    public void Permite_transicoes_clinicas_previstas(ConsultaStatus origem, ConsultaStatus destino)
+        => Assert.True(ConsultaStateMachine.PodeTransicionar(origem, destino));
+
+    [Fact]
+    public void Bloqueia_edicao_comum_de_consulta_finalizada()
+        => Assert.False(ConsultaStateMachine.PodeTransicionar(ConsultaStatus.FINALIZADA, ConsultaStatus.RASCUNHO));
+}

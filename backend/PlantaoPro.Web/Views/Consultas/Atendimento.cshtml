@@ -1,29 +1,28 @@
 @{
     ViewData["Title"] = "Atendimento médico";
+    var consultaId = ViewData["ConsultaId"];
 }
-<section class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-start mb-3">
-        <div>
-            <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
-            <h1 class="h3 mb-1">Atendimento médico</h1>
-            <p class="text-muted mb-0">Triagem finalizada, consulta, CID, conduta e prescrição vinculada.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#confirmarFinalizacao">Finalizar consulta</button>
-            <a asp-controller="Consultas" asp-action="Imprimir" class="btn btn-primary">Imprimir resumo</a>
-        </div>
+<link rel="stylesheet" href="~/css/design-system/clinical-workspace.css" asp-append-version="true" />
+<main class="clinical-workspace" data-clinical-workspace data-consulta-id="@consultaId" data-versao="@ViewData["Versao"]">
+    <header class="patient-context" aria-label="Contexto do paciente">
+        <p class="text-uppercase text-primary fw-semibold small">Prontuário médico</p>
+        <h1>Atendimento em curso</h1>
+        <p>Os dados de identificação, alergias, plano, risco e espera são carregados do workspace protegido da consulta.</p>
+    </header>
+    <div class="clinical-grid">
+        <nav class="clinical-nav" aria-label="Seções do prontuário">
+            <a href="#anamnese">Anamnese</a><a href="#exame-fisico">Exame físico</a><a href="#diagnostico">Diagnóstico</a>
+            <a href="#conduta">Conduta</a><a asp-controller="Prescricoes" asp-action="Editor" asp-route-consultaId="@consultaId">Prescrição</a>
+        </nav>
+        <form novalidate>
+            <section id="anamnese" class="consultation-section"><label for="anamnese-field">Anamnese</label><textarea id="anamnese-field" name="anamnese" maxlength="12000"></textarea></section>
+            <section id="exame-fisico" class="consultation-section"><label for="exame-field">Exame físico</label><textarea id="exame-field" name="exameFisico" maxlength="12000"></textarea></section>
+            <section id="diagnostico" class="consultation-section"><label for="hipotese-field">Hipótese diagnóstica</label><textarea id="hipotese-field" name="hipoteseDiagnostica"></textarea><label for="diagnostico-field">Diagnóstico</label><textarea id="diagnostico-field" name="diagnostico"></textarea></section>
+            <section id="conduta" class="consultation-section"><label for="conduta-field">Conduta</label><textarea id="conduta-field" name="conduta"></textarea><label for="orientacoes-field">Orientações</label><textarea id="orientacoes-field" name="orientacoes"></textarea><label for="observacoes-field">Observações</label><textarea id="observacoes-field" name="observacoes"></textarea></section>
+        </form>
     </div>
-    <div class="row g-3">
-        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Dados do paciente</h2><p class="text-muted">Identificação, alergias e dados administrativos visíveis por permissão.</p></div></div></div>
-        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Dados da triagem</h2><p class="text-muted">Classificação de risco, queixa principal e sinais vitais.</p></div></div></div>
-        <div class="col-lg-4"><div class="card border-0 shadow-sm h-100"><div class="card-body"><h2 class="h6">Prescrição vinculada</h2><p class="text-muted">Rascunho, modelos rápidos, finalização e impressão auditada.</p></div></div></div>
-        <div class="col-lg-6"><label class="form-label">Anamnese</label><textarea class="form-control" rows="5" maxlength="4000"></textarea></div>
-        <div class="col-lg-6"><label class="form-label">Exame físico</label><textarea class="form-control" rows="5" maxlength="4000"></textarea></div>
-        <div class="col-lg-6"><label class="form-label">Diagnóstico / CID</label><input class="form-control" placeholder="Buscar por código ou descrição" maxlength="120" /></div>
-        <div class="col-lg-6"><label class="form-label">Conduta</label><input class="form-control" maxlength="500" /></div>
-    </div>
-    <div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast show" role="status"><div class="toast-body">Rascunho pronto para salvar com auditoria clínica.</div></div></div>
-</section>
-<div class="modal fade" id="confirmarFinalizacao" tabindex="-1" aria-labelledby="confirmarFinalizacaoLabel" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="confirmarFinalizacaoLabel">Finalizar consulta?</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">A finalização bloqueia edição comum e registra auditoria clínica.</div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirmar</button></div></div></div>
-</div>
+    <footer class="sticky-clinical-actions"><a asp-action="Index" class="btn btn-outline-secondary">Voltar para fila</a><span class="save-status" data-save-status aria-live="polite">Alterações não salvas</span><button type="button" class="btn btn-primary" data-action="save">Salvar rascunho</button><button type="button" class="btn btn-success" data-action="finalize">Finalizar consulta</button></footer>
+</main>
+<dialog id="finalizationChecklistModal" aria-labelledby="finalization-title"><h2 id="finalization-title">Conferir finalização</h2><ul data-finalization-pending></ul><form method="dialog"><button type="submit">Voltar</button></form><button type="button" data-confirm-finalization>Confirmar finalização</button></dialog>
+<dialog id="concurrencyConflictModal" aria-labelledby="conflict-title"><h2 id="conflict-title">Este atendimento foi atualizado</h2><p>Recarregue os dados antes de salvar novamente para não perder informações.</p><button type="button" data-action="reload">Recarregar</button></dialog>
+<script src="~/js/clinical-workspace.js" asp-append-version="true"></script>

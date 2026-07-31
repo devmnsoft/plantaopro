@@ -66,11 +66,27 @@ def parse_trx(path: Path) -> tuple[dict[str, int], list[dict[str, str]], dict[st
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("baseline_trx", type=Path)
+    parser.add_argument("baseline_trx", type=Path, nargs="?")
+    parser.add_argument("--build-failed", action="store_true")
     parser.add_argument("--final-trx", type=Path)
     parser.add_argument("--decisions", type=Path, help="JSON indexado pelo nome completo do teste")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+
+    if args.build_failed:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(
+            json.dumps({
+                "status": "BUILD_FAILED",
+                "execution": {"total": 0, "executed": 0, "passed": 0, "failed": 0},
+                "failures": [],
+                "message": "A compilação falhou; a suíte de testes não foi executada e nenhum TRX válido foi produzido.",
+            }, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        return 0
+    if args.baseline_trx is None:
+        parser.error("baseline_trx é obrigatório quando --build-failed não é informado")
 
     execution, failures, _ = parse_trx(args.baseline_trx)
     final_outcomes: dict[str, str] = {}

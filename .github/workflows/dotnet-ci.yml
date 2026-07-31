@@ -44,12 +44,16 @@ jobs:
       - name: Generate real test failure matrix
         if: always()
         run: |
-          if test -s artifacts/TestResults/tests.trx; then
+          if test "${{ steps.build.outcome }}" = "failure"; then
+            python3 scripts/generate-test-failure-matrix.py --build-failed \
+              --output artifacts/TestResults/test-failure-matrix.json
+          elif test -s artifacts/TestResults/tests.trx && \
+               python3 -c "import sys, xml.etree.ElementTree as ET; r=ET.parse(sys.argv[1]).getroot(); sys.exit(0 if r.find('.//{*}Counters') is not None else 1)" artifacts/TestResults/tests.trx; then
             python3 scripts/generate-test-failure-matrix.py \
               artifacts/TestResults/tests.trx \
               --output artifacts/TestResults/test-failure-matrix.json
           else
-            echo 'TRX não gerado porque build/testes não executaram; consulte a evidência da etapa anterior.'
+            echo 'TRX_MISSING_OR_INVALID: testes não produziram Counters; consulte a evidência da etapa anterior.'
           fi
       - name: Validate TRX evidence
         run: |

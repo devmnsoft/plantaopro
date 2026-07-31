@@ -115,6 +115,6 @@ public static class RepositoryPathResolver
 
     internal static string ResolveRepositoryRoot()
     {
-        throw new NotImplementedException();
+        return RepoRoot;
     }
 }

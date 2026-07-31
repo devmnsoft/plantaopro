@@ -21,6 +21,18 @@ def trx(failed: int, outcome: str = "Failed") -> str:
 
 
 class FailureMatrixTests(unittest.TestCase):
+    def test_records_build_failure_without_attempting_to_parse_trx(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "matrix.json"
+            subprocess.run(
+                [sys.executable, str(SCRIPT), "--build-failed", "--output", str(output)],
+                check=True,
+            )
+            matrix = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual("BUILD_FAILED", matrix["status"])
+            self.assertEqual(0, matrix["execution"]["executed"])
+            self.assertEqual([], matrix["failures"])
+
     def test_generates_rows_from_trx_and_reconciles_final_result(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

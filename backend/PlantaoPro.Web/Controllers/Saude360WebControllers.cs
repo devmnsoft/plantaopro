@@ -191,7 +191,8 @@ public sealed class ConsultasController : Saude360WebControllerBase
     public IActionResult Create() { return Formulario("Nova consulta", "api/consultas"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar consulta", "api/consultas/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da consulta", "Consultas", "Resumo clínico com restrição por médico/tenant.", "api/consultas/" + id, Links(Link("Consultas", "Index", "bi-arrow-left"))); }
-    public Task<IActionResult> Atendimento() { return ModuloAsync("Atendimento médico", "Consultas", "Tela de condução do atendimento com vínculo a triagem, CID, prescrição e finalização segura.", "api/consultas/atendimento", Links(Link("Nova consulta", "Create", "bi-plus-circle"), LinkTo("CID", "Cid", "Index", "bi-search-heart"), LinkTo("Prescrições", "Prescricoes", "Index", "bi-capsule"))); }
+    [HttpGet("Consultas/Atendimento/{consultaId:guid}")]
+    public IActionResult Atendimento(Guid consultaId) { return View(new PlantaoPro.Web.Models.ConsultaWorkspaceViewModel { ConsultaId = consultaId, ApiBase = Url.Content("~/api/consultas") }); }
     public Task<IActionResult> HistoricoPaciente() { return ModuloAsync("Histórico clínico do paciente", "Consultas", "Histórico de consultas por paciente com acesso auditado e visão adequada ao perfil médico.", "api/consultas/historico-paciente", Links(Link("Atendimento", "Atendimento", "bi-clipboard2-pulse"))); }
     public Task<IActionResult> Resumo() { return ModuloAsync("Resumo de consultas", "Consultas", "Resumo operacional de consultas por status, médico e prioridade.", "api/consultas/resumo", Links(Link("Consultas", "Index", "bi-journal-medical"))); }
     public Task<IActionResult> Imprimir() { return ModuloAsync("Impressão de consulta", "Consultas", "Impressão com registro em auditoria e sem log técnico de conteúdo sensível.", "api/consultas", Links(Link("Consultas", "Index", "bi-arrow-left"))); }
@@ -214,6 +215,8 @@ public sealed class PrescricoesController : Saude360WebControllerBase
     public PrescricoesController(IHttpClientFactory f, ILogger<PrescricoesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Prescrições", "Prescrição médica", "Prescrição por médico, modelos reutilizáveis, finalização, cancelamento justificado e impressão auditada.", "api/prescricoes", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Modelos", "Modelos", "bi-files"), Link("Histórico", "HistoricoPaciente", "bi-clock-history"))); }
     public IActionResult Create() { return Formulario("Nova prescrição", "api/prescricoes"); }
+    [HttpGet("Prescricoes/Editor/{consultaId:guid}")]
+    public IActionResult Editor(Guid consultaId) { return View("Edit", new Saude360FormViewModel { ConsultaId = consultaId }); }
     public IActionResult Edit(Guid id) { return Formulario("Editar prescrição", "api/prescricoes/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da prescrição", "Prescrição médica", "Resumo sem expor conteúdo clínico em logs técnicos.", "api/prescricoes/" + id, Links(Link("Prescrições", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Imprimir() { return ModuloAsync("Imprimir prescrição", "Prescrição médica", "Impressão auditada da prescrição médica.", "api/prescricoes", Links(Link("Prescrições", "Index", "bi-arrow-left"))); }

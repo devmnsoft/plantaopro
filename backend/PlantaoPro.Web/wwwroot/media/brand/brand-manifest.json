@@ -1,0 +1,6 @@
+{
+  "version": "1.30.0",
+  "horizontal": { "light": "logo-horizontal-light.svg", "dark": "logo-horizontal-dark.svg", "color": "logo-horizontal-color.svg" },
+  "symbol": { "light": "logo-symbol-light.svg", "dark": "logo-symbol-dark.svg", "color": "logo-symbol-color.svg" },
+  "fallback": "logo-monochrome.svg"
+}

@@ -1,0 +1,4 @@
+.btn { border-radius: var(--pp-radius-sm); font-weight: 600; transition: transform var(--pp-transition-fast), box-shadow var(--pp-transition-fast); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn-primary { background: var(--pp-primary); border-color: var(--pp-primary); }
+.btn-primary:hover { background: var(--pp-primary-hover); border-color: var(--pp-primary-hover); box-shadow: var(--pp-shadow-xs); }

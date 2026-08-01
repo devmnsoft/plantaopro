@@ -1,0 +1,24 @@
+<dialog class="pp-dialog" id="commandPalette" aria-labelledby="commandPaletteTitle">
+    <form class="p-3 border-bottom" role="search" data-command-search>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <label class="visually-hidden" for="commandSearchInput">Pesquisar no PlantãoPro</label>
+            <input class="form-control border-0 shadow-none"
+                   id="commandSearchInput"
+                   name="q"
+                   type="search"
+                   minlength="2"
+                   autocomplete="off"
+                   aria-controls="commandSearchResults"
+                   aria-describedby="commandSearchHint"
+                   placeholder="Pacientes, médicos, plantões e unidades" />
+            <button class="btn btn-light btn-sm" type="button" data-command-close aria-label="Fechar busca">
+                <kbd>Esc</kbd>
+            </button>
+        </div>
+        <p class="pp-caption mb-0 mt-2" id="commandSearchHint">Digite ao menos dois caracteres. Dados clínicos não são exibidos.</p>
+    </form>
+    <div class="pp-command-results" id="commandSearchResults" role="listbox" aria-live="polite">
+        <p class="text-secondary p-3 mb-0">Encontre rapidamente o que precisa sem sair da sua jornada.</p>
+    </div>
+</dialog>

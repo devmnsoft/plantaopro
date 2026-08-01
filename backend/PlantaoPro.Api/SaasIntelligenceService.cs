@@ -186,7 +186,7 @@ where c.id=@clienteId and c.reg_status='A'", new { clienteId });
     0::numeric as ""ChurnEstimado"",
     (select count(distinct cliente_id)::bigint from plantaopro.cliente_alertas where tipo='USO_ALTO' and resolvido=false and reg_status='A') as ""ClientesProximosLimite"",
     (select count(distinct cliente_id)::bigint from plantaopro.cliente_alertas where tipo='UPGRADE' and resolvido=false and reg_status='A') as ""OportunidadesUpgrade"",
-    (select count(1)::bigint from plantaopro.cliente_alertas where resolvido=false and reg_status='A') as ""AlertasAbertos""");
+    (select count(1)::bigint from plantaopro.cliente_alertas where resolvido=false and reg_status='A') as ""AlertasAbertos"" ");
             return ApiResponse<SaasResumoExecutivoDto>.Ok(resumo);
         }
         catch (Exception ex)

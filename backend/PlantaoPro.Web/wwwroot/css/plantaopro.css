@@ -9,3 +9,12 @@
 @import url('./design-system/accessibility.css');
 @import url('./design-system/responsive.css');
 @import url('./design-system/white-label.css');
+@import url('./design-system/typography.css');
+@import url('./design-system/buttons.css');
+@import url('./design-system/cards.css');
+@import url('./design-system/badges.css');
+@import url('./design-system/overlays.css');
+@import url('./design-system/feedback.css');
+@import url('./design-system/charts.css');
+@import url('./design-system/workspaces.css');
+@import url('./design-system/utilities.css');

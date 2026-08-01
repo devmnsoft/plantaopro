@@ -1,0 +1,3 @@
+.pp-chart { min-height: 16rem; color: var(--pp-text-secondary); }
+.pp-chart svg { max-width: 100%; overflow: visible; }
+.pp-chart [role="img"]:focus { outline: 3px solid var(--pp-focus); outline-offset: 3px; }

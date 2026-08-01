@@ -1,0 +1,4 @@
+.pp-panel { background: var(--pp-surface-primary); border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg); box-shadow: var(--pp-shadow-xs); }
+.pp-panel--elevated { box-shadow: var(--pp-shadow-sm); }
+.pp-panel__header { padding: var(--pp-space-5); border-bottom: 1px solid var(--pp-border-subtle); }
+.pp-panel__body { padding: var(--pp-space-5); }

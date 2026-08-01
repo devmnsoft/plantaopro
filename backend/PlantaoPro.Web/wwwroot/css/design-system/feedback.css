@@ -1,0 +1,3 @@
+.pp-live-region { position: fixed; inset: auto var(--pp-space-4) var(--pp-space-4) auto; z-index: var(--pp-z-toast); }
+.pp-skeleton { background: linear-gradient(90deg, var(--pp-neutral-100), var(--pp-neutral-200), var(--pp-neutral-100)); background-size: 200% 100%; animation: pp-shimmer 1.4s infinite; }
+@keyframes pp-shimmer { to { background-position: -200% 0; } }

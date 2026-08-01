@@ -155,6 +155,8 @@ builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
 builder.Services.AddScoped<IConsultaApplicationService, ConsultaApplicationService>();
+builder.Services.AddScoped<IGlobalSearchRepository, GlobalSearchRepository>();
+builder.Services.AddScoped<IGlobalSearchService, GlobalSearchService>();
 builder.Services.AddScoped<ICentralAtendimentoService, CentralAtendimentoService>();
 builder.Services.AddScoped<Fase6BiIntegracoesService>();
 builder.Services.AddScoped<OperacaoRecomendacaoService>();

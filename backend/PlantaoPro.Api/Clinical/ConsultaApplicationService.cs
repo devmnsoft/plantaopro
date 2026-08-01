@@ -28,7 +28,9 @@ public sealed class ConsultaRepository : IConsultaRepository
 
     public async Task<Consulta?> ObterAsync(Guid id, Guid clienteId, CancellationToken ct, IDbTransaction? tx = null)
     {
-        const string sql = """select id,cliente_id ClienteId,unidade_id UnidadeId,atendimento_id AtendimentoId,agendamento_id AgendamentoId,paciente_id PacienteId,medico_id MedicoId,triagem_id TriagemId,status,coalesce(anamnese,'') Anamnese,coalesce(exame_fisico,'') ExameFisico,coalesce(hipotese_diagnostica,'') HipoteseDiagnostica,coalesce(diagnostico,'') Diagnostico,coalesce(conduta,'') Conduta,coalesce(orientacoes,'') Orientacoes,coalesce(observacoes,'') Observacoes,inicio_em InicioEm,finalizada_em FinalizadaEm,cancelada_em CanceladaEm,motivo_cancelamento MotivoCancelamento,versao,created_by CreatedBy,updated_by UpdatedBy,reg_date RegDate,reg_update RegUpdate,reg_status RegStatus from plantaopro.consultas where id=@id and cliente_id=@clienteId and reg_status='A'""";
+        const string sql = @"
+            select id,cliente_id ClienteId,unidade_id UnidadeId,atendimento_id AtendimentoId,agendamento_id AgendamentoId,paciente_id PacienteId,medico_id MedicoId,triagem_id TriagemId,status,coalesce(anamnese,'') Anamnese,coalesce(exame_fisico,'') ExameFisico,coalesce(hipotese_diagnostica,'') HipoteseDiagnostica,coalesce(diagnostico,'') Diagnostico,coalesce(conduta,'') Conduta,coalesce(orientacoes,'') Orientacoes,coalesce(observacoes,'') Observacoes,inicio_em InicioEm,finalizada_em FinalizadaEm,cancelada_em CanceladaEm,motivo_cancelamento MotivoCancelamento,versao,created_by CreatedBy,updated_by UpdatedBy,reg_date RegDate,reg_update RegUpdate,reg_status RegStatus from plantaopro.consultas where id=@id and cliente_id=@clienteId and reg_status='A'
+        ";
         var cn = tx?.Connection ?? AbrirConexao(); if (tx is null) await ((NpgsqlConnection)cn).OpenAsync(ct);
         try { return await cn.QuerySingleOrDefaultAsync<Consulta>(Cmd(sql, new { id, clienteId }, tx, ct)); } finally { if (tx is null) await ((NpgsqlConnection)cn).DisposeAsync(); }
     }
@@ -36,7 +38,9 @@ public sealed class ConsultaRepository : IConsultaRepository
     public async Task<ConsultaWorkspaceResponse?> WorkspaceAsync(Guid id, Guid clienteId, CancellationToken ct)
     {
         await using var cn = AbrirConexao(); await cn.OpenAsync(ct);
-        const string sql = """select c.id,c.cliente_id ClienteId,c.unidade_id UnidadeId,c.atendimento_id AtendimentoId,c.agendamento_id AgendamentoId,c.paciente_id PacienteId,c.medico_id MedicoId,c.triagem_id TriagemId,c.status,coalesce(c.anamnese,'') Anamnese,coalesce(c.exame_fisico,'') ExameFisico,coalesce(c.hipotese_diagnostica,'') HipoteseDiagnostica,coalesce(c.diagnostico,'') Diagnostico,coalesce(c.conduta,'') Conduta,coalesce(c.orientacoes,'') Orientacoes,coalesce(c.observacoes,'') Observacoes,c.inicio_em InicioEm,c.finalizada_em FinalizadaEm,c.cancelada_em CanceladaEm,c.motivo_cancelamento MotivoCancelamento,c.versao,c.created_by CreatedBy,c.updated_by UpdatedBy,c.reg_date RegDate,c.reg_update RegUpdate,c.reg_status RegStatus,p.nome PacienteNome,p.nome_social NomeSocial,p.data_nascimento DataNascimento,p.sexo_genero SexoGenero,p.alergias,u.nome Unidade,t.classificacao_risco ClassificacaoRisco,a.checkin_em ChegadaEm from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.unidades u on u.id=c.unidade_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.id=@id and c.cliente_id=@clienteId and c.reg_status='A'""";
+        const string sql = @"
+            select c.id,c.cliente_id ClienteId,c.unidade_id UnidadeId,c.atendimento_id AtendimentoId,c.agendamento_id AgendamentoId,c.paciente_id PacienteId,c.medico_id MedicoId,c.triagem_id TriagemId,c.status,coalesce(c.anamnese,'') Anamnese,coalesce(c.exame_fisico,'') ExameFisico,coalesce(c.hipotese_diagnostica,'') HipoteseDiagnostica,coalesce(c.diagnostico,'') Diagnostico,coalesce(c.conduta,'') Conduta,coalesce(c.orientacoes,'') Orientacoes,coalesce(c.observacoes,'') Observacoes,c.inicio_em InicioEm,c.finalizada_em FinalizadaEm,c.cancelada_em CanceladaEm,c.motivo_cancelamento MotivoCancelamento,c.versao,c.created_by CreatedBy,c.updated_by UpdatedBy,c.reg_date RegDate,c.reg_update RegUpdate,c.reg_status RegStatus,p.nome PacienteNome,p.nome_social NomeSocial,p.data_nascimento DataNascimento,p.sexo_genero SexoGenero,p.alergias,u.nome Unidade,t.classificacao_risco ClassificacaoRisco,a.checkin_em ChegadaEm from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.unidades u on u.id=c.unidade_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.id=@id and c.cliente_id=@clienteId and c.reg_status='A'
+        ";
         ConsultaWorkspaceResponse? result = null;
         await cn.QueryAsync<Consulta, ConsultaWorkspaceResponse, ConsultaWorkspaceResponse>(new CommandDefinition(sql, new { id, clienteId }, cancellationToken: ct), (consulta, workspace) => { workspace.Consulta = consulta; result = workspace; return workspace; }, splitOn: "PacienteNome");
         if (result is not null) result.Cids = await ListarCidsAsync(id, clienteId, ct);
@@ -46,26 +50,34 @@ public sealed class ConsultaRepository : IConsultaRepository
     public async Task<IReadOnlyList<ConsultaResumoResponse>> FilaAsync(Guid clienteId, Guid? unidadeId, Guid? medicoId, int pagina, int tamanho, CancellationToken ct)
     {
         await using var cn = AbrirConexao(); var offset = (Math.Max(1, pagina) - 1) * Math.Clamp(tamanho, 1, 100);
-        const string sql = """select c.id,c.paciente_id PacienteId,p.nome PacienteNome,c.status,coalesce(t.classificacao_risco,'SEM_CLASSIFICACAO') ClassificacaoRisco,coalesce(a.checkin_em,c.reg_date) ChegadaEm,greatest(0,extract(epoch from(now()-coalesce(a.checkin_em,c.reg_date)))/60)::int TempoEsperaMinutos from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.cliente_id=@clienteId and c.reg_status='A' and c.status in ('AGUARDANDO','EM_ATENDIMENTO','RASCUNHO') and (@unidadeId is null or c.unidade_id=@unidadeId) and (@medicoId is null or c.medico_id=@medicoId) order by case coalesce(t.classificacao_risco,'') when 'VERMELHO' then 1 when 'LARANJA' then 2 when 'AMARELO' then 3 when 'VERDE' then 4 else 5 end,coalesce(a.checkin_em,c.reg_date) limit @tamanho offset @offset""";
+        const string sql = @"
+            select c.id,c.paciente_id PacienteId,p.nome PacienteNome,c.status,coalesce(t.classificacao_risco,'SEM_CLASSIFICACAO') ClassificacaoRisco,coalesce(a.checkin_em,c.reg_date) ChegadaEm,greatest(0,extract(epoch from(now()-coalesce(a.checkin_em,c.reg_date)))/60)::int TempoEsperaMinutos from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.cliente_id=@clienteId and c.reg_status='A' and c.status in ('AGUARDANDO','EM_ATENDIMENTO','RASCUNHO') and (@unidadeId is null or c.unidade_id=@unidadeId) and (@medicoId is null or c.medico_id=@medicoId) order by case coalesce(t.classificacao_risco,'') when 'VERMELHO' then 1 when 'LARANJA' then 2 when 'AMARELO' then 3 when 'VERDE' then 4 else 5 end,coalesce(a.checkin_em,c.reg_date) limit @tamanho offset @offset
+        ";
         return (await cn.QueryAsync<ConsultaResumoResponse>(new CommandDefinition(sql, new { clienteId, unidadeId, medicoId, tamanho = Math.Clamp(tamanho, 1, 100), offset }, cancellationToken: ct))).AsList();
     }
 
     public async Task<bool> AlterarStatusAsync(Guid id, Guid clienteId, ConsultaStatus atual, ConsultaStatus destino, int versao, Guid? usuarioId, CancellationToken ct, IDbTransaction? tx = null)
     {
-        const string sql = """update plantaopro.consultas set status=@destino,inicio_em=case when @destino='EM_ATENDIMENTO' then coalesce(inicio_em,now()) else inicio_em end,finalizada_em=case when @destino='FINALIZADA' then now() else finalizada_em end,cancelada_em=case when @destino='CANCELADA' then now() else cancelada_em end,versao=versao+1,updated_by=@usuarioId,reg_update=now() where id=@id and cliente_id=@clienteId and status=@atual and versao=@versao and reg_status='A'""";
+        const string sql = @"
+            update plantaopro.consultas set status=@destino,inicio_em=case when @destino='EM_ATENDIMENTO' then coalesce(inicio_em,now()) else inicio_em end,finalizada_em=case when @destino='FINALIZADA' then now() else finalizada_em end,cancelada_em=case when @destino='CANCELADA' then now() else cancelada_em end,versao=versao+1,updated_by=@usuarioId,reg_update=now() where id=@id and cliente_id=@clienteId and status=@atual and versao=@versao and reg_status='A'
+        ";
         var cn = tx?.Connection ?? AbrirConexao(); if (tx is null) await ((NpgsqlConnection)cn).OpenAsync(ct);
         try { return await cn.ExecuteAsync(Cmd(sql, new { id, clienteId, atual = atual.ToString(), destino = destino.ToString(), versao, usuarioId }, tx, ct)) == 1; } finally { if (tx is null) await ((NpgsqlConnection)cn).DisposeAsync(); }
     }
 
     public async Task<bool> SalvarRascunhoAsync(Guid id, Guid clienteId, SalvarConsultaRascunhoRequest r, Guid? usuarioId, CancellationToken ct)
     {
-        await using var cn = AbrirConexao(); const string sql = """update plantaopro.consultas set anamnese=@Anamnese,exame_fisico=@ExameFisico,hipotese_diagnostica=@HipoteseDiagnostica,diagnostico=@Diagnostico,conduta=@Conduta,orientacoes=@Orientacoes,observacoes=@Observacoes,status='RASCUNHO',versao=versao+1,updated_by=@usuarioId,reg_update=now() where id=@id and cliente_id=@clienteId and versao=@Versao and status in ('EM_ATENDIMENTO','RASCUNHO') and reg_status='A'""";
+        await using var cn = AbrirConexao(); const string sql = @"
+            update plantaopro.consultas set anamnese=@Anamnese,exame_fisico=@ExameFisico,hipotese_diagnostica=@HipoteseDiagnostica,diagnostico=@Diagnostico,conduta=@Conduta,orientacoes=@Orientacoes,observacoes=@Observacoes,status='RASCUNHO',versao=versao+1,updated_by=@usuarioId,reg_update=now() where id=@id and cliente_id=@clienteId and versao=@Versao and status in ('EM_ATENDIMENTO','RASCUNHO') and reg_status='A'
+        ";
         return await cn.ExecuteAsync(new CommandDefinition(sql, new { id, clienteId, r.Versao, r.Anamnese, r.ExameFisico, r.HipoteseDiagnostica, r.Diagnostico, r.Conduta, r.Orientacoes, r.Observacoes, usuarioId }, cancellationToken: ct)) == 1;
     }
 
     public async Task<IReadOnlyList<ConsultaCid>> ListarCidsAsync(Guid consultaId, Guid clienteId, CancellationToken ct)
     {
-        await using var cn = AbrirConexao(); const string sql = """select cc.id,cc.cliente_id ClienteId,cc.consulta_id ConsultaId,cc.cid_id CidId,c.codigo,c.descricao,cc.tipo,cc.principal,cc.ordem from plantaopro.consulta_cids cc join plantaopro.cid_tabela c on c.id=cc.cid_id where cc.consulta_id=@consultaId and cc.cliente_id=@clienteId and cc.reg_status='A' order by cc.principal desc,cc.ordem""";
+        await using var cn = AbrirConexao(); const string sql = @"
+            select cc.id,cc.cliente_id ClienteId,cc.consulta_id ConsultaId,cc.cid_id CidId,c.codigo,c.descricao,cc.tipo,cc.principal,cc.ordem from plantaopro.consulta_cids cc join plantaopro.cid_tabela c on c.id=cc.cid_id where cc.consulta_id=@consultaId and cc.cliente_id=@clienteId and cc.reg_status='A' order by cc.principal desc,cc.ordem
+        ";
         return (await cn.QueryAsync<ConsultaCid>(new CommandDefinition(sql, new { consultaId, clienteId }, cancellationToken: ct))).AsList();
     }
 
@@ -73,7 +85,9 @@ public sealed class ConsultaRepository : IConsultaRepository
     {
         await using var cn = AbrirConexao(); await cn.OpenAsync(ct); await using var tx = await cn.BeginTransactionAsync(ct);
         if (r.Principal) await cn.ExecuteAsync(Cmd("update plantaopro.consulta_cids set principal=false where consulta_id=@consultaId and cliente_id=@clienteId and reg_status='A'", new { consultaId, clienteId }, tx, ct));
-        var id = Guid.NewGuid(); const string sql = """insert into plantaopro.consulta_cids(id,cliente_id,consulta_id,cid_id,tipo,principal,ordem,created_by,reg_date,reg_status) select @id,@clienteId,@consultaId,c.id,@tipo,@principal,coalesce((select max(ordem)+1 from plantaopro.consulta_cids where consulta_id=@consultaId),1),@usuarioId,now(),'A' from plantaopro.cid_tabela c where c.id=@cidId and c.reg_status='A' on conflict (cliente_id,consulta_id,cid_id) where reg_status='A' do nothing""";
+        var id = Guid.NewGuid(); const string sql = @"
+            insert into plantaopro.consulta_cids(id,cliente_id,consulta_id,cid_id,tipo,principal,ordem,created_by,reg_date,reg_status) select @id,@clienteId,@consultaId,c.id,@tipo,@principal,coalesce((select max(ordem)+1 from plantaopro.consulta_cids where consulta_id=@consultaId),1),@usuarioId,now(),'A' from plantaopro.cid_tabela c where c.id=@cidId and c.reg_status='A' on conflict (cliente_id,consulta_id,cid_id) where reg_status='A' do nothing
+        ";
         if (await cn.ExecuteAsync(Cmd(sql, new { id, clienteId, consultaId, cidId = r.CidId, tipo = r.Principal ? "PRINCIPAL" : r.Tipo, principal = r.Principal, usuarioId }, tx, ct)) != 1) { await tx.RollbackAsync(ct); return null; }
         await tx.CommitAsync(ct); return (await ListarCidsAsync(consultaId, clienteId, ct)).Single(x => x.Id == id);
     }

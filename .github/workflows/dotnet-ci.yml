@@ -26,6 +26,8 @@ jobs:
           dotnet-quality: 'preview'
       - name: Dotnet diagnostics
         run: dotnet --info
+      - name: Enforce C# 10 compatibility
+        run: python3 scripts/check-csharp10-compatibility.py
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build

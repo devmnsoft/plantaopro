@@ -1,0 +1,4 @@
+.pp-cluster { display: flex; flex-wrap: wrap; gap: var(--pp-space-3); align-items: center; }
+.pp-stack > * + * { margin-top: var(--pp-space-4); }
+.pp-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-visually-muted { color: var(--pp-text-muted); }

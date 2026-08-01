@@ -1,0 +1,5 @@
+.pp-dialog { width: min(42rem, calc(100vw - 2rem)); padding: 0; border: 1px solid var(--pp-border-default); border-radius: var(--pp-radius-xl); box-shadow: var(--pp-shadow-lg); background: var(--pp-surface-elevated); }
+.pp-dialog::backdrop { background: rgb(15 23 42 / .58); backdrop-filter: blur(3px); }
+.pp-command-results { max-height: min(28rem, 60vh); overflow: auto; padding: var(--pp-space-2); }
+.pp-command-result { display: flex; align-items: center; gap: .75rem; padding: .75rem; color: var(--pp-text-primary); text-decoration: none; border-radius: var(--pp-radius-sm); }
+.pp-command-result:hover, .pp-command-result:focus { background: var(--pp-hover-bg); }

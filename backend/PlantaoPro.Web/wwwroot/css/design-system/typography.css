@@ -1,0 +1,10 @@
+body { font-family: var(--pp-font-sans); color: var(--pp-text-primary); }
+h1, h2, h3, .pp-title { letter-spacing: -.025em; text-wrap: balance; }
+.pp-display { font-size: clamp(2rem, 4vw, 3.5rem); line-height: 1.08; font-weight: 700; }
+.pp-heading-1 { font-size: clamp(1.75rem, 3vw, 2.25rem); line-height: 1.15; font-weight: 700; }
+.pp-heading-2 { font-size: 1.5rem; line-height: 1.25; font-weight: 650; }
+.pp-heading-3, .pp-title { font-size: 1.125rem; line-height: 1.35; font-weight: 650; }
+.pp-body-small { font-size: .875rem; }
+.pp-caption { font-size: .75rem; color: var(--pp-text-muted); }
+.pp-overline { font-size: .6875rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.pp-numeric { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }

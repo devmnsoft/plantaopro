@@ -209,7 +209,11 @@
     "plantaopro.v115_regras_faturamento",
     "plantaopro.v115_regras_glosa",
     "plantaopro.v115_regras_repasse",
-    "plantaopro.webhooks"
+    "plantaopro.webhooks",
+    "plantaopro.work_item_assignments",
+    "plantaopro.work_item_comments",
+    "plantaopro.work_item_history",
+    "plantaopro.work_items"
   ],
   "installedObjects": [
     "plantaopro.modulos_sistema",
@@ -442,6 +446,7 @@
     "database/schema/120_operacoes_continuidade.sql",
     "database/schema/130_contexto_multiempresa.sql",
     "database/schema/140_experiencia_premium_meu_dia.sql",
-    "database/schema/150_v1243_painel_publico_seguro.sql"
+    "database/schema/150_v1243_painel_publico_seguro.sql",
+    "database/schema/210_v1310_consolidacao_operacao_assistida.sql"
   ]
 }

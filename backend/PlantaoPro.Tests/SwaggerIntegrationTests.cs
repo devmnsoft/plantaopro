@@ -1,15 +1,14 @@
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Hosting;
 using PlantaoPro.Api;
 using Xunit;
+using PlantaoPro.Tests.Infrastructure;
 
 namespace PlantaoPro.Tests;
 
-public sealed class SwaggerIntegrationTests : IClassFixture<WebApplicationFactory<ApiAssemblyMarker>>
+public sealed class SwaggerIntegrationTests : IClassFixture<PlantaoProApiFactory>
 {
-    private readonly WebApplicationFactory<ApiAssemblyMarker> factory;
-    public SwaggerIntegrationTests(WebApplicationFactory<ApiAssemblyMarker> factory) { this.factory = factory.WithWebHostBuilder(b => b.UseSetting("environment", "Development")); }
+    private readonly PlantaoProApiFactory factory;
+    public SwaggerIntegrationTests(PlantaoProApiFactory factory) { this.factory = factory; }
 
     [Fact]
     public async Task SwaggerJsonDeveResponder200ComBearerPathsEOperacoesUnicas()

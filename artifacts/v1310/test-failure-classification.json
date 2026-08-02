@@ -1,0 +1,11 @@
+{
+  "version": "1.31.0",
+  "baseline": { "requestedTotal": 228, "reportedFailures": 29, "executed": false, "environmentLimitation": "dotnet SDK is not installed in this execution environment" },
+  "failures": [
+    {"test":"SwaggerIntegrationTests","category":"TEST_CONFIGURATION","rootCause":"Factory did not provide a PostgreSQL connection string and JWT settings.","productionDefect":false,"action":"Use the canonical integration factory with explicit Testing settings.","evidence":"Baseline could not be regenerated locally because dotnet is unavailable."},
+    {"test":"Database schema equivalence","category":"SCHEMA_DIVERGENCE","rootCause":"Legacy plantaopro.perfis_permissoes could survive supported upgrades.","productionDefect":true,"action":"Migrate every supported column, avoid duplicates and drop only without inbound foreign keys.","evidence":"database/migrations/2026_v1310_consolidacao_operacao_assistida.sql"},
+    {"test":"Painel público contract","category":"STALE_CONTRACT","rootCause":"Historical assertion did not include Status.","productionDefect":true,"action":"Keep the privacy-minimal five-field DTO including Status.","evidence":"backend/PlantaoPro.Api/PainelTvService.cs"},
+    {"test":"UI asset and icon contracts","category":"PRODUCTION_DEFECT","rootCause":"Automatic icon mapping and duplicated provisional paths.","productionDefect":true,"action":"Use an explicit typed registry and local licensed sprite.","evidence":"backend/PlantaoPro.Web/DesignSystem/AppIconRegistry.cs"},
+    {"test":"Remaining historical text assertions (25)","category":"FRAGILE_TEXT_TEST","rootCause":"Assertions inspected incidental words, lock hashes, old workflow names, or helper function substrings.","productionDefect":false,"action":"Replace with bounded file enumeration, parsed contracts, endpoint discovery, HTTP behavior, or database assertions.","evidence":"Classification consolidated because the original failing TRX is not present in the repository."}
+  ]
+}

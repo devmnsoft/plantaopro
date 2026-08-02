@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "table": "plantaopro.medico_indisponibilidades",
+    "first_origin": "database/schema/030_operacao_plantoes.sql",
+    "second_origin": "database/schema/210_v1310_consolidacao_operacao_assistida.sql",
+    "first_columns": [
+      "atualizado_em",
+      "codigo",
+      "criado_em",
+      "dados",
+      "id",
+      "nome",
+      "status",
+      "tenant_id"
+    ],
+    "second_columns": [
+      "disponibilidade_id",
+      "fim",
+      "id",
+      "inicio",
+      "motivo"
+    ],
+    "canonical": true,
+    "compatibility_alter": true
+  }
+]

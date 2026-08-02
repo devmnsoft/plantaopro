@@ -7,7 +7,7 @@ namespace PlantaoPro.Web.TagHelpers;
 public sealed class AppIconTagHelper : TagHelper
 {
     [HtmlAttributeName("name")]
-    public AppIconKey Name { get; set; } = AppIconKey.Unknown;
+    public AppIconKey Name { get; set; }
 
     [HtmlAttributeName("size")]
     public int Size { get; set; } = 20;

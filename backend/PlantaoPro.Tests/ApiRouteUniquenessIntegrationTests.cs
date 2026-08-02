@@ -1,16 +1,15 @@
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using PlantaoPro.Api;
 using Xunit;
+using PlantaoPro.Tests.Infrastructure;
 
 namespace PlantaoPro.Tests;
 
-public sealed class ApiRouteUniquenessIntegrationTests : IClassFixture<WebApplicationFactory<ApiAssemblyMarker>>
+public sealed class ApiRouteUniquenessIntegrationTests : IClassFixture<PlantaoProApiFactory>
 {
-    private readonly WebApplicationFactory<ApiAssemblyMarker> factory;
-    public ApiRouteUniquenessIntegrationTests(WebApplicationFactory<ApiAssemblyMarker> factory) { this.factory = factory.WithWebHostBuilder(b => b.UseSetting("environment", "Testing")); }
+    private readonly PlantaoProApiFactory factory;
+    public ApiRouteUniquenessIntegrationTests(PlantaoProApiFactory factory) { this.factory = factory; }
 
     [Fact]
     public void TodasAsRotasDaApiDevemSerUnicasPorMetodoECaminhoNormalizado()

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.18.9",
-  "generatedAt": "2026-07-21",
+  "schemaVersion": "v1.31.0",
+  "generatedAt": "2026-08-02",
   "sections": [
     {
       "order": 3,
@@ -119,6 +119,19 @@
           "source": "database/schema/150_v1243_painel_publico_seguro.sql"
         }
       ]
+    },
+    {
+      "order": 16,
+      "name": "Operação assistida v1.31.0",
+      "objects": [
+        {
+          "name": "plantaopro.operacao_assistida_v1310",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/210_v1310_consolidacao_operacao_assistida.sql"
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -148,6 +161,23 @@
     "meu_dia_item_estados",
     "meu_dia_historico",
     "paineis_publicos",
-    "painel_publico_tokens"
+    "painel_publico_tokens",
+    "work_items",
+    "work_item_assignments",
+    "work_item_comments",
+    "work_item_history",
+    "notifications",
+    "notification_recipients",
+    "notification_read_states",
+    "notification_preferences",
+    "user_favorites",
+    "recent_items",
+    "saved_views",
+    "saved_filters",
+    "medico_disponibilidade",
+    "medico_disponibilidade_periodos",
+    "medico_indisponibilidades",
+    "agenda_change_history",
+    "operational_transition_history"
   ]
 }

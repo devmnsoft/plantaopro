@@ -6,6 +6,7 @@ using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
 using PlantaoPro.Api.Clinical;
+using PlantaoPro.Api.Realtime;
 using System.Text;
 
 using PlantaoPro.CrossCutting.Security;
@@ -19,6 +20,7 @@ if (builder.Environment.IsProduction() && !builder.Configuration.GetValue("Authe
 }
 
 
+builder.Services.AddSignalR();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<RequestLogContextFilter>();
@@ -227,6 +229,10 @@ app.UseAuthentication();
 app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<OperacaoHub>("/hubs/operacao");
+app.MapHub<FilaHub>("/hubs/fila");
+app.MapHub<NotificacoesHub>("/hubs/notificacoes");
+app.MapHub<EscalasHub>("/hubs/escalas");
 ApiRouteStartupValidator.Validate(app);
 app.Run();
 

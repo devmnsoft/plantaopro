@@ -1,0 +1,9 @@
+@model PlantaoPro.Web.Models.MinhaCentralViewModel
+@{ViewData["Title"]="Minha Central";}
+<div class="central-workspace" data-central-root data-api-base="/bff/operacao">
+ @if(!string.IsNullOrEmpty(Model.Error)){<section class="state-panel" role="alert"><h2>Sua Central não carregou</h2><p>@Model.Error</p><button type="button" class="button button-primary" data-central-retry>Tentar novamente</button></section>}
+ else {<partial name="_DaySummary" model="Model.Summary"/><partial name="_PrioritySection" model="Model.Items"/><partial name="_KanbanBoard" model="Model.Items"/><div class="central-lower"><partial name="_ActivityFeed"/><partial name="_QuickActions"/></div>}
+ <partial name="_WorkItemDrawer" />
+</div>
+@section Styles{<link rel="stylesheet" href="~/css/pages/minha-central.css" asp-append-version="true" />}
+@section Scripts{<script type="module" src="~/js/pages/minha-central.js" asp-append-version="true"></script>}

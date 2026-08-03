@@ -7,6 +7,10 @@ using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
 using PlantaoPro.Api.Clinical;
 using PlantaoPro.Api.Realtime;
+using PlantaoPro.Api.Operation360.WorkItems;
+using PlantaoPro.Api.Operation360.Realtime;
+using PlantaoPro.Api.Operation360.Notifications;
+using PlantaoPro.Api.Operation360.Productivity;
 using System.Text;
 
 using PlantaoPro.CrossCutting.Security;
@@ -190,6 +194,13 @@ builder.Services.AddScoped<ImpersonationTokenService>();
 builder.Services.AddScoped<ImpersonationAuthorizationService>();
 builder.Services.AddScoped<IMeuDiaRepository, MeuDiaRepository>();
 builder.Services.AddScoped<IMeuDiaService, MeuDiaService>();
+builder.Services.AddScoped<IWorkItemRepository, WorkItemRepository>();
+builder.Services.AddScoped<IWorkItemService, WorkItemService>();
+builder.Services.AddScoped<IOperationRealtimePublisher, OperationRealtimePublisher>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IOperationNotificationService, OperationNotificationService>();
+builder.Services.AddScoped<IProductivityRepository, ProductivityRepository>();
+builder.Services.AddScoped<IProductivityService, ProductivityService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

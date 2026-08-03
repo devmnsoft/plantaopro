@@ -1,0 +1,2 @@
+@model PlantaoPro.Web.Models.CentralSummaryViewModel
+<section aria-labelledby="daySummaryTitle"><div class="section-heading"><div><span class="eyebrow">Hoje</span><h2 id="daySummaryTitle">Resumo do dia</h2></div></div><dl class="day-summary"><div><dt>Abertas</dt><dd>@Model.Open</dd></div><div><dt>Atrasadas</dt><dd>@Model.Overdue</dd></div><div><dt>Críticas</dt><dd>@Model.Critical</dd></div><div><dt>Aguardando</dt><dd>@Model.Waiting</dd></div><div><dt>Concluídas hoje</dt><dd>@Model.CompletedToday</dd></div></dl></section>

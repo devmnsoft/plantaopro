@@ -1,96 +1,16 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using PlantaoPro.Api;
-using PlantaoPro.Api.Data;
-using PlantaoPro.Api.Models;
-
-namespace PlantaoPro.Api.Controllers
+using Microsoft.AspNetCore.Authorization; using Microsoft.AspNetCore.Mvc; using PlantaoPro.Api.Operation360.Notifications;
+namespace PlantaoPro.Api.Controllers;
+[ApiController,Authorize,Route("api/notificacoes")]
+public sealed class NotificacoesController : ControllerBase
 {
-    [ApiController]
-    [Route("api/notificacoes")]
-    public class NotificacoesController : ControllerBase
-    {
-        private readonly NotificacaoService service;
-        private readonly ILogger<NotificacoesController> logger;
-
-        public NotificacoesController(NotificacaoService service, ILogger<NotificacoesController> logger)
-        {
-            this.service = service;
-            this.logger = logger;
-        }
-
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] NotificationFilterRequest f)
-        {
-            try
-            {
-                var uid = GetUserId();
-                var r = await service.ListarAsync(uid, f);
-                return StatusCode(r.StatusCode, r);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro ao listar notificações do usuário autenticado");
-                return StatusCode(500, ApiResponse<string>.Fail("Não foi possível listar notificações no momento.", 500));
-            }
-        }
-
-        [Authorize]
-        [HttpGet("nao-lidas")]
-        public async Task<IActionResult> NaoLidas([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
-        {
-            try
-            {
-                var uid = GetUserId();
-                var filtro = new NotificationFilterRequest(null, false, null, null, page, pageSize);
-                var r = await service.ListarAsync(uid, filtro);
-                return StatusCode(r.StatusCode, r);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro ao listar notificações não lidas do usuário autenticado");
-                return StatusCode(500, ApiResponse<string>.Fail("Não foi possível listar notificações não lidas no momento.", 500));
-            }
-        }
-
-        [Authorize]
-        [HttpPut("{id:guid}/lida")]
-        public async Task<IActionResult> Lida(Guid id)
-        {
-            try
-            {
-                var uid = GetUserId();
-                var r = await service.MarcarLidaAsync(uid, id, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-                return StatusCode(r.StatusCode, r);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro ao marcar notificação {NotificacaoId} como lida", id);
-                return StatusCode(500, ApiResponse<string>.Fail("Não foi possível marcar a notificação como lida no momento.", 500));
-            }
-        }
-
-        [Authorize]
-        [HttpPut("lidas")]
-        public async Task<IActionResult> Lidas()
-        {
-            try
-            {
-                var uid = GetUserId();
-                var r = await service.MarcarTodasLidasAsync(uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
-                return StatusCode(r.StatusCode, r);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Erro ao marcar todas as notificações como lidas");
-                return StatusCode(500, ApiResponse<string>.Fail("Não foi possível marcar as notificações como lidas no momento.", 500));
-            }
-        }
-
-        private Guid GetUserId()
-        {
-            return Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);
-        }
-    }
+ private readonly IOperationNotificationService service; private readonly ILogger<NotificacoesController> logger; public NotificacoesController(IOperationNotificationService service,ILogger<NotificacoesController> logger){this.service=service;this.logger=logger;}
+ [HttpGet] public async Task<IActionResult> List(CancellationToken ct)=>Ok(await service.ListAsync(false,ct));
+ [HttpGet("nao-lidas")] public async Task<IActionResult> Unread(CancellationToken ct)=>Ok(await service.ListAsync(true,ct));
+ [HttpPost("{id:guid}/lida")] public async Task<IActionResult> Read(Guid id,CancellationToken ct)=>await service.ReadAsync(id,ct)?NoContent():NotFound();
+ [HttpPost("marcar-todas-lidas")] public async Task<IActionResult> ReadAll(CancellationToken ct)=>Ok(new { updated=await service.ReadAllAsync(ct) });
+ [HttpPut("lidas")] public Task<IActionResult> ReadAllCompatibility(CancellationToken ct)=>ReadAll(ct);
+ [HttpDelete("{id:guid}")] public async Task<IActionResult> Delete(Guid id,CancellationToken ct)=>await service.DeleteAsync(id,ct)?NoContent():NotFound();
+ [HttpGet("preferencias")] public async Task<IActionResult> Preferences(CancellationToken ct)=>Ok(await service.PreferencesAsync(ct));
+ [HttpPut("preferencias")] public async Task<IActionResult> Save([FromBody] NotificationPreferencesRequest request,CancellationToken ct){await service.SavePreferencesAsync(request,ct);return NoContent();}
+ private IActionResult LegacyFailure(Exception ex){logger.LogError(ex,"Falha ao atualizar notificações persistidas");return StatusCode(500,PlantaoPro.Api.Models.ApiResponse<string>.Fail("As notificações não puderam ser atualizadas agora.",500));}
 }

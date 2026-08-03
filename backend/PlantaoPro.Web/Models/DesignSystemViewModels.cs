@@ -173,3 +173,13 @@ public sealed class MenuItemViewModel
     public bool IsLocked { get; set; }
     public string LockedReason { get; set; } = string.Empty;
 }
+
+public sealed record PageIntroductionViewModel(
+    string Title,
+    string Description,
+    string Benefit,
+    string? ActionText = null,
+    string? ActionName = null,
+    string? ActionController = null,
+    IReadOnlyList<string>? Steps = null,
+    string Eyebrow = "Visão operacional");

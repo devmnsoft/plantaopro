@@ -6,15 +6,13 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#155eef" />
+    <meta name="theme-color" content="#1f73f1" />
     <link rel="manifest" href="~/manifest.json" />
     <title>@(ViewData["Title"] ?? "PlantãoPro")</title>
     <link rel="icon" type="image/svg+xml" href="~/media/brand/favicon.svg" />
     <link rel="apple-touch-icon" href="~/media/brand/apple-touch-icon.png" />
     <link rel="stylesheet" href="~/css/plantaopro.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/app-icons.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/design-system/tokens.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/design-system/app-shell.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/drawers.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
@@ -54,6 +52,7 @@
     <partial name="_ConfirmModal" model="new PlantaoPro.Web.Models.ConfirmModalViewModel()" />
     <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
     <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>
+    <script src="~/js/form-experience.js" asp-append-version="true"></script>
     @if (isAuthenticated)
     {
         <script src="~/js/command-palette.js" asp-append-version="true"></script>

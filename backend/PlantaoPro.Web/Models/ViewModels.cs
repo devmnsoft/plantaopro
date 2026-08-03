@@ -181,21 +181,32 @@ public record DashboardChartItem(string Label, decimal Valor);
 
 
     public record PlantaoDetailsDto(Guid Id, Guid HospitalId, Guid EspecialidadeId, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicio, DateTime DataFim, decimal Valor, int Vagas, int VagasDisponiveis, string Tipo, string Status, string? Observacoes, string RegStatus, DateTime RegDate);
-    public record PlantaoFormViewModel
+    public record PlantaoFormViewModel : IValidatableObject
     {
         public Guid? Id { get; set; }
-        [Required] public Guid HospitalId { get; set; }
-        [Required] public Guid EspecialidadeId { get; set; }
-        [Required] public DateTime DataInicio { get; set; }
-        [Required] public DateTime DataFim { get; set; }
-        [Range(0, double.MaxValue, ErrorMessage = "Valor não pode ser negativo.")] public decimal Valor { get; set; }
-        [Range(1, int.MaxValue, ErrorMessage = "Vagas deve ser maior que zero.")] public int Vagas { get; set; }
-        [Required] public string Tipo { get; set; } = "Presencial";
+        [Required(ErrorMessage = "Selecione um hospital.")] public Guid HospitalId { get; set; }
+        [Required(ErrorMessage = "Selecione uma especialidade.")] public Guid EspecialidadeId { get; set; }
+        [Required(ErrorMessage = "Informe a data inicial.")] public DateTime DataInicio { get; set; }
+        [Required(ErrorMessage = "Informe a data final.")] public DateTime DataFim { get; set; }
+        [Range(typeof(decimal), "0", "1000000", ErrorMessage = "Informe um valor entre R$ 0,00 e R$ 1.000.000,00.")] public decimal Valor { get; set; }
+        [Range(1, 500, ErrorMessage = "Informe entre 1 e 500 vagas.")] public int Vagas { get; set; }
+        [Required(ErrorMessage = "Selecione o tipo de plantão.")]
+        [RegularExpression("^(Presencial|Remoto|Sobreaviso|Híbrido)$", ErrorMessage = "Selecione um tipo de plantão válido.")]
+        public string Tipo { get; set; } = "Presencial";
+        [StringLength(1000, ErrorMessage = "As observações devem ter no máximo 1.000 caracteres.")]
         public string? Observacoes { get; set; }
         public string? Status { get; set; }
         public string? ErrorMessage { get; set; }
         public IEnumerable<HospitalDto> Hospitais { get; set; } = Enumerable.Empty<HospitalDto>();
         public IEnumerable<EspecialidadeDto> Especialidades { get; set; } = Enumerable.Empty<EspecialidadeDto>();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (HospitalId == Guid.Empty) yield return new ValidationResult("Selecione um hospital válido.", new[] { nameof(HospitalId) });
+            if (EspecialidadeId == Guid.Empty) yield return new ValidationResult("Selecione uma especialidade válida.", new[] { nameof(EspecialidadeId) });
+            if (DataFim <= DataInicio) yield return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { nameof(DataFim) });
+            if (DataInicio != default && DataFim.Subtract(DataInicio).TotalDays > 7) yield return new ValidationResult("O período do plantão não pode ultrapassar 7 dias.", new[] { nameof(DataFim) });
+        }
     }
 
     public record StatusActionViewModel(Guid Id, [Required] string Justificativa);
@@ -273,6 +284,14 @@ public record DashboardChartItem(string Label, decimal Valor);
         [Required]
         public string RegStatus { get; set; } = "A";
         public IEnumerable<EspecialidadeDto> Especialidades { get; set; } = Enumerable.Empty<EspecialidadeDto>();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (HospitalId == Guid.Empty) yield return new ValidationResult("Selecione um hospital válido.", new[] { nameof(HospitalId) });
+            if (EspecialidadeId == Guid.Empty) yield return new ValidationResult("Selecione uma especialidade válida.", new[] { nameof(EspecialidadeId) });
+            if (DataFim <= DataInicio) yield return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { nameof(DataFim) });
+            if (DataInicio != default && DataFim.Subtract(DataInicio).TotalDays > 7) yield return new ValidationResult("O período do plantão não pode ultrapassar 7 dias.", new[] { nameof(DataFim) });
+        }
     }
 
     public record UpdateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus);

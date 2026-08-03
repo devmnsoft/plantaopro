@@ -5,11 +5,11 @@
     var items = Model?.Items ?? Array.Empty<PlantaoPro.Web.Models.EscalaResumoDto>();
 }
 
-<div class="page-header">
-    <h2>Escalas Médicas</h2>
-    <p class="text-muted">Acompanhe solicitações, confirmações e execução dos plantões.</p>
-    <button class="btn btn-primary" disabled title="Ação indisponível">Nova Escala</button>
-</div>
+<partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
+    "Escalas",
+    "Acompanhe profissionais vinculados aos plantões, confirmações, recusas, substituições e conflitos.",
+    "Priorize pendências de cobertura sem perder o contexto do plantão.",
+    Steps: new[] { "Consulte escalas e seus status.", "Revise conflitos e solicitações.", "Confirme ou substitua profissionais autorizados." })' />
 
 @if (!items.Any())
 {
@@ -23,7 +23,7 @@ else
 {
     <div class="table-responsive">
         <table class="table table-modern align-middle mb-0">
-            <thead>
+            <caption class="visually-hidden">Escalas médicas e situação operacional</caption><thead>
                 <tr>
                     <th>Médico</th>
                     <th>Hospital</th>
@@ -49,11 +49,11 @@ else
                         <td class="text-end">
                             <div class="action-buttons">
                                 <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@e.Id">Detalhes</a>
-                                <button class="btn btn-sm btn-soft-success" disabled title="Ação indisponível">Confirmar</button>
-                                <button class="btn btn-sm btn-soft-danger" disabled title="Ação indisponível">Recusar</button>
-                                <button class="btn btn-sm btn-soft-warning" disabled title="Ação indisponível">Cancelar</button>
-                                <button class="btn btn-sm btn-outline-success" disabled title="Ação indisponível">Realizado</button>
-                                <button class="btn btn-sm btn-outline-primary" disabled title="Ação indisponível">Pagamentos</button>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" disabled>Confirmar</button><span class="visually-hidden">Confirmação disponível somente para solicitações pendentes.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" disabled>Recusar</button><span class="visually-hidden">Recusa disponível somente para solicitações pendentes.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-warning" disabled>Cancelar</button><span class="visually-hidden">Cancelamento depende do status e das permissões.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-success" disabled>Realizado</button><span class="visually-hidden">Conclusão disponível após o término do plantão.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-primary" disabled>Pagamentos</button><span class="visually-hidden">Pagamento disponível após a realização.</span></span>
                             </div>
                         </td>
                     </tr>

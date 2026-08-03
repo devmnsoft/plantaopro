@@ -1,0 +1,5 @@
+export class RealtimeClient{
+ constructor(handlers){this.handlers=handlers;this.retry=1000;this.poll=null;}
+ async connect(){if(!window.signalR){this.startPolling();return;}this.connection=new window.signalR.HubConnectionBuilder().withUrl('/hubs/operacao').withAutomaticReconnect([0,2000,5000,10000]).build();['WorkItemCriado','WorkItemAtualizado','WorkItemConcluido'].forEach(name=>this.connection.on(name,payload=>this.handlers.onWorkItem?.(payload)));['NotificacaoRecebida','NotificacaoLida'].forEach(name=>this.connection.on(name,payload=>this.handlers.onNotification?.(payload)));this.connection.onreconnecting(()=>document.body.dataset.realtime='offline');this.connection.onreconnected(()=>{document.body.dataset.realtime='online';this.handlers.onWorkItem?.();this.handlers.onNotification?.();});try{await this.connection.start();document.body.dataset.realtime='online';}catch{document.body.dataset.realtime='offline';this.startPolling();}}
+ startPolling(){if(this.poll)return;this.poll=window.setInterval(()=>{this.handlers.onWorkItem?.();this.handlers.onNotification?.();},30000);}
+}

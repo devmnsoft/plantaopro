@@ -1,9 +1,1 @@
-<div class="notification-drawer offcanvas offcanvas-end" tabindex="-1" id="notificationDrawer" aria-labelledby="notificationDrawerTitle">
-    <div class="offcanvas-header">
-        <h2 class="h5 offcanvas-title" id="notificationDrawerTitle">Notificações</h2>
-        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar notificações"></button>
-    </div>
-    <div class="offcanvas-body" aria-live="polite">
-        <p class="text-muted mb-0">As notificações reais serão exibidas conforme suas permissões e contexto.</p>
-    </div>
-</div>
+<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden><header><div><span class="eyebrow">Atualizações</span><h2 id="notificationTitle">Notificações</h2></div><button type="button" data-drawer-close aria-label="Fechar notificações"><app-icon name="Close" size="20" /></button></header><div class="drawer-toolbar"><select aria-label="Filtrar categoria" data-notification-filter><option value="">Todas as categorias</option><option>OPERACAO</option><option>ESCALA</option><option>CLINICA</option><option>FINANCEIRO</option></select><button type="button" class="button button-subtle" data-notification-read-all>Marcar todas como lidas</button></div><div class="drawer-body" data-notification-list aria-live="polite"><div class="skeleton-list" aria-label="Carregando notificações"></div></div></section>

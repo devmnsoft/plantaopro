@@ -1,0 +1,2 @@
+@model (string Status,string Label,List<PlantaoPro.Web.Models.WorkItemViewModel> Items)
+<section class="kanban-column" data-status="@Model.Status" aria-labelledby="column-@Model.Status"><header><h3 id="column-@Model.Status">@Model.Label</h3><span>@Model.Items.Count</span></header><div class="kanban-stack" data-kanban-stack>@foreach(var item in Model.Items){<partial name="_WorkItemCard" model="item"/>}@if(Model.Items.Count==0){<p class="column-empty">Nenhuma tarefa nesta etapa.</p>}</div></section>

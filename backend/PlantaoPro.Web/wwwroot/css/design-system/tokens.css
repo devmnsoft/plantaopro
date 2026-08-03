@@ -97,3 +97,6 @@
     --pp-selected-bg: var(--pp-brand-50);
     --pp-disabled-opacity: .55;
 }
+
+/* App Shell 7.0 semantic aliases and density controls. */
+:root{--pp-navy:#10243e;--pp-navy-2:#183653;--pp-accent:#176b87;--pp-accent-strong:#0e566f;--pp-bg:var(--pp-bg-app);--pp-surface:var(--pp-bg-surface);--pp-surface-muted:var(--pp-bg-subtle);--pp-text:var(--pp-text-primary);--pp-text-soft:var(--pp-text-secondary);--pp-shadow:var(--pp-shadow-lg);--pp-radius:var(--pp-radius-md);--pp-rail:76px;--pp-sidebar:258px;--pp-topbar:72px;--pp-density:1;--pp-fast:var(--pp-transition-fast);--pp-z-drawer:1070}html[data-density="compact"]{--pp-density:.82}html[data-density="comfortable"]{--pp-density:1.18}

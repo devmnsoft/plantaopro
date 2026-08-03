@@ -1,25 +1,2 @@
-@using PlantaoPro.Web.Services.Security
-@inject IMenuBuilderService MenuBuilder
-@{
-    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
-    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global";
-    var planName = User.FindFirst("plano")?.Value ?? "Plano não informado";
-}
-<aside class="app-sidebar" id="appSidebar" aria-label="Navegação principal">
- <div class="sidebar-brand">
-  <img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" class="brand-logo tenant-logo-light" />
-  <div class="brand-subtitle" title="@tenantName">@tenantName</div>
-  <div class="sidebar-badges"><span class="pp-pill pp-pill-soft"><i class="bi bi-gem" aria-hidden="true"></i>@planName</span></div>
- </div>
- <nav class="sidebar-nav">
- @foreach (var group in MenuBuilder.Build(controller, action)) {
-  <div class="nav-section-title"><i class="bi @group.Icon" aria-hidden="true"></i><span>@group.Title</span></div>
-  @foreach (var item in group.Items) {
-   if (item.IsLocked) { <span class="nav-link-app locked" title="@item.LockedReason" aria-disabled="true"><i class="bi @item.Icon" aria-hidden="true"></i><span>@item.Title</span><small>Bloqueado</small></span> }
-   else { <a class="nav-link-app @(item.IsActive ? "active" : string.Empty)" asp-controller="@item.Controller" asp-action="@item.Action" title="@item.Title" aria-current="@(item.IsActive ? "page" : null)"><i class="bi @item.Icon" aria-hidden="true"></i><span>@item.Title</span></a> }
-  }
- }
- </nav>
- <button class="nav-link-app sidebar-collapse m-3 border-0" id="sidebarCollapse" type="button" aria-controls="appSidebar" aria-expanded="true"><i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i><span>Recolher menu</span></button>
-</aside>
+@{var tenantName=User.FindFirst("cliente")?.Value??User.FindFirst("tenant")?.Value??"Organização";var profile=User.Claims.FirstOrDefault(x=>x.Type.EndsWith("role"))?.Value??"Profissional";}
+<aside class="app-sidebar" id="appSidebar" aria-label="Navegação contextual"><header><img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro"/><strong>@tenantName</strong><span>@profile</span></header><nav><p>Meu trabalho</p><a asp-controller="MinhaCentral" asp-action="Index"><app-icon name="Dashboard" size="18"/>Minha Central</a><a asp-controller="MeuDia" asp-action="Index"><app-icon name="Calendar" size="18"/>Minha agenda</a><p>Operação</p><a asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="18"/>Plantões</a><a asp-controller="Escalas" asp-action="Index"><app-icon name="Users" size="18"/>Escalas</a><p>Assistência</p><a asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="18"/>Pacientes</a><a asp-controller="CentralAtendimento" asp-action="Index"><app-icon name="Clinical" size="18"/>Atendimento</a></nav><section data-productivity-links><h2>Favoritos</h2><div data-favorites><p>Nenhum favorito.</p></div><h2>Recentes</h2><div data-recents><p>Nenhum item recente.</p></div></section><footer><a asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="18"/>Configurações</a><a asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="18"/>Ajuda</a></footer></aside>

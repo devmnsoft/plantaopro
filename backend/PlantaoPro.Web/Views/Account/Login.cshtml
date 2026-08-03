@@ -3,19 +3,51 @@
     Layout = "_AuthLayout";
     ViewData["Title"] = "Entrar";
 }
-<div class="login-shell container py-4 auth-experience">
-    @await Html.PartialAsync("_ToastMessages")
+<div class="auth-experience">
     <div class="login-card-modern">
-        <section class="auth-story" aria-labelledby="authStoryTitle"><img src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" /><h1 id="authStoryTitle">Sua operação de saúde, conectada de ponta a ponta.</h1><p>Escalas, assistência e gestão em um ambiente seguro e preparado para decisões em tempo real.</p><img class="auth-illustration" src="~/media/illustrations/login-operations.svg" width="640" height="480" alt="Organização visual da operação médica" /></section>
-        <div class="auth-form-panel"><h2>Acesse sua central</h2><p class="text-muted mb-4">Continue de onde parou com segurança.</p>
-        <form asp-action="Login" method="post" id="loginForm" novalidate>
-            @Html.AntiForgeryToken()
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" aria-live="assertive"></div>
-            <div class="mb-3"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control form-control-lg" autocomplete="username email" inputmode="email" placeholder="voce@empresa.com" /><span asp-validation-for="Email" class="text-danger small"></span></div>
-<div class="mb-3"><label asp-for="Senha" class="form-label">Senha</label><div class="input-group"><input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" autocomplete="current-password" placeholder="Sua senha" aria-describedby="capsLockWarning" /><button class="btn btn-outline-secondary" type="button" data-password-toggle aria-label="Mostrar senha" title="Mostrar senha"><app-icon name="View" size="20" /></button></div><div id="capsLockWarning" class="form-text text-warning d-none" aria-live="polite"><app-icon name="Warning" size="18" /> Caps Lock ativado.</div><span asp-validation-for="Senha" class="text-danger small"></span></div>
-            <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit"><span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none"></span></button>
-            <a asp-action="ForgotPassword" class="d-inline-block mt-3">Esqueci a senha</a>
-        </form></div>
+        <section class="auth-story" aria-labelledby="authStoryTitle">
+            <div class="auth-logo-surface">
+                <img class="auth-logo" src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" />
+            </div>
+            <h1 id="authStoryTitle">Sua operação de saúde, organizada em um só lugar.</h1>
+            <p>Gerencie plantões, escalas, equipes, atendimento e financeiro com clareza, segurança e informações atualizadas.</p>
+            <ul class="auth-benefits" aria-label="Benefícios da plataforma">
+                <li>Escalas e coberturas em tempo real.</li>
+                <li>Jornadas assistenciais integradas.</li>
+                <li>Gestão financeira e operacional.</li>
+                <li>Segurança e rastreabilidade.</li>
+            </ul>
+        </section>
+        <section class="auth-form-panel" aria-labelledby="loginTitle">
+            <span class="pp-page-intro__eyebrow">Acesso seguro</span>
+            <h2 id="loginTitle">Entre na sua central</h2>
+            <p>Use seu e-mail profissional e sua senha para continuar.</p>
+            <form asp-action="Login" method="post" id="loginForm" novalidate data-focus-invalid>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1"></div>
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label form-required">E-mail</label>
+                    <input asp-for="Email" class="form-control form-control-lg" autocomplete="username email" inputmode="email" maxlength="254" placeholder="nome@empresa.com.br" aria-describedby="emailHelp" />
+                    <small id="emailHelp" class="form-help">Informe o e-mail vinculado ao seu acesso.</small>
+                    <span asp-validation-for="Email" class="field-validation-error"></span>
+                </div>
+                <div class="mb-3">
+                    <label asp-for="Senha" class="form-label form-required">Senha</label>
+                    <div class="input-group">
+                        <input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" autocomplete="current-password" aria-describedby="passwordHelp capsLockWarning" />
+                        <button class="btn btn-outline-secondary" type="button" data-password-toggle aria-label="Mostrar senha" aria-pressed="false"><app-icon name="View" size="20" /></button>
+                    </div>
+                    <small id="passwordHelp" class="form-help">A senha diferencia letras maiúsculas e minúsculas.</small>
+                    <div id="capsLockWarning" class="form-help d-none" role="status"><app-icon name="Warning" size="18" /> Caps Lock está ativado.</div>
+                    <span asp-validation-for="Senha" class="field-validation-error"></span>
+                </div>
+                <button id="btnLogin" class="btn btn-primary btn-lg w-100" type="submit">
+                    <span class="label">Entrar com segurança</span><span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+                </button>
+                <a asp-action="ForgotPassword" class="d-inline-block mt-3">Esqueci minha senha</a>
+            </form>
+            <div class="auth-security"><app-icon name="Lock" size="18" /><span>Conexão protegida e acessos registrados para auditoria.</span></div>
+        </section>
     </div>
 </div>
 @section Scripts {

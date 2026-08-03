@@ -1,5 +1,9 @@
 @model PlantaoPro.Web.Models.MinhaCentralViewModel
 @{ViewData["Title"]="Minha Central";}
+<partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
+ "Minha Central", "Reúne tarefas, alertas e pendências que exigem sua atenção ou a atuação da sua equipe.",
+ "Comece pelos itens prioritários e acompanhe o progresso ao longo do dia.",
+ Steps: new[] { "Revise as prioridades do dia.", "Abra um item para consultar o contexto.", "Conclua ou encaminhe a próxima ação." }, Eyebrow: "Seu dia")' />
 <div class="central-workspace" data-central-root data-api-base="/bff/operacao">
  @if(!string.IsNullOrEmpty(Model.Error)){<section class="state-panel" role="alert"><h2>Sua Central não carregou</h2><p>@Model.Error</p><button type="button" class="button button-primary" data-central-retry>Tentar novamente</button></section>}
  else {<partial name="_DaySummary" model="Model.Summary"/><partial name="_PrioritySection" model="Model.Items"/><partial name="_KanbanBoard" model="Model.Items"/><div class="central-lower"><partial name="_ActivityFeed"/><partial name="_QuickActions"/></div>}

@@ -1,102 +1,108 @@
-/* PlantãoPro Design System 2.0 — centralized semantic tokens. */
+/* PlantãoPro Premium Experience 10.0 — única fonte canônica de identidade e semântica. */
 :root {
-    --pp-brand-25: #f5f9ff;
-    --pp-brand-50: #edf5ff;
-    --pp-brand-100: #d9eaff;
-    --pp-brand-200: #bcd9ff;
-    --pp-brand-300: #8fc1ff;
-    --pp-brand-400: #5aa0ff;
-    --pp-brand-500: #347cf5;
-    --pp-brand-600: #2563eb;
-    --pp-brand-700: #1d4ed8;
-    --pp-brand-800: #1e40af;
-    --pp-brand-900: #1e3a8a;
-    --pp-neutral-0: #ffffff;
-    --pp-neutral-25: #fcfdff;
-    --pp-neutral-50: #f7f9fc;
-    --pp-neutral-100: #eef2f7;
-    --pp-neutral-200: #dfe6ef;
-    --pp-neutral-300: #c7d1df;
-    --pp-neutral-400: #94a3b8;
-    --pp-neutral-500: #64748b;
-    --pp-neutral-600: #475569;
-    --pp-neutral-700: #334155;
-    --pp-neutral-800: #1e293b;
-    --pp-neutral-900: #0f172a;
-    --pp-success: #087a4d;
-    --pp-warning: #925b0a;
-    --pp-danger: #b42336;
-    --pp-info: #245ea8;
-    --pp-surface-page: var(--pp-neutral-50);
-    --pp-surface-primary: var(--pp-neutral-0);
-    --pp-surface-secondary: var(--pp-neutral-100);
-    --pp-surface-elevated: var(--pp-neutral-0);
-    --pp-surface-inverse: var(--pp-neutral-900);
-    --pp-text-primary: var(--pp-neutral-900);
-    --pp-text-secondary: var(--pp-neutral-600);
-    --pp-text-muted: var(--pp-neutral-500);
-    --pp-text-inverse: var(--pp-neutral-25);
-    --pp-border-subtle: var(--pp-neutral-100);
-    --pp-border-default: var(--pp-neutral-200);
-    --pp-border-strong: var(--pp-neutral-300);
-    --pp-radius-xs: .375rem;
-    --pp-radius-sm: .5rem;
-    --pp-radius-md: .75rem;
-    --pp-radius-lg: 1rem;
-    --pp-radius-xl: 1.375rem;
-    --pp-shadow-xs: 0 1px 2px rgb(15 23 42 / .05);
-    --pp-shadow-sm: 0 5px 16px rgb(15 23 42 / .08);
-    --pp-shadow-md: 0 14px 32px rgb(15 23 42 / .11);
-    --pp-shadow-lg: 0 28px 64px rgb(15 23 42 / .16);
-    --pp-sidebar-expanded: 18rem;
-    --pp-sidebar-collapsed: 5rem;
-    --pp-topbar-height: 5rem;
-    --pp-content-max: 100rem;
-    --pp-brand-primary: var(--pp-brand-600);
-    --pp-brand-secondary: #0f8276;
-    --pp-brand-accent: #f59e0b;
-    --pp-primary: var(--pp-brand-600);
-    --pp-primary-hover: var(--pp-brand-700);
-    --pp-primary-soft: var(--pp-brand-50);
-    --pp-success-soft: #e8f7f0;
-    --pp-warning-soft: #fff4d8;
-    --pp-danger-soft: #ffeaed;
-    --pp-info-soft: #e8f2ff;
-    --pp-bg-app: var(--pp-surface-page);
-    --pp-bg-surface: var(--pp-surface-primary);
-    --pp-bg-subtle: var(--pp-surface-secondary);
-    --pp-bg-elevated: var(--pp-surface-elevated);
-    --pp-border: var(--pp-border-default);
-    --pp-focus: var(--pp-brand-300);
-    --pp-sidebar-bg: #0c2037;
-    --pp-sidebar-bg-secondary: #102d4c;
-    --pp-sidebar-text: var(--pp-text-inverse);
-    --pp-sidebar-muted: #b7c8dc;
-    --pp-sidebar-active: var(--pp-brand-500);
-    --pp-radius-pill: 999px;
-    --pp-space-1: .25rem;
-    --pp-space-2: .5rem;
-    --pp-space-3: .75rem;
-    --pp-space-4: 1rem;
-    --pp-space-5: 1.5rem;
-    --pp-space-6: 2rem;
-    --pp-space-8: 3rem;
-    --pp-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    --pp-font-size-sm: .875rem;
-    --pp-font-size-base: 1rem;
-    --pp-line-height: 1.55;
-    --pp-sidebar-width: var(--pp-sidebar-expanded);
-    --pp-sidebar-collapsed-width: var(--pp-sidebar-collapsed);
-    --pp-z-sidebar: 1040;
-    --pp-z-overlay: 1060;
-    --pp-z-topbar: 1020;
-    --pp-z-toast: 1090;
-    --pp-transition-fast: 140ms ease;
-    --pp-transition: 220ms cubic-bezier(.2, .8, .2, 1);
-    --pp-hover-bg: var(--pp-neutral-100);
-    --pp-selected-bg: var(--pp-brand-50);
-    --pp-disabled-opacity: .55;
-}
+    /* Identidade oficial */
+    --pp-brand-primary: #1f73f1;
+    --pp-brand-primary-hover: #185fc8;
+    --pp-brand-primary-active: #124b9f;
+    --pp-brand-primary-soft: #eaf4ff;
+    --pp-brand-dark: #0b2a52;
+    --pp-brand-dark-hover: #071f3e;
+    --pp-brand-ink: #0e1d33;
+    --pp-brand-muted: #51698d;
+    --pp-brand-light: #eaf4ff;
 
-/* App Shell 7.0 semantic aliases and density controls. */
-:root{--pp-navy:#10243e;--pp-navy-2:#183653;--pp-accent:#176b87;--pp-accent-strong:#0e566f;--pp-bg:var(--pp-bg-app);--pp-surface:var(--pp-bg-surface);--pp-surface-muted:var(--pp-bg-subtle);--pp-text:var(--pp-text-primary);--pp-text-soft:var(--pp-text-secondary);--pp-shadow:var(--pp-shadow-lg);--pp-radius:var(--pp-radius-md);--pp-rail:76px;--pp-sidebar:258px;--pp-topbar:72px;--pp-density:1;--pp-fast:var(--pp-transition-fast);--pp-z-drawer:1070}html[data-density="compact"]{--pp-density:.82}html[data-density="comfortable"]{--pp-density:1.18}
+    /* Superfícies, conteúdo e bordas */
+    --pp-page-background: #f5f8fc;
+    --pp-surface-default: #ffffff;
+    --pp-surface-subtle: #f8fafd;
+    --pp-surface-elevated: #ffffff;
+    --pp-surface-inverse: #0b2a52;
+    --pp-text-primary: #0e1d33;
+    --pp-text-secondary: #405a80;
+    --pp-text-muted: #51698d;
+    --pp-text-inverse: #ffffff;
+    --pp-border-subtle: #e5ebf3;
+    --pp-border-default: #ccd7e5;
+    --pp-border-strong: #91a5bf;
+    --pp-focus-ring: #75aaf8;
+
+    /* Semântica funcional, com contraste AA */
+    --pp-success: #087a4d;
+    --pp-success-soft: #e8f7f0;
+    --pp-warning: #805000;
+    --pp-warning-soft: #fff4d8;
+    --pp-danger: #b42336;
+    --pp-danger-soft: #ffeaed;
+    --pp-info: #245ea8;
+    --pp-info-soft: #e8f2ff;
+
+    /* Tipografia */
+    --pp-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --pp-font-display: clamp(2rem, 4vw, 3.5rem);
+    --pp-font-page-title: clamp(1.65rem, 2.5vw, 2.25rem);
+    --pp-font-section-title: clamp(1.25rem, 1.5vw, 1.5rem);
+    --pp-font-card-title: 1.0625rem;
+    --pp-font-body: 1rem;
+    --pp-font-body-small: .875rem;
+    --pp-font-label: .875rem;
+    --pp-font-helper: .8125rem;
+    --pp-font-caption: .75rem;
+    --pp-line-tight: 1.2;
+    --pp-line-body: 1.55;
+    --pp-reading-width: 68ch;
+
+    /* Espaçamento 4px */
+    --pp-space-1: .25rem; --pp-space-2: .5rem; --pp-space-3: .75rem;
+    --pp-space-4: 1rem; --pp-space-5: 1.25rem; --pp-space-6: 1.5rem;
+    --pp-space-8: 2rem; --pp-space-10: 2.5rem; --pp-space-12: 3rem;
+
+    /* Dimensões e layout */
+    --pp-rail-width: 4.75rem;
+    --pp-sidebar-min: 14rem;
+    --pp-sidebar-max: 17rem;
+    --pp-topbar-height: 4.5rem;
+    --pp-content-max: 100rem;
+    --pp-touch-target: 2.75rem;
+
+    /* Bordas, raios e elevação */
+    --pp-border-width: 1px;
+    --pp-radius-xs: .375rem; --pp-radius-sm: .5rem; --pp-radius-md: .75rem;
+    --pp-radius-lg: 1rem; --pp-radius-xl: 1.375rem; --pp-radius-pill: 999px;
+    --pp-shadow-xs: 0 1px 2px rgb(14 29 51 / .06);
+    --pp-shadow-sm: 0 6px 20px rgb(14 29 51 / .08);
+    --pp-shadow-md: 0 16px 40px rgb(14 29 51 / .12);
+
+    /* Movimento e camadas */
+    --pp-transition-fast: 140ms ease;
+    --pp-transition: 220ms cubic-bezier(.2,.8,.2,1);
+    --pp-z-topbar: 1020; --pp-z-sidebar: 1040; --pp-z-overlay: 1060;
+    --pp-z-drawer: 1070; --pp-z-toast: 1090;
+
+    /* Compatibilidade temporária dos componentes existentes */
+    --pp-primary: var(--pp-brand-primary);
+    --pp-primary-hover: var(--pp-brand-primary-hover);
+    --pp-primary-soft: var(--pp-brand-primary-soft);
+    --pp-bg-app: var(--pp-page-background);
+    --pp-bg-surface: var(--pp-surface-default);
+    --pp-bg-subtle: var(--pp-surface-subtle);
+    --pp-bg-elevated: var(--pp-surface-elevated);
+    --pp-surface-page: var(--pp-page-background);
+    --pp-surface-primary: var(--pp-surface-default);
+    --pp-surface-secondary: var(--pp-surface-subtle);
+    --pp-border: var(--pp-border-default);
+    --pp-focus: var(--pp-focus-ring);
+    --pp-muted: var(--pp-text-muted);
+    --pp-shadow: var(--pp-shadow-sm);
+    --pp-radius: var(--pp-radius-md);
+    --pp-sidebar-bg: var(--pp-brand-dark);
+    --pp-sidebar-bg-secondary: var(--pp-brand-dark-hover);
+    --pp-sidebar-text: var(--pp-text-inverse);
+    --pp-sidebar-muted: #c6d7eb;
+    --pp-sidebar-active: var(--pp-brand-primary);
+    --pp-sidebar-width: var(--pp-sidebar-max);
+    --pp-sidebar-collapsed-width: var(--pp-rail-width);
+    --pp-disabled-opacity: .58;
+    --pp-density: 1;
+}
+html[data-density="compact"] { --pp-density: .88; }
+html[data-density="comfortable"] { --pp-density: 1.12; }

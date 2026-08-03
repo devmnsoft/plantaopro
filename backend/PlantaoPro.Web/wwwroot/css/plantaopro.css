@@ -1,23 +1,24 @@
 @import url('./design-system/tokens.css');
 @import url('./design-system/foundation.css');
+@import url('./design-system/typography.css');
 @import url('./design-system/layout.css');
 @import url('./design-system/navigation.css');
 @import url('./design-system/components.css');
-@import url('./design-system/forms.css');
-@import url('./design-system/tables.css');
-@import url('./design-system/states.css');
-@import url('./design-system/accessibility.css');
-@import url('./design-system/responsive.css');
-@import url('./design-system/white-label.css');
-@import url('./design-system/typography.css');
 @import url('./design-system/buttons.css');
 @import url('./design-system/cards.css');
 @import url('./design-system/badges.css');
-@import url('./design-system/overlays.css');
+@import url('./design-system/forms.css');
+@import url('./design-system/tables.css');
 @import url('./design-system/feedback.css');
+@import url('./design-system/states.css');
 @import url('./design-system/charts.css');
+@import url('./design-system/overlays.css');
 @import url('./design-system/workspaces.css');
+@import url('./design-system/accessibility.css');
+@import url('./design-system/responsive.css');
+@import url('./design-system/white-label.css');
 @import url('./design-system/utilities.css');
+@import url('./design-system/premium-experience.css');
 
 /* Visual Experience 3.0 — autenticação com narrativa e formulário contextual. */
 .auth-experience .login-card-modern {

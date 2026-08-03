@@ -32,7 +32,7 @@ public class PlantoesController : BaseWebController
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(PlantaoFormViewModel model)
     {
-        if (model.DataFim <= model.DataInicio) ModelState.AddModelError(nameof(model.DataFim), "Data fim deve ser maior que data início.");
+        Normalize(model);
         if (!ModelState.IsValid)
         {
             if (IsAjaxRequest()) return AjaxError("Revise os campos obrigatórios do plantão.", 400);
@@ -54,7 +54,7 @@ public class PlantoesController : BaseWebController
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(Guid id, PlantaoFormViewModel model)
     {
-        if (model.DataFim <= model.DataInicio) ModelState.AddModelError(nameof(model.DataFim), "Data fim deve ser maior que data início.");
+        Normalize(model);
         if (!ModelState.IsValid)
         {
             if (IsAjaxRequest()) return AjaxError("Revise os campos obrigatórios do plantão.", 400);
@@ -74,6 +74,12 @@ public class PlantoesController : BaseWebController
     {
         if (string.IsNullOrWhiteSpace(model.Justificativa)) { TempData["Error"] = "Justificativa obrigatória para cancelar."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
         return await SendStatusAction(model.Id, "api/plantoes/{0}/cancelar", "Plantão cancelado.", "Cancelamento não realizado.", model.Justificativa);
+    }
+
+    private static void Normalize(PlantaoFormViewModel model)
+    {
+        model.Tipo = model.Tipo.Trim();
+        model.Observacoes = string.IsNullOrWhiteSpace(model.Observacoes) ? null : model.Observacoes.Trim();
     }
 
     private async Task<IActionResult> SendPlantao(PlantaoFormViewModel model, Guid? id)

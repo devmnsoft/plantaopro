@@ -7,3 +7,4 @@
 - ALTER compatibilidade: `True`
 - Colunas primeira: atualizado_em, codigo, criado_em, dados, id, nome, status, tenant_id
 - Colunas segunda: disponibilidade_id, fim, id, inicio, motivo
+

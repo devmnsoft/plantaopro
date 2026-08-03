@@ -116,8 +116,6 @@
     "plantaopro.mobile_dispositivos",
     "plantaopro.mobile_push_tokens",
     "plantaopro.modulos_sistema",
-    "plantaopro.notificacao_filas",
-    "plantaopro.notificacao_preferencias",
     "plantaopro.notificacao_regras",
     "plantaopro.notificacoes",
     "plantaopro.notification_preferences",

@@ -30,7 +30,7 @@ public class PremiumController : ControllerBase
     }
 
     [HttpGet("notificacoes/preferencias")]
-    [ProducesResponseType(typeof(ApiResponse<IEnumerable<NotificationPreferenceDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<LegacyNotificationChannelPreferenceDto>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetNotificationPreferences()
     {
         var uid = Guid.Parse(User.Claims.First(c => c.Type == "uid").Value);

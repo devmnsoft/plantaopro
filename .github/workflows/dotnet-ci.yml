@@ -440,3 +440,40 @@ jobs:
       - uses: actions/checkout@v4
       - name: Swagger route uniqueness contract
         run: dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj --filter SwaggerIntegrationTests --logger "console;verbosity=normal"
+
+  database-duplicate-profile-upgrade:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: plantaopro
+          POSTGRES_USER: plantaopro
+          POSTGRES_PASSWORD: plantaopro_demo_ci
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U plantaopro -d plantaopro" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: plantaopro
+      PGUSER: plantaopro
+      PGPASSWORD: plantaopro_demo_ci
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install canonical database
+        run: psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
+      - name: Upgrade duplicate profiles twice and assert preservation
+        run: |
+          set -o pipefail
+          mkdir -p artifacts
+          psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-duplicate-profiles.sql
+          psql -v ON_ERROR_STOP=1 -f database/migrations/2026_v1360_reconciliar_perfis_duplicados.sql 2>&1 | tee artifacts/database-duplicate-profile-upgrade.log
+          psql -v ON_ERROR_STOP=1 -f database/fixtures/assert-duplicate-profile-upgrade.sql
+          psql -v ON_ERROR_STOP=1 -f database/migrations/2026_v1360_reconciliar_perfis_duplicados.sql 2>&1 | tee -a artifacts/database-duplicate-profile-upgrade.log
+          psql -v ON_ERROR_STOP=1 -f database/fixtures/assert-duplicate-profile-upgrade.sql
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-duplicate-profile-upgrade-evidence
+          path: artifacts/database-duplicate-profile-upgrade.log

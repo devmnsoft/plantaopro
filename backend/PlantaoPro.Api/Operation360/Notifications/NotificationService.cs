@@ -1,13 +1,12 @@
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Operation360.Realtime;
+using PlantaoPro.Api.Contracts.Notifications;
 
 namespace PlantaoPro.Api.Operation360.Notifications;
 
 public sealed record NotificationDto(Guid Id, string Categoria, string Titulo, string Mensagem, string? Prioridade, string? OrigemTipo, Guid? OrigemId, string? DestinoUrl, bool Lida, DateTimeOffset CriadaEm, DateTimeOffset? ExpiraEm);
-public sealed record NotificationPreferenceDto(string Categoria, string TipoEvento, bool InApp, bool Email, bool Push, bool Whatsapp, bool Ativo);
 public sealed record NotificationReadResult(Guid Id, bool AlreadyRead);
-public sealed record NotificationPreferencesRequest(IReadOnlyList<NotificationPreferenceDto> Preferences);
 
 public interface INotificationRepository
 {

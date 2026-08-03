@@ -42,12 +42,12 @@ public sealed class NotificationPreferenceService
         this.audit = audit;
     }
 
-    public async Task<ApiResponse<IEnumerable<NotificationPreferenceDto>>> GetAsync(Guid userId)
+    public async Task<ApiResponse<IEnumerable<LegacyNotificationChannelPreferenceDto>>> GetAsync(Guid userId)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        var rows = await cn.QueryAsync<NotificationPreferenceDto>(@"select tipo as Tipo, in_app as InApp, email as Email
+        var rows = await cn.QueryAsync<LegacyNotificationChannelPreferenceDto>(@"select tipo as Tipo, in_app as InApp, email as Email
 from plantaopro.usuario_notificacao_preferencias where usuario_id=@userId order by tipo", new { userId });
-        return ApiResponse<IEnumerable<NotificationPreferenceDto>>.Ok(rows);
+        return ApiResponse<IEnumerable<LegacyNotificationChannelPreferenceDto>>.Ok(rows);
     }
 
     public async Task<ApiResponse<string>> UpsertAsync(Guid userId, UpsertNotificationPreferenceRequest request, string? ip, string? ua)

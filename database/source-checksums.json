@@ -1,4 +1,8 @@
 {
+  "database/bootstrap/010_superadmin_profile.sql": "c9cd9bdc3da715c20cbb35bfc83433a89c07b0e5ea3c9ef2fa2e39cfd42c4f99",
+  "database/bootstrap/020_superadmin_user.sql": "ce4e333d7a5e3a756d7618bd7e2321a2518bee1d6edd60794c2ea6474e0de64b",
+  "database/bootstrap/030_superadmin_permissions.sql": "34bcd57ca0baf6ce2555b603ce5f1706e9bce79e417a3f138ec90e9996c68946",
+  "database/bootstrap/040_superadmin_assertions.sql": "52e054d3f205bf35461a015a59e55c071efcccf8ae55ff822a599aa4c468cd6f",
   "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
   "database/schema/000_schema_canonico_base.sql": "f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e",
   "database/schema/010_identity_access.sql": "9ba007cec03cf0e623f884026c6534f4219d009e33a30b57478d676e69e8fa4b",
@@ -16,5 +20,6 @@
   "database/schema/130_contexto_multiempresa.sql": "deb03f24f6a422ddeabb2074bec8e0e54207d1c4ebf5e6fd7624c472ccaa7e2e",
   "database/schema/140_experiencia_premium_meu_dia.sql": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
   "database/schema/150_v1243_painel_publico_seguro.sql": "70a98b8b035155c391136e4b76af84b20145f82f570c7d68b35489eb7aa89ff9",
-  "database/schema/210_v1310_consolidacao_operacao_assistida.sql": "67b91b2ca48bdba2158be6c33971eac190178ea7b5f8fab17e1f389467feacde"
+  "database/schema/210_v1310_consolidacao_operacao_assistida.sql": "67b91b2ca48bdba2158be6c33971eac190178ea7b5f8fab17e1f389467feacde",
+  "database/schema/250_v1370_bootstrap_superadmin.sql": "f270a007a6d316926146711b5ef98a8fbebd759add1159b2ddeb5ac35ef9855e"
 }

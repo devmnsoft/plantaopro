@@ -1,7 +1,7 @@
 -- PlantãoPro - script completo oficial de instalação limpa
--- Versão do schema: v1.31.0
+-- Versão do schema: v1.37.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-08-02
+-- Data de geração: 2026-08-03
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -1832,3 +1832,177 @@ do $migration$ declare cols text; begin
  end if;
 end $migration$;
 insert into plantaopro.schema_migrations(id,script_path,checksum,applied_at) select 'v1.31.0','database/migrations/2026_v1310_consolidacao_operacao_assistida.sql','runtime-managed',now() where not exists(select 1 from plantaopro.schema_migrations where id='v1.31.0');
+
+-- ============================================================
+-- Seção 17 — Bootstrap seguro e catálogo canônico v1.37.0
+-- ============================================================
+
+-- SOURCE: database/schema/250_v1370_bootstrap_superadmin.sql
+-- SOURCE-SHA256: f270a007a6d316926146711b5ef98a8fbebd759add1159b2ddeb5ac35ef9855e
+-- v1.37.0: catálogo mínimo determinístico e infraestrutura do bootstrap.
+SET search_path TO plantaopro, public;
+SELECT pg_advisory_lock(hashtext('plantaopro.install.v1370'));
+
+ALTER TABLE plantaopro.schema_migrations
+    ADD COLUMN IF NOT EXISTS nome text,
+    ADD COLUMN IF NOT EXISTS duracao_ms bigint,
+    ADD COLUMN IF NOT EXISTS status text;
+UPDATE plantaopro.schema_migrations
+SET nome=coalesce(nome,script_path), duracao_ms=coalesce(duracao_ms,0), status=coalesce(status,'APLICADA');
+ALTER TABLE plantaopro.schema_migrations
+    ALTER COLUMN nome SET DEFAULT '', ALTER COLUMN nome SET NOT NULL,
+    ALTER COLUMN duracao_ms SET DEFAULT 0, ALTER COLUMN duracao_ms SET NOT NULL,
+    ALTER COLUMN status SET DEFAULT 'APLICADA', ALTER COLUMN status SET NOT NULL;
+
+
+WITH catalog(codigo,nome,ordem) AS (VALUES
+ ('ADMIN_SAAS','Administração SaaS',10),('TENANTS','Tenants',20),('CLIENTES','Clientes',30),('PLANOS','Planos',40),
+ ('ASSINATURAS','Assinaturas',50),('USUARIOS','Usuários',60),('PERFIS','Perfis',70),('PERMISSOES','Permissões',80),
+ ('AUDITORIA','Auditoria',90),('SEGURANCA','Segurança',100),('CONFIGURACOES','Configurações',110),
+ ('FEATURE_FLAGS','Feature flags',120),('OBSERVABILIDADE','Observabilidade',130),('SUPORTE','Suporte',140),
+ ('OPERACAO360','Operação 360',150),('SAUDE360','Saúde 360',160),('FINANCEIRO','Financeiro',170),('RELATORIOS','Relatórios',180)
+)
+INSERT INTO plantaopro.modulos_sistema(id,codigo,nome,descricao,ordem,status,reg_status)
+SELECT md5('module:'||c.codigo)::uuid,c.codigo,c.nome,'Módulo canônico PlantãoPro',c.ordem,'ATIVO','A' FROM catalog c
+WHERE NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE upper(btrim(m.codigo))=c.codigo AND m.reg_status='A');
+
+WITH catalog(codigo,nome,ordem,sensivel) AS (VALUES
+ ('VER','Ver',10,false),('LISTAR','Listar',20,false),('CRIAR','Criar',30,false),('EDITAR','Editar',40,false),
+ ('INATIVAR','Inativar',50,true),('REATIVAR','Reativar',60,true),('APROVAR','Aprovar',70,true),('CANCELAR','Cancelar',80,true),
+ ('EXCLUIR','Excluir',90,true),('EXPORTAR','Exportar',100,true),('CONFIGURAR','Configurar',110,true),
+ ('GERENCIAR','Gerenciar',120,true),('IMPERSONAR','Impersonar',130,true),('AUDITAR','Auditar',140,true),
+ ('EXECUTAR','Executar',150,true),('REPROCESSAR','Reprocessar',160,true),('VER_DADOS_SENSIVEIS','Ver dados sensíveis',170,true)
+)
+INSERT INTO plantaopro.acoes_sistema(id,codigo,nome,descricao,ordem,sensivel,status,reg_status)
+SELECT md5('action:'||c.codigo)::uuid,c.codigo,c.nome,'Ação canônica PlantãoPro',c.ordem,c.sensivel,'ATIVO','A' FROM catalog c
+WHERE NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE upper(btrim(a.codigo))=c.codigo AND a.reg_status='A');
+
+WITH combinations(modulo,acao) AS (VALUES
+ ('ADMIN_SAAS','VER'),('ADMIN_SAAS','GERENCIAR'),('TENANTS','LISTAR'),('TENANTS','CRIAR'),('TENANTS','EDITAR'),('TENANTS','INATIVAR'),('TENANTS','REATIVAR'),
+ ('TENANTS','IMPERSONAR'),('CLIENTES','LISTAR'),('CLIENTES','GERENCIAR'),('PLANOS','LISTAR'),('PLANOS','GERENCIAR'),('ASSINATURAS','LISTAR'),
+ ('ASSINATURAS','CANCELAR'),('USUARIOS','LISTAR'),('USUARIOS','GERENCIAR'),('PERFIS','LISTAR'),('PERFIS','GERENCIAR'),
+ ('PERMISSOES','LISTAR'),('PERMISSOES','GERENCIAR'),('AUDITORIA','AUDITAR'),('AUDITORIA','EXPORTAR'),('SEGURANCA','VER'),
+ ('SEGURANCA','GERENCIAR'),('CONFIGURACOES','CONFIGURAR'),('FEATURE_FLAGS','CONFIGURAR'),('OBSERVABILIDADE','VER'),
+ ('SUPORTE','GERENCIAR'),('OPERACAO360','VER'),('OPERACAO360','EXECUTAR'),('SAUDE360','VER'),('SAUDE360','VER_DADOS_SENSIVEIS'),
+ ('FINANCEIRO','VER'),('FINANCEIRO','EXPORTAR'),('RELATORIOS','VER'),('RELATORIOS','EXPORTAR')
+)
+INSERT INTO plantaopro.permissoes(id,codigo,nome,descricao,modulo,acao,modulo_id,acao_id,sensivel,status,reg_status)
+SELECT md5('permission:'||c.modulo||':'||c.acao)::uuid,c.modulo||'.'||c.acao,c.modulo||' '||c.acao,
+       'Permissão canônica PlantãoPro',c.modulo,c.acao,m.id,a.id,a.sensivel,'ATIVO','A'
+FROM combinations c
+JOIN plantaopro.modulos_sistema m ON upper(btrim(m.codigo))=c.modulo AND m.reg_status='A'
+JOIN plantaopro.acoes_sistema a ON upper(btrim(a.codigo))=c.acao AND a.reg_status='A'
+WHERE NOT EXISTS (SELECT 1 FROM plantaopro.permissoes p WHERE upper(btrim(p.codigo))=c.modulo||'.'||c.acao AND p.reg_status='A');
+
+-- SOURCE: database/bootstrap/010_superadmin_profile.sql
+-- SOURCE-SHA256: c9cd9bdc3da715c20cbb35bfc83433a89c07b0e5ea3c9ef2fa2e39cfd42c4f99
+-- v1.37.0 bootstrap condicional: o instalador define somente o hash BCrypt.
+\if :{?bootstrap_admin_password_hash}
+\if :{?bootstrap_environment}
+\else
+  \echo 'ERRO: bootstrap_environment deve ser informado explicitamente.'
+  \quit 3
+\endif
+\if :{?bootstrap_admin_email}
+\else
+  \set bootstrap_admin_email 'admin.global@plantaopro.local'
+\endif
+\if :{?bootstrap_admin_name}
+\else
+  \set bootstrap_admin_name 'Super Administrador PlantãoPro'
+\endif
+\if :{?bootstrap_force_rotation}
+\else
+  \set bootstrap_force_rotation 'true'
+\endif
+
+SELECT set_config('plantaopro.bootstrap_environment', :'bootstrap_environment', false),
+       set_config('plantaopro.bootstrap_admin_email', :'bootstrap_admin_email', false),
+       set_config('plantaopro.bootstrap_password_hash', :'bootstrap_admin_password_hash', false),
+       set_config('plantaopro.bootstrap_force_rotation', :'bootstrap_force_rotation', false);
+DO $bootstrap$
+DECLARE
+    environment_name text := current_setting('plantaopro.bootstrap_environment');
+    admin_email text := lower(btrim(current_setting('plantaopro.bootstrap_admin_email')));
+    supplied_hash text := current_setting('plantaopro.bootstrap_password_hash');
+    force_rotation boolean := current_setting('plantaopro.bootstrap_force_rotation')::boolean;
+BEGIN
+    IF supplied_hash !~ '^\\$2[aby]\\$[0-9]{2}\\$.{53}$' THEN
+        RAISE EXCEPTION 'Bootstrap recusado: hash BCrypt inválido.';
+    END IF;
+    IF lower(environment_name) = 'production' AND
+       (admin_email LIKE '%@plantaopro.local' OR NOT force_rotation OR
+        crypt(concat('PlantaoPro.Admin@','2026!','Trocar'), supplied_hash) = supplied_hash) THEN
+        RAISE EXCEPTION 'Bootstrap recusado: Production exige credencial própria e rotação obrigatória.';
+    END IF;
+END $bootstrap$;
+
+INSERT INTO plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status,reg_date)
+SELECT md5('profile:ADMINISTRADOR_GLOBAL')::uuid,NULL,NULL,'ADMINISTRADOR_GLOBAL','Super Administrador',
+       'Administração global da plataforma',true,false,'ATIVO','A',now()
+WHERE NOT EXISTS (
+    SELECT 1 FROM plantaopro.perfis
+    WHERE tenant_id IS NULL AND cliente_id IS NULL AND lower(btrim(codigo))='administrador_global' AND reg_status='A');
+\endif
+
+-- SOURCE: database/bootstrap/020_superadmin_user.sql
+-- SOURCE-SHA256: ce4e333d7a5e3a756d7618bd7e2321a2518bee1d6edd60794c2ea6474e0de64b
+\if :{?bootstrap_admin_password_hash}
+INSERT INTO plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,reg_date)
+SELECT gen_random_uuid(),NULL,NULL,:'bootstrap_admin_name',lower(btrim(:'bootstrap_admin_email')),
+       lower(btrim(:'bootstrap_admin_email')),:'bootstrap_admin_password_hash','ATIVO','A',:'bootstrap_force_rotation'::boolean,now()
+WHERE NOT EXISTS (
+    SELECT 1 FROM plantaopro.usuarios
+    WHERE lower(coalesce(nullif(btrim(email_normalizado),''),btrim(email)))=lower(btrim(:'bootstrap_admin_email')) AND reg_status='A');
+\endif
+
+-- SOURCE: database/bootstrap/030_superadmin_permissions.sql
+-- SOURCE-SHA256: 34bcd57ca0baf6ce2555b603ce5f1706e9bce79e417a3f138ec90e9996c68946
+\if :{?bootstrap_admin_password_hash}
+INSERT INTO plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_status,reg_date)
+SELECT gen_random_uuid(),NULL,NULL,u.id,p.id,'A',now()
+FROM plantaopro.usuarios u CROSS JOIN plantaopro.perfis p
+WHERE lower(coalesce(nullif(btrim(u.email_normalizado),''),btrim(u.email)))=lower(btrim(:'bootstrap_admin_email'))
+  AND u.reg_status='A' AND p.tenant_id IS NULL AND p.cliente_id IS NULL
+  AND lower(btrim(p.codigo))='administrador_global' AND p.reg_status='A'
+  AND NOT EXISTS (SELECT 1 FROM plantaopro.usuarios_perfis up WHERE up.usuario_id=u.id AND up.perfil_id=p.id AND up.reg_status='A');
+
+INSERT INTO plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,bloqueado_por_plano,reg_status,reg_date)
+SELECT gen_random_uuid(),profile.id,permission.id,true,false,'A',now()
+FROM plantaopro.perfis profile CROSS JOIN plantaopro.permissoes permission
+WHERE profile.tenant_id IS NULL AND profile.cliente_id IS NULL AND lower(btrim(profile.codigo))='administrador_global'
+  AND profile.reg_status='A' AND permission.reg_status='A'
+  AND NOT EXISTS (SELECT 1 FROM plantaopro.perfil_permissoes pp WHERE pp.perfil_id=profile.id AND pp.permissao_id=permission.id AND pp.reg_status='A');
+\endif
+
+-- SOURCE: database/bootstrap/040_superadmin_assertions.sql
+-- SOURCE-SHA256: 52e054d3f205bf35461a015a59e55c071efcccf8ae55ff822a599aa4c468cd6f
+\if :{?bootstrap_admin_password_hash}
+DO $assertions$
+DECLARE
+    matching_users integer;
+    matching_profiles integer;
+    permission_count integer;
+BEGIN
+    SELECT count(*) INTO matching_profiles FROM plantaopro.perfis
+     WHERE tenant_id IS NULL AND cliente_id IS NULL AND lower(btrim(codigo))='administrador_global' AND status='ATIVO' AND reg_status='A';
+    SELECT count(*) INTO matching_users FROM plantaopro.usuarios
+     WHERE lower(coalesce(nullif(btrim(email_normalizado),''),btrim(email)))=lower(btrim(current_setting('plantaopro.bootstrap_admin_email'))) AND reg_status='A';
+    SELECT count(*) INTO permission_count FROM plantaopro.perfil_permissoes pp
+     JOIN plantaopro.perfis p ON p.id=pp.perfil_id
+     WHERE lower(btrim(p.codigo))='administrador_global' AND p.tenant_id IS NULL AND pp.permitido AND pp.reg_status='A';
+    IF matching_profiles <> 1 OR matching_users <> 1 OR permission_count = 0 THEN
+        RAISE EXCEPTION 'Bootstrap inconsistente: perfis %, usuários %, permissões %', matching_profiles, matching_users, permission_count;
+    END IF;
+END $assertions$;
+
+INSERT INTO plantaopro.auditoria(id,codigo,nome,status,dados,criado_em)
+SELECT gen_random_uuid(),'BOOTSTRAP_ADMIN_RECONCILIADO','Bootstrap global validado','ATIVO',
+       jsonb_build_object('email_normalizado',lower(btrim(:'bootstrap_admin_email')),'senha_alterada',false),now()
+WHERE NOT EXISTS (
+    SELECT 1 FROM plantaopro.auditoria
+    WHERE codigo='BOOTSTRAP_ADMIN_RECONCILIADO'
+      AND dados->>'email_normalizado'=lower(btrim(:'bootstrap_admin_email')));
+\echo 'Bootstrap do superadministrador criado ou preservado e validado; segredos não foram exibidos.'
+\endif
+SELECT pg_advisory_unlock(hashtext('plantaopro.install.v1370'));

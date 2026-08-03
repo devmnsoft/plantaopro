@@ -90,5 +90,30 @@
     "object": "plantaopro.operacao_assistida_v1310",
     "dependsOn": [],
     "source": "database/schema/210_v1310_consolidacao_operacao_assistida.sql"
+  },
+  {
+    "object": "plantaopro.bootstrap_catalog",
+    "dependsOn": [],
+    "source": "database/schema/250_v1370_bootstrap_superadmin.sql"
+  },
+  {
+    "object": "plantaopro.bootstrap_profile",
+    "dependsOn": [],
+    "source": "database/bootstrap/010_superadmin_profile.sql"
+  },
+  {
+    "object": "plantaopro.bootstrap_user",
+    "dependsOn": [],
+    "source": "database/bootstrap/020_superadmin_user.sql"
+  },
+  {
+    "object": "plantaopro.bootstrap_permissions",
+    "dependsOn": [],
+    "source": "database/bootstrap/030_superadmin_permissions.sql"
+  },
+  {
+    "object": "plantaopro.bootstrap_assertions",
+    "dependsOn": [],
+    "source": "database/bootstrap/040_superadmin_assertions.sql"
   }
 ]

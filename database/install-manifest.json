@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.37.0",
+  "schemaVersion": "v1.39.0",
   "generatedAt": "2026-08-03",
   "sections": [
     {
@@ -143,34 +143,89 @@
           "category": "CANONICAL_IDENTITY",
           "required": true,
           "source": "database/schema/250_v1370_bootstrap_superadmin.sql"
+        }
+      ]
+    },
+    {
+      "order": 18,
+      "name": "Seeds obrigatórios de sistema v1.39.0",
+      "objects": [
+        {
+          "name": "plantaopro.seed_010_modulos",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/010_modulos.sql"
         },
         {
-          "name": "plantaopro.bootstrap_profile",
-          "type": "bootstrap",
-          "category": "BOOTSTRAP",
+          "name": "plantaopro.seed_020_acoes",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
           "required": true,
-          "source": "database/bootstrap/010_superadmin_profile.sql"
+          "source": "database/seeds/system/020_acoes.sql"
         },
         {
-          "name": "plantaopro.bootstrap_user",
-          "type": "bootstrap",
-          "category": "BOOTSTRAP",
+          "name": "plantaopro.seed_030_permissoes",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
           "required": true,
-          "source": "database/bootstrap/020_superadmin_user.sql"
+          "source": "database/seeds/system/030_permissoes.sql"
         },
         {
-          "name": "plantaopro.bootstrap_permissions",
-          "type": "bootstrap",
-          "category": "BOOTSTRAP",
+          "name": "plantaopro.seed_040_perfis",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
           "required": true,
-          "source": "database/bootstrap/030_superadmin_permissions.sql"
+          "source": "database/seeds/system/040_perfis.sql"
         },
         {
-          "name": "plantaopro.bootstrap_assertions",
-          "type": "bootstrap",
-          "category": "BOOTSTRAP",
+          "name": "plantaopro.seed_050_perfil_permissoes",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
           "required": true,
-          "source": "database/bootstrap/040_superadmin_assertions.sql"
+          "source": "database/seeds/system/050_perfil_permissoes.sql"
+        },
+        {
+          "name": "plantaopro.seed_060_politica_senha",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/060_politica_senha.sql"
+        },
+        {
+          "name": "plantaopro.seed_070_planos_recursos",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/070_planos_recursos.sql"
+        },
+        {
+          "name": "plantaopro.seed_080_parametros_globais",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/080_parametros_globais.sql"
+        },
+        {
+          "name": "plantaopro.seed_090_notificacoes",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/090_notificacoes.sql"
+        },
+        {
+          "name": "plantaopro.seed_100_status_operacionais",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/100_status_operacionais.sql"
+        },
+        {
+          "name": "plantaopro.seed_110_configuracoes_runtime",
+          "type": "seed",
+          "category": "SYSTEM_SEED",
+          "required": true,
+          "source": "database/seeds/system/110_configuracoes_runtime.sql"
         }
       ]
     }

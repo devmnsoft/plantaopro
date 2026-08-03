@@ -1,0 +1,2 @@
+param([string]$Database='plantaopro',[string]$Environment='Development')
+$ErrorActionPreference='Stop'; if($Environment -ne 'Development'){throw 'Remoção permitida somente em Development.'}; $confirmation=Read-Host "Digite o nome do banco ($Database) para confirmar"; if($confirmation -ne $Database){throw 'Confirmação recusada.'}; & psql -X -d postgres -v ON_ERROR_STOP=1 -c "DROP DATABASE `"$Database`" WITH (FORCE)"; if($LASTEXITCODE){throw 'Remoção falhou.'}

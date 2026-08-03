@@ -260,7 +260,7 @@ public record DashboardChartItem(string Label, decimal Valor);
         public string RegStatus { get; set; } = "A";
     }
 
-    public class MedicoFormViewModel
+    public class MedicoFormViewModel : IValidatableObject
     {
         public Guid? Id { get; set; }
         [Required(ErrorMessage = "Informe o nome do médico.")]
@@ -287,10 +287,8 @@ public record DashboardChartItem(string Label, decimal Valor);
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
-            if (HospitalId == Guid.Empty) yield return new ValidationResult("Selecione um hospital válido.", new[] { nameof(HospitalId) });
             if (EspecialidadeId == Guid.Empty) yield return new ValidationResult("Selecione uma especialidade válida.", new[] { nameof(EspecialidadeId) });
-            if (DataFim <= DataInicio) yield return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { nameof(DataFim) });
-            if (DataInicio != default && DataFim.Subtract(DataInicio).TotalDays > 7) yield return new ValidationResult("O período do plantão não pode ultrapassar 7 dias.", new[] { nameof(DataFim) });
+            if (!string.IsNullOrWhiteSpace(Estado) && Estado.Length != 2) yield return new ValidationResult("UF deve ter 2 caracteres.", new[] { nameof(Estado) });
         }
     }
 

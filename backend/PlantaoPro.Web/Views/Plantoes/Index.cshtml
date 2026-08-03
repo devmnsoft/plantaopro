@@ -11,7 +11,7 @@
     <div><label class="form-label" for="plantaoStatus">Status</label><select class="form-select" id="plantaoStatus" name="status"><option value="">Todos</option><option value="ABERTO">Aberto</option><option value="CONFIRMADO">Confirmado</option><option value="REALIZADO">Realizado</option></select></div>
     <button class="btn btn-primary" type="submit">Aplicar filtros</button>
     <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a>
-    <span class="ms-auto text-muted" role="status">@Model.Total resultado(s)</span>
+    <span class="ms-auto text-muted" role="status">@(Model?.Total ?? 0) resultado(s)</span>
 </form>
 <div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0 pp-responsive-table"><thead class="table-light"><tr><th>Hospital</th><th>Especialidade</th><th>Período</th><th>Valor</th><th>Vagas</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
 @if(items.Any()){foreach(var p in items){

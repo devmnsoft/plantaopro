@@ -5,6 +5,9 @@ ROOT=Path(__file__).resolve().parents[1]
 manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
 catalog=json.loads((ROOT/'database/object-catalog.json').read_text(encoding='utf-8'))
 script=(ROOT/'database/scrpt_completo.sql').read_text(encoding='utf-8')
+forbidden=re.findall(r'^\s*\\(?:if|else|endif|set|unset|echo|quit|connect|gexec|prompt|ir|i)\b',script,re.I|re.M)
+if forbidden:
+ print(json.dumps({'ok':False,'forbiddenPsqlMetacommands':forbidden},ensure_ascii=False)); sys.exit(1)
 art=ROOT/'artifacts'; art.mkdir(exist_ok=True)
 patterns={
  'table':r'CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+(?:plantaopro\.)?{name}\b',

@@ -1,0 +1,101 @@
+\set ON_ERROR_STOP on
+-- PlantãoPro v1.39.0: use psql -f neste arquivo; nenhuma senha está armazenada aqui.
+\if :{?installation_environment}\else\set installation_environment Development
+\endif
+\if :{?maintenance_database}\else\set maintenance_database postgres
+\endif
+\if :{?target_database}\else\set target_database plantaopro
+\endif
+\if :{?database_owner}\else\set database_owner plantaopro_owner
+\endif
+\if :{?application_role}\else\set application_role plantaopro_app
+\endif
+\if :{?install_mode}\else\set install_mode UPGRADE
+\endif
+\if :{?recreate_database}\else\set recreate_database false
+\endif
+\if :{?seed_system}\else\set seed_system true
+\endif
+\if :{?seed_development}\else\set seed_development false
+\endif
+\if :{?bootstrap_admin}\else\set bootstrap_admin true
+\endif
+\if :{?bootstrap_admin_email}\else\set bootstrap_admin_email admin.global@plantaopro.local
+\endif
+\if :{?bootstrap_admin_name}\else\set bootstrap_admin_name 'Super Administrador PlantãoPro'
+\endif
+\if :{?bootstrap_force_password_change}\else\set bootstrap_force_password_change true
+\endif
+\if :{?default_locale}\else\set default_locale pt-BR
+\endif
+\if :{?default_timezone}\else\set default_timezone America/Belem
+\endif
+\if :{?default_currency}\else\set default_currency BRL
+\endif
+
+\connect :maintenance_database
+SELECT CASE WHEN current_setting('server_version_num')::int < 160000 THEN 1/0 ELSE 1 END AS postgresql_16_validado;
+SELECT CASE WHEN :'installation_environment' !~* '^(Development|Homologation|Production)$' THEN 1/0 ELSE 1 END AS ambiente_validado;
+SELECT CASE WHEN :'install_mode' !~* '^(CLEAN|UPGRADE|REPAIR|RECREATE_DEVELOPMENT)$' THEN 1/0 ELSE 1 END AS modo_validado;
+SELECT CASE WHEN :'install_mode' ~* '^RECREATE_DEVELOPMENT$' AND :'installation_environment' !~* '^Development$' THEN 1/0 ELSE 1 END AS recriacao_segura;
+
+-- Roles são NOINHERIT/NOSUPERUSER/NOCREATEDB/NOCREATEROLE por construção.
+SELECT EXISTS (SELECT FROM pg_roles WHERE rolname=:'database_owner') AS owner_role_exists \gset
+SELECT format('CREATE ROLE %I LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS', :'database_owner')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname=:'database_owner') \gexec
+SELECT EXISTS (SELECT FROM pg_roles WHERE rolname=:'application_role') AS application_role_exists \gset
+SELECT format('CREATE ROLE %I LOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS', :'application_role')
+WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname=:'application_role') \gexec
+\if :owner_role_exists
+\else
+\if :{?database_owner_password}
+SELECT format('ALTER ROLE %I PASSWORD %L', :'database_owner', :'database_owner_password') \gexec
+\endif
+\endif
+\if :application_role_exists
+\else
+\if :{?application_role_password}
+SELECT format('ALTER ROLE %I PASSWORD %L', :'application_role', :'application_role_password') \gexec
+\endif
+\endif
+
+SELECT CASE WHEN :'install_mode' ~* '^CLEAN$' AND EXISTS(SELECT FROM pg_database WHERE datname=:'target_database') THEN 1/0 ELSE 1 END AS clean_target_validado;
+SELECT format('DROP DATABASE %I WITH (FORCE)', :'target_database')
+WHERE :'install_mode' ~* '^RECREATE_DEVELOPMENT$' AND :'recreate_database'::boolean AND :'installation_environment' ~* '^Development$'
+  AND EXISTS(SELECT FROM pg_database WHERE datname=:'target_database') \gexec
+SELECT format('CREATE DATABASE %I OWNER %I ENCODING %L TEMPLATE template0', :'target_database', :'database_owner', 'UTF8')
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname=:'target_database') \gexec
+SELECT format('ALTER DATABASE %I OWNER TO %I', :'target_database', :'database_owner') \gexec
+SELECT format('ALTER DATABASE %I SET timezone TO %L', :'target_database', :'default_timezone') \gexec
+\connect :target_database
+SELECT pg_advisory_lock(hashtext('plantaopro.install.v1390'));
+SELECT format('SET ROLE %I', :'database_owner') \gexec
+\ir scrpt_completo.sql
+
+\if :bootstrap_admin
+\if :{?bootstrap_admin_password_hash}
+\set bootstrap_environment :installation_environment
+\set bootstrap_force_rotation :bootstrap_force_password_change
+\ir bootstrap/010_superadmin_profile.sql
+\ir bootstrap/020_superadmin_user.sql
+\ir bootstrap/030_superadmin_permissions.sql
+\ir bootstrap/040_superadmin_assertions.sql
+\else
+\echo 'ERRO: bootstrap_admin=true exige bootstrap_admin_password_hash BCrypt.'
+\quit 4
+\endif
+\endif
+
+SELECT format('REVOKE CREATE ON SCHEMA public FROM PUBLIC'); \gexec
+SELECT format('REVOKE ALL ON SCHEMA plantaopro FROM %I', :'application_role') \gexec
+SELECT format('GRANT CONNECT ON DATABASE %I TO %I', :'target_database', :'application_role') \gexec
+SELECT format('GRANT USAGE ON SCHEMA plantaopro TO %I', :'application_role') \gexec
+SELECT format('GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA plantaopro TO %I', :'application_role') \gexec
+SELECT format('GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA plantaopro TO %I', :'application_role') \gexec
+SELECT format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA plantaopro TO %I', :'application_role') \gexec
+SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT SELECT,INSERT,UPDATE,DELETE ON TABLES TO %I', :'database_owner', :'application_role') \gexec
+SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT USAGE,SELECT ON SEQUENCES TO %I', :'database_owner', :'application_role') \gexec
+SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT EXECUTE ON FUNCTIONS TO %I', :'database_owner', :'application_role') \gexec
+\ir ../scripts/database/verify-complete-install.sql
+SELECT pg_advisory_unlock(hashtext('plantaopro.install.v1390'));
+\echo 'PlantãoPro — instalação concluída; versão v1.39.0; resultado APROVADO.'

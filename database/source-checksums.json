@@ -1,8 +1,4 @@
 {
-  "database/bootstrap/010_superadmin_profile.sql": "c9cd9bdc3da715c20cbb35bfc83433a89c07b0e5ea3c9ef2fa2e39cfd42c4f99",
-  "database/bootstrap/020_superadmin_user.sql": "ce4e333d7a5e3a756d7618bd7e2321a2518bee1d6edd60794c2ea6474e0de64b",
-  "database/bootstrap/030_superadmin_permissions.sql": "34bcd57ca0baf6ce2555b603ce5f1706e9bce79e417a3f138ec90e9996c68946",
-  "database/bootstrap/040_superadmin_assertions.sql": "52e054d3f205bf35461a015a59e55c071efcccf8ae55ff822a599aa4c468cd6f",
   "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
   "database/schema/000_schema_canonico_base.sql": "f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e",
   "database/schema/010_identity_access.sql": "9ba007cec03cf0e623f884026c6534f4219d009e33a30b57478d676e69e8fa4b",
@@ -21,5 +17,16 @@
   "database/schema/140_experiencia_premium_meu_dia.sql": "c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178",
   "database/schema/150_v1243_painel_publico_seguro.sql": "70a98b8b035155c391136e4b76af84b20145f82f570c7d68b35489eb7aa89ff9",
   "database/schema/210_v1310_consolidacao_operacao_assistida.sql": "67b91b2ca48bdba2158be6c33971eac190178ea7b5f8fab17e1f389467feacde",
-  "database/schema/250_v1370_bootstrap_superadmin.sql": "f270a007a6d316926146711b5ef98a8fbebd759add1159b2ddeb5ac35ef9855e"
+  "database/schema/250_v1370_bootstrap_superadmin.sql": "6f5469f6e5fb49e8eb5026c2b22f76c1cf02edcc8b2f0c6f7f5fbc154b91457f",
+  "database/seeds/system/010_modulos.sql": "dd9b0558c442472b79a9bdb4aa69bfe86eb692dc929279fbbc769f518ce153fd",
+  "database/seeds/system/020_acoes.sql": "556b6e7c90a6d94dfdb4d5c93f6e4f831a16ba82aacc9b2912ff504e8ba18464",
+  "database/seeds/system/030_permissoes.sql": "e20d55ef179d3b1e805900646953dae491528ca36ca54115d225ae82b580833a",
+  "database/seeds/system/040_perfis.sql": "c3c0e38970a10bafcd2fbcbee38ac6e930ef68fd69cb9b0b02d4f9a7a115f7f5",
+  "database/seeds/system/050_perfil_permissoes.sql": "aa6efe9df7c40694b6bbc862a2de123f6a96e16f273b33205a722c4e609992dd",
+  "database/seeds/system/060_politica_senha.sql": "3d5ffaab64fdddd3c882f522383d18dc5f06d7bc24802d826bb759aeb6cf873e",
+  "database/seeds/system/070_planos_recursos.sql": "078253b958cb25cffef4f040f6e612845d89dcaf3da3683b0c98e14e468bda3d",
+  "database/seeds/system/080_parametros_globais.sql": "55c6012d5e6d782d95715932118f4f1b458d61f90693316caa6f2343cae28a45",
+  "database/seeds/system/090_notificacoes.sql": "d0227e5cfa331213531e0465c30fd822aa6baae84173766fc231657f380d6bb6",
+  "database/seeds/system/100_status_operacionais.sql": "ef836ab01b0bfd1061176118379ba57f9d3def83c88445ee68917d57973945cb",
+  "database/seeds/system/110_configuracoes_runtime.sql": "afc90f4db08211c439413848742b8ea68802ac83891ff700204d63fedd99710c"
 }

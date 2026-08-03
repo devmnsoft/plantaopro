@@ -175,3 +175,17 @@ A v1.17 fortalece a base v1.16 sem declarar produção: Swagger sem conflito de 
 Instalações novas devem executar `database/scrpt_completo.sql` no banco `plantaopro` e, em seguida, criar o primeiro Administrador Global pela CLI `backend/PlantaoPro.Tools.Bootstrap`. A senha inicial é informada por prompt ou variável de ambiente local e nunca é versionada.
 
 Em desenvolvimento, habilite `DevelopmentSeed:Enabled=true` apenas com `ASPNETCORE_ENVIRONMENT=Development` e configure `Demo:Password` por user-secrets ou variável local. A documentação não assume mais senha `123456`.
+
+## Instalação integral do banco (v1.39.0)
+
+O instalador oficial parte de um PostgreSQL 16 com o banco administrativo `postgres`, cria as roles sem privilégios administrativos, cria `plantaopro`, muda a conexão, aplica o schema/seeds/bootstrap/grants e executa o verificador:
+
+```bash
+bash scripts/database/install-plantaopro.sh
+```
+
+No Windows, execute `scripts\\database\\install-plantaopro.bat` ou `./scripts/database/install-plantaopro.ps1`. Senhas são solicitadas sem eco e o ambiente local é gravado, com acesso restrito, em `.local/plantaopro.env`.
+
+Para automação direta com `psql`, forneça secrets por variáveis `-v` e execute `psql -d postgres -f database/instalar_plantaopro.psql`. Os modos suportados são `CLEAN`, `UPGRADE`, `REPAIR` e `RECREATE_DEVELOPMENT`; o último exige ambiente Development e confirmação explícita por `recreate_database=true`.
+
+O arquivo `database/scrpt_completo.sql` é **somente o schema SQL puro** para um banco que já existe. No Query Tool do pgAdmin, selecione previamente o banco de destino e use `database/pgadmin/instalar_no_banco_atual.sql`; esse arquivo recusa execução no banco administrativo `postgres`.

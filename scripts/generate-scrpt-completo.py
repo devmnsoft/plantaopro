@@ -75,13 +75,13 @@ def write_reports():
     (art/'schema-dependencies.md').write_text('\n'.join(dlines)+"\n",encoding='utf-8')
     (art/'schema-install-plan.json').write_text(json.dumps(deps,ensure_ascii=False,indent=2)+"\n",encoding='utf-8')
     (art/'schema-install-plan.md').write_text('\n'.join(dlines)+"\n",encoding='utf-8')
-header=f"""-- PlantãoPro - script completo oficial de instalação limpa
+header=f"""-- PlantãoPro - schema SQL puro para banco de destino já existente
 -- Versão do schema: {manifest.get('schemaVersion','v1.18.6')}
 -- PostgreSQL suportado: 16
 -- Data de geração: {manifest.get('generatedAt','2026-07-21')}
 -- Execução oficial:
 --   psql \\\n--     -v ON_ERROR_STOP=1 \\\n--     -h localhost \\\n--     -p 5432 \\\n--     -U postgres \\\n--     -d plantaopro \\\n--     -f database/scrpt_completo.sql
--- O banco de dados de destino deve existir antes da execução.
+-- Para criar roles e banco automaticamente, execute database/instalar_plantaopro.psql.
 -- Este arquivo não contém credenciais reais, senhas administrativas, tokens ou connection strings.
 -- Não use scripts de demonstração em produção.
 
@@ -126,8 +126,21 @@ write_reports()
     encoding='utf-8')
 script='\n'.join(out)
 if re.search(r'^\s*CREATE\s+DATABASE\b', script, re.I|re.M): raise SystemExit('CREATE DATABASE não é permitido')
-if re.search(r'^\s*\\i\b', script, re.M): raise SystemExit('Comando \\i não é permitido')
+if re.search(r'^\s*\\(?:if|else|endif|set|unset|echo|quit|connect|gexec|prompt|ir|i)\b', script, re.M): raise SystemExit('Metacomando psql não é permitido no SQL puro')
 path=ROOT/'database/scrpt_completo.sql'; path.write_text(script, encoding='utf-8')
 sha=hashlib.sha256(script.encode()).hexdigest()
 (ROOT/'database/scrpt_completo.sha256').write_text(f'{sha}  scrpt_completo.sql\n', encoding='utf-8')
+pgadmin=ROOT/'database/pgadmin/instalar_no_banco_atual.sql'; pgadmin.parent.mkdir(parents=True,exist_ok=True)
+guard="""-- SQL puro para Query Tool do pgAdmin. Instala somente no banco selecionado.
+DO $$ BEGIN
+ IF current_database() = 'postgres' THEN
+  RAISE EXCEPTION 'Este script instala as estruturas no banco atualmente selecionado. Para criar automaticamente o banco, utilize install-plantaopro.ps1 ou instalar_plantaopro.psql.';
+ END IF;
+END $$;
+"""
+pgadmin.write_text(guard+script,encoding='utf-8')
+installer=ROOT/'database/instalar_plantaopro.psql'
+if installer.exists():
+    ih=hashlib.sha256(installer.read_bytes()).hexdigest()
+    (ROOT/'database/instalador_plantaopro.sha256').write_text(f'{ih}  instalar_plantaopro.psql\n',encoding='utf-8')
 print(sha)

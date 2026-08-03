@@ -3,12 +3,21 @@ SET search_path TO plantaopro, public;
 SELECT pg_advisory_lock(hashtext('plantaopro.install.v1370'));
 
 ALTER TABLE plantaopro.schema_migrations
+    ADD COLUMN IF NOT EXISTS versao text,
     ADD COLUMN IF NOT EXISTS nome text,
+    ADD COLUMN IF NOT EXISTS iniciado_em timestamptz,
+    ADD COLUMN IF NOT EXISTS aplicado_em timestamptz,
     ADD COLUMN IF NOT EXISTS duracao_ms bigint,
-    ADD COLUMN IF NOT EXISTS status text;
+    ADD COLUMN IF NOT EXISTS status text,
+    ADD COLUMN IF NOT EXISTS erro_resumido text,
+    ADD COLUMN IF NOT EXISTS executado_por text,
+    ADD COLUMN IF NOT EXISTS ambiente text;
 UPDATE plantaopro.schema_migrations
-SET nome=coalesce(nome,script_path), duracao_ms=coalesce(duracao_ms,0), status=coalesce(status,'APLICADA');
+SET versao=coalesce(versao,id), nome=coalesce(nome,script_path), iniciado_em=coalesce(iniciado_em,applied_at), aplicado_em=coalesce(aplicado_em,applied_at),
+    duracao_ms=coalesce(duracao_ms,0), status=coalesce(status,'APLICADA'), executado_por=coalesce(executado_por,current_user),
+    ambiente=coalesce(ambiente,'UNKNOWN');
 ALTER TABLE plantaopro.schema_migrations
+    ALTER COLUMN versao SET DEFAULT '', ALTER COLUMN versao SET NOT NULL,
     ALTER COLUMN nome SET DEFAULT '', ALTER COLUMN nome SET NOT NULL,
     ALTER COLUMN duracao_ms SET DEFAULT 0, ALTER COLUMN duracao_ms SET NOT NULL,
     ALTER COLUMN status SET DEFAULT 'APLICADA', ALTER COLUMN status SET NOT NULL;

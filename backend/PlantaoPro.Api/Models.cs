@@ -93,7 +93,7 @@ public record DashboardChartItem(string Label,decimal Valor);
 public record MedicoPlantaoRecomendacaoDto(Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,decimal Score,string MotivoRecomendacao);
 public record AlertaOperacionalDto(string Tipo,string Titulo,string Descricao,string Severidade);
 public record RolePermissionDto(string Role,IEnumerable<string> Permissions);
-public record NotificationPreferenceDto(string Tipo,bool InApp,bool Email);
+public record LegacyNotificationChannelPreferenceDto(string Tipo, bool InApp, bool Email);
 public record UpsertNotificationPreferenceRequest(string Tipo,bool InApp,bool Email);
 public record PremiumKpiCardDto(string Chave,string Titulo,decimal Valor,string Cor,string Icone,string Indicador,string Tooltip);
 public record PremiumOperacoesResumoDto(

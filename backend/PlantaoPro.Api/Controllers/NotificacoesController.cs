@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Api.Contracts.Notifications;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Operation360.Notifications;
 

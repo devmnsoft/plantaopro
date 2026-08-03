@@ -39,6 +39,7 @@ builder.Services.AddSingleton<ITenantContextResolver, TenantContextResolver>();
 
 builder.Services.AddSwaggerGen(c =>
 {
+    c.CustomSchemaIds(type => (type.FullName ?? type.Name).Replace("+", ".", StringComparison.Ordinal));
     c.OperationFilter<DefaultApiResponseOperationFilter>();
     c.SwaggerDoc("v1", new OpenApiInfo
     {

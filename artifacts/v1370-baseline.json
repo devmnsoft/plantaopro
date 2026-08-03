@@ -1,0 +1,19 @@
+{
+  "initialSha": "80f6b2c8ad05df1950cddc40efd75a2fe4629874",
+  "capturedAtUtc": "2026-08-03",
+  "dotnet": {
+    "available": false,
+    "cleanExitCode": 127,
+    "restoreExitCode": 127,
+    "buildExitCode": 127,
+    "testExitCode": 127,
+    "reason": "dotnet executable is not installed in the execution environment"
+  },
+  "gates": {
+    "generateCompleteScript": "passed",
+    "validateCompleteScript": "passed",
+    "csharp10Compatibility": "passed",
+    "uiAssets": "passed",
+    "repositorySecurity": "passed"
+  }
+}

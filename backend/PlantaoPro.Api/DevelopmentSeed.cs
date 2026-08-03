@@ -50,9 +50,12 @@ where not exists(select 1 from plantaopro.perfis where codigo=@role and coalesce
         foreach (var u in users)
         {
             var userId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.usuarios where email_normalizado=lower(@email) or lower(email)=lower(@email) limit 1", new { email = u.Item1 }) ?? Guid.NewGuid();
-            await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,reg_date)
-values(@userId,@tenantIdValue,@clienteIdValue,@nome,@email,lower(@email),@hash,'ATIVO','A',false,now())
-on conflict (id) do update set nome=@nome,email_normalizado=lower(@email),senha_hash=@hash,status='ATIVO',reg_status='A',tenant_id=@tenantIdValue,cliente_id=@clienteIdValue,reg_update=now()", new { userId, tenantIdValue = u.Item4 ? (Guid?)null : tenantId, clienteIdValue = u.Item4 ? (Guid?)null : clienteId, nome = u.Item2, email = u.Item1, hash = BCrypt.Net.BCrypt.HashPassword(demoPassword) });
+            if (!await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.usuarios where id=@userId)", new { userId }))
+            {
+                var hash = BCrypt.Net.BCrypt.HashPassword(demoPassword);
+                await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,reg_date)
+values(@userId,@tenantIdValue,@clienteIdValue,@nome,@email,lower(@email),@hash,'ATIVO','A',false,now())", new { userId, tenantIdValue = u.Item4 ? (Guid?)null : tenantId, clienteIdValue = u.Item4 ? (Guid?)null : clienteId, nome = u.Item2, email = u.Item1, hash });
+            }
             var perfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where codigo=@role and reg_status='A' order by tenant_id nulls first limit 1", new { role = u.Item3 });
             await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_status,reg_date) select gen_random_uuid(),@tenantIdValue,@clienteIdValue,@userId,@perfilId,'A',now() where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@userId and perfil_id=@perfilId and reg_status='A')", new { tenantIdValue = u.Item4 ? (Guid?)null : tenantId, clienteIdValue = u.Item4 ? (Guid?)null : clienteId, userId, perfilId });
         }

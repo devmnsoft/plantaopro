@@ -63,7 +63,8 @@ public sealed class NotificacoesController : ControllerBase
     [HttpGet("preferencias")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationPreferenceDto>>>> Preferences(CancellationToken ct)
     {
-        return Ok(ApiResponse<IReadOnlyList<NotificationPreferenceDto>>.Ok((IReadOnlyList<NotificationPreferenceDto>)await service.PreferencesAsync(ct)));
+        var preferences = await service.PreferencesAsync(ct);
+        return Ok(ApiResponse<IReadOnlyList<NotificationPreferenceDto>>.Ok(preferences));
     }
 
     [HttpPut("preferencias")]

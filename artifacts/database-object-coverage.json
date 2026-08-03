@@ -30,6 +30,7 @@
     "plantaopro.auditoria_lgpd_eventos",
     "plantaopro.auth_sessoes",
     "plantaopro.background_job_logs",
+    "plantaopro.bootstrap",
     "plantaopro.cadastro_cliente_pagamentos_iniciais",
     "plantaopro.cadastro_cliente_solicitacoes",
     "plantaopro.chamado_mensagens",
@@ -452,6 +453,11 @@
     "database/schema/130_contexto_multiempresa.sql",
     "database/schema/140_experiencia_premium_meu_dia.sql",
     "database/schema/150_v1243_painel_publico_seguro.sql",
-    "database/schema/210_v1310_consolidacao_operacao_assistida.sql"
+    "database/schema/210_v1310_consolidacao_operacao_assistida.sql",
+    "database/schema/250_v1370_bootstrap_superadmin.sql",
+    "database/bootstrap/010_superadmin_profile.sql",
+    "database/bootstrap/020_superadmin_user.sql",
+    "database/bootstrap/030_superadmin_permissions.sql",
+    "database/bootstrap/040_superadmin_assertions.sql"
   ]
 }

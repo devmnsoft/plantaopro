@@ -18,3 +18,8 @@
 - `plantaopro.experiencia_premium_meu_dia` depende de: nenhuma
 - `plantaopro.paineis_publicos` depende de: plantaopro.clientes
 - `plantaopro.operacao_assistida_v1310` depende de: nenhuma
+- `plantaopro.bootstrap_catalog` depende de: nenhuma
+- `plantaopro.bootstrap_profile` depende de: nenhuma
+- `plantaopro.bootstrap_user` depende de: nenhuma
+- `plantaopro.bootstrap_permissions` depende de: nenhuma
+- `plantaopro.bootstrap_assertions` depende de: nenhuma

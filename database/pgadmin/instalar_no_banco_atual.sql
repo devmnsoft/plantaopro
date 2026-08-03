@@ -1,3 +1,9 @@
+-- SQL puro para Query Tool do pgAdmin. Instala somente no banco selecionado.
+DO $$ BEGIN
+ IF current_database() = 'postgres' THEN
+  RAISE EXCEPTION 'Este script instala as estruturas no banco atualmente selecionado. Para criar automaticamente o banco, utilize install-plantaopro.ps1 ou instalar_plantaopro.psql.';
+ END IF;
+END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
 -- Versão do schema: v1.39.0
 -- PostgreSQL suportado: 16

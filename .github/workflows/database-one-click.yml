@@ -1,0 +1,76 @@
+name: database-one-click-v1390
+on: [push, pull_request]
+env:
+  PGHOST: localhost
+  PGPORT: 5432
+  PGUSER: postgres
+  PGPASSWORD: ci-${{ github.run_id }}-${{ github.run_attempt }}
+  PLANTAOPRO_APP_PASSWORD: app-${{ github.run_id }}-${{ github.run_attempt }}
+  PLANTAOPRO_BOOTSTRAP_PASSWORD: Admin-${{ github.run_id }}-${{ github.run_attempt }}-Aa1!
+  PLANTAOPRO_ADMIN_EMAIL: admin.ci@example.invalid
+jobs:
+  database-one-click-create:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: "ci-${{ github.run_id }}-${{ github.run_attempt }}" }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres -d postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x', dotnet-quality: preview }
+      - run: test "$(psql -d postgres -Atc "select count(*) from pg_database where datname='plantaopro'")" = 0
+      - run: PLANTAOPRO_INSTALL_MODE=CLEAN bash scripts/database/install-plantaopro.sh
+      - run: psql -d plantaopro -v ON_ERROR_STOP=1 -f scripts/database/verify-runtime-contract.sql
+  database-one-click-replay:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: "ci-${{ github.run_id }}-${{ github.run_attempt }}" }
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U postgres -d postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: '10.0.x', dotnet-quality: preview }
+      - run: bash scripts/database/install-plantaopro.sh
+      - run: psql -d plantaopro -Atc "select json_build_array((select count(*) from plantaopro.usuarios),(select count(*) from plantaopro.perfis),(select count(*) from plantaopro.permissoes),(select count(*) from plantaopro.perfil_permissoes),(select count(*) from plantaopro.parametros_sistema))" > /tmp/before
+      - run: bash scripts/database/install-plantaopro.sh
+      - run: psql -d plantaopro -Atc "select json_build_array((select count(*) from plantaopro.usuarios),(select count(*) from plantaopro.perfis),(select count(*) from plantaopro.permissoes),(select count(*) from plantaopro.perfil_permissoes),(select count(*) from plantaopro.parametros_sistema))" > /tmp/after && diff /tmp/before /tmp/after
+  database-one-click-upgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/generate-scrpt-completo.py && python3 scripts/validate-scrpt-completo.py
+  database-one-click-development-seed:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -d database/seeds/development && ! rg -n "paciente|prontuario|receita" database/seeds/development
+  database-one-click-production-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/repository-security-check.py
+      - run: rg -n "NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS" database/instalar_plantaopro.psql
+  database-runtime-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: test -s scripts/database/verify-runtime-contract.sql && rg -n "RAISE EXCEPTION" scripts/database/verify-runtime-contract.sql
+  database-pgadmin-current-database:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: '! rg -n "^\\\\(if|set|connect|gexec|ir|i)" database/pgadmin/instalar_no_banco_atual.sql'
+      - run: rg -n "current_database|Este script instala as estruturas" database/pgadmin/instalar_no_banco_atual.sql
+  database-windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse PowerShell with paths and accents
+        shell: pwsh
+        run: $errors=$null; [Management.Automation.Language.Parser]::ParseFile((Resolve-Path scripts/database/install-plantaopro.ps1),[ref]$null,[ref]$errors)|Out-Null; if($errors){throw ($errors|Out-String)}

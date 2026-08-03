@@ -455,9 +455,16 @@
     "database/schema/150_v1243_painel_publico_seguro.sql",
     "database/schema/210_v1310_consolidacao_operacao_assistida.sql",
     "database/schema/250_v1370_bootstrap_superadmin.sql",
-    "database/bootstrap/010_superadmin_profile.sql",
-    "database/bootstrap/020_superadmin_user.sql",
-    "database/bootstrap/030_superadmin_permissions.sql",
-    "database/bootstrap/040_superadmin_assertions.sql"
+    "database/seeds/system/010_modulos.sql",
+    "database/seeds/system/020_acoes.sql",
+    "database/seeds/system/030_permissoes.sql",
+    "database/seeds/system/040_perfis.sql",
+    "database/seeds/system/050_perfil_permissoes.sql",
+    "database/seeds/system/060_politica_senha.sql",
+    "database/seeds/system/070_planos_recursos.sql",
+    "database/seeds/system/080_parametros_globais.sql",
+    "database/seeds/system/090_notificacoes.sql",
+    "database/seeds/system/100_status_operacionais.sql",
+    "database/seeds/system/110_configuracoes_runtime.sql"
   ]
 }

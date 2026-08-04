@@ -150,5 +150,10 @@
     "object": "plantaopro.seed_110_configuracoes_runtime",
     "dependsOn": [],
     "source": "database/seeds/system/110_configuracoes_runtime.sql"
+  },
+  {
+    "object": "plantaopro.operational_premium_v1400",
+    "dependsOn": [],
+    "source": "database/schema/260_v1400_produto_operacional_premium.sql"
   }
 ]

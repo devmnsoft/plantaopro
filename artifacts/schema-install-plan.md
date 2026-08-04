@@ -30,3 +30,4 @@
 - `plantaopro.seed_090_notificacoes` depende de: nenhuma
 - `plantaopro.seed_100_status_operacionais` depende de: nenhuma
 - `plantaopro.seed_110_configuracoes_runtime` depende de: nenhuma
+- `plantaopro.operational_premium_v1400` depende de: nenhuma

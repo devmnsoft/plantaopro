@@ -795,13 +795,71 @@ where id=@id", new
                 where += " and h.estado=@es";
                 dp.Add("es", f.Estado);
             }
+            if (f.ComVagas.HasValue)
+            {
+                where += f.ComVagas.Value ? " and p.vagas_disponiveis > 0" : " and p.vagas_disponiveis = 0";
+            }
+            if (f.ValorMinimo.HasValue)
+            {
+                where += " and p.valor >= @valorMinimo";
+                dp.Add("valorMinimo", f.ValorMinimo.Value);
+            }
+            if (f.ValorMaximo.HasValue)
+            {
+                where += " and p.valor <= @valorMaximo";
+                dp.Add("valorMaximo", f.ValorMaximo.Value);
+            }
+            if (f.ValorMinimo.HasValue && f.ValorMaximo.HasValue && f.ValorMinimo > f.ValorMaximo)
+                return ApiResponse<PagedResult<PlantaoResumoDto>>.Fail("O valor mínimo não pode ser maior que o valor máximo.");
+
+            var orderColumn = (f.OrdenarPor ?? string.Empty).Trim().ToLowerInvariant() switch
+            {
+                "valor" => "p.valor",
+                "hospital" => "h.nome_fantasia",
+                "especialidade" => "esp.nome",
+                "status" => "p.status",
+                "vagas" => "p.vagas_disponiveis",
+                _ => "p.data_inicio"
+            };
+            var orderDirection = string.Equals(f.Direcao, "asc", StringComparison.OrdinalIgnoreCase) ? "asc" : "desc";
             var page = Math.Max(1, f.Page);
             var size = Math.Clamp(f.PageSize, 1, 100);
             dp.Add("off", (page - 1) * size);
             dp.Add("lim", size);
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id" + where, dp);
-            var items = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(esp.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id" + where + " order by p.data_inicio desc limit @lim offset @off", dp);
+            var items = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(esp.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades esp on esp.id=p.especialidade_id" + where + $" order by {orderColumn} {orderDirection}, p.id limit @lim offset @off", dp);
             return ApiResponse<PagedResult<PlantaoResumoDto>>.Ok(new(items, page, size, total));
+        }
+
+        public async Task<ApiResponse<PlantaoDto>> DuplicarAsync(Guid sourceId, DuplicarPlantaoRequest request, Guid userId, string? ip, string? userAgent)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var source = await cn.QueryFirstOrDefaultAsync<PlantaoDto>(
+                "select p.id,p.hospital_id as HospitalId,p.especialidade_id as EspecialidadeId,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,coalesce(p.observacoes,'') as Observacoes from plantaopro.plantoes p where p.id=@sourceId and p.reg_status='A' for update",
+                new { sourceId }, tx);
+            if (source is null)
+            {
+                await tx.RollbackAsync();
+                return ApiResponse<PlantaoDto>.Fail("Plantão de origem não encontrado.", 404);
+            }
+
+            var duration = source.DataFim - source.DataInicio;
+            var start = request.DataInicio ?? source.DataInicio.AddDays(7);
+            var end = request.DataFim ?? start.Add(duration);
+            if (end <= start)
+            {
+                await tx.RollbackAsync();
+                return ApiResponse<PlantaoDto>.Fail("O término da cópia deve ser posterior ao início.");
+            }
+
+            var id = Guid.NewGuid();
+            await cn.ExecuteAsync("insert into plantaopro.plantoes(id,hospital_id,especialidade_id,data_inicio,data_fim,valor,vagas,vagas_disponiveis,tipo,status,observacoes,reg_date,reg_status,created_by) values(@id,@HospitalId,@EspecialidadeId,@start,@end,@Valor,@Vagas,@Vagas,@Tipo,'rascunho',@Observacoes,now(),'A',@userId)", new { id, source.HospitalId, source.EspecialidadeId, start, end, source.Valor, source.Vagas, source.Tipo, source.Observacoes, userId }, tx);
+            await cn.ExecuteAsync("insert into plantaopro.plantao_historico(id,plantao_id,status_anterior,status_novo,justificativa,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@id,'', 'rascunho',@reason,@userId,now(),'A')", new { id, reason = string.IsNullOrWhiteSpace(request.Justificativa) ? $"Duplicado do plantão {sourceId}" : request.Justificativa.Trim(), userId }, tx);
+            await tx.CommitAsync();
+            await audit.LogAsync(userId, "DUPLICATE", "plantoes", id, $"Origem: {sourceId}", ip: ip, userAgent: userAgent);
+            return ApiResponse<PlantaoDto>.Ok(new PlantaoDto(id, source.HospitalId, source.EspecialidadeId, start, end, source.Valor, source.Vagas, source.Vagas, source.Tipo, "rascunho", source.Observacoes), "Plantão duplicado como rascunho.");
         }
         public async Task<ApiResponse<PlantaoDetailsDto>> GetByIdAsync(Guid id)
         {

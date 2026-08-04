@@ -5,9 +5,9 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v1.39.0
+-- Versão do schema: v1.40.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-08-03
+-- Data de geração: 2026-08-04
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -2039,3 +2039,66 @@ SELECT 1 AS seed_100_status_operacionais;
 INSERT INTO plantaopro.schema_migrations(id,versao,nome,script_path,checksum,iniciado_em,applied_at,aplicado_em,duracao_ms,status,executado_por,ambiente)
 SELECT 'v1.39.0','v1.39.0','One-click database runtime-ready','database/install-manifest.json','manifest-managed',now(),now(),now(),0,'APLICADA',current_user,'INSTALL'
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='v1.39.0');
+
+-- ============================================================
+-- Seção 19 — Produto operacional premium v1.40.0
+-- ============================================================
+
+-- SOURCE: database/schema/260_v1400_produto_operacional_premium.sql
+-- SOURCE-SHA256: 5ac8669035bf9cff19eb0c3d576c0a8e6b9e7d49451d35ada413648f6b525174
+-- PlantãoPro v1.40.0 — trilha operacional, cobertura e fechamento.
+-- Estruturas aditivas, idempotentes e isoladas por tenant.
+
+alter table if exists plantaopro.saved_views
+    add column if not exists filtros jsonb not null default '{}'::jsonb;
+alter table if exists plantaopro.saved_views
+    add column if not exists visualizacao varchar(24) not null default 'TABELA';
+
+create table if not exists plantaopro.operational_action_history (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    usuario_id uuid,
+    entidade varchar(40) not null,
+    entidade_id uuid not null,
+    acao varchar(60) not null,
+    status_anterior varchar(40),
+    status_novo varchar(40),
+    motivo text,
+    comentario text,
+    metadata jsonb not null default '{}'::jsonb,
+    ocorrido_em timestamptz not null default now()
+);
+create index if not exists ix_operational_action_history_entity
+    on plantaopro.operational_action_history(tenant_id, entidade, entidade_id, ocorrido_em desc);
+
+create table if not exists plantaopro.cobertura_auditoria (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    plantao_id uuid not null,
+    medico_id uuid,
+    convite_id uuid,
+    usuario_id uuid,
+    acao varchar(60) not null,
+    motivo text,
+    criterios_ranking jsonb not null default '{}'::jsonb,
+    ocorrido_em timestamptz not null default now()
+);
+create index if not exists ix_cobertura_auditoria_plantao
+    on plantaopro.cobertura_auditoria(tenant_id, plantao_id, ocorrido_em desc);
+
+create table if not exists plantaopro.fechamento_auditoria (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    plantao_id uuid not null,
+    escala_id uuid,
+    pagamento_id uuid,
+    usuario_id uuid,
+    acao varchar(60) not null,
+    valor_anterior numeric(14,2),
+    valor_novo numeric(14,2),
+    justificativa text,
+    metadata jsonb not null default '{}'::jsonb,
+    ocorrido_em timestamptz not null default now()
+);
+create index if not exists ix_fechamento_auditoria_plantao
+    on plantaopro.fechamento_auditoria(tenant_id, plantao_id, ocorrido_em desc);

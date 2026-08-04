@@ -1,20 +1,49 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PlantaoResumoDto>
-@{ ViewData["Title"] = "Plantões"; var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>(); }
+@{
+    ViewData["Title"] = "Central de Plantões";
+    var items = (Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>()).ToArray();
+    var descobertos = items.Count(p => p.VagasDisponiveis == p.Vagas && p.Vagas > 0);
+    var proximos = items.Count(p => p.DataInicio >= DateTime.Now && p.DataInicio <= DateTime.Now.AddHours(24));
+    var valorPagina = items.Sum(p => p.Valor);
+}
 <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
-    "Plantões",
-    "Crie, publique e acompanhe oportunidades de plantão, vagas disponíveis, cobertura e situação operacional.",
-    "Centralize a cobertura e reduza conflitos antes da publicação.",
-    "Novo plantão", "Create", "Plantoes",
-    new[] { "Cadastre hospital, especialidade, período, vagas e valor.", "Publique o plantão e convide profissionais.", "Confirme as escalas e acompanhe a realização.", "Conclua o fechamento operacional e financeiro." })' />
-<form method="get" class="pp-section-card pp-filter-actions mb-3" role="search" aria-label="Filtrar plantões">
-    <div><label class="form-label" for="plantaoSearch">Hospital ou cidade</label><input class="form-control" id="plantaoSearch" name="hospital" value="@Context.Request.Query["hospital"]" /></div>
-    <div><label class="form-label" for="plantaoStatus">Status</label><select class="form-select" id="plantaoStatus" name="status"><option value="">Todos</option><option value="ABERTO">Aberto</option><option value="CONFIRMADO">Confirmado</option><option value="REALIZADO">Realizado</option></select></div>
-    <button class="btn btn-primary" type="submit">Aplicar filtros</button>
-    <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a>
-    <span class="ms-auto text-muted" role="status">@(Model?.Total ?? 0) resultado(s)</span>
+    "Central de Plantões", "Planeje, publique e recupere coberturas em um único workspace operacional.",
+    "Os indicadores abaixo usam somente os resultados reais da página atual.", "Novo plantão", "Create", "Plantoes",
+    new[] { "Filtre a operação no servidor.", "Priorize riscos de cobertura.", "Abra o detalhe para publicar, cancelar e acompanhar o histórico." })' />
+
+<section class="pp-kpi-strip" aria-label="Resumo dos resultados exibidos">
+    <article class="pp-kpi-card"><span>Resultados</span><strong>@(Model?.Total ?? 0)</strong><small>em todos os resultados filtrados</small></article>
+    <article class="pp-kpi-card pp-kpi-card--danger"><span>Sem cobertura</span><strong>@descobertos</strong><small>nesta página</small></article>
+    <article class="pp-kpi-card pp-kpi-card--warning"><span>Próximas 24h</span><strong>@proximos</strong><small>nesta página</small></article>
+    <article class="pp-kpi-card"><span>Valor previsto</span><strong>@valorPagina.ToString("C")</strong><small>nesta página</small></article>
+</section>
+
+<form method="get" class="pp-filter-bar" role="search" aria-label="Filtros operacionais de plantões">
+    <div class="pp-filter-bar__heading"><div><span class="pp-section-kicker">Filtros reais</span><h2 class="h6 mb-0">Recorte operacional</h2></div><a asp-action="Index" class="btn btn-sm btn-link">Limpar tudo</a></div>
+    <div class="pp-filter-grid">
+        <div><label for="cidade" class="form-label">Cidade</label><input id="cidade" name="cidade" class="form-control" value="@Context.Request.Query["cidade"]" placeholder="Ex.: Recife" /></div>
+        <div><label for="status" class="form-label">Status</label><select id="status" name="status" class="form-select"><option value="">Todos</option><option value="rascunho">Rascunho</option><option value="aberto">Publicado</option><option value="realizado">Realizado</option><option value="cancelado">Cancelado</option></select></div>
+        <div><label for="dataInicio" class="form-label">A partir de</label><input id="dataInicio" name="dataInicio" type="date" class="form-control" value="@Context.Request.Query["dataInicio"]" /></div>
+        <div><label for="dataFim" class="form-label">Até</label><input id="dataFim" name="dataFim" type="date" class="form-control" value="@Context.Request.Query["dataFim"]" /></div>
+        <div><label for="comVagas" class="form-label">Cobertura</label><select id="comVagas" name="comVagas" class="form-select"><option value="">Todas</option><option value="true">Com vagas</option><option value="false">Cobertura completa</option></select></div>
+        <div><label for="valorMinimo" class="form-label">Valor mínimo</label><input id="valorMinimo" name="valorMinimo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMinimo"]" /></div>
+        <div><label for="valorMaximo" class="form-label">Valor máximo</label><input id="valorMaximo" name="valorMaximo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMaximo"]" /></div>
+        <div><label for="ordenarPor" class="form-label">Ordenar</label><select id="ordenarPor" name="ordenarPor" class="form-select"><option value="data">Data</option><option value="valor">Valor</option><option value="hospital">Hospital</option><option value="especialidade">Especialidade</option><option value="vagas">Vagas</option></select></div>
+    </div>
+    <div class="pp-filter-bar__actions"><select name="direcao" class="form-select form-select-sm" aria-label="Direção da ordenação"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Aplicar filtros</button></div>
 </form>
-<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0 pp-responsive-table"><thead class="table-light"><tr><th>Hospital</th><th>Especialidade</th><th>Período</th><th>Valor</th><th>Vagas</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
-@if(items.Any()){foreach(var p in items){
-    var disponibilidadeCritica = p.Vagas > 0 && p.VagasDisponiveis <= Math.Max(1, (int)Math.Ceiling(p.Vagas * 0.25m));
-<tr><td><div class="fw-semibold">@p.HospitalNome</div><div class="text-muted small">@p.HospitalCidade/@p.HospitalEstado</div></td><td>@p.EspecialidadeNome</td><td><div>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</div><div class="text-muted small">até @p.DataFim.ToString("dd/MM/yyyy HH:mm")</div></td><td>@p.Valor.ToString("C")</td><td><span class="badge @(disponibilidadeCritica ? "text-bg-warning" : "text-bg-light border")">@p.VagasDisponiveis/@p.Vagas</span>@if(disponibilidadeCritica){<div class="small text-warning-emphasis mt-1"><i class="bi bi-exclamation-triangle"></i> Vagas limitadas</div>}</td><td><partial name="_StatusBadge" model="p.Status" /></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">Detalhes</a> <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@p.Id">Editar</a> <span class="pp-locked-action"><button class="btn btn-sm btn-outline-danger" disabled aria-describedby="cancelReason-@p.Id">Cancelar</button><span id="cancelReason-@p.Id">Disponível no detalhe quando o status permitir.</span></span></td></tr>}} else {<tr><td colspan="7" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar-x","Nenhum plantão encontrado","Crie um novo plantão para começar a alocação.","Novo Plantão","Create","Plantoes")' /></td></tr>}
-</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div></div>
+
+@if (items.Any())
+{
+    <div class="pp-data-table d-none d-lg-block"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Hospital e cidade</th><th>Especialidade</th><th>Período</th><th>Cobertura</th><th>Valor</th><th>Status</th><th><span class="visually-hidden">Ações</span></th></tr></thead><tbody>
+    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; <tr><td><strong>@p.HospitalNome</strong><small>@p.HospitalCidade/@p.HospitalEstado</small></td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM, HH:mm")<small>@((p.DataFim-p.DataInicio).TotalHours.ToString("0.#")) horas</small></td><td><span class="@(risco ? "text-danger fw-semibold" : "")">@(p.Vagas-p.VagasDisponiveis)/@p.Vagas preenchidas</span></td><td>@p.Valor.ToString("C")</td><td><partial name="_StatusBadge" model="p.Status" /></td><td class="text-end"><a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-outline-primary">Abrir</a><form asp-action="Duplicar" asp-route-id="@p.Id" method="post" class="d-inline">@Html.AntiForgeryToken()<button class="btn btn-sm btn-outline-secondary" type="submit" aria-label="Duplicar plantão de @p.HospitalNome"><i class="bi bi-copy"></i></button></form></td></tr> }
+    </tbody></table></div></div>
+    <div class="pp-mobile-card-list d-lg-none" aria-label="Plantões em cartões">
+    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; <article class="pp-operational-card @(risco ? "pp-operational-card--risk" : "")"><header><div><span class="pp-section-kicker">@p.EspecialidadeNome</span><h2>@p.HospitalNome</h2><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p></div><partial name="_StatusBadge" model="p.Status" /></header><dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div><div><dt>Valor</dt><dd>@p.Valor.ToString("C")</dd></div></dl><footer><a asp-action="Details" asp-route-id="@p.Id" class="btn btn-primary flex-grow-1">Abrir operação</a><form asp-action="Duplicar" asp-route-id="@p.Id" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-secondary" aria-label="Duplicar plantão"><i class="bi bi-copy"></i></button></form></footer></article> }
+    </div>
+    <partial name="_Pagination" model="Model" />
+}
+else
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Nenhum plantão neste recorte", "Ajuste os filtros ou crie um plantão para iniciar a cobertura.", "Novo plantão", "Create", "Plantoes")' />
+}

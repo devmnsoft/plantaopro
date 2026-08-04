@@ -18,6 +18,7 @@
   "database/schema/150_v1243_painel_publico_seguro.sql": "70a98b8b035155c391136e4b76af84b20145f82f570c7d68b35489eb7aa89ff9",
   "database/schema/210_v1310_consolidacao_operacao_assistida.sql": "67b91b2ca48bdba2158be6c33971eac190178ea7b5f8fab17e1f389467feacde",
   "database/schema/250_v1370_bootstrap_superadmin.sql": "6f5469f6e5fb49e8eb5026c2b22f76c1cf02edcc8b2f0c6f7f5fbc154b91457f",
+  "database/schema/260_v1400_produto_operacional_premium.sql": "5ac8669035bf9cff19eb0c3d576c0a8e6b9e7d49451d35ada413648f6b525174",
   "database/seeds/system/010_modulos.sql": "dd9b0558c442472b79a9bdb4aa69bfe86eb692dc929279fbbc769f518ce153fd",
   "database/seeds/system/020_acoes.sql": "556b6e7c90a6d94dfdb4d5c93f6e4f831a16ba82aacc9b2912ff504e8ba18464",
   "database/seeds/system/030_permissoes.sql": "e20d55ef179d3b1e805900646953dae491528ca36ca54115d225ae82b580833a",

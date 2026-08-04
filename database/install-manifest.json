@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.40.0",
+  "schemaVersion": "v1.41.0",
   "generatedAt": "2026-08-04",
   "sections": [
     {
@@ -239,6 +239,19 @@
           "category": "CANONICAL_OPERATION",
           "required": true,
           "source": "database/schema/260_v1400_produto_operacional_premium.sql"
+        }
+      ]
+    },
+    {
+      "order": 20,
+      "name": "Ciclo operacional v1.41.0",
+      "objects": [
+        {
+          "name": "plantaopro.operational_cycle_v1410",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
         }
       ]
     }

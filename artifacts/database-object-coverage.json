@@ -466,6 +466,7 @@
     "database/seeds/system/090_notificacoes.sql",
     "database/seeds/system/100_status_operacionais.sql",
     "database/seeds/system/110_configuracoes_runtime.sql",
-    "database/schema/260_v1400_produto_operacional_premium.sql"
+    "database/schema/260_v1400_produto_operacional_premium.sql",
+    "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
   ]
 }

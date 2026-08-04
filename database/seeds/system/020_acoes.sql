@@ -3,7 +3,9 @@ WITH catalog(codigo,nome,ordem,sensivel) AS (VALUES
  ('GERENCIAR','Gerenciar',50,true),('SUSPENDER','Suspender',60,true),('IMPERSONAR','Impersonar',70,true),
  ('PUBLICAR','Publicar',80,true),('CANCELAR','Cancelar',90,true),('CONFIRMAR','Confirmar',100,false),
  ('RECUSAR','Recusar',110,false),('SUBSTITUIR','Substituir',120,true),('INICIAR','Iniciar',130,false),
- ('FINALIZAR','Finalizar',140,true),('EXPORTAR','Exportar',150,true)
+ ('FINALIZAR','Finalizar',140,true),('EXPORTAR','Exportar',150,true),('CONVIDAR','Convidar',160,true),
+ ('REALIZAR','Realizar',170,true),('CONFERIR','Conferir',180,true),('APROVAR','Aprovar',190,true),
+ ('REABRIR','Reabrir',200,true),('PAGAR','Pagar',210,true)
 )
 INSERT INTO plantaopro.acoes_sistema(id,codigo,nome,descricao,ordem,sensivel,status,reg_status)
 SELECT md5('action:'||codigo)::uuid,codigo,nome,'Ação canônica PlantãoPro',ordem,sensivel,'ATIVO','A' FROM catalog

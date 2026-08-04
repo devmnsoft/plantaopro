@@ -155,5 +155,10 @@
     "object": "plantaopro.operational_premium_v1400",
     "dependsOn": [],
     "source": "database/schema/260_v1400_produto_operacional_premium.sql"
+  },
+  {
+    "object": "plantaopro.operational_cycle_v1410",
+    "dependsOn": [],
+    "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
   }
 ]

@@ -5,7 +5,7 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v1.40.0
+-- Versão do schema: v1.41.0
 -- PostgreSQL suportado: 16
 -- Data de geração: 2026-08-04
 -- Execução oficial:
@@ -1914,40 +1914,46 @@ WHERE NOT EXISTS (SELECT 1 FROM plantaopro.permissoes p WHERE upper(btrim(p.codi
 -- ============================================================
 
 -- SOURCE: database/seeds/system/010_modulos.sql
--- SOURCE-SHA256: dd9b0558c442472b79a9bdb4aa69bfe86eb692dc929279fbbc769f518ce153fd
+-- SOURCE-SHA256: ee27f14e0966c5aef1ba6e7669182dc3bec4382de80dabd99dc49506fc2f0bf3
 -- Catálogo real de módulos consumidos pelo runtime. IDs determinísticos tornam o replay seguro.
 WITH catalog(codigo,nome,ordem) AS (VALUES
  ('ADMIN_SAAS','Administração SaaS',10),('TENANTS','Tenants',20),('CLIENTES','Clientes',30),('PLANOS','Planos',40),
  ('ASSINATURAS','Assinaturas',50),('USUARIOS','Usuários',60),('PERFIS','Perfis',70),('PERMISSOES','Permissões',80),
  ('PLANTOES','Plantões',90),('ESCALAS','Escalas',100),('PACIENTES','Pacientes',110),('CONSULTAS','Consultas',120),
- ('FINANCEIRO','Financeiro',130),('RELATORIOS','Relatórios',140),('AUDITORIA','Auditoria',150),('SEGURANCA','Segurança',160)
+ ('FINANCEIRO','Financeiro',130),('RELATORIOS','Relatórios',140),('AUDITORIA','Auditoria',150),('SEGURANCA','Segurança',160),
+ ('COBERTURA','Cobertura inteligente',170),('FECHAMENTO','Fechamento operacional',180)
 )
 INSERT INTO plantaopro.modulos_sistema(id,codigo,nome,descricao,ordem,status,reg_status)
 SELECT md5('module:'||codigo)::uuid,codigo,nome,'Módulo canônico PlantãoPro',ordem,'ATIVO','A' FROM catalog
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/020_acoes.sql
--- SOURCE-SHA256: 556b6e7c90a6d94dfdb4d5c93f6e4f831a16ba82aacc9b2912ff504e8ba18464
+-- SOURCE-SHA256: 4b192295da67ad56935ed39879bc12eb73825756e21ad7e07e7a45bc95a54238
 WITH catalog(codigo,nome,ordem,sensivel) AS (VALUES
  ('VER','Ver',10,false),('LISTAR','Listar',20,false),('CRIAR','Criar',30,false),('EDITAR','Editar',40,false),
  ('GERENCIAR','Gerenciar',50,true),('SUSPENDER','Suspender',60,true),('IMPERSONAR','Impersonar',70,true),
  ('PUBLICAR','Publicar',80,true),('CANCELAR','Cancelar',90,true),('CONFIRMAR','Confirmar',100,false),
  ('RECUSAR','Recusar',110,false),('SUBSTITUIR','Substituir',120,true),('INICIAR','Iniciar',130,false),
- ('FINALIZAR','Finalizar',140,true),('EXPORTAR','Exportar',150,true)
+ ('FINALIZAR','Finalizar',140,true),('EXPORTAR','Exportar',150,true),('CONVIDAR','Convidar',160,true),
+ ('REALIZAR','Realizar',170,true),('CONFERIR','Conferir',180,true),('APROVAR','Aprovar',190,true),
+ ('REABRIR','Reabrir',200,true),('PAGAR','Pagar',210,true)
 )
 INSERT INTO plantaopro.acoes_sistema(id,codigo,nome,descricao,ordem,sensivel,status,reg_status)
 SELECT md5('action:'||codigo)::uuid,codigo,nome,'Ação canônica PlantãoPro',ordem,sensivel,'ATIVO','A' FROM catalog
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/030_permissoes.sql
--- SOURCE-SHA256: e20d55ef179d3b1e805900646953dae491528ca36ca54115d225ae82b580833a
+-- SOURCE-SHA256: af8f4a93a329103f764da681fd3b3b15c72c33724c447d1efff4b5db24416833
 WITH catalog(modulo,acao) AS (VALUES
  ('ADMIN_SAAS','VER'),('ADMIN_SAAS','GERENCIAR'),('TENANTS','LISTAR'),('TENANTS','CRIAR'),('TENANTS','EDITAR'),('TENANTS','SUSPENDER'),('TENANTS','IMPERSONAR'),
  ('USUARIOS','LISTAR'),('USUARIOS','CRIAR'),('USUARIOS','EDITAR'),('PERFIS','LISTAR'),('PERFIS','GERENCIAR'),
  ('PLANTOES','LISTAR'),('PLANTOES','CRIAR'),('PLANTOES','EDITAR'),('PLANTOES','PUBLICAR'),('PLANTOES','CANCELAR'),
  ('ESCALAS','LISTAR'),('ESCALAS','CONFIRMAR'),('ESCALAS','RECUSAR'),('ESCALAS','SUBSTITUIR'),
  ('PACIENTES','LISTAR'),('PACIENTES','CRIAR'),('CONSULTAS','INICIAR'),('CONSULTAS','EDITAR'),('CONSULTAS','FINALIZAR'),
- ('FINANCEIRO','VER'),('FINANCEIRO','GERENCIAR'),('RELATORIOS','VER'),('RELATORIOS','EXPORTAR'),('AUDITORIA','VER'),('SEGURANCA','GERENCIAR')
+ ('FINANCEIRO','VER'),('FINANCEIRO','GERENCIAR'),('RELATORIOS','VER'),('RELATORIOS','EXPORTAR'),('AUDITORIA','VER'),('SEGURANCA','GERENCIAR'),
+ ('COBERTURA','VER'),('COBERTURA','GERENCIAR'),('COBERTURA','CONVIDAR'),
+ ('ESCALAS','REALIZAR'),('FECHAMENTO','VER'),('FECHAMENTO','CONFERIR'),('FECHAMENTO','APROVAR'),('FECHAMENTO','REABRIR'),
+ ('FINANCEIRO','APROVAR'),('FINANCEIRO','PAGAR'),('FINANCEIRO','CANCELAR'),('FINANCEIRO','EXPORTAR')
 )
 INSERT INTO plantaopro.permissoes(id,codigo,nome,descricao,modulo,acao,modulo_id,acao_id,sensivel,status,reg_status)
 SELECT md5('permission:'||c.modulo||':'||c.acao)::uuid,c.modulo||'.'||c.acao,c.modulo||' '||c.acao,'Permissão canônica',c.modulo,c.acao,m.id,a.id,a.sensivel,'ATIVO','A'
@@ -2102,3 +2108,76 @@ create table if not exists plantaopro.fechamento_auditoria (
 );
 create index if not exists ix_fechamento_auditoria_plantao
     on plantaopro.fechamento_auditoria(tenant_id, plantao_id, ocorrido_em desc);
+
+-- ============================================================
+-- Seção 20 — Ciclo operacional v1.41.0
+-- ============================================================
+
+-- SOURCE: database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql
+-- SOURCE-SHA256: bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721
+-- PlantãoPro v1.41.0 — cobertura, execução, fechamento e origem financeira.
+-- Modelo aditivo e idempotente; todas as entidades operacionais carregam o tenant.
+set search_path to plantaopro, public;
+
+create table if not exists cobertura_sugestoes (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, plantao_id uuid not null,
+    medico_id uuid not null, score smallint not null check (score between 0 and 100),
+    criterios jsonb not null default '{}'::jsonb, elegivel boolean not null,
+    impedimentos jsonb not null default '[]'::jsonb, calculado_em timestamptz not null default now(),
+    unique (tenant_id, plantao_id, medico_id)
+);
+create index if not exists ix_cobertura_sugestoes_ranking on cobertura_sugestoes(tenant_id, plantao_id, elegivel, score desc);
+
+create table if not exists cobertura_convites (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, plantao_id uuid not null,
+    medico_id uuid not null, status varchar(20) not null default 'PENDENTE'
+        check (status in ('PENDENTE','ACEITO','RECUSADO','CANCELADO','EXPIRADO')),
+    mensagem text, criado_por uuid not null, criado_em timestamptz not null default now(),
+    reenviado_em timestamptz, respondido_em timestamptz, cancelado_em timestamptz, motivo text
+);
+create unique index if not exists ux_cobertura_convite_pendente
+    on cobertura_convites(tenant_id, plantao_id, medico_id) where status = 'PENDENTE';
+
+create table if not exists escala_transicoes (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, escala_id uuid not null,
+    estado_anterior varchar(24), estado_novo varchar(24) not null
+        check (estado_novo in ('SOLICITADA','CONFIRMADA','RECUSADA','CANCELADA','SUBSTITUIDA','REALIZADA','AUSENTE','EM_FECHAMENTO','FECHADA')),
+    motivo text, novo_medico_id uuid, executado_por uuid not null, executado_em timestamptz not null default now(), metadata jsonb not null default '{}'::jsonb
+);
+create index if not exists ix_escala_transicoes_timeline on escala_transicoes(tenant_id, escala_id, executado_em desc);
+
+create table if not exists fechamento_plantao (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, plantao_id uuid not null,
+    status varchar(24) not null default 'EM_CONFERENCIA' check (status in ('EM_CONFERENCIA','COM_DIVERGENCIA','APROVADO','FECHADO','REABERTO')),
+    iniciado_por uuid not null, iniciado_em timestamptz not null default now(), aprovado_por uuid, aprovado_em timestamptz,
+    fechado_em timestamptz, reaberto_em timestamptz, motivo_reabertura text, versao integer not null default 1
+);
+create unique index if not exists ux_fechamento_plantao_ativo on fechamento_plantao(tenant_id, plantao_id) where status <> 'REABERTO';
+
+create table if not exists fechamento_plantao_escalas (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, fechamento_id uuid not null references fechamento_plantao(id),
+    escala_id uuid not null, presenca boolean not null, horas_previstas numeric(6,2) not null default 0,
+    horas_realizadas numeric(6,2) not null default 0 check (horas_realizadas >= 0), valor_previsto numeric(14,2) not null default 0,
+    valor_calculado numeric(14,2) not null default 0, conferido_por uuid, conferido_em timestamptz, unique(tenant_id, fechamento_id, escala_id)
+);
+create table if not exists fechamento_divergencias (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, fechamento_id uuid not null references fechamento_plantao(id),
+    escala_id uuid, tipo varchar(40) not null, descricao text not null check (length(trim(descricao)) >= 3),
+    status varchar(20) not null default 'ABERTA' check (status in ('ABERTA','RESOLVIDA','CANCELADA')),
+    criada_por uuid not null, criada_em timestamptz not null default now(), resolucao text, resolvida_por uuid, resolvida_em timestamptz
+);
+create table if not exists fechamento_aprovacoes (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, fechamento_id uuid not null references fechamento_plantao(id),
+    aprovado_por uuid not null, decisao varchar(16) not null check (decisao in ('APROVADO','REJEITADO','REABERTO')),
+    justificativa text, criado_em timestamptz not null default now()
+);
+create table if not exists financeiro_pagamento_origem (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, pagamento_id uuid not null,
+    fechamento_id uuid not null references fechamento_plantao(id), escala_id uuid not null,
+    criado_em timestamptz not null default now(), unique(tenant_id, pagamento_id), unique(tenant_id, escala_id)
+);
+create table if not exists work_item_contextos (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, work_item_id uuid not null,
+    tipo varchar(40) not null, entidade_id uuid not null, rota_segura text not null, dados jsonb not null default '{}'::jsonb,
+    criado_em timestamptz not null default now(), unique(tenant_id, work_item_id, tipo, entidade_id)
+);

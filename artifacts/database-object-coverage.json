@@ -465,6 +465,7 @@
     "database/seeds/system/080_parametros_globais.sql",
     "database/seeds/system/090_notificacoes.sql",
     "database/seeds/system/100_status_operacionais.sql",
-    "database/seeds/system/110_configuracoes_runtime.sql"
+    "database/seeds/system/110_configuracoes_runtime.sql",
+    "database/schema/260_v1400_produto_operacional_premium.sql"
   ]
 }

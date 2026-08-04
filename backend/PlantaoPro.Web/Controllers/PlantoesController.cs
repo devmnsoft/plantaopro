@@ -13,8 +13,28 @@ public class PlantoesController : BaseWebController
 {
     public PlantoesController(IHttpClientFactory f, ILogger<PlantoesController> l) : base(f, l) { }
 
-    public async Task<IActionResult> Index(string? hospital, string? especialidade, string? status, string? tipo, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
-        => await this.RenderPaged<PlantaoResumoDto>($"api/plantoes?status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&cidade={hospital}&estado={tipo}&page={page}&pageSize={pageSize}");
+    public async Task<IActionResult> Index(string? cidade, string? status, DateTime? dataInicio, DateTime? dataFim,
+        bool? comVagas, decimal? valorMinimo, decimal? valorMaximo, string? ordenarPor, string? direcao,
+        int page = 1, int pageSize = 20)
+    {
+        var query = new Dictionary<string, string?>
+        {
+            ["cidade"] = cidade,
+            ["status"] = status,
+            ["dataInicio"] = dataInicio?.ToString("O"),
+            ["dataFim"] = dataFim?.ToString("O"),
+            ["comVagas"] = comVagas?.ToString(),
+            ["valorMinimo"] = valorMinimo?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["valorMaximo"] = valorMaximo?.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            ["ordenarPor"] = ordenarPor,
+            ["direcao"] = direcao,
+            ["page"] = page.ToString(),
+            ["pageSize"] = pageSize.ToString()
+        };
+        var parameters = string.Join("&", query.Where(item => !string.IsNullOrWhiteSpace(item.Value))
+            .Select(item => $"{Uri.EscapeDataString(item.Key)}={Uri.EscapeDataString(item.Value!)}"));
+        return await this.RenderPaged<PlantaoResumoDto>($"api/plantoes?{parameters}");
+    }
 
     public IActionResult Calendario() => View();
 
@@ -74,6 +94,29 @@ public class PlantoesController : BaseWebController
     {
         if (string.IsNullOrWhiteSpace(model.Justificativa)) { TempData["Error"] = "Justificativa obrigatória para cancelar."; return RedirectToAction(nameof(Details), new { id = model.Id }); }
         return await SendStatusAction(model.Id, "api/plantoes/{0}/cancelar", "Plantão cancelado.", "Cancelamento não realizado.", model.Justificativa);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Duplicar(Guid id)
+    {
+        var endpoint = $"api/plantoes/{id}/duplicar";
+        try
+        {
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+            var result = await SendApiWithoutResponseAsync(client, HttpMethod.Post, endpoint,
+                new { DataInicio = (DateTime?)null, DataFim = (DateTime?)null, Justificativa = "Duplicação solicitada pela central operacional" });
+            TempData[result.Success ? "Success" : "Error"] = result.Success
+                ? "Plantão duplicado como rascunho para a próxima semana."
+                : result.Error ?? "Não foi possível duplicar o plantão.";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao duplicar plantão {PlantaoId}", id);
+            TempData["Error"] = "Não foi possível duplicar o plantão agora.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
     }
 
     private static void Normalize(PlantaoFormViewModel model)

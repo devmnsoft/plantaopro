@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.39.0",
-  "generatedAt": "2026-08-03",
+  "schemaVersion": "v1.40.0",
+  "generatedAt": "2026-08-04",
   "sections": [
     {
       "order": 3,
@@ -226,6 +226,19 @@
           "category": "SYSTEM_SEED",
           "required": true,
           "source": "database/seeds/system/110_configuracoes_runtime.sql"
+        }
+      ]
+    },
+    {
+      "order": 19,
+      "name": "Produto operacional premium v1.40.0",
+      "objects": [
+        {
+          "name": "plantaopro.operational_premium_v1400",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/260_v1400_produto_operacional_premium.sql"
         }
       ]
     }

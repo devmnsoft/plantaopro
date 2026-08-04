@@ -122,6 +122,27 @@ namespace PlantaoPro.Api.Controllers
         }
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]
+        [HttpPost("{id:guid}/duplicar")]
+        public async Task<IActionResult> Duplicar(Guid id, [FromBody] DuplicarPlantaoRequest request)
+        {
+            try
+            {
+                var result = await service.DuplicarAsync(
+                    id,
+                    request,
+                    GetUserId(),
+                    HttpContext.Connection.RemoteIpAddress?.ToString(),
+                    Request.Headers.UserAgent.ToString());
+                return StatusCode(result.StatusCode, result);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro ao duplicar plantão {PlantaoId}", id);
+                return StatusCode(500, ApiResponse<string>.Fail("Erro ao duplicar plantão.", 500));
+            }
+        }
+
+        [Authorize(Roles = RolesConstants.PlantoesGestao)]
         [HttpPost("{id:guid}/realizar")]
         [HttpPost("{id:guid}/encerrar")]
         public Task<IActionResult> Realizar(Guid id, [FromBody] StatusRequest req)

@@ -35,7 +35,26 @@ public sealed class PlantaoResumoDto
 }
 public record CreatePlantaoRequest(Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,string Tipo,string? Observacoes);
 public record UpdatePlantaoRequest(Guid HospitalId,Guid EspecialidadeId,DateTime DataInicio,DateTime DataFim,decimal Valor,int Vagas,string Tipo,string? Observacoes);
-public record PlantaoFilterRequest(Guid? HospitalId,Guid? EspecialidadeId,string? Status,DateTime? DataInicio,DateTime? DataFim,string? Cidade,string? Estado,int Page=1,int PageSize=20);
+public record PlantaoFilterRequest(
+    Guid? HospitalId,
+    Guid? EspecialidadeId,
+    string? Status,
+    DateTime? DataInicio,
+    DateTime? DataFim,
+    string? Cidade,
+    string? Estado,
+    int Page = 1,
+    int PageSize = 20,
+    bool? ComVagas = null,
+    decimal? ValorMinimo = null,
+    decimal? ValorMaximo = null,
+    string? OrdenarPor = null,
+    string? Direcao = null);
+
+public sealed record DuplicarPlantaoRequest(
+    DateTime? DataInicio,
+    DateTime? DataFim,
+    string? Justificativa);
 public record PagedResult<T>(IEnumerable<T> Items,int Page,int PageSize,long Total);
 public record CancelarPlantaoRequest(string Justificativa);
 public record StatusRequest(string Justificativa);

@@ -1,0 +1,30 @@
+@model PlantaoPro.Web.Models.FechamentoViewModel
+@{
+    ViewData["Title"] = "Fechamento Operacional";
+}
+<section class="premium-workspace v1420-workspace" aria-labelledby="closing-title">
+    <div class="page-hero v1420-hero">
+        <div>
+            <span class="eyebrow">Conferência e financeiro</span>
+            <h1 id="closing-title">Fechamento Operacional</h1>
+            <p>Conferência de escalas, divergências justificadas, aprovação e geração financeira transacional.</p>
+        </div>
+        <div class="hero-actions" role="group" aria-label="Ações de fechamento">
+            <a class="btn btn-primary" href="/bff/fechamentos">Atualizar BFF</a>
+            <a class="btn btn-secondary" href="/fechamentos/pendentes">Pendentes</a>
+        </div>
+    </div>
+    <div class="kpi-strip">
+        @foreach (var kpi in Model.Indicadores)
+        {
+            <article class="kpi-card tone-@kpi.Tone"><span>@kpi.Label</span><strong>@kpi.Value</strong><small>@kpi.Hint</small></article>
+        }
+    </div>
+    <div class="operational-grid">
+        <section class="operational-card" aria-labelledby="closing-list-title">
+            <h2 id="closing-list-title">Fechamentos aguardando conferência</h2>
+            <div class="empty-state" role="status"><strong>Nenhum fechamento pendente.</strong><p>Novos plantões conferíveis serão carregados por endpoint real, sem dados demonstrativos.</p></div>
+        </section>
+        <aside class="context-drawer is-static" aria-labelledby="closing-context-title"><h2 id="closing-context-title">Auditoria e timeline</h2><p>Eventos de conferência, divergência, aprovação e financeiro aparecem aqui.</p></aside>
+    </div>
+</section>

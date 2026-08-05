@@ -1,0 +1,42 @@
+@model PlantaoPro.Web.Models.CoverageDashboardViewModel
+@{
+    ViewData["Title"] = "Central de Cobertura";
+}
+<section class="premium-workspace v1420-workspace" aria-labelledby="coverage-title">
+    <div class="page-hero v1420-hero">
+        <div>
+            <span class="eyebrow">Operação em tempo real</span>
+            <h1 id="coverage-title">Central de Cobertura</h1>
+            <p>Priorize plantões sem cobertura, entenda o score de elegibilidade e dispare convites com rastreabilidade.</p>
+        </div>
+        <div class="hero-actions" role="group" aria-label="Ações de cobertura">
+            <a class="btn btn-primary" href="/bff/cobertura">Atualizar BFF</a>
+            <a class="btn btn-secondary" href="/cobertura/criticos">Ver críticos</a>
+        </div>
+    </div>
+    <div class="kpi-strip">
+        @foreach (var kpi in Model.Indicadores)
+        {
+            <article class="kpi-card tone-@kpi.Tone"><span>@kpi.Label</span><strong>@kpi.Value</strong><small>@kpi.Hint</small></article>
+        }
+    </div>
+    <div class="operational-grid">
+        <section class="operational-card" aria-labelledby="coverage-list-title">
+            <h2 id="coverage-list-title">Plantões críticos</h2>
+            <div class="empty-state" role="status">
+                <strong>Nenhum plantão crítico agora.</strong>
+                <p>Quando a API retornar plantões sem cobertura, eles aparecerão aqui com score, impedimentos e ações reais.</p>
+            </div>
+        </section>
+        <aside class="context-drawer is-static" aria-labelledby="coverage-context-title">
+            <h2 id="coverage-context-title">Painel contextual</h2>
+            <p>Selecione um plantão para visualizar sugestões, conflitos, disponibilidade, histórico e timeline.</p>
+            <ol class="timeline-list">
+                @foreach (var item in Model.Timeline)
+                {
+                    <li><strong>@item.Title</strong><span>@item.Description</span></li>
+                }
+            </ol>
+        </aside>
+    </div>
+</section>

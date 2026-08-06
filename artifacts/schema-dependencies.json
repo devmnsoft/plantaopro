@@ -87,6 +87,16 @@
     "source": "database/schema/150_v1243_painel_publico_seguro.sql"
   },
   {
+    "object": "v1440_produto_vendavel",
+    "dependsOn": [
+      "plantaopro.tenants",
+      "plantaopro.usuarios",
+      "plantaopro.medicos",
+      "plantaopro.escalas"
+    ],
+    "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql"
+  },
+  {
     "object": "plantaopro.operacao_assistida_v1310",
     "dependsOn": [],
     "source": "database/schema/210_v1310_consolidacao_operacao_assistida.sql"

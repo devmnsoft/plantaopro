@@ -2,22 +2,37 @@
 @{
     var vm = Model ?? new PlantaoPro.Web.Models.AgendaOperacionalViewModel();
     ViewData["Title"] = "Agenda Operacional";
+    var modo = ViewData["AgendaModo"]?.ToString() ?? "semana";
     var grouped = (vm.Itens ?? Array.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>())
         .OrderBy(x => x.DataInicio)
         .GroupBy(x => x.DataInicio.Date)
         .ToList();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Agenda Operacional</h1>
-    <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Criar Plantão</a>
-</div>
+<section class="agenda-hero mb-4" aria-labelledby="agenda-title">
+  <div>
+    <span class="agenda-eyebrow">Operação em tempo real</span>
+    <h1 id="agenda-title">Agenda operacional</h1>
+    <p>Plantões, coberturas e conflitos em uma visão única para antecipar decisões.</p>
+  </div>
+  <div class="agenda-actions">
+    <button type="button" class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i>Imprimir</button>
+    <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Novo plantão</a>
+  </div>
+</section>
 
-<form method="get" class="card border-0 shadow-sm mb-3">
+<nav class="agenda-switcher mb-3" aria-label="Visualização da agenda">
+  <a href="/agenda/dia" class="@(modo == "dia" ? "active" : null)">Dia</a>
+  <a href="/agenda/semana" class="@(modo == "semana" ? "active" : null)">Semana</a>
+  <a href="/agenda/mes" class="@(modo == "mes" ? "active" : null)">Mês</a>
+  <a href="/agenda/conflitos" class="@(modo == "conflitos" ? "active danger" : null)"><i class="bi bi-exclamation-triangle me-1"></i>Conflitos</a>
+</nav>
+
+<form method="get" class="agenda-filter card border-0 shadow-sm mb-3">
     <div class="card-body row g-2">
         <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@vm.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
         <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@vm.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
-        <div class="col-md-3"><label class="form-label">Status</label><input type="text" name="status" value="@vm.Status" class="form-control" placeholder="aberto, confirmado..." /></div>
+        <div class="col-md-3"><label class="form-label">Status</label><select name="status" class="form-select"><option value="">Todos os status</option><option value="ABERTO" selected="@(vm.Status == "ABERTO")">Aberto</option><option value="CONFIRMADO" selected="@(vm.Status == "CONFIRMADO")">Confirmado</option><option value="CONFLITO" selected="@(vm.Status == "CONFLITO")">Conflito</option></select></div>
         <div class="col-md-3 d-flex align-items-end"><button class="btn btn-outline-primary w-100" type="submit">Filtrar</button></div>
     </div>
 </form>
@@ -33,18 +48,18 @@
 }
 else
 {
-    <div class="small text-muted mb-2">Total de eventos: @vm.Total</div>
+        <div class="agenda-summary mb-3"><strong>@vm.Total</strong><span>eventos no período</span><span class="agenda-live"><i></i>Dados operacionais</span></div>
     @foreach (var day in grouped)
     {
-        <div class="card border-0 shadow-sm mb-3">
-            <div class="card-header bg-white"><strong>@day.Key.ToString("dddd, dd/MM/yyyy")</strong></div>
+        <div class="agenda-day card border-0 shadow-sm mb-3">
+            <div class="card-header"><time datetime="@day.Key.ToString("yyyy-MM-dd")">@day.Key.ToString("dddd, dd/MM/yyyy")</time><span>@day.Count() eventos</span></div>
             <div class="card-body">
                 <div class="row g-3">
                     @foreach (var item in day)
                     {
                         var statusClass = (item.Status ?? string.Empty).ToLowerInvariant();
                         <div class="col-12 col-lg-6">
-                            <div class="border rounded p-3 h-100">
+                            <article class="agenda-event status-@statusClass h-100">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <div class="fw-semibold">@item.HospitalNome</div>
@@ -53,8 +68,8 @@ else
                                     <span class="badge status-@statusClass">@item.Status</span>
                                 </div>
                                 <div class="mt-2 small">@item.DataInicio.ToString("HH:mm") - @item.DataFim.ToString("HH:mm") · @item.Valor.ToString("C")</div>
-                                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary mt-2">Abrir plantão</a>
-                            </div>
+                                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary mt-3">Ver contexto <i class="bi bi-arrow-right ms-1"></i></a>
+                            </article>
                         </div>
                     }
                 </div>

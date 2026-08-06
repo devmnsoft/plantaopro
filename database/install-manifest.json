@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.44.0",
+  "schemaVersion": "v1.45.0",
   "generatedAt": "2026-08-06",
   "sections": [
     {
@@ -273,6 +273,26 @@
           ]
         }
       ]
+    },
+    {
+      "order": 21,
+      "name": "Design executivo, operação inteligente e comercial v1.45.0",
+      "objects": [
+        {
+          "name": "plantaopro.executive_commercial_v1450",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql",
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.usuarios",
+            "plantaopro.medicos",
+            "plantaopro.escalas",
+            "plantaopro.agenda_eventos_operacionais"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -319,6 +339,20 @@
     "medico_disponibilidade_periodos",
     "medico_indisponibilidades",
     "agenda_change_history",
-    "operational_transition_history"
+    "operational_transition_history",
+    "agenda_evento_participantes",
+    "agenda_evento_conflitos",
+    "medico_checkins",
+    "medico_disponibilidade_regras",
+    "onboarding_etapas_execucao",
+    "relatorio_modelos",
+    "relatorio_execucoes",
+    "superadmin_cliente_riscos",
+    "white_label_temas",
+    "white_label_historico",
+    "ajuda_contextual_topicos",
+    "operacao_assistida_runbooks",
+    "notificacao_agrupamentos_v145",
+    "user_saved_dashboards"
   ]
 }

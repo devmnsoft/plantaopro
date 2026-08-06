@@ -16,7 +16,10 @@
     <p>Plantões, coberturas e conflitos em uma visão única para antecipar decisões.</p>
   </div>
   <div class="agenda-actions">
-    <button type="button" class="btn btn-light" onclick="window.print()"><i class="bi bi-printer me-1"></i>Imprimir</button>
+    <button type="button" class="btn btn-light" data-agenda-print aria-describedby="agenda-print-help">
+      <i class="bi bi-printer me-1" aria-hidden="true"></i>Imprimir
+    </button>
+    <span id="agenda-print-help" class="visually-hidden">Abre a caixa de impressão com uma versão profissional da agenda filtrada.</span>
     <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Novo plantão</a>
   </div>
 </section>
@@ -40,6 +43,10 @@
 @if (!string.IsNullOrWhiteSpace(vm.ErrorMessage))
 {
     <div class="alert alert-danger">@vm.ErrorMessage</div>
+}
+
+@section Scripts {
+    <script src="~/js/agenda-operacional.js" asp-append-version="true" defer></script>
 }
 
 @if (!grouped.Any())

@@ -21,6 +21,7 @@
   "database/schema/260_v1400_produto_operacional_premium.sql": "5ac8669035bf9cff19eb0c3d576c0a8e6b9e7d49451d35ada413648f6b525174",
   "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql": "bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721",
   "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql": "a91ac25f68d57fdefde5b37fa4831a12c8a347c86616dd61060d01146581a0ed",
+  "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql": "58f2affeb86244c30184eaf27922e5562439dbc4afe5f39d7218d09cd9b4856a",
   "database/seeds/system/010_modulos.sql": "ee27f14e0966c5aef1ba6e7669182dc3bec4382de80dabd99dc49506fc2f0bf3",
   "database/seeds/system/020_acoes.sql": "4b192295da67ad56935ed39879bc12eb73825756e21ad7e07e7a45bc95a54238",
   "database/seeds/system/030_permissoes.sql": "af8f4a93a329103f764da681fd3b3b15c72c33724c447d1efff4b5db24416833",

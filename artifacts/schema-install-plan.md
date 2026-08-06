@@ -33,3 +33,4 @@
 - `plantaopro.seed_110_configuracoes_runtime` depende de: nenhuma
 - `plantaopro.operational_premium_v1400` depende de: nenhuma
 - `plantaopro.operational_cycle_v1410` depende de: nenhuma
+- `plantaopro.executive_commercial_v1450` depende de: plantaopro.tenants, plantaopro.usuarios, plantaopro.medicos, plantaopro.escalas, plantaopro.agenda_eventos_operacionais

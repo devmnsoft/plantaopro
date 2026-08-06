@@ -170,5 +170,16 @@
     "object": "plantaopro.operational_cycle_v1410",
     "dependsOn": [],
     "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
+  },
+  {
+    "object": "plantaopro.executive_commercial_v1450",
+    "dependsOn": [
+      "plantaopro.tenants",
+      "plantaopro.usuarios",
+      "plantaopro.medicos",
+      "plantaopro.escalas",
+      "plantaopro.agenda_eventos_operacionais"
+    ],
+    "source": "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql"
   }
 ]

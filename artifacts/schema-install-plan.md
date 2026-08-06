@@ -17,6 +17,7 @@
 - `plantaopro.contexto_multiempresa` depende de: nenhuma
 - `plantaopro.experiencia_premium_meu_dia` depende de: nenhuma
 - `plantaopro.paineis_publicos` depende de: plantaopro.clientes
+- `v1440_produto_vendavel` depende de: plantaopro.tenants, plantaopro.usuarios, plantaopro.medicos, plantaopro.escalas
 - `plantaopro.operacao_assistida_v1310` depende de: nenhuma
 - `plantaopro.bootstrap_catalog` depende de: nenhuma
 - `plantaopro.seed_010_modulos` depende de: nenhuma

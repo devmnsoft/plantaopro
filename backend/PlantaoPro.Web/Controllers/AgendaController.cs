@@ -11,7 +11,27 @@ public class AgendaController : BaseWebController
 {
     public AgendaController(IHttpClientFactory factory, ILogger<AgendaController> logger) : base(factory, logger) { }
 
-    public async Task<IActionResult> Index(DateTime? inicio, DateTime? fim, string? status, int page = 1, int pageSize = 100)
+    [HttpGet("/agenda")]
+    public Task<IActionResult> Index(DateTime? inicio, DateTime? fim, string? status, int page = 1, int pageSize = 100)
+        => Carregar("semana", inicio, fim, status, page, pageSize);
+
+    [HttpGet("/agenda/dia")]
+    public Task<IActionResult> Dia(DateTime? inicio, string? status, int page = 1, int pageSize = 100)
+        => Carregar("dia", inicio, inicio?.Date.AddDays(1).AddTicks(-1), status, page, pageSize);
+
+    [HttpGet("/agenda/semana")]
+    public Task<IActionResult> Semana(DateTime? inicio, string? status, int page = 1, int pageSize = 100)
+        => Carregar("semana", inicio, inicio?.Date.AddDays(7).AddTicks(-1), status, page, pageSize);
+
+    [HttpGet("/agenda/mes")]
+    public Task<IActionResult> Mes(DateTime? inicio, string? status, int page = 1, int pageSize = 100)
+        => Carregar("mes", inicio, inicio?.Date.AddMonths(1).AddTicks(-1), status, page, pageSize);
+
+    [HttpGet("/agenda/conflitos")]
+    public Task<IActionResult> Conflitos(DateTime? inicio, DateTime? fim, int page = 1, int pageSize = 100)
+        => Carregar("conflitos", inicio, fim, "CONFLITO", page, pageSize);
+
+    private async Task<IActionResult> Carregar(string modo, DateTime? inicio, DateTime? fim, string? status, int page, int pageSize)
     {
         var dataInicio = inicio ?? DateTime.Today;
         var dataFim = fim ?? DateTime.Today.AddDays(30);
@@ -32,6 +52,8 @@ public class AgendaController : BaseWebController
             Total = data.TotalItems,
             ErrorMessage = error
         };
+
+        ViewData["AgendaModo"] = modo;
 
         return View(vm);
     }

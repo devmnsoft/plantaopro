@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.41.0",
-  "generatedAt": "2026-08-04",
+  "schemaVersion": "v1.44.0",
+  "generatedAt": "2026-08-06",
   "sections": [
     {
       "order": 3,
@@ -252,6 +252,25 @@
           "category": "CANONICAL_OPERATION",
           "required": true,
           "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
+        }
+      ]
+    },
+    {
+      "order": 15,
+      "name": "Produto vendável, agenda e operação mobile v1.44.0",
+      "objects": [
+        {
+          "name": "v1440_produto_vendavel",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql",
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.usuarios",
+            "plantaopro.medicos",
+            "plantaopro.escalas"
+          ]
         }
       ]
     }

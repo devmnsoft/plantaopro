@@ -25,7 +25,10 @@
 </section>
 
 <nav class="agenda-switcher mb-3" aria-label="Visualização da agenda">
-  <a href="/agenda/dia" class="@(modo == "dia" ? "active" : null)">Dia</a>
+  <a href="/agenda/dia" class="@(modo == "dia" ? "active" : null)">Timeline</a>
+  <a href="/agenda/calendario" class="@(modo == "calendario" ? "active" : null)">Calendário</a>
+  <a href="/agenda/medicos" class="@(modo == "medicos" ? "active" : null)">Por médico</a>
+  <a href="/agenda/hospitais" class="@(modo == "hospitais" ? "active" : null)">Por hospital</a>
   <a href="/agenda/semana" class="@(modo == "semana" ? "active" : null)">Semana</a>
   <a href="/agenda/mes" class="@(modo == "mes" ? "active" : null)">Mês</a>
   <a href="/agenda/conflitos" class="@(modo == "conflitos" ? "active danger" : null)"><i class="bi bi-exclamation-triangle me-1"></i>Conflitos</a>
@@ -66,7 +69,7 @@ else
                     {
                         var statusClass = (item.Status ?? string.Empty).ToLowerInvariant();
                         <div class="col-12 col-lg-6">
-                            <article class="agenda-event status-@statusClass h-100">
+                            <article class="agenda-event status-@statusClass h-100" data-agenda-event data-event-id="@item.Id" tabindex="0" aria-label="@item.HospitalNome, @item.EspecialidadeNome, @item.DataInicio.ToString("dd/MM HH:mm")">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <div class="fw-semibold">@item.HospitalNome</div>

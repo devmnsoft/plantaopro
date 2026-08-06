@@ -31,6 +31,18 @@ public class AgendaController : BaseWebController
     public Task<IActionResult> Conflitos(DateTime? inicio, DateTime? fim, int page = 1, int pageSize = 100)
         => Carregar("conflitos", inicio, fim, "CONFLITO", page, pageSize);
 
+    [HttpGet("/agenda/calendario")]
+    public Task<IActionResult> Calendario(DateTime? inicio, DateTime? fim, string? status, int page = 1, int pageSize = 100)
+        => Carregar("calendario", inicio, fim, status, page, pageSize);
+
+    [HttpGet("/agenda/medicos")]
+    public Task<IActionResult> Medicos(DateTime? inicio, DateTime? fim, string? status, int page = 1, int pageSize = 100)
+        => Carregar("medicos", inicio, fim, status, page, pageSize);
+
+    [HttpGet("/agenda/hospitais")]
+    public Task<IActionResult> Hospitais(DateTime? inicio, DateTime? fim, string? status, int page = 1, int pageSize = 100)
+        => Carregar("hospitais", inicio, fim, status, page, pageSize);
+
     private async Task<IActionResult> Carregar(string modo, DateTime? inicio, DateTime? fim, string? status, int page, int pageSize)
     {
         var dataInicio = inicio ?? DateTime.Today;

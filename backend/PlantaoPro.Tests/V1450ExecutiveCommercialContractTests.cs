@@ -58,4 +58,33 @@ public sealed class V1450ExecutiveCommercialContractTests
         Assert.Contains("addEventListener('click'", script);
         Assert.Contains("window.print()", script);
     }
+
+    [Fact]
+    public void AgendaAvancada_ExpoeBffEApiComIsolamentoDeTenant()
+    {
+        var bff = Read("backend", "PlantaoPro.Web", "Controllers", "AgendaBffController.cs");
+        var api = Read("backend", "PlantaoPro.Api", "Controllers", "AgendaOperacionalController.cs");
+
+        foreach (var route in new[] { "eventos", "conflitos", "medicos", "hospitais" })
+            Assert.Contains($"HttpGet(\"{route}\")", bff);
+
+        Assert.Contains("HttpPost(\"eventos\")", api);
+        Assert.Contains("HttpPut(\"eventos/{id:guid}\")", api);
+        Assert.Contains("HttpPost(\"eventos/{id:guid}/resolver-conflito\")", api);
+        Assert.Contains("cliente_id=@clienteId", api);
+        Assert.Contains("GetClienteId()", api);
+        Assert.Contains("string.IsNullOrWhiteSpace(request.Resolucao)", api);
+    }
+
+    [Fact]
+    public void AgendaAvancada_OfereceVisoesOperacionaisReais()
+    {
+        var controller = Read("backend", "PlantaoPro.Web", "Controllers", "AgendaController.cs");
+        var view = Read("backend", "PlantaoPro.Web", "Views", "Agenda", "Index.cshtml");
+
+        foreach (var route in new[] { "/agenda/calendario", "/agenda/medicos", "/agenda/hospitais" })
+            Assert.Contains(route, controller);
+        foreach (var label in new[] { "Timeline", "Calendário", "Por médico", "Por hospital", "Conflitos" })
+            Assert.Contains(label, view);
+    }
 }

@@ -4,6 +4,7 @@
   "referencedObjects": [
     "plantaopro.acessos_negados_log",
     "plantaopro.acoes_sistema",
+    "plantaopro.agenda_evento_conflitos",
     "plantaopro.agendamento_checkins",
     "plantaopro.agendamento_historico",
     "plantaopro.agendamentos",

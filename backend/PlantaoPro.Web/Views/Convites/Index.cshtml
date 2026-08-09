@@ -1,0 +1,15 @@
+@model PlantaoPro.Web.Models.ConvitesPageViewModel
+@{ ViewData["Title"] = "Central de convites"; var itens = Model.Items.ToList(); }
+<div class="container-fluid py-4">
+  <header class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div><span class="text-primary fw-semibold">OPERAÇÃO · COBERTURA</span><h1 class="h2 mt-1">Central de convites</h1><p class="text-muted mb-0">Acompanhe respostas e abra a cobertura do plantão sem perder o contexto.</p></div>
+    <a class="btn btn-primary" asp-controller="CentralEscala" asp-action="Index"><i class="bi bi-person-plus me-2"></i>Convidar médicos</a>
+  </header>
+  <section class="row g-3 mb-4" aria-label="Indicadores de convites">
+    @foreach (var kpi in new[] { ("Pendentes", itens.Count(x => x.Status.Equals("pendente", StringComparison.OrdinalIgnoreCase))), ("Aceitos", itens.Count(x => x.Status.Equals("aceito", StringComparison.OrdinalIgnoreCase))), ("Recusados", itens.Count(x => x.Status.Equals("recusado", StringComparison.OrdinalIgnoreCase))), ("Total", itens.Count) }) { <div class="col-6 col-lg-3"><div class="card h-100 shadow-sm"><div class="card-body"><span class="text-muted">@kpi.Item1</span><strong class="d-block fs-3">@kpi.Item2</strong></div></div></div> }
+  </section>
+  <form method="get" class="card card-body mb-4" aria-label="Filtros de convites"><div class="row g-3 align-items-end"><div class="col-md-8"><label class="form-label" for="plantaoId">Plantão</label><input class="form-control" id="plantaoId" name="plantaoId" type="text" value="@Model.PlantaoId" placeholder="ID do plantão" required /></div><div class="col-md-4"><button class="btn btn-outline-primary w-100" type="submit">Aplicar filtro</button></div></div></form>
+  @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="alert alert-danger" role="alert">@Model.ErrorMessage</div> }
+  @if (!Model.PlantaoId.HasValue || itens.Count == 0) { <div class="card card-body text-center py-5"><i class="bi bi-envelope-check fs-1 text-primary" aria-hidden="true"></i><h2 class="h5 mt-3">Nenhum convite pendente.</h2><p class="text-muted">Selecione um plantão ou use a Cobertura Inteligente para localizar médicos disponíveis.</p></div> }
+  else { <div class="row g-3">@foreach (var item in itens) { <div class="col-md-6 col-xl-4"><article class="card h-100 shadow-sm"><div class="card-body"><div class="d-flex justify-content-between"><span class="badge text-bg-light">@item.Status</span><time class="small text-muted">@item.DataEnvio.ToString("dd/MM HH:mm")</time></div><h2 class="h5 mt-3">@item.MedicoNome</h2><p class="text-muted">@item.Mensagem</p><a class="btn btn-sm btn-outline-primary" asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.PlantaoId">Abrir plantão</a></div></article></div> }</div> }
+</div>

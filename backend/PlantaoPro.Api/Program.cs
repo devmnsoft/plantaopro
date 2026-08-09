@@ -160,6 +160,7 @@ builder.Services.AddScoped<B2BCommercialOpsService>();
 builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
+builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
 builder.Services.AddScoped<IConsultaApplicationService, ConsultaApplicationService>();
 builder.Services.AddScoped<IGlobalSearchRepository, GlobalSearchRepository>();

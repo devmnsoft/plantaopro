@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Operation360.WorkItems;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -72,31 +73,43 @@ public sealed class LookupsController : ControllerBase
 [Route("api/pendencias-clinicas")]
 public sealed class PendenciasClinicasApiController : ControllerBase
 {
+    private readonly IWorkItemService service;
+    private readonly ICurrentUserService current;
+
+    public PendenciasClinicasApiController(IWorkItemService service, ICurrentUserService current) { this.service = service; this.current = current; }
+
     [HttpGet]
-    public IActionResult Get()
-    {
-        var itens = new List<PendenciaClinicaDto>
-        {
-            new PendenciaClinicaDto { Tipo = "AGENDAMENTO", Prioridade = "ALTA", Descricao = "Agendamentos de hoje precisam de confirmação ou check-in.", ProximoPasso = "Abra a agenda do dia e confirme a chegada.", Link = "/Agendamentos/CheckIn", PerfilResponsavel = "RECEPCAO", Status = "PENDENTE" },
-            new PendenciaClinicaDto { Tipo = "TRIAGEM", Prioridade = "MEDIA", Descricao = "Pacientes na fila devem ser classificados por risco.", ProximoPasso = "Abrir fila de triagem.", Link = "/Triagem/Fila", PerfilResponsavel = "TRIAGEM", Status = "PENDENTE" },
-            new PendenciaClinicaDto { Tipo = "CONSULTA", Prioridade = "MEDIA", Descricao = "Consultas aguardando início devem ser assumidas pelo médico.", ProximoPasso = "Abrir atendimento médico.", Link = "/Consultas/Atendimento", PerfilResponsavel = "MEDICO", Status = "PENDENTE" },
-            new PendenciaClinicaDto { Tipo = "FINANCEIRO", Prioridade = "BAIXA", Descricao = "Contas em aberto precisam de cobrança ou baixa.", ProximoPasso = "Abrir contas a receber.", Link = "/ClinicaFinanceiro/ContasReceber", PerfilResponsavel = "FINANCEIRO", Status = "PENDENTE" }
-        };
-        return Ok(ApiResponse<IEnumerable<PendenciaClinicaDto>>.Ok(itens, "Pendências clínicas carregadas."));
-    }
+    public async Task<IActionResult> Get(CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<WorkItemDto>>.Ok(await service.ListAsync(ct), "Pendências clínicas carregadas."));
 
     [HttpGet("resumo")]
-    public IActionResult Resumo() { return Ok(ApiResponse<object>.Ok(new { Total = 10, Criticas = 3, Minhas = 4, ProximaAcao = "Realizar check-in dos pacientes que chegaram." }, "Resumo de pendências carregado.")); }
+    public async Task<IActionResult> Resumo(CancellationToken ct) { var central = await service.CentralAsync(ct); return Ok(ApiResponse<CentralSummaryDto>.Ok(central.Summary, "Resumo de pendências carregado.")); }
 
     [HttpGet("minhas")]
-    public IActionResult Minhas() { return Get(); }
+    public async Task<IActionResult> Minhas(CancellationToken ct) { var central = await service.CentralAsync(ct); return Ok(ApiResponse<IReadOnlyList<WorkItemDto>>.Ok(central.Items.Where(x => x.ResponsavelId == current.UserId).ToList(), "Pendências atribuídas carregadas.")); }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken ct) { var item = await service.GetAsync(id, ct); return item is null ? NotFound(ApiResponse<string>.Fail("Pendência não encontrada.", 404)) : Ok(ApiResponse<WorkItemDto>.Ok(item)); }
+
+    [HttpPost("{id:guid}/assumir")]
+    public async Task<IActionResult> Assumir(Guid id, [FromBody] WorkItemVersionRequest request, CancellationToken ct) => Mutation(await service.AssignAsync(id, Guid.Empty, request, ct));
 
     [HttpPost("{id:guid}/resolver")]
-    public IActionResult Resolver(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "RESOLVIDA" }, "Pendência resolvida com sucesso.")); }
+    public async Task<IActionResult> Resolver(Guid id, [FromBody] WorkItemVersionRequest request, CancellationToken ct)
+    {
+        var item = await service.GetAsync(id, ct);
+        if (item is null) return NotFound(ApiResponse<string>.Fail("Pendência não encontrada.", 404));
+        return Mutation(await service.MoveAsync(new WorkItemMoveRequest(id, item.Status, WorkItemStatus.Concluido, item.Posicao, request.Version, request.IdempotencyKey), ct));
+    }
 
     [HttpPost("{id:guid}/adiar")]
-    public IActionResult Adiar(Guid id) { return Ok(ApiResponse<object>.Ok(new { Id = id, Status = "ADIADA" }, "Pendência adiada com auditoria operacional.")); }
+    public async Task<IActionResult> Adiar(Guid id, [FromBody] WorkItemPostponeRequest request, CancellationToken ct) => Mutation(await service.PostponeAsync(id, request, ct));
+
+    private IActionResult Mutation(WorkItemMutationResult result)
+    {
+        if (!result.Found) return NotFound(ApiResponse<string>.Fail("Pendência não encontrada.", 404));
+        if (result.Conflict) return Conflict(ApiResponse<string>.Fail("A pendência foi alterada por outro usuário. Atualize os dados.", 409));
+        return Ok(ApiResponse<WorkItemDto>.Ok(result.Item!, result.Duplicate ? "A operação já havia sido processada." : "Pendência atualizada com sucesso."));
+    }
 }
 
 public sealed class LookupItemDto { public Guid Id { get; set; } public string Text { get; set; } = string.Empty; public string Description { get; set; } = string.Empty; public string Extra { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; }
-public sealed class PendenciaClinicaDto { public string Tipo { get; set; } = string.Empty; public string Prioridade { get; set; } = string.Empty; public string Descricao { get; set; } = string.Empty; public string ProximoPasso { get; set; } = string.Empty; public string Link { get; set; } = string.Empty; public string PerfilResponsavel { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; public DateTime DataHora { get; set; } = DateTime.UtcNow; }

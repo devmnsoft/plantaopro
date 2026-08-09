@@ -1,8 +1,47 @@
-@{ ViewData["Title"] = "Meu Dia"; }
-<section class="pp-card p-4" aria-labelledby="meuDiaTitle">
-  <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-    <div><p class="text-uppercase text-muted fw-semibold mb-1">Central operacional</p><h1 id="meuDiaTitle">Meu Dia</h1><p class="text-muted">Pendências, agenda, alertas e ações rápidas respeitando perfil, permissões e contexto.</p></div>
-    <span class="badge text-bg-primary">Dados em tempo real via API</span>
-  </div>
-  <div class="alert alert-light border mt-3" role="status" aria-live="polite">Carregando resumo operacional...</div>
+@model PlantaoPro.Web.Models.MinhaCentralViewModel
+@{
+  ViewData["Title"] = "Meu Dia";
+  var items = (Model?.Items ?? Array.Empty<PlantaoPro.Web.Models.WorkItemViewModel>()).ToArray();
+  var now = DateTimeOffset.Now;
+  var ordered = items.OrderByDescending(x => string.Equals(x.Priority, "CRITICAL", StringComparison.OrdinalIgnoreCase))
+                     .ThenBy(x => x.DueAt ?? DateTimeOffset.MaxValue).ToArray();
+  var next = ordered.FirstOrDefault();
+}
+<section class="day-command-hero" aria-labelledby="meuDiaTitle">
+  <div><span class="pp-section-kicker">Central pessoal · @now.ToString("dddd, dd 'de' MMMM")</span><h1 id="meuDiaTitle">O que precisa da sua atenção agora</h1><p>Prioridades calculadas a partir das pendências reais atribuídas à sua operação.</p></div>
+  <div class="day-command-hero__signal" role="status"><strong>@(Model?.Summary.Open ?? 0)</strong><span>itens em aberto</span></div>
 </section>
+
+@if (!string.IsNullOrWhiteSpace(Model?.Error))
+{
+  <section class="state-panel" role="alert"><span class="state-panel__icon"><i class="bi bi-cloud-slash"></i></span><h2>Não foi possível montar seu dia</h2><p>@Model.Error</p><a asp-action="Index" class="btn btn-primary">Tentar novamente</a></section>
+}
+else
+{
+  <section class="day-kpis" aria-label="Resumo do dia">
+    <article><span>Em aberto</span><strong>@Model.Summary.Open</strong><small>dependem da operação</small></article>
+    <article class="is-danger"><span>Atrasadas</span><strong>@Model.Summary.Overdue</strong><small>trate primeiro</small></article>
+    <article class="is-warning"><span>Críticas</span><strong>@Model.Summary.Critical</strong><small>exigem atenção</small></article>
+    <article class="is-success"><span>Concluídas hoje</span><strong>@Model.Summary.CompletedToday</strong><small>progresso do turno</small></article>
+  </section>
+
+  @if (next is not null)
+  {
+    <section class="next-action-spotlight" aria-labelledby="nextActionTitle">
+      <div class="next-action-spotlight__icon"><i class="bi bi-lightning-charge-fill" aria-hidden="true"></i></div>
+      <div><span class="pp-section-kicker">Próxima ação recomendada</span><h2 id="nextActionTitle">@next.Title</h2><p>@next.Description</p><div class="d-flex gap-2 flex-wrap"><partial name="_StatusBadge" model="next.Status" /><span class="priority-pill priority-@((next.Priority ?? string.Empty).ToLowerInvariant())">@next.Priority</span>@if(next.DueAt.HasValue){<time datetime="@next.DueAt.Value.ToString("O")"><i class="bi bi-clock"></i> @next.DueAt.Value.ToString("dd/MM HH:mm")</time>}</div></div>
+      <button type="button" class="btn btn-primary" data-work-item-open="@next.Id">Abrir e resolver <i class="bi bi-arrow-right"></i></button>
+    </section>
+  }
+
+  <div class="day-workspace">
+    <section class="day-timeline" aria-labelledby="dayTimelineTitle"><header><div><span class="pp-section-kicker">Linha do tempo</span><h2 id="dayTimelineTitle">Fila priorizada</h2></div><span>@ordered.Length itens</span></header>
+      @if (!ordered.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Seu dia está em dia", "Não há pendências atribuídas neste momento. Volte mais tarde para acompanhar novas ações.")' /> }
+      else { <ol>@foreach(var item in ordered){var overdue=item.DueAt.HasValue && item.DueAt < now;<li class="@(overdue ? "is-overdue" : null)"><span class="day-timeline__marker"></span><div><div class="d-flex justify-content-between gap-2"><strong>@item.Title</strong><partial name="_StatusBadge" model="item.Status" /></div><p>@item.Description</p><small>@(item.DueAt.HasValue ? (overdue ? "Atrasada desde " : "Prazo ") + item.DueAt.Value.ToString("dd/MM HH:mm") : "Sem prazo definido")</small></div><button class="btn btn-sm btn-outline-primary" type="button" data-work-item-open="@item.Id" aria-label="Abrir @item.Title">Abrir</button></li>}</ol> }
+    </section>
+    <aside class="day-shortcuts" aria-labelledby="shortcutsTitle"><span class="pp-section-kicker">Atalhos seguros</span><h2 id="shortcutsTitle">Continuar a operação</h2><a asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i><span><strong>Ver agenda</strong><small>Plantões e conflitos</small></span><i class="bi bi-chevron-right"></i></a><a asp-controller="Convites" asp-action="Index"><i class="bi bi-envelope-check"></i><span><strong>Revisar convites</strong><small>Aceites pendentes</small></span><i class="bi bi-chevron-right"></i></a><a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-wallet2"></i><span><strong>Abrir financeiro</strong><small>Pagamentos e composição</small></span><i class="bi bi-chevron-right"></i></a><a asp-controller="MinhaCentral" asp-action="Index"><i class="bi bi-kanban"></i><span><strong>Minha Central</strong><small>Visão completa da equipe</small></span><i class="bi bi-chevron-right"></i></a></aside>
+  </div>
+}
+<partial name="~/Views/MinhaCentral/_WorkItemDrawer.cshtml" />
+@section Styles { <link rel="stylesheet" href="~/css/pages/meu-dia.css" asp-append-version="true" /> }
+@section Scripts { <script type="module" src="~/js/pages/meu-dia.js" asp-append-version="true"></script> }

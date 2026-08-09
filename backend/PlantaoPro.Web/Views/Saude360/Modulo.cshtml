@@ -22,21 +22,32 @@
     DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
 })
 
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 saude360-page-header">
+<section class="clinical-command-hero mb-4" aria-labelledby="saude360Title">
     <div>
-        <p class="text-uppercase text-primary fw-semibold small mb-1">PlantãoPro Saúde 360</p>
-        <h1 class="h3 mb-1">@vm.Titulo</h1>
-        <p class="text-muted mb-0">@vm.Descricao</p>
+        <p class="text-uppercase fw-semibold small mb-1">PlantãoPro Saúde 360 · jornada assistencial</p>
+        <h1 id="saude360Title">@vm.Titulo</h1>
+        <p>@vm.Descricao</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
         {
-            <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-outline-primary">
+            <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-light">
                 <i class="bi @acao.Icone me-1" aria-hidden="true"></i>@acao.Titulo
             </a>
         }
     </div>
-</div>
+</section>
+
+<nav class="clinical-journey mb-4" aria-label="Etapas da jornada Saúde 360">
+    <a asp-controller="Pacientes" asp-action="Index"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Paciente</span></a>
+    <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>Agendamento</span></a>
+    <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Check-in</span></a>
+    <a asp-controller="PainelChamada" asp-action="Index"><i class="bi bi-megaphone" aria-hidden="true"></i><span>Chamada</span></a>
+    <a asp-controller="Triagem" asp-action="Index"><i class="bi bi-activity" aria-hidden="true"></i><span>Triagem</span></a>
+    <a asp-controller="Consultas" asp-action="Index"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>Consulta</span></a>
+    <a asp-controller="Prescricoes" asp-action="Index"><i class="bi bi-capsule" aria-hidden="true"></i><span>Prescrição</span></a>
+    <a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>Financeiro</span></a>
+</nav>
 
 @if (!string.IsNullOrWhiteSpace(vm.ErrorMessage) && !string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase))
 {
@@ -66,7 +77,7 @@
             <tbody>
             @if (!registros.Any())
             {
-                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou cadastre dados demo para validar a jornada.</span></div></td></tr>
+                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou ajuste os filtros da jornada.</span></div></td></tr>
             }
             else
             {
@@ -85,6 +96,7 @@
         </table>
     </div>
 </div>
+
 
 <div class="alert alert-info" role="status">
     <strong>LGPD e auditoria:</strong> as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.

@@ -55,6 +55,49 @@ limit 100";
         }
     }
 
+    protected async Task<ApiResponse<object>> ObterAsync(string tabela, string tipo, Guid id)
+    {
+        try
+        {
+            var ctx = ResolverContexto();
+            if (!ctx.Success) return ApiResponse<object>.Fail(ctx.Message, ctx.StatusCode);
+            await using var cn = CriarConexao();
+            var row = await cn.QuerySingleOrDefaultAsync<V116ResumoDto>(@"select id, tenant_id as TenantId, cliente_id as ClienteId, @Tipo as Tipo,
+    coalesce(status_operacional, reg_status) as Status, coalesce(descricao, '') as Descricao, valor as Valor,
+    created_at as CriadoEm, updated_at as AtualizadoEm, true as Auditado, 'PostgreSQL/Dapper' as Fonte
+from plantaopro." + TabelaSegura(tabela) + @"
+where id=@Id and tenant_id=@TenantId and cliente_id=@ClienteId and coalesce(reg_status, 'ATIVO') <> 'EXCLUIDO'", new { Id = id, ctx.TenantId, ctx.ClienteId, Tipo = tipo });
+            return row is null ? ApiResponse<object>.Fail(tipo + " não encontrado para o tenant atual.", 404) : ApiResponse<object>.Ok(row, tipo + " consultado sem alteração de estado.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao consultar v1.16 {Tipo} {Id}", tipo, id);
+            return ApiResponse<object>.Fail("Não foi possível consultar a operação v1.16.", 500);
+        }
+    }
+
+    protected async Task<ApiResponse<object>> ObterPrimeiroAsync(string tabela, string tipo, string status)
+    {
+        try
+        {
+            var ctx = ResolverContexto();
+            if (!ctx.Success) return ApiResponse<object>.Fail(ctx.Message, ctx.StatusCode);
+            await using var cn = CriarConexao();
+            var row = await cn.QueryFirstOrDefaultAsync<V116ResumoDto>(@"select id, tenant_id as TenantId, cliente_id as ClienteId, @Tipo as Tipo,
+    coalesce(status_operacional, reg_status) as Status, coalesce(descricao, '') as Descricao, valor as Valor,
+    created_at as CriadoEm, updated_at as AtualizadoEm, true as Auditado, 'PostgreSQL/Dapper' as Fonte
+from plantaopro." + TabelaSegura(tabela) + @"
+where tenant_id=@TenantId and cliente_id=@ClienteId and status_operacional=@Status and coalesce(reg_status, 'ATIVO') <> 'EXCLUIDO'
+order by created_at desc limit 1", new { ctx.TenantId, ctx.ClienteId, Tipo = tipo, Status = status });
+            return ApiResponse<object>.Ok(row, row is null ? "Nenhum registro encontrado." : tipo + " consultado sem alteração de estado.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao consultar status v1.16 {Tipo}", tipo);
+            return ApiResponse<object>.Fail("Não foi possível consultar o status da operação v1.16.", 500);
+        }
+    }
+
     protected async Task<ApiResponse<object>> CriarAsync(string tabela, string tipo, string status, V116OperacaoRequest? request = null, Guid? id = null)
     {
         try
@@ -141,12 +184,12 @@ public sealed class V116ConvenioService : V116BaseService
 public sealed class V116LoteFaturamentoService : V116BaseService
 {
     public V116LoteFaturamentoService(IConfiguration c, ICurrentUserService u, IAuditService a, ILogger<V116LoteFaturamentoService> l) : base(c, u, a, l) { }
-    public Task<ApiResponse<IEnumerable<object>>> ListarAsync() => ListarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO"); public Task<ApiResponse<object>> CriarAsync(V116OperacaoRequest r) => CriarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", r); public Task<ApiResponse<object>> ObterAsync(Guid id) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "DETALHE", id); public Task<ApiResponse<object>> AdicionarItemAsync(Guid id, V116OperacaoRequest r) => CriarAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "ADICIONADO", r); public Task<ApiResponse<object>> RemoverItemAsync(Guid id, Guid itemId) => AtualizarStatusAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "REMOVIDO", itemId); public Task<ApiResponse<object>> FecharAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "FECHADO", id, r); public Task<ApiResponse<object>> ReabrirAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", id, r); public Task<ApiResponse<object>> EnviadoDemoAsync(Guid id) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ENVIADO_DEMO", id); public Task<ApiResponse<object>> RetornoDemoAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "RETORNO_DEMO", id, r);
+    public Task<ApiResponse<IEnumerable<object>>> ListarAsync() => ListarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO"); public Task<ApiResponse<object>> CriarAsync(V116OperacaoRequest r) => CriarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", r); public Task<ApiResponse<object>> ObterAsync(Guid id) => ObterAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", id); public Task<ApiResponse<object>> AdicionarItemAsync(Guid id, V116OperacaoRequest r) => CriarAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "ADICIONADO", r); public Task<ApiResponse<object>> RemoverItemAsync(Guid id, Guid itemId) => AtualizarStatusAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "REMOVIDO", itemId); public Task<ApiResponse<object>> FecharAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "FECHADO", id, r); public Task<ApiResponse<object>> ReabrirAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", id, r); public Task<ApiResponse<object>> EnviadoDemoAsync(Guid id) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ENVIADO_DEMO", id); public Task<ApiResponse<object>> RetornoDemoAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "RETORNO_DEMO", id, r);
 }
 public sealed class V116CaixaService : V116BaseService
 {
     public V116CaixaService(IConfiguration c, ICurrentUserService u, IAuditService a, ILogger<V116CaixaService> l) : base(c, u, a, l) { }
-    public Task<ApiResponse<object>> StatusAsync() => CriarAsync("v116_caixas", "CAIXA", "ABERTO"); public Task<ApiResponse<object>> AbrirAsync(V116OperacaoRequest r) => CriarAsync("v116_caixas", "CAIXA", "ABERTO", r); public async Task<ApiResponse<object>> FecharAsync(V116OperacaoRequest r) { if (r.Valor != 0 && string.IsNullOrWhiteSpace(r.Justificativa)) return ApiResponse<object>.Fail("Divergência exige justificativa.", 400); return await CriarAsync("v116_caixas", "CAIXA", "FECHADO", r); } public Task<ApiResponse<IEnumerable<object>>> MovimentosAsync() => ListarAsync("v116_caixa_movimentos", "CAIXA_MOVIMENTO"); public Task<ApiResponse<object>> ReceberAsync(Guid contaId, V116OperacaoRequest r) => CriarAsync("v116_recebimentos_parciais", "RECEBIMENTO", r.Valor.GetValueOrDefault() > 0 ? "PARCIAL_OU_TOTAL" : "PENDENTE", r, contaId); public async Task<ApiResponse<object>> EstornarAsync(Guid id, V116OperacaoRequest r) { if (string.IsNullOrWhiteSpace(r.Justificativa)) return ApiResponse<object>.Fail("Estorno exige justificativa.", 400); return await CriarAsync("v116_estornos", "ESTORNO", "REGISTRADO", r, id); } public Task<ApiResponse<object>> ConciliarAsync(Guid id, V116OperacaoRequest r) => AtualizarStatusAsync("v116_caixa_movimentos", "CONCILIACAO", "CONCILIADO", id, r);
+    public Task<ApiResponse<object>> StatusAsync() => ObterStatusAsync(); public Task<ApiResponse<object>> ObterStatusAsync() => ObterCaixaAbertoAsync(); public Task<ApiResponse<object>> ObterCaixaAbertoAsync() => ObterPrimeiroAsync("v116_caixas", "CAIXA", "ABERTO"); public Task<ApiResponse<object>> AbrirAsync(V116OperacaoRequest r) => CriarAsync("v116_caixas", "CAIXA", "ABERTO", r); public async Task<ApiResponse<object>> FecharAsync(V116OperacaoRequest r) { if (r.Valor != 0 && string.IsNullOrWhiteSpace(r.Justificativa)) return ApiResponse<object>.Fail("Divergência exige justificativa.", 400); return await CriarAsync("v116_caixas", "CAIXA", "FECHADO", r); } public Task<ApiResponse<IEnumerable<object>>> MovimentosAsync() => ListarAsync("v116_caixa_movimentos", "CAIXA_MOVIMENTO"); public Task<ApiResponse<object>> ReceberAsync(Guid contaId, V116OperacaoRequest r) => CriarAsync("v116_recebimentos_parciais", "RECEBIMENTO", r.Valor.GetValueOrDefault() > 0 ? "PARCIAL_OU_TOTAL" : "PENDENTE", r, contaId); public async Task<ApiResponse<object>> EstornarAsync(Guid id, V116OperacaoRequest r) { if (string.IsNullOrWhiteSpace(r.Justificativa)) return ApiResponse<object>.Fail("Estorno exige justificativa.", 400); return await CriarAsync("v116_estornos", "ESTORNO", "REGISTRADO", r, id); } public Task<ApiResponse<object>> ConciliarAsync(Guid id, V116OperacaoRequest r) => AtualizarStatusAsync("v116_caixa_movimentos", "CONCILIACAO", "CONCILIADO", id, r);
 }
 public sealed class V116TimelineService : V116BaseService { public V116TimelineService(IConfiguration c, ICurrentUserService u, IAuditService a, ILogger<V116TimelineService> l) : base(c, u, a, l) { } public Task<ApiResponse<IEnumerable<object>>> ListarAsync(string e, Guid id) => ListarAsync("v116_timelines", "TIMELINE_" + e.ToUpperInvariant(), e, id); public Task<ApiResponse<object>> ComentarAsync(string e, Guid id, V116OperacaoRequest r) => CriarAsync("v116_timelines", "TIMELINE_COMENTARIO_" + e.ToUpperInvariant(), "REGISTRADO", r, id); public Task<ApiResponse<IEnumerable<object>>> HistoricoAsync(string e, Guid id) => ListarAsync("v116_auditoria_consultas", "HISTORICO_" + e.ToUpperInvariant(), e, id); }
 public sealed class V116NotificacaoOperacionalService : V116BaseService { public V116NotificacaoOperacionalService(IConfiguration c, ICurrentUserService u, IAuditService a, ILogger<V116NotificacaoOperacionalService> l) : base(c, u, a, l) { } public Task<ApiResponse<IEnumerable<object>>> ListarAsync() => ListarAsync("v116_notificacoes_operacionais", "NOTIFICACAO_OPERACIONAL"); public Task<ApiResponse<object>> LidaAsync(Guid id) => AtualizarStatusAsync("v116_notificacoes_operacionais", "NOTIFICACAO_OPERACIONAL", "LIDA", id); public Task<ApiResponse<object>> TodasLidasAsync() => CriarAsync("v116_notificacoes_operacionais", "NOTIFICACAO_OPERACIONAL", "LIDAS"); public Task<ApiResponse<object>> ReprocessarAsync() => CriarAsync("v116_integracao_provedores", "OUTBOX_OPERACIONAL", "REPROCESSADO"); }

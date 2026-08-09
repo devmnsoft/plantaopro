@@ -54,6 +54,27 @@ public sealed class Saude360ClinicalService
     private Guid? TenantId => currentUser.ClienteId ?? currentUser.TenantId;
     private bool IsGlobal => currentUser.IsGlobalAdmin();
 
+    public async Task<ApiResponse<IEnumerable<LookupItemDto>>> ListarLookupEntidadesAsync(string entidade, string? termo, int limite = 50)
+    {
+        var tabelas = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "medicos", "hospitais", "unidades", "especialidades", "salas" };
+        if (!tabelas.Contains(entidade)) return ApiResponse<IEnumerable<LookupItemDto>>.Fail("Lookup não suportado.", 400);
+        if (!TenantId.HasValue && !IsGlobal) return ApiResponse<IEnumerable<LookupItemDto>>.Fail("Contexto de tenant obrigatório.", 403);
+
+        limite = Math.Clamp(limite, 1, 100);
+        termo = string.IsNullOrWhiteSpace(termo) ? null : termo.Trim()[..Math.Min(termo.Trim().Length, 120)];
+        await using var cn = Cn();
+        var rows = await cn.QueryAsync<LookupItemDto>($@"select id as Id, coalesce(nome, codigo, '') as Text,
+    coalesce(codigo, '') as Extra, status as Status, '' as Description
+from plantaopro.{entidade}
+where id <> '00000000-0000-0000-0000-000000000000'::uuid
+  and upper(coalesce(status, 'ATIVO')) in ('ATIVO', 'A')
+  and ((@IsGlobal and @TenantId is null) or tenant_id=@TenantId)
+  and (@Termo is null or nome ilike @LikeTermo or codigo ilike @LikeTermo)
+order by coalesce(nome, codigo, ''), id
+limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is null ? null : "%" + termo + "%", Limite = limite });
+        return ApiResponse<IEnumerable<LookupItemDto>>.Ok(rows, "Lookup carregado do PostgreSQL.");
+    }
+
     public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null)
     {
         var table = ResolveTable(tableKey);

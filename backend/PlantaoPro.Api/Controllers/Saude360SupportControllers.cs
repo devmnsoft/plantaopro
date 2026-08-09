@@ -13,11 +13,11 @@ public sealed class LookupsController : ControllerBase
     public LookupsController(Saude360ClinicalService service) { this.service = service; }
 
     [HttpGet("pacientes")] public async Task<IActionResult> Pacientes([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("pacientes", NormalizeTerm(termo, term)); }
-    [HttpGet("medicos")] public IActionResult Medicos([FromQuery] string? termo, [FromQuery] string? term) { return Static("Médicos", NormalizeTerm(termo, term), "MEDICO"); }
-    [HttpGet("hospitais")] public IActionResult Hospitais([FromQuery] string? termo, [FromQuery] string? term) { return Static("Hospitais", NormalizeTerm(termo, term), "HOSPITAL"); }
-    [HttpGet("unidades")] public IActionResult Unidades([FromQuery] string? termo) { return Static("Unidades", termo, "UNIDADE"); }
-    [HttpGet("especialidades")] public IActionResult Especialidades([FromQuery] string? termo, [FromQuery] string? term) { return Static("Clínica médica", NormalizeTerm(termo, term), "ESPECIALIDADE"); }
-    [HttpGet("salas")] public IActionResult Salas([FromQuery] string? termo) { return Static("Sala 1", termo, "SALA"); }
+    [HttpGet("medicos")] public Task<IActionResult> Medicos([FromQuery] string? termo, [FromQuery] string? term, [FromQuery] int limite = 50) => LookupEntidade("medicos", NormalizeTerm(termo, term), limite);
+    [HttpGet("hospitais")] public Task<IActionResult> Hospitais([FromQuery] string? termo, [FromQuery] string? term, [FromQuery] int limite = 50) => LookupEntidade("hospitais", NormalizeTerm(termo, term), limite);
+    [HttpGet("unidades")] public Task<IActionResult> Unidades([FromQuery] string? termo, [FromQuery] int limite = 50) => LookupEntidade("unidades", NormalizeTerm(termo, null), limite);
+    [HttpGet("especialidades")] public Task<IActionResult> Especialidades([FromQuery] string? termo, [FromQuery] string? term, [FromQuery] int limite = 50) => LookupEntidade("especialidades", NormalizeTerm(termo, term), limite);
+    [HttpGet("salas")] public Task<IActionResult> Salas([FromQuery] string? termo, [FromQuery] int limite = 50) => LookupEntidade("salas", NormalizeTerm(termo, null), limite);
     [HttpGet("convenios")] public async Task<IActionResult> Convenios([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("convenios", NormalizeTerm(termo, term)); }
     [HttpGet("planos-saude")] public async Task<IActionResult> PlanosSaude([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("planosSaude", NormalizeTerm(termo, term)); }
     [HttpGet("agendamentos")] public async Task<IActionResult> Agendamentos([FromQuery] string? termo, [FromQuery] string? term) { return await Lookup("agendamentos", NormalizeTerm(termo, term)); }
@@ -55,11 +55,10 @@ public sealed class LookupsController : ControllerBase
         return StatusCode(result.StatusCode, ApiResponse<IEnumerable<LookupItemDto>>.Ok(itens, result.Message));
     }
 
-    private IActionResult Static(string text, string? termo, string extra)
+    private async Task<IActionResult> LookupEntidade(string entidade, string? termo, int limite)
     {
-        var itens = ToItems(new List<string> { text }).Where(x => string.IsNullOrWhiteSpace(termo) || x.Text.Contains(termo, StringComparison.OrdinalIgnoreCase)).ToList();
-        foreach (var item in itens) item.Extra = extra;
-        return Ok(ApiResponse<IEnumerable<LookupItemDto>>.Ok(itens, "Lookup carregado."));
+        var result = await service.ListarLookupEntidadesAsync(entidade, termo, limite);
+        return StatusCode(result.StatusCode, result);
     }
 
     private static IEnumerable<LookupItemDto> ToItems(IEnumerable<string> values)

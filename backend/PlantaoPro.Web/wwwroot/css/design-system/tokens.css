@@ -1,5 +1,23 @@
 /* PlantãoPro Premium Experience 10.0 — única fonte canônica de identidade e semântica. */
 :root {
+    /* Paleta v1.48 — aliases semânticos mantêm compatibilidade com o legado. */
+    --pp-color-navy-950: #06172c;
+    --pp-color-navy-900: #0b2747;
+    --pp-color-blue-600: #1768d7;
+    --pp-color-cyan-500: #14a9bd;
+    --pp-color-teal-500: #0d9488;
+    --pp-color-green-600: #087a4d;
+    --pp-color-amber-500: #c87800;
+    --pp-color-red-600: #b42336;
+    --pp-surface-canvas: #f3f7fb;
+    --pp-surface-card: #ffffff;
+    --pp-surface-glass: rgb(255 255 255 / .86);
+    --pp-surface-raised: #ffffff;
+    --pp-shadow-card: 0 8px 28px rgb(6 23 44 / .08);
+    --pp-shadow-floating: 0 20px 54px rgb(6 23 44 / .16);
+    --pp-shadow-shell: 0 14px 42px rgb(6 23 44 / .12);
+    --pp-radius-card: 1.125rem;
+    --pp-radius-panel: 1.5rem;
     /* Identidade oficial */
     --pp-brand-primary: #1f73f1;
     --pp-brand-primary-hover: #185fc8;

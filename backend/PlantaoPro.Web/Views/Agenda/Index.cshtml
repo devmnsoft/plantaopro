@@ -69,7 +69,7 @@ else
                     {
                         var statusClass = (item.Status ?? string.Empty).ToLowerInvariant();
                         <div class="col-12 col-lg-6">
-                            <article class="agenda-event status-@statusClass h-100" data-agenda-event data-event-id="@item.Id" tabindex="0" aria-label="@item.HospitalNome, @item.EspecialidadeNome, @item.DataInicio.ToString("dd/MM HH:mm")">
+                            <article class="agenda-event status-@statusClass h-100" data-agenda-event data-event-id="@item.Id" data-title="@item.HospitalNome" data-specialty="@item.EspecialidadeNome" data-period="@item.DataInicio.ToString("dd/MM HH:mm") – @item.DataFim.ToString("dd/MM HH:mm")" data-status="@item.Status" tabindex="0" aria-label="@item.HospitalNome, @item.EspecialidadeNome, @item.DataInicio.ToString("dd/MM HH:mm")">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <div class="fw-semibold">@item.HospitalNome</div>
@@ -78,7 +78,7 @@ else
                                     <span class="badge status-@statusClass">@item.Status</span>
                                 </div>
                                 <div class="mt-2 small">@item.DataInicio.ToString("HH:mm") - @item.DataFim.ToString("HH:mm") · @item.Valor.ToString("C")</div>
-                                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary mt-3">Ver contexto <i class="bi bi-arrow-right ms-1"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-secondary mt-3" data-agenda-detail>Ver contexto <i class="bi bi-arrow-right ms-1"></i></button>
                             </article>
                         </div>
                     }
@@ -87,3 +87,8 @@ else
         </div>
     }
 }
+<section class="app-drawer agenda-detail-drawer" data-agenda-drawer role="dialog" aria-modal="true" aria-labelledby="agendaDrawerTitle" hidden>
+  <header><div><span class="eyebrow">Contexto operacional</span><h2 id="agendaDrawerTitle" data-agenda-title>Detalhe da agenda</h2></div><button type="button" data-agenda-close aria-label="Fechar detalhe"><i class="bi bi-x-lg"></i></button></header>
+  <div class="drawer-body"><partial name="_StatusBadge" model='"Carregando"' /><dl class="mt-4"><dt>Especialidade</dt><dd data-agenda-specialty>—</dd><dt>Período</dt><dd data-agenda-period>—</dd></dl><div class="agenda-drawer-timeline"><span></span><div><strong>Evento na agenda operacional</strong><small>Dados carregados do resultado atual.</small></div></div></div>
+  <footer><a href="#" class="btn btn-primary" data-agenda-full>Abrir operação completa</a><button type="button" class="btn btn-outline-secondary" data-agenda-close>Voltar</button></footer>
+</section>

@@ -1,6 +1,6 @@
 @model PlantaoPro.Web.Models.WorkspaceHeaderViewModel
 <header class="workspace-header">
  <nav aria-label="Caminho"><ol>@foreach(var item in Model.Breadcrumbs){<li>@if(item.Url is not null){<a href="@item.Url">@item.Label</a>}else{@item.Label}</li>}</ol></nav>
- <div class="workspace-heading"><div><h1>@Model.Title</h1><p>@Model.Description</p></div>@if(Model.PrimaryAction is not null){<a class="button button-primary" href="@Model.PrimaryAction.Url">@Model.PrimaryAction.Label</a>}</div>
+ <div class="workspace-heading"><div>@if(!string.IsNullOrWhiteSpace(Model.Status)){<span class="workspace-status"><span aria-hidden="true"></span>@Model.Status</span>}<h1>@Model.Title</h1><p>@Model.Description</p></div><div class="workspace-actions">@foreach(var action in Model.SecondaryActions){<a class="button button-subtle" href="@action.Url">@action.Label</a>}@if(Model.PrimaryAction is not null){<a class="button button-primary" href="@Model.PrimaryAction.Url">@Model.PrimaryAction.Label</a>}</div></div>
  @if(Model.Context is not null){<p class="workspace-context"><app-icon name="Hospital" size="16" /> @Model.Context</p>}
 </header>

@@ -1,2 +1,62 @@
-@{var tenantName=User.FindFirst("cliente")?.Value??User.FindFirst("tenant")?.Value??"Organização";var profile=User.Claims.FirstOrDefault(x=>x.Type.EndsWith("role"))?.Value??"Profissional";}
-<aside class="app-sidebar" id="appSidebar" aria-label="Navegação contextual"><header><img src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro"/><strong>@tenantName</strong><span>@profile</span></header><nav><p>Meu trabalho</p><a asp-controller="MinhaCentral" asp-action="Index"><app-icon name="Dashboard" size="18"/>Minha Central</a><a asp-controller="MeuDia" asp-action="Index"><app-icon name="Calendar" size="18"/>Minha agenda</a><p>Operação</p><a asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="18"/>Plantões</a><a asp-controller="Escalas" asp-action="Index"><app-icon name="Coverage" size="18"/>Escalas</a><p>Assistência</p><a asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="18"/>Pacientes</a><a asp-controller="CentralAtendimento" asp-action="Index"><app-icon name="Consultation" size="18"/>Atendimento</a></nav><section data-productivity-links><h2>Favoritos</h2><div data-favorites><p>Nenhum favorito.</p></div><h2>Recentes</h2><div data-recents><p>Nenhum item recente.</p></div></section><footer><a asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="18"/>Configurações</a><a asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="18"/>Ajuda</a></footer></aside>
+@using PlantaoPro.Web.Security
+@{
+    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Organização";
+    var profile = User.Claims.FirstOrDefault(x => x.Type.EndsWith("role"))?.Value ?? "Profissional";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var operationRoles = RolesConstants.Operacao.Split(',');
+    var clinicalRoles = RolesConstants.Saude360Assistencial.Split(',');
+    var financeRoles = RolesConstants.FinanceiroArea.Split(',').Concat(RolesConstants.Saude360Financeiro.Split(','));
+    var canOperate = operationRoles.Any(User.IsInRole);
+    var canUseClinical = clinicalRoles.Any(User.IsInRole);
+    var canUseFinance = financeRoles.Any(User.IsInRole);
+    var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
+    string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+}
+<aside class="app-sidebar" id="appSidebar" aria-label="Navegação principal">
+    <header class="sidebar-brand">
+        <a asp-controller="MinhaCentral" asp-action="Index" class="sidebar-logo" aria-label="PlantãoPro — início"><img class="brand-logo" src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
+        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><app-icon name="Menu" size="18" /></button>
+        <div class="sidebar-tenant"><span class="tenant-status" aria-hidden="true"></span><div><strong>@tenantName</strong><span>@profile.Replace('_', ' ')</span></div></div>
+        <button class="sidebar-search" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette"><app-icon name="Search" size="18" /><span>Busca rápida</span><kbd>Ctrl K</kbd></button>
+    </header>
+    <nav class="sidebar-nav">
+        <div class="nav-section-title"><span>Visão geral</span></div>
+        <a class="nav-link-app @Active("MinhaCentral")" asp-controller="MinhaCentral" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Minha Central</span></a>
+        <a class="nav-link-app @Active("MeuDia")" asp-controller="MeuDia" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Meu dia</span></a>
+        <a class="nav-link-app @Active("Pendencias")" asp-controller="Pendencias" asp-action="Index"><app-icon name="Warning" size="19" /><span>Pendências</span></a>
+        @if (canOperate)
+        {
+            <div class="nav-section-title"><span>Operação médica</span></div>
+            <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>Plantões</span></a>
+            <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agenda</span></a>
+            <a class="nav-link-app @Active("Cobertura")" asp-controller="Cobertura" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Cobertura</span></a>
+            <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>Convites</span></a>
+            <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Escalas</span></a>
+            <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>Fechamentos</span></a>
+        }
+        @if (canUseClinical)
+        {
+            <div class="nav-section-title"><span>Saúde 360</span></div>
+            <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a>
+            <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a>
+            <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a>
+            <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a>
+            <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a>
+        }
+        @if (canUseFinance)
+        {
+            <div class="nav-section-title"><span>Financeiro</span></div>
+            <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>Visão financeira</span></a>
+            <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>Pagamentos</span></a>
+            <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a>
+        }
+        @if (canManage)
+        {
+            <div class="nav-section-title"><span>Gestão</span></div>
+            <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a>
+            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Clientes</span></a>
+            <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
+        }
+    </nav>
+    <footer class="sidebar-footer"><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>Central de ajuda</span></a><span class="sidebar-version">PlantãoPro v1.48</span></footer>
+</aside>

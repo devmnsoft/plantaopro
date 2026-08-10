@@ -1,0 +1,41 @@
+/* v1.53 — functional form and feedback layer. Semantic components are intentionally
+   layout-agnostic so legacy screens can adopt them without markup rewrites. */
+.pp-form,.pp-form-card{display:grid;gap:var(--pp-space-5)}
+.pp-form-card,.pp-form-section{padding:clamp(1rem,2.5vw,1.75rem);border:1px solid var(--pp-border);border-radius:var(--pp-radius-lg);background:var(--pp-bg-surface);box-shadow:0 10px 30px rgb(15 42 76/6%)}
+.pp-form-section>legend,.pp-form-section__title{width:auto;margin:0 0 .35rem;font-size:1.125rem;font-weight:750;color:var(--pp-text-primary)}
+.pp-form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1rem}
+.pp-form-field{display:grid;gap:.4rem;min-width:0}.pp-form-label{font-weight:700;color:var(--pp-text-primary)}
+.pp-form-help,.pp-field-help{font-size:.875rem;line-height:1.45;color:var(--pp-text-secondary)}
+.pp-required-marker{color:var(--pp-danger);font-weight:800}.pp-form-error,.pp-inline-validation,.field-validation-error:not(:empty){display:flex;gap:.4rem;align-items:flex-start;font-size:.875rem;font-weight:650;color:var(--pp-danger)}
+.input-validation-error,[aria-invalid="true"]{border-color:var(--pp-danger)!important;box-shadow:0 0 0 3px rgb(190 24 93/12%)}
+.pp-validation-summary,.validation-summary-errors{padding:1rem 1.125rem;border:1px solid color-mix(in srgb,var(--pp-danger) 35%,transparent);border-left:4px solid var(--pp-danger);border-radius:var(--pp-radius-md);background:color-mix(in srgb,var(--pp-danger) 7%,white);color:var(--pp-text-primary)}
+.validation-summary-valid{display:none}.pp-validation-summary__title{display:block;margin-bottom:.35rem;font-weight:800;color:var(--pp-danger)}
+.pp-form-footer,.pp-form-actions{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:.75rem;padding-top:1rem;border-top:1px solid var(--pp-border)}
+.pp-form-sticky-footer{position:sticky;bottom:0;z-index:10;margin-inline:-.5rem;padding:1rem;background:rgb(255 255 255/94%);backdrop-filter:blur(10px);box-shadow:0 -8px 24px rgb(15 42 76/8%)}
+.pp-alert,.pp-info-panel,.pp-warning-panel,.pp-error-panel,.pp-success-panel,.pp-info-banner,.pp-warning-banner,.pp-error-banner,.pp-success-banner,.pp-update-banner,.pp-unsaved-changes-banner{display:grid;grid-template-columns:auto 1fr;gap:.75rem;padding:1rem;border:1px solid var(--pp-border);border-radius:var(--pp-radius-md);background:var(--pp-bg-surface)}
+.pp-alert__icon{display:grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:50%;background:color-mix(in srgb,currentColor 10%,white)}
+.pp-alert__title{display:block;font-weight:800;color:var(--pp-text-primary)}.pp-alert__description{margin:.15rem 0 0;color:var(--pp-text-secondary)}
+.pp-error-panel,.pp-error-banner{color:var(--pp-danger);border-left:4px solid currentColor}.pp-success-panel,.pp-success-banner{color:var(--pp-success);border-left:4px solid currentColor}.pp-warning-panel,.pp-warning-banner,.pp-unsaved-changes-banner{color:var(--pp-warning);border-left:4px solid currentColor}.pp-info-panel,.pp-info-banner,.pp-update-banner{color:var(--pp-primary);border-left:4px solid currentColor}
+.pp-loading-state,.pp-empty-state{display:grid;justify-items:center;gap:.6rem;padding:2rem;text-align:center;color:var(--pp-text-secondary)}
+.pp-modal .modal-content,.pp-confirm-dialog,.pp-delete-confirmation,.pp-confirm-modal{overflow:hidden;border:0;border-radius:1.25rem;box-shadow:0 24px 80px rgb(9 30 66/28%)}
+.pp-confirm-modal .modal-header{align-items:flex-start;padding:1.4rem;border:0}.pp-confirm-modal .modal-body{padding:0 1.4rem 1.4rem;font-size:1rem;line-height:1.6}.pp-confirm-modal .modal-footer{padding:1rem 1.4rem;background:var(--pp-neutral-50);border:0}.pp-confirm-icon{display:grid;place-items:center;flex:0 0 auto;width:2.75rem;height:2.75rem;border-radius:50%;color:var(--pp-warning);background:color-mix(in srgb,var(--pp-warning) 12%,white)}
+.pp-confirm-modal-danger .pp-confirm-icon,.pp-delete-confirmation{color:var(--pp-danger)}
+.plantaopro-toast-host{position:fixed;z-index:1090;right:1rem;bottom:1rem;display:grid;gap:.75rem;width:min(25rem,calc(100vw - 2rem))}.plantaopro-toast{display:grid;grid-template-columns:auto 1fr auto;gap:.75rem;align-items:start;padding:1rem;border:1px solid var(--pp-border);border-left:4px solid currentColor;border-radius:var(--pp-radius-md);background:white;box-shadow:0 16px 44px rgb(15 42 76/20%)}
+.plantaopro-toast-icon{display:grid;place-items:center;width:2rem;height:2rem;border-radius:50%;background:color-mix(in srgb,currentColor 10%,white);font-weight:900}.plantaopro-toast-title{font-weight:800;color:var(--pp-text-primary)}.plantaopro-toast-message{margin-top:.15rem;color:var(--pp-text-secondary);line-height:1.4}.plantaopro-toast-success{color:var(--pp-success)}.plantaopro-toast-error,.plantaopro-toast-delete{color:var(--pp-danger)}.plantaopro-toast-warning{color:var(--pp-warning)}.plantaopro-toast-info,.plantaopro-toast-update,.plantaopro-toast-loading{color:var(--pp-primary)}
+.pp-readable-table{font-size:.95rem}.pp-readable-table thead th{padding:.9rem 1rem;font-size:.8rem;letter-spacing:.025em;color:var(--pp-text-primary);background:var(--pp-neutral-50)}.pp-readable-table tbody td{padding:1rem;vertical-align:middle}.pp-readable-table tbody tr:hover{background:color-mix(in srgb,var(--pp-primary) 4%,white)}
+.pp-unsaved-indicator{display:none}.pp-form.is-dirty .pp-unsaved-indicator{display:flex}
+@media(max-width:767.98px){.pp-form-grid{grid-template-columns:1fr}.pp-form-grid>*{grid-column:1!important}.pp-form-footer,.pp-form-actions{align-items:stretch;flex-direction:column-reverse}.pp-form-footer>.btn,.pp-form-actions>.btn{width:100%;min-height:48px}.pp-form-sticky-footer{bottom:var(--pp-mobile-nav-height,0)}.plantaopro-toast-host{right:.75rem;bottom:calc(var(--pp-mobile-nav-height,4.5rem) + .75rem);width:calc(100vw - 1.5rem)}.modal-dialog{margin:0;min-height:100%}.pp-confirm-modal{min-height:100vh;border-radius:0!important}.pp-confirm-modal .modal-footer{margin-top:auto;flex-wrap:nowrap}.pp-readable-table{min-width:44rem}}
+@media(prefers-reduced-motion:reduce){.plantaopro-toast{transition:none!important}}
+
+/* Authentication is a focused workspace, not a generic centered form. */
+.auth-main{min-height:100vh;padding:clamp(1rem,3vw,2.5rem);background:radial-gradient(circle at 10% 0,rgb(31 115 241/13%),transparent 35%),linear-gradient(145deg,#f4f8fd,#eef5ff)}
+.auth-experience{display:grid;place-items:center;min-height:calc(100vh - 5rem)}
+.auth-experience .login-card-modern{width:min(1160px,100%);border:1px solid rgb(255 255 255/55%);border-radius:1.5rem;background:white;box-shadow:0 28px 90px rgb(9 42 82/18%)}
+.auth-logo-surface{display:inline-flex;padding:.75rem 1rem;border-radius:1rem;background:white;box-shadow:0 8px 30px rgb(0 0 0/12%)}.auth-logo{width:min(250px,65vw);height:auto}
+.auth-product-tag{display:inline-flex;margin-top:2rem;padding:.4rem .7rem;border:1px solid rgb(255 255 255/20%);border-radius:999px;background:rgb(255 255 255/9%);font-size:.75rem;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+.auth-benefits{display:grid;gap:1rem;margin:2rem 0 0;padding:0;list-style:none}.auth-benefits li{display:grid;gap:.15rem;padding-left:1rem;border-left:2px solid #58b8ff}.auth-benefits strong{color:white}.auth-benefits span{font-size:.9rem;color:#c8def7}
+.auth-form-panel h2{margin:.4rem 0 .5rem;font-size:clamp(1.65rem,3vw,2.15rem)}.auth-form-panel>p{margin-bottom:1.6rem;color:var(--pp-text-secondary)}
+.auth-form-panel .form-control{min-height:3.25rem;padding-inline:1rem}.auth-password-toggle{min-width:3.25rem;border:1px solid var(--pp-border-strong);background:var(--pp-neutral-50)}
+.auth-security{display:flex;gap:.6rem;align-items:center;margin-top:1.5rem;padding:1rem;border-radius:.75rem;background:var(--pp-neutral-50);font-size:.875rem;color:var(--pp-text-secondary)}
+.auth-environment-notice{display:flex;justify-content:center;gap:.5rem;padding:.65rem 1rem;background:#fff7d6;color:#624b00;font-weight:650;text-align:center}
+@media(max-width:767.98px){.auth-main{padding:0}.auth-experience{min-height:auto}.auth-experience .login-card-modern{border:0;border-radius:0;box-shadow:none}.auth-story{padding:1.5rem}.auth-story p,.auth-benefits{display:none}.auth-product-tag{margin-top:1rem}.auth-form-panel{padding:1.5rem}.auth-form-panel .btn-lg{min-height:3.25rem}}

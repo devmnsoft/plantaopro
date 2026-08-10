@@ -2,14 +2,14 @@
 @{
     var status = string.IsNullOrWhiteSpace(Model.Status) ? "RASCUNHO" : Model.Status;
 }
-<form method="post" data-ajax-form="true" data-unsaved-form data-focus-invalid class="pp-page-grid" novalidate>
+<form method="post" data-ajax-form="true" data-unsaved-form data-focus-invalid class="pp-page-grid pp-form" novalidate>
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1"></div>
-    <div data-ajax-errors class="alert alert-danger d-none" role="alert"></div>
+    <div asp-validation-summary="All" class="pp-validation-summary" role="alert" aria-live="assertive" tabindex="-1"></div>
+    <div data-ajax-errors class="pp-error-panel d-none" role="alert"></div>
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        <div class="alert alert-warning" role="alert">
+        <div class="pp-warning-panel" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage
         </div>
     }

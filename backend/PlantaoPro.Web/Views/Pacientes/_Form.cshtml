@@ -1,9 +1,9 @@
 @model PlantaoPro.Web.Models.PacienteFormViewModel
-<form asp-action="Save" method="post" class="row g-3" novalidate>
+<form asp-action="Save" method="post" class="row g-3 pp-form pp-form-card" novalidate data-focus-invalid data-unsaved-form>
     @Html.AntiForgeryToken()
     <input asp-for="Id" type="hidden" />
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-    <div class="col-12 col-md-6"><label asp-for="Nome" class="form-label">Nome</label><input asp-for="Nome" class="form-control" autocomplete="name" /><span asp-validation-for="Nome" class="text-danger"></span></div>
+    <div asp-validation-summary="ModelOnly" class="pp-validation-summary" role="alert" aria-live="assertive" tabindex="-1"></div>
+    <div class="col-12 col-md-6"><label asp-for="Nome" class="form-label">Nome</label><input asp-for="Nome" class="form-control" autocomplete="name" /><span asp-validation-for="Nome" class="pp-inline-validation"></span></div>
     <div class="col-12 col-md-6"><label asp-for="NomeSocial" class="form-label">Nome social</label><input asp-for="NomeSocial" class="form-control" /></div>
     <div class="col-12 col-md-4"><label asp-for="DataNascimento" class="form-label">Data de nascimento</label><input asp-for="DataNascimento" class="form-control" type="date" /></div>
     <div class="col-12 col-md-4"><label asp-for="SexoGenero" class="form-label">Sexo/gênero</label><input asp-for="SexoGenero" class="form-control" /></div>
@@ -13,6 +13,6 @@
     <div class="col-12 col-md-4"><label asp-for="Email" class="form-label">E-mail</label><input asp-for="Email" class="form-control" type="email" /></div>
     <div class="col-12"><label asp-for="Endereco" class="form-label">Endereço</label><input asp-for="Endereco" class="form-control" /></div>
     <div class="col-12 col-md-6"><label asp-for="ResponsavelNome" class="form-label">Responsável</label><input asp-for="ResponsavelNome" class="form-control" /></div>
-    <div class="col-12"><div class="form-check"><input asp-for="ConsentimentoLgpd" class="form-check-input" /><label asp-for="ConsentimentoLgpd" class="form-check-label">Consentimento LGPD registrado</label></div><span asp-validation-for="ConsentimentoLgpd" class="text-danger"></span></div>
-    <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar paciente</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
+    <div class="col-12"><div class="form-check"><input asp-for="ConsentimentoLgpd" class="form-check-input" /><label asp-for="ConsentimentoLgpd" class="form-check-label">Consentimento LGPD registrado</label></div><span asp-validation-for="ConsentimentoLgpd" class="pp-inline-validation"></span></div>
+    <div class="col-12 d-flex gap-2 pp-form-actions"><button class="btn btn-primary" type="submit">Salvar paciente</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
 </form>

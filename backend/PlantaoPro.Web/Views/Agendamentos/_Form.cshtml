@@ -1,8 +1,8 @@
 @model PlantaoPro.Web.Models.AgendamentoFormViewModel
-<form asp-action="Save" method="post" class="row g-3" novalidate>
+<form asp-action="Save" method="post" class="row g-3 pp-form pp-form-card" novalidate data-focus-invalid data-unsaved-form>
     @Html.AntiForgeryToken()
     <input asp-for="Id" type="hidden" />
-    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div asp-validation-summary="ModelOnly" class="pp-validation-summary" role="alert" aria-live="assertive" tabindex="-1"></div>
     <div class="col-12 col-md-6"><label asp-for="PacienteId" class="form-label">Paciente</label><input asp-for="PacienteId" class="form-control" /></div>
     <div class="col-12 col-md-6"><label asp-for="MedicoId" class="form-label">Profissional</label><input asp-for="MedicoId" class="form-control" /></div>
     <div class="col-12 col-md-6"><label asp-for="UnidadeId" class="form-label">Unidade</label><input asp-for="UnidadeId" class="form-control" /></div>
@@ -12,5 +12,5 @@
     <div class="col-12 col-md-6"><label asp-for="Tipo" class="form-label">Tipo</label><input asp-for="Tipo" class="form-control" /></div>
     <div class="col-12 col-md-6"><label asp-for="Especialidade" class="form-label">Especialidade</label><input asp-for="Especialidade" class="form-control" /></div>
     <div class="col-12"><label asp-for="Observacoes" class="form-label">Observações administrativas</label><textarea asp-for="Observacoes" class="form-control" rows="3"></textarea></div>
-    <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit">Salvar agendamento</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
+    <div class="col-12 d-flex gap-2 pp-form-actions"><button class="btn btn-primary" type="submit">Salvar agendamento</button><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a></div>
 </form>

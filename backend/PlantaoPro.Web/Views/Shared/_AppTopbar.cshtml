@@ -3,23 +3,23 @@
     var subtitle = ViewData["Subtitle"]?.ToString() ?? "Acompanhe prioridades e continue sua jornada.";
     var canUpgrade = User.IsInRole("ADMINISTRADOR_GLOBAL") || User.IsInRole("ADMINISTRADOR") || User.IsInRole("ADMINISTRADOR_CLIENTE") || User.IsInRole("DIRETOR");
 }
-<header class="app-topbar">
-    <div class="topbar-left">
+<header class="pp-topbar app-topbar">
+    <div class="pp-topbar__identity topbar-left">
         <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu">
             <app-icon name="Menu" size="20" />
         </button>
         <div>
-            <nav aria-label="Breadcrumb">
-                <ol class="breadcrumb app-breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Minha Central</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">@controller</li>
+            <nav class="pp-breadcrumb" aria-label="Você está em">
+                <ol class="app-breadcrumb">
+                    <li><a asp-controller="Home" asp-action="Dashboard">Minha Central</a></li>
+                    <li aria-current="page">@controller</li>
                 </ol>
             </nav>
-            <h1 class="page-title">@(ViewData["Title"] ?? controller)</h1>
-            <p class="pp-caption mb-0 d-none d-md-block">@subtitle</p>
+            <h1 class="pp-topbar__title page-title">@(ViewData["Title"] ?? controller)</h1>
+            <p class="pp-topbar__subtitle pp-caption d-none d-md-block">@subtitle</p>
         </div>
     </div>
-    <div class="topbar-actions">
+    <div class="pp-topbar__actions topbar-actions">
         <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette">
             <app-icon name="Search" size="18" />
             <span>Buscar no PlantãoPro</span>

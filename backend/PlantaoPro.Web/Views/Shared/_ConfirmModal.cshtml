@@ -34,11 +34,12 @@
     var type = allowedTypes.Contains(requestedType)
         ? requestedType
         : "warning";
+
 }
 
 <div class="modal fade" id="@id" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="@(id)-title" aria-describedby="@(id)-description" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content pp-confirm-modal pp-confirm-modal-@type">
+        <div class="modal-content pp-confirm-modal pp-confirm-modal-@type @(type == "danger" ? "pp-delete-dialog" : string.Empty)" aria-busy="false">
             <div class="modal-header">
                 <div class="pp-confirm-heading">
                     <span class="pp-confirm-icon" aria-hidden="true"><app-icon name="Warning" size="22" /></span>
@@ -56,8 +57,17 @@
 
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">@cancelText</button>
-                <button type="button" class="btn btn-primary" data-pp-confirm-action>
-                    <app-icon name="Check" size="18" /> @confirmText
+                <button type="button" class="btn @(type == "danger" ? "btn-danger" : "btn-primary")" data-pp-confirm-action>
+                    @if (type == "danger")
+                    {
+                        <app-icon name="Delete" size="18" />
+                    }
+                    else
+                    {
+                        <app-icon name="Check" size="18" />
+                    }
+                    <span>@confirmText</span>
+                    <span class="spinner-border spinner-border-sm d-none" data-pp-confirm-loading aria-hidden="true"></span>
                 </button>
             </div>
         </div>

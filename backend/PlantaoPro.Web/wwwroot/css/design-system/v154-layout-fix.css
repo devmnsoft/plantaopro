@@ -1,0 +1,64 @@
+/* v1.54 — shell e navegação. Esta camada substitui os ajustes dispersos das versões anteriores. */
+.pp-app {
+    display: grid;
+    grid-template-columns: var(--pp-sidebar-width-v154) minmax(0, 1fr);
+    min-height: 100vh;
+}
+.pp-main {
+    display: flex;
+    min-width: 0;
+    min-height: 100vh;
+    flex-direction: column;
+}
+.pp-content {
+    width: 100%;
+    max-width: var(--pp-content-max);
+    margin-inline: auto;
+    padding: clamp(1rem, 2.5vw, 2rem);
+    flex: 1 0 auto;
+}
+.pp-main > footer { margin-top: auto; }
+.pp-topbar {
+    position: sticky;
+    z-index: var(--pp-z-topbar);
+    top: 0;
+    display: flex;
+    min-height: var(--pp-topbar-height-v154);
+    padding: .75rem clamp(1rem, 2.5vw, 2rem);
+    gap: 1.5rem;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--pp-border-soft-v154);
+    background: rgb(255 255 255 / .94);
+    backdrop-filter: blur(14px);
+}
+.pp-topbar__identity { display: flex; min-width: 0; gap: .75rem; align-items: center; }
+.pp-topbar__identity > div { min-width: 0; }
+.pp-topbar__title { margin: .15rem 0 0; overflow: hidden; font-size: clamp(1.15rem, 2vw, 1.55rem); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.pp-topbar__subtitle { margin: .2rem 0 0; color: var(--pp-text-soft); }
+.pp-breadcrumb ol { display: flex; gap: .45rem; align-items: center; font-size: .75rem; color: var(--pp-text-soft); }
+.pp-breadcrumb li { display: inline-flex; min-width: 0; align-items: center; }
+.pp-breadcrumb li + li::before { margin-right: .45rem; content: "/"; color: #94a3b8; }
+.pp-breadcrumb a { color: var(--pp-text-muted); text-decoration: none; }
+.pp-topbar__actions { display: flex; min-width: 0; gap: .5rem; align-items: center; }
+.pp-user-menu { position: relative; }
+.pp-user-menu__trigger { display: flex; min-height: 2.75rem; padding: .35rem .55rem; gap: .55rem; align-items: center; border: 1px solid var(--pp-border); border-radius: var(--pp-radius-md); color: var(--pp-text); background: var(--pp-surface); cursor: pointer; }
+.pp-user-menu__trigger .user-info { display: grid; max-width: 10rem; text-align: left; }
+.pp-user-menu__trigger .user-name, .pp-user-menu__trigger small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pp-user-menu__trigger small { color: var(--pp-text-soft); font-size: .72rem; }
+.pp-user-menu__dropdown { min-width: 14rem; padding: .45rem; border: 1px solid var(--pp-border-soft-v154); border-radius: var(--pp-radius-md); box-shadow: var(--pp-shadow-panel); }
+.pp-user-menu__dropdown .dropdown-item { display: flex; padding: .7rem .75rem; gap: .65rem; align-items: center; border-radius: var(--pp-radius-sm); }
+.pp-user-menu__divider { height: 1px; margin: .35rem; background: var(--pp-border-soft-v154); }
+.pp-user-menu__logout { color: var(--pp-red-600); }
+
+@media (max-width: 1199px) {
+    .pp-app { grid-template-columns: 1fr; }
+    .pp-topbar__actions > :where(.tenant-context-badge, .plan-usage-mini-card) { display: none; }
+}
+@media (max-width: 767px) {
+    .pp-content { padding: 1rem 1rem 6rem; }
+    .pp-topbar { min-height: 4.5rem; padding: .65rem 1rem; }
+    .pp-topbar__subtitle, .pp-breadcrumb { display: none; }
+    .pp-topbar__actions > :not(.pp-user-menu):not(.notification-menu) { display: none; }
+    .pp-user-menu__trigger .user-info, .pp-user-menu__trigger > app-icon:last-child { display: none; }
+}

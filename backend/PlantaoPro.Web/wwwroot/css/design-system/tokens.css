@@ -1,5 +1,24 @@
 /* PlantãoPro Premium Experience 10.0 — única fonte canônica de identidade e semântica. */
 :root {
+    /* v1.54: nomes canônicos. Os aliases abaixo preservam componentes anteriores. */
+    --pp-bg: #f4f7fb;
+    --pp-surface: #ffffff;
+    --pp-surface-muted: #f8fafc;
+    --pp-surface-dark: #071f3a;
+    --pp-navy-950: #06172b;
+    --pp-navy-900: #0b243f;
+    --pp-blue-600: #2563eb;
+    --pp-cyan-500: #06b6d4;
+    --pp-teal-500: #14b8a6;
+    --pp-green-600: #16a34a;
+    --pp-amber-500: #f59e0b;
+    --pp-red-600: #dc2626;
+    --pp-text: #0f172a;
+    --pp-text-soft: #64748b;
+    --pp-border-soft-v154: #e5edf5;
+    --pp-shadow-panel: 0 18px 50px rgb(15 23 42 / .12);
+    --pp-sidebar-width-v154: 280px;
+    --pp-topbar-height-v154: 84px;
     /* Paleta v1.48 — aliases semânticos mantêm compatibilidade com o legado. */
     --pp-color-navy-950: #06172c;
     --pp-color-navy-900: #0b2747;

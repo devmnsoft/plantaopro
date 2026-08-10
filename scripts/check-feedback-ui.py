@@ -1,33 +1,46 @@
 #!/usr/bin/env python3
-"""Guard v1.53 feedback surfaces against inaccessible/native interaction patterns."""
+"""Valida região viva e contrato do diálogo de confirmação sem APIs nativas."""
 from pathlib import Path
 import re
 import subprocess
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
-
-def changed_files():
-    result = subprocess.run(["git", "diff", "--name-only", "HEAD"], cwd=ROOT, text=True, capture_output=True, check=True)
-    return [ROOT / line for line in result.stdout.splitlines() if line.endswith((".js", ".cshtml"))]
-
-rules = {
-    "alert() nativo": re.compile(r"(?<![\w.])alert\s*\("),
-    "confirm() nativo": re.compile(r"(?<![\w.])confirm\s*\("),
-    'href="#"': re.compile(r'href\s*=\s*["\']#["\']', re.I),
-    "button sem type": re.compile(r"<button(?![^>]*\btype\s*=)[^>]*>", re.I),
+files = {
+    "modal": WEB / "Views/Shared/_ConfirmModal.cshtml",
+    "toast": WEB / "Views/Shared/_ToastRegion.cshtml",
+    "ui": WEB / "wwwroot/js/plantaopro-ui.js",
 }
-issues = []
-for path in changed_files():
-    if not path.exists() or WEB not in path.parents:
-        continue
-    text = path.read_text(encoding="utf-8")
-    for label, pattern in rules.items():
-        for match in pattern.finditer(text):
-            line = text.count("\n", 0, match.start()) + 1
-            issues.append(f"{path.relative_to(ROOT)}:{line}: {label}")
+texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
+errors: list[str] = []
 
-print(f"Feedback UI: {len(issues)} ocorrência(s) bloqueadora(s) em arquivos alterados.")
-for issue in issues: print(f"- {issue}")
-sys.exit(1 if issues else 0)
+for marker in ('role="dialog"', 'aria-modal="true"', "data-pp-confirm-action", "data-pp-confirm-loading"):
+    if marker not in texts["modal"]:
+        errors.append(f"Modal sem {marker}")
+if 'aria-live="polite"' not in texts["toast"]:
+    errors.append("Toast region sem aria-live")
+for name, text in texts.items():
+    if re.search(r"\b(?:alert|confirm)\s*\(", text):
+        errors.append(f"{name}: API nativa alert/confirm detectada")
+
+changed = subprocess.run(
+    ["git", "diff", "--name-only", "HEAD"], cwd=ROOT, text=True,
+    capture_output=True, check=True,
+).stdout.splitlines()
+rules = {
+    "alert/confirm nativo": re.compile(r"(?<![\w.])(?:alert|confirm)\s*\("),
+    "href placeholder": re.compile(r'href\s*=\s*["\']#["\']', re.I),
+    "button sem type": re.compile(r"<button(?![^>]*\btype=)[^>]*>", re.I),
+}
+for relative in changed:
+    path = ROOT / relative
+    if path.suffix not in (".js", ".cshtml") or not path.exists() or WEB not in path.parents:
+        continue
+    source = path.read_text(encoding="utf-8")
+    for label, pattern in rules.items():
+        if pattern.search(source):
+            errors.append(f"{relative}: {label}")
+
+if errors:
+    raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
+print("Feedback UI v1.54 validado: toast acessível e confirmação sem API nativa.")

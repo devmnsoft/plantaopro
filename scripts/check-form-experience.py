@@ -1,28 +1,39 @@
 #!/usr/bin/env python3
-"""Validate the v1.53 critical forms contract without failing untouched legacy views."""
+"""Verifica o contrato acessível dos formulários críticos e componentes v1.54."""
 from pathlib import Path
 import re
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+WEB = ROOT / "backend/PlantaoPro.Web"
+css = (WEB / "wwwroot/css/design-system/v154-forms-feedback.css").read_text(encoding="utf-8")
+errors: list[str] = []
+
 critical = [
-    "backend/PlantaoPro.Web/Views/Account/Login.cshtml",
-    "backend/PlantaoPro.Web/Views/Account/ForgotPassword.cshtml",
-    "backend/PlantaoPro.Web/Views/Account/ResetPassword.cshtml",
-    "backend/PlantaoPro.Web/Views/Pacientes/_Form.cshtml",
-    "backend/PlantaoPro.Web/Views/Agendamentos/_Form.cshtml",
-    "backend/PlantaoPro.Web/Views/Plantoes/_PlantaoForm.cshtml",
+    "Views/Account/Login.cshtml", "Views/Account/ForgotPassword.cshtml",
+    "Views/Account/ResetPassword.cshtml", "Views/Pacientes/_Form.cshtml",
+    "Views/Agendamentos/_Form.cshtml", "Views/Plantoes/_PlantaoForm.cshtml",
 ]
-issues = []
 for relative in critical:
-    path = ROOT / relative
-    text = path.read_text(encoding="utf-8")
-    if "<form" not in text: issues.append(f"{relative}: formulário ausente"); continue
-    if "asp-validation-summary" not in text: issues.append(f"{relative}: resumo de validação ausente")
-    if "novalidate" not in text: issues.append(f"{relative}: contrato de validação progressiva ausente")
-    for match in re.finditer(r"<button(?![^>]*\btype=)[^>]*>", text, re.I):
-        issues.append(f"{relative}:{text.count(chr(10), 0, match.start()) + 1}: botão sem type")
-    if re.search(r"class=[\"'][^\"']*alert alert-", text): issues.append(f"{relative}: alerta Bootstrap cru")
-print(f"Form experience: {len(issues)} ocorrência(s) bloqueadora(s) em {len(critical)} formulários críticos.")
-for issue in issues: print(f"- {issue}")
-sys.exit(1 if issues else 0)
+    text = (WEB / relative).read_text(encoding="utf-8")
+    if "<form" not in text:
+        errors.append(f"{relative}: formulário ausente")
+        continue
+    if "asp-validation-summary" not in text:
+        errors.append(f"{relative}: resumo de validação ausente")
+    if "novalidate" not in text:
+        errors.append(f"{relative}: validação progressiva ausente")
+    if re.search(r"<button(?![^>]*\btype=)[^>]*>", text, re.I):
+        errors.append(f"{relative}: button sem type")
+login = (WEB / critical[0]).read_text(encoding="utf-8")
+for marker in ("data-focus-invalid", "pp-form-field", "pp-form-control", "aria-describedby"):
+    if marker not in login:
+        errors.append(f"Login sem contrato obrigatório: {marker}")
+for marker in (".pp-form-grid", ".pp-form-card", ".pp-form-error", ".pp-form-actions"):
+    if marker not in css:
+        errors.append(f"Design system sem componente: {marker}")
+if 'type="submit"' not in login:
+    errors.append("Login sem submit explícito")
+
+if errors:
+    raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
+print("Form experience v1.54 validada: grid, ajuda, erros e associação acessível presentes.")

@@ -2,19 +2,19 @@
 @{
     var status = string.IsNullOrWhiteSpace(Model.Status) ? "RASCUNHO" : Model.Status;
 }
-<form method="post" data-ajax-form="true" data-unsaved-form data-focus-invalid class="pp-page-grid" novalidate>
+<form method="post" data-ajax-form="true" data-unsaved-form data-focus-invalid class="pp-form" novalidate>
     @Html.AntiForgeryToken()
-    <div asp-validation-summary="All" class="alert alert-danger" role="alert" aria-live="assertive" tabindex="-1"></div>
-    <div data-ajax-errors class="alert alert-danger d-none" role="alert"></div>
+    <div asp-validation-summary="All" class="pp-error-panel" role="alert" aria-live="assertive" tabindex="-1"></div>
+    <div data-ajax-errors class="pp-error-panel d-none" role="alert"></div>
 
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
     {
-        <div class="alert alert-warning" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>@Model.ErrorMessage
+        <div class="pp-warning-panel" role="alert">
+            <span class="pp-alert__icon" aria-hidden="true">!</span><div class="pp-alert__content"><strong>Revise o plantão</strong><p>@Model.ErrorMessage</p></div>
         </div>
     }
 
-    <div class="pp-section-card">
+    <div class="pp-form-section">
         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
             <div>
                 <span class="pp-section-kicker">Dados operacionais</span>
@@ -88,9 +88,9 @@
         </div>
     </div>
 
-    <div class="pp-section-card pp-form-actions d-flex justify-content-between align-items-center gap-3 flex-wrap">
-        <div class="text-muted small">
-            <i class="bi bi-shield-check me-1"></i>Ações críticas de publicação, cancelamento e confirmação são validadas pela API e registradas para auditoria.
+    <div class="pp-form-sticky-footer">
+        <div class="pp-form-status">
+            <app-icon name="Security" size="18" /><span>Ações críticas são validadas pela API e registradas para auditoria.</span>
         </div>
         <div class="d-flex gap-2 flex-wrap">
             <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>

@@ -158,7 +158,7 @@
     let box=form.querySelector('[data-ajax-errors]');
     if(!box){
       box=document.createElement('div');
-      box.className='alert alert-danger d-none';
+      box.className='pp-error-panel d-none';
       box.setAttribute('data-ajax-errors','true');
       form.prepend(box);
     }

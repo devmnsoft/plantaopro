@@ -22,11 +22,11 @@
     @if (isAuthenticated)
     {
         <partial name="_ImpersonationBanner" />
-        <div class="app-shell">
+        <div class="pp-app app-shell">
             <partial name="_AppSidebar" />
-            <section class="app-main" data-app-shell="true">
+            <section class="pp-main app-main" data-app-shell="true">
                 <partial name="_AppTopbar" />
-                <main class="app-content" id="mainContent" tabindex="-1">
+                <main class="pp-content app-content" id="mainContent" tabindex="-1">
                     <partial name="_ToastMessages" />
                     @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
                     @RenderBody()

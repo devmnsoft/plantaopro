@@ -1,17 +1,31 @@
 @{
-    ViewData["Title"] = "Relatórios gerenciais";
-    var relatorios = new[] { "Plantões por período", "Escalas por médico", "Pagamentos médicos", "Produtividade médica", "Agendamentos", "Atendimentos clínicos", "Financeiro da Clínica", "Convênios e glosas", "Uso do Plano SaaS", "Auditoria" };
+    ViewData["Title"] = "Biblioteca de relatórios";
+    var reports = new[]
+    {
+        new { Title = "Plantões e cobertura", Description = "Acompanhe composição, cobertura e riscos da operação por período.", Icon = "bi-calendar2-week", Action = "Cobertura", Category = "Operação" },
+        new { Title = "Convites", Description = "Analise respostas e conversão dos convites enviados aos médicos.", Icon = "bi-send-check", Action = "Convites", Category = "Operação" },
+        new { Title = "Produtividade médica", Description = "Consulte os indicadores disponíveis de produtividade sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Clínico" },
+        new { Title = "SLA", Description = "Visualize indicadores de nível de serviço e pontos que exigem atenção.", Icon = "bi-speedometer2", Action = "Sla", Category = "Gestão" },
+        new { Title = "Faturamento SaaS", Description = "Consolide a visão de faturamento da plataforma por competência.", Icon = "bi-receipt", Action = "FaturamentoSaas", Category = "Financeiro" },
+        new { Title = "Clientes SaaS", Description = "Consulte dados paginados reais e exporte o resultado auditado em CSV.", Icon = "bi-buildings", Action = "Saas", Category = "SaaS" }
+    };
 }
-<h1>Relatórios gerenciais vendáveis</h1>
-<p class="lead">Visões executivas com filtros, cards de resumo, tabela responsiva e bloqueio comercial para exportações ainda não auditadas.</p>
-<div class="alert alert-warning">LGPD: relatórios clínicos exibem apenas o mínimo necessário por perfil e tenant.</div>
-<div class="row g-3">
-@foreach (var relatorio in relatorios)
-{
-    <div class="col-md-6"><article class="card h-100 shadow-sm"><div class="card-body">
-        <h2 class="h5">Relatório de @relatorio</h2>
-        <p>Filtros por período, unidade, médico, status e perfil responsável quando aplicável.</p>
-        <button class="btn btn-secondary" type="button" disabled>Exportação futura bloqueada até auditoria</button>
-    </div></article></div>
-}
+<div class="pp-page">
+    <header class="pp-hero" aria-labelledby="reports-title">
+        <div class="pp-hero__copy"><span class="pp-eyebrow"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Inteligência operacional</span><h1 id="reports-title">Biblioteca de relatórios</h1><p>Escolha uma visão para investigar a operação. Indicadores são carregados pelas fontes reais; quando não houver dados, mostramos o contexto e a próxima possibilidade.</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-primary" asp-action="Saas"><i class="bi bi-table" aria-hidden="true"></i> Abrir dados SaaS</a></div>
+    </header>
+    <div class="pp-notice" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Privacidade por padrão</strong><br />Relatórios clínicos respeitam tenant, perfil de acesso e princípio do mínimo necessário.</div></div>
+    <section aria-labelledby="catalog-title">
+        <div class="pp-section-header"><div><h2 id="catalog-title">Visões disponíveis</h2><p>Acesse somente jornadas com rota implementada.</p></div></div>
+        <div class="pp-action-grid mt-3">
+            @foreach (var report in reports)
+            {
+                <a class="pp-action-card" asp-controller="Relatorios" asp-action="@report.Action">
+                    <span class="pp-action-card__icon"><i class="bi @report.Icon" aria-hidden="true"></i></span><h3>@report.Title</h3><p>@report.Description</p><span class="pp-action-card__meta"><span>@report.Category</span><span>Abrir <i class="bi bi-arrow-right" aria-hidden="true"></i></span></span>
+                </a>
+            }
+        </div>
+    </section>
+    <section aria-labelledby="automation-title"><div class="pp-section-header"><div><h2 id="automation-title">Automação e favoritos</h2><p>Recursos ainda sem persistência permanecem explícitos, sem botões que simulam uma ação.</p></div></div><div class="pp-action-grid mt-3"><article class="pp-action-card pp-action-card--disabled" aria-disabled="true"><span class="pp-action-card__icon"><i class="bi bi-star" aria-hidden="true"></i></span><h3>Relatórios favoritos</h3><p>A personalização será liberada quando houver armazenamento por usuário.</p><span class="pp-action-card__meta">Indisponível nesta versão</span></article><article class="pp-action-card pp-action-card--disabled" aria-disabled="true"><span class="pp-action-card__icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><h3>Agendamentos</h3><p>O envio recorrente depende de fila e trilha de auditoria no backend.</p><span class="pp-action-card__meta">Indisponível nesta versão</span></article></div></section>
 </div>

@@ -1,45 +1,23 @@
 @model PlantaoPro.Web.Controllers.UserSettingsSummaryViewModel
 @{ ViewData["Title"] = "Configurações"; }
-
-<div class="row g-3">
-    <div class="col-12 col-xl-7">
-        <div class="data-card p-4 h-100">
-            <h4 class="mb-3">Conta do usuário</h4>
-            @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
-            {
-                @* Feedback visual amigável quando a API retornar erro ou estiver indisponível. *@
-                <div class="alert alert-warning" role="alert">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    @ViewBag.ErrorMessage
-                </div>
-            }
-            @if (string.IsNullOrWhiteSpace(Model.Email))
-            {
-                <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-person-x", "Dados indisponíveis", "Não foi possível carregar os dados da conta.", "Tentar novamente", "Index", "Configuracoes")' />
-            }
-            else
-            {
-                <dl class="row mb-0">
-                    <dt class="col-sm-4">Nome</dt><dd class="col-sm-8">@Model.Nome</dd>
-                    <dt class="col-sm-4">E-mail</dt><dd class="col-sm-8">@Model.Email</dd>
-                    <dt class="col-sm-4">Telefone</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Telefone) ? "Não informado" : Model.Telefone)</dd>
-                    <dt class="col-sm-4">Notificações</dt><dd class="col-sm-8">@Model.PreferenciasNotificacao</dd>
-                </dl>
-            }
-            <div class="d-flex gap-2 mt-3">
-                <a class="btn btn-primary" asp-controller="Usuario" asp-action="Edit"><i class="bi bi-pencil-square"></i> Editar perfil</a>
-                <a class="btn btn-outline-primary" asp-controller="Usuario" asp-action="AlterarSenha"><i class="bi bi-key"></i> Alterar senha</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-xl-5">
-        <div class="data-card p-4 h-100">
-            <h4 class="mb-3">Sistema</h4>
-            <p class="text-muted">Acesse monitoramento e documentação interativa da API.</p>
-            <div class="d-grid gap-2">
-                <a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Saude">Saúde do Sistema</a>
-                <a class="btn btn-outline-secondary" href="/swagger" target="_blank" rel="noopener">Swagger API</a>
-            </div>
-        </div>
-    </div>
+<div class="pp-page">
+    <header class="pp-hero" aria-labelledby="settings-title">
+        <div class="pp-hero__copy"><span class="pp-eyebrow"><i class="bi bi-sliders" aria-hidden="true"></i> Governança do ambiente</span><h1 id="settings-title">Configurações</h1><p>Encontre sua conta, segurança, identidade e parâmetros operacionais em uma central organizada por responsabilidade.</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-primary" asp-controller="Usuario" asp-action="Edit"><i class="bi bi-person-gear" aria-hidden="true"></i> Editar meu perfil</a></div>
+    </header>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string)) { <div class="pp-notice" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><div><strong>Não foi possível atualizar os dados da conta.</strong><br />@ViewBag.ErrorMessage</div></div> }
+    <section aria-labelledby="account-title"><div class="pp-section-header"><div><h2 id="account-title">Minha conta</h2><p>Dados retornados pelo perfil autenticado.</p></div></div>
+        @if (string.IsNullOrWhiteSpace(Model.Email)) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-person-x", "Dados da conta indisponíveis", "Não foi possível carregar seu perfil. Tente novamente quando a conexão com a API for restabelecida.", "Tentar novamente", "Index", "Configuracoes")' /> }
+        else { <article class="pp-account-card mt-3"><span class="pp-account-card__avatar"><i class="bi bi-person" aria-hidden="true"></i></span><div><h3 class="h5 mb-0">@Model.Nome</h3><dl><div><dt>E-mail</dt><dd>@Model.Email</dd></div><div><dt>Telefone</dt><dd>@(string.IsNullOrWhiteSpace(Model.Telefone) ? "Não informado" : Model.Telefone)</dd></div><div><dt>Notificações</dt><dd>@Model.PreferenciasNotificacao</dd></div></dl><div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-outline-primary" asp-controller="Usuario" asp-action="AlterarSenha"><i class="bi bi-key" aria-hidden="true"></i> Alterar senha</a></div></div></article> }
+    </section>
+    <section aria-labelledby="settings-catalog-title"><div class="pp-section-header"><div><h2 id="settings-catalog-title">Áreas de configuração</h2><p>Atalhos para módulos existentes, com escopo claro antes de entrar.</p></div></div><div class="pp-action-grid mt-3">
+        <a class="pp-action-card" asp-controller="Usuarios" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-people" aria-hidden="true"></i></span><h3>Usuários e permissões</h3><p>Administre acessos e avance para a matriz de permissões.</p><span class="pp-action-card__meta">Acesso e equipe <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="MinhaAssinatura" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-gem" aria-hidden="true"></i></span><h3>Plano e assinatura</h3><p>Consulte módulos, consumo, limites e faturas do plano.</p><span class="pp-action-card__meta">Contrato <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="WhiteLabel" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-palette" aria-hidden="true"></i></span><h3>Identidade visual</h3><p>Gerencie a experiência white label permitida pelo plano.</p><span class="pp-action-card__meta">Marca <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="Notificacoes" asp-action="Preferencias"><span class="pp-action-card__icon"><i class="bi bi-bell" aria-hidden="true"></i></span><h3>Notificações</h3><p>Defina como receber atualizações importantes da operação.</p><span class="pp-action-card__meta">Preferências <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="Lgpd" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-shield-lock" aria-hidden="true"></i></span><h3>Segurança e LGPD</h3><p>Consulte privacidade, consentimentos, retenção e solicitações.</p><span class="pp-action-card__meta">Governança <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="Integracoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-plug" aria-hidden="true"></i></span><h3>Integrações</h3><p>Acesse chaves e pontos de integração disponíveis.</p><span class="pp-action-card__meta">Conectividade <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="Parametrizacoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-toggles" aria-hidden="true"></i></span><h3>Parâmetros operacionais</h3><p>Organize regras financeiras, notificações e operação.</p><span class="pp-action-card__meta">Operação <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+        <a class="pp-action-card" asp-controller="Configuracoes" asp-action="Saude"><span class="pp-action-card__icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span><h3>Saúde do sistema</h3><p>Verifique conectividade e estado técnico do ambiente.</p><span class="pp-action-card__meta">Diagnóstico <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+    </div></section>
 </div>

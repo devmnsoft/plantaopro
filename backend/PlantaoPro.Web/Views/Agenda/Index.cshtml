@@ -9,7 +9,7 @@
         .ToList();
 }
 
-<section class="agenda-hero mb-4" aria-labelledby="agenda-title">
+<div class="pp-page"><section class="agenda-hero pp-hero pp-hero--operation" aria-labelledby="agenda-title">
   <div>
     <span class="agenda-eyebrow">Operação em tempo real</span>
     <h1 id="agenda-title">Agenda operacional</h1>
@@ -34,7 +34,7 @@
   <a href="/agenda/conflitos" class="@(modo == "conflitos" ? "active danger" : null)"><i class="bi bi-exclamation-triangle me-1"></i>Conflitos</a>
 </nav>
 
-<form method="get" class="agenda-filter card border-0 shadow-sm mb-3">
+<form method="get" class="agenda-filter pp-filter-panel">
     <div class="card-body row g-2">
         <div class="col-md-3"><label class="form-label">Início</label><input type="date" name="inicio" value="@vm.Inicio.ToString("yyyy-MM-dd")" class="form-control" /></div>
         <div class="col-md-3"><label class="form-label">Fim</label><input type="date" name="fim" value="@vm.Fim.ToString("yyyy-MM-dd")" class="form-control" /></div>
@@ -61,7 +61,7 @@ else
         <div class="agenda-summary mb-3"><strong>@vm.Total</strong><span>eventos no período</span><span class="agenda-live"><i></i>Dados operacionais</span></div>
     @foreach (var day in grouped)
     {
-        <div class="agenda-day card border-0 shadow-sm mb-3">
+        <div class="agenda-day pp-data-card">
             <div class="card-header"><time datetime="@day.Key.ToString("yyyy-MM-dd")">@day.Key.ToString("dddd, dd/MM/yyyy")</time><span>@day.Count() eventos</span></div>
             <div class="card-body">
                 <div class="row g-3">
@@ -69,7 +69,7 @@ else
                     {
                         var statusClass = (item.Status ?? string.Empty).ToLowerInvariant();
                         <div class="col-12 col-lg-6">
-                            <article class="agenda-event status-@statusClass h-100" data-agenda-event data-event-id="@item.Id" data-title="@item.HospitalNome" data-specialty="@item.EspecialidadeNome" data-period="@item.DataInicio.ToString("dd/MM HH:mm") – @item.DataFim.ToString("dd/MM HH:mm")" data-status="@item.Status" tabindex="0" aria-label="@item.HospitalNome, @item.EspecialidadeNome, @item.DataInicio.ToString("dd/MM HH:mm")">
+                            <article class="agenda-event status-@statusClass h-100" data-agenda-event data-event-id="@item.Id" data-title="@item.HospitalNome" data-hospital="@item.HospitalNome · @item.HospitalCidade/@item.HospitalEstado" data-specialty="@item.EspecialidadeNome" data-period="@item.DataInicio.ToString("dd/MM HH:mm") – @item.DataFim.ToString("dd/MM HH:mm")" data-value="@item.Valor.ToString("C")" data-coverage="@(item.Vagas-item.VagasDisponiveis)/@item.Vagas vagas preenchidas" data-status="@item.Status" tabindex="0" aria-label="@item.HospitalNome, @item.EspecialidadeNome, @item.DataInicio.ToString("dd/MM HH:mm")">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div>
                                         <div class="fw-semibold">@item.HospitalNome</div>
@@ -78,7 +78,7 @@ else
                                     <span class="badge status-@statusClass">@item.Status</span>
                                 </div>
                                 <div class="mt-2 small">@item.DataInicio.ToString("HH:mm") - @item.DataFim.ToString("HH:mm") · @item.Valor.ToString("C")</div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary mt-3" data-agenda-detail>Ver contexto <i class="bi bi-arrow-right ms-1"></i></button>
+                                <button type="button" class="btn btn-sm btn-context mt-3" data-agenda-detail>Ver contexto <i class="bi bi-arrow-right ms-1"></i></button>
                             </article>
                         </div>
                     }
@@ -89,6 +89,7 @@ else
 }
 <section class="app-drawer agenda-detail-drawer" data-agenda-drawer role="dialog" aria-modal="true" aria-labelledby="agendaDrawerTitle" hidden>
   <header><div><span class="eyebrow">Contexto operacional</span><h2 id="agendaDrawerTitle" data-agenda-title>Detalhe da agenda</h2></div><button type="button" data-agenda-close aria-label="Fechar detalhe"><i class="bi bi-x-lg"></i></button></header>
-  <div class="drawer-body"><partial name="_StatusBadge" model='"Carregando"' /><dl class="mt-4"><dt>Especialidade</dt><dd data-agenda-specialty>—</dd><dt>Período</dt><dd data-agenda-period>—</dd></dl><div class="agenda-drawer-timeline"><span></span><div><strong>Evento na agenda operacional</strong><small>Dados carregados do resultado atual.</small></div></div></div>
+  <div class="drawer-body"><partial name="_StatusBadge" model='"Carregando"' /><dl class="agenda-context-grid"><div><dt>Hospital</dt><dd data-agenda-hospital>—</dd></div><div><dt>Especialidade</dt><dd data-agenda-specialty>—</dd></div><div><dt>Período</dt><dd data-agenda-period>—</dd></div><div><dt>Valor</dt><dd data-agenda-value>—</dd></div><div><dt>Cobertura</dt><dd data-agenda-coverage>—</dd></div></dl><div class="agenda-drawer-timeline"><span></span><div><strong>Evento na agenda operacional</strong><small>Contexto obtido dos dados reais do plantão selecionado.</small></div></div></div>
   <footer><a href="#" class="btn btn-primary" data-agenda-full>Abrir operação completa</a><button type="button" class="btn btn-outline-secondary" data-agenda-close>Voltar</button></footer>
 </section>
+</div>

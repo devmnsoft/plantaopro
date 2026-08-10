@@ -24,8 +24,11 @@
         if (!drawer || !event) return;
         trigger = button;
         drawer.querySelector('[data-agenda-title]').textContent = event.dataset.title;
+        drawer.querySelector('[data-agenda-hospital]').textContent = event.dataset.hospital;
         drawer.querySelector('[data-agenda-specialty]').textContent = event.dataset.specialty;
         drawer.querySelector('[data-agenda-period]').textContent = event.dataset.period;
+        drawer.querySelector('[data-agenda-value]').textContent = event.dataset.value;
+        drawer.querySelector('[data-agenda-coverage]').textContent = event.dataset.coverage;
         const badge = drawer.querySelector('.status-badge');
         badge.textContent = event.dataset.status;
         badge.setAttribute('aria-label', `Status: ${event.dataset.status}`);

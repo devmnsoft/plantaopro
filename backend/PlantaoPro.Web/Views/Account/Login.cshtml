@@ -9,13 +9,13 @@
             <div class="auth-logo-surface">
                 <img class="auth-logo" src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" />
             </div>
-            <h1 id="authStoryTitle">Sua operação de saúde, organizada em um só lugar.</h1>
-            <p>Gerencie plantões, escalas, equipes, atendimento e financeiro com clareza, segurança e informações atualizadas.</p>
+            <span class="auth-product-tag">Central médica em tempo real</span>
+            <h1 id="authStoryTitle">Gestão médica em tempo real.</h1>
+            <p>Controle plantões, escalas, convites, pagamentos e jornadas assistenciais em uma única central.</p>
             <ul class="auth-benefits" aria-label="Benefícios da plataforma">
-                <li>Escalas e coberturas em tempo real.</li>
-                <li>Jornadas assistenciais integradas.</li>
-                <li>Gestão financeira e operacional.</li>
-                <li>Segurança e rastreabilidade.</li>
+                <li><strong>Operação conectada</strong><span>Escalas, coberturas e convites sem perder contexto.</span></li>
+                <li><strong>Jornada assistencial</strong><span>Do agendamento ao financeiro em um fluxo contínuo.</span></li>
+                <li><strong>Governança nativa</strong><span>Permissões, segurança e rastreabilidade por tenant.</span></li>
             </ul>
         </section>
         <section class="auth-form-panel" aria-labelledby="loginTitle">
@@ -35,7 +35,7 @@
                     <label asp-for="Senha" class="form-label form-required">Senha</label>
                     <div class="input-group">
                         <input asp-for="Senha" class="form-control form-control-lg" type="password" id="senha" autocomplete="current-password" aria-describedby="passwordHelp capsLockWarning" />
-                        <button class="btn btn-outline-secondary" type="button" data-password-toggle aria-label="Mostrar senha" aria-pressed="false"><app-icon name="View" size="20" /></button>
+                        <button class="btn auth-password-toggle" type="button" data-password-toggle aria-label="Mostrar senha" aria-pressed="false"><app-icon name="View" size="20" /></button>
                     </div>
                     <small id="passwordHelp" class="form-help">A senha diferencia letras maiúsculas e minúsculas.</small>
                     <div id="capsLockWarning" class="form-help d-none" role="status"><app-icon name="Warning" size="18" /> Caps Lock está ativado.</div>

@@ -14,7 +14,7 @@
     <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
     @if (Configuration.GetValue<bool>("Demo:Enabled"))
     {
-        <div class="alert alert-info m-3" role="status">Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</div>
+        <div class="auth-environment-notice" role="status"><span aria-hidden="true">●</span> Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</div>
     }
     <main id="mainContent" class="auth-main" tabindex="-1">@RenderBody()</main>
     <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>

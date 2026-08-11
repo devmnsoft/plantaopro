@@ -1,5 +1,21 @@
 /* PlantãoPro Premium Experience 10.0 — única fonte canônica de identidade e semântica. */
 :root {
+    /* Identidade clínica v1.54; aliases canônicos evitam valores duplicados nos componentes. */
+    --pp-clinical-bg: #f4f8fb;
+    --pp-clinical-surface: #ffffff;
+    --pp-clinical-surface-muted: #f8fbfd;
+    --pp-clinical-navy: #071a2f;
+    --pp-clinical-blue: #2563eb;
+    --pp-clinical-teal: #0d9488;
+    --pp-clinical-cyan: #0891b2;
+    --pp-clinical-green: #16a34a;
+    --pp-clinical-amber: #d97706;
+    --pp-clinical-red: #dc2626;
+    --pp-clinical-text: #0f172a;
+    --pp-clinical-muted: #475569;
+    --pp-clinical-border: #dbe5ef;
+    --pp-clinical-radius: 16px;
+    --pp-clinical-shadow: 0 12px 32px rgb(15 23 42 / .08);
     /* v1.54: nomes canônicos. Os aliases abaixo preservam componentes anteriores. */
     --pp-bg: #f4f7fb;
     --pp-surface: #ffffff;

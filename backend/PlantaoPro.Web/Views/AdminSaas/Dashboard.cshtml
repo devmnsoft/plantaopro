@@ -1,13 +1,47 @@
 @model CommercialDemoPageViewModel
 @{
     ViewData["Title"] = Model.Title;
+    ViewData["Subtitle"] = Model.Subtitle;
 }
-<section class="pp-page-head"><span class="pp-badge">Dashboard</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
-<section class="pp-grid">
-@foreach (var card in Model.Cards)
-{
-    <article class="pp-card"><h2>@card.Title</h2><p>@card.Description</p><a class="btn btn-outline-primary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a></article>
-}
-</section>
-<aside class="pp-card"><h2>Checklist operacional</h2><ul>@foreach (var item in Model.Checklist) { <li>@item</li> }</ul></aside>
-<partial name="_CommercialStyles" />
+<div class="pp-page pp-saas-dashboard">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy">
+            <span class="pp-eyebrow">Administração SaaS</span>
+            <h2>Governança comercial e operacional em um só painel</h2>
+            <p>@Model.Subtitle</p>
+        </div>
+        <div class="pp-hero-actions">
+            <a class="btn btn-outline-primary" asp-controller="Planos" asp-action="Index"><app-icon name="Settings" size="18" /> Ver planos</a>
+            <a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente"><app-icon name="Hospital" size="18" /> Novo cliente</a>
+        </div>
+    </header>
+
+    <section class="pp-section" aria-labelledby="saasModulesTitle">
+        <div class="pp-section-heading"><div><h2 id="saasModulesTitle">Áreas de gestão</h2><p>Acesse dados reais e continue o fluxo necessário.</p></div></div>
+        <div class="pp-clinical-grid">
+            @foreach (var card in Model.Cards)
+            {
+                <article class="pp-action-card">
+                    <span class="pp-icon-surface" aria-hidden="true"><app-icon name="Settings" size="22" /></span>
+                    <h3>@card.Title</h3><p>@card.Description</p>
+                    <div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText <app-icon name="ChevronRight" size="17" /></a></div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="pp-section" aria-labelledby="operationsTitle">
+        <div class="pp-section-heading"><div><h2 id="operationsTitle">Checklist operacional</h2><p>Revise cada frente antes de ampliar a operação do tenant.</p></div><span class="pp-badge">@(Model.Checklist.Count()) frentes</span></div>
+        <div class="pp-checklist-grid">
+            @foreach (var item in Model.Checklist)
+            {
+                <article class="pp-checklist-card">
+                    <div class="pp-checklist-card__head"><span class="pp-icon-surface" aria-hidden="true"><app-icon name="Settings" size="20" /></span><h3>@item</h3></div>
+                    <p>Confira configuração, responsáveis e pendências desta frente.</p>
+                    <div class="pp-progress" aria-label="Revisão pendente"><span style="width: 0"></span></div>
+                    <a class="btn btn-sm btn-outline-primary" asp-controller="Implantacao" asp-action="Index">Revisar configuração</a>
+                </article>
+            }
+        </div>
+    </section>
+</div>

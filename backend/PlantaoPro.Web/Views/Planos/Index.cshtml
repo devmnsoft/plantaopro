@@ -1,13 +1,35 @@
 @model PlantaoPro.Web.Models.PlanosSaasIndexViewModel
 @{
     ViewData["Title"] = "Planos SaaS";
+    ViewData["Subtitle"] = "Catálogo comercial, limites e recursos contratáveis.";
     var planos = Model.Planos.Items ?? Array.Empty<PlantaoPro.Web.Models.PlanoSaasViewModel>();
 }
-<div class="container-fluid py-3">
-    <div class="d-flex justify-content-between align-items-center mb-3"><div><h1 class="h3">Planos SaaS</h1><p class="text-muted">Catálogo comercial, limites e recursos.</p></div><a class="btn btn-primary" asp-action="Create">Novo plano</a></div>
-    <form method="get" class="card card-body mb-3"><div class="row g-2"><div class="col-md-4"><select class="form-select" name="status"><option value="">Todos os status</option><option value="ATIVO" selected="@(Model.Status == "ATIVO")">ATIVO</option><option value="INATIVO" selected="@(Model.Status == "INATIVO")">INATIVO</option><option value="ARQUIVADO" selected="@(Model.Status == "ARQUIVADO")">ARQUIVADO</option></select></div><div class="col-md-4"><button class="btn btn-outline-primary" type="submit">Filtrar</button> <a class="btn btn-outline-secondary" asp-action="Comparativo">Comparativo</a></div></div></form>
-    <div class="row g-3">
-    @if (!planos.Any()) { <div class="col-12"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-layers", "Nenhum plano encontrado", "Cadastre planos SaaS para iniciar assinaturas.", "Novo plano", "Create", "Planos")' /></div> }
-    else { foreach (var item in planos) { <div class="col-md-4"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><h2 class="h5">@item.Nome</h2><span class="badge bg-secondary">@item.Status</span></div><p class="text-muted">@item.Descricao</p><div class="h4">@item.ValorMensal.ToString("C")</div><div class="small">Médicos: @item.LimiteMedicos | Hospitais: @item.LimiteHospitais | Plantões/mês: @item.LimitePlantoesMes</div><div class="mt-2"><span class="badge bg-info">Mobile: @(item.PermiteMobile ? "Sim" : "Não")</span> <span class="badge bg-info">BI: @(item.PermiteBi ? "Sim" : "Não")</span></div></div><div class="card-footer bg-white d-flex gap-2"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Detalhes</a><a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-route-id="@item.Id">Editar</a><a class="btn btn-sm btn-outline-success" asp-action="Recursos" asp-route-id="@item.Id">Recursos</a><form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-message="Alterar status do plano?">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="acao" value="@(item.Status == "ATIVO" ? "INATIVAR" : "REATIVAR")" /><button class="btn btn-sm btn-outline-warning" type="submit">@(item.Status == "ATIVO" ? "Inativar" : "Reativar")</button></form></div></div></div> } }
-    </div>
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Catálogo comercial</span><h2>Planos claros para cada estágio da operação</h2><p>Compare limites, recursos e disponibilidade usando somente os planos cadastrados.</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-action="Comparativo"><app-icon name="Settings" size="18" /> Comparar</a><a class="btn btn-primary" asp-action="Create"><app-icon name="Add" size="18" /> Novo plano</a></div>
+    </header>
+    <form method="get" class="pp-toolbar" aria-label="Filtros de planos">
+        <div class="pp-form-field"><label for="status">Status do plano</label><select class="pp-form-control" id="status" name="status"><option value="">Todos os status</option><option value="ATIVO" selected="@(Model.Status == "ATIVO")">Ativo</option><option value="INATIVO" selected="@(Model.Status == "INATIVO")">Inativo</option><option value="ARQUIVADO" selected="@(Model.Status == "ARQUIVADO")">Arquivado</option></select></div>
+        <button class="btn btn-outline-primary" type="submit">Aplicar filtro</button>
+    </form>
+    <section class="pp-section" aria-labelledby="plansTitle">
+        <div class="pp-section-heading"><div><h2 id="plansTitle">Planos disponíveis</h2><p>Valores e limites refletem o catálogo atual.</p></div></div>
+        @if (!planos.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-layers", "Nenhum plano encontrado", "Cadastre planos SaaS para iniciar assinaturas.", "Novo plano", "Create", "Planos")' /> }
+        else
+        {
+            <div class="pp-plan-grid">
+                @foreach (var item in planos)
+                {
+                    <article class="pp-plan-card" data-active="@(item.Status == "ATIVO" ? "true" : "false")">
+                        <div class="pp-plan-card__heading"><div><span class="pp-eyebrow">Plano</span><h3>@item.Nome</h3></div><span class="pp-badge">@item.Status</span></div>
+                        <p>@item.Descricao</p><div class="pp-plan-price">@item.ValorMensal.ToString("C") <small>/ mês</small></div>
+                        <ul class="pp-feature-list"><li>@item.LimiteMedicos médicos</li><li>@item.LimiteHospitais hospitais</li><li>@item.LimitePlantoesMes plantões por mês</li><li>Aplicativo mobile: @(item.PermiteMobile ? "incluído" : "não incluído")</li><li>BI: @(item.PermiteBi ? "incluído" : "não incluído")</li></ul>
+                        <div class="pp-card-actions"><a class="btn btn-primary" asp-action="Details" asp-route-id="@item.Id">Ver detalhes</a><a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@item.Id">Editar</a><a class="btn btn-outline-secondary" asp-action="Recursos" asp-route-id="@item.Id">Recursos</a></div>
+                        <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-message="Confirma a alteração de status deste plano?">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@item.Id" /><input type="hidden" name="acao" value="@(item.Status == "ATIVO" ? "INATIVAR" : "REATIVAR")" /><button class="btn btn-sm btn-outline-warning" type="submit">@(item.Status == "ATIVO" ? "Inativar plano" : "Reativar plano")</button></form>
+                    </article>
+                }
+            </div>
+        }
+    </section>
 </div>

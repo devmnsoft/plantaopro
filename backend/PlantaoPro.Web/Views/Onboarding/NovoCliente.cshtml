@@ -1,29 +1,53 @@
 @model PlantaoPro.Web.Models.OnboardingClienteViewModel
-@{
-    ViewData["Title"] = "Novo Cliente";
-}
-<div class="container py-4">
-    <h3 class="mb-3"><i class="bi bi-diagram-3 me-2"></i>Wizard de Onboarding</h3>
-    <div class="progress mb-4" role="progressbar"><div class="progress-bar" style="width: 100%">Etapas 1-4</div></div>
-    <form method="post" class="card card-body shadow-sm">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <div class="row g-3">
-            <div class="col-md-6"><label class="form-label">Razão Social</label><input asp-for="RazaoSocial" class="form-control"/></div>
-            <div class="col-md-6"><label class="form-label">Nome Fantasia</label><input asp-for="NomeFantasia" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">CNPJ</label><input asp-for="Cnpj" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">E-mail cliente</label><input asp-for="Email" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">Telefone cliente</label><input asp-for="Telefone" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">Plano (GUID)</label><input asp-for="PlanoId" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">Status</label><select asp-for="Status" class="form-select"><option>ATIVO</option><option>TESTE</option></select></div>
-            <div class="col-md-4"><label class="form-label">Cidade/UF</label><div class="input-group"><input asp-for="Cidade" class="form-control"/><input asp-for="Estado" class="form-control"/></div></div>
-            <div class="col-md-6"><label class="form-label">Unidade</label><input asp-for="UnidadeNome" class="form-control"/></div>
-            <div class="col-md-3"><label class="form-label">Tipo unidade</label><input asp-for="UnidadeTipo" class="form-control"/></div>
-            <div class="col-md-3"><label class="form-label">Resp. unidade</label><input asp-for="UnidadeResponsavel" class="form-control"/></div>
-            <div class="col-md-6"><label class="form-label">Usuário admin</label><input asp-for="UsuarioNome" class="form-control"/></div>
-            <div class="col-md-3"><label class="form-label">E-mail admin</label><input asp-for="UsuarioEmail" class="form-control"/></div>
-            <div class="col-md-3"><label class="form-label">Telefone admin</label><input asp-for="UsuarioTelefone" class="form-control"/></div>
-            <div class="col-md-4"><label class="form-label">Senha temporária</label><input asp-for="UsuarioSenha" type="password" class="form-control"/></div>
+@{ ViewData["Title"] = "Novo cliente"; ViewData["Subtitle"] = "Configure empresa, plano, unidade e administrador inicial."; }
+<div class="pp-page pp-form-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Onboarding SaaS</span><h2>Prepare uma operação segura desde o primeiro acesso</h2><p>Preencha os dados por contexto. Todos os campos obrigatórios serão revisados antes da criação.</p></div>
+        <div class="pp-hero-actions"><a asp-action="Index" class="btn btn-outline-secondary">Cancelar onboarding</a></div>
+    </header>
+    <ol class="pp-stepper" aria-label="Etapas do onboarding">
+        <li data-step="1" aria-current="step">Empresa</li><li data-step="2">Plano</li><li data-step="3">Administrador</li><li data-step="4">Revisão</li><li data-step="5">Conclusão</li>
+    </ol>
+    <form method="post" class="pp-wizard-layout pp-form" novalidate data-focus-invalid>
+        @Html.AntiForgeryToken()
+        <div class="pp-form-card">
+            <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" tabindex="-1"></div>
+            <section class="pp-form-section" aria-labelledby="companySection">
+                <header class="pp-form-section-header"><span class="pp-step">1</span><div><h2 id="companySection">Empresa</h2><p>Dados fiscais e canais de contato do tenant.</p></div></header>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="RazaoSocial">Razão social</label><input asp-for="RazaoSocial" class="pp-form-control" aria-describedby="RazaoSocial-help RazaoSocial-error" /><small id="RazaoSocial-help" class="form-help">Use a denominação registrada no CNPJ.</small><span asp-validation-for="RazaoSocial" id="RazaoSocial-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="NomeFantasia">Nome fantasia</label><input asp-for="NomeFantasia" class="pp-form-control" aria-describedby="NomeFantasia-error" /><span asp-validation-for="NomeFantasia" id="NomeFantasia-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Cnpj">CNPJ</label><input asp-for="Cnpj" class="pp-form-control" inputmode="numeric" aria-describedby="Cnpj-help Cnpj-error" /><small id="Cnpj-help" class="form-help">Informe o CNPJ para criar o tenant.</small><span asp-validation-for="Cnpj" id="Cnpj-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Email">E-mail corporativo</label><input asp-for="Email" class="pp-form-control" autocomplete="organization-email" aria-describedby="Email-error" /><span asp-validation-for="Email" id="Email-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Telefone">Telefone</label><input asp-for="Telefone" class="pp-form-control" inputmode="tel" autocomplete="tel" aria-describedby="Telefone-error" /><span asp-validation-for="Telefone" id="Telefone-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Cidade">Cidade</label><input asp-for="Cidade" class="pp-form-control" autocomplete="address-level2" aria-describedby="Cidade-error" /><span asp-validation-for="Cidade" id="Cidade-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Estado">UF</label><input asp-for="Estado" class="pp-form-control" maxlength="2" autocomplete="address-level1" aria-describedby="Estado-error" /><span asp-validation-for="Estado" id="Estado-error" class="pp-form-error"></span></div>
+                </div>
+            </section>
+            <section class="pp-form-section" aria-labelledby="planSection">
+                <header class="pp-form-section-header"><span class="pp-step">2</span><div><h2 id="planSection">Plano e unidade inicial</h2><p>Vincule o plano contratado e a primeira unidade operacional.</p></div></header>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="PlanoId">Identificador do plano</label><input asp-for="PlanoId" class="pp-form-control" aria-describedby="PlanoId-help PlanoId-error" /><small id="PlanoId-help" class="form-help">Escolha um plano válido do catálogo antes de continuar.</small><span asp-validation-for="PlanoId" id="PlanoId-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Status">Status inicial</label><select asp-for="Status" class="pp-form-control" aria-describedby="Status-help Status-error"><option value="ATIVO">Ativo</option><option value="TESTE">Período de teste</option></select><small id="Status-help" class="form-help">Define a disponibilidade inicial do tenant.</small><span asp-validation-for="Status" id="Status-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UnidadeNome">Nome da unidade</label><input asp-for="UnidadeNome" class="pp-form-control" aria-describedby="UnidadeNome-help UnidadeNome-error" /><small id="UnidadeNome-help" class="form-help">Informe ao menos uma unidade.</small><span asp-validation-for="UnidadeNome" id="UnidadeNome-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UnidadeTipo">Tipo de unidade</label><input asp-for="UnidadeTipo" class="pp-form-control" aria-describedby="UnidadeTipo-error" /><span asp-validation-for="UnidadeTipo" id="UnidadeTipo-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UnidadeCidade">Cidade da unidade</label><input asp-for="UnidadeCidade" class="pp-form-control" aria-describedby="UnidadeCidade-error" /><span asp-validation-for="UnidadeCidade" id="UnidadeCidade-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UnidadeEstado">UF da unidade</label><input asp-for="UnidadeEstado" class="pp-form-control" maxlength="2" aria-describedby="UnidadeEstado-error" /><span asp-validation-for="UnidadeEstado" id="UnidadeEstado-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UnidadeResponsavel">Responsável pela unidade</label><input asp-for="UnidadeResponsavel" class="pp-form-control" aria-describedby="UnidadeResponsavel-help" /><small id="UnidadeResponsavel-help" class="form-help">Opcional; pode ser definido posteriormente.</small></div>
+                </div>
+            </section>
+            <section class="pp-form-section" aria-labelledby="adminSection">
+                <header class="pp-form-section-header"><span class="pp-step">3</span><div><h2 id="adminSection">Administrador inicial</h2><p>Este usuário receberá acesso administrativo ao novo tenant.</p></div></header>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="UsuarioNome">Nome completo</label><input asp-for="UsuarioNome" class="pp-form-control" autocomplete="name" aria-describedby="UsuarioNome-error" /><span asp-validation-for="UsuarioNome" id="UsuarioNome-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UsuarioEmail">E-mail corporativo</label><input asp-for="UsuarioEmail" class="pp-form-control" autocomplete="email" aria-describedby="UsuarioEmail-help UsuarioEmail-error" /><small id="UsuarioEmail-help" class="form-help">O e-mail corporativo será usado para criar o administrador inicial.</small><span asp-validation-for="UsuarioEmail" id="UsuarioEmail-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UsuarioTelefone">Telefone</label><input asp-for="UsuarioTelefone" class="pp-form-control" inputmode="tel" autocomplete="tel" aria-describedby="UsuarioTelefone-error" /><span asp-validation-for="UsuarioTelefone" id="UsuarioTelefone-error" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="UsuarioSenha">Senha temporária</label><input asp-for="UsuarioSenha" type="password" class="pp-form-control" autocomplete="new-password" aria-describedby="UsuarioSenha-help UsuarioSenha-error" /><small id="UsuarioSenha-help" class="form-help">Compartilhe a senha por um canal seguro e solicite a troca no primeiro acesso.</small><span asp-validation-for="UsuarioSenha" id="UsuarioSenha-error" class="pp-form-error"></span></div>
+                </div>
+            </section>
+            <div class="pp-form-actions"><a asp-action="Index" class="btn btn-outline-secondary">Voltar</a><button class="btn btn-primary" type="submit">Revisar e criar cliente</button></div>
         </div>
-        <div class="mt-4 d-flex gap-2"><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a><button class="btn btn-primary" type="submit">Criar cliente</button></div>
+        <aside class="pp-form-card pp-wizard-summary" aria-labelledby="summaryTitle"><span class="pp-eyebrow">Resumo</span><h2 id="summaryTitle">Antes de concluir</h2><ul class="pp-feature-list"><li>Confira o CNPJ e os dados de contato.</li><li>Valide o plano contratado.</li><li>Confirme a unidade inicial.</li><li>Revise o e-mail do administrador.</li></ul><p class="form-help">Nenhum dado de exemplo é preenchido automaticamente.</p></aside>
     </form>
 </div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

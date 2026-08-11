@@ -1,33 +1,22 @@
 @model PlantaoPro.Web.Models.B2BLaunchPageViewModel
-@{
-    ViewData["Title"] = Model.Titulo;
-}
-<div class="container py-4">
-    <div class="d-flex align-items-start justify-content-between gap-3 mb-4">
-        <div>
-            <p class="text-uppercase text-primary fw-semibold mb-1">PlantãoPro White Label B2B</p>
-            <h1 class="h3 mb-2">@Model.Titulo</h1>
-            <p class="text-muted mb-0">@Model.Subtitulo</p>
+@{ ViewData["Title"] = Model.Titulo; ViewData["Subtitle"] = Model.Subtitulo; }
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">PlantãoPro White Label B2B</span><h2>@Model.Titulo</h2><p>@Model.Subtitulo</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-controller="Home" asp-action="Dashboard">Voltar à central</a></div>
+    </header>
+    <section class="pp-section" aria-labelledby="b2bFlowsTitle">
+        <div class="pp-section-heading"><div><h2 id="b2bFlowsTitle">Fluxos de integração</h2><p>Escolha uma área para configurar a operação com segurança.</p></div></div>
+        <div class="pp-clinical-grid">
+            @foreach (var card in Model.Cards)
+            {
+                <article class="pp-action-card">
+                    <div class="pp-card-actions"><span class="pp-badge">@card.Codigo</span><span class="pp-badge pp-badge-success">@card.Status</span></div>
+                    <span class="pp-icon-surface" aria-hidden="true"><app-icon name="Settings" size="22" /></span>
+                    <h3>@card.Titulo</h3><p>@card.Descricao</p>
+                    <div class="pp-card-actions"><a class="btn btn-primary" asp-controller="@card.Controller" asp-action="@card.Acao">Abrir fluxo <app-icon name="ChevronRight" size="17" /></a></div>
+                </article>
+            }
         </div>
-        <a class="btn btn-outline-primary" asp-controller="Home" asp-action="Dashboard">Voltar ao dashboard</a>
-    </div>
-
-    <div class="row g-3">
-        @foreach (var card in Model.Cards)
-        {
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <span class="badge bg-primary-subtle text-primary mb-2">@card.Codigo</span>
-                        <h2 class="h5">@card.Titulo</h2>
-                        <p class="text-muted">@card.Descricao</p>
-                        <span class="badge bg-success">@card.Status</span>
-                    </div>
-                    <div class="card-footer bg-white">
-                        <a class="btn btn-sm btn-primary" asp-controller="@card.Controller" asp-action="@card.Acao">Abrir fluxo</a>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
+    </section>
 </div>

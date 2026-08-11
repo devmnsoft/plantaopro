@@ -139,11 +139,12 @@ jobs:
         run: |
           python3 scripts/generate-scrpt-completo.py
           git diff --exit-code database/scrpt_completo.sql database/scrpt_completo.sha256
-      - name: Run complete script twice
+      - name: Replay complete script three times
         run: |
           mkdir -p artifacts
           psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql 2>&1 | tee artifacts/database-first-run.log
           psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql 2>&1 | tee artifacts/database-second-run.log
+          psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql 2>&1 | tee artifacts/database-third-run.log
           python3 scripts/validate-scrpt-completo.py
       - if: always()
         uses: actions/upload-artifact@v4

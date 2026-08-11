@@ -19,6 +19,21 @@ public class HomologacaoFinalRuntimeContractTests
     }
 
     [Fact]
+    public void WorkflowDotnetCi_DeveReexecutarScriptCompletoTresVezes()
+    {
+        var raiz = RepositoryPathResolver.RepoRoot;
+        var workflow = File.ReadAllText(Path.Combine(raiz, ".github", "workflows", "dotnet-ci.yml"));
+
+        var firstRun = workflow.IndexOf("artifacts/database-first-run.log", StringComparison.Ordinal);
+        var secondRun = workflow.IndexOf("artifacts/database-second-run.log", firstRun + 1, StringComparison.Ordinal);
+        var thirdRun = workflow.IndexOf("artifacts/database-third-run.log", secondRun + 1, StringComparison.Ordinal);
+
+        Assert.True(firstRun >= 0, "O replay deve preservar a evidência da primeira execução.");
+        Assert.True(secondRun > firstRun, "A segunda execução deve ocorrer após a primeira.");
+        Assert.True(thirdRun > secondRun, "A terceira execução deve ocorrer após a segunda.");
+    }
+
+    [Fact]
     public void SmokeApi_DeveValidarHealthSwaggerLoginEEndpointAutenticadoSemLogarToken()
     {
         var raiz = RepositoryPathResolver.RepoRoot;

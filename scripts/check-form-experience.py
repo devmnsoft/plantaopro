@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica o contrato acessível dos formulários críticos e componentes v1.54."""
+"""Verifica formulários críticos e ações operacionais até a v1.57."""
 from pathlib import Path
 import re
 

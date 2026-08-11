@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regressão estática das superfícies SaaS comerciais da v1.55."""
+"""Regressão das superfícies SaaS e centrais operacionais até a v1.57."""
 from pathlib import Path
 import re
 
@@ -18,6 +18,8 @@ functional_surfaces = {
     "Views/Home/Dashboard.cshtml": ("pp-page", "pp-page-hero", "pp-kpi-strip", "_EmptyState", "pp-mobile-card"),
     "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-action-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-page", "pp-plan-grid", "pp-plan-card"),
+    "Views/Plantoes/Index.cshtml": ("_PageIntroduction", "data-detail-open", "pp-mobile-card"),
+    "Views/Escalas/Index.cshtml": ("_PageIntroduction", "data-detail-open", "table-responsive"),
 }
 
 for relative, markers in required.items():

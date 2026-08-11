@@ -1,0 +1,27 @@
+# Diagnóstico v1.57 — fluxos operacionais
+
+## Método
+Auditoria estática das views, controllers, view models, BFFs e JavaScript existentes. Nenhum indicador ou registro foi inventado; todos os resumos de tela continuam derivados dos modelos retornados pela API.
+
+| Área | Tela e funcionalidade existente | Problema UX/visual e ações pobres | Dados disponíveis | Melhoria implementada | Pendência real |
+|---|---|---|---|---|---|
+| Plantões | Lista paginada, filtros, criação, detalhe e duplicação reais | O detalhe exigia troca de página e perdia o recorte | Hospital, cidade/UF, especialidade, período, valor, vagas, status e observações | Drawer canônico com cobertura, período, referência, timeline do estado e rota real para o detalhe; preservados cards mobile | Convites, fechamento e pagamento não compõem o DTO resumido |
+| Escalas | Lista, detalhe e rota de substituição | Muitos gates desabilitados e pouco contexto antes de navegar | Médico/CRM, plantão, hospital, especialidade, período, valor, tipo, status, justificativa e data do registro | Drawer com médico, origem, período, composição, histórico e links reais para escala/plantão | Presença, conflito e pagamento não constam no resumo atual; ações permanecem bloqueadas em vez de simuladas |
+| Fechamentos | Workspace e BFF de fechamentos | Estado vazio; timeline estática | Indicadores do `FechamentoViewModel` | Mantido fluxo real e documentada a lacuna | Lista transacional precisa ser exposta pelo BFF antes de criar ações |
+| Pendências | `MinhaCentral`, kanban, prioridade, activity feed e drawer de `work_items` | Drawer atual tem resumo curto e tratamento parcial de conflito/permissão | Título, descrição, prioridade, status, versão e comentários | Contrato canônico consolidado sem substituir o fluxo transacional existente | Enriquecer resposta de work item com entidade, responsável, prazo e histórico completo |
+| Saúde 360 | Módulo agregado compartilhado por pacientes/agendamentos e jornadas clínicas | Superfície ampla, mas os quantitativos dependem de endpoints existentes | `Saude360PageViewModel` e rotas clínicas reais | Preservada composição sem indicadores artificiais | BFF agregado deve expor tempos médios antes de apresentá-los |
+| Pacientes | Módulo Saúde 360, cadastro, detalhe, histórico e resumo clínico | Listagem não recebe hoje uma projeção longitudinal completa | Dados clínicos e rotas já segmentados | Drawer canônico preparado no shell; nenhuma informação sensível foi duplicada em JavaScript | Criar DTO mínimo mascarado com último atendimento/próximo agendamento |
+| Agendamentos | Agenda, calendário, check-in, detalhe e edição | Variação de telas e ausência de projeção única de próxima ação | Jornada real do módulo Saúde 360 | Mantida navegação real e responsiva | Consolidar status/atraso/sala na projeção da listagem |
+| Triagem | Workspace clínico e regras de jornada | Validação clínica está distribuída | Serviços e regras clínicas existentes | Mantidos gates reais, sem validações inventadas | Formalizar intervalos clínicos por configuração/serviço |
+| Consultas | Atendimento, histórico, resumo, impressão e prescrição vinculável | Contexto fragmentado entre rotas | Modelos clínicos reais | Drawer global disponível sem copiar PHI para logs | Criar projeção segura de histórico resumido para detalhe lateral |
+| Financeiro/Pagamentos | Painéis derivados da página, listas e detalhes | Composição completa só existe no detalhe | Médico/CRM, plantão, valores, datas, forma, status e observações | Padrão do drawer documentado e carregado no shell | Expor ajustes/contestações e timeline em DTO autorizado |
+| Convites | Central por plantão com respostas e rotas para cobertura/plantão | Entrada manual do GUID ainda é fallback | Médico, mensagem, envio/resposta, status e plantão | Seleção pela Central de Escala continua como CTA principal | Endpoint de busca deve eliminar o fallback manual |
+| Relatórios | Biblioteca com rotas implementadas e CSV SaaS | Alguns relatórios permanecem sem fonte e mostram zero estático | Catálogo de rotas e relatório SaaS real | Recursos sem persistência continuam explicitamente indisponíveis | Implementar fontes antes de habilitar exportações restantes |
+| Configurações | Central de conta, segurança, LGPD, integrações e parâmetros | Sem data de última alteração por área | Perfil autenticado e rotas reais | Organização por responsabilidade preservada | Backend precisa fornecer metadado de última atualização |
+| Comando global | Ctrl+K e busca global existentes | Resultados dependem das categorias retornadas pela API | `GlobalSearchController`/serviço | Sem regressão: drawer utiliza o mesmo gerenciamento de overlay e Escape | Ampliar categorias somente quando a busca real as indexar |
+| Notificações | Drawer, filtro e marcação de leitura | Taxonomia ainda usa categorias agregadas | Endpoint e drawer existentes | Mantido feedback `aria-live` e ação real | API deve normalizar os oito tipos solicitados |
+
+## Decisões
+- O `pp-detail-drawer` é único, seguro contra injeção (conteúdo por `textContent`), fecha por Escape, contém foco, devolve foco ao gatilho e vira tela cheia em até 600 px.
+- Apenas Plantões e Escalas foram ligados nesta rodada porque seus DTOs resumidos já oferecem contexto suficiente e rotas de detalhe reais. As demais integrações ficam explicitamente pendentes, evitando CTA falso.
+- Não foram criados mocks, contadores artificiais ou mudanças de regra de negócio.

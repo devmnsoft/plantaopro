@@ -17,7 +17,7 @@
                 <option value="active" selected="@(Context.Request.Query["status"]=="active")">Ativos</option>
             </select>
         </div>
-        <div class="col-md-3"><button class="btn btn-primary w-100">Filtrar</button></div>
+        <div class="col-md-3"><button class="btn btn-primary w-100" type="submit">Filtrar</button></div>
     </form>
 
     @if (!Model.Items.Any())
@@ -49,12 +49,12 @@
                             <form asp-action="Unlock" method="post" class="d-inline" data-confirm="true" data-confirm-title="Desbloquear usuário" data-confirm-message="Confirma desbloquear este usuário?" data-confirm-type="warning">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@item.Id" />
-                                <button class="btn btn-sm btn-warning">Desbloquear</button>
+                                <button class="btn btn-sm btn-warning" type="submit">Desbloquear</button>
                             </form>
                         }
                         else
                         {
-                            <button class="btn btn-sm btn-outline-secondary" disabled title="Usuário já está ativo">Desbloquear</button>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="Usuário já está ativo">Desbloquear</button>
                         }
                     </td>
                 </tr>

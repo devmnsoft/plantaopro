@@ -35,6 +35,14 @@ for marker in (".pp-form-grid", ".pp-form-card", ".pp-form-error", ".pp-form-act
 if 'type="submit"' not in login:
     errors.append("Login sem submit explícito")
 
+# Todo formulário novo ou alterado deve manter feedback resumido quando coleta dados.
+for path in (WEB / "Views").rglob("*.cshtml"):
+    source = path.read_text(encoding="utf-8")
+    if "<form" not in source or "method=\"post\"" not in source:
+        continue
+    if re.search(r"<button(?![^>]*\btype=)[^>]*>", source, re.I):
+        errors.append(f"{path.relative_to(WEB)}: button sem type")
+
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
 print("Form experience v1.54 validada: grid, ajuda, erros e associação acessível presentes.")

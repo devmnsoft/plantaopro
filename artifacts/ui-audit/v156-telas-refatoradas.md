@@ -1,28 +1,30 @@
-# Telas refatoradas na v1.56.0
+# Telas refatoradas e homologadas — v1.56.0
 
-## Saúde 360 e módulos médicos
+## Refatoração desta entrega
 
-`Views/Saude360/Modulo.cshtml` passou de uma combinação dominante de hero/cards Bootstrap para a composição clínica do produto: `pp-page`, `pp-page-hero`, KPIs, tabela operacional e banner LGPD. Pacientes, Agendamentos, Triagem e rotas clínicas que reutilizam esse módulo recebem a mesma hierarquia sem duplicação de CSS.
+### Painel operacional (`Views/Home/Dashboard.cshtml`)
 
-`Views/Agendamentos/AgendaPremium.cshtml` recebeu hero clínico, barra de filtros, resumo de status, grid de cards e tipos explícitos nos botões de ação. Dados continuam vindos do view model; o empty state é mantido quando a API não retorna itens.
+- Substituição da saudação fixa “Administrador” pela identidade autenticada, com fallback neutro.
+- Remoção do plano “Profissional”, lista prescritiva estática e conteúdo comercial que não vinha do backend.
+- Nova hierarquia: resumo operacional, agenda de hoje, riscos de cobertura, operação médica, financeiro e linha do tempo.
+- Indicadores derivados exclusivamente de `DashboardOverviewDto` e de suas coleções.
+- Filtros com labels, ação de limpeza e sem placeholders como substitutos de rótulos.
+- Tabela desktop e cartões mobile para a agenda.
+- Empty states específicos quando agenda, riscos, pagamentos ou notificações não possuem dados.
+- CTAs somente para controllers/actions existentes no produto.
 
-## Operação
+## Superfícies homologadas
 
-`Views/Escalas/Index.cshtml` agora apresenta empty state compartilhado, contêiner de dados com quantidade real, linguagem de presença/pagamento e ações bloqueadas semanticamente tipadas. A interface não afirma conflito, presença ou pagamento que o DTO não fornece.
+Foram revisadas e mantidas as evoluções funcionais existentes em Minha Central, Meu Dia, Agenda, Plantões, Escalas, fechamentos operacionais, Saúde 360, Pacientes, Agendamentos, Triagem, Consultas, Convites, Pagamentos, Financeiro, Relatórios, Configurações, Admin SaaS, Planos e Onboarding. O diagnóstico detalha o contrato encontrado em cada área.
 
-Plantões foi auditada e já continha KPIs calculados da página, status de cobertura, especialidade, período, valor, ações, tabela desktop e cards mobile; não houve reescrita cosmética desnecessária.
+## Gates atualizados
 
-## SaaS
+- `check-layout-regression.py`: amplia o inventário de views críticas e exige adaptação de tabelas operacionais.
+- `check-form-experience.py`: detecta botões sem tipo nos formulários POST das views.
+- `check-feedback-ui.py`: bloqueia novos `!important` e botões exclusivamente icônicos sem nome acessível nos arquivos alterados.
+- `check-saas-ui.py`: valida a composição funcional do dashboard, configurações e planos.
 
-`Views/Onboarding/Index.cshtml` foi migrada de card Bootstrap isolado para hero, CTA, explicação e stepper de cinco etapas. O formulário de novo cliente, Admin SaaS e Planos já tinham composição `pp-*`; foram mantidos e incluídos/fortalecidos nos gates.
+## Pendências reais
 
-## Regressão automatizada
-
-- Layout: valida footer no shell, `pp-content` flexível, composição das views críticas, botões tipados e links não-placeholder.
-- Formulários: onboarding entrou no conjunto crítico, além de login, recuperação, pacientes, agendamentos e plantões.
-- SaaS: a landing de onboarding passou a exigir hero, stepper e seção do design system.
-- Feedback: continua varrendo arquivos alterados contra APIs nativas, `href="#"` e botões sem tipo.
-
-## Pendências honestas
-
-Sem o SDK .NET não houve runtime, login autenticado nem screenshots. Timeline de Escalas, etapa atual da jornada e ações persistidas da Agenda exigem dados/contratos de backend antes de qualquer UI que não seja fictícia.
+- A captura de screenshots não é reproduzível neste container sem o SDK .NET e sem a API autenticada.
+- Totais globais adicionais (convites pendentes, tempo médio assistencial e contestações) exigem extensão dos contratos de API; não foram simulados na view.

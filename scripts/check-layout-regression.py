@@ -42,8 +42,11 @@ for marker in ("data-user-menu", 'role="menu"', "hidden", "aria-expanded"):
         errors.append(f"_UserMenu.cshtml não contém {marker}")
 
 critical_views = (
-    "Views/Agenda/Index.cshtml", "Views/Plantoes/Index.cshtml",
-    "Views/Escalas/Index.cshtml", "Views/Saude360/Modulo.cshtml",
+    "Views/Home/Dashboard.cshtml", "Views/MinhaCentral/Index.cshtml",
+    "Views/MeuDia/Index.cshtml", "Views/Agenda/Index.cshtml",
+    "Views/Plantoes/Index.cshtml", "Views/Escalas/Index.cshtml",
+    "Views/Financeiro/Index.cshtml", "Views/Saude360/Modulo.cshtml",
+    "Views/Relatorios/Index.cshtml", "Views/Configuracoes/Index.cshtml",
     "Views/AdminSaas/Dashboard.cshtml", "Views/Planos/Index.cshtml",
     "Views/Onboarding/NovoCliente.cshtml",
 )
@@ -55,6 +58,15 @@ for relative in critical_views:
         errors.append(f"{relative}: link placeholder href=#")
     if re.search(r"<button(?![^>]*\btype=)[^>]*>", source, re.I):
         errors.append(f"{relative}: button sem type")
+
+responsive_tables = (
+    "Views/Home/Dashboard.cshtml", "Views/Agenda/Index.cshtml",
+    "Views/Plantoes/Index.cshtml", "Views/Escalas/Index.cshtml",
+)
+for relative in responsive_tables:
+    source = (WEB / relative).read_text(encoding="utf-8")
+    if "<table" in source and not any(marker in source for marker in ("table-responsive", "pp-mobile-card")):
+        errors.append(f"{relative}: tabela crítica sem wrapper ou alternativa mobile")
 
 medical_css = (WEB / "wwwroot/css/design-system/v155-medical-experience.css").read_text(encoding="utf-8")
 if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):

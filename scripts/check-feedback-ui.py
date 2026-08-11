@@ -40,6 +40,19 @@ for relative in changed:
     for label, pattern in rules.items():
         if pattern.search(source):
             errors.append(f"{relative}: {label}")
+    if path.suffix == ".cshtml":
+        for match in re.finditer(r"<button\b([^>]*)>\s*<(?:i|app-icon)\b", source, re.I | re.S):
+            attributes = match.group(1)
+            if "aria-label" not in attributes and not re.search(r"</(?:i|app-icon)>\s*\S", source[match.end():match.end() + 120], re.S):
+                errors.append(f"{relative}: botão apenas com ícone sem aria-label")
+
+for css_path in (WEB / "wwwroot/css").rglob("*.css"):
+    relative = str(css_path.relative_to(ROOT))
+    if relative not in changed:
+        continue
+    for number, line in enumerate(css_path.read_text(encoding="utf-8").splitlines(), 1):
+        if "!important" in line:
+            errors.append(f"{relative}:{number}: novo CSS com !important")
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))

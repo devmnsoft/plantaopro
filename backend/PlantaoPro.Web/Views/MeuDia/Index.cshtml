@@ -7,6 +7,7 @@
                      .ThenBy(x => x.DueAt ?? DateTimeOffset.MaxValue).ToArray();
   var next = ordered.FirstOrDefault();
 }
+<div class="pp-page">
 <section class="day-command-hero" aria-labelledby="meuDiaTitle">
   <div><span class="pp-section-kicker">Central pessoal · @now.ToString("dddd, dd 'de' MMMM")</span><h1 id="meuDiaTitle">O que precisa da sua atenção agora</h1><p>Prioridades calculadas a partir das pendências reais atribuídas à sua operação.</p></div>
   <div class="day-command-hero__signal" role="status"><strong>@(Model?.Summary.Open ?? 0)</strong><span>itens em aberto</span></div>
@@ -43,5 +44,6 @@ else
   </div>
 }
 <partial name="~/Views/MinhaCentral/_WorkItemDrawer.cshtml" />
+</div>
 @section Styles { <link rel="stylesheet" href="~/css/pages/meu-dia.css" asp-append-version="true" /> }
 @section Scripts { <script type="module" src="~/js/pages/meu-dia.js" asp-append-version="true"></script> }

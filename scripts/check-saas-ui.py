@@ -14,6 +14,12 @@ required = {
     "Views/Onboarding/Index.cshtml": ("pp-page-hero", "pp-stepper", "pp-section"),
 }
 
+functional_surfaces = {
+    "Views/Home/Dashboard.cshtml": ("pp-page", "pp-page-hero", "pp-kpi-strip", "_EmptyState", "pp-mobile-card"),
+    "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-action-grid", "pp-action-card"),
+    "Views/Planos/Index.cshtml": ("pp-page", "pp-plan-grid", "pp-plan-card"),
+}
+
 for relative, markers in required.items():
     text = (WEB / relative).read_text(encoding="utf-8")
     for marker in markers:
@@ -26,6 +32,12 @@ for relative, markers in required.items():
     for match in re.finditer(r"<button\b([^>]*)>", text, re.I | re.S):
         if not re.search(r"\btype\s*=", match.group(1), re.I):
             errors.append(f"{relative}: button sem type")
+
+for relative, markers in functional_surfaces.items():
+    text = (WEB / relative).read_text(encoding="utf-8")
+    for marker in markers:
+        if marker not in text:
+            errors.append(f"{relative}: superfície funcional ausente: {marker}")
 
 plans = (WEB / "Views/Planos/Index.cshtml").read_text(encoding="utf-8")
 if "Model.Planos.Items" not in plans:

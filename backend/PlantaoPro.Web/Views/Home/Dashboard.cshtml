@@ -1,162 +1,86 @@
 @model DashboardOverviewDto
 @using PlantaoPro.Web.Security
 @{
-    ViewData["Title"] = "Visão Geral Saúde 360";
-    var i = Model?.Indicadores;
-    var proximos = Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>();
-    var porEspecialidade = Model?.PlantoesPorEspecialidade ?? Enumerable.Empty<DashboardChartItem>();
-    var porHospital = Model?.PlantoesPorHospital ?? Enumerable.Empty<DashboardChartItem>();
-    var notificacoes = Model?.UltimasNotificacoes ?? Enumerable.Empty<NotificacaoDto>();
-
-    var isAdmin = User.IsAdmin();
-    var isCoord = User.IsCoordenacao();
-    var isMed = User.IsMedico();
-    var isFin = User.IsFinanceiro();
-    var isHosp = User.IsHospital();
-
-    var perfilLabel = isAdmin ? "Admin" : isCoord ? "Coordenação" : isMed ? "Médico" : isFin ? "Financeiro" : isHosp ? "Hospital" : "Operacional";
-    var tituloVisao = isMed ? "Minha Agenda" : isFin ? "KPIs Financeiros" : isHosp ? "Visão da Unidade" : "Visão Operacional";
-    var queryInicio = Context.Request.Query["inicio"].ToString();
-    var queryFim = Context.Request.Query["fim"].ToString();
-    var queryHospital = Context.Request.Query["hospital"].ToString();
-    var queryEspecialidade = Context.Request.Query["especialidade"].ToString();
+    ViewData["Title"] = "Painel operacional";
+    var indicadores = Model?.Indicadores;
+    var plantoes = (Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>()).OrderBy(x => x.DataInicio).ToArray();
+    var pagamentos = (Model?.UltimosPagamentos ?? Enumerable.Empty<PagamentoResumoDto>()).ToArray();
+    var notificacoes = (Model?.UltimasNotificacoes ?? Enumerable.Empty<NotificacaoDto>()).ToArray();
+    var agora = DateTime.Now;
+    var agendaHoje = plantoes.Where(x => x.DataInicio.Date == agora.Date).ToArray();
+    var riscosCobertura = plantoes.Where(x => x.DataInicio >= agora && x.VagasDisponiveis > 0).ToArray();
+    var nome = User.Identity?.Name;
+    var perfil = User.IsAdmin() ? "Administração" : User.IsCoordenacao() ? "Coordenação" : User.IsMedico() ? "Médico" : User.IsFinanceiro() ? "Financeiro" : User.IsHospital() ? "Unidade hospitalar" : "Operação";
 }
 
-<div class="page-header mb-4 d-flex flex-wrap justify-content-between gap-3 align-items-start">
-    <div>
-        <img src="~/branding/logo-horizontal-dark.svg" class="dashboard-brand mb-2" alt="PlantãoPro" />
-        <h2 class="page-title">Olá, Administrador. Veja o resumo da sua operação hoje.</h2>
-        <p class="page-subtitle mb-0">PlantãoPro Saúde 360 centraliza atendimento, plantões, financeiro, convênios, relatórios e gestão SaaS em uma jornada pronta para demonstração comercial.</p>
-    </div>
-    <div class="d-flex gap-2 align-items-center flex-wrap">
-        <span class="badge text-bg-light border">Perfil: @perfilLabel</span>
-        <a asp-controller="ClinicaDashboard" asp-action="FluxoAtendimento" class="btn btn-primary btn-sm"><i class="bi bi-signpost-2 me-1"></i>Iniciar jornada guiada</a>
-        <a asp-controller="MinhaAssinatura" asp-action="Upgrade" class="btn btn-outline-warning btn-sm"><i class="bi bi-rocket-takeoff me-1"></i>Upgrade</a>
-    </div>
-</div>
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body py-3">
-        <form class="row g-2" method="get" asp-controller="Home" asp-action="Dashboard">
-            <div class="col-12 col-md-3"><input type="date" name="inicio" value="@queryInicio" class="form-control form-control-sm" aria-label="Início" /></div>
-            <div class="col-12 col-md-3"><input type="date" name="fim" value="@queryFim" class="form-control form-control-sm" aria-label="Fim" /></div>
-            <div class="col-12 col-md-3"><input type="text" name="hospital" value="@queryHospital" class="form-control form-control-sm" placeholder="Hospital" /></div>
-            <div class="col-12 col-md-3"><input type="text" name="especialidade" value="@queryEspecialidade" class="form-control form-control-sm" placeholder="Especialidade" /></div>
-            <div class="col-12 col-md-3 d-grid"><button type="submit" class="btn btn-outline-primary btn-sm">Aplicar filtros</button></div>
-            <div class="col-12 col-md-3 d-grid"><a asp-action="Dashboard" class="btn btn-light btn-sm">Limpar</a></div>
-        </form>
-    </div>
-</div>
-
-
-<div class="row g-3 mb-4">
-@foreach (var a in new[] {
-("Cadastrar paciente","Pacientes","Create","bi-person-plus","Cadastre ou localize o paciente antes de iniciar o atendimento."),
-("Criar agendamento","Agendamentos","Create","bi-calendar2-plus","Agende consulta, retorno, procedimento ou encaixe."),
-("Fazer check-in","Agendamentos","CheckIn","bi-person-check","Confirme a chegada do paciente."),
-("Abrir painel","PainelChamada","Index","bi-megaphone","Chame para sala, guichê ou triagem."),
-("Realizar triagem","Triagem","Create","bi-clipboard2-pulse","Classifique risco e sinais vitais."),
-("Iniciar consulta","Consultas","Atendimento","bi-journal-medical","Registre atendimento e conduta."),
-("Emitir prescrição","Prescricoes","Create","bi-capsule","Gere prescrição auditável."),
-("Receber pagamento","ClinicaFinanceiro","Receber","bi-cash-coin","Finalize cobrança particular ou coparticipação.")
-})
-{
-    <div class="col-12 col-md-6 col-xl-3"><a asp-controller="@a.Item2" asp-action="@a.Item3" class="card border-0 shadow-sm h-100 text-decoration-none text-reset"><div class="card-body"><div class="d-flex align-items-start gap-3"><div class="kpi-icon"><i class="bi @a.Item4"></i></div><div><strong>@a.Item1</strong><p class="text-muted small mb-0">@a.Item5</p></div></div></div></a></div>
-}
-</div>
-
-<div class="row g-3 mb-4">
-    <div class="col-lg-7"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white"><strong>O que fazer agora?</strong></div><div class="card-body"><ol class="mb-0"><li>Verificar pacientes aguardando e realizar chamadas pendentes.</li><li>Finalizar triagens em aberto antes de iniciar novas consultas.</li><li>Conferir pagamentos e autorizações pendentes do dia.</li></ol></div></div></div>
-    <div class="col-lg-5"><div class="card border-0 shadow-sm h-100"><div class="card-header bg-white d-flex justify-content-between"><strong>Plano atual</strong><span class="badge text-bg-primary">Profissional</span></div><div class="card-body"><p class="mb-2">Recursos liberados: atendimento, plantões, financeiro, CID e prescrições.</p><p class="text-muted small mb-3">Premium: convênios avançados, BI SaaS e white label completo.</p><a asp-controller="MinhaAssinatura" asp-action="Upgrade" class="btn btn-warning btn-sm">Ver upgrade</a></div></div></div>
-</div>
-
-<div class="row g-3 mb-4 kpi-grid">
-@foreach (var m in new[] {
-("Plantões",(i?.TotalPlantoes ?? 0).ToString(),"bi-calendar2-week"),
-("Confirmados",(i?.PlantoesConfirmados ?? 0).ToString(),"bi-check2-circle"),
-("Pendentes",(i?.PagamentosPendentes ?? 0).ToString(),"bi-cash"),
-("Notificações",(i?.NotificacoesNaoLidas ?? 0).ToString(),"bi-bell")
-})
-{
-    <div class="col-6 col-lg-3"><div class="metric-card h-100"><div class="kpi-icon"><i class="bi @m.Item3"></i></div><div class="kpi-title">@m.Item1</div><div class="metric-value">@m.Item2</div></div></div>
-}
-</div>
-
-@if ((i?.PagamentosPendentes ?? 0) > 0 || (i?.NotificacoesNaoLidas ?? 0) > 0)
-{
-    <div class="alert alert-warning border-0 shadow-sm">
-        <div class="d-flex align-items-start gap-2">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <div>
-                <strong>Ações críticas detectadas.</strong>
-                Há @(i?.PagamentosPendentes ?? 0) pagamentos pendentes e @(i?.NotificacoesNaoLidas ?? 0) notificações não lidas.
-            </div>
+<div class="pp-page pp-dashboard-workspace">
+    <header class="pp-page-hero" aria-labelledby="dashboard-title">
+        <div class="pp-page-hero__copy">
+            <span class="pp-eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> @perfil · @agora.ToString("dd 'de' MMMM")</span>
+            <h1 id="dashboard-title">@(string.IsNullOrWhiteSpace(nome) ? "Visão operacional do dia" : $"Olá, {nome}. Veja sua operação hoje.")</h1>
+            <p>Priorize coberturas, agenda e financeiro com indicadores retornados pela operação.</p>
         </div>
-    </div>
-}
+        <div class="pp-hero-actions">
+            <a asp-controller="MeuDia" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-list-check" aria-hidden="true"></i> Abrir Meu Dia</a>
+            <a asp-controller="Agenda" asp-action="Index" class="btn btn-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> Ver agenda</a>
+        </div>
+    </header>
 
-<div class="row g-3">
-    <div class="col-12 col-xxl-8">
-        <div class="data-card card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <strong>@(isMed ? "Minha Agenda" : "Próximos plantões e escalas")</strong>
-                <span class="badge text-bg-light border">Atualizado agora</span>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-modern"><thead><tr><th>Hospital</th><th>Especialidade</th><th>Início</th><th>Status</th></tr></thead><tbody>
-                @if(proximos.Any())
-                {
-                    foreach(var p in proximos.Take(8))
-                    {
-                        <tr><td>@(p.HospitalNome ?? "—")</td><td>@(p.EspecialidadeNome ?? "—")</td><td>@p.DataInicio.ToString("dd/MM/yyyy HH:mm")</td><td><partial name="_StatusBadge" model="p.Status" /></td></tr>
-                    }
-                }
-                else
-                { <tr><td colspan="4"><div class="empty-state">Nenhum plantão encontrado no período selecionado.</div></td></tr> }
-                </tbody></table>
-            </div>
+    <form class="pp-filter-bar" method="get" asp-action="Dashboard" role="search" aria-label="Filtros do painel operacional">
+        <div class="pp-filter-bar__heading"><div><span class="pp-section-kicker">Período e contexto</span><h2 class="h6 mb-0">Refine os indicadores</h2></div><a asp-action="Dashboard" class="btn btn-sm btn-link">Limpar filtros</a></div>
+        <div class="pp-filter-grid">
+            <div><label for="inicio" class="form-label">Data inicial</label><input id="inicio" type="date" name="inicio" value="@Context.Request.Query["inicio"]" class="form-control" /></div>
+            <div><label for="fim" class="form-label">Data final</label><input id="fim" type="date" name="fim" value="@Context.Request.Query["fim"]" class="form-control" /></div>
+            <div><label for="hospital" class="form-label">Hospital</label><input id="hospital" name="hospital" value="@Context.Request.Query["hospital"]" class="form-control" placeholder="Nome do hospital" /></div>
+            <div><label for="especialidade" class="form-label">Especialidade</label><input id="especialidade" name="especialidade" value="@Context.Request.Query["especialidade"]" class="form-control" placeholder="Nome da especialidade" /></div>
         </div>
+        <div class="pp-filter-bar__actions"><button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Aplicar filtros</button></div>
+    </form>
+
+    <section class="pp-section" aria-labelledby="resumo-title">
+        <div class="pp-section-heading"><div><h2 id="resumo-title">Resumo operacional</h2><p>Dados consolidados para o recorte selecionado.</p></div></div>
+        <div class="pp-kpi-strip">
+            <article class="pp-kpi-card"><span>Plantões</span><strong>@(indicadores?.TotalPlantoes ?? 0)</strong><small>@(indicadores?.PlantoesConfirmados ?? 0) confirmados</small></article>
+            <article class="pp-kpi-card pp-kpi-card--warning"><span>Pagamentos pendentes</span><strong>@(indicadores?.PagamentosPendentes ?? 0)</strong><small>@((indicadores?.ValorPendente ?? 0).ToString("C")) previstos</small></article>
+            <article class="pp-kpi-card @(riscosCobertura.Any() ? "pp-kpi-card--danger" : "")"><span>Coberturas em risco</span><strong>@riscosCobertura.Length</strong><small>entre os próximos plantões</small></article>
+            <article class="pp-kpi-card"><span>Agenda de hoje</span><strong>@agendaHoje.Length</strong><small>eventos retornados</small></article>
+        </div>
+    </section>
+
+    <div class="row g-4">
+        <section class="col-12 col-xl-8" aria-labelledby="agenda-title">
+            <div class="pp-section h-100"><div class="pp-section-heading"><div><h2 id="agenda-title">Agenda de hoje</h2><p>Plantões ordenados pelo próximo horário.</p></div><a asp-controller="Agenda" asp-action="Index" class="btn btn-sm btn-outline-primary">Agenda completa</a></div>
+            @if (!agendaHoje.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-check", "Nenhum plantão na agenda de hoje", "Não há plantões retornados para hoje. Consulte a agenda completa ou ajuste o período.", "Abrir agenda", "Index", "Agenda")' /> }
+            else {
+                <div class="pp-data-table d-none d-md-block"><div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">Plantões de hoje</caption><thead><tr><th>Horário</th><th>Hospital</th><th>Especialidade</th><th>Cobertura</th><th>Status</th><th></th></tr></thead><tbody>
+                @foreach (var item in agendaHoje) { <tr><td><strong>@item.DataInicio.ToString("HH:mm")</strong><small>até @item.DataFim.ToString("HH:mm")</small></td><td>@item.HospitalNome</td><td>@item.EspecialidadeNome</td><td>@(item.Vagas - item.VagasDisponiveis)/@item.Vagas</td><td><partial name="_StatusBadge" model="item.Status" /></td><td><a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Abrir</a></td></tr> }
+                </tbody></table></div></div>
+                <div class="pp-mobile-card-list d-md-none">@foreach (var item in agendaHoje) { <article class="pp-operational-card"><header><div><span class="pp-section-kicker">@item.DataInicio.ToString("HH:mm")–@item.DataFim.ToString("HH:mm")</span><h3>@item.HospitalNome</h3><p>@item.EspecialidadeNome</p></div><partial name="_StatusBadge" model="item.Status" /></header><dl><div><dt>Cobertura</dt><dd>@(item.Vagas - item.VagasDisponiveis)/@item.Vagas</dd></div><div><dt>Valor</dt><dd>@item.Valor.ToString("C")</dd></div></dl><footer><a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary w-100">Abrir plantão</a></footer></article> }</div>
+            }</div>
+        </section>
+
+        <section class="col-12 col-xl-4" aria-labelledby="risco-title">
+            <div class="pp-section h-100"><div class="pp-section-heading"><div><h2 id="risco-title">Riscos e pendências</h2><p>Próximas coberturas incompletas.</p></div></div>
+            @if (!riscosCobertura.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-shield-check", "Nenhum risco de cobertura identificado", "Os próximos plantões retornados não possuem vagas pendentes.")' /> }
+            else { <div class="pp-stack-list">@foreach (var item in riscosCobertura.Take(5)) { <article class="pp-stack-item"><div><span class="pp-section-kicker">@item.DataInicio.ToString("dd/MM HH:mm")</span><h3 class="h6">@item.HospitalNome</h3><p class="mb-0">@item.VagasDisponiveis vaga(s) · @item.EspecialidadeNome</p></div><a asp-controller="Plantoes" asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Resolver</a></article> }</div> }
+            </div>
+        </section>
     </div>
-    <div class="col-12 col-xxl-4">
-        <div class="data-card card h-100">
-            <div class="card-header"><strong>@(isFin ? "KPIs Financeiros" : isHosp ? "Visão da Unidade" : "Distribuição")</strong></div>
-            <div class="card-body">
-                @if(isFin)
-                {
-                    <ul class="list-group list-group-flush"><li class="list-group-item d-flex justify-content-between"><span>Valor pendente</span><strong>@(i?.ValorPendente ?? 0).ToString("C")</strong></li><li class="list-group-item d-flex justify-content-between"><span>Pago no mês</span><strong>@(i?.ValorPagoMes ?? 0).ToString("C")</strong></li></ul>
-                }
-                else if(isHosp && porHospital.Any())
-                {
-                    foreach(var it in porHospital.Take(6)){<div class="d-flex justify-content-between border-bottom py-1"><span>@it.Label</span><strong>@it.Valor</strong></div>}
-                }
-                else if(porEspecialidade.Any())
-                {
-                    foreach(var it in porEspecialidade.Take(6)){<div class="mb-2"><div class="d-flex justify-content-between"><span>@it.Label</span><span>@it.Valor</span></div><div class="progress"><div class="progress-bar" style="width:@(Math.Min(it.Valor*10,100))%"></div></div></div>}
-                }
-                else
-                { <div class="empty-state">Sem dados no período.</div> }
-            </div>
+
+    <section class="pp-section" aria-labelledby="atalhos-title">
+        <div class="pp-section-heading"><div><h2 id="atalhos-title">Operação médica</h2><p>Ações disponíveis nos módulos reais da jornada.</p></div></div>
+        <div class="pp-action-grid">
+            <a class="pp-action-card" asp-controller="Plantoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><h3>Plantões</h3><p>Planeje publicação, cobertura e acompanhamento.</p><span class="pp-action-card__meta">Abrir central <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+            <a class="pp-action-card" asp-controller="MinhaCentral" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-kanban" aria-hidden="true"></i></span><h3>Pendências</h3><p>Priorize os itens reais atribuídos à operação.</p><span class="pp-action-card__meta">Abrir central <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+            <a class="pp-action-card" asp-controller="Saude360" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span><h3>Saúde 360</h3><p>Acompanhe a jornada assistencial de ponta a ponta.</p><span class="pp-action-card__meta">Abrir jornada <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+            <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span><h3>Financeiro</h3><p>Confira composição, pendências e pagamentos.</p><span class="pp-action-card__meta">Abrir financeiro <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
         </div>
+    </section>
+
+    <div class="row g-4">
+        <section class="col-12 col-lg-6" aria-labelledby="financeiro-title"><div class="pp-section h-100"><div class="pp-section-heading"><div><h2 id="financeiro-title">Movimentação financeira</h2><p>Últimos pagamentos retornados.</p></div><a asp-controller="Financeiro" asp-action="Index" class="btn btn-sm btn-outline-primary">Ver todos</a></div>
+        @if (!pagamentos.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Nenhuma movimentação financeira", "Não há pagamentos disponíveis no recorte atual.")' /> } else { <div class="pp-stack-list">@foreach (var item in pagamentos.Take(5)) { <article class="pp-stack-item"><div><strong>@item.MedicoNome</strong><p class="mb-0">@item.HospitalNome · @item.DataPlantao.ToString("dd/MM")</p></div><div class="text-end"><strong>@item.ValorPrevisto.ToString("C")</strong><br /><partial name="_StatusBadge" model="item.Status" /></div></article> }</div> }</div></section>
+        <section class="col-12 col-lg-6" aria-labelledby="timeline-title"><div class="pp-section h-100"><div class="pp-section-heading"><div><h2 id="timeline-title">Linha do tempo operacional</h2><p>Notificações recentes da sua operação.</p></div><a asp-controller="Notificacoes" asp-action="Index" class="btn btn-sm btn-outline-primary">Ver todas</a></div>
+        @if (!notificacoes.Any()) { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bell-slash", "Nenhuma atualização recente", "Novas movimentações da operação aparecerão aqui.")' /> } else { <ol class="pp-timeline">@foreach (var item in notificacoes.Take(5)) { <li><span aria-hidden="true"></span><div><div class="d-flex justify-content-between gap-2"><strong>@item.Titulo</strong><time datetime="@item.RegDate.ToString("O")">@item.RegDate.ToString("dd/MM HH:mm")</time></div><p>@item.Mensagem</p><small>@(item.Lida ? "Lida" : "Não lida")</small></div></li> }</ol> }</div></section>
     </div>
 </div>
-
-<div class="row g-3 mt-1">
-    <div class="col-12 col-xl-7"><div class="data-card card"><div class="card-header"><strong>Resumo visual da semana</strong></div><div class="card-body"><canvas id="kpiChart" height="100"></canvas></div></div></div>
-    <div class="col-12 col-xl-5"><div class="data-card card"><div class="card-header d-flex justify-content-between"><strong>Notificações in-app</strong><a asp-controller="Notificacoes" asp-action="Index" class="small">Ver todas</a></div><div class="card-body">
-        @if(notificacoes.Any()){
-            foreach(var n in notificacoes.Take(5)){<div class="border-bottom py-2"><div class="d-flex justify-content-between"><strong>@n.Titulo</strong><span class="badge @(n.Lida ? "text-bg-light" : "text-bg-warning")">@(n.Lida ? "Lida" : "Nova")</span></div><div class="text-muted small">@n.Mensagem</div></div>}
-        } else { <div class="empty-state">Sem notificações recentes.</div> }
-    </div></div></div>
-</div>
-
-@section Scripts{
-<script>
-document.addEventListener("DOMContentLoaded",()=>{
-  if(!window.Chart) return;
-  const ctx=document.getElementById("kpiChart");
-  if(!ctx) return;
-  const labels=[@Html.Raw(string.Join(",", (Model?.PlantoesPorMes ?? Enumerable.Empty<DashboardChartItem>()).Select(x=>$"\"{x.Label}\"")))];
-  const values=[@Html.Raw(string.Join(",", (Model?.PlantoesPorMes ?? Enumerable.Empty<DashboardChartItem>()).Select(x=>x.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture))))];
-  new Chart(ctx,{type:"bar",data:{labels:labels.length?labels:["Sem dados"],datasets:[{label:"Plantões por mês",data:values.length?values:[0],borderRadius:8,backgroundColor:"#155eef"}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}});
-});
-</script>
-}

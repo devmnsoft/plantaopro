@@ -12,7 +12,7 @@
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
     string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
-<aside class="app-sidebar" id="appSidebar" aria-label="Navegação principal">
+<aside class="pp-sidebar app-sidebar" id="appSidebar" aria-label="Navegação principal">
     <header class="sidebar-brand">
         <a asp-controller="MinhaCentral" asp-action="Index" class="sidebar-logo" aria-label="PlantãoPro — início"><img class="brand-logo" src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
         <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><app-icon name="Menu" size="18" /></button>
@@ -59,5 +59,5 @@
             <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
         }
     </nav>
-    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>Central de ajuda</span></a><a class="nav-link-app" asp-controller="Lgpd" asp-action="Index"><app-icon name="Lock" size="19" /><span>Privacidade e LGPD</span></a><span class="sidebar-version">PlantãoPro v1.51 · operação segura</span></footer>
+    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>Central de ajuda</span></a><a class="nav-link-app" asp-controller="Lgpd" asp-action="Index"><app-icon name="Lock" size="19" /><span>Privacidade e LGPD</span></a><span class="sidebar-version">PlantãoPro v1.55 · operação segura</span></footer>
 </aside>

@@ -22,9 +22,9 @@
     @if (isAuthenticated)
     {
         <partial name="_ImpersonationBanner" />
-        <div class="pp-app app-shell">
+        <div class="pp-app-shell" data-app-shell="true">
             <partial name="_AppSidebar" />
-            <section class="pp-main app-main" data-app-shell="true">
+            <div class="pp-main-shell">
                 <partial name="_AppTopbar" />
                 <main class="pp-content app-content" id="mainContent" tabindex="-1">
                     <partial name="_ToastMessages" />
@@ -32,7 +32,7 @@
                     @RenderBody()
                 </main>
                 <partial name="_AppFooter" />
-            </section>
+            </div>
         </div>
         <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="Fechar menu" tabindex="-1"></button>
         <partial name="_MobileNavigation" />
@@ -52,6 +52,7 @@
     <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
     <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>
     <script src="~/js/form-experience.js" asp-append-version="true"></script>
+    <script src="~/js/v155-medical-ui.js" asp-append-version="true"></script>
     @if (isAuthenticated)
     {
         <script src="~/js/command-palette.js" asp-append-version="true"></script>

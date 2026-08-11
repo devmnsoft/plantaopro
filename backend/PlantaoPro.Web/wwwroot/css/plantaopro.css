@@ -27,29 +27,4 @@
 @import url('./design-system/v154-forms-feedback.css');
 @import url('./design-system/v154-clinical-pages.css');
 @import url('./pages/saude360-journey.css');
-
-/* Visual Experience 3.0 — autenticação com narrativa e formulário contextual. */
-.auth-experience .login-card-modern {
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
-  max-width: 1120px;
-  margin-inline: auto;
-  padding: 0;
-  overflow: hidden;
-}
-.auth-story {
-  padding: clamp(2rem, 5vw, 4rem);
-  color: #eaf4ff;
-  background: radial-gradient(circle at 80% 10%, #1f73f1 0, transparent 34%), #0b2a52;
-}
-.auth-story > img:first-child { max-width: 300px; height: auto; }
-.auth-story h1 { max-width: 16ch; margin-top: 2.5rem; font-size: clamp(2rem, 4vw, 3.25rem); }
-.auth-story p { max-width: 54ch; color: #c8def7; }
-.auth-illustration { display: block; width: 100%; height: auto; margin-top: 2rem; }
-.auth-form-panel { align-self: center; padding: clamp(2rem, 5vw, 4rem); }
-@media (max-width: 767px) {
-  .auth-experience .login-card-modern { grid-template-columns: 1fr; }
-  .auth-story { padding: 2rem; }
-  .auth-story h1 { margin-top: 1.5rem; font-size: 2rem; }
-  .auth-illustration { max-height: 190px; }
-}
+@import url('./design-system/v155-medical-experience.css');

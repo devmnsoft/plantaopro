@@ -1,13 +1,15 @@
-<div class="dropdown pp-user-menu user-menu">
-    <button class="pp-user-menu__trigger user-pill dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="menu">
+@{ var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global"; }
+<div class="pp-user-menu" data-user-menu>
+    <button class="pp-user-menu__trigger" type="button" data-user-menu-trigger aria-controls="userMenuDropdown" aria-expanded="false" aria-haspopup="menu">
         <span class="user-avatar" aria-hidden="true"><app-icon name="User" size="20" /></span>
         <span class="user-info"><span class="user-name">@(User.Identity?.Name ?? "Usuário")</span><small>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Perfil")</small></span>
         <app-icon name="ChevronDown" size="16" />
     </button>
-    <ul class="pp-user-menu__dropdown dropdown-menu dropdown-menu-end" role="menu">
-        <li role="none"><a class="dropdown-item" role="menuitem" asp-controller="Configuracoes" asp-action="MeuPerfil"><app-icon name="User" size="18" /> Meu perfil</a></li>
-        <li role="none"><a class="dropdown-item" role="menuitem" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="18" /> Configurações</a></li>
-        <li class="pp-user-menu__divider" role="separator"></li>
-        <li role="none"><a class="dropdown-item pp-user-menu__logout" role="menuitem" asp-controller="Account" asp-action="Logout"><app-icon name="Logout" size="18" /> Sair</a></li>
-    </ul>
+    <div class="pp-user-menu__dropdown" id="userMenuDropdown" role="menu" hidden>
+        <div class="pp-user-menu__summary"><strong>@(User.Identity?.Name ?? "Usuário")</strong><span>@tenantName</span></div>
+        <a role="menuitem" asp-controller="Configuracoes" asp-action="MeuPerfil"><app-icon name="User" size="18" /> Meu perfil</a>
+        <a role="menuitem" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="18" /> Configurações</a>
+        <div class="pp-user-menu__divider" role="separator"></div>
+        <a class="pp-user-menu__logout" role="menuitem" asp-controller="Account" asp-action="Logout"><app-icon name="Logout" size="18" /> Sair</a>
+    </div>
 </div>

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell v1.55; evita regressões de navegação e acessibilidade."""
+"""Gate estrutural do shell v1.55 e overlays operacionais v1.57."""
 from pathlib import Path
 import re
 
@@ -11,6 +11,9 @@ layout = (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8")
 for marker in ("pp-app-shell", "pp-main-shell", "pp-content"):
     if marker not in layout:
         errors.append(f"_Layout.cshtml não contém {marker}")
+for marker in ('_DetailDrawer', 'detail-drawer.js'):
+    if marker not in layout:
+        errors.append(f"_Layout.cshtml não carrega {marker}")
 if "pp-footer" not in (WEB / "Views/Shared/_AppFooter.cshtml").read_text(encoding="utf-8"):
     errors.append("_AppFooter.cshtml não contém pp-footer")
 main_start = layout.find('class="pp-main-shell"')

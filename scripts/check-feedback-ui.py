@@ -10,6 +10,7 @@ files = {
     "modal": WEB / "Views/Shared/_ConfirmModal.cshtml",
     "toast": WEB / "Views/Shared/_ToastRegion.cshtml",
     "ui": WEB / "wwwroot/js/plantaopro-ui.js",
+    "detail_drawer": WEB / "wwwroot/js/detail-drawer.js",
 }
 texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
 errors: list[str] = []

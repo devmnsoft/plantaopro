@@ -11,6 +11,7 @@ required = {
     "Views/B2BLaunch/Index.cshtml": ("pp-page-hero", "pp-clinical-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-plan-grid", "pp-plan-card", "pp-feature-list"),
     "Views/Onboarding/NovoCliente.cshtml": ("pp-stepper", "pp-wizard-layout", "pp-form-grid", "asp-validation-summary"),
+    "Views/Onboarding/Index.cshtml": ("pp-page-hero", "pp-stepper", "pp-section"),
 }
 
 for relative, markers in required.items():

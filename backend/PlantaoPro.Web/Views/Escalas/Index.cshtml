@@ -13,15 +13,11 @@
 
 @if (!items.Any())
 {
-    <div class="empty-state">
-        <i class="bi bi-calendar2-x"></i>
-        <h5>Sem escalas</h5>
-        <p>Nenhuma escala encontrada para os filtros atuais.</p>
-    </div>
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Sem escalas", "Nenhuma escala real foi encontrada para os filtros atuais.")' />
 }
 else
 {
-    <div class="table-responsive">
+    <section class="pp-data-table" aria-labelledby="scaleTableTitle"><div class="pp-section-heading"><div><span class="pp-section-kicker">Cobertura e presença</span><h2 id="scaleTableTitle">Escalas encontradas</h2></div><span class="pp-badge">@items.Count() resultados</span></div><div class="table-responsive">
         <table class="table table-modern align-middle mb-0">
             <caption class="visually-hidden">Escalas médicas e situação operacional</caption><thead>
                 <tr>
@@ -29,7 +25,7 @@ else
                     <th>Hospital</th>
                     <th>Especialidade</th>
                     <th>Data/Hora</th>
-                    <th>Valor</th>
+                    <th>Pagamento</th>
                     <th>Status</th>
                     <th>Justificativa</th>
                     <th class="text-end">Ações</th>
@@ -43,24 +39,24 @@ else
                         <td>@e.HospitalNome</td>
                         <td>@e.EspecialidadeNome</td>
                         <td>@e.DataInicio.ToString("dd/MM/yyyy HH:mm") - @e.DataFim.ToString("HH:mm")</td>
-                        <td>@e.Valor.ToString("C")</td>
+                        <td><strong>@e.Valor.ToString("C")</strong><small class="d-block text-muted">vinculação no detalhe</small></td>
                         <td><span class="badge status-@e.Status.ToLowerInvariant()">@e.Status</span></td>
                         <td>@(string.IsNullOrWhiteSpace(e.Justificativa) ? "-" : e.Justificativa)</td>
                         <td class="text-end">
                             <div class="action-buttons">
                                 <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@e.Id">Detalhes</a>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" disabled>Confirmar</button><span class="visually-hidden">Confirmação disponível somente para solicitações pendentes.</span></span>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" disabled>Recusar</button><span class="visually-hidden">Recusa disponível somente para solicitações pendentes.</span></span>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-warning" disabled>Cancelar</button><span class="visually-hidden">Cancelamento depende do status e das permissões.</span></span>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-success" disabled>Realizado</button><span class="visually-hidden">Conclusão disponível após o término do plantão.</span></span>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-primary" disabled>Pagamentos</button><span class="visually-hidden">Pagamento disponível após a realização.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled>Confirmar presença</button><span class="visually-hidden">Confirmação disponível somente para solicitações pendentes.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" type="button" disabled>Recusar</button><span class="visually-hidden">Recusa disponível somente para solicitações pendentes.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-warning" type="button" disabled>Substituir</button><span class="visually-hidden">Substituição depende do status e das permissões.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-success" type="button" disabled>Realizado</button><span class="visually-hidden">Conclusão disponível após o término do plantão.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-outline-primary" type="button" disabled>Pagamento</button><span class="visually-hidden">Pagamento disponível após a realização.</span></span>
                             </div>
                         </td>
                     </tr>
                 }
             </tbody>
         </table>
-    </div>
+    </div></section>
 }
 
 <div class="card-footer bg-white">

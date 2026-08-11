@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regressão estática das superfícies SaaS comerciais da v1.54."""
+"""Regressão estática das superfícies SaaS comerciais da v1.55."""
 from pathlib import Path
 import re
 
@@ -46,4 +46,4 @@ for line_number, line in enumerate(css.splitlines(), 1):
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.54:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.54 validada: hero, planos, checklist e onboarding estruturados.")
+print("SaaS UI v1.55 validada: hero, planos, checklist e onboarding estruturados.")

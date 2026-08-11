@@ -12,6 +12,7 @@ critical = [
     "Views/Account/Login.cshtml", "Views/Account/ForgotPassword.cshtml",
     "Views/Account/ResetPassword.cshtml", "Views/Pacientes/_Form.cshtml",
     "Views/Agendamentos/_Form.cshtml", "Views/Plantoes/_PlantaoForm.cshtml",
+    "Views/Onboarding/NovoCliente.cshtml",
 ]
 for relative in critical:
     text = (WEB / relative).read_text(encoding="utf-8")

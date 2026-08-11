@@ -22,23 +22,24 @@
     DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
 })
 
-<section class="clinical-command-hero mb-4" aria-labelledby="saude360Title">
+<div class="pp-page pp-clinical-page">
+<section class="pp-page-hero" aria-labelledby="saude360Title">
     <div>
-        <p class="text-uppercase fw-semibold small mb-1">PlantãoPro Saúde 360 · jornada assistencial</p>
+        <span class="pp-eyebrow">PlantãoPro Saúde 360 · jornada assistencial</span>
         <h1 id="saude360Title">@vm.Titulo</h1>
         <p>@vm.Descricao</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
         @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
         {
-            <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-light">
+            <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-primary">
                 <i class="bi @acao.Icone me-1" aria-hidden="true"></i>@acao.Titulo
             </a>
         }
     </div>
 </section>
 
-<nav class="clinical-journey mb-4" aria-label="Etapas da jornada Saúde 360">
+<nav class="clinical-journey" aria-label="Etapas da jornada Saúde 360">
     <a asp-controller="Pacientes" asp-action="Index"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Paciente</span></a>
     <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>Agendamento</span></a>
     <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Check-in</span></a>
@@ -51,24 +52,18 @@
 
 @if (!string.IsNullOrWhiteSpace(vm.ErrorMessage) && !string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase))
 {
-    <div class="alert alert-warning" role="alert">@vm.ErrorMessage</div>
+    <div class="pp-alert pp-alert--warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>@vm.ErrorMessage</span></div>
 }
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Plano mínimo</div><div class="h5 mb-0">@vm.Plano</div></div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Registros</div><div class="h5 mb-0">@registros.Count</div></div></div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100"><div class="card-body"><div class="text-muted small">Controle de acesso</div><div class="fw-semibold">Tenant + perfil + auditoria</div></div></div>
-    </div>
+<div class="pp-kpi-strip" aria-label="Contexto do módulo">
+    <article class="pp-kpi-card"><span>Plano mínimo</span><strong>@vm.Plano</strong><small>requisito do módulo</small></article>
+    <article class="pp-kpi-card"><span>Registros</span><strong>@registros.Count</strong><small>resultado real carregado</small></article>
+    <article class="pp-kpi-card"><span>Controle de acesso</span><strong>Protegido</strong><small>tenant, perfil e auditoria</small></article>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <strong>@vm.Modulo</strong>
+<section class="pp-data-table" aria-labelledby="moduleRecordsTitle">
+    <div class="pp-section-heading">
+        <div><span class="pp-section-kicker">Registros assistenciais</span><h2 id="moduleRecordsTitle">@vm.Modulo</h2></div>
         <span class="badge bg-light text-dark">@vm.Permissao</span>
     </div>
     <div class="table-responsive">
@@ -95,9 +90,10 @@
             </tbody>
         </table>
     </div>
-</div>
+</section>
 
 
-<div class="alert alert-info" role="status">
+<div class="pp-info-banner" role="note">
     <strong>LGPD e auditoria:</strong> as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.
+</div>
 </div>

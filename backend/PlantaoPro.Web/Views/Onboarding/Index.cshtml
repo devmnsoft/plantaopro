@@ -1,12 +1,7 @@
 @{
     ViewData["Title"] = "Onboarding SaaS";
 }
-<div class="container py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <h2><i class="bi bi-rocket-takeoff me-2 text-primary"></i>Onboarding de Clientes</h2>
-            <p class="text-muted">Configure um novo cliente, plano, unidade e usuário administrador em poucos passos.</p>
-            <a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Iniciar onboarding</a>
-        </div>
-    </div>
+<div class="pp-page">
+    <header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Implantação orientada</span><h2>Onboarding de clientes</h2><p>Configure tenant, plano, unidade e administrador com revisão antes da criação.</p></div><div class="pp-hero-actions"><a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Iniciar onboarding</a></div></header>
+    <section class="pp-section" aria-labelledby="onboardingFlow"><div class="pp-section-heading"><div><h2 id="onboardingFlow">Fluxo seguro de ativação</h2><p>Nenhuma informação demonstrativa é preenchida automaticamente.</p></div></div><ol class="pp-stepper" aria-label="Etapas do onboarding"><li data-step="1">Empresa</li><li data-step="2">Plano e unidade</li><li data-step="3">Administrador</li><li data-step="4">Revisão</li><li data-step="5">Conclusão</li></ol></section>
 </div>

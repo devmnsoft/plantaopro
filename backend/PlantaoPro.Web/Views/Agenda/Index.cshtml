@@ -90,6 +90,6 @@ else
 <section class="app-drawer agenda-detail-drawer" data-agenda-drawer role="dialog" aria-modal="true" aria-labelledby="agendaDrawerTitle" hidden>
   <header><div><span class="eyebrow">Contexto operacional</span><h2 id="agendaDrawerTitle" data-agenda-title>Detalhe da agenda</h2></div><button type="button" data-agenda-close aria-label="Fechar detalhe"><i class="bi bi-x-lg"></i></button></header>
   <div class="drawer-body"><partial name="_StatusBadge" model='"Carregando"' /><dl class="agenda-context-grid"><div><dt>Hospital</dt><dd data-agenda-hospital>—</dd></div><div><dt>Especialidade</dt><dd data-agenda-specialty>—</dd></div><div><dt>Período</dt><dd data-agenda-period>—</dd></div><div><dt>Valor</dt><dd data-agenda-value>—</dd></div><div><dt>Cobertura</dt><dd data-agenda-coverage>—</dd></div></dl><div class="agenda-drawer-timeline"><span></span><div><strong>Evento na agenda operacional</strong><small>Contexto obtido dos dados reais do plantão selecionado.</small></div></div></div>
-  <footer><a href="#" class="btn btn-primary" data-agenda-full>Abrir operação completa</a><button type="button" class="btn btn-outline-secondary" data-agenda-close>Voltar</button></footer>
+  <footer><a asp-controller="Plantoes" asp-action="Index" class="btn btn-primary" data-agenda-full>Abrir operação completa</a><button type="button" class="btn btn-outline-secondary" data-agenda-close>Voltar</button></footer>
 </section>
 </div>

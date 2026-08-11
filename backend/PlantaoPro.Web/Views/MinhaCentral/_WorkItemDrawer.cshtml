@@ -1,1 +1,11 @@
-<section class="app-drawer work-item-drawer" data-work-item-drawer role="dialog" aria-modal="true" aria-labelledby="workItemTitle" hidden><header><div><span class="eyebrow">Pendência operacional</span><h2 id="workItemTitle" data-detail-title>Detalhes da tarefa</h2></div><button type="button" data-drawer-close aria-label="Fechar detalhes"><app-icon name="Close" size="20" /></button></header><div class="drawer-body" data-detail-content></div><form class="drawer-comment" data-comment-form><label for="workItemComment">Adicionar comentário</label><textarea id="workItemComment" maxlength="2000" required></textarea><button class="button button-primary" type="submit" data-busy-text="Salvando comentário…">Salvar comentário</button></form></section>
+<section class="app-drawer work-item-drawer" data-work-item-drawer role="dialog" aria-modal="true" aria-labelledby="workItemTitle" aria-describedby="workItemSummary" tabindex="-1" hidden>
+ <header><div><span class="eyebrow">Pendência operacional</span><h2 id="workItemTitle" data-detail-title>Detalhes da tarefa</h2><span class="pp-detail-drawer__status" data-work-item-status></span></div><button type="button" data-drawer-close aria-label="Fechar detalhes"><app-icon name="Close" size="20" /></button></header>
+ <div class="drawer-body" aria-live="polite" data-work-item-body>
+  <div data-work-item-loading role="status">Carregando dados reais da pendência…</div><div data-work-item-error role="alert" hidden></div>
+  <div data-work-item-content hidden><p id="workItemSummary" data-work-item-summary></p><dl class="work-item-metadata" data-work-item-metadata></dl>
+   <section><h3>Próxima ação</h3><div class="work-item-actions" data-work-item-actions></div></section>
+   <section><h3>Timeline e histórico</h3><ol class="work-item-timeline" data-work-item-history></ol></section>
+  </div>
+ </div>
+ <form class="drawer-comment" data-comment-form><label for="workItemComment">Adicionar comentário</label><textarea id="workItemComment" maxlength="2000" required></textarea><button class="button button-primary" type="submit" data-busy-text="Salvando comentário…">Salvar comentário</button></form>
+</section>

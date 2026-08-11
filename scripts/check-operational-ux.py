@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático dos contratos operacionais e do drawer canônico da v1.57."""
+"""Gate estático dos contratos operacionais e drawers da v1.58."""
 from pathlib import Path
 import re
 
@@ -44,6 +44,21 @@ for relative in ("Views/Plantoes/Index.cshtml", "Views/Escalas/Index.cshtml"):
     if "data-detail-open" not in (WEB / relative).read_text(encoding="utf-8"):
         errors.append(f"{relative}: sem abertura do drawer operacional")
 
+work_drawer = (WEB / "Views/MinhaCentral/_WorkItemDrawer.cshtml").read_text(encoding="utf-8")
+work_drawer_js = (WEB / "wwwroot/js/components/work-item-drawer.js").read_text(encoding="utf-8")
+central = (WEB / "Views/MinhaCentral/Index.cshtml").read_text(encoding="utf-8")
+for marker in ('role="dialog"', 'aria-describedby=', 'data-work-item-loading', 'data-work-item-error', 'data-work-item-history', 'data-work-item-actions'):
+    if marker not in work_drawer:
+        errors.append(f"_WorkItemDrawer.cshtml sem contrato v1.58: {marker}")
+for marker in ("/assumir", "/concluir", "/adiar", "/reabrir", "/comentar", "/historico", "textContent", "response.status===409", "response.status===403"):
+    if marker not in work_drawer_js:
+        errors.append(f"work-item-drawer.js sem ação/tratamento real: {marker}")
+if "innerHTML" in work_drawer_js:
+    errors.append("work-item-drawer.js interpola HTML; use construção segura do DOM")
+for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "data-filter-owner"):
+    if marker not in central:
+        errors.append(f"Minha Central sem filtro operacional: {marker}")
+
 if errors:
-    raise SystemExit("Falha na UX operacional v1.57:\n- " + "\n- ".join(errors))
-print("UX operacional v1.57 validada: drawer acessível, ações reais e superfícies responsivas.")
+    raise SystemExit("Falha na UX operacional v1.58:\n- " + "\n- ".join(errors))
+print("UX operacional v1.58 validada: drawers acessíveis, ações reais e superfícies responsivas.")

@@ -4,21 +4,23 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v158/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v160/", import.meta.url);
 const routes = [
   "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
   "/Triagem", "/Consultas", "/Pagamentos", "/Configuracoes"
 ];
-const widths = (process.env.PLANTAOPRO_VIEWPORTS ?? "360,390,430,768,1024,1366,1920")
-  .split(",").map(Number).filter(Boolean);
+const viewports = (process.env.PLANTAOPRO_VIEWPORTS
+  ? process.env.PLANTAOPRO_VIEWPORTS.split(",").map(value => ({ width: Number(value), height: Number(value) < 768 ? 844 : 900 }))
+  : [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }])
+  .filter(viewport => viewport.width > 0 && viewport.height > 0);
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext(storageState ? { storageState } : {});
 const failures = [];
-for (const width of widths) {
+for (const { width, height } of viewports) {
   const page = await context.newPage();
-  await page.setViewportSize({ width, height: width < 768 ? 844 : 900 });
+  await page.setViewportSize({ width, height });
   for (const route of routes) {
     const response = await page.goto(`${baseURL}${route}`, { waitUntil: "networkidle" });
     if (!response?.ok()) failures.push(`${route} (${width}px): HTTP ${response?.status() ?? "sem resposta"}`);
@@ -60,5 +62,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual aprovado em ${routes.length} rotas e ${widths.length} larguras.`);
+  console.log(`Smoke visual aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

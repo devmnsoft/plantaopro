@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático dos contratos operacionais e drawers da v1.58."""
+"""Gate estático dos contratos operacionais e jornadas da v1.60."""
 from pathlib import Path
 import re
 
@@ -71,10 +71,32 @@ for marker in ("RequestVerificationToken", "aria-busy", "response.ok", "textCont
         errors.append(f"agendamentos.js sem contrato de ação real: {marker}")
 if "ExecutarAcao" not in agenda_controller or "ValidateAntiForgeryToken" not in agenda_controller:
     errors.append("AgendamentosController sem BFF protegido para ações operacionais")
+for marker in ("data-detail-open", "TipoAtendimento", "Convenio", "Sala", "Reagendar", "Abrir triagem"):
+    if marker not in agenda:
+        errors.append(f"Agenda clínica sem contexto da recepção v1.60: {marker}")
+
+saude = (WEB / "Views/Saude360/Modulo.cshtml").read_text(encoding="utf-8")
+for etapa in ("Paciente", "Agendamento", "Check-in", "Chamada", "Triagem", "Consulta", "Prescrição", "Financeiro"):
+    if f"<span>{etapa}</span>" not in saude:
+        errors.append(f"Saúde 360 sem etapa real da jornada: {etapa}")
+
+forms = (WEB / "Views/Saude360/Formulario.cshtml").read_text(encoding="utf-8")
+models = (WEB / "Models/Saude360WebViewModels.cs").read_text(encoding="utf-8")
+for marker in ('min="50" max="260"', 'min="30" max="45"', 'min="50" max="100"'):
+    if marker not in forms:
+        errors.append(f"Triagem sem limite clínico no formulário: {marker}")
+for marker in ("ValidarTriagem", "classificação de risco", "alto risco"):
+    if marker.lower() not in models.lower():
+        errors.append(f"Triagem sem validação server-side: {marker}")
+
+palette = (WEB / "wwwroot/js/command-palette.js").read_text(encoding="utf-8")
+for marker in ("ctrlKey", "metaKey", "Escape", "trigger.focus()", "/GlobalSearch"):
+    if marker not in palette:
+        errors.append(f"Command Palette sem contrato acessível/real: {marker}")
 for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "data-filter-owner"):
     if marker not in central:
         errors.append(f"Minha Central sem filtro operacional: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UX operacional v1.58:\n- " + "\n- ".join(errors))
-print("UX operacional v1.58 validada: drawers acessíveis, ações reais e superfícies responsivas.")
+    raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
+print("UX operacional v1.60 validada: jornadas, drawers, validações clínicas e busca real.")

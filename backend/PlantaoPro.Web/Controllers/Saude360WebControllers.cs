@@ -57,6 +57,15 @@ public abstract class Saude360WebControllerBase : BaseWebController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Salvar(Saude360FormViewModel form)
     {
+        if (string.Equals(form.Controller, "Triagem", StringComparison.OrdinalIgnoreCase))
+        {
+            foreach (var validationError in form.ValidarTriagem()) ModelState.AddModelError(string.Empty, validationError);
+            if (!ModelState.IsValid)
+            {
+                form.Titulo = string.IsNullOrWhiteSpace(form.Titulo) ? "Revise os dados da triagem" : form.Titulo;
+                return View($"~/Views/{form.Controller}/{form.Action}.cshtml", form);
+            }
+        }
         var token = GetJwtToken();
         if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
         var result = await service.EnviarAsync(token, form.ApiEndpoint, form);
@@ -158,9 +167,12 @@ public sealed class AgendamentosController : Saude360WebControllerBase
             Id = r.Id,
             Horario = r.RegDate,
             Paciente = r.Nome,
-            Medico = r.MedicoId?.ToString() ?? string.Empty,
+            Medico = string.IsNullOrWhiteSpace(r.ProfissionalNome) ? r.MedicoId?.ToString() ?? string.Empty : r.ProfissionalNome,
             Especialidade = r.Codigo,
-            Unidade = string.Empty,
+            Unidade = r.Descricao,
+            TipoAtendimento = r.TipoAtendimento,
+            Convenio = r.Convenio,
+            Sala = r.Sala,
             Status = r.Status
         }).ToList();
         var statusCards = itens.Where(i => !string.IsNullOrWhiteSpace(i.Status)).GroupBy(i => i.Status).Select(g => new PlantaoPro.Web.Models.AgendaStatusBadgeViewModel { Status = g.Key, Total = g.Count(), CssClass = BadgeClass(g.Key) }).ToList();
@@ -189,7 +201,12 @@ public sealed class TriagemController : Saude360WebControllerBase
 {
     public TriagemController(IHttpClientFactory f, ILogger<TriagemController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
     public Task<IActionResult> Index() { return ModuloAsync("Triagens", "Triagem", "Fila assistencial com classificação de risco, sinais vitais e encaminhamento para consulta.", "api/triagens", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Fila", "Fila", "bi-people"), Link("Classificação", "ClassificacaoRisco", "bi-flag"))); }
-    public IActionResult Create() { return Formulario("Nova triagem", "api/triagens"); }
+    public IActionResult Create(Guid? agendamentoId = null)
+    {
+        var result = Formulario("Nova triagem", "api/triagens") as ViewResult;
+        if (result?.Model is Saude360FormViewModel model) model.AgendamentoId = agendamentoId;
+        return result ?? Formulario("Nova triagem", "api/triagens");
+    }
     public IActionResult Edit(Guid id) { return Formulario("Editar triagem", "api/triagens/" + id, id); }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da triagem", "Triagem", "Resumo assistencial auditado da triagem.", "api/triagens/" + id, Links(Link("Triagens", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Fila() { return ModuloAsync("Fila de triagem", "Triagem", "Pacientes aguardando classificação e encaminhamento.", "api/triagens/fila", Links(Link("Nova", "Create", "bi-plus-circle"))); }

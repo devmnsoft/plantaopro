@@ -10,6 +10,10 @@ public sealed class Saude360RegistroViewModel
     public string Nome { get; set; } = string.Empty;
     public string Descricao { get; set; } = string.Empty;
     public string Codigo { get; set; } = string.Empty;
+    public string TipoAtendimento { get; set; } = string.Empty;
+    public string Convenio { get; set; } = string.Empty;
+    public string Sala { get; set; } = string.Empty;
+    public string ProfissionalNome { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime RegDate { get; set; }
 }
@@ -81,6 +85,18 @@ public sealed class Saude360FormViewModel
     public decimal? Altura { get; set; }
     public decimal? Valor { get; set; }
     public bool Principal { get; set; }
+
+    public IEnumerable<string> ValidarTriagem()
+    {
+        if (string.IsNullOrWhiteSpace(ClassificacaoRisco)) yield return "Selecione a classificação de risco.";
+        if (PressaoSistolica is < 50 or > 260 || PressaoDiastolica is < 30 or > 160)
+            yield return "Informe uma pressão arterial plausível (PAS 50–260 e PAD 30–160 mmHg).";
+        if (Temperatura is < 30 or > 45) yield return "Informe uma temperatura entre 30 e 45 °C.";
+        if (Saturacao is < 50 or > 100) yield return "Informe uma saturação entre 50% e 100%.";
+        if (FrequenciaCardiaca is < 20 or > 250) yield return "Informe uma frequência cardíaca entre 20 e 250 bpm.";
+        if ((ClassificacaoRisco == "EMERGENCIA" || ClassificacaoRisco == "MUITO_URGENTE") && string.IsNullOrWhiteSpace(Descricao))
+            yield return "Registre uma observação clínica para classificações de alto risco.";
+    }
 }
 
 public sealed class FriendlyErrorViewModel

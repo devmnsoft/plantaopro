@@ -12,7 +12,10 @@
         dialog.showModal();
         window.setTimeout(() => input.focus(), 0);
     };
-    const close = () => dialog.close();
+    const close = () => {
+        if (dialog.open) dialog.close();
+        trigger.focus();
+    };
     const escapeHtml = (value) => {
         const node = document.createElement('span');
         node.textContent = value || '';
@@ -67,5 +70,10 @@
             event.preventDefault();
             dialog.open ? close() : open();
         }
+        if (event.key === 'Escape' && dialog.open) {
+            event.preventDefault();
+            close();
+        }
     });
+    dialog.addEventListener('cancel', (event) => { event.preventDefault(); close(); });
 })();

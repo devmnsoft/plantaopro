@@ -393,6 +393,10 @@ values(@id,@tenantId,@tenantId,@pacienteId,@consultaId,coalesce(@medicoId,@uid),
 (select count(1) from plantaopro.painel_chamada_fila where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('CHAMADO','RECHAMADO')) as pacientes_chamados,
 (select count(1) from plantaopro.triagens where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('AGUARDANDO','EM_TRIAGEM')) as triagens_pendentes,
 (select count(1) from plantaopro.triagens where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('FINALIZADA','ENCAMINHADA_CONSULTA')) as triagens_finalizadas,
+(select count(1) from plantaopro.consultas where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('EM_ATENDIMENTO','INICIADA')) as consultas_em_andamento,
+(select count(1) from plantaopro.consultas where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='FINALIZADA' and coalesce(finalizada_em, reg_date)::date=current_date) as consultas_finalizadas,
+(select count(1) from plantaopro.prescricoes where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status in ('RASCUNHO','PENDENTE')) as prescricoes_pendentes,
+(select count(1) from plantaopro.clinica_contas_receber where reg_status='A' and (@tenantId is null or cliente_id is null or cliente_id=@tenantId or @isGlobal) and status='ABERTA') as financeiro_pendente,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='FALTOU' and data_inicio::date=current_date) as faltas_dia,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal) and status='CANCELADO' and data_inicio::date=current_date) as cancelamentos_dia", new { tenantId = TenantId, isGlobal = IsGlobal });
             await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });

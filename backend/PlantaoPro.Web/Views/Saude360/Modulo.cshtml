@@ -3,6 +3,7 @@
     var vm = Model ?? new PlantaoPro.Web.Models.Saude360PageViewModel();
     ViewData["Title"] = vm.Titulo;
     var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
+    string? Quantidade(string indicador) => registros.FirstOrDefault(item => string.Equals(item.Nome, indicador, StringComparison.OrdinalIgnoreCase))?.Descricao;
 }
 
 @if (ViewBag.AssistenteContextual is PlantaoPro.Web.Models.AssistenteContextualViewModel assistenteContextual)
@@ -41,13 +42,13 @@
 
 <nav class="clinical-journey" aria-label="Etapas da jornada Saúde 360">
     <a asp-controller="Pacientes" asp-action="Index"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Paciente</span></a>
-    <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>Agendamento</span></a>
-    <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Check-in</span></a>
-    <a asp-controller="PainelChamada" asp-action="Index"><i class="bi bi-megaphone" aria-hidden="true"></i><span>Chamada</span></a>
-    <a asp-controller="Triagem" asp-action="Index"><i class="bi bi-activity" aria-hidden="true"></i><span>Triagem</span></a>
-    <a asp-controller="Consultas" asp-action="Index"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>Consulta</span></a>
-    <a asp-controller="Prescricoes" asp-action="Index"><i class="bi bi-capsule" aria-hidden="true"></i><span>Prescrição</span></a>
-    <a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>Financeiro</span></a>
+    <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>Agendamento</span>@if (Quantidade("agendamentos hoje") is string agendamentos) { <strong aria-label="Agendamentos de hoje">@agendamentos</strong> }</a>
+    <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Check-in</span>@if (Quantidade("checkins realizados") is string checkins) { <strong aria-label="Check-ins realizados">@checkins</strong> }</a>
+    <a asp-controller="PainelChamada" asp-action="Index"><i class="bi bi-megaphone" aria-hidden="true"></i><span>Chamada</span>@if (Quantidade("pacientes aguardando") is string aguardando) { <strong aria-label="Pacientes aguardando">@aguardando</strong> }</a>
+    <a asp-controller="Triagem" asp-action="Index"><i class="bi bi-activity" aria-hidden="true"></i><span>Triagem</span>@if (Quantidade("triagens pendentes") is string triagens) { <strong aria-label="Triagens pendentes">@triagens</strong> }</a>
+    <a asp-controller="Consultas" asp-action="Index"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>Consulta</span>@if (Quantidade("consultas em andamento") is string consultas) { <strong aria-label="Consultas em andamento">@consultas</strong> }</a>
+    <a asp-controller="Prescricoes" asp-action="Index"><i class="bi bi-capsule" aria-hidden="true"></i><span>Prescrição</span>@if (Quantidade("prescricoes pendentes") is string prescricoes) { <strong aria-label="Prescrições pendentes">@prescricoes</strong> }</a>
+    <a asp-controller="ClinicaFinanceiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>Financeiro</span>@if (Quantidade("financeiro pendente") is string financeiro) { <strong aria-label="Financeiro pendente">@financeiro</strong> }</a>
 </nav>
 
 @if (!string.IsNullOrWhiteSpace(vm.ErrorMessage) && !string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase))

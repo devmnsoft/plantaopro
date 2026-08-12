@@ -111,6 +111,23 @@ public sealed class Saude360WebService
         }
     }
 
+    public async Task<(bool Success, string Message)> ExecutarAcaoAsync(string token, string endpoint, string? motivo)
+    {
+        try
+        {
+            var client = CreateClient(token);
+            var payload = new StringContent(JsonSerializer.Serialize(new { Motivo = motivo ?? string.Empty }, JsonOptions), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(endpoint, payload);
+            var content = await response.Content.ReadAsStringAsync();
+            return (response.IsSuccessStatusCode, ApiErrorPresenter.ToFriendlyMessage(content));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao executar ação clínica em {Endpoint}", endpoint);
+            return (false, "Não foi possível concluir a ação. Tente novamente.");
+        }
+    }
+
     private static (IEnumerable<Saude360RegistroViewModel> Registros, string Message) ParseRegistros(string content)
     {
         using var document = JsonDocument.Parse(content);

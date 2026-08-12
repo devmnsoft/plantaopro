@@ -29,6 +29,9 @@ public sealed class AgendaClinicaItemViewModel
     public string Medico { get; set; } = string.Empty;
     public string Especialidade { get; set; } = string.Empty;
     public string Unidade { get; set; } = string.Empty;
+    public string TipoAtendimento { get; set; } = string.Empty;
+    public string Convenio { get; set; } = string.Empty;
+    public string Sala { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 }
 

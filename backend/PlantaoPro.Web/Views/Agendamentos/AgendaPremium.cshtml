@@ -51,12 +51,18 @@ else
                 <p class="mb-1"><strong>Profissional:</strong> @(string.IsNullOrWhiteSpace(item.Medico) ? "Não informado" : item.Medico)</p>
                 <p class="mb-1"><strong>Especialidade:</strong> @(string.IsNullOrWhiteSpace(item.Especialidade) ? "Não informada" : item.Especialidade)</p>
                 <p class="mb-3"><strong>Unidade:</strong> @(string.IsNullOrWhiteSpace(item.Unidade) ? "Não informada pela API" : item.Unidade)</p>
+                <dl class="pp-data-meta">
+                    <div><dt>Atendimento</dt><dd>@(string.IsNullOrWhiteSpace(item.TipoAtendimento) ? "Não informado" : item.TipoAtendimento)</dd></div>
+                    <div><dt>Convênio</dt><dd>@(string.IsNullOrWhiteSpace(item.Convenio) ? "Não informado" : item.Convenio)</dd></div>
+                    <div><dt>Sala</dt><dd>@(string.IsNullOrWhiteSpace(item.Sala) ? "Não informada" : item.Sala)</dd></div>
+                </dl>
                 <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn btn-primary btn-sm" data-detail-open data-detail-kind="Agendamento" data-detail-title="@(string.IsNullOrWhiteSpace(item.Paciente) ? "Paciente não informado" : item.Paciente)" data-detail-status="@item.Status" data-detail-summary="@item.TipoAtendimento" data-detail-origin="@item.Unidade" data-detail-period="@item.Horario.ToString("dd/MM/yyyy HH:mm")" data-detail-owner="@item.Medico" data-detail-composition="@item.Convenio · sala @item.Sala" data-detail-reference="@item.Id" data-detail-primary-url="@Url.Action("Details", "Agendamentos", new { id = item.Id })">Ver jornada</button>
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="confirmar" data-agenda-label="Confirmar agendamento">Confirmar</button>
                     <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="checkin" data-agenda-label="Realizar check-in">Check-in</button>
-                    <a class="btn btn-outline-secondary btn-sm" asp-controller="PainelChamada" asp-action="Fila">Chamar no painel</a>
-                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Fila">Enviar para triagem</a>
-                    <a class="btn btn-outline-primary btn-sm" asp-controller="Consultas" asp-action="Create">Iniciar consulta</a>
+                    <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Reagendar</a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A chamada será habilitada quando o endpoint transacional estiver disponível.">Chamar paciente</button>
+                    <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Create" asp-route-agendamentoId="@item.Id">Abrir triagem</a>
                     <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="cancelar" data-agenda-label="Cancelar agendamento">Cancelar</button>
                 </div>
             </article>

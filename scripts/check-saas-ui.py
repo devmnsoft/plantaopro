@@ -62,4 +62,4 @@ for line_number, line in enumerate(css.splitlines(), 1):
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.54:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.55 validada: hero, planos, checklist e onboarding estruturados.")
+print("SaaS UI v1.61 validada: hero, planos, checklist e onboarding estruturados.")

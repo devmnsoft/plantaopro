@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell v1.55 e overlays operacionais v1.57."""
+"""Gate estrutural do shell v1.61 e overlays operacionais v1.57."""
 from pathlib import Path
 import re
 
@@ -31,7 +31,7 @@ for relative in ("Views/Shared/_AppTopbar.cshtml", "Views/Shared/_UserMenu.cshtm
     if relative.endswith("_UserMenu.cshtml") and re.search(r"<(?:ul|li)\b", text, re.I):
         errors.append(f"{relative}: menu não pode depender de lista crua")
 
-css_files = list((WEB / "wwwroot/css/design-system").glob("v155-*.css"))
+css_files = list((WEB / "wwwroot/css/design-system").glob("v161-*.css"))
 for css in css_files:
     for number, line in enumerate(css.read_text(encoding="utf-8").splitlines(), 1):
         if len(line) > 300:
@@ -71,17 +71,17 @@ for relative in responsive_tables:
     if "<table" in source and not any(marker in source for marker in ("table-responsive", "pp-mobile-card")):
         errors.append(f"{relative}: tabela crítica sem wrapper ou alternativa mobile")
 
-medical_css = (WEB / "wwwroot/css/design-system/v155-medical-experience.css").read_text(encoding="utf-8")
+medical_css = (WEB / "wwwroot/css/design-system/v161-medical-experience.css").read_text(encoding="utf-8")
 for pattern, message in (
     (r"\.pp-app-shell\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:", "pp-app-shell deve usar grid no desktop"),
     (r"\.pp-sidebar\s*\{[^}]*position:\s*sticky", "pp-sidebar deve ser sticky no desktop"),
     (r"\.pp-content-container\s*\{", "pp-content-container deve limitar a largura interna"),
 ):
     if not re.search(pattern, medical_css, re.S):
-        errors.append(f"v155-medical-experience.css: {message}")
+        errors.append(f"v161-medical-experience.css: {message}")
 if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):
-    errors.append("v155-medical-experience.css: pp-content deve preservar flex: 1")
+    errors.append("v161-medical-experience.css: pp-content deve preservar flex: 1")
 
 if errors:
-    raise SystemExit("Falha no layout v1.55:\n- " + "\n- ".join(errors))
-print("Layout v1.55 validado: shell, navegação e CSS sem regressões críticas.")
+    raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))
+print("Layout v1.61 validado: shell, navegação e CSS sem regressões críticas.")

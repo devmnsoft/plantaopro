@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v160/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v161/", import.meta.url);
 const routes = [
   "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
@@ -12,7 +12,7 @@ const routes = [
 ];
 const viewports = (process.env.PLANTAOPRO_VIEWPORTS
   ? process.env.PLANTAOPRO_VIEWPORTS.split(",").map(value => ({ width: Number(value), height: Number(value) < 768 ? 844 : 900 }))
-  : [{ width: 390, height: 844 }, { width: 768, height: 1024 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }])
+  : [{ width: 360, height: 800 }, { width: 390, height: 844 }, { width: 430, height: 932 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }])
   .filter(viewport => viewport.width > 0 && viewport.height > 0);
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
@@ -31,6 +31,9 @@ for (const { width, height } of viewports) {
       const sidebar = document.querySelector(".pp-sidebar");
       const content = document.querySelector(".pp-content");
       const footer = document.querySelector(".pp-footer");
+      const container = document.querySelector(".pp-content-container");
+      const authPage = document.querySelector(".pp-auth-page");
+      const adminPage = document.querySelector(".pp-admin-saas-page.pp-page");
       const rect = element => element?.getBoundingClientRect();
       const cards = [...document.querySelectorAll(".pp-card,.pp-action-card,.pp-kpi-card,.card")];
       const primaryButtons = [...document.querySelectorAll(".btn-primary,[type=submit]")];
@@ -40,6 +43,8 @@ for (const { width, height } of viewports) {
         overflow: Math.max(0, body.scrollWidth - innerWidth),
         hasSidebar: login || Boolean(sidebar),
         hasContent: login || Boolean(content),
+        hasContainer: login || Boolean(container),
+        correctPageRoot: login ? Boolean(authPage) : route !== "/AdminSaas/Index" || Boolean(adminPage),
         contentClear: login || !desktop || !sidebarRect || !contentRect || contentRect.left >= sidebarRect.right - 1,
         footerAfterContent: login || !footer || !content || rect(footer).top >= contentRect.top,
         cardsValid: cards.every(card => rect(card).width > 0),

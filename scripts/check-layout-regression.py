@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell v1.61 e overlays operacionais v1.57."""
+"""Gate estrutural do shell e do contrato de homologação visual v1.62."""
 from pathlib import Path
 import re
 
@@ -82,6 +82,25 @@ for pattern, message in (
 if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):
     errors.append("v161-medical-experience.css: pp-content deve preservar flex: 1")
 
+smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
+for route in (
+    "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
+    "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
+    "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes",
+):
+    if f'"{route}"' not in smoke:
+        errors.append(f"visual-smoke.mjs sem rota obrigatória: {route}")
+for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1920x1080"):
+    if f'"{viewport}"' not in smoke:
+        errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
+for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "containerPresent",
+                 "topbarVisible", "sidebarClear", "footerAfterContent", "cardsHaveWidth",
+                 "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
+    if contract not in smoke:
+        errors.append(f"visual-smoke.mjs sem verificação: {contract}")
+if "screenshots/v162" not in smoke:
+    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v162")
+
 if errors:
     raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))
-print("Layout v1.61 validado: shell, navegação e CSS sem regressões críticas.")
+print("Layout v1.62 validado: shell, navegação e contrato de smoke sem regressões críticas.")

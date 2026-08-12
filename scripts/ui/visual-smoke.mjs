@@ -4,9 +4,9 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v162/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v163/", import.meta.url);
 const routes = [
-  "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
+  "/", "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
   "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes"
 ];
@@ -25,12 +25,13 @@ const failures = [];
 
 for (const { width, height } of viewports) {
   for (const route of routes) {
+    const publicRoute = route === "/" || route === "/Account/Login";
     const login = route === "/Account/Login";
-    if (!login && !authenticatedContext) {
+    if (!publicRoute && !authenticatedContext) {
       failures.push(`${route} (${width}x${height}): informe PLANTAOPRO_STORAGE_STATE para a homologação autenticada`);
       continue;
     }
-    const page = await (login ? publicContext : authenticatedContext).newPage();
+    const page = await (publicRoute ? publicContext : authenticatedContext).newPage();
     await page.setViewportSize({ width, height });
     try {
       const response = await page.goto(`${baseURL}${route}`, { waitUntil: "networkidle" });
@@ -65,7 +66,9 @@ for (const { width, height } of viewports) {
           contentPresent: login || Boolean(content),
           containerPresent: login || Boolean(container),
           topbarVisible: login || visible(topbar),
-          correctPageRoot: login ? Boolean(document.querySelector(".pp-auth-page")) : !admin || Boolean(document.querySelector(".pp-admin-saas-page.pp-page")),
+          correctPageRoot: login ? Boolean(document.querySelector(".pp-auth-page .pp-auth-shell .pp-auth-card")) : !admin || Boolean(document.querySelector(".pp-admin-saas-page.pp-page")),
+          authContentClear: !login || [...document.querySelectorAll(".pp-auth-shell *")].every(element => element.scrollWidth <= element.clientWidth + 2),
+          topbarClear: login || !topbar || !contentBox || rect(topbar).bottom <= contentBox.top + 2,
           sidebarClear: login || !desktop || !visible(sidebar) || !contentBox || !sidebarBox || contentBox.left >= sidebarBox.right - 1,
           footerAfterContent: login || !footerBox || !contentBox || footerBox.top >= contentBox.top,
           cardsHaveWidth: cards.every(card => rect(card).width > 0),
@@ -92,5 +95,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual v1.62 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.63 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

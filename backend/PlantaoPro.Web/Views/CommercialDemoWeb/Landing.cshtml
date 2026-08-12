@@ -2,18 +2,19 @@
 @{
     ViewData["Title"] = Model.Title;
 }
-<section class="pp-hero">
-    <div>
-        <span class="pp-badge">PlantãoPro SaaS B2B</span>
+<div class="pp-public-page">
+<section class="pp-public-hero">
+    <div class="pp-public-hero__content">
+        <span class="pp-kicker">PlantãoPro SaaS B2B</span>
         <h1>@Model.Title</h1>
         <p>@Model.Subtitle</p>
-        <div class="pp-actions">
+        <div class="pp-hero-actions">
             <a class="btn btn-primary btn-lg" asp-controller="Cadastro" asp-action="Index">Começar agora</a>
             <a class="btn btn-outline-primary btn-lg" asp-controller="CommercialDemoWeb" asp-action="Demo">Agendar demonstração</a>
             <a class="btn btn-success btn-lg" asp-controller="PlanosPublicos" asp-action="Index">Ver planos</a>
         </div>
     </div>
-    <div class="pp-panel">
+    <aside class="pp-public-hero__panel">
         <strong>Operação demonstrável</strong>
         <ul>
             @foreach (var item in Model.Checklist)
@@ -21,9 +22,9 @@
                 <li>@item</li>
             }
         </ul>
-    </div>
+    </aside>
 </section>
-<section class="pp-grid">
+<section class="pp-public-card-grid" aria-label="Soluções PlantãoPro">
 @foreach (var card in Model.Cards)
 {
     <article class="pp-card">
@@ -33,11 +34,12 @@
     </article>
 }
 </section>
-<section class="pp-grid pp-grid-2">
+<section class="pp-public-card-grid pp-public-card-grid--secondary">
     <article class="pp-card"><h2>Segurança e LGPD</h2><p>Autenticação, perfis, auditoria e registros operacionais sem exposição de dados sensíveis.</p></article>
     <article class="pp-card"><h2>Multi-tenant e white label</h2><p>Clientes, parceiros e MNSOFT navegam por experiências segregadas e configuráveis.</p></article>
     <article class="pp-card"><h2>Planos e módulos</h2><p>Governança comercial para limites, feature flags, adicionais e upgrades.</p></article>
     <article class="pp-card"><h2>Dashboards</h2><p>Visões executivas para operação, comercial, billing e Customer Success.</p></article>
 </section>
 <div class="pp-mobile-cta"><a asp-controller="Cadastro" asp-action="Index">Começar agora</a></div>
+</div>
 <partial name="_CommercialStyles" />

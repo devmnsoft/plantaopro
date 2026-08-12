@@ -84,7 +84,7 @@ if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):
 
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 for route in (
-    "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
+    "/", "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
     "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
     "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes",
 ):
@@ -94,12 +94,12 @@ for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x
     if f'"{viewport}"' not in smoke:
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
 for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "containerPresent",
-                 "topbarVisible", "sidebarClear", "footerAfterContent", "cardsHaveWidth",
+                 "topbarVisible", "topbarClear", "authContentClear", "sidebarClear", "footerAfterContent", "cardsHaveWidth",
                  "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-if "screenshots/v162" not in smoke:
-    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v162")
+if "screenshots/v163" not in smoke:
+    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v163")
 
 if errors:
     raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))

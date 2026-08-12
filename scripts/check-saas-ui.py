@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
 errors: list[str] = []
 required = {
+    "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid", "pp-section-grid"),
     "Views/AdminSaas/Dashboard.cshtml": ("pp-page-hero", "pp-checklist-grid", "pp-checklist-card"),
     "Views/B2BLaunch/Index.cshtml": ("pp-page-hero", "pp-clinical-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-plan-grid", "pp-plan-card", "pp-feature-list"),

@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="app-body">
+<body class="pp-body app-body">
     <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
     @if (isAuthenticated)
     {
@@ -27,9 +27,11 @@
             <div class="pp-main-shell">
                 <partial name="_AppTopbar" />
                 <main class="pp-content app-content" id="mainContent" tabindex="-1">
-                    <partial name="_ToastMessages" />
-                    @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
-                    @RenderBody()
+                    <div class="pp-content-container">
+                        <partial name="_ToastMessages" />
+                        @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
+                        @RenderBody()
+                    </div>
                 </main>
                 <partial name="_AppFooter" />
             </div>

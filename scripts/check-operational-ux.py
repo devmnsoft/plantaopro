@@ -6,6 +6,10 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
 errors: list[str] = []
+layout = (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8")
+if "pp-content-container" not in layout:
+    errors.append("_Layout.cshtml sem container responsivo do conteúdo autenticado")
+
 
 drawer = (WEB / "Views/Shared/_DetailDrawer.cshtml").read_text(encoding="utf-8")
 drawer_js = (WEB / "wwwroot/js/detail-drawer.js").read_text(encoding="utf-8")

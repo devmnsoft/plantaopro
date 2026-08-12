@@ -3,26 +3,26 @@
     Layout = "_AuthLayout";
     ViewData["Title"] = "Entrar";
 }
-<div class="pp-auth auth-experience">
-    <div class="pp-auth__shell login-card-modern">
-        <section class="pp-auth-brand auth-story" aria-labelledby="authStoryTitle">
+<div class="pp-auth-page pp-auth auth-experience">
+    <div class="pp-auth-shell pp-auth__shell login-card-modern">
+        <section class="pp-auth-brand-panel pp-auth-brand auth-story" aria-labelledby="authStoryTitle">
             <div class="auth-logo-surface">
-                <img class="auth-logo" src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" />
+                <img class="pp-auth-logo auth-logo" src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" />
             </div>
-            <span class="auth-product-tag">Central médica em tempo real</span>
+            <span class="pp-auth-kicker auth-product-tag">Central médica em tempo real</span>
             <h1 id="authStoryTitle">Gestão médica em tempo real.</h1>
             <p>Controle plantões, escalas, convites, pagamentos e jornadas assistenciais em uma única central.</p>
-            <ul class="auth-benefits" aria-label="Benefícios da plataforma">
+            <ul class="pp-auth-benefit-grid auth-benefits" aria-label="Benefícios da plataforma">
                 <li><strong>Operação conectada</strong><span>Escalas, coberturas e convites sem perder contexto.</span></li>
                 <li><strong>Jornada assistencial</strong><span>Do agendamento ao financeiro em um fluxo contínuo.</span></li>
                 <li><strong>Governança nativa</strong><span>Permissões, segurança e rastreabilidade por tenant.</span></li>
             </ul>
         </section>
-        <section class="pp-auth-panel auth-form-panel" aria-labelledby="loginTitle">
+        <section class="pp-auth-form-panel pp-auth-panel auth-form-panel" aria-labelledby="loginTitle">
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
             <h2 id="loginTitle">Entre na sua central</h2>
             <p>Use seu e-mail profissional e sua senha para continuar.</p>
-            <form asp-action="Login" method="post" id="loginForm" class="pp-form" novalidate data-focus-invalid>
+            <form asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" tabindex="-1"></div>
                 <div class="pp-form-field">

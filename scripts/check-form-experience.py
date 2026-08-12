@@ -26,7 +26,7 @@ for relative in critical:
     if re.search(r"<button(?![^>]*\btype=)[^>]*>", text, re.I):
         errors.append(f"{relative}: button sem type")
 login = (WEB / critical[0]).read_text(encoding="utf-8")
-for marker in ("data-focus-invalid", "pp-form-field", "pp-form-control", "aria-describedby"):
+for marker in ("pp-auth-page", "pp-login-form", "data-focus-invalid", "pp-form-field", "pp-form-control", "aria-describedby"):
     if marker not in login:
         errors.append(f"Login sem contrato obrigatório: {marker}")
 for marker in (".pp-form-grid", ".pp-form-card", ".pp-form-error", ".pp-form-actions"):

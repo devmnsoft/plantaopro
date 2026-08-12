@@ -14,6 +14,8 @@ files = {
 }
 texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
 errors: list[str] = []
+if "pp-content-container" not in (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8"):
+    errors.append("Shell sem pp-content-container")
 
 for marker in ('role="dialog"', 'aria-modal="true"', "data-pp-confirm-action", "data-pp-confirm-loading"):
     if marker not in texts["modal"]:

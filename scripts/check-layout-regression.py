@@ -8,7 +8,7 @@ WEB = ROOT / "backend/PlantaoPro.Web"
 errors: list[str] = []
 
 layout = (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8")
-for marker in ("pp-app-shell", "pp-main-shell", "pp-content"):
+for marker in ("pp-app-shell", "pp-main-shell", "pp-content", "pp-content-container"):
     if marker not in layout:
         errors.append(f"_Layout.cshtml não contém {marker}")
 for marker in ('_DetailDrawer', 'detail-drawer.js'):
@@ -72,6 +72,13 @@ for relative in responsive_tables:
         errors.append(f"{relative}: tabela crítica sem wrapper ou alternativa mobile")
 
 medical_css = (WEB / "wwwroot/css/design-system/v155-medical-experience.css").read_text(encoding="utf-8")
+for pattern, message in (
+    (r"\.pp-app-shell\s*\{[^}]*display:\s*grid[^}]*grid-template-columns:", "pp-app-shell deve usar grid no desktop"),
+    (r"\.pp-sidebar\s*\{[^}]*position:\s*sticky", "pp-sidebar deve ser sticky no desktop"),
+    (r"\.pp-content-container\s*\{", "pp-content-container deve limitar a largura interna"),
+):
+    if not re.search(pattern, medical_css, re.S):
+        errors.append(f"v155-medical-experience.css: {message}")
 if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):
     errors.append("v155-medical-experience.css: pp-content deve preservar flex: 1")
 

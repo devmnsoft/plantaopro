@@ -82,7 +82,7 @@ public sealed class CommercialDemoWebController : Controller
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
 public sealed class AdminSaasController : Controller
 {
-    public IActionResult Index() => View("Dashboard", Dashboard("Admin SaaS MNSOFT", "Leads do mês, propostas, clientes, MRR, implantação, billing e alertas críticos."));
+    public IActionResult Index() => View("Index", Dashboard("Admin SaaS MNSOFT", "Acompanhe governança, implantação, billing e alertas críticos com dados do ambiente."));
     public IActionResult Clientes() => View("Dashboard", Dashboard("Clientes SaaS", "Clientes ativos, trial, implantação, inadimplência e risco."));
     public IActionResult Tenants() => View("Dashboard", Dashboard("Tenants", "Isolamento, status e módulos habilitados por tenant."));
     public IActionResult Planos() => View("Dashboard", Dashboard("Planos", "Comparação, limites e módulos contratados."));

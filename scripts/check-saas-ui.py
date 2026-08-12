@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
 errors: list[str] = []
 required = {
-    "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid", "pp-section-grid"),
+    "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid--admin", "pp-admin-layout", "pp-admin-main", "pp-admin-side"),
     "Views/AdminSaas/Dashboard.cshtml": ("pp-page-hero", "pp-checklist-grid", "pp-checklist-card"),
     "Views/B2BLaunch/Index.cshtml": ("pp-page-hero", "pp-clinical-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-plan-grid", "pp-plan-card", "pp-feature-list"),
@@ -59,6 +59,13 @@ if "!important" in css:
 for line_number, line in enumerate(css.splitlines(), 1):
     if len(line) > 300:
         errors.append(f"v154-clinical-pages.css:{line_number}: CSS em linha gigante")
+
+medical_css = (WEB / "wwwroot/css/design-system/v161-medical-experience.css").read_text(encoding="utf-8")
+if re.search(r"minmax\((?:[01]?\d\d|2[01]\d)px", medical_css):
+    errors.append("v161-medical-experience.css: grid novo com mínimo inferior a 220px")
+for marker in (".pp-admin-layout", ".pp-kpi-grid--admin", ".pp-public-hero", ".pp-auth-shell"):
+    if marker not in medical_css:
+        errors.append(f"v161-medical-experience.css: contrato v1.63 ausente: {marker}")
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.54:\n- " + "\n- ".join(errors))

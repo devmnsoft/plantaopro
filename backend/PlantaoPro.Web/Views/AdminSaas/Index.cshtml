@@ -18,14 +18,15 @@
         </div>
     </section>
 
-    <section class="pp-kpi-grid" aria-label="Resumo da administração SaaS">
+    <section class="pp-kpi-grid pp-kpi-grid--admin" aria-label="Resumo da administração SaaS">
         <article class="pp-kpi-card"><span>Áreas disponíveis</span><strong>@cards.Length</strong><small>Atalhos retornados para o seu perfil</small></article>
         <article class="pp-kpi-card"><span>Frentes para revisão</span><strong>@checklist.Length</strong><small>Itens de configuração disponíveis</small></article>
         <article class="pp-kpi-card"><span>Tenant</span><strong>Contexto atual</strong><small>Consulte o contexto seguro exibido na topbar</small></article>
         <article class="pp-kpi-card"><span>Plano e uso</span><strong>Dados do ambiente</strong><small>Consulte limites sem estimativas ou dados fictícios</small></article>
     </section>
 
-    <section class="pp-section-grid">
+    <section class="pp-admin-layout">
+        <div class="pp-admin-main">
         <section class="pp-section" aria-labelledby="saasAreasTitle">
             <div class="pp-section-heading"><div><span class="pp-eyebrow">Organização</span><h2 id="saasAreasTitle">Áreas de gestão</h2><p>Abra a fonte responsável por planos, billing, white label, módulos ou auditoria.</p></div></div>
             @if (cards.Length == 0)
@@ -46,8 +47,9 @@
                 </div>
             }
         </section>
+        </div>
 
-        <aside class="pp-section pp-admin-review" aria-labelledby="adminReviewTitle">
+        <aside class="pp-section pp-admin-side pp-admin-review" aria-labelledby="adminReviewTitle">
             <div class="pp-section-heading"><div><span class="pp-eyebrow">Onboarding e conformidade</span><h2 id="adminReviewTitle">Revisões necessárias</h2><p>Valide as configurações reais antes de ampliar a operação.</p></div></div>
             @if (checklist.Length == 0)
             {

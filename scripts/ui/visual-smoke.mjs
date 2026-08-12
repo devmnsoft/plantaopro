@@ -4,68 +4,93 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v161/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v162/", import.meta.url);
 const routes = [
   "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
-  "/Triagem", "/Consultas", "/Pagamentos", "/Configuracoes"
+  "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes"
 ];
-const viewports = (process.env.PLANTAOPRO_VIEWPORTS
-  ? process.env.PLANTAOPRO_VIEWPORTS.split(",").map(value => ({ width: Number(value), height: Number(value) < 768 ? 844 : 900 }))
-  : [{ width: 360, height: 800 }, { width: 390, height: 844 }, { width: 430, height: 932 }, { width: 768, height: 1024 }, { width: 1024, height: 768 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }])
-  .filter(viewport => viewport.width > 0 && viewport.height > 0);
+const defaults = ["360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1920x1080"];
+const viewports = (process.env.PLANTAOPRO_VIEWPORTS?.split(",") ?? defaults).map(value => {
+  const match = value.trim().match(/^(\d+)x(\d+)$/i);
+  if (!match) throw new Error(`Viewport inválido: ${value}. Use largura×altura, por exemplo 390x844.`);
+  return { width: Number(match[1]), height: Number(match[2]) };
+});
+
 await mkdir(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
-const context = await browser.newContext(storageState ? { storageState } : {});
+const publicContext = await browser.newContext();
+const authenticatedContext = storageState ? await browser.newContext({ storageState }) : null;
 const failures = [];
+
 for (const { width, height } of viewports) {
-  const page = await context.newPage();
-  await page.setViewportSize({ width, height });
   for (const route of routes) {
-    const response = await page.goto(`${baseURL}${route}`, { waitUntil: "networkidle" });
-    if (!response?.ok()) failures.push(`${route} (${width}px): HTTP ${response?.status() ?? "sem resposta"}`);
-    const redirectedToLogin = route !== "/Account/Login" && new URL(page.url()).pathname.toLowerCase().includes("/account/login");
-    if (redirectedToLogin) failures.push(`${route} (${width}px): autenticação ausente; informe PLANTAOPRO_STORAGE_STATE`);
-    const result = await page.evaluate(({ desktop, login }) => {
-      const body = document.body;
-      const sidebar = document.querySelector(".pp-sidebar");
-      const content = document.querySelector(".pp-content");
-      const footer = document.querySelector(".pp-footer");
-      const container = document.querySelector(".pp-content-container");
-      const authPage = document.querySelector(".pp-auth-page");
-      const adminPage = document.querySelector(".pp-admin-saas-page.pp-page");
-      const rect = element => element?.getBoundingClientRect();
-      const cards = [...document.querySelectorAll(".pp-card,.pp-action-card,.pp-kpi-card,.card")];
-      const primaryButtons = [...document.querySelectorAll(".btn-primary,[type=submit]")];
-      const contentRect = rect(content);
-      const sidebarRect = rect(sidebar);
-      return {
-        overflow: Math.max(0, body.scrollWidth - innerWidth),
-        hasSidebar: login || Boolean(sidebar),
-        hasContent: login || Boolean(content),
-        hasContainer: login || Boolean(container),
-        correctPageRoot: login ? Boolean(authPage) : route !== "/AdminSaas/Index" || Boolean(adminPage),
-        contentClear: login || !desktop || !sidebarRect || !contentRect || contentRect.left >= sidebarRect.right - 1,
-        footerAfterContent: login || !footer || !content || rect(footer).top >= contentRect.top,
-        cardsValid: cards.every(card => rect(card).width > 0),
-        primaryVisible: primaryButtons.length === 0 || primaryButtons.some(button => {
-          const box = rect(button); return box.width > 0 && box.height > 0;
-        }),
-        bodySane: body.scrollWidth <= Math.max(innerWidth + 24, innerWidth * 1.25)
-      };
-    }, { desktop: width >= 992, login: route === "/Account/Login" });
-    for (const [check, passed] of Object.entries(result)) {
-      if (check === "overflow" ? passed > 24 : !passed) failures.push(`${route} (${width}px): ${check}=${passed}`);
+    const login = route === "/Account/Login";
+    if (!login && !authenticatedContext) {
+      failures.push(`${route} (${width}x${height}): informe PLANTAOPRO_STORAGE_STATE para a homologação autenticada`);
+      continue;
     }
-    const name = route.replace(/^\//, "").replaceAll("/", "-") || "home";
-    await page.screenshot({ path: new URL(`${width}-${name}.png`, output).pathname, fullPage: true });
+    const page = await (login ? publicContext : authenticatedContext).newPage();
+    await page.setViewportSize({ width, height });
+    try {
+      const response = await page.goto(`${baseURL}${route}`, { waitUntil: "networkidle" });
+      if (!response?.ok()) failures.push(`${route} (${width}x${height}): HTTP ${response?.status() ?? "sem resposta"}`);
+      const currentPath = new URL(page.url()).pathname.toLowerCase();
+      if (!login && currentPath.includes("/account/login")) throw new Error("sessão expirada ou storage state inválido");
+
+      const result = await page.evaluate(({ desktop, login, admin }) => {
+        const rect = element => element?.getBoundingClientRect();
+        const visible = element => {
+          if (!element) return false;
+          const box = rect(element); const style = getComputedStyle(element);
+          return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+        };
+        const body = document.body;
+        const shell = document.querySelector(".pp-app-shell");
+        const sidebar = document.querySelector(".pp-sidebar");
+        const topbar = document.querySelector(".pp-topbar");
+        const content = document.querySelector(".pp-content");
+        const container = document.querySelector(".pp-content-container");
+        const footer = document.querySelector(".pp-footer");
+        const cards = [...document.querySelectorAll(".pp-card,.pp-action-card,.pp-kpi-card,.card")];
+        const primaryButtons = [...document.querySelectorAll(".btn-primary,.button-primary,[type=submit]")];
+        const openDrawers = [...document.querySelectorAll('[role="dialog"]:not([hidden]),dialog[open]')];
+        const visibleToasts = [...document.querySelectorAll(".pp-toast:not([hidden]),.toast.show")];
+        const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
+        const contentBox = rect(content); const sidebarBox = rect(sidebar);
+        const footerBox = rect(footer); const navBox = rect(mobileNavigation);
+        return {
+          horizontalOverflow: Math.max(0, body.scrollWidth - innerWidth) <= 24,
+          shellPresent: login || Boolean(shell),
+          contentPresent: login || Boolean(content),
+          containerPresent: login || Boolean(container),
+          topbarVisible: login || visible(topbar),
+          correctPageRoot: login ? Boolean(document.querySelector(".pp-auth-page")) : !admin || Boolean(document.querySelector(".pp-admin-saas-page.pp-page")),
+          sidebarClear: login || !desktop || !visible(sidebar) || !contentBox || !sidebarBox || contentBox.left >= sidebarBox.right - 1,
+          footerAfterContent: login || !footerBox || !contentBox || footerBox.top >= contentBox.top,
+          cardsHaveWidth: cards.every(card => rect(card).width > 0),
+          primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
+          drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
+          toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top)
+        };
+      }, { desktop: width >= 992, login, admin: route === "/AdminSaas/Index" });
+      for (const [check, passed] of Object.entries(result)) if (!passed) failures.push(`${route} (${width}x${height}): ${check}`);
+      const name = route.slice(1).replaceAll("/", "-");
+      await page.screenshot({ path: new URL(`${width}x${height}-${name}.png`, output).pathname, fullPage: true });
+    } catch (error) {
+      failures.push(`${route} (${width}x${height}): ${error.message}`);
+    } finally {
+      await page.close();
+    }
   }
-  await page.close();
 }
+
+await publicContext.close();
+if (authenticatedContext) await authenticatedContext.close();
 await browser.close();
 if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.62 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

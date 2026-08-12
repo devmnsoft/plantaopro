@@ -3,6 +3,7 @@
     ViewData["Title"] = Model.Titulo;
 }
 <div class="pp-page pp-clinical-page">
+@Html.AntiForgeryToken()
 <section class="pp-page-hero">
     <span class="pp-eyebrow">Saúde 360 · agenda assistencial</span>
     <h1>@Model.Titulo</h1>
@@ -41,29 +42,30 @@ else
     <div class="pp-clinical-grid">
     @foreach (var grupo in Model.Itens.GroupBy(i => i.Horario.ToString("HH:mm")).OrderBy(g => g.Key))
     {
-        <div class="pp-section-heading"><div><span class="pp-section-kicker">Horário</span><h2>@grupo.Key</h2></div></div>
+        <div class="pp-section-heading"><div><span class="pp-section-kicker">Horário</span><h2>@(grupo.First().Horario == default ? "Horário não informado" : grupo.Key)</h2></div></div>
         @foreach (var item in grupo)
         {
             <article class="pp-action-card">
-                <span class="badge bg-secondary">@item.Status</span>
-                <h3 class="h5 mt-2">@item.Paciente</h3>
-                <p class="mb-1"><strong>Médico:</strong> @item.Medico</p>
-                <p class="mb-1"><strong>Especialidade:</strong> @item.Especialidade</p>
-                <p class="mb-3"><strong>Unidade:</strong> @item.Unidade</p>
+                <span class="badge bg-secondary">@(string.IsNullOrWhiteSpace(item.Status) ? "Status não informado" : item.Status)</span>
+                <h3 class="h5 mt-2">@(string.IsNullOrWhiteSpace(item.Paciente) ? "Paciente não informado" : item.Paciente)</h3>
+                <p class="mb-1"><strong>Profissional:</strong> @(string.IsNullOrWhiteSpace(item.Medico) ? "Não informado" : item.Medico)</p>
+                <p class="mb-1"><strong>Especialidade:</strong> @(string.IsNullOrWhiteSpace(item.Especialidade) ? "Não informada" : item.Especialidade)</p>
+                <p class="mb-3"><strong>Unidade:</strong> @(string.IsNullOrWhiteSpace(item.Unidade) ? "Não informada pela API" : item.Unidade)</p>
                 <div class="d-flex gap-2 flex-wrap">
-                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Confirmar">Confirmar</button>
-                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Check-in">Check-in</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="confirmar" data-agenda-label="Confirmar agendamento">Confirmar</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="checkin" data-agenda-label="Realizar check-in">Check-in</button>
                     <a class="btn btn-outline-secondary btn-sm" asp-controller="PainelChamada" asp-action="Fila">Chamar no painel</a>
                     <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Fila">Enviar para triagem</a>
                     <a class="btn btn-outline-primary btn-sm" asp-controller="Consultas" asp-action="Create">Iniciar consulta</a>
-                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-action="Cancelar com motivo">Cancelar</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#agendaActionModal" data-agenda-id="@item.Id" data-agenda-operation="cancelar" data-agenda-label="Cancelar agendamento">Cancelar</button>
                 </div>
             </article>
         }
     }
     </div>
 }
-<div class="modal fade" id="agendaActionModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5">Confirmar ação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">A ação será enviada para a API real do agendamento e registrada em auditoria quando disponível.</div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Confirmar</button></div></div></div></div>
-<div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast" role="status" aria-live="polite" aria-atomic="true"><div class="toast-body">Ação preparada para envio seguro.</div></div></div>
+<div class="modal fade" id="agendaActionModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="agendaActionTitle" aria-describedby="agendaActionDescription" data-action-url="@Url.Action("ExecutarAcao", "Agendamentos")"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title h5" id="agendaActionTitle">Confirmar ação</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><p id="agendaActionDescription">Confirme para registrar a ação no agendamento.</p><div class="pp-form-field" data-agenda-reason hidden><label for="agendaActionReason">Motivo do cancelamento</label><textarea id="agendaActionReason" class="pp-form-control" rows="3" maxlength="500" aria-describedby="agendaActionReasonHelp"></textarea><small id="agendaActionReasonHelp">Obrigatório para manter o histórico auditável.</small></div><div class="pp-alert pp-alert--danger mt-3" role="alert" data-agenda-error hidden></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Voltar</button><button type="button" class="btn btn-primary" data-agenda-confirm>Confirmar</button></div></div></div></div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast" id="agendaActionToast" role="status" aria-live="polite" aria-atomic="true"><div class="toast-body"></div></div></div>
 
 </div>
+@section Scripts { <script src="~/js/pages/agendamentos.js" asp-append-version="true"></script> }

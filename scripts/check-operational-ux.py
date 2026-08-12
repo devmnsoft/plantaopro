@@ -59,6 +59,18 @@ for marker in ("/assumir", "/concluir", "/adiar", "/reabrir", "/comentar", "/his
         errors.append(f"work-item-drawer.js sem ação/tratamento real: {marker}")
 if "innerHTML" in work_drawer_js:
     errors.append("work-item-drawer.js interpola HTML; use construção segura do DOM")
+
+agenda = (WEB / "Views/Agendamentos/AgendaPremium.cshtml").read_text(encoding="utf-8")
+agenda_js = (WEB / "wwwroot/js/pages/agendamentos.js").read_text(encoding="utf-8")
+agenda_controller = (WEB / "Controllers/Saude360WebControllers.cs").read_text(encoding="utf-8")
+for marker in ('role="dialog"', 'aria-describedby="agendaActionDescription"', 'data-agenda-confirm', 'data-agenda-reason'):
+    if marker not in agenda:
+        errors.append(f"Agenda clínica sem confirmação acessível: {marker}")
+for marker in ("RequestVerificationToken", "aria-busy", "response.ok", "textContent"):
+    if marker not in agenda_js:
+        errors.append(f"agendamentos.js sem contrato de ação real: {marker}")
+if "ExecutarAcao" not in agenda_controller or "ValidateAntiForgeryToken" not in agenda_controller:
+    errors.append("AgendamentosController sem BFF protegido para ações operacionais")
 for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "data-filter-owner"):
     if marker not in central:
         errors.append(f"Minha Central sem filtro operacional: {marker}")

@@ -136,6 +136,19 @@ public sealed class AgendamentosController : Saude360WebControllerBase
     public Task<IActionResult> CheckIn() { return AgendaPremiumAsync("Check-in", "api/agendamentos"); }
     public Task<IActionResult> Cancelamentos() { return ModuloAsync("Cancelamentos", "Agendamento", "Cancelamentos exigem motivo e geram histórico auditável.", "api/agendamentos?status=CANCELADO", Links(Link("Agenda", "Index", "bi-calendar"))); }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ExecutarAcao(Guid id, string operacao, string? motivo)
+    {
+        var permitidas = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "confirmar", "checkin", "cancelar", "reagendar" };
+        if (id == Guid.Empty || !permitidas.Contains(operacao)) return BadRequest(new { success = false, message = "Ação de agendamento inválida." });
+        if (operacao.Equals("cancelar", StringComparison.OrdinalIgnoreCase) && string.IsNullOrWhiteSpace(motivo))
+            return BadRequest(new { success = false, message = "Informe o motivo do cancelamento." });
+        var token = GetJwtToken();
+        if (string.IsNullOrWhiteSpace(token)) return Unauthorized(new { success = false, message = "Sua sessão expirou." });
+        var result = await service.ExecutarAcaoAsync(token, $"api/agendamentos/{id}/{operacao.ToLowerInvariant()}", motivo);
+        return StatusCode(result.Success ? StatusCodes.Status200OK : StatusCodes.Status422UnprocessableEntity, new { success = result.Success, message = result.Message });
+    }
+
     private async Task<IActionResult> AgendaPremiumAsync(string titulo, string endpoint)
     {
         var token = GetJwtToken() ?? string.Empty;
@@ -143,14 +156,14 @@ public sealed class AgendamentosController : Saude360WebControllerBase
         var itens = result.Registros.Select(r => new PlantaoPro.Web.Models.AgendaClinicaItemViewModel
         {
             Id = r.Id,
-            Horario = r.RegDate == default ? DateTime.UtcNow : r.RegDate,
-            Paciente = string.IsNullOrWhiteSpace(r.Nome) ? "Paciente" : r.Nome,
-            Medico = r.MedicoId.HasValue ? "Médico informado" : "Médico a definir",
-            Especialidade = string.IsNullOrWhiteSpace(r.Codigo) ? "Especialidade a definir" : r.Codigo,
-            Unidade = "Unidade informada",
-            Status = string.IsNullOrWhiteSpace(r.Status) ? "PENDENTE" : r.Status
+            Horario = r.RegDate,
+            Paciente = r.Nome,
+            Medico = r.MedicoId?.ToString() ?? string.Empty,
+            Especialidade = r.Codigo,
+            Unidade = string.Empty,
+            Status = r.Status
         }).ToList();
-        var statusCards = itens.GroupBy(i => i.Status).Select(g => new PlantaoPro.Web.Models.AgendaStatusBadgeViewModel { Status = g.Key, Total = g.Count(), CssClass = BadgeClass(g.Key) }).ToList();
+        var statusCards = itens.Where(i => !string.IsNullOrWhiteSpace(i.Status)).GroupBy(i => i.Status).Select(g => new PlantaoPro.Web.Models.AgendaStatusBadgeViewModel { Status = g.Key, Total = g.Count(), CssClass = BadgeClass(g.Key) }).ToList();
         var model = new PlantaoPro.Web.Models.AgendaClinicaViewModel
         {
             Titulo = titulo,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.68 das páginas, tabelas, drawers e ações operacionais."""
+"""Gate estático v1.72 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -71,7 +71,7 @@ for marker in ("RequestVerificationToken", "aria-busy", "response.ok", "textCont
         errors.append(f"agendamentos.js sem contrato de ação real: {marker}")
 if "ExecutarAcao" not in agenda_controller or "ValidateAntiForgeryToken" not in agenda_controller:
     errors.append("AgendamentosController sem BFF protegido para ações operacionais")
-for marker in ("data-detail-open", "TipoAtendimento", "Convenio", "Sala", "Reagendar", "Abrir triagem"):
+for marker in ("data-detail-open", "TipoAtendimento", "Convenio", "Sala", "Tempo de espera", "Atraso", "Próxima ação", "Reagendar", "Abrir triagem", "Abrir consulta"):
     if marker not in agenda:
         errors.append(f"Agenda clínica sem contexto da recepção v1.60: {marker}")
 
@@ -120,4 +120,11 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.68 validada: páginas, tabelas, drawers, jornadas e busca real.")
+for marker in ("clinicalJourney", "operationalActionsAreExplicit", "screenshots/v172", "version: '1.72.0'"):
+    smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
+    if marker not in smoke:
+        errors.append(f"Smoke v1.72 sem contrato operacional: {marker}")
+
+if errors:
+    raise SystemExit("Falha na UX operacional v1.72:\n- " + "\n- ".join(errors))
+print("UX operacional v1.72 validada: recepção, clínica, operação, drawers e ações reais.")

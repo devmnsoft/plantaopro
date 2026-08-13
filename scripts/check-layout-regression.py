@@ -98,8 +98,11 @@ for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "contai
                  "cardsHaveHeight", "tablesResponsive", "publicHeroProportional", "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-if "screenshots/v165" not in smoke:
-    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v165")
+if "screenshots/v166" not in smoke:
+    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v166")
+for contract in ("landingContract", "overlayOutOfFlow", "selfserviceReady"):
+    if contract not in smoke:
+        errors.append(f"visual-smoke.mjs sem contrato visual v1.66: {contract}")
 
 if errors:
     raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))

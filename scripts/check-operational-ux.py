@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.64 das páginas, tabelas, drawers e ações operacionais."""
+"""Gate estático v1.66 das páginas, tabelas, drawers e ações operacionais."""
 from pathlib import Path
 import re
 
@@ -105,7 +105,11 @@ for required_marker in ("pp-app-shell", "pp-main-shell", "pp-content"):
         errors.append(f"Shell operacional sem {required_marker}")
 if "pp-overlay-root" not in portal:
     errors.append("Shell operacional sem portal global de overlays")
+for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_WorkItemDrawer.cshtml"):
+    source = (WEB / drawer_view).read_text(encoding="utf-8")
+    if 'role="dialog"' not in source or 'aria-modal="true"' not in source:
+        errors.append(f"{drawer_view}: drawer sem semântica modal acessível")
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.64 validada: páginas, tabelas, drawers, jornadas e busca real.")
+print("UX operacional v1.66 validada: páginas, tabelas, drawers, jornadas e busca real.")

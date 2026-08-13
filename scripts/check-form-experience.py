@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica o contrato responsivo e acessível dos formulários críticos v1.64."""
+"""Verifica o contrato responsivo e acessível dos formulários críticos v1.66."""
 from pathlib import Path
 import re
 
@@ -53,4 +53,4 @@ for path in (WEB / "Views").rglob("*.cshtml"):
 
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
-print("Form experience v1.64 validada: pp-form, grid, ajuda, erros e associação acessível presentes.")
+print("Form experience v1.66 validada: pp-form, grid, ajuda, erros e associação acessível presentes.")

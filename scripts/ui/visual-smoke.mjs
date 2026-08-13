@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v165/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v166/", import.meta.url);
 const routes = [
   "/", "/Account/Login", "/cadastro/empresa", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
@@ -39,7 +39,7 @@ for (const { width, height } of viewports) {
       const currentPath = new URL(page.url()).pathname.toLowerCase();
       if (!login && currentPath.includes("/account/login")) throw new Error("sessão expirada ou storage state inválido");
 
-      const result = await page.evaluate(({ desktop, login, admin, currentPath }) => {
+      const result = await page.evaluate(({ desktop, login, admin, authenticated, landing, currentPath }) => {
         const rect = element => element?.getBoundingClientRect();
         const visible = element => {
           if (!element) return false;
@@ -60,6 +60,7 @@ for (const { width, height } of viewports) {
         const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
         const tables = [...document.querySelectorAll("table")];
         const publicHero = document.querySelector(".pp-public-hero");
+        const publicCards = document.querySelector(".pp-public-card-grid");
         const overlayRoot = document.querySelector("#pp-overlay-root");
         const confirmModal = document.querySelector("#pp-confirm-modal");
         const selfservice = document.querySelector(".pp-selfservice-page .pp-onboarding-form");
@@ -67,11 +68,12 @@ for (const { width, height } of viewports) {
         const footerBox = rect(footer); const navBox = rect(mobileNavigation);
         return {
           horizontalOverflow: Math.max(0, body.scrollWidth - innerWidth) <= 24,
-          shellPresent: login || Boolean(shell),
-          contentPresent: login || Boolean(content),
-          containerPresent: login || Boolean(container),
-          topbarVisible: login || visible(topbar),
+          shellPresent: !authenticated || Boolean(shell),
+          contentPresent: !authenticated || Boolean(content),
+          containerPresent: !authenticated || Boolean(container),
+          topbarVisible: !authenticated || visible(topbar),
           correctPageRoot: login ? Boolean(document.querySelector(".pp-auth-page .pp-auth-shell .pp-auth-card")) : !admin || Boolean(document.querySelector(".pp-admin-saas-page.pp-page")),
+          landingContract: !landing || Boolean(publicHero && publicCards),
           authContentClear: !login || [...document.querySelectorAll(".pp-auth-shell *")].every(element => element.scrollWidth <= element.clientWidth + 2),
           topbarClear: login || !topbar || !contentBox || rect(topbar).bottom <= contentBox.top + 2,
           sidebarClear: login || !desktop || !visible(sidebar) || !contentBox || !sidebarBox || contentBox.left >= sidebarBox.right - 1,
@@ -80,13 +82,13 @@ for (const { width, height } of viewports) {
           cardsHaveHeight: cards.every(card => rect(card).height > 0),
           tablesResponsive: tables.every(table => table.closest(".table-responsive") || document.querySelector(".pp-mobile-card") || table.scrollWidth <= table.clientWidth + 2),
           publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(900, innerHeight * 1.4),
-          overlayOutOfFlow: Boolean(overlayRoot) && getComputedStyle(overlayRoot).position === "fixed" && (!confirmModal || confirmModal.hidden),
+          overlayOutOfFlow: !authenticated || (Boolean(overlayRoot) && getComputedStyle(overlayRoot).position === "fixed" && (!confirmModal || confirmModal.hidden)),
           selfserviceReady: currentPath !== "/cadastro/empresa" || Boolean(selfservice),
           primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
           drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
           toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top)
         };
-      }, { desktop: width >= 992, login, admin: route === "/AdminSaas/Index", currentPath });
+      }, { desktop: width >= 992, login, authenticated: !publicRoute, landing: route === "/", admin: route === "/AdminSaas/Index", currentPath });
       for (const [check, passed] of Object.entries(result)) if (!passed) failures.push(`${route} (${width}x${height}): ${check}`);
       const name = route.slice(1).replaceAll("/", "-");
       await page.screenshot({ path: new URL(`${width}x${height}-${name}.png`, output).pathname, fullPage: true });
@@ -105,5 +107,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual v1.65 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.66 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

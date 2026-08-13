@@ -16,7 +16,7 @@ required = {
 }
 
 landing = (WEB / "Views/CommercialDemoWeb/Landing.cshtml").read_text(encoding="utf-8")
-for marker in ("pp-public-hero", "pp-public-card-grid", "pp-action-card", "pp-data-card"):
+for marker in ("pp-public-hero", "pp-public-card-grid", "pp-public-card", "pp-action-card", "pp-data-card"):
     if marker not in landing:
         errors.append(f"Landing comercial sem componente obrigatório: {marker}")
 

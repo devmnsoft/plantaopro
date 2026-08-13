@@ -49,9 +49,9 @@
             <partial name="_ToastMessages" />
             @RenderBody()
         </main>
+        <partial name="_OverlayPortal" />
     }
     <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
-    <partial name="_ConfirmModal" model="new PlantaoPro.Web.Models.ConfirmModalViewModel()" />
     <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
     <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>
     <script src="~/js/form-experience.js" asp-append-version="true"></script>

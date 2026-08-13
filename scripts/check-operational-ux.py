@@ -97,6 +97,15 @@ for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "d
     if marker not in central:
         errors.append(f"Minha Central sem filtro operacional: {marker}")
 
+# Contratos visuais críticos v1.65 também protegem a navegação operacional.
+layout = (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8")
+portal = (WEB / "Views/Shared/_OverlayPortal.cshtml").read_text(encoding="utf-8")
+for required_marker in ("pp-app-shell", "pp-main-shell", "pp-content"):
+    if required_marker not in layout:
+        errors.append(f"Shell operacional sem {required_marker}")
+if "pp-overlay-root" not in portal:
+    errors.append("Shell operacional sem portal global de overlays")
+
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
 print("UX operacional v1.64 validada: páginas, tabelas, drawers, jornadas e busca real.")

@@ -37,16 +37,7 @@
   }
 
   function ensureConfirmModal(){
-    let modal=document.getElementById(confirmModalId);
-    if(modal){return modal;}
-    modal=document.createElement('div');
-    modal.className='modal fade';
-    modal.id=confirmModalId;
-    modal.tabIndex=-1;
-    modal.setAttribute('aria-hidden','true');
-    modal.innerHTML='<div class="modal-dialog modal-dialog-centered"><div class="modal-content pp-confirm-modal pp-confirm-modal-warning"><div class="modal-header"><div><span class="pp-confirm-kicker">Confirmação necessária</span><h5 class="modal-title mb-0" data-pp-confirm-title>Confirmar ação</h5></div><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body"><p class="mb-0" data-pp-confirm-message>Deseja realmente continuar?</p></div><div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-primary" data-pp-confirm-action><i class="bi bi-check2-circle me-1"></i>Confirmar</button></div></div></div>';
-    document.body.appendChild(modal);
-    return modal;
+    return document.getElementById(confirmModalId);
   }
 
   function getConfirmOptions(el){
@@ -61,77 +52,64 @@
 
   function wireConfirmActions(){
     const modal=ensureConfirmModal();
-    const instance=window.bootstrap&&window.bootstrap.Modal?bootstrap.Modal.getOrCreateInstance(modal):null;
+    const root=document.getElementById('pp-overlay-root');
+    if(!modal||!root||root.dataset.ppConfirmRootBound==='1'){return;}
+    root.dataset.ppConfirmRootBound='1';
     const titleEl=modal.querySelector('[data-pp-confirm-title]');
     const messageEl=modal.querySelector('[data-pp-confirm-message]');
     const actionButton=modal.querySelector('[data-pp-confirm-action],[data-pp-confirm-submit]');
     let pending=null;
+    let returnFocus=null;
 
+    const closeModal=()=>{
+      root.classList.remove('is-active');
+      modal.hidden=true;
+      document.body.classList.remove('pp-modal-open');
+      returnFocus?.focus();
+      returnFocus=null;
+    };
     const openModal=(source,event)=>{
-      if(event){event.preventDefault();event.stopImmediatePropagation();}
-      if(!instance){
-        showToast('error','Não foi possível abrir a confirmação. Atualize a página e tente novamente.');
-        return;
-      }
-
+      event?.preventDefault();
+      event?.stopImmediatePropagation();
       pending=source;
+      returnFocus=source;
       const options=getConfirmOptions(source);
       const safeType=String(options.type||'warning').replace(/[^a-z-]/gi,'').toLowerCase()||'warning';
       if(titleEl){titleEl.textContent=options.title;}
       if(messageEl){messageEl.textContent=options.message;}
-      if(actionButton){
-        actionButton.className='btn btn-'+safeType;
-        actionButton.innerHTML='<i class="bi bi-check2-circle me-1"></i>'+sanitize(options.text);
-      }
-      const content=modal.querySelector('.pp-confirm-modal');
-      if(content){
-        Array.from(content.classList).forEach((className)=>{if(className.indexOf('pp-confirm-modal-')===0){content.classList.remove(className);}});
-        content.classList.add('pp-confirm-modal-'+safeType);
-      }
-      instance.show();
+      if(actionButton){actionButton.className='btn btn-'+safeType;actionButton.querySelector('span')?.replaceChildren(options.text);}
+      Array.from(modal.classList).forEach(className=>{if(className.indexOf('pp-confirm-modal-')===0){modal.classList.remove(className);}});
+      modal.classList.add('pp-confirm-modal-'+safeType);
+      modal.hidden=false;
+      root.classList.add('is-active');
+      document.body.classList.add('pp-modal-open');
+      modal.focus();
     };
 
     document.querySelectorAll('[data-confirm="true"], [data-confirm-url], [data-confirm-action]').forEach(el=>{
-      if(el.dataset.ppConfirmBound==='1'){return;}
+      if(el===actionButton||el.dataset.ppConfirmBound==='1'){return;}
       el.dataset.ppConfirmBound='1';
-
-      if(el.tagName==='FORM'){
-        el.addEventListener('submit',(event)=>{
-          if(el.dataset.ppConfirmApproved==='1'){
-            return;
-          }
-          openModal(el,event);
-        });
-        return;
-      }
-
-      el.addEventListener('click',(event)=>{
+      const eventName=el.tagName==='FORM'?'submit':'click';
+      el.addEventListener(eventName,event=>{
+        if(el.dataset.ppConfirmApproved==='1'){return;}
         const action=getConfirmOptions(el).url;
-        const isButton=el.tagName==='BUTTON'||el.getAttribute('role')==='button';
-        if(!action&&!isButton){return;}
+        if(eventName==='click'&&!action&&el.tagName!=='BUTTON'&&el.getAttribute('role')!=='button'){return;}
         openModal(el,event);
       });
     });
-
-    if(actionButton&&actionButton.dataset.ppSubmitBound!=='1'){
-      actionButton.dataset.ppSubmitBound='1';
-      actionButton.addEventListener('click',()=>{
-        if(!pending){return;}
-        const formId=pending.getAttribute('data-confirm-form');
-        const targetForm=formId?document.getElementById(formId):pending.tagName==='FORM'?pending:pending.closest('form');
-        const action=getConfirmOptions(pending).url;
-
-        if(instance){instance.hide();}
-        if(targetForm){
-          targetForm.dataset.ppConfirmApproved='1';
-          targetForm.requestSubmit();
-          pending=null;
-          return;
-        }
-        if(action){window.location.assign(action);}
-        pending=null;
-      });
-    }
+    root.querySelectorAll('[data-bs-dismiss="modal"], [data-pp-confirm-cancel]').forEach(el=>el.addEventListener('click',closeModal));
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&root.classList.contains('is-active')){closeModal();}});
+    actionButton?.addEventListener('click',()=>{
+      if(!pending){return;}
+      const approved=pending;
+      const formId=approved.getAttribute('data-confirm-form');
+      const targetForm=formId?document.getElementById(formId):approved.tagName==='FORM'?approved:approved.closest('form');
+      const action=getConfirmOptions(approved).url;
+      closeModal();
+      if(targetForm){targetForm.dataset.ppConfirmApproved='1';targetForm.requestSubmit();pending=null;return;}
+      if(action){window.location.assign(action);}
+      pending=null;
+    });
   }
 
 

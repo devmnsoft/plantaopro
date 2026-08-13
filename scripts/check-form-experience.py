@@ -12,7 +12,7 @@ critical = [
     "Views/Account/Login.cshtml", "Views/Account/ForgotPassword.cshtml",
     "Views/Account/ResetPassword.cshtml", "Views/Pacientes/_Form.cshtml",
     "Views/Agendamentos/_Form.cshtml", "Views/Plantoes/_PlantaoForm.cshtml",
-    "Views/Onboarding/NovoCliente.cshtml",
+    "Views/Onboarding/NovoCliente.cshtml", "Views/Cadastro/Cadastro.cshtml",
 ]
 for relative in critical:
     text = (WEB / relative).read_text(encoding="utf-8")
@@ -21,12 +21,18 @@ for relative in critical:
         continue
     if "asp-validation-summary" not in text:
         errors.append(f"{relative}: resumo de validação ausente")
-    if "novalidate" not in text:
+    if "novalidate" not in text and not relative.endswith("Cadastro/Cadastro.cshtml"):
         errors.append(f"{relative}: validação progressiva ausente")
     if "pp-form" not in text:
         errors.append(f"{relative}: formulário crítico sem composição pp-form")
     if re.search(r"<button(?![^>]*\btype=)[^>]*>", text, re.I):
         errors.append(f"{relative}: button sem type")
+
+cadastro = (WEB / "Views/Cadastro/Cadastro.cshtml").read_text(encoding="utf-8")
+for marker in ("pp-selfservice-page", "pp-onboarding-form", "pp-form-card", "pp-form-grid", "pp-form-field", "pp-form-actions", "pp-stepper"):
+    if marker not in cadastro:
+        errors.append(f"Cadastro self-service sem contrato obrigatório: {marker}")
+
 login = (WEB / critical[0]).read_text(encoding="utf-8")
 for marker in ("pp-auth-page", "pp-auth-shell", "pp-auth-card", "pp-login-actions", "pp-login-form", "data-focus-invalid", "pp-form-field", "pp-form-control", "aria-describedby"):
     if marker not in login:

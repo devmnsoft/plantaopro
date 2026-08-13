@@ -37,9 +37,7 @@
 
 }
 
-<div class="modal fade" id="@id" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="@(id)-title" aria-describedby="@(id)-description" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content pp-confirm-modal pp-confirm-modal-@type @(type == "danger" ? "pp-delete-dialog" : string.Empty)" aria-busy="false">
+<section class="pp-modal pp-confirm-modal pp-confirm-modal-@type @(type == "danger" ? "pp-delete-dialog" : string.Empty)" id="@id" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="@(id)-title" aria-describedby="@(id)-description" aria-busy="false" hidden>
             <div class="modal-header">
                 <div class="pp-confirm-heading">
                     <span class="pp-confirm-icon" aria-hidden="true"><app-icon name="Warning" size="22" /></span>
@@ -70,6 +68,5 @@
                     <span class="spinner-border spinner-border-sm d-none" data-pp-confirm-loading aria-hidden="true"></span>
                 </button>
             </div>
-        </div>
-    </div>
-</div>
+
+</section>

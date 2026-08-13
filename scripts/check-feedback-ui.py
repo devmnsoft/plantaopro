@@ -14,6 +14,12 @@ files = {
 }
 texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
 errors: list[str] = []
+portal = (WEB / "Views/Shared/_OverlayPortal.cshtml").read_text(encoding="utf-8")
+if "pp-overlay-root" not in portal:
+    errors.append("Portal sem pp-overlay-root")
+if "hidden" not in texts["modal"]:
+    errors.append("Modal de confirmação não inicia hidden")
+
 if "pp-content-container" not in (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8"):
     errors.append("Shell sem pp-content-container")
 

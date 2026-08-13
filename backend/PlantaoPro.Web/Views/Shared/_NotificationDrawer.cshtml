@@ -1,1 +1,11 @@
-<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden><header><div><span class="eyebrow">Atualizações</span><h2 id="notificationTitle">Notificações</h2></div><button type="button" data-drawer-close aria-label="Fechar notificações"><app-icon name="Close" size="20" /></button></header><div class="drawer-toolbar"><select aria-label="Filtrar categoria" data-notification-filter><option value="">Todas as categorias</option><option>OPERACAO</option><option>ESCALA</option><option>CLINICA</option><option>FINANCEIRO</option></select><button type="button" class="button button-subtle" data-notification-read-all>Marcar todas como lidas</button></div><div class="drawer-body" data-notification-list aria-live="polite"><div class="skeleton-list" aria-label="Carregando notificações"></div></div></section>
+<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden>
+    <header><div><span class="eyebrow">Atualizações reais</span><h2 id="notificationTitle">Notificações</h2></div><button type="button" data-notification-close aria-label="Fechar notificações"><app-icon name="Close" size="20" /></button></header>
+    <div class="drawer-toolbar">
+        <select aria-label="Filtrar notificações por tipo" data-notification-filter>
+            <option value="">Todos os tipos</option><option value="PLANTAO">Plantão</option><option value="ESCALA">Escala</option><option value="CONVITE">Convite</option><option value="PAGAMENTO">Pagamento</option><option value="PENDENCIA">Pendência</option><option value="SAUDE360">Saúde 360</option><option value="SISTEMA">Sistema</option><option value="SEGURANCA">Segurança</option>
+        </select>
+        <button type="button" class="button button-subtle" data-notification-read-all hidden>Marcar todas como lidas</button>
+    </div>
+    <div class="drawer-body" data-notification-list aria-live="polite" aria-busy="false"></div>
+    <footer class="drawer-footer"><a class="button button-subtle" asp-controller="Notificacoes" asp-action="Index">Abrir histórico de notificações</a></footer>
+</section>

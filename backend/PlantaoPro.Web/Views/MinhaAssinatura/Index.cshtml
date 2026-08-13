@@ -1,16 +1,23 @@
-@{ ViewData["Title"] = "Minha assinatura"; ViewData["Subtitle"] = "Plano, uso e cobrança do ambiente atual."; }
+@model PlantaoPro.Web.Models.MinhaAssinaturaViewModel
+@{ ViewData["Title"] = "Minha assinatura"; }
 <div class="pp-page">
-    <header class="pp-page-hero" aria-labelledby="subscription-title">
-        <div class="pp-page-hero__copy"><span class="pp-eyebrow"><i class="bi bi-gem" aria-hidden="true"></i> Contrato e billing</span><h1 id="subscription-title">Minha assinatura</h1><p>Consulte dados contratuais retornados pelos módulos responsáveis, sem estimativas de preço, consumo ou renovação.</p></div>
-        <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-action="Faturas"><i class="bi bi-receipt" aria-hidden="true"></i> Consultar faturas</a><a class="btn btn-primary" asp-action="Upgrade"><i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Ver opções de plano</a></div>
-    </header>
-    <div class="pp-notice" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i><div><strong>Dados contratuais ainda não vinculados a esta tela.</strong><br />Plano atual, status, renovação e limites só serão exibidos quando retornados pelo backend. Nenhum valor estimado é apresentado.</div></div>
-    <section aria-labelledby="subscription-resources"><div class="pp-section-header"><div><h2 id="subscription-resources">Gestão da assinatura</h2><p>Acesse jornadas existentes para conferir disponibilidade e histórico.</p></div></div>
-        <div class="pp-action-grid mt-3">
-            <a class="pp-action-card" asp-action="Uso"><span class="pp-action-card__icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h3>Uso atual</h3><p>Consulte apenas medições disponibilizadas para o ambiente.</p><span class="pp-action-card__meta">Abrir uso <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-action="Limites"><span class="pp-action-card__icon"><i class="bi bi-sliders" aria-hidden="true"></i></span><h3>Limites contratados</h3><p>Verifique limites quando houver informação contratual disponível.</p><span class="pp-action-card__meta">Abrir limites <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-action="Modulos"><span class="pp-action-card__icon"><i class="bi bi-grid" aria-hidden="true"></i></span><h3>Recursos e módulos</h3><p>Entenda quais módulos estão disponíveis no contexto atual.</p><span class="pp-action-card__meta">Abrir módulos <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-action="Faturas"><span class="pp-action-card__icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><h3>Histórico de cobrança</h3><p>Acesse faturas reais quando disponibilizadas pelo billing.</p><span class="pp-action-card__meta">Abrir histórico <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-        </div>
-    </section>
+    <header class="pp-hero" aria-labelledby="subscription-title"><div class="pp-hero__copy"><span class="pp-eyebrow"><i class="bi bi-gem" aria-hidden="true"></i> Contrato e módulos</span><h1 id="subscription-title">Minha assinatura</h1><p>Dados fornecidos pela assinatura vinculada à organização autenticada.</p></div></header>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    { <div class="pp-notice" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><div><strong>Não foi possível consultar a assinatura.</strong><br />@Model.ErrorMessage</div></div> }
+    else if (!Model.HasSubscription)
+    { <section class="pp-empty-state" aria-labelledby="subscription-empty-title"><i class="bi bi-link-45deg" aria-hidden="true"></i><h2 id="subscription-empty-title">Assinatura ainda não vinculada</h2><p>A API não retornou uma assinatura para esta organização. Um administrador precisa concluir o vínculo contratual antes que plano, limites e cobranças possam ser exibidos.</p></section> }
+    else
+    {
+        <section class="pp-action-grid" aria-label="Resumo da assinatura">
+            @if (!string.IsNullOrWhiteSpace(Model.Plano)) { <article class="pp-card"><h2 class="h6">Plano atual</h2><p>@Model.Plano</p></article> }
+            @if (!string.IsNullOrWhiteSpace(Model.Status)) { <article class="pp-card"><h2 class="h6">Status</h2><p>@Model.Status</p></article> }
+            @if (!string.IsNullOrWhiteSpace(Model.Ciclo)) { <article class="pp-card"><h2 class="h6">Ciclo</h2><p>@Model.Ciclo</p></article> }
+            @if (Model.Vencimento.HasValue) { <article class="pp-card"><h2 class="h6">Próximo vencimento</h2><p>@Model.Vencimento.Value.ToString("dd/MM/yyyy")</p></article> }
+        </section>
+        <section class="mt-4" aria-labelledby="modules-title"><h2 id="modules-title">Módulos</h2>@if (Model.Modulos.Count == 0) { <p class="text-muted">Nenhum módulo foi informado pela API.</p> } else { <ul>@foreach (var item in Model.Modulos) { <li>@item</li> }</ul> }</section>
+        <section class="mt-4" aria-labelledby="limits-title"><h2 id="limits-title">Limites e uso</h2><div class="table-responsive"><table class="table"><thead><tr><th scope="col">Métrica</th><th scope="col">Limite</th></tr></thead><tbody>@foreach (var item in Model.Limites) { <tr><th scope="row">@item.Nome</th><td>@item.Valor</td></tr> }@foreach (var item in Model.Uso) { <tr><th scope="row">Uso: @item.Nome</th><td>@item.Valor</td></tr> }</tbody></table></div>@if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <p class="text-muted">A API não informou limites ou consumo.</p> }</section>
+        @if (!string.IsNullOrWhiteSpace(Model.ResponsavelFinanceiro)) { <section class="mt-4"><h2>Responsável financeiro</h2><p>@Model.ResponsavelFinanceiro</p></section> }
+        <section class="mt-4"><h2>Alertas</h2>@if (Model.Alertas.Count == 0) { <p class="text-muted">Nenhum alerta informado.</p> } else { <ul>@foreach (var alerta in Model.Alertas) { <li>@alerta</li> }</ul> }</section>
+        <section class="mt-4"><h2>Histórico de cobrança</h2>@if (Model.HistoricoCobranca.Count == 0) { <p class="text-muted">Nenhuma cobrança foi informada pela API.</p> } else { <div class="table-responsive"><table class="table"><thead><tr><th>Data</th><th>Status</th><th>Valor</th></tr></thead><tbody>@foreach (var item in Model.HistoricoCobranca) { <tr><td>@(item.Data?.ToString("dd/MM/yyyy") ?? "Não informada")</td><td>@item.Status</td><td>@item.Valor</td></tr> }</tbody></table></div> }</section>
+    }
 </div>

@@ -4,7 +4,7 @@
         <select aria-label="Filtrar notificações por tipo" data-notification-filter>
             <option value="">Todos os tipos</option><option value="PLANTAO">Plantão</option><option value="ESCALA">Escala</option><option value="CONVITE">Convite</option><option value="PAGAMENTO">Pagamento</option><option value="PENDENCIA">Pendência</option><option value="SAUDE360">Saúde 360</option><option value="SISTEMA">Sistema</option><option value="SEGURANCA">Segurança</option>
         </select>
-        <button type="button" class="button button-subtle" data-notification-read-all hidden>Marcar todas como lidas</button>
+        <button type="button" class="button button-subtle" data-notification-read-all disabled hidden>Marcar todas como lidas</button>
     </div>
     <div class="drawer-body" data-notification-list aria-live="polite" aria-busy="false"></div>
     <footer class="drawer-footer"><a class="button button-subtle" asp-controller="Notificacoes" asp-action="Index">Abrir histórico de notificações</a></footer>

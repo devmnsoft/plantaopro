@@ -11,11 +11,15 @@ export class NotificationDrawer {
   }
   async request(path, options) {
     const response = await fetch(this.api + path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) } });
-    if (!response.ok) throw new Error('As notificações não puderam ser atualizadas.');
+    if (!response.ok) {
+      const messages = { 401: 'Sua sessão expirou. Entre novamente para consultar as notificações.', 403: 'Você não tem permissão para consultar estas notificações.', 404: 'A central de notificações ainda não está disponível para esta conta.' };
+      const error = new Error(messages[response.status] || (response.status >= 500 ? 'A central de notificações está temporariamente indisponível.' : 'As notificações não puderam ser atualizadas.'));
+      error.status = response.status; throw error;
+    }
     return response.status === 204 ? null : response.json();
   }
   async refreshCount() {
-    try { const items = await this.request('/nao-lidas'); document.querySelectorAll('[data-notification-count]').forEach(counter => { counter.firstChild.textContent = String(items.length); counter.hidden = items.length === 0; }); }
+    try { const payload = await this.request('/nao-lidas'); const items = Array.isArray(payload) ? payload : []; document.querySelectorAll('[data-notification-count]').forEach(counter => { counter.querySelector('[data-notification-count-value]').textContent = items.length ? String(items.length) : ''; counter.hidden = items.length === 0; }); }
     catch { /* A ausência do backend não pode produzir contador fictício. */ }
   }
   async open(trigger) { this.trigger = trigger; this.drawer.hidden = false; document.querySelector('[data-overlay-backdrop]')?.removeAttribute('hidden'); this.drawer.querySelector('[data-notification-close]')?.focus(); await this.load(); }
@@ -30,13 +34,13 @@ export class NotificationDrawer {
   }
   async load() {
     const list = this.drawer.querySelector('[data-notification-list]'); list.setAttribute('aria-busy', 'true'); this.state('Carregando atualizações', 'Consultando a central de notificações…');
-    try { this.items = await this.request('/nao-lidas'); this.render(); } catch (error) { this.state('Notificações indisponíveis', error.message, true); } finally { list.setAttribute('aria-busy', 'false'); }
+    try { const payload = await this.request('/nao-lidas'); this.items = Array.isArray(payload) ? payload : []; this.render(); } catch (error) { this.items = []; this.state('Notificações indisponíveis', error.message, error.status !== 401 && error.status !== 403 && error.status !== 404); } finally { list.setAttribute('aria-busy', 'false'); }
   }
   safeDestination(value) { if (!value) return null; try { const url = new URL(value, window.location.origin); return url.origin === window.location.origin ? `${url.pathname}${url.search}${url.hash}` : null; } catch { return null; } }
   render() {
     const category = this.drawer.querySelector('[data-notification-filter]').value;
     const items = this.items.filter(item => !category || item.categoria === category);
-    this.drawer.querySelector('[data-notification-read-all]').hidden = this.items.length === 0;
+    const readAll = this.drawer.querySelector('[data-notification-read-all]'); readAll.hidden = this.items.length === 0; readAll.disabled = this.items.length === 0;
     if (!items.length) { this.state('Tudo em dia', 'Não há notificações novas neste filtro. Novas atualizações reais aparecerão aqui.'); return; }
     const list = this.drawer.querySelector('[data-notification-list]'); list.replaceChildren();
     items.forEach(item => {
@@ -45,12 +49,12 @@ export class NotificationDrawer {
       const title = document.createElement('h3'); title.textContent = item.titulo || 'Atualização';
       const message = document.createElement('p'); message.textContent = item.mensagem || '';
       const actions = document.createElement('div');
-      const read = document.createElement('button'); read.type = 'button'; read.className = 'button button-subtle'; read.textContent = 'Marcar como lida'; read.addEventListener('click', () => this.read(item.id)); actions.append(read);
+      const read = document.createElement('button'); read.type = 'button'; read.className = 'button button-subtle'; read.textContent = 'Marcar como lida'; read.disabled = !item.id; read.addEventListener('click', () => this.read(item.id, read)); actions.append(read);
       const destination = this.safeDestination(item.destinoUrl);
       if (destination) { const link = document.createElement('a'); link.className = 'button button-subtle'; link.href = destination; link.textContent = 'Abrir origem'; actions.append(link); }
       article.append(type, title, message, actions); list.append(article);
     });
   }
-  async read(id) { await this.request(`/${id}/lida`, { method: 'POST' }); this.items = this.items.filter(item => item.id !== id); this.render(); this.refreshCount(); }
-  async readAll() { await this.request('/marcar-todas-lidas', { method: 'POST' }); this.items = []; this.render(); this.refreshCount(); }
+  async read(id, button) { button.disabled = true; try { await this.request(`/${encodeURIComponent(id)}/lida`, { method: 'POST' }); this.items = this.items.filter(item => item.id !== id); this.render(); this.refreshCount(); } catch (error) { button.disabled = false; this.state('Não foi possível atualizar', error.message, true); } }
+  async readAll() { const button = this.drawer.querySelector('[data-notification-read-all]'); button.disabled = true; try { await this.request('/marcar-todas-lidas', { method: 'POST' }); this.items = []; this.render(); this.refreshCount(); } catch (error) { button.disabled = false; this.state('Não foi possível atualizar', error.message, true); } }
 }

@@ -270,3 +270,38 @@
 @media (prefers-reduced-motion: reduce) {
     .pp-user-menu__dropdown { scroll-behavior: auto; }
 }
+
+/* v1.65 — correções estruturais das rotas observadas em ambiente real. */
+.pp-selfservice-page { padding-block: clamp(2rem, 5vw, 4rem); }
+.pp-selfservice-hero { max-width: 52rem; margin-bottom: 1.5rem; }
+.pp-selfservice-hero h1 { max-width: 15ch; margin: .5rem 0 .75rem; color: var(--pp-v161-navy); font-size: clamp(2.25rem, 5vw, 4rem); line-height: 1; letter-spacing: -.045em; }
+.pp-selfservice-hero p { max-width: 62ch; margin: 0; color: var(--pp-v161-muted); font-size: 1.08rem; }
+.pp-stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0 0 1.5rem; padding: 1rem; gap: .5rem; border: 1px solid var(--pp-v161-line); border-radius: 1rem; background: #fff; list-style: none; }
+.pp-stepper li { display: flex; min-width: 0; gap: .55rem; align-items: center; color: var(--pp-v161-muted); font-size: .85rem; }
+.pp-stepper strong { display: grid; width: 1.8rem; height: 1.8rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: var(--pp-v161-blue); }
+.pp-onboarding-shell { display: grid; grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.pp-onboarding-summary { position: sticky; top: 1.5rem; padding: 1.5rem; border-radius: 1.25rem; color: #fff; background: var(--pp-v161-navy); box-shadow: 0 18px 50px rgb(11 36 67 / .16); }
+.pp-onboarding-summary h2 { margin: .6rem 0; font-size: 1.5rem; }
+.pp-onboarding-summary p, .pp-onboarding-summary li { color: #d7e4ef; line-height: 1.55; }
+.pp-onboarding-summary ul { display: grid; margin: 1.25rem 0 0; padding-left: 1.2rem; gap: .65rem; }
+.pp-onboarding-form { display: grid; gap: 1rem; min-width: 0; }
+.pp-form-card { overflow: hidden; border: 1px solid var(--pp-v161-line); border-radius: 1.25rem; background: #fff; box-shadow: 0 10px 30px rgb(11 36 67 / .055); }
+.pp-form-heading > span { color: var(--pp-v161-blue); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.pp-form-heading h2 { margin: .2rem 0; color: var(--pp-v161-navy); font-size: 1.35rem; }
+.pp-form-heading p { margin: 0; color: var(--pp-v161-muted); }
+.pp-form-field--wide { grid-column: 1 / -1; }
+.pp-form :where(input:not([type="checkbox"]), select, textarea) { width: 100%; min-height: 3rem; }
+.pp-form-help { color: var(--pp-v161-muted); font-size: .82rem; }
+.pp-consent-list { display: grid; gap: .75rem; }
+.pp-checkbox { display: flex; gap: .7rem; align-items: flex-start; color: var(--pp-v161-navy); }
+.pp-checkbox input { width: 1.15rem; height: 1.15rem; min-height: 0; margin-top: .15rem; flex: 0 0 auto; }
+.pp-public-card-grid .pp-card { min-height: 11.25rem; }
+.pp-admin-side .pp-checklist-card { width: 100%; }
+
+@media (max-width: 767px) {
+    .pp-onboarding-shell { grid-template-columns: 1fr; }
+    .pp-onboarding-summary { position: static; }
+    .pp-stepper { grid-template-columns: 1fr; }
+    .pp-stepper li { min-height: 2rem; }
+    .pp-form-field--wide { grid-column: auto; }
+}

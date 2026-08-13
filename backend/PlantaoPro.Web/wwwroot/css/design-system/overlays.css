@@ -3,3 +3,13 @@
 .pp-command-results { max-height: min(28rem, 60vh); overflow: auto; padding: var(--pp-space-2); }
 .pp-command-result { display: flex; align-items: center; gap: .75rem; padding: .75rem; color: var(--pp-text-primary); text-decoration: none; border-radius: var(--pp-radius-sm); }
 .pp-command-result:hover, .pp-command-result:focus { background: var(--pp-hover-bg); }
+
+.pp-overlay-root { position: fixed; inset: 0; z-index: 9999; display: none; padding: 1rem; place-items: center; pointer-events: none; }
+.pp-overlay-root.is-active { display: grid; pointer-events: auto; }
+.pp-overlay-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgb(15 23 42 / .58); backdrop-filter: blur(3px); cursor: default; }
+.pp-modal { position: relative; z-index: 1; width: min(calc(100% - 2rem), 560px); max-height: calc(100dvh - 2rem); overflow: auto; border: 1px solid var(--pp-border-default); border-radius: 1.5rem; background: #fff; box-shadow: 0 32px 100px rgb(15 23 42 / .24); }
+.pp-modal[hidden] { display: none; }
+.pp-confirm-modal .modal-header, .pp-confirm-modal .modal-body, .pp-confirm-modal .modal-footer { padding: 1.25rem 1.5rem; }
+.pp-confirm-modal .modal-header { display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--pp-border-default); }
+.pp-confirm-modal .modal-footer { display: flex; gap: .75rem; justify-content: flex-end; border-top: 1px solid var(--pp-border-default); }
+body.pp-modal-open { overflow: hidden; }

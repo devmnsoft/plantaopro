@@ -2,55 +2,72 @@
 @{
     ViewData["Title"] = "Cadastro self-service";
 }
-<section class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="mb-4">
-                <span class="badge bg-success">Self-service</span>
-                <h1>Crie sua conta PlantãoPro</h1>
-                <p class="text-muted">Preencha empresa, plano e administrador. A API cria tenant, cliente, assinatura, usuário admin, LGPD e onboarding.</p>
-                <div class="progress"><div class="progress-bar" style="width: 75%">Cadastro em etapas</div></div>
-            </div>
-            <form asp-controller="Cadastro" asp-action="Confirmar" method="post" class="card shadow-sm">
-                @Html.AntiForgeryToken()
-                <div class="card-body">
-                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                    <h2 class="h5">1. Empresa</h2>
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Nome fantasia</label><input class="form-control" asp-for="NomeFantasia" /></div>
-                        <div class="col-md-6"><label class="form-label">Razão social</label><input class="form-control" asp-for="RazaoSocial" /></div>
-                        <div class="col-md-4"><label class="form-label">CNPJ</label><input class="form-control" asp-for="Cnpj" /></div>
-                        <div class="col-md-4"><label class="form-label">Segmento</label><input class="form-control" asp-for="Segmento" /></div>
-                        <div class="col-md-4"><label class="form-label">E-mail corporativo</label><input class="form-control" asp-for="EmailCorporativo" /></div>
-                        <div class="col-md-4"><label class="form-label">Médicos estimados</label><input class="form-control" asp-for="QuantidadeMedicos" /></div>
-                        <div class="col-md-4"><label class="form-label">Unidades</label><input class="form-control" asp-for="QuantidadeHospitais" /></div>
-                        <div class="col-md-4"><label class="form-label">Plantões/mês</label><input class="form-control" asp-for="VolumePlantoesMes" /></div>
-                    </div>
-                    <hr />
-                    <h2 class="h5">2. Plano</h2>
-                    <select class="form-select" asp-for="PlanoId">
-                        @foreach (var plano in Model.Planos)
-                        {
-                            <option value="@plano.Id">@plano.Nome - @(plano.ValorMensal <= 0 ? "Sob proposta" : plano.ValorMensal.ToString("C"))</option>
-                        }
-                    </select>
-                    <div class="mt-2"><label class="form-label">Periodicidade</label><select class="form-select" asp-for="Periodicidade"><option>MENSAL</option><option>ANUAL</option></select></div>
-                    <hr />
-                    <h2 class="h5">3. Administrador</h2>
-                    <div class="row g-3">
-                        <div class="col-md-6"><label class="form-label">Nome</label><input class="form-control" asp-for="ResponsavelNome" /></div>
-                        <div class="col-md-6"><label class="form-label">E-mail</label><input class="form-control" asp-for="ResponsavelEmail" /></div>
-                        <div class="col-md-6"><label class="form-label">Telefone</label><input class="form-control" asp-for="ResponsavelTelefone" /></div>
-                        <div class="col-md-6"><label class="form-label">Cargo</label><input class="form-control" asp-for="ResponsavelCargo" /></div>
-                        <div class="col-md-6"><label class="form-label">Senha</label><input type="password" class="form-control" asp-for="Senha" /></div>
-                    </div>
-                    <hr />
-                    <div class="form-check"><input class="form-check-input" asp-for="AceiteTermos" /><label class="form-check-label" asp-for="AceiteTermos">Aceito os termos de uso</label></div>
-                    <div class="form-check"><input class="form-check-input" asp-for="AceitePrivacidade" /><label class="form-check-label" asp-for="AceitePrivacidade">Aceito a política de privacidade</label></div>
-                    <div class="form-check"><input class="form-check-input" asp-for="ConsentimentoLgpd" /><label class="form-check-label" asp-for="ConsentimentoLgpd">Autorizo o tratamento conforme LGPD</label></div>
+<div class="pp-public-page pp-selfservice-page">
+    <header class="pp-selfservice-hero">
+        <span class="pp-kicker">Cadastro self-service</span>
+        <h1>Crie sua conta PlantãoPro</h1>
+        <p>Preencha empresa, plano e administrador para iniciar sua operação médica.</p>
+    </header>
+
+    <ol class="pp-stepper" aria-label="Etapas do cadastro">
+        <li><strong>1</strong><span>Empresa</span></li><li><strong>2</strong><span>Plano</span></li><li><strong>3</strong><span>Administrador</span></li><li><strong>4</strong><span>Termos e LGPD</span></li><li><strong>5</strong><span>Revisão</span></li>
+    </ol>
+
+    <section class="pp-onboarding-shell">
+        <aside class="pp-onboarding-summary" aria-labelledby="cadastroResumo">
+            <span class="pp-kicker">Implantação guiada</span>
+            <h2 id="cadastroResumo">Comece com uma base segura</h2>
+            <p>Os dados informados configuram a organização, o acesso administrador e a jornada inicial.</p>
+            <ul><li>Ambiente separado por organização</li><li>Administrador responsável identificado</li><li>Consentimentos registrados</li></ul>
+        </aside>
+
+        <form asp-controller="Cadastro" asp-action="Confirmar" method="post" class="pp-form pp-onboarding-form" data-focus-invalid>
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert"></div>
+
+            <section class="pp-form-card pp-form-section" aria-labelledby="empresaTitle">
+                <div class="pp-form-heading"><span>Etapa 1</span><h2 id="empresaTitle">Empresa</h2><p>Identifique a organização e o porte da operação.</p></div>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="NomeFantasia" class="pp-form-label">Nome fantasia</label><input asp-for="NomeFantasia" class="pp-form-control" autocomplete="organization" /><span asp-validation-for="NomeFantasia" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="RazaoSocial" class="pp-form-label">Razão social</label><input asp-for="RazaoSocial" class="pp-form-control" /><span asp-validation-for="RazaoSocial" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Cnpj" class="pp-form-label">CNPJ</label><input asp-for="Cnpj" class="pp-form-control" inputmode="numeric" data-mask="cnpj" /><span asp-validation-for="Cnpj" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Segmento" class="pp-form-label">Segmento</label><input asp-for="Segmento" class="pp-form-control" /><span asp-validation-for="Segmento" class="pp-form-error"></span></div>
+                    <div class="pp-form-field pp-form-field--wide"><label asp-for="EmailCorporativo" class="pp-form-label">E-mail corporativo</label><input asp-for="EmailCorporativo" class="pp-form-control" type="email" autocomplete="email" /><span class="pp-form-help">Usaremos este endereço para comunicações sobre a implantação.</span><span asp-validation-for="EmailCorporativo" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="QuantidadeMedicos" class="pp-form-label">Médicos estimados</label><input asp-for="QuantidadeMedicos" class="pp-form-control" inputmode="numeric" /><span asp-validation-for="QuantidadeMedicos" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="QuantidadeHospitais" class="pp-form-label">Unidades</label><input asp-for="QuantidadeHospitais" class="pp-form-control" inputmode="numeric" /><span asp-validation-for="QuantidadeHospitais" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="VolumePlantoesMes" class="pp-form-label">Plantões por mês</label><input asp-for="VolumePlantoesMes" class="pp-form-control" inputmode="numeric" /><span asp-validation-for="VolumePlantoesMes" class="pp-form-error"></span></div>
                 </div>
-                <div class="card-footer d-flex justify-content-between"><a class="btn btn-outline-secondary" asp-controller="PlanosPublicos" asp-action="Index">Voltar aos planos</a><button class="btn btn-primary" type="submit">Finalizar cadastro</button></div>
-            </form>
-        </div>
-    </div>
-</section>
+            </section>
+
+            <section class="pp-form-card pp-form-section" aria-labelledby="planoTitle">
+                <div class="pp-form-heading"><span>Etapa 2</span><h2 id="planoTitle">Plano</h2><p>Escolha a modalidade adequada à operação.</p></div>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="PlanoId" class="pp-form-label">Plano</label><select asp-for="PlanoId" class="pp-form-control">@foreach (var plano in Model.Planos) { <option value="@plano.Id">@plano.Nome — @(plano.ValorMensal <= 0 ? "Sob proposta" : plano.ValorMensal.ToString("C"))</option> }</select><span asp-validation-for="PlanoId" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="Periodicidade" class="pp-form-label">Periodicidade</label><select asp-for="Periodicidade" class="pp-form-control"><option value="MENSAL">Mensal</option><option value="ANUAL">Anual</option></select><span asp-validation-for="Periodicidade" class="pp-form-error"></span></div>
+                </div>
+            </section>
+
+            <section class="pp-form-card pp-form-section" aria-labelledby="adminTitle">
+                <div class="pp-form-heading"><span>Etapa 3</span><h2 id="adminTitle">Administrador</h2><p>Defina quem conduzirá a configuração inicial.</p></div>
+                <div class="pp-form-grid">
+                    <div class="pp-form-field"><label asp-for="ResponsavelNome" class="pp-form-label">Nome</label><input asp-for="ResponsavelNome" class="pp-form-control" autocomplete="name" /><span asp-validation-for="ResponsavelNome" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="ResponsavelEmail" class="pp-form-label">E-mail</label><input asp-for="ResponsavelEmail" class="pp-form-control" type="email" autocomplete="email" /><span asp-validation-for="ResponsavelEmail" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="ResponsavelTelefone" class="pp-form-label">Telefone</label><input asp-for="ResponsavelTelefone" class="pp-form-control" inputmode="tel" autocomplete="tel" data-mask="phone" /><span asp-validation-for="ResponsavelTelefone" class="pp-form-error"></span></div>
+                    <div class="pp-form-field"><label asp-for="ResponsavelCargo" class="pp-form-label">Cargo</label><input asp-for="ResponsavelCargo" class="pp-form-control" autocomplete="organization-title" /><span asp-validation-for="ResponsavelCargo" class="pp-form-error"></span></div>
+                    <div class="pp-form-field pp-form-field--wide"><label asp-for="Senha" class="pp-form-label">Senha</label><input asp-for="Senha" class="pp-form-control" type="password" autocomplete="new-password" /><span class="pp-form-help">Use uma senha exclusiva para este acesso.</span><span asp-validation-for="Senha" class="pp-form-error"></span></div>
+                </div>
+            </section>
+
+            <section class="pp-form-card pp-form-section" aria-labelledby="termosTitle">
+                <div class="pp-form-heading"><span>Etapas 4 e 5</span><h2 id="termosTitle">Termos, LGPD e revisão</h2><p>Revise os dados e confirme os consentimentos antes de finalizar.</p></div>
+                <div class="pp-consent-list">
+                    <label class="pp-checkbox"><input asp-for="AceiteTermos" /><span>Aceito os termos de uso.</span></label>
+                    <label class="pp-checkbox"><input asp-for="AceitePrivacidade" /><span>Aceito a política de privacidade.</span></label>
+                    <label class="pp-checkbox"><input asp-for="ConsentimentoLgpd" /><span>Autorizo o tratamento de dados conforme a LGPD.</span></label>
+                </div>
+                <div class="pp-form-actions"><a class="btn btn-outline-secondary" asp-controller="PlanosPublicos" asp-action="Index">Voltar aos planos</a><button class="btn btn-primary" type="submit">Finalizar cadastro</button></div>
+            </section>
+        </form>
+    </section>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -4,9 +4,9 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v164/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v165/", import.meta.url);
 const routes = [
-  "/", "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
+  "/", "/Account/Login", "/cadastro/empresa", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
   "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes"
 ];
@@ -25,7 +25,7 @@ const failures = [];
 
 for (const { width, height } of viewports) {
   for (const route of routes) {
-    const publicRoute = route === "/" || route === "/Account/Login";
+    const publicRoute = route === "/" || route === "/Account/Login" || route === "/cadastro/empresa";
     const login = route === "/Account/Login";
     if (!publicRoute && !authenticatedContext) {
       failures.push(`${route} (${width}x${height}): informe PLANTAOPRO_STORAGE_STATE para a homologação autenticada`);
@@ -39,7 +39,7 @@ for (const { width, height } of viewports) {
       const currentPath = new URL(page.url()).pathname.toLowerCase();
       if (!login && currentPath.includes("/account/login")) throw new Error("sessão expirada ou storage state inválido");
 
-      const result = await page.evaluate(({ desktop, login, admin }) => {
+      const result = await page.evaluate(({ desktop, login, admin, currentPath }) => {
         const rect = element => element?.getBoundingClientRect();
         const visible = element => {
           if (!element) return false;
@@ -60,6 +60,9 @@ for (const { width, height } of viewports) {
         const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
         const tables = [...document.querySelectorAll("table")];
         const publicHero = document.querySelector(".pp-public-hero");
+        const overlayRoot = document.querySelector("#pp-overlay-root");
+        const confirmModal = document.querySelector("#pp-confirm-modal");
+        const selfservice = document.querySelector(".pp-selfservice-page .pp-onboarding-form");
         const contentBox = rect(content); const sidebarBox = rect(sidebar);
         const footerBox = rect(footer); const navBox = rect(mobileNavigation);
         return {
@@ -76,12 +79,14 @@ for (const { width, height } of viewports) {
           cardsHaveWidth: cards.every(card => rect(card).width > 0),
           cardsHaveHeight: cards.every(card => rect(card).height > 0),
           tablesResponsive: tables.every(table => table.closest(".table-responsive") || document.querySelector(".pp-mobile-card") || table.scrollWidth <= table.clientWidth + 2),
-          publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(1100, innerHeight * 1.75),
+          publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(900, innerHeight * 1.4),
+          overlayOutOfFlow: Boolean(overlayRoot) && getComputedStyle(overlayRoot).position === "fixed" && (!confirmModal || confirmModal.hidden),
+          selfserviceReady: currentPath !== "/cadastro/empresa" || Boolean(selfservice),
           primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
           drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
           toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top)
         };
-      }, { desktop: width >= 992, login, admin: route === "/AdminSaas/Index" });
+      }, { desktop: width >= 992, login, admin: route === "/AdminSaas/Index", currentPath });
       for (const [check, passed] of Object.entries(result)) if (!passed) failures.push(`${route} (${width}x${height}): ${check}`);
       const name = route.slice(1).replaceAll("/", "-");
       await page.screenshot({ path: new URL(`${width}x${height}-${name}.png`, output).pathname, fullPage: true });
@@ -100,5 +105,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual v1.64 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.65 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

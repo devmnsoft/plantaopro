@@ -1,1 +1,8 @@
-<div class="overlay-backdrop" data-overlay-backdrop hidden></div><partial name="_NotificationDrawer" /><partial name="_QuickActionDrawer" /><partial name="_ContextPanel" />
+<div id="pp-overlay-root" class="pp-overlay-root" aria-live="polite">
+    <button class="pp-overlay-backdrop" type="button" data-pp-confirm-cancel aria-label="Fechar confirmação"></button>
+    <partial name="_ConfirmModal" model="new PlantaoPro.Web.Models.ConfirmModalViewModel()" />
+</div>
+<div class="overlay-backdrop" data-overlay-backdrop hidden></div>
+<partial name="_NotificationDrawer" />
+<partial name="_QuickActionDrawer" />
+<partial name="_ContextPanel" />

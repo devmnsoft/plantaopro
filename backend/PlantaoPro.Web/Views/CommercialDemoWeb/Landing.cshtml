@@ -28,7 +28,7 @@
 <section class="pp-public-card-grid" aria-label="Soluções PlantãoPro">
 @foreach (var card in Model.Cards)
 {
-    <article class="pp-card pp-action-card">
+    <article class="pp-card pp-public-card pp-action-card">
         <h2>@card.Title</h2>
         <p>@card.Description</p>
         <a class="btn btn-outline-secondary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a>
@@ -36,10 +36,10 @@
 }
 </section>
 <section class="pp-public-card-grid pp-public-card-grid--secondary">
-    <article class="pp-card pp-data-card"><h2>Segurança e LGPD</h2><p>Autenticação, perfis, auditoria e registros operacionais sem exposição de dados sensíveis.</p></article>
-    <article class="pp-card pp-data-card"><h2>Multi-tenant e white label</h2><p>Clientes, parceiros e MNSOFT navegam por experiências segregadas e configuráveis.</p></article>
-    <article class="pp-card pp-data-card"><h2>Planos e módulos</h2><p>Governança comercial para limites, feature flags, adicionais e upgrades.</p></article>
-    <article class="pp-card pp-data-card"><h2>Dashboards</h2><p>Visões executivas para operação, comercial, billing e Customer Success.</p></article>
+    <article class="pp-card pp-public-card pp-data-card"><h2>Segurança e LGPD</h2><p>Autenticação, perfis, auditoria e registros operacionais sem exposição de dados sensíveis.</p></article>
+    <article class="pp-card pp-public-card pp-data-card"><h2>Multi-tenant e white label</h2><p>Clientes, parceiros e MNSOFT navegam por experiências segregadas e configuráveis.</p></article>
+    <article class="pp-card pp-public-card pp-data-card"><h2>Planos e módulos</h2><p>Governança comercial para limites, feature flags, adicionais e upgrades.</p></article>
+    <article class="pp-card pp-public-card pp-data-card"><h2>Dashboards</h2><p>Visões executivas para operação, comercial, billing e Customer Success.</p></article>
 </section>
 <div class="pp-mobile-cta"><a asp-controller="Cadastro" asp-action="Index">Começar agora</a></div>
 </div>

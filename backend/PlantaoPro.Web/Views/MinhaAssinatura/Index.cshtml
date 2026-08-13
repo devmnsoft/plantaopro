@@ -1,23 +1,45 @@
 @model PlantaoPro.Web.Models.MinhaAssinaturaViewModel
 @{ ViewData["Title"] = "Minha assinatura"; }
-<div class="pp-page">
-    <header class="pp-hero" aria-labelledby="subscription-title"><div class="pp-hero__copy"><span class="pp-eyebrow"><i class="bi bi-gem" aria-hidden="true"></i> Contrato e módulos</span><h1 id="subscription-title">Minha assinatura</h1><p>Dados fornecidos pela assinatura vinculada à organização autenticada.</p></div></header>
+<div class="pp-page pp-subscription-page">
+    <header class="pp-page-hero" aria-labelledby="subscription-title">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow"><i class="bi bi-gem" aria-hidden="true"></i> Contrato e billing</span><h1 id="subscription-title">Minha assinatura</h1><p>Consulte somente informações contratuais devolvidas pela API para a organização autenticada.</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-controller="Planos" asp-action="Index"><i class="bi bi-layers" aria-hidden="true"></i> Consultar planos</a></div>
+    </header>
+
     @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
-    { <div class="pp-notice" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><div><strong>Não foi possível consultar a assinatura.</strong><br />@Model.ErrorMessage</div></div> }
+    {
+        <div class="pp-notice" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><div><strong>Não foi possível consultar a assinatura.</strong><br />@Model.ErrorMessage</div></div>
+    }
     else if (!Model.HasSubscription)
-    { <section class="pp-empty-state" aria-labelledby="subscription-empty-title"><i class="bi bi-link-45deg" aria-hidden="true"></i><h2 id="subscription-empty-title">Assinatura ainda não vinculada</h2><p>A API não retornou uma assinatura para esta organização. Um administrador precisa concluir o vínculo contratual antes que plano, limites e cobranças possam ser exibidos.</p></section> }
+    {
+        <section class="pp-empty-state pp-empty-state--featured" aria-labelledby="subscription-empty-title"><span class="pp-icon-surface" aria-hidden="true"><i class="bi bi-link-45deg"></i></span><h2 id="subscription-empty-title">Assinatura ainda não vinculada</h2><p>A API não retornou um vínculo contratual para esta organização. Plano, preço, limites, consumo e cobranças permanecem ocultos para não apresentar estimativas como dados reais.</p><a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Index">Abrir central administrativa</a></section>
+    }
     else
     {
-        <section class="pp-action-grid" aria-label="Resumo da assinatura">
-            @if (!string.IsNullOrWhiteSpace(Model.Plano)) { <article class="pp-card"><h2 class="h6">Plano atual</h2><p>@Model.Plano</p></article> }
-            @if (!string.IsNullOrWhiteSpace(Model.Status)) { <article class="pp-card"><h2 class="h6">Status</h2><p>@Model.Status</p></article> }
-            @if (!string.IsNullOrWhiteSpace(Model.Ciclo)) { <article class="pp-card"><h2 class="h6">Ciclo</h2><p>@Model.Ciclo</p></article> }
-            @if (Model.Vencimento.HasValue) { <article class="pp-card"><h2 class="h6">Próximo vencimento</h2><p>@Model.Vencimento.Value.ToString("dd/MM/yyyy")</p></article> }
+        <section class="pp-kpi-grid pp-subscription-summary" aria-label="Resumo da assinatura">
+            @if (!string.IsNullOrWhiteSpace(Model.Plano)) { <article class="pp-kpi-card"><span>Plano atual</span><strong>@Model.Plano</strong><small>Informado pelo contrato vinculado</small></article> }
+            @if (!string.IsNullOrWhiteSpace(Model.Status)) { <article class="pp-kpi-card"><span>Status</span><strong>@Model.Status</strong><small>Situação retornada pela API</small></article> }
+            @if (!string.IsNullOrWhiteSpace(Model.Ciclo)) { <article class="pp-kpi-card"><span>Ciclo</span><strong>@Model.Ciclo</strong><small>Periodicidade contratual</small></article> }
+            @if (Model.Vencimento.HasValue) { <article class="pp-kpi-card"><span>Próximo vencimento</span><strong>@Model.Vencimento.Value.ToString("dd/MM/yyyy")</strong><small>Data informada pelo billing</small></article> }
         </section>
-        <section class="mt-4" aria-labelledby="modules-title"><h2 id="modules-title">Módulos</h2>@if (Model.Modulos.Count == 0) { <p class="text-muted">Nenhum módulo foi informado pela API.</p> } else { <ul>@foreach (var item in Model.Modulos) { <li>@item</li> }</ul> }</section>
-        <section class="mt-4" aria-labelledby="limits-title"><h2 id="limits-title">Limites e uso</h2><div class="table-responsive"><table class="table"><thead><tr><th scope="col">Métrica</th><th scope="col">Limite</th></tr></thead><tbody>@foreach (var item in Model.Limites) { <tr><th scope="row">@item.Nome</th><td>@item.Valor</td></tr> }@foreach (var item in Model.Uso) { <tr><th scope="row">Uso: @item.Nome</th><td>@item.Valor</td></tr> }</tbody></table></div>@if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <p class="text-muted">A API não informou limites ou consumo.</p> }</section>
-        @if (!string.IsNullOrWhiteSpace(Model.ResponsavelFinanceiro)) { <section class="mt-4"><h2>Responsável financeiro</h2><p>@Model.ResponsavelFinanceiro</p></section> }
-        <section class="mt-4"><h2>Alertas</h2>@if (Model.Alertas.Count == 0) { <p class="text-muted">Nenhum alerta informado.</p> } else { <ul>@foreach (var alerta in Model.Alertas) { <li>@alerta</li> }</ul> }</section>
-        <section class="mt-4"><h2>Histórico de cobrança</h2>@if (Model.HistoricoCobranca.Count == 0) { <p class="text-muted">Nenhuma cobrança foi informada pela API.</p> } else { <div class="table-responsive"><table class="table"><thead><tr><th>Data</th><th>Status</th><th>Valor</th></tr></thead><tbody>@foreach (var item in Model.HistoricoCobranca) { <tr><td>@(item.Data?.ToString("dd/MM/yyyy") ?? "Não informada")</td><td>@item.Status</td><td>@item.Valor</td></tr> }</tbody></table></div> }</section>
+
+        <div class="pp-subscription-layout">
+            <main class="pp-subscription-main">
+                <section class="pp-card pp-subscription-section" aria-labelledby="usage-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Capacidade</span><h2 id="usage-title">Limites e uso</h2><p>Valores disponibilizados pela fonte contratual, sem projeções.</p></div></div>
+                    @if (Model.Limites.Count == 0 && Model.Uso.Count == 0) { <div class="pp-inline-empty"><i class="bi bi-bar-chart" aria-hidden="true"></i><div><strong>Consumo não informado</strong><p>A API ainda não disponibilizou limites ou uso para este contrato.</p></div></div> }
+                    else { <div class="table-responsive"><table class="pp-data-table"><thead><tr><th scope="col">Métrica</th><th scope="col">Origem</th><th scope="col">Valor</th></tr></thead><tbody>@foreach (var item in Model.Limites) { <tr><th scope="row">@item.Nome</th><td>Limite contratado</td><td>@item.Valor</td></tr> }@foreach (var item in Model.Uso) { <tr><th scope="row">@item.Nome</th><td>Uso atual</td><td>@item.Valor</td></tr> }</tbody></table></div> }
+                </section>
+                <section class="pp-card pp-subscription-section" aria-labelledby="billing-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Billing</span><h2 id="billing-title">Histórico de cobrança</h2><p>Eventos efetivamente retornados pelo serviço de cobrança.</p></div></div>
+                    @if (Model.HistoricoCobranca.Count == 0) { <div class="pp-inline-empty"><i class="bi bi-receipt" aria-hidden="true"></i><div><strong>Nenhuma cobrança disponível</strong><p>O histórico não foi informado pela API para esta assinatura.</p></div></div> }
+                    else { <div class="pp-billing-timeline">@foreach (var item in Model.HistoricoCobranca) { <article><span class="pp-timeline-dot" aria-hidden="true"></span><div><h3>@(string.IsNullOrWhiteSpace(item.Status) ? "Status não informado" : item.Status)</h3><p>@(item.Data?.ToString("dd/MM/yyyy") ?? "Data não informada")</p></div><strong>@item.Valor</strong></article> }</div> }
+                </section>
+            </main>
+            <aside class="pp-card pp-subscription-side" aria-labelledby="contract-details-title"><span class="pp-eyebrow">Contrato</span><h2 id="contract-details-title">Detalhes e ações</h2>
+                <h3>Módulos habilitados</h3>@if (Model.Modulos.Count == 0) { <p class="text-muted">Nenhum módulo foi informado pela API.</p> } else { <ul class="pp-chip-list">@foreach (var item in Model.Modulos) { <li>@item</li> }</ul> }
+                <h3>Responsável financeiro</h3><p>@(string.IsNullOrWhiteSpace(Model.ResponsavelFinanceiro) ? "Não informado pela API." : Model.ResponsavelFinanceiro)</p>
+                <h3>Alertas contratuais</h3>@if (Model.Alertas.Count == 0) { <p class="text-muted">Nenhum alerta informado.</p> } else { <ul class="pp-status-list">@foreach (var alerta in Model.Alertas) { <li><i class="bi bi-exclamation-circle" aria-hidden="true"></i>@alerta</li> }</ul> }
+                <nav class="pp-stack-actions" aria-label="Ações da assinatura"><a class="btn btn-outline-primary" asp-controller="Planos" asp-action="Index">Ver catálogo de planos</a><a class="btn btn-outline-secondary" asp-controller="Configuracoes" asp-action="Index">Abrir configurações</a></nav>
+            </aside>
+        </div>
     }
 </div>

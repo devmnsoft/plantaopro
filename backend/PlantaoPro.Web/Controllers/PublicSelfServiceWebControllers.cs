@@ -142,24 +142,3 @@ public sealed class ParametrizacoesController : Controller
         Lgpd = new Dictionary<string, string> { ["Versão política"] = "1.0", ["Retenção"] = "5 anos" }
     };
 }
-
-[Authorize]
-public sealed class MinhaAssinaturaController : Controller
-{
-    [HttpGet("MinhaAssinatura")]
-    public IActionResult Index() => View("Index");
-    [HttpGet("MinhaAssinatura/Uso")]
-    public IActionResult Uso() => View("Uso");
-    [HttpGet("MinhaAssinatura/Modulos")]
-    public IActionResult Modulos() => View("Modulos");
-    [HttpGet("MinhaAssinatura/Limites")]
-    public IActionResult Limites() => View("Limites");
-    [HttpGet("MinhaAssinatura/Upgrade")]
-    public IActionResult Upgrade() => View("Upgrade", PlanosPublicosController.Planos());
-    [HttpGet("MinhaAssinatura/Downgrade")]
-    public IActionResult Downgrade() => View("Downgrade", PlanosPublicosController.Planos());
-    [HttpGet("MinhaAssinatura/Faturas")]
-    public IActionResult Faturas() => View("Faturas");
-    [HttpGet("MinhaAssinatura/Cancelamento")]
-    public IActionResult Cancelamento() => View("Cancelamento");
-}

@@ -30,4 +30,25 @@ public sealed class MinhaAssinaturaController : BaseWebController
 
         return View(model);
     }
+
+    [HttpGet("Uso")]
+    public IActionResult Uso() => View("Uso");
+
+    [HttpGet("Modulos")]
+    public IActionResult Modulos() => View("Modulos");
+
+    [HttpGet("Limites")]
+    public IActionResult Limites() => View("Limites");
+
+    [HttpGet("Upgrade")]
+    public IActionResult Upgrade() => View("Upgrade", PlanosPublicosController.Planos());
+
+    [HttpGet("Downgrade")]
+    public IActionResult Downgrade() => View("Downgrade", PlanosPublicosController.Planos());
+
+    [HttpGet("Faturas")]
+    public IActionResult Faturas() => View("Faturas");
+
+    [HttpGet("Cancelamento")]
+    public IActionResult Cancelamento() => View("Cancelamento");
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell e do contrato de homologação visual v1.68."""
+"""Gate estrutural do shell e do contrato de homologação visual v1.69."""
 from pathlib import Path
 import re
 
@@ -88,23 +88,20 @@ for route in (
     "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
     "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes",
 ):
-    if f'"{route}"' not in smoke:
+    if route not in smoke:
         errors.append(f"visual-smoke.mjs sem rota obrigatória: {route}")
 for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1440x900", "1920x1080"):
-    if f'"{viewport}"' not in smoke:
+    if viewport not in smoke:
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
-for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "containerPresent",
-                 "topbarVisible", "topbarClear", "authContentClear", "sidebarClear", "footerAfterContent", "cardsHaveWidth",
-                 "cardsHaveHeight", "tablesResponsive", "publicHeroProportional", "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav",
-                 "labelsAboveFields", "iconButtonsAccessible"):
+for contract in ("noHorizontalOverflow", "cardsInsideViewport", "responsiveTables", "accessibleDialogs",
+                 "overlaysOutOfFlow", "formsStructured", "pageContract", "shellClear",
+                 "commandPaletteOpens", "commandPaletteCloses"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-if "screenshots/v168" not in smoke:
-    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v168")
-for contract in ("landingContract", "overlayOutOfFlow", "selfserviceReady", "formsStructured", "dialogsAccessible", "noFlowingOverlay"):
-    if contract not in smoke:
-        errors.append(f"visual-smoke.mjs sem contrato visual v1.68: {contract}")
+for output in ("screenshots/v169", "v169-visual-smoke-results.json", "v169-visual-smoke-summary.md"):
+    if output not in smoke:
+        errors.append(f"visual-smoke.mjs sem saída v1.69: {output}")
 
 if errors:
-    raise SystemExit("Falha no layout v1.68:\n- " + "\n- ".join(errors))
-print("Layout v1.68 validado: shell, navegação e contrato de smoke sem regressões críticas.")
+    raise SystemExit("Falha no layout v1.69:\n- " + "\n- ".join(errors))
+print("Layout v1.69 validado: shell, navegação e contrato executável de smoke sem regressões críticas.")

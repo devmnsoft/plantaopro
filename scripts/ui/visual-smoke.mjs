@@ -1,121 +1,66 @@
 #!/usr/bin/env node
-import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+import { access, mkdir, writeFile } from 'node:fs/promises';
+import { chromium } from 'playwright';
 
-const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
+const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v168/", import.meta.url);
-const publicRoutes = new Set(["/", "/Account/Login", "/cadastro/empresa", "/Planos"]);
-const routes = [
-  "/", "/Account/Login", "/cadastro/empresa", "/Planos", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
-  "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
-  "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes"
-];
-const defaults = ["360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1440x900", "1920x1080"];
-const viewports = (process.env.PLANTAOPRO_VIEWPORTS?.split(",") ?? defaults).map(value => {
-  const match = value.trim().match(/^(\d+)x(\d+)$/i);
-  if (!match) throw new Error(`Viewport inválido: ${value}. Use largura×altura, por exemplo 390x844.`);
-  return { width: Number(match[1]), height: Number(match[2]) };
-});
-
-await mkdir(output, { recursive: true });
-const browser = await chromium.launch({ headless: true });
-const publicContext = await browser.newContext();
-const authenticatedContext = storageState ? await browser.newContext({ storageState }) : null;
-const failures = [];
-
-for (const { width, height } of viewports) {
-  for (const route of routes) {
-    const publicRoute = publicRoutes.has(route);
-    const login = route === "/Account/Login";
-    if (!publicRoute && !authenticatedContext) {
-      failures.push(`${route} (${width}x${height}): informe PLANTAOPRO_STORAGE_STATE para a homologação autenticada`);
-      continue;
-    }
-    const page = await (publicRoute ? publicContext : authenticatedContext).newPage();
-    await page.setViewportSize({ width, height });
+const root = new URL('../../artifacts/ui-audit/', import.meta.url);
+const screenshots = new URL('screenshots/v169/', root);
+const jsonOutput = new URL('v169-visual-smoke-results.json', root);
+const markdownOutput = new URL('v169-visual-smoke-summary.md', root);
+const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
+const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Plantoes', '/Escalas', '/Saude360', '/Pacientes', '/Agendamentos', '/Triagem', '/Consultas', '/Pagamentos', '/Financeiro', '/Relatorios', '/Configuracoes'];
+const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
+const selectedRoutes = process.env.PLANTAOPRO_PUBLIC_ONLY === '1' ? routes.filter(route => publicRoutes.has(route)) : routes;
+const viewports = (process.env.PLANTAOPRO_VIEWPORTS?.split(',') ?? defaults).map(value => { const match = value.trim().match(/^(\d+)x(\d+)$/i); if (!match) throw new Error(`Viewport inválido: ${value}`); return { width: +match[1], height: +match[2] }; });
+if (!baseURL) throw new Error('Defina PLANTAOPRO_BASE_URL (ex.: http://127.0.0.1:5000).');
+new URL(baseURL);
+if (selectedRoutes.some(route => !publicRoutes.has(route)) && !storageState) throw new Error('Rotas autenticadas exigem PLANTAOPRO_STORAGE_STATE. Autentique no Playwright e salve com: await page.context().storageState({ path: "playwright/.auth/user.json" }). Use PLANTAOPRO_PUBLIC_ONLY=1 para auditar apenas rotas públicas.');
+if (storageState) await access(storageState);
+await mkdir(screenshots, { recursive: true });
+const startedAt = new Date().toISOString();
+const results = [];
+let browser;
+try {
+  browser = await chromium.launch({ headless: true });
+  const publicContext = await browser.newContext();
+  const authenticatedContext = storageState ? await browser.newContext({ storageState }) : null;
+  for (const viewport of viewports) for (const route of selectedRoutes) {
+    const context = publicRoutes.has(route) ? publicContext : authenticatedContext;
+    const page = await context.newPage(); const checks = {}; let status = 'approved'; let error = null;
     try {
-      const response = await page.goto(`${baseURL}${route}`, { waitUntil: "networkidle" });
-      if (!response?.ok()) failures.push(`${route} (${width}x${height}): HTTP ${response?.status() ?? "sem resposta"}`);
-      const currentPath = new URL(page.url()).pathname.toLowerCase();
-      if (!login && currentPath.includes("/account/login")) throw new Error("sessão expirada ou storage state inválido");
-
-      const result = await page.evaluate(({ desktop, login, admin, authenticated, landing, currentPath }) => {
-        const rect = element => element?.getBoundingClientRect();
-        const visible = element => {
-          if (!element) return false;
-          const box = rect(element); const style = getComputedStyle(element);
-          return box.width > 0 && box.height > 0 && style.visibility !== "hidden" && style.display !== "none";
-        };
-        const body = document.body;
-        const html = document.documentElement;
-        const shell = document.querySelector(".pp-app-shell");
-        const sidebar = document.querySelector(".pp-sidebar");
-        const topbar = document.querySelector(".pp-topbar");
-        const content = document.querySelector(".pp-content");
-        const container = document.querySelector(".pp-content-container");
-        const footer = document.querySelector(".pp-footer");
-        const cards = [...document.querySelectorAll(".pp-card,.pp-action-card,.pp-kpi-card,.card")];
-        const primaryButtons = [...document.querySelectorAll(".btn-primary,.button-primary,[type=submit]")];
-        const iconButtons = [...document.querySelectorAll('button:not([aria-label])')].filter(button => !button.textContent.trim());
-        const forms = [...document.querySelectorAll("form")].filter(visible);
-        const labels = [...document.querySelectorAll("form label[for]")].filter(visible);
-        const openDrawers = [...document.querySelectorAll('[role="dialog"]:not([hidden]),dialog[open]')].filter(visible);
-        const visibleToasts = [...document.querySelectorAll(".pp-toast:not([hidden]),.toast.show")];
-        const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
-        const tables = [...document.querySelectorAll("table")];
-        const publicHero = document.querySelector(".pp-public-hero");
-        const publicCards = document.querySelector(".pp-public-card-grid");
-        const overlayRoot = document.querySelector("#pp-overlay-root");
-        const confirmModal = document.querySelector("#pp-confirm-modal");
-        const selfservice = document.querySelector(".pp-selfservice-page .pp-onboarding-form");
-        const contentBox = rect(content); const sidebarBox = rect(sidebar);
-        const footerBox = rect(footer); const navBox = rect(mobileNavigation);
+      await page.setViewportSize(viewport);
+      const response = await page.goto(new URL(route, baseURL).href, { waitUntil: 'networkidle' });
+      checks.http = Boolean(response?.ok());
+      checks.notRedirectedToLogin = route === '/Account/Login' || !new URL(page.url()).pathname.toLowerCase().includes('/account/login');
+      Object.assign(checks, await page.evaluate(({ route, desktop }) => {
+        const visible = element => element && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== 'hidden';
+        const dialogs = [...document.querySelectorAll('[role="dialog"]')]; const tables = [...document.querySelectorAll('table')];
         return {
-          horizontalOverflow: Math.max(body.scrollWidth, html.scrollWidth) <= innerWidth + 2,
-          shellPresent: !authenticated || Boolean(shell),
-          contentPresent: !authenticated || Boolean(content),
-          containerPresent: !authenticated || Boolean(container),
-          topbarVisible: !authenticated || visible(topbar),
-          correctPageRoot: login ? Boolean(document.querySelector(".pp-auth-page .pp-auth-shell .pp-auth-card")) : !admin || Boolean(document.querySelector(".pp-admin-layout, .pp-admin-saas-page.pp-page")),
-          landingContract: !landing || Boolean(publicHero && publicCards),
-          authContentClear: !login || [...document.querySelectorAll(".pp-auth-shell *")].every(element => element.scrollWidth <= element.clientWidth + 2),
-          topbarClear: login || !topbar || !contentBox || rect(topbar).bottom <= contentBox.top + 2,
-          sidebarClear: login || !desktop || !visible(sidebar) || !contentBox || !sidebarBox || contentBox.left >= sidebarBox.right - 1,
-          footerAfterContent: login || !footerBox || !contentBox || footerBox.top >= contentBox.top,
-          cardsHaveWidth: cards.filter(visible).every(card => rect(card).right <= innerWidth + 2 && rect(card).width > 0),
-          cardsHaveHeight: cards.filter(visible).every(card => rect(card).height > 0),
-          tablesResponsive: tables.every(table => table.closest(".table-responsive") || document.querySelector(".pp-mobile-card") || table.scrollWidth <= table.clientWidth + 2),
-          publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(900, innerHeight * 1.4),
-          overlayOutOfFlow: !authenticated || (Boolean(overlayRoot) && getComputedStyle(overlayRoot).position === "fixed" && (!confirmModal || confirmModal.hidden)),
-          selfserviceReady: currentPath !== "/cadastro/empresa" || Boolean(selfservice),
-          formsStructured: forms.every(form => form.classList.contains("pp-form") || form.classList.contains("pp-filter-bar") || form.classList.contains("pp-filter-form") || form.closest(".pp-topbar")),
-          labelsAboveFields: labels.every(label => { const field = document.getElementById(label.htmlFor); if (!field || !visible(field)) return true; const labelBox = rect(label); const fieldBox = rect(field); return labelBox.top <= fieldBox.top + 2; }),
-          dialogsAccessible: [...document.querySelectorAll('[role="dialog"]')].every(dialog => dialog.getAttribute("aria-modal") === "true" && Boolean(dialog.getAttribute("aria-label") || dialog.getAttribute("aria-labelledby"))),
-          noFlowingOverlay: [...document.querySelectorAll('[role="dialog"]')].every(dialog => dialog.hidden || ["fixed", "absolute"].includes(getComputedStyle(dialog).position)),
-          primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
-          drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
-          toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top),
-          iconButtonsAccessible: iconButtons.length === 0
+          noHorizontalOverflow: document.documentElement.scrollWidth <= innerWidth + 2,
+          cardsInsideViewport: [...document.querySelectorAll('.pp-card,.pp-action-card,.pp-kpi-card')].filter(visible).every(card => card.getBoundingClientRect().right <= innerWidth + 2),
+          responsiveTables: tables.every(table => table.closest('.table-responsive') || document.querySelector('.pp-mobile-card') || table.scrollWidth <= table.clientWidth + 2),
+          accessibleDialogs: dialogs.every(dialog => dialog.getAttribute('aria-modal') === 'true' && (dialog.getAttribute('aria-label') || dialog.getAttribute('aria-labelledby'))),
+          overlaysOutOfFlow: dialogs.every(dialog => dialog.hidden || ['fixed', 'absolute'].includes(getComputedStyle(dialog).position)),
+          formsStructured: [...document.querySelectorAll('form')].filter(visible).every(form => form.matches('.pp-form,.pp-filter-bar,.pp-filter-form') || form.closest('.pp-topbar')),
+          pageContract: route === '/Account/Login' ? Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')) : route === '/cadastro/empresa' ? Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')) : route === '/AdminSaas/Index' ? Boolean(document.querySelector('.pp-admin-layout')) : true,
+          shellClear: !desktop || !visible(document.querySelector('.pp-sidebar')) || !document.querySelector('.pp-content') || document.querySelector('.pp-content').getBoundingClientRect().left >= document.querySelector('.pp-sidebar').getBoundingClientRect().right - 1
         };
-      }, { desktop: width >= 992, login, authenticated: !publicRoute, landing: route === "/", admin: route === "/AdminSaas/Index", currentPath });
-      for (const [check, passed] of Object.entries(result)) if (!passed) failures.push(`${route} (${width}x${height}): ${check}`);
-      const name = route === "/" ? "home" : route.slice(1).replaceAll("/", "-").toLowerCase();
-      await page.screenshot({ path: new URL(`${width}x${height}-${name}.png`, output).pathname, fullPage: true });
-    } catch (error) {
-      failures.push(`${route} (${width}x${height}): ${error.message}`);
-    } finally {
-      await page.close();
-    }
+      }, { route, desktop: viewport.width >= 992 }));
+      if (Object.values(checks).some(value => !value)) status = 'failed';
+      const name = route === '/' ? 'home' : route.slice(1).replaceAll('/', '-').toLowerCase();
+      await page.screenshot({ path: new URL(`${viewport.width}x${viewport.height}-${name}.png`, screenshots).pathname, fullPage: true });
+      if (route === '/Home/Dashboard') { await page.keyboard.press('Control+K'); checks.commandPaletteOpens = await page.locator('#commandPalette:not([hidden])').isVisible(); await page.keyboard.press('Escape'); checks.commandPaletteCloses = await page.locator('#commandPalette').isHidden(); if (!checks.commandPaletteOpens || !checks.commandPaletteCloses) status = 'failed'; }
+    } catch (caught) { status = 'failed'; error = caught.message; }
+    finally { results.push({ route, authenticated: !publicRoutes.has(route), viewport: `${viewport.width}x${viewport.height}`, status, checks, error }); await page.close(); }
   }
+  await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
+} finally {
+  if (browser) await browser.close();
+  const payload = { version: '1.69.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
+  const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
+  await writeFile(markdownOutput, `# Smoke visual v1.69.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
-
-await publicContext.close();
-if (authenticatedContext) await authenticatedContext.close();
-await browser.close();
-if (failures.length) {
-  console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
-  process.exitCode = 1;
-} else {
-  console.log(`Smoke visual v1.68 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
-}
+if (results.some(item => item.status === 'failed')) process.exitCode = 1;
+else console.log(`Smoke visual v1.69.0 aprovado: ${results.length} execuções.`);

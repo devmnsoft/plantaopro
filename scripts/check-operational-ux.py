@@ -98,7 +98,7 @@ for marker in ("ValidarTriagem", "classificação de risco", "alto risco"):
         errors.append(f"Triagem sem validação server-side: {marker}")
 
 palette = (WEB / "wwwroot/js/command-palette.js").read_text(encoding="utf-8")
-for marker in ("ctrlKey", "metaKey", "Escape", "trigger.focus()", "/GlobalSearch"):
+for marker in ("ctrlKey", "metaKey", "Escape", "activeTrigger.focus()", "/GlobalSearch", "querySelectorAll('[data-command-open]')", "aria-activedescendant", "ArrowDown", "aria-selected", "url.origin === window.location.origin"):
     if marker not in palette:
         errors.append(f"Command Palette sem contrato acessível/real: {marker}")
 for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "data-filter-owner"):

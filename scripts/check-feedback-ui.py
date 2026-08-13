@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Valida feedback acessível e impede atalhos visuais proibidos na v1.66."""
+"""Valida feedback acessível e impede atalhos visuais proibidos na v1.68."""
 from pathlib import Path
 import re
 import subprocess
@@ -68,4 +68,4 @@ for css_path in (WEB / "wwwroot/css").rglob("*.css"):
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
-print("Feedback UI v1.66 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")
+print("Feedback UI v1.68 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")

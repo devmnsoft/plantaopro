@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Fechamento Operacional";
 }
-<section class="premium-workspace v1420-workspace" aria-labelledby="closing-title">
+<section class="pp-page premium-workspace v1420-workspace" aria-labelledby="closing-title">
     <div class="page-hero v1420-hero">
         <div>
             <span class="eyebrow">Conferência e financeiro</span>
@@ -10,10 +10,18 @@
             <p>Conferência de escalas, divergências justificadas, aprovação e geração financeira transacional.</p>
         </div>
         <div class="hero-actions" role="group" aria-label="Ações de fechamento">
-            <a class="btn btn-primary" href="/bff/fechamentos">Atualizar BFF</a>
-            <a class="btn btn-secondary" href="/fechamentos/pendentes">Pendentes</a>
+            <a class="btn btn-primary" asp-controller="Fechamentos" asp-action="Index"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Atualizar</a>
+            <a class="btn btn-secondary" asp-controller="Fechamentos" asp-action="Pendentes">Ver pendentes</a>
         </div>
     </div>
+    <nav class="clinical-journey" aria-label="Etapas do fechamento operacional">
+        <span><i class="bi bi-calendar-check" aria-hidden="true"></i>Plantão realizado</span>
+        <span><i class="bi bi-exclamation-diamond" aria-hidden="true"></i>Divergências</span>
+        <span><i class="bi bi-clipboard-check" aria-hidden="true"></i>Conferência</span>
+        <span><i class="bi bi-shield-check" aria-hidden="true"></i>Aprovação</span>
+        <span><i class="bi bi-receipt" aria-hidden="true"></i>Financeiro</span>
+        <span><i class="bi bi-cash-coin" aria-hidden="true"></i>Pagamento</span>
+    </nav>
     <div class="kpi-strip">
         @foreach (var kpi in Model.Indicadores)
         {
@@ -23,8 +31,15 @@
     <div class="operational-grid">
         <section class="operational-card" aria-labelledby="closing-list-title">
             <h2 id="closing-list-title">Fechamentos aguardando conferência</h2>
-            <div class="empty-state" role="status"><strong>Nenhum fechamento pendente.</strong><p>Novos plantões conferíveis serão carregados por endpoint real, sem dados demonstrativos.</p></div>
+            @if (!Model.Pendentes.Any())
+            {
+                <div class="empty-state" role="status"><strong>Nenhum fechamento disponível.</strong><p>A fonte operacional não retornou plantões para conferência. Nenhum valor ou status é estimado nesta tela.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive"><table class="pp-data-table"><thead><tr><th>Plantão</th><th>Origem</th><th>Status</th><th>Prioridade</th><th>Próxima ação</th></tr></thead><tbody>@foreach (var item in Model.Pendentes) { <tr><td data-label="Plantão"><a href="@item.Url">@item.Title</a><small>@item.Description</small></td><td data-label="Origem">@item.Origin</td><td data-label="Status">@item.Status</td><td data-label="Prioridade">@item.Priority</td><td data-label="Próxima ação">@item.NextAction</td></tr> }</tbody></table></div>
+            }
         </section>
-        <aside class="context-drawer is-static" aria-labelledby="closing-context-title"><h2 id="closing-context-title">Auditoria e timeline</h2><p>Eventos de conferência, divergência, aprovação e financeiro aparecem aqui.</p></aside>
+        <aside class="context-drawer is-static" aria-labelledby="closing-context-title"><h2 id="closing-context-title">Auditoria e timeline</h2>@if (!Model.Timeline.Any()) { <div class="empty-state" role="status"><strong>Sem histórico para exibir</strong><p>Selecione um fechamento retornado pela operação para consultar responsáveis, ajustes, divergências e pagamento vinculado.</p></div> } else { <ol class="timeline-list">@foreach (var item in Model.Timeline) { <li><strong>@item.Title</strong><span>@item.Description</span><time datetime="@item.OccurredAt.ToString("O")">@item.OccurredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time></li> }</ol> }</aside>
     </div>
 </section>

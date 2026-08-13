@@ -29,7 +29,7 @@
     <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
 
-<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="card border-0 shadow-sm saude360-form" data-saude360-form aria-describedby="saude360-form-hint">
+<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="pp-form card border-0 shadow-sm saude360-form" data-saude360-form aria-describedby="saude360-form-hint" data-focus-invalid data-unsaved-form>
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ApiEndpoint" />
     <input type="hidden" asp-for="Controller" />

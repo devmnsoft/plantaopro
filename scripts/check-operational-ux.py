@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.67 das páginas, tabelas, drawers e ações operacionais."""
+"""Gate estático v1.68 das páginas, tabelas, drawers e ações operacionais."""
 from pathlib import Path
 import re
 
@@ -80,6 +80,14 @@ for etapa in ("Paciente", "Agendamento", "Check-in", "Chamada", "Triagem", "Cons
     if f"<span>{etapa}</span>" not in saude:
         errors.append(f"Saúde 360 sem etapa real da jornada: {etapa}")
 
+fechamentos = (WEB / "Views/OperacaoPremium/Fechamentos.cshtml").read_text(encoding="utf-8")
+for etapa in ("Plantão realizado", "Divergências", "Conferência", "Aprovação", "Financeiro", "Pagamento"):
+    if etapa not in fechamentos:
+        errors.append(f"Fechamentos sem etapa operacional: {etapa}")
+for marker in ("Model.Pendentes.Any()", "table-responsive", "data-label=", "Model.Timeline.Any()"):
+    if marker not in fechamentos:
+        errors.append(f"Fechamentos sem contrato de dados reais/responsivo: {marker}")
+
 forms = (WEB / "Views/Saude360/Formulario.cshtml").read_text(encoding="utf-8")
 models = (WEB / "Models/Saude360WebViewModels.cs").read_text(encoding="utf-8")
 for marker in ('min="50" max="260"', 'min="30" max="45"', 'min="50" max="100"'):
@@ -112,4 +120,4 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.67 validada: páginas, tabelas, drawers, jornadas e busca real.")
+print("UX operacional v1.68 validada: páginas, tabelas, drawers, jornadas e busca real.")

@@ -42,8 +42,8 @@ public sealed class OperationBffController : ControllerBase
         if (Request.ContentLength is > 0 || Request.Headers.ContainsKey("Transfer-Encoding"))
         {
             request.Content = new StreamContent(Request.Body);
-            if (!string.IsNullOrWhiteSpace(Request.ContentType))
-                request.Content.Headers.ContentType = MediaTypeHeaderValue.Parse(Request.ContentType);
+            if (MediaTypeHeaderValue.TryParse(Request.ContentType, out var contentType))
+                request.Content.Headers.ContentType = contentType;
         }
 
         try
@@ -63,16 +63,25 @@ public sealed class OperationBffController : ControllerBase
             _logger.LogWarning("Timeout ao encaminhar {Method} para {Target}", Request.Method, target);
             return StatusCode((int)HttpStatusCode.GatewayTimeout, new { message = "A operação demorou mais que o esperado. Tente novamente." });
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "Falha de comunicação ao encaminhar {Method} para {Target}", Request.Method, target);
             return StatusCode((int)HttpStatusCode.BadGateway, new { message = "O serviço operacional está temporariamente indisponível." });
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha inesperada ao encaminhar {Method} para {Target}", Request.Method, target);
+            return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Não foi possível concluir a operação." });
+        }
     }
 
     private string? ResolveToken()
     {
-        foreach (var key in new[] { "jwt", "JwtToken", "AccessToken" })
+        foreach (var key in new[] { "jwt", "JwtToken", "AccessToken", "access_token", "accessToken", "token" })
         {
             var value = HttpContext.Session.GetString(key);
             if (!string.IsNullOrWhiteSpace(value)) return value;

@@ -1,11 +1,27 @@
 #!/usr/bin/env python3
-"""Regressão das superfícies SaaS e centrais operacionais até a v1.68."""
+"""Regressão das superfícies SaaS, assinatura e centrais operacionais v1.72."""
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
 errors: list[str] = []
+
+# Evita a regressão que causou CS0263/CS0101/CS0111: o controller de
+# assinatura deve existir uma única vez e manter sua rota/API no arquivo dedicado.
+controllers = WEB / "Controllers"
+controller_declarations: list[Path] = []
+for path in controllers.rglob("*.cs"):
+    if re.search(r"\bclass\s+MinhaAssinaturaController\b", path.read_text(encoding="utf-8")):
+        controller_declarations.append(path)
+if controller_declarations != [controllers / "MinhaAssinaturaController.cs"]:
+    found = ", ".join(str(path.relative_to(WEB)) for path in controller_declarations) or "nenhuma"
+    errors.append(f"MinhaAssinaturaController deve ter uma definição dedicada; encontrado: {found}")
+else:
+    assinatura_controller = controller_declarations[0].read_text(encoding="utf-8")
+    for marker in ('[Route("MinhaAssinatura")]', "BaseWebController", '"api/minha-assinatura"', "MinhaAssinaturaViewModel"):
+        if marker not in assinatura_controller:
+            errors.append(f"MinhaAssinaturaController sem contrato obrigatório: {marker}")
 required = {
     "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid--admin", "pp-admin-layout", "pp-admin-main", "pp-admin-side"),
     "Views/AdminSaas/Dashboard.cshtml": ("pp-page-hero", "pp-checklist-grid", "pp-checklist-card"),
@@ -76,5 +92,5 @@ for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
         errors.append(f"v161-medical-experience.css: acabamento premium v1.68 ausente: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UI SaaS v1.54:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.68 validada: hero, planos, checklist e onboarding estruturados.")
+    raise SystemExit("Falha na UI SaaS v1.72:\n- " + "\n- ".join(errors))
+print("SaaS UI v1.72 validada: assinatura única, hero, planos, checklist e onboarding estruturados.")

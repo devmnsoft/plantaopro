@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.66 das páginas, tabelas, drawers e ações operacionais."""
+"""Gate estático v1.67 das páginas, tabelas, drawers e ações operacionais."""
 from pathlib import Path
 import re
 
@@ -112,4 +112,4 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.66 validada: páginas, tabelas, drawers, jornadas e busca real.")
+print("UX operacional v1.67 validada: páginas, tabelas, drawers, jornadas e busca real.")

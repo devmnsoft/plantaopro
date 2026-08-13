@@ -1,0 +1,24 @@
+.pp-subscription-summary { margin-block: 1.5rem; }
+.pp-subscription-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(17rem, .8fr); gap: 1.25rem; align-items: start; }
+.pp-subscription-main { display: grid; gap: 1.25rem; min-width: 0; }
+.pp-subscription-section, .pp-subscription-side { padding: clamp(1rem, 2vw, 1.5rem); }
+.pp-subscription-side { position: sticky; top: 5.5rem; }
+.pp-subscription-side h3 { font-size: .9rem; margin: 1.35rem 0 .5rem; }
+.pp-inline-empty { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem; border: 1px dashed var(--pp-border, #d7dfeb); border-radius: .85rem; background: var(--pp-surface-subtle, #f7f9fc); }
+.pp-inline-empty i { color: var(--pp-primary, #1f73f1); font-size: 1.25rem; }
+.pp-inline-empty p { margin: .2rem 0 0; color: var(--pp-text-muted, #5f6b7a); }
+.pp-chip-list, .pp-status-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.pp-chip-list li { border-radius: 999px; padding: .35rem .7rem; background: #edf4ff; color: #174ea6; font-size: .85rem; }
+.pp-status-list { display: grid; }
+.pp-status-list li { display: flex; gap: .5rem; align-items: flex-start; }
+.pp-stack-actions { display: grid; gap: .65rem; margin-top: 1.5rem; }
+.pp-billing-timeline { display: grid; }
+.pp-billing-timeline article { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .75rem; align-items: center; padding: .85rem 0; border-bottom: 1px solid var(--pp-border, #e1e6ee); }
+.pp-billing-timeline h3, .pp-billing-timeline p { margin: 0; }
+.pp-timeline-dot { width: .65rem; height: .65rem; border-radius: 50%; background: var(--pp-primary, #1f73f1); box-shadow: 0 0 0 .3rem #e6f0ff; }
+.pp-empty-state--featured { max-width: 46rem; margin: 2rem auto; }
+.pp-settings-group { margin-top: 1.5rem; }
+.pp-settings-group + .pp-settings-group { padding-top: 1.25rem; border-top: 1px solid var(--pp-border, #e1e6ee); }
+.pp-card-status { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--pp-text-muted, #5f6b7a); }
+@media (max-width: 900px) { .pp-subscription-layout { grid-template-columns: 1fr; } .pp-subscription-side { position: static; } }
+@media (max-width: 560px) { .pp-billing-timeline article { grid-template-columns: auto minmax(0, 1fr); } .pp-billing-timeline article > strong { grid-column: 2; } }

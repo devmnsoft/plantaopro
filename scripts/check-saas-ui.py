@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regressão das superfícies SaaS, assinatura e centrais operacionais v1.72."""
+"""Regressão das superfícies SaaS, assinatura e centrais operacionais v1.73."""
 from pathlib import Path
 import re
 
@@ -22,6 +22,19 @@ else:
     for marker in ('[Route("MinhaAssinatura")]', "BaseWebController", '"api/minha-assinatura"', "MinhaAssinaturaViewModel"):
         if marker not in assinatura_controller:
             errors.append(f"MinhaAssinaturaController sem contrato obrigatório: {marker}")
+
+faturamento_declarations = []
+for path in controllers.rglob("*.cs"):
+    if re.search(r"\bclass\s+FaturamentoClinicoController\b", path.read_text(encoding="utf-8")):
+        faturamento_declarations.append(path)
+if faturamento_declarations != [controllers / "FaturamentoClinicoController.cs"]:
+    found = ", ".join(str(path.relative_to(WEB)) for path in faturamento_declarations) or "nenhuma"
+    errors.append(f"FaturamentoClinicoController deve ter uma definição dedicada; encontrado: {found}")
+else:
+    faturamento = faturamento_declarations[0].read_text(encoding="utf-8")
+    for marker in ('[Route("FaturamentoClinico")]', "BaseWebController", '"api/v115/faturamento/contas-receber"'):
+        if marker not in faturamento:
+            errors.append(f"FaturamentoClinicoController sem contrato obrigatório: {marker}")
 required = {
     "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid--admin", "pp-admin-layout", "pp-admin-main", "pp-admin-side"),
     "Views/AdminSaas/Dashboard.cshtml": ("pp-page-hero", "pp-checklist-grid", "pp-checklist-card"),
@@ -92,5 +105,5 @@ for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
         errors.append(f"v161-medical-experience.css: acabamento premium v1.68 ausente: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UI SaaS v1.72:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.72 validada: assinatura única, hero, planos, checklist e onboarding estruturados.")
+    raise SystemExit("Falha na UI SaaS v1.73:\n- " + "\n- ".join(errors))
+print("SaaS UI v1.73 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")

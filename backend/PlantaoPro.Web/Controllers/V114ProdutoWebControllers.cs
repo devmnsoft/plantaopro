@@ -4,18 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
-public partial class FaturamentoClinicoController : Controller
-{
-    public IActionResult Index() => View("~/Views/V114/Produto.cshtml", V114Page("Faturamento Clínico", "Contas, títulos, repasses, glosas e demo-boleto explícito.", "api/v115/faturamento/contas-receber"));
-    public IActionResult ContasReceber() => View("~/Views/V114/Produto.cshtml", V114Page("Contas a Receber", "Cobrança mínima sem evolução clínica sensível.", "api/v115/faturamento/contas-receber"));
-    public IActionResult Titulos() => View("~/Views/V114/Produto.cshtml", V114Page("Títulos", "Títulos financeiros com demo-boleto demonstrativo.", "api/v114/faturamento/titulos"));
-    public IActionResult RepassesMedicos() => View("~/Views/V114/Produto.cshtml", V114Page("Repasses Médicos", "Repasses por plantão realizado e atendimento faturado.", "api/v115/repasses-medicos"));
-    public IActionResult Glosas() => View("~/Views/V114/Produto.cshtml", V114Page("Glosas", "Registro e acompanhamento de glosas por convênio.", "api/v115/glosas"));
-    public IActionResult DemoBoleto() => View("~/Views/V114/Produto.cshtml", V114Page("Demo Boleto", "Boleto demonstrativo: não emite cobrança real.", "api/v114/faturamento/titulos"));
-    private static V114ProdutoWebPage V114Page(string title, string subtitle, string endpoint) => new V114ProdutoWebPage(title, subtitle, endpoint);
-}
-
-[Authorize]
 public class ItensFaturaveisController : Controller
 {
     public IActionResult Index() => View("~/Views/V114/Produto.cshtml", Page("Itens Faturáveis", "Serviços, procedimentos, plantões, taxas, repasses, convênios e pacotes.", "api/v114/itens-faturaveis"));

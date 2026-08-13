@@ -1,0 +1,75 @@
+@model PlantaoPro.Web.Models.FaturamentoClinicoViewModel
+@{
+    ViewData["Title"] = "Faturamento Clínico";
+}
+
+<div class="pp-page pp-clinical-page">
+    <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
+        "Faturamento Clínico",
+        "Confira contas geradas a partir das jornadas assistenciais antes do fluxo financeiro.",
+        "Os dados abaixo são retornados pela API do tenant; campos não fornecidos pela origem não são estimados.",
+        Steps: new[] { "Confira a referência e a competência.", "Investigue pendências na jornada de origem.", "Prossiga no Financeiro somente com dados consistentes." },
+        Eyebrow: "Receita assistencial")' />
+
+    <nav class="pp-action-grid" aria-label="Jornadas relacionadas">
+        <a class="pp-action-card" asp-controller="Consultas" asp-action="Index"><span>Consultas</span><small>Abrir a origem assistencial</small></a>
+        <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span>Financeiro</span><small>Conferir valores e situações</small></a>
+        <a class="pp-action-card" asp-controller="Pagamentos" asp-action="Index"><span>Pagamentos</span><small>Acompanhar realizações financeiras</small></a>
+    </nav>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <section class="pp-empty-state" role="status" aria-labelledby="billing-error-title">
+            <h2 id="billing-error-title">Não foi possível carregar o faturamento</h2>
+            <p>@Model.Error</p>
+            <a class="btn btn-outline-primary" asp-action="Index">Tentar novamente</a>
+        </section>
+    }
+    else if (Model.Items.Count == 0)
+    {
+        <section class="pp-empty-state" role="status" aria-labelledby="billing-empty-title">
+            <h2 id="billing-empty-title">Nenhuma conta clínica encontrada</h2>
+            <p>A API não retornou contas para este tenant. Nenhum valor ou histórico demonstrativo foi criado.</p>
+            <a class="btn btn-outline-primary" asp-controller="Consultas" asp-action="Index">Revisar consultas</a>
+        </section>
+    }
+    else
+    {
+        <section class="pp-section" aria-labelledby="billing-list-title">
+            <div class="pp-section-heading">
+                <div><span class="pp-section-kicker">Dados reais</span><h2 id="billing-list-title">Contas retornadas</h2><p>@Model.Items.Count registro(s) disponível(is) para conferência.</p></div>
+            </div>
+            <div class="pp-data-table d-none d-md-block"><div class="table-responsive">
+                <table class="table table-modern align-middle mb-0">
+                    <caption class="visually-hidden">Contas do faturamento clínico</caption>
+                    <thead><tr><th>Competência</th><th>Origem</th><th>Valor previsto</th><th>Status</th><th>Pendências</th><th class="text-end">Ações</th></tr></thead>
+                    <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        var referencia = item.ReferenciaId ?? item.AtendimentoId;
+                        <tr>
+                            <td>@(item.EmitidaEm?.ToString("MM/yyyy") ?? "Não informada")</td>
+                            <td>@(referencia?.ToString() ?? "Não informada pela API")</td>
+                            <td>@item.Valor.ToString("C")</td>
+                            <td><partial name="_StatusBadge" model="item.Status" /></td>
+                            <td>@(string.Equals(item.Status, "Pendente", StringComparison.OrdinalIgnoreCase) ? "Aguardando conferência" : "Nenhuma pendência informada")</td>
+                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Financeiro" asp-action="Index">Conferir no Financeiro</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div></div>
+            <div class="pp-mobile-card-list d-md-none" aria-label="Contas em formato compacto">
+            @foreach (var item in Model.Items)
+            {
+                var referencia = item.ReferenciaId ?? item.AtendimentoId;
+                <article class="pp-mobile-card pp-data-card">
+                    <header><div><span class="pp-section-kicker">@(item.EmitidaEm?.ToString("MM/yyyy") ?? "Competência não informada")</span><h3>@item.Valor.ToString("C")</h3></div><partial name="_StatusBadge" model="item.Status" /></header>
+                    <p>Origem: @(referencia?.ToString() ?? "não informada pela API")</p>
+                    <a class="btn btn-outline-primary w-100" asp-controller="Financeiro" asp-action="Index">Conferir no Financeiro</a>
+                </article>
+            }
+            </div>
+        </section>
+    }
+</div>

@@ -43,8 +43,10 @@ public sealed class V1420BffController : ControllerBase
 
 internal static class V1420Empty
 {
-    public static CoverageDashboardViewModel Coverage(string title = "Central de cobertura") => new(DefaultKpis(), Array.Empty<OperationalWorkItemViewModel>(), EmptyTimeline(title));
-    public static FechamentoViewModel Fechamentos(string title = "Fechamentos") => new(DefaultKpis(), Array.Empty<OperationalWorkItemViewModel>(), EmptyTimeline(title));
-    private static KpiItemViewModel[] DefaultKpis() => new[] { new KpiItemViewModel("Críticos", "0", "Sem registros críticos", "success"), new KpiItemViewModel("Pendentes", "0", "Nenhuma ação obrigatória", "neutral"), new KpiItemViewModel("SLA", "100%", "Sem vencimentos", "success") };
-    private static TimelineEventViewModel[] EmptyTimeline(string title) => new[] { new TimelineEventViewModel(title, "Aguardando dados operacionais reais da API para montar a linha do tempo.", DateTimeOffset.UtcNow, "neutral") };
+    public static CoverageDashboardViewModel Coverage(string title = "Central de cobertura") => new(UnavailableKpis(), Array.Empty<OperationalWorkItemViewModel>(), Array.Empty<TimelineEventViewModel>());
+    public static FechamentoViewModel Fechamentos(string title = "Fechamentos") => new(UnavailableKpis(), Array.Empty<OperationalWorkItemViewModel>(), Array.Empty<TimelineEventViewModel>());
+    private static KpiItemViewModel[] UnavailableKpis() => new[]
+    {
+        new KpiItemViewModel("Indicadores", "—", "Aguardando integração com a fonte operacional", "neutral")
+    };
 }

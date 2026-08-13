@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v167/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v168/", import.meta.url);
 const publicRoutes = new Set(["/", "/Account/Login", "/cadastro/empresa", "/Planos"]);
 const routes = [
   "/", "/Account/Login", "/cadastro/empresa", "/Planos", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
@@ -57,6 +57,9 @@ for (const { width, height } of viewports) {
         const footer = document.querySelector(".pp-footer");
         const cards = [...document.querySelectorAll(".pp-card,.pp-action-card,.pp-kpi-card,.card")];
         const primaryButtons = [...document.querySelectorAll(".btn-primary,.button-primary,[type=submit]")];
+        const iconButtons = [...document.querySelectorAll('button:not([aria-label])')].filter(button => !button.textContent.trim());
+        const forms = [...document.querySelectorAll("form")].filter(visible);
+        const labels = [...document.querySelectorAll("form label[for]")].filter(visible);
         const openDrawers = [...document.querySelectorAll('[role="dialog"]:not([hidden]),dialog[open]')].filter(visible);
         const visibleToasts = [...document.querySelectorAll(".pp-toast:not([hidden]),.toast.show")];
         const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
@@ -86,12 +89,14 @@ for (const { width, height } of viewports) {
           publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(900, innerHeight * 1.4),
           overlayOutOfFlow: !authenticated || (Boolean(overlayRoot) && getComputedStyle(overlayRoot).position === "fixed" && (!confirmModal || confirmModal.hidden)),
           selfserviceReady: currentPath !== "/cadastro/empresa" || Boolean(selfservice),
-          formsStructured: [...document.querySelectorAll("form")].filter(visible).every(form => form.classList.contains("pp-form") || form.classList.contains("pp-filter-bar") || form.closest(".pp-topbar")),
+          formsStructured: forms.every(form => form.classList.contains("pp-form") || form.classList.contains("pp-filter-bar") || form.classList.contains("pp-filter-form") || form.closest(".pp-topbar")),
+          labelsAboveFields: labels.every(label => { const field = document.getElementById(label.htmlFor); if (!field || !visible(field)) return true; const labelBox = rect(label); const fieldBox = rect(field); return labelBox.top <= fieldBox.top + 2; }),
           dialogsAccessible: [...document.querySelectorAll('[role="dialog"]')].every(dialog => dialog.getAttribute("aria-modal") === "true" && Boolean(dialog.getAttribute("aria-label") || dialog.getAttribute("aria-labelledby"))),
           noFlowingOverlay: [...document.querySelectorAll('[role="dialog"]')].every(dialog => dialog.hidden || ["fixed", "absolute"].includes(getComputedStyle(dialog).position)),
           primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
           drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
-          toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top)
+          toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top),
+          iconButtonsAccessible: iconButtons.length === 0
         };
       }, { desktop: width >= 992, login, authenticated: !publicRoute, landing: route === "/", admin: route === "/AdminSaas/Index", currentPath });
       for (const [check, passed] of Object.entries(result)) if (!passed) failures.push(`${route} (${width}x${height}): ${check}`);
@@ -112,5 +117,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual v1.67 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.68 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

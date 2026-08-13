@@ -144,10 +144,19 @@ public sealed class ParametrizacoesController : Controller
 }
 
 [Authorize]
-public sealed class MinhaAssinaturaController : Controller
+public sealed class MinhaAssinaturaController : BaseWebController
 {
+    public MinhaAssinaturaController(IHttpClientFactory factory, ILogger<MinhaAssinaturaController> logger) : base(factory, logger) { }
     [HttpGet("MinhaAssinatura")]
-    public IActionResult Index() => View("Index");
+    public async Task<IActionResult> Index()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (data, error, _) = await ReadApiResponseAsync<MinhaAssinaturaViewModel>(client, "api/minha-assinatura");
+        var model = data ?? new MinhaAssinaturaViewModel();
+        model.ErrorMessage = error;
+        return View("Index", model);
+    }
     [HttpGet("MinhaAssinatura/Uso")]
     public IActionResult Uso() => View("Uso");
     [HttpGet("MinhaAssinatura/Modulos")]

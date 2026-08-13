@@ -11,11 +11,17 @@ export class NotificationDrawer {
   }
   async request(path, options) {
     const response = await fetch(this.api + path, { credentials: 'same-origin', ...options, headers: { 'Content-Type': 'application/json', ...(options?.headers || {}) } });
-    if (!response.ok) throw new Error('As notificações não puderam ser atualizadas.');
-    return response.status === 204 ? null : response.json();
+    if (!response.ok) {
+      const messages = { 403: 'Seu perfil não tem permissão para acessar notificações.', 404: 'A central de notificações não está disponível neste ambiente.' };
+      throw new Error(messages[response.status] || (response.status === 401 ? 'Sua sessão expirou. Entre novamente para consultar notificações.' : 'As notificações não puderam ser atualizadas.'));
+    }
+    if (response.status === 204) return null;
+    const payload = await response.json();
+    if (payload && typeof payload === 'object' && Object.hasOwn(payload, 'success') && payload.success === false) throw new Error(payload.message || 'As notificações não puderam ser atualizadas.');
+    return payload && typeof payload === 'object' && Object.hasOwn(payload, 'data') ? payload.data : payload;
   }
   async refreshCount() {
-    try { const items = await this.request('/nao-lidas'); document.querySelectorAll('[data-notification-count]').forEach(counter => { counter.firstChild.textContent = String(items.length); counter.hidden = items.length === 0; }); }
+    try { const items = await this.request('/nao-lidas'); document.querySelectorAll('[data-notification-count]').forEach(counter => { counter.querySelector('[data-notification-count-value]').textContent = String(items.length); counter.querySelector('[data-notification-count-description]').textContent = `${items.length} notificações não lidas`; counter.hidden = items.length === 0; }); }
     catch { /* A ausência do backend não pode produzir contador fictício. */ }
   }
   async open(trigger) { this.trigger = trigger; this.drawer.hidden = false; document.querySelector('[data-overlay-backdrop]')?.removeAttribute('hidden'); this.drawer.querySelector('[data-notification-close]')?.focus(); await this.load(); }
@@ -35,7 +41,7 @@ export class NotificationDrawer {
   safeDestination(value) { if (!value) return null; try { const url = new URL(value, window.location.origin); return url.origin === window.location.origin ? `${url.pathname}${url.search}${url.hash}` : null; } catch { return null; } }
   render() {
     const category = this.drawer.querySelector('[data-notification-filter]').value;
-    const items = this.items.filter(item => !category || item.categoria === category);
+    const items = this.items.filter(item => !category || String(item.categoria || '').toUpperCase() === category);
     this.drawer.querySelector('[data-notification-read-all]').hidden = this.items.length === 0;
     if (!items.length) { this.state('Tudo em dia', 'Não há notificações novas neste filtro. Novas atualizações reais aparecerão aqui.'); return; }
     const list = this.drawer.querySelector('[data-notification-list]'); list.replaceChildren();

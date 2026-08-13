@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regressão das superfícies SaaS e centrais operacionais até a v1.68."""
+"""Regressão das superfícies SaaS e centrais operacionais até a v1.70."""
 from pathlib import Path
 import re
 
@@ -24,6 +24,7 @@ functional_surfaces = {
     "Views/Home/Dashboard.cshtml": ("pp-page", "pp-page-hero", "pp-kpi-strip", "_EmptyState", "pp-mobile-card"),
     "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-action-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-page", "pp-plan-grid", "pp-plan-card"),
+    "Views/MinhaAssinatura/Index.cshtml": ("pp-page", "Model.Disponivel", "_EmptyState", "pp-action-grid"),
     "Views/Plantoes/Index.cshtml": ("_PageIntroduction", "data-detail-open", "pp-mobile-card"),
     "Views/Escalas/Index.cshtml": ("_PageIntroduction", "data-detail-open", "table-responsive"),
 }
@@ -73,8 +74,8 @@ for marker in (".pp-admin-layout", ".pp-kpi-grid--admin", ".pp-public-hero", ".p
         errors.append(f"v161-medical-experience.css: contrato v1.63 ausente: {marker}")
 for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
     if marker not in medical_css:
-        errors.append(f"v161-medical-experience.css: acabamento premium v1.68 ausente: {marker}")
+        errors.append(f"v161-medical-experience.css: acabamento premium v1.70 ausente: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UI SaaS v1.54:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.68 validada: hero, planos, checklist e onboarding estruturados.")
+    raise SystemExit("Falha na UI SaaS v1.70:\n- " + "\n- ".join(errors))
+print("SaaS UI v1.70 validada: hero, planos, checklist e onboarding estruturados.")

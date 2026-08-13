@@ -5,11 +5,11 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v169/', root);
-const jsonOutput = new URL('v169-visual-smoke-results.json', root);
-const markdownOutput = new URL('v169-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v170/', root);
+const jsonOutput = new URL('v170-visual-smoke-results.json', root);
+const markdownOutput = new URL('v170-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
-const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Plantoes', '/Escalas', '/Saude360', '/Pacientes', '/Agendamentos', '/Triagem', '/Consultas', '/Pagamentos', '/Financeiro', '/Relatorios', '/Configuracoes'];
+const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Plantoes', '/Escalas', '/Saude360', '/Pacientes', '/Agendamentos', '/Triagem', '/Consultas', '/Pagamentos', '/Financeiro', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
 const selectedRoutes = process.env.PLANTAOPRO_PUBLIC_ONLY === '1' ? routes.filter(route => publicRoutes.has(route)) : routes;
 const viewports = (process.env.PLANTAOPRO_VIEWPORTS?.split(',') ?? defaults).map(value => { const match = value.trim().match(/^(\d+)x(\d+)$/i); if (!match) throw new Error(`Viewport inválido: ${value}`); return { width: +match[1], height: +match[2] }; });
@@ -51,16 +51,17 @@ try {
       const name = route === '/' ? 'home' : route.slice(1).replaceAll('/', '-').toLowerCase();
       await page.screenshot({ path: new URL(`${viewport.width}x${viewport.height}-${name}.png`, screenshots).pathname, fullPage: true });
       if (route === '/Home/Dashboard') { await page.keyboard.press('Control+K'); checks.commandPaletteOpens = await page.locator('#commandPalette:not([hidden])').isVisible(); await page.keyboard.press('Escape'); checks.commandPaletteCloses = await page.locator('#commandPalette').isHidden(); if (!checks.commandPaletteOpens || !checks.commandPaletteCloses) status = 'failed'; }
+      if (route === '/Home/Dashboard') { const notificationButton = page.locator('[data-notification-open]').first(); checks.notificationTriggerAccessible = await notificationButton.getAttribute('aria-controls') === 'notificationDrawer'; await notificationButton.click(); checks.notificationDrawerOpens = await page.locator('#notificationDrawer:not([hidden])').isVisible(); await page.keyboard.press('Escape'); checks.notificationDrawerCloses = await page.locator('#notificationDrawer').isHidden(); if (!checks.notificationTriggerAccessible || !checks.notificationDrawerOpens || !checks.notificationDrawerCloses) status = 'failed'; }
     } catch (caught) { status = 'failed'; error = caught.message; }
     finally { results.push({ route, authenticated: !publicRoutes.has(route), viewport: `${viewport.width}x${viewport.height}`, status, checks, error }); await page.close(); }
   }
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.69.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  const payload = { version: '1.70.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.69.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.70.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.69.0 aprovado: ${results.length} execuções.`);
+else console.log(`Smoke visual v1.70.0 aprovado: ${results.length} execuções.`);

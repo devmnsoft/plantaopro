@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell e do contrato de homologação visual v1.69."""
+"""Gate estrutural do shell e do contrato de homologação visual v1.70."""
 from pathlib import Path
 import re
 
@@ -86,7 +86,7 @@ smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 for route in (
     "/", "/Account/Login", "/cadastro/empresa", "/Planos", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
     "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
-    "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes",
+    "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes", "/MinhaAssinatura",
 ):
     if route not in smoke:
         errors.append(f"visual-smoke.mjs sem rota obrigatória: {route}")
@@ -95,13 +95,13 @@ for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
 for contract in ("noHorizontalOverflow", "cardsInsideViewport", "responsiveTables", "accessibleDialogs",
                  "overlaysOutOfFlow", "formsStructured", "pageContract", "shellClear",
-                 "commandPaletteOpens", "commandPaletteCloses"):
+                 "commandPaletteOpens", "commandPaletteCloses", "notificationDrawerOpens", "notificationDrawerCloses"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-for output in ("screenshots/v169", "v169-visual-smoke-results.json", "v169-visual-smoke-summary.md"):
+for output in ("screenshots/v170", "v170-visual-smoke-results.json", "v170-visual-smoke-summary.md"):
     if output not in smoke:
-        errors.append(f"visual-smoke.mjs sem saída v1.69: {output}")
+        errors.append(f"visual-smoke.mjs sem saída v1.70: {output}")
 
 if errors:
-    raise SystemExit("Falha no layout v1.69:\n- " + "\n- ".join(errors))
-print("Layout v1.69 validado: shell, navegação e contrato executável de smoke sem regressões críticas.")
+    raise SystemExit("Falha no layout v1.70:\n- " + "\n- ".join(errors))
+print("Layout v1.70 validado: shell, navegação e contrato executável de smoke sem regressões críticas.")

@@ -1,10 +1,23 @@
+@model PlantaoPro.Web.Models.MinhaAssinaturaViewModel
 @{ ViewData["Title"] = "Minha assinatura"; ViewData["Subtitle"] = "Plano, uso e cobrança do ambiente atual."; }
 <div class="pp-page">
     <header class="pp-page-hero" aria-labelledby="subscription-title">
         <div class="pp-page-hero__copy"><span class="pp-eyebrow"><i class="bi bi-gem" aria-hidden="true"></i> Contrato e billing</span><h1 id="subscription-title">Minha assinatura</h1><p>Consulte dados contratuais retornados pelos módulos responsáveis, sem estimativas de preço, consumo ou renovação.</p></div>
         <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-action="Faturas"><i class="bi bi-receipt" aria-hidden="true"></i> Consultar faturas</a><a class="btn btn-primary" asp-action="Upgrade"><i class="bi bi-arrow-up-circle" aria-hidden="true"></i> Ver opções de plano</a></div>
     </header>
-    <div class="pp-notice" role="status"><i class="bi bi-info-circle" aria-hidden="true"></i><div><strong>Dados contratuais ainda não vinculados a esta tela.</strong><br />Plano atual, status, renovação e limites só serão exibidos quando retornados pelo backend. Nenhum valor estimado é apresentado.</div></div>
+    @if (Model.Disponivel)
+    {
+        <section class="pp-kpi-grid" aria-label="Resumo da assinatura">
+            <article class="pp-kpi-card"><span>Plano atual</span><strong>@Model.PlanoNome</strong><small>Dado do contrato ativo</small></article>
+            <article class="pp-kpi-card"><span>Status</span><strong>@Model.Status</strong><small>Atualizado pelo billing</small></article>
+            <article class="pp-kpi-card"><span>Valor contratado</span><strong>@Model.ValorContratado.ToString("C")</strong><small>Sem estimativas adicionais</small></article>
+            <article class="pp-kpi-card"><span>Vigência</span><strong>@Model.DataInicio.ToString("dd/MM/yyyy")</strong><small>@(Model.DataFim.HasValue ? $"até {Model.DataFim:dd/MM/yyyy}" : "Sem término informado")</small></article>
+        </section>
+    }
+    else
+    {
+        <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-receipt", "Assinatura não disponível", Model.ErrorMessage ?? "O billing não retornou um contrato para o ambiente atual. Nenhum plano, valor ou vencimento foi presumido.")' />
+    }
     <section aria-labelledby="subscription-resources"><div class="pp-section-header"><div><h2 id="subscription-resources">Gestão da assinatura</h2><p>Acesse jornadas existentes para conferir disponibilidade e histórico.</p></div></div>
         <div class="pp-action-grid mt-3">
             <a class="pp-action-card" asp-action="Uso"><span class="pp-action-card__icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><h3>Uso atual</h3><p>Consulte apenas medições disponibilizadas para o ambiente.</p><span class="pp-action-card__meta">Abrir uso <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>

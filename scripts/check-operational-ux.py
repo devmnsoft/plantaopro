@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.68 das páginas, tabelas, drawers e ações operacionais."""
+"""Gate estático v1.70 das páginas, tabelas, drawers e ações operacionais."""
 from pathlib import Path
 import re
 
@@ -73,7 +73,7 @@ if "ExecutarAcao" not in agenda_controller or "ValidateAntiForgeryToken" not in 
     errors.append("AgendamentosController sem BFF protegido para ações operacionais")
 for marker in ("data-detail-open", "TipoAtendimento", "Convenio", "Sala", "Reagendar", "Abrir triagem"):
     if marker not in agenda:
-        errors.append(f"Agenda clínica sem contexto da recepção v1.60: {marker}")
+        errors.append(f"Agenda clínica sem contexto da recepção v1.70: {marker}")
 
 saude = (WEB / "Views/Saude360/Modulo.cshtml").read_text(encoding="utf-8")
 for etapa in ("Paciente", "Agendamento", "Check-in", "Chamada", "Triagem", "Consulta", "Prescrição", "Financeiro"):
@@ -118,6 +118,17 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
     if 'role="dialog"' not in source or 'aria-modal="true"' not in source:
         errors.append(f"{drawer_view}: drawer sem semântica modal acessível")
 
+notification_js = (WEB / "wwwroot/js/components/notification-drawer.js").read_text(encoding="utf-8")
+notification_bff = (WEB / "Controllers/OperationBffController.cs").read_text(encoding="utf-8")
+for marker in ("textContent", "same-origin", "403:", "404:", "payload.data", "safeDestination"):
+    if marker not in notification_js:
+        errors.append(f"Notification drawer sem integração segura v1.70: {marker}")
+if 'innerHTML' in notification_js:
+    errors.append("Notification drawer não pode interpolar innerHTML")
+for marker in ('Session.GetString("jwt")', 'Unauthorized'):
+    if marker not in notification_bff:
+        errors.append(f"BFF de notificações sem contrato autenticado: {marker}")
+
 if errors:
-    raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.68 validada: páginas, tabelas, drawers, jornadas e busca real.")
+    raise SystemExit("Falha na UX operacional v1.70:\n- " + "\n- ".join(errors))
+print("UX operacional v1.70 validada: páginas, tabelas, drawers, jornadas e busca real.")

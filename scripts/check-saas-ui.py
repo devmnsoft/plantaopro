@@ -15,6 +15,11 @@ required = {
     "Views/Onboarding/Index.cshtml": ("pp-page-hero", "pp-stepper", "pp-section"),
 }
 
+landing = (WEB / "Views/CommercialDemoWeb/Landing.cshtml").read_text(encoding="utf-8")
+for marker in ("pp-public-hero", "pp-public-card-grid", "pp-action-card", "pp-data-card"):
+    if marker not in landing:
+        errors.append(f"Landing comercial sem componente obrigatório: {marker}")
+
 functional_surfaces = {
     "Views/Home/Dashboard.cshtml": ("pp-page", "pp-page-hero", "pp-kpi-strip", "_EmptyState", "pp-mobile-card"),
     "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-action-grid", "pp-action-card"),

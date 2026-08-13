@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Valida região viva e contrato do diálogo de confirmação sem APIs nativas."""
+"""Valida feedback acessível e impede atalhos visuais proibidos na v1.64."""
 from pathlib import Path
 import re
 import subprocess
@@ -37,6 +37,8 @@ rules = {
 }
 for relative in changed:
     path = ROOT / relative
+    if relative.endswith(".min.css"):
+        errors.append(f"{relative}: nova camada CSS minificada não é permitida")
     if path.suffix not in (".js", ".cshtml") or not path.exists() or WEB not in path.parents:
         continue
     source = path.read_text(encoding="utf-8")
@@ -59,4 +61,4 @@ for css_path in (WEB / "wwwroot/css").rglob("*.css"):
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
-print("Feedback UI v1.54 validado: toast acessível e confirmação sem API nativa.")
+print("Feedback UI v1.64 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")

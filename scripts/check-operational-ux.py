@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático dos contratos operacionais preservados na v1.62."""
+"""Gate estático v1.64 das páginas, tabelas, drawers e ações operacionais."""
 from pathlib import Path
 import re
 
@@ -99,4 +99,4 @@ for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "d
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-print("UX operacional v1.62 validada: jornadas, drawers, validações clínicas e busca real.")
+print("UX operacional v1.64 validada: páginas, tabelas, drawers, jornadas e busca real.")

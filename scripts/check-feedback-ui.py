@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Valida feedback acessível e impede atalhos visuais proibidos na v1.64."""
+"""Valida feedback acessível e impede atalhos visuais proibidos na v1.66."""
 from pathlib import Path
 import re
 import subprocess
@@ -11,6 +11,7 @@ files = {
     "toast": WEB / "Views/Shared/_ToastRegion.cshtml",
     "ui": WEB / "wwwroot/js/plantaopro-ui.js",
     "detail_drawer": WEB / "wwwroot/js/detail-drawer.js",
+    "work_drawer": WEB / "wwwroot/js/components/work-item-drawer.js",
 }
 texts = {name: path.read_text(encoding="utf-8") for name, path in files.items()}
 errors: list[str] = []
@@ -67,4 +68,4 @@ for css_path in (WEB / "wwwroot/css").rglob("*.css"):
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
-print("Feedback UI v1.64 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")
+print("Feedback UI v1.66 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")

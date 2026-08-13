@@ -95,11 +95,11 @@ for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
 for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "containerPresent",
                  "topbarVisible", "topbarClear", "authContentClear", "sidebarClear", "footerAfterContent", "cardsHaveWidth",
-                 "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
+                 "cardsHaveHeight", "tablesResponsive", "publicHeroProportional", "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-if "screenshots/v163" not in smoke:
-    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v163")
+if "screenshots/v164" not in smoke:
+    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v164")
 
 if errors:
     raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))

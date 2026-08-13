@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica formulários críticos e ações operacionais até a v1.57."""
+"""Verifica o contrato responsivo e acessível dos formulários críticos v1.64."""
 from pathlib import Path
 import re
 
@@ -23,6 +23,8 @@ for relative in critical:
         errors.append(f"{relative}: resumo de validação ausente")
     if "novalidate" not in text:
         errors.append(f"{relative}: validação progressiva ausente")
+    if "pp-form" not in text:
+        errors.append(f"{relative}: formulário crítico sem composição pp-form")
     if re.search(r"<button(?![^>]*\btype=)[^>]*>", text, re.I):
         errors.append(f"{relative}: button sem type")
 login = (WEB / critical[0]).read_text(encoding="utf-8")
@@ -45,4 +47,4 @@ for path in (WEB / "Views").rglob("*.cshtml"):
 
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
-print("Form experience v1.54 validada: grid, ajuda, erros e associação acessível presentes.")
+print("Form experience v1.64 validada: pp-form, grid, ajuda, erros e associação acessível presentes.")

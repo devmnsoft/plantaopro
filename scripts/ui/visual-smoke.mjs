@@ -4,7 +4,7 @@ import { chromium } from "playwright";
 
 const baseURL = process.env.PLANTAOPRO_BASE_URL ?? "http://127.0.0.1:5000";
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
-const output = new URL("../../artifacts/ui-audit/screenshots/v163/", import.meta.url);
+const output = new URL("../../artifacts/ui-audit/screenshots/v164/", import.meta.url);
 const routes = [
   "/", "/Account/Login", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
   "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
@@ -58,6 +58,8 @@ for (const { width, height } of viewports) {
         const openDrawers = [...document.querySelectorAll('[role="dialog"]:not([hidden]),dialog[open]')];
         const visibleToasts = [...document.querySelectorAll(".pp-toast:not([hidden]),.toast.show")];
         const mobileNavigation = document.querySelector(".pp-mobile-nav,.mobile-navigation");
+        const tables = [...document.querySelectorAll("table")];
+        const publicHero = document.querySelector(".pp-public-hero");
         const contentBox = rect(content); const sidebarBox = rect(sidebar);
         const footerBox = rect(footer); const navBox = rect(mobileNavigation);
         return {
@@ -72,6 +74,9 @@ for (const { width, height } of viewports) {
           sidebarClear: login || !desktop || !visible(sidebar) || !contentBox || !sidebarBox || contentBox.left >= sidebarBox.right - 1,
           footerAfterContent: login || !footerBox || !contentBox || footerBox.top >= contentBox.top,
           cardsHaveWidth: cards.every(card => rect(card).width > 0),
+          cardsHaveHeight: cards.every(card => rect(card).height > 0),
+          tablesResponsive: tables.every(table => table.closest(".table-responsive") || document.querySelector(".pp-mobile-card") || table.scrollWidth <= table.clientWidth + 2),
+          publicHeroProportional: !publicHero || rect(publicHero).height <= Math.max(1100, innerHeight * 1.75),
           primaryActionVisible: primaryButtons.length === 0 || primaryButtons.some(visible),
           drawersAboveSidebar: openDrawers.every(drawer => !sidebar || Number(getComputedStyle(drawer).zIndex || 0) > Number(getComputedStyle(sidebar).zIndex || 0)),
           toastsClearMobileNav: desktop || !navBox || visibleToasts.every(toast => rect(toast).bottom <= navBox.top)
@@ -95,5 +100,5 @@ if (failures.length) {
   console.error(`Smoke visual falhou:\n- ${failures.join("\n- ")}`);
   process.exitCode = 1;
 } else {
-  console.log(`Smoke visual v1.63 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
+  console.log(`Smoke visual v1.64 aprovado em ${routes.length} rotas e ${viewports.length} viewports.`);
 }

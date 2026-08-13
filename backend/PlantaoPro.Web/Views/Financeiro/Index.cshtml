@@ -11,6 +11,7 @@
     var maiorValor = porStatus.Any() ? porStatus.Max(x => x.Total) : 0;
 }
 
+<div class="pp-page pp-financial-workspace">
 <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
     "Financeiro",
     "Acompanhe pagamentos, repasses, divergências, vencimentos e fechamentos operacionais.",
@@ -18,15 +19,15 @@
     Steps: new[] { "Confira valores previstos e realizados.", "Analise divergências e pendências.", "Registre a resolução antes do fechamento." },
     Eyebrow: "Controle financeiro")' />
 
-<div class="row g-3 mb-3">
-    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Total Previsto</div><div class="metric-value">@totalPrevisto.ToString("C")</div></div></div>
-    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Total Pago</div><div class="metric-value text-success">@totalPago.ToString("C")</div></div></div>
-    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Pendentes</div><div class="metric-value text-warning">@pendentes</div></div></div>
-    <div class="col-md-3"><div class="metric-card"><div class="kpi-title">Cancelados</div><div class="metric-value text-danger">@cancelados</div></div></div>
-</div>
+<section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
+    <article class="pp-kpi-card"><span>Total previsto</span><strong>@totalPrevisto.ToString("C")</strong><small>Composição dos registros exibidos</small></article>
+    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@totalPago.ToString("C")</strong><small>Valores já realizados</small></article>
+    <article class="pp-kpi-card pp-kpi-card--warning"><span>Pendentes</span><strong>@pendentes</strong><small>Aguardando avanço operacional</small></article>
+    <article class="pp-kpi-card"><span>Cancelados</span><strong>@cancelados</strong><small>Registros sem continuidade</small></article>
+</section>
 
-<div class="card border-0 mb-3">
-    <div class="card-header">Consolidação por status (amostra da página)</div>
+<section class="pp-section" aria-labelledby="financial-status-title">
+    <div class="pp-section-heading"><div><span class="pp-section-kicker">Competência atual</span><h2 id="financial-status-title">Consolidação por status</h2><p>Distribuição calculada somente com os registros retornados nesta página.</p></div></div>
     <div class="card-body">
         @if (!porStatus.Any())
         {
@@ -44,7 +45,7 @@
             }
         }
     </div>
-</div>
+</section>
 
 @if (!items.Any())
 {
@@ -56,7 +57,7 @@
 }
 else
 {
-    <div class="table-responsive">
+    <div class="pp-data-table d-none d-md-block"><div class="table-responsive">
         <table class="table table-modern align-middle mb-0">
             <caption class="visually-hidden">Pagamentos e situação financeira</caption><thead>
                 <tr>
@@ -94,9 +95,20 @@ else
                 }
             </tbody>
         </table>
+    </div></div>
+    <div class="pp-mobile-card-list d-md-none" aria-label="Pagamentos em formato compacto">
+        @foreach (var p in items)
+        {
+            <article class="pp-operational-card">
+                <header><div><span class="pp-section-kicker">@p.DataPlantao.ToString("dd/MM/yyyy HH:mm")</span><h3>@p.MedicoNome</h3><p>@p.HospitalNome · @p.EspecialidadeNome</p></div><partial name="_StatusBadge" model="p.Status" /></header>
+                <dl><div><dt>Previsto</dt><dd>@p.ValorPrevisto.ToString("C")</dd></div><div><dt>Pago</dt><dd>@(p.ValorPago?.ToString("C") ?? "Não realizado")</dd></div></dl>
+                <footer><a class="btn btn-outline-primary w-100" asp-action="Details" asp-route-id="@p.Id">Ver composição e histórico</a></footer>
+            </article>
+        }
     </div>
 }
 
 <div class="card-footer bg-white">
     <partial name="_Pagination" model="Model" />
+</div>
 </div>

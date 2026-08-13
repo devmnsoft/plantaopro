@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell e do contrato de homologação visual v1.62."""
+"""Gate estrutural do shell e do contrato de homologação visual v1.67."""
 from pathlib import Path
 import re
 
@@ -84,13 +84,13 @@ if not re.search(r"\.pp-content\s*\{[^}]*\bflex:\s*1", medical_css, re.S):
 
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 for route in (
-    "/", "/Account/Login", "/cadastro/empresa", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
+    "/", "/Account/Login", "/cadastro/empresa", "/Planos", "/AdminSaas/Index", "/Home/Dashboard", "/MinhaCentral", "/MeuDia",
     "/Agenda", "/Plantoes", "/Escalas", "/Saude360", "/Pacientes", "/Agendamentos",
     "/Triagem", "/Consultas", "/Pagamentos", "/Financeiro", "/Relatorios", "/Configuracoes",
 ):
     if f'"{route}"' not in smoke:
         errors.append(f"visual-smoke.mjs sem rota obrigatória: {route}")
-for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1920x1080"):
+for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1440x900", "1920x1080"):
     if f'"{viewport}"' not in smoke:
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
 for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "containerPresent",
@@ -98,12 +98,12 @@ for contract in ("horizontalOverflow", "shellPresent", "contentPresent", "contai
                  "cardsHaveHeight", "tablesResponsive", "publicHeroProportional", "primaryActionVisible", "drawersAboveSidebar", "toastsClearMobileNav"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-if "screenshots/v166" not in smoke:
-    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v166")
-for contract in ("landingContract", "overlayOutOfFlow", "selfserviceReady"):
+if "screenshots/v167" not in smoke:
+    errors.append("visual-smoke.mjs deve gravar evidências em screenshots/v167")
+for contract in ("landingContract", "overlayOutOfFlow", "selfserviceReady", "formsStructured", "dialogsAccessible", "noFlowingOverlay"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem contrato visual v1.66: {contract}")
 
 if errors:
     raise SystemExit("Falha no layout v1.61:\n- " + "\n- ".join(errors))
-print("Layout v1.62 validado: shell, navegação e contrato de smoke sem regressões críticas.")
+print("Layout v1.67 validado: shell, navegação e contrato de smoke sem regressões críticas.")

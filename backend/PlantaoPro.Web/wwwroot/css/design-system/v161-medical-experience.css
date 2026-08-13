@@ -349,3 +349,17 @@
     .pp-stepper li { min-height: 2rem; }
     .pp-form-field--wide { grid-column: auto; }
 }
+
+/* v1.67: composição financeira validável, ligada à view e aos dados reais. */
+.pp-financial-workspace { display: grid; gap: 1.25rem; }
+.pp-financial-workspace .pp-kpi-strip { margin: 0; }
+.pp-financial-workspace .pp-section { margin: 0; }
+.pp-financial-workspace .card-body { padding: 0; }
+.pp-financial-workspace .progress { height: .6rem; border-radius: 999px; background: #e7eef4; }
+.pp-financial-workspace .progress-bar { border-radius: inherit; background: var(--pp-v161-blue); }
+.pp-financial-workspace .pp-mobile-card-list { gap: 1rem; }
+
+@media (max-width: 767px) {
+    .pp-financial-workspace .pp-operational-card header { align-items: flex-start; }
+    .pp-financial-workspace .pp-operational-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

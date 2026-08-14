@@ -217,10 +217,10 @@ public sealed class TriagemController : Saude360WebControllerBase
 public sealed class ConsultasController : Saude360WebControllerBase
 {
     public ConsultasController(IHttpClientFactory f, ILogger<ConsultasController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
-    public Task<IActionResult> Index() { return ModuloAsync("Consultas", "Consultas", "Atendimento médico com vínculo a triagem, CID, prescrição e auditoria de impressão.", "api/consultas", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Atendimento", "Atendimento", "bi-clipboard2-pulse"), Link("Histórico", "HistoricoPaciente", "bi-journal-medical"))); }
+    public Task<IActionResult> Index() { return ModuloAsync("Consultas", "Consultas", "Atendimento médico com vínculo a triagem, CID, prescrição e auditoria de impressão.", "api/consultas", Links(Link("Nova", "Create", "bi-plus-circle"), Link("Atendimento", "Atendimento", "bi-clipboard2-pulse"), Link("Histórico", "HistoricoPaciente", "bi-journal-medical"), LinkTo("Faturamento clínico", "FaturamentoClinico", "Index", "bi-receipt"))); }
     public IActionResult Create() { return Formulario("Nova consulta", "api/consultas"); }
     public IActionResult Edit(Guid id) { return Formulario("Editar consulta", "api/consultas/" + id, id); }
-    public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da consulta", "Consultas", "Resumo clínico com restrição por médico/tenant.", "api/consultas/" + id, Links(Link("Consultas", "Index", "bi-arrow-left"))); }
+    public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da consulta", "Consultas", "Resumo clínico com restrição por médico/tenant. O status financeiro só é exibido quando fornecido pela API.", "api/consultas/" + id, Links(Link("Consultas", "Index", "bi-arrow-left"), LinkTo("Abrir faturamento", "FaturamentoClinico", "Index", "bi-receipt"), LinkTo("Abrir financeiro", "ClinicaFinanceiro", "ContasReceber", "bi-cash-stack"))); }
     [HttpGet("Consultas/Atendimento/{consultaId:guid}")]
     public IActionResult Atendimento(Guid consultaId) { return View(new PlantaoPro.Web.Models.ConsultaWorkspaceViewModel { ConsultaId = consultaId, ApiBase = Url.Content("~/api/consultas") }); }
     public Task<IActionResult> HistoricoPaciente() { return ModuloAsync("Histórico clínico do paciente", "Consultas", "Histórico de consultas por paciente com acesso auditado e visão adequada ao perfil médico.", "api/consultas/historico-paciente", Links(Link("Atendimento", "Atendimento", "bi-clipboard2-pulse"))); }

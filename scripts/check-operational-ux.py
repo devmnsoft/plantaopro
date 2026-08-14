@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.73 das jornadas clínicas e operacionais."""
+"""Gate estático v1.74 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -120,11 +120,11 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourney", "operationalActionsAreExplicit", "screenshots/v173", "version: '1.73.0'"):
+for marker in ("clinicalJourney", "operationalActionsAreExplicit", "screenshots/v174", "version: '1.74.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
-        errors.append(f"Smoke v1.73 sem contrato operacional: {marker}")
+        errors.append(f"Smoke v1.74 sem contrato operacional: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UX operacional v1.73:\n- " + "\n- ".join(errors))
-print("UX operacional v1.73 validada: recepção, clínica, operação, drawers e ações reais.")
+    raise SystemExit("Falha na UX operacional v1.74:\n- " + "\n- ".join(errors))
+print("UX operacional v1.74 validada: recepção, clínica, operação, drawers e ações reais.")

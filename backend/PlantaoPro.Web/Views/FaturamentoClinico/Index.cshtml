@@ -42,18 +42,32 @@
             <div class="pp-data-table d-none d-md-block"><div class="table-responsive">
                 <table class="table table-modern align-middle mb-0">
                     <caption class="visually-hidden">Contas do faturamento clínico</caption>
-                    <thead><tr><th>Competência</th><th>Origem</th><th>Valor previsto</th><th>Status</th><th>Pendências</th><th class="text-end">Ações</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Consulta / origem</th><th>Paciente</th><th>Profissional</th><th>Convênio / procedimento</th><th>Valor previsto</th><th>Aprovado / pago</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
                     <tbody>
                     @foreach (var item in Model.Items)
                     {
-                        var referencia = item.ReferenciaId ?? item.AtendimentoId;
+                        var referencia = item.OrigemId;
                         <tr>
-                            <td>@(item.EmitidaEm?.ToString("MM/yyyy") ?? "Não informada")</td>
+                            <td>@item.Competencia</td>
                             <td>@(referencia?.ToString() ?? "Não informada pela API")</td>
+                            <td><span class="text-muted">Não informado pela fonte</span></td>
+                            <td><span class="text-muted">Não informado pela fonte</span></td>
+                            <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td>@item.Valor.ToString("C")</td>
+                            <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td><partial name="_StatusBadge" model="item.Status" /></td>
-                            <td>@(string.Equals(item.Status, "Pendente", StringComparison.OrdinalIgnoreCase) ? "Aguardando conferência" : "Nenhuma pendência informada")</td>
-                            <td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-controller="Financeiro" asp-action="Index">Conferir no Financeiro</a></td>
+                            <td class="text-end"><div class="d-flex flex-wrap justify-content-end gap-2">
+                                @if (item.AtendimentoId.HasValue)
+                                {
+                                    <a class="btn btn-sm btn-outline-secondary" asp-controller="Consultas" asp-action="Details" asp-route-id="@item.AtendimentoId">Abrir origem</a>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" disabled title="A API não informou o identificador da consulta.">Abrir origem</button>
+                                }
+                                <a class="btn btn-sm btn-outline-primary" asp-controller="ClinicaFinanceiro" asp-action="ContasReceber">Abrir financeiro clínico</a>
+                                <button class="btn btn-sm btn-outline-primary" type="button" disabled title="A API atual não oferece aprovação, glosa ou exportação desta conta.">Outras ações</button>
+                            </div></td>
                         </tr>
                     }
                     </tbody>
@@ -62,11 +76,12 @@
             <div class="pp-mobile-card-list d-md-none" aria-label="Contas em formato compacto">
             @foreach (var item in Model.Items)
             {
-                var referencia = item.ReferenciaId ?? item.AtendimentoId;
+                var referencia = item.OrigemId;
                 <article class="pp-mobile-card pp-data-card">
-                    <header><div><span class="pp-section-kicker">@(item.EmitidaEm?.ToString("MM/yyyy") ?? "Competência não informada")</span><h3>@item.Valor.ToString("C")</h3></div><partial name="_StatusBadge" model="item.Status" /></header>
+                    <header><div><span class="pp-section-kicker">@item.Competencia</span><h3>@item.Valor.ToString("C")</h3></div><partial name="_StatusBadge" model="item.Status" /></header>
                     <p>Origem: @(referencia?.ToString() ?? "não informada pela API")</p>
-                    <a class="btn btn-outline-primary w-100" asp-controller="Financeiro" asp-action="Index">Conferir no Financeiro</a>
+                    <p class="text-muted">Paciente, profissional, convênio, procedimento, aprovação, pagamento, glosas, repasses e histórico não são fornecidos por esta API.</p>
+                    <a class="btn btn-outline-primary w-100" asp-controller="ClinicaFinanceiro" asp-action="ContasReceber">Abrir financeiro clínico</a>
                 </article>
             }
             </div>

@@ -12,4 +12,8 @@ public sealed class FaturamentoClinicoItemViewModel
     public decimal Valor { get; init; }
     public string Status { get; init; } = "Não informado";
     public DateTime? EmitidaEm { get; init; }
+
+    public Guid? OrigemId => AtendimentoId ?? ReferenciaId;
+
+    public string Competencia => EmitidaEm?.ToString("MM/yyyy") ?? "Não informada pela API";
 }

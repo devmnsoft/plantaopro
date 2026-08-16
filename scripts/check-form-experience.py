@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verifica o contrato responsivo e acessível dos formulários críticos v1.72."""
+"""Verifica o contrato responsivo e acessível dos formulários críticos v1.75."""
 from pathlib import Path
 import re
 
@@ -29,7 +29,7 @@ for relative in critical:
         errors.append(f"{relative}: button sem type")
 
 cadastro = (WEB / "Views/Cadastro/Cadastro.cshtml").read_text(encoding="utf-8")
-for marker in ("pp-selfservice-page", "pp-onboarding-form", "pp-form-card", "pp-form-grid", "pp-form-field", "pp-form-actions", "pp-stepper"):
+for marker in ("pp-selfservice-page", "pp-onboarding-form", "pp-form-card", "pp-form-grid", "pp-form-field", "pp-form-actions", "pp-stepper", "data-unsaved-form", "data-focus-invalid", "data-submit-feedback", "data-submit-spinner"):
     if marker not in cadastro:
         errors.append(f"Cadastro self-service sem contrato obrigatório: {marker}")
 
@@ -53,4 +53,4 @@ for path in (WEB / "Views").rglob("*.cshtml"):
 
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
-print("Form experience v1.72 validada: pp-form, grid, ajuda, erros e associação acessível presentes.")
+print("Form experience v1.75 validada: pp-form, labels, feedback de envio e associação acessível presentes.")

@@ -21,7 +21,7 @@
             <ul><li>Ambiente separado por organização</li><li>Administrador responsável identificado</li><li>Consentimentos registrados</li></ul>
         </aside>
 
-        <form asp-controller="Cadastro" asp-action="Confirmar" method="post" class="pp-form pp-onboarding-form" data-focus-invalid>
+        <form asp-controller="Cadastro" asp-action="Confirmar" method="post" class="pp-form pp-onboarding-form" data-focus-invalid data-unsaved-form data-submit-feedback>
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert"></div>
 
@@ -65,7 +65,13 @@
                     <label class="pp-checkbox"><input asp-for="AceitePrivacidade" /><span>Aceito a política de privacidade.</span></label>
                     <label class="pp-checkbox"><input asp-for="ConsentimentoLgpd" /><span>Autorizo o tratamento de dados conforme a LGPD.</span></label>
                 </div>
-                <div class="pp-form-actions"><a class="btn btn-outline-secondary" asp-controller="PlanosPublicos" asp-action="Index">Voltar aos planos</a><button class="btn btn-primary" type="submit">Finalizar cadastro</button></div>
+                <div class="pp-form-actions pp-form-sticky-footer">
+                    <a class="btn btn-outline-secondary" asp-controller="PlanosPublicos" asp-action="Index">Voltar aos planos</a>
+                    <button class="btn btn-primary" type="submit">
+                        <span data-submit-label>Finalizar cadastro</span>
+                        <span class="spinner-border spinner-border-sm d-none" data-submit-spinner aria-hidden="true"></span>
+                    </button>
+                </div>
             </section>
         </form>
     </section>

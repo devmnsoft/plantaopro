@@ -17,6 +17,18 @@
         <a class="pp-action-card" asp-controller="Pagamentos" asp-action="Index"><span>Pagamentos</span><small>Acompanhar realizações financeiras</small></a>
     </nav>
 
+    <section class="pp-filter-panel" aria-labelledby="billing-filter-title">
+        <div class="pp-section-heading"><div><span class="pp-section-kicker">Dados retornados</span><h2 id="billing-filter-title">Filtrar contas</h2></div></div>
+        <form method="get" class="pp-form pp-filter-form">
+            <div><label class="form-label" for="status">Status</label><input class="form-control" id="status" name="status" value="@Model.Status" /></div>
+            <div><label class="form-label" for="competencia">Competência</label><input class="form-control" id="competencia" name="competencia" placeholder="MM/AAAA" value="@Model.CompetenciaFiltro" inputmode="numeric" /></div>
+            <div><label class="form-label" for="convenio">Convênio</label><input class="form-control" id="convenio" name="convenio" value="@Model.Convenio" /></div>
+            <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+            @if (Model.HasActiveFilters) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a> }
+        </form>
+        <p class="form-text">Os filtros usam somente status, competência e convênio fornecidos pela API.</p>
+    </section>
+
     @if (!string.IsNullOrWhiteSpace(Model.Error))
     {
         <section class="pp-empty-state" role="status" aria-labelledby="billing-error-title">
@@ -28,8 +40,8 @@
     else if (Model.Items.Count == 0)
     {
         <section class="pp-empty-state" role="status" aria-labelledby="billing-empty-title">
-            <h2 id="billing-empty-title">Nenhuma conta clínica encontrada</h2>
-            <p>A API não retornou contas para este tenant. Nenhum valor ou histórico demonstrativo foi criado.</p>
+            <h2 id="billing-empty-title">@(Model.HasActiveFilters ? "Nenhuma conta corresponde aos filtros" : "Nenhuma conta clínica encontrada")</h2>
+            <p>@(Model.HasActiveFilters ? "Ajuste ou limpe os filtros para consultar novamente os dados retornados pela API." : "A API não retornou contas para este tenant. Nenhum valor ou histórico demonstrativo foi criado.")</p>
             <a class="btn btn-outline-primary" asp-controller="Consultas" asp-action="Index">Revisar consultas</a>
         </section>
     }
@@ -53,9 +65,9 @@
                             <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
-                            <td>@item.Valor.ToString("C")</td>
+                            <td>@(item.Valor.HasValue ? item.Valor.Value.ToString("C") : "Não informado pela API")</td>
                             <td><span class="text-muted">Não informado pela fonte</span></td>
-                            <td><partial name="_StatusBadge" model="item.Status" /></td>
+                            <td>@if (string.IsNullOrWhiteSpace(item.Status)) { <span class="text-muted">Não informado pela API</span> } else { <partial name="_StatusBadge" model="item.Status" /> }</td>
                             <td class="text-end"><div class="d-flex flex-wrap justify-content-end gap-2">
                                 @if (item.AtendimentoId.HasValue)
                                 {
@@ -78,7 +90,7 @@
             {
                 var referencia = item.OrigemId;
                 <article class="pp-mobile-card pp-data-card">
-                    <header><div><span class="pp-section-kicker">@item.Competencia</span><h3>@item.Valor.ToString("C")</h3></div><partial name="_StatusBadge" model="item.Status" /></header>
+                    <header><div><span class="pp-section-kicker">@item.Competencia</span><h3>@(item.Valor.HasValue ? item.Valor.Value.ToString("C") : "Valor não informado")</h3></div>@if (!string.IsNullOrWhiteSpace(item.Status)) { <partial name="_StatusBadge" model="item.Status" /> }</header>
                     <p>Origem: @(referencia?.ToString() ?? "não informada pela API")</p>
                     <p class="text-muted">Paciente, profissional, convênio, procedimento, aprovação, pagamento, glosas, repasses e histórico não são fornecidos por esta API.</p>
                     <a class="btn btn-outline-primary w-100" asp-controller="ClinicaFinanceiro" asp-action="ContasReceber">Abrir financeiro clínico</a>

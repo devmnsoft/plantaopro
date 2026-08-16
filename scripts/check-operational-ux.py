@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.74 das jornadas clínicas e operacionais."""
+"""Gate estático v1.75 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -105,6 +105,24 @@ for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "d
     if marker not in central:
         errors.append(f"Minha Central sem filtro operacional: {marker}")
 
+# O fechamento v1.75 exige destinos reais e ausência financeira tratada honestamente.
+faturamento_controller = (WEB / "Controllers/FaturamentoClinicoController.cs").read_text(encoding="utf-8")
+saude_controllers = (WEB / "Controllers/Saude360WebControllers.cs").read_text(encoding="utf-8")
+faturamento_view = (WEB / "Views/FaturamentoClinico/Index.cshtml").read_text(encoding="utf-8")
+pagamentos_view = (WEB / "Views/Pagamentos/Index.cshtml").read_text(encoding="utf-8")
+for marker in ('[Route("FaturamentoClinico")]', '[HttpGet("")]', '[HttpGet("Index")]'):
+    if marker not in faturamento_controller:
+        errors.append(f"Faturamento clínico sem rota real: {marker}")
+for marker in ("class ConsultasController", "class ClinicaFinanceiroController", "Task<IActionResult> ContasReceber()"):
+    if marker not in saude_controllers:
+        errors.append(f"Jornada consulta/financeiro sem destino real: {marker}")
+for marker in ('asp-controller="Consultas"', 'asp-controller="Financeiro"', 'asp-controller="Pagamentos"', 'asp-controller="ClinicaFinanceiro"'):
+    if marker not in faturamento_view:
+        errors.append(f"Faturamento sem navegação operacional: {marker}")
+for marker in ("ValorPago.HasValue", "Não informado"):
+    if marker not in pagamentos_view:
+        errors.append(f"Pagamentos não preserva ausência de valor: {marker}")
+
 # Contratos visuais críticos v1.65 também protegem a navegação operacional.
 layout = (WEB / "Views/Shared/_Layout.cshtml").read_text(encoding="utf-8")
 portal = (WEB / "Views/Shared/_OverlayPortal.cshtml").read_text(encoding="utf-8")
@@ -120,11 +138,11 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.60:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourney", "operationalActionsAreExplicit", "screenshots/v174", "version: '1.74.0'"):
+for marker in ("clinicalJourney", "operationalActionsAreExplicit", "screenshots/v175", "version: '1.75.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
-        errors.append(f"Smoke v1.74 sem contrato operacional: {marker}")
+        errors.append(f"Smoke v1.75 sem contrato operacional: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UX operacional v1.74:\n- " + "\n- ".join(errors))
-print("UX operacional v1.74 validada: recepção, clínica, operação, drawers e ações reais.")
+    raise SystemExit("Falha na UX operacional v1.75:\n- " + "\n- ".join(errors))
+print("UX operacional v1.75 validada: recepção, clínica, operação, drawers e ações reais.")

@@ -39,12 +39,19 @@
 
     <section class="pp-section" aria-labelledby="resumo-title">
         <div class="pp-section-heading"><div><h2 id="resumo-title">Resumo operacional</h2><p>Dados consolidados para o recorte selecionado.</p></div></div>
-        <div class="pp-kpi-strip">
-            <article class="pp-kpi-card"><span>Plantões</span><strong>@(indicadores?.TotalPlantoes ?? 0)</strong><small>@(indicadores?.PlantoesConfirmados ?? 0) confirmados</small></article>
-            <article class="pp-kpi-card pp-kpi-card--warning"><span>Pagamentos pendentes</span><strong>@(indicadores?.PagamentosPendentes ?? 0)</strong><small>@((indicadores?.ValorPendente ?? 0).ToString("C")) previstos</small></article>
-            <article class="pp-kpi-card @(riscosCobertura.Any() ? "pp-kpi-card--danger" : "")"><span>Coberturas em risco</span><strong>@riscosCobertura.Length</strong><small>entre os próximos plantões</small></article>
-            <article class="pp-kpi-card"><span>Agenda de hoje</span><strong>@agendaHoje.Length</strong><small>eventos retornados</small></article>
-        </div>
+        @if (indicadores is null)
+        {
+            <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bar-chart", "Resumo ainda não disponível", "A operação não retornou indicadores para o recorte selecionado. Nenhum valor foi presumido.")' />
+        }
+        else
+        {
+            <div class="pp-kpi-strip" aria-label="Indicadores retornados pela operação">
+                <article class="pp-kpi-card"><span>Plantões</span><strong>@indicadores.TotalPlantoes</strong><small>@indicadores.PlantoesConfirmados confirmados</small></article>
+                <article class="pp-kpi-card pp-kpi-card--warning"><span>Pagamentos pendentes</span><strong>@indicadores.PagamentosPendentes</strong><small>@indicadores.ValorPendente.ToString("C") previstos</small></article>
+                <article class="pp-kpi-card @(riscosCobertura.Any() ? "pp-kpi-card--danger" : "")"><span>Coberturas em risco</span><strong>@riscosCobertura.Length</strong><small>entre os plantões retornados</small></article>
+                <article class="pp-kpi-card"><span>Agenda de hoje</span><strong>@agendaHoje.Length</strong><small>eventos retornados</small></article>
+            </div>
+        }
     </section>
 
     <div class="row g-4">
@@ -70,10 +77,11 @@
     <section class="pp-section" aria-labelledby="atalhos-title">
         <div class="pp-section-heading"><div><h2 id="atalhos-title">Operação médica</h2><p>Ações disponíveis nos módulos reais da jornada.</p></div></div>
         <div class="pp-action-grid">
-            <a class="pp-action-card" asp-controller="Plantoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><h3>Plantões</h3><p>Planeje publicação, cobertura e acompanhamento.</p><span class="pp-action-card__meta">Abrir central <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-controller="MinhaCentral" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-kanban" aria-hidden="true"></i></span><h3>Pendências</h3><p>Priorize os itens reais atribuídos à operação.</p><span class="pp-action-card__meta">Abrir central <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-controller="Saude360" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span><h3>Saúde 360</h3><p>Acompanhe a jornada assistencial de ponta a ponta.</p><span class="pp-action-card__meta">Abrir jornada <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
-            <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span><h3>Financeiro</h3><p>Confira composição, pendências e pagamentos.</p><span class="pp-action-card__meta">Abrir financeiro <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+            @if (User.IsAdmin()) { <a class="pp-action-card" asp-controller="AdminSaas" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-building-gear" aria-hidden="true"></i></span><h3>Admin SaaS</h3><p>Revise tenants, assinatura e saúde administrativa.</p><span class="pp-action-card__meta">Abrir administração <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
+            @if (User.IsCoordenacao() || User.IsHospital() || User.IsAdmin()) { <a class="pp-action-card" asp-controller="Plantoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><h3>Cobertura e escalas</h3><p>Priorize vagas, convites, substituições e fechamentos.</p><span class="pp-action-card__meta">Abrir plantões <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
+            @if (User.IsMedico() || (!User.IsAdmin() && !User.IsCoordenacao() && !User.IsHospital() && !User.IsFinanceiro())) { <a class="pp-action-card" asp-controller="Saude360" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span><h3>Jornada assistencial</h3><p>Acesse agenda, triagem, consulta e seus próximos passos.</p><span class="pp-action-card__meta">Abrir Saúde 360 <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
+            @if (User.IsFinanceiro() || User.IsAdmin() || User.IsHospital()) { <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span><h3>Financeiro</h3><p>Revise faturamento, divergências, fechamentos e pagamentos.</p><span class="pp-action-card__meta">Abrir financeiro <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
+            <a class="pp-action-card" asp-controller="MinhaCentral" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-kanban" aria-hidden="true"></i></span><h3>Minha Central</h3><p>Priorize somente os itens reais atribuídos ao seu perfil.</p><span class="pp-action-card__meta">Ver pendências <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
         </div>
     </section>
 

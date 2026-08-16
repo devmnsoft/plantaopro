@@ -55,6 +55,26 @@
         window.addEventListener("beforeunload", event => { if (dirty) event.preventDefault(); });
     }
 
+    function wireSubmitFeedback(form) {
+        if (!form.matches("[data-submit-feedback]") || form.matches('[data-ajax-form="true"], [data-saude360-form]')) return;
+        form.addEventListener("submit", event => {
+            if (event.defaultPrevented || !form.checkValidity()) return;
+            const button = event.submitter instanceof HTMLButtonElement
+                ? event.submitter
+                : form.querySelector('button[type="submit"]');
+            if (!(button instanceof HTMLButtonElement)) return;
+            if (button.getAttribute("aria-busy") === "true") {
+                event.preventDefault();
+                return;
+            }
+            button.setAttribute("aria-busy", "true");
+            button.disabled = true;
+            button.querySelector("[data-submit-spinner]")?.classList.remove("d-none");
+            const label = button.querySelector("[data-submit-label]");
+            if (label) label.textContent = "Enviando com segurança…";
+        });
+    }
+
     document.querySelectorAll("[data-character-counter]").forEach(counter => {
         const field = document.getElementById(counter.dataset.for);
         if (!field) return;
@@ -73,6 +93,7 @@
                 window.PlantaoProToast?.error("Revise os campos destacados antes de continuar.", { title: "Há informações pendentes" });
             }
         }, true);
+        wireSubmitFeedback(form);
         if (form.matches("[data-focus-invalid]")) focusFirstInvalid(form);
     });
 })();

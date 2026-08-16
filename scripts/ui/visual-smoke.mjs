@@ -37,15 +37,35 @@ try {
         const visible = element => element && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== 'hidden';
         const dialogs = [...document.querySelectorAll('[role="dialog"]')]; const tables = [...document.querySelectorAll('table')];
         const fields = [...document.querySelectorAll('form input:not([type="hidden"]):not([type="submit"]):not([type="button"]), form select, form textarea')].filter(visible);
+        const buttons = [...document.querySelectorAll('button')];
+        const iconButtons = buttons.filter(button => !button.textContent.trim() && visible(button));
+        const links = [...document.querySelectorAll('a[href]')];
+        const sidebar = document.querySelector('.pp-sidebar');
+        const content = document.querySelector('.pp-content');
+        const topbar = document.querySelector('.pp-topbar');
         return {
           noHorizontalOverflow: document.documentElement.scrollWidth <= innerWidth + 2,
           cardsInsideViewport: [...document.querySelectorAll('.pp-card,.pp-action-card,.pp-kpi-card')].filter(visible).every(card => card.getBoundingClientRect().right <= innerWidth + 2),
+          noClippedCards: [...document.querySelectorAll('.pp-card,.pp-action-card,.pp-kpi-card')].filter(visible).every(card => card.getBoundingClientRect().left >= -2 && card.getBoundingClientRect().right <= innerWidth + 2),
           responsiveTables: tables.every(table => table.closest('.table-responsive') || document.querySelector('.pp-mobile-card') || table.scrollWidth <= table.clientWidth + 2),
           accessibleDialogs: dialogs.every(dialog => dialog.getAttribute('aria-modal') === 'true' && (dialog.getAttribute('aria-label') || dialog.getAttribute('aria-labelledby'))),
           dialogsStartHidden: dialogs.every(dialog => dialog.hidden || dialog.getAttribute('aria-hidden') === 'true' || !visible(dialog)),
           overlaysOutOfFlow: dialogs.every(dialog => dialog.hidden || ['fixed', 'absolute'].includes(getComputedStyle(dialog).position)),
           formsStructured: [...document.querySelectorAll('form')].filter(visible).every(form => form.matches('.pp-form,.pp-filter-bar,.pp-filter-form') || form.closest('.pp-topbar')),
           fieldsHaveLabels: fields.every(field => field.labels?.length || field.getAttribute('aria-label') || field.getAttribute('aria-labelledby')),
+          formsHaveLabels: fields.every(field => field.labels?.length || field.getAttribute('aria-label') || field.getAttribute('aria-labelledby')),
+          buttonsHaveType: buttons.every(button => Boolean(button.getAttribute('type'))),
+          iconButtonsHaveAriaLabel: iconButtons.every(button => button.getAttribute('aria-label') || button.getAttribute('aria-labelledby')),
+          drawersAccessible: [...document.querySelectorAll('.pp-detail-drawer,.pp-notification-drawer')].every(drawer => drawer.getAttribute('role') === 'dialog' && drawer.getAttribute('aria-modal') === 'true'),
+          commandPaletteAccessible: !document.querySelector('#commandPalette') || Boolean(document.querySelector('#commandPalette[role="dialog"] [role="listbox"]')),
+          notificationDrawerAccessible: !document.querySelector('#notificationDrawer') || Boolean(document.querySelector('#notificationDrawer[role="dialog"][aria-modal="true"]')),
+          loginResponsive: route !== '/Account/Login' || Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')),
+          selfServiceResponsive: route !== '/cadastro/empresa' || Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')),
+          financialJourneyHonest: !['/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || !/pagamento fake|valor fake|histórico fake/i.test(document.body.innerText),
+          noFakeValues: !/pagamento fake|valor fake|histórico fake|contador fake/i.test(document.body.innerText),
+          noBrokenLinks: links.every(link => { const href = link.getAttribute('href'); if (!href || href === '#') return false; try { const target = new URL(href, location.href); return ['http:', 'https:', 'mailto:', 'tel:'].includes(target.protocol); } catch { return false; } }),
+          topbarDoesNotOverlap: !visible(topbar) || !visible(content) || topbar.getBoundingClientRect().bottom <= content.getBoundingClientRect().top + 2 || getComputedStyle(topbar).position === 'sticky',
+          sidebarDoesNotOverlap: !desktop || !visible(sidebar) || !visible(content) || content.getBoundingClientRect().left >= sidebar.getBoundingClientRect().right - 1,
           pageContract: route === '/Account/Login' ? Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')) : route === '/cadastro/empresa' ? Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')) : route === '/AdminSaas/Index' ? Boolean(document.querySelector('.pp-admin-layout')) : true,
           clinicalJourney: !['/Saude360', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('.pp-clinical-page,.clinical-workspace,.saude360-form')),
           operationalActionsAreExplicit: !['/Agendamentos', '/Plantoes', '/Escalas', '/Pagamentos', '/Financeiro'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),

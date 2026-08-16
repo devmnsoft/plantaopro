@@ -94,9 +94,12 @@ for route in (
 for viewport in ("360x800", "390x844", "430x932", "768x1024", "1024x768", "1366x768", "1440x900", "1920x1080"):
     if viewport not in smoke:
         errors.append(f"visual-smoke.mjs sem viewport obrigatório: {viewport}")
-for contract in ("noHorizontalOverflow", "cardsInsideViewport", "responsiveTables", "accessibleDialogs",
+for contract in ("noHorizontalOverflow", "noClippedCards", "cardsInsideViewport", "responsiveTables", "accessibleDialogs",
                  "dialogsStartHidden", "overlaysOutOfFlow", "formsStructured", "fieldsHaveLabels",
-                 "pageContract", "shellClear",
+                 "formsHaveLabels", "buttonsHaveType", "iconButtonsHaveAriaLabel", "drawersAccessible",
+                 "commandPaletteAccessible", "notificationDrawerAccessible", "loginResponsive",
+                 "selfServiceResponsive", "financialJourneyHonest", "noFakeValues", "noBrokenLinks",
+                 "topbarDoesNotOverlap", "sidebarDoesNotOverlap", "pageContract", "shellClear",
                  "commandPaletteOpens", "commandPaletteCloses", "notificationDrawerOpens",
                  "notificationDrawerCloses", "notificationTriggerRegainsFocus", "subscriptionHonestState"):
     if contract not in smoke:

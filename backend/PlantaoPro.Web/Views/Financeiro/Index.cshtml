@@ -5,6 +5,7 @@
     var items = Model?.Items ?? Array.Empty<PlantaoPro.Web.Models.PagamentoResumoDto>();
     var totalPrevisto = items.Sum(x => x.ValorPrevisto);
     var totalPago = items.Where(x => x.ValorPago.HasValue).Sum(x => x.ValorPago ?? 0);
+    var possuiValorPago = items.Any(x => x.ValorPago.HasValue);
     var pendentes = items.Count(x => string.Equals(x.Status, "Pendente", StringComparison.OrdinalIgnoreCase));
     var cancelados = items.Count(x => string.Equals(x.Status, "Cancelado", StringComparison.OrdinalIgnoreCase));
     var porStatus = items.GroupBy(x => x.Status).Select(g => new { Status = g.Key, Total = g.Sum(v => v.ValorPrevisto) }).ToList();
@@ -21,7 +22,7 @@
 
 <section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
     <article class="pp-kpi-card"><span>Total previsto</span><strong>@totalPrevisto.ToString("C")</strong><small>Composição dos registros exibidos</small></article>
-    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@totalPago.ToString("C")</strong><small>Valores já realizados</small></article>
+    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@(possuiValorPago ? totalPago.ToString("C") : "Não informado")</strong><small>Somente valores realizados retornados pela API</small></article>
     <article class="pp-kpi-card pp-kpi-card--warning"><span>Pendentes</span><strong>@pendentes</strong><small>Aguardando avanço operacional</small></article>
     <article class="pp-kpi-card"><span>Cancelados</span><strong>@cancelados</strong><small>Registros sem continuidade</small></article>
 </section>
@@ -80,9 +81,9 @@ else
                         <td>@p.EspecialidadeNome</td>
                         <td>@p.DataPlantao.ToString("dd/MM/yyyy HH:mm")</td>
                         <td>@p.ValorPrevisto.ToString("C")</td>
-                        <td>@(p.ValorPago.HasValue ? p.ValorPago.Value.ToString("C") : "-")</td>
+                        <td>@(p.ValorPago.HasValue ? p.ValorPago.Value.ToString("C") : "Não informado")</td>
                         <td>
-                            <span class="badge status-@p.Status.ToLowerInvariant()">@p.Status</span>
+                            @if (string.IsNullOrWhiteSpace(p.Status)) { <span class="text-muted">Não informado pela API</span> } else { <span class="badge status-@p.Status.ToLowerInvariant()">@p.Status</span> }
                         </td>
                         <td class="text-end">
                             <div class="action-buttons">
@@ -101,7 +102,7 @@ else
         {
             <article class="pp-operational-card">
                 <header><div><span class="pp-section-kicker">@p.DataPlantao.ToString("dd/MM/yyyy HH:mm")</span><h3>@p.MedicoNome</h3><p>@p.HospitalNome · @p.EspecialidadeNome</p></div><partial name="_StatusBadge" model="p.Status" /></header>
-                <dl><div><dt>Previsto</dt><dd>@p.ValorPrevisto.ToString("C")</dd></div><div><dt>Pago</dt><dd>@(p.ValorPago?.ToString("C") ?? "Não realizado")</dd></div></dl>
+                <dl><div><dt>Previsto</dt><dd>@p.ValorPrevisto.ToString("C")</dd></div><div><dt>Pago</dt><dd>@(p.ValorPago?.ToString("C") ?? "Não informado")</dd></div></dl>
                 <footer><a class="btn btn-outline-primary w-100" asp-action="Details" asp-route-id="@p.Id">Ver composição e histórico</a></footer>
             </article>
         }

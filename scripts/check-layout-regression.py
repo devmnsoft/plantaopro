@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estrutural do shell e do contrato de homologação visual v1.78.0."""
+"""Gate estrutural do shell e do contrato de homologação visual v1.79.0."""
 from pathlib import Path
 import re
 
@@ -104,9 +104,9 @@ for contract in ("noHorizontalOverflow", "noClippedCards", "cardsInsideViewport"
                  "notificationDrawerCloses", "notificationTriggerRegainsFocus", "subscriptionHonestState"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-for output in ("screenshots/v178", "v178-visual-smoke-results.json", "v178-visual-smoke-summary.md"):
+for output in ("screenshots/v179", "v179-visual-smoke-results.json", "v179-visual-smoke-summary.md"):
     if output not in smoke:
-        errors.append(f"visual-smoke.mjs sem saída v1.78.0: {output}")
+        errors.append(f"visual-smoke.mjs sem saída v1.79.0: {output}")
 
 notification_menu = (WEB / "Views/Shared/_NotificationMenu.cshtml").read_text(encoding="utf-8")
 notification_drawer = (WEB / "Views/Shared/_NotificationDrawer.cshtml").read_text(encoding="utf-8")
@@ -124,5 +124,5 @@ if ".innerHTML" in notification_js:
     errors.append("notification-drawer.js usa innerHTML")
 
 if errors:
-    raise SystemExit("Falha no layout v1.78.0:\n- " + "\n- ".join(errors))
-print("Layout v1.78.0 validado: shell, jornadas, notificações e contrato executável de smoke sem regressões críticas.")
+    raise SystemExit("Falha no layout v1.79.0:\n- " + "\n- ".join(errors))
+print("Layout v1.79.0 validado: shell, jornadas, notificações e contrato executável de smoke sem regressões críticas.")

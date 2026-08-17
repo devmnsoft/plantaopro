@@ -14,7 +14,7 @@
             <a class="btn btn-secondary" asp-controller="Fechamentos" asp-action="Pendentes">Ver pendentes</a>
         </div>
     </div>
-    <nav class="clinical-journey" aria-label="Etapas do fechamento operacional">
+    <nav class="clinical-journey pp-operational-journey" aria-label="Etapas do fechamento operacional" data-operational-mvp-journey data-closing-business-rules>
         <span><i class="bi bi-calendar-check" aria-hidden="true"></i>Plantão realizado</span>
         <span><i class="bi bi-exclamation-diamond" aria-hidden="true"></i>Divergências</span>
         <span><i class="bi bi-clipboard-check" aria-hidden="true"></i>Conferência</span>
@@ -34,6 +34,14 @@
             @if (!Model.Pendentes.Any())
             {
                 <div class="empty-state" role="status"><strong>Nenhum fechamento disponível.</strong><p>A fonte operacional não retornou plantões para conferência. Nenhum valor ou status é estimado nesta tela.</p></div>
+                <div class="pp-disabled-actions" aria-label="Ações indisponíveis sem fechamento real">
+                    <button type="button" class="btn btn-primary" disabled title="Conferência exige um plantão realizado retornado pelo backend.">Conferir</button>
+                    <button type="button" class="btn btn-secondary" disabled title="Aprovação exige fechamento em status compatível.">Aprovar</button>
+                    <button type="button" class="btn btn-secondary" disabled title="Devolução exige fechamento real e motivo.">Devolver com motivo</button>
+                    <button type="button" class="btn btn-secondary" disabled title="Divergência exige fechamento real e motivo.">Registrar divergência</button>
+                    <button type="button" class="btn btn-secondary" disabled title="Financeiro só pode ser gerado depois da aprovação.">Gerar financeiro</button>
+                    <button type="button" class="btn btn-secondary" disabled title="Nenhum financeiro vinculado foi retornado.">Abrir pagamento</button>
+                </div>
             }
             else
             {

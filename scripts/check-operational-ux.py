@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.78 das jornadas clínicas e operacionais."""
+"""Gate estático v1.79 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -138,11 +138,24 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "actionsWithoutBackendDisabled", "screenshots/v178", "version: '1.78.0'"):
+for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v179", "version: '1.79.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
         errors.append(f"Smoke v1.78 sem contrato operacional: {marker}")
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
-print("UX operacional v1.78 validada: recepção, clínica, operação, drawers e ações reais.")
+operational_files = {
+    "Views/Plantoes/Index.cshtml": ("Cobertura", "Risco", "Próxima ação"),
+    "Views/Escalas/Index.cshtml": ("Conflito", "Próxima ação", "data-operational-mvp-journey"),
+    "Views/OperacaoPremium/Fechamentos.cshtml": ("data-closing-business-rules", "Gerar financeiro", "disabled"),
+    "Views/Convites/Index.cshtml": ("DataEnvio", "data-next-action", "Reenviar convite"),
+}
+for relative, markers in operational_files.items():
+    source = (WEB / relative).read_text(encoding="utf-8")
+    for marker in markers:
+        if marker not in source:
+            errors.append(f"{relative}: contrato operacional v1.79 ausente: {marker}")
+if errors:
+    raise SystemExit("Falha na UX operacional v1.79:\n- " + "\n- ".join(errors))
+print("UX operacional v1.79 validada: cobertura, convites, escalas, substituições e fechamento honesto.")

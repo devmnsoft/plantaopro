@@ -5,11 +5,11 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v178/', root);
-const jsonOutput = new URL('v178-visual-smoke-results.json', root);
-const markdownOutput = new URL('v178-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v179/', root);
+const jsonOutput = new URL('v179-visual-smoke-results.json', root);
+const markdownOutput = new URL('v179-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
-const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
+const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
 const selectedRoutes = process.env.PLANTAOPRO_PUBLIC_ONLY === '1' ? routes.filter(route => publicRoutes.has(route)) : routes;
 const viewports = (process.env.PLANTAOPRO_VIEWPORTS?.split(',') ?? defaults).map(value => { const match = value.trim().match(/^(\d+)x(\d+)$/i); if (!match) throw new Error(`Viewport inválido: ${value}`); return { width: +match[1], height: +match[2] }; });
@@ -75,6 +75,14 @@ try {
           consultationBillingActionHonest: !['/Consultas', '/FaturamentoClinico'].includes(route) || Boolean(document.querySelector('[data-consultation-billing-honest], button:disabled[title]')),
           clinicalJourneyClear: !['/Saude360', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('.pp-clinical-page,.clinical-workspace,.saude360-form')),
           operationalJourneyClear: !['/Plantoes', '/Escalas', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('.pp-page,.pp-operational-workspace,.pp-financial-workspace')),
+          operationalMvpJourneyVisible: !['/Plantoes', '/Escalas', '/Fechamentos'].includes(route) || Boolean(document.querySelector('[data-operational-mvp-journey]')),
+          shiftCoverageStatusVisible: route !== '/Plantoes' || Boolean(document.querySelector('.pp-coverage-badge,[data-operational-risk],.pp-empty-state')),
+          scheduleNextActionVisible: route !== '/Escalas' || Boolean(document.querySelector('[data-next-action],.pp-empty-state')),
+          invitationActionsHonest: route !== '/Plantoes' || !document.querySelector('a[href="#"]'),
+          substitutionRulesVisible: route !== '/Escalas' || /substitui|motivo|sem escalas/i.test(document.body.innerText),
+          closingBusinessRulesVisible: route !== '/Fechamentos' || Boolean(document.querySelector('[data-closing-business-rules]')),
+          closingFinanceActionHonest: route !== '/Fechamentos' || Boolean(document.querySelector('button:disabled[title], table')),
+          operationalRiskVisible: route !== '/Plantoes' || Boolean(document.querySelector('[data-operational-risk],.pp-risk-badge,.pp-empty-state')),
           profileDashboardVisible: route !== '/Home/Dashboard' || Boolean(document.querySelector('[data-profile-dashboard]')),
           businessRulesVisible: !['/Agendamentos', '/Triagem', '/Consultas', '/Plantoes', '/Escalas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('.pp-empty-state,.pp-status-badge,.badge,[data-business-rule],button:disabled,.pp-data-table,table')),
           actionsWithoutBackendDisabled: !['/Agendamentos', '/Plantoes', '/Escalas', '/Pagamentos', '/Financeiro'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),
@@ -113,10 +121,10 @@ try {
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.78.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  const payload = { version: '1.79.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.78.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.79.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.78.0 aprovado: ${results.length} execuções.`);
+else console.log(`Smoke visual v1.79.0 aprovado: ${results.length} execuções.`);

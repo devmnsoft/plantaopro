@@ -1,0 +1,15 @@
+/* PlantãoPro v1.79 — jornada operacional. Camada aditiva, sem dados decorativos. */
+.pp-operational-journey{display:flex;gap:.5rem;overflow-x:auto;margin:0 0 1.25rem;padding:.75rem;border:1px solid var(--pp-border,#dfe5ec);border-radius:1rem;background:var(--pp-surface,#fff);scrollbar-width:thin}
+.pp-operational-journey span{flex:0 0 auto;padding:.45rem .75rem;border-radius:999px;background:#f2f5f8;color:#526274;font-size:.82rem;font-weight:650;white-space:nowrap}
+.pp-operational-journey span.is-current{background:#e2f4ee;color:#126548;box-shadow:inset 0 0 0 1px #b8dfd1}
+.pp-operational-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin-bottom:1.25rem}
+.pp-operational-summary>div,.pp-next-action{display:grid;gap:.2rem;padding:.75rem;border:1px solid #dfe5ec;border-radius:.75rem;background:#f8fafc}
+.pp-operational-summary small,.pp-next-action small{color:#667587;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.pp-next-action strong{color:#17324d;font-size:.88rem}
+.pp-coverage-badge,.pp-risk-badge{display:inline-flex;padding:.25rem .5rem;border-radius:999px;font-size:.75rem;font-weight:700}
+.pp-coverage-badge.is-covered{background:#dcf6e9;color:#126548}.pp-coverage-badge.is-open,.pp-risk-badge{background:#fee9e7;color:#a9362d}
+.pp-disabled-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem}
+.pp-operational-card--risk{border-inline-start:4px solid #d84a3f}
+.pp-operational-card footer{display:flex;flex-wrap:wrap;gap:.5rem}
+@media (max-width:991.98px){.pp-operational-summary{grid-template-columns:1fr}.pp-data-table+.pp-mobile-card-list{display:grid}.pp-data-table:has(+.pp-mobile-card-list){display:none}.pp-filter-bar{grid-template-columns:1fr 1fr}}
+@media (max-width:575.98px){.pp-filter-bar{grid-template-columns:1fr}.pp-operational-card footer>*{flex:1 1 100%}.pp-disabled-actions>*{width:100%;min-height:44px}}

@@ -6,7 +6,7 @@
     <header class="pp-selfservice-hero">
         <span class="pp-kicker">Cadastro self-service</span>
         <h1>Crie sua conta PlantãoPro</h1>
-        <p>Preencha empresa, plano e administrador para iniciar sua operação médica.</p>
+        <p>Informe os dados reais da organização, confira a opção disponível e defina o acesso responsável. Você poderá revisar tudo antes do envio.</p>
     </header>
 
     <ol class="pp-stepper" aria-label="Etapas do cadastro">
@@ -40,7 +40,7 @@
             </section>
 
             <section class="pp-form-card pp-form-section" aria-labelledby="planoTitle">
-                <div class="pp-form-heading"><span>Etapa 2</span><h2 id="planoTitle">Plano</h2><p>Escolha a modalidade adequada à operação.</p></div>
+                <div class="pp-form-heading"><span>Etapa 2</span><h2 id="planoTitle">Plano</h2><p>Selecione uma opção carregada pelo catálogo atual. Valores e limites devem ser conferidos antes da confirmação.</p></div>
                 <div class="pp-form-grid">
                     <div class="pp-form-field"><label asp-for="PlanoId" class="pp-form-label">Plano</label><select asp-for="PlanoId" class="pp-form-control">@foreach (var plano in Model.Planos) { <option value="@plano.Id">@plano.Nome — @(plano.ValorMensal <= 0 ? "Sob proposta" : plano.ValorMensal.ToString("C"))</option> }</select><span asp-validation-for="PlanoId" class="pp-form-error"></span></div>
                     <div class="pp-form-field"><label asp-for="Periodicidade" class="pp-form-label">Periodicidade</label><select asp-for="Periodicidade" class="pp-form-control"><option value="MENSAL">Mensal</option><option value="ANUAL">Anual</option></select><span asp-validation-for="Periodicidade" class="pp-form-error"></span></div>
@@ -68,7 +68,7 @@
                 <div class="pp-form-actions pp-form-sticky-footer">
                     <a class="btn btn-outline-secondary" asp-controller="PlanosPublicos" asp-action="Index">Voltar aos planos</a>
                     <button class="btn btn-primary" type="submit">
-                        <span data-submit-label>Finalizar cadastro</span>
+                        <span data-submit-label>Enviar cadastro para validação</span>
                         <span class="spinner-border spinner-border-sm d-none" data-submit-spinner aria-hidden="true"></span>
                     </button>
                 </div>

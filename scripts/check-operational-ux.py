@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.82; Gate estático v1.79 das jornadas clínicas e operacionais."""
+"""Contrato v1.83; Gate estático v1.79 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -138,7 +138,7 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v182", "version: '1.82.0'"):
+for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v183", "version: '1.83.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
         errors.append(f"Smoke v1.78 sem contrato operacional: {marker}")

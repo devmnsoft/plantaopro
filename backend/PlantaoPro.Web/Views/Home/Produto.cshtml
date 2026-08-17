@@ -1,6 +1,15 @@
 @{ ViewData["Title"] = "Produto"; }
-<section class="card border-0 shadow-sm mb-3"><div class="card-body p-4"><h2>PlantãoPro SaaS</h2><p class="text-muted">Plataforma premium para operação de plantões, escalas inteligentes, comunicação e financeiro integrado.</p><a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente">Cadastrar novo cliente</a></div></section>
-<div class="row g-3">
-<div class="col-md-6"><div class="card h-100"><div class="card-body"><h5>Diferenciais</h5><ul><li>Escalas inteligentes</li><li>Área do médico</li><li>Notificações e auditoria</li><li>Multiempresa</li></ul></div></div></div>
-<div class="col-md-6"><div class="card h-100"><div class="card-body"><h5>Módulos</h5><ul><li>Operação</li><li>Comunicação</li><li>Convites</li><li>Relatórios executivos</li></ul></div></div></div>
-</div>
+<section class="pp-public-product" aria-labelledby="produto-title">
+  <div class="pp-public-product__hero">
+    <span class="pp-eyebrow">PlantãoPro</span>
+    <h1 id="produto-title">Uma central para acompanhar a operação médica de ponta a ponta</h1>
+    <p>Organize jornadas clínicas, escalas, rotinas financeiras e governança com os dados reais da sua organização.</p>
+    <div class="pp-public-product__actions"><a class="btn btn-primary" asp-controller="Cadastro" asp-action="Empresa">Iniciar cadastro</a><a class="btn btn-outline-primary" asp-controller="PlanosPublicos" asp-action="Index">Consultar opções disponíveis</a></div>
+  </div>
+  <div class="pp-public-product__journey" aria-label="Jornada do produto">
+    <article><span>01</span><h2>Configure</h2><p>Cadastre a organização e o administrador responsável.</p></article>
+    <article><span>02</span><h2>Organize</h2><p>Centralize fluxos clínicos, operacionais e financeiros permitidos ao seu perfil.</p></article>
+    <article><span>03</span><h2>Acompanhe</h2><p>Consulte estados e próximos passos gerados pelo backend, sem indicadores fabricados.</p></article>
+  </div>
+  <p class="pp-public-trust"><strong>Segurança desde o primeiro acesso.</strong> Use somente dados autorizados e credenciais individuais; disponibilidade de recursos depende da configuração e contratação reais.</p>
+</section>

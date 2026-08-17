@@ -5,9 +5,9 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v181/', root);
-const jsonOutput = new URL('v181-visual-smoke-results.json', root);
-const markdownOutput = new URL('v181-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v182/', root);
+const jsonOutput = new URL('v182-visual-smoke-results.json', root);
+const markdownOutput = new URL('v182-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
 const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
@@ -28,11 +28,21 @@ try {
   for (const viewport of viewports) for (const route of selectedRoutes) {
     const context = publicRoutes.has(route) ? publicContext : authenticatedContext;
     const page = await context.newPage(); const checks = {}; let status = 'approved'; let error = null;
+    const clientErrors = [];
+    const failedResponses = [];
+    page.on('pageerror', event => clientErrors.push(event.message));
+    page.on('console', message => { if (message.type() === 'error') clientErrors.push(message.text()); });
+    page.on('response', response => { if (response.status() >= 500) failedResponses.push(`${response.status()} ${response.url()}`); });
     try {
       await page.setViewportSize(viewport);
       const response = await page.goto(new URL(route, baseURL).href, { waitUntil: 'networkidle' });
       checks.http = Boolean(response?.ok());
       checks.notRedirectedToLogin = route === '/Account/Login' || !new URL(page.url()).pathname.toLowerCase().includes('/account/login');
+      checks.runtimeResponds = Boolean(response);
+      checks.authenticatedSessionValid = publicRoutes.has(route) || checks.notRedirectedToLogin;
+      checks.noServerErrorPages = failedResponses.length === 0 && (response?.status() ?? 500) < 500;
+      checks.noRazorErrorPages = !/An unhandled exception occurred while processing the request|Razor.*(?:error|exception)|Compilation failed/i.test(await page.locator('body').innerText());
+      checks.noUnhandledClientErrors = clientErrors.length === 0;
       Object.assign(checks, await page.evaluate(({ route, desktop }) => {
         const visible = element => element && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== 'hidden';
         const dialogs = [...document.querySelectorAll('[role="dialog"]')]; const tables = [...document.querySelectorAll('table')];
@@ -138,10 +148,10 @@ try {
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.81.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  const payload = { version: '1.82.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.81.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.82.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.81.0 aprovado: ${results.length} execuções.`);
+else console.log(`Smoke visual v1.82.0 aprovado: ${results.length} execuções.`);

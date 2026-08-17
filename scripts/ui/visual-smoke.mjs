@@ -70,6 +70,7 @@ try {
           clinicalJourney: !['/Saude360', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('.pp-clinical-page,.clinical-workspace,.saude360-form')),
           clinicalJourneyClear: !['/Saude360', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('.pp-clinical-page,.clinical-workspace,.saude360-form')),
           operationalJourneyClear: !['/Plantoes', '/Escalas', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('.pp-page,.pp-operational-workspace,.pp-financial-workspace')),
+          businessRulesVisible: !['/Agendamentos', '/Triagem', '/Consultas', '/Plantoes', '/Escalas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('.pp-empty-state,.pp-status-badge,.badge,[data-business-rule],button:disabled,.pp-data-table,table')),
           actionsWithoutBackendDisabled: !['/Agendamentos', '/Plantoes', '/Escalas', '/Pagamentos', '/Financeiro'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),
           shellClear: !desktop || !visible(document.querySelector('.pp-sidebar')) || !document.querySelector('.pp-content') || document.querySelector('.pp-content').getBoundingClientRect().left >= document.querySelector('.pp-sidebar').getBoundingClientRect().right - 1
         };

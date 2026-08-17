@@ -29,7 +29,7 @@
     <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Voltar</a>
 </div>
 
-<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="pp-form card border-0 shadow-sm saude360-form" data-saude360-form aria-describedby="saude360-form-hint" data-focus-invalid data-unsaved-form>
+<form asp-controller="@vm.Controller" asp-action="Salvar" method="post" class="pp-form card border-0 shadow-sm saude360-form clinical-mvp-journey" data-saude360-form data-clinical-mvp-journey data-next-action aria-describedby="saude360-form-hint" data-focus-invalid data-unsaved-form>
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="ApiEndpoint" />
     <input type="hidden" asp-for="Controller" />
@@ -71,7 +71,7 @@
             <div class="col-md-3"><label asp-for="Valor" class="form-label">Valor</label><input asp-for="Valor" type="number" step="0.01" class="form-control" /></div>
         </div>
 
-        <h2 class="h6 text-uppercase text-primary">Triagem e sinais vitais</h2>
+        <h2 class="h6 text-uppercase text-primary" data-triage-rules>Triagem e sinais vitais</h2>
         <div class="row g-3 mb-4">
             <div class="col-md-4"><label asp-for="QueixaPrincipal" class="form-label">Queixa principal</label><input asp-for="QueixaPrincipal" class="form-control" maxlength="500" /></div>
             <div class="col-md-4"><label asp-for="ClassificacaoRisco" class="form-label">Classificação de risco</label><select asp-for="ClassificacaoRisco" class="form-select" required="@(string.Equals(vm.Controller, "Triagem", StringComparison.OrdinalIgnoreCase) ? "required" : null)" aria-describedby="risco-help"><option value="">Selecione</option><option>EMERGENCIA</option><option>MUITO_URGENTE</option><option>URGENTE</option><option>POUCO_URGENTE</option><option>NAO_URGENTE</option></select><small id="risco-help">Obrigatória para finalizar a triagem; alto risco exige observação.</small></div>
@@ -98,5 +98,10 @@
     <div class="card-footer bg-white d-flex justify-content-end gap-2">
         <a asp-controller="@vm.Controller" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
         <button type="submit" class="btn btn-primary" data-loading-text="Salvando..."><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Salvar</button>
+        @if (string.Equals(vm.Controller, "Triagem", StringComparison.OrdinalIgnoreCase))
+        {
+            <button type="button" class="btn btn-success" disabled title="A API atual salva a triagem, mas não expõe uma transição separada e auditável para finalizar.">Finalizar triagem</button>
+            <button type="button" class="btn btn-outline-primary" disabled title="O encaminhamento será liberado quando a API retornar o identificador da consulta vinculada.">Encaminhar para consulta</button>
+        }
     </div>
 </form>

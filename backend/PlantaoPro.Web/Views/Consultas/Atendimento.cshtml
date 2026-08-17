@@ -1,7 +1,7 @@
 @model PlantaoPro.Web.Models.ConsultaWorkspaceViewModel
 @{ ViewData["Title"] = "Atendimento médico"; }
 <link rel="stylesheet" href="~/css/design-system/clinical-workspace.css" asp-append-version="true" />
-<main class="clinical-workspace" data-clinical-workspace data-consulta-id="@Model.ConsultaId" data-api-base="@Model.ApiBase">
+<main class="clinical-workspace clinical-mvp-journey" data-clinical-workspace data-clinical-mvp-journey data-patient-context data-next-action data-consulta-id="@Model.ConsultaId" data-api-base="@Model.ApiBase">
   <header class="patient-context" aria-live="polite"><div><small>Atendimento médico</small><h1 data-patient-name>Carregando paciente…</h1><p><span data-patient-age></span> <span data-patient-gender></span> · <strong data-risk></strong></p></div><div><span class="clinical-status" data-status></span><span data-wait></span></div></header>
   <ol class="journey-stepper" aria-label="Jornada assistencial"><li>Agendado</li><li>Check-in</li><li>Triagem</li><li>Aguardando médico</li><li class="active">Em atendimento</li><li>Prescrição</li><li>Finalizado</li><li>Financeiro</li></ol>
   <div class="clinical-layout">
@@ -18,7 +18,7 @@
     </form>
   </div>
   <div class="save-indicator" data-save-status role="status">Dados carregados</div>
-  <footer class="clinical-actions"><a asp-action="Index" class="btn btn-outline-secondary">Voltar para fila</a><button type="button" class="btn btn-primary" data-save>Salvar rascunho</button><a asp-controller="Prescricoes" asp-action="Editor" asp-route-consultaId="@Model.ConsultaId" class="btn btn-outline-primary">Abrir prescrição</a><button type="button" class="btn btn-success" data-finalize>Finalizar consulta</button></footer>
+  <footer class="clinical-actions" data-consultation-billing-honest><a asp-action="Index" class="btn btn-outline-secondary">Voltar para fila</a><button type="button" class="btn btn-primary" data-save>Salvar rascunho</button><a asp-controller="Prescricoes" asp-action="Editor" asp-route-consultaId="@Model.ConsultaId" class="btn btn-outline-primary">Abrir prescrição</a><button type="button" class="btn btn-success" data-finalize>Finalizar consulta</button><a asp-controller="FaturamentoClinico" asp-action="Index" asp-route-atendimentoId="@Model.ConsultaId" class="btn btn-outline-primary">Abrir faturamento clínico</a><button type="button" class="btn btn-outline-secondary" disabled title="O pagamento depende de uma conta financeira real gerada após o faturamento.">Abrir pagamento</button></footer>
   <dialog data-conflict-modal><h2>Alteração em outra sessão</h2><p>Seus campos foram preservados. Recarregue os dados antes de salvar novamente.</p><button type="button" data-reload>Recarregar</button></dialog>
   <dialog data-finalize-modal><h2>Revisar finalização</h2><div data-pendencies></div><button type="button" data-close-finalization>Voltar</button><button type="button" data-confirm-finalization>Confirmar finalização</button></dialog>
 </main>

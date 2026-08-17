@@ -15,24 +15,25 @@ public sealed class FaturamentoClinicoController : BaseWebController
 
     [HttpGet("")]
     [HttpGet("Index")]
-    public async Task<IActionResult> Index(string? status, string? competencia, string? convenio)
+    public async Task<IActionResult> Index(string? status, string? competencia, string? convenio, Guid? atendimentoId)
     {
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
         var result = await ReadApiListResponseAsync<FaturamentoClinicoItemViewModel>(client, ContasEndpoint);
-        var hasFilters = !string.IsNullOrWhiteSpace(status) || !string.IsNullOrWhiteSpace(competencia) || !string.IsNullOrWhiteSpace(convenio);
+        var hasFilters = !string.IsNullOrWhiteSpace(status) || !string.IsNullOrWhiteSpace(competencia) || !string.IsNullOrWhiteSpace(convenio) || atendimentoId.HasValue;
         var items = result.Data
             .Where(item => string.IsNullOrWhiteSpace(status) || string.Equals(item.Status, status, StringComparison.OrdinalIgnoreCase))
             .Where(item => string.IsNullOrWhiteSpace(competencia) || string.Equals(item.Competencia, competencia, StringComparison.OrdinalIgnoreCase))
             .Where(item => string.IsNullOrWhiteSpace(convenio) || string.Equals(item.Convenio, convenio, StringComparison.OrdinalIgnoreCase))
+            .Where(item => !atendimentoId.HasValue || item.OrigemId == atendimentoId)
             .ToArray();
-        var model = new FaturamentoClinicoViewModel(items, result.Error, status, competencia, convenio, hasFilters);
+        var model = new FaturamentoClinicoViewModel(items, result.Error, status, competencia, convenio, hasFilters, atendimentoId);
         return View(model);
     }
 
     [HttpGet("ContasReceber")]
-    public Task<IActionResult> ContasReceber() => Index(null, null, null);
+    public Task<IActionResult> ContasReceber() => Index(null, null, null, null);
 
     [HttpGet("Titulos")]
     public IActionResult Titulos() => Produto("Títulos", "Títulos financeiros retornados pela API; boleto permanece somente demonstrativo.", "api/v114/faturamento/titulos");
@@ -50,7 +51,7 @@ public sealed class FaturamentoClinicoController : BaseWebController
     public IActionResult Regras() => Produto("Regras", "Regras reais de faturamento configuradas para o tenant.", "api/v115/faturamento/regras");
 
     [HttpGet("Recebimentos")]
-    public Task<IActionResult> Recebimentos() => Index(null, null, null);
+    public Task<IActionResult> Recebimentos() => Index(null, null, null, null);
 
     [HttpGet("Configuracoes")]
     public IActionResult Configuracoes() => Produto("Configurações", "Parâmetros financeiros e dependências de provedores externos.", "api/v115/faturamento/regras");

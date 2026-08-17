@@ -23,7 +23,7 @@
     DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
 })
 
-<div class="pp-page pp-clinical-page">
+<div class="pp-page pp-clinical-page clinical-mvp-journey" data-clinical-mvp-journey data-patient-context="@(string.Equals(vm.Controller, "Pacientes", StringComparison.OrdinalIgnoreCase) ? "available-from-api" : null)">
 <section class="pp-page-hero" aria-labelledby="saude360Title">
     <div>
         <span class="pp-eyebrow">PlantãoPro Saúde 360 · jornada assistencial</span>
@@ -51,6 +51,25 @@
     <a asp-controller="ClinicaFinanceiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>Financeiro</span>@if (Quantidade("financeiro pendente") is string financeiro) { <strong aria-label="Financeiro pendente">@financeiro</strong> }</a>
 </nav>
 
+<section class="clinical-next-action" data-next-action aria-labelledby="clinicalNextActionTitle">
+    <div>
+        <span class="pp-section-kicker">Próxima ação</span>
+        <h2 id="clinicalNextActionTitle">Continue somente com vínculo e status reais</h2>
+        <p>Abra um registro retornado pela API para confirmar paciente, agendamento e identificadores antes de avançar. Ações sem vínculo permanecem indisponíveis.</p>
+    </div>
+    <a class="btn btn-outline-primary" asp-controller="ClinicaDashboard" asp-action="FluxoAtendimento">Ver regras da jornada</a>
+</section>
+
+@if (string.Equals(vm.Controller, "Pacientes", StringComparison.OrdinalIgnoreCase))
+{
+    <section class="clinical-patient-sections" aria-label="Contexto longitudinal do paciente">
+        @foreach (var bloco in new[] { "Dados", "Agenda", "Triagem", "Consultas", "Faturamento" })
+        {
+            <article class="clinical-context-card"><h2>@bloco</h2><p>Selecione um paciente retornado pela API para consultar este bloco. Nenhum histórico demonstrativo é exibido.</p></article>
+        }
+    </section>
+}
+
 @if (!string.IsNullOrWhiteSpace(vm.ErrorMessage) && !string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase))
 {
     <div class="pp-alert pp-alert--warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>@vm.ErrorMessage</span></div>
@@ -58,7 +77,7 @@
 
 <div class="pp-kpi-strip" aria-label="Contexto do módulo">
     <article class="pp-kpi-card"><span>Plano mínimo</span><strong>@vm.Plano</strong><small>requisito do módulo</small></article>
-    <article class="pp-kpi-card"><span>Registros</span><strong>@registros.Count</strong><small>resultado real carregado</small></article>
+    <article class="pp-kpi-card"><span>Registros</span>@if (string.IsNullOrWhiteSpace(vm.ErrorMessage) || string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase)) { <strong>@registros.Count</strong><small>resultado real carregado</small> } else { <strong>Indisponível</strong><small>a API não confirmou o total</small> }</article>
     <article class="pp-kpi-card"><span>Controle de acesso</span><strong>Protegido</strong><small>tenant, perfil e auditoria</small></article>
 </div>
 

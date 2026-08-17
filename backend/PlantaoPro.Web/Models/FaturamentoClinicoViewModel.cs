@@ -6,7 +6,8 @@ public sealed record FaturamentoClinicoViewModel(
     string? Status = null,
     string? CompetenciaFiltro = null,
     string? Convenio = null,
-    bool HasActiveFilters = false);
+    bool HasActiveFilters = false,
+    Guid? AtendimentoId = null);
 
 public sealed class FaturamentoClinicoItemViewModel
 {

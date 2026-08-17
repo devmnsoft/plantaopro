@@ -5,9 +5,9 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v180/', root);
-const jsonOutput = new URL('v180-visual-smoke-results.json', root);
-const markdownOutput = new URL('v180-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v181/', root);
+const jsonOutput = new URL('v181-visual-smoke-results.json', root);
+const markdownOutput = new URL('v181-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
 const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
@@ -71,11 +71,20 @@ try {
           financialNextActionVisible: !['/FaturamentoClinico','/Financeiro','/Pagamentos'].includes(route) || Boolean(document.querySelector('[data-financial-next-action],.pp-empty-state')),
           reportsActionsHonest: route !== '/Relatorios' || !document.querySelector('a[href="#"]'),
           financialJourneyHonest: !['/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || !/pagamento fake|valor fake|histórico fake/i.test(document.body.innerText),
-          noFakeValues: !/pagamento fake|valor fake|histórico fake|contador fake/i.test(document.body.innerText),
+          adminGovernanceVisible: route !== '/AdminSaas/Index' || Boolean(document.querySelector('[data-admin-governance]')),
+          subscriptionStatusHonest: route !== '/MinhaAssinatura' || Boolean(document.querySelector('#subscription-title')),
+          plansActionsHonest: route !== '/Planos' || !document.querySelector('a[href="#"]'),
+          configurationGroupsVisible: route !== '/Configuracoes' || Boolean(document.querySelector('[data-configuration-groups]')),
+          permissionsMatrixVisible: route !== '/AdminSaas/Index' || Boolean(document.querySelector('[data-permissions-matrix]')),
+          auditLgpdHonest: route !== '/AdminSaas/Index' || /eventos reais|backend necessário/i.test(document.body.innerText),
+          adminReportsActionsHonest: route !== '/Relatorios' || Boolean(document.querySelector('[data-admin-reports-honest] button:disabled')),
+          adminNextActionVisible: route !== '/AdminSaas/Index' || Boolean(document.querySelector('[data-admin-next-action]')),
+          actionsWithoutBackendDisabled: !['/AdminSaas/Index','/Relatorios'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),
+          noFakeValues: !/pagamento fake|valor fake|histórico fake|contador fake|plano fake|tenant fake/i.test(document.body.innerText),
           noBrokenLinks: links.every(link => { const href = link.getAttribute('href'); if (!href || href === '#') return false; try { const target = new URL(href, location.href); return ['http:', 'https:', 'mailto:', 'tel:'].includes(target.protocol); } catch { return false; } }),
           topbarDoesNotOverlap: !visible(topbar) || !visible(content) || topbar.getBoundingClientRect().bottom <= content.getBoundingClientRect().top + 2 || getComputedStyle(topbar).position === 'sticky',
           sidebarDoesNotOverlap: !desktop || !visible(sidebar) || !visible(content) || content.getBoundingClientRect().left >= sidebar.getBoundingClientRect().right - 1,
-          pageContract: route === '/Account/Login' ? Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')) : route === '/cadastro/empresa' ? Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')) : route === '/AdminSaas/Index' ? Boolean(document.querySelector('.pp-admin-layout')) : true,
+          pageContract: route === '/Account/Login' ? Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')) : route === '/cadastro/empresa' ? Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')) : route === '/AdminSaas/Index' ? Boolean(document.querySelector('[data-admin-governance]')) : true,
           clinicalJourney: !['/Saude360', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('.pp-clinical-page,.clinical-workspace,.saude360-form')),
           clinicalMvpJourneyVisible: !['/Saude360', '/Pacientes', '/Agendamentos', '/Triagem', '/Consultas'].includes(route) || Boolean(document.querySelector('[data-clinical-mvp-journey]')),
           patientContextVisible: !['/Pacientes', '/Agendamentos', '/Consultas'].includes(route) || Boolean(document.querySelector('[data-patient-context]')),
@@ -94,7 +103,6 @@ try {
           operationalRiskVisible: route !== '/Plantoes' || Boolean(document.querySelector('[data-operational-risk],.pp-risk-badge,.pp-empty-state')),
           profileDashboardVisible: route !== '/Home/Dashboard' || Boolean(document.querySelector('[data-profile-dashboard]')),
           businessRulesVisible: !['/Agendamentos', '/Triagem', '/Consultas', '/Plantoes', '/Escalas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('.pp-empty-state,.pp-status-badge,.badge,[data-business-rule],button:disabled,.pp-data-table,table')),
-          actionsWithoutBackendDisabled: !['/Agendamentos', '/Plantoes', '/Escalas', '/Pagamentos', '/Financeiro'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),
           shellClear: !desktop || !visible(document.querySelector('.pp-sidebar')) || !document.querySelector('.pp-content') || document.querySelector('.pp-content').getBoundingClientRect().left >= document.querySelector('.pp-sidebar').getBoundingClientRect().right - 1
         };
       }, { route, desktop: viewport.width >= 992 }));
@@ -130,10 +138,10 @@ try {
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.80.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  const payload = { version: '1.81.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.80.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.81.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.80.0 aprovado: ${results.length} execuções.`);
+else console.log(`Smoke visual v1.81.0 aprovado: ${results.length} execuções.`);

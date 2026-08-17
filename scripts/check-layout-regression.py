@@ -104,7 +104,7 @@ for contract in ("noHorizontalOverflow", "noClippedCards", "cardsInsideViewport"
                  "notificationDrawerCloses", "notificationTriggerRegainsFocus", "subscriptionHonestState"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-for output in ("screenshots/v180", "v180-visual-smoke-results.json", "v180-visual-smoke-summary.md"):
+for output in ("screenshots/v181", "v181-visual-smoke-results.json", "v181-visual-smoke-summary.md"):
     if output not in smoke:
         errors.append(f"visual-smoke.mjs sem saída v1.79.0: {output}")
 

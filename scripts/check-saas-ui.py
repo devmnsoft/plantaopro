@@ -36,7 +36,7 @@ else:
         if marker not in faturamento:
             errors.append(f"FaturamentoClinicoController sem contrato obrigatório: {marker}")
 required = {
-    "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-saas-page", "pp-page-hero", "pp-kpi-grid--admin", "pp-admin-layout", "pp-admin-main", "pp-admin-side"),
+    "Views/AdminSaas/Index.cshtml": ("pp-page", "pp-admin-governance", "data-admin-governance", "data-permissions-matrix", "data-admin-next-action"),
     "Views/AdminSaas/Dashboard.cshtml": ("pp-page-hero", "pp-checklist-grid", "pp-checklist-card"),
     "Views/B2BLaunch/Index.cshtml": ("pp-page-hero", "pp-clinical-grid", "pp-action-card"),
     "Views/Planos/Index.cshtml": ("pp-plan-grid", "pp-plan-card", "pp-feature-list"),
@@ -51,7 +51,7 @@ for marker in ("pp-public-hero", "pp-public-card-grid", "pp-public-card", "pp-ac
 
 functional_surfaces = {
     "Views/Home/Dashboard.cshtml": ("pp-page", "pp-page-hero", "pp-kpi-strip", "_EmptyState", "pp-mobile-card"),
-    "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-action-grid", "pp-action-card"),
+    "Views/Configuracoes/Index.cshtml": ("pp-page", "pp-governance-grid", "pp-governance-card", "data-configuration-groups"),
     "Views/Planos/Index.cshtml": ("pp-page", "pp-plan-grid", "pp-plan-card"),
     "Views/Plantoes/Index.cshtml": ("_PageIntroduction", "data-detail-open", "pp-mobile-card"),
     "Views/Escalas/Index.cshtml": ("_PageIntroduction", "data-detail-open", "table-responsive"),
@@ -106,4 +106,14 @@ for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.77:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.80 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")
+print("SaaS UI v1.81 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")
+
+# Contrato administrativo v1.81
+admin = (WEB / "Views/AdminSaas/Index.cshtml").read_text(encoding="utf-8")
+settings = (WEB / "Views/Configuracoes/Index.cshtml").read_text(encoding="utf-8")
+reports = (WEB / "Views/Relatorios/Index.cshtml").read_text(encoding="utf-8")
+smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
+css181 = (WEB / "wwwroot/css/design-system/v181-admin-governance.css").read_text(encoding="utf-8")
+for marker, source in (("data-admin-governance", admin), ("data-permissions-matrix", admin), ("data-configuration-groups", settings), ("data-admin-reports-honest", reports), ("adminGovernanceVisible", smoke), ("screenshots/v181", smoke)):
+    if marker not in source: raise SystemExit(f"Contrato v1.81 ausente: {marker}")
+if "!important" in css181: raise SystemExit("v181-admin-governance.css contém !important")

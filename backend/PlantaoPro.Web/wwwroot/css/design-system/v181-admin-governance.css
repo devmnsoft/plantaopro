@@ -1,0 +1,14 @@
+.pp-admin-governance,.pp-settings-page,.pp-subscription-page{--pp-governance-accent:#4f46e5;--pp-governance-soft:#eef2ff}
+.pp-governance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1rem}
+.pp-governance-card,.pp-governance-panel,.pp-governance-notice{border:1px solid var(--pp-border-color,#dbe2ea);border-radius:1rem;background:var(--pp-surface,#fff);box-shadow:0 12px 35px rgba(15,23,42,.06)}
+.pp-governance-card{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:.75rem;padding:1.25rem}
+.pp-governance-card h3,.pp-governance-card p{margin:0}.pp-governance-card p{color:var(--pp-text-muted,#64748b);line-height:1.6}.pp-governance-card .pp-card-actions{margin-top:auto}
+.pp-governance-card--muted{background:linear-gradient(145deg,#f8fafc,#fff)}
+.pp-governance-panel{margin-top:1.5rem;padding:1.5rem;scroll-margin-top:6rem}
+.pp-governance-notice{display:flex;gap:1rem;align-items:flex-start;margin:1rem 0 1.5rem;padding:1rem 1.25rem;background:linear-gradient(135deg,var(--pp-governance-soft),#fff)}
+.pp-governance-notice i{color:var(--pp-governance-accent);font-size:1.4rem}.pp-governance-notice p{margin:.25rem 0 0}
+.pp-status-badge{display:inline-flex;border-radius:999px;padding:.3rem .65rem;font-size:.75rem;font-weight:700;letter-spacing:.02em}
+.pp-status-badge--source{color:#3730a3;background:#e0e7ff}.pp-status-badge--unknown{color:#854d0e;background:#fef9c3}.pp-status-badge--unavailable{color:#9f1239;background:#ffe4e6}
+.pp-admin-governance .btn:disabled,.pp-governance-panel .btn:disabled{cursor:not-allowed;opacity:.72}
+@media(max-width:991px){.pp-governance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:639px){.pp-governance-grid{grid-template-columns:1fr}.pp-governance-card,.pp-governance-panel{padding:1rem}.pp-governance-card .pp-card-actions{display:flex;width:100%;flex-direction:column;align-items:stretch}.pp-governance-card .btn{min-height:44px}.pp-governance-notice{align-items:flex-start}}

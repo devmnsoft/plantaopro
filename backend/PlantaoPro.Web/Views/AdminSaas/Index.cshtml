@@ -1,79 +1,27 @@
 @model CommercialDemoPageViewModel
-@{
-    ViewData["Title"] = Model.Title;
-    ViewData["Subtitle"] = Model.Subtitle;
-    var cards = Model.Cards?.ToArray() ?? Array.Empty<CommercialCardViewModel>();
-    var checklist = Model.Checklist?.ToArray() ?? Array.Empty<string>();
-}
-<div class="pp-page pp-admin-saas-page">
-    <section class="pp-page-hero pp-admin-hero" aria-labelledby="adminSaasTitle">
-        <div class="pp-page-hero__copy">
-            <span class="pp-eyebrow">Cockpit SaaS</span>
-            <h2 id="adminSaasTitle">Governança do ambiente</h2>
-            <p>@Model.Subtitle</p>
-        </div>
-        <div class="pp-hero-actions" aria-label="Ações rápidas">
-            <a class="btn btn-outline-primary" asp-controller="Planos" asp-action="Index"><app-icon name="Settings" size="18" /> Planos e limites</a>
-            <a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente"><app-icon name="Hospital" size="18" /> Iniciar onboarding</a>
+@{ ViewData["Title"] = "Admin SaaS e Governança"; }
+<div class="pp-page pp-admin-governance" data-admin-governance data-admin-next-action>
+    <header class="pp-page-hero" aria-labelledby="admin-title">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Admin SaaS e Governança</span><h1 id="admin-title">Central administrativa</h1><p>Consulte as fontes responsáveis pelo contrato, configuração, acessos e rastreabilidade. Ausência de integração nunca é apresentada como dado do tenant.</p></div>
+        <div class="pp-hero-actions"><a class="btn btn-primary" asp-controller="Configuracoes" asp-action="Index">Abrir configurações</a><a class="btn btn-outline-primary" asp-controller="MinhaAssinatura" asp-action="Index">Minha assinatura</a></div>
+    </header>
+
+    <div class="pp-governance-notice" role="note"><i class="bi bi-database-check" aria-hidden="true"></i><div><strong>Estado administrativo sob demanda</strong><p>Tenant, plano, consumo, limites, módulos e usuários são exibidos apenas nas respectivas telas quando retornados pelo backend.</p></div></div>
+
+    <section aria-labelledby="next-actions-title"><div class="pp-section-header"><div><span class="pp-eyebrow">Próximas ações do administrador</span><h2 id="next-actions-title">Governança por fonte</h2><p>Cada ação abaixo abre uma rota existente e preserva a autorização do servidor.</p></div></div>
+        <div class="pp-governance-grid">
+            <article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--source">Fonte contratual</span><h3>Assinatura e plano</h3><p>Plano, status, cobrança, uso e módulos somente quando informados pela API.</p><div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="MinhaAssinatura" asp-action="Index">Consultar assinatura</a><a class="btn btn-link" asp-controller="Planos" asp-action="Index">Catálogo real</a></div></article>
+            <article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--source">Rotas existentes</span><h3>Configuração do tenant</h3><p>Organize identidade, jornadas, segurança, integrações e preferências sem presumir status.</p><div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="Configuracoes" asp-action="Index">Abrir configurações</a></div></article>
+            <article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--source">Autorização no servidor</span><h3>Usuários, perfis e permissões</h3><p>A lista depende da API. A interface não concede nem substitui permissões.</p><div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="Usuarios" asp-action="Index">Gerenciar usuários</a><a class="btn btn-link" asp-controller="AdminSaas" asp-action="Index" asp-fragment="permissions-matrix">Ver matriz de referência</a></div></article>
+            <article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--source">Eventos reais</span><h3>Auditoria e LGPD</h3><p>Consulte somente eventos, solicitações e evidências persistidos pelas fontes de governança.</p><div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="Auditoria" asp-action="Index">Auditoria</a><a class="btn btn-link" asp-controller="Lgpd" asp-action="Index">LGPD</a></div></article>
+            <article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--source">Geração contratada</span><h3>Relatórios administrativos</h3><p>Relatórios com endpoint podem ser abertos; implantações permanecem identificadas e inativas.</p><div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="Relatorios" asp-action="Index">Abrir relatórios</a></div></article>
+            <article class="pp-governance-card pp-governance-card--muted"><span class="pp-status-badge pp-status-badge--unavailable">Backend necessário</span><h3>Visão consolidada do tenant</h3><p>Não existe um agregado confiável para prontidão, pendências, usuários, módulos e contrato.</p><button class="btn btn-outline-secondary" type="button" disabled title="Depende de endpoint agregado e auditável do tenant.">Gerar diagnóstico consolidado</button></article>
         </div>
     </section>
 
-    <section class="pp-kpi-grid pp-kpi-grid--admin" aria-label="Resumo da administração SaaS">
-        <article class="pp-kpi-card"><span>Áreas disponíveis</span><strong>@cards.Length</strong><small>Atalhos retornados para o seu perfil</small></article>
-        <article class="pp-kpi-card"><span>Frentes para revisão</span><strong>@checklist.Length</strong><small>Itens de configuração disponíveis</small></article>
-        <article class="pp-kpi-card"><span>Tenant</span><strong>Contexto atual</strong><small>Consulte o contexto seguro exibido na topbar</small></article>
-        <article class="pp-kpi-card"><span>Plano e uso</span><strong>Dados do ambiente</strong><small>Consulte limites sem estimativas ou dados fictícios</small></article>
-    </section>
-
-    <section class="pp-admin-layout">
-        <div class="pp-admin-main">
-        <section class="pp-section" aria-labelledby="saasAreasTitle">
-            <div class="pp-section-heading"><div><span class="pp-eyebrow">Organização</span><h2 id="saasAreasTitle">Áreas de gestão</h2><p>Abra a fonte responsável por planos, billing, white label, módulos ou auditoria.</p></div></div>
-            @if (cards.Length == 0)
-            {
-                <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-grid", "Nenhuma área disponível", "Seu perfil ainda não recebeu atalhos administrativos.")' />
-            }
-            else
-            {
-                <div class="pp-clinical-grid">
-                    @foreach (var card in cards)
-                    {
-                        <article class="pp-action-card">
-                            <span class="pp-icon-surface" aria-hidden="true"><app-icon name="Settings" size="22" /></span>
-                            <h3>@card.Title</h3><p>@card.Description</p>
-                            <div class="pp-card-actions"><a class="btn btn-outline-primary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText <app-icon name="ChevronRight" size="17" /></a></div>
-                        </article>
-                    }
-                </div>
-            }
-        </section>
-        </div>
-
-        <aside class="pp-section pp-admin-side pp-admin-review" aria-labelledby="adminReviewTitle">
-            <div class="pp-section-heading"><div><span class="pp-eyebrow">Onboarding e conformidade</span><h2 id="adminReviewTitle">Revisões necessárias</h2><p>Valide as configurações reais antes de ampliar a operação.</p></div></div>
-            @if (checklist.Length == 0)
-            {
-                <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Sem revisões disponíveis", "Não há itens de onboarding retornados neste momento.")' />
-            }
-            else
-            {
-                <div class="pp-checklist-grid">
-                    @foreach (var item in checklist)
-                    {
-                        <article class="pp-checklist-card">
-                            <div class="pp-checklist-card__head"><span class="pp-icon-surface" aria-hidden="true"><app-icon name="Check" size="20" /></span><h3>@item</h3></div>
-                            <p>Abra a implantação para conferir responsáveis, evidências e pendências.</p>
-                            <a class="btn btn-sm btn-outline-primary" asp-controller="Implantacao" asp-action="Index">Revisar configuração</a>
-                        </article>
-                    }
-                </div>
-            }
-            <nav class="pp-admin-shortcuts" aria-label="Governança e configuração">
-                <a asp-controller="Parametrizacoes" asp-action="WhiteLabel">White label</a>
-                <a asp-controller="FaturamentoSaas" asp-action="Index">Billing</a>
-                <a asp-controller="Lgpd" asp-action="Index">LGPD</a>
-                <a asp-controller="Auditoria" asp-action="Index">Auditoria</a>
-            </nav>
-        </aside>
+    <section id="permissions-matrix" class="pp-governance-panel" aria-labelledby="permissions-title" data-permissions-matrix>
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Perfis e permissões</span><h2 id="permissions-title">Matriz de referência</h2><p>Perfis esperados no produto: Admin, Coordenação, Médico, Hospital, Financeiro e Operador. As permissões efetivas dependem das claims e policies devolvidas pelo backend.</p></div></div>
+        <div class="pp-inline-empty"><i class="bi bi-shield-lock" aria-hidden="true"></i><div><strong>Matriz efetiva não disponibilizada</strong><p>Para evitar permissões fictícias, nenhuma capacidade é marcada como concedida. Consulte o artefato de governança e valide a autorização no servidor.</p></div></div>
+        <button class="btn btn-outline-secondary" type="button" disabled title="A edição depende de endpoints de policies, perfis e auditoria.">Editar permissões</button>
     </section>
 </div>

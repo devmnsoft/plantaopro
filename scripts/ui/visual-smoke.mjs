@@ -5,9 +5,9 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v179/', root);
-const jsonOutput = new URL('v179-visual-smoke-results.json', root);
-const markdownOutput = new URL('v179-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v180/', root);
+const jsonOutput = new URL('v180-visual-smoke-results.json', root);
+const markdownOutput = new URL('v180-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
 const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
@@ -61,6 +61,15 @@ try {
           notificationDrawerAccessible: !document.querySelector('#notificationDrawer') || Boolean(document.querySelector('#notificationDrawer[role="dialog"][aria-modal="true"]')),
           loginResponsive: route !== '/Account/Login' || Boolean(document.querySelector('.pp-auth-page .pp-auth-shell .pp-auth-card')),
           selfServiceResponsive: route !== '/cadastro/empresa' || Boolean(document.querySelector('.pp-selfservice-page .pp-onboarding-form')),
+          financialMvpJourneyVisible: !['/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || Boolean(document.querySelector('[data-financial-mvp-journey]')),
+          billingOriginVisible: route !== '/FaturamentoClinico' || Boolean(document.querySelector('[data-billing-origin],.pp-empty-state')),
+          financialStatusHonest: route !== '/Financeiro' || Boolean(document.querySelector('[data-financial-status-honest],.pp-empty-state')),
+          paymentValueHonest: route !== '/Pagamentos' || Boolean(document.querySelector('[data-payment-value-honest],.pp-empty-state')),
+          missingValuesNotZero: !['/FaturamentoClinico','/Financeiro','/Pagamentos'].includes(route) || !/Não informado[^\n]{0,30}R\$\s*0[,\.]00/i.test(document.body.innerText),
+          glosaRulesVisible: !['/Financeiro','/Pagamentos'].includes(route) || Boolean(document.querySelector('[data-glosa-rules],table')),
+          repasseRulesVisible: !['/Financeiro','/Pagamentos'].includes(route) || Boolean(document.querySelector('[data-repasse-rules],table')),
+          financialNextActionVisible: !['/FaturamentoClinico','/Financeiro','/Pagamentos'].includes(route) || Boolean(document.querySelector('[data-financial-next-action],.pp-empty-state')),
+          reportsActionsHonest: route !== '/Relatorios' || !document.querySelector('a[href="#"]'),
           financialJourneyHonest: !['/FaturamentoClinico', '/Financeiro', '/Pagamentos'].includes(route) || !/pagamento fake|valor fake|histórico fake/i.test(document.body.innerText),
           noFakeValues: !/pagamento fake|valor fake|histórico fake|contador fake/i.test(document.body.innerText),
           noBrokenLinks: links.every(link => { const href = link.getAttribute('href'); if (!href || href === '#') return false; try { const target = new URL(href, location.href); return ['http:', 'https:', 'mailto:', 'tel:'].includes(target.protocol); } catch { return false; } }),
@@ -121,10 +130,10 @@ try {
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.79.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
+  const payload = { version: '1.80.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.79.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.80.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.79.0 aprovado: ${results.length} execuções.`);
+else console.log(`Smoke visual v1.80.0 aprovado: ${results.length} execuções.`);

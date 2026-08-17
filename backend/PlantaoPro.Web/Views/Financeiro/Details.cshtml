@@ -17,11 +17,11 @@
     <div><strong>Plantão:</strong> @pg.DataInicioPlantao.ToString("dd/MM/yyyy HH:mm") - @pg.DataFimPlantao.ToString("dd/MM/yyyy HH:mm")</div>
     <div><strong>Status:</strong> <partial name="_StatusBadge" model="pg.Status" /></div>
     <div><strong>Valor previsto:</strong> @pg.ValorPrevisto.ToString("C")</div>
-    <div><strong>Valor pago:</strong> @((pg.ValorPago ?? 0).ToString("C"))</div>
-    <div><strong>Data prevista:</strong> @(pg.DataPrevista?.ToString("dd/MM/yyyy") ?? "-")</div>
-    <div><strong>Data pagamento:</strong> @(pg.DataPagamento?.ToString("dd/MM/yyyy") ?? "-")</div>
-    <div><strong>Forma:</strong> @(pg.FormaPagamento ?? "-")</div>
-    <div><strong>Observações:</strong> @(pg.Observacoes ?? "-")</div>
+    <div><strong>Valor pago:</strong> @(pg.ValorPago?.ToString("C") ?? "Não informado")</div>
+    <div><strong>Data prevista:</strong> @(pg.DataPrevista?.ToString("dd/MM/yyyy") ?? "Não informada")</div>
+    <div><strong>Data pagamento:</strong> @(pg.DataPagamento?.ToString("dd/MM/yyyy") ?? "Não informada")</div>
+    <div><strong>Forma:</strong> @(string.IsNullOrWhiteSpace(pg.FormaPagamento) ? "Não informada" : pg.FormaPagamento)</div>
+    <div><strong>Observações:</strong> @(string.IsNullOrWhiteSpace(pg.Observacoes) ? "Não informadas" : pg.Observacoes)</div>
 </div>
 
 @if (pg.Status == "pendente")

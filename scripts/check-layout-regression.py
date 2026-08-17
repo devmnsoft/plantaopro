@@ -104,7 +104,7 @@ for contract in ("noHorizontalOverflow", "noClippedCards", "cardsInsideViewport"
                  "notificationDrawerCloses", "notificationTriggerRegainsFocus", "subscriptionHonestState"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-for output in ("screenshots/v179", "v179-visual-smoke-results.json", "v179-visual-smoke-summary.md"):
+for output in ("screenshots/v180", "v180-visual-smoke-results.json", "v180-visual-smoke-summary.md"):
     if output not in smoke:
         errors.append(f"visual-smoke.mjs sem saída v1.79.0: {output}")
 
@@ -125,4 +125,4 @@ if ".innerHTML" in notification_js:
 
 if errors:
     raise SystemExit("Falha no layout v1.79.0:\n- " + "\n- ".join(errors))
-print("Layout v1.79.0 validado: shell, jornadas, notificações e contrato executável de smoke sem regressões críticas.")
+print("Layout v1.80 validado: shell, jornadas, notificações e contrato executável de smoke sem regressões críticas.")

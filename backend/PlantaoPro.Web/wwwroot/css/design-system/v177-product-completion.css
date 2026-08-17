@@ -1,0 +1,25 @@
+/* v1.77 — acabamento aditivo para a central de fechamento e dashboards por perfil. */
+.pp-profile-focus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pp-space-5);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, var(--pp-primary) 22%, var(--pp-border));
+  border-radius: var(--pp-radius-xl);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 9%, var(--pp-surface)) 0%, var(--pp-surface) 72%);
+  box-shadow: var(--pp-shadow-sm);
+}
+
+.pp-profile-focus h2 { margin: .2rem 0 .35rem; }
+.pp-profile-focus p { max-width: 70ch; margin: 0; color: var(--pp-text-muted); }
+.pp-dashboard-workspace .pp-kpi-card,
+.pp-dashboard-workspace .pp-action-card { min-width: 0; }
+.pp-financial-workspace .table-responsive { border-radius: var(--pp-radius-lg); }
+
+@media (max-width: 767px) {
+  .pp-profile-focus { align-items: stretch; flex-direction: column; }
+  .pp-profile-focus .btn { width: 100%; min-height: 44px; }
+  .pp-filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .pp-dashboard-workspace .pp-action-grid { grid-template-columns: minmax(0, 1fr); }
+}

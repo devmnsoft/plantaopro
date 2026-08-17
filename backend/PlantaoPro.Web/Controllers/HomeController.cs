@@ -25,8 +25,8 @@ public class HomeController : BaseWebController
 
     public async Task<IActionResult> Dashboard([FromQuery] DateTime? inicio, [FromQuery] DateTime? fim, [FromQuery] string? hospital, [FromQuery] string? especialidade)
     {
-        if (User.IsMedico()) return RedirectToAction("Index", "MinhaAgenda");
         var fallback = CriarDashboardVazio();
+        ViewData["DashboardDataAvailable"] = false;
 
         try
         {
@@ -60,7 +60,11 @@ public class HomeController : BaseWebController
                 PlantoesPorEspecialidade = data.PlantoesPorEspecialidade ?? Array.Empty<DashboardChartItem>(),
                 PlantoesPorHospital = data.PlantoesPorHospital ?? Array.Empty<DashboardChartItem>()
             };
-            safeData = AplicarFiltrosDashboard(safeData, inicio, fim, hospital, especialidade);
+            if (data is not null)
+            {
+                safeData = AplicarFiltrosDashboard(safeData, inicio, fim, hospital, especialidade);
+                ViewData["DashboardDataAvailable"] = true;
+            }
             if (!string.IsNullOrWhiteSpace(error)) TempData["Info"] = error;
             return View(safeData);
         }

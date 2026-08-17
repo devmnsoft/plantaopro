@@ -33,3 +33,9 @@ build/
 Thumbs.db
 
 .local/
+
+# Credenciais e sessões locais de homologação
+.env
+.env.*
+!.env.example
+artifacts/auth/

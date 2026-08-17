@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.82; Detecta controllers duplicados e actions Index conflitantes antes do build."""
+"""Contrato v1.83; Detecta controllers duplicados e actions Index conflitantes antes do build."""
 from collections import defaultdict
 from pathlib import Path
 import re
@@ -77,14 +77,14 @@ if errors:
 
 print(f"Controllers v1.80 validados: {len(declarations)} nomes únicos, controllers críticos consolidados e dashboard por perfil honesto.")
 
-# Contrato de homologação runtime v1.82.
+# Contrato de homologação runtime v1.83.
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 for marker in (
-    "screenshots/v182", "v182-visual-smoke-results.json", "v182-visual-smoke-summary.md",
+    "screenshots/v183", "v183-visual-smoke-results.json", "v183-visual-smoke-summary.md",
     "runtimeResponds", "authenticatedSessionValid", "noServerErrorPages", "noRazorErrorPages",
     "noUnhandledClientErrors", "noBrokenLinks", "clinicalMvpJourneyVisible",
     "operationalMvpJourneyVisible", "financialMvpJourneyVisible", "adminGovernanceVisible",
-    "actionsWithoutBackendDisabled", "noFakeValues", "version: '1.82.0'",
+    "actionsWithoutBackendDisabled", "noFakeValues", "version: '1.83.0'",
 ):
     if marker not in smoke:
-        raise SystemExit(f"Smoke v1.82 sem contrato obrigatório: {marker}")
+        raise SystemExit(f"Smoke v1.83 sem contrato obrigatório: {marker}")

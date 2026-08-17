@@ -17,9 +17,10 @@
         <a class="pp-action-card" asp-controller="Pagamentos" asp-action="Index"><span>Pagamentos</span><small>Acompanhar realizações financeiras</small></a>
     </nav>
 
-    <section class="pp-filter-panel" aria-labelledby="billing-filter-title">
+    <section class="pp-filter-panel" aria-labelledby="billing-filter-title" data-consultation-billing-honest>
         <div class="pp-section-heading"><div><span class="pp-section-kicker">Dados retornados</span><h2 id="billing-filter-title">Filtrar contas</h2></div></div>
         <form method="get" class="pp-form pp-filter-form">
+            @if (Model.AtendimentoId.HasValue) { <input type="hidden" name="atendimentoId" value="@Model.AtendimentoId" /> }
             <div><label class="form-label" for="status">Status</label><input class="form-control" id="status" name="status" value="@Model.Status" /></div>
             <div><label class="form-label" for="competencia">Competência</label><input class="form-control" id="competencia" name="competencia" placeholder="MM/AAAA" value="@Model.CompetenciaFiltro" inputmode="numeric" /></div>
             <div><label class="form-label" for="convenio">Convênio</label><input class="form-control" id="convenio" name="convenio" value="@Model.Convenio" /></div>
@@ -27,6 +28,7 @@
             @if (Model.HasActiveFilters) { <a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a> }
         </form>
         <p class="form-text">Os filtros usam somente status, competência e convênio fornecidos pela API.</p>
+        @if (Model.AtendimentoId.HasValue) { <p class="pp-alert pp-alert--info">Entrada vinculada à consulta <strong>@Model.AtendimentoId</strong>. Somente contas cuja origem corresponda a esse identificador são exibidas.</p> }
     </section>
 
     @if (!string.IsNullOrWhiteSpace(Model.Error))

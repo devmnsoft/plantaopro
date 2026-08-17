@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gate estático v1.77 das jornadas clínicas e operacionais."""
+"""Gate estático v1.78 das jornadas clínicas e operacionais."""
 from pathlib import Path
 import re
 
@@ -105,7 +105,7 @@ for marker in ("data-filter-priority", "data-filter-type", "data-filter-due", "d
     if marker not in central:
         errors.append(f"Minha Central sem filtro operacional: {marker}")
 
-# O fechamento v1.77 exige destinos reais e ausência financeira tratada honestamente.
+# O fechamento v1.78 exige destinos reais e ausência financeira tratada honestamente.
 faturamento_controller = (WEB / "Controllers/FaturamentoClinicoController.cs").read_text(encoding="utf-8")
 saude_controllers = (WEB / "Controllers/Saude360WebControllers.cs").read_text(encoding="utf-8")
 faturamento_view = (WEB / "Views/FaturamentoClinico/Index.cshtml").read_text(encoding="utf-8")
@@ -137,12 +137,12 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
         errors.append(f"{drawer_view}: drawer sem semântica modal acessível")
 
 if errors:
-    raise SystemExit("Falha na UX operacional v1.77:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourneyClear", "operationalJourneyClear", "actionsWithoutBackendDisabled", "screenshots/v177", "version: '1.77.0'"):
+    raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
+for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "actionsWithoutBackendDisabled", "screenshots/v178", "version: '1.78.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
-        errors.append(f"Smoke v1.77 sem contrato operacional: {marker}")
+        errors.append(f"Smoke v1.78 sem contrato operacional: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UX operacional v1.77:\n- " + "\n- ".join(errors))
-print("UX operacional v1.77 validada: recepção, clínica, operação, drawers e ações reais.")
+    raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
+print("UX operacional v1.78 validada: recepção, clínica, operação, drawers e ações reais.")

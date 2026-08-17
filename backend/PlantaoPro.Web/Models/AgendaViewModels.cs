@@ -34,6 +34,14 @@ public sealed class AgendaClinicaItemViewModel
     public string Sala { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
 
+    private string StatusNormalizado => Status.Trim().ToUpperInvariant();
+    public bool PodeConfirmar => StatusNormalizado.Contains("AGEND");
+    public bool PodeCheckIn => StatusNormalizado.Contains("AGEND") || StatusNormalizado.Contains("CONFIRM");
+    public bool PodeAbrirTriagem => StatusNormalizado.Contains("CHECK") || StatusNormalizado.Contains("AGUARD");
+    public bool PodeAlterarAgenda => !string.IsNullOrWhiteSpace(Status)
+        && !StatusNormalizado.Contains("CANCEL")
+        && !StatusNormalizado.Contains("FINAL");
+
     public string TempoEspera
     {
         get
@@ -61,7 +69,7 @@ public sealed class AgendaClinicaItemViewModel
     {
         get
         {
-            var normalized = Status.Trim().ToUpperInvariant();
+            var normalized = StatusNormalizado;
             if (normalized.Contains("AGEND")) return "Confirmar ou realizar check-in";
             if (normalized.Contains("CONFIRM")) return "Realizar check-in";
             if (normalized.Contains("CHECK") || normalized.Contains("AGUARD")) return "Abrir triagem";

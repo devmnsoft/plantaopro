@@ -53,4 +53,4 @@ for path in (WEB / "Views").rglob("*.cshtml"):
 
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
-print("Form experience v1.77 validada: pp-form, labels, feedback de envio e associação acessível presentes.")
+print("Form experience v1.80 validada: pp-form, labels, feedback de envio e associação acessível presentes.")

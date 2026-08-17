@@ -106,4 +106,4 @@ for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.77:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.77 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")
+print("SaaS UI v1.80 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")

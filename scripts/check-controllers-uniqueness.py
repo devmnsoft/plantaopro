@@ -75,4 +75,4 @@ if "data-profile-dashboard" not in dashboard_view:
 if errors:
     raise SystemExit("Falha na unicidade de controllers:\n- " + "\n- ".join(dict.fromkeys(errors)))
 
-print(f"Controllers v1.77 validados: {len(declarations)} nomes únicos, controllers críticos consolidados e dashboard por perfil honesto.")
+print(f"Controllers v1.80 validados: {len(declarations)} nomes únicos, controllers críticos consolidados e dashboard por perfil honesto.")

@@ -68,4 +68,4 @@ for css_path in (WEB / "wwwroot/css").rglob("*.css"):
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
-print("Feedback UI v1.77 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")
+print("Feedback UI v1.80 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")

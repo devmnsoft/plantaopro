@@ -20,6 +20,10 @@
     Steps: new[] { "Confira valores previstos e realizados.", "Analise divergências e pendências.", "Registre a resolução antes do fechamento." },
     Eyebrow: "Controle financeiro")' />
 
+<nav class="pp-financial-journey" aria-label="Jornada financeira" data-financial-mvp-journey>
+    <span>Faturamento</span><span class="is-current">Financeiro</span><span>Glosa / contestação</span><span>Pagamento</span><span>Repasse</span><span>Relatório</span>
+</nav>
+
 <section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
     <article class="pp-kpi-card"><span>Total previsto</span><strong>@totalPrevisto.ToString("C")</strong><small>Composição dos registros exibidos</small></article>
     <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">@(possuiValorPago ? totalPago.ToString("C") : "Não informado")</strong><small>Somente valores realizados retornados pela API</small></article>
@@ -50,16 +54,16 @@
 
 @if (!items.Any())
 {
-    <div class="empty-state">
+    <div class="pp-empty-state" data-financial-status-honest data-glosa-rules data-repasse-rules>
         <i class="bi bi-calendar2-x"></i>
         <h5>Sem pagamentos</h5>
-        <p>Nenhum pagamento encontrado para os filtros atuais.</p>
+        <p>A API não retornou lançamentos para os filtros atuais. Isso não significa saldo zero, pagamento pendente, glosa ou repasse.</p><p><strong>Glosas e repasses:</strong> serão exibidos somente quando a fonte financeira fornecer registros vinculados.</p>
     </div>
 }
 else
 {
     <div class="pp-data-table d-none d-md-block"><div class="table-responsive">
-        <table class="table table-modern align-middle mb-0">
+        <table class="table table-modern align-middle mb-0" data-financial-status-honest data-financial-next-action>
             <caption class="visually-hidden">Pagamentos e situação financeira</caption><thead>
                 <tr>
                     <th>Médico</th>
@@ -69,7 +73,7 @@ else
                     <th>Valor Previsto</th>
                     <th>Valor Pago</th>
                     <th>Status</th>
-                    <th class="text-end">Ações</th>
+                    <th class="text-end">Próxima ação</th>
                 </tr>
             </thead>
             <tbody>
@@ -88,8 +92,8 @@ else
                         <td class="text-end">
                             <div class="action-buttons">
                                 <a class="btn btn-sm btn-soft-primary" asp-action="Details" asp-route-id="@p.Id">Detalhes</a>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled>Confirmar</button><span class="visually-hidden">Disponível quando o pagamento estiver pendente e conciliado.</span></span>
-                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" type="button" disabled>Cancelar</button><span class="visually-hidden">Disponível quando não houver fechamento concluído.</span></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-success" type="button" disabled title="Use o detalhe; a confirmação exige status pendente, valor e endpoint transacional.">Confirmar</button></span>
+                                <span class="pp-locked-action"><button class="btn btn-sm btn-soft-danger" type="button" disabled title="Use o detalhe; o cancelamento exige um lançamento real e justificativa.">Cancelar</button></span>
                             </div>
                         </td>
                     </tr>

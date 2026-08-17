@@ -11,6 +11,10 @@
         Steps: new[] { "Confira a referência e a competência.", "Investigue pendências na jornada de origem.", "Prossiga no Financeiro somente com dados consistentes." },
         Eyebrow: "Receita assistencial")' />
 
+    <nav class="pp-financial-journey" aria-label="Jornada financeira" data-financial-mvp-journey>
+        <span class="is-current">Faturamento</span><span>Financeiro</span><span>Glosa / contestação</span><span>Pagamento</span><span>Repasse</span><span>Relatório</span>
+    </nav>
+
     <nav class="pp-action-grid" aria-label="Jornadas relacionadas">
         <a class="pp-action-card" asp-controller="Consultas" asp-action="Index"><span>Consultas</span><small>Abrir a origem assistencial</small></a>
         <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span>Financeiro</span><small>Conferir valores e situações</small></a>
@@ -53,10 +57,10 @@
             <div class="pp-section-heading">
                 <div><span class="pp-section-kicker">Dados reais</span><h2 id="billing-list-title">Contas retornadas</h2><p>@Model.Items.Count registro(s) disponível(is) para conferência.</p></div>
             </div>
-            <div class="pp-data-table d-none d-md-block"><div class="table-responsive">
+            <div class="pp-data-table d-none d-md-block" data-billing-origin data-financial-next-action><div class="table-responsive">
                 <table class="table table-modern align-middle mb-0">
                     <caption class="visually-hidden">Contas do faturamento clínico</caption>
-                    <thead><tr><th>Competência</th><th>Consulta / origem</th><th>Paciente</th><th>Profissional</th><th>Convênio / procedimento</th><th>Valor previsto</th><th>Aprovado / pago</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
+                    <thead><tr><th>Competência</th><th>Consulta / origem</th><th>Paciente</th><th>Profissional</th><th>Convênio / procedimento</th><th>Valor previsto</th><th>Aprovado / pago</th><th>Status</th><th class="text-end">Próxima ação</th></tr></thead>
                     <tbody>
                     @foreach (var item in Model.Items)
                     {

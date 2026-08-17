@@ -138,7 +138,7 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v179", "version: '1.79.0'"):
+for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v180", "version: '1.80.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
         errors.append(f"Smoke v1.78 sem contrato operacional: {marker}")
@@ -157,5 +157,5 @@ for relative, markers in operational_files.items():
         if marker not in source:
             errors.append(f"{relative}: contrato operacional v1.79 ausente: {marker}")
 if errors:
-    raise SystemExit("Falha na UX operacional v1.79:\n- " + "\n- ".join(errors))
-print("UX operacional v1.79 validada: cobertura, convites, escalas, substituições e fechamento honesto.")
+    raise SystemExit("Falha na UX operacional v1.80:\n- " + "\n- ".join(errors))
+print("UX operacional v1.80 validada: cobertura, convites, escalas, substituições e fechamento honesto.")

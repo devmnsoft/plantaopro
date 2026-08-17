@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regressão das superfícies SaaS, assinatura e centrais operacionais v1.73."""
+"""Regressão das superfícies SaaS, assinatura e centrais operacionais v1.77."""
 from pathlib import Path
 import re
 
@@ -105,5 +105,5 @@ for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
         errors.append(f"v161-medical-experience.css: acabamento premium v1.68 ausente: {marker}")
 
 if errors:
-    raise SystemExit("Falha na UI SaaS v1.73:\n- " + "\n- ".join(errors))
-print("SaaS UI v1.73 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")
+    raise SystemExit("Falha na UI SaaS v1.77:\n- " + "\n- ".join(errors))
+print("SaaS UI v1.77 validada: controllers críticos únicos, hero, planos, checklist e onboarding estruturados.")

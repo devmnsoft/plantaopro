@@ -2,7 +2,8 @@
 @using PlantaoPro.Web.Security
 @{
     ViewData["Title"] = "Painel operacional";
-    var indicadores = Model?.Indicadores;
+    var dadosDisponiveis = ViewData["DashboardDataAvailable"] as bool? == true;
+    var indicadores = dadosDisponiveis ? Model?.Indicadores : null;
     var plantoes = (Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>()).OrderBy(x => x.DataInicio).ToArray();
     var pagamentos = (Model?.UltimosPagamentos ?? Enumerable.Empty<PagamentoResumoDto>()).ToArray();
     var notificacoes = (Model?.UltimasNotificacoes ?? Enumerable.Empty<NotificacaoDto>()).ToArray();
@@ -11,6 +12,7 @@
     var riscosCobertura = plantoes.Where(x => x.DataInicio >= agora && x.VagasDisponiveis > 0).ToArray();
     var nome = User.Identity?.Name;
     var perfil = User.IsAdmin() ? "Administração" : User.IsCoordenacao() ? "Coordenação" : User.IsMedico() ? "Médico" : User.IsFinanceiro() ? "Financeiro" : User.IsHospital() ? "Unidade hospitalar" : "Operação";
+    var contextoPerfil = User.IsAdmin() ? "Governança SaaS, configurações e assinatura" : User.IsCoordenacao() ? "Cobertura, escalas, convites e fechamentos" : User.IsMedico() ? "Agenda, plantões e pagamentos vinculados" : User.IsFinanceiro() ? "Faturamento, glosas, repasses e pagamentos" : User.IsHospital() ? "Cobertura, equipes e solicitações da unidade" : "Agenda, check-in e triagem";
 }
 
 <div class="pp-page pp-dashboard-workspace">
@@ -25,6 +27,11 @@
             <a asp-controller="Agenda" asp-action="Index" class="btn btn-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> Ver agenda</a>
         </div>
     </header>
+
+    <section class="pp-profile-focus" aria-labelledby="profile-focus-title" data-profile-dashboard="@perfil">
+        <div><span class="pp-section-kicker">Prioridade do perfil</span><h2 id="profile-focus-title">@perfil</h2><p>@contextoPerfil. As ações continuam condicionadas às permissões e aos dados retornados pelo servidor.</p></div>
+        <a asp-controller="MinhaCentral" asp-action="Index" class="btn btn-primary">Ver próximas ações</a>
+    </section>
 
     <form class="pp-filter-bar" method="get" asp-action="Dashboard" role="search" aria-label="Filtros do painel operacional">
         <div class="pp-filter-bar__heading"><div><span class="pp-section-kicker">Período e contexto</span><h2 class="h6 mb-0">Refine os indicadores</h2></div><a asp-action="Dashboard" class="btn btn-sm btn-link">Limpar filtros</a></div>
@@ -47,7 +54,7 @@
         {
             <div class="pp-kpi-strip" aria-label="Indicadores retornados pela operação">
                 <article class="pp-kpi-card"><span>Plantões</span><strong>@indicadores.TotalPlantoes</strong><small>@indicadores.PlantoesConfirmados confirmados</small></article>
-                <article class="pp-kpi-card pp-kpi-card--warning"><span>Pagamentos pendentes</span><strong>@indicadores.PagamentosPendentes</strong><small>@indicadores.ValorPendente.ToString("C") previstos</small></article>
+                <article class="pp-kpi-card pp-kpi-card--warning"><span>Pagamentos pendentes</span><strong>@indicadores.PagamentosPendentes</strong><small>@indicadores.ValorPendente.ToString("C") previstos pela fonte</small></article>
                 <article class="pp-kpi-card @(riscosCobertura.Any() ? "pp-kpi-card--danger" : "")"><span>Coberturas em risco</span><strong>@riscosCobertura.Length</strong><small>entre os plantões retornados</small></article>
                 <article class="pp-kpi-card"><span>Agenda de hoje</span><strong>@agendaHoje.Length</strong><small>eventos retornados</small></article>
             </div>

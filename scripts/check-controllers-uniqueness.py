@@ -63,7 +63,16 @@ for critical in ("MinhaAssinaturaController", "FaturamentoClinicoController"):
     if len(parts) != 1:
         errors.append(f"{critical}: esperado exatamente uma declaração, encontrado {len(parts)}")
 
+home = (CONTROLLERS / "HomeController.cs").read_text(encoding="utf-8")
+dashboard_view = (ROOT / "backend/PlantaoPro.Web/Views/Home/Dashboard.cshtml").read_text(encoding="utf-8")
+if 'ViewData["DashboardDataAvailable"]' not in home:
+    errors.append("HomeController: dashboard não distingue dados reais do fallback técnico")
+if 'RedirectToAction("Index", "MinhaAgenda")' in home:
+    errors.append("HomeController: perfil médico não pode ser desviado do dashboard por perfil v1.77")
+if "data-profile-dashboard" not in dashboard_view:
+    errors.append("Dashboard: contrato visual por perfil v1.77 ausente")
+
 if errors:
     raise SystemExit("Falha na unicidade de controllers:\n- " + "\n- ".join(dict.fromkeys(errors)))
 
-print(f"Controllers validados: {len(declarations)} nomes únicos; MinhaAssinatura e FaturamentoClinico consolidados.")
+print(f"Controllers v1.77 validados: {len(declarations)} nomes únicos, controllers críticos consolidados e dashboard por perfil honesto.")

@@ -24,13 +24,30 @@ public class EscalasController : BaseWebController
     }
 
     [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Confirmar(Guid id) => await PostStatus($"api/escalas/{id}/confirmar", new { justificativa = "Confirmada pela coordenação" }, "Escala confirmada.", id);
-    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Recusar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/recusar", new { justificativa }, "Escala recusada.", id);
-    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostStatus($"api/escalas/{id}/cancelar", new { justificativa }, "Escala cancelada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Recusar(Guid id, string justificativa) => await PostWithRequiredReason($"api/escalas/{id}/recusar", justificativa, "Escala recusada.", id);
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostWithRequiredReason($"api/escalas/{id}/cancelar", justificativa, "Escala cancelada.", id);
     [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> MarcarRealizado(Guid id) => await PostStatus($"api/escalas/{id}/marcar-realizado", new { justificativa = "Escala concluída" }, "Escala marcada como realizada.", id);
 
     [HttpGet] public IActionResult Substituir(Guid id) => View(model: new StatusActionViewModel(id, string.Empty));
     [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Substituir(Guid id, Guid novoMedicoId, string justificativa)
-        => await PostStatus($"api/escalas/{id}/substituir", new { novoMedicoId, justificativa }, "Escala substituída.", id);
+    {
+        if (novoMedicoId == Guid.Empty || string.IsNullOrWhiteSpace(justificativa))
+        {
+            ModelState.AddModelError(string.Empty, "Informe um médico real e o motivo da substituição.");
+            return View(new StatusActionViewModel(id, justificativa ?? string.Empty));
+        }
+        return await PostStatus($"api/escalas/{id}/substituir", new { novoMedicoId, justificativa = justificativa.Trim() }, "Escala substituída.", id);
+    }
+
+    private Task<IActionResult> PostWithRequiredReason(string endpoint, string justificativa, string success, Guid id)
+    {
+        if (string.IsNullOrWhiteSpace(justificativa))
+        {
+            TempData["Error"] = "Informe o motivo para concluir esta ação.";
+            return Task.FromResult<IActionResult>(RedirectToAction(nameof(Details), new { id }));
+        }
+        return PostStatus(endpoint, new { justificativa = justificativa.Trim() }, success, id);
+    }
 
     private async Task<IActionResult> PostStatus(string endpoint, object payload, string success, Guid id)
     {

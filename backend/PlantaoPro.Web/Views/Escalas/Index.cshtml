@@ -11,6 +11,14 @@
     "Priorize pendências de cobertura sem perder o contexto do plantão.",
     Steps: new[] { "Consulte escalas e seus status.", "Revise conflitos e solicitações.", "Confirme ou substitua profissionais autorizados." })' />
 
+<nav class="pp-operational-journey" aria-label="Jornada operacional MVP" data-operational-mvp-journey><span>Plantão</span><span>Convite</span><span class="is-current">Escala</span><span>Confirmação</span><span>Presença ou substituição</span><span>Fechamento</span><span>Financeiro</span></nav>
+<form method="get" class="pp-filter-bar" role="search" aria-label="Filtros de escalas">
+    <div><label class="form-label" for="status">Status</label><input class="form-control" id="status" name="status" value="@Context.Request.Query["status"]" placeholder="Status retornado pela API" /></div>
+    <div><label class="form-label" for="dataInicio">De</label><input class="form-control" id="dataInicio" name="dataInicio" type="date" value="@Context.Request.Query["dataInicio"]" /></div>
+    <div><label class="form-label" for="dataFim">Até</label><input class="form-control" id="dataFim" name="dataFim" type="date" value="@Context.Request.Query["dataFim"]" /></div>
+    <button class="btn btn-primary" type="submit">Aplicar filtros</button><a class="btn btn-link" asp-action="Index">Limpar</a>
+</form>
+
 @if (!items.Any())
 {
     <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Sem escalas", "Nenhuma escala real foi encontrada para os filtros atuais.")' />
@@ -28,6 +36,7 @@ else
                     <th>Pagamento</th>
                     <th>Status</th>
                     <th>Justificativa</th>
+                    <th>Próxima ação</th>
                     <th class="text-end">Ações</th>
                 </tr>
             </thead>
@@ -42,6 +51,7 @@ else
                         <td><strong>@e.Valor.ToString("C")</strong><small class="d-block text-muted">vinculação no detalhe</small></td>
                         <td><span class="badge status-@e.Status.ToLowerInvariant()">@e.Status</span></td>
                         <td>@(string.IsNullOrWhiteSpace(e.Justificativa) ? "-" : e.Justificativa)</td>
+                        <td><div class="pp-next-action" data-next-action><small>Conflito</small><span>Não informado pela API</span><strong>@(e.Status.Equals("solicitado", StringComparison.OrdinalIgnoreCase) ? "Confirmar ou recusar" : e.Status.Equals("confirmado", StringComparison.OrdinalIgnoreCase) ? "Registrar realização ou substituir" : "Revisar detalhe")</strong></div></td>
                         <td class="text-end">
                             <div class="action-buttons">
                                 <button class="btn btn-sm btn-soft-primary" type="button" data-detail-open data-detail-kind="Escala" data-detail-title="@e.MedicoNome · @e.EspecialidadeNome" data-detail-status="@e.Status" data-detail-summary="@(string.IsNullOrWhiteSpace(e.Justificativa) ? "Escala sem justificativa registrada." : e.Justificativa)" data-detail-origin="@e.HospitalNome · @e.TipoPlantao" data-detail-period="@e.DataInicio.ToString("dd/MM/yyyy HH:mm") – @e.DataFim.ToString("dd/MM/yyyy HH:mm")" data-detail-owner="@e.MedicoNome · CRM @e.MedicoCrm/@e.MedicoUfCrm" data-detail-composition="@e.Valor.ToString("C")" data-detail-reference="@e.Id" data-detail-history="Registro criado em @e.RegDate.ToString("dd/MM/yyyy HH:mm")." data-detail-primary-url="@Url.Action("Details", "Escalas", new { id = e.Id })" data-detail-secondary-label="Abrir plantão" data-detail-secondary-url="@Url.Action("Details", "Plantoes", new { id = e.PlantaoId })">Ver contexto</button>
@@ -57,6 +67,9 @@ else
             </tbody>
         </table>
     </div></section>
+    <div class="pp-mobile-card-list d-lg-none" aria-label="Escalas em cartões">
+    @foreach (var e in items) { <article class="pp-operational-card"><header><div><span class="pp-section-kicker">@e.EspecialidadeNome</span><h2>@e.MedicoNome</h2><p>@e.HospitalNome</p></div><partial name="_StatusBadge" model="e.Status" /></header><dl><div><dt>Período</dt><dd>@e.DataInicio.ToString("dd/MM HH:mm")–@e.DataFim.ToString("HH:mm")</dd></div><div><dt>Presença</dt><dd>Não informada pela API</dd></div><div><dt>Conflito</dt><dd>Não informado pela API</dd></div></dl><div class="pp-next-action" data-next-action><small>Próxima ação</small><strong>@(e.Status.Equals("solicitado", StringComparison.OrdinalIgnoreCase) ? "Confirmar ou recusar" : "Revisar detalhe")</strong></div><footer><a class="btn btn-primary" asp-action="Details" asp-route-id="@e.Id">Abrir escala</a><a class="btn btn-outline-secondary" asp-controller="Plantoes" asp-action="Details" asp-route-id="@e.PlantaoId">Abrir plantão</a></footer></article> }
+    </div>
 }
 
 <div class="card-footer bg-white">

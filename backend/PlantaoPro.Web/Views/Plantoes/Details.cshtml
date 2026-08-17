@@ -8,7 +8,11 @@
     var podeEditar = status == "rascunho";
     var podePublicar = status == "rascunho";
     var podeCancelar = status != "cancelado" && status != "realizado" && status != "pago";
+    var dadosMinimos = plantao is not null && plantao.HospitalId != Guid.Empty && plantao.EspecialidadeId != Guid.Empty && plantao.DataFim > plantao.DataInicio && plantao.Vagas > 0;
+    var semCobertura = plantao is not null && plantao.Vagas > 0 && plantao.VagasDisponiveis == plantao.Vagas;
 }
+
+<nav class="pp-operational-journey" aria-label="Jornada operacional MVP" data-operational-mvp-journey><span class="is-current">Plantão</span><span>Convite</span><span>Escala</span><span>Confirmação</span><span>Presença ou substituição</span><span>Fechamento</span><span>Financeiro</span></nav>
 
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
@@ -53,6 +57,11 @@ else
         </div>
 
         <div class="card-body">
+            <div class="pp-operational-summary" data-operational-risk>
+                <div><small>Cobertura</small><strong>@(plantao.VagasDisponiveis == 0 ? "Completa" : $"{plantao.VagasDisponiveis} vaga(s) disponível(is)")</strong></div>
+                <div><small>Risco operacional</small><strong>@(semCobertura ? "Sem cobertura" : "Sem risco derivável dos dados atuais")</strong></div>
+                <div data-next-action><small>Próxima ação</small><strong>@(status == "rascunho" ? "Publicar após validar os dados mínimos" : semCobertura ? "Convidar profissionais" : status == "realizado" ? "Aguardar vínculo de fechamento" : "Acompanhar escala")</strong></div>
+            </div>
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="text-muted small">Hospital/Clínica</div>
@@ -156,8 +165,8 @@ else
 
                     <button type="submit"
                             class="btn btn-success"
-                            disabled="@(!podePublicar)"
-                            title="@(podePublicar ? "Publicar plantão" : "Somente plantões em rascunho podem ser publicados.")">
+                            disabled="@(!podePublicar || !dadosMinimos)"
+                            title="@(podePublicar && dadosMinimos ? "Publicar plantão" : "A publicação exige rascunho e dados mínimos válidos: unidade, especialidade, período e vagas.")">
                         <i class="bi bi-megaphone me-1"></i>
                         Publicar
                     </button>
@@ -172,6 +181,11 @@ else
                     <i class="bi bi-x-circle me-1"></i>
                     Cancelar
                 </button>
+
+                <a class="btn btn-outline-primary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@plantao.Id"><i class="bi bi-person-plus me-1"></i>Acompanhar convites</a>
+                <a class="btn btn-outline-primary" asp-controller="Escalas" asp-action="Index"><i class="bi bi-calendar2-check me-1"></i>Abrir escalas</a>
+                <button type="button" class="btn btn-outline-secondary" disabled title="A API do plantão não fornece vínculo de fechamento.">Abrir fechamento</button>
+                <button type="button" class="btn btn-outline-secondary" disabled title="Financeiro só fica disponível após um fechamento aprovado e vinculado.">Abrir financeiro</button>
             </div>
         </div>
     </div>

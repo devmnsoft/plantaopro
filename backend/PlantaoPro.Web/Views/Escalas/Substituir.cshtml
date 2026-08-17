@@ -4,14 +4,17 @@
 
 <form method="post" class="card card-body shadow-sm" data-ajax-form="true" data-confirm="true" data-confirm-title="Substituir escala" data-confirm-message="Confirma substituir o médico desta escala? O sistema validará conflitos críticos e registrará a justificativa." data-confirm-type="warning">
     @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <input type="hidden" asp-for="Id" />
     <div class="mb-3">
-        <label class="form-label">Novo Médico (ID)</label>
-        <input name="novoMedicoId" class="form-control" required />
+        <label class="form-label" for="novoMedicoId">Identificador do novo médico</label>
+        <input id="novoMedicoId" name="novoMedicoId" type="text" inputmode="text" class="form-control" required aria-describedby="novoMedicoHelp" />
+        <small id="novoMedicoHelp">Use somente o identificador de um profissional já cadastrado; esta tela não cria médicos.</small>
     </div>
     <div class="mb-3">
-        <label class="form-label">Justificativa</label>
-        <textarea name="justificativa" class="form-control" required></textarea>
+        <label class="form-label" for="justificativa">Motivo da substituição</label>
+        <textarea id="justificativa" name="justificativa" class="form-control" required minlength="5" aria-describedby="justificativaHelp"></textarea>
+        <small id="justificativaHelp">O motivo é obrigatório e será enviado ao endpoint real de substituição.</small>
     </div>
     <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Substituir</button>
 </form>

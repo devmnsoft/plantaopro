@@ -100,4 +100,40 @@ public class FinanceiroController : BaseWebController
             return RedirectToAction(nameof(Details), new { id });
         }
     }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ContestarPagamento(Guid id, string motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+        {
+            TempData["Error"] = "Informe o motivo da contestação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        try
+        {
+            var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+            var payload = JsonSerializer.Serialize(new ContestarPagamentoRequest(motivo.Trim()));
+            var response = await client.PostAsync($"api/pagamentos/{id}/contestar", new StringContent(payload, Encoding.UTF8, "application/json"));
+            if (response.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = response.StatusCode switch
+                {
+                    HttpStatusCode.NotFound => "Pagamento não encontrado.",
+                    HttpStatusCode.Conflict => "O status atual não permite contestação.",
+                    HttpStatusCode.UnprocessableEntity => "Uma regra de negócio impediu a contestação.",
+                    _ => "Não foi possível registrar a contestação."
+                };
+                return RedirectToAction(nameof(Details), new { id });
+            }
+            TempData["Success"] = "Contestação registrada e persistida no histórico.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao contestar pagamento {PagamentoId}", id);
+            TempData["Error"] = "Erro de comunicação ao registrar contestação.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+    }
 }

@@ -89,6 +89,7 @@ namespace PlantaoPro.Api.Controllers
         [Authorize]
         [HttpPost("escalas/{id:guid}/realizar")]
         [HttpPost("escalas/{id:guid}/marcar-realizado")]
+        [HttpPost("escalas/{id:guid}/presenca")]
         public Task<IActionResult> Realizado(Guid id, [FromBody] CompleteEscalaRequest req)
         {
             return AlterarStatus(id, "realizado", req.Justificativa, null, "marcar escala realizada");
@@ -96,6 +97,7 @@ namespace PlantaoPro.Api.Controllers
 
         [Authorize(Roles = RolesConstants.EscalasGestao)]
         [HttpPost("escalas/{id:guid}/nao-compareceu")]
+        [HttpPost("escalas/{id:guid}/ausencia")]
         public Task<IActionResult> NaoCompareceu(Guid id, [FromBody] CompleteEscalaRequest req)
         {
             return AlterarStatus(id, "nao_compareceu", req.Justificativa, null, "marcar não comparecimento");

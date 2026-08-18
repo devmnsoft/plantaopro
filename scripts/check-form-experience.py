@@ -53,4 +53,9 @@ for path in (WEB / "Views").rglob("*.cshtml"):
 
 if errors:
     raise SystemExit("Falha na experiência de formulários:\n- " + "\n- ".join(errors))
+
+consultation = (WEB / "Views/Consultas/Atendimento.cshtml").read_text(encoding="utf-8")
+for marker in ("data-billing-type", "data-billing-value", "data-billing-reason", "data-finalize-error"):
+    if marker not in consultation:
+        raise SystemExit(f"Form experience v1.85 sem campo de finalização: {marker}")
 print("Form experience v1.80 validada: pp-form, labels, feedback de envio e associação acessível presentes.")

@@ -1327,7 +1327,9 @@ where id=@id", new
                 else if (novo == "nao_compareceu")
                 {
                     if (e.Status != "confirmado")
-                        return ApiResponse<string>.Fail("Somente escala confirmada pode ser marcada como não compareceu");
+                        return ApiResponse<string>.Fail("Somente escala confirmada pode ser marcada como não compareceu", 409);
+                    if (string.IsNullOrWhiteSpace(justificativa))
+                        return ApiResponse<string>.Fail("O motivo da ausência é obrigatório.", 422);
                     await cn.ExecuteAsync("update plantaopro.escalas set status='nao_compareceu',justificativa=@j,updated_by=@u,reg_update=now() where id=@id", new
                     {
                         id,

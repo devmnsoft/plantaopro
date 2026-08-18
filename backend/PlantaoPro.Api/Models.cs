@@ -72,6 +72,7 @@ public record GerarPagamentoRequest(Guid EscalaId,DateOnly? DataPrevista,string?
 public record ConfirmarPagamentoRequest(decimal ValorPago,DateOnly DataPagamento,string FormaPagamento,string? Observacoes);
 public record MarcarPagamentoPagoRequest(string FormaPagamento,string? Observacoes);
 public record ContestarPagamentoRequest(string Motivo);
+public record ResolverContestacaoPagamentoRequest(string Decisao,string Justificativa,decimal? NovoValor);
 public record PagamentoActionResponse(Guid PagamentoId,string Status,decimal Valor,DateOnly? DataPagamento,string ProximaAcao);
 public record PagamentoDetailsDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string MedicoEmail,string MedicoTelefone,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento,string? Observacoes);
 public sealed class PagamentoResumoDto

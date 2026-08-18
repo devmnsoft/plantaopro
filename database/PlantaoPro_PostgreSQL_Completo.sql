@@ -84,3 +84,5 @@ CREATE INDEX IF NOT EXISTS ix_pagamentos_status_data_prevista ON plantaopro.paga
 
 COMMENT ON COLUMN plantaopro.escalas.score_prioridade IS 'Score para priorização inteligente de médicos com menor carga recente.';
 COMMENT ON COLUMN plantaopro.escalas.conflito_detectado IS 'Flag operacional para alertas visuais e auditoria de conflitos.';
+
+\ir schema/320_v187_fechamento_operacional_financeiro.sql

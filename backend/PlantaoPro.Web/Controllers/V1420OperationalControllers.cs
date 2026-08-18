@@ -14,12 +14,17 @@ public sealed class CoberturaController : Controller
 }
 
 [Authorize]
-public sealed class FechamentosController : Controller
+public sealed class FechamentosController : BaseWebController
 {
-    [HttpGet("/fechamentos")] public IActionResult Index() => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos());
-    [HttpGet("/fechamentos/pendentes")] public IActionResult Pendentes() => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos("Pendentes"));
-    [HttpGet("/fechamentos/{plantaoId:guid}")] public IActionResult Details(Guid plantaoId) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos($"Plantão {plantaoId:N}"));
-    [HttpGet("/fechamentos/{plantaoId:guid}/conferencia")] public IActionResult Conferencia(Guid plantaoId) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos($"Conferência {plantaoId:N}"));
+    public FechamentosController(IHttpClientFactory factory,ILogger<FechamentosController> logger):base(factory,logger){}
+    [HttpGet("/fechamentos")] public Task<IActionResult> Index(CancellationToken ct)=>Load(null,false,ct);
+    [HttpGet("/fechamentos/pendentes")] public Task<IActionResult> Pendentes(CancellationToken ct)=>Load(null,true,ct);
+    [HttpGet("/fechamentos/{id:guid}")] public Task<IActionResult> Details(Guid id,CancellationToken ct)=>Load(id,false,ct);
+    [HttpGet("/fechamentos/{id:guid}/conferencia")] public Task<IActionResult> Conferencia(Guid id,CancellationToken ct)=>Load(id,false,ct);
+    private async Task<IActionResult> Load(Guid? id,bool pendentes,CancellationToken ct){var client=CreateApiClient();if(!AddBearerToken(client))return HandleUnauthorized();var list=await ReadApiResponseAsync<IReadOnlyList<FechamentoWebDto>>(client,pendentes?"api/fechamentos/pendentes":"api/fechamentos");var model=new FechamentoOperacionalPageViewModel{Fechamentos=list.Data??[],Error=list.Error};if(id.HasValue){var detail=await ReadApiResponseAsync<FechamentoWebDto>(client,$"api/fechamentos/{id}");var timeline=await ReadApiResponseAsync<IReadOnlyList<FechamentoTimelineWebDto>>(client,$"api/fechamentos/{id}/timeline");model.Selecionado=detail.Data;model.Timeline=timeline.Data??[];model.Error??=detail.Error;}return View("~/Views/OperacaoPremium/Fechamentos.cshtml",model);}
+
+    [HttpPost("/fechamentos/{id:guid}/acao"),ValidateAntiForgeryToken]
+    public async Task<IActionResult> Acao(Guid id,string acao,string? motivo,CancellationToken ct){var permitidas=new HashSet<string>{"iniciar-conferencia","concluir-conferencia","aprovar","devolver","gerar-financeiro"};if(!permitidas.Contains(acao))return BadRequest();var client=CreateApiClient();if(!AddBearerToken(client))return Unauthorized();var result=await SendApiAsync<object,FechamentoWebDto>(client,HttpMethod.Post,$"api/fechamentos/{id}/{acao}",acao=="devolver"?new{Motivo=motivo}:new{});TempData[result.Data is null?"Error":"Success"]=result.Error??"Ação concluída com sucesso.";return RedirectToAction(nameof(Details),new{id});}
 }
 
 [Authorize, ApiController, Route("bff")]

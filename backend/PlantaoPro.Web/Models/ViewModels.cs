@@ -55,6 +55,7 @@ public record DashboardChartItem(string Label, decimal Valor);
     public record PagamentoDetailsDto(Guid Id, Guid EscalaId, Guid MedicoId, Guid PlantaoId, string MedicoNome, string MedicoCrm, string MedicoUfCrm, string MedicoEmail, string MedicoTelefone, string HospitalNome, string HospitalCidade, string HospitalEstado, string EspecialidadeNome, DateTime DataInicioPlantao, DateTime DataFimPlantao, decimal ValorPrevisto, decimal? ValorPago, string Status, DateOnly? DataPrevista, DateOnly? DataPagamento, string? FormaPagamento, string? ChavePix, string? Observacoes, DateTime RegDate);
     public record GerarPagamentoRequest(Guid EscalaId, DateOnly? DataPrevista, string? Observacoes);
     public record ConfirmarPagamentoRequest(decimal ValorPago, DateOnly DataPagamento, string FormaPagamento, string? Observacoes);
+    public record ContestarPagamentoRequest(string Motivo);
     public record CancelarPagamentoRequest(string Justificativa);
     public record NotificacaoDto(Guid Id, string Titulo, string Mensagem, string Tipo, bool Lida, DateTime RegDate);
 

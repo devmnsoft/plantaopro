@@ -39,12 +39,19 @@
             </form>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-lg-5 d-grid gap-3">
             <form asp-action="CancelarPagamento" asp-route-id="@pg.Id" method="post" class="card card-body shadow-sm border-danger-subtle" data-ajax-form="true" data-confirm="true" data-confirm-title="Cancelar pagamento" data-confirm-message="Confirma cancelar este pagamento? Informe a justificativa para histórico e auditoria." data-confirm-type="danger">
                 @Html.AntiForgeryToken()
                 <h5 class="mb-3"><i class="bi bi-x-circle me-1"></i>Cancelar pagamento</h5>
                 <textarea name="justificativa" class="form-control mb-2" required placeholder="Justificativa"></textarea>
                 <button class="btn btn-danger" type="submit">Cancelar pagamento</button>
+            </form>
+            <form asp-action="ContestarPagamento" asp-route-id="@pg.Id" method="post" class="card card-body shadow-sm border-warning-subtle" data-ajax-form="true" data-confirm="true" data-confirm-title="Contestar pagamento" data-confirm-message="Confirma registrar esta contestação? O motivo será persistido no histórico sem alterar o valor original." data-confirm-type="warning">
+                @Html.AntiForgeryToken()
+                <h5 class="mb-3"><i class="bi bi-exclamation-diamond me-1"></i>Contestar pagamento</h5>
+                <label for="payment-contest-reason" class="form-label">Motivo</label>
+                <textarea id="payment-contest-reason" name="motivo" class="form-control mb-2" required minlength="3"></textarea>
+                <button class="btn btn-outline-warning" type="submit" data-loading-text="Registrando…">Registrar contestação</button>
             </form>
         </div>
     </div>

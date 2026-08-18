@@ -1491,6 +1491,51 @@ where id=@id", new
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro confirmar pagamento"); return ApiResponse<string>.Fail("Erro ao confirmar pagamento", 500); }
         }
+        public async Task<ApiResponse<PagamentoActionResponse>> MarcarPagoAsync(Guid id, MarcarPagamentoPagoRequest req, Guid userId, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(req.FormaPagamento))
+                return ApiResponse<PagamentoActionResponse>.Fail("Forma de pagamento obrigatória.", 400);
+            await using var cn = Cn();
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            try
+            {
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
+                if (pg.Status == "pago") return ApiResponse<PagamentoActionResponse>.Fail("Pagamento já está marcado como pago.", 409);
+                if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("O status atual não permite marcar o pagamento como pago.", 409);
+                if (pg.ValorPrevisto <= 0) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento sem valor real não pode ser marcado como pago.", 422);
+                var dataPagamento = DateOnly.FromDateTime(DateTime.UtcNow);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=valor_previsto,forma_pagamento=@forma,data_pagamento=@data,observacoes=coalesce(@observacoes,observacoes),updated_by=@userId,reg_update=now() where id=@id", new { id, forma = req.FormaPagamento.Trim(), data = dataPagamento, observacoes = string.IsNullOrWhiteSpace(req.Observacoes) ? null : req.Observacoes.Trim(), userId }, tx);
+                await AddHistoricoAsync(cn, tx, id, pg.Status, "pago", req.Observacoes ?? "Pagamento marcado como pago", userId);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento confirmado", "Seu pagamento foi confirmado.", "financeiro", tx);
+                await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "pendente->pago", ip: ip, userAgent: ua);
+                await tx.CommitAsync();
+                return ApiResponse<PagamentoActionResponse>.Ok(new(id, "pago", pg.ValorPrevisto, dataPagamento, "nenhuma"), "Pagamento marcado como pago.");
+            }
+            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao marcar pagamento {PagamentoId} como pago", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao marcar pagamento como pago.", 500); }
+        }
+
+        public async Task<ApiResponse<PagamentoActionResponse>> ContestarAsync(Guid id, ContestarPagamentoRequest req, Guid userId, string? ip, string? ua)
+        {
+            if (string.IsNullOrWhiteSpace(req.Motivo)) return ApiResponse<PagamentoActionResponse>.Fail("Motivo obrigatório.", 400);
+            await using var cn = Cn();
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            try
+            {
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
+                if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado.", 409);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',observacoes=@motivo,updated_by=@userId,reg_update=now() where id=@id", new { id, motivo = req.Motivo.Trim(), userId }, tx);
+                await AddHistoricoAsync(cn, tx, id, pg.Status, "contestado", req.Motivo.Trim(), userId);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);
+                await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "pendente->contestado", ip: ip, userAgent: ua);
+                await tx.CommitAsync();
+                return ApiResponse<PagamentoActionResponse>.Ok(new(id, "contestado", pg.ValorPrevisto, null, "aguardar-resolucao"), "Contestação registrada.");
+            }
+            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao contestar pagamento {PagamentoId}", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao contestar pagamento.", 500); }
+        }
         public async Task<ApiResponse<string>> CancelarAsync(Guid id, string justificativa, Guid userId, string? ip, string? ua)
         {
             if (string.IsNullOrWhiteSpace(justificativa))

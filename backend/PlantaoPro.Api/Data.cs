@@ -1353,11 +1353,12 @@ where id=@id", new
 
     public sealed class FinanceiroService
     {
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ILogger<FinanceiroService> logger; public FinanceiroService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ILogger<FinanceiroService> logger)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly NotificacaoService notificacao; private readonly ICurrentUserService currentUser; private readonly ILogger<FinanceiroService> logger; public FinanceiroService(IConfiguration cfg, IAuditService audit, NotificacaoService notificacao, ICurrentUserService currentUser, ILogger<FinanceiroService> logger)
         {
             this.cfg = cfg;
             this.audit = audit;
             this.notificacao = notificacao;
+            this.currentUser = currentUser;
             this.logger = logger;
         }
         private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
@@ -1437,7 +1438,7 @@ where id=@id", new
                 var id = Guid.NewGuid();
                 var dataPrevista = req.DataPrevista ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
                 var horas = Math.Max(1m, (decimal)(row.DataFim - row.DataInicio).TotalHours);
-                var valorProporcional = Math.Round((row.Valor / 12m) * horas, 2);
+                var valorProporcional = PlantaoPro.Domain.Financeiro.PlantaoPaymentCalculator.Calcular(row.Valor, row.DataInicio, row.DataFim);
                 await cn.ExecuteAsync("insert into plantaopro.pagamentos(id,escala_id,medico_id,plantao_id,valor_previsto,valor_pago,status,data_prevista,observacoes,reg_date,reg_status,created_by) values(@id,@e,@m,@p,@v,null,'pendente',@d,@o,now(),'A',@u)", new
                 {
                     id,
@@ -1500,7 +1501,9 @@ where id=@id", new
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
+                if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or exists(select 1 from plantaopro.financeiro_pagamento_origem o where o.pagamento_id=pg.id and o.tenant_id=@tenantId)) for update", new { id,userId,tenantId }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
                 if (pg.Status == "pago") return ApiResponse<PagamentoActionResponse>.Fail("Pagamento já está marcado como pago.", 409);
                 if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("O status atual não permite marcar o pagamento como pago.", 409);
@@ -1524,9 +1527,12 @@ where id=@id", new
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
+                if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or exists(select 1 from plantaopro.financeiro_pagamento_origem o where o.pagamento_id=pg.id and o.tenant_id=@tenantId)) for update", new { id,userId,tenantId }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
                 if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado.", 409);
+                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@userId)",new{tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=pg.ValorPrevisto,userId},tx);
                 await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',observacoes=@motivo,updated_by=@userId,reg_update=now() where id=@id", new { id, motivo = req.Motivo.Trim(), userId }, tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, "contestado", req.Motivo.Trim(), userId);
                 await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);
@@ -1534,7 +1540,29 @@ where id=@id", new
                 await tx.CommitAsync();
                 return ApiResponse<PagamentoActionResponse>.Ok(new(id, "contestado", pg.ValorPrevisto, null, "aguardar-resolucao"), "Contestação registrada.");
             }
+            catch (PostgresException ex) when(ex.SqlState==PostgresErrorCodes.UniqueViolation) { await tx.RollbackAsync(); return ApiResponse<PagamentoActionResponse>.Fail("Já existe contestação aberta para este pagamento.",409); }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao contestar pagamento {PagamentoId}", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao contestar pagamento.", 500); }
+        }
+        public async Task<ApiResponse<PagamentoActionResponse>> ResolverContestacaoAsync(Guid id, ResolverContestacaoPagamentoRequest req, Guid userId, string? ip, string? ua)
+        {
+            var decisao=(req.Decisao??string.Empty).Trim().ToUpperInvariant(); var justificativa=(req.Justificativa??string.Empty).Trim();
+            if(decisao is not ("MANTER_VALOR" or "AJUSTAR_VALOR" or "CANCELAR_PAGAMENTO"))return ApiResponse<PagamentoActionResponse>.Fail("Decisão inválida.",422);
+            if(justificativa.Length<10||justificativa.Length>1000)return ApiResponse<PagamentoActionResponse>.Fail("Justificativa deve possuir entre 10 e 1000 caracteres.",422);
+            if(decisao=="AJUSTAR_VALOR"&&(!req.NovoValor.HasValue||req.NovoValor<=0))return ApiResponse<PagamentoActionResponse>.Fail("Novo valor positivo é obrigatório para ajuste.",422);
+            var tenantId=currentUser.TenantId;var clienteId=currentUser.ClienteId;if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
+            await using var cn=Cn();await cn.OpenAsync();await using var tx=await cn.BeginTransactionAsync();
+            try
+            {
+                var contestacao=await cn.QueryFirstOrDefaultAsync<(Guid Id,decimal ValorOriginal)>("select id as \"Id\",valor_original as \"ValorOriginal\" from plantaopro.pagamento_contestacoes where tenant_id=@tenantId and cliente_id=@clienteId and pagamento_id=@id and status='ABERTA' for update",new{tenantId,clienteId,id},tx);
+                if(contestacao.Id==Guid.Empty)return ApiResponse<PagamentoActionResponse>.Fail("Contestação aberta não encontrada.",404);
+                var pg=await cn.QueryFirstOrDefaultAsync<(string Status,decimal ValorPrevisto,Guid UsuarioId)>("select pg.status as \"Status\",pg.valor_previsto as \"ValorPrevisto\",m.usuario_id as \"UsuarioId\" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update",new{id},tx);
+                if(pg.Status!="contestado")return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não está em contestação.",409);
+                var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":"pendente";var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
+                var changed=await cn.ExecuteAsync("update plantaopro.pagamento_contestacoes set status='RESOLVIDA',decisao=@decisao,justificativa_resolucao=@justificativa,valor_resolvido=@valor,resolvido_por=@userId,resolvido_em=now(),updated_at=now() where id=@contestacaoId and status='ABERTA'",new{decisao,justificativa,valor,userId,contestacaoId=contestacao.Id},tx);if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("Contestação já foi resolvida.",409);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_previsto=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now() where id=@id and status='contestado'",new{id,novoStatus,valor,justificativa,userId},tx);
+                await AddHistoricoAsync(cn,tx,id,"contestado",novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx);await tx.CommitAsync();
+                await audit.LogAsync(userId,"CONTESTACAO_RESOLVIDA","pagamentos",id,$"{pg.ValorPrevisto}->{valor}; {decisao}",ip:ip,userAgent:ua);return ApiResponse<PagamentoActionResponse>.Ok(new(id,novoStatus,valor,null,"nenhuma"),"Contestação resolvida.");
+            }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao resolver contestação do pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao resolver contestação.",500);}
         }
         public async Task<ApiResponse<string>> CancelarAsync(Guid id, string justificativa, Guid userId, string? ip, string? ua)
         {

@@ -174,6 +174,7 @@ builder.Services.AddScoped<V114ProdutoService>();
 builder.Services.AddScoped<V115FaturamentoRegraService>();
 builder.Services.AddScoped<V115RepasseMedicoService>();
 builder.Services.AddScoped<V115GlosaService>();
+builder.Services.AddScoped<PlantaoPro.Api.Fechamentos.FechamentoOperacionalService>();
 builder.Services.AddScoped<V116ConvenioService>();
 builder.Services.AddScoped<V116LoteFaturamentoService>();
 builder.Services.AddScoped<V116CaixaService>();

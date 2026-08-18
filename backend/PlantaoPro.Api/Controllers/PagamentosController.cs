@@ -7,7 +7,7 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
 [Route("api/pagamentos")]
-[Authorize(Roles = RolesConstants.FinanceiroGestao)]
+[Authorize(Roles = RolesConstants.FinanceiroGestao + "," + RolesConstants.Medico)]
 public sealed class PagamentosController : ControllerBase
 {
     private readonly FinanceiroService service;
@@ -20,12 +20,18 @@ public sealed class PagamentosController : ControllerBase
     }
 
     [HttpPost("{id:guid}/marcar-pago")]
+    [Authorize(Roles = RolesConstants.FinanceiroGestao)]
     public Task<IActionResult> MarcarPago(Guid id, [FromBody] MarcarPagamentoPagoRequest request) =>
         ExecuteAsync(id, "marcar como pago", uid => service.MarcarPagoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
 
     [HttpPost("{id:guid}/contestar")]
     public Task<IActionResult> Contestar(Guid id, [FromBody] ContestarPagamentoRequest request) =>
         ExecuteAsync(id, "contestar", uid => service.ContestarAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
+
+    [HttpPost("{id:guid}/resolver-contestacao")]
+    [Authorize(Roles = RolesConstants.FinanceiroGestao)]
+    public Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoPagamentoRequest request) =>
+        ExecuteAsync(id, "resolver contestação", uid => service.ResolverContestacaoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
 
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 

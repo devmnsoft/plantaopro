@@ -341,6 +341,17 @@ public sealed class PacientesController : Saude360WebControllerBase
             return View(form.Id.HasValue ? "Edit" : "Create", form);
         }
     }
+    [Authorize(Policy="Consulta.VerDadosSensiveis")]
+    public async Task<IActionResult> Prontuario(Guid id, string? tipo = null, int page = 1)
+    {
+        var client=CreateApiClient(); if(!AddBearerToken(client)) return HandleUnauthorized();
+        var prontuario=await ReadApiResponseAsync<ProntuarioViewModel>(client,$"api/pacientes/{id}/prontuario");
+        if(prontuario.Data is null) return View(new ProntuarioViewModel { Erro=prontuario.Error });
+        var filtro=string.IsNullOrWhiteSpace(tipo)?string.Empty:$"&tipo={Uri.EscapeDataString(tipo)}";
+        var timeline=await ReadApiResponseAsync<IReadOnlyList<TimelineProntuarioViewModel>>(client,$"api/pacientes/{id}/timeline?page={Math.Max(1,page)}&pageSize=25{filtro}");
+        prontuario.Data.Timeline=timeline.Data??Array.Empty<TimelineProntuarioViewModel>();
+        prontuario.Data.Erro=timeline.Error; ViewBag.Tipo=tipo; ViewBag.Page=Math.Max(1,page); return View(prontuario.Data);
+    }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes do paciente", "Pacientes", "Identificação operacional do paciente com dados mínimos.", "api/pacientes/" + id, Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Historico(Guid id) { return ModuloAsync("Histórico do paciente", "Pacientes", "Histórico administrativo e assistencial auditado.", "api/pacientes/" + id + "/historico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> ResumoClinico(Guid id) { return ModuloAsync("Resumo clínico", "Pacientes", "Resumo clínico com auditoria de acesso e controle VerDadosSensiveis.", "api/pacientes/" + id + "/resumo-clinico", Links(Link("Pacientes", "Index", "bi-arrow-left"))); }

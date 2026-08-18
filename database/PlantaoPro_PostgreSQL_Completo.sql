@@ -160,3 +160,5 @@ CREATE TABLE IF NOT EXISTS plantaopro.anexos_clinicos(
 CREATE INDEX IF NOT EXISTS ix_anexos_clinicos_entidade ON plantaopro.anexos_clinicos(tenant_id,entidade_tipo,entidade_id);
 CREATE INDEX IF NOT EXISTS ix_anexos_clinicos_paciente ON plantaopro.anexos_clinicos(tenant_id,paciente_id,created_at DESC);
 -- END v1.88.0 prontuario longitudinal
+
+\ir schema/340_v189_clinical_operational_hardening.sql

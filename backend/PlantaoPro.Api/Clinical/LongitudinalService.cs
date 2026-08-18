@@ -23,7 +23,7 @@ public sealed class ClinicalAccessService : IClinicalAccessService
 public interface ILongitudinalService
 {
     Task<ApiResponse<PacienteProntuarioDto>> ProntuarioAsync(Guid pacienteId,CancellationToken ct);
-    Task<ApiResponse<IReadOnlyList<TimelineClinicaDto>>> TimelineAsync(Guid pacienteId,CancellationToken ct);
+    Task<ApiResponse<IReadOnlyList<TimelineClinicaDto>>> TimelineAsync(Guid pacienteId,string? tipo,int page,int pageSize,CancellationToken ct);
 }
 public sealed class LongitudinalService : ILongitudinalService
 {
@@ -32,5 +32,5 @@ public sealed class LongitudinalService : ILongitudinalService
     private Guid Tenant => user.ClienteId??user.TenantId??Guid.Empty;
     private Task Audit(Guid p,string action,Guid? entity=null)=>audit.RegistrarAsync(user.UserId,Tenant,"prontuario",entity??p,action,new{pacienteId=p,entidadeId=entity,resultado="SUCESSO"},true,null,string.Join(',',user.Roles));
     public async Task<ApiResponse<PacienteProntuarioDto>> ProntuarioAsync(Guid p,CancellationToken ct){var allowed=access.Authorize();if(!allowed.Success)return ApiResponse<PacienteProntuarioDto>.Fail(allowed.Message,allowed.StatusCode);var paciente=await repository.PacienteAsync(Tenant,p,ct);if(paciente is null)return ApiResponse<PacienteProntuarioDto>.Fail("Paciente não encontrado.",404);var resumo=await repository.ResumoAsync(Tenant,p,ct);await Audit(p,"PRONTUARIO_VISUALIZAR");return ApiResponse<PacienteProntuarioDto>.Ok(new(paciente,resumo));}
-    public async Task<ApiResponse<IReadOnlyList<TimelineClinicaDto>>> TimelineAsync(Guid p,CancellationToken ct){var allowed=access.Authorize();if(!allowed.Success)return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Fail(allowed.Message,allowed.StatusCode);if(await repository.PacienteAsync(Tenant,p,ct) is null)return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Fail("Paciente não encontrado.",404);var value=await repository.TimelineAsync(Tenant,p,ct);await Audit(p,"PRONTUARIO_TIMELINE");return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Ok(value);}
+    public async Task<ApiResponse<IReadOnlyList<TimelineClinicaDto>>> TimelineAsync(Guid p,string? tipo,int page,int pageSize,CancellationToken ct){var allowed=access.Authorize();if(!allowed.Success)return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Fail(allowed.Message,allowed.StatusCode);if(await repository.PacienteAsync(Tenant,p,ct) is null)return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Fail("Paciente não encontrado.",404);var value=await repository.TimelineAsync(Tenant,p,tipo,page,pageSize,ct);await Audit(p,"PRONTUARIO_TIMELINE");return ApiResponse<IReadOnlyList<TimelineClinicaDto>>.Ok(value);}
 }

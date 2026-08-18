@@ -1,0 +1,18 @@
+@model PlantaoPro.Web.Models.ProntuarioViewModel
+@{ Layout="_Layout"; var page=(int)(ViewBag.Page??1); var tipos=new[]{"","CONSULTA","TRIAGEM","ALERGIA","MEDICAMENTO","EXAME_SOLICITADO","EXAME_RESULTADO","ENCAMINHAMENTO","DOCUMENTO"}; }
+<main class="container-fluid py-4 clinical-record">
+@if(!string.IsNullOrWhiteSpace(Model.Erro)){<div class="alert alert-warning" role="alert">@Model.Erro</div>}
+<header class="patient-context rounded-4 p-4 mb-4 shadow-sm" aria-labelledby="patient-name">
+ <div><span class="text-uppercase small opacity-75">Prontuário longitudinal</span><h1 id="patient-name" class="h3 mb-1">@(Model.Paciente.NomeSocial??Model.Paciente.Nome)</h1><p class="mb-0">@Model.Paciente.DataNascimento?.ToString("dd/MM/yyyy") · @Model.Paciente.Unidade · @Model.Paciente.Convenio</p></div>
+ <a class="btn btn-light" asp-controller="Consultas" asp-action="Index">Iniciar atendimento</a>
+</header>
+<section class="row g-3 mb-4" aria-label="Resumo clínico">
+ <div class="col-12 col-lg-4"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><h2 class="h5">Problemas ativos <span class="badge text-bg-primary">@Model.Resumo.ProblemasAtivos.Count</span></h2>@foreach(var x in Model.Resumo.ProblemasAtivos.Take(4)){<p class="mb-2">@x.Descricao</p>}</div></article></div>
+ <div class="col-12 col-lg-4"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><h2 class="h5">Alergias <span class="badge text-bg-danger">@Model.Resumo.Alergias.Count</span></h2>@foreach(var x in Model.Resumo.Alergias.Take(4)){<p class="mb-2"><strong>@x.Substancia</strong> · @x.Gravidade</p>}</div></article></div>
+ <div class="col-12 col-lg-4"><article class="card h-100 border-0 shadow-sm"><div class="card-body"><h2 class="h5">Medicamentos em uso <span class="badge text-bg-success">@Model.Resumo.MedicamentosEmUso.Count</span></h2>@foreach(var x in Model.Resumo.MedicamentosEmUso.Take(4)){<p class="mb-2"><strong>@x.MedicamentoDescricao</strong> @x.Dose @x.Frequencia</p>}</div></article></div>
+</section>
+<section class="card border-0 shadow-sm"><div class="card-body"><div class="d-flex flex-wrap justify-content-between gap-3"><h2 class="h4">Timeline clínica</h2><nav class="d-flex flex-wrap gap-2" aria-label="Filtrar timeline">@foreach(var t in tipos){<a class="btn btn-sm @(Equals(ViewBag.Tipo,t)||string.IsNullOrEmpty(t)&&ViewBag.Tipo is null?"btn-primary":"btn-outline-secondary")" asp-action="Prontuario" asp-route-id="@Model.Paciente.Id" asp-route-tipo="@t">@(string.IsNullOrEmpty(t)?"Todos":t.Replace('_',' '))</a>}</nav></div>
+ <ol class="list-unstyled mt-4">@foreach(var item in Model.Timeline){<li class="border-start border-3 ps-3 pb-4"><time class="small text-muted" datetime="@item.Data.ToString("O")">@item.Data.ToString("dd/MM/yyyy HH:mm")</time><h3 class="h6 mb-1">@item.Titulo</h3><p class="mb-1">@item.ResumoSeguro</p><small>@item.Profissional @item.Unidade</small></li>}</ol>
+ <nav aria-label="Paginação da timeline" class="d-flex justify-content-between"><a class="btn btn-outline-secondary @(page<=1?"disabled":"")" asp-route-id="@Model.Paciente.Id" asp-route-tipo="@ViewBag.Tipo" asp-route-page="@(page-1)">Anterior</a><a class="btn btn-outline-primary @(Model.Timeline.Count<25?"disabled":"")" asp-route-id="@Model.Paciente.Id" asp-route-tipo="@ViewBag.Tipo" asp-route-page="@(page+1)">Próxima</a></nav>
+</div></section></main>
+<style>.patient-context{background:linear-gradient(120deg,#075985,#0f766e);color:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:.5rem;z-index:10}.clinical-record .card{border-radius:1rem}@media(max-width:768px){.patient-context{position:static;align-items:flex-start;gap:1rem;flex-direction:column}}</style>

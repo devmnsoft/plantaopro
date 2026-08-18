@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.83; Regressão das superfícies SaaS, assinatura e centrais operacionais v1.77."""
+"""Contrato v1.84; Regressão das superfícies SaaS, assinatura e centrais operacionais v1.77."""
 from pathlib import Path
 import re
 
@@ -114,6 +114,6 @@ settings = (WEB / "Views/Configuracoes/Index.cshtml").read_text(encoding="utf-8"
 reports = (WEB / "Views/Relatorios/Index.cshtml").read_text(encoding="utf-8")
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 css181 = (WEB / "wwwroot/css/design-system/v181-admin-governance.css").read_text(encoding="utf-8")
-for marker, source in (("data-admin-governance", admin), ("data-permissions-matrix", admin), ("data-configuration-groups", settings), ("data-admin-reports-honest", reports), ("adminGovernanceVisible", smoke), ("screenshots/v183", smoke)):
+for marker, source in (("data-admin-governance", admin), ("data-permissions-matrix", admin), ("data-configuration-groups", settings), ("data-admin-reports-honest", reports), ("adminGovernanceVisible", smoke), ("screenshots/v184", smoke)):
     if marker not in source: raise SystemExit(f"Contrato v1.81 ausente: {marker}")
 if "!important" in css181: raise SystemExit("v181-admin-governance.css contém !important")

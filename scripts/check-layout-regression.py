@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.83; Gate estrutural do shell e do contrato de homologação visual v1.79.0."""
+"""Contrato v1.84; Gate estrutural do shell e do contrato de homologação visual v1.79.0."""
 from pathlib import Path
 import re
 
@@ -104,7 +104,7 @@ for contract in ("noHorizontalOverflow", "noClippedCards", "cardsInsideViewport"
                  "notificationDrawerCloses", "notificationTriggerRegainsFocus", "subscriptionHonestState"):
     if contract not in smoke:
         errors.append(f"visual-smoke.mjs sem verificação: {contract}")
-for output in ("screenshots/v183", "v183-visual-smoke-results.json", "v183-visual-smoke-summary.md"):
+for output in ("screenshots/v184", "v184-visual-smoke-results.json", "v184-visual-smoke-summary.md"):
     if output not in smoke:
         errors.append(f"visual-smoke.mjs sem saída v1.79.0: {output}")
 

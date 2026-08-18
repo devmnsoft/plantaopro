@@ -128,6 +128,38 @@ public sealed class Saude360WebService
         }
     }
 
+    public async Task<(bool Success, string Message)> FinalizarTriagemAsync(string token, Guid triagemId, Saude360FormViewModel form)
+    {
+        try
+        {
+            var client = CreateClient(token);
+            var payload = new StringContent(JsonSerializer.Serialize(new
+            {
+                AtendimentoId = form.AgendamentoId ?? Guid.Empty,
+                PacienteId = form.PacienteId ?? Guid.Empty,
+                form.QueixaPrincipal,
+                form.PressaoSistolica,
+                form.PressaoDiastolica,
+                form.FrequenciaCardiaca,
+                form.FrequenciaRespiratoria,
+                form.Temperatura,
+                form.Saturacao,
+                form.Peso,
+                form.Altura,
+                form.ClassificacaoRisco,
+                Observacoes = form.Descricao
+            }, JsonOptions), Encoding.UTF8, "application/json");
+            var response = await client.PostAsync($"api/triagens/{triagemId}/finalizar-tipado", payload);
+            var content = await response.Content.ReadAsStringAsync();
+            return (response.IsSuccessStatusCode, ApiErrorPresenter.ToFriendlyMessage(content));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao finalizar triagem {TriagemId}", triagemId);
+            return (false, "Não foi possível finalizar a triagem. Tente novamente.");
+        }
+    }
+
     private static (IEnumerable<Saude360RegistroViewModel> Registros, string Message) ParseRegistros(string content)
     {
         using var document = JsonDocument.Parse(content);

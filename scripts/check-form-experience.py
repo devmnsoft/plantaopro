@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.82; Verifica o contrato responsivo e acessível dos formulários críticos v1.77."""
+"""Contrato v1.84; verifica formulários críticos, loading e submissões acessíveis."""
 from pathlib import Path
 import re
 

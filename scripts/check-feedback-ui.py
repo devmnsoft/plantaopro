@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contrato v1.82; Valida feedback acessível e impede atalhos visuais proibidos na v1.77."""
+"""Contrato v1.84; valida feedback de ações reais e impede atalhos visuais proibidos."""
 from pathlib import Path
 import re
 import subprocess

@@ -5,9 +5,9 @@ import { chromium } from 'playwright';
 const baseURL = process.env.PLANTAOPRO_BASE_URL;
 const storageState = process.env.PLANTAOPRO_STORAGE_STATE;
 const root = new URL('../../artifacts/ui-audit/', import.meta.url);
-const screenshots = new URL('screenshots/v183/', root);
-const jsonOutput = new URL('v183-visual-smoke-results.json', root);
-const markdownOutput = new URL('v183-visual-smoke-summary.md', root);
+const screenshots = new URL('screenshots/v184/', root);
+const jsonOutput = new URL('v184-visual-smoke-results.json', root);
+const markdownOutput = new URL('v184-visual-smoke-summary.md', root);
 const publicRoutes = new Set(['/', '/Account/Login', '/cadastro/empresa', '/Planos']);
 const routes = ['/', '/Account/Login', '/cadastro/empresa', '/Planos', '/AdminSaas/Index', '/Home/Dashboard', '/MinhaCentral', '/MeuDia', '/Agenda', '/Agendamentos', '/Saude360', '/Pacientes', '/Triagem', '/Consultas', '/FaturamentoClinico', '/Financeiro', '/Pagamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Relatorios', '/Configuracoes', '/MinhaAssinatura'];
 const defaults = ['360x800', '390x844', '430x932', '768x1024', '1024x768', '1366x768', '1440x900', '1920x1080'];
@@ -92,6 +92,12 @@ try {
           adminNextActionVisible: route !== '/AdminSaas/Index' || Boolean(document.querySelector('[data-admin-next-action]')),
           actionsWithoutBackendDisabled: !['/AdminSaas/Index','/Relatorios'].includes(route) || [...document.querySelectorAll('button:disabled')].every(button => button.title || button.getAttribute('aria-describedby')),
           noFakeValues: !/pagamento fake|valor fake|histórico fake|contador fake|plano fake|tenant fake/i.test(document.body.innerText),
+          businessActionsEndpointBacked: !['/Agendamentos', '/Triagem', '/Consultas'].includes(route) || ![...document.querySelectorAll('button:not(:disabled)')].some(button => /check-in|finalizar/i.test(button.textContent) && !button.closest('form') && !button.dataset.bsTarget),
+          disabledActionsReduced: route !== '/Triagem' || Boolean(document.querySelector('button[formaction*="Finalizar"],button[disabled]')),
+          criticalActionsHaveReasonModal: !['/Agendamentos', '/Plantoes', '/Escalas', '/Fechamentos', '/Financeiro', '/Pagamentos'].includes(route) || ![...document.querySelectorAll('button:not(:disabled)')].some(button => /cancelar|devolver|contestar|substituir/i.test(button.textContent) && !button.dataset.bsTarget && !button.closest('form')),
+          mutationButtonsHaveLoading: [...document.querySelectorAll('button[data-loading-text],button[data-agenda-confirm],button[data-finalize],button[data-save]')].every(button => Boolean(button.dataset.loadingText || button.hasAttribute('data-agenda-confirm') || button.hasAttribute('data-finalize') || button.hasAttribute('data-save'))),
+          businessErrorsHandled: Boolean(document.querySelector('[role="alert"], [data-agenda-error], [data-validation-summary]')) || !document.querySelector('form'),
+          noFakeSuccess: !/simular sucesso|sucesso fake|retorna(?:r)? apenas ok/i.test(document.body.innerText),
           noBrokenLinks: links.every(link => { const href = link.getAttribute('href'); if (!href || href === '#') return false; try { const target = new URL(href, location.href); return ['http:', 'https:', 'mailto:', 'tel:'].includes(target.protocol); } catch { return false; } }),
           topbarDoesNotOverlap: !visible(topbar) || !visible(content) || topbar.getBoundingClientRect().bottom <= content.getBoundingClientRect().top + 2 || getComputedStyle(topbar).position === 'sticky',
           sidebarDoesNotOverlap: !desktop || !visible(sidebar) || !visible(content) || content.getBoundingClientRect().left >= sidebar.getBoundingClientRect().right - 1,
@@ -149,10 +155,10 @@ try {
   await publicContext.close(); if (authenticatedContext) await authenticatedContext.close();
 } finally {
   if (browser) await browser.close();
-  const payload = { version: '1.83.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length, blocked: results.filter(x => x.status === 'blocked').length }, results };
+  const payload = { version: '1.84.0', baseURL, startedAt, finishedAt: new Date().toISOString(), totals: { executions: results.length, approved: results.filter(x => x.status === 'approved').length, failed: results.filter(x => x.status === 'failed').length, blocked: results.filter(x => x.status === 'blocked').length }, results };
   await writeFile(jsonOutput, `${JSON.stringify(payload, null, 2)}\n`);
   const rows = results.map(item => `| ${item.route} | ${item.viewport} | ${item.authenticated ? 'Autenticada' : 'Pública'} | ${item.status === 'approved' ? 'APROVADA' : item.status === 'blocked' ? 'BLOQUEADA' : 'FALHA'} | ${item.error ?? (Object.entries(item.checks).filter(([, ok]) => !ok).map(([name]) => name).join(', ') || '—')} |`).join('\n');
-  await writeFile(markdownOutput, `# Smoke visual v1.83.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n- Bloqueadas: ${results.filter(x => x.status === 'blocked').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
+  await writeFile(markdownOutput, `# Smoke visual v1.84.0\n\n- URL: \`${baseURL}\`\n- Início: ${startedAt}\n- Execuções: ${results.length}\n- Aprovadas: ${results.filter(x => x.status === 'approved').length}\n- Falhas: ${results.filter(x => x.status === 'failed').length}\n- Bloqueadas: ${results.filter(x => x.status === 'blocked').length}\n\n| Rota | Viewport | Acesso | Status | Diagnóstico |\n|---|---:|---|---|---|\n${rows}\n`);
 }
 if (results.some(item => item.status === 'failed')) process.exitCode = 1;
-else console.log(`Smoke visual v1.83.0 concluído: ${results.filter(item => item.status === 'approved').length} aprovadas e ${results.filter(item => item.status === 'blocked').length} bloqueadas.`);
+else console.log(`Smoke visual v1.84.0 concluído: ${results.filter(item => item.status === 'approved').length} aprovadas e ${results.filter(item => item.status === 'blocked').length} bloqueadas.`);

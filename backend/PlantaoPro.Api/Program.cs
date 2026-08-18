@@ -122,6 +122,8 @@ builder.Services.AddScoped<ConflitoHorarioService>();
 builder.Services.AddScoped<MedicoElegibilidadeService>();
 builder.Services.AddScoped<MedicoRecomendacaoService>();
 builder.Services.AddScoped<FinanceiroService>();
+builder.Services.AddScoped<FechamentoOperacionalService>();
+builder.Services.AddScoped<PagamentoContestacaoService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<UserService>();

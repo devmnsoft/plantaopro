@@ -1500,7 +1500,7 @@ where id=@id", new
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId, Guid ClienteId)>("select pg.status,pg.valor_previsto,m.usuario_id,p.cliente_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.plantoes p on p.id=pg.plantao_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
                 if (pg.Status == "pago") return ApiResponse<PagamentoActionResponse>.Fail("Pagamento já está marcado como pago.", 409);
                 if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("O status atual não permite marcar o pagamento como pago.", 409);
@@ -1524,9 +1524,10 @@ where id=@id", new
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId, Guid ClienteId)>("select pg.status,pg.valor_previsto,m.usuario_id,p.cliente_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.plantoes p on p.id=pg.plantao_id where pg.id=@id and pg.reg_status='A' for update", new { id }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
                 if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado.", 409);
+                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,aberto_por,aberto_em,valor_anterior,created_at) values(gen_random_uuid(),@clienteId,@clienteId,@id,@motivo,'ABERTA',@userId,now(),@valor,now())", new { id, clienteId = pg.ClienteId, motivo = req.Motivo.Trim(), userId, valor = pg.ValorPrevisto }, tx);
                 await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',observacoes=@motivo,updated_by=@userId,reg_update=now() where id=@id", new { id, motivo = req.Motivo.Trim(), userId }, tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, "contestado", req.Motivo.Trim(), userId);
                 await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);

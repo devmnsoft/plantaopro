@@ -14,12 +14,13 @@ public sealed class CoberturaController : Controller
 }
 
 [Authorize]
-public sealed class FechamentosController : Controller
+public sealed class FechamentosController(PlantaoPro.Web.Services.FechamentoWebService service) : Controller
 {
-    [HttpGet("/fechamentos")] public IActionResult Index() => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos());
-    [HttpGet("/fechamentos/pendentes")] public IActionResult Pendentes() => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos("Pendentes"));
-    [HttpGet("/fechamentos/{plantaoId:guid}")] public IActionResult Details(Guid plantaoId) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos($"Plantão {plantaoId:N}"));
-    [HttpGet("/fechamentos/{plantaoId:guid}/conferencia")] public IActionResult Conferencia(Guid plantaoId) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", V1420Empty.Fechamentos($"Conferência {plantaoId:N}"));
+    private string Token => HttpContext.Session.GetString("JwtToken") ?? string.Empty;
+    [HttpGet("/fechamentos")] public async Task<IActionResult> Index(CancellationToken ct) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", await service.GetAsync(Token,false,null,ct));
+    [HttpGet("/fechamentos/pendentes")] public async Task<IActionResult> Pendentes(CancellationToken ct) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", await service.GetAsync(Token,true,null,ct));
+    [HttpGet("/fechamentos/{id:guid}")] public async Task<IActionResult> Details(Guid id,CancellationToken ct) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", await service.GetAsync(Token,false,id,ct));
+    [HttpGet("/fechamentos/{id:guid}/conferencia")] public async Task<IActionResult> Conferencia(Guid id,CancellationToken ct) => View("~/Views/OperacaoPremium/Fechamentos.cshtml", await service.GetAsync(Token,false,id,ct));
 }
 
 [Authorize, ApiController, Route("bff")]

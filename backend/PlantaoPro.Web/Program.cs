@@ -66,6 +66,7 @@ builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
     logger.LogInformation("HttpClient PlantaoProApi configurado com BaseUrl: {BaseUrl}", client.BaseAddress);
 });
 builder.Services.AddScoped<Saude360WebService>();
+builder.Services.AddScoped<FechamentoWebService>();
 builder.Services.AddScoped<MinhaCentralWebService>();
 var app = builder.Build();
 

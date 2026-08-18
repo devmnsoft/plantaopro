@@ -12,10 +12,12 @@ public sealed class PagamentosController : ControllerBase
 {
     private readonly FinanceiroService service;
     private readonly ILogger<PagamentosController> logger;
+    private readonly PagamentoContestacaoService contestacoes;
 
-    public PagamentosController(FinanceiroService service, ILogger<PagamentosController> logger)
+    public PagamentosController(FinanceiroService service, PagamentoContestacaoService contestacoes, ILogger<PagamentosController> logger)
     {
         this.service = service;
+        this.contestacoes = contestacoes;
         this.logger = logger;
     }
 
@@ -26,6 +28,10 @@ public sealed class PagamentosController : ControllerBase
     [HttpPost("{id:guid}/contestar")]
     public Task<IActionResult> Contestar(Guid id, [FromBody] ContestarPagamentoRequest request) =>
         ExecuteAsync(id, "contestar", uid => service.ContestarAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
+
+    [HttpPost("{id:guid}/resolver-contestacao")]
+    public Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoPagamentoRequest request) =>
+        ExecuteAsync(id, "resolver contestação", _ => contestacoes.ResolveAsync(id, request));
 
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 

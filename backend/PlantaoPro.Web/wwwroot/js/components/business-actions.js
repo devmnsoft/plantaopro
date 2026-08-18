@@ -13,13 +13,18 @@
 
   async function execute(button) {
     if (button.disabled || button.getAttribute('aria-busy') === 'true') return;
-    const url = button.dataset.businessAction;
-    if (!url || !url.startsWith('/')) return;
+    const action = button.dataset.businessAction;
+    if (!action) return;
+    const url = new URL(action, window.location.origin);
+    if (url.origin !== window.location.origin) {
+      notify('error', 'A ação foi bloqueada porque não pertence a este sistema.');
+      return;
+    }
     button.disabled = true;
     button.setAttribute('aria-busy', 'true');
-    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-    const payload = button.dataset.businessPayload ? JSON.parse(button.dataset.businessPayload) : {};
     try {
+      const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+      const payload = button.dataset.businessPayload ? JSON.parse(button.dataset.businessPayload) : {};
       const response = await fetch(url, {
         method: 'POST', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', ...(token ? { RequestVerificationToken: token } : {}) },
@@ -37,7 +42,7 @@
   }
 
   document.addEventListener('click', event => {
-    const button = event.target.closest('[data-business-action]');
+    const button = event.target instanceof Element ? event.target.closest('[data-business-action]') : null;
     if (button) execute(button);
   });
 })();

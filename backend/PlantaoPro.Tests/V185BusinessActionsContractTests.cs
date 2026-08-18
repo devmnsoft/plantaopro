@@ -7,6 +7,21 @@ public sealed class V185BusinessActionsContractTests
     private static string Read(string relative) => File.ReadAllText(Path.Combine(RepositoryPathResolver.RepoRoot, relative));
 
     [Fact]
+    public void Check_in_has_canonical_route_and_persisted_patient_aware_transition()
+    {
+        var controller = Read("backend/PlantaoPro.Api/Controllers/Saude360ClinicalControllers.cs");
+        var service = Read("backend/PlantaoPro.Api/Saude360ClinicalService.cs");
+        var view = Read("backend/PlantaoPro.Web/Views/Agendamentos/AgendaPremium.cshtml");
+
+        Assert.Contains("{id:guid}/check-in", controller);
+        Assert.Contains("Agendamento não encontrado para check-in.", service);
+        Assert.Contains("Check-in exige paciente vinculado ao agendamento.", service);
+        Assert.Contains("agendamento_checkins", service);
+        Assert.Contains("data-agenda-operation=\"checkin\"", view);
+        Assert.Contains("item.PodeCheckIn", view);
+    }
+
+    [Fact]
     public void Consultation_finalization_has_typed_response_real_value_gate_and_safe_ui()
     {
         var service = Read("backend/PlantaoPro.Api/Clinical/ConsultaApplicationService.cs");

@@ -100,7 +100,14 @@
         <button type="submit" class="btn btn-primary" data-loading-text="Salvando..."><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Salvar</button>
         @if (string.Equals(vm.Controller, "Triagem", StringComparison.OrdinalIgnoreCase))
         {
-            <button type="button" class="btn btn-success" disabled title="A API atual salva a triagem, mas não expõe uma transição separada e auditável para finalizar.">Finalizar triagem</button>
+            @if (vm.Id.HasValue)
+            {
+                <button type="submit" class="btn btn-success" asp-controller="Triagem" asp-action="Finalizar" data-loading-text="Finalizando...">Finalizar triagem</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-success" disabled title="Salve a triagem para obter um identificador real antes de finalizar.">Finalizar triagem</button>
+            }
             <button type="button" class="btn btn-outline-primary" disabled title="O encaminhamento será liberado quando a API retornar o identificador da consulta vinculada.">Encaminhar para consulta</button>
         }
     </div>

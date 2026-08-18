@@ -86,7 +86,7 @@ public sealed class TriagensController : ControllerBase
     [HttpPost("{id:guid}/salvar")]
     public async Task<IActionResult> Salvar(Guid id, [FromBody] TriagemUpdateRequest request)
     {
-        if (request.AtendimentoId == Guid.Empty || request.PacienteId == Guid.Empty) return ValidationProblem("Atendimento e paciente são obrigatórios.");
+        if (request.PacienteId == Guid.Empty) return ValidationProblem("Paciente é obrigatório.");
         var errors = ClinicalMeasurements.Validar(request, false);
         if (errors.Count > 0) return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), 400));
         var r = await service.AtualizarAsync("triagens", id, ToClinicalRequest(request));
@@ -98,7 +98,7 @@ public sealed class TriagensController : ControllerBase
     public async Task<IActionResult> FinalizarTipado(Guid id, [FromBody] TriagemUpdateRequest request)
     {
         var errors = ClinicalMeasurements.Validar(request, true);
-        if (request.AtendimentoId == Guid.Empty || request.PacienteId == Guid.Empty) errors = errors.Concat(new[] { "Atendimento e paciente são obrigatórios." }).ToList();
+        if (request.PacienteId == Guid.Empty) errors = errors.Concat(new[] { "Paciente é obrigatório." }).ToList();
         if (errors.Count > 0) return BadRequest(ApiResponse<object>.Fail(string.Join(" ", errors), 400));
         var saved = await service.AtualizarAsync("triagens", id, ToClinicalRequest(request));
         if (!saved.Success) return StatusCode(saved.StatusCode, saved);

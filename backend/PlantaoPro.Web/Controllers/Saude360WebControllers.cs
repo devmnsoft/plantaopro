@@ -208,6 +208,26 @@ public sealed class TriagemController : Saude360WebControllerBase
         return result ?? Formulario("Nova triagem", "api/triagens");
     }
     public IActionResult Edit(Guid id) { return Formulario("Editar triagem", "api/triagens/" + id, id); }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Finalizar(Saude360FormViewModel form)
+    {
+        foreach (var validationError in form.ValidarTriagem()) ModelState.AddModelError(string.Empty, validationError);
+        if (!form.Id.HasValue || form.Id == Guid.Empty) ModelState.AddModelError(string.Empty, "Salve a triagem antes de finalizá-la.");
+        if (!form.PacienteId.HasValue || form.PacienteId == Guid.Empty) ModelState.AddModelError(string.Empty, "Selecione o paciente da triagem.");
+        if (!ModelState.IsValid)
+        {
+            form.Titulo = "Revise os dados antes de finalizar a triagem";
+            return View("~/Views/Saude360/Formulario.cshtml", form);
+        }
+        var token = GetJwtToken();
+        if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
+        var result = await service.FinalizarTriagemAsync(token, form.Id.Value, form);
+        TempData[result.Success ? "Success" : "Error"] = result.Message;
+        if (result.Success) return RedirectToAction(nameof(Details), new { id = form.Id.Value });
+        ModelState.AddModelError(string.Empty, result.Message);
+        form.Titulo = "Revise os dados antes de finalizar a triagem";
+        return View("~/Views/Saude360/Formulario.cshtml", form);
+    }
     public Task<IActionResult> Details(Guid id) { return ModuloAsync("Detalhes da triagem", "Triagem", "Resumo assistencial auditado da triagem.", "api/triagens/" + id, Links(Link("Triagens", "Index", "bi-arrow-left"))); }
     public Task<IActionResult> Fila() { return ModuloAsync("Fila de triagem", "Triagem", "Pacientes aguardando classificação e encaminhamento.", "api/triagens/fila", Links(Link("Nova", "Create", "bi-plus-circle"))); }
     public Task<IActionResult> HistoricoPaciente() { return ModuloAsync("Histórico do paciente", "Triagem", "Histórico de triagens por paciente com acesso auditado e sem exposição desnecessária de dados sensíveis.", "api/triagens/historico-paciente", Links(Link("Fila", "Fila", "bi-people"))); }

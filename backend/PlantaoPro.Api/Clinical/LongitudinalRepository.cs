@@ -6,6 +6,7 @@ namespace PlantaoPro.Api.Clinical;
 public interface ILongitudinalRepository
 {
     Task<PacienteIdentificacaoDto?> PacienteAsync(Guid tenantId, Guid pacienteId, CancellationToken ct);
+    Task<bool> PossuiVinculoAssistencialAsync(Guid tenantId, Guid pacienteId, Guid userId, CancellationToken ct);
     Task<ResumoClinicoDto> ResumoAsync(Guid tenantId, Guid pacienteId, CancellationToken ct);
     Task<IReadOnlyList<TimelineClinicaDto>> TimelineAsync(Guid tenantId, Guid pacienteId, string? tipo, int page, int pageSize, CancellationToken ct);
     Task<IReadOnlyList<PacienteProblemaDto>> ProblemasAsync(Guid tenantId, Guid pacienteId, CancellationToken ct);
@@ -39,6 +40,21 @@ public sealed class LongitudinalRepository : ILongitudinalRepository
     public LongitudinalRepository(IConfiguration cfg) => connectionString = cfg.GetConnectionString("Default") ?? throw new InvalidOperationException("ConnectionStrings:Default não configurada.");
     private NpgsqlConnection Connection() => new(connectionString);
     private static CommandDefinition Cmd(string sql, object? value, CancellationToken ct, NpgsqlTransaction? tx = null) => new(sql, value, tx, cancellationToken: ct);
+
+    public async Task<bool> PossuiVinculoAssistencialAsync(Guid t, Guid p, Guid userId, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        const string sql = """
+            select exists (
+                select 1
+                  from plantaopro.consultas c
+                  join plantaopro.medicos m on m.id = c.medico_id and m.reg_status = 'A'
+                 where c.cliente_id = @t and c.paciente_id = @p and c.reg_status = 'A'
+                   and m.usuario_id = @userId
+            )
+            """;
+        return await cn.ExecuteScalarAsync<bool>(Cmd(sql, new { t, p, userId }, ct));
+    }
 
     public async Task<PacienteIdentificacaoDto?> PacienteAsync(Guid t, Guid p, CancellationToken ct)
     { await using var cn=Connection(); return await cn.QuerySingleOrDefaultAsync<PacienteIdentificacaoDto>(Cmd("select p.id,p.nome,p.nome_social NomeSocial,p.data_nascimento DataNascimento,p.sexo_genero SexoGenero,u.nome Unidade,p.telefone,p.email,coalesce(cv.nome,pl.nome) Convenio from plantaopro.pacientes p left join plantaopro.unidades u on u.id=p.unidade_id left join lateral (select pc.convenio_id,pc.plano_saude_id from plantaopro.paciente_convenios pc where pc.paciente_id=p.id and pc.cliente_id=p.cliente_id and pc.reg_status='A' order by pc.principal desc,pc.reg_date desc limit 1) pc on true left join plantaopro.convenios cv on cv.id=pc.convenio_id left join plantaopro.planos_saude pl on pl.id=pc.plano_saude_id where p.id=@p and p.cliente_id=@t and p.reg_status='A'",new{t,p},ct)); }

@@ -138,7 +138,7 @@ for drawer_view in ("Views/Shared/_DetailDrawer.cshtml", "Views/MinhaCentral/_Wo
 
 if errors:
     raise SystemExit("Falha na UX operacional v1.78:\n- " + "\n- ".join(errors))
-for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v184", "version: '1.84.0'"):
+for marker in ("clinicalJourneyClear", "clinicalMvpJourneyVisible", "nextActionVisible", "triageRulesVisible", "consultationBillingActionHonest", "operationalJourneyClear", "operationalMvpJourneyVisible", "shiftCoverageStatusVisible", "scheduleNextActionVisible", "invitationActionsHonest", "substitutionRulesVisible", "closingBusinessRulesVisible", "closingFinanceActionHonest", "operationalRiskVisible", "actionsWithoutBackendDisabled", "noFakeValues", "noBrokenLinks", "screenshots/v185", "version: '1.85.0'"):
     smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
     if marker not in smoke:
         errors.append(f"Smoke v1.78 sem contrato operacional: {marker}")

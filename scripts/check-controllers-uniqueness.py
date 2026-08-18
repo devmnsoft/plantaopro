@@ -80,11 +80,15 @@ print(f"Controllers v1.80 validados: {len(declarations)} nomes únicos, controll
 # Contrato de homologação runtime v1.84.
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
 for marker in (
-    "screenshots/v184", "v184-visual-smoke-results.json", "v184-visual-smoke-summary.md",
+    "screenshots/v185", "v185-visual-smoke-results.json", "v185-visual-smoke-summary.md",
     "runtimeResponds", "authenticatedSessionValid", "noServerErrorPages", "noRazorErrorPages",
     "noUnhandledClientErrors", "noBrokenLinks", "clinicalMvpJourneyVisible",
     "operationalMvpJourneyVisible", "financialMvpJourneyVisible", "adminGovernanceVisible",
-    "actionsWithoutBackendDisabled", "noFakeValues", "version: '1.84.0'",
+    "actionsWithoutBackendDisabled", "noFakeValues", "version: '1.85.0'",
+    "checkinEndpointBacked", "consultationFinishEndpointBacked", "shiftPublishEndpointBacked",
+    "scheduleConfirmEndpointBacked", "closingApprovalEndpointBacked", "financialActionEndpointBacked",
+    "paymentActionEndpointBacked", "reasonModalVisibleForCriticalActions", "businessErrorsHandled",
+    "noFakeSuccess", "disabledActionsReduced",
 ):
     if marker not in smoke:
         raise SystemExit(f"Smoke v1.84 sem contrato obrigatório: {marker}")

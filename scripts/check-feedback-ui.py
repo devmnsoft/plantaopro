@@ -68,4 +68,11 @@ for css_path in (WEB / "wwwroot/css").rglob("*.css"):
 
 if errors:
     raise SystemExit("Falha no feedback UI:\n- " + "\n- ".join(errors))
+
+business_actions = (WEB / "wwwroot/js/components/business-actions.js").read_text(encoding="utf-8")
+for marker in ("response.ok", "aria-busy", "RequestVerificationToken", "400", "401", "403", "404", "409", "422"):
+    if marker not in business_actions:
+        raise SystemExit(f"Feedback UI v1.85 sem contrato de ação real: {marker}")
+if "innerHTML" in business_actions:
+    raise SystemExit("Feedback UI v1.85 usa innerHTML no cliente de ações reais")
 print("Feedback UI v1.80 validado: toast e confirmação acessíveis, sem APIs nativas ou CSS minificado novo.")

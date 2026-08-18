@@ -31,6 +31,7 @@ public sealed class PrescricaoItem { public Guid Id { get; set; } public Guid Pr
 public record IniciarConsultaRequest(int Versao);
 public record SalvarConsultaRascunhoRequest([Required] int Versao, string? Anamnese, string? ExameFisico, string? HipoteseDiagnostica, string? Diagnostico, string? Conduta, string? Orientacoes, string? Observacoes);
 public record FinalizarConsultaRequest([Required] int Versao, TipoFaturamentoAssistencial TipoFaturamento, decimal ValorBruto = 0, decimal Desconto = 0, decimal Coparticipacao = 0, string? Justificativa = null);
+public record FinalizarConsultaResponse(Consulta Consulta, bool PodeAbrirFaturamento, Guid? FinanceiroId, string ProximaAcao);
 public record CancelarConsultaRequest([Required, MinLength(10)] string Motivo, int Versao);
 public record ReabrirConsultaRequest([Required, MinLength(10)] string Justificativa, int Versao);
 public record AdicionarConsultaCidRequest(Guid CidId, bool Principal, string Tipo = "SECUNDARIO");

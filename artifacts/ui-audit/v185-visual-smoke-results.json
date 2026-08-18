@@ -1,0 +1,6 @@
+{
+  "version": "1.85.0",
+  "status": "blocked",
+  "reason": "SDK .NET ausente; runtime não iniciado e storage-state autenticado não validado.",
+  "results": []
+}

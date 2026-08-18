@@ -62,7 +62,9 @@ public sealed class AgendamentosController : ControllerBase
     [HttpPost] public async Task<IActionResult> Post([FromBody] AgendamentoRequest request) { var r = await service.CriarAsync("agendamentos", request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] AgendamentoRequest request) { var r = await service.AtualizarAsync("agendamentos", id, request.ToClinicalRequest()); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/confirmar")] public async Task<IActionResult> Confirmar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "confirmar", request); return StatusCode(r.StatusCode, r); }
-    [HttpPost("{id:guid}/checkin")] public async Task<IActionResult> Checkin(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "checkin", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/checkin")]
+    [HttpPost("{id:guid}/check-in")]
+    public async Task<IActionResult> Checkin(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "checkin", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/reagendar")] public async Task<IActionResult> Reagendar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "reagendar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/marcar-falta")] public async Task<IActionResult> MarcarFalta(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("agendamentos", id, "marcar-falta", request); return StatusCode(r.StatusCode, r); }

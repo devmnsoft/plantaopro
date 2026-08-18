@@ -202,8 +202,10 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         }
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "checkin", StringComparison.OrdinalIgnoreCase))
         {
-            var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.agendamentos where id=@id and reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
-            if (currentStatus != "AGENDADO" && currentStatus != "CONFIRMADO") return ApiResponse<Saude360RegistroDto>.Fail("Check-in permitido apenas para AGENDADO ou CONFIRMADO.", 409);
+            var state = await cn.QuerySingleOrDefaultAsync<AgendamentoCheckInState>("select status, paciente_id as PacienteId from plantaopro.agendamentos where id=@id and reg_status='A' and (@tenantId is null or cliente_id=@tenantId or @isGlobal)", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (state is null) return ApiResponse<Saude360RegistroDto>.Fail("Agendamento não encontrado para check-in.", 404);
+            if (!state.PacienteId.HasValue) return ApiResponse<Saude360RegistroDto>.Fail("Check-in exige paciente vinculado ao agendamento.", 422);
+            if (state.Status != "AGENDADO" && state.Status != "CONFIRMADO") return ApiResponse<Saude360RegistroDto>.Fail("Check-in permitido apenas para AGENDADO ou CONFIRMADO.", 409);
         }
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase))
         {
@@ -224,6 +226,12 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
         await AuditAsync(table, id, acao.ToUpperInvariant(), auditDetalhes);
         return await ObterAsync(tableKey, id);
+    }
+
+    private sealed class AgendamentoCheckInState
+    {
+        public string Status { get; init; } = string.Empty;
+        public Guid? PacienteId { get; init; }
     }
 
 

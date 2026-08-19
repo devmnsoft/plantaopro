@@ -59,6 +59,7 @@ public class ConfiguracoesController : BaseWebController
         return View(model);
     }
 
+    [HttpGet("/SystemHealth")]
     public async Task<IActionResult> Saude()
     {
         var client = CreateApiClient();
@@ -94,6 +95,17 @@ public class ConfiguracoesController : BaseWebController
                 {
                     if (data.TryGetProperty("status", out var status) && status.ValueKind == JsonValueKind.String)
                         dados = dados with { Status = status.GetString() ?? dados.Status };
+
+                    // O contrato público de health usa nomes neutros em inglês. Mantemos
+                    // compatibilidade com o contrato antigo sem inventar estado de banco.
+                    if (data.TryGetProperty("environment", out var environment) && environment.ValueKind == JsonValueKind.String)
+                        dados = dados with { Ambiente = environment.GetString() ?? dados.Ambiente };
+
+                    if (data.TryGetProperty("timestampUtc", out var timestamp) && timestamp.ValueKind == JsonValueKind.String && DateTime.TryParse(timestamp.GetString(), out var timestampUtc))
+                        dados = dados with { DataHora = timestampUtc };
+
+                    if (data.TryGetProperty("version", out var version) && version.ValueKind == JsonValueKind.String)
+                        dados = dados with { Versao = version.GetString() };
 
                     if (data.TryGetProperty("bancoConectado", out var banco) && (banco.ValueKind == JsonValueKind.True || banco.ValueKind == JsonValueKind.False))
                         dados = dados with { BancoConectado = banco.GetBoolean() };

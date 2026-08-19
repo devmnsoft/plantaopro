@@ -1,0 +1,7 @@
+@using System.Reflection
+@{
+    var version = typeof(Program).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?.Split('+')[0] ?? "1.90.0";
+}
+<span class="sidebar-version">PlantãoPro v@version · operação segura</span>

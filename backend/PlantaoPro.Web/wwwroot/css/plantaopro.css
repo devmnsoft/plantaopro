@@ -14,28 +14,11 @@
 @import url('./design-system/charts.css');
 @import url('./design-system/overlays.css');
 @import url('./design-system/workspaces.css');
+@import url('./design-system/clinical.css');
+@import url('./design-system/financial.css');
+@import url('./design-system/operations.css');
+@import url('./design-system/saas.css');
 @import url('./design-system/accessibility.css');
 @import url('./design-system/responsive.css');
 @import url('./design-system/white-label.css');
 @import url('./design-system/utilities.css');
-@import url('./design-system/premium-experience.css');
-@import url('./design-system/v151-product-experience.css');
-@import url('./design-system/v152-product-workspaces.css');
-@import url('./design-system/v153-feedback-experience.css');
-@import url('./design-system/v154-system-reset.css');
-@import url('./design-system/v154-layout-fix.css');
-@import url('./design-system/v154-forms-feedback.css');
-@import url('./design-system/v154-clinical-pages.css');
-@import url('./pages/saude360-journey.css');
-@import url('./design-system/v161-medical-experience.css');
-@import url('./design-system/v171-saas-admin.css');
-@import url('./design-system/v175-product-polish.css');
-
-@import url('./design-system/v176-product-experience.css');
-@import url('./design-system/v177-product-completion.css');
-@import url('./design-system/v178-clinical-mvp.css');
-@import url('./design-system/v179-operational-mvp.css');
-@import url('./design-system/v180-financial-mvp.css');
-@import url('./design-system/v181-admin-governance.css');
-
-@import url('./design-system/v183-onboarding-homologation.css');

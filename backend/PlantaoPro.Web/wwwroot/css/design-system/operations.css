@@ -1,3 +1,6 @@
+/* PlantãoPro Design System — operations */
+
+/* Migrado de v179-operational-mvp.css; consolidado na v1.90.0. */
 /* PlantãoPro v1.79 — jornada operacional. Camada aditiva, sem dados decorativos. */
 .pp-operational-journey{display:flex;gap:.5rem;overflow-x:auto;margin:0 0 1.25rem;padding:.75rem;border:1px solid var(--pp-border,#dfe5ec);border-radius:1rem;background:var(--pp-surface,#fff);scrollbar-width:thin}
 .pp-operational-journey span{flex:0 0 auto;padding:.45rem .75rem;border-radius:999px;background:#f2f5f8;color:#526274;font-size:.82rem;font-weight:650;white-space:nowrap}

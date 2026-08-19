@@ -1,10 +1,11 @@
 {
   "name": "plantaopro-local-homologation",
   "private": true,
-  "version": "1.84.0",
+  "version": "1.90.0",
   "description": "Tooling local para smoke visual do PlantãoPro",
   "scripts": {
     "smoke:ui": "node scripts/ui/visual-smoke.mjs",
+    "audit:experience": "node scripts/ui/product-experience-audit.mjs",
     "smoke:auth": "node scripts/ui/create-storage-state.mjs",
     "playwright:install": "playwright install chromium"
   },

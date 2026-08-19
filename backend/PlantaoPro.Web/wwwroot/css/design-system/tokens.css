@@ -145,7 +145,11 @@
     --pp-transition-fast: 140ms ease;
     --pp-transition: 220ms cubic-bezier(.2,.8,.2,1);
     --pp-z-topbar: 1020; --pp-z-sidebar: 1040; --pp-z-overlay: 1060;
-    --pp-z-drawer: 1070; --pp-z-toast: 1090;
+    --pp-z-dropdown: 1030; --pp-z-drawer: 1070; --pp-z-modal: 1080; --pp-z-toast: 1090;
+    --pp-font-size-base: 1rem;
+    --pp-font-size-sm: .875rem;
+    --pp-line-height: 1.55;
+    --pp-hover-bg: #edf4fc;
 
     /* Compatibilidade temporária dos componentes existentes */
     --pp-primary: var(--pp-brand-primary);

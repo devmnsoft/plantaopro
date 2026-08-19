@@ -568,6 +568,8 @@ namespace PlantaoPro.Api.Models
 public sealed record HealthDependencyResponse(string Name, string Status);
 public sealed record HealthDatabaseResponse(string Status, string Schema, string AdminBootstrap);
 public sealed record HealthResponse(string Application, string Status, string Environment, DateTime TimestampUtc, string Version, HealthDatabaseResponse Database, HealthDependencyResponse Jwt);
+public sealed record SystemHealthComponent(string Name, string Status, string Detail);
+public sealed record SystemHealthResponse(string Status, string Environment, DateTime TimestampUtc, string Version, IReadOnlyList<SystemHealthComponent> Components);
 public sealed record MeuDiaItemDto(Guid Id, string Tipo, string Titulo, string Descricao, string Prioridade, DateTime? Prazo, string Responsavel, string Status, string Icone, string Controller, string Action, bool PodeConcluir, bool PodeAdiar);
 public sealed record MeuDiaIndicadorDto(string Chave, string Titulo, decimal Valor, string Icone, string Severidade);
 public sealed record MeuDiaDto(IEnumerable<MeuDiaIndicadorDto> Indicadores, IEnumerable<MeuDiaItemDto> Pendencias, IEnumerable<MeuDiaItemDto> Agenda, IEnumerable<MeuDiaItemDto> Alertas, IEnumerable<MeuDiaItemDto> AcoesRapidas);

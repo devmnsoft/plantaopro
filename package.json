@@ -1,7 +1,7 @@
 {
   "name": "plantaopro-local-homologation",
   "private": true,
-  "version": "1.90.0",
+  "version": "1.91.0",
   "description": "Tooling local para smoke visual do PlantãoPro",
   "scripts": {
     "smoke:ui": "node scripts/ui/visual-smoke.mjs",

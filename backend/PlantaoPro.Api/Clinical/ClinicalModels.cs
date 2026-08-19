@@ -6,6 +6,18 @@ public enum ConsultaStatus { AGUARDANDO, EM_ATENDIMENTO, RASCUNHO, FINALIZADA, C
 public enum PrescricaoStatus { RASCUNHO, FINALIZADA, CANCELADA, SUBSTITUIDA }
 public enum TipoFaturamentoAssistencial { PARTICULAR, CONVENIO, PLANO_SAUDE, CORTESIA, ISENTO, FATURAMENTO_POSTERIOR }
 
+public static class ClassificacaoRiscoCatalogo
+{
+    public static readonly IReadOnlyList<object> Itens = new object[]
+    {
+        new { Code = "EMERGENCIA", Label = "Emergência", Priority = 1, ColorToken = "danger" },
+        new { Code = "MUITO_URGENTE", Label = "Muito urgente", Priority = 2, ColorToken = "orange" },
+        new { Code = "URGENTE", Label = "Urgente", Priority = 3, ColorToken = "warning" },
+        new { Code = "POUCO_URGENTE", Label = "Pouco urgente", Priority = 4, ColorToken = "success" },
+        new { Code = "NAO_URGENTE", Label = "Não urgente", Priority = 5, ColorToken = "info" }
+    };
+}
+
 public sealed class Consulta
 {
     public Guid Id { get; set; } public Guid ClienteId { get; set; } public Guid UnidadeId { get; set; }
@@ -24,6 +36,7 @@ public sealed class ConsultaCid { public Guid Id { get; set; } public Guid Clien
 public sealed class ConsultaSolicitacaoExame { public Guid Id { get; set; } public Guid ConsultaId { get; set; } public string Exame { get; set; } = ""; public string? IndicacaoClinica { get; set; } public string Prioridade { get; set; } = "ROTINA"; public DateTime RegDate { get; set; } }
 public sealed class ConsultaEncaminhamento { public Guid Id { get; set; } public Guid ConsultaId { get; set; } public string Especialidade { get; set; } = ""; public string Motivo { get; set; } = ""; public DateTime RegDate { get; set; } }
 public sealed class ConsultaHistorico { public Guid Id { get; set; } public Guid ConsultaId { get; set; } public string Evento { get; set; } = ""; public int Versao { get; set; } public DateTime RegDate { get; set; } }
+public sealed class ConsultaAdendo { public Guid Id { get; set; } public Guid ClienteId { get; set; } public Guid ConsultaId { get; set; } public Guid AutorId { get; set; } public Guid? MedicoId { get; set; } public string Motivo { get; set; } = ""; public string Conteudo { get; set; } = ""; public DateTime CreatedAt { get; set; } public string Hash { get; set; } = ""; }
 
 public sealed class Prescricao { public Guid Id { get; set; } public Guid ClienteId { get; set; } public Guid UnidadeId { get; set; } public Guid ConsultaId { get; set; } public Guid PacienteId { get; set; } public Guid MedicoId { get; set; } public PrescricaoStatus Status { get; set; } public string OrientacoesGerais { get; set; } = ""; public int Versao { get; set; } public DateTime? FinalizadaEm { get; set; } public IReadOnlyList<PrescricaoItem> Itens { get; set; } = Array.Empty<PrescricaoItem>(); }
 public sealed class PrescricaoItem { public Guid Id { get; set; } public Guid PrescricaoId { get; set; } public string MedicamentoNome { get; set; } = ""; public string? PrincipioAtivo { get; set; } public string? Apresentacao { get; set; } public string? Concentracao { get; set; } public string Dose { get; set; } = ""; public string UnidadeDose { get; set; } = ""; public string ViaAdministracao { get; set; } = ""; public string Frequencia { get; set; } = ""; public string Duracao { get; set; } = ""; public decimal Quantidade { get; set; } public string? Instrucoes { get; set; } public bool UsoContinuo { get; set; } public int Ordem { get; set; } }
@@ -33,7 +46,7 @@ public record SalvarConsultaRascunhoRequest([Required] int Versao, string? Anamn
 public record FinalizarConsultaRequest([Required] int Versao, TipoFaturamentoAssistencial TipoFaturamento, decimal ValorBruto = 0, decimal Desconto = 0, decimal Coparticipacao = 0, string? Justificativa = null);
 public record FinalizarConsultaResponse(Consulta Consulta, bool PodeAbrirFaturamento, Guid? FinanceiroId, string ProximaAcao);
 public record CancelarConsultaRequest([Required, MinLength(10)] string Motivo, int Versao);
-public record ReabrirConsultaRequest([Required, MinLength(10)] string Justificativa, int Versao);
+public record CriarConsultaAdendoRequest([Required, MinLength(10), MaxLength(500)] string Motivo, [Required, MinLength(10), MaxLength(12000)] string Conteudo, Guid? MedicoId = null);
 public record AdicionarConsultaCidRequest(Guid CidId, bool Principal, string Tipo = "SECUNDARIO");
 public record CriarSolicitacaoExameRequest([Required] string Exame, string? IndicacaoClinica, string Prioridade = "ROTINA");
 public record CriarEncaminhamentoRequest([Required] string Especialidade, [Required] string Motivo);

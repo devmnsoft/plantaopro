@@ -16,6 +16,8 @@ public interface IConsultaRepository
     Task<IReadOnlyList<ConsultaCid>> ListarCidsAsync(Guid consultaId, Guid clienteId, CancellationToken ct);
     Task<ConsultaCid?> AdicionarCidAsync(Guid consultaId, Guid clienteId, AdicionarConsultaCidRequest request, Guid? usuarioId, CancellationToken ct);
     Task<bool> RemoverCidAsync(Guid consultaId, Guid consultaCidId, Guid clienteId, Guid? usuarioId, CancellationToken ct);
+    Task<IReadOnlyList<ConsultaAdendo>> ListarAdendosAsync(Guid consultaId, Guid clienteId, CancellationToken ct);
+    Task<ConsultaAdendo> CriarAdendoAsync(Guid consultaId, Guid clienteId, Guid autorId, CriarConsultaAdendoRequest request, string hash, CancellationToken ct);
     NpgsqlConnection AbrirConexao();
 }
 
@@ -51,7 +53,7 @@ public sealed class ConsultaRepository : IConsultaRepository
     {
         await using var cn = AbrirConexao(); var offset = (Math.Max(1, pagina) - 1) * Math.Clamp(tamanho, 1, 100);
         const string sql = @"
-            select c.id,c.paciente_id PacienteId,p.nome PacienteNome,c.status,coalesce(t.classificacao_risco,'SEM_CLASSIFICACAO') ClassificacaoRisco,coalesce(a.checkin_em,c.reg_date) ChegadaEm,greatest(0,extract(epoch from(now()-coalesce(a.checkin_em,c.reg_date)))/60)::int TempoEsperaMinutos from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.cliente_id=@clienteId and c.reg_status='A' and c.status in ('AGUARDANDO','EM_ATENDIMENTO','RASCUNHO') and (@unidadeId is null or c.unidade_id=@unidadeId) and (@medicoId is null or c.medico_id=@medicoId) order by case coalesce(t.classificacao_risco,'') when 'VERMELHO' then 1 when 'LARANJA' then 2 when 'AMARELO' then 3 when 'VERDE' then 4 else 5 end,coalesce(a.checkin_em,c.reg_date) limit @tamanho offset @offset
+            select c.id,c.paciente_id PacienteId,p.nome PacienteNome,c.status,coalesce(t.classificacao_risco,'SEM_CLASSIFICACAO') ClassificacaoRisco,coalesce(a.checkin_em,c.reg_date) ChegadaEm,greatest(0,extract(epoch from(now()-coalesce(a.checkin_em,c.reg_date)))/60)::int TempoEsperaMinutos from plantaopro.consultas c join plantaopro.pacientes p on p.id=c.paciente_id left join plantaopro.triagens t on t.id=c.triagem_id left join plantaopro.agendamentos a on a.id=c.agendamento_id where c.cliente_id=@clienteId and c.reg_status='A' and c.status in ('AGUARDANDO','EM_ATENDIMENTO','RASCUNHO') and (@unidadeId is null or c.unidade_id=@unidadeId) and (@medicoId is null or c.medico_id=@medicoId) order by case coalesce(t.classificacao_risco,'') when 'EMERGENCIA' then 1 when 'MUITO_URGENTE' then 2 when 'URGENTE' then 3 when 'POUCO_URGENTE' then 4 when 'NAO_URGENTE' then 5 else 6 end,coalesce(a.checkin_em,c.reg_date) limit @tamanho offset @offset
         ";
         return (await cn.QueryAsync<ConsultaResumoResponse>(new CommandDefinition(sql, new { clienteId, unidadeId, medicoId, tamanho = Math.Clamp(tamanho, 1, 100), offset }, cancellationToken: ct))).AsList();
     }
@@ -94,6 +96,20 @@ public sealed class ConsultaRepository : IConsultaRepository
 
     public async Task<bool> RemoverCidAsync(Guid consultaId, Guid consultaCidId, Guid clienteId, Guid? usuarioId, CancellationToken ct)
     { await using var cn = AbrirConexao(); return await cn.ExecuteAsync(new CommandDefinition("update plantaopro.consulta_cids set reg_status='I',removed_by=@usuarioId,removed_at=now() where id=@consultaCidId and consulta_id=@consultaId and cliente_id=@clienteId and reg_status='A'", new { consultaId, consultaCidId, clienteId, usuarioId }, cancellationToken: ct)) == 1; }
+
+    public async Task<IReadOnlyList<ConsultaAdendo>> ListarAdendosAsync(Guid consultaId, Guid clienteId, CancellationToken ct)
+    {
+        await using var cn = AbrirConexao();
+        const string sql = @"select id,cliente_id ClienteId,consulta_id ConsultaId,autor_id AutorId,medico_id MedicoId,motivo,conteudo,created_at CreatedAt,hash from plantaopro.consulta_adendos where consulta_id=@consultaId and cliente_id=@clienteId order by created_at,id";
+        return (await cn.QueryAsync<ConsultaAdendo>(new CommandDefinition(sql, new { consultaId, clienteId }, cancellationToken: ct))).AsList();
+    }
+
+    public async Task<ConsultaAdendo> CriarAdendoAsync(Guid consultaId, Guid clienteId, Guid autorId, CriarConsultaAdendoRequest request, string hash, CancellationToken ct)
+    {
+        await using var cn = AbrirConexao(); var id = Guid.NewGuid();
+        const string sql = @"insert into plantaopro.consulta_adendos(id,cliente_id,consulta_id,autor_id,medico_id,motivo,conteudo,created_at,hash) values(@id,@clienteId,@consultaId,@autorId,@MedicoId,@Motivo,@Conteudo,now(),@hash) returning id,cliente_id ClienteId,consulta_id ConsultaId,autor_id AutorId,medico_id MedicoId,motivo,conteudo,created_at CreatedAt,hash";
+        return await cn.QuerySingleAsync<ConsultaAdendo>(new CommandDefinition(sql, new { id, clienteId, consultaId, autorId, request.MedicoId, Motivo = request.Motivo.Trim(), Conteudo = request.Conteudo.Trim(), hash }, cancellationToken: ct));
+    }
 }
 
 public interface IConsultaApplicationService
@@ -104,6 +120,11 @@ public interface IConsultaApplicationService
     Task<ApiResponse<Consulta>> SalvarRascunhoAsync(Guid id, SalvarConsultaRascunhoRequest request, CancellationToken ct);
     Task<ApiResponse<ConsultaPendenciasFinalizacaoResponse>> PendenciasAsync(Guid id, CancellationToken ct);
     Task<ApiResponse<FinalizarConsultaResponse>> FinalizarAsync(Guid id, FinalizarConsultaRequest request, CancellationToken ct);
+    Task<ApiResponse<IReadOnlyList<ConsultaCid>>> ListarCidsAsync(Guid id, CancellationToken ct);
+    Task<ApiResponse<ConsultaCid>> AdicionarCidAsync(Guid id, AdicionarConsultaCidRequest request, CancellationToken ct);
+    Task<ApiResponse<bool>> RemoverCidAsync(Guid id, Guid consultaCidId, CancellationToken ct);
+    Task<ApiResponse<IReadOnlyList<ConsultaAdendo>>> ListarAdendosAsync(Guid id, CancellationToken ct);
+    Task<ApiResponse<ConsultaAdendo>> CriarAdendoAsync(Guid id, CriarConsultaAdendoRequest request, CancellationToken ct);
 }
 
 public sealed class ConsultaApplicationService : IConsultaApplicationService
@@ -114,6 +135,11 @@ public sealed class ConsultaApplicationService : IConsultaApplicationService
     private Guid? Tenant => user.ClienteId ?? user.TenantId;
     private ApiResponse<T> SemTenant<T>() => ApiResponse<T>.Fail("Selecione uma organização para acessar o prontuário.", 403);
     private Task Auditar(Guid id, string acao, object detalhes) => audit.RegistrarAsync(user.UserId, Tenant, "consultas", id, acao, detalhes, true, null, string.Join(',', user.Roles));
+    public async Task<ApiResponse<IReadOnlyList<ConsultaCid>>> ListarCidsAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<IReadOnlyList<ConsultaCid>>(); if (await repository.ObterAsync(id, tenant, ct) is null) return ApiResponse<IReadOnlyList<ConsultaCid>>.Fail("Consulta não encontrada.", 404); return ApiResponse<IReadOnlyList<ConsultaCid>>.Ok(await repository.ListarCidsAsync(id, tenant, ct)); }
+    public async Task<ApiResponse<ConsultaCid>> AdicionarCidAsync(Guid id, AdicionarConsultaCidRequest request, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaCid>(); var consulta = await repository.ObterAsync(id, tenant, ct); if (consulta is null) return ApiResponse<ConsultaCid>.Fail("Consulta não encontrada.", 404); if (consulta.Status is ConsultaStatus.FINALIZADA or ConsultaStatus.RETORNO_SOLICITADO) return ApiResponse<ConsultaCid>.Fail("Consulta finalizada é imutável. Registre a correção em um adendo.", 409); var item = await repository.AdicionarCidAsync(id, tenant, request, user.UserId, ct); if (item is null) return ApiResponse<ConsultaCid>.Fail("CID inativo ou já vinculado.", 409); await Auditar(id, "CID_VINCULAR", new { cidId = request.CidId, request.Principal }); return ApiResponse<ConsultaCid>.Ok(item); }
+    public async Task<ApiResponse<bool>> RemoverCidAsync(Guid id, Guid consultaCidId, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<bool>(); var consulta = await repository.ObterAsync(id, tenant, ct); if (consulta is null) return ApiResponse<bool>.Fail("Consulta não encontrada.", 404); if (consulta.Status is ConsultaStatus.FINALIZADA or ConsultaStatus.RETORNO_SOLICITADO) return ApiResponse<bool>.Fail("Consulta finalizada é imutável. Registre a correção em um adendo.", 409); return await repository.RemoverCidAsync(id, consultaCidId, tenant, user.UserId, ct) ? ApiResponse<bool>.Ok(true) : ApiResponse<bool>.Fail("CID vinculado não encontrado.", 404); }
+    public async Task<ApiResponse<IReadOnlyList<ConsultaAdendo>>> ListarAdendosAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<IReadOnlyList<ConsultaAdendo>>(); if (await repository.ObterAsync(id, tenant, ct) is null) return ApiResponse<IReadOnlyList<ConsultaAdendo>>.Fail("Consulta não encontrada.", 404); var items = await repository.ListarAdendosAsync(id, tenant, ct); await Auditar(id, "CONSULTA_ADENDO_VISUALIZAR", new { quantidade = items.Count }); return ApiResponse<IReadOnlyList<ConsultaAdendo>>.Ok(items); }
+    public async Task<ApiResponse<ConsultaAdendo>> CriarAdendoAsync(Guid id, CriarConsultaAdendoRequest request, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaAdendo>(); if (user.UserId is not Guid autorId) return ApiResponse<ConsultaAdendo>.Fail("Usuário clínico obrigatório.", 403); var consulta = await repository.ObterAsync(id, tenant, ct); if (consulta is null) return ApiResponse<ConsultaAdendo>.Fail("Consulta não encontrada.", 404); if (consulta.Status is not (ConsultaStatus.FINALIZADA or ConsultaStatus.RETORNO_SOLICITADO)) return ApiResponse<ConsultaAdendo>.Fail("Adendos somente podem ser incluídos em consultas finalizadas.", 409); var motivo = request.Motivo.Trim(); var conteudo = request.Conteudo.Trim(); if (motivo.Length < 10 || conteudo.Length < 10) return ApiResponse<ConsultaAdendo>.Fail("Motivo e conteúdo devem possuir ao menos 10 caracteres.", 400); var material = $"{tenant:N}|{id:N}|{autorId:N}|{motivo}|{conteudo}"; var hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(material))).ToLowerInvariant(); var item = await repository.CriarAdendoAsync(id, tenant, autorId, request with { Motivo = motivo, Conteudo = conteudo }, hash, ct); await Auditar(id, "CONSULTA_ADENDO_CRIAR", new { adendoId = item.Id, item.Hash }); return ApiResponse<ConsultaAdendo>.Ok(item, "Adendo registrado. O conteúdo é imutável."); }
 
     public async Task<ApiResponse<IReadOnlyList<ConsultaResumoResponse>>> FilaAsync(Guid? unidadeId, Guid? medicoId, int pagina, int tamanho, CancellationToken ct) => Tenant is not Guid tenant ? SemTenant<IReadOnlyList<ConsultaResumoResponse>>() : ApiResponse<IReadOnlyList<ConsultaResumoResponse>>.Ok(await repository.FilaAsync(tenant, unidadeId, medicoId, pagina, tamanho, ct));
     public async Task<ApiResponse<ConsultaWorkspaceResponse>> WorkspaceAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaWorkspaceResponse>(); var value = await repository.WorkspaceAsync(id, tenant, ct); if (value is null) return ApiResponse<ConsultaWorkspaceResponse>.Fail("Consulta não encontrada.", 404); await Auditar(id, "PRONTUARIO_VISUALIZAR", new { consultaId = id }); return ApiResponse<ConsultaWorkspaceResponse>.Ok(value); }

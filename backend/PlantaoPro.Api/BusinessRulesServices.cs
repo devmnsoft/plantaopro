@@ -138,13 +138,15 @@ public sealed class MedicoElegibilidadeService
     public async Task<bool> VerificarConflitoHorarioAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim) => await _conflito.ExisteConflitoAsync(medicoId, dataInicio, dataFim);
     public async Task<bool> VerificarLimiteHorasSemanaAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim)
     {
+        var limite = _cfg.GetValue<decimal?>("Operacao:LimiteHorasSemanais");
+        if (!limite.HasValue) return true;
         await using var cn = Cn();
         var horas = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (p.data_fim-p.data_inicio))/3600.0),0)
 from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id
 where e.medico_id=@medicoId and e.reg_status='A' and lower(coalesce(e.status,'')) in ('confirmado','realizado')
 and date_trunc('week',p.data_inicio)=date_trunc('week',@dataInicio)", new { medicoId, dataInicio });
         var horasPlantao = (decimal)(dataFim - dataInicio).TotalHours;
-        return (horas + horasPlantao) <= 60m;
+        return (horas + horasPlantao) <= limite.Value;
     }
     public async Task<bool> VerificarEspecialidadeCompatívelAsync(Guid medicoId, Guid especialidadeId)
     {
@@ -152,13 +154,21 @@ and date_trunc('week',p.data_inicio)=date_trunc('week',@dataInicio)", new { medi
         var count = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.medico_especialidades where medico_id=@medicoId and especialidade_id=@especialidadeId and reg_status='A'", new { medicoId, especialidadeId });
         return count > 0;
     }
-    public Task<bool> VerificarDisponibilidadeAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim) => Task.FromResult(true);
+    public async Task<bool> VerificarDisponibilidadeAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim)
+    {
+        await using var cn = Cn();
+        return !await cn.ExecuteScalarAsync<bool>(@"select exists(
+select 1 from plantaopro.medico_indisponibilidades i
+where i.medico_id=@medicoId and coalesce(i.reg_status,'A')='A'
+  and upper(coalesce(i.status,'ATIVA'))='ATIVA'
+  and @dataInicio < i.data_fim and @dataFim > i.data_inicio)", new { medicoId, dataInicio, dataFim });
+    }
     public async Task<bool> VerificarStatusMedicoAsync(Guid medicoId)
     {
         await using var cn = Cn();
         return await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.medicos where id=@medicoId and reg_status='A' and coalesce(bloqueado,false)=false", new { medicoId }) > 0;
     }
-    public Task<bool> VerificarDocumentacaoAsync(Guid medicoId) => Task.FromResult(true);
+    public Task<bool?> VerificarDocumentacaoAsync(Guid medicoId) => Task.FromResult<bool?>(null);
 
     public async Task<IEnumerable<MotivoElegibilidadeDto>> ObterMotivosInelegibilidadeAsync(Guid medicoId, Guid plantaoId)
     {
@@ -168,7 +178,10 @@ and date_trunc('week',p.data_inicio)=date_trunc('week',@dataInicio)", new { medi
         if (!await VerificarStatusMedicoAsync(medicoId)) itens.Add(new MotivoElegibilidadeDto { Codigo = "MEDICO_INATIVO", Mensagem = "Médico inativo, bloqueado ou suspenso.", Bloqueante = true });
         if (!await VerificarEspecialidadeCompatívelAsync(medicoId, plantao.EspecialidadeId)) itens.Add(new MotivoElegibilidadeDto { Codigo = "ESPECIALIDADE", Mensagem = "Especialidade incompatível com o plantão.", Bloqueante = true });
         if (await VerificarConflitoHorarioAsync(medicoId, plantao.DataInicio, plantao.DataFim)) itens.Add(new MotivoElegibilidadeDto { Codigo = "CONFLITO", Mensagem = "Conflito de horário detectado.", Bloqueante = true });
+        if (!await VerificarDisponibilidadeAsync(medicoId, plantao.DataInicio, plantao.DataFim)) itens.Add(new MotivoElegibilidadeDto { Codigo = "INDISPONIBILIDADE", Mensagem = "Médico indisponível neste horário.", Bloqueante = true });
         if (!await VerificarLimiteHorasSemanaAsync(medicoId, plantao.DataInicio, plantao.DataFim)) itens.Add(new MotivoElegibilidadeDto { Codigo = "LIMITE_HORAS", Mensagem = "Limite semanal de horas excedido.", Bloqueante = true });
+        if (!_cfg.GetValue<decimal?>("Operacao:LimiteHorasSemanais").HasValue) itens.Add(new MotivoElegibilidadeDto { Codigo = "LIMITE_NAO_CONFIGURADO", Mensagem = "Limite semanal não configurado.", Bloqueante = false });
+        itens.Add(new MotivoElegibilidadeDto { Codigo = "DOCUMENTACAO_NAO_VERIFICADA", Mensagem = "Documentação não verificada por ausência de política documental configurada.", Bloqueante = false });
         return itens;
     }
 }
@@ -232,13 +245,6 @@ limit @buscaLimite", new { medicoId, buscaLimite = Math.Max(limite * 3, 20) })).
             {
                 score -= 50m;
                 motivos.Add("conflito de horário");
-            }
-
-            var horas = (decimal)(candidato.DataFim - candidato.DataInicio).TotalHours;
-            score += Math.Min(20m, horas);
-            if (candidato.Valor >= 2000m)
-            {
-                score += 10m;
             }
 
             var textoMotivo = motivos.Count == 0 ? "Alta aderência ao seu perfil, sem conflitos de horário." : "Atenção: " + string.Join("; ", motivos) + ".";

@@ -965,7 +965,28 @@ where id=@id", new
             await audit.LogAsync(u, "UPDATE", "plantoes", id, "Edição", ip: ip, userAgent: ua);
             return ApiResponse<string>.Ok("ok", "Plantão atualizado");
         }
-        public async Task<ApiResponse<string>> ChangeStatusAsync(Guid id, string novo, string just, Guid u, string? ip, string? ua)
+        public Task<ApiResponse<string>> PublicarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent) =>
+            ChangeStatusAsync(id, "aberto", justificativa ?? "Publicação operacional", userId, ip, userAgent);
+
+        public Task<ApiResponse<string>> CancelarAsync(Guid id, string? motivo, Guid userId, string? ip, string? userAgent)
+        {
+            if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 10)
+                return Task.FromResult(ApiResponse<string>.Fail("Informe um motivo de cancelamento com pelo menos 10 caracteres.", 422));
+            return ChangeStatusAsync(id, "cancelado", motivo.Trim(), userId, ip, userAgent);
+        }
+
+        public async Task<ApiResponse<string>> RealizarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var pendentes = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.escalas
+where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','solicitada','confirmado','confirmada')", new { id });
+            if (pendentes > 0) return ApiResponse<string>.Fail("Reconcilie solicitações e presenças antes de realizar o plantão.", 409);
+            var terminou = await cn.ExecuteScalarAsync<bool>("select coalesce(data_fim <= now(),false) from plantaopro.plantoes where id=@id and reg_status='A'", new { id });
+            if (!terminou) return ApiResponse<string>.Fail("O plantão ainda não terminou. Encerramento antecipado exige fluxo de override.", 409);
+            return await ChangeStatusAsync(id, "realizado", justificativa ?? "Operação reconciliada", userId, ip, userAgent);
+        }
+
+        private async Task<ApiResponse<string>> ChangeStatusAsync(Guid id, string novo, string just, Guid u, string? ip, string? ua)
         {
             if (novo == "cancelado" && string.IsNullOrWhiteSpace(just))
                 return ApiResponse<string>.Fail("Justificativa obrigatória");
@@ -1132,19 +1153,6 @@ where id=@id", new
                     }, tx);
                     return ApiResponse<string>.Fail("Conflito de horário para médico");
                 }
-                var horasSemana = await cn.ExecuteScalarAsync<decimal>(@"select coalesce(sum(extract(epoch from (pl.data_fim-pl.data_inicio))/3600.0),0)
-                    from plantaopro.escalas e
-                    join plantaopro.plantoes pl on pl.id=e.plantao_id
-                    where e.medico_id=@m and e.reg_status='A' and e.status in ('solicitado','confirmado','realizado')
-                      and date_trunc('week',pl.data_inicio)=date_trunc('week',@di)", new
-                {
-                    m = medicoId,
-                    di = p.Di
-                }, tx);
-                var horasPlantao = (decimal)(p.Df - p.Di).TotalHours;
-                const decimal limiteSemanalHoras = 60m;
-                if ((horasSemana + horasPlantao) > limiteSemanalHoras)
-                    return ApiResponse<string>.Fail($"Limite semanal de {limiteSemanalHoras}h excedido para o médico.");
                 var escalasRecentes = await cn.ExecuteScalarAsync<int>(@"select count(1)
                     from plantaopro.escalas e
                     join plantaopro.plantoes pl on pl.id=e.plantao_id
@@ -1184,7 +1192,14 @@ where id=@id", new
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao aceitar plantão {PlantaoId}", plantaoId); return ApiResponse<string>.Fail("Erro ao aceitar plantão", 500); }
         }
-        public async Task<ApiResponse<string>> AlterarStatusAsync(Guid id, string novo, string? justificativa, Guid userId, Guid? novoMedicoId, string? ip, string? ua)
+        public Task<ApiResponse<string>> ConfirmarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "confirmado", justificativa, userId, null, ip, userAgent);
+        public Task<ApiResponse<string>> RecusarAsync(Guid id, string justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "recusado", justificativa, userId, null, ip, userAgent);
+        public Task<ApiResponse<string>> CancelarAsync(Guid id, string justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "cancelado", justificativa, userId, null, ip, userAgent);
+        public Task<ApiResponse<string>> SubstituirAsync(Guid id, Guid novoMedicoId, string justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "substituido", justificativa, userId, novoMedicoId, ip, userAgent);
+        public Task<ApiResponse<string>> RealizarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "realizado", justificativa, userId, null, ip, userAgent);
+        public Task<ApiResponse<string>> RegistrarAusenciaAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "nao_compareceu", justificativa, userId, null, ip, userAgent);
+
+        private async Task<ApiResponse<string>> AlterarStatusAsync(Guid id, string novo, string? justificativa, Guid userId, Guid? novoMedicoId, string? ip, string? ua)
         {
             await using var cn = Cn();
             await cn.OpenAsync();
@@ -1201,19 +1216,13 @@ where id=@id", new
                 {
                     if (e.Status != "solicitado")
                         return ApiResponse<string>.Fail("Somente escala solicitada pode ser confirmada");
-                    var dadosPlantao = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new { id = e.PlantaoId }, tx);
+                    var dadosPlantao = await cn.QueryFirstAsync<(DateTime Di, DateTime Df, int VagasDisponiveis)>("select data_inicio as Di,data_fim as Df,coalesce(vagas_disponiveis,0) as VagasDisponiveis from plantaopro.plantoes where id=@id for update", new { id = e.PlantaoId }, tx);
+                    if (dadosPlantao.VagasDisponiveis <= 0)
+                        return ApiResponse<string>.Fail("A última vaga foi preenchida por outra operação. Atualize o plantão.", 409);
                     var elegibilidadeConfirmacao = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(e.MedicoId, e.PlantaoId);
                     if (elegibilidadeConfirmacao.Bloqueado) return ApiResponse<string>.Fail(string.Join("; ", elegibilidadeConfirmacao.MotivosBloqueio));
                     if (await conflitoService.ExisteConflitoAsync(e.MedicoId, dadosPlantao.Di, dadosPlantao.Df, id)) return ApiResponse<string>.Fail("Conflito de horário detectado na confirmação.");
-                    await cn.ExecuteAsync("update plantaopro.escalas set status='confirmado',updated_by=@u,reg_update=now() where id=@id", new
-                    {
-                        id,
-                        u = userId
-                    }, tx);
-                    var vagasDisponiveis = await cn.ExecuteScalarAsync<int>("select coalesce(vagas_disponiveis,0) from plantaopro.plantoes where id=@p for update", new { p = e.PlantaoId }, tx);
-                    if (vagasDisponiveis <= 0)
-                        return ApiResponse<string>.Fail("Não há vagas disponíveis para confirmar esta escala.");
-                    await cn.ExecuteAsync(@"update plantaopro.plantoes
+                    var ocupouVaga = await cn.ExecuteAsync(@"update plantaopro.plantoes
                         set vagas_disponiveis=vagas_disponiveis-1,
                             status=case when vagas_disponiveis-1<=0 then 'preenchido' else 'em_escala' end,
                             updated_by=@u,
@@ -1223,6 +1232,9 @@ where id=@id", new
                         p = e.PlantaoId,
                         u = userId
                     }, tx);
+                    if (ocupouVaga != 1)
+                        return ApiResponse<string>.Fail("A última vaga foi preenchida por outra operação. Atualize o plantão.", 409);
+                    await cn.ExecuteAsync("update plantaopro.escalas set status='confirmado',updated_by=@u,reg_update=now() where id=@id and status='solicitado'", new { id, u = userId }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "confirmado", justificativa, userId);
                     await notificacao.CriarNotificacaoAsync(userId, "Escala confirmada", "Sua escala foi confirmada", "escala", tx);
                 }

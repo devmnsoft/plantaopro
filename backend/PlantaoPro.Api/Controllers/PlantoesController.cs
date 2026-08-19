@@ -111,16 +111,14 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("{id:guid}/publicar")]
         public Task<IActionResult> Publicar(Guid id, [FromBody] StatusRequest req)
         {
-            return ChangeStatus(id, "aberto", req.Justificativa, "publicar plantão");
+            return ExecuteStatusAction(id, () => service.PublicarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "publicar plantão");
         }
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]
         [HttpPost("{id:guid}/cancelar")]
         public Task<IActionResult> Cancelar(Guid id, [FromBody] StatusRequest req)
         {
-            if (string.IsNullOrWhiteSpace(req.Justificativa))
-                return Task.FromResult<IActionResult>(UnprocessableEntity(ApiResponse<string>.Fail("O motivo do cancelamento é obrigatório.", 422)));
-            return ChangeStatus(id, "cancelado", req.Justificativa, "cancelar plantão");
+            return ExecuteStatusAction(id, () => service.CancelarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "cancelar plantão");
         }
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]
@@ -149,7 +147,7 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("{id:guid}/encerrar")]
         public Task<IActionResult> Realizar(Guid id, [FromBody] StatusRequest req)
         {
-            return ChangeStatus(id, "realizado", req.Justificativa, "realizar plantão");
+            return ExecuteStatusAction(id, () => service.RealizarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "realizar plantão");
         }
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]
@@ -241,12 +239,14 @@ namespace PlantaoPro.Api.Controllers
             }
         }
 
-        private async Task<IActionResult> ChangeStatus(Guid id, string status, string justificativa, string acao)
+        private string? ClientIp => HttpContext.Connection.RemoteIpAddress?.ToString();
+        private string UserAgent => Request.Headers.UserAgent.ToString();
+
+        private async Task<IActionResult> ExecuteStatusAction(Guid id, Func<Task<ApiResponse<string>>> action, string acao)
         {
             try
             {
-                var uid = GetUserId();
-                if (string.Equals(status, "aberto", StringComparison.OrdinalIgnoreCase))
+                if (acao == "publicar plantão")
                 {
                     var clienteId = usuarioContext.GetClienteId();
                     if (clienteId.HasValue)
@@ -256,7 +256,7 @@ namespace PlantaoPro.Api.Controllers
                     }
                 }
 
-                var r = await service.ChangeStatusAsync(id, status, justificativa, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+                var r = await action();
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)

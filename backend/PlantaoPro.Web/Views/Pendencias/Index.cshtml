@@ -1,0 +1,53 @@
+@model PlantaoPro.Web.Models.ProductivityPageViewModel
+@using Microsoft.AspNetCore.Routing
+@{
+    var q = ViewData["Query"] as PlantaoPro.Web.Models.ProductivityQueryViewModel ?? new();
+    var pages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
+    string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.UnitId, page = 1, q.PageSize })!;
+    string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? "#";
+}
+<div class="pp-page action-center" data-action-center>
+    @Html.AntiForgeryToken()
+    <nav class="action-tabs" aria-label="Listas da Central de Ações">
+        <a class="@(q.Tab == "para-mim" ? "is-active" : null)" href="@TabUrl("para-mim")">Para mim</a>
+        @if (Model.CanViewTeam) { <a class="@(q.Tab == "equipe" ? "is-active" : null)" href="@TabUrl("equipe")">Minha equipe</a> }
+        <a class="@(q.Tab == "criticas" ? "is-active" : null)" href="@TabUrl("criticas")">Críticas</a>
+        <a class="@(q.Tab == "hoje" ? "is-active" : null)" href="@TabUrl("hoje")">Hoje</a>
+        <a class="@(q.Tab == "atrasadas" ? "is-active" : null)" href="@TabUrl("atrasadas")">Atrasadas</a>
+        <a class="@(q.Tab == "adiadas" ? "is-active" : null)" href="@TabUrl("adiadas")">Adiadas</a>
+    </nav>
+
+    <form method="get" class="action-filter" data-filter-form>
+        <input type="hidden" name="tab" value="@q.Tab" />
+        <label>Prioridade<select name="priority"><option value="">Todas</option>@foreach(var value in new[]{"CRITICA","ALTA","NORMAL","BAIXA"}){<option selected="@(q.Priority == value)">@value</option>}</select></label>
+        <label>Módulo<input name="module" value="@q.Module" placeholder="Todos" /></label>
+        <label>Status<input name="status" value="@q.Status" placeholder="Ativos" /></label>
+        <label>Prazo<select name="due"><option value="">Qualquer prazo</option><option value="hoje" selected="@(q.Due == "hoje")">Hoje</option><option value="atrasado" selected="@(q.Due == "atrasado")">Atrasado</option></select></label>
+        <button class="btn btn-primary" type="submit">Aplicar filtros</button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { tab = q.Tab })">Limpar</a>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    { <section class="state-panel" role="alert"><i class="bi bi-cloud-slash"></i><h2>Central indisponível</h2><p>@Model.Error</p><a class="btn btn-primary" href="@Context.Request.Path@Context.Request.QueryString">Tentar novamente</a></section> }
+    else if (Model.Items.Count == 0)
+    { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Nenhuma ação nesta visão", "Não há itens reais que correspondam aos filtros selecionados.")' /> }
+    else
+    {
+        <section class="action-list" aria-label="Ações encontradas">
+        @foreach (var item in Model.Items)
+        {
+            <article class="productivity-item priority-@item.Priority.ToLowerInvariant()" data-item-key="@item.Key">
+                <span class="productivity-item__icon"><i class="bi @item.Icon" aria-hidden="true"></i></span>
+                <div class="productivity-item__body"><div class="productivity-item__meta"><span class="priority-badge">@item.Priority</span><span>@item.Module</span>@if(item.DueAt.HasValue){<time datetime="@item.DueAt.Value.ToString("O")">@item.DueAt.Value.ToLocalTime().ToString("dd/MM HH:mm")</time>}</div><h2>@item.Title</h2><p>@item.Description</p><small>@item.ContextLabel</small></div>
+                <div class="productivity-item__actions">
+                    @if(item.PrimaryAction is not null){<a class="btn btn-sm btn-primary" href="@ActionUrl(item.PrimaryAction)">@item.PrimaryAction.Label</a>}
+                    @if(item.CanSnooze){<button class="btn btn-sm btn-outline-secondary" type="button" data-snooze="@item.Key" aria-label="Adiar @item.Title"><i class="bi bi-clock"></i> Adiar</button>}
+                </div>
+            </article>
+        }
+        </section>
+        <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @pages</span>@if(Model.Page < pages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
+    }
+</div>
+@section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }
+@section Scripts { <script type="module" src="~/js/pages/central-acoes.js" asp-append-version="true"></script> }

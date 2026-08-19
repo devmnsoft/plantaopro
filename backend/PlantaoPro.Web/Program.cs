@@ -22,6 +22,7 @@ builder.Services.AddScoped<IPageContextService, PageContextService>();
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
 builder.Services.AddScoped<IAssistenteContextualService, AssistenteContextualService>();
 builder.Services.AddScoped<IFase2OperationalFlowService, Fase2OperationalFlowService>();
+builder.Services.AddScoped<ProductivityWebService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();

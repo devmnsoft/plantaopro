@@ -11,6 +11,8 @@ using PlantaoPro.Api.Operation360.WorkItems;
 using PlantaoPro.Api.Operation360.Realtime;
 using PlantaoPro.Api.Operation360.Notifications;
 using PlantaoPro.Api.Operation360.Productivity;
+using PlantaoPro.Api.Productivity;
+using PlantaoPro.Api.SavedViews;
 using System.Text;
 
 using PlantaoPro.CrossCutting.Security;
@@ -208,6 +210,10 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IOperationNotificationService, OperationNotificationService>();
 builder.Services.AddScoped<IProductivityRepository, ProductivityRepository>();
 builder.Services.AddScoped<IProductivityService, ProductivityService>();
+builder.Services.AddScoped<IProductivityActionRepository, ProductivityActionRepository>();
+builder.Services.AddScoped<IProductivityActionService, ProductivityActionService>();
+builder.Services.AddScoped<ISavedViewRepository, SavedViewRepository>();
+builder.Services.AddScoped<ISavedViewService, SavedViewService>();
 
 var app = builder.Build();
 app.UseHttpLogging();

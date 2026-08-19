@@ -398,6 +398,16 @@
       ],
       "status": "active",
       "transactional": true
+    },
+    {
+      "version": "2026_v192_saved_views",
+      "source": "database/migrations/2026_v192_saved_views.sql",
+      "checksum": "36085c17bba5fd2329e5831ecdea7e4053c0788d68f9949174946128e14ab5f8",
+      "dependsOn": [
+        "2026_v1250_jornada_clinica_operacional"
+      ],
+      "status": "active",
+      "transactional": true
     }
   ]
 }

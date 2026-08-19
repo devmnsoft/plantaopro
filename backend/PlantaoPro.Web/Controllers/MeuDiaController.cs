@@ -9,9 +9,9 @@ namespace PlantaoPro.Web.Controllers;
 [Route("MeuDia")]
 public sealed class MeuDiaController : Controller
 {
-    private readonly MinhaCentralWebService _central;
+    private readonly ProductivityWebService _productivity;
 
-    public MeuDiaController(MinhaCentralWebService central) => _central = central;
+    public MeuDiaController(ProductivityWebService productivity) => _productivity = productivity;
 
     [HttpGet("")]
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -25,6 +25,6 @@ public sealed class MeuDiaController : Controller
             HelpContext = "meu-dia"
         };
         var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;
-        return View(await _central.GetAsync(token, cancellationToken));
+        return View(await _productivity.GetMyDayAsync(token, cancellationToken));
     }
 }

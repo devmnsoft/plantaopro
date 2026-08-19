@@ -408,6 +408,16 @@
       ],
       "status": "active",
       "transactional": true
+    },
+    {
+      "version": "2026_08_v195_financeiro_revenue_cycle",
+      "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
+      "checksum": "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
+      "dependsOn": [
+        "2026_v192_saved_views"
+      ],
+      "status": "active",
+      "transactional": true
     }
   ]
 }

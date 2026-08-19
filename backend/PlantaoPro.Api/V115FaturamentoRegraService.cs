@@ -1,114 +1,66 @@
 using Dapper;
 using Npgsql;
-using PlantaoPro.Api.Controllers;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using System.Data;
 using System.Text.Json;
 
 namespace PlantaoPro.Api;
 
-public sealed class V115FaturamentoRegraService
+public sealed class V115FaturamentoRegraService(IConfiguration cfg, FinancialTenantContext context, IAuditService audit, ILogger<V115FaturamentoRegraService> logger)
 {
-    private readonly IConfiguration cfg;
-    private readonly ICurrentUserService currentUser;
-    private readonly IAuditService audit;
-    private readonly ILogger<V115FaturamentoRegraService> logger;
+    private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
 
-    public V115FaturamentoRegraService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<V115FaturamentoRegraService> logger)
+    public async Task<ApiResponse<IEnumerable<RegraFaturamentoDto>>> ListarRegrasAsync(string? tipo = null)
     {
-        this.cfg = cfg;
-        this.currentUser = currentUser;
-        this.audit = audit;
-        this.logger = logger;
+        if (!context.HasTenant) return context.MissingTenant<IEnumerable<RegraFaturamentoDto>>();
+        try { await using var cn = Cn(); var rows = await cn.QueryAsync<RegraFaturamentoDto>(@"select id,codigo,nome,tipo_faturamento tipo,valor_base valorBase,percentual_desconto descontoPercentual,percentual_acrescimo acrescimoPercentual,item_faturavel_id itemFaturavelId,convenio_id convenioId,status from plantaopro.v115_regras_faturamento where reg_status='A' and tenant_id=@tenantId and (@tipo is null or tipo_faturamento=@tipo) order by created_at desc", new { tenantId=context.TenantId, tipo=Norm(tipo) }); return ApiResponse<IEnumerable<RegraFaturamentoDto>>.Ok(rows, "Regras carregadas."); }
+        catch(Exception ex) { return Fail<IEnumerable<RegraFaturamentoDto>>(ex,"Falha ao listar regras."); }
     }
 
-    private NpgsqlConnection Cn() => new NpgsqlConnection(cfg.GetConnectionString("Default"));
-    private Guid? TenantId => currentUser.ClienteId ?? currentUser.TenantId;
-    private Guid? UserId => currentUser.UserId;
-    private bool Global => currentUser.IsGlobalAdmin();
-    private string Perfil => string.Join(',', currentUser.Roles);
-
-    public async Task<ApiResponse<IEnumerable<object>>> ListarRegrasAsync(string? tipo = null) => await QueryList(@"select id,codigo,nome,tipo_faturamento as tipoFaturamento,valor_base as valorBase,percentual_desconto as percentualDesconto,percentual_acrescimo as percentualAcrescimo,convenio_id as convenioId,item_faturavel_id as itemFaturavelId,status,created_at as criadoEm from plantaopro.v115_regras_faturamento where reg_status='A' and (@tipo is null or tipo_faturamento=@tipo) and (@isGlobal or @tenantId is null or tenant_id=@tenantId or cliente_id=@tenantId) order by created_at desc", "Regras de faturamento v1.15 carregadas.", ScopeWith(new { tipo = Normalize(tipo) }));
-
-    public async Task<ApiResponse<V115RegraFaturamentoDto>> SalvarRegraAsync(V115RegraFaturamentoRequest request, Guid? id = null)
+    public async Task<ApiResponse<V115RegraFaturamentoDto>> SalvarRegraAsync(V115RegraFaturamentoRequest r, Guid? id=null)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(request.Codigo) || string.IsNullOrWhiteSpace(request.Nome)) return ApiResponse<V115RegraFaturamentoDto>.Fail("Código e nome da regra são obrigatórios.", 400);
-            if (request.ValorBase < 0) return ApiResponse<V115RegraFaturamentoDto>.Fail("Valor base não pode ser negativo.", 400);
-            await using var cn = Cn();
-            var regraId = id ?? Guid.NewGuid();
-            if (id.HasValue)
-            {
-                var affected = await cn.ExecuteAsync(@"update plantaopro.v115_regras_faturamento set codigo=@codigo,nome=@nome,tipo_faturamento=@tipoFaturamento,item_faturavel_id=@itemFaturavelId,convenio_id=@convenioId,valor_base=@valorBase,percentual_desconto=@percentualDesconto,percentual_acrescimo=@percentualAcrescimo,status=@status,updated_at=now(),updated_by=@userId where id=@id and reg_status='A' and (@isGlobal or @tenantId is null or tenant_id=@tenantId or cliente_id=@tenantId)", Params(request, regraId));
-                if (affected == 0) return ApiResponse<V115RegraFaturamentoDto>.Fail("Regra de faturamento não encontrada para o tenant.", 404);
-            }
-            else
-            {
-                await cn.ExecuteAsync(@"insert into plantaopro.v115_regras_faturamento(id,cliente_id,tenant_id,codigo,nome,tipo_faturamento,item_faturavel_id,convenio_id,valor_base,percentual_desconto,percentual_acrescimo,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@codigo,@nome,@tipoFaturamento,@itemFaturavelId,@convenioId,@valorBase,@percentualDesconto,@percentualAcrescimo,@status,'A',now(),@userId)", Params(request, regraId));
-            }
-            await AuditAsync("v115_regras_faturamento", regraId, id.HasValue ? "ATUALIZAR_REGRA" : "CRIAR_REGRA", new { request.Codigo, request.TipoFaturamento });
-            return ApiResponse<V115RegraFaturamentoDto>.Ok(new V115RegraFaturamentoDto(regraId, request.Codigo, request.Nome, Normalize(request.TipoFaturamento) ?? "CONSULTA", request.ValorBase, request.PercentualDesconto, request.PercentualAcrescimo, request.ItemFaturavelId, request.ConvenioId, Normalize(request.Status) ?? "ATIVA"), "Regra de faturamento salva.");
-        }
-        catch (Exception ex) { return Fail<V115RegraFaturamentoDto>(ex, "Falha ao salvar regra de faturamento."); }
+        if (!context.HasTenant) return context.MissingTenant<V115RegraFaturamentoDto>();
+        if(string.IsNullOrWhiteSpace(r.Codigo)||string.IsNullOrWhiteSpace(r.Nome)||r.ValorBase<0||r.PercentualDesconto is <0 or >100||r.PercentualAcrescimo<0) return ApiResponse<V115RegraFaturamentoDto>.Fail("Regra financeira invalida.",422);
+        try { await using var cn=Cn(); var regraId=id??Guid.NewGuid(); var p=new { id=regraId,tenantId=context.TenantId,userId=context.UserId,codigo=r.Codigo.Trim(),nome=r.Nome.Trim(),tipo=Norm(r.TipoFaturamento)??"CONSULTA",r.ItemFaturavelId,r.ConvenioId,r.ValorBase,r.PercentualDesconto,r.PercentualAcrescimo,status=Norm(r.Status)??"ATIVA"};
+            int affected=id.HasValue?await cn.ExecuteAsync(@"update plantaopro.v115_regras_faturamento set codigo=@codigo,nome=@nome,tipo_faturamento=@tipo,item_faturavel_id=@ItemFaturavelId,convenio_id=@ConvenioId,valor_base=@ValorBase,percentual_desconto=@PercentualDesconto,percentual_acrescimo=@PercentualAcrescimo,status=@status,updated_at=now(),updated_by=@userId where id=@id and tenant_id=@tenantId and reg_status='A'",p):await cn.ExecuteAsync(@"insert into plantaopro.v115_regras_faturamento(id,cliente_id,tenant_id,codigo,nome,tipo_faturamento,item_faturavel_id,convenio_id,valor_base,percentual_desconto,percentual_acrescimo,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@codigo,@nome,@tipo,@ItemFaturavelId,@ConvenioId,@ValorBase,@PercentualDesconto,@PercentualAcrescimo,@status,'A',now(),@userId)",p);
+            if(affected==0)return ApiResponse<V115RegraFaturamentoDto>.Fail("Regra nao encontrada para o tenant.",404); await Audit("v115_regras_faturamento",regraId,id.HasValue?"ATUALIZAR_REGRA":"CRIAR_REGRA",new{r.Codigo}); return ApiResponse<V115RegraFaturamentoDto>.Ok(new(regraId,r.Codigo,r.Nome,p.tipo,r.ValorBase,r.PercentualDesconto,r.PercentualAcrescimo,r.ItemFaturavelId,r.ConvenioId,p.status),"Regra salva."); }
+        catch(Exception ex){return Fail<V115RegraFaturamentoDto>(ex,"Falha ao salvar regra.");}
     }
 
-    public async Task<ApiResponse<object>> GerarContaConsultaAsync(Guid consultaId, V115GerarContaRequest? request = null) => await GerarContaAsync(consultaId, "CONSULTA", request);
-    public async Task<ApiResponse<object>> GerarContaPlantaoAsync(Guid plantaoId, V115GerarContaRequest? request = null) => await GerarContaAsync(plantaoId, "PLANTAO", request);
-    public async Task<ApiResponse<IEnumerable<object>>> ContasReceberAsync() => await QueryList("select id,pedido_id as referenciaId,valor,status,created_at as emitidaEm from plantaopro.v113_faturas where reg_status='A' and (@isGlobal or @tenantId is null or tenant_id=@tenantId or cliente_id=@tenantId) order by created_at desc", "Contas a receber reais carregadas.");
+    public Task<ApiResponse<ContaReceberDto>> GerarContaConsultaAsync(Guid id,V115GerarContaRequest? r=null)=>GerarContaAsync(id,"CONSULTA",r);
+    [Obsolete("Pagamento de plantao pertence ao fechamento operacional e nao ao financeiro clinico.")]
+    public Task<ApiResponse<ContaReceberDto>> GerarContaPlantaoAsync(Guid id,V115GerarContaRequest? r=null)=>Task.FromResult(ApiResponse<ContaReceberDto>.Fail("Plantao deve usar o fechamento operacional existente.",409));
 
-    public async Task<ApiResponse<object>> ReceberAsync(Guid contaId, V115RecebimentoRequest request)
+    public async Task<ApiResponse<IEnumerable<ContaReceberDto>>> ContasReceberAsync()
     {
-        try
-        {
-            await using var cn = Cn();
-            var valor = await cn.ExecuteScalarAsync<decimal?>("select valor from plantaopro.v113_faturas where id=@contaId and reg_status='A' and (@isGlobal or @tenantId is null or tenant_id=@tenantId or cliente_id=@tenantId)", ScopeWith(new { contaId }));
-            if (!valor.HasValue) return ApiResponse<object>.Fail("Conta a receber não encontrada.", 404);
-            var recebido = request.ValorRecebido <= 0 ? valor.Value : request.ValorRecebido;
-            var id = Guid.NewGuid();
-            await cn.ExecuteAsync("insert into plantaopro.v115_recebimentos(id,cliente_id,tenant_id,conta_receber_id,valor_recebido,forma,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@contaId,@recebido,@forma,'RECEBIDO','A',now(),@userId); update plantaopro.v113_faturas set status='PAID',updated_at=now(),updated_by=@userId where id=@contaId", ScopeWith(new { id, contaId, recebido, forma = Normalize(request.Forma) ?? "MANUAL_AUDITADO", userId = UserId }));
-            await RegistrarEventoAsync(cn, "RECEBIMENTO_REGISTRADO", contaId, new { contaId, recebido });
-            return ApiResponse<object>.Ok(new { id, contaId, valorRecebido = recebido, status = "RECEBIDO" }, "Recebimento registrado com auditoria financeira.");
-        }
-        catch (Exception ex) { return Fail<object>(ex, "Falha ao registrar recebimento."); }
+        if(!context.HasTenant)return context.MissingTenant<IEnumerable<ContaReceberDto>>();
+        try { await using var cn=Cn(); var rows=await cn.QueryAsync<ContaReceberDto>(@"select f.id,f.pedido_id referenciaId,coalesce(f.origem_tipo,'ATENDIMENTO') origemTipo,f.valor valorOriginal,coalesce(f.descontos,0) descontos,coalesce(f.acrescimos,0) acrescimos,coalesce(f.glosa_reconhecida,0) glosaReconhecida,coalesce(sum(r.valor_recebido) filter(where r.tipo='RECEBIMENTO'),0) recebido,coalesce(sum(r.valor_recebido) filter(where r.tipo='ESTORNO'),0) estornado,greatest(0,f.valor-coalesce(f.descontos,0)+coalesce(f.acrescimos,0)-coalesce(f.glosa_reconhecida,0)-coalesce(sum(r.valor_recebido) filter(where r.tipo='RECEBIMENTO'),0)+coalesce(sum(r.valor_recebido) filter(where r.tipo='ESTORNO'),0)) saldo,f.status,f.created_at emitidaEm from plantaopro.v113_faturas f left join plantaopro.v115_recebimentos r on r.conta_receber_id=f.id and r.reg_status='A' where f.tenant_id=@tenantId and f.reg_status='A' group by f.id order by f.created_at desc limit 100",new{tenantId=context.TenantId}); return ApiResponse<IEnumerable<ContaReceberDto>>.Ok(rows,"Contas carregadas."); }
+        catch(Exception ex){return Fail<IEnumerable<ContaReceberDto>>(ex,"Falha ao listar contas.");}
     }
 
-    private async Task<ApiResponse<object>> GerarContaAsync(Guid referenciaId, string tipo, V115GerarContaRequest? request)
+    public async Task<ApiResponse<RecebimentoResumoDto>> ReceberAsync(Guid contaId,V115RecebimentoRequest r)
     {
-        try
-        {
-            await using var cn = Cn();
-            var regra = await cn.QueryFirstOrDefaultAsync<dynamic>(@"select id,codigo,valor_base,percentual_desconto,percentual_acrescimo from plantaopro.v115_regras_faturamento where reg_status='A' and status='ATIVA' and tipo_faturamento=@tipo and (@convenioId is null or convenio_id is null or convenio_id=@convenioId) and (@itemFaturavelId is null or item_faturavel_id is null or item_faturavel_id=@itemFaturavelId) and (@isGlobal or @tenantId is null or tenant_id=@tenantId or cliente_id=@tenantId) order by convenio_id nulls last,item_faturavel_id nulls last,created_at desc limit 1", ScopeWith(new { tipo, convenioId = request == null ? null : request.ConvenioId, itemFaturavelId = request == null ? null : request.ItemFaturavelId }));
-            if (regra == null) return ApiResponse<object>.Fail("Regra de faturamento ausente para " + tipo + ". Configure item faturável/convênio antes de gerar conta real.", 400);
-            decimal baseValor = regra.valor_base;
-            decimal desconto = regra.percentual_desconto;
-            decimal acrescimo = regra.percentual_acrescimo;
-            var valorCalculado = decimal.Round(baseValor - (baseValor * desconto / 100m) + (baseValor * acrescimo / 100m), 2);
-            var contaId = Guid.NewGuid();
-            var tituloId = Guid.NewGuid();
-            await cn.ExecuteAsync("insert into plantaopro.v113_faturas(id,cliente_id,tenant_id,pedido_id,valor,status,reg_status,created_at,created_by) values(@contaId,@tenantId,@tenantId,@referenciaId,@valor,'ISSUED','A',now(),@userId); insert into plantaopro.v113_titulos(id,cliente_id,tenant_id,fatura_id,valor,status,demo_boleto,vencimento,reg_status,created_at,created_by) values(@tituloId,@tenantId,@tenantId,@contaId,@valor,'OPEN',false,now()+interval '7 days','A',now(),@userId)", ScopeWith(new { contaId, tituloId, referenciaId, valor = valorCalculado, userId = UserId }));
-            await RegistrarEventoAsync(cn, "CONTA_REAL_GERADA", contaId, new { referenciaId, tipo, regraId = regra.id, valorCalculado });
-            await AuditAsync("v115_contas_receber", contaId, "GERAR_CONTA_" + tipo, new { referenciaId, regraId = regra.id });
-            return ApiResponse<object>.Ok(new { contaReceberId = contaId, tituloId, referenciaId, tipoFaturamento = tipo, valorCalculado, regraAplicada = regra.codigo, status = "ISSUED", mensagens = new List<string> { "Valor calculado por regra configurável v1.15." } }, "Conta a receber gerada por regra real.");
-        }
-        catch (Exception ex) { return Fail<object>(ex, "Falha ao gerar conta por regra real."); }
+        if(!context.HasTenant)return context.MissingTenant<RecebimentoResumoDto>(); if(r.ValorRecebido<=0)return ApiResponse<RecebimentoResumoDto>.Fail("Valor deve ser maior que zero.",422);
+        await using var cn=Cn(); await cn.OpenAsync(); await using var tx=await cn.BeginTransactionAsync(IsolationLevel.ReadCommitted);
+        try { var conta=await cn.QuerySingleOrDefaultAsync<ContaLockRow>("select id,valor,status from plantaopro.v113_faturas where id=@contaId and tenant_id=@tenantId and reg_status='A' for update",new{contaId,tenantId=context.TenantId},tx); if(conta is null){await tx.RollbackAsync();return ApiResponse<RecebimentoResumoDto>.Fail("Conta nao encontrada.",404);} var totais=await cn.QuerySingleAsync<(decimal recebido,decimal estornado)>("select coalesce(sum(valor_recebido) filter(where tipo='RECEBIMENTO'),0),coalesce(sum(valor_recebido) filter(where tipo='ESTORNO'),0) from plantaopro.v115_recebimentos where conta_receber_id=@contaId and tenant_id=@tenantId and reg_status='A'",new{contaId,tenantId=context.TenantId},tx); var saldo=conta.Valor-totais.recebido+totais.estornado; if(r.ValorRecebido>saldo){await tx.RollbackAsync();return ApiResponse<RecebimentoResumoDto>.Fail("Recebimento excede o saldo da conta.",422);} var id=Guid.NewGuid(); var novoSaldo=saldo-r.ValorRecebido; var status=novoSaldo==0?"PAGA":"PARCIAL"; await cn.ExecuteAsync(@"insert into plantaopro.v115_recebimentos(id,cliente_id,tenant_id,conta_receber_id,valor_recebido,forma,tipo,status,observacao,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@contaId,@valor,@forma,'RECEBIMENTO','RECEBIDO',@observacao,'A',now(),@userId); update plantaopro.v113_faturas set status=@status,updated_at=now(),updated_by=@userId where id=@contaId and tenant_id=@tenantId; insert into plantaopro.v115_financeiro_historico(id,tenant_id,entidade_tipo,entidade_id,evento,valor_novo,detalhes,created_at,created_by) values(gen_random_uuid(),@tenantId,'CONTA',@contaId,'RECEBIMENTO_REGISTRAR',@valor,cast(@detalhes as jsonb),now(),@userId)",new{id,tenantId=context.TenantId,userId=context.UserId,contaId,valor=r.ValorRecebido,forma=Norm(r.Forma)??"MANUAL_AUDITADO",r.Observacao,status,detalhes=JsonSerializer.Serialize(new{saldoAnterior=saldo,saldo=novoSaldo})},tx); await Evento(cn,tx,"RECEBIMENTO_CONFIRMADO",contaId,new{recebimentoId=id,valor=r.ValorRecebido,saldo=novoSaldo}); await tx.CommitAsync(); await Audit("v115_recebimentos",id,"RECEBIMENTO_REGISTRAR",new{contaId,r.ValorRecebido}); return ApiResponse<RecebimentoResumoDto>.Ok(new(contaId,totais.recebido+r.ValorRecebido,totais.estornado,novoSaldo,status),"Recebimento registrado."); }
+        catch(Exception ex){await tx.RollbackAsync();return Fail<RecebimentoResumoDto>(ex,"Falha ao receber.");}
     }
 
-    public async Task RegistrarEventoAsync(NpgsqlConnection cn, string tipo, Guid entidadeId, object payload)
+    public async Task<ApiResponse<RecebimentoResumoDto>> EstornarAsync(Guid recebimentoId,V115EstornoRequest r)
     {
-        await cn.ExecuteAsync("insert into plantaopro.v115_faturamento_eventos(id,cliente_id,tenant_id,tipo,entidade_id,payload,status,reg_status,created_at,created_by) values(gen_random_uuid(),@tenantId,@tenantId,@tipo,@entidadeId,cast(@payload as jsonb),'PENDENTE','A',now(),@userId)", new { tenantId = TenantId, userId = UserId, tipo, entidadeId, payload = JsonSerializer.Serialize(payload) });
-        await cn.ExecuteAsync("insert into plantaopro.v113_outbox_eventos(id,cliente_id,tenant_id,tipo,payload_ref,payload,status,reg_status,created_at,created_by) values(gen_random_uuid(),@tenantId,@tenantId,@tipo,@payloadRef,cast(@payload as jsonb),'PENDING','A',now(),@userId)", new { tenantId = TenantId, userId = UserId, tipo, payloadRef = entidadeId.ToString(), payload = JsonSerializer.Serialize(payload) });
+        if(!context.HasTenant)return context.MissingTenant<RecebimentoResumoDto>(); if(r.Valor<=0||string.IsNullOrWhiteSpace(r.Motivo))return ApiResponse<RecebimentoResumoDto>.Fail("Valor positivo e motivo sao obrigatorios.",422); await using var cn=Cn();await cn.OpenAsync();await using var tx=await cn.BeginTransactionAsync();
+        try{var original=await cn.QuerySingleOrDefaultAsync<(Guid contaId,decimal valor)>("select conta_receber_id,valor_recebido from plantaopro.v115_recebimentos where id=@id and tenant_id=@tenantId and tipo='RECEBIMENTO' and reg_status='A' for update",new{id=recebimentoId,tenantId=context.TenantId},tx);if(original.contaId==Guid.Empty){await tx.RollbackAsync();return ApiResponse<RecebimentoResumoDto>.Fail("Recebimento nao encontrado.",404);}var ja=await cn.ExecuteScalarAsync<decimal>("select coalesce(sum(valor_recebido),0) from plantaopro.v115_recebimentos where recebimento_origem_id=@id and tipo='ESTORNO' and reg_status='A'",new{id=recebimentoId},tx);if(r.Valor>original.valor-ja){await tx.RollbackAsync();return ApiResponse<RecebimentoResumoDto>.Fail("Estorno excede o valor estornavel.",422);}var id=Guid.NewGuid();await cn.ExecuteAsync(@"insert into plantaopro.v115_recebimentos(id,cliente_id,tenant_id,conta_receber_id,recebimento_origem_id,valor_recebido,forma,tipo,status,observacao,reg_status,created_at,created_by) select @novoId,cliente_id,tenant_id,conta_receber_id,id,@valor,forma,'ESTORNO','ESTORNADO',@motivo,'A',now(),@userId from plantaopro.v115_recebimentos where id=@id and tenant_id=@tenantId; update plantaopro.v113_faturas set status='PARCIAL',updated_at=now(),updated_by=@userId where id=@contaId and tenant_id=@tenantId",new{novoId=id,id=recebimentoId,valor=r.Valor,motivo=r.Motivo,userId=context.UserId,tenantId=context.TenantId,contaId=original.contaId},tx);var t=await cn.QuerySingleAsync<(decimal recebido,decimal estornado)>("select coalesce(sum(valor_recebido) filter(where tipo='RECEBIMENTO'),0),coalesce(sum(valor_recebido) filter(where tipo='ESTORNO'),0) from plantaopro.v115_recebimentos where conta_receber_id=@contaId and tenant_id=@tenantId and reg_status='A'",new{original.contaId,tenantId=context.TenantId},tx);var total=await cn.ExecuteScalarAsync<decimal>("select valor from plantaopro.v113_faturas where id=@contaId",new{original.contaId},tx);var saldo=total-t.recebido+t.estornado;var status=t.recebido-t.estornado==0?"ABERTA":"PARCIAL";await cn.ExecuteAsync("update plantaopro.v113_faturas set status=@status where id=@contaId and tenant_id=@tenantId",new{status,original.contaId,tenantId=context.TenantId},tx);await Evento(cn,tx,"RECEBIMENTO_ESTORNADO",original.contaId,new{recebimentoId,estornoId=id,r.Valor,r.Motivo});await tx.CommitAsync();await Audit("v115_recebimentos",id,"RECEBIMENTO_ESTORNAR",new{recebimentoId,r.Valor,r.Motivo});return ApiResponse<RecebimentoResumoDto>.Ok(new(original.contaId,t.recebido,t.estornado,saldo,status),"Estorno registrado sem apagar o recebimento original.");}catch(Exception ex){await tx.RollbackAsync();return Fail<RecebimentoResumoDto>(ex,"Falha ao estornar.");}
     }
 
-    private object Params(V115RegraFaturamentoRequest r, Guid id) => ScopeWith(new { id, userId = UserId, codigo = r.Codigo, nome = r.Nome, tipoFaturamento = Normalize(r.TipoFaturamento) ?? "CONSULTA", itemFaturavelId = r.ItemFaturavelId, convenioId = r.ConvenioId, valorBase = r.ValorBase, percentualDesconto = r.PercentualDesconto, percentualAcrescimo = r.PercentualAcrescimo, status = Normalize(r.Status) ?? "ATIVA" });
-    private async Task<ApiResponse<IEnumerable<object>>> QueryList(string sql, string ok, object? args = null) { try { await using var cn = Cn(); var rows = await cn.QueryAsync<object>(sql, args ?? ScopeWith(new { })); return ApiResponse<IEnumerable<object>>.Ok(rows.ToList(), ok); } catch (Exception ex) { return Fail<IEnumerable<object>>(ex, ok); } }
-    private async Task AuditAsync(string entity, Guid id, string action, object details) => await audit.RegistrarAsync(UserId, TenantId, entity, id, action, details, true, null, Perfil);
-    private ApiResponse<T> Fail<T>(Exception ex, string message) { logger.LogError(ex, "V1.15 faturamento: {Message}", message); return ApiResponse<T>.Fail(message, 500); }
-    private object ScopeWith(object values) { var dict = new Dictionary<string, object?> { { "tenantId", TenantId }, { "isGlobal", Global } }; foreach (var p in values.GetType().GetProperties()) dict[p.Name] = p.GetValue(values); return dict; }
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToUpperInvariant();
+    private async Task<ApiResponse<ContaReceberDto>> GerarContaAsync(Guid referenciaId,string tipo,V115GerarContaRequest? r)
+    { if(!context.HasTenant)return context.MissingTenant<ContaReceberDto>(); try{await using var cn=Cn();await cn.OpenAsync();await using var tx=await cn.BeginTransactionAsync();var existente=await cn.QuerySingleOrDefaultAsync<Guid?>("select id from plantaopro.v113_faturas where tenant_id=@tenantId and origem_tipo=@tipo and pedido_id=@referenciaId and reg_status='A' limit 1 for update",new{tenantId=context.TenantId,tipo,referenciaId},tx);if(existente.HasValue){await tx.RollbackAsync();return ApiResponse<ContaReceberDto>.Fail("Conta ja existe para esta origem.",409);}var regra=await cn.QuerySingleOrDefaultAsync<RegraFaturamentoRow>(@"select id,codigo,nome,tipo_faturamento tipo,valor_base valorBase,percentual_desconto descontoPercentual,percentual_acrescimo acrescimoPercentual,item_faturavel_id itemFaturavelId,convenio_id convenioId,status from plantaopro.v115_regras_faturamento where tenant_id=@tenantId and reg_status='A' and status='ATIVA' and tipo_faturamento=@tipo and (@convenio is null or convenio_id is null or convenio_id=@convenio) order by convenio_id nulls last,created_at desc limit 1",new{tenantId=context.TenantId,tipo,convenio=r?.ConvenioId},tx);if(regra is null){await tx.RollbackAsync();return ApiResponse<ContaReceberDto>.Fail("Regra de faturamento ausente.",422);}var desconto=regra.ValorBase*regra.DescontoPercentual/100m;var acrescimo=regra.ValorBase*regra.AcrescimoPercentual/100m;var valor=decimal.Round(regra.ValorBase-desconto+acrescimo,2);var id=Guid.NewGuid();await cn.ExecuteAsync(@"insert into plantaopro.v113_faturas(id,cliente_id,tenant_id,pedido_id,origem_tipo,regra_id,regra_codigo,valor_base_snapshot,descontos,acrescimos,valor,status,reg_status,created_at,created_by) values(@id,@tenantId,@tenantId,@referenciaId,@tipo,@regraId,@codigo,@base,@desconto,@acrescimo,@valor,'ABERTA','A',now(),@userId)",new{id,tenantId=context.TenantId,userId=context.UserId,referenciaId,tipo,regraId=regra.Id,codigo=regra.Codigo,@base=regra.ValorBase,desconto,acrescimo,valor},tx);await Evento(cn,tx,"CONTA_GERADA",id,new{referenciaId,tipo,regraId=regra.Id,valor});await tx.CommitAsync();await Audit("v113_faturas",id,"CONTA_GERAR",new{referenciaId,tipo});return ApiResponse<ContaReceberDto>.Ok(new(id,referenciaId,tipo,valor,desconto,acrescimo,0,0,0,valor,"ABERTA",DateTime.UtcNow),"Conta gerada.");}catch(PostgresException ex) when(ex.SqlState==PostgresErrorCodes.UniqueViolation){return ApiResponse<ContaReceberDto>.Fail("Conta ja existe para esta origem.",409);}catch(Exception ex){return Fail<ContaReceberDto>(ex,"Falha ao gerar conta.");}}
+    private async Task Evento(NpgsqlConnection cn,NpgsqlTransaction tx,string tipo,Guid id,object payload)=>await cn.ExecuteAsync("insert into plantaopro.v113_outbox_eventos(id,cliente_id,tenant_id,tipo,payload_ref,payload,status,reg_status,created_at,created_by) values(gen_random_uuid(),@tenantId,@tenantId,@tipo,@ref,cast(@payload as jsonb),'PENDING','A',now(),@userId)",new{tenantId=context.TenantId,userId=context.UserId,tipo,@ref=id.ToString(),payload=JsonSerializer.Serialize(payload)},tx);
+    private Task Audit(string entity,Guid id,string action,object details)=>audit.RegistrarAsync(context.UserId,context.TenantId,entity,id,action,details,true,null,string.Join(',',context.Roles));
+    private ApiResponse<T> Fail<T>(Exception ex,string msg){logger.LogError(ex,"Financeiro v1.95: {Message}",msg);return ApiResponse<T>.Fail(msg,500);} private static string? Norm(string? s)=>string.IsNullOrWhiteSpace(s)?null:s.Trim().ToUpperInvariant();
 }
-
-public sealed record V115RegraFaturamentoDto(Guid Id, string Codigo, string Nome, string TipoFaturamento, decimal ValorBase, decimal PercentualDesconto, decimal PercentualAcrescimo, Guid? ItemFaturavelId, Guid? ConvenioId, string Status);
-public sealed record V115RegraFaturamentoRequest(string Codigo, string Nome, string TipoFaturamento, decimal ValorBase, decimal PercentualDesconto, decimal PercentualAcrescimo, Guid? ItemFaturavelId, Guid? ConvenioId, string? Status);
-public sealed record V115GerarContaRequest(Guid? ItemFaturavelId, Guid? ConvenioId, Guid? PacienteId, Guid? MedicoId);
-public sealed record V115RecebimentoRequest(decimal ValorRecebido, string? Forma, string? Observacao);
+public sealed record V115RegraFaturamentoDto(Guid Id,string Codigo,string Nome,string TipoFaturamento,decimal ValorBase,decimal PercentualDesconto,decimal PercentualAcrescimo,Guid? ItemFaturavelId,Guid? ConvenioId,string Status);
+public sealed record V115RegraFaturamentoRequest(string Codigo,string Nome,string TipoFaturamento,decimal ValorBase,decimal PercentualDesconto,decimal PercentualAcrescimo,Guid? ItemFaturavelId,Guid? ConvenioId,string? Status);
+public sealed record V115GerarContaRequest(Guid? ItemFaturavelId,Guid? ConvenioId,Guid? PacienteId,Guid? MedicoId);
+public sealed record V115RecebimentoRequest(decimal ValorRecebido,string? Forma,string? Observacao);
+public sealed record V115EstornoRequest(decimal Valor,string Motivo);

@@ -176,7 +176,8 @@ public record DashboardChartItem(string Label, decimal Valor);
     }
 
     public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Downloads);
-    public record HealthViewModel(string Status,string Ambiente,string Schema,bool BancoConectado,DateTime DataHora,string? Versao,string BaseUrlApi,bool TokenPresente,string UsuarioAutenticado,string SwaggerUrl);
+    public record HealthViewModel(string Status, string Ambiente, DateTime DataHora, string? Versao, IReadOnlyList<HealthComponentViewModel> Componentes);
+    public record HealthComponentViewModel(string Nome, string Status, string Detalhe);
     public record MinhaAgendaViewModel(IEnumerable<PlantaoResumoDto> MeusPlantoes, IEnumerable<PagamentoResumoDto> MeusPagamentos, IEnumerable<NotificacaoDto> MinhasNotificacoes, string? ErrorMessage = null);
 
     public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);

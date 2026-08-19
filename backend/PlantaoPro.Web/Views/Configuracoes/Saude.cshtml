@@ -2,7 +2,10 @@
 @{
     ViewData["Title"] = "Saúde do Sistema";
 }
-<h2 class="mb-3">Saúde do Sistema</h2>
+<header class="page-header mb-4">
+    <div><span class="eyebrow">Operação e confiabilidade</span><h1>Saúde do sistema</h1><p>Visão sanitizada das dependências essenciais do PlantãoPro.</p></div>
+    <span class="badge @(Model?.Status == "SAUDÁVEL" ? "text-bg-success" : Model?.Status == "DEGRADADO" ? "text-bg-warning" : "text-bg-danger")">@(Model?.Status ?? "INDISPONÍVEL")</span>
+</header>
 
 @if (TempData["Error"] is string erro && !string.IsNullOrWhiteSpace(erro))
 {
@@ -17,21 +20,21 @@
 }
 else
 {
-    <div class="row g-3">
-        <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><small>Status</small><h5>@(Model.Status ?? "N/D")</h5></div></div></div>
-        <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><small>Banco</small><h5>@(Model.BancoConectado ? "Conectado" : "Indisponível")</h5></div></div></div>
-        <div class="col-md-4"><div class="card border-0 shadow-sm"><div class="card-body"><small>Ambiente</small><h5>@(Model.Ambiente ?? "N/D")</h5></div></div></div>
+    <div class="row g-3" aria-label="Dependências do sistema">
+        @foreach (var componente in Model.Componentes)
+        {
+            <div class="col-12 col-md-6 col-xl-4"><article class="card h-100 border-0 shadow-sm"><div class="card-body">
+                <div class="d-flex justify-content-between gap-3"><h2 class="h6 mb-2">@componente.Nome</h2><span class="badge @(componente.Status == "DISPONÍVEL" || componente.Status == "CONFIGURADO" ? "text-bg-success" : componente.Status == "NÃO CONFIGURADO" ? "text-bg-warning" : "text-bg-danger")">@componente.Status</span></div>
+                <p class="text-secondary mb-0">@componente.Detalhe</p>
+            </div></article></div>
+        }
     </div>
     <div class="card border-0 shadow-sm mt-3">
         <div class="card-body">
             <dl class="row mb-0">
-                <dt class="col-md-3">Schema</dt><dd class="col-md-9">@(Model.Schema ?? "N/D")</dd>
                 <dt class="col-md-3">Data/Hora (UTC)</dt><dd class="col-md-9">@Model.DataHora.ToString("dd/MM/yyyy HH:mm:ss")</dd>
                 <dt class="col-md-3">Versão</dt><dd class="col-md-9">@(string.IsNullOrWhiteSpace(Model.Versao) ? "N/D" : Model.Versao)</dd>
-                <dt class="col-md-3">Base URL API</dt><dd class="col-md-9">@(Model.BaseUrlApi ?? "N/D")</dd>
-                <dt class="col-md-3">Token presente</dt><dd class="col-md-9">@(Model.TokenPresente ? "Sim" : "Não")</dd>
-                <dt class="col-md-3">Usuário autenticado</dt><dd class="col-md-9">@(Model.UsuarioAutenticado ?? "N/D")</dd>
-                <dt class="col-md-3">Swagger</dt><dd class="col-md-9"><a href="@Model.SwaggerUrl" target="_blank" rel="noopener">@Model.SwaggerUrl</a></dd>
+                <dt class="col-md-3">Ambiente</dt><dd class="col-md-9">@(Model.Ambiente ?? "N/D")</dd>
             </dl>
         </div>
     </div>

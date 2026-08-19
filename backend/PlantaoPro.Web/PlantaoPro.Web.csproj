@@ -5,10 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RazorCompileOnBuild>true</RazorCompileOnBuild>
     <RazorCompileOnPublish>true</RazorCompileOnPublish>
-    <Version>1.90.0</Version>
-    <AssemblyVersion>1.90.0.0</AssemblyVersion>
-    <FileVersion>1.90.0.0</FileVersion>
-    <InformationalVersion>1.90.0</InformationalVersion>
+    <Version>1.91.0</Version>
+    <AssemblyVersion>1.91.0.0</AssemblyVersion>
+    <FileVersion>1.91.0.0</FileVersion>
+    <InformationalVersion>1.91.0</InformationalVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.OpenApi" Version="1.2.3" />

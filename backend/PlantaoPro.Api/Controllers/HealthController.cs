@@ -38,6 +38,47 @@ public class HealthController : ControllerBase
         return Ok(ApiResponse<HealthDto>.Ok(health, "PlantaoPro.Api online"));
     }
 
+    [HttpGet("system")]
+    [ProducesResponseType(typeof(ApiResponse<SystemHealthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<SystemHealthResponse>), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GetSystem(CancellationToken cancellationToken)
+    {
+        var components = new List<SystemHealthComponent>
+        {
+            new("API", "DISPONÍVEL", "Serviço HTTP respondendo."),
+            new("Autenticação", IsJwtConfigured() ? "CONFIGURADO" : "NÃO CONFIGURADO", IsJwtConfigured() ? "Assinatura JWT validada na inicialização." : "Configuração obrigatória ausente."),
+            new("Storage", IsStorageConfigured() ? "CONFIGURADO" : "NÃO CONFIGURADO", IsStorageConfigured() ? "Provedor externo configurado." : "Armazenamento externo não habilitado."),
+            new("Workers", "NÃO CONFIGURADO", "Nenhum worker essencial foi registrado neste processo.")
+        };
+        try
+        {
+            await using var connection = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
+            await connection.OpenAsync(cancellationToken);
+            await new NpgsqlCommand("select 1", connection).ExecuteScalarAsync(cancellationToken);
+            components.Add(new("Banco", "DISPONÍVEL", "PostgreSQL conectado."));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Dependência de banco indisponível no health agregado.");
+            components.Add(new("Banco", "INDISPONÍVEL", "Não foi possível validar a conexão."));
+        }
+
+        var unavailable = components.Any(component => component.Status == "INDISPONÍVEL");
+        var degraded = components.Any(component => component.Status == "NÃO CONFIGURADO");
+        var status = unavailable ? "INDISPONÍVEL" : degraded ? "DEGRADADO" : "SAUDÁVEL";
+        var payload = new SystemHealthResponse(status, _environment.EnvironmentName, DateTime.UtcNow,
+            typeof(HealthController).Assembly.GetName().Version?.ToString() ?? string.Empty, components);
+        return unavailable
+            ? StatusCode(StatusCodes.Status503ServiceUnavailable, new ApiResponse<SystemHealthResponse>(false, "Sistema indisponível.", payload, new[] { "Uma dependência essencial está indisponível." }, StatusCodes.Status503ServiceUnavailable, DateTime.UtcNow))
+            : Ok(ApiResponse<SystemHealthResponse>.Ok(payload, degraded ? "Sistema operando de forma degradada." : "Sistema saudável."));
+    }
+
+    private bool IsJwtConfigured() => !string.IsNullOrWhiteSpace(_configuration["Jwt:Key"])
+        && (_configuration["Jwt:Key"]?.Length ?? 0) >= 32;
+
+    private bool IsStorageConfigured() => !string.IsNullOrWhiteSpace(_configuration["Storage:Provider"])
+        || !string.IsNullOrWhiteSpace(_configuration["Storage:Endpoint"]);
+
     [HttpGet("db")]
     [ProducesResponseType(typeof(ApiResponse<HealthDbDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<HealthDbDto>), StatusCodes.Status503ServiceUnavailable)]

@@ -62,37 +62,36 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("escalas/{id:guid}/confirmar")]
         public Task<IActionResult> Confirmar(Guid id, [FromBody] ConfirmEscalaRequest req)
         {
-            return AlterarStatus(id, "confirmado", req.Justificativa, null, "confirmar escala");
+            return Execute(id, () => service.ConfirmarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "confirmar escala");
         }
 
         [Authorize]
         [HttpPost("escalas/{id:guid}/recusar")]
         public Task<IActionResult> Recusar(Guid id, [FromBody] RecusarEscalaRequest req)
         {
-            return AlterarStatus(id, "recusado", req.Justificativa, null, "recusar escala");
+            return Execute(id, () => service.RecusarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "recusar escala");
         }
 
         [Authorize]
         [HttpPost("escalas/{id:guid}/cancelar")]
         public Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarEscalaRequest req)
         {
-            return AlterarStatus(id, "cancelado", req.Justificativa, null, "cancelar escala");
+            return Execute(id, () => service.CancelarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "cancelar escala");
         }
 
         [Authorize]
         [HttpPost("escalas/{id:guid}/substituir")]
         public Task<IActionResult> Substituir(Guid id, [FromBody] SubstituirEscalaRequest req)
         {
-            return AlterarStatus(id, "substituido", req.Justificativa, req.NovoMedicoId, "substituir escala");
+            return Execute(id, () => service.SubstituirAsync(id, req.NovoMedicoId, req.Justificativa, GetUserId(), ClientIp, UserAgent), "substituir escala");
         }
 
         [Authorize]
         [HttpPost("escalas/{id:guid}/realizar")]
         [HttpPost("escalas/{id:guid}/marcar-realizado")]
-        [HttpPost("escalas/{id:guid}/presenca")]
         public Task<IActionResult> Realizado(Guid id, [FromBody] CompleteEscalaRequest req)
         {
-            return AlterarStatus(id, "realizado", req.Justificativa, null, "marcar escala realizada");
+            return Execute(id, () => service.RealizarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "marcar escala realizada");
         }
 
         [Authorize(Roles = RolesConstants.EscalasGestao)]
@@ -100,7 +99,7 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("escalas/{id:guid}/ausencia")]
         public Task<IActionResult> NaoCompareceu(Guid id, [FromBody] CompleteEscalaRequest req)
         {
-            return AlterarStatus(id, "nao_compareceu", req.Justificativa, null, "marcar não comparecimento");
+            return Execute(id, () => service.RegistrarAusenciaAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "marcar não comparecimento");
         }
 
         private async Task<IActionResult> SolicitarPlantao(Guid plantaoId, Guid medicoId, string acao)
@@ -118,12 +117,14 @@ namespace PlantaoPro.Api.Controllers
             }
         }
 
-        private async Task<IActionResult> AlterarStatus(Guid escalaId, string status, string? justificativa, Guid? novoMedicoId, string acao)
+        private string? ClientIp => HttpContext.Connection.RemoteIpAddress?.ToString();
+        private string UserAgent => Request.Headers.UserAgent.ToString();
+
+        private async Task<IActionResult> Execute(Guid escalaId, Func<Task<ApiResponse<string>>> action, string acao)
         {
             try
             {
-                var uid = GetUserId();
-                var r = await service.AlterarStatusAsync(escalaId, status, justificativa, uid, novoMedicoId, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+                var r = await action();
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)

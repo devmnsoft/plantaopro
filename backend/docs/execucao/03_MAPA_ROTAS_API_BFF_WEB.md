@@ -1,6 +1,6 @@
 # Mapa inicial de rotas API, BFF e Web
 
-Este mapa registra somente rotas verificadas no código presente. As rotas Valora solicitadas não existem neste produto e não serão simuladas.
+Este mapa registra somente rotas PlantãoPro verificadas no código presente; rotas não implementadas não são simuladas.
 
 | Web | BFF/Controller | API | Consumidor | Status | Pendência |
 |---|---|---|---|---|---|

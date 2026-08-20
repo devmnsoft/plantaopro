@@ -20,7 +20,7 @@
         </div>
     </div>
     <div class="pp-topbar__actions topbar-actions">
-        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette">
+        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Buscar no PlantãoPro">
             <app-icon name="Search" size="18" />
             <span>Buscar no PlantãoPro</span>
             <kbd>Ctrl K</kbd>
@@ -34,7 +34,7 @@
         @if (canUpgrade)
         {
             <a class="btn btn-warning btn-sm d-none d-md-inline-flex" asp-controller="MinhaAssinatura" asp-action="Upgrade">
-                <app-icon name="Plan" size="18" /> Upgrade
+                <app-icon name="Finance" size="18" /> Upgrade
             </a>
         }
         <partial name="_UserMenu" />

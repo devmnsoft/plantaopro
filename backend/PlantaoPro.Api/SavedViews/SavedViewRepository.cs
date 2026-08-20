@@ -3,13 +3,14 @@ using Npgsql;
 
 namespace PlantaoPro.Api.SavedViews;
 
-public sealed class SavedViewRepository(IConfiguration configuration) : ISavedViewRepository
+public sealed class SavedViewRepository : ISavedViewRepository
 {
-    private const string Select = """
+    private readonly IConfiguration configuration; public SavedViewRepository(IConfiguration configuration)=>this.configuration=configuration;
+    private const string Select = @"
         select id, module, name, filters_json::text FiltersJson, sort_json::text SortJson,
                is_default IsDefault, created_at CreatedAt, updated_at UpdatedAt
         from plantaopro.saved_views
-        """;
+        ";
     private NpgsqlConnection Connection() => new(configuration.GetConnectionString("Default"));
 
     public async Task<IReadOnlyList<SavedViewDto>> ListAsync(Guid tenantId, Guid userId, string module, CancellationToken ct)
@@ -30,11 +31,11 @@ public sealed class SavedViewRepository(IConfiguration configuration) : ISavedVi
         await using var cn = Connection(); await cn.OpenAsync(ct); await using var tx = await cn.BeginTransactionAsync(ct);
         try {
             if (isDefault) await ClearDefault(cn, tx, tenantId, userId, module, ct);
-            var row = await cn.QuerySingleAsync<Row>(new CommandDefinition("""
+            var row = await cn.QuerySingleAsync<Row>(new CommandDefinition(@"
                 insert into plantaopro.saved_views(tenant_id,user_id,module,name,normalized_name,filters_json,sort_json,is_default)
                 values(@tenantId,@userId,@module,@name,@normalizedName,cast(@filtersJson as jsonb),cast(@sortJson as jsonb),@isDefault)
                 returning id,module,name,filters_json::text FiltersJson,sort_json::text SortJson,is_default IsDefault,created_at CreatedAt,updated_at UpdatedAt
-                """, new { tenantId, userId, module, name, normalizedName, filtersJson, sortJson, isDefault }, tx, cancellationToken: ct));
+                ", new { tenantId, userId, module, name, normalizedName, filtersJson, sortJson, isDefault }, tx, cancellationToken: ct));
             await tx.CommitAsync(ct); return Map(row)!;
         } catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation) { await tx.RollbackAsync(ct); throw new SavedViewConflictException("Já existe uma visão com esse nome no módulo."); }
     }
@@ -46,11 +47,11 @@ public sealed class SavedViewRepository(IConfiguration configuration) : ISavedVi
             var module = await cn.QuerySingleOrDefaultAsync<string>(new CommandDefinition("select module from plantaopro.saved_views where id=@id and tenant_id=@tenantId and user_id=@userId for update", new { id, tenantId, userId }, tx, cancellationToken: ct));
             if (module is null) { await tx.RollbackAsync(ct); return null; }
             if (isDefault) await ClearDefault(cn, tx, tenantId, userId, module, ct);
-            var row = await cn.QuerySingleAsync<Row>(new CommandDefinition("""
+            var row = await cn.QuerySingleAsync<Row>(new CommandDefinition(@"
                 update plantaopro.saved_views set name=@name,normalized_name=@normalizedName,filters_json=cast(@filtersJson as jsonb),sort_json=cast(@sortJson as jsonb),is_default=@isDefault,updated_at=now()
                 where id=@id and tenant_id=@tenantId and user_id=@userId
                 returning id,module,name,filters_json::text FiltersJson,sort_json::text SortJson,is_default IsDefault,created_at CreatedAt,updated_at UpdatedAt
-                """, new { id, tenantId, userId, name, normalizedName, filtersJson, sortJson, isDefault }, tx, cancellationToken: ct));
+                ", new { id, tenantId, userId, name, normalizedName, filtersJson, sortJson, isDefault }, tx, cancellationToken: ct));
             await tx.CommitAsync(ct); return Map(row);
         } catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation) { await tx.RollbackAsync(ct); throw new SavedViewConflictException("Já existe uma visão com esse nome no módulo."); }
     }

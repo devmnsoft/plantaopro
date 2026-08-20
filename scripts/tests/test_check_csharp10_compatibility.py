@@ -21,6 +21,12 @@ class CSharp10CompatibilityGateTests(unittest.TestCase):
                 MODULE.INVALID_LANG_VERSION.search(f"<LangVersion>{version}</LangVersion>")
             )
         self.assertIsNone(MODULE.INVALID_LANG_VERSION.search("<LangVersion>10</LangVersion>"))
+        self.assertIsNone(MODULE.INVALID_LANG_VERSION.search("<LangVersion>10.0</LangVersion>"))
+
+    def test_detects_post_csharp10_class_and_collection_syntax(self):
+        self.assertIsNotNone(MODULE.PRIMARY_CONSTRUCTOR.search("public sealed class Service(IDb db)"))
+        self.assertIsNotNone(MODULE.COLLECTION_EXPRESSION.search("var values = [one, two];"))
+        self.assertIsNone(MODULE.COLLECTION_EXPRESSION.search("var values = new[] { one, two };"))
 
 
 if __name__ == "__main__":

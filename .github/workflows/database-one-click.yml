@@ -8,6 +8,7 @@ env:
   PLANTAOPRO_APP_PASSWORD: app-${{ github.run_id }}-${{ github.run_attempt }}
   PLANTAOPRO_BOOTSTRAP_PASSWORD: Admin-${{ github.run_id }}-${{ github.run_attempt }}-Aa1!
   PLANTAOPRO_ADMIN_EMAIL: admin.ci@example.invalid
+  PLANTAOPRO_BOOTSTRAP_ENVIRONMENT: CI
 jobs:
   database-one-click-create:
     runs-on: ubuntu-latest
@@ -20,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: '10.0.x', dotnet-quality: preview }
+        with: { dotnet-version: '10.0.x' }
       - run: test "$(psql -d postgres -Atc "select count(*) from pg_database where datname='plantaopro'")" = 0
       - run: PLANTAOPRO_INSTALL_MODE=CLEAN bash scripts/database/install-plantaopro.sh
       - run: psql -d plantaopro -v ON_ERROR_STOP=1 -f scripts/database/verify-runtime-contract.sql
@@ -49,22 +50,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ripgrep
       - run: test -d database/seeds/development && ! rg -n "paciente|prontuario|receita" database/seeds/development
   database-one-click-production-security:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ripgrep
       - run: python3 scripts/repository-security-check.py
       - run: rg -n "NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS" database/instalar_plantaopro.psql
   database-runtime-contract:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ripgrep
       - run: test -s scripts/database/verify-runtime-contract.sql && rg -n "RAISE EXCEPTION" scripts/database/verify-runtime-contract.sql
   database-pgadmin-current-database:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y ripgrep
       - run: '! rg -n "^\\\\(if|set|connect|gexec|ir|i)" database/pgadmin/instalar_no_banco_atual.sql'
       - run: rg -n "current_database|Este script instala as estruturas" database/pgadmin/instalar_no_banco_atual.sql
   database-windows-installer:

@@ -5,8 +5,9 @@ using PlantaoPro.Api.Productivity;
 namespace PlantaoPro.Api.Controllers;
 
 [ApiController, Authorize, Route("api/produtividade")]
-public sealed class ProductivityActionController(IProductivityActionService service, ICurrentUserService current) : ControllerBase
+public sealed class ProductivityActionController : ControllerBase
 {
+    private readonly IProductivityActionService service;private readonly ICurrentUserService current;public ProductivityActionController(IProductivityActionService service,ICurrentUserService current){this.service=service;this.current=current;}
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] ProductivityQuery query, CancellationToken ct) =>
         Ok(await PageAsync(query, ct));

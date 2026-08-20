@@ -181,5 +181,40 @@
       "plantaopro.agenda_eventos_operacionais"
     ],
     "source": "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql"
+  },
+  {
+    "object": "plantaopro.fechamento_operacional_v187",
+    "dependsOn": [
+      "plantaopro.fechamento_plantao"
+    ],
+    "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql"
+  },
+  {
+    "object": "plantaopro.prontuario_longitudinal_v188",
+    "dependsOn": [
+      "plantaopro.fechamento_operacional_v187"
+    ],
+    "source": "database/schema/330_v188_prontuario_longitudinal.sql"
+  },
+  {
+    "object": "plantaopro.clinical_hardening_v189",
+    "dependsOn": [
+      "plantaopro.prontuario_longitudinal_v188"
+    ],
+    "source": "database/schema/340_v189_clinical_operational_hardening.sql"
+  },
+  {
+    "object": "plantaopro.saved_views_v192",
+    "dependsOn": [
+      "plantaopro.clinical_hardening_v189"
+    ],
+    "source": "database/migrations/2026_v192_saved_views.sql"
+  },
+  {
+    "object": "plantaopro.revenue_cycle_v195",
+    "dependsOn": [
+      "plantaopro.saved_views_v192"
+    ],
+    "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql"
   }
 ]

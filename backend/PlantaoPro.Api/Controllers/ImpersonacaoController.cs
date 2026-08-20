@@ -13,24 +13,24 @@ public sealed class ImpersonacaoController : ControllerBase
     public ImpersonacaoController(IImpersonationService impersonation) => _impersonation = impersonation;
 
     [HttpGet("usuarios-disponiveis")]
-    public IActionResult UsuariosDisponiveis([FromQuery] Guid tenantId) => Ok(ApiResponse<object[]>.Ok(Array.Empty<object>()));
+    public async Task<IActionResult> UsuariosDisponiveis([FromQuery] Guid tenantId,CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<object>>.Ok(await _impersonation.UsuariosAsync(tenantId,ct)));
 
     [HttpPost("iniciar")]
-    public IActionResult Iniciar([FromBody] IniciarImpersonacaoRequest request)
+    public async Task<IActionResult> Iniciar([FromBody] IniciarImpersonacaoRequest request,CancellationToken ct)
     {
         if (request.TenantId == Guid.Empty || request.UsuarioAlvoId == Guid.Empty || string.IsNullOrWhiteSpace(request.Motivo) || string.IsNullOrWhiteSpace(request.TicketReferencia))
             return BadRequest(ApiResponse<object>.Fail("Tenant, usuário alvo, motivo e ticket são obrigatórios."));
-        return Ok(ApiResponse<object>.Ok(_impersonation.Iniciar(User, request), "Impersonação iniciada."));
+        return Ok(ApiResponse<ImpersonationSessionDto>.Ok(await _impersonation.IniciarAsync(User,request,ct), "Impersonação iniciada."));
     }
 
     [HttpPost("encerrar")]
-    public IActionResult Encerrar([FromBody] EncerrarImpersonacaoRequest request) => Ok(ApiResponse<object>.Ok(_impersonation.Encerrar(User, request), "Impersonação encerrada."));
+    public async Task<IActionResult> Encerrar([FromBody] EncerrarImpersonacaoRequest request,CancellationToken ct) { await _impersonation.EncerrarAsync(User,request,ct); return Ok(ApiResponse<object>.Ok(new { status="ENCERRADA" }, "Impersonação encerrada.")); }
 
     [HttpGet("atual")]
     public IActionResult Atual() => Ok(ApiResponse<object>.Ok(_impersonation.Atual(User)));
 
     [HttpGet("historico")]
-    public IActionResult Historico() => Ok(ApiResponse<IEnumerable<object>>.Ok(_impersonation.Historico(User)));
+    public async Task<IActionResult> Historico(CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<object>>.Ok(await _impersonation.HistoricoAsync(User,ct)));
 }
 
 public sealed record IniciarImpersonacaoRequest(Guid TenantId, Guid UsuarioAlvoId, string Motivo, string TicketReferencia, int? DuracaoMinutos);

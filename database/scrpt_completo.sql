@@ -1,7 +1,7 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v1.45.0
+-- Versão do schema: v1.95.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-08-06
+-- Data de geração: 2026-08-20
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -1673,7 +1673,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.manutencao_aprovacoes (
 );
 
 -- SOURCE: database/schema/130_contexto_multiempresa.sql
--- SOURCE-SHA256: deb03f24f6a422ddeabb2074bec8e0e54207d1c4ebf5e6fd7624c472ccaa7e2e
+-- SOURCE-SHA256: f08349be6f286abc56f13ab14ccfb3934acb98b12c3b3c72294743e421f0bd6d
 -- v1.19.0 - Contexto multiempresa e suporte assistido
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_tenant_acessos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), usuario_id uuid NOT NULL, tenant_id uuid NULL, cliente_id uuid NULL, perfil_id uuid NULL,
@@ -1700,6 +1700,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.impersonacao_eventos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), impersonacao_sessao_id uuid NOT NULL, usuario_origem_id uuid NOT NULL, usuario_alvo_id uuid NOT NULL, evento text NOT NULL, detalhes jsonb NOT NULL DEFAULT '{}'::jsonb, reg_date timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A'
 );
 CREATE INDEX IF NOT EXISTS ix_usuario_tenant_acessos_usuario ON plantaopro.usuario_tenant_acessos(usuario_id, reg_status, status);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_usuario_contextos_recentes_usuario_tenant ON plantaopro.usuario_contextos_recentes(usuario_id, tenant_id);
 CREATE INDEX IF NOT EXISTS ix_contexto_sessoes_usuario ON plantaopro.contexto_sessoes(usuario_id, reg_status, encerrado_em);
 CREATE INDEX IF NOT EXISTS ix_impersonacao_sessoes_origem ON plantaopro.impersonacao_sessoes(usuario_origem_id, status, reg_status);
 INSERT INTO plantaopro.usuario_tenant_acessos(usuario_id, tenant_id, cliente_id, perfil_id, origem, created_by)
@@ -2382,3 +2383,294 @@ CREATE TABLE IF NOT EXISTS user_saved_dashboards (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_saved_dashboard_padrao ON user_saved_dashboards(tenant_id,usuario_id,perfil) WHERE padrao;
 CREATE INDEX IF NOT EXISTS idx_saved_dashboards_usuario ON user_saved_dashboards(tenant_id,usuario_id,perfil);
+
+-- ============================================================
+-- Seção 39 — plantaopro.fechamento_operacional_v187
+-- ============================================================
+
+-- SOURCE: database/schema/320_v187_fechamento_operacional_financeiro.sql
+-- SOURCE-SHA256: 5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13
+-- PlantaoPro v1.87.0 - fechamento operacional e contestacao financeira reais.
+-- Evolui as estruturas de v1.41 sem criar um dominio concorrente.
+set search_path to plantaopro, public;
+
+alter table plantaopro.fechamento_plantao
+    add column if not exists cliente_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists hospital_id uuid,
+    add column if not exists data_referencia date,
+    add column if not exists valor_previsto numeric(14,2) not null default 0,
+    add column if not exists valor_apurado numeric(14,2) not null default 0,
+    add column if not exists horas_previstas numeric(8,2) not null default 0,
+    add column if not exists horas_realizadas numeric(8,2) not null default 0,
+    add column if not exists conferido_por uuid,
+    add column if not exists conferido_em timestamptz,
+    add column if not exists devolvido_por uuid,
+    add column if not exists devolvido_em timestamptz,
+    add column if not exists motivo_devolucao varchar(500),
+    add column if not exists financeiro_gerado_por uuid,
+    add column if not exists financeiro_gerado_em timestamptz,
+    add column if not exists concluido_em timestamptz,
+    add column if not exists atualizado_por uuid,
+    add column if not exists atualizado_em timestamptz not null default now();
+
+alter table plantaopro.fechamento_plantao drop constraint if exists fechamento_plantao_status_check;
+alter table plantaopro.fechamento_plantao add constraint fechamento_plantao_status_check
+ check (status in ('ABERTO','EM_CONFERENCIA','COM_DIVERGENCIA','AGUARDANDO_APROVACAO','APROVADO','DEVOLVIDO','FINANCEIRO_GERADO','CONCLUIDO','CANCELADO','FECHADO','REABERTO'));
+
+alter table plantaopro.fechamento_plantao_escalas
+    add column if not exists medico_id uuid,
+    add column if not exists plantao_id uuid,
+    add column if not exists status_escala varchar(24),
+    add column if not exists inicio_previsto timestamptz,
+    add column if not exists fim_previsto timestamptz,
+    add column if not exists inicio_realizado timestamptz,
+    add column if not exists fim_realizado timestamptz,
+    add column if not exists possui_divergencia boolean not null default false,
+    add column if not exists observacao varchar(500),
+    add column if not exists criado_em timestamptz not null default now(),
+    add column if not exists atualizado_em timestamptz not null default now();
+
+alter table plantaopro.fechamento_divergencias
+    add column if not exists fechamento_item_id uuid,
+    add column if not exists valor_anterior numeric(14,2),
+    add column if not exists valor_proposto numeric(14,2),
+    add column if not exists motivo varchar(500);
+
+create table if not exists plantaopro.fechamento_historico (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, cliente_id uuid not null,
+    fechamento_id uuid not null references plantaopro.fechamento_plantao(id), evento varchar(50) not null,
+    status_anterior varchar(24), status_novo varchar(24), descricao varchar(500), dados jsonb not null default '{}'::jsonb,
+    executado_por uuid not null, executado_em timestamptz not null default now()
+);
+
+create table if not exists plantaopro.pagamento_contestacoes (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, cliente_id uuid not null,
+    pagamento_id uuid not null references plantaopro.pagamentos(id), motivo varchar(500) not null,
+    status varchar(20) not null default 'ABERTA', valor_original numeric(14,2) not null,
+    valor_proposto numeric(14,2), aberto_por uuid not null, aberto_em timestamptz not null default now(),
+    decisao varchar(30), justificativa_resolucao varchar(1000), valor_resolvido numeric(14,2),
+    resolvido_por uuid, resolvido_em timestamptz, created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+    constraint ck_pagamento_contestacao_status check (status in ('ABERTA','RESOLVIDA','CANCELADA')),
+    constraint ck_pagamento_contestacao_decisao check (decisao is null or decisao in ('MANTER_VALOR','AJUSTAR_VALOR','CANCELAR_PAGAMENTO'))
+);
+
+create unique index if not exists ux_pagamento_contestacao_aberta on plantaopro.pagamento_contestacoes(tenant_id,pagamento_id) where status='ABERTA';
+create index if not exists ix_fechamento_status on plantaopro.fechamento_plantao(tenant_id,status,iniciado_em desc);
+create index if not exists ix_fechamento_historico_timeline on plantaopro.fechamento_historico(tenant_id,fechamento_id,executado_em desc);
+create index if not exists ix_fechamento_divergencias_abertas on plantaopro.fechamento_divergencias(tenant_id,fechamento_id,status);
+create index if not exists ix_contestacoes_status on plantaopro.pagamento_contestacoes(tenant_id,status,aberto_em desc);
+
+-- ============================================================
+-- Seção 40 — plantaopro.prontuario_longitudinal_v188
+-- ============================================================
+
+-- SOURCE: database/schema/330_v188_prontuario_longitudinal.sql
+-- SOURCE-SHA256: a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66
+-- PlantaoPro v1.88.0 - camada clinica longitudinal, tenant-safe e auditavel.
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+CREATE TABLE IF NOT EXISTS plantaopro.paciente_problemas(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, cliente_id uuid NOT NULL, paciente_id uuid NOT NULL, cid_id uuid,
+ descricao varchar(500) NOT NULL, status varchar(20) NOT NULL DEFAULT 'ATIVO', data_inicio date NOT NULL DEFAULT current_date, data_resolucao date,
+ observacao text, origem_consulta_id uuid, versao integer NOT NULL DEFAULT 1, criado_por uuid, criado_em timestamptz NOT NULL DEFAULT now(),
+ atualizado_por uuid, atualizado_em timestamptz, reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_paciente_problemas_status CHECK(status IN ('ATIVO','RESOLVIDO','INATIVO')));
+CREATE INDEX IF NOT EXISTS ix_paciente_problemas_tenant_paciente ON plantaopro.paciente_problemas(tenant_id,paciente_id,status) WHERE reg_status='A';
+CREATE INDEX IF NOT EXISTS ix_paciente_problemas_consulta ON plantaopro.paciente_problemas(tenant_id,origem_consulta_id) WHERE origem_consulta_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS plantaopro.paciente_alergias(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,tipo varchar(20) NOT NULL,substancia varchar(250) NOT NULL,
+ descricao text,gravidade varchar(20) NOT NULL DEFAULT 'NAO_INFORMADA',reacao text,status varchar(20) NOT NULL DEFAULT 'ATIVA',confirmada boolean NOT NULL DEFAULT false,
+ origem_consulta_id uuid,registrado_por uuid,registrado_em timestamptz NOT NULL DEFAULT now(),atualizado_por uuid,atualizado_em timestamptz,
+ versao integer NOT NULL DEFAULT 1,reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_paciente_alergias_tipo CHECK(tipo IN ('MEDICAMENTO','ALIMENTO','SUBSTANCIA','OUTRA')),
+ CONSTRAINT ck_paciente_alergias_gravidade CHECK(gravidade IN ('LEVE','MODERADA','GRAVE','NAO_INFORMADA')),
+ CONSTRAINT ck_paciente_alergias_status CHECK(status IN ('ATIVA','INATIVA')));
+CREATE INDEX IF NOT EXISTS ix_paciente_alergias_tenant_paciente ON plantaopro.paciente_alergias(tenant_id,paciente_id,status) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.paciente_medicamentos_uso(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,medicamento_id uuid,medicamento_descricao varchar(300) NOT NULL,
+ dose varchar(100),frequencia varchar(150),via varchar(80),inicio_em date,fim_em date,status varchar(20) NOT NULL DEFAULT 'EM_USO',origem varchar(50) NOT NULL,
+ consulta_id uuid,prescricao_id uuid,observacao text,versao integer NOT NULL DEFAULT 1,created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),
+ updated_by uuid,updated_at timestamptz,reg_status char(1) NOT NULL DEFAULT 'A',CONSTRAINT ck_medicamentos_uso_status CHECK(status IN ('EM_USO','SUSPENSO','FINALIZADO')));
+CREATE INDEX IF NOT EXISTS ix_medicamentos_uso_tenant_paciente ON plantaopro.paciente_medicamentos_uso(tenant_id,paciente_id,status) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.solicitacoes_exames(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,consulta_id uuid,medico_id uuid,unidade_id uuid,
+ status varchar(30) NOT NULL DEFAULT 'SOLICITADO',prioridade varchar(20) NOT NULL DEFAULT 'ROTINA',indicacao_clinica text NOT NULL,observacoes text,
+ solicitado_em timestamptz NOT NULL DEFAULT now(),realizado_em timestamptz,cancelado_em timestamptz,created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_by uuid,updated_at timestamptz,
+ CONSTRAINT ck_solicitacoes_exames_status CHECK(status IN ('SOLICITADO','AUTORIZACAO_PENDENTE','AUTORIZADO','AGENDADO','REALIZADO','RESULTADO_DISPONIVEL','CANCELADO')));
+CREATE INDEX IF NOT EXISTS ix_solicitacoes_exames_tenant_paciente ON plantaopro.solicitacoes_exames(tenant_id,paciente_id,status,solicitado_em DESC);
+CREATE INDEX IF NOT EXISTS ix_solicitacoes_exames_consulta ON plantaopro.solicitacoes_exames(tenant_id,consulta_id) WHERE consulta_id IS NOT NULL;
+CREATE TABLE IF NOT EXISTS plantaopro.solicitacao_exame_itens(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),solicitacao_id uuid NOT NULL,codigo varchar(80),nome varchar(250) NOT NULL,tipo varchar(80) NOT NULL,observacao text,status varchar(30) NOT NULL DEFAULT 'SOLICITADO',created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS ix_solicitacao_exame_itens_solicitacao ON plantaopro.solicitacao_exame_itens(solicitacao_id,status);
+
+CREATE TABLE IF NOT EXISTS plantaopro.resultados_exames(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,solicitacao_id uuid NOT NULL,item_id uuid,paciente_id uuid NOT NULL,tipo varchar(80) NOT NULL,
+ resumo varchar(500) NOT NULL,resultado_textual text NOT NULL,realizado_em timestamptz NOT NULL,liberado_em timestamptz,profissional_responsavel varchar(250),
+ documento_id uuid,created_by uuid,created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS ix_resultados_exames_tenant_paciente ON plantaopro.resultados_exames(tenant_id,paciente_id,created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_resultados_exames_solicitacao ON plantaopro.resultados_exames(tenant_id,solicitacao_id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.encaminhamentos_clinicos(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,consulta_id uuid NOT NULL,medico_origem_id uuid,
+ especialidade_destino_id uuid,profissional_destino_id uuid,unidade_destino_id uuid,motivo text NOT NULL,resumo_clinico text NOT NULL,prioridade varchar(20) NOT NULL DEFAULT 'ROTINA',
+ status varchar(30) NOT NULL DEFAULT 'CRIADO',criado_em timestamptz NOT NULL DEFAULT now(),agendado_em timestamptz,concluido_em timestamptz,created_by uuid,updated_by uuid,updated_at timestamptz,
+ CONSTRAINT ck_encaminhamentos_status CHECK(status IN ('CRIADO','AGUARDANDO_AGENDAMENTO','AGENDADO','CONCLUIDO','CANCELADO')));
+CREATE INDEX IF NOT EXISTS ix_encaminhamentos_tenant_paciente ON plantaopro.encaminhamentos_clinicos(tenant_id,paciente_id,status,criado_em DESC);
+CREATE INDEX IF NOT EXISTS ix_encaminhamentos_consulta ON plantaopro.encaminhamentos_clinicos(tenant_id,consulta_id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.documentos_clinicos(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,consulta_id uuid,tipo varchar(40) NOT NULL,titulo varchar(250) NOT NULL,
+ conteudo text NOT NULL,status varchar(20) NOT NULL DEFAULT 'RASCUNHO',versao integer NOT NULL DEFAULT 1,emitido_por uuid,emitido_em timestamptz,
+ cancelado_por uuid,cancelado_em timestamptz,motivo_cancelamento text,hash_documento varchar(64),assinatura_status varchar(20) NOT NULL DEFAULT 'NAO_ASSINADO',
+ cid_exibido boolean NOT NULL DEFAULT false,quantidade_dias integer,inicio_afastamento date,created_by uuid,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz,
+ CONSTRAINT ck_documentos_tipo CHECK(tipo IN ('ATESTADO','DECLARACAO','ENCAMINHAMENTO','RESUMO_ATENDIMENTO','RELATORIO_CLINICO')),
+ CONSTRAINT ck_documentos_assinatura CHECK(assinatura_status IN ('NAO_ASSINADO','PENDENTE','ASSINADO','FALHOU','CANCELADO')));
+CREATE INDEX IF NOT EXISTS ix_documentos_clinicos_tenant_paciente ON plantaopro.documentos_clinicos(tenant_id,paciente_id,status,created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_documentos_clinicos_consulta ON plantaopro.documentos_clinicos(tenant_id,consulta_id) WHERE consulta_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS plantaopro.anexos_clinicos(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),tenant_id uuid NOT NULL,paciente_id uuid NOT NULL,entidade_tipo varchar(30) NOT NULL,entidade_id uuid NOT NULL,
+ nome_original varchar(255) NOT NULL,nome_armazenado varchar(100) NOT NULL,mime_type varchar(100) NOT NULL,tamanho bigint NOT NULL,hash varchar(64) NOT NULL,
+ storage_provider varchar(30) NOT NULL,storage_key varchar(500) NOT NULL,created_by uuid,created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS ix_anexos_clinicos_entidade ON plantaopro.anexos_clinicos(tenant_id,entidade_tipo,entidade_id);
+CREATE INDEX IF NOT EXISTS ix_anexos_clinicos_paciente ON plantaopro.anexos_clinicos(tenant_id,paciente_id,created_at DESC);
+
+-- ============================================================
+-- Seção 41 — plantaopro.clinical_hardening_v189
+-- ============================================================
+
+-- SOURCE: database/schema/340_v189_clinical_operational_hardening.sql
+-- SOURCE-SHA256: abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5
+-- PlantaoPro v1.89.0 - hardening operacional clínico, incremental e idempotente.
+BEGIN;
+ALTER TABLE plantaopro.solicitacoes_exames DROP CONSTRAINT IF EXISTS ck_solicitacoes_exames_status;
+ALTER TABLE plantaopro.solicitacoes_exames ADD CONSTRAINT ck_solicitacoes_exames_status CHECK(status IN ('SOLICITADO','AUTORIZACAO_PENDENTE','AUTORIZADO','NEGADO','AGENDADO','REALIZADO','PARCIALMENTE_RESULTADO','RESULTADO_DISPONIVEL','CANCELADO'));
+ALTER TABLE plantaopro.solicitacao_exame_itens DROP CONSTRAINT IF EXISTS ck_solicitacao_exame_itens_status;
+ALTER TABLE plantaopro.solicitacao_exame_itens ADD CONSTRAINT ck_solicitacao_exame_itens_status CHECK(status IN ('SOLICITADO','REALIZADO','RESULTADO_DISPONIVEL','CANCELADO'));
+ALTER TABLE plantaopro.anexos_clinicos ADD COLUMN IF NOT EXISTS removed_at timestamptz;
+ALTER TABLE plantaopro.anexos_clinicos ADD COLUMN IF NOT EXISTS removed_by uuid;
+ALTER TABLE plantaopro.anexos_clinicos ADD COLUMN IF NOT EXISTS removal_reason varchar(500);
+ALTER TABLE plantaopro.anexos_clinicos ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+ALTER TABLE plantaopro.anexos_clinicos DROP CONSTRAINT IF EXISTS ck_anexos_clinicos_reg_status;
+ALTER TABLE plantaopro.anexos_clinicos ADD CONSTRAINT ck_anexos_clinicos_reg_status CHECK(reg_status IN ('A','I'));
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM plantaopro.resultados_exames WHERE item_id IS NOT NULL GROUP BY tenant_id,solicitacao_id,item_id HAVING count(*)>1) THEN CREATE UNIQUE INDEX IF NOT EXISTS ux_resultados_exames_item ON plantaopro.resultados_exames(tenant_id,solicitacao_id,item_id) WHERE item_id IS NOT NULL; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS(SELECT 1 FROM plantaopro.anexos_clinicos WHERE reg_status='A' GROUP BY tenant_id,paciente_id,entidade_tipo,entidade_id,hash HAVING count(*)>1) THEN CREATE UNIQUE INDEX IF NOT EXISTS ux_anexos_clinicos_hash_ativo ON plantaopro.anexos_clinicos(tenant_id,paciente_id,entidade_tipo,entidade_id,hash) WHERE reg_status='A'; END IF; END $$;
+CREATE INDEX IF NOT EXISTS ix_timeline_exames ON plantaopro.solicitacoes_exames(tenant_id,paciente_id,solicitado_em DESC);
+CREATE INDEX IF NOT EXISTS ix_timeline_documentos ON plantaopro.documentos_clinicos(tenant_id,paciente_id,created_at DESC);
+DO $$ BEGIN
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='fk_exame_itens_solicitacao') THEN ALTER TABLE plantaopro.solicitacao_exame_itens ADD CONSTRAINT fk_exame_itens_solicitacao FOREIGN KEY(solicitacao_id) REFERENCES plantaopro.solicitacoes_exames(id) ON DELETE RESTRICT NOT VALID; END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='fk_resultados_solicitacao') THEN ALTER TABLE plantaopro.resultados_exames ADD CONSTRAINT fk_resultados_solicitacao FOREIGN KEY(solicitacao_id) REFERENCES plantaopro.solicitacoes_exames(id) ON DELETE RESTRICT NOT VALID; END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conname='fk_resultados_item') THEN ALTER TABLE plantaopro.resultados_exames ADD CONSTRAINT fk_resultados_item FOREIGN KEY(item_id) REFERENCES plantaopro.solicitacao_exame_itens(id) ON DELETE RESTRICT NOT VALID; END IF;
+END $$;
+COMMIT;
+
+-- ============================================================
+-- Seção 42 — plantaopro.saved_views_v192
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_v192_saved_views.sql
+-- SOURCE-SHA256: 36085c17bba5fd2329e5831ecdea7e4053c0788d68f9949174946128e14ab5f8
+create table if not exists plantaopro.saved_views (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    user_id uuid not null,
+    module varchar(50) not null,
+    name varchar(80) not null,
+    normalized_name varchar(80) not null,
+    filters_json jsonb not null default '{}'::jsonb,
+    sort_json jsonb null,
+    is_default boolean not null default false,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    constraint ck_saved_views_filters_object check (jsonb_typeof(filters_json) = 'object' and pg_column_size(filters_json) <= 16384),
+    constraint ck_saved_views_sort_object check (sort_json is null or (jsonb_typeof(sort_json) = 'object' and pg_column_size(sort_json) <= 16384)),
+    constraint ck_saved_views_module check (module in ('PLANTOES','ESCALAS','PAGAMENTOS','PRODUTIVIDADE','PACIENTES','AGENDA')),
+    constraint uq_saved_views_name unique (tenant_id,user_id,module,normalized_name)
+);
+
+create index if not exists ix_saved_views_tenant_user on plantaopro.saved_views(tenant_id,user_id);
+create index if not exists ix_saved_views_tenant_module on plantaopro.saved_views(tenant_id,module);
+create unique index if not exists ux_saved_views_default on plantaopro.saved_views(tenant_id,user_id,module) where is_default;
+
+-- Business state stays in its source entity; only per-user presentation state is persisted.
+create table if not exists plantaopro.productivity_item_user_state (
+    id uuid primary key default gen_random_uuid(), tenant_id uuid not null, user_id uuid not null,
+    item_key varchar(300) not null, snoozed_until timestamptz null, dismissed_at timestamptz null,
+    last_seen_at timestamptz null, created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+    constraint uq_productivity_user_item unique (tenant_id,user_id,item_key)
+);
+create index if not exists ix_productivity_user_state_scope on plantaopro.productivity_item_user_state(tenant_id,user_id);
+create index if not exists ix_productivity_user_state_snooze on plantaopro.productivity_item_user_state(snoozed_until) where snoozed_until is not null;
+
+do $$ begin
+    if not exists (select 1 from pg_constraint where conname = 'fk_saved_views_tenant') then
+        alter table plantaopro.saved_views add constraint fk_saved_views_tenant foreign key (tenant_id) references plantaopro.clientes(id) on delete cascade;
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'fk_saved_views_user') then
+        alter table plantaopro.saved_views add constraint fk_saved_views_user foreign key (user_id) references plantaopro.usuarios(id) on delete cascade;
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'fk_productivity_state_tenant') then
+        alter table plantaopro.productivity_item_user_state add constraint fk_productivity_state_tenant foreign key (tenant_id) references plantaopro.clientes(id) on delete cascade;
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'fk_productivity_state_user') then
+        alter table plantaopro.productivity_item_user_state add constraint fk_productivity_state_user foreign key (user_id) references plantaopro.usuarios(id) on delete cascade;
+    end if;
+end $$;
+
+-- ============================================================
+-- Seção 43 — plantaopro.revenue_cycle_v195
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_08_v195_financeiro_revenue_cycle.sql
+-- SOURCE-SHA256: 2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72
+-- PlantaoPro v1.95: evolução incremental do financeiro clínico; não altera pagamentos de plantão nem faturamento SaaS.
+begin;
+
+alter table plantaopro.v113_faturas
+  add column if not exists origem_tipo varchar(40),
+  add column if not exists regra_id uuid,
+  add column if not exists regra_codigo varchar(80),
+  add column if not exists valor_base_snapshot numeric(14,2) not null default 0,
+  add column if not exists descontos numeric(14,2) not null default 0,
+  add column if not exists acrescimos numeric(14,2) not null default 0,
+  add column if not exists glosa_reconhecida numeric(14,2) not null default 0;
+
+alter table plantaopro.v115_recebimentos
+  add column if not exists tipo varchar(20) not null default 'RECEBIMENTO',
+  add column if not exists recebimento_origem_id uuid,
+  add column if not exists observacao text,
+  add column if not exists recebido_em timestamptz not null default now();
+
+do $$ begin
+  alter table plantaopro.v115_recebimentos add constraint ck_v195_recebimento_positivo check (valor_recebido > 0);
+exception when duplicate_object then null; end $$;
+do $$ begin
+  alter table plantaopro.v115_recebimentos add constraint ck_v195_recebimento_tipo check (tipo in ('RECEBIMENTO','ESTORNO'));
+exception when duplicate_object then null; end $$;
+
+create unique index if not exists ux_v195_conta_origem_ativa on plantaopro.v113_faturas(tenant_id,origem_tipo,pedido_id) where reg_status='A' and origem_tipo is not null and pedido_id is not null;
+create index if not exists ix_v195_conta_tenant_status on plantaopro.v113_faturas(tenant_id,status) where reg_status='A';
+create index if not exists ix_v195_recebimento_conta_tipo on plantaopro.v115_recebimentos(tenant_id,conta_receber_id,tipo) where reg_status='A';
+
+alter table plantaopro.v115_regras_glosa add column if not exists valor_recuperado numeric(14,2) not null default 0;
+do $$ begin alter table plantaopro.v115_regras_glosa add constraint ck_v195_glosa_positiva check(valor_glosado>0); exception when duplicate_object then null; end $$;
+create index if not exists ix_v195_glosa_tenant_status_prazo on plantaopro.v115_regras_glosa(tenant_id,status,prazo_recurso) where reg_status='A';
+
+alter table plantaopro.v115_regras_repasse
+ add column if not exists regra_id uuid,
+ add column if not exists evento_gerador varchar(40) not null default 'CONTA_EMITIDA';
+do $$ begin alter table plantaopro.v115_regras_repasse add constraint ck_v195_repasse_percentual check(tipo_regra<>'PERCENTUAL' or percentual between 0 and 100); exception when duplicate_object then null; end $$;
+create unique index if not exists ux_v195_repasse_lancamento on plantaopro.v115_regras_repasse(tenant_id,referencia_id,medico_id,regra_id) where reg_status='A' and referencia_id is not null and status not in ('CANCELADO','REGRA_ATIVA');
+create index if not exists ix_v195_repasse_tenant_status on plantaopro.v115_regras_repasse(tenant_id,status) where reg_status='A';
+
+create table if not exists plantaopro.v115_financeiro_historico(
+ id uuid primary key default gen_random_uuid(), tenant_id uuid not null, entidade_tipo varchar(30) not null,
+ entidade_id uuid not null, evento varchar(60) not null, valor_anterior numeric(14,2), valor_novo numeric(14,2),
+ detalhes jsonb not null default '{}'::jsonb, created_at timestamptz not null default now(), created_by uuid
+);
+create index if not exists ix_v195_financeiro_historico_entidade on plantaopro.v115_financeiro_historico(tenant_id,entidade_tipo,entidade_id,created_at desc);
+commit;

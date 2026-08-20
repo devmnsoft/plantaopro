@@ -7,8 +7,10 @@ using System.Text.Json;
 
 namespace PlantaoPro.Api;
 
-public sealed class V115FaturamentoRegraService(IConfiguration cfg, FinancialTenantContext context, IAuditService audit, ILogger<V115FaturamentoRegraService> logger)
+public sealed class V115FaturamentoRegraService
 {
+    private readonly IConfiguration cfg;private readonly FinancialTenantContext context;private readonly IAuditService audit;private readonly ILogger<V115FaturamentoRegraService> logger;
+    public V115FaturamentoRegraService(IConfiguration cfg,FinancialTenantContext context,IAuditService audit,ILogger<V115FaturamentoRegraService> logger){this.cfg=cfg;this.context=context;this.audit=audit;this.logger=logger;}
     private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
 
     public async Task<ApiResponse<IEnumerable<RegraFaturamentoDto>>> ListarRegrasAsync(string? tipo = null)

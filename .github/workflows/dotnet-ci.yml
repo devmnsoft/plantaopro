@@ -12,6 +12,7 @@ env:
   Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
   Jwt__Issuer: PlantaoPro
   Jwt__Audience: PlantaoPro
+  PLANTAOPRO_BOOTSTRAP_ENVIRONMENT: CI
 
 jobs:
   build-test:
@@ -23,7 +24,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
       - name: Dotnet diagnostics
         run: dotnet --info
       - name: Enforce C# 10 compatibility

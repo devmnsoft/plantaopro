@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
@@ -104,9 +105,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization(options =>
 {
-    var policies = new[] { "GlobalAccess", "TenantAccess", "HybridAccess", "TenantContextRequired", "TenantContextOptional", "CanSwitchTenant", "CanImpersonateTenant", "CanManageSaas", "CanViewGlobalAudit", "CentralAtendimento.Ver", "Agendamento.Criar", "Agendamento.Confirmar", "Agendamento.CheckIn", "PainelChamada.Operar", "Triagem.Iniciar", "Triagem.Finalizar", "Consulta.Iniciar", "Consulta.Editar", "Consulta.Finalizar", "Consulta.Adendo", "Consulta.VerDadosSensiveis", "CID.Vincular", "CID.Remover", "Prescricao.Criar", "Prescricao.Editar", "Prescricao.Finalizar", "Relatorios.Ver", "Relatorios.Exportar", "Relatorios.Executivos", "Relatorios.Financeiros", "Relatorios.Clinicos", "Relatorios.DadosSensiveis" };
-    foreach (var policy in policies) options.AddPolicy(policy, p => p.RequireAuthenticatedUser());
+    var scopes=new[]{"GlobalAccess","TenantAccess","HybridAccess","TenantContextRequired","TenantContextOptional"};
+    foreach(var name in scopes)options.AddPolicy(name,p=>p.RequireAuthenticatedUser().AddRequirements(new EffectiveAccessRequirement(name)));
+    var permissions=new Dictionary<string,string>{["CanSwitchTenant"]="CONTEXTO:TROCAR",["CanImpersonateTenant"]="TENANT_SUPORTE:ENTRAR",["CanManageSaas"]="SAAS:GERENCIAR",["CanViewGlobalAudit"]="AUDITORIA:VER",["CentralAtendimento.Ver"]="CENTRAL_ATENDIMENTO:VER",["Agendamento.Criar"]="AGENDAMENTO:CRIAR",["Agendamento.Confirmar"]="AGENDAMENTO:CONFIRMAR",["Agendamento.CheckIn"]="AGENDAMENTO:CHECKIN",["PainelChamada.Operar"]="PAINEL_CHAMADA:OPERAR",["Triagem.Iniciar"]="TRIAGEM:INICIAR",["Triagem.Finalizar"]="TRIAGEM:FINALIZAR",["Consulta.Iniciar"]="CONSULTA:INICIAR",["Consulta.Editar"]="CONSULTA:EDITAR",["Consulta.Finalizar"]="CONSULTA:FINALIZAR",["Consulta.Adendo"]="CONSULTA:ADENDO",["Consulta.VerDadosSensiveis"]="CONSULTA:VER_DADOS_SENSIVEIS",["CID.Vincular"]="CID:VINCULAR",["CID.Remover"]="CID:REMOVER",["Prescricao.Criar"]="PRESCRICAO:CRIAR",["Prescricao.Editar"]="PRESCRICAO:EDITAR",["Prescricao.Finalizar"]="PRESCRICAO:FINALIZAR",["Relatorios.Ver"]="RELATORIOS:VER",["Relatorios.Exportar"]="RELATORIOS:EXPORTAR",["Relatorios.Executivos"]="RELATORIOS:EXECUTIVOS",["Relatorios.Financeiros"]="RELATORIOS:FINANCEIROS",["Relatorios.Clinicos"]="RELATORIOS:CLINICOS",["Relatorios.DadosSensiveis"]="RELATORIOS:DADOS_SENSIVEIS"};
+    foreach(var item in permissions)options.AddPolicy(item.Key,p=>p.RequireAuthenticatedUser().AddRequirements(new EffectiveAccessRequirement(item.Key,item.Value)));
 });
+builder.Services.AddScoped<IAuthorizationHandler,EffectiveAccessAuthorizationHandler>();
 
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<PainelTvService>();

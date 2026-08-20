@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.18.9",
-  "generatedAt": "2026-07-21",
+  "schemaVersion": "v1.95.0",
+  "generatedAt": "2026-08-20",
   "migrations": [
     {
       "version": "20260607_saas_lgpd_jornada_comercial_ajuda",

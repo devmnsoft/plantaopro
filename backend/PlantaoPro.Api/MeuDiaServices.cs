@@ -8,8 +8,9 @@ public interface IMeuDiaRepository
     Task<ProductivityPageDto> ReadAsync(ProductivityQuery query, CancellationToken ct);
 }
 
-public sealed class MeuDiaRepository(IProductivityActionService productivity) : IMeuDiaRepository
+public sealed class MeuDiaRepository : IMeuDiaRepository
 {
+    private readonly IProductivityActionService productivity; public MeuDiaRepository(IProductivityActionService productivity)=>this.productivity=productivity;
     public Task<ProductivityPageDto> ReadAsync(ProductivityQuery query, CancellationToken ct) => productivity.ListAsync(query, ct);
 }
 
@@ -22,8 +23,9 @@ public interface IMeuDiaService
     IReadOnlyList<QuickActionDto> AcoesRapidas();
 }
 
-public sealed class MeuDiaService(IMeuDiaRepository repository, IProductivityActionService productivity) : IMeuDiaService
+public sealed class MeuDiaService : IMeuDiaService
 {
+    private readonly IMeuDiaRepository repository; private readonly IProductivityActionService productivity; public MeuDiaService(IMeuDiaRepository repository,IProductivityActionService productivity){this.repository=repository;this.productivity=productivity;}
     private static ProductivityQuery Today => new(DueTo: DateTimeOffset.UtcNow.AddDays(1), PageSize: 25);
     public Task<ProductivityPageDto> ObterResumoAsync(CancellationToken ct) => repository.ReadAsync(Today, ct);
     public Task<ProductivitySummaryDto> IndicadoresAsync(CancellationToken ct) => productivity.SummaryAsync(ct);

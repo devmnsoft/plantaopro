@@ -13,13 +13,13 @@ public static class FechamentoStatus
 
     private static readonly IReadOnlyDictionary<string, string[]> Transicoes = new Dictionary<string, string[]>(StringComparer.Ordinal)
     {
-        [Aberto] = [EmConferencia],
-        [EmConferencia] = [ComDivergencia, AguardandoAprovacao],
-        [ComDivergencia] = [EmConferencia],
-        [AguardandoAprovacao] = [Aprovado, Devolvido],
-        [Devolvido] = [EmConferencia],
-        [Aprovado] = [FinanceiroGerado],
-        [FinanceiroGerado] = [Concluido]
+        [Aberto] = new[] { EmConferencia },
+        [EmConferencia] = new[] { ComDivergencia, AguardandoAprovacao },
+        [ComDivergencia] = new[] { EmConferencia },
+        [AguardandoAprovacao] = new[] { Aprovado, Devolvido },
+        [Devolvido] = new[] { EmConferencia },
+        [Aprovado] = new[] { FinanceiroGerado },
+        [FinanceiroGerado] = new[] { Concluido }
     };
 
     public static bool PodeTransicionar(string atual, string destino) =>

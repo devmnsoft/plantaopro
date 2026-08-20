@@ -1,6 +1,6 @@
 {
   "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql": "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
-  "database/migrations/2026_v192_saved_views.sql": "36085c17bba5fd2329e5831ecdea7e4053c0788d68f9949174946128e14ab5f8",
+  "database/migrations/2026_v192_saved_views.sql": "df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6",
   "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
   "database/schema/000_schema_canonico_base.sql": "f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e",
   "database/schema/010_identity_access.sql": "9ba007cec03cf0e623f884026c6534f4219d009e33a30b57478d676e69e8fa4b",

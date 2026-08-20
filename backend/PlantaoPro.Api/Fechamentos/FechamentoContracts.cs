@@ -36,8 +36,8 @@ public sealed class FechamentoDivergenciaDto
 }
 public sealed class FechamentoDetalheDto : FechamentoResumoDto
 {
-    public IReadOnlyList<FechamentoItemDto> Itens { get; set; } = [];
-    public IReadOnlyList<FechamentoDivergenciaDto> Divergencias { get; set; } = [];
+    public IReadOnlyList<FechamentoItemDto> Itens { get; set; } = Array.Empty<FechamentoItemDto>();
+    public IReadOnlyList<FechamentoDivergenciaDto> Divergencias { get; set; } = Array.Empty<FechamentoDivergenciaDto>();
 }
 public sealed class FechamentoTimelineDto
 {

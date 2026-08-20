@@ -2,7 +2,7 @@
 
 - `plantaopro.extensions` depende de: nenhuma
 - `plantaopro.schema_canonico_base` depende de: nenhuma
-- `plantaopro.identity_access` depende de: nenhuma
+- `plantaopro.identity_access` depende de: plantaopro.schema_canonico_base
 - `plantaopro.saas_tenants` depende de: nenhuma
 - `plantaopro.operacao_plantoes` depende de: nenhuma
 - `plantaopro.saude360` depende de: nenhuma
@@ -16,10 +16,13 @@
 - `plantaopro.operacoes_continuidade` depende de: nenhuma
 - `plantaopro.contexto_multiempresa` depende de: nenhuma
 - `plantaopro.experiencia_premium_meu_dia` depende de: nenhuma
+- `plantaopro.operacional_real_v113` depende de: plantaopro.schema_canonico_base
+- `plantaopro.consolidacao_produto_v114` depende de: plantaopro.operacional_real_v113
+- `plantaopro.regras_faturamento_repasses_v115` depende de: plantaopro.consolidacao_produto_v114
 - `plantaopro.paineis_publicos` depende de: plantaopro.clientes
 - `v1440_produto_vendavel` depende de: plantaopro.tenants, plantaopro.usuarios, plantaopro.medicos, plantaopro.escalas
 - `plantaopro.operacao_assistida_v1310` depende de: nenhuma
-- `plantaopro.bootstrap_catalog` depende de: nenhuma
+- `plantaopro.bootstrap_catalog` depende de: plantaopro.schema_canonico_base
 - `plantaopro.seed_010_modulos` depende de: nenhuma
 - `plantaopro.seed_020_acoes` depende de: nenhuma
 - `plantaopro.seed_030_permissoes` depende de: nenhuma
@@ -31,12 +34,12 @@
 - `plantaopro.seed_090_notificacoes` depende de: nenhuma
 - `plantaopro.seed_100_status_operacionais` depende de: nenhuma
 - `plantaopro.seed_110_configuracoes_runtime` depende de: nenhuma
-- `plantaopro.operational_premium_v1400` depende de: nenhuma
+- `plantaopro.operational_premium_v1400` depende de: plantaopro.operacao_assistida_v1310
 - `plantaopro.operational_cycle_v1410` depende de: nenhuma
 - `plantaopro.executive_commercial_v1450` depende de: plantaopro.tenants, plantaopro.usuarios, plantaopro.medicos, plantaopro.escalas, plantaopro.agenda_eventos_operacionais
 - `plantaopro.pagamentos` depende de: plantaopro.escalas, plantaopro.medicos, plantaopro.plantoes
-- `plantaopro.fechamento_operacional_v187` depende de: plantaopro.fechamento_plantao
+- `plantaopro.fechamento_operacional_v187` depende de: plantaopro.fechamento_plantao, plantaopro.operational_cycle_v1410
 - `plantaopro.prontuario_longitudinal_v188` depende de: plantaopro.fechamento_operacional_v187
 - `plantaopro.clinical_hardening_v189` depende de: plantaopro.prontuario_longitudinal_v188
-- `plantaopro.saved_views_v192` depende de: plantaopro.clinical_hardening_v189
-- `plantaopro.revenue_cycle_v195` depende de: plantaopro.saved_views_v192
+- `plantaopro.saved_views_v192` depende de: plantaopro.clinical_hardening_v189, plantaopro.operacao_assistida_v1310
+- `plantaopro.revenue_cycle_v195` depende de: plantaopro.saved_views_v192, plantaopro.regras_faturamento_repasses_v115, plantaopro.operacional_real_v113

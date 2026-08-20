@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-psql -v ON_ERROR_STOP=1 -f database/PlantaoPro_PostgreSQL_Completo.sql
-psql -v ON_ERROR_STOP=1 -f database/migrations/2026_v113_operacional_real.sql
+psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-supported.sql
 psql -v ON_ERROR_STOP=1 <<'SQL'
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 CREATE TABLE IF NOT EXISTS plantaopro.upgrade_preservation_probe(

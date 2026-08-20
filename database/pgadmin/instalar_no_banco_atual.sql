@@ -5,7 +5,7 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v1.95.1
+-- Versão do schema: v1.95.3
 -- PostgreSQL suportado: 16
 -- Data de geração: 2026-08-20
 -- Execução oficial:
@@ -1758,6 +1758,313 @@ CREATE TABLE IF NOT EXISTS plantaopro.meu_dia_historico (
 
 CREATE INDEX IF NOT EXISTS ix_meu_dia_item_estados_usuario ON plantaopro.meu_dia_item_estados(usuario_id, status, reg_status);
 CREATE INDEX IF NOT EXISTS ix_meu_dia_historico_usuario ON plantaopro.meu_dia_historico(usuario_id, reg_date DESC);
+
+-- ============================================================
+-- Seção 12 — Operacional real v1.13
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_v113_operacional_real.sql
+-- SOURCE-SHA256: 5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599
+create schema if not exists plantaopro;
+create extension if not exists pgcrypto;
+create table if not exists plantaopro.v113_clientes (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, nome varchar(160), documento varchar(40), email varchar(160), status varchar(40));
+alter table if exists plantaopro.v113_clientes add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_clientes add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_clientes add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_clientes add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_clientes add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_clientes add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_clientes add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_clientes add column if not exists nome varchar(160);
+alter table if exists plantaopro.v113_clientes add column if not exists documento varchar(40);
+alter table if exists plantaopro.v113_clientes add column if not exists email varchar(160);
+alter table if exists plantaopro.v113_clientes add column if not exists status varchar(40);
+create index if not exists ix_v113_clientes_cliente_id on plantaopro.v113_clientes (cliente_id);
+create index if not exists ix_v113_clientes_status on plantaopro.v113_clientes (status);
+create index if not exists ix_v113_clientes_created_at on plantaopro.v113_clientes (created_at);
+create index if not exists ix_v113_clientes_tenant_id on plantaopro.v113_clientes (tenant_id);
+create table if not exists plantaopro.v113_produtos (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, codigo varchar(60), nome varchar(160), preco numeric(14,2) default 0, estoque_minimo numeric(14,2) default 0, status varchar(40));
+alter table if exists plantaopro.v113_produtos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_produtos add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_produtos add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_produtos add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_produtos add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_produtos add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_produtos add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_produtos add column if not exists codigo varchar(60);
+alter table if exists plantaopro.v113_produtos add column if not exists nome varchar(160);
+alter table if exists plantaopro.v113_produtos add column if not exists preco numeric(14,2) default 0;
+alter table if exists plantaopro.v113_produtos add column if not exists estoque_minimo numeric(14,2) default 0;
+alter table if exists plantaopro.v113_produtos add column if not exists status varchar(40);
+create index if not exists ix_v113_produtos_cliente_id on plantaopro.v113_produtos (cliente_id);
+create index if not exists ix_v113_produtos_status on plantaopro.v113_produtos (status);
+create index if not exists ix_v113_produtos_created_at on plantaopro.v113_produtos (created_at);
+create index if not exists ix_v113_produtos_tenant_id on plantaopro.v113_produtos (tenant_id);
+create table if not exists plantaopro.v113_estoque_movimentos (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, produto_id uuid, pedido_id uuid, quantidade numeric(14,2) default 0, tipo varchar(60), observacao text, status varchar(40));
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists produto_id uuid;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists pedido_id uuid;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists quantidade numeric(14,2) default 0;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists tipo varchar(60);
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists observacao text;
+alter table if exists plantaopro.v113_estoque_movimentos add column if not exists status varchar(40);
+create index if not exists ix_v113_estoque_movimentos_cliente_id on plantaopro.v113_estoque_movimentos (cliente_id);
+create index if not exists ix_v113_estoque_movimentos_status on plantaopro.v113_estoque_movimentos (status);
+create index if not exists ix_v113_estoque_movimentos_created_at on plantaopro.v113_estoque_movimentos (created_at);
+create index if not exists ix_v113_estoque_movimentos_tenant_id on plantaopro.v113_estoque_movimentos (tenant_id);
+create table if not exists plantaopro.v113_pedidos (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, cliente_operacional_id uuid, status varchar(40), total numeric(14,2) default 0);
+alter table if exists plantaopro.v113_pedidos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_pedidos add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_pedidos add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_pedidos add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_pedidos add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_pedidos add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_pedidos add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_pedidos add column if not exists cliente_operacional_id uuid;
+alter table if exists plantaopro.v113_pedidos add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_pedidos add column if not exists total numeric(14,2) default 0;
+create index if not exists ix_v113_pedidos_cliente_id on plantaopro.v113_pedidos (cliente_id);
+create index if not exists ix_v113_pedidos_status on plantaopro.v113_pedidos (status);
+create index if not exists ix_v113_pedidos_created_at on plantaopro.v113_pedidos (created_at);
+create index if not exists ix_v113_pedidos_tenant_id on plantaopro.v113_pedidos (tenant_id);
+create table if not exists plantaopro.v113_pedido_itens (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, pedido_id uuid, produto_id uuid, quantidade numeric(14,2) default 0, valor_unitario numeric(14,2) default 0, status varchar(40));
+alter table if exists plantaopro.v113_pedido_itens add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_pedido_itens add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_pedido_itens add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists pedido_id uuid;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists produto_id uuid;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists quantidade numeric(14,2) default 0;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists valor_unitario numeric(14,2) default 0;
+alter table if exists plantaopro.v113_pedido_itens add column if not exists status varchar(40);
+create index if not exists ix_v113_pedido_itens_cliente_id on plantaopro.v113_pedido_itens (cliente_id);
+create index if not exists ix_v113_pedido_itens_status on plantaopro.v113_pedido_itens (status);
+create index if not exists ix_v113_pedido_itens_created_at on plantaopro.v113_pedido_itens (created_at);
+create index if not exists ix_v113_pedido_itens_tenant_id on plantaopro.v113_pedido_itens (tenant_id);
+create table if not exists plantaopro.v113_tarefas (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, pedido_id uuid, titulo varchar(180), status varchar(40), responsavel varchar(120), comentarios jsonb default '[]'::jsonb);
+alter table if exists plantaopro.v113_tarefas add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_tarefas add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_tarefas add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_tarefas add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_tarefas add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_tarefas add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_tarefas add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_tarefas add column if not exists pedido_id uuid;
+alter table if exists plantaopro.v113_tarefas add column if not exists titulo varchar(180);
+alter table if exists plantaopro.v113_tarefas add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_tarefas add column if not exists responsavel varchar(120);
+alter table if exists plantaopro.v113_tarefas add column if not exists comentarios jsonb default '[]'::jsonb;
+create index if not exists ix_v113_tarefas_cliente_id on plantaopro.v113_tarefas (cliente_id);
+create index if not exists ix_v113_tarefas_status on plantaopro.v113_tarefas (status);
+create index if not exists ix_v113_tarefas_created_at on plantaopro.v113_tarefas (created_at);
+create index if not exists ix_v113_tarefas_tenant_id on plantaopro.v113_tarefas (tenant_id);
+create table if not exists plantaopro.v113_faturas (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, pedido_id uuid, valor numeric(14,2) default 0, status varchar(40));
+alter table if exists plantaopro.v113_faturas add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_faturas add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_faturas add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_faturas add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_faturas add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_faturas add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_faturas add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_faturas add column if not exists pedido_id uuid;
+alter table if exists plantaopro.v113_faturas add column if not exists valor numeric(14,2) default 0;
+alter table if exists plantaopro.v113_faturas add column if not exists status varchar(40);
+create index if not exists ix_v113_faturas_cliente_id on plantaopro.v113_faturas (cliente_id);
+create index if not exists ix_v113_faturas_status on plantaopro.v113_faturas (status);
+create index if not exists ix_v113_faturas_created_at on plantaopro.v113_faturas (created_at);
+create index if not exists ix_v113_faturas_tenant_id on plantaopro.v113_faturas (tenant_id);
+create table if not exists plantaopro.v113_titulos (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, fatura_id uuid, valor numeric(14,2) default 0, status varchar(40), demo_boleto boolean default false, vencimento timestamptz);
+alter table if exists plantaopro.v113_titulos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_titulos add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_titulos add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_titulos add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_titulos add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_titulos add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_titulos add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_titulos add column if not exists fatura_id uuid;
+alter table if exists plantaopro.v113_titulos add column if not exists valor numeric(14,2) default 0;
+alter table if exists plantaopro.v113_titulos add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_titulos add column if not exists demo_boleto boolean default false;
+alter table if exists plantaopro.v113_titulos add column if not exists vencimento timestamptz;
+create index if not exists ix_v113_titulos_cliente_id on plantaopro.v113_titulos (cliente_id);
+create index if not exists ix_v113_titulos_status on plantaopro.v113_titulos (status);
+create index if not exists ix_v113_titulos_created_at on plantaopro.v113_titulos (created_at);
+create index if not exists ix_v113_titulos_tenant_id on plantaopro.v113_titulos (tenant_id);
+create table if not exists plantaopro.v113_outbox_eventos (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, tipo varchar(80), payload_ref varchar(120), payload jsonb default '{}'::jsonb, status varchar(40), erro text);
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists tipo varchar(80);
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists payload_ref varchar(120);
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists payload jsonb default '{}'::jsonb;
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_outbox_eventos add column if not exists erro text;
+create index if not exists ix_v113_outbox_eventos_cliente_id on plantaopro.v113_outbox_eventos (cliente_id);
+create index if not exists ix_v113_outbox_eventos_status on plantaopro.v113_outbox_eventos (status);
+create index if not exists ix_v113_outbox_eventos_created_at on plantaopro.v113_outbox_eventos (created_at);
+create index if not exists ix_v113_outbox_eventos_tenant_id on plantaopro.v113_outbox_eventos (tenant_id);
+create table if not exists plantaopro.v113_outbox_logs (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, outbox_evento_id uuid, status varchar(40), detalhe text);
+alter table if exists plantaopro.v113_outbox_logs add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_outbox_logs add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_outbox_logs add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists outbox_evento_id uuid;
+alter table if exists plantaopro.v113_outbox_logs add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_outbox_logs add column if not exists detalhe text;
+create index if not exists ix_v113_outbox_logs_cliente_id on plantaopro.v113_outbox_logs (cliente_id);
+create index if not exists ix_v113_outbox_logs_status on plantaopro.v113_outbox_logs (status);
+create index if not exists ix_v113_outbox_logs_created_at on plantaopro.v113_outbox_logs (created_at);
+create index if not exists ix_v113_outbox_logs_tenant_id on plantaopro.v113_outbox_logs (tenant_id);
+create table if not exists plantaopro.v113_templates (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, codigo varchar(80) unique, nome varchar(160), descricao text, status varchar(40));
+alter table if exists plantaopro.v113_templates add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_templates add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_templates add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_templates add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_templates add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_templates add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_templates add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_templates add column if not exists codigo varchar(80) unique;
+alter table if exists plantaopro.v113_templates add column if not exists nome varchar(160);
+alter table if exists plantaopro.v113_templates add column if not exists descricao text;
+alter table if exists plantaopro.v113_templates add column if not exists status varchar(40);
+create index if not exists ix_v113_templates_cliente_id on plantaopro.v113_templates (cliente_id);
+create index if not exists ix_v113_templates_status on plantaopro.v113_templates (status);
+create index if not exists ix_v113_templates_created_at on plantaopro.v113_templates (created_at);
+create index if not exists ix_v113_templates_tenant_id on plantaopro.v113_templates (tenant_id);
+create table if not exists plantaopro.v113_template_instalacoes (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, template_id uuid, status varchar(40));
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists template_id uuid;
+alter table if exists plantaopro.v113_template_instalacoes add column if not exists status varchar(40);
+create index if not exists ix_v113_template_instalacoes_cliente_id on plantaopro.v113_template_instalacoes (cliente_id);
+create index if not exists ix_v113_template_instalacoes_status on plantaopro.v113_template_instalacoes (status);
+create index if not exists ix_v113_template_instalacoes_created_at on plantaopro.v113_template_instalacoes (created_at);
+create index if not exists ix_v113_template_instalacoes_tenant_id on plantaopro.v113_template_instalacoes (tenant_id);
+create table if not exists plantaopro.v113_jornada_acoes (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, codigo varchar(80), status varchar(40), detalhe text, erro text, open_url varchar(180), ordem int default 0);
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists codigo varchar(80);
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists status varchar(40);
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists detalhe text;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists erro text;
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists open_url varchar(180);
+alter table if exists plantaopro.v113_jornada_acoes add column if not exists ordem int default 0;
+create index if not exists ix_v113_jornada_acoes_cliente_id on plantaopro.v113_jornada_acoes (cliente_id);
+create index if not exists ix_v113_jornada_acoes_status on plantaopro.v113_jornada_acoes (status);
+create index if not exists ix_v113_jornada_acoes_created_at on plantaopro.v113_jornada_acoes (created_at);
+create index if not exists ix_v113_jornada_acoes_tenant_id on plantaopro.v113_jornada_acoes (tenant_id);
+create table if not exists plantaopro.v113_atividades (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, tipo varchar(80), descricao text, status varchar(40));
+alter table if exists plantaopro.v113_atividades add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_atividades add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_atividades add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_atividades add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_atividades add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_atividades add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_atividades add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_atividades add column if not exists tipo varchar(80);
+alter table if exists plantaopro.v113_atividades add column if not exists descricao text;
+alter table if exists plantaopro.v113_atividades add column if not exists status varchar(40);
+create index if not exists ix_v113_atividades_cliente_id on plantaopro.v113_atividades (cliente_id);
+create index if not exists ix_v113_atividades_status on plantaopro.v113_atividades (status);
+create index if not exists ix_v113_atividades_created_at on plantaopro.v113_atividades (created_at);
+create index if not exists ix_v113_atividades_tenant_id on plantaopro.v113_atividades (tenant_id);
+create table if not exists plantaopro.v113_auditoria (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, usuario_id uuid, entidade varchar(120), entidade_id uuid, acao varchar(120), detalhes jsonb default '{}'::jsonb, sucesso boolean default true, ip_origem varchar(80), perfil varchar(120), status varchar(40));
+alter table if exists plantaopro.v113_auditoria add column if not exists cliente_id uuid null;
+alter table if exists plantaopro.v113_auditoria add column if not exists tenant_id uuid null;
+alter table if exists plantaopro.v113_auditoria add column if not exists reg_status varchar(20) default 'A';
+alter table if exists plantaopro.v113_auditoria add column if not exists created_at timestamptz default now();
+alter table if exists plantaopro.v113_auditoria add column if not exists created_by uuid null;
+alter table if exists plantaopro.v113_auditoria add column if not exists updated_at timestamptz null;
+alter table if exists plantaopro.v113_auditoria add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v113_auditoria add column if not exists usuario_id uuid;
+alter table if exists plantaopro.v113_auditoria add column if not exists entidade varchar(120);
+alter table if exists plantaopro.v113_auditoria add column if not exists entidade_id uuid;
+alter table if exists plantaopro.v113_auditoria add column if not exists acao varchar(120);
+alter table if exists plantaopro.v113_auditoria add column if not exists detalhes jsonb default '{}'::jsonb;
+alter table if exists plantaopro.v113_auditoria add column if not exists sucesso boolean default true;
+alter table if exists plantaopro.v113_auditoria add column if not exists ip_origem varchar(80);
+alter table if exists plantaopro.v113_auditoria add column if not exists perfil varchar(120);
+alter table if exists plantaopro.v113_auditoria add column if not exists status varchar(40);
+create index if not exists ix_v113_auditoria_cliente_id on plantaopro.v113_auditoria (cliente_id);
+create index if not exists ix_v113_auditoria_status on plantaopro.v113_auditoria (status);
+create index if not exists ix_v113_auditoria_created_at on plantaopro.v113_auditoria (created_at);
+create index if not exists ix_v113_auditoria_tenant_id on plantaopro.v113_auditoria (tenant_id);
+
+-- ============================================================
+-- Seção 13 — Consolidação de produto v1.14
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_v114_consolidacao_produto.sql
+-- SOURCE-SHA256: a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337
+-- v1.14 consolida o domínio PlantãoPro sobre as tabelas persistidas da v1.13.
+-- Não cria módulo paralelo; adiciona estruturas pequenas para favoritos, filtros, atalhos e timelines.
+create schema if not exists plantaopro;
+create table if not exists plantaopro.v114_favoritos_usuario(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, usuario_id uuid null, titulo text not null, rota text not null, modulo text not null, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
+create table if not exists plantaopro.v114_filtros_salvos(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, usuario_id uuid null, nome text not null, rota text not null, filtros jsonb not null default '{}'::jsonb, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
+create table if not exists plantaopro.v114_timelines(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, entidade text not null, entidade_id uuid null, evento text not null, resumo text not null, perfil text null, dados_minimos jsonb not null default '{}'::jsonb, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
+create table if not exists plantaopro.v114_checklist_implantacao(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, titulo text not null, perfil_responsavel text not null, status text not null default 'PENDENTE', ordem int not null default 0, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null);
+
+-- ============================================================
+-- Seção 14 — Regras de faturamento e repasses v1.15
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_v115_regras_faturamento_repasses.sql
+-- SOURCE-SHA256: a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8
+create schema if not exists plantaopro;
+create extension if not exists pgcrypto;
+
+create table if not exists plantaopro.v115_regras_faturamento(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, codigo text not null, nome text not null, tipo_faturamento text not null, item_faturavel_id uuid null, convenio_id uuid null, valor_base numeric(12,2) not null default 0, percentual_desconto numeric(6,2) not null default 0, percentual_acrescimo numeric(6,2) not null default 0, status text not null default 'ATIVA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_regras_repasse(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, referencia_id uuid null, medico_id uuid null, convenio_id uuid null, tipo_regra text not null default 'PERCENTUAL', percentual numeric(6,2) not null default 0, valor_fixo numeric(12,2) not null default 0, valor_base numeric(12,2) not null default 0, valor_repasse numeric(12,2) not null default 0, contestacao text null, status text not null default 'REGRA_ATIVA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_regras_glosa(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, conta_receber_id uuid null, titulo_id uuid null, convenio_id uuid null, motivo text not null default 'REGRA_CONVENIO', valor_glosado numeric(12,2) not null default 0, percentual_glosa numeric(6,2) not null default 0, prazo_recurso timestamptz null, resolucao text null, status text not null default 'ABERTA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_convenio_regras(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, convenio_id uuid null, nome text not null, prazo_recebimento_dias int not null default 30, exige_autorizacao boolean not null default false, status text not null default 'ATIVA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_faturamento_eventos(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, tipo text not null, entidade_id uuid null, payload jsonb not null default '{}'::jsonb, status text not null default 'PENDENTE', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_recebimentos(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, conta_receber_id uuid null, valor_recebido numeric(12,2) not null default 0, forma text not null default 'MANUAL_AUDITADO', status text not null default 'RECEBIDO', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_configuracoes_financeiras(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, chave text not null, valor text not null, escopo text not null default 'TENANT', status text not null default 'ATIVA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_jornada_perfil_progresso(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, perfil text not null, passo text not null, rota text not null, cta text not null, pendencia_relacionada text null, status text not null default 'PENDENTE', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_alertas_operacionais(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, tipo text not null, prioridade text not null, perfil_responsavel text not null, modulo text not null, entidade_id uuid null, cta text not null, rota text not null, prazo timestamptz null, status text not null default 'ABERTA', origem_regra text not null, reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+create table if not exists plantaopro.v115_configuracoes_mobile(id uuid primary key default gen_random_uuid(), cliente_id uuid null, tenant_id uuid null, perfil text not null, chave text not null, valor jsonb not null default '{}'::jsonb, status text not null default 'ATIVA', reg_status char(1) not null default 'A', created_at timestamptz not null default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null);
+
+alter table if exists plantaopro.v115_regras_faturamento add column if not exists updated_by uuid null;
+alter table if exists plantaopro.v115_regras_repasse add column if not exists contestacao text null;
+alter table if exists plantaopro.v115_regras_glosa add column if not exists resolucao text null;
+alter table if exists plantaopro.v115_alertas_operacionais add column if not exists origem_regra text not null default 'v115';
+
+create index if not exists ix_v115_regras_faturamento_tenant_status_data on plantaopro.v115_regras_faturamento(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_regras_repasse_tenant_status_data on plantaopro.v115_regras_repasse(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_regras_glosa_tenant_status_data on plantaopro.v115_regras_glosa(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_convenio_regras_tenant_status_data on plantaopro.v115_convenio_regras(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_faturamento_eventos_tenant_status_data on plantaopro.v115_faturamento_eventos(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_recebimentos_tenant_status_data on plantaopro.v115_recebimentos(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_config_fin_tenant_status_data on plantaopro.v115_configuracoes_financeiras(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_jornada_tenant_status_data on plantaopro.v115_jornada_perfil_progresso(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_alertas_tenant_status_data on plantaopro.v115_alertas_operacionais(tenant_id,reg_status,created_at);
+create index if not exists ix_v115_mobile_tenant_status_data on plantaopro.v115_configuracoes_mobile(tenant_id,reg_status,created_at);
 
 -- ============================================================
 -- Seção 15 — Painel público seguro v1.24.3

@@ -1,5 +1,8 @@
 {
   "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql": "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
+  "database/migrations/2026_v113_operacional_real.sql": "5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599",
+  "database/migrations/2026_v114_consolidacao_produto.sql": "a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337",
+  "database/migrations/2026_v115_regras_faturamento_repasses.sql": "a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8",
   "database/migrations/2026_v192_saved_views.sql": "df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6",
   "database/schema/000_extensions_schema.sql": "c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776",
   "database/schema/000_schema_canonico_base.sql": "f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e",

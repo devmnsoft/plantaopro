@@ -47,7 +47,7 @@ public sealed class V186FinancialOperationalContractTests
         var script = Read("backend/PlantaoPro.Web/wwwroot/js/components/business-actions.js");
         foreach (var status in new[] { "400", "401", "403", "404", "409", "422" }) Assert.Contains($"[{status},", script);
         Assert.DoesNotContain("innerHTML", script);
-        Assert.DoesNotContain("confirm(", script);
+        Assert.DoesNotMatch(@"(?<![\w.])(?:window\.)?confirm\s*\(", script);
         Assert.Contains("url.origin !== window.location.origin", script);
         Assert.Contains("event.target instanceof Element", script);
         Assert.True(script.IndexOf("try {", StringComparison.Ordinal) < script.IndexOf("JSON.parse", StringComparison.Ordinal));

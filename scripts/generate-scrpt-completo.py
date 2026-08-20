@@ -2,8 +2,12 @@
 import hashlib,json,re
 from collections import defaultdict
 from pathlib import Path
+from database_manifest_validation import validate_database_manifests
 ROOT=Path(__file__).resolve().parents[1]
 manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
+manifest_errors=validate_database_manifests(ROOT, manifest)
+if manifest_errors:
+    raise SystemExit('Manifesto de banco inválido:\n- '+'\n- '.join(manifest_errors))
 out=[]; seen=set(); objects={}; conflicts=[]; canonical_sources=set(); canonical_tables=set(manifest.get('canonicalTables', [])); source_checksums={}
 for section in manifest['sections']:
     for obj in section.get('objects',[]):

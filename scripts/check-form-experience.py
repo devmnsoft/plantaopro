@@ -5,7 +5,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "backend/PlantaoPro.Web"
-css = (WEB / "wwwroot/css/design-system/v154-forms-feedback.css").read_text(encoding="utf-8")
+css = (WEB / "wwwroot/css/design-system/forms.css").read_text(encoding="utf-8")
 errors: list[str] = []
 
 critical = [

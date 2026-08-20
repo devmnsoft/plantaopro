@@ -2,8 +2,10 @@ using PlantaoPro.Api.Data;
 
 namespace PlantaoPro.Api.SavedViews;
 
-public sealed class SavedViewService(ISavedViewRepository repository, ICurrentUserService currentUser, IAuditService audit) : ISavedViewService
+public sealed class SavedViewService : ISavedViewService
 {
+    private readonly ISavedViewRepository repository; private readonly ICurrentUserService currentUser; private readonly IAuditService audit;
+    public SavedViewService(ISavedViewRepository repository,ICurrentUserService currentUser,IAuditService audit){this.repository=repository;this.currentUser=currentUser;this.audit=audit;}
     public Task<IReadOnlyList<SavedViewDto>> ListAsync(string module, CancellationToken ct)
     {
         var context = Context();

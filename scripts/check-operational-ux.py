@@ -84,7 +84,7 @@ fechamentos = (WEB / "Views/OperacaoPremium/Fechamentos.cshtml").read_text(encod
 for etapa in ("Plantão realizado", "Divergências", "Conferência", "Aprovação", "Financeiro", "Pagamento"):
     if etapa not in fechamentos:
         errors.append(f"Fechamentos sem etapa operacional: {etapa}")
-for marker in ("Model.Pendentes.Any()", "table-responsive", "data-label=", "Model.Timeline.Any()"):
+for marker in ("Model.Fechamentos", "table-responsive", "data-label=", "Model.Timeline.Count"):
     if marker not in fechamentos:
         errors.append(f"Fechamentos sem contrato de dados reais/responsivo: {marker}")
 

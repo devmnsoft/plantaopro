@@ -17,15 +17,15 @@ public sealed class FechamentoOperacionalService
     private NpgsqlConnection Connection() => new(configuration.GetConnectionString("Default"));
     private (Guid Tenant, Guid Cliente, Guid Usuario) Contexto() => (current.TenantId ?? throw new UnauthorizedAccessException(), current.ClienteId ?? throw new UnauthorizedAccessException(), current.UserId ?? throw new UnauthorizedAccessException());
 
-    private const string ResumoSql = """
-        select f.id as "Id",f.plantao_id as "PlantaoId",coalesce(h.nome_fantasia,'') as "Hospital",
-        coalesce(es.nome,'') as "Especialidade",p.data_inicio as "Inicio",p.data_fim as "Fim",f.status as "Status",
-        f.valor_previsto as "ValorPrevisto",f.valor_apurado as "ValorApurado",f.horas_previstas as "HorasPrevistas",
-        f.horas_realizadas as "HorasRealizadas",(select count(*)::int from plantaopro.fechamento_plantao_escalas i where i.tenant_id=f.tenant_id and i.fechamento_id=f.id) as "QuantidadeEscalas",
-        (select count(*)::int from plantaopro.fechamento_divergencias d where d.tenant_id=f.tenant_id and d.fechamento_id=f.id and d.status='ABERTA') as "DivergenciasAbertas",
-        f.iniciado_em as "CriadoEm" from plantaopro.fechamento_plantao f join plantaopro.plantoes p on p.id=f.plantao_id
+    private const string ResumoSql = @"
+        select f.id as ""Id"",f.plantao_id as ""PlantaoId"",coalesce(h.nome_fantasia,'') as ""Hospital"",
+        coalesce(es.nome,'') as ""Especialidade"",p.data_inicio as ""Inicio"",p.data_fim as ""Fim"",f.status as ""Status"",
+        f.valor_previsto as ""ValorPrevisto"",f.valor_apurado as ""ValorApurado"",f.horas_previstas as ""HorasPrevistas"",
+        f.horas_realizadas as ""HorasRealizadas"",(select count(*)::int from plantaopro.fechamento_plantao_escalas i where i.tenant_id=f.tenant_id and i.fechamento_id=f.id) as ""QuantidadeEscalas"",
+        (select count(*)::int from plantaopro.fechamento_divergencias d where d.tenant_id=f.tenant_id and d.fechamento_id=f.id and d.status='ABERTA') as ""DivergenciasAbertas"",
+        f.iniciado_em as ""CriadoEm"" from plantaopro.fechamento_plantao f join plantaopro.plantoes p on p.id=f.plantao_id
         join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades es on es.id=p.especialidade_id
-        """;
+        ";
 
     public async Task<ApiResponse<IReadOnlyList<FechamentoResumoDto>>> ListarAsync(bool pendentes, CancellationToken ct)
     {
@@ -40,19 +40,19 @@ public sealed class FechamentoOperacionalService
         var c = Contexto(); await using var cn = Connection();
         var header = await cn.QueryFirstOrDefaultAsync<FechamentoDetalheDto>(new CommandDefinition(ResumoSql + " where f.id=@id and f.tenant_id=@Tenant and f.cliente_id=@Cliente", new { id, c.Tenant, c.Cliente }, cancellationToken: ct));
         if (header is null) return ApiResponse<FechamentoDetalheDto>.Fail("Fechamento não encontrado.", 404);
-        header.Itens = (await cn.QueryAsync<FechamentoItemDto>(new CommandDefinition("""
-            select i.id as "Id",i.escala_id as "EscalaId",i.medico_id as "MedicoId",coalesce(m.nome,'') as "Medico",coalesce(m.crm,'') as "Crm",
-            i.status_escala as "StatusEscala",i.inicio_previsto as "InicioPrevisto",i.fim_previsto as "FimPrevisto",i.horas_previstas as "HorasPrevistas",
-            i.horas_realizadas as "HorasRealizadas",i.valor_previsto as "ValorPrevisto",i.valor_calculado as "ValorApurado",i.possui_divergencia as "PossuiDivergencia",
-            o.pagamento_id as "PagamentoId",pg.status as "PagamentoStatus" from plantaopro.fechamento_plantao_escalas i join plantaopro.medicos m on m.id=i.medico_id
+        header.Itens = (await cn.QueryAsync<FechamentoItemDto>(new CommandDefinition(@"
+            select i.id as ""Id"",i.escala_id as ""EscalaId"",i.medico_id as ""MedicoId"",coalesce(m.nome,'') as ""Medico"",coalesce(m.crm,'') as ""Crm"",
+            i.status_escala as ""StatusEscala"",i.inicio_previsto as ""InicioPrevisto"",i.fim_previsto as ""FimPrevisto"",i.horas_previstas as ""HorasPrevistas"",
+            i.horas_realizadas as ""HorasRealizadas"",i.valor_previsto as ""ValorPrevisto"",i.valor_calculado as ""ValorApurado"",i.possui_divergencia as ""PossuiDivergencia"",
+            o.pagamento_id as ""PagamentoId"",pg.status as ""PagamentoStatus"" from plantaopro.fechamento_plantao_escalas i join plantaopro.medicos m on m.id=i.medico_id
             left join plantaopro.financeiro_pagamento_origem o on o.tenant_id=i.tenant_id and o.fechamento_id=i.fechamento_id and o.escala_id=i.escala_id
             left join plantaopro.pagamentos pg on pg.id=o.pagamento_id where i.tenant_id=@Tenant and i.fechamento_id=@id order by i.inicio_previsto,m.nome
-            """, new { id, c.Tenant }, cancellationToken: ct))).AsList();
-        header.Divergencias = (await cn.QueryAsync<FechamentoDivergenciaDto>(new CommandDefinition("""
-            select id as "Id",fechamento_item_id as "FechamentoItemId",tipo as "Tipo",descricao as "Descricao",valor_anterior as "ValorAnterior",
-            valor_proposto as "ValorProposto",status as "Status",resolucao as "Resolucao",criada_em as "CriadoEm",resolvida_em as "ResolvidoEm"
+            ", new { id, c.Tenant }, cancellationToken: ct))).AsList();
+        header.Divergencias = (await cn.QueryAsync<FechamentoDivergenciaDto>(new CommandDefinition(@"
+            select id as ""Id"",fechamento_item_id as ""FechamentoItemId"",tipo as ""Tipo"",descricao as ""Descricao"",valor_anterior as ""ValorAnterior"",
+            valor_proposto as ""ValorProposto"",status as ""Status"",resolucao as ""Resolucao"",criada_em as ""CriadoEm"",resolvida_em as ""ResolvidoEm""
             from plantaopro.fechamento_divergencias where tenant_id=@Tenant and fechamento_id=@id order by criada_em desc
-            """, new { id, c.Tenant }, cancellationToken: ct))).AsList();
+            ", new { id, c.Tenant }, cancellationToken: ct))).AsList();
         return ApiResponse<FechamentoDetalheDto>.Ok(header);
     }
 
@@ -89,16 +89,16 @@ public sealed class FechamentoOperacionalService
         catch(Exception ex){ await tx.RollbackAsync(ct); logger.LogError(ex,"Erro ao gerar fechamento do plantão {PlantaoId}",plantaoId); return ApiResponse<FechamentoDetalheDto>.Fail("Não foi possível gerar o fechamento.",500); }
     }
 
-    public Task<ApiResponse<FechamentoDetalheDto>> IniciarConferenciaAsync(Guid id, CancellationToken ct) => TransicionarAsync(id, [FechamentoStatus.Aberto,FechamentoStatus.Devolvido], FechamentoStatus.EmConferencia,"CONFERENCIA_INICIADA",null,ct);
+    public Task<ApiResponse<FechamentoDetalheDto>> IniciarConferenciaAsync(Guid id, CancellationToken ct) => TransicionarAsync(id, new[] { FechamentoStatus.Aberto,FechamentoStatus.Devolvido }, FechamentoStatus.EmConferencia,"CONFERENCIA_INICIADA",null,ct);
     public async Task<ApiResponse<FechamentoDetalheDto>> ConcluirConferenciaAsync(Guid id, CancellationToken ct)
     {
         var c=Contexto(); await using var cn=Connection(); var abertas=await cn.ExecuteScalarAsync<int>(new CommandDefinition("select count(*) from plantaopro.fechamento_divergencias where tenant_id=@Tenant and fechamento_id=@id and status='ABERTA'",new{id,c.Tenant},cancellationToken:ct));
         if(abertas>0) return ApiResponse<FechamentoDetalheDto>.Fail("Resolva as divergências abertas antes de concluir a conferência.",422);
-        return await TransicionarAsync(id,[FechamentoStatus.EmConferencia],FechamentoStatus.AguardandoAprovacao,"CONFERENCIA_CONCLUIDA",null,ct);
+        return await TransicionarAsync(id,new[] { FechamentoStatus.EmConferencia },FechamentoStatus.AguardandoAprovacao,"CONFERENCIA_CONCLUIDA",null,ct);
     }
-    public Task<ApiResponse<FechamentoDetalheDto>> AprovarAsync(Guid id,CancellationToken ct)=>TransicionarAsync(id,[FechamentoStatus.AguardandoAprovacao],FechamentoStatus.Aprovado,"APROVADO",null,ct,"aprovado_por","aprovado_em");
+    public Task<ApiResponse<FechamentoDetalheDto>> AprovarAsync(Guid id,CancellationToken ct)=>TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Aprovado,"APROVADO",null,ct,"aprovado_por","aprovado_em");
     public async Task<ApiResponse<FechamentoDetalheDto>> DevolverAsync(Guid id,string motivo,CancellationToken ct)
-    { motivo=(motivo??"").Trim(); if(motivo.Length<10||motivo.Length>500)return ApiResponse<FechamentoDetalheDto>.Fail("Motivo deve possuir entre 10 e 500 caracteres.",422); return await TransicionarAsync(id,[FechamentoStatus.AguardandoAprovacao],FechamentoStatus.Devolvido,"DEVOLVIDO",motivo,ct,"devolvido_por","devolvido_em"); }
+    { motivo=(motivo??"").Trim(); if(motivo.Length<10||motivo.Length>500)return ApiResponse<FechamentoDetalheDto>.Fail("Motivo deve possuir entre 10 e 500 caracteres.",422); return await TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Devolvido,"DEVOLVIDO",motivo,ct,"devolvido_por","devolvido_em"); }
 
     public async Task<ApiResponse<FechamentoDetalheDto>> CriarDivergenciaAsync(Guid id,CriarDivergenciaRequest request,CancellationToken ct)
     {

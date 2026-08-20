@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace PlantaoPro.Api.Controllers;
 
 [ApiController, Route("api/meu-dia"), Authorize]
-public sealed class MeuDiaController(IMeuDiaService service) : ControllerBase
+public sealed class MeuDiaController : ControllerBase
 {
+    private readonly IMeuDiaService service; public MeuDiaController(IMeuDiaService service)=>this.service=service;
     [HttpGet] public async Task<IActionResult> Get(CancellationToken ct) => Ok(await service.ObterResumoAsync(ct));
     [HttpGet("indicadores")] public async Task<IActionResult> Indicators(CancellationToken ct) => Ok(await service.IndicadoresAsync(ct));
     [HttpGet("pendencias")] public async Task<IActionResult> Actions(CancellationToken ct) => Ok(await service.PendenciasAsync(ct));

@@ -1,7 +1,8 @@
 namespace PlantaoPro.Api;
 
-public sealed class FinancialTenantContext(ICurrentUserService currentUser)
+public sealed class FinancialTenantContext
 {
+    private readonly ICurrentUserService currentUser; public FinancialTenantContext(ICurrentUserService currentUser)=>this.currentUser=currentUser;
     public Guid? TenantId => currentUser.ClienteId ?? currentUser.TenantId;
     public Guid? UserId => currentUser.UserId;
     public IReadOnlyCollection<string> Roles => currentUser.Roles;

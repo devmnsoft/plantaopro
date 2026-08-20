@@ -1,9 +1,12 @@
 from pathlib import Path
+import json
+import subprocess
 import re
 
 IGNORED_PARTS = {'.git', '.vs', 'artifacts', 'bin', 'obj', 'node_modules'}
 TEXT_SUFFIXES = {'.cs', '.cshtml', '.ts', '.tsx', '.js', '.jsx', '.json', '.sql', '.md', '.config', '.xml', '.yml', '.yaml'}
 ROOTS = [Path('backend/PlantaoPro.Api'), Path('backend/PlantaoPro.Web'), Path('mobile/PlantaoPro.App/src'), Path('database'), Path('docs')]
+INVALID_PLACEHOLDERS = ('__SET_', '<senha', '<password', 'change-me', 'example.invalid')
 
 RULES = [
     ('token logging', re.compile(r'\bconsole\.log\s*\([^\n)]*\b(token|jwt|bearer)\b', re.IGNORECASE)),
@@ -48,6 +51,24 @@ for root in ROOTS:
         for label, pattern in RULES:
             if pattern.search(text):
                 blocked.append({'file': str(path), 'rule': label})
+
+# Configuration invariants are parsed rather than inferred from a textual match.
+for path in [*Path('backend').rglob('appsettings*.json')]:
+    data = json.loads(path.read_text(encoding='utf-8'))
+    database = data.get('Database', {})
+    if database.get('AllowLegacyPostgresDatabase') is True:
+        blocked.append({'file': str(path), 'rule': 'legacy database enabled'})
+    if database.get('AllowDevelopmentAutoCreate') is True:
+        blocked.append({'file': str(path), 'rule': 'development auto-create enabled'})
+    for value_name, value in [('JWT', data.get('Jwt', {}).get('Key')), ('connection string', data.get('ConnectionStrings', {}).get('Default'))]:
+        if value and not any(marker.lower() in str(value).lower() for marker in INVALID_PLACEHOLDERS):
+            blocked.append({'file': str(path), 'rule': f'non-placeholder {value_name}'})
+
+tracked = subprocess.run(['git','ls-files'],check=True,text=True,capture_output=True).stdout.splitlines()
+for name in tracked:
+    base=Path(name).name
+    if base == '.env' or (base.startswith('.env.') and base not in {'.env.example','.env.sample'}):
+        blocked.append({'file': name, 'rule': 'tracked environment file'})
 
 if blocked:
     details = ', '.join(f"{item['file']} ({item['rule']})" for item in blocked)

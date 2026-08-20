@@ -8,14 +8,14 @@ public sealed class V192SavedViewValidationTests
     [Fact]
     public void Filters_AcceptsWhitelistedKeys()
     {
-        using var json = JsonDocument.Parse("""{"status":"ABERTO","hospital":"x","inicio":"2026-08-19"}""");
+        using var json = JsonDocument.Parse(@"{""status"":""ABERTO"",""hospital"":""x"",""inicio"":""2026-08-19""}");
         Assert.Equal(json.RootElement.GetRawText(), SavedViewValidation.Json(json.RootElement, "PLANTOES", false));
     }
 
     [Fact]
     public void Filters_RejectsUnknownKeysInsteadOfPassingThemToSql()
     {
-        using var json = JsonDocument.Parse("""{"status":"ABERTO","sql":"drop table"}""");
+        using var json = JsonDocument.Parse(@"{""status"":""ABERTO"",""sql"":""drop table""}");
         var error = Assert.Throws<SavedViewValidationException>(() => SavedViewValidation.Json(json.RootElement, "PLANTOES", false));
         Assert.Contains("sql", error.Message);
     }

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.45.0",
-  "generatedAt": "2026-08-06",
+  "schemaVersion": "v1.95.0",
+  "generatedAt": "2026-08-20",
   "sections": [
     {
       "order": 3,
@@ -117,6 +117,25 @@
             "plantaopro.clientes"
           ],
           "source": "database/schema/150_v1243_painel_publico_seguro.sql"
+        }
+      ]
+    },
+    {
+      "order": 15,
+      "name": "Produto vendável, agenda e operação mobile v1.44.0",
+      "objects": [
+        {
+          "name": "v1440_produto_vendavel",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql",
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.usuarios",
+            "plantaopro.medicos",
+            "plantaopro.escalas"
+          ]
         }
       ]
     },
@@ -256,25 +275,6 @@
       ]
     },
     {
-      "order": 15,
-      "name": "Produto vendável, agenda e operação mobile v1.44.0",
-      "objects": [
-        {
-          "name": "v1440_produto_vendavel",
-          "type": "canonical",
-          "category": "CANONICAL_PRODUCT",
-          "required": true,
-          "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql",
-          "dependsOn": [
-            "plantaopro.tenants",
-            "plantaopro.usuarios",
-            "plantaopro.medicos",
-            "plantaopro.escalas"
-          ]
-        }
-      ]
-    },
-    {
       "order": 21,
       "name": "Design executivo, operação inteligente e comercial v1.45.0",
       "objects": [
@@ -290,6 +290,86 @@
             "plantaopro.medicos",
             "plantaopro.escalas",
             "plantaopro.agenda_eventos_operacionais"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 39,
+      "name": "plantaopro.fechamento_operacional_v187",
+      "objects": [
+        {
+          "name": "plantaopro.fechamento_operacional_v187",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql",
+          "dependsOn": [
+            "plantaopro.fechamento_plantao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 40,
+      "name": "plantaopro.prontuario_longitudinal_v188",
+      "objects": [
+        {
+          "name": "plantaopro.prontuario_longitudinal_v188",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/330_v188_prontuario_longitudinal.sql",
+          "dependsOn": [
+            "plantaopro.fechamento_operacional_v187"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 41,
+      "name": "plantaopro.clinical_hardening_v189",
+      "objects": [
+        {
+          "name": "plantaopro.clinical_hardening_v189",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/340_v189_clinical_operational_hardening.sql",
+          "dependsOn": [
+            "plantaopro.prontuario_longitudinal_v188"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 42,
+      "name": "plantaopro.saved_views_v192",
+      "objects": [
+        {
+          "name": "plantaopro.saved_views_v192",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/migrations/2026_v192_saved_views.sql",
+          "dependsOn": [
+            "plantaopro.clinical_hardening_v189"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 43,
+      "name": "plantaopro.revenue_cycle_v195",
+      "objects": [
+        {
+          "name": "plantaopro.revenue_cycle_v195",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
+          "dependsOn": [
+            "plantaopro.saved_views_v192"
           ]
         }
       ]

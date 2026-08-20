@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
 RAW_STRING = re.compile(r"(?:=|return|=>|\(|,|:)\s*\"\"\"")
+PRIMARY_CONSTRUCTOR = re.compile(r"^\s*(?:public|internal)\s+(?:sealed\s+)?class\s+\w+\s*\(")
+COLLECTION_EXPRESSION = re.compile(r"(?:=>|=|return)\s*\[[A-Za-z_][^\]\n]*,")
 INVALID_LANG_VERSION = re.compile(
     r"<LangVersion>\s*(?:latest|preview|1[1-9](?:\.\d+)?)\s*</LangVersion>",
     re.IGNORECASE,
@@ -23,6 +25,10 @@ def validate() -> list[str]:
         for line_number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
             if RAW_STRING.search(line):
                 errors.append(f"{source.relative_to(ROOT)}:{line_number}: raw string literal")
+            if PRIMARY_CONSTRUCTOR.search(line):
+                errors.append(f"{source.relative_to(ROOT)}:{line_number}: primary constructor")
+            if COLLECTION_EXPRESSION.search(line):
+                errors.append(f"{source.relative_to(ROOT)}:{line_number}: collection expression")
 
     for project in [*BACKEND.rglob("*.csproj"), *BACKEND.rglob("*.props")]:
         content = project.read_text(encoding="utf-8")
@@ -30,8 +36,8 @@ def validate() -> list[str]:
             errors.append(f"{project.relative_to(ROOT)}: LangVersion incompatível com C# 10")
 
     directory_props = (BACKEND / "Directory.Build.props").read_text(encoding="utf-8")
-    if "<LangVersion>10</LangVersion>" not in directory_props:
-        errors.append("backend/Directory.Build.props: o gate exige <LangVersion>10</LangVersion>")
+    if not re.search(r"<LangVersion>\s*10(?:\.0)?\s*</LangVersion>", directory_props):
+        errors.append("backend/Directory.Build.props: o gate exige <LangVersion>10.0</LangVersion>")
     return errors
 
 

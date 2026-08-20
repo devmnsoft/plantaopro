@@ -6,8 +6,8 @@ public sealed record SavedViewDto(Guid Id, string Module, string Name, JsonEleme
 public sealed record SaveSavedViewRequest(string Module, string Name, JsonElement Filters, JsonElement? Sort, bool IsDefault = false);
 public sealed record UpdateSavedViewRequest(string Name, JsonElement Filters, JsonElement? Sort, bool IsDefault = false);
 
-public sealed class SavedViewValidationException(string message) : Exception(message);
-public sealed class SavedViewConflictException(string message) : Exception(message);
+public sealed class SavedViewValidationException : Exception { public SavedViewValidationException(string message):base(message){} }
+public sealed class SavedViewConflictException : Exception { public SavedViewConflictException(string message):base(message){} }
 
 public interface ISavedViewRepository
 {

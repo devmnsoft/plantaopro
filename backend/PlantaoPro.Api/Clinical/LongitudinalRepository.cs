@@ -44,7 +44,7 @@ public sealed class LongitudinalRepository : ILongitudinalRepository
     public async Task<bool> PossuiVinculoAssistencialAsync(Guid t, Guid p, Guid userId, CancellationToken ct)
     {
         await using var cn = Connection();
-        const string sql = """
+        const string sql = @"
             select exists (
                 select 1
                   from plantaopro.consultas c
@@ -52,7 +52,7 @@ public sealed class LongitudinalRepository : ILongitudinalRepository
                  where c.cliente_id = @t and c.paciente_id = @p and c.reg_status = 'A'
                    and m.usuario_id = @userId
             )
-            """;
+            ";
         return await cn.ExecuteScalarAsync<bool>(Cmd(sql, new { t, p, userId }, ct));
     }
 

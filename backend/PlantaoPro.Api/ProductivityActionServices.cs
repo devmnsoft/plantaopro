@@ -23,7 +23,7 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
     private NpgsqlConnection Open() => new(connectionString);
 
     // Every row is derived from the current source entity. Only user presentation state is joined.
-    private const string DerivedSql = """
+    private const string DerivedSql = @"
         select concat('OPERACAO:PLANTAO:',p.id,':COBERTURA') as Key,'OPERACAO' as Module,'PLANTAO' as EntityType,
           p.id as EntityId,'COBERTURA' as ActionCode,'Plantão sem cobertura' as Title,
           coalesce(nullif(p.nome,''),'Existem vagas abertas para este plantão.') as Description,
@@ -67,14 +67,14 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           and ax.starts_at>=date_trunc('day',now()) and ax.starts_at<date_trunc('day',now())+interval '1 day'
           and not exists(select 1 from plantaopro.checkins ci where ci.tenant_id=@tenantId and ci.status not in ('CANCELADO','INATIVO')
             and coalesce(ci.dados->>'agendamentoId',ci.dados->>'agendamento_id')=a.id::text)
-        """;
+        ";
 
     public async Task<ProductivityPageDto> ListAsync(Guid tenantId, Guid userId, ProductivityQuery query,
         bool operation, bool clinical, bool financial, bool doctorOnly, CancellationToken ct)
     {
         var page = Math.Max(1, query.Page); var size = Math.Clamp(query.PageSize, 1, 100);
         var tab = (query.Tab ?? "PARA_MIM").Trim().ToUpperInvariant();
-        var sql = $"""
+        var sql = $@"
             with derived as ({DerivedSql}), visible as (
               select d.*,s.snoozed_until is not null and s.snoozed_until>now() as IsSnoozed
               from derived d left join plantaopro.productivity_item_user_state s
@@ -90,7 +90,7 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
             select *,count(*) over()::int as TotalRows from filtered
             order by case Priority when 'CRITICA' then 1 when 'ALTA' then 2 when 'NORMAL' then 3 else 4 end,DueAt nulls last,CreatedAt
             offset @offset limit @size
-            """;
+            ";
         await using var cn = Open();
         var args = new { tenantId,userId,operation,clinical,financial,doctorOnly,
             priority=Normalize(query.Priority),module=Normalize(query.Module),status=Normalize(query.Status),query.OwnerId,query.DueFrom,query.DueTo,
@@ -112,11 +112,11 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
     public async Task SnoozeAsync(Guid tenantId, Guid userId, string key, DateTimeOffset until, CancellationToken ct)
     {
         await using var cn=Open();
-        await cn.ExecuteAsync(new CommandDefinition("""
+        await cn.ExecuteAsync(new CommandDefinition(@"
           insert into plantaopro.productivity_item_user_state(id,tenant_id,user_id,item_key,snoozed_until,created_at,updated_at)
           values(gen_random_uuid(),@tenantId,@userId,@key,@until,now(),now())
           on conflict(tenant_id,user_id,item_key) do update set snoozed_until=excluded.snoozed_until,dismissed_at=null,updated_at=now()
-          """,new{tenantId,userId,key,until},cancellationToken:ct));
+          ",new{tenantId,userId,key,until},cancellationToken:ct));
     }
 
     private static string? Normalize(string? value)=>string.IsNullOrWhiteSpace(value)?null:value.Trim().ToUpperInvariant();

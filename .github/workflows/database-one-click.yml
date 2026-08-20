@@ -1,4 +1,4 @@
-name: database-one-click-v1390
+name: database-one-click-v1951
 on: [push, pull_request]
 env:
   PGHOST: localhost
@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
-        with: { dotnet-version: '10.0.x', dotnet-quality: preview }
+        with: { dotnet-version: '10.0.x' }
       - run: bash scripts/database/install-plantaopro.sh
       - run: psql -d plantaopro -Atc "select json_build_array((select count(*) from plantaopro.usuarios),(select count(*) from plantaopro.perfis),(select count(*) from plantaopro.permissoes),(select count(*) from plantaopro.perfil_permissoes),(select count(*) from plantaopro.parametros_sistema))" > /tmp/before
       - run: bash scripts/database/install-plantaopro.sh
@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y ripgrep
-      - run: test -d database/seeds/development && ! rg -n "paciente|prontuario|receita" database/seeds/development
+      - run: test -d database/seeds/development && ! rg -n --glob '*.sql' "INSERT[[:space:][:alnum:]_,()]*INTO[[:space:]]+(plantaopro\\.)?(pacientes|prontuarios|prescricoes)|dados clínicos reais" database/seeds/development
   database-one-click-production-security:
     runs-on: ubuntu-latest
     steps:

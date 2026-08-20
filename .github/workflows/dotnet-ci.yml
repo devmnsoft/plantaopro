@@ -325,7 +325,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
       - name: Apply complete database script
         run: psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
       - name: Restore

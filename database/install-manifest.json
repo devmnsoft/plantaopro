@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.95.0",
+  "schemaVersion": "v1.95.1",
   "generatedAt": "2026-08-20",
   "sections": [
     {
@@ -167,7 +167,7 @@
     },
     {
       "order": 18,
-      "name": "Seeds obrigatórios de sistema v1.39.0",
+      "name": "Seeds obrigatórios de sistema v1.95.1",
       "objects": [
         {
           "name": "plantaopro.seed_010_modulos",
@@ -290,6 +290,24 @@
             "plantaopro.medicos",
             "plantaopro.escalas",
             "plantaopro.agenda_eventos_operacionais"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 38,
+      "name": "Pagamentos de plantões v1.95.1",
+      "objects": [
+        {
+          "name": "plantaopro.pagamentos",
+          "type": "canonical",
+          "category": "CANONICAL_FINANCE",
+          "required": true,
+          "source": "database/schema/305_v1951_pagamentos_plantoes.sql",
+          "dependsOn": [
+            "plantaopro.escalas",
+            "plantaopro.medicos",
+            "plantaopro.plantoes"
           ]
         }
       ]

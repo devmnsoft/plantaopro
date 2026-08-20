@@ -5,7 +5,7 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v1.95.0
+-- Versão do schema: v1.95.1
 -- PostgreSQL suportado: 16
 -- Data de geração: 2026-08-20
 -- Execução oficial:
@@ -1976,7 +1976,7 @@ JOIN plantaopro.acoes_sistema a ON upper(btrim(a.codigo))=c.acao AND a.reg_statu
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.permissoes p WHERE upper(btrim(p.codigo))=c.modulo||'.'||c.acao AND p.reg_status='A');
 
 -- ============================================================
--- Seção 18 — Seeds obrigatórios de sistema v1.39.0
+-- Seção 18 — Seeds obrigatórios de sistema v1.95.1
 -- ============================================================
 
 -- SOURCE: database/seeds/system/010_modulos.sql
@@ -2106,11 +2106,11 @@ SELECT 1 AS seed_090_notificacoes;
 SELECT 1 AS seed_100_status_operacionais;
 
 -- SOURCE: database/seeds/system/110_configuracoes_runtime.sql
--- SOURCE-SHA256: afc90f4db08211c439413848742b8ea68802ac83891ff700204d63fedd99710c
+-- SOURCE-SHA256: 076be98b9c8f146b3c6166ee6d9caa0d01fc9dc1d5eb24c90f62fe0cbfe932db
 -- Checkpoint de schema concluído somente após todas as estruturas e seeds anteriores.
 INSERT INTO plantaopro.schema_migrations(id,versao,nome,script_path,checksum,iniciado_em,applied_at,aplicado_em,duracao_ms,status,executado_por,ambiente)
-SELECT 'v1.39.0','v1.39.0','One-click database runtime-ready','database/install-manifest.json','manifest-managed',now(),now(),now(),0,'APLICADA',current_user,'INSTALL'
-WHERE NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='v1.39.0');
+SELECT 'v1.95.1','v1.95.1','One-click database runtime-ready','database/install-manifest.json','manifest-managed',now(),now(),now(),0,'APLICADA',current_user,'INSTALL'
+WHERE NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='v1.95.1');
 
 -- ============================================================
 -- Seção 19 — Produto operacional premium v1.40.0
@@ -2389,6 +2389,65 @@ CREATE TABLE IF NOT EXISTS user_saved_dashboards (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_saved_dashboard_padrao ON user_saved_dashboards(tenant_id,usuario_id,perfil) WHERE padrao;
 CREATE INDEX IF NOT EXISTS idx_saved_dashboards_usuario ON user_saved_dashboards(tenant_id,usuario_id,perfil);
+
+-- ============================================================
+-- Seção 38 — Pagamentos de plantões v1.95.1
+-- ============================================================
+
+-- SOURCE: database/schema/305_v1951_pagamentos_plantoes.sql
+-- SOURCE-SHA256: fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0
+-- PlantãoPro v1.95.1 — contrato canônico de pagamentos de plantões.
+-- Mantém este domínio separado de pagamentos_medicos e pagamentos_saas.
+set search_path to plantaopro, public;
+
+create table if not exists plantaopro.pagamentos (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid,
+    escala_id uuid not null,
+    medico_id uuid not null,
+    plantao_id uuid not null,
+    valor_previsto numeric(14,2) not null default 0,
+    valor_pago numeric(14,2),
+    valor_hora numeric(14,2) not null default 0,
+    horas_referencia numeric(8,2) not null default 0,
+    status varchar(24) not null default 'pendente',
+    data_prevista date,
+    data_vencimento date,
+    data_pagamento date,
+    forma_pagamento varchar(50),
+    chave_pix varchar(180),
+    observacoes text,
+    processado_automaticamente boolean not null default false,
+    created_by uuid,
+    updated_by uuid,
+    reg_date timestamptz not null default now(),
+    reg_update timestamptz,
+    reg_status char(1) not null default 'A',
+    constraint ck_pagamentos_valores check (
+        valor_previsto >= 0 and coalesce(valor_pago, 0) >= 0 and
+        valor_hora >= 0 and horas_referencia >= 0),
+    constraint ck_pagamentos_reg_status check (reg_status in ('A','I'))
+);
+
+create unique index if not exists ux_pagamentos_escala_ativo
+    on plantaopro.pagamentos(escala_id) where reg_status = 'A';
+create index if not exists ix_pagamentos_tenant_status
+    on plantaopro.pagamentos(tenant_id, status, data_prevista) where reg_status = 'A';
+create index if not exists ix_pagamentos_medico
+    on plantaopro.pagamentos(medico_id, reg_date desc) where reg_status = 'A';
+
+create table if not exists plantaopro.historico_pagamento (
+    id uuid primary key default gen_random_uuid(),
+    pagamento_id uuid not null references plantaopro.pagamentos(id),
+    status_anterior varchar(24),
+    status_novo varchar(24) not null,
+    justificativa text,
+    usuario_id uuid,
+    reg_date timestamptz not null default now()
+);
+create index if not exists ix_historico_pagamento_timeline
+    on plantaopro.historico_pagamento(pagamento_id, reg_date desc);
 
 -- ============================================================
 -- Seção 39 — plantaopro.fechamento_operacional_v187

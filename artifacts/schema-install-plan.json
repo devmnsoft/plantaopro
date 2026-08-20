@@ -183,6 +183,15 @@
     "source": "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql"
   },
   {
+    "object": "plantaopro.pagamentos",
+    "dependsOn": [
+      "plantaopro.escalas",
+      "plantaopro.medicos",
+      "plantaopro.plantoes"
+    ],
+    "source": "database/schema/305_v1951_pagamentos_plantoes.sql"
+  },
+  {
     "object": "plantaopro.fechamento_operacional_v187",
     "dependsOn": [
       "plantaopro.fechamento_plantao"

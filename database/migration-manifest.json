@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.95.1",
+  "schemaVersion": "v1.95.3",
   "generatedAt": "2026-08-20",
   "migrations": [
     {
@@ -288,7 +288,8 @@
         "2026_saude360_indices_performance"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v114_consolidacao_produto",
@@ -298,7 +299,8 @@
         "2026_v113_operacional_real"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v115_regras_faturamento_repasses",
@@ -308,7 +310,8 @@
         "2026_v114_consolidacao_produto"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v116_consolidacao_operacional_final",
@@ -407,7 +410,8 @@
         "2026_v1250_jornada_clinica_operacional"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v1951_pagamentos_plantoes",
@@ -417,7 +421,8 @@
         "2026_v1410_cobertura_escalas_fechamento_financeiro"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v187_fechamento_operacional_financeiro",
@@ -427,7 +432,8 @@
         "2026_v1951_pagamentos_plantoes"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v188_prontuario_longitudinal",
@@ -437,7 +443,8 @@
         "2026_v187_fechamento_operacional_financeiro"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v189_clinical_operational_hardening",
@@ -447,7 +454,8 @@
         "2026_v188_prontuario_longitudinal"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_v192_saved_views",
@@ -457,7 +465,8 @@
         "2026_v189_clinical_operational_hardening"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     },
     {
       "version": "2026_08_v195_financeiro_revenue_cycle",
@@ -467,7 +476,8 @@
         "2026_v192_saved_views"
       ],
       "status": "active",
-      "transactional": true
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

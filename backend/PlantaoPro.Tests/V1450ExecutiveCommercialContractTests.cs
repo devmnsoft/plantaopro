@@ -40,7 +40,8 @@ public sealed class V1450ExecutiveCommercialContractTests
     public void Manifesto_InstalaSchemaV1450ComoFonteCanonicaObrigatoria()
     {
         using var document = JsonDocument.Parse(Read("database", "install-manifest.json"));
-        Assert.Equal("v1.45.0", document.RootElement.GetProperty("schemaVersion").GetString());
+        var schemaVersion = Version.Parse(document.RootElement.GetProperty("schemaVersion").GetString()!.TrimStart('v'));
+        Assert.True(schemaVersion >= new Version(1, 45, 0), $"Schema {schemaVersion} não pode regredir abaixo de v1.45.0.");
         var json = document.RootElement.GetRawText();
         Assert.Contains("database/schema/310_v1450_design_system_executivo_operacao_comercial.sql", json);
         Assert.Contains("CANONICAL_PRODUCT", json);

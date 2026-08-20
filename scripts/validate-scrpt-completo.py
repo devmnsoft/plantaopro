@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 import json,re,sys
 from pathlib import Path
+from database_manifest_validation import validate_database_manifests
 ROOT=Path(__file__).resolve().parents[1]
 manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
+manifest_errors=validate_database_manifests(ROOT, manifest)
+if manifest_errors:
+ print(json.dumps({'ok':False,'manifestErrors':manifest_errors},ensure_ascii=False)); sys.exit(1)
 catalog=json.loads((ROOT/'database/object-catalog.json').read_text(encoding='utf-8'))
 script=(ROOT/'database/scrpt_completo.sql').read_text(encoding='utf-8')
 forbidden=re.findall(r'^\s*\\(?:if|else|endif|set|unset|echo|quit|connect|gexec|prompt|ir|i)\b',script,re.I|re.M)

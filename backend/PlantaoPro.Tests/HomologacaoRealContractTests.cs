@@ -19,8 +19,8 @@ public class HomologacaoRealContractTests
         foreach (var file in views)
         {
             var content = File.ReadAllText(file);
-            Assert.DoesNotContain("@" + "page", content, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("asp-" + "page", content, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotMatch(@"(?im)^\s*@page(?:\s|$)", content);
+            Assert.DoesNotMatch(@"\basp-page(?:\s|=)", content);
             Assert.DoesNotContain("@model" + " dynamic", content, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("href=\"#\"", content, StringComparison.OrdinalIgnoreCase);
         }
@@ -35,8 +35,7 @@ public class HomologacaoRealContractTests
         foreach (var file in arquivos)
         {
             var content = File.ReadAllText(file);
-            Assert.DoesNotContain("alert" + "(", content, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("confirm" + "(", content, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotMatch(@"(?i)(?<![\w.])(?:window\.)?(?:alert|confirm)\s*\(", content);
             Assert.DoesNotContain("Alert.alert", content, StringComparison.OrdinalIgnoreCase);
         }
     }

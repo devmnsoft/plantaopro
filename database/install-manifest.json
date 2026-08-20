@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.95.1",
+  "schemaVersion": "v1.95.3",
   "generatedAt": "2026-08-20",
   "sections": [
     {
@@ -22,7 +22,10 @@
           "name": "plantaopro.identity_access",
           "type": "canonical",
           "category": "CANONICAL",
-          "source": "database/schema/010_identity_access.sql"
+          "source": "database/schema/010_identity_access.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
         },
         {
           "name": "plantaopro.saas_tenants",
@@ -105,6 +108,54 @@
       ]
     },
     {
+      "order": 12,
+      "name": "Operacional real v1.13",
+      "objects": [
+        {
+          "name": "plantaopro.operacional_real_v113",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/migrations/2026_v113_operacional_real.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 13,
+      "name": "Consolidação de produto v1.14",
+      "objects": [
+        {
+          "name": "plantaopro.consolidacao_produto_v114",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/migrations/2026_v114_consolidacao_produto.sql",
+          "dependsOn": [
+            "plantaopro.operacional_real_v113"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 14,
+      "name": "Regras de faturamento e repasses v1.15",
+      "objects": [
+        {
+          "name": "plantaopro.regras_faturamento_repasses_v115",
+          "type": "canonical",
+          "category": "CANONICAL_FINANCE",
+          "required": true,
+          "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql",
+          "dependsOn": [
+            "plantaopro.consolidacao_produto_v114"
+          ]
+        }
+      ]
+    },
+    {
       "order": 15,
       "name": "Painel público seguro v1.24.3",
       "objects": [
@@ -161,7 +212,10 @@
           "type": "canonical",
           "category": "CANONICAL_IDENTITY",
           "required": true,
-          "source": "database/schema/250_v1370_bootstrap_superadmin.sql"
+          "source": "database/schema/250_v1370_bootstrap_superadmin.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
         }
       ]
     },
@@ -257,7 +311,10 @@
           "type": "canonical",
           "category": "CANONICAL_OPERATION",
           "required": true,
-          "source": "database/schema/260_v1400_produto_operacional_premium.sql"
+          "source": "database/schema/260_v1400_produto_operacional_premium.sql",
+          "dependsOn": [
+            "plantaopro.operacao_assistida_v1310"
+          ]
         }
       ]
     },
@@ -323,7 +380,8 @@
           "required": true,
           "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql",
           "dependsOn": [
-            "plantaopro.fechamento_plantao"
+            "plantaopro.fechamento_plantao",
+            "plantaopro.operational_cycle_v1410"
           ]
         }
       ]
@@ -371,7 +429,8 @@
           "required": true,
           "source": "database/migrations/2026_v192_saved_views.sql",
           "dependsOn": [
-            "plantaopro.clinical_hardening_v189"
+            "plantaopro.clinical_hardening_v189",
+            "plantaopro.operacao_assistida_v1310"
           ]
         }
       ]
@@ -387,7 +446,9 @@
           "required": true,
           "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
           "dependsOn": [
-            "plantaopro.saved_views_v192"
+            "plantaopro.saved_views_v192",
+            "plantaopro.regras_faturamento_repasses_v115",
+            "plantaopro.operacional_real_v113"
           ]
         }
       ]

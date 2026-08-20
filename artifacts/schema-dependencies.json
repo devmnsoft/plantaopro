@@ -11,7 +11,9 @@
   },
   {
     "object": "plantaopro.identity_access",
-    "dependsOn": [],
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
     "source": "database/schema/010_identity_access.sql"
   },
   {
@@ -80,6 +82,27 @@
     "source": "database/schema/140_experiencia_premium_meu_dia.sql"
   },
   {
+    "object": "plantaopro.operacional_real_v113",
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/migrations/2026_v113_operacional_real.sql"
+  },
+  {
+    "object": "plantaopro.consolidacao_produto_v114",
+    "dependsOn": [
+      "plantaopro.operacional_real_v113"
+    ],
+    "source": "database/migrations/2026_v114_consolidacao_produto.sql"
+  },
+  {
+    "object": "plantaopro.regras_faturamento_repasses_v115",
+    "dependsOn": [
+      "plantaopro.consolidacao_produto_v114"
+    ],
+    "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql"
+  },
+  {
     "object": "plantaopro.paineis_publicos",
     "dependsOn": [
       "plantaopro.clientes"
@@ -103,7 +126,9 @@
   },
   {
     "object": "plantaopro.bootstrap_catalog",
-    "dependsOn": [],
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
     "source": "database/schema/250_v1370_bootstrap_superadmin.sql"
   },
   {
@@ -163,7 +188,9 @@
   },
   {
     "object": "plantaopro.operational_premium_v1400",
-    "dependsOn": [],
+    "dependsOn": [
+      "plantaopro.operacao_assistida_v1310"
+    ],
     "source": "database/schema/260_v1400_produto_operacional_premium.sql"
   },
   {
@@ -194,7 +221,8 @@
   {
     "object": "plantaopro.fechamento_operacional_v187",
     "dependsOn": [
-      "plantaopro.fechamento_plantao"
+      "plantaopro.fechamento_plantao",
+      "plantaopro.operational_cycle_v1410"
     ],
     "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql"
   },
@@ -215,14 +243,17 @@
   {
     "object": "plantaopro.saved_views_v192",
     "dependsOn": [
-      "plantaopro.clinical_hardening_v189"
+      "plantaopro.clinical_hardening_v189",
+      "plantaopro.operacao_assistida_v1310"
     ],
     "source": "database/migrations/2026_v192_saved_views.sql"
   },
   {
     "object": "plantaopro.revenue_cycle_v195",
     "dependsOn": [
-      "plantaopro.saved_views_v192"
+      "plantaopro.saved_views_v192",
+      "plantaopro.regras_faturamento_repasses_v115",
+      "plantaopro.operacional_real_v113"
     ],
     "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql"
   }

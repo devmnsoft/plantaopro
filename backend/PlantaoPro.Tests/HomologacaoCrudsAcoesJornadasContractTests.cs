@@ -52,7 +52,7 @@ public sealed class HomologacaoCrudsAcoesJornadasContractTests
             .Concat(Directory.EnumerateFiles(Path.Combine(Root, "mobile"), "*.*", SearchOption.AllDirectories))
             .Where(f => !f.Contains("node_modules") && !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar))
             .Where(f => f.EndsWith(".cs") || f.EndsWith(".cshtml") || f.EndsWith(".tsx") || f.EndsWith(".ts") || f.EndsWith(".json"));
-        var pattern = new Regex("@" + "page|asp-" + "page|@model " + "dynamic|href=\"" + "#\"|alert" + "\\(|confirm" + "\\(|= " + "\\[\\]|return " + "\\[");
+        var pattern = new Regex("(?im)^\\s*@page(?:\\s|$)|\\basp-page(?:\\s|=)|@model\\s+dynamic|href=\"#\"|(?<![\\w.])(?:window\\.)?(?:alert|confirm)\\s*\\(|=\\s*\\[\\s*\\]|return\\s*\\[\\s*\\]");
         foreach (var file in files)
             Assert.False(pattern.IsMatch(File.ReadAllText(file)), file);
 

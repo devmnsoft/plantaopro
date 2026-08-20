@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.95.0",
+  "schemaVersion": "v1.95.1",
   "generatedAt": "2026-08-20",
   "migrations": [
     {
@@ -400,11 +400,61 @@
       "transactional": true
     },
     {
+      "version": "2026_v1410_cobertura_escalas_fechamento_financeiro",
+      "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql",
+      "checksum": "bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721",
+      "dependsOn": [
+        "2026_v1250_jornada_clinica_operacional"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v1951_pagamentos_plantoes",
+      "source": "database/schema/305_v1951_pagamentos_plantoes.sql",
+      "checksum": "fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0",
+      "dependsOn": [
+        "2026_v1410_cobertura_escalas_fechamento_financeiro"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v187_fechamento_operacional_financeiro",
+      "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql",
+      "checksum": "5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13",
+      "dependsOn": [
+        "2026_v1951_pagamentos_plantoes"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v188_prontuario_longitudinal",
+      "source": "database/schema/330_v188_prontuario_longitudinal.sql",
+      "checksum": "a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66",
+      "dependsOn": [
+        "2026_v187_fechamento_operacional_financeiro"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
+      "version": "2026_v189_clinical_operational_hardening",
+      "source": "database/schema/340_v189_clinical_operational_hardening.sql",
+      "checksum": "abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5",
+      "dependsOn": [
+        "2026_v188_prontuario_longitudinal"
+      ],
+      "status": "active",
+      "transactional": true
+    },
+    {
       "version": "2026_v192_saved_views",
       "source": "database/migrations/2026_v192_saved_views.sql",
       "checksum": "36085c17bba5fd2329e5831ecdea7e4053c0788d68f9949174946128e14ab5f8",
       "dependsOn": [
-        "2026_v1250_jornada_clinica_operacional"
+        "2026_v189_clinical_operational_hardening"
       ],
       "status": "active",
       "transactional": true

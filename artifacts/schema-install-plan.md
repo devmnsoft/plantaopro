@@ -34,6 +34,7 @@
 - `plantaopro.operational_premium_v1400` depende de: nenhuma
 - `plantaopro.operational_cycle_v1410` depende de: nenhuma
 - `plantaopro.executive_commercial_v1450` depende de: plantaopro.tenants, plantaopro.usuarios, plantaopro.medicos, plantaopro.escalas, plantaopro.agenda_eventos_operacionais
+- `plantaopro.pagamentos` depende de: plantaopro.escalas, plantaopro.medicos, plantaopro.plantoes
 - `plantaopro.fechamento_operacional_v187` depende de: plantaopro.fechamento_plantao
 - `plantaopro.prontuario_longitudinal_v188` depende de: plantaopro.fechamento_operacional_v187
 - `plantaopro.clinical_hardening_v189` depende de: plantaopro.prontuario_longitudinal_v188

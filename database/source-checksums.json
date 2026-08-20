@@ -23,6 +23,7 @@
   "database/schema/260_v1400_produto_operacional_premium.sql": "5ac8669035bf9cff19eb0c3d576c0a8e6b9e7d49451d35ada413648f6b525174",
   "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql": "bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721",
   "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql": "a91ac25f68d57fdefde5b37fa4831a12c8a347c86616dd61060d01146581a0ed",
+  "database/schema/305_v1951_pagamentos_plantoes.sql": "fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0",
   "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql": "58f2affeb86244c30184eaf27922e5562439dbc4afe5f39d7218d09cd9b4856a",
   "database/schema/320_v187_fechamento_operacional_financeiro.sql": "5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13",
   "database/schema/330_v188_prontuario_longitudinal.sql": "a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66",
@@ -37,5 +38,5 @@
   "database/seeds/system/080_parametros_globais.sql": "55c6012d5e6d782d95715932118f4f1b458d61f90693316caa6f2343cae28a45",
   "database/seeds/system/090_notificacoes.sql": "d0227e5cfa331213531e0465c30fd822aa6baae84173766fc231657f380d6bb6",
   "database/seeds/system/100_status_operacionais.sql": "ef836ab01b0bfd1061176118379ba57f9d3def83c88445ee68917d57973945cb",
-  "database/seeds/system/110_configuracoes_runtime.sql": "afc90f4db08211c439413848742b8ea68802ac83891ff700204d63fedd99710c"
+  "database/seeds/system/110_configuracoes_runtime.sql": "076be98b9c8f146b3c6166ee6d9caa0d01fc9dc1d5eb24c90f62fe0cbfe932db"
 }

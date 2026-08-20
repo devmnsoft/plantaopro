@@ -388,9 +388,14 @@
     "plantaopro.impersonacao_eventos",
     "plantaopro.usuario_preferencias_interface",
     "plantaopro.meu_dia_item_estados",
-    "plantaopro.meu_dia_historico"
+    "plantaopro.meu_dia_historico",
+    "plantaopro.pagamentos",
+    "plantaopro.historico_pagamento"
   ],
   "missingObjects": [],
+  "missingBackendRequired": [],
+  "missingForeignKeyTargets": [],
+  "missingManifestRequired": [],
   "orphanObjects": [
     "plantaopro.assinatura_bloqueios",
     "plantaopro.assinatura_modulos",
@@ -492,6 +497,7 @@
     "database/schema/260_v1400_produto_operacional_premium.sql",
     "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql",
     "database/schema/310_v1450_design_system_executivo_operacao_comercial.sql",
+    "database/schema/305_v1951_pagamentos_plantoes.sql",
     "database/schema/320_v187_fechamento_operacional_financeiro.sql",
     "database/schema/330_v188_prontuario_longitudinal.sql",
     "database/schema/340_v189_clinical_operational_hardening.sql",

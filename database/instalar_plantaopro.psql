@@ -1,5 +1,5 @@
 \set ON_ERROR_STOP on
--- PlantãoPro v1.39.0: use psql -f neste arquivo; nenhuma senha está armazenada aqui.
+-- PlantãoPro v1.95.1: use psql -f neste arquivo; nenhuma senha está armazenada aqui.
 \if :{?installation_environment}\else\set installation_environment Development
 \endif
 \if :{?maintenance_database}\else\set maintenance_database postgres
@@ -34,10 +34,14 @@
 \endif
 
 \connect :maintenance_database
-SELECT CASE WHEN current_setting('server_version_num')::int < 160000 THEN 1/0 ELSE 1 END AS postgresql_16_validado;
-SELECT CASE WHEN :'installation_environment' !~* '^(Development|Homologation|Production)$' THEN 1/0 ELSE 1 END AS ambiente_validado;
-SELECT CASE WHEN :'install_mode' !~* '^(CLEAN|UPGRADE|REPAIR|RECREATE_DEVELOPMENT)$' THEN 1/0 ELSE 1 END AS modo_validado;
-SELECT CASE WHEN :'install_mode' ~* '^RECREATE_DEVELOPMENT$' AND :'installation_environment' !~* '^Development$' THEN 1/0 ELSE 1 END AS recriacao_segura;
+SELECT 'DO $guard$ BEGIN RAISE EXCEPTION ''PlantãoPro exige PostgreSQL 16 ou superior.''; END $guard$;'
+WHERE current_setting('server_version_num')::int < 160000 \gexec
+SELECT format('DO $guard$ BEGIN RAISE EXCEPTION %L; END $guard$;', 'Ambiente inválido: use Development, Homologation ou Production.')
+WHERE :'installation_environment' !~* '^(Development|Homologation|Production)$' \gexec
+SELECT format('DO $guard$ BEGIN RAISE EXCEPTION %L; END $guard$;', 'Modo inválido: use CLEAN, UPGRADE, REPAIR ou RECREATE_DEVELOPMENT.')
+WHERE :'install_mode' !~* '^(CLEAN|UPGRADE|REPAIR|RECREATE_DEVELOPMENT)$' \gexec
+SELECT format('DO $guard$ BEGIN RAISE EXCEPTION %L; END $guard$;', 'Recriação insegura: RECREATE_DEVELOPMENT é exclusivo de Development.')
+WHERE :'install_mode' ~* '^RECREATE_DEVELOPMENT$' AND :'installation_environment' !~* '^Development$' \gexec
 
 -- Roles são NOINHERIT/NOSUPERUSER/NOCREATEDB/NOCREATEROLE por construção.
 SELECT EXISTS (SELECT FROM pg_roles WHERE rolname=:'database_owner') AS owner_role_exists \gset
@@ -59,7 +63,8 @@ SELECT format('ALTER ROLE %I PASSWORD %L', :'application_role', :'application_ro
 \endif
 \endif
 
-SELECT CASE WHEN :'install_mode' ~* '^CLEAN$' AND EXISTS(SELECT FROM pg_database WHERE datname=:'target_database') THEN 1/0 ELSE 1 END AS clean_target_validado;
+SELECT format('DO $guard$ BEGIN RAISE EXCEPTION %L; END $guard$;', 'Banco de destino já existe; modo CLEAN não sobrescreve dados.')
+WHERE :'install_mode' ~* '^CLEAN$' AND EXISTS(SELECT FROM pg_database WHERE datname=:'target_database') \gexec
 SELECT format('DROP DATABASE %I WITH (FORCE)', :'target_database')
 WHERE :'install_mode' ~* '^RECREATE_DEVELOPMENT$' AND :'recreate_database'::boolean AND :'installation_environment' ~* '^Development$'
   AND EXISTS(SELECT FROM pg_database WHERE datname=:'target_database') \gexec
@@ -68,7 +73,7 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname=:'target_database') \gex
 SELECT format('ALTER DATABASE %I OWNER TO %I', :'target_database', :'database_owner') \gexec
 SELECT format('ALTER DATABASE %I SET timezone TO %L', :'target_database', :'default_timezone') \gexec
 \connect :target_database
-SELECT pg_advisory_lock(hashtext('plantaopro.install.v1390'));
+SELECT pg_advisory_lock(hashtext('plantaopro.install.v1951'));
 SELECT format('SET ROLE %I', :'database_owner') \gexec
 \ir scrpt_completo.sql
 
@@ -97,5 +102,5 @@ SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT S
 SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT USAGE,SELECT ON SEQUENCES TO %I', :'database_owner', :'application_role') \gexec
 SELECT format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA plantaopro GRANT EXECUTE ON FUNCTIONS TO %I', :'database_owner', :'application_role') \gexec
 \ir ../scripts/database/verify-complete-install.sql
-SELECT pg_advisory_unlock(hashtext('plantaopro.install.v1390'));
-\echo 'PlantãoPro — instalação concluída; versão v1.39.0; resultado APROVADO.'
+SELECT pg_advisory_unlock(hashtext('plantaopro.install.v1951'));
+\echo 'PlantãoPro — instalação concluída; versão v1.95.1; resultado APROVADO.'

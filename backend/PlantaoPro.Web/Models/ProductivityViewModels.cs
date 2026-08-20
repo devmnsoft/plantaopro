@@ -6,7 +6,7 @@ public sealed class ProductivityPageViewModel
 {
     public IReadOnlyList<ProductivityItemViewModel> Items { get; set; } = Array.Empty<ProductivityItemViewModel>();
     public ProductivitySummaryViewModel Summary { get; set; } = new();
-    public IReadOnlyList<QuickActionViewModel> QuickActions { get; set; } = Array.Empty<QuickActionViewModel>();
+    public IReadOnlyList<ProductivityQuickActionViewModel> QuickActions { get; set; } = Array.Empty<ProductivityQuickActionViewModel>();
     public IReadOnlyList<ProductivityAgendaItemViewModel> Agenda { get; set; } = Array.Empty<ProductivityAgendaItemViewModel>();
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 25;
@@ -53,7 +53,7 @@ public sealed class ProductivitySummaryViewModel
     public int CompletedToday { get; set; }
 }
 
-public sealed class QuickActionViewModel
+public sealed class ProductivityQuickActionViewModel
 {
     public string Code { get; set; } = string.Empty;
     public string Label { get; set; } = string.Empty;

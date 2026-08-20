@@ -20,3 +20,7 @@ Estabilizar o PlantãoPro .NET existente em `backend/`, preservando a solução,
 - `PlantaoPro.Tools.Database install` referencia `database/scrpt_completo.sql`, ausente no checkout. Reconstituir schema sem fonte canônica arriscaria dados reais.
 - Sem `dotnet`, não é possível afirmar compilação ou startup.
 - Sem PostgreSQL/configuração local, não é possível executar smoke de login ou banco.
+
+## Sprint corretiva v1.95.1 (2026-08-20)
+
+A v1.95.1 corrige os bloqueios de compilação, reconcilia pagamentos de plantões e ordena as fontes v1.41/v1.87 na cadeia de upgrade. A conclusão de produção continua condicionada aos gates executáveis de build, banco PostgreSQL 16, runtime, autenticação e isolamento tenant no CI; documentação não substitui essas evidências.

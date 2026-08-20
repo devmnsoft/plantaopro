@@ -1,3 +1,5 @@
+using PlantaoPro.Api.Models;
+
 namespace PlantaoPro.Api;
 
 public sealed class FinancialTenantContext

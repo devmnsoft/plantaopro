@@ -122,12 +122,19 @@ apply_script() {
 apply_script "000_base_schema" "database/PlantaoPro_PostgreSQL_Completo.sql" false base
 while IFS=$'\t' read -r migration_id migration_path transactional; do
     apply_script "$migration_id" "$migration_path" "$transactional" migration
- done < <(python3 - "$ROOT_DIR/database/migration-manifest.json" <<'PYMANIFEST'
-import json, sys
+ done < <(python3 - "$ROOT_DIR/database/migration-manifest.json" "$MODE" "${BASELINE_FILE:-}" <<'PYMANIFEST'
+import json, os, sys
 manifest=json.load(open(sys.argv[1],encoding='utf-8'))
-for item in manifest['migrations']:
-    if item.get('status') == 'active':
-        print(item['version'],item['source'],str(item.get('transactional',True)).lower(),sep='\t')
+items=[item for item in manifest['migrations'] if item.get('status') == 'active']
+if sys.argv[2] == 'baseline':
+    baseline=json.load(open(sys.argv[3],encoding='utf-8'))
+    next_source=baseline.get('nextMigration')
+    matches=[i for i,item in enumerate(items) if os.path.basename(item['source']) == next_source]
+    if len(matches) != 1:
+        raise SystemExit(f"Baseline nextMigration inválida ou ambígua: {next_source!r}")
+    items=items[:matches[0]]
+for item in items:
+    print(item['version'],item['source'],str(item.get('transactional',True)).lower(),sep='\t')
 PYMANIFEST
 )
 

@@ -5,11 +5,11 @@ Projeto full-stack para gestão de plantões médicos com backend ASP.NET Core (
 - database/ (script completo + seeds)
 - mobile/PlantaoPro.App (TypeScript mobile)
 - docs/
-## Instalação limpa oficial do banco (v1.95.0)
+## Instalação limpa oficial do banco (v1.95.1)
 
 A fonte canônica para banco novo é `database/install-manifest.json`, que ordena os arquivos de `database/schema/` e os seeds obrigatórios do sistema. A CLI valida todas as fontes antes de abrir a transação, executa o plano e realiza a verificação pós-instalação. `database/scrpt_completo.sql` é somente um artefato derivado pelo gerador do repositório; não deve ser editado como uma fonte independente.
 
-Upgrades partem exclusivamente de `database/migration-manifest.json`, na ordem de dependências declarada, por meio de `scripts/apply-canonical-migrations.sh upgrade`. Os scripts `database/PlantaoPro_PostgreSQL_Completo.sql` e `database/instalar_plantaopro.psql` são mantidos como entradas de compatibilidade; não são a fonte canônica. Os projetos backend compartilham a versão 1.95.0; o aplicativo mobile conserva versionamento independente.
+Upgrades partem exclusivamente de `database/migration-manifest.json`, na ordem de dependências declarada, por meio de `scripts/apply-canonical-migrations.sh upgrade`. Os scripts `database/PlantaoPro_PostgreSQL_Completo.sql` e `database/instalar_plantaopro.psql` são mantidos como entradas de compatibilidade; não são a fonte canônica. Os projetos backend compartilham a versão 1.95.1; o aplicativo mobile conserva versionamento independente.
 
 ```bash
 PLANTAOPRO_CONNECTION_STRING='Host=localhost;Database=plantaopro;Username=...;Password=...' \
@@ -173,7 +173,7 @@ Instalações novas devem executar `database/scrpt_completo.sql` no banco `plant
 
 Em desenvolvimento, habilite `DevelopmentSeed:Enabled=true` apenas com `ASPNETCORE_ENVIRONMENT=Development` e configure `Demo:Password` por user-secrets ou variável local. A documentação não assume mais senha `123456`.
 
-## Instalação integral do banco (v1.39.0)
+## Instalação integral do banco (v1.95.1)
 
 O instalador oficial parte de um PostgreSQL 16 com o banco administrativo `postgres`, cria as roles sem privilégios administrativos, cria `plantaopro`, muda a conexão, aplica o schema/seeds/bootstrap/grants e executa o verificador:
 

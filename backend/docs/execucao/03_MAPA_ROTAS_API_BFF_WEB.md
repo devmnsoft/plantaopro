@@ -14,3 +14,7 @@ Este mapa registra somente rotas PlantãoPro verificadas no código presente; ro
 
 ## Pendência de inventário
 Gerar mapa completo por reflexão/Swagger somente depois de o SDK estar disponível e `ApiRouteStartupValidator` executar com sucesso. Não declarar ausência de 404 sem esse smoke.
+
+## Evidência de segurança v1.95.1
+
+As rotas protegidas e tenant-scoped permanecem sujeitas à autenticação, autorização efetiva, contexto persistido e regras de impersonação introduzidas na Sprint 0. Os jobs `auth-e2e`, `security-access-e2e` e `swagger-contract` são gates bloqueantes; nenhum resultado documental é considerado aprovação desses contratos.

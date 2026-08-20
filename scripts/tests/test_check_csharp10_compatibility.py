@@ -25,8 +25,41 @@ class CSharp10CompatibilityGateTests(unittest.TestCase):
 
     def test_detects_post_csharp10_class_and_collection_syntax(self):
         self.assertIsNotNone(MODULE.PRIMARY_CONSTRUCTOR.search("public sealed class Service(IDb db)"))
-        self.assertIsNotNone(MODULE.COLLECTION_EXPRESSION.search("var values = [one, two];"))
-        self.assertIsNone(MODULE.COLLECTION_EXPRESSION.search("var values = new[] { one, two };"))
+        invalid = (
+            "var values = [];",
+            "values ?? []",
+            "return [];",
+            "value => [value]",
+            "var values = [one, two];",
+            "Call([one, two]);",
+            "Call(first, [second]);",
+            "enabled ? [one] : [two]",
+            "var nested = [[one], [two]];",
+        )
+        for source in invalid:
+            with self.subTest(source=source):
+                self.assertIsNotNone(MODULE.COLLECTION_EXPRESSION.search(source))
+
+    def test_allows_csharp10_brackets(self):
+        valid = (
+            "string[] names = new string[0];",
+            "Guid[] ids = Array.Empty<Guid>();",
+            "[HttpGet]",
+            "[Authorize(Roles = Roles.Admin)]",
+            "public string this[int index] => values[index];",
+            "var value = values[0];",
+            "var values = new[] { one, two };",
+            "var matrix = new int[2, 2];",
+        )
+        for source in valid:
+            with self.subTest(source=source):
+                self.assertIsNone(MODULE.COLLECTION_EXPRESSION.search(source))
+
+    def test_detects_raw_css_directives_only_inside_razor_style_blocks(self):
+        self.assertIsNotNone(MODULE.RAW_RAZOR_CSS_DIRECTIVE.search("<style>@media(max-width: 1px){}</style>"))
+        self.assertIsNotNone(MODULE.RAW_RAZOR_CSS_DIRECTIVE.search("<style>@supports(display:grid){}</style>"))
+        self.assertIsNone(MODULE.RAW_RAZOR_CSS_DIRECTIVE.search("<style>@@media(max-width: 1px){}</style>"))
+        self.assertIsNone(MODULE.RAW_RAZOR_CSS_DIRECTIVE.search("@media is ordinary Razor text here"))
 
 
 if __name__ == "__main__":

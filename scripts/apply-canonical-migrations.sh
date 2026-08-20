@@ -79,6 +79,15 @@ apply_script() {
         exit 1
     fi
 
+    if [[ "$id" == "2026_v187_fechamento_operacional_financeiro" ]]; then
+        local fechamento_plantao
+        fechamento_plantao="$(psql -v ON_ERROR_STOP=1 -At -c "SELECT to_regclass('plantaopro.fechamento_plantao');")"
+        if [[ -z "$fechamento_plantao" ]]; then
+            echo "Migration precondition failed: plantaopro.fechamento_plantao must exist before $id" >&2
+            exit 3
+        fi
+    fi
+
     local checksum escaped_id escaped_path stored_checksum tmp_sql
     checksum="$(sha256sum "$path" | awk '{print $1}')"
     escaped_id="$(sql_literal "$id")"

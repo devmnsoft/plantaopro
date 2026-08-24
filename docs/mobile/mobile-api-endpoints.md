@@ -69,3 +69,7 @@
 - Endpoints ausentes retornam fallback amigável: `Endpoint mobile não disponível nesta versão.`, sem quebrar a tela.
 - O JWT é armazenado pelo helper `storage` e reaplicado automaticamente no header `Authorization: Bearer <token>`.
 - Serviços separados (`authService`, `plantaoService`, `financeiroService`, `notificationService`, `medicoService`) mapeiam os endpoints MVP para reduzir duplicidade nas telas.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

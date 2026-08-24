@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Routing
 @{
     var q = ViewData["Query"] as PlantaoPro.Web.Models.ProductivityQueryViewModel ?? new();
-    var pages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
+    var totalPages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
     string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.UnitId, page = 1, q.PageSize })!;
     string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? Url.Action("Index", "Pendencias")!;
 }
@@ -46,7 +46,7 @@
             </article>
         }
         </section>
-        <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @pages</span>@if(Model.Page < pages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
+        <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @totalPages</span>@if(Model.Page < totalPages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
     }
 </div>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }

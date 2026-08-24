@@ -10,8 +10,9 @@ public sealed class V117RuntimeHardeningContractTests
         Assert.Contains("DevelopmentSeed:Enabled", Read("backend/PlantaoPro.Api/Program.cs"));
         Assert.True(File.Exists(Path.Combine(Root(), "scripts/smoke-test-v117.sh")));
         var ci = Read(".github/workflows/dotnet-ci.yml");
-        Assert.Contains("runtime-e2e-v116", ci);
-        Assert.Contains("runtime-e2e-v117", ci);
+        Assert.Contains("runtime-from-complete-script", ci);
+        var decisions = Read("docs/releases/v1.24.3/contract-decisions.md");
+        Assert.Contains("runtime-e2e-v116", decisions);
         Assert.Contains("smoke-test-v117.sh", ci);
         Assert.Contains("ASPNETCORE_ENVIRONMENT: Development", ci);
     }

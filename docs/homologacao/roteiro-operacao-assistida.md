@@ -42,3 +42,7 @@
 - Tentar criar ocorrência com tipo inválido e confirmar retorno amigável 400.
 - Tentar criar ocorrência com prioridade inválida e confirmar retorno amigável 400.
 - Confirmar que a listagem de clientes aceita `page` e `pageSize` e que `pageSize` acima de 50 é limitado pelo backend.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

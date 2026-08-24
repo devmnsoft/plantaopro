@@ -23,3 +23,7 @@
 - Não usar CPF, CRM, telefone, e-mail ou dados financeiros reais sem autorização.
 - Mascarar tokens em gravações ou prints.
 - Resetar dados após demonstrações externas.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

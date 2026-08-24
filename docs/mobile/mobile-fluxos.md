@@ -41,3 +41,7 @@ Resultado esperado: escala SOLICITADA ou mensagem amigável de bloqueio.
 2. App lista chamados.
 3. Médico cria chamado via `POST /api/mobile/suporte/chamados`.
 4. Chamado crítico gera alerta operacional.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

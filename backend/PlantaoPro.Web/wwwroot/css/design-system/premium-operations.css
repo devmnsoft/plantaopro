@@ -1,0 +1,27 @@
+/* v1.96 — acabamento premium para cabeçalhos e espaços operacionais. */
+.pp-operation-page { display: grid; gap: var(--pp-space-6); padding-block: var(--pp-space-4) var(--pp-space-8); }
+.pp-operation-header { display: flex; align-items: end; justify-content: space-between; gap: var(--pp-space-5); padding: var(--pp-space-6); border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-xl); background: linear-gradient(135deg, var(--pp-surface-default) 55%, var(--pp-brand-primary-soft)); box-shadow: var(--pp-shadow-xs); }
+.pp-operation-header__copy { max-width: var(--pp-reading-width); }
+.pp-operation-header__copy h1 { margin: var(--pp-space-1) 0 var(--pp-space-2); font-size: var(--pp-font-page-title); letter-spacing: -.025em; }
+.pp-operation-header__copy p { margin: 0; color: var(--pp-text-secondary); }
+.pp-operation-actions { display: flex; flex-wrap: wrap; gap: var(--pp-space-2); }
+.pp-filter-panel { padding: var(--pp-space-5); border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg); background: var(--pp-surface-default); box-shadow: var(--pp-shadow-xs); }
+.pp-filter-panel__title { margin: 0 0 var(--pp-space-4); font-size: var(--pp-font-card-title); }
+.pp-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: var(--pp-space-3); }
+.pp-kpi-card { position: relative; min-height: 8.5rem; padding: var(--pp-space-5); overflow: hidden; border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg); background: var(--pp-surface-default); box-shadow: var(--pp-shadow-xs); }
+.pp-kpi-card::after { position: absolute; inset: 0 0 auto; height: .25rem; background: var(--pp-brand-primary); content: ""; }
+.pp-kpi-card--attention::after { background: var(--pp-warning); }
+.pp-kpi-card--critical::after { background: var(--pp-danger); }
+.pp-kpi-card__label { display: block; color: var(--pp-text-secondary); font-size: var(--pp-font-body-small); font-weight: 650; }
+.pp-kpi-card__value { display: block; margin-top: var(--pp-space-2); color: var(--pp-text-primary); font-size: clamp(1.65rem, 3vw, 2.25rem); line-height: 1; }
+.pp-kpi-card__context { display: block; margin-top: var(--pp-space-3); color: var(--pp-text-muted); font-size: var(--pp-font-caption); }
+.pp-workboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--pp-space-4); }
+.pp-workboard__lane { min-width: 0; overflow: hidden; border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg); background: var(--pp-surface-default); box-shadow: var(--pp-shadow-xs); }
+.pp-workboard__header { display: flex; align-items: center; justify-content: space-between; min-height: 3.5rem; padding: var(--pp-space-4) var(--pp-space-5); border-bottom: 1px solid var(--pp-border-subtle); background: var(--pp-surface-subtle); }
+.pp-workboard__header h2 { margin: 0; font-size: var(--pp-font-card-title); }
+.pp-empty-compact { display: grid; place-items: center; min-height: 9rem; padding: var(--pp-space-5); color: var(--pp-text-muted); text-align: center; }
+.pp-data-source { display: inline-flex; align-items: center; gap: var(--pp-space-2); width: fit-content; padding: var(--pp-space-2) var(--pp-space-3); border-radius: var(--pp-radius-pill); background: var(--pp-success-soft); color: var(--pp-success); font-size: var(--pp-font-caption); font-weight: 750; }
+.pp-data-source::before { width: .5rem; height: .5rem; border-radius: 50%; background: currentColor; content: ""; }
+@media (max-width: 991.98px) { .pp-operation-header { align-items: start; flex-direction: column; } .pp-workboard { grid-template-columns: 1fr; } }
+@media (max-width: 575.98px) { .pp-operation-page { gap: var(--pp-space-4); } .pp-operation-header, .pp-filter-panel { padding: var(--pp-space-4); border-radius: var(--pp-radius-lg); } .pp-operation-actions, .pp-operation-actions .btn { width: 100%; } .pp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pp-kpi-card { min-height: 7.5rem; padding: var(--pp-space-4); } }
+@media (prefers-reduced-motion: reduce) { .pp-operation-page *, .pp-operation-page *::before, .pp-operation-page *::after { scroll-behavior: auto; transition-duration: .01ms; animation-duration: .01ms; animation-iteration-count: 1; } }

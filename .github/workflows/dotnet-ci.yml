@@ -30,6 +30,10 @@ jobs:
         run: python3 scripts/check-csharp10-compatibility.py
       - name: Validate v1.14 smoke contract
         run: bash -n scripts/smoke-test-v114.sh
+      - name: Validate v1.15 billing migration contract
+        run: |
+          test -s database/migrations/2026_v115_regras_faturamento_repasses.sql
+          bash -n scripts/smoke-test-v115.sh
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build

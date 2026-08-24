@@ -35,7 +35,7 @@ public sealed class V114ConsolidacaoProdutoContractTests
         Assert.Contains("JornadaController", web);
         Assert.Contains("FavoritosController", web);
         Assert.Contains("HistoricoAcoesController", web);
-        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs");
+        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         Assert.Contains("Jornada", menu);
         Assert.Contains("ItensFaturaveis", menu);
         Assert.Contains("FaturamentoClinico", menu);

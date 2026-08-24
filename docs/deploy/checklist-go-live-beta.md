@@ -26,6 +26,7 @@
 - [ ] `/api/health` saudável.
 - [ ] Swagger carregando e endpoint protegido retorna 401 sem token.
 - [ ] Login admin global e dashboard executivo.
+- [ ] Fluxo operacional médico: login, agenda, disponibilidade e escalas.
 - [ ] Criar/publicar plantão de teste.
 - [ ] Login médico e visualizar plantões disponíveis.
 - [ ] Solicitar plantão, confirmar escala, marcar realizada e gerar pagamento.

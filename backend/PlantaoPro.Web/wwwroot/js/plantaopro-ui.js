@@ -141,7 +141,7 @@
       form.prepend(box);
     }
 
-    const list=[];
+    const list=new Array();
     if(message){list.push(message);}
     if(Array.isArray(errors)){errors.forEach(error=>{if(error){list.push(String(error));}});}
     else if(errors&&typeof errors==='object'){

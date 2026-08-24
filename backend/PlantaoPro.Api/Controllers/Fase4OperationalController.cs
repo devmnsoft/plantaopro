@@ -120,7 +120,10 @@ public sealed class MedicosMeSubstituicoesController : ControllerBase
     public MedicosMeSubstituicoesController(OperationalAutomationService service) { this.service = service; }
     private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
 
-    [HttpPost("api/medicos/me/substituicoes")]
+    [HttpGet("api/medicos/me/substituicao")]
+    public async Task<IActionResult> Listar() { var r = await service.ListarSubstituicoesDoMedicoAsync(Uid()); return StatusCode(r.StatusCode, r); }
+
+    [HttpPost("api/medicos/me/substituicao")]
     public async Task<IActionResult> Solicitar([FromBody] SolicitarSubstituicaoRequest request) { var r = await service.SolicitarSubstituicaoAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 }
 

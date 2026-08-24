@@ -154,8 +154,10 @@ public sealed class CentralEscalaEvoluidaController : ControllerBase
 public sealed class MedicoAgendaMeController : ControllerBase
 {
     private readonly B2BCommercialOpsService _service;
-    public MedicoAgendaMeController(B2BCommercialOpsService service) { _service = service; }
+    private readonly OperationalAutomationService _operationalService;
+    public MedicoAgendaMeController(B2BCommercialOpsService service, OperationalAutomationService operationalService) { _service = service; _operationalService = operationalService; }
     [HttpGet("agenda")] public async Task<IActionResult> Agenda() => Ok(await _service.AgendaMedicaAsync(Uid()));
+    [HttpGet("disponibilidade")] public async Task<IActionResult> Disponibilidade() { var r = await _operationalService.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
     private Guid Uid() { var uid = User.FindFirst("uid")?.Value; return Guid.TryParse(uid, out var parsed) ? parsed : Guid.Empty; }
 }
 

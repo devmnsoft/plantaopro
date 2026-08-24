@@ -14,9 +14,6 @@ public sealed class MedicosMeDisponibilidadeController : ControllerBase
     public MedicosMeDisponibilidadeController(OperationalAutomationService service) { this.service = service; }
     private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
 
-    [HttpGet("api/medicos/me/disponibilidade")]
-    public async Task<IActionResult> Disponibilidade() { var r = await service.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
-
     [HttpPost("api/medicos/me/disponibilidade")]
     public async Task<IActionResult> CriarDisponibilidade([FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await service.CriarDisponibilidadeAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 

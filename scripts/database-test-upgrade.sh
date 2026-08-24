@@ -17,7 +17,7 @@ scripts/apply-canonical-migrations.sh upgrade
 psql -v ON_ERROR_STOP=1 <<'SQL'
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='240_v117_runtime') THEN
+  IF NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='2026_v117_hardening_v116_runtime') THEN
     RAISE EXCEPTION 'upgrade did not reach v117 runtime migration';
   END IF;
   IF (SELECT COUNT(*) FROM plantaopro.upgrade_preservation_probe) <> 11 THEN

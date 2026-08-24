@@ -12,7 +12,7 @@
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
     string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
-<aside class="pp-sidebar app-sidebar" id="appSidebar" aria-label="Navegação principal">
+<aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navegação principal">
     <header class="sidebar-brand">
         <a asp-controller="MinhaCentral" asp-action="Index" class="sidebar-logo" aria-label="PlantãoPro — início"><img class="brand-logo" src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
         <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><app-icon name="Menu" size="18" /></button>

@@ -1,5 +1,5 @@
 @{ var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global"; }
-<div class="pp-user-menu" data-user-menu>
+<div class="pp-user-menu pp-calm-user-menu" data-user-menu>
     <button class="pp-user-menu__trigger" type="button" data-user-menu-trigger aria-controls="userMenuDropdown" aria-expanded="false" aria-haspopup="menu">
         <span class="user-avatar" aria-hidden="true"><app-icon name="User" size="20" /></span>
         <span class="user-info"><span class="user-name">@(User.Identity?.Name ?? "Usuário")</span><small>@(User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Perfil")</small></span>

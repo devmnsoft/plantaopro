@@ -28,7 +28,7 @@
 
 @if (toasts.Count > 0)
 {
-    <script type="application/json" id="pp-toast-data">@Html.Raw(toastJson)</script>
+    <script type="application/json" id="pp-toast-data" data-visual-tone="calm">@Html.Raw(toastJson)</script>
     <script>
         window.addEventListener('DOMContentLoaded', function () {
             const el = document.getElementById('pp-toast-data');

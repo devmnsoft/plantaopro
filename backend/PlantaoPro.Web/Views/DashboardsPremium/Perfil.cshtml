@@ -3,7 +3,7 @@
     ViewData["Title"] = "Dashboard " + Model.Titulo;
     var badgeClass = Model.Fonte == "Real" ? "bg-success" : Model.Fonte == "Parcial" ? "bg-warning text-dark" : "bg-secondary";
 }
-<section class="pp-hero premium-hero">
+<section class="pp-hero premium-hero pp-strategic-surface">
     <p class="text-uppercase text-primary fw-bold">Dashboard executivo</p>
     <h1>Dashboard @Model.Titulo</h1>
     <p>KPIs carregados da API <code>/api/dashboards/@Model.PerfilApi</code>, respeitando tenant, perfil, plano e módulos contratados.</p>

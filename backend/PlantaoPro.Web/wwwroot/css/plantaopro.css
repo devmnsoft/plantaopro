@@ -23,3 +23,6 @@
 @import url('./design-system/white-label.css');
 @import url('./design-system/utilities.css');
 @import url('./design-system/premium-operations.css');
+
+/* v1.96.1: bridge to the calm-futuristic semantic layer. */
+.pp-body { --pp-app-canvas: var(--fc-surface-solid, #f8fbfc); }

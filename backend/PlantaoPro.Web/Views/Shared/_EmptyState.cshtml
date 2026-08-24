@@ -12,9 +12,9 @@
     var secondaryController = Model?.SecondaryController ?? string.Empty;
     var secondaryDisabled = Model?.SecondaryActionDisabled ?? false;
 }
-<div class="empty-state text-center">
+<section class="empty-state pp-future-empty-state text-center" role="status" aria-labelledby="empty-state-title">
     <div class="empty-state-icon"><i class="bi @icon"></i></div>
-    <h5 class="mb-2">@title</h5>
+    <h5 class="mb-2" id="empty-state-title">@title</h5>
     <p class="text-muted mb-3">@description</p>
     @if (!string.IsNullOrWhiteSpace(buttonText))
     {
@@ -24,7 +24,7 @@
         }
         else
         {
-            <button class="btn btn-soft-primary" disabled title="Ação indisponível">@buttonText</button>
+            <button type="button" class="btn btn-soft-primary" disabled title="Ação indisponível">@buttonText</button>
         }
     }
     @if (!string.IsNullOrWhiteSpace(secondaryText))
@@ -35,7 +35,7 @@
         }
         else
         {
-            <button class="btn btn-outline-secondary ms-2" disabled title="Ação indisponível">@secondaryText</button>
+            <button type="button" class="btn btn-outline-secondary ms-2" disabled title="Ação indisponível">@secondaryText</button>
         }
     }
-</div>
+</section>

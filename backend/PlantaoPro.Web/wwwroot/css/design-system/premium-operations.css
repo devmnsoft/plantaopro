@@ -25,3 +25,6 @@
 @media (max-width: 991.98px) { .pp-operation-header { align-items: start; flex-direction: column; } .pp-workboard { grid-template-columns: 1fr; } }
 @media (max-width: 575.98px) { .pp-operation-page { gap: var(--pp-space-4); } .pp-operation-header, .pp-filter-panel { padding: var(--pp-space-4); border-radius: var(--pp-radius-lg); } .pp-operation-actions, .pp-operation-actions .btn { width: 100%; } .pp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pp-kpi-card { min-height: 7.5rem; padding: var(--pp-space-4); } }
 @media (prefers-reduced-motion: reduce) { .pp-operation-page *, .pp-operation-page *::before, .pp-operation-page *::after { scroll-behavior: auto; transition-duration: .01ms; animation-duration: .01ms; animation-iteration-count: 1; } }
+
+/* v1.96.1 aligns operational workboards with the global calm layer. */
+.pp-ops-page { --pp-ops-accent: var(--fc-cyan, #087f8c); --pp-ops-border: var(--fc-border, rgba(39, 80, 108, .15)); }

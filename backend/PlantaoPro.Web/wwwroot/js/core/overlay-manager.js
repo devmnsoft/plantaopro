@@ -1,6 +1,6 @@
 import { trapFocus } from './focus-manager.js';
 class OverlayManager {
-  constructor() { this.stack = []; }
+  constructor() { this.stack = new Array(); }
   open(element, trigger = document.activeElement) {
     this.stack.push({ element, trigger }); element.hidden = false; element.setAttribute('aria-modal', 'true');
     document.body.classList.add('overlay-open'); element.addEventListener('keydown', this.onKeyDown); element.querySelector('[autofocus],button')?.focus();

@@ -8,6 +8,7 @@ A stack mobile do aplicativo móvel usa Expo/React Native e prevê `SecureStore`
 - Navegação MVP autenticada em `AppNavigator` para Início, Plantões disponíveis, Convites, Escalas, Meus pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
 - Consumo de `EXPO_PUBLIC_API_BASE_URL` via `services/api.ts`, com JWT no header Authorization e fallback amigável.
 - Loading, empty state e error state básicos nos fluxos já conectados.
+- Suporte acessível pela área médica, com abertura e acompanhamento de chamados sem incluir credenciais ou dados clínicos; o atalho integra a navegação autenticada do MVP junto de plantões e pagamentos.
 
 ## Implementado e não testado em runtime
 

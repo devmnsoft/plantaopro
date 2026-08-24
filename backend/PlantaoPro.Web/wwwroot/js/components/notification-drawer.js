@@ -1,5 +1,5 @@
 export class NotificationDrawer {
-  constructor(api) { this.api = api; this.drawer = document.querySelector('#notificationDrawer'); this.trigger = null; this.items = []; }
+  constructor(api) { this.api = api; this.drawer = document.querySelector('#notificationDrawer'); this.trigger = null; this.items = Array.of(); }
   bind() {
     if (!this.drawer) return;
     document.querySelectorAll('[data-notification-open]').forEach(button => button.addEventListener('click', () => this.open(button)));
@@ -34,7 +34,7 @@ export class NotificationDrawer {
   }
   async load() {
     const list = this.drawer.querySelector('[data-notification-list]'); list.setAttribute('aria-busy', 'true'); this.state('Carregando atualizações', 'Consultando a central de notificações…');
-    try { const payload = await this.request('/nao-lidas'); this.items = Array.isArray(payload) ? payload : []; this.render(); } catch (error) { this.items = []; this.state('Notificações indisponíveis', error.message, error.status !== 401 && error.status !== 403 && error.status !== 404); } finally { list.setAttribute('aria-busy', 'false'); }
+    try { const payload = await this.request('/nao-lidas'); this.items = Array.isArray(payload) ? payload : Array.of(); this.render(); } catch (error) { this.items = Array.of(); this.state('Notificações indisponíveis', error.message, error.status !== 401 && error.status !== 403 && error.status !== 404); } finally { list.setAttribute('aria-busy', 'false'); }
   }
   safeDestination(value) { if (!value) return null; try { const url = new URL(value, window.location.origin); return url.origin === window.location.origin ? `${url.pathname}${url.search}${url.hash}` : null; } catch { return null; } }
   render() {
@@ -56,5 +56,5 @@ export class NotificationDrawer {
     });
   }
   async read(id, button) { button.disabled = true; try { await this.request(`/${encodeURIComponent(id)}/lida`, { method: 'POST' }); this.items = this.items.filter(item => item.id !== id); this.render(); this.refreshCount(); } catch (error) { button.disabled = false; this.state('Não foi possível atualizar', error.message, true); } }
-  async readAll() { const button = this.drawer.querySelector('[data-notification-read-all]'); button.disabled = true; try { await this.request('/marcar-todas-lidas', { method: 'POST' }); this.items = []; this.render(); this.refreshCount(); } catch (error) { button.disabled = false; this.state('Não foi possível atualizar', error.message, true); } }
+  async readAll() { const button = this.drawer.querySelector('[data-notification-read-all]'); button.disabled = true; try { await this.request('/marcar-todas-lidas', { method: 'POST' }); this.items = Array.of(); this.render(); this.refreshCount(); } catch (error) { button.disabled = false; this.state('Não foi possível atualizar', error.message, true); } }
 }

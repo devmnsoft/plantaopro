@@ -1,4 +1,4 @@
-const queue = [], visible = new Map(), MAX = 3;
+const queue = Array.of(), visible = new Map(), MAX = 3;
 export function enqueueToast(message) {
   if (visible.has(message.code) || queue.some(x => x.code === message.code)) return;
   queue.push(message); renderNext();

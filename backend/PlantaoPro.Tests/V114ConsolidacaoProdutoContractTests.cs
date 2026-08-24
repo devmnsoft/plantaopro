@@ -29,13 +29,13 @@ public sealed class V114ConsolidacaoProdutoContractTests
         Assert.True(Exists("backend/PlantaoPro.Web/Controllers/V114ProdutoWebControllers.cs"));
         Assert.True(Exists("backend/PlantaoPro.Web/Views/V114/Produto.cshtml"));
         Assert.True(Exists("backend/PlantaoPro.Web/Views/V114/Form.cshtml"));
-        var web = Read("backend/PlantaoPro.Web/Controllers/V114ProdutoWebControllers.cs");
+        var web = string.Join("\n", Directory.EnumerateFiles(Path.Combine(Root, "backend/PlantaoPro.Web/Controllers"), "*.cs").Select(File.ReadAllText));
         Assert.Contains("ItensFaturaveisController", web);
         Assert.Contains("FaturamentoClinicoController", web);
         Assert.Contains("JornadaController", web);
         Assert.Contains("FavoritosController", web);
         Assert.Contains("HistoricoAcoesController", web);
-        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs");
+        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         Assert.Contains("Jornada", menu);
         Assert.Contains("ItensFaturaveis", menu);
         Assert.Contains("FaturamentoClinico", menu);

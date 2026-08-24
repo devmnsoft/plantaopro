@@ -166,11 +166,12 @@ values(gen_random_uuid(),@tenantId,@clienteId,@id,120,10000,'ATIVO',now(),'A')",
     {
         var ctx = await _tenantContext.ObterAtualAsync();
         if (!ctx.Success) return ApiResponse<IEnumerable<object>>.Fail(ctx.Message, ctx.StatusCode);
+        if (!ctx.Data!.TenantId.HasValue) return ApiResponse<IEnumerable<object>>.Fail("Contexto de tenant obrigatório.", 409);
 
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
         var rows = await cn.QueryAsync(@"select id, nome, escopos, status, reg_date as CriadoEm, ultimo_uso_em as UltimoUsoEm
 from plantaopro.api_chaves
-where (@tenantId is null or tenant_id = @tenantId) and reg_status = 'A'
+where tenant_id = @tenantId and reg_status = 'A'
 order by reg_date desc", new { tenantId = ctx.Data?.TenantId });
         return ApiResponse<IEnumerable<object>>.Ok(rows.Cast<object>());
     }
@@ -194,8 +195,9 @@ order by reg_date desc", new { tenantId = ctx.Data?.TenantId });
         {
             var ctx = await _tenantContext.ObterAtualAsync();
             if (!ctx.Success) return ApiResponse<string>.Fail(ctx.Message, ctx.StatusCode);
+            if (!ctx.Data!.TenantId.HasValue) return ApiResponse<string>.Fail("Contexto de tenant obrigatório.", 409);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var linhas = await cn.ExecuteAsync("update plantaopro.api_chaves set status='REVOGADA', revogada_em=now(), reg_update=now() where id=@id and (@tenantId is null or tenant_id=@tenantId) and reg_status='A'", new { id, tenantId = ctx.Data?.TenantId });
+            var linhas = await cn.ExecuteAsync("update plantaopro.api_chaves set status='REVOGADA', revogada_em=now(), reg_update=now() where id=@id and tenant_id=@tenantId and reg_status='A'", new { id, tenantId = ctx.Data.TenantId });
             if (linhas == 0) return ApiResponse<string>.Fail("API key não encontrada para este tenant.", 404);
             await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data?.ClienteId, "API_KEY", id, "REVOGAR", new { id }, true, ip, "ADMINISTRADOR_CLIENTE");
             return ApiResponse<string>.Ok("ok", "API key revogada.");

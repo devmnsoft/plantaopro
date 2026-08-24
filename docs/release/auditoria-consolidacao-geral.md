@@ -13,3 +13,7 @@ Esta rodada consolidou auditoria real do repositório, matriz mestra, QA de menu
 
 ## Pendências
 Consultar `docs/homologacao/pendencias-reais-pos-auditoria.md`.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

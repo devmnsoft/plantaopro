@@ -1,3 +1,60 @@
 .pp-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); gap: var(--pp-space-5); align-items: start; }
 .pp-context-panel { position: sticky; top: calc(var(--pp-topbar-height) + var(--pp-space-4)); }
 @media (max-width: 991.98px) { .pp-workspace { grid-template-columns: 1fr; } .pp-context-panel { position: static; } }
+
+/* Migrado de v152-product-workspaces.css; consolidado na v1.90.0. */
+/* v1.52 — padrões estruturais para landings operacionais (não sobrescreve tokens). */
+.pp-page { display: grid; gap: var(--pp-space-6, 1.5rem); }
+.pp-hero { position: relative; overflow: hidden; display: flex; align-items: end; justify-content: space-between; gap: 2rem; padding: clamp(1.5rem,4vw,3rem); border: 1px solid color-mix(in srgb,var(--pp-brand-primary) 20%,var(--pp-border-subtle)); border-radius: var(--pp-radius-xl,1.5rem); background: radial-gradient(circle at 90% 0,color-mix(in srgb,var(--pp-brand-primary) 18%,transparent),transparent 42%),linear-gradient(135deg,var(--pp-surface-elevated),var(--pp-surface-default)); box-shadow: var(--pp-shadow-md); }
+.pp-hero__copy { max-width: 68ch; }
+.pp-eyebrow { display: inline-flex; align-items: center; gap: .5rem; margin-bottom: .75rem; color: var(--pp-brand-primary); font-size: .75rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.pp-hero h1 { margin: 0; font-size: clamp(1.75rem,4vw,3rem); letter-spacing: -.04em; }
+.pp-hero p { margin: .75rem 0 0; color: var(--pp-text-secondary); font-size: 1.05rem; }
+.pp-hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; flex: 0 0 auto; }
+.pp-section-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.pp-section-header h2 { margin: 0; font-size: 1.25rem; }
+.pp-section-header p { margin: .35rem 0 0; color: var(--pp-text-secondary); }
+.pp-action-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,250px),1fr)); gap: 1rem; }
+.pp-action-card { display: flex; min-height: 190px; flex-direction: column; padding: 1.25rem; color: inherit; text-decoration: none; border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg,1rem); background: var(--pp-surface-default); box-shadow: var(--pp-shadow-sm); transition: transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+.pp-action-card[href]:hover { transform: translateY(-3px); border-color: color-mix(in srgb,var(--pp-brand-primary) 38%,var(--pp-border-subtle)); box-shadow: var(--pp-shadow-md); }
+.pp-action-card:focus-visible { outline: 3px solid var(--pp-focus-ring); outline-offset: 3px; }
+.pp-action-card__icon { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; margin-bottom: 1rem; border-radius: .8rem; color: var(--pp-brand-primary); background: var(--pp-brand-primary-soft); font-size: 1.2rem; }
+.pp-action-card h3 { margin: 0; font-size: 1.05rem; }
+.pp-action-card p { margin: .5rem 0 1rem; color: var(--pp-text-secondary); }
+.pp-action-card__meta { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-top: auto; color: var(--pp-text-muted); font-size: .82rem; font-weight: 650; }
+.pp-action-card--disabled { opacity: .72; cursor: not-allowed; }
+.pp-notice { display: flex; gap: .8rem; padding: 1rem 1.15rem; border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-md,.8rem); background: var(--pp-surface-subtle); color: var(--pp-text-secondary); }
+.pp-account-card { display: grid; grid-template-columns: auto 1fr; gap: 1rem; padding: 1.25rem; border: 1px solid var(--pp-border-subtle); border-radius: var(--pp-radius-lg,1rem); background: var(--pp-surface-default); }
+.pp-account-card__avatar { display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border-radius: 1rem; background: var(--pp-brand-primary-soft); color: var(--pp-brand-primary); font-size: 1.35rem; }
+.pp-account-card dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .75rem 1.5rem; margin: 1rem 0 0; }
+.pp-account-card dt { color: var(--pp-text-muted); font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+.pp-account-card dd { margin: .2rem 0 0; font-weight: 650; overflow-wrap: anywhere; }
+@media (max-width: 767px) { .pp-hero { align-items: stretch; flex-direction: column; padding: 1.25rem; } .pp-hero-actions > * { flex: 1 1 100%; } .pp-account-card { grid-template-columns: 1fr; } .pp-account-card dl { grid-template-columns: 1fr; } .pp-action-card { min-height: 160px; } }
+@media (prefers-reduced-motion: reduce) { .pp-action-card { transition: none; } }
+
+/* Migrado de v177-product-completion.css; consolidado na v1.90.0. */
+/* v1.77 — acabamento aditivo para a central de fechamento e dashboards por perfil. */
+.pp-profile-focus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pp-space-5);
+  padding: clamp(1rem, 2vw, 1.5rem);
+  border: 1px solid color-mix(in srgb, var(--pp-primary) 22%, var(--pp-border));
+  border-radius: var(--pp-radius-xl);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--pp-primary) 9%, var(--pp-surface)) 0%, var(--pp-surface) 72%);
+  box-shadow: var(--pp-shadow-sm);
+}
+
+.pp-profile-focus h2 { margin: .2rem 0 .35rem; }
+.pp-profile-focus p { max-width: 70ch; margin: 0; color: var(--pp-text-muted); }
+.pp-dashboard-workspace .pp-kpi-card,
+.pp-dashboard-workspace .pp-action-card { min-width: 0; }
+.pp-financial-workspace .table-responsive { border-radius: var(--pp-radius-lg); }
+
+@media (max-width: 767px) {
+  .pp-profile-focus { align-items: stretch; flex-direction: column; }
+  .pp-profile-focus .btn { width: 100%; min-height: 44px; }
+  .pp-filter-grid { grid-template-columns: minmax(0, 1fr); }
+  .pp-dashboard-workspace .pp-action-grid { grid-template-columns: minmax(0, 1fr); }
+}

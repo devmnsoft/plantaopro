@@ -21,6 +21,8 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
         Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "bi-people", "Recepção", "SAUDE360_PACIENTES", "PACIENTES.VER", "Atendimento", "Paciente"),
         Feature("AGENDA", "Agenda", "Organize agendamentos e a chegada dos pacientes.", "Atendimento", "Agendamentos", "Index", "bi-calendar2", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.VER", "Atendimento", "Agendamento"),
         Feature("CHECK_IN", "Check-in", "Registre a chegada e encaminhe o paciente.", "Atendimento", "Agendamentos", "CheckIn", "bi-person-check", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.CHECKIN", "Atendimento", "Check-in"),
+        Feature("PAINEL_CHAMADA", "Painel de chamada", "Chame e encaminhe pacientes sem expor dados sensíveis.", "Atendimento", "PainelChamada", "Index", "bi-megaphone", "Recepção", "SAUDE360_PAINEL", "PAINEL_CHAMADA.OPERAR", "Atendimento", "Painel de chamada"),
+        Feature("FILA_ATENDIMENTO", "Fila de Atendimento", "Acompanhe pacientes aguardando chamada e encaminhamento.", "Atendimento", "PainelChamada", "Fila", "bi-list", "Recepção", "SAUDE360_PAINEL", "PAINEL_CHAMADA.OPERAR", "Atendimento", "Fila de Atendimento"),
         Feature("TRIAGEM", "Triagem", "Priorize e encaminhe atendimentos com segurança.", "Atendimento", "Triagem", "Index", "bi-clipboard2-pulse", "Triagem", "SAUDE360_TRIAGEM", "TRIAGEM.VER", "Atendimento", "Triagem"),
         Feature("MINHA_AGENDA", "Minhas Escalas", "Acompanhe plantões, convites e compromissos.", "Área médica", "MinhaAgenda", "Index", "bi-calendar-heart", "Médico", "MINHA_AGENDA", "AGENDA_PROPRIA.VER", "Área médica", "Escalas"),
         Feature("PAGAMENTOS", "Meus Pagamentos", "Consulte valores previstos e realizados.", "Área médica", "Pagamentos", "Index", "bi-cash-coin", "Médico,Financeiro", "PAGAMENTOS", "PAGAMENTOS.VER", "Área médica", "Pagamento")
@@ -28,7 +30,7 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
 
     private static readonly IReadOnlyList<NavigationDefinition> NavigationItems = new List<NavigationDefinition>
     {
-        Nav("Recepção", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1), Nav("Recepção", "Rotina", "Agenda", "bi-calendar2", "AGENDA", 2), Nav("Recepção", "Rotina", "Check-in", "bi-person-check", "CHECK_IN", 3), Nav("Recepção", "Rotina", "Pacientes", "bi-people", "PACIENTES", 4),
+        Nav("Recepção", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1), Nav("Recepção", "Rotina", "Agenda", "bi-calendar2", "AGENDA", 2), Nav("Recepção", "Rotina", "Check-in", "bi-person-check", "CHECK_IN", 3), Nav("Recepção", "Rotina", "Painel de chamada", "bi-megaphone", "PAINEL_CHAMADA", 4), Nav("Recepção", "Rotina", "Fila de Atendimento", "bi-list", "FILA_ATENDIMENTO", 5), Nav("Recepção", "Rotina", "Pacientes", "bi-people", "PACIENTES", 6),
         Nav("Coordenação", "Rotina", "Meu Dia", "bi-house-heart", "MEU_DIA", 1), Nav("Coordenação", "Rotina", "Central de Cobertura", "bi-people", "COBERTURA", 2), Nav("Coordenação", "Rotina", "Plantões", "bi-calendar-event", "PLANTOES", 3),
         Nav("Médico", "Rotina", "Hoje", "bi-house-heart", "MEU_DIA", 1), Nav("Médico", "Rotina", "Minha Agenda", "bi-calendar-heart", "MINHA_AGENDA", 2), Nav("Médico", "Rotina", "Pagamentos", "bi-cash-coin", "PAGAMENTOS", 3)
         ,Nav("Administrador Global", "Visão geral", "Visão Executiva", "bi-speedometer2", "MEU_DIA", 1)

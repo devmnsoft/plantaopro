@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-psql -v ON_ERROR_STOP=1 -f database/PlantaoPro_PostgreSQL_Completo.sql
-psql -v ON_ERROR_STOP=1 -f database/migrations/2026_v113_operacional_real.sql
+psql -v ON_ERROR_STOP=1 -f database/fixtures/legacy-supported.sql
 psql -v ON_ERROR_STOP=1 <<'SQL'
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 CREATE TABLE IF NOT EXISTS plantaopro.upgrade_preservation_probe(
@@ -18,7 +17,7 @@ scripts/apply-canonical-migrations.sh upgrade
 psql -v ON_ERROR_STOP=1 <<'SQL'
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='240_v117_runtime') THEN
+  IF NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='2026_v117_hardening_v116_runtime') THEN
     RAISE EXCEPTION 'upgrade did not reach v117 runtime migration';
   END IF;
   IF (SELECT COUNT(*) FROM plantaopro.upgrade_preservation_probe) <> 11 THEN

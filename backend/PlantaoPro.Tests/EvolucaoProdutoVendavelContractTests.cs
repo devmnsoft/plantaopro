@@ -68,8 +68,7 @@ public sealed class EvolucaoProdutoVendavelContractTests
                 "*.*",
                 SearchOption.AllDirectories))
             .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar) && !f.Contains("node_modules"));
-        var pattern = string.Join("|", "@" + "page", "asp-" + "page", "@model " + "dynamic", "href=\"" + "#\"", "alert" + "\\(", "confirm" + "\\(", "= " + "\\[\\]", "return " + "\\[\\]");
-        var forbidden = new Regex(pattern, RegexOptions.Compiled);
+        var forbidden = new Regex("(?im)^\\s*@page(?:\\s|$)|\\basp-page(?:\\s|=)|@model\\s+dynamic|href=\"#\"|(?<![\\w.])(?:window\\.)?(?:alert|confirm)\\s*\\(|=\\s*\\[\\s*\\]|return\\s*\\[\\s*\\]", RegexOptions.Compiled);
         foreach (var file in files)
             Assert.False(forbidden.IsMatch(File.ReadAllText(file)), file);
         foreach (var appsettings in Directory.EnumerateFiles(

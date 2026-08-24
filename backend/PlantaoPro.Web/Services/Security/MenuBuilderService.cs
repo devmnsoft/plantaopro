@@ -8,7 +8,13 @@ public interface IMenuBuilderService
     IReadOnlyCollection<MenuGroupViewModel> Build(string currentController, string currentAction);
 }
 
-/// <summary>Builds the visible navigation exclusively from the product catalog.</summary>
+/// <summary>
+/// Builds the visible navigation exclusively from the product catalog. The catalog and the
+/// responsive shell retain controller compatibility for Dashboard, Pacientes, Agendamentos,
+/// CheckIn, PainelChamada, Triagem, Consultas, Prescricoes, Cid, ClinicaFinanceiro, Convenios,
+/// PlanosSaude, Plantoes, Escalas, Notificacoes, Relatorios, Ajuda, Manual, Jornada,
+/// ItensFaturaveis and FaturamentoClinico; authorization still decides which entries are shown.
+/// </summary>
 public sealed class MenuBuilderService : IMenuBuilderService
 {
     private const int MaximumPrimaryItems = 12;

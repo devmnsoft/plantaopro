@@ -23,12 +23,14 @@ public sealed class V148PremiumTemplateContractTests
     {
         var layout = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Views", "Shared", "_Layout.cshtml"));
         var tokens = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "css", "design-system", "tokens.css"));
-        var experience = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "css", "design-system", "premium-experience.css"));
+        var entrypoint = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "css", "plantaopro.css"));
+        var foundation = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "wwwroot", "css", "design-system", "foundation.css"));
 
         Assert.Contains("~/css/plantaopro.css", layout, StringComparison.Ordinal);
         Assert.DoesNotContain("_NavigationRail", layout, StringComparison.Ordinal);
         Assert.Contains("--pp-color-primary", tokens, StringComparison.Ordinal);
-        Assert.Contains("v1.48", experience, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("prefers-reduced-motion", experience, StringComparison.Ordinal);
+        Assert.Contains("design-system/tokens.css", entrypoint, StringComparison.Ordinal);
+        Assert.Contains("design-system/foundation.css", entrypoint, StringComparison.Ordinal);
+        Assert.Contains("prefers-reduced-motion", foundation, StringComparison.Ordinal);
     }
 }

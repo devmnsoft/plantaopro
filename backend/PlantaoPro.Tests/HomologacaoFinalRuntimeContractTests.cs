@@ -11,7 +11,7 @@ public class HomologacaoFinalRuntimeContractTests
         Assert.Contains("actions/checkout@v4", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("actions/setup-dotnet@v4", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("dotnet-version: '10.0.x'", workflow, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("dotnet-quality: 'preview'", workflow, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("dotnet-quality:", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("dotnet --info", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("dotnet restore backend/PlantaoPro.sln", workflow, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("dotnet build backend/PlantaoPro.sln -c Release", workflow, StringComparison.OrdinalIgnoreCase);

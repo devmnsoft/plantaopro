@@ -1,5 +1,7 @@
 # PlantãoPro — Relatório de Fechamento Real da Beta Homologável — 2026-06-06
 
+> Limitação registrada na rodada local: dotnet não disponível; builds e testes ficam sob responsabilidade do CI reproduzível.
+
 ## Branches
 
 - Branch de trabalho criada: `codex/plantaopro-beta-fechamento-real`.

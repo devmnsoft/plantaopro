@@ -1,0 +1,60 @@
+/* PlantãoPro Design System — saas */
+
+/* Migrado de v171-saas-admin.css; consolidado na v1.90.0. */
+.pp-subscription-summary { margin-block: 1.5rem; }
+.pp-subscription-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(17rem, .8fr); gap: 1.25rem; align-items: start; }
+.pp-subscription-main { display: grid; gap: 1.25rem; min-width: 0; }
+.pp-subscription-section, .pp-subscription-side { padding: clamp(1rem, 2vw, 1.5rem); }
+.pp-subscription-side { position: sticky; top: 5.5rem; }
+.pp-subscription-side h3 { font-size: .9rem; margin: 1.35rem 0 .5rem; }
+.pp-inline-empty { display: flex; gap: .85rem; align-items: flex-start; padding: 1rem; border: 1px dashed var(--pp-border, #d7dfeb); border-radius: .85rem; background: var(--pp-surface-subtle, #f7f9fc); }
+.pp-inline-empty i { color: var(--pp-primary, #1f73f1); font-size: 1.25rem; }
+.pp-inline-empty p { margin: .2rem 0 0; color: var(--pp-text-muted, #5f6b7a); }
+.pp-chip-list, .pp-status-list { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+.pp-chip-list li { border-radius: 999px; padding: .35rem .7rem; background: #edf4ff; color: #174ea6; font-size: .85rem; }
+.pp-status-list { display: grid; }
+.pp-status-list li { display: flex; gap: .5rem; align-items: flex-start; }
+.pp-stack-actions { display: grid; gap: .65rem; margin-top: 1.5rem; }
+.pp-billing-timeline { display: grid; }
+.pp-billing-timeline article { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .75rem; align-items: center; padding: .85rem 0; border-bottom: 1px solid var(--pp-border, #e1e6ee); }
+.pp-billing-timeline h3, .pp-billing-timeline p { margin: 0; }
+.pp-timeline-dot { width: .65rem; height: .65rem; border-radius: 50%; background: var(--pp-primary, #1f73f1); box-shadow: 0 0 0 .3rem #e6f0ff; }
+.pp-empty-state--featured { max-width: 46rem; margin: 2rem auto; }
+.pp-settings-group { margin-top: 1.5rem; }
+.pp-settings-group + .pp-settings-group { padding-top: 1.25rem; border-top: 1px solid var(--pp-border, #e1e6ee); }
+.pp-card-status { display: inline-flex; align-items: center; gap: .35rem; font-size: .78rem; color: var(--pp-text-muted, #5f6b7a); }
+@media (max-width: 900px) { .pp-subscription-layout { grid-template-columns: 1fr; } .pp-subscription-side { position: static; } }
+@media (max-width: 560px) { .pp-billing-timeline article { grid-template-columns: auto minmax(0, 1fr); } .pp-billing-timeline article > strong { grid-column: 2; } }
+
+/* Migrado de v181-admin-governance.css; consolidado na v1.90.0. */
+.pp-admin-governance,.pp-settings-page,.pp-subscription-page{--pp-governance-accent:#4f46e5;--pp-governance-soft:#eef2ff}
+.pp-governance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1rem}
+.pp-governance-card,.pp-governance-panel,.pp-governance-notice{border:1px solid var(--pp-border-color,#dbe2ea);border-radius:1rem;background:var(--pp-surface,#fff);box-shadow:0 12px 35px rgba(15,23,42,.06)}
+.pp-governance-card{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:.75rem;padding:1.25rem}
+.pp-governance-card h3,.pp-governance-card p{margin:0}.pp-governance-card p{color:var(--pp-text-muted,#64748b);line-height:1.6}.pp-governance-card .pp-card-actions{margin-top:auto}
+.pp-governance-card--muted{background:linear-gradient(145deg,#f8fafc,#fff)}
+.pp-governance-panel{margin-top:1.5rem;padding:1.5rem;scroll-margin-top:6rem}
+.pp-governance-notice{display:flex;gap:1rem;align-items:flex-start;margin:1rem 0 1.5rem;padding:1rem 1.25rem;background:linear-gradient(135deg,var(--pp-governance-soft),#fff)}
+.pp-governance-notice i{color:var(--pp-governance-accent);font-size:1.4rem}.pp-governance-notice p{margin:.25rem 0 0}
+.pp-status-badge{display:inline-flex;border-radius:999px;padding:.3rem .65rem;font-size:.75rem;font-weight:700;letter-spacing:.02em}
+.pp-status-badge--source{color:#3730a3;background:#e0e7ff}.pp-status-badge--unknown{color:#854d0e;background:#fef9c3}.pp-status-badge--unavailable{color:#9f1239;background:#ffe4e6}
+.pp-admin-governance .btn:disabled,.pp-governance-panel .btn:disabled{cursor:not-allowed;opacity:.72}
+@media(max-width:991px){.pp-governance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:639px){.pp-governance-grid{grid-template-columns:1fr}.pp-governance-card,.pp-governance-panel{padding:1rem}.pp-governance-card .pp-card-actions{display:flex;width:100%;flex-direction:column;align-items:stretch}.pp-governance-card .btn{min-height:44px}.pp-governance-notice{align-items:flex-start}}
+
+/* Migrado de v183-onboarding-homologation.css; consolidado na v1.90.0. */
+/* v1.83: superfícies públicas e onboarding; sem alterar workspaces autenticados. */
+.pp-commercial-onboarding .card { border-radius: 1rem; }
+.pp-commercial-onboarding .card-body { gap: .25rem; }
+.pp-commercial-onboarding li { margin-block: .45rem; }
+.pp-public-product { display: grid; gap: 2rem; max-width: 1180px; margin-inline: auto; padding: clamp(2rem, 6vw, 5rem) clamp(1rem, 4vw, 3rem); }
+.pp-public-product__hero { max-width: 760px; }
+.pp-public-product__hero h1 { font-size: clamp(2rem, 5vw, 3.75rem); line-height: 1.05; margin-block: .75rem 1rem; }
+.pp-public-product__hero p { color: var(--pp-text-muted, #52606d); font-size: 1.125rem; }
+.pp-public-product__actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+.pp-public-product__journey { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.pp-public-product__journey article, .pp-public-trust { background: var(--pp-surface, #fff); border: 1px solid var(--pp-border, #dbe3ea); border-radius: 1rem; padding: 1.25rem; }
+.pp-public-product__journey span { color: var(--pp-primary, #246bfd); font-weight: 700; }
+.pp-public-product__journey h2 { font-size: 1.15rem; margin-block: .5rem; }
+.pp-public-trust { margin: 0; }
+@media (max-width: 767px) { .pp-public-product__journey { grid-template-columns: 1fr; } .pp-commercial-onboarding .btn { width: 100%; margin-block: .25rem; } }

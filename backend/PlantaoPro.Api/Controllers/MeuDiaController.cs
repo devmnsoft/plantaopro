@@ -1,33 +1,22 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers;
 
-[ApiController]
-[Route("api/meu-dia")]
-[Authorize]
+[ApiController, Route("api/meu-dia"), Authorize]
 public sealed class MeuDiaController : ControllerBase
 {
-    private readonly IMeuDiaService _service;
-    public MeuDiaController(IMeuDiaService service) => _service = service;
+    private readonly IMeuDiaService service; public MeuDiaController(IMeuDiaService service)=>this.service=service;
+    [HttpGet] public async Task<IActionResult> Get(CancellationToken ct) => Ok(await service.ObterResumoAsync(ct));
+    [HttpGet("indicadores")] public async Task<IActionResult> Indicators(CancellationToken ct) => Ok(await service.IndicadoresAsync(ct));
+    [HttpGet("pendencias")] public async Task<IActionResult> Actions(CancellationToken ct) => Ok(await service.PendenciasAsync(ct));
+    [HttpGet("agenda")] public async Task<IActionResult> Agenda(CancellationToken ct) => Ok(await service.AgendaAsync(ct));
+    [HttpGet("alertas")] public IActionResult Alerts() => Ok(Array.Empty<object>());
+    [HttpGet("acoes-rapidas")] public IActionResult QuickActions() => Ok(service.AcoesRapidas());
 
-    [HttpGet]
-    public IActionResult Get() => Ok(ApiResponse<MeuDiaDto>.Ok(_service.ObterResumo(User)));
-    [HttpGet("indicadores")]
-    public IActionResult Indicadores() => Ok(ApiResponse<IEnumerable<MeuDiaIndicadorDto>>.Ok(_service.Indicadores(User)));
-    [HttpGet("pendencias")]
-    public IActionResult Pendencias() => Ok(ApiResponse<IEnumerable<MeuDiaItemDto>>.Ok(_service.Pendencias(User)));
-    [HttpGet("agenda")]
-    public IActionResult Agenda() => Ok(ApiResponse<IEnumerable<MeuDiaItemDto>>.Ok(_service.Agenda(User)));
-    [HttpGet("alertas")]
-    public IActionResult Alertas() => Ok(ApiResponse<IEnumerable<MeuDiaItemDto>>.Ok(_service.Alertas(User)));
-    [HttpGet("acoes-rapidas")]
-    public IActionResult AcoesRapidas() => Ok(ApiResponse<IEnumerable<MeuDiaItemDto>>.Ok(_service.AcoesRapidas(User)));
-    [HttpPost("itens/{id:guid}/concluir")]
-    public IActionResult Concluir(Guid id, [FromBody] MeuDiaEstadoRequest request) => Ok(ApiResponse<MeuDiaItemDto>.Ok(_service.AlterarEstado(id, "concluido", request)));
-    [HttpPost("itens/{id:guid}/adiar")]
-    public IActionResult Adiar(Guid id, [FromBody] MeuDiaEstadoRequest request) => Ok(ApiResponse<MeuDiaItemDto>.Ok(_service.AlterarEstado(id, "adiado", request)));
-    [HttpPost("itens/{id:guid}/reabrir")]
-    public IActionResult Reabrir(Guid id, [FromBody] MeuDiaEstadoRequest request) => Ok(ApiResponse<MeuDiaItemDto>.Ok(_service.AlterarEstado(id, "aberto", request)));
+    [HttpPost("itens/{id:guid}/concluir"), HttpPost("itens/{id:guid}/reabrir")]
+    public IActionResult UnsupportedMutation(Guid id) => StatusCode(StatusCodes.Status410Gone, new
+    {
+        error = "A ação deve ser concluída na entidade operacional de origem."
+    });
 }

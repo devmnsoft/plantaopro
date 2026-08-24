@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v1.18.9",
+  "schemaVersion": "v1.95.1",
   "generatedAt": "2026-07-21",
   "objects": [
     {
@@ -1381,6 +1381,32 @@
       "requiredForInstall": true,
       "sourceCanonical": "database/schema/140_experiencia_premium_meu_dia.sql",
       "references": []
+    },
+    {
+      "schema": "plantaopro",
+      "name": "pagamentos",
+      "type": "table",
+      "module": "FINANCEIRO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/305_v1951_pagamentos_plantoes.sql",
+      "references": [
+        "escalas",
+        "medicos",
+        "plantoes"
+      ]
+    },
+    {
+      "schema": "plantaopro",
+      "name": "historico_pagamento",
+      "type": "table",
+      "module": "FINANCEIRO_PLANTOES",
+      "status": "ACTIVE",
+      "requiredForInstall": true,
+      "sourceCanonical": "database/schema/305_v1951_pagamentos_plantoes.sql",
+      "references": [
+        "pagamentos"
+      ]
     }
   ]
 }

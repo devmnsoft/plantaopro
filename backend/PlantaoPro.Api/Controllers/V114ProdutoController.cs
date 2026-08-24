@@ -29,7 +29,7 @@ public sealed class V114ProdutoController : ControllerBase
     [HttpDelete("itens-faturaveis/{id:guid}")] public async Task<ActionResult<ApiResponse<object>>> InativarItem(Guid id) => await Safe(() => service.InativarItemFaturavelAsync(id), "inativar item faturável");
     [HttpGet("faturamento/contas-receber")] public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> ContasReceber() => await Safe(() => service.ContasReceberAsync(), "contas a receber");
     [HttpGet("faturamento/titulos")] public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> Titulos() => await Safe(() => service.TitulosAsync(), "títulos");
-    [HttpPost("faturamento/gerar-conta-atendimento/{atendimentoId:guid}")] public async Task<ActionResult<ApiResponse<object>>> GerarConta(Guid atendimentoId) => await Safe(() => service.GerarContaAtendimentoAsync(atendimentoId), "gerar conta atendimento");
+    [HttpPost("faturamento/gerar-conta-atendimento/{atendimentoId:guid}")] public async Task<ActionResult<ApiResponse<ContaReceberDto>>> GerarConta(Guid atendimentoId) => await Safe(() => service.GerarContaAtendimentoAsync(atendimentoId), "gerar conta atendimento");
     [HttpPost("faturamento/titulos/{id:guid}/demo-boleto")] public async Task<ActionResult<ApiResponse<object>>> DemoBoleto(Guid id) => await Safe(() => service.DemoBoletoAsync(id), "demo boleto");
     [HttpGet("faturamento/repasses-medicos")] public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> Repasses() => await Safe(() => service.RepassesMedicosAsync(), "repasses médicos");
     [HttpGet("faturamento/glosas")] public async Task<ActionResult<ApiResponse<IEnumerable<object>>>> Glosas() => await Safe(() => service.GlosasAsync(), "glosas");

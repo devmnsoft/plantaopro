@@ -47,25 +47,22 @@ public sealed class V186FinancialOperationalContractTests
         var script = Read("backend/PlantaoPro.Web/wwwroot/js/components/business-actions.js");
         foreach (var status in new[] { "400", "401", "403", "404", "409", "422" }) Assert.Contains($"[{status},", script);
         Assert.DoesNotContain("innerHTML", script);
-        Assert.DoesNotContain("confirm(", script);
+        Assert.DoesNotMatch(@"(?<![\w.])(?:window\.)?confirm\s*\(", script);
         Assert.Contains("url.origin !== window.location.origin", script);
         Assert.Contains("event.target instanceof Element", script);
         Assert.True(script.IndexOf("try {", StringComparison.Ordinal) < script.IndexOf("JSON.parse", StringComparison.Ordinal));
     }
 
     [Fact]
-    public void Unsupported_canonical_routes_are_documented_instead_of_faked()
+    public void Closing_routes_use_the_persisted_canonical_aggregate()
     {
-        var controllers = Directory.GetFiles(Path.Combine(RepositoryPathResolver.RepoRoot, "backend/PlantaoPro.Api/Controllers"), "*.cs")
-            .Select(File.ReadAllText);
-        var source = string.Join('\n', controllers);
-        foreach (var unsupportedRoute in new[] { "api/fechamentos", "{id:guid}/gerar-financeiro", "{id:guid}/gerar-pagamento" })
-            Assert.DoesNotContain(unsupportedRoute, source);
+        var controller = Read("backend/PlantaoPro.Api/Controllers/FechamentosController.cs");
+        var service = Read("backend/PlantaoPro.Api/Fechamentos/FechamentoOperacionalService.cs");
+        Assert.Contains("api/fechamentos", controller);
+        Assert.Contains("{id:guid}/gerar-financeiro", controller);
+        Assert.Contains("plantaopro.fechamento_plantao", service);
+        Assert.Contains("await tx.CommitAsync", service);
         var paymentsController = Read("backend/PlantaoPro.Api/Controllers/PagamentosController.cs");
         Assert.DoesNotContain("{id:guid}/resolver-contestacao", paymentsController);
-
-        var pending = Read("artifacts/ui-audit/v186-endpoints-pendentes.md");
-        Assert.Contains("não existe agregado/repository real", pending);
-        Assert.Contains("não há campos/workflow de resolução", pending);
     }
 }

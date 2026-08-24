@@ -47,7 +47,7 @@ public sealed class Saude360BaseClinicaContractTests
     public void WebExposesClinicalMenusAndProfiles()
     {
         var roles = Read("backend/PlantaoPro.Web/Security/RolesConstants.cs");
-        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs");
+        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         var web = Read("backend/PlantaoPro.Web/Controllers/Saude360WebControllers.cs");
 
         foreach (var role in new[] { "RECEPCAO", "TRIAGEM", "ENFERMAGEM", "COORDENADOR_CLINICO", "ADMINISTRADOR_CLINICA", "AUDITOR_CLINICO" }) Assert.Contains(role, roles);

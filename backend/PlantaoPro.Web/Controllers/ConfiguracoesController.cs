@@ -59,32 +59,27 @@ public class ConfiguracoesController : BaseWebController
         return View(model);
     }
 
+    [HttpGet("/SystemHealth")]
     public async Task<IActionResult> Saude()
     {
         var client = CreateApiClient();
-        var tokenPresente = AddBearerToken(client);
-        var endpoint = "api/health";
+        AddBearerToken(client);
+        var endpoint = "api/health/system";
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "N/D";
         var email = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name ?? "N/D";
         var dataHoraUtc = DateTime.UtcNow;
 
-        var baseUrl = client.BaseAddress?.ToString()?.TrimEnd('/') ?? string.Empty;
         var dados = new HealthViewModel(
-            Status: "N/D",
+            Status: "INDISPONÍVEL",
             Ambiente: "N/D",
-            Schema: "plantaopro",
-            BancoConectado: false,
             DataHora: DateTime.UtcNow,
             Versao: null,
-            BaseUrlApi: baseUrl,
-            TokenPresente: tokenPresente,
-            UsuarioAutenticado: User.Identity?.Name ?? "Não autenticado",
-            SwaggerUrl: string.IsNullOrWhiteSpace(baseUrl) ? "swagger" : $"{baseUrl}/swagger");
+            Componentes: new[] { new HealthComponentViewModel("API", "INDISPONÍVEL", "Não foi possível consultar o serviço.") });
 
         try
         {
             var response = await client.GetAsync(endpoint);
-            dados = dados with { Status = response.IsSuccessStatusCode ? "Healthy" : $"HTTP {(int)response.StatusCode}" };
+            dados = dados with { Status = response.IsSuccessStatusCode ? "SAUDÁVEL" : "INDISPONÍVEL" };
 
             var rawJson = await response.Content.ReadAsStringAsync();
             if (!string.IsNullOrWhiteSpace(rawJson))
@@ -95,20 +90,21 @@ public class ConfiguracoesController : BaseWebController
                     if (data.TryGetProperty("status", out var status) && status.ValueKind == JsonValueKind.String)
                         dados = dados with { Status = status.GetString() ?? dados.Status };
 
-                    if (data.TryGetProperty("bancoConectado", out var banco) && (banco.ValueKind == JsonValueKind.True || banco.ValueKind == JsonValueKind.False))
-                        dados = dados with { BancoConectado = banco.GetBoolean() };
+                    // O contrato público de health usa nomes neutros em inglês. Mantemos
+                    // compatibilidade com o contrato antigo sem inventar estado de banco.
+                    if (data.TryGetProperty("environment", out var environment) && environment.ValueKind == JsonValueKind.String)
+                        dados = dados with { Ambiente = environment.GetString() ?? dados.Ambiente };
 
-                    if (data.TryGetProperty("schema", out var schema) && schema.ValueKind == JsonValueKind.String)
-                        dados = dados with { Schema = schema.GetString() ?? dados.Schema };
+                    if (data.TryGetProperty("timestampUtc", out var timestamp) && timestamp.ValueKind == JsonValueKind.String && DateTime.TryParse(timestamp.GetString(), out var timestampUtc))
+                        dados = dados with { DataHora = timestampUtc };
 
-                    if (data.TryGetProperty("ambiente", out var ambiente) && ambiente.ValueKind == JsonValueKind.String)
-                        dados = dados with { Ambiente = ambiente.GetString() ?? dados.Ambiente };
-
-                    if (data.TryGetProperty("dataHora", out var dh) && dh.ValueKind == JsonValueKind.String && DateTime.TryParse(dh.GetString(), out var parsed))
-                        dados = dados with { DataHora = parsed };
-
-                    if (data.TryGetProperty("versao", out var versao) && versao.ValueKind == JsonValueKind.String)
-                        dados = dados with { Versao = versao.GetString() };
+                    if (data.TryGetProperty("version", out var version) && version.ValueKind == JsonValueKind.String)
+                        dados = dados with { Versao = version.GetString() };
+                    if (data.TryGetProperty("components", out var components) && components.ValueKind == JsonValueKind.Array)
+                        dados = dados with { Componentes = components.EnumerateArray().Select(component => new HealthComponentViewModel(
+                            component.GetProperty("name").GetString() ?? "Componente",
+                            component.GetProperty("status").GetString() ?? "INDISPONÍVEL",
+                            component.GetProperty("detail").GetString() ?? "Sem detalhe disponível.")).ToArray() };
                 }
             }
 

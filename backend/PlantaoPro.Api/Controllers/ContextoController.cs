@@ -16,25 +16,25 @@ public sealed class ContextoController : ControllerBase
     public IActionResult Atual() => Ok(ApiResponse<ContextoAtualDto>.Ok(_contexto.Atual(User)));
 
     [HttpGet("tenants-disponiveis")]
-    public IActionResult TenantsDisponiveis() => Ok(ApiResponse<IEnumerable<TenantDisponivelDto>>.Ok(_contexto.TenantsDisponiveis(User)));
+    public async Task<IActionResult> TenantsDisponiveis(CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<TenantDisponivelDto>>.Ok(await _contexto.TenantsDisponiveisAsync(User,ct)));
 
     [HttpGet("recentes")]
-    public IActionResult Recentes() => Ok(ApiResponse<IEnumerable<ContextoTrocaDto>>.Ok(_contexto.Recentes(User)));
+    public async Task<IActionResult> Recentes(CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<ContextoTrocaDto>>.Ok(await _contexto.RecentesAsync(User,ct)));
 
     [HttpPost("selecionar")]
     [Authorize(Policy = "CanSwitchTenant")]
-    public IActionResult Selecionar([FromBody] SelecionarContextoRequest request)
+    public async Task<IActionResult> Selecionar([FromBody] SelecionarContextoRequest request,CancellationToken ct)
     {
         if (request.TenantId == Guid.Empty) return BadRequest(ApiResponse<object>.Fail("Tenant inválido."));
-        return Ok(ApiResponse<object>.Ok(_contexto.Selecionar(User, request), "Contexto selecionado."));
+        return Ok(ApiResponse<ContextSelectionDto>.Ok(await _contexto.SelecionarAsync(User,request,ct), "Contexto selecionado."));
     }
 
     [HttpPost("retornar-global")]
     [Authorize(Policy = "GlobalAccess")]
-    public IActionResult RetornarGlobal() => Ok(ApiResponse<object>.Ok(_contexto.RetornarGlobal(User), "Contexto global restaurado."));
+    public async Task<IActionResult> RetornarGlobal(CancellationToken ct) { await _contexto.RetornarGlobalAsync(User,ct); return Ok(ApiResponse<object>.Ok(new { contextMode="GLOBAL" }, "Contexto global restaurado.")); }
 
     [HttpGet("historico")]
-    public IActionResult Historico() => Ok(ApiResponse<IEnumerable<ContextoTrocaDto>>.Ok(_contexto.Historico(User)));
+    public async Task<IActionResult> Historico(CancellationToken ct) => Ok(ApiResponse<IReadOnlyList<ContextoTrocaDto>>.Ok(await _contexto.HistoricoAsync(User,ct)));
 }
 
 public sealed record SelecionarContextoRequest(Guid TenantId, string? Motivo);

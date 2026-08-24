@@ -1,3 +1,87 @@
+/* PlantãoPro Design System — clinical */
+
+/* Migrado de v154-clinical-pages.css; consolidado na v1.90.0. */
+/* v1.54 — páginas comerciais e clínicas. Componentes sem dependência estrutural do Bootstrap. */
+.pp-page { display: grid; gap: 1.5rem; }
+.pp-page-hero {
+    display: flex;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    gap: 1.5rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    border: 1px solid var(--pp-border-soft-v154);
+    border-radius: var(--pp-radius-lg);
+    background: var(--pp-surface);
+    box-shadow: var(--pp-shadow-card);
+}
+.pp-page-hero__copy { max-width: 48rem; }
+.pp-page-hero__copy h2 { max-width: 22ch; margin: .35rem 0 .5rem; font-size: clamp(1.55rem, 3vw, 2.25rem); }
+.pp-page-hero__copy p { max-width: 65ch; margin: 0; color: var(--pp-text-muted); }
+.pp-eyebrow { color: var(--pp-teal-700, #0f766e); font-size: .75rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.pp-hero-actions, .pp-card-actions { display: flex; flex-wrap: wrap; gap: .65rem; }
+.pp-section { display: grid; gap: 1rem; }
+.pp-section-heading { display: flex; gap: 1rem; align-items: end; justify-content: space-between; }
+.pp-section-heading h2 { margin: 0; font-size: 1.25rem; }
+.pp-section-heading p { margin: .25rem 0 0; color: var(--pp-text-muted); }
+.pp-clinical-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.pp-action-card, .pp-checklist-card, .pp-plan-card {
+    display: flex;
+    min-width: 0;
+    padding: 1.25rem;
+    gap: 1rem;
+    flex-direction: column;
+    border: 1px solid var(--pp-border-soft-v154);
+    border-radius: var(--pp-radius-lg);
+    background: var(--pp-surface);
+    box-shadow: var(--pp-shadow-card);
+}
+.pp-action-card h3, .pp-checklist-card h3, .pp-plan-card h3 { margin: 0; font-size: 1.05rem; }
+.pp-action-card p, .pp-checklist-card p, .pp-plan-card p { margin: 0; color: var(--pp-text-muted); }
+.pp-action-card .pp-card-actions, .pp-plan-card .pp-card-actions { margin-top: auto; }
+.pp-icon-surface { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border-radius: .75rem; color: var(--pp-blue-600); background: #eff6ff; }
+.pp-checklist-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem; }
+.pp-checklist-card { padding: 1rem; }
+.pp-checklist-card__head { display: flex; gap: .75rem; align-items: center; }
+.pp-progress { overflow: hidden; height: .45rem; border-radius: 999px; background: #e2e8f0; }
+.pp-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--pp-teal-600, #0d9488); }
+.pp-plan-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: stretch; }
+.pp-plan-card { position: relative; overflow: hidden; }
+.pp-plan-card[data-active="true"] { border-color: var(--pp-blue-600); box-shadow: 0 12px 32px rgb(37 99 235 / .12); }
+.pp-plan-card__heading { display: flex; gap: .75rem; align-items: flex-start; justify-content: space-between; }
+.pp-plan-price { color: var(--pp-clinical-navy, #071a2f); font-size: 1.75rem; font-weight: 800; }
+.pp-plan-price small { color: var(--pp-text-muted); font-size: .78rem; font-weight: 500; }
+.pp-feature-list { display: grid; margin: 0; padding: 0; gap: .6rem; list-style: none; }
+.pp-feature-list li { display: flex; gap: .5rem; align-items: flex-start; color: var(--pp-text-muted); }
+.pp-feature-list li::before { content: "✓"; color: var(--pp-green-600); font-weight: 800; }
+.pp-toolbar { display: flex; padding: 1rem; gap: 1rem; flex-wrap: wrap; align-items: end; border: 1px solid var(--pp-border-soft-v154); border-radius: var(--pp-radius-lg); background: var(--pp-surface); }
+.pp-toolbar .pp-form-field { min-width: min(100%, 16rem); }
+.pp-wizard-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem); gap: 1.25rem; align-items: start; }
+.pp-stepper { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; gap: .5rem; list-style: none; }
+.pp-stepper li { display: grid; gap: .45rem; color: var(--pp-text-soft); font-size: .75rem; }
+.pp-stepper li::before { content: attr(data-step); display: grid; width: 2rem; height: 2rem; place-items: center; border: 1px solid var(--pp-border); border-radius: 50%; background: var(--pp-surface); font-weight: 750; }
+.pp-stepper li[aria-current="step"] { color: var(--pp-blue-600); font-weight: 700; }
+.pp-stepper li[aria-current="step"]::before { border-color: var(--pp-blue-600); color: white; background: var(--pp-blue-600); }
+.pp-wizard-summary { position: sticky; top: calc(var(--pp-topbar-height-v154) + 1rem); }
+.pp-data-table { width: 100%; border-collapse: collapse; }
+.pp-data-table th { color: var(--pp-text-muted); background: var(--pp-surface-muted); text-align: left; }
+.pp-data-table :where(th, td) { padding: .85rem 1rem; border-bottom: 1px solid var(--pp-border-soft-v154); }
+
+@media (max-width: 1023px) {
+    .pp-clinical-grid, .pp-plan-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pp-checklist-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pp-wizard-layout { grid-template-columns: 1fr; }
+    .pp-wizard-summary { position: static; }
+}
+@media (max-width: 767px) {
+    .pp-page-hero { flex-direction: column; }
+    .pp-page-hero .pp-hero-actions { width: 100%; }
+    .pp-page-hero .pp-hero-actions > * { flex: 1; justify-content: center; }
+    .pp-clinical-grid, .pp-plan-grid, .pp-checklist-grid { grid-template-columns: 1fr; }
+    .pp-stepper { display: flex; overflow-x: auto; padding-bottom: .5rem; }
+    .pp-stepper li { min-width: 5rem; }
+}
+
+/* Migrado de v161-medical-experience.css; consolidado na v1.90.0. */
 /* v1.61 — estrutura definitiva do shell médico e dos componentes críticos. */
 :root {
     --pp-v161-navy: #0b2443;
@@ -363,3 +447,67 @@
     .pp-financial-workspace .pp-operational-card header { align-items: flex-start; }
     .pp-financial-workspace .pp-operational-card dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Migrado de v178-clinical-mvp.css; consolidado na v1.90.0. */
+/* PlantãoPro v1.78 — camada aditiva da Jornada Clínica MVP. */
+.clinical-mvp-journey {
+  --clinical-accent: #0f766e;
+  --clinical-surface: color-mix(in srgb, var(--clinical-accent) 6%, white);
+}
+
+.clinical-next-action {
+  align-items: center;
+  background: linear-gradient(135deg, var(--clinical-surface), #fff);
+  border: 1px solid color-mix(in srgb, var(--clinical-accent) 24%, transparent);
+  border-left: 4px solid var(--clinical-accent);
+  border-radius: var(--pp-radius-lg, 1rem);
+  display: flex;
+  gap: 1.25rem;
+  justify-content: space-between;
+  margin-block: 1.25rem;
+  padding: 1.25rem;
+}
+
+.clinical-next-action h2 { font-size: 1.1rem; margin: .2rem 0; }
+.clinical-next-action p { margin: 0; max-width: 70ch; }
+
+.clinical-patient-sections {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  margin-block: 1.25rem;
+}
+
+.clinical-context-card,
+.clinical-appointment-card {
+  border-top: 3px solid color-mix(in srgb, var(--clinical-accent) 55%, transparent);
+  min-width: 0;
+}
+
+.clinical-context-card {
+  background: var(--clinical-surface);
+  border-radius: var(--pp-radius-md, .75rem);
+  padding: 1rem;
+}
+
+.clinical-context-card h2 { font-size: 1rem; }
+.clinical-context-card p { color: var(--pp-text-muted, #64748b); font-size: .875rem; margin: 0; }
+
+.clinical-actions[data-consultation-billing-honest] { flex-wrap: wrap; }
+
+@media (max-width: 767.98px) {
+  .clinical-next-action { align-items: stretch; flex-direction: column; }
+  .clinical-next-action .btn { min-height: 44px; width: 100%; }
+  .clinical-patient-sections { grid-template-columns: 1fr; }
+  .clinical-appointment-card .btn { flex: 1 1 9rem; min-height: 44px; }
+  .clinical-actions[data-consultation-billing-honest] > * { flex: 1 1 100%; min-height: 44px; }
+}
+
+/* Migrado de pages/saude360-journey.css; consolidado na v1.90.0. */
+.patient-context{background:linear-gradient(120deg,#075985,#0f766e);color:#fff;display:flex;align-items:center;justify-content:space-between;position:sticky;top:.5rem;z-index:10}
+.clinical-record .card{border-radius:1rem}
+@media(max-width:768px){.patient-context{position:static;align-items:flex-start;gap:1rem;flex-direction:column}}
+
+.clinical-command-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:2rem;padding:clamp(1.5rem,4vw,2.75rem);border-radius:24px;color:#fff;background:radial-gradient(circle at 90% 0,rgba(45,212,191,.25),transparent 35%),linear-gradient(135deg,#062b38,#075d67 60%,#0f766e);box-shadow:0 22px 55px rgba(6,43,56,.2)}.clinical-command-hero h1{margin:.25rem 0;font-size:clamp(1.75rem,3vw,2.65rem)}.clinical-command-hero p{max-width:65ch;margin:0;color:#ccfbf1}.clinical-command-hero>div:last-child{justify-content:flex-end}.clinical-journey{display:grid;grid-template-columns:repeat(8,minmax(95px,1fr));overflow-x:auto;padding:1rem;border:1px solid var(--pp-border-subtle);border-radius:20px;background:var(--pp-surface-default);box-shadow:var(--pp-shadow-sm)}.clinical-journey a{position:relative;display:grid;min-width:90px;gap:.5rem;justify-items:center;padding:.7rem .35rem;color:var(--pp-text-secondary);font-size:.78rem;font-weight:700;text-decoration:none}.clinical-journey a:not(:last-child):after{position:absolute;top:24px;right:-8px;width:16px;border-top:2px dotted var(--pp-border-strong);content:""}.clinical-journey i{display:grid;width:42px;height:42px;place-items:center;border-radius:14px;color:#0f766e;background:#ccfbf1;font-size:1.1rem;transition:transform .2s ease,box-shadow .2s ease}.clinical-journey a:hover i,.clinical-journey a:focus-visible i{transform:translateY(-2px);box-shadow:0 8px 16px rgba(15,118,110,.18)}
+@media(max-width:767px){.clinical-command-hero{align-items:flex-start;flex-direction:column}.clinical-journey{grid-template-columns:repeat(8,100px);scroll-snap-type:x mandatory}.clinical-journey a{scroll-snap-align:start}}
+.clinical-journey>span{display:grid;min-width:95px;gap:.45rem;justify-items:center;padding:.7rem .35rem;color:var(--pp-text-secondary);font-size:.78rem;font-weight:700;text-align:center}.clinical-journey>span i{width:38px;height:38px}

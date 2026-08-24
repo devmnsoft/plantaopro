@@ -28,11 +28,6 @@ public sealed class PagamentosController : ControllerBase
     public Task<IActionResult> Contestar(Guid id, [FromBody] ContestarPagamentoRequest request) =>
         ExecuteAsync(id, "contestar", uid => service.ContestarAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
 
-    [HttpPost("{id:guid}/resolver-contestacao")]
-    [Authorize(Roles = RolesConstants.FinanceiroGestao)]
-    public Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoPagamentoRequest request) =>
-        ExecuteAsync(id, "resolver contestação", uid => service.ResolverContestacaoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
-
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 
     private async Task<IActionResult> ExecuteAsync(Guid id, string action, Func<Guid, Task<ApiResponse<PagamentoActionResponse>>> operation)

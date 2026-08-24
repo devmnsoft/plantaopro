@@ -79,6 +79,15 @@ apply_script() {
         exit 1
     fi
 
+    if [[ "$id" == "2026_v187_fechamento_operacional_financeiro" ]]; then
+        local fechamento_plantao
+        fechamento_plantao="$(psql -v ON_ERROR_STOP=1 -At -c "SELECT to_regclass('plantaopro.fechamento_plantao');")"
+        if [[ -z "$fechamento_plantao" ]]; then
+            echo "Migration precondition failed: plantaopro.fechamento_plantao must exist before $id" >&2
+            exit 3
+        fi
+    fi
+
     local checksum escaped_id escaped_path stored_checksum tmp_sql
     checksum="$(sha256sum "$path" | awk '{print $1}')"
     escaped_id="$(sql_literal "$id")"
@@ -120,25 +129,23 @@ apply_script() {
 }
 
 apply_script "000_base_schema" "database/PlantaoPro_PostgreSQL_Completo.sql" false base
-apply_script "010_common_saas_premium" "database/20260525_evolucao_saas_premium.sql" true saas
-apply_script "020_common_self_service_white_label" "database/migrations/2026_plantao_pro_self_service_white_label.sql" true saas
-apply_script "030_common_white_label_self_service" "database/migrations/2026_plantao_pro_white_label_self_service.sql" true saas
-apply_script "040_saude360_base_minima" "database/migrations/2026_saude360_base_clinica_minima.sql" true clinico
-apply_script "050_saude360_base" "database/migrations/2026_plantao_pro_saude360_base_clinica.sql" true clinico
-apply_script "060_saude360_modulos" "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql" true clinico
-apply_script "070_saude360_consultas" "database/migrations/2026_saude360_consultas_base.sql" true clinico
-apply_script "080_saude360_cid_prescricao" "database/migrations/2026_saude360_cid_prescricao.sql" true clinico
-apply_script "090_saude360_convenios" "database/migrations/2026_saude360_convenios_planos_saude.sql" true clinico
-apply_script "100_saude360_financeiro" "database/migrations/2026_saude360_financeiro_clinica.sql" true clinico
-apply_script "110_saas_inteligente" "database/migrations/2026_plantao_pro_saas_inteligente.sql" true saas
-apply_script "120_saas_inteligente_funcional" "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql" true saas
-apply_script "130_saas_auditavel" "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql" true saas
-apply_script "140_saas_comercial_core" "database/migrations/2026_saas_comercial_core.sql" true saas
-apply_script "200_v113_operacional" "database/migrations/2026_v113_operacional_real.sql" true operacional
-apply_script "210_v114_consolidacao" "database/migrations/2026_v114_consolidacao_produto.sql" true operacional
-apply_script "220_v115_faturamento" "database/migrations/2026_v115_regras_faturamento_repasses.sql" true operacional
-apply_script "230_v116_operacional" "database/migrations/2026_v116_consolidacao_operacional_final.sql" true operacional
-apply_script "240_v117_runtime" "database/migrations/2026_v117_hardening_v116_runtime.sql" true operacional
+while IFS=$'\t' read -r migration_id migration_path transactional; do
+    apply_script "$migration_id" "$migration_path" "$transactional" migration
+ done < <(python3 - "$ROOT_DIR/database/migration-manifest.json" "$MODE" "${BASELINE_FILE:-}" <<'PYMANIFEST'
+import json, os, sys
+manifest=json.load(open(sys.argv[1],encoding='utf-8'))
+items=[item for item in manifest['migrations'] if item.get('status') == 'active']
+if sys.argv[2] == 'baseline':
+    baseline=json.load(open(sys.argv[3],encoding='utf-8'))
+    next_source=baseline.get('nextMigration')
+    matches=[i for i,item in enumerate(items) if os.path.basename(item['source']) == next_source]
+    if len(matches) != 1:
+        raise SystemExit(f"Baseline nextMigration inválida ou ambígua: {next_source!r}")
+    items=items[:matches[0]]
+for item in items:
+    print(item['version'],item['source'],str(item.get('transactional',True)).lower(),sep='\t')
+PYMANIFEST
+)
 
 if [[ "$APPLY_DEMO_SEEDS" == "1" ]]; then
     apply_script "900_seed_v113" "database/seeds/2026_demo_v113_operacional.sql"

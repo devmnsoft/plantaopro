@@ -145,3 +145,5 @@ OK: True
 - `plantaopro.usuario_preferencias_interface`
 - `plantaopro.meu_dia_item_estados`
 - `plantaopro.meu_dia_historico`
+- `plantaopro.pagamentos`
+- `plantaopro.historico_pagamento`

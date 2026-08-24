@@ -35,3 +35,7 @@ Validar criação comercial, assinatura, limites, faturamento, inadimplência e 
 - Nenhuma etapa exibe exception técnica.
 - Fluxo pode ser demonstrado em até 15 minutos.
 - Faturamento SaaS básico fica rastreável em auditoria e relatórios.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

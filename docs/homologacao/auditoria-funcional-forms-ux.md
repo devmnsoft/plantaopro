@@ -19,3 +19,7 @@
 - Validar build em ambiente com .NET SDK.
 - Executar QA manual logado contra banco PostgreSQL de homologação.
 - Evoluir cada view específica para view models fortemente tipados por domínio conforme a matriz funcional.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

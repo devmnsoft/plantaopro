@@ -21,3 +21,7 @@ Checklist mínimo de validação após aplicar:
 - [ ] convênios e planos de saúde;
 - [ ] auditoria e LGPD;
 - [ ] seeds demo idempotentes.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

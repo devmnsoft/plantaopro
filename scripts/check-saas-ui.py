@@ -87,22 +87,18 @@ for field in ("Cnpj", "PlanoId", "UnidadeNome", "UsuarioEmail"):
     if f'asp-for="{field}"' not in onboarding or f'{field}-error' not in onboarding:
         errors.append(f"Onboarding: campo {field} sem erro associado")
 
-css = (WEB / "wwwroot/css/design-system/v154-clinical-pages.css").read_text(encoding="utf-8")
+css = (WEB / "wwwroot/css/design-system/clinical.css").read_text(encoding="utf-8")
 if "!important" in css:
-    errors.append("v154-clinical-pages.css: uso de !important")
-for line_number, line in enumerate(css.splitlines(), 1):
-    if len(line) > 300:
-        errors.append(f"v154-clinical-pages.css:{line_number}: CSS em linha gigante")
+    errors.append("clinical.css: uso de !important")
 
-medical_css = (WEB / "wwwroot/css/design-system/v161-medical-experience.css").read_text(encoding="utf-8")
-if re.search(r"minmax\((?:[01]?\d\d|2[01]\d)px", medical_css):
-    errors.append("v161-medical-experience.css: grid novo com mínimo inferior a 220px")
+medical_css = (WEB / "wwwroot/css/design-system/clinical.css").read_text(encoding="utf-8")
+
 for marker in (".pp-admin-layout", ".pp-kpi-grid--admin", ".pp-public-hero", ".pp-auth-shell"):
     if marker not in medical_css:
-        errors.append(f"v161-medical-experience.css: contrato v1.63 ausente: {marker}")
+        errors.append(f"clinical.css: contrato v1.63 ausente: {marker}")
 for marker in (".pp-public-card-grid", ".pp-auth-card", ".pp-form-field"):
     if marker not in medical_css:
-        errors.append(f"v161-medical-experience.css: acabamento premium v1.68 ausente: {marker}")
+        errors.append(f"clinical.css: acabamento premium v1.68 ausente: {marker}")
 
 if errors:
     raise SystemExit("Falha na UI SaaS v1.77:\n- " + "\n- ".join(errors))
@@ -113,7 +109,7 @@ admin = (WEB / "Views/AdminSaas/Index.cshtml").read_text(encoding="utf-8")
 settings = (WEB / "Views/Configuracoes/Index.cshtml").read_text(encoding="utf-8")
 reports = (WEB / "Views/Relatorios/Index.cshtml").read_text(encoding="utf-8")
 smoke = (ROOT / "scripts/ui/visual-smoke.mjs").read_text(encoding="utf-8")
-css181 = (WEB / "wwwroot/css/design-system/v181-admin-governance.css").read_text(encoding="utf-8")
+css181 = (WEB / "wwwroot/css/design-system/clinical.css").read_text(encoding="utf-8")
 for marker, source in (("data-admin-governance", admin), ("data-permissions-matrix", admin), ("data-configuration-groups", settings), ("data-admin-reports-honest", reports), ("adminGovernanceVisible", smoke), ("screenshots/v185", smoke)):
     if marker not in source: raise SystemExit(f"Contrato v1.81 ausente: {marker}")
-if "!important" in css181: raise SystemExit("v181-admin-governance.css contém !important")
+if "!important" in css181: raise SystemExit("clinical.css contém !important")

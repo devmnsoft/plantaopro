@@ -37,7 +37,9 @@ public sealed class V113PersistenceContractTests
         Assert.True(File.Exists(Path.Combine(Root, "../database/seeds/2026_demo_v113_operacional.sql")));
         Assert.True(File.Exists(Path.Combine(Root, "../scripts/smoke-test-v113.sh")));
         Assert.True(File.Exists(Path.Combine(Root, "../scripts/smoke-test-v113.ps1")));
-        Assert.Contains("runtime-e2e-v113", File.ReadAllText(Path.Combine(Root, "../.github/workflows/dotnet-ci.yml")));
+        var ci = File.ReadAllText(Path.Combine(Root, "../.github/workflows/dotnet-ci.yml"));
+        Assert.Contains("runtime-from-complete-script", ci);
+        Assert.Contains("runtime-e2e-v113", File.ReadAllText(Path.Combine(Root, "../docs/releases/v1.24.3/contract-decisions.md")));
     }
 
     [Fact]

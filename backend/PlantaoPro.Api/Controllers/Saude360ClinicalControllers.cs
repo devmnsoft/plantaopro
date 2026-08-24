@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Api.Clinical;
 using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers;
@@ -110,8 +111,8 @@ public sealed class TriagensController : ControllerBase
     [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("triagens", id, "cancelar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("fila")] public async Task<IActionResult> Fila() { var r = await service.ListarAsync("triagens", "AGUARDANDO"); return StatusCode(r.StatusCode, r); }
     [HttpGet("paciente/{pacienteId:guid}")] public async Task<IActionResult> Paciente(Guid pacienteId) { var r = await service.ListarAsync("triagens", pacienteId: pacienteId); return StatusCode(r.StatusCode, r); }
-    [HttpGet("classificacoes-risco")] public IActionResult ClassificacoesRisco() { return Ok(ApiResponse<object>.Ok(new[] { "EMERGENCIA", "MUITO_URGENTE", "URGENTE", "POUCO_URGENTE", "NAO_URGENTE" }, "Classificações carregadas.")); }
-    [HttpPut("classificacoes-risco")] public IActionResult AtualizarClassificacoesRisco([FromBody] object request) { return Ok(ApiResponse<object>.Ok(request, "Classificações recebidas para configuração por tenant.")); }
+    [HttpGet("classificacoes-risco")] public IActionResult ClassificacoesRisco() => Ok(ApiResponse<object>.Ok(ClassificacaoRiscoCatalogo.Itens, "Classificações carregadas."));
+    [HttpPut("classificacoes-risco")] public IActionResult AtualizarClassificacoesRisco() => StatusCode(StatusCodes.Status501NotImplemented, ApiResponse<object>.Fail("A configuração personalizada de risco ainda não possui persistência segura e não foi aplicada.", StatusCodes.Status501NotImplemented));
 
     private static Saude360CreateRequest ToClinicalRequest(TriagemUpdateRequest request)
     {

@@ -28,7 +28,7 @@ public sealed class V1243PainelTvSecurityContractTests
 
         Assert.True(dto.Success);
         Assert.Equal(new[] { "Senha", "NomeAbreviado", "Destino", "Horario", "Status" },
-            Regex.Matches(dto.Groups["fields"].Value, @"\b[A-Z][A-Za-z]+(?=,|\))").Select(match => match.Value));
+            Regex.Matches(dto.Groups["fields"].Value, @"\b[A-Z][A-Za-z]+(?=,|$)").Select(match => match.Value));
         Assert.Contains("left(split_part", service, StringComparison.Ordinal);
     }
 

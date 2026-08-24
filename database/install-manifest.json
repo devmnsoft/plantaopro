@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.45.0",
-  "generatedAt": "2026-08-06",
+  "schemaVersion": "v1.95.3",
+  "generatedAt": "2026-08-20",
   "sections": [
     {
       "order": 3,
@@ -22,7 +22,10 @@
           "name": "plantaopro.identity_access",
           "type": "canonical",
           "category": "CANONICAL",
-          "source": "database/schema/010_identity_access.sql"
+          "source": "database/schema/010_identity_access.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
         },
         {
           "name": "plantaopro.saas_tenants",
@@ -105,6 +108,54 @@
       ]
     },
     {
+      "order": 12,
+      "name": "Operacional real v1.13",
+      "objects": [
+        {
+          "name": "plantaopro.operacional_real_v113",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/migrations/2026_v113_operacional_real.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 13,
+      "name": "Consolidação de produto v1.14",
+      "objects": [
+        {
+          "name": "plantaopro.consolidacao_produto_v114",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/migrations/2026_v114_consolidacao_produto.sql",
+          "dependsOn": [
+            "plantaopro.operacional_real_v113"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 14,
+      "name": "Regras de faturamento e repasses v1.15",
+      "objects": [
+        {
+          "name": "plantaopro.regras_faturamento_repasses_v115",
+          "type": "canonical",
+          "category": "CANONICAL_FINANCE",
+          "required": true,
+          "source": "database/migrations/2026_v115_regras_faturamento_repasses.sql",
+          "dependsOn": [
+            "plantaopro.consolidacao_produto_v114"
+          ]
+        }
+      ]
+    },
+    {
       "order": 15,
       "name": "Painel público seguro v1.24.3",
       "objects": [
@@ -117,6 +168,25 @@
             "plantaopro.clientes"
           ],
           "source": "database/schema/150_v1243_painel_publico_seguro.sql"
+        }
+      ]
+    },
+    {
+      "order": 15,
+      "name": "Produto vendável, agenda e operação mobile v1.44.0",
+      "objects": [
+        {
+          "name": "v1440_produto_vendavel",
+          "type": "canonical",
+          "category": "CANONICAL_PRODUCT",
+          "required": true,
+          "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql",
+          "dependsOn": [
+            "plantaopro.tenants",
+            "plantaopro.usuarios",
+            "plantaopro.medicos",
+            "plantaopro.escalas"
+          ]
         }
       ]
     },
@@ -142,13 +212,16 @@
           "type": "canonical",
           "category": "CANONICAL_IDENTITY",
           "required": true,
-          "source": "database/schema/250_v1370_bootstrap_superadmin.sql"
+          "source": "database/schema/250_v1370_bootstrap_superadmin.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
         }
       ]
     },
     {
       "order": 18,
-      "name": "Seeds obrigatórios de sistema v1.39.0",
+      "name": "Seeds obrigatórios de sistema v1.95.1",
       "objects": [
         {
           "name": "plantaopro.seed_010_modulos",
@@ -238,7 +311,10 @@
           "type": "canonical",
           "category": "CANONICAL_OPERATION",
           "required": true,
-          "source": "database/schema/260_v1400_produto_operacional_premium.sql"
+          "source": "database/schema/260_v1400_produto_operacional_premium.sql",
+          "dependsOn": [
+            "plantaopro.operacao_assistida_v1310"
+          ]
         }
       ]
     },
@@ -252,25 +328,6 @@
           "category": "CANONICAL_OPERATION",
           "required": true,
           "source": "database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql"
-        }
-      ]
-    },
-    {
-      "order": 15,
-      "name": "Produto vendável, agenda e operação mobile v1.44.0",
-      "objects": [
-        {
-          "name": "v1440_produto_vendavel",
-          "type": "canonical",
-          "category": "CANONICAL_PRODUCT",
-          "required": true,
-          "source": "database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql",
-          "dependsOn": [
-            "plantaopro.tenants",
-            "plantaopro.usuarios",
-            "plantaopro.medicos",
-            "plantaopro.escalas"
-          ]
         }
       ]
     },
@@ -290,6 +347,108 @@
             "plantaopro.medicos",
             "plantaopro.escalas",
             "plantaopro.agenda_eventos_operacionais"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 38,
+      "name": "Pagamentos de plantões v1.95.1",
+      "objects": [
+        {
+          "name": "plantaopro.pagamentos",
+          "type": "canonical",
+          "category": "CANONICAL_FINANCE",
+          "required": true,
+          "source": "database/schema/305_v1951_pagamentos_plantoes.sql",
+          "dependsOn": [
+            "plantaopro.escalas",
+            "plantaopro.medicos",
+            "plantaopro.plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 39,
+      "name": "plantaopro.fechamento_operacional_v187",
+      "objects": [
+        {
+          "name": "plantaopro.fechamento_operacional_v187",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/320_v187_fechamento_operacional_financeiro.sql",
+          "dependsOn": [
+            "plantaopro.fechamento_plantao",
+            "plantaopro.operational_cycle_v1410"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 40,
+      "name": "plantaopro.prontuario_longitudinal_v188",
+      "objects": [
+        {
+          "name": "plantaopro.prontuario_longitudinal_v188",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/330_v188_prontuario_longitudinal.sql",
+          "dependsOn": [
+            "plantaopro.fechamento_operacional_v187"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 41,
+      "name": "plantaopro.clinical_hardening_v189",
+      "objects": [
+        {
+          "name": "plantaopro.clinical_hardening_v189",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/340_v189_clinical_operational_hardening.sql",
+          "dependsOn": [
+            "plantaopro.prontuario_longitudinal_v188"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 42,
+      "name": "plantaopro.saved_views_v192",
+      "objects": [
+        {
+          "name": "plantaopro.saved_views_v192",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/migrations/2026_v192_saved_views.sql",
+          "dependsOn": [
+            "plantaopro.clinical_hardening_v189",
+            "plantaopro.operacao_assistida_v1310"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 43,
+      "name": "plantaopro.revenue_cycle_v195",
+      "objects": [
+        {
+          "name": "plantaopro.revenue_cycle_v195",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
+          "dependsOn": [
+            "plantaopro.saved_views_v192",
+            "plantaopro.regras_faturamento_repasses_v115",
+            "plantaopro.operacional_real_v113"
           ]
         }
       ]

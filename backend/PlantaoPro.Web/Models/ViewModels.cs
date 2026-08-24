@@ -176,7 +176,8 @@ public record DashboardChartItem(string Label, decimal Valor);
     }
 
     public record AuditoriaResumoDto(long AcoesHoje, long FalhasHoje, long AcessosNegados, long Downloads);
-    public record HealthViewModel(string Status,string Ambiente,string Schema,bool BancoConectado,DateTime DataHora,string? Versao,string BaseUrlApi,bool TokenPresente,string UsuarioAutenticado,string SwaggerUrl);
+    public record HealthViewModel(string Status, string Ambiente, DateTime DataHora, string? Versao, IReadOnlyList<HealthComponentViewModel> Componentes);
+    public record HealthComponentViewModel(string Nome, string Status, string Detalhe);
     public record MinhaAgendaViewModel(IEnumerable<PlantaoResumoDto> MeusPlantoes, IEnumerable<PagamentoResumoDto> MeusPagamentos, IEnumerable<NotificacaoDto> MinhasNotificacoes, string? ErrorMessage = null);
 
     public record EscalaResumoDto(Guid Id,Guid PlantaoId,Guid MedicoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string TipoPlantao,string Status,string? Justificativa,DateTime RegDate);
@@ -187,10 +188,12 @@ public record DashboardChartItem(string Label, decimal Valor);
     public record PlantaoFormViewModel : IValidatableObject
     {
         public Guid? Id { get; set; }
-        [Required(ErrorMessage = "Selecione um hospital.")] public Guid HospitalId { get; set; }
-        [Required(ErrorMessage = "Selecione uma especialidade.")] public Guid EspecialidadeId { get; set; }
+        [NonEmptyGuid(ErrorMessage = "Selecione um hospital.")] public Guid HospitalId { get; set; }
+        [NonEmptyGuid(ErrorMessage = "Selecione uma especialidade.")] public Guid EspecialidadeId { get; set; }
         [Required(ErrorMessage = "Informe a data inicial.")] public DateTime DataInicio { get; set; }
-        [Required(ErrorMessage = "Informe a data final.")] public DateTime DataFim { get; set; }
+        [Required(ErrorMessage = "Informe a data final.")]
+        [PlantaoEndAfterStart]
+        public DateTime DataFim { get; set; }
         [Range(typeof(decimal), "0", "1000000", ErrorMessage = "Informe um valor entre R$ 0,00 e R$ 1.000.000,00.")] public decimal Valor { get; set; }
         [Range(1, 500, ErrorMessage = "Informe entre 1 e 500 vagas.")] public int Vagas { get; set; }
         [Required(ErrorMessage = "Selecione o tipo de plantão.")]
@@ -207,9 +210,25 @@ public record DashboardChartItem(string Label, decimal Valor);
         {
             if (HospitalId == Guid.Empty) yield return new ValidationResult("Selecione um hospital válido.", new[] { nameof(HospitalId) });
             if (EspecialidadeId == Guid.Empty) yield return new ValidationResult("Selecione uma especialidade válida.", new[] { nameof(EspecialidadeId) });
-            if (DataFim <= DataInicio) yield return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { nameof(DataFim) });
             if (DataInicio != default && DataFim.Subtract(DataInicio).TotalDays > 7) yield return new ValidationResult("O período do plantão não pode ultrapassar 7 dias.", new[] { nameof(DataFim) });
         }
+    }
+
+    public sealed class PlantaoEndAfterStartAttribute : ValidationAttribute
+    {
+        protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+        {
+            if (value is not DateTime end || validationContext.ObjectInstance is not PlantaoFormViewModel model ||
+                model.DataInicio == default || end > model.DataInicio)
+                return ValidationResult.Success;
+
+            return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { validationContext.MemberName! });
+        }
+    }
+
+    public sealed class NonEmptyGuidAttribute : ValidationAttribute
+    {
+        public override bool IsValid(object? value) => value is Guid id && id != Guid.Empty;
     }
 
     public record StatusActionViewModel(Guid Id, [Required] string Justificativa);

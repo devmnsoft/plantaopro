@@ -26,6 +26,7 @@
 - [ ] `/api/health` saudável.
 - [ ] Swagger carregando e endpoint protegido retorna 401 sem token.
 - [ ] Login admin global e dashboard executivo.
+- [ ] Fluxo operacional médico: login, agenda, disponibilidade e escalas.
 - [ ] Criar/publicar plantão de teste.
 - [ ] Login médico e visualizar plantões disponíveis.
 - [ ] Solicitar plantão, confirmar escala, marcar realizada e gerar pagamento.
@@ -54,3 +55,7 @@
 - Abrir `/OperacaoAssistida` com ADMINISTRADOR_GLOBAL.
 - Validar isolamento acessando o mesmo módulo com ADMINISTRADOR do cliente.
 - Conferir que ocorrências críticas aparecem em alertas operacionais e auditoria.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

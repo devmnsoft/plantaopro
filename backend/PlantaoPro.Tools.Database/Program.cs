@@ -18,7 +18,7 @@ try
     {
         case "doctor": await Doctor(cs); break;
         case "create-database": await CreateDatabase(cs, env); break;
-        case "install": await ExecuteScript(cs, Path.Combine(root, "database", "scrpt_completo.sql"), "install"); break;
+        case "install": await ExecuteInstallManifest(cs, Path.Combine(root, "database", "install-manifest.json")); break;
         case "upgrade": await ExecuteManifest(cs, Path.Combine(root, "database", "migration-manifest.json"), "upgrade"); break;
         case "verify": await Verify(cs); break;
         case "repair-identity-schema": await RepairIdentitySchema(cs, env, options); break;
@@ -76,6 +76,73 @@ static async Task ExecuteScript(string cs, string script, string label)
     Console.WriteLine($"{label} concluído com sucesso.");
 }
 
+static async Task ExecuteInstallManifest(string cs, string manifest)
+{
+    if (!File.Exists(manifest)) throw new FileNotFoundException("Manifesto canônico de instalação não encontrado.", manifest);
+    var root = FindRepoRoot();
+    using var document = JsonDocument.Parse(await File.ReadAllTextAsync(manifest));
+    var manifestVersion = document.RootElement.TryGetProperty("schemaVersion", out var version)
+        ? version.GetString() ?? "unknown"
+        : "unknown";
+    var entries = document.RootElement.GetProperty("sections").EnumerateArray()
+        .SelectMany(section =>
+        {
+            var order = section.GetProperty("order").GetInt32();
+            var sectionName = section.GetProperty("name").GetString() ?? "Seção sem nome";
+            return section.GetProperty("objects").EnumerateArray().Select((item, index) => new
+            {
+                SectionOrder = order,
+                SectionName = sectionName,
+                ObjectOrder = index,
+                Name = item.GetProperty("name").GetString() ?? throw new InvalidOperationException("Objeto de instalação sem nome."),
+                Source = item.GetProperty("source").GetString() ?? throw new InvalidOperationException("Objeto de instalação sem source."),
+                Required = !item.TryGetProperty("required", out var required) || required.GetBoolean()
+            }).ToArray();
+        })
+        .OrderBy(item => item.SectionOrder)
+        .ThenBy(item => item.ObjectOrder)
+        .ToList();
+
+    if (entries.Count == 0) throw new InvalidOperationException("Manifesto canônico de instalação não contém objetos.");
+    var sources = entries.Select(entry => new
+    {
+        Entry = entry,
+        FullPath = Path.GetFullPath(Path.Combine(root, entry.Source.Replace('/', Path.DirectorySeparatorChar)))
+    }).ToList();
+    foreach (var source in sources)
+    {
+        if (!source.FullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Source fora do repositório: {source.Entry.Source}.");
+        if (source.Entry.Required && !File.Exists(source.FullPath))
+            throw new FileNotFoundException($"Source obrigatório não encontrado: {source.Entry.Source}.", source.FullPath);
+    }
+
+    await using var cn = new NpgsqlConnection(cs);
+    await cn.OpenAsync();
+    await using var tx = await cn.BeginTransactionAsync();
+    var stopwatch = Stopwatch.StartNew();
+    foreach (var source in sources.Where(source => File.Exists(source.FullPath)))
+    {
+        var sql = await File.ReadAllTextAsync(source.FullPath);
+        if (string.IsNullOrWhiteSpace(sql)) throw new InvalidOperationException($"Source vazio: {source.Entry.Source}.");
+        Console.WriteLine($"install: [{source.Entry.SectionOrder}] {source.Entry.Name} ({source.Entry.Source})");
+        await cn.ExecuteAsync(sql, transaction: tx, commandTimeout: 0);
+    }
+    await cn.ExecuteAsync(@"CREATE TABLE IF NOT EXISTS plantaopro.install_manifest_runs (
+        id bigserial PRIMARY KEY,
+        manifest_version text NOT NULL,
+        applied_at timestamptz NOT NULL DEFAULT now(),
+        duration_ms integer NOT NULL,
+        source_count integer NOT NULL,
+        success boolean NOT NULL DEFAULT true
+    );", transaction: tx);
+    await cn.ExecuteAsync("INSERT INTO plantaopro.install_manifest_runs(manifest_version,duration_ms,source_count) VALUES(@Version,@Duration,@Count)",
+        new { Version = manifestVersion, Duration = (int)stopwatch.ElapsedMilliseconds, Count = sources.Count }, tx);
+    await tx.CommitAsync();
+    Console.WriteLine($"install concluído com {sources.Count} fontes canônicas do manifesto {manifestVersion}.");
+    await Verify(cs);
+}
+
 static async Task ExecuteManifest(string cs, string manifest, string label)
 {
     if (!File.Exists(manifest)) throw new FileNotFoundException("Manifesto não encontrado", manifest);
@@ -104,7 +171,7 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
         success boolean NOT NULL DEFAULT true,
         error_code text NULL,
         error_message_sanitized text NULL,
-        executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.18.9'
+        executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.91.0'
     );");
 
     var applied = (await cn.QueryAsync<(string Version, string Checksum)>("SELECT version, checksum FROM plantaopro.schema_migrations WHERE success = true")).ToDictionary(x => x.Version, x => x.Checksum);
@@ -119,6 +186,7 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
             if (!string.Equals(previous, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");
             continue;
         }
+        await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE version=@Version AND success=false", new { migration.Version });
         foreach (var dep in migration.DependsOn) if (!applied.ContainsKey(dep)) throw new InvalidOperationException($"Dependência pendente: {dep} antes de {migration.Version}.");
         var sw = Stopwatch.StartNew();
         try
@@ -204,7 +272,24 @@ static async Task RepairIdentitySchema(string cs, string env, Dictionary<string,
     await ExecuteScript(cs, Path.Combine(root, "database", "migrations", "2026_v1189_identity_schema_login.sql"), "repair-identity-schema");
     await Verify(cs);
 }
-static Task Status(string cs) => Verify(cs);
+static async Task Status(string cs)
+{
+    await using var cn = new NpgsqlConnection(cs);
+    await cn.OpenAsync();
+    var tableExists = await cn.ExecuteScalarAsync<bool>("select to_regclass('plantaopro.schema_migrations') is not null");
+    if (!tableExists)
+    {
+        Console.WriteLine("Migrations: schema_migrations ainda não existe.");
+        return;
+    }
+    var root = FindRepoRoot();
+    using var document = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root, "database", "migration-manifest.json")));
+    var expected = document.RootElement.GetProperty("migrations").EnumerateArray()
+        .Count(item => !item.TryGetProperty("status", out var status) || status.GetString() == "active");
+    var applied = await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=true");
+    var failed = await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=false");
+    Console.WriteLine($"Migrations: aplicadas={applied} esperadas={expected} falhas={failed} pendentes={Math.Max(0, expected - applied)}.");
+}
 
 static async Task BootstrapAdmin(string cs, Dictionary<string,string> opt)
 {

@@ -14,9 +14,6 @@ public sealed class MedicosMeDisponibilidadeController : ControllerBase
     public MedicosMeDisponibilidadeController(OperationalAutomationService service) { this.service = service; }
     private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
 
-    [HttpGet("api/medicos/me/disponibilidade")]
-    public async Task<IActionResult> Disponibilidade() { var r = await service.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
-
     [HttpPost("api/medicos/me/disponibilidade")]
     public async Task<IActionResult> CriarDisponibilidade([FromBody] PlantaoPro.Api.Models.MedicoDisponibilidadeRequest request) { var r = await service.CriarDisponibilidadeAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 
@@ -110,18 +107,6 @@ public sealed class SubstituicoesFase4Controller : ControllerBase
 
     [HttpGet("{id:guid}/historico")]
     public async Task<IActionResult> Historico(Guid id) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.HistoricoSubstituicaoAsync(id, ctx.ClienteId); return StatusCode(r.StatusCode, r); }
-}
-
-[ApiController]
-[Authorize(Roles = RolesConstants.Medico)]
-public sealed class MedicosMeSubstituicoesController : ControllerBase
-{
-    private readonly OperationalAutomationService service;
-    public MedicosMeSubstituicoesController(OperationalAutomationService service) { this.service = service; }
-    private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
-
-    [HttpPost("api/medicos/me/substituicoes")]
-    public async Task<IActionResult> Solicitar([FromBody] SolicitarSubstituicaoRequest request) { var r = await service.SolicitarSubstituicaoAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]

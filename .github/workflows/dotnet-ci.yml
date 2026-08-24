@@ -12,6 +12,7 @@ env:
   Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS
   Jwt__Issuer: PlantaoPro
   Jwt__Audience: PlantaoPro
+  PLANTAOPRO_BOOTSTRAP_ENVIRONMENT: CI
 
 jobs:
   build-test:
@@ -23,11 +24,16 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
       - name: Dotnet diagnostics
         run: dotnet --info
       - name: Enforce C# 10 compatibility
         run: python3 scripts/check-csharp10-compatibility.py
+      - name: Validate v1.14 smoke contract
+        run: bash -n scripts/smoke-test-v114.sh
+      - name: Validate v1.15 billing migration contract
+        run: |
+          test -s database/migrations/2026_v115_regras_faturamento_repasses.sql
+          bash -n scripts/smoke-test-v115.sh
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build
@@ -325,7 +331,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-          dotnet-quality: 'preview'
       - name: Apply complete database script
         run: psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
       - name: Restore

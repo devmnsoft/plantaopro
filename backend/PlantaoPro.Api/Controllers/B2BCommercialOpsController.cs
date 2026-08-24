@@ -154,8 +154,12 @@ public sealed class CentralEscalaEvoluidaController : ControllerBase
 public sealed class MedicoAgendaMeController : ControllerBase
 {
     private readonly B2BCommercialOpsService _service;
-    public MedicoAgendaMeController(B2BCommercialOpsService service) { _service = service; }
+    private readonly OperationalAutomationService _operationalService;
+    public MedicoAgendaMeController(B2BCommercialOpsService service, OperationalAutomationService operationalService) { _service = service; _operationalService = operationalService; }
     [HttpGet("agenda")] public async Task<IActionResult> Agenda() => Ok(await _service.AgendaMedicaAsync(Uid()));
+    [HttpGet("disponibilidade")] public async Task<IActionResult> Disponibilidade() { var r = await _operationalService.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
+    [HttpGet("substituicao")] public async Task<IActionResult> Substituicoes() { var r = await _operationalService.ListarSubstituicoesDoMedicoAsync(Uid()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("substituicao")] public async Task<IActionResult> SolicitarSubstituicao([FromBody] SolicitarSubstituicaoRequest request) { var r = await _operationalService.SolicitarSubstituicaoAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
     private Guid Uid() { var uid = User.FindFirst("uid")?.Value; return Guid.TryParse(uid, out var parsed) ? parsed : Guid.Empty; }
 }
 

@@ -158,6 +158,8 @@ public sealed class MedicoAgendaMeController : ControllerBase
     public MedicoAgendaMeController(B2BCommercialOpsService service, OperationalAutomationService operationalService) { _service = service; _operationalService = operationalService; }
     [HttpGet("agenda")] public async Task<IActionResult> Agenda() => Ok(await _service.AgendaMedicaAsync(Uid()));
     [HttpGet("disponibilidade")] public async Task<IActionResult> Disponibilidade() { var r = await _operationalService.ListarDisponibilidadesAsync(Uid()); return StatusCode(r.StatusCode, r); }
+    [HttpGet("substituicao")] public async Task<IActionResult> Substituicoes() { var r = await _operationalService.ListarSubstituicoesDoMedicoAsync(Uid()); return StatusCode(r.StatusCode, r); }
+    [HttpPost("substituicao")] public async Task<IActionResult> SolicitarSubstituicao([FromBody] SolicitarSubstituicaoRequest request) { var r = await _operationalService.SolicitarSubstituicaoAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
     private Guid Uid() { var uid = User.FindFirst("uid")?.Value; return Guid.TryParse(uid, out var parsed) ? parsed : Guid.Empty; }
 }
 

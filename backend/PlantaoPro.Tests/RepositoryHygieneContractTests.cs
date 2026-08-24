@@ -193,6 +193,9 @@ public class RepositoryHygieneContractTests
         if (normalizado.Contains("/obj/", StringComparison.OrdinalIgnoreCase)) return false;
         if (normalizado.Contains("/node_modules/", StringComparison.OrdinalIgnoreCase)) return false;
         if (normalizado.Contains("/.vs/", StringComparison.OrdinalIgnoreCase)) return false;
+        // Lockfiles são gerados pelo gerenciador e seus campos integrity contêm
+        // Base64 opaco. O código-fonte e os manifestos continuam inspecionados.
+        if (normalizado.EndsWith("/package-lock.json", StringComparison.OrdinalIgnoreCase)) return false;
 
         var extensao = Path.GetExtension(arquivo).ToLowerInvariant();
         return extensao is ".cs" or ".cshtml" or ".md" or ".json" or ".sql" or ".js" or ".ts" or ".tsx" or ".css";

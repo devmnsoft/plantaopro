@@ -24,3 +24,7 @@ Acompanhar clientes piloto, reduzir risco operacional e registrar plano de açã
 - Interação fica registrada em timeline.
 - Plano de ação possui descrição, responsável, prazo e status.
 - Diretoria consegue entender risco e próxima ação em menos de 5 minutos.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

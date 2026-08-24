@@ -11,7 +11,7 @@ BEGIN
  IF bad>0 THEN RAISE EXCEPTION 'Usuários ativos duplicados'; END IF;
  SELECT count(*) INTO bad FROM (SELECT coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'),lower(codigo) FROM plantaopro.perfis WHERE reg_status='A' GROUP BY 1,2 HAVING count(*)>1) d;
  IF bad>0 THEN RAISE EXCEPTION 'Perfis ativos duplicados'; END IF;
- IF EXISTS(SELECT FROM plantaopro.usuarios WHERE reg_status='A' AND (senha_hash IS NULL OR senha_hash='' OR senha_hash !~ '^\\$2[aby]\\$[0-9]{2}\\$.{53}$')) THEN RAISE EXCEPTION 'Hash de senha inválido'; END IF;
+ IF EXISTS(SELECT FROM plantaopro.usuarios WHERE reg_status='A' AND (senha_hash IS NULL OR senha_hash='' OR senha_hash !~ '^[$]2[aby][$][0-9]{2}[$].{53}$')) THEN RAISE EXCEPTION 'Hash de senha inválido'; END IF;
  IF EXISTS(SELECT FROM plantaopro.schema_migrations WHERE status='FALHA') THEN RAISE EXCEPTION 'Migration em falha'; END IF;
  IF EXISTS(SELECT FROM plantaopro.perfis p WHERE p.base_sistema AND p.reg_status='A' AND NOT EXISTS(SELECT FROM plantaopro.perfil_permissoes pp WHERE pp.perfil_id=p.id AND pp.reg_status='A')) THEN RAISE EXCEPTION 'Perfil de sistema sem permissão'; END IF;
 END $verify$;

@@ -22,3 +22,7 @@ Padronizar criação, resposta, resolução e cancelamento de chamados durante o
 - Cancelamento sem justificativa é bloqueado.
 - Mensagem gera notificação.
 - Timeline fica demonstrável para diretoria e cliente piloto.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

@@ -68,3 +68,7 @@ A operação assistida permite que a MNSOFT acompanhe um cliente real durante im
 5. Criar ocorrência `CRITICA` do tipo `BUG` e confirmar alerta operacional.
 6. Resolver a ocorrência com solução preenchida.
 7. Registrar treinamento para `COORDENACAO` e validar timeline.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

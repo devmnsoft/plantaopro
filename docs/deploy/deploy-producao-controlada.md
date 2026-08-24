@@ -30,3 +30,7 @@ Produção controlada deve atender poucos clientes selecionados, com operação 
 - Reunião diária rápida com cliente nos primeiros 5 dias úteis.
 - Revisão de chamados críticos em até 2 horas úteis.
 - Congelar mudanças de alto risco durante homologação real.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

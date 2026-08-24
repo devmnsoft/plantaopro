@@ -70,7 +70,7 @@ public sealed class V112HomologationController : ControllerBase
     public async Task<ActionResult<ApiResponse<OrderDto>>> RemoveItem(Guid id, Guid itemId) => ToAction(await service.RemoveItemAsync(id, itemId));
 
     [HttpPost("api/v113/orders/{id:guid}/confirm")]
-    public async Task<ActionResult<ApiResponse<OrderDto>>> Confirm(Guid id) => ToAction(await service.ConfirmAsync(id));
+    public async Task<ActionResult<ApiResponse<OrderDto>>> ConfirmOrder(Guid id) => ToAction(await service.ConfirmAsync(id));
 
     [HttpPost("api/v113/orders/{id:guid}/cancel")]
     public async Task<ActionResult<ApiResponse<OrderDto>>> Cancel(Guid id) => ToAction(await service.CancelAsync(id));

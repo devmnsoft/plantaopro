@@ -99,3 +99,7 @@ Classificação geral desta rodada: **Funcional pendente QA** com execução run
 - Executar build/test com SDK .NET disponível.
 - Subir Docker/PostgreSQL, aplicar migrations/seeds e rodar smoke real.
 - Validar CRUDs e RBAC com usuários demo via variáveis de ambiente, sem versionar senha real.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

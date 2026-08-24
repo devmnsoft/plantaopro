@@ -29,3 +29,7 @@ O detalhe da fatura SaaS no Web agora concentra as ações operacionais de cobra
 - cancelar fatura com justificativa.
 
 Na API, ações críticas de faturamento usam transação explícita para atualizar fatura, registrar pagamento quando aplicável, registrar evento de cobrança e criar ou resolver alertas financeiros. Falhas retornam mensagens funcionais e são registradas em logger/auditoria sem expor stack trace ao usuário.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

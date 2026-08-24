@@ -15,3 +15,7 @@ Planos definem limites de médicos, hospitais, usuários, plantões e convites m
 - CRUD Web em `Planos/Index`, `Planos/Create`, `Planos/Edit`, `Planos/Details`, `Planos/Recursos` e `Planos/Comparativo`.
 - API de recursos do plano em `GET /api/planos/{id}/recursos` e `PUT /api/planos/{id}/recursos`.
 - Alterações de recursos usam transação, inativação lógica dos recursos anteriores e auditoria comercial.
+
+## Contexto comercial
+
+Este fluxo integra a operação SaaS do PlantãoPro, com isolamento por cliente e auditoria das decisões comerciais.

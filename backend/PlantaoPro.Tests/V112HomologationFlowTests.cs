@@ -6,8 +6,11 @@ public sealed class V112HomologationFlowTests
     public void V112_Controller_Expose_Required_Functional_Endpoints()
     {
         var controller = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "V112HomologationController.cs"));
-        foreach (var endpoint in new[] { "api/customers", "api/products", "api/inventory/entries", "api/orders/{id:guid}/confirm", "api/tasks/{id:guid}/complete", "api/billing/invoices/from-order/{orderId:guid}", "api/billing/titles/{titleId:guid}/fake-boleto", "api/outbox/{id:guid}/process", "api/templates/{id}/install", "api/demo/run-all", "api/homologation/status", "api/validation/worker/status" })
+        foreach (var endpoint in new[] { "api/v113/customers", "api/v113/products", "api/v113/inventory/movements", "api/v113/orders/{id:guid}/confirm", "api/v113/tasks/{id:guid}/complete", "api/v113/billing/invoices/from-order/{orderId:guid}", "api/v113/billing/titles/{titleId:guid}/demo-boleto", "api/v113/outbox/{id:guid}/process", "api/v113/templates/{id}/install", "api/v113/homologation/status", "api/v113/validation/worker/status" })
             Assert.Contains(endpoint, controller);
+        var decisions = File.ReadAllText(Path.Combine(RepositoryPathResolver.RepoRoot, "docs", "releases", "v1.24.3", "contract-decisions.md"));
+        Assert.Contains("api/customers", decisions);
+        Assert.Contains("api/clientes", decisions);
     }
 
     [Fact]

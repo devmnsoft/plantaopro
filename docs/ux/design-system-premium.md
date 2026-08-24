@@ -15,3 +15,7 @@ Padrões: cards com sombra suave, botões consistentes, EmptyState, PageHelp, As
 ## Nota de status real — 2026-07-08
 
 Esta documentação diferencia demonstração comercial de runtime real: dados demo só devem ser usados com `DemoMode=true`. Fluxos marcados como parciais exigem validação em ambiente com API, PostgreSQL, Docker/Expo e massa de homologação antes de qualquer declaração de produção.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

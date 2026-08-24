@@ -54,3 +54,7 @@
 - Abrir `/OperacaoAssistida` com ADMINISTRADOR_GLOBAL.
 - Validar isolamento acessando o mesmo módulo com ADMINISTRADOR do cliente.
 - Conferir que ocorrências críticas aparecem em alertas operacionais e auditoria.
+
+## Escopo do produto
+
+Este artefato orienta a operação homologável do PlantãoPro e deve ser revisado quando o contrato funcional correspondente mudar.

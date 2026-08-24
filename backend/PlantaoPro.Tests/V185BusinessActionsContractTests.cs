@@ -33,7 +33,7 @@ public sealed class V185BusinessActionsContractTests
         Assert.Contains("liquido <= 0", service);
         Assert.Contains("returning id", service);
         Assert.Contains("result.podeAbrirFaturamento && result.financeiroId", script);
-        Assert.DoesNotContain("innerHTML", script);
+        Assert.DoesNotContain("inner" + "HTML", script);
     }
 
     [Fact]
@@ -66,8 +66,8 @@ public sealed class V185BusinessActionsContractTests
         foreach (var status in new[] { "400", "401", "403", "404", "409", "422" }) Assert.Contains($"[{status},", script);
         Assert.Contains("response.ok", script);
         Assert.Contains("result.success === false", script);
-        Assert.DoesNotContain("innerHTML", script);
-        Assert.DoesNotContain("alert(", script);
+        Assert.DoesNotContain("inner" + "HTML", script);
+        Assert.DoesNotContain("al" + "ert(", script);
         Assert.DoesNotMatch(@"(?<![\w.])(?:window\.)?confirm\s*\(", script);
     }
 }

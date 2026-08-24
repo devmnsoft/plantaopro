@@ -20,3 +20,11 @@ create table if not exists plantaopro.clientes (
     id uuid primary key default gen_random_uuid(), nome_fantasia text);
 create table if not exists plantaopro.assinaturas (
     id uuid primary key default gen_random_uuid(), cliente_id uuid, plano_id uuid);
+
+-- Plantões pertence ao núcleo mínimo da última versão legada suportada. As
+-- migrações posteriores dependem deste agregado operacional já existir.
+create table if not exists plantaopro.plantoes (
+    id uuid primary key default gen_random_uuid(), hospital_id uuid,
+    especialidade_id uuid, data_inicio timestamp, data_fim timestamp,
+    valor numeric(12,2) default 0, vagas integer default 1, tipo text,
+    status text default 'ABERTO', reg_status char(1) default 'A');

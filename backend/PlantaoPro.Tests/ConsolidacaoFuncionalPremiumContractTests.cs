@@ -20,7 +20,9 @@ public class ConsolidacaoFuncionalPremiumContractTests
             Assert.DoesNotContain("public Task<IActionResult> " + action + "() { return Index(); }", conteudo, StringComparison.OrdinalIgnoreCase);
         }
 
-        Assert.Contains("api/consultas/atendimento", conteudo, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("~/api/consultas", conteudo, StringComparison.OrdinalIgnoreCase);
+        var consultasApi = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Controllers", "ConsultasWorkspaceController.cs"));
+        Assert.Contains("{id:guid}/workspace", consultasApi, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("api/cid/favoritos", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("api/clinica-financeiro/contas-receber", conteudo, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("api/convenios/faturamento", conteudo, StringComparison.OrdinalIgnoreCase);

@@ -61,7 +61,7 @@ public class BetaPrReadyContractTests
         Assert.Contains("ILogger<NotificacoesController>", notificacoes, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("try", notificacoes, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("catch (Exception ex)", notificacoes, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("ApiResponse<string>.Fail", notificacoes, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ApiResponse<NotificationReadResult>.Fail", notificacoes, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("Request.Headers.Authorization", notificacoes, StringComparison.OrdinalIgnoreCase);
     }
 

@@ -12,10 +12,12 @@ namespace PlantaoPro.Api.Controllers;
 public sealed class NotificacoesController : ControllerBase
 {
     private readonly IOperationNotificationService service;
+    private readonly ILogger<NotificacoesController> logger;
 
-    public NotificacoesController(IOperationNotificationService service)
+    public NotificacoesController(IOperationNotificationService service, ILogger<NotificacoesController> logger)
     {
         this.service = service;
+        this.logger = logger;
     }
 
     [HttpGet]
@@ -33,13 +35,19 @@ public sealed class NotificacoesController : ControllerBase
     [HttpPost("{id:guid}/lida")]
     public async Task<ActionResult<ApiResponse<NotificationReadResult>>> Read(Guid id, CancellationToken ct)
     {
-        var result = await service.ReadAsync(id, ct);
-        if (result is null)
+        try
         {
-            return NotFound(ApiResponse<NotificationReadResult>.Fail("Notificação não encontrada.", 404));
-        }
+            var result = await service.ReadAsync(id, ct);
+            if (result is null)
+                return NotFound(ApiResponse<NotificationReadResult>.Fail("Notificação não encontrada.", 404));
 
-        return Ok(ApiResponse<NotificationReadResult>.Ok(result, result.AlreadyRead ? "Notificação já estava lida." : "Notificação marcada como lida."));
+            return Ok(ApiResponse<NotificationReadResult>.Ok(result, result.AlreadyRead ? "Notificação já estava lida." : "Notificação marcada como lida."));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao marcar notificação {NotificationId} como lida.", id);
+            return StatusCode(500, ApiResponse<NotificationReadResult>.Fail("Não foi possível atualizar a notificação.", 500));
+        }
     }
 
     [HttpPost("marcar-todas-lidas")]

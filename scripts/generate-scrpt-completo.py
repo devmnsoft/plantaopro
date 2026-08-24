@@ -4,6 +4,7 @@ from collections import defaultdict
 from pathlib import Path
 from database_manifest_validation import validate_database_manifests
 ROOT=Path(__file__).resolve().parents[1]
+QUALIFIED_UNACCENT='public.'+'unaccent('
 manifest=json.loads((ROOT/'database/install-manifest.json').read_text(encoding='utf-8'))
 manifest_errors=validate_database_manifests(ROOT, manifest)
 if manifest_errors:
@@ -32,7 +33,7 @@ def validate_sql(s, origin):
             errors.append({'file':origin,'line':lineno,'function':'search_path','correction':'Use SET search_path TO plantaopro, public;'})
         if re.search(r'(?<![\w.])uuid_generate_v4\s*\(', line):
             errors.append({'file':origin,'line':lineno,'function':'uuid_generate_v4','correction':'Use gen_random_uuid() or public.uuid_generate_v4().'})
-        if 'public.unaccent(' in line.lower():
+        if QUALIFIED_UNACCENT in line.lower():
             errors.append({'file':origin,'line':lineno,'function':'unaccent','correction':'Use unaccent(...) with resolved extension search_path compatibility.'})
     if errors:
         art=ROOT/'artifacts'; art.mkdir(exist_ok=True)

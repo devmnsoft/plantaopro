@@ -29,7 +29,9 @@ DECLARE
     supplied_hash text := current_setting('plantaopro.bootstrap_password_hash');
     force_rotation boolean := current_setting('plantaopro.bootstrap_force_rotation')::boolean;
 BEGIN
-    IF supplied_hash !~ '^\\$2[aby]\\$[0-9]{2}\\$.{53}$' THEN
+    -- Character classes avoid PostgreSQL string/backslash escaping changing
+    -- the meaning of the BCrypt delimiter.
+    IF supplied_hash !~ '^[$]2[aby][$][0-9]{2}[$].{53}$' THEN
         RAISE EXCEPTION 'Bootstrap recusado: hash BCrypt inválido.';
     END IF;
     IF lower(environment_name) = 'production' AND

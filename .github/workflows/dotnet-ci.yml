@@ -28,6 +28,8 @@ jobs:
         run: dotnet --info
       - name: Enforce C# 10 compatibility
         run: python3 scripts/check-csharp10-compatibility.py
+      - name: Validate v1.14 smoke contract
+        run: bash -n scripts/smoke-test-v114.sh
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build

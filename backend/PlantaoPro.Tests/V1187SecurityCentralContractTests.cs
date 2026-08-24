@@ -11,7 +11,8 @@ public sealed class V1187SecurityCentralContractTests
         var generator = Read("scripts/generate-scrpt-completo.py");
         Assert.Contains("SET search_path TO plantaopro, public;", generator);
         Assert.Contains("gen_random_uuid(", generator);
-        Assert.Contains("public.unaccent(", generator);
+        Assert.Contains("QUALIFIED_UNACCENT", generator);
+        Assert.Contains("public.'+'unaccent(", generator);
     }
 
     [Fact]

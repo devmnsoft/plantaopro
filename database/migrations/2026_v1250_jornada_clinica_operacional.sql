@@ -54,8 +54,13 @@ BEGIN
         END IF;
         EXECUTE format(
             'INSERT INTO plantaopro.perfil_permissoes(perfil_id, permissao_id, permitido, reg_status, reg_date) '
-            'SELECT perfil_id, permissao_id, %s, %s, %s FROM plantaopro.perfis_permissoes '
-            'ON CONFLICT (perfil_id, permissao_id) DO NOTHING',
+            'SELECT DISTINCT ON (legado.perfil_id, legado.permissao_id) '
+            'legado.perfil_id, legado.permissao_id, %s, %s, %s '
+            'FROM plantaopro.perfis_permissoes legado '
+            'WHERE legado.perfil_id IS NOT NULL AND legado.permissao_id IS NOT NULL '
+            'AND NOT EXISTS (SELECT 1 FROM plantaopro.perfil_permissoes atual '
+            'WHERE atual.perfil_id = legado.perfil_id AND atual.permissao_id = legado.permissao_id) '
+            'ORDER BY legado.perfil_id, legado.permissao_id',
             permitido_expr, reg_status_expr, reg_date_expr);
     END IF;
 END $$;

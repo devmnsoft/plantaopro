@@ -94,7 +94,7 @@ public sealed class AdminSaasController : Controller
     public IActionResult Alertas() => View("Dashboard", Dashboard("Alertas", "Clientes em risco, incidentes e limites próximos."));
     public IActionResult Implantacoes() => View("Dashboard", Dashboard("Implantações", "Onboarding e tarefas pendentes."));
     public IActionResult Monitoramento() => View("Dashboard", Dashboard("Monitoramento", "Saúde operacional e observabilidade."));
-    private static CommercialDemoPageViewModel Dashboard(string title, string subtitle) => CommercialDemoWebControllerPageFactory.Build(title, subtitle);
+    private static CommercialDemoPageViewModel Dashboard(string title, string subtitle) => CommercialPageFactory.Build(title, subtitle);
 }
 
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor)]
@@ -147,38 +147,38 @@ public sealed class ParceiroPortalController : Controller
 [Authorize]
 public sealed class PropostasComerciaisController : Controller
 {
-    public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Propostas comerciais", "Gere proposta com plano, módulos, setup, mensalidade, SLA, condições, validade e preview."));
+    public IActionResult Index() => View("Dashboard", CommercialPageFactory.Build("Propostas comerciais", "Gere proposta com plano, módulos, setup, mensalidade, SLA, condições, validade e preview."));
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult Index([FromForm] string cliente) { TempData["Success"] = "Proposta salva para demonstração comercial."; return View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Propostas comerciais", "Proposta registrada e pronta para preview imprimível.")); }
-    public IActionResult Create() => View("PropostaForm", CommercialDemoWebControllerPageFactory.Build("Nova proposta", "Preencha os dados comerciais e gere preview imprimível."));
-    public IActionResult Edit(Guid id) => Create(); public IActionResult Details(Guid id) => Index(); public IActionResult Preview(Guid id) => View("Preview", CommercialDemoWebControllerPageFactory.Build("Preview da proposta", "HTML imprimível para salvar como PDF pelo navegador.")); public IActionResult Enviar(Guid id) => Index();
+    public IActionResult Index([FromForm] string cliente) { TempData["Success"] = "Proposta salva para demonstração comercial."; return View("Dashboard", CommercialPageFactory.Build("Propostas comerciais", "Proposta registrada e pronta para preview imprimível.")); }
+    public IActionResult Create() => View("PropostaForm", CommercialPageFactory.Build("Nova proposta", "Preencha os dados comerciais e gere preview imprimível."));
+    public IActionResult Edit(Guid id) => Create(); public IActionResult Details(Guid id) => Index(); public IActionResult Preview(Guid id) => View("Preview", CommercialPageFactory.Build("Preview da proposta", "HTML imprimível para salvar como PDF pelo navegador.")); public IActionResult Enviar(Guid id) => Index();
 }
 
 [Authorize]
 public sealed class ModulosController : Controller
 {
-    public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Governança de módulos", "Controle por plano, tenant, adicionais contratados e beta."));
+    public IActionResult Index() => View("Dashboard", CommercialPageFactory.Build("Governança de módulos", "Controle por plano, tenant, adicionais contratados e beta."));
     public IActionResult Create() => Index(); public IActionResult Edit(Guid id) => Index(); public IActionResult Details(Guid id) => Index(); public IActionResult Tenant(Guid id) => Index();
 }
 
 [Authorize]
 public sealed class FeatureFlagsController : Controller
 {
-    public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Feature flags", "Habilite funcionalidades globalmente ou por tenant com auditoria."));
+    public IActionResult Index() => View("Dashboard", CommercialPageFactory.Build("Feature flags", "Habilite funcionalidades globalmente ou por tenant com auditoria."));
 }
 
 [Authorize]
 [Route("Demo")]
 public sealed class DemoAdminController : Controller
 {
-    [HttpGet("Index")] public IActionResult Index() => View("Dashboard", CommercialDemoWebControllerPageFactory.Build("Modo demo comercial", "Gere e limpe apenas dados fictícios marcados como demo."));
+    [HttpGet("Index")] public IActionResult Index() => View("Dashboard", CommercialPageFactory.Build("Modo demo comercial", "Gere e limpe apenas dados fictícios marcados como demo."));
     [HttpGet("GerarDados")] public IActionResult GerarDados() => Index();
     [HttpGet("Roteiros")] public IActionResult Roteiros() => Index();
     [HttpGet("Status")] public IActionResult Status() => Index();
 }
 
-internal static class CommercialDemoWebControllerPageFactory
+internal static class CommercialPageFactory
 {
     public static CommercialDemoPageViewModel Build(string title, string subtitle) => new CommercialDemoPageViewModel
     {

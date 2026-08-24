@@ -2,6 +2,8 @@
 
 Status honesto: funcional pendente QA em ambiente integrado. Não declarar produção.
 
+O PlantãoPro organiza a operação médica de ponta a ponta: transforma a demanda por cobertura em plantões publicados, convites rastreáveis, escalas confirmadas e pagamentos acompanháveis. A demonstração deve mostrar esse fluxo com dados fictícios, destacando governança multi-tenant, auditoria e redução do trabalho manual sem prometer integrações ainda não homologadas.
+
 ## Escopo
 
 - Convênios com autorizações, guias, vínculo a conta e glosa demonstrativa.

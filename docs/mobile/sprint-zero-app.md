@@ -5,7 +5,7 @@ A stack mobile do aplicativo móvel usa Expo/React Native e prevê `SecureStore`
 ## Implementado e testado por inspeção
 
 - LoginScreen com validação amigável, sem `alert()` nativo.
-- Navegação MVP autenticada em `AppNavigator` para Início, Plantões disponíveis, Convites, Escalas, Pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
+- Navegação MVP autenticada em `AppNavigator` para Início, Plantões disponíveis, Convites, Escalas, Meus pagamentos, Notificações, Perfil, Disponibilidade e Preferências.
 - Consumo de `EXPO_PUBLIC_API_BASE_URL` via `services/api.ts`, com JWT no header Authorization e fallback amigável.
 - Loading, empty state e error state básicos nos fluxos já conectados.
 

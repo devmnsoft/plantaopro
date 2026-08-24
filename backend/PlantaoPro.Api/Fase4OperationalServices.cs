@@ -247,6 +247,18 @@ order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim,
         return ApiResponse<Guid>.Ok(id, "Substituição solicitada.");
     }
 
+    public async Task<ApiResponse<IEnumerable<SubstituicaoDto>>> ListarSubstituicoesDoMedicoAsync(Guid uid)
+    {
+        await using var cn = Cn();
+        var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
+        if (medico.Id == Guid.Empty) return ApiResponse<IEnumerable<SubstituicaoDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+        var rows = await cn.QueryAsync<SubstituicaoDto>(@"select s.id as ""Id"", s.plantao_id as ""PlantaoId"", s.escala_id as ""EscalaId"", s.medico_solicitante_id as ""MedicoSolicitanteId"", s.motivo as ""Motivo"", s.status as ""Status"", s.reg_date as ""RegDate""
+from plantaopro.substituicoes_plantao s
+where s.medico_solicitante_id=@medicoId and s.cliente_id=@clienteId and s.reg_status='A'
+order by s.reg_date desc", new { medicoId = medico.Id, clienteId = medico.ClienteId });
+        return ApiResponse<IEnumerable<SubstituicaoDto>>.Ok(rows, "Substituições carregadas.");
+    }
+
     public async Task<ApiResponse<IEnumerable<SubstituicaoDto>>> ListarSubstituicoesAsync(Guid? clienteId)
     {
         await using var cn = Cn();

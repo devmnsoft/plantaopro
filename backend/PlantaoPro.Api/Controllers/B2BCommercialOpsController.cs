@@ -156,7 +156,6 @@ public sealed class MedicoAgendaMeController : ControllerBase
     private readonly B2BCommercialOpsService _service;
     public MedicoAgendaMeController(B2BCommercialOpsService service) { _service = service; }
     [HttpGet("agenda")] public async Task<IActionResult> Agenda() => Ok(await _service.AgendaMedicaAsync(Uid()));
-    [HttpGet("disponibilidade")] public async Task<IActionResult> Disponibilidade() => Ok(await _service.AgendaMedicaAsync(Uid()));
     private Guid Uid() { var uid = User.FindFirst("uid")?.Value; return Guid.TryParse(uid, out var parsed) ? parsed : Guid.Empty; }
 }
 

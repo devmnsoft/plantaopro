@@ -4,7 +4,7 @@
     var q = ViewData["Query"] as PlantaoPro.Web.Models.ProductivityQueryViewModel ?? new();
     var pages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
     string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.UnitId, page = 1, q.PageSize })!;
-    string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? "#";
+    string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? Url.Action("Index", "Pendencias")!;
 }
 <div class="pp-page action-center" data-action-center>
     @Html.AntiForgeryToken()

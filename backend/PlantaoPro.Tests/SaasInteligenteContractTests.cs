@@ -16,6 +16,7 @@ public class SaasInteligenteContractTests
             typeof(FaturamentoSaasController),
             typeof(SaasInteligenciaController),
             typeof(SaasDashboardController),
+            typeof(JornadaClientesController),
             typeof(RelatoriosSaasController));
 
         var esperadas = new[]

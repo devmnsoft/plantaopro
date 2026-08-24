@@ -67,7 +67,7 @@ else
                     else { <button type="button" class="btn btn-outline-success btn-sm" disabled title="O check-in só é liberado para agendamento confirmado ou ainda agendado.">Check-in</button> }
                     @if (item.PodeAlterarAgenda) { <a class="btn btn-outline-secondary btn-sm" asp-action="Edit" asp-route-id="@item.Id">Reagendar</a> }
                     else { <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="O status retornado não permite reagendamento.">Reagendar</button> }
-                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A chamada será habilitada quando o endpoint transacional estiver disponível.">Chamar paciente</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="Vincule o agendamento à fila do painel antes de realizar a chamada.">Chamar no painel</button>
                     @if (item.PodeAbrirTriagem) { <a class="btn btn-outline-secondary btn-sm" asp-controller="Triagem" asp-action="Create" asp-route-agendamentoId="@item.Id">Abrir triagem</a> }
                     else { <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A triagem exige check-in ou status de espera retornado pela API.">Abrir triagem</button> }
                     <button type="button" class="btn btn-outline-secondary btn-sm" disabled title="A consulta será habilitada quando a API retornar o vínculo da consulta deste agendamento.">Abrir consulta</button>

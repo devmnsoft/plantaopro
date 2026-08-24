@@ -1,4 +1,6 @@
-# Sprint zero — app médico PlantãoPro
+# Sprint zero — aplicativo móvel médico PlantãoPro
+
+A stack mobile do aplicativo móvel usa Expo/React Native e prevê `SecureStore` para credenciais no dispositivo.
 
 ## Implementado e testado por inspeção
 

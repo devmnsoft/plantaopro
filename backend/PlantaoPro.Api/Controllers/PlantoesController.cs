@@ -118,6 +118,8 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("{id:guid}/cancelar")]
         public Task<IActionResult> Cancelar(Guid id, [FromBody] StatusRequest req)
         {
+            if (string.IsNullOrWhiteSpace(req.Justificativa))
+                return Task.FromResult<IActionResult>(BadRequest(ApiResponse<object>.Fail("O motivo do cancelamento é obrigatório.", 400)));
             return ExecuteStatusAction(id, () => service.CancelarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "cancelar plantão");
         }
 

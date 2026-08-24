@@ -39,7 +39,7 @@ public sealed class HomologacaoRuntimeRealContractTests
     [Fact]
     public void MenusControllersSegredosEMobile_DevemRespeitarContratosDeHomologacao()
     {
-        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs");
+        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         foreach (var route in new[] { "Dashboard", "Pacientes", "Agendamentos", "Triagem", "Consultas", "Prescricoes", "Cid", "ClinicaFinanceiro", "Convenios", "PlanosSaude", "Plantoes", "Escalas", "Financeiro", "Notificacoes", "Relatorios" })
         {
             Assert.Contains(route, menu, StringComparison.OrdinalIgnoreCase);

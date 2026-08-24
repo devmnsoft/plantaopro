@@ -188,8 +188,8 @@ public record DashboardChartItem(string Label, decimal Valor);
     public record PlantaoFormViewModel : IValidatableObject
     {
         public Guid? Id { get; set; }
-        [Required(ErrorMessage = "Selecione um hospital.")] public Guid HospitalId { get; set; }
-        [Required(ErrorMessage = "Selecione uma especialidade.")] public Guid EspecialidadeId { get; set; }
+        [NonEmptyGuid(ErrorMessage = "Selecione um hospital.")] public Guid HospitalId { get; set; }
+        [NonEmptyGuid(ErrorMessage = "Selecione uma especialidade.")] public Guid EspecialidadeId { get; set; }
         [Required(ErrorMessage = "Informe a data inicial.")] public DateTime DataInicio { get; set; }
         [Required(ErrorMessage = "Informe a data final.")] public DateTime DataFim { get; set; }
         [Range(typeof(decimal), "0", "1000000", ErrorMessage = "Informe um valor entre R$ 0,00 e R$ 1.000.000,00.")] public decimal Valor { get; set; }
@@ -211,6 +211,11 @@ public record DashboardChartItem(string Label, decimal Valor);
             if (DataFim <= DataInicio) yield return new ValidationResult("Informe uma data final posterior ao início do plantão.", new[] { nameof(DataFim) });
             if (DataInicio != default && DataFim.Subtract(DataInicio).TotalDays > 7) yield return new ValidationResult("O período do plantão não pode ultrapassar 7 dias.", new[] { nameof(DataFim) });
         }
+    }
+
+    public sealed class NonEmptyGuidAttribute : ValidationAttribute
+    {
+        public override bool IsValid(object? value) => value is Guid id && id != Guid.Empty;
     }
 
     public record StatusActionViewModel(Guid Id, [Required] string Justificativa);

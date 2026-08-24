@@ -19,7 +19,7 @@ public sealed class HomologacaoCrudsAcoesJornadasContractTests
         foreach (var action in new[] { "Index()", "Create()", "Edit(Guid id)", "Details(Guid id)" })
             Assert.Contains(action, saude);
 
-        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs");
+        var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         foreach (var route in new[] { "Pacientes", "Agendamentos", "CheckIn", "PainelChamada", "Triagem", "Consultas", "Prescricoes", "Cid", "ClinicaFinanceiro", "Convenios", "PlanosSaude", "Plantoes", "Escalas", "Notificacoes", "Relatorios", "Ajuda", "Manual" })
             Assert.Contains(route, menu);
     }

@@ -37,17 +37,25 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_idempotencia_operacional
     ON plantaopro.idempotencia_operacional(cliente_id, escopo, chave_hash);
 
 DO $$
+DECLARE
+    permitido_expr text := 'true';
+    reg_status_expr text := '''A''';
+    reg_date_expr text := 'now()';
 BEGIN
     IF to_regclass('plantaopro.perfis_permissoes') IS NOT NULL THEN
-        INSERT INTO plantaopro.perfil_permissoes(perfil_id, permissao_id, permitido, reg_status, reg_date)
-        SELECT perfil_id, permissao_id, coalesce(permitido, true), coalesce(reg_status, 'A'), coalesce(reg_date, now())
-          FROM plantaopro.perfis_permissoes
-        ON CONFLICT (perfil_id, permissao_id) DO NOTHING;
-        IF NOT EXISTS (
-            SELECT 1 FROM pg_constraint c
-            WHERE c.contype = 'f' AND c.confrelid = 'plantaopro.perfis_permissoes'::regclass
-        ) THEN
-            DROP TABLE plantaopro.perfis_permissoes;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='perfis_permissoes' AND column_name='permitido') THEN
+            permitido_expr := 'coalesce(permitido, true)';
         END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='perfis_permissoes' AND column_name='reg_status') THEN
+            reg_status_expr := 'coalesce(reg_status, ''A'')';
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='perfis_permissoes' AND column_name='reg_date') THEN
+            reg_date_expr := 'coalesce(reg_date, now())';
+        END IF;
+        EXECUTE format(
+            'INSERT INTO plantaopro.perfil_permissoes(perfil_id, permissao_id, permitido, reg_status, reg_date) '
+            'SELECT perfil_id, permissao_id, %s, %s, %s FROM plantaopro.perfis_permissoes '
+            'ON CONFLICT (perfil_id, permissao_id) DO NOTHING',
+            permitido_expr, reg_status_expr, reg_date_expr);
     END IF;
 END $$;

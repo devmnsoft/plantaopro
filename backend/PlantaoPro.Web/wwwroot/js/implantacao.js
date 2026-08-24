@@ -2,7 +2,7 @@
     'use strict';
     const app = document.getElementById('implantacao-app');
     if (!app) return;
-    let etapas = [];
+    let etapas = Array.of();
     const byId = id => document.getElementById(id);
     const text = (id, value) => { byId(id).textContent = value; };
 

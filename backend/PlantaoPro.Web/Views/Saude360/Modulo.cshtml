@@ -75,6 +75,11 @@
     <div class="pp-alert pp-alert--warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><span>@vm.ErrorMessage</span></div>
 }
 
+@if (registros.Count == 0 && string.IsNullOrWhiteSpace(vm.ErrorMessage))
+{
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-inbox", "Nenhum registro encontrado", "A API não retornou registros reais para este módulo.")' />
+}
+
 <div class="pp-kpi-strip" aria-label="Contexto do módulo">
     <article class="pp-kpi-card"><span>Plano mínimo</span><strong>@vm.Plano</strong><small>requisito do módulo</small></article>
     <article class="pp-kpi-card"><span>Registros</span>@if (string.IsNullOrWhiteSpace(vm.ErrorMessage) || string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase)) { <strong>@registros.Count</strong><small>resultado real carregado</small> } else { <strong>Indisponível</strong><small>a API não confirmou o total</small> }</article>

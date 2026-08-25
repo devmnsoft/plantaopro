@@ -13,7 +13,7 @@
 
 <nav class="pp-operational-journey" aria-label="Jornada operacional MVP" data-operational-mvp-journey><span>Plantão</span><span>Convite</span><span class="is-current">Escala</span><span>Confirmação</span><span>Presença ou substituição</span><span>Fechamento</span><span>Financeiro</span></nav>
 <form method="get" class="pp-filter-bar" role="search" aria-label="Filtros de escalas">
-    <div><label class="form-label" for="status">Status</label><input class="form-control" id="status" name="status" value="@Context.Request.Query["status"]" placeholder="Status retornado pela API" /></div>
+    <div><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">Todos os status</option>@foreach (var option in new[] { ("solicitado", "Aguardando confirmação"), ("confirmado", "Confirmado"), ("recusado", "Recusado"), ("realizado", "Realizado"), ("cancelado", "Cancelado") }) { <option value="@option.Item1" selected="@(Context.Request.Query["status"] == option.Item1)">@option.Item2</option> }</select></div>
     <div><label class="form-label" for="dataInicio">De</label><input class="form-control" id="dataInicio" name="dataInicio" type="date" value="@Context.Request.Query["dataInicio"]" /></div>
     <div><label class="form-label" for="dataFim">Até</label><input class="form-control" id="dataFim" name="dataFim" type="date" value="@Context.Request.Query["dataFim"]" /></div>
     <button class="btn btn-primary" type="submit">Aplicar filtros</button><a class="btn btn-link" asp-action="Index">Limpar</a>

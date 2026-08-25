@@ -45,7 +45,8 @@
 
                     <form method="post" asp-action="Recusar" asp-route-id="@e.Id" class="d-flex flex-column flex-md-row gap-2" data-ajax-form="true" data-confirm="true" data-confirm-title="Recusar escala" data-confirm-message="Confirma recusar esta escala? Informe a justificativa para registrar o histórico." data-confirm-type="danger">
                         @Html.AntiForgeryToken()
-                        <input name="justificativa" class="form-control" placeholder="Justificativa" required />
+                        <label class="visually-hidden" for="motivoRecusa">Motivo da recusa</label>
+                        <select id="motivoRecusa" name="justificativa" class="form-select" required><option value="">Selecione o motivo...</option><option value="Conflito de agenda">Conflito de agenda</option><option value="Indisponibilidade pessoal">Indisponibilidade pessoal</option><option value="Afastamento de saúde">Afastamento de saúde</option><option value="Local ou deslocamento inviável">Local ou deslocamento inviável</option><option value="Outro motivo informado à coordenação">Outro — contatar coordenação</option></select>
                         <button class="btn btn-danger" type="submit"><i class="bi bi-x-circle me-1"></i>Recusar</button>
                     </form>
                 }

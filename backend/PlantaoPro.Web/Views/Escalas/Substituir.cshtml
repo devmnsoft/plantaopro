@@ -1,4 +1,4 @@
-@model PlantaoPro.Web.Models.StatusActionViewModel
+@model PlantaoPro.Web.Models.SubstituicaoEscalaViewModel
 
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Substituir Escala", "Registre substituições com justificativa, confirmação, toast e auditoria.", "bi-arrow-repeat")' />
 
@@ -6,15 +6,24 @@
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <input type="hidden" asp-for="Id" />
+    @if (Model.Escala is not null) { <div class="alert alert-light border mb-3"><strong>@Model.Escala.MedicoNome</strong><br /><span class="text-muted">@Model.Escala.HospitalNome · @Model.Escala.EspecialidadeNome · @Model.Escala.DataInicio.ToString("dd/MM/yyyy HH:mm")</span></div> }
     <div class="mb-3">
-        <label class="form-label" for="novoMedicoId">Identificador do novo médico</label>
-        <input id="novoMedicoId" name="novoMedicoId" type="text" inputmode="text" class="form-control" required aria-describedby="novoMedicoHelp" />
-        <small id="novoMedicoHelp">Use somente o identificador de um profissional já cadastrado; esta tela não cria médicos.</small>
+        <label class="form-label form-required" asp-for="NovoMedicoId">Profissional substituto</label>
+        <select asp-for="NovoMedicoId" class="form-select" required aria-describedby="novoMedicoHelp"><option value="">Selecione um profissional disponível...</option>@foreach (var medico in Model.ProfissionaisOptions) { <option value="@medico.Id">@medico.Nome — CRM @medico.Crm/@medico.UfCrm</option> }</select>
+        <small id="novoMedicoHelp">A lista contém somente profissionais ativos e habilitados na especialidade. Conflitos serão revalidados ao salvar.</small>
+        <span asp-validation-for="NovoMedicoId" class="text-danger small"></span>
     </div>
     <div class="mb-3">
-        <label class="form-label" for="justificativa">Motivo da substituição</label>
-        <textarea id="justificativa" name="justificativa" class="form-control" required minlength="5" aria-describedby="justificativaHelp"></textarea>
-        <small id="justificativaHelp">O motivo é obrigatório e será enviado ao endpoint real de substituição.</small>
+        <label class="form-label form-required" asp-for="Motivo">Motivo da substituição</label>
+        <select asp-for="Motivo" class="form-select" required><option value="">Selecione...</option><option value="INDISPONIBILIDADE">Indisponibilidade do profissional</option><option value="CONFLITO">Conflito de agenda</option><option value="AFASTAMENTO">Afastamento</option><option value="SOLICITACAO_PROFISSIONAL">Solicitação do profissional</option><option value="OUTRO">Outro motivo</option></select>
+        <span asp-validation-for="Motivo" class="text-danger small"></span>
     </div>
-    <button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Substituir</button>
+    <div class="mb-3">
+        <label class="form-label" asp-for="Detalhes">Detalhes</label>
+        <textarea asp-for="Detalhes" class="form-control" minlength="5" maxlength="500" rows="3" aria-describedby="detalhesHelp"></textarea>
+        <small id="detalhesHelp">Obrigatório para “Outro motivo”; será registrado no histórico operacional.</small>
+        <span asp-validation-for="Detalhes" class="text-danger small"></span>
+    </div>
+    <div class="d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-arrow-repeat me-1"></i>Substituir</button><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancelar</a></div>
 </form>
+<partial name="_ValidationScriptsPartial" />

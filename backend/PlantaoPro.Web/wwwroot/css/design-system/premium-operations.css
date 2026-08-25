@@ -28,3 +28,7 @@
 
 /* v1.96.1 aligns operational workboards with the global calm layer. */
 .pp-ops-page { --pp-ops-accent: var(--fc-cyan, #087f8c); --pp-ops-border: var(--fc-border, rgba(39, 80, 108, .15)); }
+/* v1.96.2: densidade executiva para painéis operacionais. */
+.pp-operation-page > section { min-width: 0; }
+.pp-workboard__lane { box-shadow: var(--fc-shadow-xs, var(--pp-shadow-xs)); }
+.pp-workboard__header span { color: var(--fc-muted, var(--pp-text-muted)); font-size: var(--pp-font-caption); }

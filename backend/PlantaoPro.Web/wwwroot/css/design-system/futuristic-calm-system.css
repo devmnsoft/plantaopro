@@ -1,4 +1,4 @@
-/* PlantãoPro v1.96.1 — camada visual futurista, clínica e calma. */
+/* PlantãoPro v1.96.2 — experiência clean, clínica e comercial. */
 :root {
   --fc-ink: #10243b;
   --fc-muted: #60748a;
@@ -17,6 +17,16 @@
   --fc-warning: #9a6700;
   --fc-danger: #b4233c;
   --fc-info: #1261a0;
+  --fc-canvas: #f3f7f8;
+  --fc-surface-raised: #ffffff;
+  --fc-surface-muted: #edf3f5;
+  --fc-radius-sm: 10px;
+  --fc-radius-lg: 20px;
+  --fc-shadow-xs: 0 1px 3px rgba(13, 41, 62, .05);
+  --fc-shadow-sm: 0 8px 24px rgba(13, 41, 62, .06);
+  --fc-shadow-lg: 0 24px 64px rgba(13, 41, 62, .12);
+  --fc-space-page: clamp(1rem, 2.2vw, 2rem);
+  --fc-reading-width: 68ch;
 }
 
 html { color-scheme: light; }
@@ -54,7 +64,7 @@ body.pp-body {
 .pp-user-menu__dropdown { border: 1px solid var(--fc-border); border-radius: 14px; background: rgba(255,255,255,.97); box-shadow: var(--fc-shadow); }
 
 .pp-content { min-width: 0; }
-.pp-content-container { max-width: 1680px; }
+.pp-content-container { max-width: 1680px; padding: var(--fc-space-page); }
 .pp-future-page-header, .workspace-header {
   padding: clamp(1rem, 2vw, 1.5rem);
   background: linear-gradient(125deg, rgba(255,255,255,.94), rgba(242,249,249,.86));
@@ -76,6 +86,10 @@ body.pp-body {
 :where(.kpi-card, .metric-card, .stat-card) :where(.value, .metric-value, h2) { color: var(--fc-ink); letter-spacing: -.035em; }
 :where(.filter-panel, .filters-panel, .filter-card) { padding: 1rem; background: rgba(242,248,249,.88); border: 1px solid var(--fc-border); border-radius: 14px; }
 .pp-module-grid, .quick-actions-grid { gap: 1rem; }
+.dashboard-grid, .metrics-grid, .stats-grid, .saas-dashboard-grid { gap: clamp(.85rem, 1.5vw, 1.25rem); }
+.pp-page-intro__eyebrow, .pp-section-kicker { color: #14727b; font-size: .72rem; font-weight: 750; letter-spacing: .085em; text-transform: uppercase; }
+:where(.pp-future-page-header, .workspace-header, .pp-operation-header) :where(h1, h2) { max-width: 24ch; margin-bottom: .35rem; letter-spacing: -.035em; }
+:where(.pp-future-page-header, .workspace-header, .pp-operation-header) p { max-width: var(--fc-reading-width); color: var(--fc-muted); }
 
 .btn { border-radius: 10px; font-weight: 650; transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease; }
 .btn:hover:not(:disabled) { transform: translateY(-1px); }
@@ -93,6 +107,9 @@ body.pp-body {
 .table thead th { color: #4d6577; background: rgba(228,239,241,.6); font-size: .75rem; letter-spacing: .045em; text-transform: uppercase; }
 .table tbody tr { transition: background-color .15s ease; }
 .table tbody tr:hover { background: rgba(222, 242, 242, .35); }
+.table td { vertical-align: middle; }
+.table :where(.btn, .badge, .status-badge) { white-space: nowrap; }
+.table-responsive:focus-visible { outline: 2px solid var(--fc-cyan); outline-offset: 2px; }
 
 .pp-future-empty-state, .empty-state { padding: clamp(2rem, 5vw, 4rem); border: 1px dashed rgba(49, 105, 126, .28); border-radius: var(--fc-radius); background: rgba(248,252,252,.72); }
 .empty-state-icon { color: var(--fc-cyan); background: var(--fc-cyan-soft); }
@@ -105,6 +122,10 @@ body.pp-body {
 .pp-future-modal, .pp-future-drawer, .app-drawer { border-color: var(--fc-border); background: #fbfdfd; box-shadow: -18px 0 48px rgba(8,34,51,.15); }
 .app-drawer { width: min(32rem, 100vw); max-height: 100dvh; overflow: auto; }
 .pp-detail-drawer__timeline { border-left-color: #91c7c8; }
+.modal-content, .offcanvas { border: 1px solid var(--fc-border); border-radius: var(--fc-radius); background: rgba(252,254,254,.98); box-shadow: var(--fc-shadow-lg); }
+.modal-header, .modal-footer, .offcanvas-header { border-color: rgba(39,80,108,.1); }
+.form-control, .form-select { min-height: 2.75rem; border-color: rgba(45,86,110,.2); border-radius: var(--fc-radius-sm); background-color: rgba(255,255,255,.9); }
+.form-control:focus, .form-select:focus { border-color: var(--fc-cyan); box-shadow: var(--fc-focus); }
 
 /* Login: produto e segurança em equilíbrio, sem conteúdo decorativo falso. */
 .pp-auth-body { min-height: 100dvh; background: #09243c; background-image: radial-gradient(circle at 18% 20%, rgba(47,154,159,.18), transparent 28rem), linear-gradient(145deg, #081f34, #10364b 64%, #174c58); }
@@ -137,6 +158,9 @@ body.pp-body {
   .pp-future-page-header, .workspace-header { border-radius: 13px; }
   .pp-operation-toolbar .btn { flex: 1 1 auto; }
   .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table { min-width: 42rem; }
+  .table[data-mobile-cards] { min-width: 0; }
+  .pp-kpi-grid, .dashboard-grid, .metrics-grid, .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pp-auth-page { padding: .75rem; align-items: start; }
   .pp-auth-shell { border-radius: 18px; }
   .pp-auth-brand-panel { padding: 1.5rem; }
@@ -150,6 +174,7 @@ body.pp-body {
   .pp-auth-brand-panel, .pp-auth-form-panel { padding: 1.15rem; }
   .pp-auth-brand-panel p, .pp-auth-benefit-grid { display: none; }
   .pp-user-menu .user-info { display: none; }
+  .pp-kpi-grid, .dashboard-grid, .metrics-grid, .stats-grid { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto; animation-duration: .01ms; animation-iteration-count: 1; transition-duration: .01ms; }

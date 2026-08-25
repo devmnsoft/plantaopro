@@ -20,3 +20,5 @@
 
 /* v1.96.1 shared component rhythm. */
 .action-toolbar, .quick-actions-grid { --pp-component-gap: 1rem; }
+/* v1.96.2: componentes compartilhados mais leves e previsíveis. */
+.action-toolbar{align-items:center;box-shadow:var(--fc-shadow-xs,0 1px 3px rgba(13,41,62,.05));padding:.8rem}.quick-actions-grid{grid-template-columns:repeat(auto-fit,minmax(12rem,1fr))}.empty-state p{max-width:38rem;margin-inline:auto}

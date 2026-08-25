@@ -1,86 +1,87 @@
 @model PlantaoPro.Web.Models.OperacaoResumoDto
 @{
-    ViewData["Title"] = "Central de Escala";
+    ViewData["Title"] = "Central de Operação";
+    var critical = Model.PlantoesCriticos?.ToList() ?? new List<OperacaoPlantaoCriticoDto>();
+    var pending = Model.EscalasPendentes?.ToList() ?? new List<OperacaoEscalaPendenteDto>();
+    var heatmap = new[]
+    {
+        new CoverageHeatmapItemViewModel("Cobertura confirmada", Model.TotalEscalasConfirmadasHoje, "confirmações hoje", "covered"),
+        new CoverageHeatmapItemViewModel("Aguardando resposta", Model.TotalEscalasSolicitadas, "solicitações em análise", "waiting"),
+        new CoverageHeatmapItemViewModel("Turnos em aberto", Model.TotalPlantoesAbertos, "exigem cobertura", "risk"),
+        new CoverageHeatmapItemViewModel("Conflitos", Model.TotalConflitos, "exigem decisão", "critical")
+    };
+    var timeline = critical.Select(item => new OperationalTimelineItemViewModel(
+            item.HospitalNome, $"{item.EspecialidadeNome} · {item.VagasDisponiveis} vaga(s)", item.DataInicio,
+            item.Status, "CentralEscala", "Plantao", item.Id))
+        .Concat(pending.Select(item => new OperationalTimelineItemViewModel(
+            item.MedicoNome, item.HospitalNome, item.DataInicio, item.Status, "Escalas", "Details", item.Id)))
+        .OrderBy(item => item.OccursAt).Take(6).ToList();
 }
 
-<section class="pp-operation-page" aria-labelledby="escala-title">
-<header class="pp-operation-header">
-    <div>
-        <span class="eyebrow">Sala de controle</span><h1 id="escala-title">Central de Escala</h1>
-        <p class="text-muted mb-0">Sala de controle para cobertura, solicitações, conflitos e pendências financeiras.</p>
-    </div>
-    <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-calendar3"></i> Abrir agenda</a>
-</header>
+<section class="operation-command" aria-labelledby="operation-title">
+    <header class="operation-command__hero">
+        <div>
+            <span class="pp-section-kicker">Operação em tempo real</span>
+            <h1 id="operation-title">Central de cobertura</h1>
+            <p>Priorize riscos, acompanhe confirmações e conduza a escala a partir de sinais operacionais reais.</p>
+        </div>
+        <div class="operation-command__live" role="status"><span aria-hidden="true"></span> Visão operacional atual</div>
+        <div class="operation-command__actions">
+            <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Novo plantão</a>
+            <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> Abrir calendário</a>
+        </div>
+    </header>
 
-@if (ViewBag.ErrorMessage != null)
-{
-    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle"></i> @ViewBag.ErrorMessage</div>
-}
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <div class="alert alert-warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> @ViewBag.ErrorMessage</div>
+    }
 
-<div class="pp-kpi-grid" aria-label="Indicadores da escala">
-    <article class="pp-kpi-card"><span class="pp-kpi-card__label">Hoje</span><strong class="pp-kpi-card__value">@Model.TotalPlantoesHoje</strong><span class="pp-kpi-card__context">Plantões programados</span></article>
-    <article class="pp-kpi-card pp-kpi-card--attention"><span class="pp-kpi-card__label">Abertos</span><strong class="pp-kpi-card__value">@Model.TotalPlantoesAbertos</strong><span class="pp-kpi-card__context">Aguardam cobertura</span></article>
-    <article class="pp-kpi-card"><span class="pp-kpi-card__label">Solicitações</span><strong class="pp-kpi-card__value">@Model.TotalEscalasSolicitadas</strong><span class="pp-kpi-card__context">Em análise</span></article>
-    <article class="pp-kpi-card"><span class="pp-kpi-card__label">Confirmadas hoje</span><strong class="pp-kpi-card__value">@Model.TotalEscalasConfirmadasHoje</strong><span class="pp-kpi-card__context">Coberturas concluídas</span></article>
-    <article class="pp-kpi-card pp-kpi-card--critical"><span class="pp-kpi-card__label">Conflitos</span><strong class="pp-kpi-card__value">@Model.TotalConflitos</strong><span class="pp-kpi-card__context">Requerem decisão</span></article>
-    <article class="pp-kpi-card pp-kpi-card--attention"><span class="pp-kpi-card__label">Financeiro</span><strong class="pp-kpi-card__value">@Model.TotalPagamentosPendentes</strong><span class="pp-kpi-card__context">Pagamentos pendentes</span></article>
-</div>
+    <div class="coverage-overview" aria-label="Indicadores de cobertura">
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Plantões hoje", Model.TotalPlantoesHoje, "programados no período", "neutral", "Plantoes", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Confirmados", Model.TotalEscalasConfirmadasHoje, "confirmações concluídas hoje", "positive", "Escalas", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Aguardando", Model.TotalEscalasSolicitadas, "respostas pendentes", "attention", "Escalas", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Em risco", Model.TotalPlantoesAbertos, "plantões ainda abertos", "risk", "Plantoes", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Conflitos", Model.TotalConflitos, "decisões necessárias", "critical", "Escalas", "Index"))" />
+    </div>
 
-<div class="card">
-    <div class="card-body pp-operation-actions">
-        <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Novo plantão</a>
-        <a asp-controller="Plantoes" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-send"></i> Publicar/convites</a>
-        <a asp-controller="Escalas" asp-action="Index" class="btn btn-outline-success"><i class="bi bi-check2-circle"></i> Confirmar escalas</a>
-        <a asp-controller="Financeiro" asp-action="Index" class="btn btn-outline-warning"><i class="bi bi-cash-stack"></i> Pagamentos</a>
-    </div>
-</div>
+    <nav class="operation-view-switcher" aria-label="Modos de visualização">
+        <span class="operation-view-switcher__label">Explorar por</span>
+        <a asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i> Calendário</a>
+        <a asp-controller="Plantoes" asp-action="Index"><i class="bi bi-list-task"></i> Lista</a>
+        <a asp-controller="Hospitais" asp-action="Index"><i class="bi bi-building"></i> Unidade</a>
+        <a asp-controller="Medicos" asp-action="Index"><i class="bi bi-person-badge"></i> Profissional</a>
+        <a asp-controller="CentralEscala" asp-action="Risco" class="is-active" aria-current="page"><i class="bi bi-shield-exclamation"></i> Risco</a>
+    </nav>
 
-<div class="row g-3">
-    <div class="col-lg-4">
-        <div class="card h-100"><div class="card-header fw-semibold">Plantões sem cobertura</div><div class="list-group list-group-flush">
-            @if (!Model.PlantoesCriticos.Any())
-            {
-                <div class="pp-empty-compact"><div><strong>Cobertura sob controle</strong><div>Nenhum plantão crítico no momento.</div></div></div>
-            }
-            @foreach (var item in Model.PlantoesCriticos)
-            {
-                <a asp-controller="CentralEscala" asp-action="Plantao" asp-route-id="@item.Id" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between"><strong>@item.HospitalNome</strong><span class="badge text-bg-danger">@item.Status</span></div>
-                    <small>@item.EspecialidadeNome • @item.DataInicio.ToString("dd/MM HH:mm")</small>
-                </a>
-            }
-        </div></div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card h-100"><div class="card-header fw-semibold">Escalas solicitadas</div><div class="list-group list-group-flush">
-            @if (!Model.EscalasPendentes.Any())
-            {
-                <div class="pp-empty-compact"><div><strong>Solicitações em dia</strong><div>Não há escalas aguardando confirmação.</div></div></div>
-            }
-            @foreach (var item in Model.EscalasPendentes)
-            {
-                <a asp-controller="Escalas" asp-action="Details" asp-route-id="@item.Id" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between"><strong>@item.MedicoNome</strong><span class="badge text-bg-info">@item.Status</span></div>
-                    <small>@item.HospitalNome • @item.DataInicio.ToString("dd/MM HH:mm")</small>
-                </a>
-            }
-        </div></div>
-    </div>
-    <div class="col-lg-4">
-        <div class="card h-100"><div class="card-header fw-semibold">Pagamentos pendentes</div><div class="list-group list-group-flush">
-            @if (!Model.PagamentosPendentes.Any())
-            {
-                <div class="pp-empty-compact"><div><strong>Financeiro conciliado</strong><div>Nenhum pagamento pendente nesta visão.</div></div></div>
-            }
-            @foreach (var item in Model.PagamentosPendentes)
-            {
-                <a asp-controller="Financeiro" asp-action="Details" asp-route-id="@item.Id" class="list-group-item list-group-item-action">
-                    <div class="d-flex justify-content-between"><strong>@item.MedicoNome</strong><span class="badge text-bg-warning">@item.Status</span></div>
-                    <small>@item.HospitalNome • @item.ValorPrevisto.ToString("C")</small>
-                </a>
-            }
-        </div></div>
-    </div>
-</div>
+    <div class="operation-command__grid">
+        <section class="operation-panel operation-panel--wide" aria-labelledby="coverage-map-title">
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">Mapa de cobertura</span><h2 id="coverage-map-title">Leitura rápida da operação</h2></div><a asp-controller="CentralEscala" asp-action="Calendario">Ver grade completa <i class="bi bi-arrow-right"></i></a></header>
+            <partial name="_CoverageHeatmap" model="heatmap" />
+            <p class="operation-panel__note"><i class="bi bi-info-circle"></i> Os sinais refletem os dados disponíveis agora; nenhuma projeção ou dado de demonstração é adicionado.</p>
+        </section>
 
+        <aside class="operation-panel risk-panel" aria-labelledby="risk-title">
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">Fila prioritária</span><h2 id="risk-title">Atenção necessária</h2></div></header>
+            <a asp-controller="CentralEscala" asp-action="PlantaoDescoberto" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--critical"><i class="bi bi-person-x"></i></span><span><strong>@Model.TotalPlantoesAbertos plantão(ões) em aberto</strong><small>Inicie a busca por cobertura</small></span><i class="bi bi-chevron-right"></i></a>
+            <a asp-controller="CentralEscala" asp-action="ConvitesPendentes" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--waiting"><i class="bi bi-hourglass-split"></i></span><span><strong>@Model.TotalEscalasSolicitadas confirmação(ões)</strong><small>Acompanhe respostas pendentes</small></span><i class="bi bi-chevron-right"></i></a>
+            <a asp-controller="CentralEscala" asp-action="Risco" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--risk"><i class="bi bi-intersect"></i></span><span><strong>@Model.TotalConflitos conflito(s)</strong><small>Revise sobreposições de escala</small></span><i class="bi bi-chevron-right"></i></a>
+        </aside>
+
+        <section class="operation-panel operation-panel--wide" aria-labelledby="timeline-title">
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">Próximos eventos</span><h2 id="timeline-title">Linha do tempo operacional</h2></div></header>
+            @if (timeline.Any()) { <partial name="_OperationalTimeline" model="timeline" /> }
+            else { <partial name="_DemoEmptyState" model="@(new EmptyStateViewModel("bi-calendar-check", "Agenda operacional tranquila", "Os próximos plantões críticos e confirmações aparecerão aqui assim que existirem."))" /> }
+        </section>
+
+        <aside class="operation-panel" aria-labelledby="quick-title">
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">Atalhos</span><h2 id="quick-title">Ações rápidas</h2></div></header>
+            <div class="operation-quick-actions">
+                <a asp-controller="CentralEscala" asp-action="MedicosDisponiveis"><i class="bi bi-person-check"></i><span><strong>Profissionais disponíveis</strong><small>Localizar opções de cobertura</small></span></a>
+                <a asp-controller="CentralEscala" asp-action="Substituicoes"><i class="bi bi-arrow-left-right"></i><span><strong>Substituições</strong><small>Acompanhar solicitações</small></span></a>
+                <a asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span><strong>Alertas recentes</strong><small>@Model.NotificacoesNaoLidas não lido(s)</small></span></a>
+                <a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-stack"></i><span><strong>Pendências financeiras</strong><small>@Model.TotalPagamentosPendentes registro(s)</small></span></a>
+            </div>
+        </aside>
+    </div>
 </section>

@@ -1,0 +1,15 @@
+@model CoverageCardViewModel
+<article class="coverage-card coverage-card--@Model.Tone">
+    <div class="coverage-card__signal" aria-hidden="true"></div>
+    <div>
+        <span class="coverage-card__label">@Model.Label</span>
+        <strong class="coverage-card__value">@Model.Value</strong>
+        <span class="coverage-card__context">@Model.Context</span>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Model.DestinationController) && !string.IsNullOrWhiteSpace(Model.DestinationAction))
+    {
+        <a asp-controller="@Model.DestinationController" asp-action="@Model.DestinationAction" class="coverage-card__link" aria-label="Ver @Model.Label.ToLowerInvariant()">
+            Ver detalhes <i class="bi bi-arrow-right" aria-hidden="true"></i>
+        </a>
+    }
+</article>

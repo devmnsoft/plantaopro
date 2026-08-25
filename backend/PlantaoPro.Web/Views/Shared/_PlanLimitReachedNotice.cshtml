@@ -1,5 +1,5 @@
 @model string
-<div class="alert alert-danger" role="alert">
-    <div class="fw-semibold"><i class="bi bi-speedometer2 me-2"></i>Limite do plano atingido</div>
+<div class="alert alert-danger pp-access-notice" role="alert">
+    <div class="fw-semibold"><i class="bi bi-speedometer2 me-2" aria-hidden="true"></i>Limite do plano atingido</div>
     <div>@(string.IsNullOrWhiteSpace(Model) ? "Revise o uso atual ou solicite upgrade antes de continuar." : Model)</div>
 </div>

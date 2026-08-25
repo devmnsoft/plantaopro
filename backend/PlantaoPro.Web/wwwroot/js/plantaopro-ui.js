@@ -58,6 +58,8 @@
     const titleEl=modal.querySelector('[data-pp-confirm-title]');
     const messageEl=modal.querySelector('[data-pp-confirm-message]');
     const actionButton=modal.querySelector('[data-pp-confirm-action],[data-pp-confirm-submit]');
+    const loadingEl=modal.querySelector('[data-pp-confirm-loading]');
+    const statusEl=modal.querySelector('[data-pp-confirm-status]');
     let pending=null;
     let returnFocus=null;
 
@@ -65,6 +67,10 @@
       root.classList.remove('is-active');
       modal.hidden=true;
       document.body.classList.remove('pp-modal-open');
+      modal.setAttribute('aria-busy','false');
+      if(actionButton){actionButton.disabled=false;}
+      loadingEl?.classList.add('d-none');
+      if(statusEl){statusEl.textContent='';}
       returnFocus?.focus();
       returnFocus=null;
     };
@@ -105,9 +111,14 @@
       const formId=approved.getAttribute('data-confirm-form');
       const targetForm=formId?document.getElementById(formId):approved.tagName==='FORM'?approved:approved.closest('form');
       const action=getConfirmOptions(approved).url;
-      closeModal();
+      if(targetForm&&!targetForm.reportValidity()){closeModal();pending=null;return;}
+      modal.setAttribute('aria-busy','true');
+      actionButton.disabled=true;
+      loadingEl?.classList.remove('d-none');
+      if(statusEl){statusEl.textContent='Processando ação. Aguarde.';}
       if(targetForm){targetForm.dataset.ppConfirmApproved='1';targetForm.requestSubmit();pending=null;return;}
-      if(action){window.location.assign(action);}
+      if(action){window.location.assign(action);return;}
+      closeModal();
       pending=null;
     });
   }

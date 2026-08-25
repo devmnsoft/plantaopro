@@ -1,0 +1,100 @@
+/* PlantãoPro v2.01.0 — acabamento tela a tela sobre o Design System 2.0. */
+:root {
+  --pp-page-max: 100rem;
+  --pp-control-height: 2.75rem;
+  --pp-row-height: 3.5rem;
+  --pp-section-gap: clamp(1rem, 1.8vw, 1.5rem);
+}
+
+/* Ritmo consistente para telas legadas e novas, sem criar outro shell. */
+.pp-content-container { width: min(100%, var(--pp-page-max)); }
+.pp-page, .container.py-3, main > .container { min-width: 0; }
+.pp-page { display: grid; gap: var(--pp-section-gap); }
+.pp-page > :where(h1, h2, p), .container.py-3 > :where(h1, h2) { margin-block: 0; }
+.pp-section, .pp-card, .card-body { min-width: 0; }
+.card-header { padding: 1rem 1.25rem; color: var(--pp-navy-900); background: #f7fafb; border-bottom-color: var(--pp-line); font-weight: 750; }
+.card-body { padding: clamp(1rem, 1.8vw, 1.5rem); }
+.pp-section-heading, .pp-section-header { display: flex; align-items: start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.pp-section-heading h2, .pp-section-header h2 { margin: 0; color: var(--pp-navy-900); font-size: clamp(1.1rem, 2vw, 1.35rem); letter-spacing: -.02em; }
+.pp-section-heading p, .pp-section-header p { margin: .3rem 0 0; color: var(--pp-text-muted); }
+
+/* Filtros permanecem legíveis e as ações nunca escapam da viewport. */
+.pp-toolbar, .pp-filter-bar, .filter-bar, .filters-panel form {
+  display: flex; align-items: end; flex-wrap: wrap; gap: .85rem; padding: 1rem;
+  background: #f8fafb; border: 1px solid var(--pp-line); border-radius: var(--pp-radius-lg);
+}
+.pp-toolbar > :where(.pp-form-field, .form-group), .pp-filter-bar > :where(.pp-form-field, .form-group) { flex: 1 1 13rem; min-width: 0; }
+.pp-form-field label, .form-label { margin-bottom: .4rem; color: #40596a; font-size: .82rem; font-weight: 720; }
+.pp-form-field :where(input, select, textarea), .pp-form-control { width: 100%; min-height: var(--pp-control-height); }
+.pp-card-actions, .pp-hero-actions, .action-bar, .modal-footer { display: flex; flex-wrap: wrap; gap: .65rem; }
+
+/* Tabelas: superfície única, cabeçalho fixo, ação previsível e scroll sinalizado. */
+.table-responsive { position: relative; max-width: 100%; overflow: auto; scrollbar-color: #9db5c0 #edf3f5; }
+.table-responsive:after { position: sticky; right: 0; display: block; width: 100%; height: 1px; content: ""; }
+:where(.table, .pp-data-table) { width: 100%; margin: 0; border-collapse: separate; border-spacing: 0; }
+:where(.table, .pp-data-table) thead th { position: sticky; top: 0; z-index: 1; padding: .8rem 1rem; color: #486170; background: #f2f6f8; border-bottom: 1px solid #cddce3; font-size: .72rem; font-weight: 780; letter-spacing: .055em; text-transform: uppercase; white-space: nowrap; }
+:where(.table, .pp-data-table) tbody :where(td, th) { min-height: var(--pp-row-height); padding: .9rem 1rem; border-bottom: 1px solid #e6edf0; vertical-align: middle; }
+:where(.table, .pp-data-table) tbody tr:last-child > * { border-bottom: 0; }
+:where(.table, .pp-data-table) td:last-child:has(.btn) { text-align: end; white-space: nowrap; }
+:where(.table, .pp-data-table) td:last-child .btn { min-width: 2.4rem; }
+.pagination { flex-wrap: wrap; gap: .25rem; }
+.pagination .page-link { border-radius: .55rem !important; }
+
+/* Estados operacionais compartilham hierarquia, iconografia e tom profissional. */
+.empty-state, .pp-empty-state, .pp-inline-empty, .pp-future-error-state, .pp-access-notice {
+  max-width: 100%; border-radius: var(--pp-radius-lg);
+}
+.empty-state, .pp-empty-state { display: grid; justify-items: center; gap: .5rem; }
+.empty-state p, .pp-empty-state p { max-width: 58ch; }
+.empty-state-icon, .pp-icon-surface { display: inline-grid; width: 3.25rem; height: 3.25rem; place-items: center; color: var(--pp-teal-600); background: #e9f6f6; border-radius: 1rem; font-size: 1.35rem; }
+.pp-inline-empty { display: flex; align-items: start; gap: .85rem; padding: 1rem; color: var(--pp-text-muted); background: #f8fafb; border: 1px dashed #bfd0d8; }
+.pp-inline-empty p { margin: .2rem 0 0; }
+.pp-access-notice { padding: 1rem 1.1rem; border-left-width: 4px; }
+[aria-busy="true"] .btn, button.is-processing { pointer-events: none; }
+
+/* Billing, planos e white label recebem linguagem comercial sem inventar conteúdo. */
+.pp-plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+.pp-plan-card { position: relative; display: flex; flex-direction: column; gap: 1rem; padding: clamp(1.15rem, 2vw, 1.6rem); overflow: hidden; background: #fff; border: 1px solid var(--pp-line); border-radius: var(--pp-radius-xl); box-shadow: var(--pp-shadow-sm); }
+.pp-plan-card[data-active="true"] { border-color: #9dcdd0; box-shadow: inset 0 3px var(--pp-teal-500), var(--pp-shadow-sm); }
+.pp-plan-card__heading { display: flex; align-items: start; justify-content: space-between; gap: .75rem; }
+.pp-plan-card__heading h3 { margin: .25rem 0 0; color: var(--pp-navy-900); }
+.pp-plan-price { color: var(--pp-navy-900); font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; letter-spacing: -.04em; }
+.pp-plan-price small { color: var(--pp-text-muted); font-size: .8rem; font-weight: 600; letter-spacing: 0; }
+.pp-feature-list { display: grid; gap: .65rem; margin: 0; padding: 0; list-style: none; }
+.pp-feature-list li { display: flex; gap: .55rem; color: #425c6b; }
+.pp-feature-list li:before { content: "✓"; color: var(--pp-success); font-weight: 800; }
+.pp-plan-card .pp-card-actions { margin-top: auto; }
+.pp-subscription-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(16rem, .8fr); gap: 1rem; align-items: start; }
+.pp-subscription-main { display: grid; gap: 1rem; min-width: 0; }
+.pp-subscription-side { position: sticky; top: calc(var(--pp-topbar-height) + 1rem); }
+
+/* Diálogos não parecem cards genéricos e preservam foco/feedback. */
+.pp-confirm-modal { position: fixed; inset: 50% auto auto 50%; width: min(34rem, calc(100vw - 2rem)); padding: 0; overflow: hidden; transform: translate(-50%, -50%); background: #fff; border: 1px solid var(--pp-line); border-radius: var(--pp-radius-xl); box-shadow: 0 28px 80px rgb(7 24 39 / 28%); z-index: var(--pp-z-overlay); }
+.pp-confirm-modal .modal-header, .pp-confirm-modal .modal-body, .pp-confirm-modal .modal-footer { padding: 1.15rem 1.25rem; }
+.pp-confirm-heading { display: flex; align-items: center; gap: .8rem; }
+.pp-confirm-icon { display: inline-grid; width: 2.75rem; height: 2.75rem; flex: 0 0 auto; place-items: center; color: var(--pp-warning); background: #fff5dc; border-radius: .8rem; }
+.pp-confirm-modal-danger .pp-confirm-icon { color: var(--pp-danger); background: #fff0f1; }
+.pp-confirm-kicker { color: var(--pp-text-muted); font-size: .7rem; font-weight: 780; letter-spacing: .06em; text-transform: uppercase; }
+
+@media (max-width: 1023.98px) {
+  .pp-subscription-layout { grid-template-columns: 1fr; }
+  .pp-subscription-side { position: static; }
+}
+@media (max-width: 767.98px) {
+  .pp-section-heading, .pp-section-header { flex-direction: column; }
+  .pp-toolbar, .pp-filter-bar, .filter-bar { align-items: stretch; }
+  .pp-toolbar > .btn, .pp-filter-bar > .btn { flex: 1 1 9rem; }
+  .table-responsive { border-radius: .9rem; }
+  :where(.table, .pp-data-table) { min-width: 42rem; }
+  :where(.table, .pp-data-table)[data-mobile-cards] { min-width: 0; }
+  .pp-card-actions > .btn, .pp-hero-actions > .btn { flex: 1 1 9rem; justify-content: center; }
+  .modal-footer > .btn { flex: 1 1 8rem; }
+}
+@media (max-width: 389.98px) {
+  .pp-toolbar, .pp-filter-bar, .card-body { padding: .85rem; }
+  .pp-plan-card { padding: 1rem; }
+  .pp-confirm-modal { width: calc(100vw - 1rem); }
+  .pp-confirm-modal .modal-header, .pp-confirm-modal .modal-body, .pp-confirm-modal .modal-footer { padding: 1rem; }
+}
+@media (min-width: 1920px) { .pp-content-container { padding-inline: 3rem; } }
+@media (forced-colors: active) { .pp-plan-card[data-active="true"], .pp-access-notice { border-width: 2px; } }

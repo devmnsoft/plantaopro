@@ -1,3 +1,24 @@
 @model PlantaoPro.Web.Models.AssinaturaSaasViewModel
 @{ ViewData["Title"] = "Alterar plano"; }
-<div class="container py-3"><h1 class="h3">Alterar plano da assinatura</h1><div class="card"><div class="card-body"><p>Cliente: <strong>@Model.ClienteNome</strong></p><p>Plano atual: <strong>@Model.PlanoNome</strong></p><form method="post" data-confirm="true" data-confirm-message="Confirmar alteração de plano?">@Html.AntiForgeryToken()<div class="mb-3"><label class="form-label" for="planoId">Novo PlanoId</label><input class="form-control" id="planoId" name="planoId" /></div><div class="mb-3"><label class="form-label" for="justificativa">Justificativa</label><textarea class="form-control" id="justificativa" name="justificativa" required></textarea></div><button class="btn btn-primary" type="submit">Alterar plano</button> <a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Voltar</a></form></div></div></div>
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy">
+            <span class="pp-eyebrow">Gestão contratual</span>
+            <h1>Alterar plano da assinatura</h1>
+            <p>Revise o contexto do cliente e registre uma justificativa auditável antes de confirmar.</p>
+        </div>
+        <div class="pp-hero-actions"><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Voltar aos detalhes</a></div>
+    </header>
+    <section class="pp-card" aria-labelledby="change-plan-title">
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Assinatura atual</span><h2 id="change-plan-title">@Model.ClienteNome</h2><p>Plano atual: <strong>@Model.PlanoNome</strong></p></div></div>
+        <form method="post" data-confirm="true" data-confirm-title="Confirmar alteração de plano" data-confirm-message="A alteração será registrada no histórico contratual. Deseja continuar?" data-confirm-type="warning">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="row g-3">
+                <div class="col-md-5"><label class="form-label" for="planoId">Identificador do novo plano</label><input class="form-control" id="planoId" name="planoId" required aria-describedby="plan-help" /><small class="form-text text-muted" id="plan-help">Informe um plano existente no catálogo comercial.</small></div>
+                <div class="col-md-7"><label class="form-label" for="justificativa">Justificativa da alteração</label><textarea class="form-control" id="justificativa" name="justificativa" rows="3" required maxlength="500"></textarea></div>
+            </div>
+            <div class="pp-card-actions mt-4"><button class="btn btn-primary" type="submit"><app-icon name="Check" size="18" /> Confirmar alteração</button><a class="btn btn-outline-secondary" asp-action="Details" asp-route-id="@Model.Id">Cancelar</a></div>
+        </form>
+    </section>
+</div>

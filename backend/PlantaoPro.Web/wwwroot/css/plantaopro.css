@@ -26,3 +26,5 @@
 
 /* v1.96.1: bridge to the calm-futuristic semantic layer. */
 .pp-body { --pp-app-canvas: var(--fc-surface-solid, #f8fbfc); }
+/* v1.96.2: ponte única entre tokens legados e a camada visual clean. */
+.pp-body { --pp-app-canvas: var(--fc-canvas, #f3f7f8); --pp-surface: var(--fc-surface-raised, #fff); --pp-muted: var(--fc-muted, #60748a); --pp-border: var(--fc-border, rgba(39, 80, 108, .15)); --pp-shadow: var(--fc-shadow-sm, 0 8px 24px rgba(13, 41, 62, .06)); }

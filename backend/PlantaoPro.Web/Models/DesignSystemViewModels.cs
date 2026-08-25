@@ -1,5 +1,28 @@
 namespace PlantaoPro.Web.Models;
 
+public sealed record CoverageCardViewModel(
+    string Label,
+    long Value,
+    string Context,
+    string Tone = "neutral",
+    string? DestinationController = null,
+    string? DestinationAction = null);
+
+public sealed record CoverageHeatmapItemViewModel(
+    string Label,
+    long Value,
+    string Context,
+    string Tone);
+
+public sealed record OperationalTimelineItemViewModel(
+    string Title,
+    string Context,
+    DateTime OccursAt,
+    string Status,
+    string DestinationController,
+    string DestinationAction,
+    Guid DestinationId);
+
 public sealed class KpiCardViewModel
 {
     public KpiCardViewModel() { }

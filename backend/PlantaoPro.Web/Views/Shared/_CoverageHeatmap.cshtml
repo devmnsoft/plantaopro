@@ -1,0 +1,11 @@
+@model IEnumerable<CoverageHeatmapItemViewModel>
+<div class="coverage-heatmap" role="list" aria-label="Mapa de sinais operacionais">
+    @foreach (var item in Model)
+    {
+        <div class="coverage-heatmap__cell coverage-heatmap__cell--@item.Tone" role="listitem">
+            <span>@item.Label</span>
+            <strong>@item.Value</strong>
+            <small>@item.Context</small>
+        </div>
+    }
+</div>

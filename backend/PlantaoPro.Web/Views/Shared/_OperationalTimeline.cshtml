@@ -1,0 +1,11 @@
+@model IEnumerable<OperationalTimelineItemViewModel>
+<div class="operational-timeline">
+    @foreach (var item in Model.OrderBy(item => item.OccursAt))
+    {
+        <a asp-controller="@item.DestinationController" asp-action="@item.DestinationAction" asp-route-id="@item.DestinationId" class="operational-timeline__item">
+            <time datetime="@item.OccursAt.ToString("O")">@item.OccursAt.ToString("dd MMM · HH:mm")</time>
+            <span><strong>@item.Title</strong><small>@item.Context</small></span>
+            <partial name="_ShiftStatusBadge" model="item.Status" />
+        </a>
+    }
+</div>

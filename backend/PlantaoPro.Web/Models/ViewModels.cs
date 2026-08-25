@@ -234,6 +234,26 @@ public record DashboardChartItem(string Label, decimal Valor);
     }
 
     public record StatusActionViewModel(Guid Id, [Required] string Justificativa);
+    public sealed class SubstituicaoEscalaViewModel : IValidatableObject
+    {
+        [NonEmptyGuid(ErrorMessage = "Escala inválida.")] public Guid Id { get; set; }
+        [NonEmptyGuid(ErrorMessage = "Selecione um profissional disponível.")] public Guid NovoMedicoId { get; set; }
+        [Required(ErrorMessage = "Selecione o motivo da substituição.")]
+        [RegularExpression("^(INDISPONIBILIDADE|CONFLITO|AFASTAMENTO|SOLICITACAO_PROFISSIONAL|OUTRO)$", ErrorMessage = "Selecione um motivo válido.")]
+        public string Motivo { get; set; } = string.Empty;
+        [StringLength(500, MinimumLength = 5, ErrorMessage = "O detalhamento deve ter entre 5 e 500 caracteres.")]
+        public string? Detalhes { get; set; }
+        public EscalaDetailsDto? Escala { get; set; }
+        public IReadOnlyList<MedicoDto> ProfissionaisOptions { get; set; } = Array.Empty<MedicoDto>();
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Motivo == "OUTRO" && string.IsNullOrWhiteSpace(Detalhes))
+                yield return new ValidationResult("Descreva o motivo quando selecionar Outro.", new[] { nameof(Detalhes) });
+        }
+
+        public string Justificativa => $"{Motivo.Replace('_', ' ')}{(string.IsNullOrWhiteSpace(Detalhes) ? string.Empty : $": {Detalhes.Trim()}")}";
+    }
     public record AcceptPlantaoWebRequest(Guid MedicoId);
     public record PageHeaderViewModel(
         string Title,

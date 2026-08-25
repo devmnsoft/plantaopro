@@ -28,15 +28,40 @@ public class EscalasController : BaseWebController
     [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Cancelar(Guid id, string justificativa) => await PostWithRequiredReason($"api/escalas/{id}/cancelar", justificativa, "Escala cancelada.", id);
     [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> MarcarRealizado(Guid id) => await PostStatus($"api/escalas/{id}/marcar-realizado", new { justificativa = "Escala concluída" }, "Escala marcada como realizada.", id);
 
-    [HttpGet] public IActionResult Substituir(Guid id) => View(model: new StatusActionViewModel(id, string.Empty));
-    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Substituir(Guid id, Guid novoMedicoId, string justificativa)
+    [HttpGet] public async Task<IActionResult> Substituir(Guid id)
     {
-        if (novoMedicoId == Guid.Empty || string.IsNullOrWhiteSpace(justificativa))
-        {
-            ModelState.AddModelError(string.Empty, "Informe um médico real e o motivo da substituição.");
-            return View(new StatusActionViewModel(id, justificativa ?? string.Empty));
-        }
-        return await PostStatus($"api/escalas/{id}/substituir", new { novoMedicoId, justificativa = justificativa.Trim() }, "Escala substituída.", id);
+        var model = await BuildSubstituicao(new SubstituicaoEscalaViewModel { Id = id });
+        if (model.Escala is null) return RedirectToAction(nameof(Details), new { id });
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken] public async Task<IActionResult> Substituir(SubstituicaoEscalaViewModel model)
+    {
+        model = await BuildSubstituicao(model);
+        if (model.Escala is null) ModelState.AddModelError(string.Empty, "A escala não existe ou não está disponível para o seu perfil.");
+        if (model.Escala is not null && !string.Equals(model.Escala.Status, "confirmado", StringComparison.OrdinalIgnoreCase))
+            ModelState.AddModelError(string.Empty, "Somente escalas confirmadas permitem substituição.");
+        if (!model.ProfissionaisOptions.Any(x => x.Id == model.NovoMedicoId))
+            ModelState.AddModelError(nameof(model.NovoMedicoId), "Selecione um profissional ativo, do tenant e habilitado para esta especialidade.");
+        if (!ModelState.IsValid) return View(model);
+        return await PostStatus($"api/escalas/{model.Id}/substituir", new { novoMedicoId = model.NovoMedicoId, justificativa = model.Justificativa }, "Escala substituída.", model.Id);
+    }
+
+    private async Task<SubstituicaoEscalaViewModel> BuildSubstituicao(SubstituicaoEscalaViewModel model)
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return model;
+        var (escala, _, _) = await ReadApiResponse<EscalaDetailsDto>(client, $"api/escalas/{model.Id}");
+        model.Escala = escala;
+        if (escala is null) return model;
+        var (plantao, _, _) = await ReadApiResponse<PlantaoDetailsDto>(client, $"api/plantoes/{escala.PlantaoId}");
+        var (medicos, _, _) = await ReadApiListResponseAsync<MedicoDto>(client, "api/medicos");
+        model.ProfissionaisOptions = medicos
+            .Where(x => string.Equals(x.RegStatus, "A", StringComparison.OrdinalIgnoreCase)
+                && x.Id != escala.MedicoId
+                && plantao is not null && x.EspecialidadeId == plantao.EspecialidadeId)
+            .OrderBy(x => x.Nome).ToArray();
+        return model;
     }
 
     private Task<IActionResult> PostWithRequiredReason(string endpoint, string justificativa, string success, Guid id)

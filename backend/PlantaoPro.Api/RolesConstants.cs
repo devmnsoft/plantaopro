@@ -2,6 +2,15 @@ namespace PlantaoPro.Api;
 
 public static class RolesConstants
 {
+    // Canonical B2B names. Legacy values remain the persisted role codes to keep upgrades compatible.
+    public const string PlatformAdmin = AdministradorGlobal;
+    public const string TenantAdmin = AdministradorCliente;
+    public const string UnitManager = Coordenador;
+    public const string ScheduleManager = Coordenacao;
+    public const string Professional = Medico;
+    public const string FinanceManager = Financeiro;
+    public const string AuditorRole = Auditor;
+    public const string Support = Suporte;
     public const string AdministradorGlobal = "ADMINISTRADOR_GLOBAL";
     public const string Administrador = "ADMINISTRADOR";
     public const string AdministradorCliente = "ADMINISTRADOR_CLIENTE";

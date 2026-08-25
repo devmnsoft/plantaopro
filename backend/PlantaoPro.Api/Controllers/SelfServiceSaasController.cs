@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Security;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -142,6 +143,7 @@ public sealed class WhiteLabelController : ControllerBase
     }
 
     [HttpGet("tenant/{tenantId:guid}")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
     public async Task<IActionResult> Tenant(Guid tenantId)
     {
         var result = await _service.ObterWhiteLabelAsync(tenantId);
@@ -149,6 +151,7 @@ public sealed class WhiteLabelController : ControllerBase
     }
 
     [HttpPut("tenant/{tenantId:guid}")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Salvar(Guid tenantId, [FromBody] WhiteLabelConfiguracaoDto request)
     {
         try
@@ -164,6 +167,7 @@ public sealed class WhiteLabelController : ControllerBase
     }
 
     [HttpPost("tenant/{tenantId:guid}/logo")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Logo(Guid tenantId, [FromBody] AssetUploadRequest request)
     {
         var validacao = ValidarAsset(request);
@@ -175,6 +179,7 @@ public sealed class WhiteLabelController : ControllerBase
     }
 
     [HttpPost("tenant/{tenantId:guid}/favicon")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Favicon(Guid tenantId, [FromBody] AssetUploadRequest request)
     {
         var validacao = ValidarAsset(request);
@@ -186,6 +191,7 @@ public sealed class WhiteLabelController : ControllerBase
     }
 
     [HttpPost("tenant/{tenantId:guid}/restaurar-padrao")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Restaurar(Guid tenantId)
     {
         var result = await _service.SalvarWhiteLabelAsync(tenantId, new WhiteLabelConfiguracaoDto { TenantId = tenantId }, HttpContext.Connection.RemoteIpAddress?.ToString());
@@ -202,10 +208,8 @@ public sealed class WhiteLabelController : ControllerBase
 
     private static ApiResponse<string> ValidarAsset(AssetUploadRequest request)
     {
-        if (request.TamanhoBytes <= 0 || request.TamanhoBytes > 2 * 1024 * 1024) return ApiResponse<string>.Fail("Arquivo deve ter até 2MB.", 400);
-        var contentType = request.ContentType ?? string.Empty;
-        if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)) return ApiResponse<string>.Fail("Apenas imagens são permitidas.", 400);
-        if (string.IsNullOrWhiteSpace(request.Url)) return ApiResponse<string>.Fail("URL do asset é obrigatória.", 400);
+        var error = WhiteLabelSecurityValidator.ValidateAsset(request.ContentType, request.TamanhoBytes, request.Url);
+        if (error is not null) return ApiResponse<string>.Fail(error, 400);
         return ApiResponse<string>.Ok("ok");
     }
 }

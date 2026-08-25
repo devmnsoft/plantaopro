@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Security;
 
 namespace PlantaoPro.Api.Data;
 
@@ -23,6 +24,9 @@ public sealed class TenantContextService
         try
         {
             var http = _httpContextAccessor.HttpContext;
+            var tenantClaim = LerGuidClaim("tenant_id");
+            if (tenantRota.HasValue && !UsuarioEhAdminGlobal() && tenantClaim != tenantRota)
+                return ApiResponse<TenantContextDto>.Fail("Acesso negado: o tenant solicitado não pertence ao usuário autenticado.", 403);
             var tenantId = tenantRota ?? LerGuidClaim("tenant_id");
             var clienteId = LerGuidClaim("cliente_id");
             var host = http?.Request.Host.Host ?? string.Empty;
@@ -271,7 +275,7 @@ values(gen_random_uuid(),@solicitacaoId,@clienteId,@assinaturaId,@Valor,'ABERTO'
         var ctx = await _tenantContext.ObterAtualAsync(tenantId);
         if (!ctx.Success || ctx.Data?.TenantId is null) return ApiResponse<WhiteLabelConfiguracaoDto>.Fail(ctx.Message, ctx.StatusCode);
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var wl = await cn.QueryFirstOrDefaultAsync<WhiteLabelConfiguracaoDto>(@"select tenant_id as ""TenantId"", coalesce(nome_plataforma,'PlantãoPro') as ""NomePlataforma"", coalesce(cliente_nome,'') as ""ClienteNome"", coalesce(slogan,'') as ""Slogan"", coalesce(logo_url,'') as ""LogoUrl"", coalesce(logo_reduzida_url,'') as ""LogoReduzidaUrl"", coalesce(favicon_url,'') as ""FaviconUrl"", coalesce(cor_primaria,'#0d6efd') as ""CorPrimaria"", coalesce(cor_secundaria,'#20c997') as ""CorSecundaria"", coalesce(cor_fundo,'#f8fafc') as ""CorFundo"", coalesce(cor_menu,'#0f172a') as ""CorMenu"", coalesce(tema,'claro') as ""Tema"", coalesce(email_remetente,'') as ""EmailRemetente"", coalesce(texto_boas_vindas,'') as ""TextoBoasVindas"", coalesce(texto_rodape,'') as ""TextoRodape"", coalesce(login_banner_url,'') as ""LoginBannerUrl"" from plantaopro.tenant_white_label where tenant_id=@tenantId and reg_status='A' limit 1", new { tenantId = ctx.Data.TenantId.Value });
+        var wl = await cn.QueryFirstOrDefaultAsync<WhiteLabelConfiguracaoDto>(@"select tenant_id as ""TenantId"", coalesce(nome_plataforma,'PlantãoPro') as ""NomePlataforma"", coalesce(cliente_nome,'') as ""ClienteNome"", coalesce(slogan,'') as ""Slogan"", coalesce(logo_url,'') as ""LogoUrl"", coalesce(logo_reduzida_url,'') as ""LogoReduzidaUrl"", coalesce(favicon_url,'') as ""FaviconUrl"", coalesce(cor_primaria,'#0757d9') as ""CorPrimaria"", coalesce(cor_secundaria,'#20c997') as ""CorSecundaria"", coalesce(cor_fundo,'#f8fafc') as ""CorFundo"", coalesce(cor_menu,'#0f172a') as ""CorMenu"", coalesce(tema,'claro') as ""Tema"", coalesce(email_remetente,'') as ""EmailRemetente"", coalesce(texto_boas_vindas,'') as ""TextoBoasVindas"", coalesce(texto_rodape,'') as ""TextoRodape"", coalesce(login_banner_url,'') as ""LoginBannerUrl"" from plantaopro.tenant_white_label where tenant_id=@tenantId and reg_status='A' limit 1", new { tenantId = ctx.Data.TenantId.Value });
         return ApiResponse<WhiteLabelConfiguracaoDto>.Ok(wl ?? new WhiteLabelConfiguracaoDto { TenantId = ctx.Data.TenantId.Value, ClienteNome = ctx.Data.TenantNome });
     }
 
@@ -279,7 +283,10 @@ values(gen_random_uuid(),@solicitacaoId,@clienteId,@assinaturaId,@Valor,'ABERTO'
     {
         try
         {
-            if (!CorValida(request.CorPrimaria) || !CorValida(request.CorSecundaria) || !CorValida(request.CorFundo) || !CorValida(request.CorMenu)) return ApiResponse<WhiteLabelConfiguracaoDto>.Fail("Cores devem estar no formato hexadecimal #RRGGBB.", 400);
+            var ctx = await _tenantContext.ObterAtualAsync(tenantId);
+            if (!ctx.Success || ctx.Data?.TenantId != tenantId) return ApiResponse<WhiteLabelConfiguracaoDto>.Fail(ctx.Message, ctx.StatusCode);
+            var validation = WhiteLabelSecurityValidator.Validate(request);
+            if (validation is not null) return ApiResponse<WhiteLabelConfiguracaoDto>.Fail(validation, 400);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.ExecuteAsync(@"insert into plantaopro.tenant_white_label(id,tenant_id,nome_plataforma,cliente_nome,slogan,logo_url,logo_reduzida_url,favicon_url,cor_primaria,cor_secundaria,cor_fundo,cor_menu,tema,email_remetente,texto_boas_vindas,texto_rodape,login_banner_url,reg_date,reg_status)
 values(gen_random_uuid(),@tenantId,@NomePlataforma,@ClienteNome,@Slogan,@LogoUrl,@LogoReduzidaUrl,@FaviconUrl,@CorPrimaria,@CorSecundaria,@CorFundo,@CorMenu,@Tema,@EmailRemetente,@TextoBoasVindas,@TextoRodape,@LoginBannerUrl,now(),'A')

@@ -110,7 +110,7 @@ public sealed class WhiteLabelConfiguracaoDto
     public string LogoUrl { get; set; } = string.Empty;
     public string LogoReduzidaUrl { get; set; } = string.Empty;
     public string FaviconUrl { get; set; } = string.Empty;
-    public string CorPrimaria { get; set; } = "#0d6efd";
+    public string CorPrimaria { get; set; } = "#0757d9";
     public string CorSecundaria { get; set; } = "#20c997";
     public string CorFundo { get; set; } = "#f8fafc";
     public string CorMenu { get; set; } = "#0f172a";

@@ -18,13 +18,13 @@
 <div class="pp-page pp-dashboard-workspace">
     <header class="pp-page-hero" aria-labelledby="dashboard-title">
         <div class="pp-page-hero__copy">
-            <span class="pp-eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> @perfil · @agora.ToString("dd 'de' MMMM")</span>
+            <span class="pp-eyebrow"><app-icon name="Dashboard" size="17" /> @perfil · @agora.ToString("dd 'de' MMMM")</span>
             <h1 id="dashboard-title">@(string.IsNullOrWhiteSpace(nome) ? "Visão operacional do dia" : $"Olá, {nome}. Veja sua operação hoje.")</h1>
             <p>Priorize coberturas, agenda e financeiro com indicadores retornados pela operação.</p>
         </div>
         <div class="pp-hero-actions">
-            <a asp-controller="MeuDia" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-list-check" aria-hidden="true"></i> Abrir Meu Dia</a>
-            <a asp-controller="Agenda" asp-action="Index" class="btn btn-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> Ver agenda</a>
+            <a asp-controller="MeuDia" asp-action="Index" class="btn btn-outline-primary"><app-icon name="Check" size="18" /> Abrir Meu Dia</a>
+            <a asp-controller="Agenda" asp-action="Index" class="btn btn-primary"><app-icon name="Calendar" size="18" /> Ver agenda</a>
         </div>
     </header>
 
@@ -41,7 +41,7 @@
             <div><label for="hospital" class="form-label">Hospital</label><input id="hospital" name="hospital" value="@Context.Request.Query["hospital"]" class="form-control" placeholder="Nome do hospital" /></div>
             <div><label for="especialidade" class="form-label">Especialidade</label><input id="especialidade" name="especialidade" value="@Context.Request.Query["especialidade"]" class="form-control" placeholder="Nome da especialidade" /></div>
         </div>
-        <div class="pp-filter-bar__actions"><button type="submit" class="btn btn-primary"><i class="bi bi-funnel" aria-hidden="true"></i> Aplicar filtros</button></div>
+        <div class="pp-filter-bar__actions"><button type="submit" class="btn btn-primary"><app-icon name="Filter" size="18" /> Aplicar filtros</button></div>
     </form>
 
     <section class="pp-section" aria-labelledby="resumo-title">
@@ -84,11 +84,11 @@
     <section class="pp-section" aria-labelledby="atalhos-title">
         <div class="pp-section-heading"><div><h2 id="atalhos-title">Operação médica</h2><p>Ações disponíveis nos módulos reais da jornada.</p></div></div>
         <div class="pp-action-grid">
-            @if (User.IsAdmin()) { <a class="pp-action-card" asp-controller="AdminSaas" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-building-gear" aria-hidden="true"></i></span><h3>Admin SaaS</h3><p>Revise tenants, assinatura e saúde administrativa.</p><span class="pp-action-card__meta">Abrir administração <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
-            @if (User.IsCoordenacao() || User.IsHospital() || User.IsAdmin()) { <a class="pp-action-card" asp-controller="Plantoes" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span><h3>Cobertura e escalas</h3><p>Priorize vagas, convites, substituições e fechamentos.</p><span class="pp-action-card__meta">Abrir plantões <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
-            @if (User.IsMedico() || (!User.IsAdmin() && !User.IsCoordenacao() && !User.IsHospital() && !User.IsFinanceiro())) { <a class="pp-action-card" asp-controller="Saude360" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-heart-pulse" aria-hidden="true"></i></span><h3>Jornada assistencial</h3><p>Acesse agenda, triagem, consulta e seus próximos passos.</p><span class="pp-action-card__meta">Abrir Saúde 360 <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
-            @if (User.IsFinanceiro() || User.IsAdmin() || User.IsHospital()) { <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-wallet2" aria-hidden="true"></i></span><h3>Financeiro</h3><p>Revise faturamento, divergências, fechamentos e pagamentos.</p><span class="pp-action-card__meta">Abrir financeiro <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a> }
-            <a class="pp-action-card" asp-controller="MinhaCentral" asp-action="Index"><span class="pp-action-card__icon"><i class="bi bi-kanban" aria-hidden="true"></i></span><h3>Minha Central</h3><p>Priorize somente os itens reais atribuídos ao seu perfil.</p><span class="pp-action-card__meta">Ver pendências <i class="bi bi-arrow-right" aria-hidden="true"></i></span></a>
+            @if (User.IsAdmin()) { <a class="pp-action-card" asp-controller="AdminSaas" asp-action="Index"><span class="pp-action-card__icon"><app-icon name="Settings" size="22" /></span><h3>Admin SaaS</h3><p>Revise tenants, assinatura e saúde administrativa.</p><span class="pp-action-card__meta">Abrir administração <app-icon name="ChevronRight" size="17" /></span></a> }
+            @if (User.IsCoordenacao() || User.IsHospital() || User.IsAdmin()) { <a class="pp-action-card" asp-controller="Plantoes" asp-action="Index"><span class="pp-action-card__icon"><app-icon name="Schedule" size="22" /></span><h3>Cobertura e escalas</h3><p>Priorize vagas, convites, substituições e fechamentos.</p><span class="pp-action-card__meta">Abrir plantões <app-icon name="ChevronRight" size="17" /></span></a> }
+            @if (User.IsMedico() || (!User.IsAdmin() && !User.IsCoordenacao() && !User.IsHospital() && !User.IsFinanceiro())) { <a class="pp-action-card" asp-controller="Saude360" asp-action="Index"><span class="pp-action-card__icon"><app-icon name="Triage" size="22" /></span><h3>Jornada assistencial</h3><p>Acesse agenda, triagem, consulta e seus próximos passos.</p><span class="pp-action-card__meta">Abrir Saúde 360 <app-icon name="ChevronRight" size="17" /></span></a> }
+            @if (User.IsFinanceiro() || User.IsAdmin() || User.IsHospital()) { <a class="pp-action-card" asp-controller="Financeiro" asp-action="Index"><span class="pp-action-card__icon"><app-icon name="Finance" size="22" /></span><h3>Financeiro</h3><p>Revise faturamento, divergências, fechamentos e pagamentos.</p><span class="pp-action-card__meta">Abrir financeiro <app-icon name="ChevronRight" size="17" /></span></a> }
+            <a class="pp-action-card" asp-controller="MinhaCentral" asp-action="Index"><span class="pp-action-card__icon"><app-icon name="Dashboard" size="22" /></span><h3>Minha Central</h3><p>Priorize somente os itens reais atribuídos ao seu perfil.</p><span class="pp-action-card__meta">Ver pendências <app-icon name="ChevronRight" size="17" /></span></a>
         </div>
     </section>
 

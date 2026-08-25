@@ -14,6 +14,6 @@ public static class ConnectionStringStartupValidator
 
         var allowLegacy = configuration.GetValue<bool>("Database:AllowLegacyPostgresDatabase");
         if (environment.IsDevelopment() && string.Equals(builder.Database, "postgres", StringComparison.OrdinalIgnoreCase) && !allowLegacy)
-            throw new InvalidOperationException("Development deve usar Database=plantaopro. Configure Database:AllowLegacyPostgresDatabase=true apenas para compatibilidade temporária.");
+            throw new InvalidOperationException("Development deve usar Database=postgres. Configure Database:AllowLegacyPostgresDatabase=true apenas para compatibilidade temporária.");
     }
 }

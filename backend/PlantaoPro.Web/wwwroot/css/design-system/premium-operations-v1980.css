@@ -1,0 +1,102 @@
+/* PlantãoPro v1.98.0 — camada operacional premium, calma e responsiva. */
+:root {
+  --pp-canvas: #f2f6f8;
+  --pp-surface: #fff;
+  --pp-surface-soft: #f7fafb;
+  --pp-ink: #10283e;
+  --pp-muted: #607487;
+  --pp-brand: #123f63;
+  --pp-accent: #087e89;
+  --pp-health: #267a59;
+  --pp-line: #d9e4e9;
+  --pp-radius: .875rem;
+  --pp-radius-lg: 1.125rem;
+  --pp-shadow: 0 8px 24px rgb(12 43 66 / .06);
+}
+
+body.pp-body { color: var(--pp-ink); background: var(--pp-canvas); }
+.pp-content { background: radial-gradient(circle at 96% 0, rgb(8 126 137 / .045), transparent 22rem), var(--pp-canvas); }
+.pp-content-container { width: min(100%, 96rem); margin-inline: auto; }
+
+/* Navegação: uma marca, hierarquia estável e alvos confortáveis. */
+.pp-sidebar { border-right: 1px solid rgb(190 218 226 / .16); }
+.sidebar-brand { border-bottom: 1px solid rgb(220 237 241 / .11); }
+.sidebar-logo img { max-width: 9.75rem; }
+.nav-section-title { margin-top: 1rem; color: #a9c1ce; letter-spacing: .09em; }
+.nav-link-app { min-height: 2.65rem; border-radius: .65rem; color: #dce9ee; }
+.nav-link-app app-icon { color: #9fc5cf; }
+.nav-link-app.active { color: #fff; background: rgb(56 171 179 / .16); box-shadow: inset 3px 0 #66c8c9; }
+.nav-link-app.active app-icon { color: #8fdddd; }
+.pp-topbar { min-height: 4.75rem; border-bottom: 1px solid var(--pp-line); }
+.pp-topbar__title { color: var(--pp-ink); letter-spacing: -.025em; }
+.pp-topbar__subtitle { color: var(--pp-muted); }
+
+/* Cabeçalhos, filtros, cards e blocos formam uma mesma linguagem. */
+:where(.pp-page-hero, .pp-profile-focus, .pp-section, .pp-filter-bar, .pp-kpi-card, .pp-action-card, .pp-operational-card, .card, .modal-content) {
+  border: 1px solid var(--pp-line);
+  border-radius: var(--pp-radius-lg);
+  box-shadow: var(--pp-shadow);
+}
+.pp-page-hero { position: relative; overflow: hidden; padding: clamp(1.25rem, 2.4vw, 2rem); }
+.pp-page-hero::after { content: ""; position: absolute; inset: 0 0 auto auto; width: 10rem; height: 10rem; pointer-events: none; background: radial-gradient(circle at top right, rgb(8 126 137 / .1), transparent 68%); }
+.pp-page-hero__copy, .pp-hero-actions { position: relative; z-index: 1; }
+.pp-eyebrow, .pp-section-kicker { color: #176d75; letter-spacing: .055em; }
+.pp-section-heading h2 { color: var(--pp-ink); letter-spacing: -.02em; }
+.pp-section-heading p, .pp-page-hero p { color: var(--pp-muted); }
+.pp-kpi-card { min-height: 8.25rem; padding: 1.15rem; }
+.pp-kpi-card strong { color: var(--pp-ink); font-variant-numeric: tabular-nums; }
+.pp-action-card { min-height: 12rem; padding: 1.2rem; }
+.pp-action-card:focus-visible { transform: translateY(-1px); }
+.pp-profile-focus { border-left: 3px solid var(--pp-accent); }
+
+/* Controles e tabelas de CRUD sem aparência de scaffolding cru. */
+:where(.form-control, .form-select, .btn, .input-group-text) { border-radius: .65rem; }
+:where(.form-control, .form-select):focus { border-color: var(--pp-accent); box-shadow: 0 0 0 3px rgb(8 126 137 / .18); }
+.btn-primary { background: var(--pp-brand); border-color: var(--pp-brand); box-shadow: 0 3px 10px rgb(18 63 99 / .12); }
+.btn-primary:hover { background: #0d3453; border-color: #0d3453; }
+.btn-danger { background: #a83343; border-color: #a83343; }
+.pp-data-table, .table-responsive { border-radius: var(--pp-radius); }
+.table { --bs-table-bg: transparent; color: var(--pp-ink); }
+.table thead th { border-bottom-color: #cbdbe1; color: #486174; font-size: .75rem; letter-spacing: .045em; text-transform: uppercase; }
+.table tbody tr { border-color: #e5edf0; }
+.table tbody tr:hover { background: #f3f8f9; }
+.badge, .pp-status-badge { border-radius: 999px; font-weight: 650; letter-spacing: .01em; }
+.pp-empty-state { min-height: 12rem; border: 1px dashed #bfd0d7; border-radius: var(--pp-radius); background: var(--pp-surface-soft); }
+
+/* Login comercial: composição discreta, sem duplicar a marca. */
+.pp-auth-body { background: #09283f; }
+.pp-auth-body::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: radial-gradient(circle at 15% 10%, rgb(49 151 163 / .18), transparent 30rem), linear-gradient(135deg, transparent 55%, rgb(255 255 255 / .025)); }
+.pp-auth-shell { isolation: isolate; max-width: 70rem; border-radius: 1.4rem; box-shadow: 0 28px 70px rgb(1 17 29 / .25); }
+.pp-auth-brand-panel { background: linear-gradient(155deg, #0b3049, #0b263b); }
+.pp-auth-logo { height: auto; }
+.pp-auth-form-panel { background: #fbfdfd; }
+.pp-auth-card { max-width: 27rem; }
+.pp-error-panel:not(:empty) { padding: .85rem 1rem; border: 1px solid #e6b7bd; border-radius: .7rem; color: #8e2635; background: #fff3f4; }
+
+@media (max-width: 1199.98px) {
+  .pp-topbar__actions > :where(.pp-plan-usage-mini, .tenant-context-badge) { display: none; }
+  .pp-kpi-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767.98px) {
+  .pp-topbar { min-height: 4rem; padding-inline: .75rem; }
+  .pp-topbar__actions { gap: .35rem; }
+  .pp-content { padding-inline: .75rem; }
+  .pp-page-hero { align-items: stretch; }
+  .pp-hero-actions { display: grid; grid-template-columns: 1fr; }
+  .pp-filter-grid { grid-template-columns: 1fr; }
+  .pp-auth-shell { width: min(100% - 1rem, 34rem); border-radius: 1rem; }
+  .pp-auth-brand-panel { padding: 1.25rem; }
+  .pp-auth-benefit-grid, .pp-auth-trust-row { display: none; }
+  .pp-auth-form-panel { padding: 1.25rem; }
+}
+@media (max-width: 479.98px) {
+  .pp-kpi-strip { grid-template-columns: 1fr; }
+  .pp-topbar__actions > :not(#sidebarToggle, .user-menu, [data-notification-menu]) { display: none; }
+  .btn { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
+@media (forced-colors: active) {
+  :where(.pp-page-hero, .pp-section, .pp-kpi-card, .pp-action-card, .nav-link-app.active) { border: 2px solid CanvasText; }
+}

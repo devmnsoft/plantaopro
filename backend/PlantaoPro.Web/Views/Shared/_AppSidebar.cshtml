@@ -55,7 +55,11 @@
         {
             <div class="nav-section-title"><span>Gestão</span></div>
             <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a>
-            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Unit" size="19" /><span>Clientes</span></a>
+            <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a>
+            <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a>
+            <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a>
+            <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a>
+            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
             <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
         }
     </nav>

@@ -36,7 +36,11 @@ public class JwtConfigurationContractTests
         Assert.Contains("Jwt__Key: PLANTAOPRO_CI_JWT_KEY_2026_CHANGE_ME_64_CHARS", Read(".github/workflows/dotnet-ci.yml"));
         Assert.True(File.Exists(Path.Combine(Root(), ".env.example")));
         var envExample = Read(".env.example");
-        Assert.Contains("PLANTAOPRO_JWT_KEY=PLANTAOPRO_LOCAL_DEV_JWT_KEY_2026_CHANGE_ME_64_CHARS", envExample);
+        Assert.Contains("ConnectionStrings__Default=", envExample);
+        Assert.Contains("Jwt__Key=", envExample);
+        Assert.Contains("Jwt__Issuer=", envExample);
+        Assert.Contains("Jwt__Audience=", envExample);
+        Assert.DoesNotContain("PLANTAOPRO_JWT_KEY=", envExample);
         Assert.DoesNotContain("local-dev-jwt-key-change-me-with-32-chars", envExample);
     }
 
@@ -63,6 +67,7 @@ public class JwtConfigurationContractTests
         Assert.DoesNotContain("Username=postgres;" + "Password=", content);
         Assert.DoesNotContain("CHANGE_ME_WITH" + "_32", content);
         Assert.DoesNotContain("\"AllowLegacyPostgresDatabase\": true", content);
+        Assert.DoesNotContain("\"AllowDevelopmentAutoCreate\": true", content);
         Assert.Contains("\"Default\": \"\"", content);
         Assert.Contains("\"Key\": \"\"", content);
     }

@@ -48,8 +48,8 @@ Foram adicionados endpoints reais para hospitais, especialidades, plantões, esc
 ### Configuração segura
 
 - O banco padronizado para desenvolvimento e homologação é `plantaopro`.
-- `appsettings.json` e `appsettings.example.json` usam placeholders (`Password=CHANGE_ME` e `Jwt:Key=CHANGE_ME_WITH_32+_CHARS`).
-- Em desenvolvimento, use `dotnet user-secrets` para sobrescrever `ConnectionStrings:Default` e `Jwt:Key`.
+- O `backend/PlantaoPro.Api/appsettings.json` mantém `ConnectionStrings:Default` e `Jwt:Key` vazios; arquivos de exemplo usam somente placeholders não operacionais.
+- Em desenvolvimento, forneça `ConnectionStrings__Default`, `Jwt__Key`, `Jwt__Issuer` e `Jwt__Audience` por variáveis de ambiente ou os nomes equivalentes via `dotnet user-secrets`.
 - Em produção, use variáveis de ambiente/secret manager. Não versionar senha, token, JWT real, connection string real ou chaves de integrações.
 
 ### Mobile médico MVP

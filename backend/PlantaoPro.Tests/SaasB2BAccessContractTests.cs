@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Authorization;
+using PlantaoPro.Api;
 using PlantaoPro.Api.Controllers;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;

@@ -6,9 +6,11 @@ namespace PlantaoPro.Web.Models
     {
         [Required(ErrorMessage = "Informe o e-mail.")]
         [EmailAddress(ErrorMessage = "E-mail inválido.")]
+        [StringLength(254, ErrorMessage = "O e-mail deve ter no máximo 254 caracteres.")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Informe a senha.")]
+        [StringLength(256, ErrorMessage = "A senha deve ter no máximo 256 caracteres.")]
         public string Senha { get; set; } = string.Empty;
     }
 
@@ -262,10 +264,13 @@ public record DashboardChartItem(string Label, decimal Valor);
     {
         public Guid? Id { get; set; }
         [Required(ErrorMessage = "Informe a razão social.")]
+        [StringLength(160, ErrorMessage = "A razão social deve ter no máximo 160 caracteres.")]
         public string RazaoSocial { get; set; } = string.Empty;
         [Required(ErrorMessage = "Informe o nome fantasia.")]
+        [StringLength(160, ErrorMessage = "O nome fantasia deve ter no máximo 160 caracteres.")]
         public string NomeFantasia { get; set; } = string.Empty;
         [Required(ErrorMessage = "Informe o CNPJ.")]
+        [RegularExpression(@"^\d{2}\.?\d{3}\.?\d{3}/?\d{4}-?\d{2}$", ErrorMessage = "Informe um CNPJ válido com 14 dígitos.")]
         public string Cnpj { get; set; } = string.Empty;
         [Phone(ErrorMessage = "Telefone inválido.")]
         public string Telefone { get; set; } = string.Empty;
@@ -279,6 +284,7 @@ public record DashboardChartItem(string Label, decimal Valor);
         public string Estado { get; set; } = string.Empty;
         public string Responsavel { get; set; } = string.Empty;
         [Required]
+        [RegularExpression("^(A|I)$", ErrorMessage = "Selecione um status válido.")]
         public string RegStatus { get; set; } = "A";
     }
 
@@ -286,10 +292,13 @@ public record DashboardChartItem(string Label, decimal Valor);
     {
         public Guid? Id { get; set; }
         [Required(ErrorMessage = "Informe o nome do médico.")]
+        [StringLength(160, ErrorMessage = "O nome deve ter no máximo 160 caracteres.")]
         public string Nome { get; set; } = string.Empty;
         [Required(ErrorMessage = "Informe o CPF.")]
+        [RegularExpression(@"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$", ErrorMessage = "Informe um CPF válido com 11 dígitos.")]
         public string Cpf { get; set; } = string.Empty;
         [Required(ErrorMessage = "Informe o CRM.")]
+        [StringLength(20, ErrorMessage = "O CRM deve ter no máximo 20 caracteres.")]
         public string Crm { get; set; } = string.Empty;
         [Required(ErrorMessage = "Informe a UF do CRM.")]
         [StringLength(2, MinimumLength = 2, ErrorMessage = "UF deve ter 2 caracteres.")]
@@ -304,6 +313,7 @@ public record DashboardChartItem(string Label, decimal Valor);
         [Required(ErrorMessage = "Selecione a especialidade.")]
         public Guid EspecialidadeId { get; set; }
         [Required]
+        [RegularExpression("^(A|I)$", ErrorMessage = "Selecione um status válido.")]
         public string RegStatus { get; set; } = "A";
         public IEnumerable<EspecialidadeDto> Especialidades { get; set; } = Enumerable.Empty<EspecialidadeDto>();
 

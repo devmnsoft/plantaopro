@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace PlantaoPro.Web.Models;
 
 public sealed class PlanoSaasViewModel
@@ -37,19 +39,36 @@ public sealed class PlanosSaasIndexViewModel
     public string? Status { get; set; }
 }
 
-public sealed class AssinaturaSaasViewModel
+public sealed class AssinaturaSaasViewModel : IValidatableObject
 {
     public Guid Id { get; set; }
+    [NonEmptyGuid(ErrorMessage = "Selecione um cliente válido.")]
     public Guid ClienteId { get; set; }
     public string ClienteNome { get; set; } = string.Empty;
+    [NonEmptyGuid(ErrorMessage = "Selecione um plano válido.")]
     public Guid PlanoId { get; set; }
     public string PlanoNome { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Informe a data de início.")]
     public DateTime DataInicio { get; set; }
+    [Required(ErrorMessage = "Informe a data de término.")]
     public DateTime DataFim { get; set; }
     public string Status { get; set; } = string.Empty;
+    [Range(typeof(decimal), "0", "10000000", ErrorMessage = "Informe um valor entre R$ 0,00 e R$ 10.000.000,00.")]
     public decimal ValorContratado { get; set; }
+    [Range(1, 31, ErrorMessage = "Informe um dia de vencimento entre 1 e 31.")]
     public int DiaVencimento { get; set; }
+    [StringLength(1000, ErrorMessage = "As observações devem ter no máximo 1.000 caracteres.")]
     public string Observacoes { get; set; } = string.Empty;
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DataInicio == default)
+            yield return new ValidationResult("Informe uma data de início válida.", new[] { nameof(DataInicio) });
+        if (DataFim == default)
+            yield return new ValidationResult("Informe uma data de término válida.", new[] { nameof(DataFim) });
+        if (DataInicio != default && DataFim != default && DataFim < DataInicio)
+            yield return new ValidationResult("A data de término deve ser igual ou posterior à data de início.", new[] { nameof(DataFim) });
+    }
 }
 
 public sealed class AssinaturasSaasIndexViewModel

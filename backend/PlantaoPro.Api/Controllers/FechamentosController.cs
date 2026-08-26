@@ -12,8 +12,10 @@ public sealed class FechamentosController : ControllerBase
     private readonly FechamentoOperacionalService service; private readonly ILogger<FechamentosController> logger;
     public FechamentosController(FechamentoOperacionalService service, ILogger<FechamentosController> logger) { this.service=service; this.logger=logger; }
 
-    [HttpGet] public Task<IActionResult> Listar(CancellationToken ct)=>Execute(()=>service.ListarAsync(false,ct));
-    [HttpGet("pendentes")] public Task<IActionResult> Pendentes(CancellationToken ct)=>Execute(()=>service.ListarAsync(true,ct));
+    [HttpGet] public Task<IActionResult> Listar([FromQuery] FechamentoFiltroRequest filtro,CancellationToken ct)=>Execute(()=>service.ListarAsync(filtro,ct));
+    [HttpGet("pendentes")] public Task<IActionResult> Pendentes([FromQuery] FechamentoFiltroRequest filtro,CancellationToken ct)=>Execute(()=>service.ListarAsync(filtro with { Pendentes=true },ct));
+    [HttpGet("exportar.csv"), Authorize(Roles=RolesConstants.FinanceiroGestao+","+RolesConstants.Administrador+","+RolesConstants.AdministradorCliente+","+RolesConstants.AdministradorGlobal)]
+    public async Task<IActionResult> Exportar([FromQuery] FechamentoFiltroRequest filtro,CancellationToken ct){var result=await service.ExportarCsvAsync(filtro,ct);return result.Success?File(result.Data!,"text/csv; charset=utf-8",$"apuracao-{DateTime.UtcNow:yyyyMMdd}.csv"):StatusCode(result.StatusCode,result);}
     [HttpGet("{id:guid}")] public Task<IActionResult> Obter(Guid id,CancellationToken ct)=>Execute(()=>service.ObterAsync(id,ct));
     [HttpGet("{id:guid}/timeline")] public Task<IActionResult> Timeline(Guid id,CancellationToken ct)=>Execute(()=>service.TimelineAsync(id,ct));
 
@@ -31,6 +33,8 @@ public sealed class FechamentosController : ControllerBase
     public Task<IActionResult> Aprovar(Guid id,CancellationToken ct)=>Execute(()=>service.AprovarAsync(id,ct));
     [HttpPost("{id:guid}/devolver"), Authorize(Roles=RolesConstants.Administrador+","+RolesConstants.AdministradorGlobal+","+RolesConstants.AdministradorCliente)]
     public Task<IActionResult> Devolver(Guid id,[FromBody]DevolverFechamentoRequest request,CancellationToken ct)=>Execute(()=>service.DevolverAsync(id,request.Motivo,ct));
+    [HttpPost("{id:guid}/rejeitar"), Authorize(Roles=RolesConstants.Administrador+","+RolesConstants.AdministradorGlobal+","+RolesConstants.AdministradorCliente)]
+    public Task<IActionResult> Rejeitar(Guid id,[FromBody]RejeitarFechamentoRequest request,CancellationToken ct)=>Execute(()=>service.RejeitarAsync(id,request,ct));
     [HttpPost("{id:guid}/gerar-financeiro"), Authorize(Roles=RolesConstants.FinanceiroGestao)]
     public Task<IActionResult> Financeiro(Guid id,CancellationToken ct)=>Execute(()=>service.GerarFinanceiroAsync(id,ct));
 

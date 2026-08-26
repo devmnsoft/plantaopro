@@ -16,7 +16,11 @@ public class FechamentoResumoDto
     public int QuantidadeEscalas { get; set; }
     public int DivergenciasAbertas { get; set; }
     public DateTime CriadoEm { get; set; }
+    public Guid HospitalId { get; set; }
+    public Guid EspecialidadeId { get; set; }
+    public string Profissionais { get; set; } = string.Empty;
 }
+public sealed record FechamentoFiltroRequest(DateOnly? Inicio, DateOnly? Fim, Guid? UnidadeId, string? Profissional, Guid? EspecialidadeId, string? Status, bool Pendentes = false);
 public sealed class FechamentoItemDto
 {
     public Guid Id { get; set; } public Guid EscalaId { get; set; } public Guid MedicoId { get; set; }
@@ -48,3 +52,4 @@ public sealed class FechamentoTimelineDto
 public sealed record CriarDivergenciaRequest(Guid? FechamentoItemId, string Tipo, string Descricao, decimal? ValorAnterior, decimal? ValorProposto, string? Motivo);
 public sealed record ResolverDivergenciaRequest(string Resolucao);
 public sealed record DevolverFechamentoRequest(string Motivo);
+public sealed record RejeitarFechamentoRequest(string Motivo, string? Observacao);

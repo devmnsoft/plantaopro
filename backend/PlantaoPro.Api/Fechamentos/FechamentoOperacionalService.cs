@@ -3,6 +3,7 @@ using Npgsql;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Domain.Financeiro;
+using System.Text;
 
 namespace PlantaoPro.Api.Fechamentos;
 
@@ -18,21 +19,40 @@ public sealed class FechamentoOperacionalService
     private (Guid Tenant, Guid Cliente, Guid Usuario) Contexto() => (current.TenantId ?? throw new UnauthorizedAccessException(), current.ClienteId ?? throw new UnauthorizedAccessException(), current.UserId ?? throw new UnauthorizedAccessException());
 
     private const string ResumoSql = @"
-        select f.id as ""Id"",f.plantao_id as ""PlantaoId"",coalesce(h.nome_fantasia,'') as ""Hospital"",
+        select f.id as ""Id"",f.plantao_id as ""PlantaoId"",h.id as ""HospitalId"",es.id as ""EspecialidadeId"",coalesce(h.nome_fantasia,'') as ""Hospital"",
         coalesce(es.nome,'') as ""Especialidade"",p.data_inicio as ""Inicio"",p.data_fim as ""Fim"",f.status as ""Status"",
         f.valor_previsto as ""ValorPrevisto"",f.valor_apurado as ""ValorApurado"",f.horas_previstas as ""HorasPrevistas"",
         f.horas_realizadas as ""HorasRealizadas"",(select count(*)::int from plantaopro.fechamento_plantao_escalas i where i.tenant_id=f.tenant_id and i.fechamento_id=f.id) as ""QuantidadeEscalas"",
         (select count(*)::int from plantaopro.fechamento_divergencias d where d.tenant_id=f.tenant_id and d.fechamento_id=f.id and d.status='ABERTA') as ""DivergenciasAbertas"",
+        (select string_agg(distinct m.nome, ', ' order by m.nome) from plantaopro.fechamento_plantao_escalas fi join plantaopro.medicos m on m.id=fi.medico_id where fi.tenant_id=f.tenant_id and fi.fechamento_id=f.id) as ""Profissionais"",
         f.iniciado_em as ""CriadoEm"" from plantaopro.fechamento_plantao f join plantaopro.plantoes p on p.id=f.plantao_id
         join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades es on es.id=p.especialidade_id
         ";
 
-    public async Task<ApiResponse<IReadOnlyList<FechamentoResumoDto>>> ListarAsync(bool pendentes, CancellationToken ct)
+    public async Task<ApiResponse<IReadOnlyList<FechamentoResumoDto>>> ListarAsync(FechamentoFiltroRequest filtro, CancellationToken ct)
     {
+        if (filtro.Inicio.HasValue != filtro.Fim.HasValue) return ApiResponse<IReadOnlyList<FechamentoResumoDto>>.Fail("Informe as duas datas do período.", 422);
+        if (filtro.Inicio > filtro.Fim) return ApiResponse<IReadOnlyList<FechamentoResumoDto>>.Fail("A data inicial deve ser menor ou igual à data final.", 422);
         var c = Contexto(); await using var cn = Connection();
-        var sql = ResumoSql + " where f.tenant_id=@Tenant and f.cliente_id=@Cliente" + (pendentes ? " and f.status not in ('CONCLUIDO','CANCELADO')" : "") + " order by f.iniciado_em desc limit 200";
-        var rows = (await cn.QueryAsync<FechamentoResumoDto>(new CommandDefinition(sql, c, cancellationToken: ct))).AsList();
+        var status=(filtro.Status??string.Empty).Trim().ToUpperInvariant();
+        var sql = ResumoSql + @" where f.tenant_id=@Tenant and f.cliente_id=@Cliente
+          and (@Inicio is null or p.data_inicio::date>=@Inicio) and (@Fim is null or p.data_inicio::date<=@Fim)
+          and (@UnidadeId is null or p.hospital_id=@UnidadeId) and (@EspecialidadeId is null or p.especialidade_id=@EspecialidadeId)
+          and (@Profissional='' or exists(select 1 from plantaopro.fechamento_plantao_escalas fx join plantaopro.medicos mx on mx.id=fx.medico_id where fx.tenant_id=f.tenant_id and fx.fechamento_id=f.id and unaccent(lower(mx.nome)) like '%'||unaccent(lower(@Profissional))||'%'))
+          and (@Status='' or f.status=@Status)" + (filtro.Pendentes ? " and f.status not in ('CONCLUIDO','CANCELADO','REJEITADO')" : "") + " order by p.data_inicio desc limit 500";
+        var args=new {c.Tenant,c.Cliente,filtro.Inicio,filtro.Fim,filtro.UnidadeId,Profissional=(filtro.Profissional??string.Empty).Trim(),filtro.EspecialidadeId,Status=status};
+        var rows = (await cn.QueryAsync<FechamentoResumoDto>(new CommandDefinition(sql, args, cancellationToken: ct))).AsList();
         return ApiResponse<IReadOnlyList<FechamentoResumoDto>>.Ok(rows);
+    }
+
+    public async Task<ApiResponse<byte[]>> ExportarCsvAsync(FechamentoFiltroRequest filtro, CancellationToken ct)
+    {
+        var result=await ListarAsync(filtro,ct); if(!result.Success)return ApiResponse<byte[]>.Fail(result.Message,result.StatusCode);
+        static string Csv(string value)=>"\""+(value??string.Empty).Replace("\"","\"\"")+"\"";
+        var csv=new StringBuilder("Data;Unidade;Profissionais;Especialidade;Horário;Status;Valor previsto;Valor aprovado;Divergências\n");
+        foreach(var x in result.Data??Array.Empty<FechamentoResumoDto>()) csv.AppendLine($"{x.Inicio:dd/MM/yyyy};{Csv(x.Hospital)};{Csv(x.Profissionais)};{Csv(x.Especialidade)};{x.Inicio:HH:mm}-{x.Fim:HH:mm};{x.Status};{x.ValorPrevisto:0.00};{x.ValorApurado:0.00};{x.DivergenciasAbertas}");
+        var c=Contexto(); await audit.LogAsync(c.Usuario,"EXPORT","fechamento_plantao",null,"Relatório financeiro CSV exportado com filtros do tenant.");
+        return ApiResponse<byte[]>.Ok(Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv.ToString())).ToArray());
     }
 
     public async Task<ApiResponse<FechamentoDetalheDto>> ObterAsync(Guid id, CancellationToken ct)
@@ -99,6 +119,8 @@ public sealed class FechamentoOperacionalService
     public Task<ApiResponse<FechamentoDetalheDto>> AprovarAsync(Guid id,CancellationToken ct)=>TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Aprovado,"APROVADO",null,ct,"aprovado_por","aprovado_em");
     public async Task<ApiResponse<FechamentoDetalheDto>> DevolverAsync(Guid id,string motivo,CancellationToken ct)
     { motivo=(motivo??"").Trim(); if(motivo.Length<10||motivo.Length>500)return ApiResponse<FechamentoDetalheDto>.Fail("Motivo deve possuir entre 10 e 500 caracteres.",422); return await TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Devolvido,"DEVOLVIDO",motivo,ct,"devolvido_por","devolvido_em"); }
+    public async Task<ApiResponse<FechamentoDetalheDto>> RejeitarAsync(Guid id,RejeitarFechamentoRequest request,CancellationToken ct)
+    { var motivos=new[]{"EXECUCAO_NAO_COMPROVADA","DIVERGENCIA_FINANCEIRA","DOCUMENTACAO_INCOMPLETA","NAO_CONFORMIDADE"};var motivo=(request.Motivo??"").Trim().ToUpperInvariant();if(!motivos.Contains(motivo))return ApiResponse<FechamentoDetalheDto>.Fail("Selecione um motivo de rejeição válido.",422);var descricao=$"{motivo}: {(request.Observacao??string.Empty).Trim()}".TrimEnd();return await TransicionarAsync(id,new[]{FechamentoStatus.AguardandoAprovacao},FechamentoStatus.Rejeitado,"REJEITADO",descricao,ct); }
 
     public async Task<ApiResponse<FechamentoDetalheDto>> CriarDivergenciaAsync(Guid id,CriarDivergenciaRequest request,CancellationToken ct)
     {

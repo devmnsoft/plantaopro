@@ -8,6 +8,7 @@ public static class FechamentoStatus
     public const string AguardandoAprovacao = "AGUARDANDO_APROVACAO";
     public const string Aprovado = "APROVADO";
     public const string Devolvido = "DEVOLVIDO";
+    public const string Rejeitado = "REJEITADO";
     public const string FinanceiroGerado = "FINANCEIRO_GERADO";
     public const string Concluido = "CONCLUIDO";
 
@@ -16,7 +17,7 @@ public static class FechamentoStatus
         [Aberto] = new[] { EmConferencia },
         [EmConferencia] = new[] { ComDivergencia, AguardandoAprovacao },
         [ComDivergencia] = new[] { EmConferencia },
-        [AguardandoAprovacao] = new[] { Aprovado, Devolvido },
+        [AguardandoAprovacao] = new[] { Aprovado, Devolvido, Rejeitado },
         [Devolvido] = new[] { EmConferencia },
         [Aprovado] = new[] { FinanceiroGerado },
         [FinanceiroGerado] = new[] { Concluido }

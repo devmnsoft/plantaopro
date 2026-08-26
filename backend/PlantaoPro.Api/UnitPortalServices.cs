@@ -21,7 +21,32 @@ public sealed class UnitDashboardService
     {
         if (tenantId==Guid.Empty || unitId==Guid.Empty) return ApiResponse<UnitDashboardDto>.Fail("Contexto de unidade inválido.",403);
         try { await using var cn=new NpgsqlConnection(configuration.GetConnectionString("Default"));
-            const string sql=@"select count(*) filter(where p.data_inicio::date=current_date) as \"Today\", count(*) filter(where p.data_inicio>now()) as \"Future\", count(*) filter(where p.vagas_disponiveis>0 and lower(p.status) not in ('cancelado','realizado')) as \"Uncovered\", count(*) filter(where lower(p.status) in ('aberto','pendente')) as \"AwaitingConfirmation\", 0::bigint as \"OpenIncidents\", (select count(*) from plantaopro.solicitacoes_plantao s where s.tenant_id=@tenantId and s.unidade_id=@unitId and s.status in ('enviada','em_analise')) as \"PendingRequests\", coalesce(round(100.0*sum(p.quantidade_vagas-p.vagas_disponiveis)/nullif(sum(p.quantidade_vagas),0),2),0) as \"CoveragePercent\", coalesce((select sum(c.valor_base) from plantaopro.contratos_operacionais c where c.tenant_id=@tenantId and c.unidade_id=@unitId and c.status='ativo' and current_date between c.vigencia_inicio and c.vigencia_fim),0) as \"ContractedValue\" from plantaopro.plantoes p where p.cliente_id=@tenantId and p.hospital_id=@unitId and p.reg_status='A'; select n.id,n.titulo,n.mensagem,n.data_criacao from plantaopro.notificacoes n where n.cliente_id=@tenantId and (n.hospital_id is null or n.hospital_id=@unitId) and n.reg_status='A' order by n.data_criacao desc limit 8";
+            const string sql = @"
+                select
+                    count(*) filter (where p.data_inicio::date = current_date) as ""Today"",
+                    count(*) filter (where p.data_inicio > now()) as ""Future"",
+                    count(*) filter (where p.vagas_disponiveis > 0 and lower(p.status) not in ('cancelado', 'realizado')) as ""Uncovered"",
+                    count(*) filter (where lower(p.status) in ('aberto', 'pendente')) as ""AwaitingConfirmation"",
+                    0::bigint as ""OpenIncidents"",
+                    (select count(*) from plantaopro.solicitacoes_plantao s where s.tenant_id = @tenantId and s.unidade_id = @unitId and s.status in ('enviada', 'em_analise')) as ""PendingRequests"",
+                    coalesce(round(100.0 * sum(p.quantidade_vagas - p.vagas_disponiveis) / nullif(sum(p.quantidade_vagas), 0), 2), 0) as ""CoveragePercent"",
+                    coalesce((select sum(c.valor_base) from plantaopro.contratos_operacionais c where c.tenant_id = @tenantId and c.unidade_id = @unitId and c.status = 'ativo' and current_date between c.vigencia_inicio and c.vigencia_fim), 0) as ""ContractedValue""
+                from plantaopro.plantoes p
+                where p.cliente_id = @tenantId
+                    and p.hospital_id = @unitId
+                    and p.reg_status = 'A';
+
+                select
+                    n.id,
+                    n.titulo,
+                    n.mensagem,
+                    n.data_criacao
+                from plantaopro.notificacoes n
+                where n.cliente_id = @tenantId
+                    and (n.hospital_id is null or n.hospital_id = @unitId)
+                    and n.reg_status = 'A'
+                order by n.data_criacao desc
+                limit 8";
             using var grid=await cn.QueryMultipleAsync(new CommandDefinition(sql,new{tenantId,unitId},cancellationToken:ct)); var row=await grid.ReadSingleAsync<UnitDashboardRow>(); var notifications=(await grid.ReadAsync()).ToArray(); return ApiResponse<UnitDashboardDto>.Ok(new(row.Today,row.Future,row.Uncovered,row.AwaitingConfirmation,row.OpenIncidents,row.PendingRequests,row.CoveragePercent,row.ContractedValue,notifications)); }
         catch(Exception ex){logger.LogError(ex,"Falha no portal da unidade {UnitId} do tenant {TenantId}",unitId,tenantId);throw;}
     }

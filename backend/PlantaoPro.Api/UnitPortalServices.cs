@@ -21,7 +21,52 @@ public sealed class UnitDashboardService
     {
         if (tenantId==Guid.Empty || unitId==Guid.Empty) return ApiResponse<UnitDashboardDto>.Fail("Contexto de unidade inválido.",403);
         try { await using var cn=new NpgsqlConnection(configuration.GetConnectionString("Default"));
-            const string sql=@"select count(*) filter(where p.data_inicio::date=current_date) as \"Today\", count(*) filter(where p.data_inicio>now()) as \"Future\", count(*) filter(where p.vagas_disponiveis>0 and lower(p.status) not in ('cancelado','realizado')) as \"Uncovered\", count(*) filter(where lower(p.status) in ('aberto','pendente')) as \"AwaitingConfirmation\", 0::bigint as \"OpenIncidents\", (select count(*) from plantaopro.solicitacoes_plantao s where s.tenant_id=@tenantId and s.unidade_id=@unitId and s.status in ('enviada','em_analise')) as \"PendingRequests\", coalesce(round(100.0*sum(p.quantidade_vagas-p.vagas_disponiveis)/nullif(sum(p.quantidade_vagas),0),2),0) as \"CoveragePercent\", coalesce((select sum(c.valor_base) from plantaopro.contratos_operacionais c where c.tenant_id=@tenantId and c.unidade_id=@unitId and c.status='ativo' and current_date between c.vigencia_inicio and c.vigencia_fim),0) as \"ContractedValue\" from plantaopro.plantoes p where p.cliente_id=@tenantId and p.hospital_id=@unitId and p.reg_status='A'; select n.id,n.titulo,n.mensagem,n.data_criacao from plantaopro.notificacoes n where n.cliente_id=@tenantId and (n.hospital_id is null or n.hospital_id=@unitId) and n.reg_status='A' order by n.data_criacao desc limit 8";
+            const string sql = @"
+select
+    count(*) filter(where p.data_inicio::date = current_date) as ""Today"",
+    count(*) filter(where p.data_inicio > now()) as ""Future"",
+    count(*) filter(
+        where p.vagas_disponiveis > 0
+          and lower(p.status) not in ('cancelado', 'realizado')) as ""Uncovered"",
+    count(*) filter(where lower(p.status) in ('aberto', 'pendente')) as ""AwaitingConfirmation"",
+    0::bigint as ""OpenIncidents"",
+    (
+        select count(*)
+        from plantaopro.solicitacoes_plantao s
+        where s.tenant_id = @tenantId
+          and s.unidade_id = @unitId
+          and s.status in ('enviada', 'em_analise')
+    ) as ""PendingRequests"",
+    coalesce(
+        round(
+            100.0 * sum(p.quantidade_vagas - p.vagas_disponiveis)
+            / nullif(sum(p.quantidade_vagas), 0),
+            2),
+        0) as ""CoveragePercent"",
+    coalesce((
+        select sum(c.valor_base)
+        from plantaopro.contratos_operacionais c
+        where c.tenant_id = @tenantId
+          and c.unidade_id = @unitId
+          and c.status = 'ativo'
+          and current_date between c.vigencia_inicio and c.vigencia_fim
+    ), 0) as ""ContractedValue""
+from plantaopro.plantoes p
+where p.cliente_id = @tenantId
+  and p.hospital_id = @unitId
+  and p.reg_status = 'A';
+
+select
+    n.id,
+    n.titulo,
+    n.mensagem,
+    n.data_criacao
+from plantaopro.notificacoes n
+where n.cliente_id = @tenantId
+  and (n.hospital_id is null or n.hospital_id = @unitId)
+  and n.reg_status = 'A'
+order by n.data_criacao desc
+limit 8";
             using var grid=await cn.QueryMultipleAsync(new CommandDefinition(sql,new{tenantId,unitId},cancellationToken:ct)); var row=await grid.ReadSingleAsync<UnitDashboardRow>(); var notifications=(await grid.ReadAsync()).ToArray(); return ApiResponse<UnitDashboardDto>.Ok(new(row.Today,row.Future,row.Uncovered,row.AwaitingConfirmation,row.OpenIncidents,row.PendingRequests,row.CoveragePercent,row.ContractedValue,notifications)); }
         catch(Exception ex){logger.LogError(ex,"Falha no portal da unidade {UnitId} do tenant {TenantId}",unitId,tenantId);throw;}
     }
@@ -50,7 +95,20 @@ public sealed class ShiftRequestApprovalService
     {
         if(!approved&&string.IsNullOrWhiteSpace(reason)) return ApiResponse<Guid>.Fail("O motivo da recusa é obrigatório.",400);
         try{await using var cn=new NpgsqlConnection(configuration.GetConnectionString("Default"));await cn.OpenAsync(ct);await using var tx=await cn.BeginTransactionAsync(ct);
-            var request=await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition("select * from plantaopro.solicitacoes_plantao where id=@requestId and tenant_id=@tenantId and status in ('enviada','em_analise','aprovada') for update",new{requestId,tenantId},tx,cancellationToken:ct));
+            const string requestSql = @"
+select
+    s.unidade_id,
+    s.especialidade_id,
+    s.data,
+    s.horario_inicio,
+    s.horario_fim,
+    s.quantidade_profissionais
+from plantaopro.solicitacoes_plantao s
+where s.id = @requestId
+  and s.tenant_id = @tenantId
+  and s.status in ('enviada', 'em_analise', 'aprovada')
+for update";
+            var request=await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(requestSql,new{requestId,tenantId},tx,cancellationToken:ct));
             if(request is null)return ApiResponse<Guid>.Fail("Solicitação não encontrada no contexto autorizado.",404);
             Guid? shiftId=null;
             if(approved&&convert){var conflict=await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(select 1 from plantaopro.plantoes p where p.cliente_id=@tenantId and p.hospital_id=@unit and p.especialidade_id=@specialty and p.reg_status='A' and tstzrange(p.data_inicio,p.data_fim,'[)') && tstzrange(@start,@finish,'[)'))",new{tenantId,unit=(Guid)request.unidade_id,specialty=(Guid)request.especialidade_id,start=((DateOnly)request.data).ToDateTime((TimeOnly)request.horario_inicio),finish=((DateOnly)request.data).ToDateTime((TimeOnly)request.horario_fim)},tx,cancellationToken:ct));if(conflict)return ApiResponse<Guid>.Fail("A conversão conflita com um plantão existente.",409);shiftId=Guid.NewGuid();await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.plantoes(id,cliente_id,hospital_id,especialidade_id,data_inicio,data_fim,quantidade_vagas,vagas_disponiveis,status,reg_status) values(@shiftId,@tenantId,@unit,@specialty,@start,@finish,@quantity,@quantity,'aberto','A')",new{shiftId,tenantId,unit=(Guid)request.unidade_id,specialty=(Guid)request.especialidade_id,start=((DateOnly)request.data).ToDateTime((TimeOnly)request.horario_inicio),finish=((DateOnly)request.data).ToDateTime((TimeOnly)request.horario_fim),quantity=(int)request.quantidade_profissionais},tx,cancellationToken:ct));}

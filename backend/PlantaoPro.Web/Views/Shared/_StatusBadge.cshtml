@@ -22,5 +22,13 @@
         normalizedStatus = "indefinido";
     }
     var label = string.IsNullOrWhiteSpace(rawStatus) ? "N/A" : rawStatus;
+    var icon = normalizedStatus switch
+    {
+        "pago" or "conferido" or "aprovado" or "concluido" => "bi-check-circle-fill",
+        "rejeitado" or "cancelado" => "bi-x-circle-fill",
+        "divergente" or "com-divergencia" => "bi-exclamation-diamond-fill",
+        "pendente" or "aguardando" or "aguardando-aprovacao" => "bi-clock-fill",
+        _ => "bi-info-circle-fill"
+    };
 }
-<span class="status-badge pp-semantic-badge status-@normalizedStatus" role="status" aria-label="Status: @label">@label</span>
+<span class="status-badge pp-semantic-badge status-@normalizedStatus" role="status" aria-label="Status: @label"><i class="bi @icon" aria-hidden="true"></i>@label.Replace('_', ' ')</span>

@@ -81,6 +81,8 @@ public sealed class PagamentoResumoDto
     public Guid EscalaId { get; set; }
     public Guid MedicoId { get; set; }
     public Guid PlantaoId { get; set; }
+    public Guid HospitalId { get; set; }
+    public Guid EspecialidadeId { get; set; }
     public string MedicoNome { get; set; } = string.Empty;
     public string MedicoCrm { get; set; } = string.Empty;
     public string HospitalNome { get; set; } = string.Empty;

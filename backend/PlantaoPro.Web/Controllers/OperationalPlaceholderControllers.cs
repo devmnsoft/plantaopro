@@ -25,6 +25,6 @@ public sealed class PagamentosController : BaseWebController
 {
     public PagamentosController(IHttpClientFactory factory, ILogger<PagamentosController> logger) : base(factory, logger) { }
 
-    public Task<IActionResult> Index(string? status, DateTime? inicio, DateTime? fim, int page = 1, int pageSize = 20) =>
-        this.RenderPaged<PagamentoResumoDto>($"api/financeiro/pagamentos?status={Uri.EscapeDataString(status ?? string.Empty)}&dataInicio={inicio:O}&dataFim={fim:O}&page={page}&pageSize={pageSize}");
+    public Task<IActionResult> Index(Guid? medicoId, Guid? hospitalId, string? status, DateTime? inicio, DateTime? fim, int page = 1, int pageSize = 20) =>
+        this.RenderPaged<PagamentoResumoDto>($"api/financeiro/pagamentos?medicoId={medicoId}&hospitalId={hospitalId}&status={Uri.EscapeDataString(status ?? string.Empty)}&dataInicio={inicio:O}&dataFim={fim:O}&page={page}&pageSize={pageSize}");
 }

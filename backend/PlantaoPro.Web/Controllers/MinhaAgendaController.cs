@@ -23,9 +23,9 @@ public class MinhaAgendaController : BaseWebController
         if (!AddBearerToken(client))
             return HandleUnauthorized();
 
-        var resumo = await ReadApiResponse<MedicoAreaResumoDto>(
+        var resumo = await ReadApiResponse<ProfessionalDashboardDto>(
             client,
-            "api/medico-area/resumo"
+            "api/medico-area/meu-dia"
         );
 
         if (resumo.StatusCode == HttpStatusCode.Unauthorized)
@@ -40,13 +40,37 @@ public class MinhaAgendaController : BaseWebController
             TempData["Error"] = resumo.Error ?? "Não foi possível carregar a área do médico.";
         }
 
-        var model = new DetailsPageViewModel<MedicoAreaResumoDto>(
+        var model = new DetailsPageViewModel<ProfessionalDashboardDto>(
             Data: resumo.Data,
             ErrorMessage: TempData["Error"] as string,
             IsPlaceholder: resumo.Data is null
         );
 
         return View(model);
+    }
+
+    public async Task<IActionResult> MeusPagamentos(int page = 1, int pageSize = 20)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = await ReadApiResponse<PagedResult<MedicoPagamentoDto>>(client, $"api/medico-area/meus-pagamentos?page={Math.Max(1,page)}&pageSize={Math.Clamp(pageSize,1,100)}");
+        return View(new ListPageViewModel<MedicoPagamentoDto>(result.Data?.Items ?? Array.Empty<MedicoPagamentoDto>(), result.Error, null, result.Data?.Total ?? 0, result.Data?.Page ?? page, result.Data?.PageSize ?? pageSize));
+    }
+
+    public async Task<IActionResult> Presencas()
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = await ReadApiResponse<IEnumerable<ProfessionalCheckInDto>>(client, "api/medico-area/presencas");
+        return View(new ListPageViewModel<ProfessionalCheckInDto>(result.Data ?? Array.Empty<ProfessionalCheckInDto>(), result.Error, null, result.Data?.Count() ?? 0, 1, 50));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarPresenca(Guid escalaId, string operacao)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var action = string.Equals(operacao, "checkout", StringComparison.OrdinalIgnoreCase) ? "check-out" : "check-in";
+        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/{action}", new { });
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? "Presença registrada com segurança." : "Não foi possível registrar a presença. Verifique se a ação já foi realizada.";
+        return RedirectToAction(nameof(Presencas));
     }
 
     public async Task<IActionResult> PlantoesDisponiveis(int page = 1, int pageSize = 20)

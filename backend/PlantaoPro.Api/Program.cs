@@ -130,6 +130,7 @@ builder.Services.AddScoped<MedicoRecomendacaoService>();
 builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
+builder.Services.AddScoped<ProfessionalPortalService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<NotificationPreferenceService>();

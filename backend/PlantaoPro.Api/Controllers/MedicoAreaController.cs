@@ -13,10 +13,44 @@ namespace PlantaoPro.Api.Controllers;
 public class MedicoAreaController : ControllerBase
 {
     private readonly MedicoAreaService service;
+    private readonly ProfessionalPortalService portal;
 
-    public MedicoAreaController(MedicoAreaService service)
+    public MedicoAreaController(MedicoAreaService service, ProfessionalPortalService portal)
     {
         this.service = service;
+        this.portal = portal;
+    }
+
+    [HttpGet("meu-dia")]
+    public async Task<IActionResult> MeuDia()
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.DashboardAsync(uid.Value);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("presencas")]
+    public async Task<IActionResult> Presencas()
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.CheckInsAsync(uid.Value);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("escalas/{escalaId:guid}/check-in")]
+    public async Task<IActionResult> CheckIn(Guid escalaId)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, false, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("escalas/{escalaId:guid}/check-out")]
+    public async Task<IActionResult> CheckOut(Guid escalaId)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, true, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
+        return StatusCode(response.StatusCode, response);
     }
 
     private Guid? Uid()

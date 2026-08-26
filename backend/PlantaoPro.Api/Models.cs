@@ -114,6 +114,9 @@ public record MedicoAreaResumoDto(string MedicoNome,string Crm,string UfCrm,int 
 public record MedicoPlantaoDisponivelDto(Guid PlantaoId,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int VagasDisponiveis,string Tipo,string Status,bool JaSolicitado,bool TemConflitoHorario);
 public record MedicoEscalaDto(Guid EscalaId,Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string Status,string? Justificativa);
 public record MedicoPagamentoDto(Guid PagamentoId,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento);
+public record ProfessionalDashboardDto(MedicoAreaResumoDto Resumo,IEnumerable<MedicoEscalaDto> ProximosPlantoes,IEnumerable<PlantaoConviteDto> ConvitesPendentes,IEnumerable<NotificacaoDto> NotificacoesRecentes,decimal ValorPrevisto,decimal ValorAprovado,decimal ValorPago,int PendenciasCheckIn,int PendenciasCheckOut);
+public record ProfessionalCheckInDto(Guid EscalaId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,DateTime? CheckInEm,DateTime? CheckOutEm,bool PodeCheckIn,bool PodeCheckOut);
+public record RecusarConviteProfissionalRequest(string Motivo);
 public record DashboardChartItem(string Label,decimal Valor);
 public record MedicoPlantaoRecomendacaoDto(Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,decimal Score,string MotivoRecomendacao);
 public record AlertaOperacionalDto(string Tipo,string Titulo,string Descricao,string Severidade);

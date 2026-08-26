@@ -68,6 +68,7 @@ builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
 });
 builder.Services.AddScoped<Saude360WebService>();
 builder.Services.AddScoped<MinhaCentralWebService>();
+builder.Services.AddScoped<ManagerCommandCenterWebService>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

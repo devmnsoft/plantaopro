@@ -35,8 +35,16 @@ namespace PlantaoPro.Api.Controllers
         [HttpGet("pagamentos/{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var r = await service.GetByIdAsync(id);
-            return StatusCode(r.StatusCode, r);
+            try
+            {
+                var r = await service.GetByIdAsync(id);
+                return StatusCode(r.StatusCode, r);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Erro ao consultar pagamento {PagamentoId}", id);
+                throw;
+            }
         }
         [Authorize(Roles = RolesConstants.FinanceiroGestao)]
         [HttpPost("pagamentos/gerar")]

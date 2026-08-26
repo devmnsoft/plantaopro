@@ -74,7 +74,33 @@ public record MarcarPagamentoPagoRequest(string FormaPagamento,string? Observaco
 public record ContestarPagamentoRequest(string Motivo);
 public record ResolverContestacaoPagamentoRequest(string Decisao,string Justificativa,decimal? NovoValor);
 public record PagamentoActionResponse(Guid PagamentoId,string Status,decimal Valor,DateOnly? DataPagamento,string ProximaAcao);
-public record PagamentoDetailsDto(Guid Id,Guid EscalaId,Guid MedicoId,Guid PlantaoId,string MedicoNome,string MedicoCrm,string MedicoUfCrm,string MedicoEmail,string MedicoTelefone,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento,string? Observacoes);
+public sealed class PagamentoDetailsDto
+{
+    public Guid Id { get; set; }
+    public Guid EscalaId { get; set; }
+    public Guid MedicoId { get; set; }
+    public Guid PlantaoId { get; set; }
+    public string? MedicoNome { get; set; }
+    public string? MedicoCrm { get; set; }
+    public string? MedicoUfCrm { get; set; }
+    public string? MedicoEmail { get; set; }
+    public string? MedicoTelefone { get; set; }
+    public string? HospitalNome { get; set; }
+    public string? HospitalCidade { get; set; }
+    public string? HospitalEstado { get; set; }
+    public string? EspecialidadeNome { get; set; }
+    public DateTime DataInicioPlantao { get; set; }
+    public DateTime DataFimPlantao { get; set; }
+    public decimal ValorPrevisto { get; set; }
+    public decimal? ValorPago { get; set; }
+    public string? Status { get; set; }
+    public DateOnly? DataPrevista { get; set; }
+    public DateOnly? DataPagamento { get; set; }
+    public string? FormaPagamento { get; set; }
+    public string? ChavePix { get; set; }
+    public string? Observacoes { get; set; }
+    public DateTime RegDate { get; set; }
+}
 public sealed class PagamentoResumoDto
 {
     public Guid Id { get; set; }

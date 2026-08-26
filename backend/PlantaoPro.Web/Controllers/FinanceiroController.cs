@@ -16,8 +16,8 @@ public class FinanceiroController : BaseWebController
     {
         this.flowService = flowService;
     }
-    public async Task<IActionResult> Index(Guid? medicoId, Guid? hospitalId, Guid? especialidadeId, string? status, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
-        => await this.RenderPaged<PagamentoResumoDto>($"api/financeiro/pagamentos?medicoId={medicoId}&hospitalId={hospitalId}&especialidadeId={especialidadeId}&status={status}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
+    public async Task<IActionResult> Index(Guid? medicoId, Guid? hospitalId, Guid? especialidadeId, string? status, string? formaPagamento, DateTime? dataInicio, DateTime? dataFim, int page = 1, int pageSize = 20)
+        => await this.RenderPaged<PagamentoResumoDto>($"api/financeiro/pagamentos?medicoId={medicoId}&hospitalId={hospitalId}&especialidadeId={especialidadeId}&status={Uri.EscapeDataString(status ?? string.Empty)}&formaPagamento={Uri.EscapeDataString(formaPagamento ?? string.Empty)}&dataInicio={dataInicio:O}&dataFim={dataFim:O}&page={page}&pageSize={pageSize}");
 
     public IActionResult Pagamentos() => Operational(nameof(Pagamentos));
     public IActionResult Pendentes() => Operational(nameof(Pendentes));

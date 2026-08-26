@@ -93,6 +93,10 @@ public sealed class PagamentoDetailsDto
     public DateTime DataFimPlantao { get; set; }
     public decimal ValorPrevisto { get; set; }
     public decimal? ValorPago { get; set; }
+    public decimal ValorBruto { get; set; }
+    public decimal? ValorLiquido { get; set; }
+    public decimal Descontos { get; set; }
+    public decimal Acrescimos { get; set; }
     public string? Status { get; set; }
     public DateOnly? DataPrevista { get; set; }
     public DateOnly? DataPagamento { get; set; }
@@ -115,15 +119,42 @@ public sealed class PagamentoResumoDto
     public string EspecialidadeNome { get; set; } = string.Empty;
     public DateTime DataPlantao { get; set; }
     public decimal ValorPrevisto { get; set; }
-    public decimal ValorPago { get; set; }
+    public decimal? ValorPago { get; set; }
+    public decimal ValorBruto { get; set; }
+    public decimal? ValorLiquido { get; set; }
+    public decimal Descontos { get; set; }
+    public decimal Acrescimos { get; set; }
     public string Status { get; set; } = string.Empty;
     public DateOnly? DataPrevista { get; set; }
     public DateOnly? DataPagamento { get; set; }
     public string FormaPagamento { get; set; } = string.Empty;
     public string ChavePix { get; set; } = string.Empty;
     public string Observacoes { get; set; } = string.Empty;
+    public DateTime RegDate { get; set; }
 }
-public record DashboardDto(long TotalMedicos,long TotalHospitais,long TotalEspecialidades,long TotalPlantoes,long PlantoesAbertos,long PlantoesConfirmados,long PlantoesRealizados,long PlantoesCancelados,long PagamentosPendentes,long PagamentosPagos,decimal ValorPendente,decimal ValorPagoMes,long NotificacoesNaoLidas);
+public sealed class DashboardDto
+{
+    public DashboardDto() { }
+    public DashboardDto(long totalMedicos,long totalHospitais,long totalEspecialidades,long totalPlantoes,long plantoesAbertos,long plantoesConfirmados,long plantoesRealizados,long plantoesCancelados,long pagamentosPendentes,long pagamentosPagos,decimal valorPendente,decimal valorPagoMes,long notificacoesNaoLidas)
+    {
+        TotalMedicos=totalMedicos; TotalHospitais=totalHospitais; TotalEspecialidades=totalEspecialidades; TotalPlantoes=totalPlantoes;
+        PlantoesAbertos=plantoesAbertos; PlantoesConfirmados=plantoesConfirmados; PlantoesRealizados=plantoesRealizados; PlantoesCancelados=plantoesCancelados;
+        PagamentosPendentes=pagamentosPendentes; PagamentosPagos=pagamentosPagos; ValorPendente=valorPendente; ValorPagoMes=valorPagoMes; NotificacoesNaoLidas=notificacoesNaoLidas;
+    }
+    public long TotalMedicos { get; set; }
+    public long TotalHospitais { get; set; }
+    public long TotalEspecialidades { get; set; }
+    public long TotalPlantoes { get; set; }
+    public long PlantoesAbertos { get; set; }
+    public long PlantoesConfirmados { get; set; }
+    public long PlantoesRealizados { get; set; }
+    public long PlantoesCancelados { get; set; }
+    public long PagamentosPendentes { get; set; }
+    public long PagamentosPagos { get; set; }
+    public decimal ValorPendente { get; set; }
+    public decimal ValorPagoMes { get; set; }
+    public long NotificacoesNaoLidas { get; set; }
+}
 public record NotificacaoDto(Guid Id,string Titulo,string Mensagem,string Tipo,bool Lida,DateTime RegDate);
 
 public record EscalaFilterRequest(Guid? MedicoId,Guid? PlantaoId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? HospitalId,Guid? EspecialidadeId,int Page=1,int PageSize=20);
@@ -132,18 +163,36 @@ public record ConfirmEscalaRequest(string? Justificativa);
 public record CancelEscalaRequest(string Justificativa);
 public record ReplaceEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record CompleteEscalaRequest(string? Justificativa);
-public record PagamentoFilterRequest(Guid? MedicoId,Guid? HospitalId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? EspecialidadeId,int Page=1,int PageSize=20);
+public record PagamentoFilterRequest(Guid? MedicoId,Guid? HospitalId,string? Status,DateTime? DataInicio,DateTime? DataFim,Guid? EspecialidadeId,string? FormaPagamento=null,int Page=1,int PageSize=20);
 public record CancelarPagamentoRequest(string Justificativa);
 public record NotificationFilterRequest(string? Tipo,bool? Lida,DateTime? DataInicio,DateTime? DataFim,int Page=1,int PageSize=20);
 
 public record MedicoAreaResumoDto(string MedicoNome,string Crm,string UfCrm,int PlantoesDisponiveis,int SolicitacoesPendentes,int EscalasConfirmadas,int PlantoesRealizados,int PagamentosPendentes,decimal ValorPendente,int NotificacoesNaoLidas);
 public record MedicoPlantaoDisponivelDto(Guid PlantaoId,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int VagasDisponiveis,string Tipo,string Status,bool JaSolicitado,bool TemConflitoHorario);
 public record MedicoEscalaDto(Guid EscalaId,Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string Status,string? Justificativa);
-public record MedicoPagamentoDto(Guid PagamentoId,string HospitalNome,string EspecialidadeNome,DateTime DataPlantao,decimal ValorPrevisto,decimal? ValorPago,string Status,DateOnly? DataPrevista,DateOnly? DataPagamento,string? FormaPagamento);
+public sealed class MedicoPagamentoDto
+{
+    public Guid PagamentoId { get; set; }
+    public string? HospitalNome { get; set; }
+    public string? EspecialidadeNome { get; set; }
+    public DateTime DataPlantao { get; set; }
+    public decimal ValorPrevisto { get; set; }
+    public decimal? ValorPago { get; set; }
+    public string? Status { get; set; }
+    public DateOnly? DataPrevista { get; set; }
+    public DateOnly? DataPagamento { get; set; }
+    public string? FormaPagamento { get; set; }
+}
 public record ProfessionalDashboardDto(MedicoAreaResumoDto Resumo,IEnumerable<MedicoEscalaDto> ProximosPlantoes,IEnumerable<PlantaoConviteDto> ConvitesPendentes,IEnumerable<NotificacaoDto> NotificacoesRecentes,decimal ValorPrevisto,decimal ValorAprovado,decimal ValorPago,int PendenciasCheckIn,int PendenciasCheckOut);
 public record ProfessionalCheckInDto(Guid EscalaId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,DateTime? CheckInEm,DateTime? CheckOutEm,bool PodeCheckIn,bool PodeCheckOut);
 public record RecusarConviteProfissionalRequest(string Motivo);
-public record DashboardChartItem(string Label,decimal Valor);
+public sealed class DashboardChartItem
+{
+    public DashboardChartItem() { }
+    public DashboardChartItem(string? label, decimal valor) { Label = label; Valor = valor; }
+    public string? Label { get; set; }
+    public decimal Valor { get; set; }
+}
 public record MedicoPlantaoRecomendacaoDto(Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,decimal Score,string MotivoRecomendacao);
 public record AlertaOperacionalDto(string Tipo,string Titulo,string Descricao,string Severidade);
 public record RolePermissionDto(string Role,IEnumerable<string> Permissions);

@@ -1379,8 +1379,15 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         public async Task<ApiResponse<PagedResult<PagamentoResumoDto>>> ListarAsync(PagamentoFilterRequest f)
         {
             await using var cn = Cn();
-            var w = " where pg.reg_status='A'";
+            var tenantId = currentUser.TenantId;
+            var isGlobal = currentUser.IsGlobalAdmin();
+            if (!isGlobal && !tenantId.HasValue)
+                return ApiResponse<PagedResult<PagamentoResumoDto>>.Fail("Contexto de tenant inválido.", 403);
+
+            var w = " where pg.reg_status='A' and (@IsGlobal or (@TenantId is not null and pg.tenant_id=@TenantId))";
             var dp = new DynamicParameters();
+            dp.Add("TenantId", tenantId);
+            dp.Add("IsGlobal", isGlobal);
             if (f.MedicoId.HasValue)
             {
                 w += " and pg.medico_id=@m";
@@ -1401,6 +1408,11 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 w += " and lower(pg.status)=lower(@s)";
                 dp.Add("s", f.Status);
             }
+            if (!string.IsNullOrWhiteSpace(f.FormaPagamento))
+            {
+                w += " and lower(pg.forma_pagamento)=lower(@fp)";
+                dp.Add("fp", f.FormaPagamento.Trim());
+            }
             if (f.DataInicio.HasValue)
             {
                 w += " and pl.data_inicio>=@di";
@@ -1416,7 +1428,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             dp.Add("off", (p - 1) * s);
             dp.Add("lim", s);
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id" + w, dp);
-            var items = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",coalesce(pg.valor_pago,0) as \"ValorPago\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id" + w + " order by pg.reg_date desc limit @lim offset @off", dp);
+            var items = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",pg.valor_pago as \"ValorPago\",pg.valor_previsto as \"ValorBruto\",pg.valor_previsto as \"ValorLiquido\",0::numeric as \"Descontos\",0::numeric as \"Acrescimos\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\",pg.reg_date as \"RegDate\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id" + w + " order by pg.reg_date desc limit @lim offset @off", dp);
             return ApiResponse<PagedResult<PagamentoResumoDto>>.Ok(new(items, p, s, total));
         }
         public async Task<ApiResponse<PagamentoDetailsDto>> GetByIdAsync(Guid id)
@@ -1433,7 +1445,9 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 m.email as ""MedicoEmail"", m.telefone as ""MedicoTelefone"",
                 h.nome_fantasia as ""HospitalNome"", h.cidade as ""HospitalCidade"", h.estado as ""HospitalEstado"",
                 esp.nome as ""EspecialidadeNome"", pl.data_inicio as ""DataInicioPlantao"", pl.data_fim as ""DataFimPlantao"",
-                pg.valor_previsto as ""ValorPrevisto"", pg.valor_pago as ""ValorPago"", pg.status as ""Status"",
+                pg.valor_previsto as ""ValorPrevisto"", pg.valor_pago as ""ValorPago"",
+                pg.valor_previsto as ""ValorBruto"", pg.valor_previsto as ""ValorLiquido"",
+                0::numeric as ""Descontos"", 0::numeric as ""Acrescimos"", pg.status as ""Status"",
                 pg.data_prevista as ""DataPrevista"", pg.data_pagamento as ""DataPagamento"",
                 pg.forma_pagamento as ""FormaPagamento"", pg.chave_pix as ""ChavePix"",
                 pg.observacoes as ""Observacoes"", pg.reg_date as ""RegDate""
@@ -1639,6 +1653,9 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
     int page,
     int pageSize)
         {
+            var tenantId = currentUser.TenantId;
+            if (!tenantId.HasValue)
+                return ApiResponse<PagedResult<PagamentoResumoDto>>.Fail("Contexto de tenant inválido.", 403);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
 
             var medicoId = await cn.ExecuteScalarAsync<Guid?>(@"
@@ -1649,7 +1666,8 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         limit 1;
     ", new
             {
-                usuarioId
+                usuarioId,
+                tenantId
             });
 
             if (!medicoId.HasValue)
@@ -1678,6 +1696,9 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             Guid usuarioId,
             Guid pagamentoId)
         {
+            var tenantId = currentUser.TenantId;
+            if (!tenantId.HasValue)
+                return ApiResponse<PagamentoDetailsDto>.Fail("Contexto de tenant inválido.", 403);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
 
             var medicoId = await cn.ExecuteScalarAsync<Guid?>(@"
@@ -1688,7 +1709,8 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         limit 1;
     ", new
             {
-                usuarioId
+                usuarioId,
+                tenantId
             });
 
             if (!medicoId.HasValue)
@@ -1703,11 +1725,13 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         select medico_id
         from plantaopro.pagamentos
         where id = @pagamentoId
+          and tenant_id = @tenantId
           and reg_status = 'A'
         limit 1;
     ", new
             {
-                pagamentoId
+                pagamentoId,
+                tenantId
             });
 
             if (!pagamentoMedicoId.HasValue)
@@ -1912,7 +1936,7 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
                 uid
             });
             var prox = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(e.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.data_inicio>=now() and p.reg_status='A' order by p.data_inicio asc limit 5");
-            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",coalesce(pg.valor_pago,0) as \"ValorPago\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' order by pg.reg_date desc limit 5");
+            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",pg.valor_pago as \"ValorPago\",pg.valor_previsto as \"ValorBruto\",pg.valor_previsto as \"ValorLiquido\",0::numeric as \"Descontos\",0::numeric as \"Acrescimos\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\",pg.reg_date as \"RegDate\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' order by pg.reg_date desc limit 5");
             var nots = await cn.QueryAsync<NotificacaoDto>("select id,titulo,mensagem,tipo,lida,reg_date as RegDate from plantaopro.notificacoes where usuario_id=@uid and reg_status='A' order by reg_date desc limit 5", new
             {
                 uid

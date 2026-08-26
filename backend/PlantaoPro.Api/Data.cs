@@ -1421,15 +1421,39 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         }
         public async Task<ApiResponse<PagamentoDetailsDto>> GetByIdAsync(Guid id)
         {
+            var tenantId = currentUser.TenantId;
+            var isGlobal = currentUser.IsGlobalAdmin();
+            if (!isGlobal && !tenantId.HasValue)
+                return ApiResponse<PagamentoDetailsDto>.Fail("Contexto de tenant inválido.", 403);
+
             await using var cn = Cn();
-            var d = await cn.QueryFirstOrDefaultAsync<PagamentoDetailsDto>("select pg.id,pg.escala_id as EscalaId,pg.medico_id as MedicoId,pg.plantao_id as PlantaoId,m.nome as MedicoNome,m.crm as MedicoCrm,m.uf_crm as MedicoUfCrm,m.email as MedicoEmail,m.telefone as MedicoTelefone,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,esp.nome as EspecialidadeNome,pl.data_inicio as DataInicioPlantao,pl.data_fim as DataFimPlantao,pg.valor_previsto as ValorPrevisto,pg.valor_pago as ValorPago,pg.status,pg.data_prevista as DataPrevista,pg.data_pagamento as DataPagamento,pg.forma_pagamento as FormaPagamento,null::text as ChavePix,pg.observacoes,pg.reg_date as RegDate from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.id=@id and pg.reg_status='A'", new
-            {
-                id
-            });
+            const string sql = @"select
+                pg.id as ""Id"", pg.escala_id as ""EscalaId"", pg.medico_id as ""MedicoId"", pg.plantao_id as ""PlantaoId"",
+                m.nome as ""MedicoNome"", m.crm as ""MedicoCrm"", m.uf_crm as ""MedicoUfCrm"",
+                m.email as ""MedicoEmail"", m.telefone as ""MedicoTelefone"",
+                h.nome_fantasia as ""HospitalNome"", h.cidade as ""HospitalCidade"", h.estado as ""HospitalEstado"",
+                esp.nome as ""EspecialidadeNome"", pl.data_inicio as ""DataInicioPlantao"", pl.data_fim as ""DataFimPlantao"",
+                pg.valor_previsto as ""ValorPrevisto"", pg.valor_pago as ""ValorPago"", pg.status as ""Status"",
+                pg.data_prevista as ""DataPrevista"", pg.data_pagamento as ""DataPagamento"",
+                pg.forma_pagamento as ""FormaPagamento"", pg.chave_pix as ""ChavePix"",
+                pg.observacoes as ""Observacoes"", pg.reg_date as ""RegDate""
+            from plantaopro.pagamentos pg
+            join plantaopro.plantoes pl on pl.id=pg.plantao_id
+            join plantaopro.medicos m on m.id=pg.medico_id
+            join plantaopro.hospitais h on h.id=pl.hospital_id
+            join plantaopro.especialidades esp on esp.id=pl.especialidade_id
+            where pg.id=@Id and pg.reg_status='A'
+              and (@IsGlobal or (@TenantId is not null and pg.tenant_id=@TenantId))";
+            var d = await cn.QueryFirstOrDefaultAsync<PagamentoDetailsDto>(sql, new { Id = id, TenantId = tenantId, IsGlobal = isGlobal });
             return d is null ? ApiResponse<PagamentoDetailsDto>.Fail("Pagamento não encontrado", 404) : ApiResponse<PagamentoDetailsDto>.Ok(d);
         }
         public async Task<ApiResponse<Guid>> GerarAsync(GerarPagamentoRequest req, Guid userId, string? ip, string? ua)
         {
+            var tenantId = currentUser.TenantId;
+            var clienteId = currentUser.ClienteId;
+            if (!tenantId.HasValue || !clienteId.HasValue)
+                return ApiResponse<Guid>.Fail("Contexto de tenant inválido.", 403);
+
             await using var cn = Cn();
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
@@ -1451,9 +1475,11 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 var dataPrevista = req.DataPrevista ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
                 var horas = Math.Max(1m, (decimal)(row.DataFim - row.DataInicio).TotalHours);
                 var valorProporcional = PlantaoPro.Domain.Financeiro.PlantaoPaymentCalculator.Calcular(row.Valor, row.DataInicio, row.DataFim);
-                await cn.ExecuteAsync("insert into plantaopro.pagamentos(id,escala_id,medico_id,plantao_id,valor_previsto,valor_pago,status,data_prevista,observacoes,reg_date,reg_status,created_by) values(@id,@e,@m,@p,@v,null,'pendente',@d,@o,now(),'A',@u)", new
+                await cn.ExecuteAsync("insert into plantaopro.pagamentos(id,tenant_id,cliente_id,escala_id,medico_id,plantao_id,valor_previsto,valor_pago,status,data_prevista,observacoes,reg_date,reg_status,created_by) values(@id,@tenantId,@clienteId,@e,@m,@p,@v,null,'pendente',@d,@o,now(),'A',@u)", new
                 {
                     id,
+                    tenantId,
+                    clienteId,
                     e = row.EscalaId,
                     m = row.MedicoId,
                     p = row.PlantaoId,

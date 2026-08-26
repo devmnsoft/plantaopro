@@ -213,6 +213,8 @@ builder.Services.AddScoped<IWorkItemService, WorkItemService>();
 builder.Services.AddScoped<IOperationRealtimePublisher, OperationRealtimePublisher>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IOperationNotificationService, OperationNotificationService>();
+builder.Services.AddScoped<INotificationDispatcher, NotificationDispatcher>();
+builder.Services.AddScoped<IAlertRuleService, AlertRuleService>();
 builder.Services.AddScoped<IProductivityRepository, ProductivityRepository>();
 builder.Services.AddScoped<IProductivityService, ProductivityService>();
 builder.Services.AddScoped<IProductivityActionRepository, ProductivityActionRepository>();

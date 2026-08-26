@@ -16,7 +16,9 @@ export class NotificationDrawer {
       const error = new Error(messages[response.status] || (response.status >= 500 ? 'A central de notificações está temporariamente indisponível.' : 'As notificações não puderam ser atualizadas.'));
       error.status = response.status; throw error;
     }
-    return response.status === 204 ? null : response.json();
+    if (response.status === 204) return null;
+    const payload = await response.json();
+    return payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
   }
   async refreshCount() {
     try { const payload = await this.request('/nao-lidas'); const items = Array.isArray(payload) ? payload : []; document.querySelectorAll('[data-notification-count]').forEach(counter => { counter.querySelector('[data-notification-count-value]').textContent = items.length ? String(items.length) : ''; counter.hidden = items.length === 0; }); }

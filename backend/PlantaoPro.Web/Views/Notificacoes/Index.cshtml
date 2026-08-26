@@ -1,6 +1,19 @@
-@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.NotificacaoDto>
-@{ ViewData["Title"] = "Notificações"; var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.NotificacaoDto>(); }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Notificações","Acompanhe alertas e avisos do sistema.","bi-bell","Marcar todas como lidas",null,null,true)' />
-<div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead class="table-light"><tr><th>Título</th><th>Mensagem</th><th>Tipo</th><th>Status</th><th>Data</th><th class="text-end">Ações</th></tr></thead><tbody>
-@if(items.Any()){foreach(var n in items){<tr><td class="fw-semibold">@n.Titulo</td><td>@n.Mensagem</td><td><span class="badge bg-light text-dark border">@n.Tipo</span></td><td><partial name="_StatusBadge" model="@(n.Lida ? "pago" : "pendente")" /></td><td>@n.RegDate.ToString("dd/MM/yyyy HH:mm")</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@n.Id">Detalhes</a> <button class="btn btn-sm btn-outline-secondary" disabled title="Ação indisponível">Marcar lida</button></td></tr>}}else{<tr><td colspan="6" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-bell-slash","Nenhuma notificação encontrada","Você está em dia com os alertas do sistema.")' /></td></tr>}
-</tbody></table></div><div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div></div>
+@{ ViewData["Title"] = "Central de Notificações"; ViewData["Subtitle"] = "Prioridades claras para uma operação tranquila."; }
+<section class="notification-center" data-notification-center data-api="/bff/operacao/notificacoes">
+  <header class="notification-hero">
+    <div><span class="eyebrow">Pulso operacional</span><h2>O que precisa da sua atenção</h2><p>Alertas reais, organizados por impacto e sempre isolados no seu contexto.</p></div>
+    <div class="notification-hero__actions"><a class="button button-subtle" asp-action="Preferencias">Preferências</a><button class="button button-primary" type="button" data-read-all>Marcar todas como lidas</button></div>
+  </header>
+  <form class="notification-filters" data-filters>
+    <label>Tipo<select name="tipo"><option value="">Todos</option><option>PLANTAO_AGUARDANDO_CONFIRMACAO</option><option>RISCO_COBERTURA</option><option>CHECKIN_PENDENTE</option><option>PAGAMENTO_PENDENTE_APROVACAO</option></select></label>
+    <label>Módulo<select name="modulo"><option value="">Todos</option><option>OPERACAO</option><option>ESCALA</option><option>CLINICA</option><option>FINANCEIRO</option><option>SISTEMA</option></select></label>
+    <label>Prioridade<select name="prioridade"><option value="">Todas</option><option>CRITICA</option><option>ALTA</option><option>MEDIA</option><option>BAIXA</option></select></label>
+    <label>Status<select name="status"><option value="">Todos</option><option value="NAO_LIDA">Não lida</option><option value="LIDA">Lida</option><option value="ARQUIVADA">Arquivada</option><option value="RESOLVIDA">Resolvida</option></select></label>
+    <label>De<input type="date" name="de" /></label><label>Até<input type="date" name="ate" /></label>
+    <button class="button button-primary" type="submit">Aplicar filtros</button>
+  </form>
+  <div class="notification-state" data-state aria-live="polite"><span class="pp-skeleton"></span><strong>Carregando notificações</strong><small>Organizando as prioridades do seu turno…</small></div>
+  <div class="notification-list" data-list hidden></div>
+</section>
+@section Styles { <link rel="stylesheet" href="~/css/design-system/v2070-notifications.css" asp-append-version="true" /> }
+@section Scripts { <script type="module" src="~/js/pages/notification-center.js" asp-append-version="true"></script> }

@@ -256,5 +256,13 @@
       "plantaopro.operacional_real_v113"
     ],
     "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql"
+  },
+  {
+    "object": "plantaopro.notificacoes_v2070",
+    "dependsOn": [
+      "plantaopro.operacao_assistida_v1310",
+      "plantaopro.revenue_cycle_v195"
+    ],
+    "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql"
   }
 ]

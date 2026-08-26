@@ -31,6 +31,7 @@
   "database/schema/320_v187_fechamento_operacional_financeiro.sql": "5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13",
   "database/schema/330_v188_prontuario_longitudinal.sql": "a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66",
   "database/schema/340_v189_clinical_operational_hardening.sql": "abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5",
+  "database/schema/350_v2070_notificacoes_alertas_operacionais.sql": "e7b73da88edb97aa0a99c07edf360a8dd2177603d79642168a39e8766076bac2",
   "database/seeds/system/010_modulos.sql": "ee27f14e0966c5aef1ba6e7669182dc3bec4382de80dabd99dc49506fc2f0bf3",
   "database/seeds/system/020_acoes.sql": "4b192295da67ad56935ed39879bc12eb73825756e21ad7e07e7a45bc95a54238",
   "database/seeds/system/030_permissoes.sql": "af8f4a93a329103f764da681fd3b3b15c72c33724c447d1efff4b5db24416833",

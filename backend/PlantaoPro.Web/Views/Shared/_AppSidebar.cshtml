@@ -28,6 +28,10 @@
         @if (canOperate)
         {
             <div class="nav-section-title"><span>Operação médica</span></div>
+            @if (User.IsInRole("Admin") || User.IsInRole("Gestor") || User.IsInRole("Administrador"))
+            {
+                <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
+            }
             <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>Plantões</span></a>
             <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agenda</span></a>
             <a class="nav-link-app @Active("Cobertura")" asp-controller="Cobertura" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Cobertura</span></a>

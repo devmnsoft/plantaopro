@@ -1,76 +1,17 @@
-@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.MedicoAreaResumoDto>
-@{
-    ViewData["Title"] = "Minha Agenda";
-    var data = Model?.Data;
-    var errorMessage = Model?.ErrorMessage ?? TempData["Error"] as string;
-
-    // Criar o PageHeaderViewModel antes do partial
-    var header = new PlantaoPro.Web.Models.PageHeaderViewModel(
-        Title: "Minha Agenda",
-        Subtitle: "Acompanhe seus plantões, solicitações e pagamentos.",
-        Icon: "bi-calendar-check"
-    );
-
-    // Criar EmptyStateViewModel antes do partial
-    var emptyState = new PlantaoPro.Web.Models.EmptyStateViewModel
-    {
-        Icon = "bi-calendar-x",
-        Title = "Agenda indisponível",
-        Description = "Não foi possível carregar sua agenda no momento.",
-        PrimaryActionText = null,
-        PrimaryAction = null,
-        PrimaryController = null,
-        ButtonDisabled = true
-    };
-}
-
-<partial name="_PageHeader" model="header" />
-
-@if (!string.IsNullOrWhiteSpace(errorMessage))
-{
-    <div class="alert alert-warning">@errorMessage</div>
-}
-
-@if (data is not null)
-{
-    <div class="row g-3">
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-label">Disponíveis</div>
-                <div class="metric-value">@data.PlantoesDisponiveis</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-label">Solicitações</div>
-                <div class="metric-value">@data.SolicitacoesPendentes</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-label">Confirmadas</div>
-                <div class="metric-value">@data.EscalasConfirmadas</div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="metric-card">
-                <div class="metric-label">Pag. pendentes</div>
-                <div class="metric-value">@data.PagamentosPendentes</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="mt-3 d-flex gap-2 flex-wrap">
-        <a asp-action="PlantoesDisponiveis" class="btn btn-primary">Ver plantões disponíveis</a>
-        <button class="btn btn-outline-secondary" disabled title="Ação indisponível">Minhas escalas</button>
-        <button class="btn btn-outline-secondary" disabled title="Ação indisponível">Meus pagamentos</button>
-    </div>
-}
-else
-{
-    <div class="card border-0 shadow-sm">
-        <div class="card-body">
-            <partial name="_EmptyState" model="emptyState" />
-        </div>
-    </div>
-}
+@model PlantaoPro.Web.Models.DetailsPageViewModel<PlantaoPro.Web.Models.ProfessionalDashboardDto>
+@{ ViewData["Title"] = "Meu Dia"; var d = Model.Data; }
+@section Styles { <link rel="stylesheet" href="~/css/pages/professional-portal.css" asp-append-version="true" /> }
+<main class="professional-portal" aria-labelledby="professional-title">
+  <header class="professional-hero"><div><span class="eyebrow">Área do profissional</span><h1 id="professional-title">Meu Dia</h1><p>@(d is null ? "Sua rotina clínica em um só lugar." : $"Olá, {d.Resumo.MedicoNome}. Veja o que precisa da sua atenção.")</p></div><div class="hero-actions"><a asp-action="PlantoesDisponiveis" class="btn btn-light">Encontrar plantão</a><a asp-controller="MedicoArea" asp-action="Disponibilidade" class="btn btn-outline-light">Informar disponibilidade</a></div></header>
+  @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="portal-state" role="alert"><strong>Não foi possível carregar o Meu Dia.</strong><span>@Model.ErrorMessage</span></div> }
+  else if (d is null) { <div class="portal-state"><strong>Nada para mostrar agora</strong><span>Atualize a página ou fale com a coordenação se seu vínculo ainda não estiver ativo.</span></div> }
+  else {
+    <section class="metric-grid" aria-label="Resumo do dia">
+      <article><span>Confirmações</span><strong>@d.Resumo.SolicitacoesPendentes</strong><small>aguardando retorno</small></article><article><span>Próximos plantões</span><strong>@d.Resumo.EscalasConfirmadas</strong><small>na sua agenda</small></article><article><span>Notificações</span><strong>@d.Resumo.NotificacoesNaoLidas</strong><small>não lidas</small></article><article><span>A receber</span><strong>@d.ValorPrevisto.ToString("C")</strong><small>valor previsto</small></article>
+    </section>
+    <div class="portal-columns"><section class="portal-panel"><div class="panel-heading"><div><span class="eyebrow">Agenda</span><h2>Próximos plantões</h2></div><a asp-action="Presencas">Check-in e check-out</a></div>
+      @if (!d.ProximosPlantoes.Any()) { <div class="compact-empty">Nenhum plantão confirmado para os próximos dias.</div> }
+      @foreach (var item in d.ProximosPlantoes) { <article class="shift-card"><time datetime="@item.DataInicio.ToString("O")"><b>@item.DataInicio.ToString("dd MMM")</b><span>@item.DataInicio.ToString("HH:mm")–@item.DataFim.ToString("HH:mm")</span></time><div><h3>@item.HospitalNome</h3><p>@item.EspecialidadeNome</p></div><span class="status-badge">@item.Status</span></article> }
+    </section><aside class="portal-panel"><div class="panel-heading"><div><span class="eyebrow">Financeiro</span><h2>Meus pagamentos</h2></div><a asp-action="MeusPagamentos">Ver detalhes</a></div><div class="finance-highlight"><span>Pago</span><strong>@d.ValorPago.ToString("C")</strong><small>Aprovado: @d.ValorAprovado.ToString("C")</small></div><hr/><h3>Convites recebidos</h3><p class="muted">@d.ConvitesPendentes.Count() convite(s) aguardando sua confirmação.</p><a asp-controller="MedicoArea" asp-action="Convites" class="btn btn-outline-primary w-100">Revisar convites</a></aside></div>
+  }
+</main>

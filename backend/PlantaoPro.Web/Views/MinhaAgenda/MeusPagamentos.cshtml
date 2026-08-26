@@ -1,0 +1,7 @@
+@model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.MedicoPagamentoDto>
+@{ ViewData["Title"]="Meus Pagamentos"; var previsto=Model.Items.Sum(x=>x.ValorPrevisto); var pago=Model.Items.Sum(x=>x.ValorPago ?? 0); }
+@section Styles { <link rel="stylesheet" href="~/css/pages/professional-portal.css" asp-append-version="true" /> }
+<main class="professional-portal"><header class="page-intro"><span class="eyebrow">Financeiro individual</span><h1>Meus Pagamentos</h1><p>Valores dos seus plantões, sempre restritos ao seu vínculo profissional.</p></header><section class="metric-grid"><article><span>Previsto no período</span><strong>@previsto.ToString("C")</strong></article><article><span>Pago</span><strong>@pago.ToString("C")</strong></article><article><span>Em aberto</span><strong>@((previsto-pago).ToString("C"))</strong></article></section>
+@if (!Model.Items.Any()) { <div class="portal-state"><strong>Nenhum pagamento encontrado</strong><span>Os valores aparecerão após o processamento dos plantões realizados.</span></div> }
+else { <section class="payment-list" aria-label="Pagamentos">@foreach(var p in Model.Items){<article><div><span class="eyebrow">@p.DataPlantao.ToString("dd/MM/yyyy") · @p.EspecialidadeNome</span><h2>@p.HospitalNome</h2><p>Previsto @p.ValorPrevisto.ToString("C")</p></div><div class="payment-value"><strong>@((p.ValorPago ?? p.ValorPrevisto).ToString("C"))</strong><span class="status-badge">@p.Status</span></div></article>}</section> }
+</main>

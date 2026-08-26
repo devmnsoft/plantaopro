@@ -5,6 +5,7 @@
     var status = (pg?.Status ?? "pendente").Trim().ToLowerInvariant();
     var statusIcon = status switch { "pago" => "bi-check-circle-fill", "cancelado" or "recusado" => "bi-x-octagon-fill", _ => "bi-clock-history" };
     var statusText = string.IsNullOrWhiteSpace(pg?.Status) ? "Pendente" : pg.Status;
+    var pixSeguro = string.IsNullOrWhiteSpace(pg?.ChavePix) ? "Não informada" : $"•••• •••• {pg.ChavePix[^Math.Min(4, pg.ChavePix.Length)..]}";
 }
 
 <main class="pp-finance-page pp-payment-detail" aria-labelledby="payment-title">
@@ -44,7 +45,11 @@
             <section class="pp-payment-card" aria-labelledby="payment-values-title">
                 <div class="pp-payment-card__heading"><i class="bi bi-wallet2" aria-hidden="true"></i><div><h2 id="payment-values-title">Resumo financeiro</h2><p>Valores e datas deste pagamento.</p></div></div>
                 <dl class="pp-payment-values">
+                    <div><dt>Valor bruto</dt><dd>@pg.ValorBruto.ToString("C")</dd></div>
                     <div><dt>Valor previsto</dt><dd>@pg.ValorPrevisto.ToString("C")</dd></div>
+                    <div><dt>Descontos</dt><dd>@pg.Descontos.ToString("C")</dd></div>
+                    <div><dt>Acréscimos</dt><dd>@pg.Acrescimos.ToString("C")</dd></div>
+                    <div><dt>Valor líquido</dt><dd>@(pg.ValorLiquido?.ToString("C") ?? "Ainda não calculado")</dd></div>
                     <div class="@(pg.ValorPago.HasValue ? "is-paid" : "is-pending")"><dt>Valor pago</dt><dd>@(pg.ValorPago?.ToString("C") ?? "Aguardando pagamento")</dd></div>
                     <div><dt>Data prevista</dt><dd>@(pg.DataPrevista?.ToString("dd/MM/yyyy") ?? "Não definida")</dd></div>
                     <div><dt>Data do pagamento</dt><dd>@(pg.DataPagamento?.ToString("dd/MM/yyyy") ?? "Ainda não pago")</dd></div>
@@ -67,7 +72,7 @@
                 <div class="pp-payment-card__heading"><i class="bi bi-card-text" aria-hidden="true"></i><div><h2 id="payment-notes-title">Pagamento e observações</h2><p>Dados da liquidação e contexto adicional.</p></div></div>
                 <dl class="pp-financial-facts">
                     <div><dt>Forma de pagamento</dt><dd>@(string.IsNullOrWhiteSpace(pg.FormaPagamento) ? "Não informada" : pg.FormaPagamento)</dd></div>
-                    <div><dt>Chave Pix</dt><dd class="pp-sensitive-value">@(string.IsNullOrWhiteSpace(pg.ChavePix) ? "Não informada" : pg.ChavePix)</dd></div>
+                    <div><dt>Chave Pix</dt><dd class="pp-sensitive-value" title="Dado mascarado por privacidade">@pixSeguro</dd></div>
                     <div class="pp-fact-wide"><dt>Observações</dt><dd>@(string.IsNullOrWhiteSpace(pg.Observacoes) ? "Nenhuma observação registrada." : pg.Observacoes)</dd></div>
                 </dl>
             </section>

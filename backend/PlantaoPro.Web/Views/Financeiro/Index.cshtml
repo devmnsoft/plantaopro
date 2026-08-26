@@ -10,6 +10,8 @@
     var cancelados = items.Count(x => string.Equals(x.Status, "Cancelado", StringComparison.OrdinalIgnoreCase));
     var porStatus = items.GroupBy(x => x.Status).Select(g => new { Status = g.Key, Total = g.Sum(v => v.ValorPrevisto) }).ToList();
     var maiorValor = porStatus.Any() ? porStatus.Max(x => x.Total) : 0;
+    var filtroInicio = Context.Request.Query["dataInicio"].ToString();
+    var filtroFim = Context.Request.Query["dataFim"].ToString();
 }
 
 <div class="pp-page pp-financial-workspace">
@@ -23,6 +25,16 @@
 <nav class="pp-financial-journey" aria-label="Jornada financeira" data-financial-mvp-journey>
     <span>Faturamento</span><span class="is-current">Financeiro</span><span>Glosa / contestação</span><span>Pagamento</span><span>Repasse</span><span>Relatório</span>
 </nav>
+
+<form method="get" class="pp-payment-card mb-3" aria-label="Filtros de pagamentos">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3"><label class="form-label" for="filter-start">Período inicial</label><input class="form-control" id="filter-start" name="dataInicio" type="date" value="@filtroInicio" /></div>
+        <div class="col-12 col-md-3"><label class="form-label" for="filter-end">Período final</label><input class="form-control" id="filter-end" name="dataFim" type="date" value="@filtroFim" /></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="filter-status">Status</label><select class="form-select" id="filter-status" name="status"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="contestado">Contestado</option><option value="cancelado">Cancelado</option></select></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="filter-method">Forma de pagamento</label><select class="form-select" id="filter-method" name="formaPagamento"><option value="">Todas</option><option value="PIX">Pix</option><option value="TED">TED</option><option value="DOC">DOC</option><option value="BOLETO">Boleto</option><option value="OUTRO">Outro</option></select></div>
+        <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button></div>
+    </div>
+</form>
 
 <section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
     <article class="pp-kpi-card"><span>Total previsto</span><strong>@totalPrevisto.ToString("C")</strong><small>Composição dos registros exibidos</small></article>

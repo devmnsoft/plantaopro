@@ -136,6 +136,7 @@
     "plantaopro.modulos_sistema",
     "plantaopro.notificacao_regras",
     "plantaopro.notificacoes",
+    "plantaopro.notification_actions",
     "plantaopro.notification_preferences",
     "plantaopro.notification_read_states",
     "plantaopro.notification_recipients",
@@ -505,6 +506,7 @@
     "database/schema/330_v188_prontuario_longitudinal.sql",
     "database/schema/340_v189_clinical_operational_hardening.sql",
     "database/migrations/2026_v192_saved_views.sql",
-    "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql"
+    "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
+    "database/schema/350_v2070_notificacoes_alertas_operacionais.sql"
   ]
 }

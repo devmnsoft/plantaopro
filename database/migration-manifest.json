@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.95.3",
-  "generatedAt": "2026-08-20",
+  "schemaVersion": "v2.07.0",
+  "generatedAt": "2026-08-26",
   "migrations": [
     {
       "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
@@ -474,6 +474,17 @@
       "checksum": "2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72",
       "dependsOn": [
         "2026_v192_saved_views"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_v2070_notificacoes_alertas_operacionais",
+      "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
+      "checksum": "e7b73da88edb97aa0a99c07edf360a8dd2177603d79642168a39e8766076bac2",
+      "dependsOn": [
+        "2026_08_v195_financeiro_revenue_cycle"
       ],
       "status": "active",
       "transactional": true,

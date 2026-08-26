@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v1.95.3",
-  "generatedAt": "2026-08-20",
+  "schemaVersion": "v2.07.0",
+  "generatedAt": "2026-08-26",
   "sections": [
     {
       "order": 3,
@@ -452,6 +452,23 @@
           ]
         }
       ]
+    },
+    {
+      "order": 44,
+      "name": "plantaopro.notificacoes_v2070",
+      "objects": [
+        {
+          "name": "plantaopro.notificacoes_v2070",
+          "type": "canonical",
+          "category": "CANONICAL_SPRINT0",
+          "required": true,
+          "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
+          "dependsOn": [
+            "plantaopro.operacao_assistida_v1310",
+            "plantaopro.revenue_cycle_v195"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -512,6 +529,8 @@
     "ajuda_contextual_topicos",
     "operacao_assistida_runbooks",
     "notificacao_agrupamentos_v145",
-    "user_saved_dashboards"
+    "user_saved_dashboards",
+    "notification_actions",
+    "notification_outbox"
   ]
 }

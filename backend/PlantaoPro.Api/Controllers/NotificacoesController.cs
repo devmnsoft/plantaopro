@@ -21,15 +21,18 @@ public sealed class NotificacoesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationDto>>>> List(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationDto>>>> List(
+        [FromQuery] string? tipo, [FromQuery] string? modulo, [FromQuery] string? prioridade,
+        [FromQuery] string? status, [FromQuery] DateTimeOffset? de, [FromQuery] DateTimeOffset? ate,
+        [FromQuery] int limite = 100, CancellationToken ct = default)
     {
-        return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(false, ct)));
+        return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(new(tipo, modulo, prioridade, status, de, ate, limite), ct)));
     }
 
     [HttpGet("nao-lidas")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationDto>>>> Unread(CancellationToken ct)
     {
-        return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(true, ct)));
+        return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(new(null, null, null, "NAO_LIDA", null, null, 10), ct)));
     }
 
     [HttpPost("{id:guid}/lida")]
@@ -57,15 +60,22 @@ public sealed class NotificacoesController : ControllerBase
         return Ok(ApiResponse<int>.Ok(await service.ReadAllAsync(ct), "Notificações atualizadas."));
     }
 
-    [HttpDelete("{id:guid}")]
-    public async Task<ActionResult<ApiResponse<bool>>> Delete(Guid id, CancellationToken ct)
+    [HttpPost("{id:guid}/arquivar")]
+    public async Task<ActionResult<ApiResponse<bool>>> Archive(Guid id, CancellationToken ct)
     {
-        if (!await service.DeleteAsync(id, ct))
+        if (!await service.SetStatusAsync(id, "ARQUIVADA", ct))
         {
             return NotFound(ApiResponse<bool>.Fail("Notificação não encontrada.", 404));
         }
 
-        return Ok(ApiResponse<bool>.Ok(true, "Notificação excluída."));
+        return Ok(ApiResponse<bool>.Ok(true, "Notificação arquivada."));
+    }
+
+    [HttpPost("{id:guid}/resolver")]
+    public async Task<ActionResult<ApiResponse<bool>>> Resolve(Guid id, CancellationToken ct)
+    {
+        if (!await service.SetStatusAsync(id, "RESOLVIDA", ct)) return NotFound(ApiResponse<bool>.Fail("Notificação não encontrada.", 404));
+        return Ok(ApiResponse<bool>.Ok(true, "Notificação resolvida."));
     }
 
     [HttpGet("preferencias")]
@@ -80,5 +90,20 @@ public sealed class NotificacoesController : ControllerBase
     {
         await service.SavePreferencesAsync(request, ct);
         return Ok(ApiResponse<bool>.Ok(true, "Preferências atualizadas."));
+    }
+}
+
+[ApiController]
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor)]
+[Route("api/alertas-operacionais")]
+public sealed class AlertasOperacionaisController : ControllerBase
+{
+    private readonly IAlertRuleService rules; private readonly ICurrentUserService user; private readonly ILogger<AlertasOperacionaisController> logger;
+    public AlertasOperacionaisController(IAlertRuleService rules, ICurrentUserService user, ILogger<AlertasOperacionaisController> logger) { this.rules=rules; this.user=user; this.logger=logger; }
+    [HttpPost("avaliar")]
+    public async Task<ActionResult<ApiResponse<int>>> Evaluate(CancellationToken ct)
+    {
+        try { var tenant=user.TenantId ?? throw new UnauthorizedAccessException(); return Ok(ApiResponse<int>.Ok(await rules.EvaluateAsync(tenant,ct),"Regras operacionais avaliadas.")); }
+        catch(Exception ex) { logger.LogError(ex,"Falha ao avaliar regras operacionais."); return StatusCode(500,ApiResponse<int>.Fail("Não foi possível avaliar os alertas agora.",500)); }
     }
 }

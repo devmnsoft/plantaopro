@@ -2,41 +2,26 @@
 
 ## Status da rodada
 
-**Bloqueada antes da implementação.** O SDK `dotnet` não está instalado ou não está
-disponível no `PATH` deste ambiente (`dotnet: command not found`). Conforme a regra da
-rodada, nenhuma alteração funcional, visual, de API ou de testes foi realizada sem a
-possibilidade de restaurar, compilar e validar a solução.
+**Bloqueada antes da implementação.** O executável `dotnet` não está instalado ou não
+está disponível no `PATH` (`dotnet: command not found`, exit code 127). A instrução da
+rodada determina que, nessa situação, o bloqueio seja documentado e nenhuma alteração
+funcional seja feita. Portanto, não houve mudança visual, de API, de formulário ou de
+teste que pudesse ficar sem restore, build e validação de runtime.
 
-Também não existe remoto Git configurado no clone. Por isso, `git fetch origin main`
-falhou e não foi possível confirmar/atualizar a `main` a partir do GitHub. O commit local
-de partida é `29211ac` e uma referência local `main` foi criada nesse mesmo commit antes
-da criação da branch solicitada.
+O clone também não possui remoto Git configurado. `git fetch origin main` terminou com
+exit code 128, então não foi possível buscar a `main` do GitHub. Para não fingir que a
+atualização remota ocorreu, a referência local `main` foi alinhada ao commit disponível
+mais recente (`d9dbfd1`) e, a partir dela, foi criada a branch solicitada
+`codex/v2107-polimento-visual-tela-a-tela-saas-premium`.
 
 ## Telas auditadas
 
-Foi feita somente uma auditoria estática de disponibilidade, sem declarar validação
-visual ou de runtime. Foram localizadas views/controllers para:
-
-- login (`Views/Account/Login.cshtml`);
-- dashboard (incluindo dashboards por perfil);
-- Meu Dia;
-- agenda e Minha Agenda;
-- plantões;
-- escalas;
-- médicos/profissionais;
-- hospitais/unidades;
-- financeiro;
-- notificações;
-- configurações;
-- administração;
-- relatórios;
-- Saúde 360.
-
-O repositório já contém parciais reutilizáveis para page header, action/filter bars,
-KPI, status badge, data table, form section, modal de confirmação, empty/error states,
-toasts, timeline e quick actions, além de folhas do design system para acessibilidade,
-responsividade, formulários, tabelas, feedback e overlays. Esses recursos foram apenas
-inventariados; sua aplicação tela a tela não pôde ser validada.
+Nesta execução não foi possível fazer auditoria visual em runtime. A auditoria estática
+já registrada no repositório identificou as seguintes áreas existentes: login,
+dashboard, Meu Dia, agenda/Minha Agenda, plantões, escalas, médicos/profissionais,
+hospitais/unidades, financeiro, notificações, configurações, administração, relatórios
+e Saúde 360. Essa relação é um inventário de cobertura, não uma alegação de validação
+visual em desktop, tablet ou mobile.
 
 ## Telas alteradas
 
@@ -44,26 +29,24 @@ Nenhuma. A ausência do SDK acionou a regra explícita de não fazer alteração
 
 ## Componentes criados ou evoluídos
 
-Nenhum. Este relatório de bloqueio é o único arquivo criado.
+Nenhum. O único arquivo modificado nesta rodada é este relatório de bloqueio.
 
 ## Problemas visuais corrigidos
 
-Nenhum. Sem build e runtime, não foi possível verificar com segurança desktop, tablet
-e mobile, nem produzir screenshots representativos.
+Nenhum. Sem build e runtime, não seria seguro alterar o design nem confirmar que uma
+mudança preservaria o padrão atual, as funcionalidades e a responsividade.
 
 ## Formulários corrigidos e IDs manuais removidos
 
-Nenhum. A busca estática final encontrou dois campos manuais preexistentes em
-`Views/Assinaturas/_Form.cshtml` (`ClienteId` e `PlanoId`). Eles não foram modificados
-porque isso exigiria implementar ou confirmar lookups reais, isolamento por tenant,
-permissões e validação server-side, trabalho funcional que não pode ser validado neste
-ambiente.
+Nenhum. A busca obrigatória encontrou dois campos manuais preexistentes em
+`Views/Assinaturas/_Form.cshtml`: `ClienteId` e `PlanoId`. Eles não foram modificados,
+pois a substituição correta exige lookups reais, autorização, isolamento por tenant e
+validação server-side — alteração funcional proibida enquanto o SDK estiver ausente.
 
 ## Acessibilidade e mobile
 
-Nenhuma mudança foi aplicada. Permanecem pendentes smoke tests com foco visível,
-contraste, navegação por teclado, leitores de tela e breakpoints de desktop, tablet e
-mobile em uma execução real da aplicação.
+Nenhuma mudança foi aplicada. Continuam pendentes testes reais de foco visível,
+contraste, teclado, tecnologias assistivas e breakpoints de desktop, tablet e mobile.
 
 ## Comandos executados e resultados
 
@@ -73,33 +56,38 @@ mobile em uma execução real da aplicação.
 |---|---|
 | `git status --short` | sucesso; árvore inicialmente limpa |
 | `git branch --show-current` | sucesso; branch inicial `work` |
-| `dotnet --info || true` | bloqueado; `dotnet: command not found` |
-| `dotnet restore backend/PlantaoPro.sln` | bloqueado; `dotnet: command not found` |
-| `dotnet build backend/PlantaoPro.sln -c Debug --no-restore` | bloqueado; `dotnet: command not found` |
-| `git fetch origin main` | bloqueado; não existe remoto `origin` configurado |
-| `git switch main` / `git pull --ff-only origin main` | não executados após a falha do fetch |
-| `git branch main HEAD` | sucesso; referência local criada em `29211ac` |
-| `git switch -c codex/v2107-polimento-visual-tela-a-tela-saas-premium main` | sucesso |
+| `dotnet --info \|\| true` | bloqueado; `dotnet: command not found` |
+| `dotnet restore backend/PlantaoPro.sln` | bloqueado; exit code 127 |
+| `dotnet build backend/PlantaoPro.sln -c Debug --no-restore` | bloqueado; exit code 127 |
+| `git fetch origin main` | bloqueado; remoto `origin` inexistente, exit code 128 |
+| `git branch -f main HEAD` e `git switch main` | sucesso; `main` local alinhada a `d9dbfd1` |
+| `git switch -c codex/v2107-polimento-visual-tela-a-tela-saas-premium` | sucesso |
 
 ### Validação final
 
-Os comandos .NET finais foram tentados, mas todos os que invocam `dotnet` ficaram
-bloqueados pela mesma limitação do ambiente. `git diff --check` passou.
+| Comando | Resultado |
+|---|---|
+| `dotnet clean backend/PlantaoPro.sln` | bloqueado; exit code 127 |
+| `dotnet restore backend/PlantaoPro.sln` | bloqueado; exit code 127 |
+| `dotnet build backend/PlantaoPro.sln -c Debug --no-restore` | bloqueado; exit code 127 |
+| `dotnet build backend/PlantaoPro.sln -c Release --no-restore` | bloqueado; exit code 127 |
+| `dotnet test backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj -c Release --no-build` | bloqueado; exit code 127 |
+| `git diff --check` | sucesso; exit code 0 |
+| `rg -n 'href="#"\|alert\\(\|confirm\\(\|Digite.*Id\|Digite.*ID\|placeholder=.*Id\|placeholder=.*ID\|SELECT \\*' backend/PlantaoPro.Api backend/PlantaoPro.Web backend/PlantaoPro.Tests` | executado; exit code 0, com 10 correspondências |
 
-A busca obrigatória encontrou 10 correspondências. Oito são textos explicativos ou
-assertivas/fixtures de segurança em testes; duas são violações reais preexistentes de
-placeholder de ID em `Views/Assinaturas/_Form.cshtml`. Não foram encontrados resultados
-de `href="#"`, `confirm()` ou `SELECT *` em código de produção nessa busca.
+Das dez correspondências, duas são violações reais preexistentes de placeholder de ID
+no formulário de assinaturas. As oito restantes são texto de ajuda, casos maliciosos
+deliberados em fixtures ou assertivas que verificam a ausência dos padrões. A busca não
+identificou `href="#"`, `confirm()` ou `SELECT *` em código de produção.
 
 ## Limitações reais restantes
 
-1. Instalar um SDK .NET compatível com os `TargetFramework` dos projetos e repetir
+1. Instalar um SDK .NET compatível com os `TargetFramework` da solução e repetir
    restore, builds Debug/Release e testes.
-2. Configurar o remoto `origin`, atualizar `main` e confirmar que a base local não está
-   defasada antes de qualquer implementação.
+2. Configurar o remoto `origin`, buscar o GitHub e atualizar a `main` de verdade.
 3. Executar a auditoria visual autenticada por perfil e tenant em desktop, tablet e
-   mobile.
-4. Substituir os dois IDs manuais de assinatura por seletores abastecidos por dados
-   reais e autorizados, acompanhados de testes de tenant/permissão e validação.
-5. Só então evoluir as telas e componentes, sem mascarar falhas nem introduzir mocks.
-
+   mobile, incluindo screenshots.
+4. Substituir `ClienteId` e `PlanoId` por seletores com dados reais e autorizados,
+   acompanhados de testes de tenant, permissão e validação.
+5. Somente depois dessas condições, evoluir telas e componentes sem mascarar falhas,
+   remover funcionalidades ou introduzir mocks.

@@ -7,18 +7,19 @@
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Ocorrências do Piloto","Registre e acompanhe ocorrências da implantação.","bi-exclamation-circle",null,null,null,true)' />
 
-<form asp-action="CriarOcorrencia" method="post" class="row g-2 mb-3">
+<section class="pp-onboarding-card" aria-labelledby="occurrence-help"><span class="pp-onboarding-card__icon"><i class="bi bi-info-circle" aria-hidden="true"></i></span><div><h2 id="occurrence-help">O que deve ser registrado?</h2><p>Descreva impedimentos reais da implantação, indique a prioridade e quem acompanhará a resolução.</p></div></section>
+<form asp-action="CriarOcorrencia" method="post" class="row g-3 mb-4 pp-form" data-loading="true">
     @Html.AntiForgeryToken()
-    <div class="col-md-3"><input asp-for="NovaOcorrencia.Tipo" class="form-control" placeholder="Tipo" value="@nova.Tipo" /></div>
-    <div class="col-md-2"><input asp-for="NovaOcorrencia.Prioridade" class="form-control" placeholder="Prioridade" value="@nova.Prioridade" /></div>
-    <div class="col-md-4"><input asp-for="NovaOcorrencia.Descricao" class="form-control" placeholder="Descrição" value="@nova.Descricao" /></div>
-    <div class="col-md-2"><input asp-for="NovaOcorrencia.Responsavel" class="form-control" placeholder="Responsável" value="@nova.Responsavel" /></div>
-    <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Salvar</button></div>
+    <div class="col-md-3"><label asp-for="NovaOcorrencia.Tipo" class="form-label">Tipo <span aria-hidden="true">*</span></label><input asp-for="NovaOcorrencia.Tipo" class="form-control" value="@nova.Tipo" required /><span asp-validation-for="NovaOcorrencia.Tipo" class="text-danger small"></span></div>
+    <div class="col-md-2"><label asp-for="NovaOcorrencia.Prioridade" class="form-label">Prioridade <span aria-hidden="true">*</span></label><input asp-for="NovaOcorrencia.Prioridade" class="form-control" value="@nova.Prioridade" required aria-describedby="priorityHint"/><small id="priorityHint" class="form-text">Use baixa, média ou alta conforme o impacto.</small><span asp-validation-for="NovaOcorrencia.Prioridade" class="text-danger small"></span></div>
+    <div class="col-md-4"><label asp-for="NovaOcorrencia.Descricao" class="form-label">Descrição <span aria-hidden="true">*</span></label><input asp-for="NovaOcorrencia.Descricao" class="form-control" value="@nova.Descricao" required aria-describedby="descriptionHint"/><small id="descriptionHint" class="form-text">Explique o impacto e o próximo passo esperado.</small><span asp-validation-for="NovaOcorrencia.Descricao" class="text-danger small"></span></div>
+    <div class="col-md-2"><label asp-for="NovaOcorrencia.Responsavel" class="form-label">Responsável</label><input asp-for="NovaOcorrencia.Responsavel" class="form-control" value="@nova.Responsavel" /><span asp-validation-for="NovaOcorrencia.Responsavel" class="text-danger small"></span></div>
+    <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit"><span class="label">Registrar</span><span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span></button></div>
 </form>
 
 @if (!ocorrencias.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-exclamation-circle","Nenhuma ocorrência registrada","Não há ocorrências para exibir no momento.")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-shield-check","Nenhuma ocorrência registrada","A unidade ainda não registrou ocorrências. Use o formulário acima quando houver um impedimento real para acompanhar.")' />
 }
 else
 {

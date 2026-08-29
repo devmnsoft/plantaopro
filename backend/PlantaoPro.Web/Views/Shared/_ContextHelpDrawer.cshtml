@@ -1,0 +1,19 @@
+<button class="pp-help-trigger" type="button" data-context-help-open aria-controls="contextHelpDrawer" aria-expanded="false">
+    <i class="bi bi-question-circle" aria-hidden="true"></i><span>Ajuda desta tela</span>
+</button>
+<div class="pp-help-backdrop" data-context-help-close hidden></div>
+<aside class="pp-help-drawer" id="contextHelpDrawer" aria-labelledby="contextHelpTitle" aria-hidden="true" tabindex="-1">
+    <header class="pp-help-drawer__header">
+        <div><span class="pp-eyebrow">Guia rápido</span><h2 id="contextHelpTitle">Como usar esta tela</h2></div>
+        <button class="btn btn-sm btn-light" type="button" data-context-help-close aria-label="Fechar ajuda"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </header>
+    <div class="pp-help-drawer__body">
+        <p>Comece pela ação principal no topo e use os filtros para encontrar o que precisa.</p>
+        <ol class="pp-help-steps">
+            <li><strong>Confira o contexto</strong><span>Valide a unidade, o período e o perfil exibidos.</span></li>
+            <li><strong>Revise os status</strong><span>Abra um item para entender detalhes e próximos passos.</span></li>
+            <li><strong>Ajuste a busca</strong><span>Se nada aparecer, limpe ou amplie os filtros.</span></li>
+        </ol>
+        <section class="pp-help-note" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Acesso e permissões</strong><p>As ações disponíveis respeitam seu perfil e a unidade ativa. Se uma opção esperada não aparecer, fale com o administrador.</p></div></section>
+    </div>
+</aside>

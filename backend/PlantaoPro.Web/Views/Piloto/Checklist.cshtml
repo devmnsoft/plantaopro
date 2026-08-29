@@ -5,12 +5,13 @@
     ViewData["Title"] = "Checklist do Piloto";
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist do Piloto","Acompanhe os itens de implantação.","bi-check2-square",null,null,null,true)' />
+<section class="pp-onboarding-card" aria-labelledby="checklist-guide"><span class="pp-onboarding-card__icon"><i class="bi bi-flag" aria-hidden="true"></i></span><div><h2 id="checklist-guide">Avance uma etapa de cada vez</h2><p>Revise os itens pendentes com sua equipe e conclua somente o que já foi validado.</p></div><a asp-action="Ocorrencias" class="btn btn-sm btn-outline-primary">Relatar impedimento</a></section>
 
 <div class="row g-3 mb-3"><div class="col-md-4"><div class="metric-card"><div class="metric-label">Total</div><div class="metric-value">@vm.Total</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Concluídos</div><div class="metric-value">@vm.Concluidos</div></div></div><div class="col-md-4"><div class="metric-card"><div class="metric-label">Percentual</div><div class="metric-value">@vm.Percentual%</div></div></div></div>
 
 @if (!itens.Any())
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square","Nenhum item no checklist","Não há itens de checklist para exibir.")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-square","Checklist ainda não disponível","Os itens de implantação aparecerão aqui quando forem disponibilizados. Se esperava uma etapa, confirme o contexto com a equipe responsável.")' />
 }
 else
 {

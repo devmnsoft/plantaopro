@@ -8,7 +8,10 @@
 }
 
 <div class="container-fluid">
-    <div class="alert alert-info mb-3"><i class="bi bi-buildings"></i> Gerencie empresas contratantes e seus limites de assinatura.</div>
+    <details class="pp-screen-guide mb-3">
+        <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Orientação rápida</span></summary>
+        <div class="pp-screen-guide__body"><p>Gerencie instituições contratantes, planos, bloqueios e módulos liberados.</p><ol><li>Confira os indicadores para priorizar clientes que exigem atenção.</li><li>Localize a instituição e revise o contexto antes de alterar seu status.</li><li>Use ações de suspensão, reativação ou cancelamento somente após confirmar o impacto.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-shield-check" aria-hidden="true"></i> Estas ações são sensíveis, dependem da autorização do servidor e devem permanecer auditáveis.</div></div>
+    </details>
     <div class="row g-3 mb-3">
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Ativos</h6><h3>@ativos</h3></div></div></div>
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Suspensos</h6><h3>@suspensos</h3></div></div></div>
@@ -16,13 +19,13 @@
         <div class="col-md-3"><div class="card"><div class="card-body"><h6>Cancelados</h6><h3>@cancelados</h3></div></div></div>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive pp-premium-table">
         <table class="table table-striped align-middle">
             <thead><tr><th>Cliente</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
             <tbody>
             @if (!Model.Any())
             {
-                <tr><td colspan="5" class="text-center py-4"><i class="bi bi-inboxes fs-3 d-block"></i>Nenhum cliente cadastrado ainda.</td></tr>
+                <tr><td colspan="5"><div class="pp-guided-empty"><i class="bi bi-buildings" aria-hidden="true"></i><strong>Nenhuma instituição encontrada</strong><span>Quando um cadastro real estiver disponível, ele aparecerá aqui. Revise o onboarding ou os filtros aplicados.</span></div></td></tr>
             }
             else
             {

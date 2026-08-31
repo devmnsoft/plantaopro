@@ -1,75 +1,65 @@
-# v2.12.1 — SaaS, Super Admin, clientes, perfis e design guiado
+# PlantãoPro v2.12.1 — SaaS, Super Admin, clientes, perfis e design guiado
 
-## Modo e diagnóstico
+## Diagnóstico e modo de execução
 
-- **Modo usado:** MODO DESIGN ESTÁTICO.
-- **SDK:** `dotnet`, `dotnet --info` e `dotnet --list-sdks` indisponíveis (`command not found`).
-- **Git:** repositório local íntegro, branch `codex/v2121-saas-super-admin-clientes-perfis-design` criada a partir de `work`.
-- **Remoto:** o checkout chegou sem remoto. `origin` foi configurado com a URL informada na tarefa, mas o proxy recusou a conexão ao GitHub com HTTP 403; `fetch`, `pull` e `push` não puderam ser concluídos.
-- Em cumprimento à restrição da rodada, não foram alterados C#, banco, migrations, contratos, projetos, solution, `TargetFramework` ou `LangVersion`.
+- **Modo usado:** `MODO DESIGN ESTÁTICO`.
+- **SDK:** `dotnet` não está instalado (`dotnet: command not found`). Por isso, conforme a regra desta rodada, nenhum arquivo C#, projeto, solução, contrato, migration ou script de banco foi alterado.
+- **Git:** a branch de trabalho é `codex/v2121-saas-super-admin-clientes-perfis-design`.
+- **Remoto:** o checkout chegou sem remoto. `origin` foi configurado com a URL informada, porém o proxy recusou o acesso ao GitHub com HTTP 403; `fetch`, `pull`, `push` e a abertura do PR remoto não puderam ser concluídos.
 
 ## Entrega segura desta rodada
 
-- O login ganhou linguagem explícita de identidade individual e três contextos visuais: profissional/gestor, instituição e administração MNSOFT.
-- O contexto institucional esclarece que o CNPJ identifica a organização, mas não substitui a identidade da pessoa nem autoriza senha compartilhada.
-- A ajuda recolhível orienta o acesso atual por e-mail e informa como solicitar CPF/contexto corporativo sem simular uma função ainda não suportada pelo contrato existente.
-- O componente reutilizável de introdução passou a identificar suas etapas como **Como usar esta tela**, levando orientação curta e recolhível a todas as páginas que já o consomem.
-- Uma camada CSS v2.12.1 adiciona acabamento premium aos contextos do login e ao painel de orientação, com foco visível herdado, responsividade, redução de conteúdo secundário no mobile e suporte a cores forçadas.
+Esta rodada evolui somente a apresentação estática já conectada às rotas existentes. Não introduz mocks, indicadores fixos, permissões presumidas, campos sem contrato ou ações que contornem o servidor.
 
-## Modelo SaaS adotado para implementação completa
+### Login e identidade
 
-### Escopos
+- O login informa explicitamente que o acesso hoje disponível usa **identidade individual por e-mail e senha**.
+- A microcopy diferencia pessoa, contexto institucional e administração MNSOFT sem simular campos ainda não suportados pelo contrato.
+- O CNPJ é descrito somente como identificador da instituição. Ele não é apresentado como usuário, senha ou credencial compartilhada.
+- CPF/CNPJ contextual permanece pendente de implementação server-side. A interface não coleta nem transmite esses documentos enquanto não houver contrato seguro, normalização, validação, proteção LGPD e auditoria.
 
-1. **Super Admin MNSOFT:** identidade global, sem `tenant_id`, com troca de contexto explícita, auditável e temporária. Pode administrar tenants, planos, módulos, cobranças e bloqueios, sem transformar a sessão de suporte em autoria do usuário do cliente.
-2. **Admin do Cliente:** identidade vinculada a exatamente um tenant em cada contexto ativo. Administra usuários e perfis somente dentro dos módulos e limites contratados. Não altera plano, inadimplência, permissões globais ou o próprio escopo.
-3. **Usuário do Cliente:** identidade individual com perfil mínimo e permissões efetivas calculadas pela interseção entre perfil, plano, módulo, funcionalidade e situação contratual.
+### Orientação de uso e design
 
-### Isolamento e autorização
+Foi criado um padrão visual recolhível “Como usar esta tela”, responsivo e acessível com HTML nativo (`details`/`summary`), aplicado às jornadas estáticas prioritárias:
 
-- Toda leitura e escrita de domínio deve receber `tenant_id` do contexto autenticado, nunca do corpo livre da requisição.
-- O escopo global deve ser concedido somente à função interna de Super Admin e registrado em auditoria.
-- O backend deve negar o acesso quando qualquer camada aplicável estiver bloqueada, mesmo quando o menu também esconder o recurso.
-- A permissão efetiva deve considerar plano, módulos habilitados, recurso liberado, bloqueio manual, inadimplência, segurança, teste e expiração.
-- Bloqueios, desbloqueios, concessões temporárias, mudança de plano e suporte em contexto devem produzir auditoria com ator, tenant, motivo e instante.
+- Central administrativa SaaS;
+- Clientes;
+- Perfis e permissões;
+- Faturamento SaaS.
 
-## Login CPF, CNPJ e e-mail
+As orientações explicam objetivo, sequência curta, efeito das ações sensíveis e dependência da autorização do servidor. Clientes e perfis também receberam tabelas com superfície premium e estados vazios com próximo passo claro. O login ganhou uma indicação visível do método efetivamente disponível.
 
-- **Pessoa física:** CPF normalizado ou e-mail + senha individual.
-- **Contexto corporativo:** CNPJ normalizado identifica o tenant, seguido de CPF/e-mail e senha da pessoa.
-- **Super Admin:** e-mail administrativo MNSOFT + senha individual e MFA quando o suporte existente for confirmado.
-- CPF/CNPJ devem ser normalizados no servidor, validados pelo padrão do projeto e mascarados fora de operações estritamente necessárias.
-- CNPJ jamais será credencial ou login compartilhado; senha não será persistida em texto puro nem registrada em log.
-- A tela atual continua enviando apenas o contrato existente de e-mail e senha. Campos funcionais de CPF/CNPJ dependem de evolução coordenada do contrato e não foram simulados sem SDK.
+## Modelo SaaS adotado como regra funcional
 
-## Estrutura de dados e scripts
+O desenho funcional a ser concluído em modo completo deve respeitar estas fronteiras:
 
-Nenhuma tabela ou migration foi criada neste modo. O diagnóstico encontrou estruturas SaaS e referências a `tenant_id` já existentes; no modo completo elas devem ser inventariadas antes de qualquer script para impedir duplicidade. A evolução deverá reaproveitar equivalentes existentes para tenants/clientes, usuários, perfis, permissões, planos, módulos, cobranças, bloqueios e auditoria, usando SQL idempotente e parametrizado.
+1. **Super Administrador MNSOFT:** identidade global individual, sem `tenant_id`, acesso global por policies específicas, troca de contexto explícita, temporária e auditada. Bloqueios, suporte, planos, cobranças e liberações precisam produzir auditoria.
+2. **Admin do Cliente:** identidade individual vinculada a exatamente um tenant no contexto ativo. Pode administrar usuários e perfis apenas desse tenant e dentro do plano. Não promove Super Admin, não altera o próprio plano nem remove bloqueio contratual.
+3. **Usuário do Cliente:** CPF ou e-mail identifica a pessoa; CNPJ seleciona o contexto institucional quando necessário. CNPJ nunca autentica sozinho e nunca possui senha compartilhada.
+4. **Isolamento:** toda leitura e escrita tenant-scoped deve receber o tenant do contexto autenticado e filtrá-lo no servidor. IDs enviados pelo navegador não definem nem ampliam o tenant.
+5. **Entitlements:** acesso efetivo é a interseção entre plano, módulo, funcionalidade, perfil, status contratual, bloqueios e janela de teste/contrato. O menu apenas reflete essa decisão; a API continua sendo a autoridade.
 
-## Permissões e módulos
+## Persistência, permissões e módulos
 
-O desenho funcional cobre dashboard, escalas, plantões, médicos, unidades, financeiro, relatórios, ocorrências, notificações, auditoria, administração, Saúde360, Central Meu Dia, busca, favoritos e preferências. A implementação server-side e os testes de interseção de permissões permanecem pendentes porque exigem alterações C#, contratos e banco.
+- **Tabelas/scripts criados:** nenhum, pois o SDK está ausente e a rodada proíbe alterações de backend e banco nesse modo.
+- **Tabelas reaproveitadas:** nenhuma alteração foi feita. O mapeamento definitivo deve evitar duplicar equivalentes existentes.
+- **Permissões implementadas:** nenhuma policy ou permissão server-side foi criada neste modo. A UI reforça que ações dependem de autorização real.
+- **Módulos controlados:** nenhum entitlement novo foi implementado. Permanecem pendentes as regras server-side para dashboard, escalas, plantões, médicos, unidades, financeiro, relatórios, ocorrências, notificações, auditoria, administração, Saúde360, Meu Dia, busca, favoritos e preferências.
 
-## Telas e orientação
+## Pendências reais para `MODO COMPLETO`
 
-- **Login:** hierarquia e microcopy SaaS, explicação dos contextos e orientação de segurança.
-- **Telas com `_PageIntroduction`:** título padronizado “Como usar esta tela”, mantendo conteúdo curto, recolhível e acessível.
-- Dashboard global, clientes, área administrativa do cliente, usuários, perfis, planos, módulos, cobranças, bloqueios e auditoria não receberam fluxos falsos ou dados fixos. Sua implementação real permanece condicionada ao modo completo.
+1. Evoluir contratos e autenticação para CPF/e-mail e CNPJ contextual, com normalização, validação, mascaramento e testes, sem senha por CNPJ.
+2. Confirmar ou implementar tenant global, vínculos de usuários, perfis tenant-scoped, planos, entitlements, bloqueios, cobranças e auditoria idempotente no PostgreSQL.
+3. Aplicar filtro obrigatório por `tenant_id` nos repositórios Dapper e policies distintas para Super Admin e Admin do Cliente.
+4. Implementar troca de contexto de suporte com expiração, justificativa, banner persistente e auditoria de início/fim.
+5. Validar módulos e funcionalidades na API e projetar motivo de bloqueio seguro para a Web.
+6. Cobrir os cenários de isolamento, promoção proibida, bloqueio, reativação, login contextual, entitlement e materialização Dapper solicitados nesta rodada.
+7. Expandir o guia reutilizável às demais telas principais após validação visual em runtime.
 
-## Testes e verificações
+## Validação e limitações
 
-- Diagnóstico de Git, remoto e SDK executado.
-- Busca de arquitetura/autorização executada nos três projetos solicitados.
-- `git diff --check` executado sem erros.
-- Build e testes .NET não executáveis porque o SDK não existe no ambiente.
-- Homologação visual por screenshot não executável porque a aplicação Razor requer o runtime ausente.
-
-## Limitações reais restantes
-
-1. Evoluir contratos e autenticação para CPF/e-mail + CNPJ como contexto, com validação, normalização e LGPD.
-2. Validar e completar o isolamento server-side por tenant em todos os repositórios/serviços.
-3. Implementar políticas de Super Admin, Admin do Cliente e permissão efetiva por entitlement.
-4. Implementar gestão real de clientes, perfis, planos, módulos, cobranças, bloqueios e auditorias.
-5. Criar scripts idempotentes somente após inventário completo do schema existente.
-6. Adicionar os testes de integração e autorização definidos no escopo e executar restore/build/test com .NET 10.
-7. Executar smoke visual responsivo e capturar screenshots quando houver runtime.
-8. Publicar a branch e abrir o PR quando o proxy permitir acesso ao GitHub e houver autenticação do GitHub CLI.
+- `git diff --check` foi executado.
+- As buscas de padrões proibidos e scripts de segurança/repositório foram executadas quando existentes; os resultados devem ser consultados no registro do agente/PR.
+- Restore, builds e testes .NET não puderam ser executados porque não há SDK.
+- Não foi possível iniciar a aplicação nem produzir screenshot confiável pelo mesmo motivo. A validação visual ficou limitada à revisão estática de Razor/CSS e deve ser repetida em ambiente com `net10.0`.
+- O bloqueio HTTP 403 do proxy impede publicar a branch e abrir o PR remoto neste checkout.

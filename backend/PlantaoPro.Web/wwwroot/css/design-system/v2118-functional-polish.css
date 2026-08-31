@@ -1,0 +1,72 @@
+/* PlantãoPro v2.11.8 — acabamento funcional, responsivo e acessível. */
+:root {
+  --pp-v2118-border: color-mix(in srgb, var(--pp-border, #cbd5e1) 78%, transparent);
+  --pp-v2118-focus: #38bdf8;
+}
+
+.pp-content-container > :is(header, .pp-page-header, .pp-workspace-header):first-child {
+  margin-block-end: clamp(1rem, 2vw, 1.5rem);
+}
+
+.pp-content :is(.card, .pp-card, .pp-kpi-card) {
+  border-color: var(--pp-v2118-border);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 6%);
+}
+
+.pp-content :is(label, .form-label) {
+  color: var(--pp-text, #172033);
+  font-weight: 650;
+}
+
+.pp-content :is(input, select, textarea, button, a):focus-visible,
+.pp-sidebar :is(button, a):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--pp-v2118-focus) 68%, transparent);
+  outline-offset: 2px;
+}
+
+.pp-content .table-responsive {
+  border: 1px solid var(--pp-v2118-border);
+  border-radius: var(--pp-radius-lg, 1rem);
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.pp-content .table-responsive > .table {
+  margin-block-end: 0;
+  min-width: 42rem;
+}
+
+.pp-content :is(.badge, .pp-status-badge) {
+  letter-spacing: .01em;
+  line-height: 1.25;
+}
+
+.pp-sidebar .nav-section-title:not(:first-child) {
+  margin-block-start: .75rem;
+}
+
+@media (max-width: 767.98px) {
+  .pp-content-container {
+    padding-inline: clamp(.75rem, 4vw, 1rem);
+  }
+
+  .pp-content :is(.btn, button[type="submit"]) {
+    min-height: 2.75rem;
+  }
+
+  .pp-content :is(.card-body, .pp-card) {
+    padding: 1rem;
+  }
+
+  .pp-content :is(.d-flex, .pp-card-actions):has(> .btn:nth-child(2)) {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-content *, .pp-sidebar * {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}

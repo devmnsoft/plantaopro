@@ -28,7 +28,7 @@
         @if (canOperate)
         {
             <div class="nav-section-title"><span>Operação médica</span></div>
-            @if (User.IsInRole("Admin") || User.IsInRole("Gestor") || User.IsInRole("Administrador"))
+            @if (canManage || User.IsInRole(RolesConstants.Coordenacao) || User.IsInRole(RolesConstants.Coordenador))
             {
                 <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
             }
@@ -62,10 +62,13 @@
             <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a>
             <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a>
             <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a>
+            <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis</span></a>
             <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a>
             <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
             <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
         }
+        <div class="nav-section-title"><span>Acompanhamento</span></div>
+        <a class="nav-link-app @Active("Notificacoes")" asp-controller="Notificacoes" asp-action="Index"><app-icon name="Notification" size="19" /><span>Notificações</span></a>
     </nav>
     <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>Central de ajuda</span></a><a class="nav-link-app" asp-controller="Lgpd" asp-action="Index"><app-icon name="Lock" size="19" /><span>Privacidade e LGPD</span></a><partial name="_ProductVersion" /></footer>
 </aside>

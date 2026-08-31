@@ -1,0 +1,143 @@
+/* PlantãoPro v2.11.7 — estabilização visual segura sobre o design system existente. */
+:root {
+    --pp-v2117-sidebar-line: rgb(255 255 255 / 10%);
+    --pp-v2117-surface-hover: #f6fafb;
+    --pp-v2117-danger: #a82424;
+    --pp-v2117-radius: .875rem;
+}
+
+/* O shell preserva o contexto durante a rolagem e separa navegação de conteúdo sem ruído. */
+.pp-sidebar {
+    border-inline-end: 1px solid var(--pp-v2117-sidebar-line);
+    box-shadow: 10px 0 32px rgb(4 24 38 / 10%);
+}
+
+.sidebar-nav {
+    scrollbar-color: rgb(255 255 255 / 22%) transparent;
+    scrollbar-width: thin;
+}
+
+.nav-link-app {
+    border: 1px solid transparent;
+    border-radius: .625rem;
+}
+
+.nav-link-app:hover {
+    border-color: rgb(255 255 255 / 9%);
+    background-color: rgb(255 255 255 / 7%);
+}
+
+.nav-link-app.active {
+    border-color: rgb(126 231 222 / 20%);
+    box-shadow: inset 3px 0 0 #69d1c9;
+}
+
+.pp-topbar {
+    border-bottom-color: #d8e3e8;
+    background-color: rgb(255 255 255 / 96%);
+    box-shadow: 0 4px 18px rgb(16 44 61 / 5%);
+}
+
+.pp-topbar__title,
+:where(.pp-page-header, .pp-page-hero, .pp-section-header) :where(h1, h2),
+:where(.card, .pp-card, .modal-content) :where(h1, h2, h3) {
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+}
+
+:where(.pp-topbar__subtitle, .pp-page-header, .pp-page-hero, .card, .pp-card, .modal-content) p {
+    overflow-wrap: anywhere;
+}
+
+/* Cards, indicadores e modais compartilham a mesma linguagem de superfície. */
+:where(.card, .pp-card, .pp-section, .pp-panel, .modal-content) {
+    border-radius: var(--pp-v2117-radius);
+}
+
+:where(.card, .pp-card, .pp-section, .pp-panel) {
+    transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+:where(.card, .pp-card, .pp-section, .pp-panel):focus-within {
+    border-color: #9bbfc3;
+}
+
+:where(.pp-kpi-card, .kpi-card, .metric-card) :where(strong, .value, .pp-kpi-value) {
+    color: #123a4b;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -.025em;
+}
+
+.modal-backdrop.show { opacity: .58; }
+.modal-content {
+    border: 1px solid #cfdee4;
+    box-shadow: 0 24px 64px rgb(7 31 48 / 24%);
+}
+.modal-header, .modal-footer { border-color: #dce6ea; }
+
+/* Listagens extensas continuam legíveis e não forçam a página para fora da viewport. */
+.table-responsive {
+    border-radius: .75rem;
+    scrollbar-color: #91aab5 #edf3f5;
+    scrollbar-width: thin;
+}
+
+:where(.table, .pp-data-table) > :not(caption) > * > * {
+    vertical-align: middle;
+}
+
+:where(.table, .pp-data-table) td {
+    max-width: 32rem;
+    overflow-wrap: anywhere;
+}
+
+:where(.table, .pp-data-table) :where(.btn, button, a) { white-space: nowrap; }
+
+/* Erros e ajuda de campo permanecem associados visualmente ao controle. */
+:where(.field-validation-error, .validation-summary-errors, .pp-form-error) {
+    color: var(--pp-v2117-danger);
+    font-weight: 600;
+}
+
+:where(.form-control, .form-select, .pp-form-control)[aria-invalid="true"] {
+    border-color: var(--pp-v2117-danger);
+    box-shadow: 0 0 0 .2rem rgb(168 36 36 / 10%);
+}
+
+:where(.form-help, .pp-field-help) {
+    color: #536c78;
+    line-height: 1.45;
+}
+
+:where(.empty-state, .pp-empty-state, .pp-error-state) {
+    border-style: dashed;
+    border-radius: var(--pp-v2117-radius);
+    background: linear-gradient(145deg, #fff, var(--pp-v2117-surface-hover));
+}
+
+@media (max-width: 991.98px) {
+    .pp-topbar { padding-inline: .875rem; }
+    .pp-topbar__identity { min-width: 0; }
+    .pp-topbar__title { max-width: min(62vw, 30rem); }
+}
+
+@media (max-width: 575.98px) {
+    .pp-content-container { padding-block: .875rem 5.5rem; }
+    :where(.pp-page-header, .pp-page-hero, .pp-section-header, .pp-toolbar, .pp-filter-bar, .action-bar, .pp-card-actions) {
+        align-items: stretch;
+    }
+    :where(.pp-toolbar, .pp-filter-bar, .action-bar, .pp-card-actions) > :where(.btn, button, a.btn) {
+        justify-content: center;
+        width: 100%;
+    }
+    .modal-dialog { margin: .75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(.card, .pp-card, .pp-section, .pp-panel) { transition: none; }
+}
+
+@media (forced-colors: active) {
+    .nav-link-app.active { border: 2px solid LinkText; box-shadow: none; }
+    :where(.form-control, .form-select, .pp-form-control)[aria-invalid="true"] { border: 2px solid Mark; }
+}

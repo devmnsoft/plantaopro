@@ -1,12 +1,26 @@
-@{
-    ViewData["Title"] = "Calendário de Plantões";
-}
+@{ ViewData["Title"] = "Calendário de Plantões"; }
 
-<div class="page-header">
-    <h1 class="h3 mb-1">Calendário de Plantões</h1>
-    <p class="text-muted mb-0">Visualização mensal em evolução para demonstração comercial.</p>
-</div>
+@section Styles { <link rel="stylesheet" href="~/css/pages/v2119-shift-operations.css" asp-append-version="true" /> }
 
-<div class="alert alert-info">
-    A visualização completa do calendário será habilitada quando a integração de calendário estiver configurada.
-</div>
+<partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
+    "Calendário de Plantões",
+    "Organize a leitura temporal da cobertura sem perder o contexto operacional.",
+    "A agenda consolidada depende da integração de calendário; nenhum compromisso fictício é exibido.",
+    "Voltar à central", "Index", "Plantoes")' />
+
+<nav class="pp-operational-journey" aria-label="Jornada operacional">
+    <span class="is-current">Solicitação e plantão</span><span>Convite</span><span>Confirmação</span><span>Presença</span><span>Substituição</span><span>Fechamento</span>
+</nav>
+
+<section class="pp-calendar-shell" aria-labelledby="calendarTitle">
+    <header>
+        <div><span class="pp-section-kicker">Visão temporal</span><h2 id="calendarTitle">Agenda operacional</h2></div>
+        <div class="pp-calendar-shell__legend" aria-label="Legenda"><span><i class="is-covered"></i>Coberto</span><span><i class="is-open"></i>Em cobertura</span><span><i class="is-risk"></i>Crítico</span></div>
+    </header>
+    <div class="pp-calendar-empty">
+        <span class="pp-calendar-empty__icon"><i class="bi bi-calendar2-week" aria-hidden="true"></i></span>
+        <h3>Integração de calendário ainda não configurada</h3>
+        <p>Use a lista ou o kanban para acompanhar os plantões reais. Assim que a fonte temporal estiver disponível, os turnos serão agrupados aqui por dia e risco de cobertura.</p>
+        <div><a class="btn btn-primary" asp-action="Index"><i class="bi bi-columns-gap"></i> Abrir central operacional</a><a class="btn btn-outline-secondary" asp-action="Create"><i class="bi bi-plus-circle"></i> Novo plantão</a></div>
+    </div>
+</section>

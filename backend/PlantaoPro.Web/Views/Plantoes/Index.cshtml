@@ -11,6 +11,17 @@
     "Os indicadores abaixo usam somente os resultados reais da página atual.", "Novo plantão", "Create", "Plantoes",
     new[] { "Filtre a operação no servidor.", "Priorize riscos de cobertura.", "Abra o detalhe para publicar, cancelar e acompanhar o histórico." })' />
 
+@section Styles { <link rel="stylesheet" href="~/css/pages/v2119-shift-operations.css" asp-append-version="true" /> }
+
+@if (!string.IsNullOrWhiteSpace(Model?.ErrorMessage))
+{
+    <section class="pp-shift-feedback pp-shift-feedback--error" role="alert">
+        <i class="bi bi-cloud-slash" aria-hidden="true"></i>
+        <div><strong>Não foi possível atualizar a operação</strong><p>@Model.ErrorMessage</p></div>
+        <a class="btn btn-outline-danger" asp-action="Index">Tentar novamente</a>
+    </section>
+}
+
 <nav class="pp-operational-journey" aria-label="Jornada operacional MVP" data-operational-mvp-journey>
     <span class="is-current">Plantão</span><span>Convite</span><span>Escala</span><span>Confirmação</span><span>Presença ou substituição</span><span>Fechamento</span><span>Financeiro</span>
 </nav>
@@ -42,15 +53,50 @@
 
 @if (items.Any())
 {
+    <div class="pp-shift-viewbar" data-shift-viewbar>
+        <div><span class="pp-section-kicker">Workspace operacional</span><strong>Escolha como acompanhar a cobertura</strong></div>
+        <div class="pp-shift-viewbar__controls" role="group" aria-label="Visualização dos plantões">
+            <button class="is-active" type="button" data-shift-view="list" aria-pressed="true"><i class="bi bi-list-task"></i> Lista</button>
+            <button type="button" data-shift-view="kanban" aria-pressed="false"><i class="bi bi-columns-gap"></i> Kanban</button>
+            <a asp-action="Calendario"><i class="bi bi-calendar3"></i> Calendário</a>
+        </div>
+    </div>
+    <div data-shift-panel="list">
     <div class="pp-data-table d-none d-lg-block"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Hospital e cidade</th><th>Especialidade</th><th>Período</th><th>Cobertura</th><th>Valor</th><th>Status</th><th><span class="visually-hidden">Ações</span></th></tr></thead><tbody>
     @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; var coberto = p.VagasDisponiveis == 0; <tr><td><strong>@p.HospitalNome</strong><small>@p.HospitalCidade/@p.HospitalEstado</small></td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM, HH:mm")<small>@((p.DataFim-p.DataInicio).TotalHours.ToString("0.#")) horas</small></td><td><span class="pp-coverage-badge @(coberto ? "is-covered" : "is-open")">@(p.Vagas-p.VagasDisponiveis)/@p.Vagas preenchidas</span><small>@(coberto ? "Cobertura completa" : "Cobertura pendente")</small></td><td>@p.Valor.ToString("C")</td><td><partial name="_StatusBadge" model="p.Status" /> @if (risco) { <span class="pp-risk-badge" title="Risco derivado de todas as vagas ainda disponíveis">Sem cobertura</span> }</td><td class="text-end"><div class="pp-next-action" data-next-action><small>Próxima ação</small><strong>@(risco ? "Buscar cobertura" : "Revisar operação")</strong></div><button class="btn btn-sm btn-outline-primary" type="button" data-detail-open data-detail-kind="Plantão" data-detail-title="@p.HospitalNome · @p.EspecialidadeNome" data-detail-status="@p.Status" data-detail-summary="@(p.Observacoes ?? "Sem observações registradas.")" data-detail-origin="@p.HospitalNome" data-detail-period="@p.DataInicio.ToString("dd/MM/yyyy HH:mm") – @p.DataFim.ToString("dd/MM/yyyy HH:mm")" data-detail-reference="@p.Id" data-detail-primary-url="@Url.Action("Details", "Plantoes", new { id = p.Id })">Ver detalhes</button><a class="btn btn-sm btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id">Ver convites</a></td></tr> }
     </tbody></table></div></div>
     <div class="pp-mobile-card-list d-lg-none" aria-label="Plantões em cartões">
     @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; <article class="pp-operational-card @(risco ? "pp-operational-card--risk" : "")"><header><div><span class="pp-section-kicker">@p.EspecialidadeNome</span><h2>@p.HospitalNome</h2><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p></div><partial name="_StatusBadge" model="p.Status" /></header><dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div><div><dt>Risco</dt><dd>@(risco ? "Sem cobertura" : "Sem risco derivável")</dd></div></dl><div class="pp-next-action" data-next-action><small>Próxima ação</small><strong>@(risco ? "Buscar cobertura" : "Revisar detalhes")</strong></div><footer><a class="btn btn-primary flex-grow-1" asp-action="Details" asp-route-id="@p.Id">Abrir operação</a><a class="btn btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id" aria-label="Ver convites do plantão"><i class="bi bi-person-plus"></i></a></footer></article> }
     </div>
+    </div>
+    <section class="pp-shift-kanban" data-shift-panel="kanban" hidden aria-label="Plantões por situação de cobertura">
+        @foreach (var lane in new[] { (Key: "risk", Title: "Cobertura crítica", Icon: "bi-shield-exclamation"), (Key: "open", Title: "Em cobertura", Icon: "bi-radar"), (Key: "covered", Title: "Cobertos", Icon: "bi-shield-check") })
+        {
+            var laneItems = items.Where(p => lane.Key == "risk" ? p.Vagas > 0 && p.VagasDisponiveis == p.Vagas : lane.Key == "covered" ? p.VagasDisponiveis == 0 : p.VagasDisponiveis > 0 && p.VagasDisponiveis < p.Vagas).ToArray();
+            <div class="pp-shift-lane pp-shift-lane--@lane.Key">
+                <header><span><i class="bi @lane.Icon" aria-hidden="true"></i> @lane.Title</span><strong>@laneItems.Length</strong></header>
+                <div class="pp-shift-lane__body">
+                    @if (!laneItems.Any()) { <p class="pp-shift-lane__empty">Nenhum plantão nesta etapa.</p> }
+                    @foreach (var p in laneItems)
+                    {
+                        <article class="pp-shift-ticket">
+                            <div class="pp-shift-ticket__top"><span>@p.EspecialidadeNome</span><partial name="_StatusBadge" model="p.Status" /></div>
+                            <h3>@p.HospitalNome</h3><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p>
+                            <dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM · HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div></dl>
+                            <div class="pp-shift-progress" role="progressbar" aria-label="Cobertura do plantão" aria-valuemin="0" aria-valuemax="@p.Vagas" aria-valuenow="@(p.Vagas-p.VagasDisponiveis)"><span style="width:@(p.Vagas == 0 ? 0 : (p.Vagas-p.VagasDisponiveis)*100/p.Vagas)%"></span></div>
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">Abrir operação <i class="bi bi-arrow-right"></i></a>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
+    </section>
     <partial name="_Pagination" model="Model" />
 }
+
 else
 {
     <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Nenhum plantão neste recorte", "Ajuste os filtros ou crie um plantão para iniciar a cobertura.", "Novo plantão", "Create", "Plantoes")' />
 }
+
+@section Scripts { <script src="~/js/v2119-shift-operations.js" asp-append-version="true"></script> }

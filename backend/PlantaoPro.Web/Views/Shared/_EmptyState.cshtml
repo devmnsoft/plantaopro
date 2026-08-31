@@ -12,9 +12,9 @@
     var secondaryController = Model?.SecondaryController ?? string.Empty;
     var secondaryDisabled = Model?.SecondaryActionDisabled ?? false;
 }
-<section class="empty-state pp-future-empty-state text-center" role="status" aria-labelledby="empty-state-title">
-    <div class="empty-state-icon"><i class="bi @icon"></i></div>
-    <h5 class="mb-2" id="empty-state-title">@title</h5>
+<section class="empty-state pp-future-empty-state text-center" role="status" aria-label="@title">
+    <div class="empty-state-icon" aria-hidden="true"><i class="bi @icon"></i></div>
+    <h2 class="h5 mb-2">@title</h2>
     <p class="text-muted mb-3">@description</p>
     @if (!string.IsNullOrWhiteSpace(buttonText))
     {

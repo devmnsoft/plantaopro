@@ -1,0 +1,65 @@
+/* v2.12.1 — orientação contextual e acabamento SaaS, sem alterar contratos. */
+.pp-how-it-works {
+  width: 100%;
+  margin-top: .85rem;
+  border: 1px solid color-mix(in srgb, var(--pp-primary, #0b7189) 24%, #dbe4ec);
+  border-radius: .875rem;
+  background: color-mix(in srgb, var(--pp-primary, #0b7189) 5%, #fff);
+}
+
+.pp-how-it-works summary {
+  display: flex;
+  min-height: 2.75rem;
+  padding: .7rem .9rem;
+  gap: .55rem;
+  align-items: center;
+  color: #123b52;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.pp-how-it-works summary span {
+  display: inline-grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  place-items: center;
+  background: #0b7189;
+  color: #fff;
+  font-size: .78rem;
+}
+
+.pp-how-it-works ol { margin: 0; padding: 0 .95rem 1rem 2.65rem; color: #425b6b; }
+.pp-how-it-works li + li { margin-top: .35rem; }
+
+.pp-login-context { display: grid; margin-block: 1.15rem .25rem; gap: .55rem; }
+.pp-login-context__item {
+  display: grid;
+  padding: .7rem .8rem;
+  grid-template-columns: 1.5rem 1fr;
+  gap: .55rem;
+  align-items: start;
+  border: 1px solid #d8e2ea;
+  border-radius: .8rem;
+  background: #f8fafc;
+  color: #526778;
+  font-size: .78rem;
+  line-height: 1.35;
+}
+
+.pp-login-context__item.is-current { border-color: #81b9c2; background: #f0fafa; color: #244c59; }
+.pp-login-context__item strong { display: block; margin-bottom: .08rem; color: #102f45; font-size: .86rem; }
+.pp-login-context__item svg { margin-top: .12rem; color: #0b7189; }
+.pp-login-help { margin-top: 1rem; border-top: 1px solid #e3e9ee; padding-top: .8rem; color: #526778; }
+.pp-login-help summary { color: #174b61; cursor: pointer; font-size: .88rem; font-weight: 750; }
+.pp-login-help p { margin: .55rem 0 0; font-size: .82rem; line-height: 1.55; }
+.auth-security { border-radius: .8rem; }
+
+@media (max-width: 767.98px) {
+  .pp-login-context__item:not(.is-current) { display: none; }
+  .pp-login-context { margin-top: .9rem; }
+}
+
+@media (forced-colors: active) {
+  .pp-how-it-works, .pp-login-context__item { border: 1px solid CanvasText; }
+}

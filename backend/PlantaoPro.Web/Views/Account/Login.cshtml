@@ -23,7 +23,12 @@
           <div class="pp-auth-card">
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
             <h2 id="loginTitle">Entre na sua central</h2>
-            <p>Use as credenciais fornecidas à sua organização. Seus dados permanecem privados durante o acesso.</p>
+            <p>Use sua identidade individual. A instituição define o contexto, mas nunca substitui o seu usuário.</p>
+            <div class="pp-login-context" aria-label="Contextos de acesso ao PlantãoPro">
+                <div class="pp-login-context__item is-current"><app-icon name="User" size="18" /><span><strong>Profissional ou gestor</strong>E-mail individual e senha</span></div>
+                <div class="pp-login-context__item"><app-icon name="Hospital" size="18" /><span><strong>Acesso institucional</strong>CNPJ identifica a organização; cada pessoa mantém seu próprio acesso</span></div>
+                <div class="pp-login-context__item"><app-icon name="Lock" size="18" /><span><strong>Administração MNSOFT</strong>Acesso administrativo individual e auditável</span></div>
+            </div>
             <form asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" tabindex="-1"></div>
@@ -50,6 +55,10 @@
                     <a asp-action="ForgotPassword" class="auth-recovery-link">Esqueci minha senha</a>
                 </div>
             </form>
+            <details class="pp-login-help">
+                <summary>Como acessar com segurança</summary>
+                <p>Entre com o e-mail cadastrado para você. Se a sua instituição exigir contexto corporativo ou acesso por CPF, solicite a habilitação ao administrador — nunca use credenciais compartilhadas.</p>
+            </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
           </div>
         </section>

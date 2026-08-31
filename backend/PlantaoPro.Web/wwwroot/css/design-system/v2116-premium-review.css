@@ -1,0 +1,69 @@
+/* PlantãoPro v2.11.6 — camada segura de refinamento visual global. */
+:root {
+    --pp-v2116-canvas: #f2f6f9;
+    --pp-v2116-panel: #ffffff;
+    --pp-v2116-panel-muted: #f7fafb;
+    --pp-v2116-line: #d8e3e8;
+    --pp-v2116-ink: #102c3d;
+    --pp-v2116-muted: #526b78;
+    --pp-v2116-accent: #167c82;
+    --pp-v2116-accent-soft: #e7f4f3;
+    --pp-v2116-focus: #0b72a8;
+    --pp-v2116-shadow: 0 8px 24px rgb(16 44 61 / 7%);
+}
+
+.pp-body { background: var(--pp-v2116-canvas); color: var(--pp-v2116-ink); }
+.pp-content { background: radial-gradient(circle at 100% 0, rgb(22 124 130 / 5%), transparent 30rem), var(--pp-v2116-canvas); }
+.pp-content-container { padding-block: clamp(1rem, 2vw, 2rem); }
+
+/* Superfícies com elevação contida e hierarquia consistente em módulos antigos e novos. */
+:where(.card, .pp-card, .pp-section, .pp-panel) {
+    background-color: var(--pp-v2116-panel);
+    border-color: var(--pp-v2116-line);
+    box-shadow: var(--pp-v2116-shadow);
+}
+:where(.card, .pp-card, .pp-section, .pp-panel):has(> .card-header) { overflow: clip; }
+:where(.card-header, .pp-card__header, .pp-section-header) { background-color: var(--pp-v2116-panel-muted); }
+
+/* Campos e ações mantêm alvo confortável, contraste e foco visível. */
+:where(input, select, textarea, button, .btn, [role="button"]):focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--pp-v2116-focus) 45%, transparent);
+    outline-offset: 2px;
+}
+:where(.form-control, .form-select, .pp-form-control) {
+    min-height: 2.75rem;
+    border-color: #bdcdd5;
+    background-color: #fff;
+}
+:where(.form-control, .form-select, .pp-form-control):hover { border-color: #8fa7b2; }
+:where(.form-control, .form-select, .pp-form-control):focus {
+    border-color: var(--pp-v2116-focus);
+    box-shadow: 0 0 0 .2rem rgb(11 114 168 / 14%);
+}
+.btn-primary { border-color: var(--pp-v2116-accent); background: var(--pp-v2116-accent); }
+.btn-primary:hover { border-color: #11666b; background: #11666b; }
+
+/* Tabelas operacionais permanecem densas, legíveis e navegáveis por teclado. */
+:where(.table, .pp-data-table) tbody tr { transition: background-color 140ms ease; }
+:where(.table, .pp-data-table) tbody tr:hover { background-color: #f3f8f9; }
+:where(.table, .pp-data-table) tbody tr:focus-within { background-color: var(--pp-v2116-accent-soft); }
+:where(.table, .pp-data-table) thead th { color: #375563; background-color: #edf3f5; }
+
+/* Feedback sem neon: status semântico, mensagens e estados vazios ganham leitura rápida. */
+:where(.alert, .pp-alert, .empty-state, .pp-empty-state, .pp-error-state) { border-color: var(--pp-v2116-line); box-shadow: none; }
+:where(.badge, .pp-badge, .status-badge) { font-weight: 700; letter-spacing: .01em; }
+.text-muted, .pp-text-muted { color: var(--pp-v2116-muted) !important; }
+
+@media (max-width: 767.98px) {
+    .pp-content-container { padding-inline: .875rem; }
+    :where(.pp-toolbar, .pp-filter-bar, .action-bar, .pp-card-actions) > :where(.btn, button) { min-height: 2.75rem; }
+    .table-responsive { border: 1px solid var(--pp-v2116-line); background: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :where(.table, .pp-data-table) tbody tr { transition: none; }
+}
+
+@media (forced-colors: active) {
+    :where(.card, .pp-card, .pp-section, .pp-panel, .table-responsive) { border: 1px solid CanvasText; }
+}

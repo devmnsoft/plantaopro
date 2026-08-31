@@ -9,6 +9,10 @@
         <div class="pp-page-hero__copy"><span class="pp-eyebrow">Catálogo comercial</span><h2>Planos claros para cada estágio da operação</h2><p>Compare limites, recursos e disponibilidade usando somente os planos cadastrados.</p></div>
         <div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-action="Comparativo"><app-icon name="Settings" size="18" /> Comparar</a><a class="btn btn-primary" asp-action="Create"><app-icon name="Add" size="18" /> Novo plano</a></div>
     </header>
+    <details class="pp-screen-guide">
+        <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Catálogo SaaS</span></summary>
+        <div class="pp-screen-guide__body"><p>Defina quais limites e recursos estarão disponíveis para cada cliente.</p><ol><li>Filtre o catálogo pelo status operacional.</li><li>Revise limites e recursos antes de editar um plano.</li><li>Inative somente opções sem novas contratações previstas.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-shield-check" aria-hidden="true"></i> Alterações comerciais são controladas pelo servidor e não mudam diretamente a assinatura do cliente.</div></div>
+    </details>
     <form method="get" class="pp-toolbar" aria-label="Filtros de planos">
         <div class="pp-form-field"><label for="status">Status do plano</label><select class="pp-form-control" id="status" name="status"><option value="">Todos os status</option><option value="ATIVO" selected="@(Model.Status == "ATIVO")">Ativo</option><option value="INATIVO" selected="@(Model.Status == "INATIVO")">Inativo</option><option value="ARQUIVADO" selected="@(Model.Status == "ARQUIVADO")">Arquivado</option></select></div>
         <button class="btn btn-outline-primary" type="submit">Aplicar filtro</button>

@@ -1,0 +1,143 @@
+/* v2.12.2 — acabamento comercial para as jornadas SaaS.
+   Camada estritamente visual: não cria dados nem contorna autorização do servidor. */
+:root {
+  --pp-saas-ink: #102f45;
+  --pp-saas-muted: #526b7d;
+  --pp-saas-line: #d8e5ec;
+  --pp-saas-soft: #f4f9fb;
+  --pp-saas-accent: #087b83;
+  --pp-saas-accent-strong: #075b68;
+  --pp-saas-shadow: 0 18px 48px rgba(11, 47, 68, .09);
+}
+
+/* Cria hierarquia consistente em catálogo, clientes, cobrança e implantação. */
+.pp-selfservice-page,
+.pp-onboarding-page,
+.pp-page,
+.pp-operational-page,
+.pp-content-container > .container-fluid { animation: pp-saas-enter .32s ease-out both; }
+
+.pp-page-hero,
+.pp-selfservice-hero,
+.pp-hero--operation {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(8, 123, 131, .18);
+  background:
+    radial-gradient(circle at 92% 5%, rgba(48, 186, 171, .17), transparent 31%),
+    linear-gradient(135deg, #f9fcfd 0%, #f1f9f8 54%, #f4f8fc 100%);
+  box-shadow: var(--pp-saas-shadow);
+}
+
+.pp-page-hero::after,
+.pp-selfservice-hero::after,
+.pp-hero--operation::after {
+  position: absolute;
+  width: 10rem;
+  height: 10rem;
+  right: -4rem;
+  bottom: -6rem;
+  border: 1px solid rgba(8, 123, 131, .18);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.pp-onboarding-shell,
+.pp-plan-card,
+.pp-premium-table,
+.pp-filter-panel,
+.pp-content-container > .container-fluid .card {
+  border-color: var(--pp-saas-line);
+  box-shadow: 0 12px 32px rgba(11, 47, 68, .07);
+}
+
+.pp-plan-card {
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+.pp-plan-card:hover {
+  border-color: rgba(8, 123, 131, .42);
+  box-shadow: var(--pp-saas-shadow);
+  transform: translateY(-3px);
+}
+
+.pp-plan-card[data-active="false"] { background: #f7f9fa; box-shadow: none; }
+.pp-plan-price { color: var(--pp-saas-accent-strong); letter-spacing: -.035em; }
+
+/* Checklist legível e responsivo, preservando os links e estados reais renderizados. */
+.pp-stepper {
+  gap: .55rem;
+  padding: .55rem;
+  border: 1px solid var(--pp-saas-line);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, .9);
+  box-shadow: 0 8px 24px rgba(11, 47, 68, .06);
+}
+
+.pp-stepper li { min-height: 3rem; border-radius: .7rem; }
+.pp-stepper li[aria-current="step"],
+.pp-stepper li.is-current { background: #e8f7f5; color: var(--pp-saas-accent-strong); }
+
+.pp-screen-guide {
+  border-color: rgba(8, 123, 131, .24);
+  background: linear-gradient(135deg, #f8fcfc, #eef8f7 58%, #f4f8fc);
+}
+.pp-screen-guide summary:focus-visible { outline: 3px solid rgba(8, 123, 131, .28); outline-offset: -3px; }
+.pp-screen-guide summary i,
+.pp-screen-guide__note i { color: var(--pp-saas-accent); }
+
+.pp-premium-table thead th {
+  background: var(--pp-saas-soft);
+  color: #405f72;
+}
+.pp-premium-table tbody tr { transition: background-color .16s ease; }
+.pp-premium-table tbody tr:hover { background: #f4fbfa; }
+
+.pp-form-control:focus,
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--pp-saas-accent);
+  box-shadow: 0 0 0 .22rem rgba(8, 123, 131, .16);
+}
+
+.pp-content-container .btn-primary,
+.pp-content-container .button-primary {
+  border-color: var(--pp-saas-accent-strong);
+  background: linear-gradient(135deg, var(--pp-saas-accent-strong), var(--pp-saas-accent));
+  box-shadow: 0 8px 18px rgba(8, 91, 104, .18);
+}
+
+.pp-content-container .btn-primary:hover,
+.pp-content-container .button-primary:hover { filter: brightness(.94); }
+
+@keyframes pp-saas-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 767.98px) {
+  .pp-page-hero,
+  .pp-selfservice-hero,
+  .pp-hero--operation { border-radius: 1rem; }
+  .pp-stepper { overflow-x: auto; scroll-snap-type: x proximity; }
+  .pp-stepper li { min-width: 8.5rem; scroll-snap-align: start; }
+  .pp-premium-table { border-radius: .85rem; }
+  .pp-plan-card:hover { transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-selfservice-page,
+  .pp-onboarding-page,
+  .pp-page,
+  .pp-operational-page,
+  .pp-content-container > .container-fluid { animation: none; }
+  .pp-plan-card { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .pp-page-hero,
+  .pp-selfservice-hero,
+  .pp-hero--operation,
+  .pp-stepper { border: 1px solid CanvasText; }
+}

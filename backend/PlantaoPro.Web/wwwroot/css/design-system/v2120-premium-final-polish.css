@@ -1,0 +1,183 @@
+/* PlantãoPro v2.12.0 — acabamento premium transversal, responsivo e acessível. */
+:root {
+  --pp-v2120-canvas: #f3f7fb;
+  --pp-v2120-surface: #fff;
+  --pp-v2120-subtle: #f7fafc;
+  --pp-v2120-ink: #10243e;
+  --pp-v2120-muted: #50647e;
+  --pp-v2120-border: #d7e2ed;
+  --pp-v2120-primary: #1268d3;
+  --pp-v2120-primary-hover: #0d54ad;
+  --pp-v2120-focus: #087ea4;
+  --pp-v2120-radius: .875rem;
+  --pp-v2120-shadow: 0 8px 24px rgb(15 35 60 / 7%);
+}
+
+html { scroll-padding-top: 6rem; }
+
+body.pp-body {
+  color: var(--pp-v2120-ink);
+  background: var(--pp-v2120-canvas);
+  font-size: 1rem;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+}
+
+/* Uma hierarquia calma para o shell, sem alterar sua estrutura ou permissões. */
+.pp-sidebar {
+  border-inline-end: 1px solid rgb(255 255 255 / 10%);
+  box-shadow: 10px 0 32px rgb(6 25 48 / 10%);
+}
+
+.sidebar-brand { border-block-end-color: rgb(255 255 255 / 10%); }
+.sidebar-logo { min-height: 2.75rem; }
+.sidebar-logo .brand-logo { display: block; max-width: 10.75rem; height: auto; }
+.sidebar-tenant { border: 1px solid rgb(255 255 255 / 12%); border-radius: .75rem; }
+.sidebar-nav { scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / 22%) transparent; }
+.nav-section-title { letter-spacing: .075em; }
+.nav-link-app {
+  min-height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: .7rem;
+}
+.nav-link-app:hover { border-color: rgb(255 255 255 / 10%); }
+.nav-link-app.active { box-shadow: inset 3px 0 0 #6ee7e0; }
+
+.pp-topbar {
+  border-block-end: 1px solid var(--pp-v2120-border);
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 4px 18px rgb(15 35 60 / 5%);
+  backdrop-filter: blur(14px);
+}
+.pp-topbar__title { color: var(--pp-v2120-ink); letter-spacing: -.02em; }
+.pp-topbar__subtitle, .pp-breadcrumb { color: var(--pp-v2120-muted); }
+.pp-content-container { width: min(100%, 100rem); margin-inline: auto; }
+
+/* Componentes canônicos: densidade comercial, superfícies leves e ações previsíveis. */
+.pp-content :is(.card, .pp-card, .pp-kpi-card, .panel) {
+  border: 1px solid var(--pp-v2120-border);
+  border-radius: var(--pp-v2120-radius);
+  background: var(--pp-v2120-surface);
+  box-shadow: var(--pp-v2120-shadow);
+}
+.pp-content :is(.card-header, .card-footer) { background: var(--pp-v2120-subtle); border-color: var(--pp-v2120-border); }
+.pp-content :is(h1, h2, h3, .card-title) { color: var(--pp-v2120-ink); text-wrap: balance; }
+.pp-content :is(p, .text-muted, small) { overflow-wrap: anywhere; }
+
+.btn {
+  min-height: 2.5rem;
+  border-radius: .65rem;
+  font-weight: 650;
+  gap: .45rem;
+}
+.btn-primary { background-color: var(--pp-v2120-primary); border-color: var(--pp-v2120-primary); }
+.btn-primary:hover { background-color: var(--pp-v2120-primary-hover); border-color: var(--pp-v2120-primary-hover); }
+.btn-icon { min-width: 2.75rem; min-height: 2.75rem; }
+.btn:disabled, .btn.disabled { cursor: not-allowed; opacity: .62; }
+
+.form-label, .pp-form-label { margin-block-end: .45rem; color: var(--pp-v2120-ink); font-weight: 650; }
+:is(.form-control, .form-select, .pp-form-control) {
+  min-height: 2.75rem;
+  border-color: #b9c8d8;
+  border-radius: .65rem;
+  color: var(--pp-v2120-ink);
+  background-color: var(--pp-v2120-surface);
+}
+:is(.form-control, .form-select, .pp-form-control)::placeholder { color: #687d94; opacity: 1; }
+:is(.form-control, .form-select, .pp-form-control):hover:not(:disabled) { border-color: #8299b1; }
+.form-help, .form-text { color: var(--pp-v2120-muted); }
+.field-validation-error, .pp-form-error { color: #a51d32; font-weight: 600; }
+
+.badge, .pp-status-badge { padding: .38rem .62rem; border-radius: 999px; font-weight: 700; }
+.alert { border-width: 1px; border-radius: .75rem; }
+.dropdown-menu, .modal-content, .toast { border: 1px solid var(--pp-v2120-border); border-radius: .875rem; box-shadow: 0 20px 48px rgb(15 35 60 / 16%); }
+
+.table-responsive { background: var(--pp-v2120-surface); }
+.table { --bs-table-bg: transparent; color: var(--pp-v2120-ink); }
+.table > :not(caption) > * > * { padding: .85rem .9rem; border-bottom-color: #e2eaf2; vertical-align: middle; }
+.table thead th { color: #435a73; background: var(--pp-v2120-subtle); font-size: .8125rem; letter-spacing: .035em; text-transform: uppercase; white-space: nowrap; }
+.table tbody tr:hover { background: #f4f8fc; }
+
+.empty-state, .pp-future-empty-state, .pp-future-error-state {
+  max-width: 42rem;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  border: 1px dashed #b9c8d8;
+  border-radius: var(--pp-v2120-radius);
+  background: var(--pp-v2120-subtle);
+}
+.empty-state-icon { display: grid; place-items: center; width: 3rem; height: 3rem; margin: 0 auto 1rem; border-radius: .8rem; color: var(--pp-v2120-primary); background: #e7f1fd; font-size: 1.35rem; }
+[aria-busy="true"] { cursor: progress; }
+[aria-busy="true"] > :not([role="status"]) { opacity: .55; }
+
+/* Foco é sempre perceptível, inclusive no shell, menus e controles somente com ícone. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--pp-v2120-focus) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px rgb(8 126 164 / 16%);
+}
+.skip-link:focus { z-index: 10000; }
+
+/* Login como composição de produto; movimento é decorativo e discreto. */
+.pp-auth-body { min-height: 100dvh; background: radial-gradient(circle at 12% 12%, #dbeefe 0, transparent 34%), #eef4f9; }
+.pp-auth-page { min-height: 100dvh; padding: clamp(1rem, 4vw, 3rem); }
+.pp-auth__shell { overflow: hidden; border: 1px solid #cfdae6; border-radius: 1.25rem; box-shadow: 0 28px 70px rgb(11 42 82 / 16%); }
+.pp-auth-brand-panel { position: relative; background: #092b4d; }
+.pp-auth-brand-panel::after { content: ""; position: absolute; inset: auto -5rem -7rem auto; width: 18rem; aspect-ratio: 1; border: 1px solid rgb(110 231 224 / 24%); border-radius: 50%; pointer-events: none; animation: pp-auth-breathe 8s ease-in-out infinite alternate; }
+.pp-auth-card { width: min(100%, 29rem); }
+.pp-auth-form-panel { background: rgb(255 255 255 / 98%); }
+.pp-password-field .pp-form-control { padding-inline-end: 3.25rem; }
+.auth-password-toggle { position: absolute; inset-inline-end: .25rem; inset-block-start: .25rem; }
+
+@keyframes pp-auth-breathe { to { transform: translate3d(-1.25rem, -1rem, 0) scale(1.06); } }
+
+@media (max-width: 1023.98px) {
+  .pp-topbar { padding-inline: 1rem; }
+  .pp-topbar__actions { gap: .4rem; }
+  .pp-content-container { padding-inline: clamp(1rem, 3vw, 1.5rem); }
+}
+
+@media (max-width: 991.98px) {
+  /* A navegação inferior já oferece o acionador: evita dois ícones de menu na mesma tela. */
+  .pp-topbar #sidebarToggle { display: none !important; }
+}
+
+@media (max-width: 767.98px) {
+  .pp-topbar { min-height: 4.25rem; align-items: center; }
+  .pp-topbar__identity { min-width: 0; }
+  .pp-topbar__title { max-width: 14rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.1rem; }
+  .pp-content-container { padding-inline: .875rem; }
+  .pp-content :is(.card-body, .card-header, .card-footer, .pp-card) { padding: 1rem; }
+  .pp-content :is(.row, [class*="d-flex"]):has(.btn) { row-gap: .65rem; }
+  .table-responsive { margin-inline: 0; border-radius: .75rem; }
+  .table-responsive > .table { min-width: 40rem; }
+  .modal-dialog { margin: .75rem; }
+  .dropdown-menu { max-width: calc(100vw - 1.5rem); }
+  .pp-auth-page { padding: .75rem; }
+  .pp-auth__shell { border-radius: 1rem; }
+  .pp-auth-brand-panel { padding: 1.35rem; }
+  .pp-auth-benefit-grid { display: none; }
+  .pp-auth-form-panel { padding: 1.25rem; }
+  .pp-login-actions .btn { width: 100%; }
+}
+
+@media (max-width: 359.98px) {
+  .pp-content-container { padding-inline: .65rem; }
+  .pp-topbar { padding-inline: .65rem; }
+  .pp-topbar__title { max-width: 10rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+@media (forced-colors: active) {
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid CanvasText !important; }
+  .nav-link-app.active, .card, .pp-card { border: 1px solid CanvasText; }
+}
+
+@media print {
+  .pp-sidebar, .pp-topbar, .mobile-navigation, .sidebar-overlay, .btn { display: none !important; }
+  .pp-main-shell, .pp-content { margin: 0 !important; width: 100% !important; }
+  .pp-content :is(.card, .pp-card) { box-shadow: none; break-inside: avoid; }
+}

@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2123-saas-operations.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2124-operational-intelligence.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/drawers.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2126-form-feedback.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -40,6 +41,7 @@
                     <div class="pp-content-container">
                         <partial name="_ToastMessages" />
                         @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
+                        <partial name="_ScreenGuide" />
                         @RenderBody()
                     </div>
                 </main>

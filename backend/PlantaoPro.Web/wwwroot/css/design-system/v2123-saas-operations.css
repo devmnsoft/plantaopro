@@ -1,0 +1,119 @@
+/* v2.12.3 — acabamento operacional para suporte, implantação, auditoria e saúde.
+   Camada somente visual: dados, autorização e isolamento continuam no servidor. */
+:root {
+  --pp-ops-navy: #0c3048;
+  --pp-ops-teal: #087f83;
+  --pp-ops-mint: #dff5f1;
+  --pp-ops-line: #d7e5eb;
+  --pp-ops-surface: #f7fafc;
+  --pp-ops-shadow: 0 16px 40px rgba(7, 42, 63, .08);
+}
+
+/* Consolida as superfícies já alimentadas pelas APIs, sem introduzir conteúdo. */
+.pp-operation-page,
+.pp-content-container > .container,
+.pp-content-container > .container-fluid {
+  accent-color: var(--pp-ops-teal);
+}
+
+.pp-operation-header,
+.pp-content-container > .container > .p-4.rounded-3.bg-light.border {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(8, 127, 131, .2) !important;
+  background:
+    radial-gradient(circle at 94% 0, rgba(56, 190, 173, .18), transparent 30%),
+    linear-gradient(135deg, #fbfdfd, #eef8f7 62%, #f5f8fb) !important;
+  box-shadow: var(--pp-ops-shadow);
+}
+
+.pp-operation-header::after {
+  position: absolute;
+  right: -2.5rem;
+  bottom: -4rem;
+  width: 9rem;
+  height: 9rem;
+  border: 1px solid rgba(8, 127, 131, .18);
+  border-radius: 50%;
+  content: "";
+  pointer-events: none;
+}
+
+.pp-operation-header .eyebrow { color: var(--pp-ops-teal); letter-spacing: .09em; }
+.pp-data-source { border: 1px solid var(--pp-ops-line); background: rgba(255, 255, 255, .86); }
+
+/* Filtros e indicadores ficam visualmente agrupados para leitura rápida. */
+.pp-filter-panel,
+.pp-content-container form.card,
+.pp-content-container .card.border-0.shadow-sm {
+  border: 1px solid var(--pp-ops-line) !important;
+  border-radius: 1rem;
+  box-shadow: var(--pp-ops-shadow) !important;
+}
+
+.pp-filter-panel { background: linear-gradient(180deg, #fff, var(--pp-ops-surface)); }
+.pp-filter-panel__title { color: var(--pp-ops-navy); }
+.pp-kpi-card { border-color: var(--pp-ops-line); box-shadow: 0 10px 26px rgba(7, 42, 63, .06); }
+.pp-kpi-card__value { color: var(--pp-ops-navy); font-variant-numeric: tabular-nums; }
+
+.pp-content-container .table-responsive {
+  border-radius: 1rem;
+  scrollbar-color: #9bbbc4 transparent;
+}
+
+.pp-content-container .table > thead th {
+  border-bottom-color: var(--pp-ops-line);
+  background: #f1f7f8;
+  color: #36586a;
+  font-size: .75rem;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.pp-content-container .table > tbody > tr { transition: background-color .15s ease; }
+.pp-content-container .table > tbody > tr:hover { background: #f3fbf9; }
+.pp-content-container .table code { color: #49697a; }
+
+/* Status, timelines e avisos mantêm contraste sem depender apenas de cor. */
+.pp-content-container .badge { border: 1px solid rgba(12, 48, 72, .12); font-weight: 650; }
+.pp-content-container .alert { border-width: 1px; border-radius: .9rem; }
+.pp-content-container .alert-info { border-color: #addbd7; background: #eef9f7; color: #164d58; }
+.pp-content-container .alert-warning { border-color: #edd49b; background: #fff9e9; color: #604b1c; }
+
+.pp-workboard__lane {
+  border-color: var(--pp-ops-line);
+  box-shadow: 0 10px 28px rgba(7, 42, 63, .06);
+}
+.pp-workboard__header { background: linear-gradient(180deg, #fff, #f4f9fa); }
+
+/* O banner existente de acesso assistido permanece destacado e legível. */
+.pp-impersonation-banner,
+[data-impersonation-banner] {
+  border-bottom: 1px solid #e5bd63;
+  background: linear-gradient(90deg, #fff4cf, #fff9ea);
+  color: #523f12;
+  box-shadow: 0 8px 22px rgba(76, 56, 10, .1);
+}
+
+@media (max-width: 767.98px) {
+  .pp-operation-header { border-radius: 1rem; }
+  .pp-filter-panel .row > [class*="col-"] { width: 100%; }
+  .pp-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pp-content-container .table-responsive { border: 1px solid var(--pp-ops-line); }
+}
+
+@media (max-width: 420px) {
+  .pp-kpi-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-content-container .table > tbody > tr { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .pp-operation-header,
+  .pp-filter-panel,
+  .pp-kpi-card,
+  .pp-workboard__lane { border: 1px solid CanvasText !important; }
+}

@@ -1,5 +1,5 @@
 /* v2.12.7 — login resiliente e composição premium isolada da aplicação autenticada. */
-.pp-auth-body { background: #071b2c; }
+.pp-auth-body { background: #061827; }
 .pp-auth-body .auth-main { overflow: auto; background: radial-gradient(circle at 12% 12%, rgb(34 183 190 / 18%), transparent 30rem), #071b2c; }
 .pp-auth-body .pp-auth-page { min-height: 100dvh; padding: clamp(1rem, 3vw, 2.5rem); }
 .pp-auth-body .pp-auth-shell { width: min(72rem, 100%); min-height: min(43rem, calc(100dvh - 5rem)); grid-template-columns: minmax(0, 1fr) minmax(23rem, .9fr); border: 1px solid rgb(255 255 255 / 14%); border-radius: 1.5rem; box-shadow: 0 2rem 5rem rgb(0 10 20 / 35%); }
@@ -7,11 +7,15 @@
 .pp-auth-body .pp-auth-brand-panel h1 { max-width: 15ch; margin: 1.5rem 0 .85rem; font-size: clamp(2rem, 3.8vw, 3.15rem); line-height: 1.06; overflow-wrap: anywhere; }
 .pp-auth-body .auth-product-tag { margin-top: 1.5rem; }
 .pp-auth-body .pp-auth-form-panel { padding: clamp(1.5rem, 4vw, 3.5rem); background: linear-gradient(180deg, #fff, #f6fafc); }
+.pp-auth-body .pp-auth-form-panel::before { content: ""; position: absolute; inset: 0 0 auto; height: .25rem; background: linear-gradient(90deg, #20b7be, #1268d3); }
+.pp-auth-body .pp-auth-form-panel { position: relative; }
 .pp-auth-body .pp-auth-card { width: min(100%, 29rem); max-width: none; box-shadow: none; }
 .pp-auth-body .pp-auth-card > p { color: #53687a; line-height: 1.55; }
 .pp-auth-body .pp-login-form { margin-top: 1.5rem; }
 .pp-auth-body .pp-form-field { min-width: 0; }
-.pp-auth-body .pp-form-control { min-height: 3rem; border-radius: .75rem; }
+.pp-auth-body .pp-form-control { min-height: 3.25rem; border: 1px solid #bdccd8; border-radius: .75rem; background: #fff; box-shadow: 0 1px 2px rgb(8 35 55 / 4%); }
+.pp-auth-body .pp-form-control:hover { border-color: #8ca7b9; }
+.pp-auth-body .pp-form-control:focus { border-color: #087ea4; box-shadow: 0 0 0 .25rem rgb(8 126 164 / 13%); }
 .pp-auth-body .pp-password-field { position: relative; }
 .pp-auth-body .pp-password-field .pp-form-control { padding-right: 3.5rem; }
 .pp-auth-body .auth-password-toggle { position: absolute; top: .3rem; right: .3rem; width: 2.4rem; height: 2.4rem; padding: 0; border: 0; }
@@ -20,6 +24,9 @@
 .pp-auth-body .pp-error-panel ul { margin: 0; padding-left: 1.25rem; }
 .pp-auth-body .pp-login-actions { display: grid; gap: .5rem; margin-top: .5rem; }
 .pp-auth-body .pp-login-actions .btn { min-height: 3.1rem; border-radius: .8rem; box-shadow: 0 .65rem 1.4rem rgb(12 75 110 / 18%); }
+.pp-auth-body #btnLogin { background: linear-gradient(135deg, #087ea4, #1268d3); border: 0; font-weight: 750; letter-spacing: .01em; }
+.pp-auth-body #btnLogin:hover { filter: brightness(.94); transform: translateY(-1px); }
+.pp-auth-body #btnLogin[aria-busy="true"] { transform: none; cursor: wait; }
 .pp-auth-body .pp-login-help { margin-top: 1.25rem; padding: .8rem 1rem; border: 1px solid #d9e5ec; border-radius: .75rem; background: #f8fbfc; }
 .pp-auth-body .pp-login-help summary { cursor: pointer; color: #173d56; font-weight: 700; }
 .pp-auth-body .pp-login-help p { margin: .7rem 0 0; color: #53687a; font-size: .875rem; }

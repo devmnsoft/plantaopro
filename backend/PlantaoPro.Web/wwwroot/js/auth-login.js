@@ -53,6 +53,9 @@
             event.preventDefault();
             return;
         }
+        // O evento submit só ocorre depois que a validação nativa aceita os
+        // campos. A partir daqui o navegador fará um POST real para form.action.
+        form.dataset.requestStarted = "true";
         button?.setAttribute("aria-busy", "true");
         button?.setAttribute("disabled", "disabled");
         button?.querySelector(".spinner-border")?.classList.remove("d-none");

@@ -1,0 +1,14 @@
+/* v2.12.6 — orientação, validação e feedback consistentes. */
+.pp-screen-guide{margin:0 0 1.25rem;border:1px solid color-mix(in srgb,var(--pp-primary,#176b87) 22%,#dce6ea);border-radius:14px;background:linear-gradient(135deg,#fff 0%,#f4fafb 100%);box-shadow:0 8px 28px rgb(15 50 65 / 6%)}
+.pp-screen-guide summary{display:flex;align-items:center;gap:.65rem;padding:.85rem 1rem;cursor:pointer;color:var(--pp-text-primary,#17313d);font-weight:750;list-style:none}
+.pp-screen-guide summary::-webkit-details-marker{display:none}.pp-screen-guide summary:focus-visible{outline:3px solid var(--pp-focus,#58b8d2);outline-offset:3px;border-radius:12px}
+.pp-screen-guide__icon{display:grid;place-items:center;width:1.7rem;height:1.7rem;border-radius:50%;background:#e4f5f7;color:#075d73;font-weight:850}
+.pp-screen-guide__chevron{margin-left:auto;width:.55rem;height:.55rem;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s ease}.pp-screen-guide[open] .pp-screen-guide__chevron{transform:rotate(225deg)}
+.pp-screen-guide__content{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(16rem,1fr);gap:1rem;padding:.15rem 1rem 1rem;border-top:1px solid #e7eff1}.pp-screen-guide__content>div{padding-top:.85rem}.pp-screen-guide__content p{margin:.3rem 0 0;color:var(--pp-text-secondary,#526b76)}.pp-screen-guide ol{margin:.75rem 0 0;padding-left:1.4rem;color:var(--pp-text-secondary,#526b76)}.pp-screen-guide li+li{margin-top:.28rem}
+form.pp-form-enhanced{position:relative}form.pp-form-enhanced:not(.notification-filters):not(.filter-bar){accent-color:var(--pp-primary,#176b87)}
+form.pp-form-enhanced :where(label,.form-label){font-weight:700}form.pp-form-enhanced .pp-required-marker{margin-left:.2rem;color:var(--pp-danger,#b42318);font-weight:800}form.pp-form-enhanced :where(input,select,textarea):focus-visible{outline:3px solid color-mix(in srgb,var(--pp-focus,#58b8d2) 45%,transparent);outline-offset:2px}
+.pp-client-validation-summary{display:none;margin:0 0 1rem;padding:.85rem 1rem;border:1px solid #f2b8b5;border-left:4px solid #b42318;border-radius:10px;background:#fff5f4;color:#7a271a}.pp-client-validation-summary.is-visible{display:block}.pp-client-validation-summary strong{display:block}.pp-client-validation-summary p{margin:.2rem 0 0}
+form.was-validated :where(input,select,textarea):invalid{border-color:#d92d20;background-color:#fffafa}form.was-validated :where(input,select,textarea):valid:not([type=checkbox]):not([type=radio]){border-color:#68a888}
+button[aria-busy=true]{cursor:progress;opacity:.78}
+@media(max-width:720px){.pp-screen-guide__content{grid-template-columns:1fr}.pp-screen-guide ol{margin-top:0}.pp-screen-guide summary{min-height:48px}}
+@media(prefers-reduced-motion:reduce){.pp-screen-guide__chevron{transition:none}}

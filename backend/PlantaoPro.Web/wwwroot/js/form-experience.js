@@ -56,7 +56,7 @@
     }
 
     function wireSubmitFeedback(form) {
-        if (!form.matches("[data-submit-feedback]") || form.matches('[data-ajax-form="true"], [data-saude360-form]')) return;
+        if (!form.matches('[method="post"], [data-submit-feedback]') || form.matches('[data-ajax-form="true"], [data-saude360-form], [data-confirm="true"]')) return;
         form.addEventListener("submit", event => {
             if (event.defaultPrevented || !form.checkValidity()) return;
             const button = event.submitter instanceof HTMLButtonElement
@@ -83,12 +83,34 @@
     });
 
     document.querySelectorAll("form").forEach(form => {
+        form.classList.add("pp-form-enhanced");
+        form.querySelectorAll("input[required], select[required], textarea[required]").forEach(field => {
+            const label = field.id ? form.querySelector(`label[for="${CSS.escape(field.id)}"]`) : null;
+            if (label && !label.querySelector(".pp-required-marker")) {
+                const marker = document.createElement("span");
+                marker.className = "pp-required-marker";
+                marker.setAttribute("aria-hidden", "true");
+                marker.textContent = "*";
+                label.append(marker);
+            }
+            field.setAttribute("aria-required", "true");
+        });
+        let summary = form.querySelector(".validation-summary-errors, [data-validation-summary]");
+        if (!summary && form.querySelector(fieldsSelector)) {
+            summary = document.createElement("div");
+            summary.className = "pp-client-validation-summary";
+            summary.setAttribute("role", "alert");
+            summary.setAttribute("tabindex", "-1");
+            summary.innerHTML = "<strong>Revise os campos destacados</strong><p>Preencha as informações obrigatórias e corrija os formatos indicados.</p>";
+            form.prepend(summary);
+        }
         connectValidation(form); wireDirtyState(form);
         form.querySelectorAll(fieldsSelector).forEach(field => field.addEventListener("change", () => validateDates(form)));
         form.addEventListener("submit", event => {
             if (!validateDates(form) || !form.checkValidity()) {
                 event.preventDefault();
                 form.classList.add("was-validated");
+                summary?.classList.add("is-visible");
                 focusFirstInvalid(form);
                 window.PlantaoProToast?.error("Revise os campos destacados antes de continuar.", { title: "Há informações pendentes" });
             }
@@ -96,4 +118,26 @@
         wireSubmitFeedback(form);
         if (form.matches("[data-focus-invalid]")) focusFirstInvalid(form);
     });
+
+    const guide = document.querySelector("[data-screen-guide]");
+    if (guide) {
+        const area = location.pathname.split("/").filter(Boolean)[0]?.toLowerCase() || "início";
+        const guides = {
+            usuarios: ["Cadastre pessoas da instituição e controle os acessos.", "Administradores devem atribuir somente os perfis necessários.", "Cadastre ou localize uma pessoa.", "Revise perfil, status e instituição antes de salvar.", "Depois, confirme as permissões concedidas."],
+            perfis: ["Organize permissões por função de trabalho.", "Administradores podem montar perfis para escala, financeiro e atendimento.", "Escolha um perfil ou crie um novo grupo.", "Conceda apenas os acessos indispensáveis.", "Depois, revise a matriz de permissões."],
+            plantoes: ["Acompanhe plantões por período, unidade, profissional e cobertura.", "Coordenação e escala usam esta área para manter a operação coberta.", "Filtre o período e abra o plantão desejado.", "Confirme profissional, horário e status antes de alterar.", "Depois, acompanhe confirmação e presença."],
+            escalas: ["Planeje a cobertura das unidades e organize os plantões.", "A equipe de escala deve revisar conflitos e lacunas.", "Selecione o período e a unidade de trabalho.", "Evite sobreposição de horários e plantões sem responsável.", "Depois, publique e acompanhe as confirmações."],
+            financeiro: ["Controle valores previstos, pagamentos, pendências e divergências.", "Perfis financeiros trabalham somente com dados do próprio tenant.", "Use os filtros para conferir o período.", "Revise valores e favorecidos antes de concluir ações.", "Depois, acompanhe a situação financeira."],
+            relatorios: ["Gere visões operacionais, financeiras e executivas da instituição.", "Gestores devem aplicar filtros antes de consultar ou exportar.", "Defina período, unidade e demais critérios.", "Exportações podem conter dados sensíveis.", "Depois, analise os indicadores ou exporte com segurança."],
+            adminsaas: ["Gerencie clientes, planos, cobrança, bloqueios e suporte da plataforma.", "Esta área é exclusiva do Super Admin MNSOFT.", "Localize o cliente e escolha a ação necessária.", "Confirme tenant, impacto e motivo de ações sensíveis.", "Depois, acompanhe o evento na auditoria."],
+            onboarding: ["Conduza a configuração inicial de um cliente.", "Implantação e administradores acompanham cada etapa.", "Complete os dados e requisitos da etapa atual.", "Confira responsáveis e informações da instituição.", "Depois, avance para o próximo item pendente."],
+            suporte: ["Registre e acompanhe solicitações de atendimento.", "Usuários autorizados devem informar contexto sem incluir segredos.", "Descreva a necessidade e defina a prioridade correta.", "Não envie senhas, tokens ou dados clínicos desnecessários.", "Depois, acompanhe as respostas e o prazo."],
+            notificacoes: ["Acompanhe eventos importantes e escolha como deseja ser avisado.", "Cada pessoa pode priorizar os alertas úteis à sua rotina.", "Filtre ou ajuste suas preferências.", "Mantenha ativos os avisos críticos da operação.", "Depois, marque como lidos os itens já tratados."]
+        };
+        const copy = guides[area];
+        if (copy) ["purpose", "audience", "action", "care", "next"].forEach((key, index) => {
+            const target = guide.querySelector(`[data-screen-guide-${key}]`);
+            if (target) target.textContent = copy[index];
+        });
+    }
 })();

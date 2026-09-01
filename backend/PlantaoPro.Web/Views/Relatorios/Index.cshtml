@@ -1,42 +1,76 @@
 @{
-    ViewData["Title"] = "Biblioteca de relatórios";
+    ViewData["Title"] = "Central de Relatórios e BI";
     var reports = new[]
     {
-        new { Title = "Plantões por período", Description = "Acompanhe composição, cobertura e riscos da operação por período.", Icon = "bi-calendar2-week", Action = "Cobertura", Category = "Operação" },
-        new { Title = "Convites", Description = "Analise respostas e conversão dos convites enviados aos médicos.", Icon = "bi-send-check", Action = "Convites", Category = "Operação" },
-        new { Title = "Produtividade médica", Description = "Consulte os indicadores disponíveis de produtividade sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Clínico" },
-        new { Title = "SLA", Description = "Visualize indicadores de nível de serviço e pontos que exigem atenção.", Icon = "bi-speedometer2", Action = "Sla", Category = "Gestão" },
-        new { Title = "Faturamento SaaS", Description = "Consolide a visão de faturamento da plataforma por competência.", Icon = "bi-receipt", Action = "FaturamentoSaas", Category = "Financeiro" },
-        new { Title = "Clientes SaaS", Description = "Consulte dados paginados reais e exporte o resultado auditado em CSV.", Icon = "bi-buildings", Action = "Saas", Category = "SaaS" }
+        new { Title = "Cobertura de plantões", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados do tenant.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Seu tenant", Formats = "Tela" },
+        new { Title = "Convites e confirmações", Description = "Analise respostas e conversão dos convites enviados aos profissionais.", Icon = "bi-send-check", Action = "Convites", Category = "Operacional", Scope = "Seu tenant", Formats = "Tela" },
+        new { Title = "Produtividade profissional", Description = "Consulte os indicadores operacionais disponíveis sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Profissionais", Scope = "Seu tenant", Formats = "Tela" },
+        new { Title = "Nível de serviço", Description = "Visualize os indicadores de SLA existentes e os pontos que exigem atenção.", Icon = "bi-speedometer2", Action = "Sla", Category = "Suporte", Scope = "Conforme permissão", Formats = "Tela" },
+        new { Title = "Receita e cobrança SaaS", Description = "Consolide o faturamento real da plataforma por competência.", Icon = "bi-receipt", Action = "FaturamentoSaas", Category = "Financeiro", Scope = "Super Admin", Formats = "Tela" },
+        new { Title = "Carteira de clientes SaaS", Description = "Consulte a carteira paginada e exporte somente as colunas autorizadas.", Icon = "bi-buildings", Action = "Saas", Category = "SaaS e clientes", Scope = "Super Admin", Formats = "Tela · CSV" }
     };
+    var categories = reports.Select(x => x.Category).Distinct().OrderBy(x => x).ToArray();
 }
-<div class="pp-page">
-    <header class="pp-hero" aria-labelledby="reports-title">
-        <div class="pp-hero__copy"><span class="pp-eyebrow"><i class="bi bi-bar-chart-line" aria-hidden="true"></i> Inteligência operacional</span><h1 id="reports-title">Biblioteca de relatórios</h1><p>Escolha uma visão para investigar a operação. Indicadores são carregados pelas fontes reais; quando não houver dados, mostramos o contexto e a próxima possibilidade.</p></div>
-        <div class="pp-hero-actions"><a class="btn btn-primary" asp-action="Saas"><i class="bi bi-table" aria-hidden="true"></i> Abrir dados SaaS</a></div>
+
+<link rel="stylesheet" href="~/css/pages/report-center.css" asp-append-version="true" />
+
+<main class="pp-page pp-report-center" data-report-center data-admin-reports-honest>
+    <header class="pp-report-hero" aria-labelledby="reports-title">
+        <div>
+            <span class="pp-eyebrow"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Decisões com fonte real</span>
+            <h1 id="reports-title">Central de Relatórios e BI</h1>
+            <p>Encontre a visão certa, refine o catálogo e abra relatórios alimentados pelas fontes autorizadas para o seu perfil.</p>
+        </div>
+        <div class="pp-report-hero__trust" aria-label="Proteções da central">
+            <span><i class="bi bi-shield-lock" aria-hidden="true"></i> Escopo protegido</span>
+            <span><i class="bi bi-file-earmark-check" aria-hidden="true"></i> Exportação auditável</span>
+        </div>
     </header>
-    <div class="pp-notice" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Privacidade por padrão</strong><br />Relatórios clínicos respeitam tenant, perfil de acesso e princípio do mínimo necessário.</div></div>
-    <section aria-labelledby="catalog-title">
-        <div class="pp-section-header"><div><h2 id="catalog-title">Visões disponíveis</h2><p>Acesse somente jornadas com rota implementada.</p></div></div>
+
+    <aside class="pp-report-guide" aria-labelledby="report-guide-title">
+        <i class="bi bi-compass" aria-hidden="true"></i>
+        <div><strong id="report-guide-title">Como usar</strong><p>Busque por assunto ou selecione uma categoria. Confira o escopo indicado no card antes de abrir; dentro do relatório, aplique somente os filtros disponibilizados pela fonte.</p></div>
+    </aside>
+
+    <section class="pp-report-toolbar" aria-labelledby="catalog-tools-title">
+        <div class="pp-report-toolbar__heading"><div><span class="pp-eyebrow">Catálogo autorizado</span><h2 id="catalog-tools-title">Qual análise você precisa?</h2></div><output data-report-count aria-live="polite">@reports.Length relatórios disponíveis</output></div>
+        <div class="pp-report-search">
+            <label for="report-search">Buscar relatório</label>
+            <div class="pp-report-search__field"><i class="bi bi-search" aria-hidden="true"></i><input id="report-search" type="search" class="form-control" placeholder="Ex.: cobertura, cobrança ou SLA" autocomplete="off" data-report-search /></div>
+        </div>
+        <fieldset class="pp-report-categories" data-report-categories>
+            <legend>Filtrar por categoria</legend>
+            <button class="is-active" type="button" data-category="" aria-pressed="true">Todos</button>
+            @foreach (var category in categories) { <button type="button" data-category="@category" aria-pressed="false">@category</button> }
+        </fieldset>
+        <div class="pp-filter-summary" data-filter-summary hidden><strong>Filtros aplicados:</strong><span data-filter-description></span><button type="button" data-clear-reports>Limpar filtros</button></div>
+    </section>
+
+    <section aria-labelledby="catalog-title" aria-busy="false" data-report-results>
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Relatórios disponíveis</span><h2 id="catalog-title">Visões para seu perfil</h2><p>O catálogo mostra apenas rotas implementadas; disponibilidade final também depende das permissões validadas pelo servidor.</p></div></div>
         <div class="pp-report-catalog mt-3">
             @foreach (var report in reports)
             {
-                <a class="pp-action-card" asp-controller="Relatorios" asp-action="@report.Action">
-                    <span class="pp-action-card__icon"><i class="bi @report.Icon" aria-hidden="true"></i></span><h3>@report.Title</h3><p>@report.Description</p><span class="pp-action-card__meta"><span>@report.Category</span><span>Abrir <i class="bi bi-arrow-right" aria-hidden="true"></i></span></span>
-                </a>
+                <article class="pp-report-card" data-report-card data-title="@report.Title" data-description="@report.Description" data-category="@report.Category">
+                    <div class="pp-report-card__top"><span class="pp-report-card__icon"><i class="bi @report.Icon" aria-hidden="true"></i></span><span class="pp-report-badge">@report.Category</span></div>
+                    <h3>@report.Title</h3><p>@report.Description</p>
+                    <dl><div><dt>Acesso</dt><dd><i class="bi bi-person-lock" aria-hidden="true"></i> @report.Scope</dd></div><div><dt>Formatos</dt><dd>@report.Formats</dd></div><div><dt>Última execução</dt><dd>Não informada</dd></div></dl>
+                    <a class="btn btn-outline-primary" asp-controller="Relatorios" asp-action="@report.Action" aria-label="Abrir relatório @report.Title">Abrir relatório <i class="bi bi-arrow-right" aria-hidden="true"></i></a>
+                </article>
             }
         </div>
+        <div class="pp-report-state" data-report-empty hidden><i class="bi bi-search" aria-hidden="true"></i><h3>Nenhum relatório encontrado</h3><p>Revise o termo ou limpe a categoria. Nenhum dado operacional foi consultado nesta busca.</p><button class="btn btn-outline-primary" type="button" data-clear-reports>Limpar filtros</button></div>
+        <div class="pp-report-state pp-report-state--error" role="alert" data-report-error hidden><i class="bi bi-exclamation-triangle" aria-hidden="true"></i><h3>Não foi possível filtrar o catálogo</h3><p>Recarregue a página. Nenhuma exportação ou consulta foi iniciada.</p></div>
     </section>
-    <section aria-labelledby="automation-title"><div class="pp-section-header"><div><h2 id="automation-title">Automação e favoritos</h2><p>Recursos ainda sem persistência permanecem explícitos, sem botões que simulam uma ação.</p></div></div><div class="pp-action-grid mt-3"><article class="pp-action-card pp-action-card--disabled" aria-disabled="true"><span class="pp-action-card__icon"><i class="bi bi-star" aria-hidden="true"></i></span><h3>Relatórios favoritos</h3><p>A personalização será liberada quando houver armazenamento por usuário.</p><span class="pp-action-card__meta">Indisponível nesta versão</span></article><article class="pp-action-card pp-action-card--disabled" aria-disabled="true"><span class="pp-action-card__icon"><i class="bi bi-clock-history" aria-hidden="true"></i></span><h3>Agendamentos</h3><p>O envio recorrente depende de fila e trilha de auditoria no backend.</p><span class="pp-action-card__meta">Indisponível nesta versão</span></article></div></section>
-</div>
-<section class="pp-section" aria-labelledby="financial-reports-title" data-financial-reports-honest><div class="pp-premium-filter mb-4"><div class="pp-section-heading"><div><span class="pp-eyebrow">Consulta executiva</span><h2>Filtros do relatório</h2><p>Defina a competência antes de abrir uma visão. Cada relatório preserva os filtros suportados por sua fonte.</p></div></div><div class="filter-grid"><div><label for="report-start">Data inicial</label><input id="report-start" class="form-control" type="date" aria-describedby="report-period-help" /></div><div><label for="report-end">Data final</label><input id="report-end" class="form-control" type="date" aria-describedby="report-period-help" /></div><div><label for="report-view">Visão</label><select id="report-view" class="form-select"><option>Financeiro por período</option><option>Financeiro por unidade</option><option>Financeiro por profissional</option><option>Divergências</option><option>Plantões aprovados</option><option>Plantões pagos</option><option>Pendências financeiras</option></select></div><div><button class="btn btn-primary" type="button" disabled title="A aplicação depende do endpoint financeiro auditável.">Aplicar filtros</button></div></div><small id="report-period-help" class="form-text">Nenhum período aplicado. A geração permanece bloqueada até existir uma fonte autorizada.</small></div>
-  <div class="pp-section-header"><div><span class="pp-eyebrow">Jornada financeira</span><h2 id="financial-reports-title">Painel de relatórios financeiros</h2><p>Faturamento, pagamentos, glosas, repasses, fechamentos, plantões, consultas e competência exigem consultas e exportações auditáveis no backend.</p></div></div>
-  <div class="pp-disabled-actions" aria-label="Relatórios financeiros indisponíveis">
-    <button class="btn btn-outline-secondary" type="button" disabled title="A geração depende de endpoint financeiro auditável.">Gerar relatório financeiro</button>
-    <button class="btn btn-outline-secondary" type="button" disabled title="Exportação futura bloqueada: depende de arquivo produzido pelo backend.">Exportar</button>
-  </div>
-</section>
-<section class="pp-section pp-governance-panel" aria-labelledby="admin-reports-title" data-admin-reports-honest>
- <div class="pp-section-header"><div><span class="pp-eyebrow">Admin SaaS e governança</span><h2 id="admin-reports-title">Relatórios administrativos</h2><p>Assinatura, usuários, perfis, permissões, auditoria, LGPD e configurações ainda não possuem endpoints de geração contratados.</p></div></div>
- <div class="pp-governance-grid"><article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--unavailable">Backend necessário</span><h3>Governança do tenant</h3><p>Nenhuma última geração, arquivo ou indicador é presumido.</p><button class="btn btn-outline-secondary" type="button" disabled title="Depende de consulta administrativa autorizada e auditável.">Gerar relatório</button></article><article class="pp-governance-card"><span class="pp-status-badge pp-status-badge--unavailable">Exportação indisponível</span><h3>Auditoria e LGPD</h3><p>A exportação exige endpoint, política de acesso e registro da operação.</p><button class="btn btn-outline-secondary" type="button" disabled title="Depende de endpoint de exportação com trilha de auditoria.">Exportar evidências</button></article></div>
-</section>
+
+    <section class="pp-report-personalization" aria-labelledby="personalization-title">
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Seu espaço</span><h2 id="personalization-title">Favoritos, recentes e filtros salvos</h2><p>Esses recursos exigem persistência segura por usuário e tenant. Permanecem claramente bloqueados para não simular operações.</p></div></div>
+        <div class="pp-report-personalization__grid">
+            <article><i class="bi bi-star" aria-hidden="true"></i><div><h3>Favoritos</h3><p>Nenhum favorito disponível nesta versão.</p></div><span>Persistência necessária</span></article>
+            <article><i class="bi bi-clock-history" aria-hidden="true"></i><div><h3>Recentes</h3><p>O histórico não é inferido no navegador.</p></div><span>Auditoria necessária</span></article>
+            <article><i class="bi bi-sliders" aria-hidden="true"></i><div><h3>Filtros salvos</h3><p>Configurações sensíveis não são armazenadas localmente.</p></div><span>Backend necessário</span></article>
+        </div>
+    </section>
+</main>
+
+@section Scripts { <script src="~/js/report-center.js" asp-append-version="true"></script> }

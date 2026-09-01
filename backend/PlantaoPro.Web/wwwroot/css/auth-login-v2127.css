@@ -1,0 +1,50 @@
+/* v2.12.7 — login resiliente e composição premium isolada da aplicação autenticada. */
+.pp-auth-body { background: #071b2c; }
+.pp-auth-body .auth-main { overflow: auto; background: radial-gradient(circle at 12% 12%, rgb(34 183 190 / 18%), transparent 30rem), #071b2c; }
+.pp-auth-body .pp-auth-page { min-height: 100dvh; padding: clamp(1rem, 3vw, 2.5rem); }
+.pp-auth-body .pp-auth-shell { width: min(72rem, 100%); min-height: min(43rem, calc(100dvh - 5rem)); grid-template-columns: minmax(0, 1fr) minmax(23rem, .9fr); border: 1px solid rgb(255 255 255 / 14%); border-radius: 1.5rem; box-shadow: 0 2rem 5rem rgb(0 10 20 / 35%); }
+.pp-auth-body .pp-auth-brand-panel { overflow: hidden; padding: clamp(2.25rem, 5vw, 4.5rem); background: linear-gradient(145deg, #09263d, #0d4050); }
+.pp-auth-body .pp-auth-brand-panel h1 { max-width: 15ch; margin: 1.5rem 0 .85rem; font-size: clamp(2rem, 3.8vw, 3.15rem); line-height: 1.06; overflow-wrap: anywhere; }
+.pp-auth-body .auth-product-tag { margin-top: 1.5rem; }
+.pp-auth-body .pp-auth-form-panel { padding: clamp(1.5rem, 4vw, 3.5rem); background: linear-gradient(180deg, #fff, #f6fafc); }
+.pp-auth-body .pp-auth-card { width: min(100%, 29rem); max-width: none; box-shadow: none; }
+.pp-auth-body .pp-auth-card > p { color: #53687a; line-height: 1.55; }
+.pp-auth-body .pp-login-form { margin-top: 1.5rem; }
+.pp-auth-body .pp-form-field { min-width: 0; }
+.pp-auth-body .pp-form-control { min-height: 3rem; border-radius: .75rem; }
+.pp-auth-body .pp-password-field { position: relative; }
+.pp-auth-body .pp-password-field .pp-form-control { padding-right: 3.5rem; }
+.pp-auth-body .auth-password-toggle { position: absolute; top: .3rem; right: .3rem; width: 2.4rem; height: 2.4rem; padding: 0; border: 0; }
+.pp-auth-body .pp-error-panel:empty { display: none; }
+.pp-auth-body .pp-error-panel:not(:empty) { margin-bottom: 1rem; padding: .8rem 1rem; border: 1px solid #f0b8b8; border-radius: .75rem; background: #fff5f5; color: #8f2020; }
+.pp-auth-body .pp-error-panel ul { margin: 0; padding-left: 1.25rem; }
+.pp-auth-body .pp-login-actions { display: grid; gap: .5rem; margin-top: .5rem; }
+.pp-auth-body .pp-login-actions .btn { min-height: 3.1rem; border-radius: .8rem; box-shadow: 0 .65rem 1.4rem rgb(12 75 110 / 18%); }
+.pp-auth-body .pp-login-help { margin-top: 1.25rem; padding: .8rem 1rem; border: 1px solid #d9e5ec; border-radius: .75rem; background: #f8fbfc; }
+.pp-auth-body .pp-login-help summary { cursor: pointer; color: #173d56; font-weight: 700; }
+.pp-auth-body .pp-login-help p { margin: .7rem 0 0; color: #53687a; font-size: .875rem; }
+.pp-auth-body .auth-security { display: flex; gap: .6rem; margin-top: .9rem; font-size: .8rem; line-height: 1.45; }
+.pp-auth-body .pp-login-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1rem; color: #6a7d8c; font-size: .75rem; }
+.pp-auth-body :is(.pp-form-control, button, a, summary):focus-visible { outline: 3px solid #1b8ca0; outline-offset: 3px; }
+
+@media (max-width: 62rem) {
+  .pp-auth-body .pp-auth-shell { grid-template-columns: 1fr; width: min(42rem, 100%); }
+  .pp-auth-body .pp-auth-brand-panel { padding: 2rem; }
+  .pp-auth-body .pp-auth-brand-panel h1 { max-width: 22ch; font-size: clamp(1.8rem, 6vw, 2.5rem); }
+  .pp-auth-body .pp-auth-benefit-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 47.99rem) {
+  .pp-auth-body .pp-auth-page { padding: 0; }
+  .pp-auth-body .pp-auth-shell { min-height: 100dvh; border: 0; border-radius: 0; }
+  .pp-auth-body .pp-auth-brand-panel { padding: 1.4rem 1.25rem; }
+  .pp-auth-body .auth-product-tag { margin-top: 1rem; }
+  .pp-auth-body .pp-auth-brand-panel h1 { margin: 1rem 0 .5rem; font-size: clamp(1.65rem, 8vw, 2.1rem); }
+  .pp-auth-body .pp-auth-benefit-grid, .pp-auth-body .pp-auth-trust-row { display: none; }
+  .pp-auth-body .pp-auth-form-panel { padding: 1.5rem 1.25rem 2rem; }
+}
+
+@media (max-width: 23rem) {
+  .pp-auth-body .pp-auth-brand-panel, .pp-auth-body .pp-auth-form-panel { padding-inline: 1rem; }
+  .pp-auth-body .pp-login-footer { flex-direction: column; gap: .3rem; }
+}

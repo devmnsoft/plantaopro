@@ -1,0 +1,14 @@
+/* v2.13.0 — acabamento comum, sem alterar o comportamento dos formulários. */
+.pp-form :is(.form-label, .pp-form-label) { color: #17324a; font-weight: 700; }
+.pp-form :is(.form-control, .form-select, .pp-form-control) { border-color: #c5d3df; border-radius: .7rem; }
+.pp-form :is(.form-control, .form-select, .pp-form-control):focus { border-color: #087ea4; box-shadow: 0 0 0 .22rem rgb(8 126 164 / 13%); }
+.pp-form :is(.form-help, .form-text) { display: block; margin-top: .35rem; color: #5b6f82; line-height: 1.4; }
+.pp-form :is(.field-validation-error, .pp-form-error):not(:empty) { display: block; margin-top: .35rem; color: #a3212c; font-size: .875rem; font-weight: 650; }
+.pp-form :is(.input-validation-error, [aria-invalid="true"]) { border-color: #c83c49; background-image: none; }
+.pp-form .form-required::after { content: " *"; color: #b42332; }
+.pp-form button[type="submit"] { min-height: 2.75rem; font-weight: 700; }
+.pp-form button[aria-busy="true"] { cursor: wait; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pp-form :is(.form-control, .form-select, .pp-form-control, button) { transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+}

@@ -22,9 +22,9 @@
         <section class="pp-auth-form-panel pp-auth-panel auth-form-panel" aria-labelledby="loginTitle">
           <div class="pp-auth-card">
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
-            <h2 id="loginTitle">Bem-vindo de volta</h2>
-            <p>Entre com sua identidade individual. Seu perfil e o contexto da instituição são carregados com segurança após a autenticação.</p>
-            <form asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-focus-invalid>
+            <h2 id="loginTitle">Acesse sua central PlantãoPro</h2>
+            <p>Entre com o e-mail cadastrado pela sua instituição ou pela administração MNSOFT.</p>
+            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" data-login-form data-submit-loading="manual" data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors></div>
                 @if (ViewData.ModelState.ErrorCount == 0 && TempData["Error"] is string loginError && !string.IsNullOrWhiteSpace(loginError))
@@ -33,14 +33,14 @@
                 }
                 <div class="pp-form-field">
                     <label asp-for="Email" class="pp-form-label form-required">E-mail</label>
-                    <input asp-for="Email" class="pp-form-control" autocomplete="username email" inputmode="email" maxlength="254" placeholder="nome@empresa.com.br" aria-describedby="emailHelp Email-error" />
+                    <input asp-for="Email" class="pp-form-control" autocomplete="username email" inputmode="email" maxlength="254" aria-describedby="emailHelp Email-error" required />
                     <small id="emailHelp" class="form-help">Use o e-mail vinculado ao seu acesso.</small>
                     <span asp-validation-for="Email" class="pp-form-error" data-valmsg-for="Email" id="Email-error"></span>
                 </div>
                 <div class="pp-form-field">
                     <label asp-for="Senha" class="pp-form-label form-required">Senha</label>
                     <div class="pp-password-field">
-                        <input asp-for="Senha" class="pp-form-control" type="password" id="senha" autocomplete="current-password" aria-describedby="passwordHelp capsLockWarning Senha-error" />
+                        <input asp-for="Senha" class="pp-form-control" type="password" id="senha" autocomplete="current-password" aria-describedby="passwordHelp capsLockWarning Senha-error" required />
                         <button class="btn auth-password-toggle" type="button" data-password-toggle aria-label="Mostrar senha" aria-pressed="false"><app-icon name="View" size="20" /></button>
                     </div>
                     <small id="passwordHelp" class="form-help">A senha diferencia letras maiúsculas e minúsculas.</small>
@@ -56,7 +56,7 @@
             </form>
             <details class="pp-login-help">
                 <summary>Como acessar com segurança</summary>
-                <p>Use somente sua identidade individual. A instituição define o contexto de acesso, mas nunca substitui seu usuário. Não compartilhe sua senha.</p>
+                <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. A MNSOFT audita acessos administrativos globais.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
             <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.12.7</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>

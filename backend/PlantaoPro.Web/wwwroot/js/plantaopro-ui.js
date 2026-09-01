@@ -231,6 +231,9 @@
   function wireSubmitLoading(){
     document.querySelectorAll('form').forEach(form=>{
       if(form.matches('[data-ajax-form="true"], [data-saude360-form]')){return;}
+      // Fluxos que controlam o próprio estado (como autenticação) não podem
+      // disputar aria-busy/disabled com o carregamento global.
+      if(form.dataset.submitLoading==='manual'){return;}
       if(form.dataset.ppLoadingBound==='1'){return;}
       form.dataset.ppLoadingBound='1';
       form.addEventListener('submit',()=>{

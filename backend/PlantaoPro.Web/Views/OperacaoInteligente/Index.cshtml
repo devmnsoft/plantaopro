@@ -2,21 +2,26 @@
 @{
     ViewData["Title"] = "Operação Inteligente";
 }
-<section class="pp-hero premium-hero">
+<main class="intelligence-workspace" aria-labelledby="intelligence-title">
+<section class="pp-hero premium-hero intelligence-hero">
     <p class="text-uppercase text-primary fw-bold">Cockpit operacional</p>
-    <h1>@Model.Titulo</h1>
+    <h1 id="intelligence-title">@Model.Titulo</h1>
     <p>@Model.Subtitulo</p>
     <a class="btn btn-primary" href="/PrimeirosPassos/Index">Comece por aqui</a>
 </section>
+<aside class="intelligence-guide" aria-labelledby="intelligence-guide-title">
+    <span class="intelligence-guide__icon" aria-hidden="true"><i class="bi bi-compass"></i></span>
+    <div><h2 id="intelligence-guide-title">Como usar esta tela</h2><p>Priorize os itens críticos, confira o motivo calculado com os dados da operação e siga a ação sugerida. As recomendações são regras determinísticas, não previsões de IA.</p></div>
+</aside>
 @if (!Model.Pendencias.Any())
 {
-    <div class="alert alert-info">Nenhuma pendência crítica encontrada. Continue acompanhando a agenda do dia e os plantões publicados.</div>
+    <div class="intelligence-empty" role="status"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Nenhuma pendência crítica encontrada</strong><p>Continue acompanhando a agenda do dia e os plantões publicados. Novos riscos aparecerão quando houver dados que atendam às regras operacionais.</p></div></div>
 }
-<div class="row g-3 mt-2">
+<div class="row g-3 mt-2 intelligence-grid">
 @foreach (var item in Model.Pendencias)
 {
     <div class="col-md-6 col-xl-4">
-        <article class="card h-100 shadow-sm border-0">
+        <article class="card h-100 intelligence-card">
             <div class="card-body">
                 <span class="badge bg-danger">@item.Prioridade</span>
                 <span class="badge bg-light text-dark">@item.Status</span>
@@ -29,8 +34,8 @@
     </div>
 }
 </div>
-<h2 class="h4 mt-4">Recomendações determinísticas</h2>
-<div class="list-group">
+<div class="intelligence-section-heading"><div><span>Próximos passos</span><h2>Recomendações determinísticas</h2></div><p>Cada recomendação informa severidade, módulo responsável e ação sugerida.</p></div>
+<div class="list-group intelligence-recommendations">
 @foreach (var rec in Model.Recomendacoes)
 {
     <a class="list-group-item list-group-item-action" href="@rec.UrlAcao">
@@ -39,3 +44,4 @@
     </a>
 }
 </div>
+</main>

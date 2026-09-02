@@ -2,4 +2,4 @@
     var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global";
     var isGlobalAdmin = User.IsInRole("ADMINISTRADOR_GLOBAL");
 }
-<span class="tenant-context-badge d-none d-lg-inline-flex"><i class="bi bi-building"></i><span>@tenantName</span>@if (isGlobalAdmin){<small>troca de contexto</small>}</span>
+<span class="tenant-context-badge d-none d-lg-inline-flex" role="status" aria-label="Contexto atual: @tenantName"><i class="bi @(isGlobalAdmin ? "bi-shield-check" : "bi-building")" aria-hidden="true"></i><span>@tenantName</span>@if (isGlobalAdmin){<small>Super Admin · acesso auditado</small>}</span>

@@ -28,6 +28,9 @@
 
 /* Migrado de v181-admin-governance.css; consolidado na v1.90.0. */
 .pp-admin-governance,.pp-settings-page,.pp-subscription-page{--pp-governance-accent:#4f46e5;--pp-governance-soft:#eef2ff}
+.pp-global-scope{display:grid;grid-template-columns:minmax(16rem,.8fr) minmax(22rem,1.2fr);gap:1.5rem;align-items:end;padding:1.35rem;margin-bottom:1.5rem;border:1px solid #c7d2fe;border-radius:1.15rem;background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);box-shadow:0 18px 45px rgba(30,41,59,.07)}
+.pp-global-scope h2{margin:.65rem 0 .35rem;font-size:1.2rem}.pp-global-scope p{margin:0;color:#475569}.pp-global-filter{display:grid;grid-template-columns:1.5fr 1fr auto;gap:.75rem;align-items:end}.pp-global-filter label{display:block;margin-bottom:.35rem;font-size:.78rem;font-weight:700;color:#334155}.pp-global-filter .btn{min-height:42px;white-space:nowrap}
+.pp-global-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem;margin:1rem 0 1.5rem}.pp-global-kpi{display:flex;min-height:8rem;flex-direction:column;padding:1rem;border:1px solid #e2e8f0;border-radius:1rem;background:#fff;box-shadow:0 8px 24px rgba(15,23,42,.05)}.pp-global-kpi span{font-size:.82rem;font-weight:700;color:#475569}.pp-global-kpi strong{margin:.25rem 0;font-size:1.9rem;color:#1e293b}.pp-global-kpi small{margin-top:auto;color:#64748b}
 .pp-governance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin-top:1rem}
 .pp-governance-card,.pp-governance-panel,.pp-governance-notice{border:1px solid var(--pp-border-color,#dbe2ea);border-radius:1rem;background:var(--pp-surface,#fff);box-shadow:0 12px 35px rgba(15,23,42,.06)}
 .pp-governance-card{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:.75rem;padding:1.25rem}
@@ -39,8 +42,8 @@
 .pp-status-badge{display:inline-flex;border-radius:999px;padding:.3rem .65rem;font-size:.75rem;font-weight:700;letter-spacing:.02em}
 .pp-status-badge--source{color:#3730a3;background:#e0e7ff}.pp-status-badge--unknown{color:#854d0e;background:#fef9c3}.pp-status-badge--unavailable{color:#9f1239;background:#ffe4e6}
 .pp-admin-governance .btn:disabled,.pp-governance-panel .btn:disabled{cursor:not-allowed;opacity:.72}
-@media(max-width:991px){.pp-governance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:639px){.pp-governance-grid{grid-template-columns:1fr}.pp-governance-card,.pp-governance-panel{padding:1rem}.pp-governance-card .pp-card-actions{display:flex;width:100%;flex-direction:column;align-items:stretch}.pp-governance-card .btn{min-height:44px}.pp-governance-notice{align-items:flex-start}}
+@media(max-width:991px){.pp-governance-grid,.pp-global-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.pp-global-scope{grid-template-columns:1fr}.pp-global-filter{grid-template-columns:1fr 1fr}}
+@media(max-width:639px){.pp-governance-grid,.pp-global-kpis,.pp-global-filter{grid-template-columns:1fr}.pp-governance-card,.pp-governance-panel{padding:1rem}.pp-governance-card .pp-card-actions{display:flex;width:100%;flex-direction:column;align-items:stretch}.pp-governance-card .btn{min-height:44px}.pp-governance-notice{align-items:flex-start}}
 
 /* Migrado de v183-onboarding-homologation.css; consolidado na v1.90.0. */
 /* v1.83: superfícies públicas e onboarding; sem alterar workspaces autenticados. */

@@ -70,8 +70,10 @@
         @if (isGlobalAdmin)
         {
             <div class="nav-section-title"><span>MNSOFT global</span></div>
-            <a class="nav-link-app @Active("AdminSaas")" asp-controller="AdminSaas" asp-action="Dashboard"><app-icon name="Dashboard" size="19" /><span>Visão SaaS</span></a>
+            <a class="nav-link-app @Active("AdminSaas")" asp-controller="AdminSaas" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Central Global</span></a>
             <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
+            <a class="nav-link-app @Active("Billing")" asp-controller="Billing" asp-action="Index"><app-icon name="Payment" size="19" /><span>Cobranças</span></a>
+            <a class="nav-link-app @Active("Observabilidade")" asp-controller="Observabilidade" asp-action="Index"><app-icon name="Warning" size="19" /><span>Logs e saúde</span></a>
             <a class="nav-link-app @Active("Auditoria")" asp-controller="Auditoria" asp-action="Index"><app-icon name="Security" size="19" /><span>Auditoria</span></a>
         }
         <div class="nav-section-title"><span>Acompanhamento</span></div>

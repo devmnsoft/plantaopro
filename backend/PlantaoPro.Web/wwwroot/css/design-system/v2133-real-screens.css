@@ -1,0 +1,23 @@
+/* PlantãoPro v2.13.3 — QA visual das telas reais. */
+.pp-screen-guide { margin-block: 0 1.5rem; overflow: clip; }
+.pp-screen-guide > summary { min-height: 3rem; padding: .75rem 1rem; cursor: pointer; }
+.pp-screen-guide__content { padding: 1rem; border-top: 1px solid var(--pp-v2132-line, #d8e4eb); }
+.pp-screen-guide__content p { margin: .5rem 0 0; color: var(--pp-v2132-muted, #506a7c); }
+.pp-screen-guide__label { color: var(--pp-v2132-ink, #102a3d); font-weight: 700; }
+.pp-screen-guide__scope { padding: .55rem .7rem; border-radius: .6rem; background: #edf8f9; }
+
+.pp-assisted-context { position: sticky; top: 0; z-index: 1100; display: flex; align-items: center; gap: .75rem; padding: .7rem clamp(1rem, 3vw, 2rem); border-bottom: 1px solid #dfbd62; background: #fff4cf; color: #513b00; box-shadow: 0 5px 18px rgb(72 52 0 / 12%); }
+.pp-assisted-context__message { display: flex; flex: 1; flex-wrap: wrap; gap: .2rem .55rem; min-width: 0; }
+.pp-assisted-context__message span { overflow-wrap: anywhere; }
+
+.pp-data-state { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid var(--pp-v2132-line, #d8e4eb); border-radius: var(--pp-v2132-radius, 1rem); background: #fff; box-shadow: var(--pp-v2132-shadow, 0 12px 36px rgb(15 54 74 / 8%)); }
+.pp-data-state__icon { display: grid; width: 3.25rem; height: 3.25rem; place-items: center; border-radius: .85rem; background: #e7f6f6; color: #076773; }
+.pp-data-state h2 { margin: .15rem 0 .3rem; font-size: clamp(1.1rem, 2vw, 1.35rem); }
+.pp-data-state p { max-width: 68ch; margin: 0; color: var(--pp-v2132-muted, #506a7c); }
+
+@media (max-width: 47.99rem) {
+  .pp-assisted-context { align-items: flex-start; flex-wrap: wrap; }
+  .pp-assisted-context .btn { width: 100%; }
+  .pp-data-state { grid-template-columns: auto 1fr; }
+  .pp-data-state .btn { grid-column: 1 / -1; width: 100%; }
+}

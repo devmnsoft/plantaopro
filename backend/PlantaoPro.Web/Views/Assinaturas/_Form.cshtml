@@ -5,15 +5,11 @@
         <p class="text-muted">Defina cliente, plano, vigência e condições comerciais da assinatura.</p>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label form-required" asp-for="ClienteId">Cliente</label>
-                <input class="form-control" asp-for="ClienteId" placeholder="ID do cliente" aria-describedby="ClienteIdHelp" />
-                <span id="ClienteIdHelp" class="form-help">Identificador fornecido pelo cadastro do cliente.</span>
+                @await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(Model.ClienteId), Label = "Cliente", Endpoint = "/api/clientes", Value = Model.ClienteId == Guid.Empty ? string.Empty : Model.ClienteId.ToString(), Placeholder = "Selecione o cliente pelo nome", HelpText = "Somente clientes reais disponíveis no seu contexto de acesso são listados." })
                 <span asp-validation-for="ClienteId" class="text-danger small"></span>
             </div>
             <div class="col-md-6">
-                <label class="form-label form-required" asp-for="PlanoId">Plano</label>
-                <input class="form-control" asp-for="PlanoId" placeholder="ID do plano contratado" aria-describedby="PlanoIdHelp" />
-                <span id="PlanoIdHelp" class="form-help">Selecione um plano disponível para este tenant.</span>
+                @await Html.PartialAsync("_LookupSelect", new PlantaoPro.Web.Models.LookupSelectViewModel { FieldName = nameof(Model.PlanoId), Label = "Plano", Endpoint = "/api/planos", Value = Model.PlanoId == Guid.Empty ? string.Empty : Model.PlanoId.ToString(), Placeholder = "Selecione o plano contratado", HelpText = "A lista respeita os planos disponíveis para contratação." })
                 <span asp-validation-for="PlanoId" class="text-danger small"></span>
             </div>
             <div class="col-md-4"><label class="form-label form-required" asp-for="DataInicio">Início da vigência</label><input class="form-control" asp-for="DataInicio" type="date" /><span asp-validation-for="DataInicio" class="text-danger small"></span></div>

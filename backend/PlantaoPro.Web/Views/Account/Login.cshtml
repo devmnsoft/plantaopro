@@ -24,7 +24,7 @@
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
             <h2 id="loginTitle">Acesse sua central PlantãoPro</h2>
             <p>Entre com o e-mail cadastrado pela sua instituição para continuar com segurança.</p>
-            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" data-login-form data-submit-loading="manual" data-focus-invalid>
+            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-submit-loading="manual" data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors></div>
                 @if (ViewData.ModelState.ErrorCount == 0 && TempData["Error"] is string loginError && !string.IsNullOrWhiteSpace(loginError))
@@ -59,7 +59,7 @@
                 <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. O acesso global MNSOFT é restrito, auditado e autorizado.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.2</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.3</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

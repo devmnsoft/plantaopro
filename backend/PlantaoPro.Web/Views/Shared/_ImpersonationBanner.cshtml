@@ -1,10 +1,11 @@
 @if (User.FindFirst("impersonation")?.Value == "true")
 {
-    <section class="alert alert-warning d-flex align-items-center gap-2 mb-0 rounded-0" role="status" aria-live="polite">
-        <i class="bi bi-person-badge" aria-hidden="true"></i>
-        <div>
-            <strong>Acesso assistido e auditável ativo.</strong>
-            Você está visualizando o contexto autorizado do usuário @User.FindFirst("impersonated_user_id")?.Value. Expira em: @User.FindFirst("impersonation_expires_at")?.Value
+    <section class="pp-assisted-context" role="status" aria-live="polite" aria-label="Contexto assistido ativo">
+        <app-icon name="Security" size="20" />
+        <div class="pp-assisted-context__message">
+            <strong>Acesso assistido e auditável ativo</strong>
+            <span>Contexto autorizado do usuário @User.FindFirst("impersonated_user_id")?.Value · expira em @User.FindFirst("impersonation_expires_at")?.Value.</span>
         </div>
+        <a class="btn btn-sm btn-outline-dark" asp-controller="Account" asp-action="Logout" aria-label="Encerrar o acesso assistido e sair da sessão">Encerrar acesso assistido</a>
     </section>
 }

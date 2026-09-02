@@ -1,3 +1,21 @@
+@{
+    var guideController = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var isGlobal = User.IsInRole("ADMINISTRADOR_GLOBAL");
+    var guide = guideController switch
+    {
+        "Usuarios" => ("Gerencie acessos da instituição sem compartilhar credenciais.", "Administradores autorizados do cliente e equipe global MNSOFT.", "Convide ou revise o usuário e atribua apenas o perfil necessário.", "Bloquear um acesso interrompe a operação desse usuário e permanece auditável."),
+        "Perfis" or "Permissoes" => ("Defina o que cada função pode visualizar e executar.", "Administradores autorizados no contexto atual.", "Revise módulos e permissões antes de vincular o perfil.", "Privilégios elevados afetam segurança, LGPD e segregação por tenant."),
+        "Clientes" or "AdminSaas" => ("Acompanhe clientes, módulos, cobrança e saúde operacional.", "Super Admin MNSOFT com acesso global auditado.", "Confirme o cliente e seu status antes de abrir ou alterar o contexto.", "Alterações de plano ou bloqueio impactam toda a instituição."),
+        "Medicos" => ("Cadastre e acompanhe profissionais habilitados para a operação.", "Gestores e operadores com permissão no tenant atual.", "Pesquise, revise credenciais e use as ações disponíveis no registro.", "Dados profissionais são pessoais e devem seguir as regras de LGPD."),
+        "Hospitais" or "Especialidades" => ("Mantenha unidades e especialidades usadas nas escalas.", "Administradores e gestores autorizados da instituição.", "Localize o cadastro, confira vínculos e atualize dados operacionais.", "Uma alteração pode afetar escalas, relatórios e faturamento."),
+        "Escalas" or "Plantoes" => ("Organize cobertura, horários e confirmações da operação médica.", "Coordenadores e usuários operacionais conforme suas permissões.", "Filtre o período, resolva pendências e confira o contexto antes de agir.", "Cancelamentos e substituições impactam profissionais e fechamento."),
+        "Financeiro" or "ClinicaFinanceiro" or "FaturamentoSaas" => ("Acompanhe valores, pendências e etapas do fluxo financeiro.", "Perfis financeiros e administradores autorizados.", "Use os filtros, confira competência e abra o registro antes de decidir.", "Baixas e ajustes geram impacto financeiro e trilha de auditoria."),
+        "Relatorios" or "Bi" => ("Analise indicadores reais dentro do seu escopo de acesso.", "Gestores e perfis com permissão de relatórios.", "Defina filtros, valide o período e então consulte ou exporte.", "Exportações podem conter dados pessoais; armazene-as com segurança."),
+        "Configuracoes" => ("Configure preferências permitidas para a instituição e para seu perfil.", "Administradores ou o próprio usuário, conforme a opção.", "Revise o contexto e salve somente as alterações necessárias.", "Configurações institucionais podem afetar todos os usuários do tenant."),
+        "Auditoria" => ("Consulte eventos rastreáveis de segurança e operação.", "Auditores e administradores expressamente autorizados.", "Filtre por período e evento antes de abrir os detalhes.", "Registros de auditoria são protegidos e não devem ser expostos."),
+        _ => ("Entenda o objetivo desta página e conclua sua atividade com segurança.", "Use esta tela somente conforme as permissões do seu perfil.", "Revise os dados, utilize filtros e avance pela ação principal indicada.", "Confira a instituição atual antes de qualquer operação com impacto.")
+    };
+}
 <details class="pp-screen-guide" data-screen-guide>
     <summary>
         <span class="pp-screen-guide__icon" aria-hidden="true">?</span>
@@ -6,13 +24,14 @@
     </summary>
     <div class="pp-screen-guide__content">
         <div>
-            <strong data-screen-guide-purpose>Entenda o objetivo desta página e conclua sua atividade com segurança.</strong>
-            <p data-screen-guide-audience>Use os filtros e ações disponíveis de acordo com o seu perfil de acesso.</p>
+            <strong data-screen-guide-purpose>@guide.Item1</strong>
+            <p data-screen-guide-audience><span class="pp-screen-guide__label">Quem pode usar:</span> @guide.Item2</p>
+            <p class="pp-screen-guide__scope"><span class="pp-screen-guide__label">Contexto:</span> @(isGlobal ? "visão global MNSOFT; confirme o tenant antes de agir." : "somente a instituição vinculada à sua sessão.")</p>
         </div>
         <ol aria-label="Orientação rápida">
-            <li data-screen-guide-action>Revise os dados apresentados antes de iniciar.</li>
-            <li data-screen-guide-care>Confira campos obrigatórios e o contexto da instituição.</li>
-            <li data-screen-guide-next>Depois, avance para a ação principal indicada na tela.</li>
+            <li data-screen-guide-action>@guide.Item3</li>
+            <li data-screen-guide-care>@guide.Item4</li>
+            <li data-screen-guide-next>Depois de concluir, confirme a mensagem de resultado antes de sair.</li>
         </ol>
     </div>
 </details>

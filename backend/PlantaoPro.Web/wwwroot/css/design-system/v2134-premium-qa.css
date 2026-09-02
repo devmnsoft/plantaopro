@@ -1,0 +1,63 @@
+/* v2.13.4 — acabamento responsivo, estados e microinterações discretas. */
+:root { --pp-motion-fast: 160ms; --pp-focus-ring: 0 0 0 .2rem rgb(12 126 164 / 22%); }
+
+.pp-card,
+.card,
+.nav-link-app,
+.btn,
+.pp-screen-guide,
+.pp-form-control,
+.form-control,
+.form-select {
+  transition: border-color var(--pp-motion-fast) ease, box-shadow var(--pp-motion-fast) ease, background-color var(--pp-motion-fast) ease, transform var(--pp-motion-fast) ease;
+}
+
+@media (hover: hover) {
+  :is(.pp-card, .card):not(.no-hover):hover { border-color: rgb(8 126 164 / 24%); box-shadow: 0 .85rem 2rem rgb(7 35 54 / 9%); }
+  .btn:not(:disabled):hover { transform: translateY(-1px); }
+  .nav-link-app:hover { transform: translateX(2px); }
+}
+
+:is(.btn, .nav-link-app, .form-control, .form-select, .pp-form-control, summary, a):focus-visible {
+  outline: 3px solid #16849f;
+  outline-offset: 3px;
+  box-shadow: var(--pp-focus-ring);
+}
+
+:is(.btn, button):disabled,
+:is(.btn, button)[aria-disabled="true"] { cursor: not-allowed; filter: saturate(.55); opacity: .62; transform: none; }
+
+.pp-screen-guide { overflow: clip; }
+.pp-screen-guide[open] { border-color: rgb(8 126 164 / 25%); box-shadow: 0 .55rem 1.4rem rgb(7 35 54 / 7%); }
+.pp-screen-guide summary { min-height: 2.75rem; }
+
+.table-responsive { border-radius: .875rem; scrollbar-gutter: stable; }
+.table th { white-space: nowrap; }
+.table tbody tr { transition: background-color var(--pp-motion-fast) ease; }
+.table tbody tr:hover { background: rgb(8 126 164 / 4%); }
+
+.pp-auth-body .pp-auth-shell { animation: pp-auth-enter 380ms cubic-bezier(.2, .8, .2, 1) both; }
+.pp-auth-body .pp-auth-card { animation: pp-auth-content 420ms 80ms cubic-bezier(.2, .8, .2, 1) both; }
+
+@keyframes pp-auth-enter { from { opacity: 0; transform: translateY(.6rem); } }
+@keyframes pp-auth-content { from { opacity: 0; transform: translateY(.35rem); } }
+
+@media (max-width: 47.99rem) {
+  .pp-content-container { max-width: 100%; padding-inline: clamp(.75rem, 4vw, 1rem); }
+  .pp-topbar__actions { gap: .35rem; }
+  .pp-screen-guide__content { grid-template-columns: 1fr; }
+  .pp-form-actions, .form-actions { align-items: stretch; flex-direction: column-reverse; }
+  .pp-form-actions .btn, .form-actions .btn { width: 100%; }
+  .modal-dialog { margin: .75rem; }
+  .toast-container, .pp-toast-region { max-width: calc(100vw - 1.5rem); inset-inline: .75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-auth-body .pp-auth-shell, .pp-auth-body .pp-auth-card { animation: none; }
+  .pp-card, .card, .nav-link-app, .btn, .table tbody tr { transition: none; }
+}
+
+@media print {
+  .pp-sidebar, .pp-topbar, .pp-screen-guide, .pp-app-footer, [data-print-page] { display: none !important; }
+  .pp-main-shell, .pp-content { margin: 0 !important; padding: 0 !important; }
+}

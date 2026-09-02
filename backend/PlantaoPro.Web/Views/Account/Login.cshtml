@@ -11,7 +11,7 @@
             </div>
             <span class="pp-auth-kicker auth-product-tag">PlantãoPro por MNSOFT</span>
             <h1 id="authStoryTitle">Acesse sua central de plantões</h1>
-            <p>Gerencie escalas, jornadas, confirmações e financeiro em um ambiente seguro.</p>
+            <p>Gestão de escalas, plantões, equipes e financeiro em uma plataforma segura da MNSOFT.</p>
             <ul class="pp-auth-benefit-grid auth-benefits" aria-label="Benefícios da plataforma">
                 <li><strong>Operação conectada</strong><span>Escalas, coberturas e convites sem perder contexto.</span></li>
                 <li><strong>Jornada assistencial</strong><span>Do agendamento ao financeiro em um fluxo contínuo.</span></li>
@@ -23,7 +23,7 @@
           <div class="pp-auth-card">
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
             <h2 id="loginTitle">Acesse sua central PlantãoPro</h2>
-            <p>Entre com o e-mail cadastrado pela sua instituição ou pela administração MNSOFT.</p>
+            <p>Entre com o e-mail cadastrado pela sua instituição para continuar com segurança.</p>
             <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" data-login-form data-submit-loading="manual" data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors></div>
@@ -56,10 +56,10 @@
             </form>
             <details class="pp-login-help">
                 <summary>Como acessar com segurança</summary>
-                <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. A MNSOFT audita acessos administrativos globais.</p>
+                <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. O acesso global MNSOFT é restrito, auditado e autorizado.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.12.7</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.2</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

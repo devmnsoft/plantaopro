@@ -10,8 +10,8 @@
                 <img class="pp-auth-logo auth-logo" src="~/media/brand/logo-horizontal-color.svg" width="360" height="86" alt="PlantãoPro" />
             </div>
             <span class="pp-auth-kicker auth-product-tag">PlantãoPro por MNSOFT</span>
-            <h1 id="authStoryTitle">Acesse sua central de plantões</h1>
-            <p>Gestão de escalas, plantões, equipes e financeiro em uma plataforma segura da MNSOFT.</p>
+            <h1 id="authStoryTitle">Acesse sua central PlantãoPro</h1>
+            <p>Escalas, plantões, equipes e financeiro em uma plataforma segura da MNSOFT.</p>
             <ul class="pp-auth-benefit-grid auth-benefits" aria-label="Benefícios da plataforma">
                 <li><strong>Operação conectada</strong><span>Escalas, coberturas e convites sem perder contexto.</span></li>
                 <li><strong>Jornada assistencial</strong><span>Do agendamento ao financeiro em um fluxo contínuo.</span></li>
@@ -34,7 +34,7 @@
                 <div class="pp-form-field">
                     <label asp-for="Email" class="pp-form-label form-required">E-mail</label>
                     <input asp-for="Email" class="pp-form-control" autocomplete="username email" inputmode="email" maxlength="254" aria-describedby="emailHelp Email-error" required />
-                    <small id="emailHelp" class="form-help">Use o e-mail vinculado ao seu acesso.</small>
+                    <small id="emailHelp" class="form-help">Use o e-mail vinculado ao seu acesso institucional.</small>
                     <span asp-validation-for="Email" class="pp-form-error" data-valmsg-for="Email" id="Email-error"></span>
                 </div>
                 <div class="pp-form-field">
@@ -59,7 +59,7 @@
                 <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. O acesso global MNSOFT é restrito, auditado e autorizado.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.3</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.4</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

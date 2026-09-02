@@ -2,5 +2,8 @@
 @{
     ViewData["Title"] = Model.Title;
 }
-<article class="pp-card"><h1>@Model.Title</h1><p>@Model.Subtitle</p><p>Plano Profissional com setup, mensalidade, módulos adicionais, SLA e condições comerciais.</p><button class="btn btn-primary" type="button" onclick="window.print()">Imprimir/salvar PDF</button></article>
+<article class="pp-card"><h1>@Model.Title</h1><p>@Model.Subtitle</p><p>Plano Profissional com setup, mensalidade, módulos adicionais, SLA e condições comerciais.</p><button class="btn btn-primary" type="button" data-print-page>Imprimir/salvar PDF</button></article>
 <partial name="_CommercialStyles" />
+@section Scripts {
+    <script src="~/js/print-page.js" asp-append-version="true"></script>
+}

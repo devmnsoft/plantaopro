@@ -10,6 +10,7 @@
     var canUseClinical = clinicalRoles.Any(User.IsInRole);
     var canUseFinance = financeRoles.Any(User.IsInRole);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
+    var isGlobalAdmin = User.IsInRole(RolesConstants.AdministradorGlobal);
     string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
 <aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navegação principal">
@@ -64,8 +65,14 @@
             <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a>
             <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis</span></a>
             <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a>
-            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
             <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
+        }
+        @if (isGlobalAdmin)
+        {
+            <div class="nav-section-title"><span>MNSOFT global</span></div>
+            <a class="nav-link-app @Active("AdminSaas")" asp-controller="AdminSaas" asp-action="Dashboard"><app-icon name="Dashboard" size="19" /><span>Visão SaaS</span></a>
+            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
+            <a class="nav-link-app @Active("Auditoria")" asp-controller="Auditoria" asp-action="Index"><app-icon name="Security" size="19" /><span>Auditoria</span></a>
         }
         <div class="nav-section-title"><span>Acompanhamento</span></div>
         <a class="nav-link-app @Active("Notificacoes")" asp-controller="Notificacoes" asp-action="Index"><app-icon name="Notification" size="19" /><span>Notificações</span></a>

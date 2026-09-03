@@ -1,0 +1,55 @@
+/* v2.13.7 — contexto global/tenant inequívoco e acabamento premium responsivo. */
+:root {
+  --pp-v2137-navy: #071f3a;
+  --pp-v2137-blue: #2563eb;
+  --pp-v2137-green: #16a34a;
+  --pp-v2137-warning: #f59e0b;
+  --pp-v2137-surface: #f8fafc;
+  --pp-v2137-text: #111827;
+  --pp-v2137-border: #e5e7eb;
+}
+
+.pp-content { background: var(--pp-v2137-surface); color: var(--pp-v2137-text); }
+.pp-content-container { width: min(100%, 96rem); }
+.pp-page-hero { border: 1px solid var(--pp-v2137-border); border-radius: 1.25rem; box-shadow: 0 1rem 2.5rem rgb(7 31 58 / 7%); }
+.pp-page-hero h1, .pp-page-hero h2 { color: var(--pp-v2137-navy); letter-spacing: -.025em; }
+
+.tenant-context-badge { min-width: 12rem; border: 1px solid var(--pp-v2137-border); border-radius: .8rem; gap: .6rem; padding: .45rem .7rem; background: #fff; }
+.tenant-context-badge > span { display: grid; min-width: 0; line-height: 1.15; }
+.tenant-context-badge strong { max-width: 13rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tenant-context-badge small { font-size: .65rem; letter-spacing: .035em; }
+.tenant-context-badge.is-global { color: #fff; border-color: #1e40af; background: var(--pp-v2137-navy); box-shadow: 0 .5rem 1.25rem rgb(7 31 58 / 18%); }
+.tenant-context-badge.is-global > small { color: #bfdbfe; }
+.tenant-context-badge.is-tenant i { color: var(--pp-v2137-green); }
+
+.pp-global-scope-banner { display: flex; align-items: flex-start; gap: .75rem; margin-block: 1rem; padding: .9rem 1rem; color: #dbeafe; background: var(--pp-v2137-navy); border-left: .3rem solid #60a5fa; border-radius: .8rem; }
+.pp-global-scope-banner div { display: grid; gap: .15rem; }
+.pp-global-scope-banner strong { color: #fff; }
+.pp-global-scope-banner span { max-width: 76ch; }
+
+.nav-link-app.active { box-shadow: inset .2rem 0 0 #60a5fa; }
+.pp-form-control, .form-control, .form-select { min-height: 2.75rem; border-color: #cbd5e1; }
+.pp-form-label, .form-label { color: var(--pp-v2137-text); font-weight: 650; }
+.pp-error-panel:not(:empty) { border-left: .25rem solid #dc2626; }
+.pp-screen-guide { background: #fff; border-color: var(--pp-v2137-border); }
+.pp-snooze-dialog { width: min(32rem, calc(100% - 2rem)); padding: 1.25rem; color: var(--pp-v2137-text); border: 1px solid var(--pp-v2137-border); border-radius: 1rem; box-shadow: 0 1.5rem 4rem rgb(7 31 58 / 25%); }
+.pp-snooze-dialog::backdrop { background: rgb(7 31 58 / 62%); backdrop-filter: blur(2px); }
+.pp-snooze-dialog__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.pp-snooze-dialog__header h2 { margin: .15rem 0 .75rem; color: var(--pp-v2137-navy); }
+.pp-snooze-dialog .pp-form-actions { display: flex; justify-content: flex-end; gap: .75rem; margin-top: 1.25rem; }
+
+@media (max-width: 61.99rem) {
+  .pp-page-hero { border-radius: 1rem; }
+  .pp-hero-actions { width: 100%; }
+  .pp-hero-actions .btn { flex: 1 1 12rem; }
+}
+
+@media (max-width: 35.99rem) {
+  .pp-global-scope-banner { font-size: .875rem; }
+  .pp-page-hero { padding: 1rem; }
+  .pp-auth-card { padding-inline: 1rem; }
+}
+
+@media (prefers-contrast: more) {
+  .pp-page-hero, .pp-screen-guide, .form-control, .form-select { border-color: #64748b; }
+}

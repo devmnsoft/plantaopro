@@ -101,7 +101,7 @@
             summary.className = "pp-client-validation-summary";
             summary.setAttribute("role", "alert");
             summary.setAttribute("tabindex", "-1");
-            summary.innerHTML = "<strong>Revise os campos destacados</strong><p>Preencha as informações obrigatórias e corrija os formatos indicados.</p>";
+            const heading = document.createElement("strong"); heading.textContent = "Revise os campos destacados"; const copy = document.createElement("p"); copy.textContent = "Preencha as informações obrigatórias e corrija os formatos indicados."; summary.append(heading, copy);
             form.prepend(summary);
         }
         connectValidation(form); wireDirtyState(form);

@@ -32,7 +32,7 @@ else
 <div class="row g-3 mt-1">
     <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Alertas</h2>@foreach (var alerta in Model.Alertas){<div class="alert alert-danger py-2">@alerta</div>}@if (!Model.Alertas.Any()){<p class="text-muted">Sem alertas retornados pela API.</p>}</div></div></div>
     <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Próximos passos</h2><ol>@foreach (var passo in Model.ProximosPassos){<li>@passo</li>}</ol>@if (!Model.ProximosPassos.Any()){<p class="text-muted">Sem próximos passos retornados.</p>}</div></div></div>
-    <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Gráfico simples</h2>@foreach (var item in Model.Series){<div class="mb-2"><span>@item.Label</span><div class="progress"><div class="progress-bar" style="width:@Math.Min(100, (int)item.Valor)%">@item.Valor</div></div></div>}@if (!Model.Series.Any()){<p class="text-muted">Sem série temporal retornada.</p>}</div></div></div>
+    <div class="col-lg-4"><div class="card h-100"><div class="card-body"><h2 class="h5">Gráfico simples</h2>@foreach (var item in Model.Series){<div class="mb-2"><span>@item.Label</span><div class="progress"><div class="progress-bar" data-progress="@Math.Min(100, (int)item.Valor)">@item.Valor</div></div></div>}@if (!Model.Series.Any()){<p class="text-muted">Sem série temporal retornada.</p>}</div></div></div>
 </div>
 <div class="mt-3 d-flex gap-2 flex-wrap">
 @foreach (var atalho in Model.Atalhos)

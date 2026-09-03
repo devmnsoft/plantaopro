@@ -23,10 +23,12 @@
         activeIndex = -1;
         activeTrigger.focus();
     };
-    const escapeHtml = (value) => {
-        const node = document.createElement('span');
-        node.textContent = value || '';
-        return node.innerHTML;
+    const showMessage = (message, className = 'text-secondary p-3 mb-0', role = '') => {
+        const copy = document.createElement('p');
+        copy.className = className;
+        copy.textContent = message;
+        if (role) copy.setAttribute('role', role);
+        results.replaceChildren(copy);
     };
 
     const safeRoute = (route) => {
@@ -43,16 +45,19 @@
         input.removeAttribute('aria-activedescendant');
         const allowedItems = items.map(item => ({ ...item, route: safeRoute(item.route) })).filter(item => item.route);
         if (!allowedItems.length) {
-            results.innerHTML = '<p class="text-secondary p-3 mb-0">Nenhum resultado permitido para este termo.</p>';
+            showMessage('Nenhum resultado permitido para este termo.');
             return;
         }
-        results.innerHTML = allowedItems.map((item, index) => `
-            <a class="pp-command-result" id="command-result-${index}" href="${encodeURI(item.route)}" role="option" aria-selected="false" tabindex="-1">
-                <i class="bi ${escapeHtml(item.icon)}" aria-hidden="true"></i>
-                <span><strong class="d-block">${escapeHtml(item.title)}</strong>
-                ${item.subtitle ? `<small class="text-secondary">${escapeHtml(item.subtitle)}</small>` : ''}</span>
-                <span class="pp-badge ms-auto">${escapeHtml(item.type)}</span>
-            </a>`).join('');
+        results.replaceChildren(...allowedItems.map((item, index) => {
+            const link = document.createElement('a');
+            link.className = 'pp-command-result'; link.id = `command-result-${index}`; link.href = item.route;
+            link.setAttribute('role', 'option'); link.setAttribute('aria-selected', 'false'); link.tabIndex = -1;
+            const icon = document.createElement('i'); icon.className = `bi ${item.icon || ''}`; icon.setAttribute('aria-hidden', 'true');
+            const copy = document.createElement('span'); const title = document.createElement('strong'); title.className = 'd-block'; title.textContent = item.title || ''; copy.append(title);
+            if (item.subtitle) { const subtitle = document.createElement('small'); subtitle.className = 'text-secondary'; subtitle.textContent = item.subtitle; copy.append(subtitle); }
+            const type = document.createElement('span'); type.className = 'pp-badge ms-auto'; type.textContent = item.type || '';
+            link.append(icon, copy, type); return link;
+        }));
     };
 
     const moveActive = (step) => {
@@ -67,12 +72,12 @@
     const search = async () => {
         const query = input.value.trim();
         if (query.length < 2) {
-            results.innerHTML = '<p class="text-secondary p-3 mb-0">Digite ao menos dois caracteres.</p>';
+            showMessage('Digite ao menos dois caracteres.');
             return;
         }
         controller?.abort();
         controller = new AbortController();
-        results.innerHTML = '<p class="text-secondary p-3 mb-0" role="status">Pesquisando…</p>';
+        showMessage('Pesquisando…', 'text-secondary p-3 mb-0', 'status');
         try {
             const response = await fetch(`/GlobalSearch?q=${encodeURIComponent(query)}&limite=20`, {
                 signal: controller.signal,
@@ -83,7 +88,7 @@
             render(payload.data?.items || []);
         } catch (error) {
             if (error.name !== 'AbortError')
-                results.innerHTML = '<p class="text-danger p-3 mb-0" role="alert">Não foi possível pesquisar agora. Tente novamente.</p>';
+                showMessage('Não foi possível pesquisar agora. Tente novamente.', 'text-danger p-3 mb-0', 'alert');
         }
     };
 

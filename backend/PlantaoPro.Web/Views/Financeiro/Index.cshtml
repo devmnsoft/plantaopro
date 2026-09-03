@@ -57,7 +57,7 @@
                 var percentual = maiorValor <= 0 ? 0 : Math.Round((item.Total / maiorValor) * 100, 0);
                 <div class="mb-2">
                     <div class="d-flex justify-content-between small"><span>@item.Status</span><strong>@item.Total.ToString("C")</strong></div>
-                    <div class="progress"><div class="progress-bar" style="width:@percentual%"></div></div>
+                    <div class="progress"><div class="progress-bar" data-progress="@percentual"></div></div>
                 </div>
             }
         }

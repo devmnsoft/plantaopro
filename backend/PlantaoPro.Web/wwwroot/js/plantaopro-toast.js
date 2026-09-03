@@ -37,7 +37,7 @@
         const item = document.createElement("article");
         item.className = `pp-toast pp-toast--${toast.type}`;
         item.setAttribute("role", toast.type === "error" ? "alert" : "status");
-        item.innerHTML = `<span class="pp-toast__icon" aria-hidden="true"></span><div><strong class="pp-toast__title"></strong><div class="pp-toast__message"></div></div>`;
+        const icon = document.createElement("span"); icon.className = "pp-toast__icon"; icon.setAttribute("aria-hidden", "true"); const body = document.createElement("div"); const heading = document.createElement("strong"); heading.className = "pp-toast__title"; const copy = document.createElement("div"); copy.className = "pp-toast__message"; body.append(heading, copy); item.append(icon, body);
         item.querySelector(".pp-toast__icon").textContent = toast.icon;
         item.querySelector(".pp-toast__title").textContent = toast.title;
         item.querySelector(".pp-toast__message").textContent = toast.message;

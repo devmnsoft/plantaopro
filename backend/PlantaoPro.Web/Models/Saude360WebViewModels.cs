@@ -127,7 +127,7 @@ public sealed class LookupSelectViewModel
     public string Endpoint { get; set; } = string.Empty;
     public string Value { get; set; } = string.Empty;
     public string Placeholder { get; set; } = string.Empty;
-    public string HelpText { get; set; } = "Digite para buscar registros reais do tenant; nenhum GUID precisa ser digitado.";
+    public string HelpText { get; set; } = "Busque registros reais do tenant pela descrição; identificadores técnicos não são solicitados.";
 }
 
 public sealed class AutocompleteFieldViewModel

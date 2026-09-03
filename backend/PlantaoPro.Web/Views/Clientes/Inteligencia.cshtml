@@ -21,7 +21,7 @@
             @foreach (var limite in new[] { new { Nome = "Médicos", Usados = uso.MedicosUsados, Limite = uso.MedicosLimite }, new { Nome = "Hospitais", Usados = uso.HospitaisUsados, Limite = uso.HospitaisLimite }, new { Nome = "Plantões/mês", Usados = uso.PlantoesMesUsados, Limite = uso.PlantoesMesLimite } })
             {
                 var percentual = Percentual(limite.Usados, limite.Limite);
-                <div class="mb-3"><div class="d-flex justify-content-between"><span>@limite.Nome</span><strong>@limite.Usados / @(limite.Limite <= 0 ? "ilimitado" : limite.Limite.ToString())</strong></div><div class="progress" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar @(percentual >= 80 ? "bg-warning" : "bg-primary")" style="width:@percentual%">@percentual%</div></div></div>
+                <div class="mb-3"><div class="d-flex justify-content-between"><span>@limite.Nome</span><strong>@limite.Usados / @(limite.Limite <= 0 ? "ilimitado" : limite.Limite.ToString())</strong></div><div class="progress" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar @(percentual >= 80 ? "bg-warning" : "bg-primary")" data-progress="@percentual">@percentual%</div></div></div>
             }
             <div class="row g-2 small">
                 <div class="col-sm-6"><span class="badge @(uso.PermiteMobile ? "text-bg-success" : "text-bg-secondary")">Mobile @(uso.PermiteMobile ? "habilitado" : "bloqueado")</span></div>

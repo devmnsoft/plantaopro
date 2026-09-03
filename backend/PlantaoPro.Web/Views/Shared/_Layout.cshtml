@@ -31,6 +31,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2134-premium-qa.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2137-global-ux.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2138-session-internal.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2139-premium-library.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -86,6 +87,7 @@
     <script src="~/js/service-worker-registration.js" asp-append-version="true"></script>
     @if (isAuthenticated) { <script type="module" src="~/js/core/app-shell.js" asp-append-version="true"></script> }
     @if (isAuthenticated) { <script src="~/js/session-health.js" asp-append-version="true"></script> }
+    <script src="~/js/v2139-premium-library.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

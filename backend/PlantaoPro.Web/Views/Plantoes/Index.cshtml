@@ -83,7 +83,7 @@
                             <div class="pp-shift-ticket__top"><span>@p.EspecialidadeNome</span><partial name="_StatusBadge" model="p.Status" /></div>
                             <h3>@p.HospitalNome</h3><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p>
                             <dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM · HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div></dl>
-                            <div class="pp-shift-progress" role="progressbar" aria-label="Cobertura do plantão" aria-valuemin="0" aria-valuemax="@p.Vagas" aria-valuenow="@(p.Vagas-p.VagasDisponiveis)"><span style="width:@(p.Vagas == 0 ? 0 : (p.Vagas-p.VagasDisponiveis)*100/p.Vagas)%"></span></div>
+                            <div class="pp-shift-progress" role="progressbar" aria-label="Cobertura do plantão" aria-valuemin="0" aria-valuemax="@p.Vagas" aria-valuenow="@(p.Vagas-p.VagasDisponiveis)"><span data-progress="@(p.Vagas == 0 ? 0 : (p.Vagas-p.VagasDisponiveis)*100/p.Vagas)"></span></div>
                             <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">Abrir operação <i class="bi bi-arrow-right"></i></a>
                         </article>
                     }

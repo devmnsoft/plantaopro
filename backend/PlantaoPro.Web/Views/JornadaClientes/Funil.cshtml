@@ -8,7 +8,7 @@
     foreach (var etapa in etapas)
     {
         var percentual = total == 0 ? 0 : (int)Math.Round((decimal)etapa.Total * 100 / total);
-        <div class="col-md-4 col-xl-3"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><span class="badge text-bg-primary">@etapa.Etapa</span><strong>@etapa.Total</strong></div><div class="progress mt-3" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width:@percentual%">@percentual%</div></div></div></div></div>
+        <div class="col-md-4 col-xl-3"><div class="card h-100"><div class="card-body"><div class="d-flex justify-content-between"><span class="badge text-bg-primary">@etapa.Etapa</span><strong>@etapa.Total</strong></div><div class="progress mt-3" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" data-progress="@percentual">@percentual%</div></div></div></div></div>
     }
 }
 else

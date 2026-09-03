@@ -6,7 +6,7 @@
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Checklist de Operação Assistida", Model?.ClienteNome ?? "Cliente", "bi-check2-square", null, null, null, true)' />
 
 <div class="progress mb-3" role="progressbar" aria-label="Progresso" aria-valuenow="@(Model?.Percentual ?? 0)" aria-valuemin="0" aria-valuemax="100">
-    <div class="progress-bar" style="width: @(Model?.Percentual ?? 0)%">@(Model?.Percentual ?? 0)%</div>
+    <div class="progress-bar" data-progress="@(Model?.Percentual ?? 0)">@(Model?.Percentual ?? 0)%</div>
 </div>
 
 @if (!itens.Any())

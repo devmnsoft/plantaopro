@@ -163,20 +163,20 @@
       });
     }
 
-    box.innerHTML=list.length?list.map(error=>'<div>'+sanitize(error)+'</div>').join(''):'';
+    box.replaceChildren(...list.map(error=>{const item=document.createElement('div');item.textContent=error;return item;}));
     box.classList.toggle('d-none',list.length===0);
   }
 
   function setFormBusy(form,isBusy){
     form.querySelectorAll('button[type="submit"], .btn-submit').forEach(btn=>{
       if(isBusy){
-        if(!btn.dataset.originalHtml){btn.dataset.originalHtml=btn.innerHTML;}
+        if(!btn.dataset.originalLabel){btn.dataset.originalLabel=btn.textContent.trim();}
         btn.classList.add('is-loading');
         btn.setAttribute('aria-busy','true');
-        btn.innerHTML='<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Processando...';
+        btn.replaceChildren();const spinner=document.createElement('span');spinner.className='spinner-border spinner-border-sm me-2';spinner.setAttribute('aria-hidden','true');btn.append(spinner,document.createTextNode('Processando...'));
         btn.disabled=true;
       }else{
-        if(btn.dataset.originalHtml){btn.innerHTML=btn.dataset.originalHtml;}
+        if(btn.dataset.originalLabel){btn.textContent=btn.dataset.originalLabel;}
         btn.classList.remove('is-loading');
         btn.removeAttribute('aria-busy');
         btn.disabled=false;
@@ -242,8 +242,8 @@
           if(btn.dataset.confirm==='true'){return;}
           btn.classList.add('is-loading');
           btn.setAttribute('aria-busy','true');
-          if(!btn.dataset.originalHtml){btn.dataset.originalHtml=btn.innerHTML;}
-          btn.innerHTML='<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Processando...';
+          if(!btn.dataset.originalLabel){btn.dataset.originalLabel=btn.textContent.trim();}
+          btn.replaceChildren();const spinner=document.createElement('span');spinner.className='spinner-border spinner-border-sm me-2';spinner.setAttribute('aria-hidden','true');btn.append(spinner,document.createTextNode('Processando...'));
           btn.disabled=true;
         });
       });

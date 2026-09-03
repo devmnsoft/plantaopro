@@ -1,0 +1,24 @@
+/* v2.14.1 — acabamento premium do acesso crítico e do cockpit global. */
+.pp-auth-body .auth-main{background:radial-gradient(circle at 8% 12%,rgba(35,188,185,.2),transparent 28rem),radial-gradient(circle at 92% 88%,rgba(40,104,190,.16),transparent 30rem),#061827}
+.pp-auth-body .pp-auth-shell{isolation:isolate;overflow:hidden;background:#fff}
+.pp-auth-body .pp-auth-brand-panel::after{position:absolute;right:-7rem;bottom:-8rem;width:22rem;height:22rem;border:1px solid rgba(255,255,255,.12);border-radius:50%;box-shadow:0 0 0 3rem rgba(255,255,255,.025),0 0 0 7rem rgba(255,255,255,.018);content:"";pointer-events:none}
+.pp-auth-body .pp-auth-brand-panel{position:relative}
+.pp-auth-body .pp-auth-brand-panel>*{position:relative;z-index:1}
+.pp-auth-context-message{display:flex;gap:.7rem;margin:1rem 0;padding:.85rem 1rem;border:1px solid #b9d9ed;border-radius:.8rem;background:#eff8fd;color:#124b6c}
+.pp-auth-context-message app-icon{flex:0 0 auto}.pp-auth-context-message div{display:grid;gap:.15rem}.pp-auth-context-message span{font-size:.85rem;line-height:1.45}
+.pp-auth-body .pp-form-label{margin-bottom:.4rem;color:#16394f;font-weight:750}.pp-auth-body .form-required::after{margin-left:.2rem;color:#b42318;content:"*"}
+.pp-auth-body .pp-form-error:not(:empty){display:block;margin-top:.35rem;color:#a42121;font-size:.8rem;font-weight:650}
+.pp-auth-body .pp-login-delay{gap:.65rem;margin-bottom:1rem;padding:.8rem;border:1px solid #f2cf8e;border-radius:.75rem;background:#fff9e9;color:#75500b}
+.pp-auth-body .pp-login-delay:not(.d-none){display:flex!important}
+.pp-auth-body #btnLogin{position:relative;overflow:hidden}.pp-auth-body #btnLogin:disabled{opacity:.78}
+
+.pp-v2141-global-banner{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.9rem;align-items:center;margin:1rem 0;padding:1rem 1.1rem;border:1px solid rgba(119,178,235,.35);border-radius:1rem;background:linear-gradient(120deg,#071f3a,#0a3454);box-shadow:0 14px 35px rgba(7,31,58,.14);color:#dcecff}
+.pp-v2141-global-banner__icon{display:grid;width:2.75rem;height:2.75rem;place-items:center;border:1px solid rgba(255,255,255,.16);border-radius:.8rem;background:rgba(255,255,255,.08)}
+.pp-v2141-global-banner .pp-eyebrow{color:#8fd9d2}.pp-v2141-global-banner strong{display:block;color:#fff;font-size:1.05rem}.pp-v2141-global-banner p{max-width:78ch;margin:.2rem 0 0;color:#bed1e4;font-size:.84rem;line-height:1.45}
+.pp-v2141-tenant-switcher{display:grid;grid-template-columns:minmax(14rem,.8fr) minmax(20rem,1.2fr);gap:1.5rem;align-items:end;margin:1rem 0 1.5rem;padding:1.25rem;border:1px solid #d9e5ed;border-radius:1rem;background:linear-gradient(145deg,#fff,#f5fafc);box-shadow:0 10px 28px rgba(9,36,60,.06)}
+.pp-v2141-tenant-switcher h2{margin:.2rem 0}.pp-v2141-tenant-switcher p{margin:0;color:#607483;font-size:.86rem}
+.pp-v2141-tenant-search label{display:block;margin-bottom:.35rem;color:#173b52;font-size:.8rem;font-weight:750}.pp-v2141-tenant-search>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.55rem}.pp-v2141-tenant-search .form-control{min-height:2.75rem}.pp-v2141-tenant-search small{display:block;margin-top:.35rem;color:#667985}
+.pp-v2141-kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;margin:1rem 0 1.5rem}.pp-v2141-kpi-grid a{position:relative;display:grid;gap:.35rem;min-height:8.5rem;padding:1rem 1rem 1rem 1.15rem;overflow:hidden;border:1px solid #d9e5ed;border-radius:1rem;background:#fff;color:#173b52;text-decoration:none;box-shadow:0 8px 24px rgba(9,36,60,.055);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}.pp-v2141-kpi-grid a::before{position:absolute;inset:0 auto 0 0;width:3px;background:linear-gradient(#159c96,#2776bf);content:""}.pp-v2141-kpi-grid a:hover,.pp-v2141-kpi-grid a:focus-visible{transform:translateY(-2px);border-color:#8ac5c0;box-shadow:0 14px 30px rgba(9,36,60,.1)}.pp-v2141-kpi-grid span{color:#596f7e;font-size:.78rem;font-weight:750;text-transform:uppercase;letter-spacing:.035em}.pp-v2141-kpi-grid strong{align-self:end;font-size:1.25rem}.pp-v2141-kpi-grid small{color:#657987}
+@media(max-width:767.98px){.pp-v2141-global-banner{grid-template-columns:auto 1fr}.pp-v2141-global-banner .btn{grid-column:1/-1}.pp-v2141-tenant-switcher{grid-template-columns:1fr}.pp-v2141-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:479.98px){.pp-v2141-tenant-search>div,.pp-v2141-kpi-grid{grid-template-columns:1fr}.pp-v2141-global-banner{padding:.9rem}.pp-v2141-global-banner__icon{display:none}.pp-v2141-global-banner>div{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.pp-v2141-kpi-grid a{transition:none}}

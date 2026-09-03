@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2133-real-screens.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2134-premium-qa.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2137-global-ux.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2141-premium-cockpit.css" asp-append-version="true" />
 </head>
 <body class="pp-body pp-auth-body app-body">
     <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
@@ -26,7 +27,10 @@
     {
         <div class="auth-environment-notice" role="status"><span aria-hidden="true">●</span> Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</div>
     }
-    <main id="mainContent" class="auth-main" tabindex="-1">@RenderBody()</main>
+    <main id="mainContent" class="auth-main" tabindex="-1">
+        <partial name="_ToastMessages" />
+        @RenderBody()
+    </main>
     <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
     <script src="~/js/plantaopro-toast.js" asp-append-version="true"></script>
     <script src="~/js/plantaopro-ui.js" asp-append-version="true"></script>

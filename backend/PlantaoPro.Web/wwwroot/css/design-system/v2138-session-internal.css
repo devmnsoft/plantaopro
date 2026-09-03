@@ -1,0 +1,67 @@
+/* v2.13.8 — continuidade visual de acesso e acabamento das telas internas. */
+.pp-session-health {
+    align-items: center;
+    gap: .55rem;
+    min-height: 2.5rem;
+    padding: .38rem .7rem;
+    border: 1px solid color-mix(in srgb, var(--pp-success-500, #16805c) 24%, transparent);
+    border-radius: .8rem;
+    background: color-mix(in srgb, var(--pp-success-50, #ecfdf5) 82%, white);
+    color: var(--pp-neutral-700, #334155);
+}
+
+.pp-session-health__dot {
+    width: .55rem;
+    height: .55rem;
+    border-radius: 50%;
+    background: var(--pp-success-500, #16805c);
+    box-shadow: 0 0 0 .2rem color-mix(in srgb, var(--pp-success-500, #16805c) 16%, transparent);
+}
+
+.pp-session-health small,
+.pp-session-health strong { display: block; line-height: 1.05; }
+.pp-session-health small { font-size: .66rem; color: var(--pp-neutral-500, #64748b); }
+.pp-session-health strong { margin-top: .16rem; font-size: .76rem; }
+.pp-session-health[data-online="false"] { border-color: #f0b429; background: #fff8e6; }
+.pp-session-health[data-online="false"] .pp-session-health__dot { background: #c77700; box-shadow: 0 0 0 .2rem rgb(199 119 0 / 14%); }
+
+.pp-login-delay {
+    align-items: flex-start;
+    gap: .65rem;
+    padding: .85rem 1rem;
+    border: 1px solid #f0b429;
+    border-radius: .85rem;
+    background: #fff8e6;
+    color: #714b00;
+    font-size: .875rem;
+}
+.pp-login-delay:not(.d-none) { display: flex; }
+
+/* O mesmo ritmo editorial atende listas, filtros e formulários reais sem
+   substituir a semântica específica de cada módulo. */
+.pp-content-container > .pp-screen-guide { margin-block: .25rem 1.25rem; }
+.pp-content-container :is(.table-responsive, .pp-table-shell, .pp-list-card) {
+    border-radius: 1rem;
+    box-shadow: 0 10px 28px rgb(15 23 42 / 5%);
+}
+.pp-content-container :is(.form-control, .form-select):focus {
+    box-shadow: 0 0 0 .22rem rgb(14 116 144 / 14%);
+}
+.pp-content-container .table > :not(caption) > * > * { vertical-align: middle; }
+.pp-content-container .table thead th {
+    white-space: nowrap;
+    font-size: .75rem;
+    letter-spacing: .025em;
+    text-transform: uppercase;
+}
+
+@media (max-width: 767.98px) {
+    .pp-content-container { padding-inline: .85rem; }
+    .pp-content-container :is(.btn-toolbar, .pp-page-actions) { width: 100%; }
+    .pp-content-container :is(.btn-toolbar, .pp-page-actions) > .btn { flex: 1 1 auto; }
+    .pp-screen-guide__content { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pp-session-health__dot { box-shadow: none; }
+}

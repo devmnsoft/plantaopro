@@ -6,6 +6,7 @@
     const warning = document.getElementById("capsLockWarning");
     const button = document.getElementById("btnLogin");
     const errorSummary = form?.querySelector("[data-login-errors]");
+    const delayMessage = form?.querySelector("[data-login-delay]");
     const idleLabel = button?.dataset.idleLabel || "Entrar com segurança";
     let recoveryTimer;
 
@@ -14,6 +15,7 @@
         button?.removeAttribute("disabled");
         button?.setAttribute("aria-busy", "false");
         button?.querySelector(".spinner-border")?.classList.add("d-none");
+        delayMessage?.classList.add("d-none");
         const label = button?.querySelector(".label");
         if (label) label.textContent = idleLabel;
     };
@@ -66,6 +68,7 @@
         // interrompida pelo navegador, este limite devolve o controle ao usuário.
         recoveryTimer = window.setTimeout(() => {
             resetSubmission();
+            delayMessage?.classList.remove("d-none");
             const liveRegion = document.getElementById("appLiveRegion");
             if (liveRegion) liveRegion.textContent = "A resposta está demorando. Você pode tentar entrar novamente.";
         }, 15000);

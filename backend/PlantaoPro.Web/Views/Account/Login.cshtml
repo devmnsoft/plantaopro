@@ -31,6 +31,10 @@
                 {
                     <div class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors>@loginError</div>
                 }
+                <div class="pp-login-delay d-none" role="status" aria-live="polite" data-login-delay>
+                    <app-icon name="Warning" size="20" />
+                    <span><strong>A resposta está demorando.</strong> Seus dados foram preservados; confira sua conexão e tente novamente.</span>
+                </div>
                 <div class="pp-form-field">
                     <label asp-for="Email" class="pp-form-label form-required">E-mail institucional</label>
                     <input asp-for="Email" class="pp-form-control" autocomplete="username email" inputmode="email" maxlength="254" aria-describedby="emailHelp Email-error" required />
@@ -59,7 +63,7 @@
                 <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. O acesso global MNSOFT é restrito, auditado e autorizado.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.7</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.13.8</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

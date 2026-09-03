@@ -1,5 +1,5 @@
 @{
-    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Contexto global";
+    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? (User.IsInRole("ADMINISTRADOR_GLOBAL") ? "Todos os clientes" : "Instituição atual");
     var isGlobalAdmin = User.IsInRole("ADMINISTRADOR_GLOBAL");
 }
-<span class="tenant-context-badge d-none d-lg-inline-flex" role="status" aria-label="Contexto atual: @tenantName"><i class="bi @(isGlobalAdmin ? "bi-shield-check" : "bi-building")" aria-hidden="true"></i><span>@tenantName</span>@if (isGlobalAdmin){<small>Super Admin · acesso auditado</small>}</span>
+<span class="tenant-context-badge d-none d-lg-inline-flex @(isGlobalAdmin ? "is-global" : "is-tenant")" role="status" aria-label="@(isGlobalAdmin ? "Modo Global MNSOFT" : "Área da instituição"): @tenantName"><i class="bi @(isGlobalAdmin ? "bi-shield-check" : "bi-building")" aria-hidden="true"></i><span><small>@(isGlobalAdmin ? "Modo Global MNSOFT" : "Área da instituição")</small><strong>@tenantName</strong></span>@if (isGlobalAdmin){<small>Acesso global auditado</small>}</span>

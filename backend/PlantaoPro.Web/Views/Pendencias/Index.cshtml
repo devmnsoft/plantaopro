@@ -49,5 +49,15 @@
         <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @totalPages</span>@if(Model.Page < totalPages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
     }
 </div>
+<dialog class="pp-snooze-dialog" data-snooze-dialog aria-labelledby="snoozeTitle">
+    <form method="dialog" data-snooze-form>
+        <div class="pp-snooze-dialog__header"><div><span class="pp-section-kicker">Organizar prioridade</span><h2 id="snoozeTitle">Adiar ação</h2></div><button class="btn btn-light btn-icon" value="cancel" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <p>Escolha quando esta ação deve voltar à sua lista. O adiamento não executa nem cancela a operação relacionada.</p>
+        <label class="form-label" for="snoozedUntil">Nova data e hora</label>
+        <input class="form-control" id="snoozedUntil" name="snoozedUntil" type="datetime-local" required />
+        <span class="pp-form-error" data-snooze-error role="alert"></span>
+        <div class="pp-form-actions"><button class="btn btn-outline-secondary" value="cancel">Cancelar</button><button class="btn btn-primary" value="confirm" data-snooze-confirm>Confirmar adiamento</button></div>
+    </form>
+</dialog>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }
 @section Scripts { <script type="module" src="~/js/pages/central-acoes.js" asp-append-version="true"></script> }

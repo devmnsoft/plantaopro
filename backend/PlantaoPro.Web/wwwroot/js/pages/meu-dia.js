@@ -6,7 +6,7 @@ const toast = (title, message, severity = 'success') => {
   const item = document.createElement('article');
   item.className = `app-toast ${severity}`;
   item.tabIndex = 0;
-  item.innerHTML = `<strong>${title}</strong><p>${message}</p>`;
+  const heading = document.createElement("strong"); heading.textContent = title; const copy = document.createElement("p"); copy.textContent = message; item.append(heading, copy);
   region.prepend(item);
   window.setTimeout(() => item.remove(), 7000);
 };

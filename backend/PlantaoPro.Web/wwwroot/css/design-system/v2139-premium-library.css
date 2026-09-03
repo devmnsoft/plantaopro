@@ -1,0 +1,12 @@
+/* PlantãoPro v2.13.9 — biblioteca visual premium e contexto global. */
+:root{--pp-2139-navy:#071f3a;--pp-2139-blue:#2563eb;--pp-2139-green:#16a34a;--pp-2139-amber:#f59e0b;--pp-2139-canvas:#f8fafc;--pp-2139-ink:#111827;--pp-2139-line:#e5e7eb;--pp-2139-shadow:0 14px 38px rgb(7 31 58 / 8%)}
+.pp-content-container{max-width:1540px}.pp-future-page-header,.pp-page-hero{border:1px solid var(--pp-2139-line);box-shadow:var(--pp-2139-shadow);background:linear-gradient(135deg,#fff 72%,#eff6ff)}
+.pp-screen-guide{border-color:#cbdcf5;background:linear-gradient(180deg,#fff,#f8fbff)}
+.pp-global-command-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem;margin:1rem 0 1.5rem}
+.pp-global-command-grid>a{display:flex;align-items:center;gap:.8rem;min-width:0;padding:1rem;border:1px solid #d8e3f1;border-radius:1rem;background:#fff;color:var(--pp-2139-navy);text-decoration:none;box-shadow:0 8px 24px rgb(7 31 58 / 5%);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.pp-global-command-grid>a:hover{transform:translateY(-2px);border-color:#93b4e5;box-shadow:var(--pp-2139-shadow)}.pp-global-command-grid>a:focus-visible{outline:3px solid #93c5fd;outline-offset:2px}
+.pp-global-command-grid app-icon{flex:0 0 auto;color:var(--pp-2139-blue)}.pp-global-command-grid span{display:grid;min-width:0}.pp-global-command-grid strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pp-global-command-grid small{color:#52657a}
+[data-progress]{width:0}.pp-preview-gradient{color:#fff}.pp-icon-2xl{font-size:2rem}.pp-conversation-body{min-height:20rem}.pp-message-bubble{max-width:80%}.pp-success-card{max-width:45rem}
+@media(max-width:991.98px){.pp-global-command-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:575.98px){.pp-global-command-grid{grid-template-columns:1fr}.pp-page-hero,.pp-future-page-header{padding:1rem}.pp-message-bubble{max-width:92%}}
+@media(prefers-reduced-motion:reduce){.pp-global-command-grid>a{transition:none}}

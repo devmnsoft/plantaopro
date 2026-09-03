@@ -18,6 +18,15 @@
 
     <div class="pp-global-scope-banner" role="note"><app-icon name="Security" size="20" /><div><strong>Visão global protegida</strong><span>Esta área é exclusiva do Super Administrador MNSOFT. Confirme o cliente antes de agir: operações sensíveis respeitam permissões do servidor e permanecem auditáveis.</span></div></div>
 
+    <nav class="pp-global-command-grid" aria-label="Navegação global MNSOFT">
+        <a asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="20" /><span><strong>Clientes e tenants</strong><small>Todos os clientes e bloqueios</small></span></a>
+        <a asp-controller="Usuarios" asp-action="Index"><app-icon name="User" size="20" /><span><strong>Usuários</strong><small>Acessos em todos os contextos</small></span></a>
+        <a asp-controller="Perfis" asp-action="Index"><app-icon name="Security" size="20" /><span><strong>Perfis e permissões</strong><small>Módulos e funcionalidades</small></span></a>
+        <a asp-controller="FaturamentoSaas" asp-action="Index"><app-icon name="Finance" size="20" /><span><strong>Cobranças</strong><small>Faturas e inadimplência</small></span></a>
+        <a asp-controller="Auditoria" asp-action="Index"><app-icon name="Audit" size="20" /><span><strong>Auditoria e logs</strong><small>Eventos globais rastreáveis</small></span></a>
+        <a asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="20" /><span><strong>Configurações globais</strong><small>Governança da plataforma</small></span></a>
+    </nav>
+
     <details class="pp-screen-guide"><summary><span class="pp-screen-guide__icon" aria-hidden="true">?</span><span>Como usar esta tela</span></summary><div class="pp-screen-guide__content"><div><strong>Monitore a plataforma sem misturar contextos.</strong><p><span class="pp-screen-guide__label">Quem pode usar:</span> Super Administrador MNSOFT.</p></div><ol><li>Consulte os indicadores reais disponibilizados pelas áreas abaixo.</li><li>Selecione e confirme o cliente antes de abrir um registro.</li><li>Revise auditoria, alertas e cobrança após qualquer ação sensível.</li></ol></div></details>
 
     <section class="pp-section" aria-labelledby="saasModulesTitle">
@@ -42,7 +51,7 @@
                 <article class="pp-checklist-card">
                     <div class="pp-checklist-card__head"><span class="pp-icon-surface" aria-hidden="true"><app-icon name="Settings" size="20" /></span><h3>@item</h3></div>
                     <p>Confira configuração, responsáveis e pendências desta frente.</p>
-                    <div class="pp-progress" aria-label="Revisão pendente"><span style="width: 0"></span></div>
+                    <div class="pp-progress" aria-label="Revisão pendente"><span data-progress="0"></span></div>
                     <a class="btn btn-sm btn-outline-primary" asp-controller="Implantacao" asp-action="Index">Revisar configuração</a>
                 </article>
             }

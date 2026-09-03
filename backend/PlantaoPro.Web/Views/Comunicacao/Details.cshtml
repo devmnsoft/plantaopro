@@ -22,13 +22,13 @@
 
 <div class="row g-3">
     <div class="col-12 col-lg-8">
-        <div class="card"><div class="card-body" style="min-height:320px;">
+        <div class="card"><div class="card-body pp-conversation-body">
             @if (mensagens.Any())
             {
                 @foreach (var msg in mensagens.OrderBy(m => m.RegDate))
                 {
                     <div class="d-flex mb-3 @(msg.MinhaMensagem ? "justify-content-end" : "justify-content-start")">
-                        <div class="p-2 rounded @(msg.MinhaMensagem ? "bg-primary text-white" : "bg-light border")" style="max-width: 80%;">
+                        <div class="p-2 rounded pp-message-bubble @(msg.MinhaMensagem ? "bg-primary text-white" : "bg-light border")">
                             <div class="small fw-semibold">@msg.RemetenteNome</div>
                             <div>@msg.Mensagem</div>
                             <div class="small opacity-75">@msg.RegDate.ToString("dd/MM/yyyy HH:mm")</div>

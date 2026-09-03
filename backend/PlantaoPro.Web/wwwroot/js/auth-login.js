@@ -8,6 +8,9 @@
     const errorSummary = form?.querySelector("[data-login-errors]");
     const delayMessage = form?.querySelector("[data-login-delay]");
     const connectionStatus = form?.querySelector("[data-connection-status]");
+    const progress = form?.querySelector("[data-login-progress]");
+    const progressTitle = progress?.querySelector("[data-login-progress-title]");
+    const progressDetail = progress?.querySelector("[data-login-progress-detail]");
     const idleLabel = button?.dataset.idleLabel || "Entrar";
     let recoveryTimer;
 
@@ -19,6 +22,14 @@
         delayMessage?.classList.add("d-none");
         const label = button?.querySelector(".label");
         if (label) label.textContent = idleLabel;
+        progress?.setAttribute("hidden", "hidden");
+    };
+
+    const setProgress = (title, detail) => {
+        if (!progress) return;
+        progress.removeAttribute("hidden");
+        if (progressTitle) progressTitle.textContent = title;
+        if (progressDetail) progressDetail.textContent = detail;
     };
 
     const showValidationMessage = () => {
@@ -72,12 +83,14 @@
         button?.querySelector(".spinner-border")?.classList.remove("d-none");
         const label = button?.querySelector(".label");
         if (label) label.textContent = "Verificando acesso…";
+        setProgress("Validando acesso com segurança", "Aguarde enquanto conferimos sua conta e o contexto autorizado.");
 
         // Um POST tradicional deve navegar para outra página. Se a navegação for
         // interrompida pelo navegador, este limite devolve o controle ao usuário.
         recoveryTimer = window.setTimeout(() => {
             resetSubmission();
             delayMessage?.classList.remove("d-none");
+            setProgress("Não recebemos uma resposta", "O botão foi liberado. Confira a conexão e tente novamente; seus campos foram preservados.");
             const liveRegion = document.getElementById("appLiveRegion");
             if (liveRegion) liveRegion.textContent = "A resposta está demorando. Você pode tentar entrar novamente.";
         }, 15000);

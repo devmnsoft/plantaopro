@@ -1,0 +1,43 @@
+/* PlantãoPro v2.14.3 — acabamento visual de jornadas críticas. */
+:root {
+  --pp-v2143-focus: #087f8c;
+  --pp-v2143-ink: #102a3a;
+  --pp-v2143-border: #d8e5ea;
+  --pp-v2143-shadow: 0 1rem 2.75rem rgb(9 36 60 / 9%);
+}
+
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: .2rem solid color-mix(in srgb, var(--pp-v2143-focus) 75%, white);
+  outline-offset: .15rem;
+}
+
+.pp-login-progress { display: flex; align-items: center; gap: .7rem; padding: .75rem .85rem; border: 1px solid #b8dcdf; border-radius: .8rem; background: #f0faf9; color: #155e66; }
+.pp-login-progress[hidden] { display: none; }
+.pp-login-progress__icon { display: grid; width: 2rem; height: 2rem; flex: 0 0 auto; place-items: center; border-radius: .6rem; background: #d8f2ef; }
+.pp-login-progress > span:last-child { display: grid; gap: .1rem; min-width: 0; }
+.pp-login-progress small { color: #466a70; line-height: 1.35; }
+
+.pp-scope-guardrails { display: flex; flex-wrap: wrap; gap: .6rem; margin: -.2rem 0 1.25rem; }
+.pp-scope-guardrails > span { display: inline-flex; align-items: center; gap: .35rem; min-height: 2.35rem; padding: .45rem .75rem; border: 1px solid var(--pp-v2143-border); border-radius: 999px; background: #fff; color: #365466; font-size: .82rem; box-shadow: 0 .25rem .8rem rgb(9 36 60 / 5%); }
+.pp-scope-guardrails svg { color: var(--pp-v2143-focus); }
+
+.pp-data-table, .pp-payment-card, .pp-action-card, .pp-data-state { border-color: var(--pp-v2143-border); box-shadow: var(--pp-v2143-shadow); }
+.table-modern th { color: #4a6575; font-size: .73rem; letter-spacing: .035em; text-transform: uppercase; }
+.table-modern td { max-width: 24rem; overflow-wrap: anywhere; }
+.pp-form-control, .form-control, .form-select { border-color: #c9dbe2; }
+.pp-form-control:hover, .form-control:hover, .form-select:hover { border-color: #93b5c1; }
+.pp-form-error:not(:empty), .field-validation-error { display: block; margin-top: .35rem; color: #a51d2d; font-weight: 650; }
+
+@media (max-width: 767.98px) {
+  .pp-auth-card h2 { font-size: clamp(1.55rem, 7vw, 1.9rem); }
+  .pp-login-progress { align-items: flex-start; }
+  .pp-scope-guardrails { display: grid; grid-template-columns: 1fr; }
+  .pp-scope-guardrails > span { border-radius: .75rem; }
+  .pp-global-command-grid, .pp-global-module-map { grid-template-columns: 1fr; }
+  .pp-page-hero__copy, .pp-section-heading > div { min-width: 0; }
+  .pp-page-hero h1, .pp-page-hero h2, .pp-section-heading h2 { overflow-wrap: anywhere; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+}

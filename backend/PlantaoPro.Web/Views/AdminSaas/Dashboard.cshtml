@@ -23,10 +23,11 @@
         <a class="btn btn-outline-primary" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="18" /> Selecionar cliente</a>
     </div>
 
-    <details class="pp-screen-guide pp-screen-guide--compact">
-        <summary><app-icon name="Info" size="18" /> Como usar esta tela</summary>
-        <div><p>Use o cockpit para acompanhar clientes, módulos, usuários, cobranças e auditoria. Selecione um cliente antes de uma ação assistida e confirme o contexto exibido no topo.</p><p><strong>Importante:</strong> bloqueios e status vêm dos dados reais; se uma ação não estiver disponível, revise sua permissão ou procure o responsável MNSOFT.</p></div>
-    </details>
+    <div class="pp-scope-guardrails" role="list" aria-label="Garantias do contexto global">
+        <span role="listitem"><app-icon name="Security" size="17" /><strong>Escopo:</strong> global MNSOFT</span>
+        <span role="listitem"><app-icon name="Audit" size="17" /><strong>Ações:</strong> auditáveis</span>
+        <span role="listitem"><app-icon name="Lock" size="17" /><strong>Cliente:</strong> selecione antes de agir</span>
+    </div>
 
     <nav class="pp-global-command-grid" aria-label="Navegação global MNSOFT">
         <a asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="20" /><span><strong>Clientes e tenants</strong><small>Todos os clientes e bloqueios</small></span></a>

@@ -1,0 +1,57 @@
+/* PlantãoPro v2.14.2 — acabamento premium, orientação compacta e contexto inequívoco. */
+:root {
+  --pp-v2142-ink: #102f43;
+  --pp-v2142-muted: #587082;
+  --pp-v2142-line: #d8e4ea;
+  --pp-v2142-soft: #f4f8fa;
+  --pp-v2142-brand: #087f8c;
+  --pp-v2142-focus: #087ea4;
+}
+
+/* Ritmo consistente sem substituir contratos dos componentes anteriores. */
+.pp-content-container > :is(.pp-page, .pp-workspace) { width: 100%; }
+.pp-page :is(.pp-page-hero, .pp-page-header, .pp-section-heading) h1,
+.pp-page :is(.pp-page-hero, .pp-page-header, .pp-section-heading) h2 { color: var(--pp-v2142-ink); text-wrap: balance; }
+.pp-page :is(.pp-page-hero, .pp-page-header, .pp-section-heading) p { max-width: 72ch; color: var(--pp-v2142-muted); }
+.pp-section { scroll-margin-top: 6rem; }
+
+/* Cards, estados e tabelas compartilham a mesma superfície institucional. */
+.pp-page :is(.pp-action-card, .pp-kpi-card, .pp-empty-state, .pp-error-state, .pp-form-section) {
+  border-color: var(--pp-v2142-line);
+  box-shadow: 0 1px 2px rgb(8 35 55 / 5%), 0 10px 28px rgb(8 35 55 / 4%);
+}
+.pp-table-responsive { border: 1px solid var(--pp-v2142-line); border-radius: 1rem; background: #fff; }
+.pp-table-responsive table { margin-bottom: 0; }
+.pp-table-responsive thead th { background: var(--pp-v2142-soft); color: #294b60; font-size: .75rem; letter-spacing: .035em; text-transform: uppercase; }
+.pp-table-responsive tbody tr:focus-within { outline: 2px solid var(--pp-v2142-focus); outline-offset: -2px; }
+
+/* Ajuda fica visível, mas não compete com a tarefa principal. */
+.pp-screen-guide--compact { margin: 1rem 0 1.25rem; border: 1px solid var(--pp-v2142-line); border-radius: .875rem; background: #fff; }
+.pp-screen-guide--compact summary { display: flex; align-items: center; gap: .5rem; min-height: 2.75rem; padding: .65rem .9rem; color: #234b61; font-weight: 750; cursor: pointer; }
+.pp-screen-guide--compact summary::marker { color: var(--pp-v2142-brand); }
+.pp-screen-guide--compact > div { padding: 0 .9rem .85rem 2.5rem; color: var(--pp-v2142-muted); font-size: .875rem; }
+.pp-screen-guide--compact p { margin: .25rem 0; }
+
+/* Contexto global nunca depende apenas de cor. */
+.pp-context-command { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .85rem; padding: .85rem 1rem; border: 1px solid #b8dce0; border-left: .3rem solid var(--pp-v2142-brand); border-radius: .875rem; background: #f2fbfb; }
+.pp-context-command > div { display: grid; gap: .1rem; min-width: 0; }
+.pp-context-command__label { color: #3e6877; font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.pp-context-command strong { color: var(--pp-v2142-ink); }
+.pp-context-command small { color: var(--pp-v2142-muted); overflow-wrap: anywhere; }
+
+/* Feedback de conectividade do login, também anunciado por leitor de tela. */
+.pp-login-connection { display: flex; align-items: center; gap: .55rem; margin-bottom: 1rem; padding: .7rem .8rem; border: 1px solid #eab7ad; border-radius: .75rem; background: #fff7f5; color: #842c20; font-size: .875rem; }
+.pp-login-connection__dot { width: .6rem; height: .6rem; flex: 0 0 auto; border-radius: 50%; background: #c33c2d; box-shadow: 0 0 0 .2rem rgb(195 60 45 / 12%); }
+
+@media (max-width: 47.99rem) {
+  .pp-context-command { align-items: stretch; flex-direction: column; }
+  .pp-context-command .btn { width: 100%; min-height: 2.75rem; }
+  .pp-table-responsive { border-radius: .75rem; }
+  .pp-screen-guide--compact > div { padding-left: .9rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pp-page *, .pp-auth-page * { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+.pp-login-connection[hidden] { display: none; }

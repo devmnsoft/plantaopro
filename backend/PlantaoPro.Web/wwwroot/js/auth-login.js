@@ -7,7 +7,7 @@
     const button = document.getElementById("btnLogin");
     const errorSummary = form?.querySelector("[data-login-errors]");
     const delayMessage = form?.querySelector("[data-login-delay]");
-    const idleLabel = button?.dataset.idleLabel || "Entrar com segurança";
+    const idleLabel = button?.dataset.idleLabel || "Entrar";
     let recoveryTimer;
 
     const resetSubmission = () => {
@@ -76,6 +76,15 @@
 
     form?.addEventListener("invalid", showValidationMessage, true);
     window.addEventListener("pageshow", resetSubmission);
+    window.addEventListener("offline", () => {
+        if (button?.getAttribute("aria-busy") !== "true") return;
+        resetSubmission();
+        if (errorSummary) {
+            errorSummary.textContent = "A conexão foi interrompida. Verifique sua internet e tente novamente.";
+            errorSummary.classList.add("validation-summary-errors");
+            errorSummary.focus();
+        }
+    });
 
     if (errorSummary?.textContent?.trim()) {
         resetSubmission();

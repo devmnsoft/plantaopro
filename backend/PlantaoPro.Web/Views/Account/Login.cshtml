@@ -2,6 +2,17 @@
 @{
     Layout = "_AuthLayout";
     ViewData["Title"] = "Entrar";
+    var loginReason = Context.Request.Query["reason"].ToString().ToLowerInvariant();
+    var sessionMessage = loginReason switch
+    {
+        "expired" or "session-expired" => "Sua sessão expirou por segurança. Entre novamente para continuar.",
+        "tenant-required" => "Não foi possível identificar sua instituição. Procure a administração do seu cliente.",
+        "user-blocked" => "Seu acesso está temporariamente bloqueado. Procure a administração da sua instituição.",
+        "tenant-blocked" => "O acesso da instituição está temporariamente indisponível. Procure a administração responsável.",
+        "feature-blocked" => "Esta funcionalidade não está liberada para o seu perfil ou instituição.",
+        "access-denied" => "Você não tem permissão para acessar o destino solicitado.",
+        _ => null
+    };
 }
 <div class="pp-auth-page pp-auth auth-experience">
     <div class="pp-auth-shell pp-auth__shell login-card-modern">
@@ -23,7 +34,11 @@
           <div class="pp-auth-card">
             <span class="pp-page-intro__eyebrow">Acesso seguro</span>
             <h2 id="loginTitle">Acesse sua central PlantãoPro</h2>
-            <p>Entre com o e-mail cadastrado pela sua instituição para continuar com segurança.</p>
+            <p>Use seu identificador cadastrado. Validaremos sua conta, perfil e instituição antes de abrir a área autorizada.</p>
+            @if (!string.IsNullOrWhiteSpace(sessionMessage))
+            {
+                <div class="pp-auth-context-message" role="status" aria-live="polite"><app-icon name="Info" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
+            }
             <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-submit-loading="manual" data-focus-invalid>
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors></div>
@@ -36,9 +51,9 @@
                     <span><strong>A resposta está demorando.</strong> Seus dados foram preservados; confira sua conexão e tente novamente.</span>
                 </div>
                 <div class="pp-form-field">
-                    <label asp-for="Email" class="pp-form-label form-required">E-mail institucional</label>
-                    <input asp-for="Email" class="pp-form-control" autocomplete="username email" inputmode="email" maxlength="254" aria-describedby="emailHelp Email-error" required />
-                    <small id="emailHelp" class="form-help">Use o e-mail vinculado ao seu acesso institucional.</small>
+                    <label asp-for="Email" class="pp-form-label form-required">E-mail, CPF ou CNPJ</label>
+                    <input asp-for="Email" class="pp-form-control" autocomplete="username" inputmode="text" maxlength="254" aria-describedby="emailHelp Email-error" required data-login-identifier />
+                    <small id="emailHelp" class="form-help">Informe o identificador habilitado pela sua instituição, sem compartilhar suas credenciais.</small>
                     <span asp-validation-for="Email" class="pp-form-error" data-valmsg-for="Email" id="Email-error"></span>
                 </div>
                 <div class="pp-form-field">
@@ -52,18 +67,18 @@
                     <span asp-validation-for="Senha" class="pp-form-error" data-valmsg-for="Senha" id="Senha-error"></span>
                 </div>
                 <div class="pp-login-actions">
-                    <button id="btnLogin" class="btn btn-primary btn-lg" type="submit" aria-busy="false" data-idle-label="Entrar com segurança">
-                        <span class="label">Entrar com segurança</span><span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+                    <button id="btnLogin" class="btn btn-primary btn-lg" type="submit" aria-busy="false" data-idle-label="Entrar">
+                        <span class="label">Entrar</span><span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
                     </button>
                     <a asp-action="ForgotPassword" class="auth-recovery-link">Esqueci minha senha</a>
                 </div>
             </form>
             <details class="pp-login-help">
-                <summary>Como acessar com segurança</summary>
-                <p>Use o e-mail cadastrado pela sua instituição. Nunca compartilhe sua senha. Administradores do cliente gerenciam os usuários da própria organização. O acesso global MNSOFT é restrito, auditado e autorizado.</p>
+                <summary>Como usar esta tela</summary>
+                <p>Preencha os dois campos obrigatórios e selecione <strong>Entrar</strong>. O sistema abrirá somente os módulos do seu perfil e da sua instituição. Em caso de bloqueio ou contexto incorreto, procure a administração; nunca envie sua senha ao suporte.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.0</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.1</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

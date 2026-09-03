@@ -6,6 +6,33 @@
         <div class="pp-hero-actions"><a class="btn btn-primary" asp-controller="Configuracoes" asp-action="Index">Abrir configurações</a><a class="btn btn-outline-primary" asp-controller="MinhaAssinatura" asp-action="Index">Minha assinatura</a></div>
     </header>
 
+    <section class="pp-v2141-global-banner" role="note" aria-label="Contexto global ativo">
+        <span class="pp-v2141-global-banner__icon"><app-icon name="Security" size="22" /></span>
+        <div><span class="pp-eyebrow">Contexto atual</span><strong>Cockpit MNSOFT · visão global auditável</strong><p>Você está fora do contexto de um cliente. Selecione explicitamente a instituição antes de consultar ou alterar dados; a autorização permanece validada no servidor.</p></div>
+        <a class="btn btn-light btn-sm" asp-controller="Auditoria" asp-action="Index"><app-icon name="Audit" size="17" /> Ver auditoria</a>
+    </section>
+
+    <section class="pp-v2141-tenant-switcher" aria-labelledby="tenant-switcher-title">
+        <div><span class="pp-eyebrow">Acesso assistido</span><h2 id="tenant-switcher-title">Localizar cliente ou tenant</h2><p>A busca abre a fonte oficial de clientes. Entrar em um contexto exige permissão e deve gerar trilha de auditoria.</p></div>
+        <form asp-controller="Clientes" asp-action="Index" method="get" role="search" class="pp-v2141-tenant-search">
+            <label for="tenantSearch">Nome, documento ou tenant</label>
+            <div><input id="tenantSearch" name="q" class="form-control" type="search" autocomplete="off" placeholder="Ex.: nome da instituição" /><button class="btn btn-primary" type="submit"><app-icon name="Search" size="18" /> Buscar cliente</button></div>
+            <small>Nenhum contexto será alterado somente pela pesquisa.</small>
+        </form>
+    </section>
+
+    <section aria-labelledby="global-overview-title">
+        <div class="pp-section-header"><div><span class="pp-eyebrow">Visão executiva</span><h2 id="global-overview-title">Indicadores globais por fonte</h2><p>Os cartões direcionam para dados persistidos; valores não carregados nunca são substituídos por estimativas.</p></div><span class="pp-status-badge pp-status-badge--source">Dados sob demanda</span></div>
+        <div class="pp-v2141-kpi-grid">
+            <a asp-controller="Clientes" asp-action="Index"><span>Clientes cadastrados</span><strong>Consultar</strong><small>Ativos, bloqueados e contexto</small></a>
+            <a asp-controller="Usuarios" asp-action="Index"><span>Usuários por cliente</span><strong>Consultar</strong><small>Perfis, acessos e bloqueios</small></a>
+            <a asp-controller="Modulos" asp-action="Dashboard"><span>Módulos e funcionalidades</span><strong>Consultar</strong><small>Ativos e bloqueados por tenant</small></a>
+            <a asp-controller="FaturamentoSaas" asp-action="Inadimplencia"><span>Cobranças</span><strong>Consultar</strong><small>Pendentes e vencidas</small></a>
+            <a asp-controller="Observabilidade" asp-action="Index"><span>Status operacional</span><strong>Ver saúde</strong><small>Serviços, erros e integrações</small></a>
+            <a asp-controller="Auditoria" asp-action="Index"><span>Últimos eventos</span><strong>Ver trilha</strong><small>Acessos e alterações globais</small></a>
+        </div>
+    </section>
+
     <div class="pp-governance-notice" role="note"><i class="bi bi-database-check" aria-hidden="true"></i><div><strong>Estado administrativo sob demanda</strong><p>Tenant, plano, consumo, limites, módulos e usuários são exibidos apenas nas respectivas telas quando retornados pelo backend.</p></div></div>
 
     <details class="pp-screen-guide"><summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Escopo global MNSOFT</span></summary><div class="pp-screen-guide__body"><p>Use esta central para navegar entre contrato, configuração, acessos e auditoria sem misturar dados de clientes.</p><ol><li>Escolha a fonte administrativa correspondente à sua tarefa.</li><li>Confirme o tenant antes de qualquer ação de suporte.</li><li>Consulte a auditoria após mudanças de plano, bloqueio ou permissão.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-eye" aria-hidden="true"></i> O modo de suporte deve ser explícito, temporário e auditável; a interface não presume privilégios globais.</div></div></details>

@@ -54,6 +54,10 @@
                     <span class="pp-login-connection__dot" aria-hidden="true"></span>
                     <span>Sem conexão. Reconecte-se para entrar com segurança.</span>
                 </div>
+                <div class="pp-login-progress" role="status" aria-live="polite" aria-atomic="true" data-login-progress hidden>
+                    <span class="pp-login-progress__icon" aria-hidden="true"><app-icon name="Lock" size="18" /></span>
+                    <span><strong data-login-progress-title>Acesso pronto</strong><small data-login-progress-detail>Preencha suas credenciais para validar conta, instituição e permissões.</small></span>
+                </div>
                 <div class="pp-form-field">
                     <label asp-for="Email" class="pp-form-label form-required">E-mail, CPF ou CNPJ</label>
                     <input asp-for="Email" class="pp-form-control" autocomplete="username" inputmode="text" maxlength="254" aria-describedby="emailHelp Email-error" required data-login-identifier />
@@ -82,7 +86,7 @@
                 <p>Preencha os dois campos obrigatórios e selecione <strong>Entrar</strong>. O sistema abrirá somente os módulos do seu perfil e da sua instituição. Em caso de bloqueio ou contexto incorreto, procure a administração; nunca envie sua senha ao suporte.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.2</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.3</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

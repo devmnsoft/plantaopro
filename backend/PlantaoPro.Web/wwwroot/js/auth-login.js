@@ -7,6 +7,7 @@
     const button = document.getElementById("btnLogin");
     const errorSummary = form?.querySelector("[data-login-errors]");
     const delayMessage = form?.querySelector("[data-login-delay]");
+    const connectionStatus = form?.querySelector("[data-connection-status]");
     const idleLabel = button?.dataset.idleLabel || "Entrar";
     let recoveryTimer;
 
@@ -26,6 +27,14 @@
             errorSummary.textContent = "Revise os campos destacados antes de continuar.";
             errorSummary.classList.add("validation-summary-errors");
         }
+    };
+
+    const updateConnectionStatus = () => {
+        if (!connectionStatus) return;
+        connectionStatus.hidden = navigator.onLine;
+        button?.toggleAttribute("disabled", !navigator.onLine);
+        if (!navigator.onLine) button?.setAttribute("aria-disabled", "true");
+        else button?.removeAttribute("aria-disabled");
     };
 
     toggle?.addEventListener("click", () => {
@@ -75,8 +84,12 @@
     });
 
     form?.addEventListener("invalid", showValidationMessage, true);
-    window.addEventListener("pageshow", resetSubmission);
+    window.addEventListener("pageshow", () => {
+        resetSubmission();
+        updateConnectionStatus();
+    });
     window.addEventListener("offline", () => {
+        updateConnectionStatus();
         if (button?.getAttribute("aria-busy") !== "true") return;
         resetSubmission();
         if (errorSummary) {
@@ -84,10 +97,13 @@
             errorSummary.classList.add("validation-summary-errors");
             errorSummary.focus();
         }
+        updateConnectionStatus();
     });
+    window.addEventListener("online", updateConnectionStatus);
 
     if (errorSummary?.textContent?.trim()) {
         resetSubmission();
         window.setTimeout(() => errorSummary.focus(), 0);
     }
+    updateConnectionStatus();
 })();

@@ -1,0 +1,36 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var isGlobalAdministrator = User.IsInRole("ADMINISTRADOR_GLOBAL");
+    var isTenantAdministrator = User.IsInRole("ADMINISTRADOR") || User.IsInRole("ADMINISTRADOR_CLIENTE");
+    var journeyTitle = isGlobalAdministrator ? "Jornada global MNSOFT" : isTenantAdministrator ? "Jornada da instituição" : "Minha jornada operacional";
+    var journeyDescription = isGlobalAdministrator
+        ? "Visão integral da plataforma. Selecione o tenant antes de executar ações com impacto."
+        : isTenantAdministrator
+            ? "Configure sua instituição e acompanhe a operação sem sair do contexto contratado."
+            : "Priorize pendências e use somente as ações liberadas para o seu perfil.";
+    var steps = isGlobalAdministrator
+        ? new[] { ("AdminSaas", "Central global"), ("Clientes", "Clientes"), ("FaturamentoSaas", "Cobranças"), ("Auditoria", "Auditoria") }
+        : isTenantAdministrator
+            ? new[] { ("Home", "Visão geral"), ("Usuarios", "Equipe"), ("Perfis", "Perfis"), ("Plantoes", "Operação") }
+            : new[] { ("MeuDia", "Meu dia"), ("Pendencias", "Pendências"), ("Plantoes", "Plantões"), ("Notificacoes", "Atualizações") };
+}
+<section class="pp-guided-journey" aria-label="@journeyTitle" data-guided-journey>
+    <div class="pp-guided-journey__intro">
+        <span class="pp-guided-journey__eyebrow">Experiência guiada</span>
+        <strong>@journeyTitle</strong>
+        <p>@journeyDescription</p>
+    </div>
+    <ol class="pp-guided-journey__steps">
+        @for (var index = 0; index < steps.Length; index++)
+        {
+            var step = steps[index];
+            var isCurrent = string.Equals(currentController, step.Item1, StringComparison.OrdinalIgnoreCase);
+            <li class="@(isCurrent ? "is-current" : string.Empty)" aria-current="@(isCurrent ? "step" : null)">
+                <a asp-controller="@step.Item1" asp-action="Index">
+                    <span aria-hidden="true">@(index + 1)</span>
+                    <strong>@step.Item2</strong>
+                </a>
+            </li>
+        }
+    </ol>
+</section>

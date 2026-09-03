@@ -27,8 +27,6 @@
         <a asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="20" /><span><strong>Configurações globais</strong><small>Governança da plataforma</small></span></a>
     </nav>
 
-    <details class="pp-screen-guide"><summary><span class="pp-screen-guide__icon" aria-hidden="true">?</span><span>Como usar esta tela</span></summary><div class="pp-screen-guide__content"><div><strong>Monitore a plataforma sem misturar contextos.</strong><p><span class="pp-screen-guide__label">Quem pode usar:</span> Super Administrador MNSOFT.</p></div><ol><li>Consulte os indicadores reais disponibilizados pelas áreas abaixo.</li><li>Selecione e confirme o cliente antes de abrir um registro.</li><li>Revise auditoria, alertas e cobrança após qualquer ação sensível.</li></ol></div></details>
-
     <section class="pp-section" aria-labelledby="saasModulesTitle">
         <div class="pp-section-heading"><div><h2 id="saasModulesTitle">Áreas de gestão</h2><p>Acesse dados reais e continue o fluxo necessário.</p></div></div>
         <div class="pp-clinical-grid">
@@ -41,6 +39,20 @@
                 </article>
             }
         </div>
+    </section>
+
+    <section class="pp-section" aria-labelledby="globalModuleMapTitle">
+        <div class="pp-section-heading"><div><span class="pp-section-kicker">Cobertura da plataforma</span><h2 id="globalModuleMapTitle">Mapa de módulos e registros globais</h2><p>Atalhos para as fontes reais. As permissões do servidor, o tenant selecionado e a auditoria continuam obrigatórios.</p></div><span class="pp-badge">Visão MNSOFT</span></div>
+        <nav class="pp-global-module-map" aria-label="Mapa global de módulos">
+            <a asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="20" /><span><strong>Médicos</strong><small>Credenciais e profissionais</small></span></a>
+            <a asp-controller="Hospitais" asp-action="Index"><app-icon name="Hospital" size="20" /><span><strong>Hospitais e unidades</strong><small>Estrutura por cliente</small></span></a>
+            <a asp-controller="Escalas" asp-action="Index"><app-icon name="Calendar" size="20" /><span><strong>Escalas</strong><small>Planejamento e cobertura</small></span></a>
+            <a asp-controller="Plantoes" asp-action="Index"><app-icon name="Coverage" size="20" /><span><strong>Plantões</strong><small>Registros operacionais</small></span></a>
+            <a asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="20" /><span><strong>Financeiro</strong><small>Pagamentos e repasses</small></span></a>
+            <a asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="20" /><span><strong>Relatórios</strong><small>Indicadores autorizados</small></span></a>
+            <a asp-controller="Observabilidade" asp-action="Index"><app-icon name="Dashboard" size="20" /><span><strong>Saúde da plataforma</strong><small>Serviços e integrações</small></span></a>
+            <a asp-controller="Onboarding" asp-action="Index"><app-icon name="Triage" size="20" /><span><strong>Implantação</strong><small>Primeiro acesso e ativação</small></span></a>
+        </nav>
     </section>
 
     <section class="pp-section" aria-labelledby="operationsTitle">

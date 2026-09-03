@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2137-global-ux.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2138-session-internal.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2139-premium-library.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2140-guided-journeys.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -48,6 +49,7 @@
                     <div class="pp-content-container">
                         <partial name="_ToastMessages" />
                         @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
+                        <partial name="_GuidedJourney" />
                         <partial name="_ScreenGuide" />
                         @RenderBody()
                     </div>

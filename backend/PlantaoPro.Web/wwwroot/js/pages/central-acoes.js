@@ -18,7 +18,10 @@ const submitSnooze = async button => {
     snoozeInput?.focus();
     return;
   }
+  const idleLabel = button.innerHTML;
   button.disabled = true;
+  button.setAttribute('aria-busy', 'true');
+  button.textContent = 'Processando…';
   const body = new FormData(); body.append('key', button.dataset.snooze); body.append('snoozedUntil', until.toISOString());
   if (token) body.append('__RequestVerificationToken', token);
   try {
@@ -28,6 +31,7 @@ const submitSnooze = async button => {
     button.closest('[data-item-key]')?.remove();
     notify(payload.message || 'Ação adiada.');
   } catch (error) { notify(error.message, 'error'); button.disabled = false; }
+  finally { button.removeAttribute('aria-busy'); if (button.isConnected) button.innerHTML = idleLabel; }
 };
 
 root?.addEventListener('click', event => {

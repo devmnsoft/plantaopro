@@ -1,19 +1,23 @@
 @{ ViewData["Title"] = "Central de Notificações"; ViewData["Subtitle"] = "Prioridades claras para uma operação tranquila."; }
 <section class="notification-center" data-notification-center data-api="/bff/operacao/notificacoes">
   <header class="notification-hero">
-    <div><span class="eyebrow">Pulso operacional</span><h2>O que precisa da sua atenção</h2><p>Alertas reais, organizados por impacto e sempre isolados no seu contexto.</p></div>
+    <div><span class="eyebrow">Pulso operacional</span><h1>Central de Notificações</h1><p>Atualizações reais, organizadas por impacto e sempre isoladas no seu contexto de acesso.</p></div>
     <div class="notification-hero__actions"><a class="button button-subtle" asp-action="Preferencias">Preferências</a><button class="button button-primary" type="button" data-read-all>Marcar todas como lidas</button></div>
   </header>
   <form class="notification-filters" data-filters>
-    <label>Tipo<select name="tipo"><option value="">Todos</option><option>PLANTAO_AGUARDANDO_CONFIRMACAO</option><option>RISCO_COBERTURA</option><option>CHECKIN_PENDENTE</option><option>PAGAMENTO_PENDENTE_APROVACAO</option></select></label>
+    <label>Tipo<select name="tipo"><option value="">Todos os tipos</option><option value="LOGIN">Login e segurança</option><option value="SESSAO">Sessão</option><option value="PLANTAO">Plantão</option><option value="ESCALA">Escala</option><option value="FINANCEIRO">Financeiro</option><option value="CLIENTE">Cliente</option><option value="USUARIO">Usuário</option><option value="PERMISSAO">Permissão</option><option value="COBRANCA">Cobrança</option><option value="AUDITORIA">Auditoria</option><option value="SISTEMA">Sistema</option></select></label>
     <label>Módulo<select name="modulo"><option value="">Todos</option><option>OPERACAO</option><option>ESCALA</option><option>CLINICA</option><option>FINANCEIRO</option><option>SISTEMA</option></select></label>
     <label>Prioridade<select name="prioridade"><option value="">Todas</option><option>CRITICA</option><option>ALTA</option><option>MEDIA</option><option>BAIXA</option></select></label>
     <label>Status<select name="status"><option value="">Todos</option><option value="NAO_LIDA">Não lida</option><option value="LIDA">Lida</option><option value="ARQUIVADA">Arquivada</option><option value="RESOLVIDA">Resolvida</option></select></label>
     <label>De<input type="date" name="de" /></label><label>Até<input type="date" name="ate" /></label>
-    <button class="button button-primary" type="submit">Aplicar filtros</button>
+    <div class="notification-filter-actions"><button class="button button-primary" type="submit">Aplicar filtros</button><button class="button button-subtle" type="reset" data-reset-filters>Limpar</button></div>
   </form>
   <div class="notification-state" data-state aria-live="polite"><span class="pp-skeleton"></span><strong>Carregando notificações</strong><small>Organizando as prioridades do seu turno…</small></div>
   <div class="notification-list" data-list hidden></div>
+  <details class="screen-guide-card">
+    <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
+    <div><p><strong>Leia por prioridade.</strong> Itens críticos e não lidos aparecem em destaque.</p><p><strong>Encontre rapidamente.</strong> Combine tipo, módulo, status e período; use “Abrir contexto” para ir ao registro relacionado.</p><p><strong>Mantenha o foco.</strong> Marcar como lida confirma ciência; resolver e arquivar alteram o ciclo da notificação.</p><p><strong>Privacidade:</strong> você vê apenas notificações liberadas para seu perfil e contexto. A visão global é exclusiva do Super Admin MNSOFT.</p></div>
+  </details>
 </section>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/v2070-notifications.css" asp-append-version="true" /> }
 @section Scripts { <script type="module" src="~/js/pages/notification-center.js" asp-append-version="true"></script> }

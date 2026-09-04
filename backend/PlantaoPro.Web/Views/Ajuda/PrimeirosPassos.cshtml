@@ -1,11 +1,14 @@
 @model PlantaoPro.Web.Models.AjudaInterativaChecklistViewModel
-@{
-    ViewData["Title"] = "Primeiros Passos";
-}
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Primeiros passos", "Roteiro rápido para começar a usar o PlantãoPro com segurança.", "bi-rocket-takeoff")' />
-<div class="row g-3">
-@foreach (var artigo in Model.Artigos)
-{
-    <div class="col-md-4"><div class="card h-100"><div class="card-body"><span class="badge bg-light text-dark border mb-2">@artigo.Perfil</span><h2 class="h5">@artigo.Titulo</h2><p>@artigo.Resumo</p><a class="btn btn-sm btn-outline-primary" asp-action="Artigo" asp-route-id="@artigo.Id">Começar</a></div></div></div>
-}
-</div>
+@{ ViewData["Title"] = "Primeiros Passos"; }
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Primeiros passos", "Roteiro inicial por perfil para usar o PlantãoPro com segurança.", "bi-rocket-takeoff")' />
+<details class="pp-screen-guide mb-3"><summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Orientação inicial</span></summary><div class="pp-screen-guide__body"><p>Siga as rotinas exibidas para seu perfil. Os links levam às telas reais e continuam sujeitos a tenant, módulo e permissão.</p><ol><li>Leia o objetivo da rotina.</li><li>Abra o manual curto.</li><li>Execute com dados oficiais e revise o resultado.</li></ol><div class="pp-screen-guide__note">Se uma rotina não estiver disponível ou o contexto estiver incorreto, procure o administrador da sua instituição.</div></div></details>
+<section class="pp-role-guide" aria-labelledby="roleGuideTitle"><div class="pp-section-heading"><div><h2 id="roleGuideTitle">Sua jornada: @Model.Perfil</h2><p>Prioridades recomendadas para começar sem perder contexto.</p></div></div>
+<div class="pp-role-guide__tracks">
+@if (Model.Perfil is "ADMINISTRADOR_GLOBAL" or "SUPER_ADMIN") { <article><i class="bi bi-globe2"></i><h3>Gestão global MNSOFT</h3><p>Gerencie clientes, alterne contexto de forma explícita, bloqueie ou desbloqueie conforme contrato, gere cobranças, audite acessos e revise módulos. O banner de acesso assistido deve permanecer visível.</p></article> }
+else if (Model.Perfil.Contains("ADMIN", StringComparison.OrdinalIgnoreCase)) { <article><i class="bi bi-building-gear"></i><h3>Administração do cliente</h3><p>Configure a equipe, crie perfis, libere somente módulos contratados, acompanhe a operação e revise pendências do seu tenant.</p></article> }
+else if (Model.Perfil is "COORDENACAO" or "GESTOR" or "GESTOR_OPERACIONAL") { <article><i class="bi bi-calendar2-check"></i><h3>Gestão operacional</h3><p>Crie escalas, acompanhe plantões, resolva pendências e confirme coberturas antes da publicação.</p></article> }
+else if (Model.Perfil == "FINANCEIRO") { <article><i class="bi bi-cash-coin"></i><h3>Financeiro</h3><p>Acompanhe pagamentos, revise pendências e consulte relatórios antes de confirmar qualquer movimentação.</p></article> }
+else if (Model.Perfil is "MEDICO" or "PROFISSIONAL") { <article><i class="bi bi-heart-pulse"></i><h3>Médico ou profissional</h3><p>Veja próximos plantões, confirme presença, acompanhe pagamentos e mantenha sua disponibilidade atualizada.</p></article> }
+else { <article><i class="bi bi-person-check"></i><h3>Uso orientado</h3><p>Comece pelas rotinas abaixo. Você verá apenas conteúdos comuns e os módulos liberados para seu perfil.</p></article> }
+</div></section>
+<div class="pp-help-grid mt-3">@foreach (var artigo in Model.Artigos) { <a class="pp-help-card" asp-action="Artigo" asp-route-id="@artigo.Id"><i class="bi bi-journal-check" aria-hidden="true"></i><span><strong>@artigo.Titulo</strong><small>@artigo.Resumo</small></span><i class="bi bi-arrow-right" aria-hidden="true"></i></a> }</div>

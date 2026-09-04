@@ -8,7 +8,7 @@
 
   function wireNavigation(){
     const body=document.body;
-    const shell=document.querySelector('.app-shell');
+    const shell=document.querySelector('.pp-app-shell, .app-shell');
     const toggles=[document.getElementById('sidebarToggle'),document.getElementById('mobileMenuToggle')].filter(Boolean);
     const overlay=document.getElementById('sidebarOverlay');
     const collapse=document.getElementById('sidebarCollapse');
@@ -62,6 +62,7 @@
     const statusEl=modal.querySelector('[data-pp-confirm-status]');
     let pending=null;
     let returnFocus=null;
+    const focusableSelector='button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
     const closeModal=()=>{
       root.classList.remove('is-active');
@@ -90,6 +91,7 @@
       root.classList.add('is-active');
       document.body.classList.add('pp-modal-open');
       modal.focus();
+      window.requestAnimationFrame(()=>modal.querySelector(focusableSelector)?.focus());
     };
 
     document.querySelectorAll('[data-confirm="true"], [data-confirm-url], [data-confirm-action]').forEach(el=>{
@@ -104,7 +106,16 @@
       });
     });
     root.querySelectorAll('[data-bs-dismiss="modal"], [data-pp-confirm-cancel]').forEach(el=>el.addEventListener('click',closeModal));
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&root.classList.contains('is-active')){closeModal();}});
+    document.addEventListener('keydown',event=>{
+      if(!root.classList.contains('is-active')){return;}
+      if(event.key==='Escape'){closeModal();return;}
+      if(event.key!=='Tab'){return;}
+      const focusable=Array.from(modal.querySelectorAll(focusableSelector)).filter(el=>!el.hidden&&el.offsetParent!==null);
+      if(!focusable.length){event.preventDefault();modal.focus();return;}
+      const first=focusable[0];const last=focusable[focusable.length-1];
+      if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+    });
     actionButton?.addEventListener('click',()=>{
       if(!pending){return;}
       const approved=pending;

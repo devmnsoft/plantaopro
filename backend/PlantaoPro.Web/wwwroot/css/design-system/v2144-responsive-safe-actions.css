@@ -1,0 +1,61 @@
+/* PlantãoPro v2.14.4 — responsividade real, formulários e ações seguras. */
+html, body { max-width: 100%; overflow-x: clip; }
+img, svg, video, canvas { max-width: 100%; }
+.pp-app-shell, .pp-main-shell, .pp-content, .pp-content-container,
+.pp-page-grid, .pp-form, .card, .row, .row > *, main, section { min-width: 0; }
+.pp-content { width: 100%; max-width: none; padding: clamp(.9rem, 1.8vw, 1.75rem); }
+.pp-content-container { width: min(100%, 100rem); }
+.pp-app-shell { grid-template-columns: clamp(14.5rem, 18vw, 17.5rem) minmax(0, 1fr); }
+.pp-app-shell.sidebar-collapsed { grid-template-columns: var(--pp-sidebar-collapsed-width) minmax(0, 1fr); }
+.pp-sidebar { width: clamp(14.5rem, 18vw, 17.5rem); }
+.pp-topbar { flex-wrap: nowrap; gap: clamp(.5rem, 1.2vw, 1.25rem); padding-inline: clamp(.9rem, 1.8vw, 1.75rem); }
+.pp-topbar__identity { flex: 1 1 auto; overflow: hidden; }
+.pp-topbar__actions { flex: 0 1 auto; flex-wrap: wrap; justify-content: flex-end; }
+.pp-topbar__title, .pp-topbar__subtitle, td, th, .card, .alert { overflow-wrap: anywhere; }
+
+.table-responsive, .pp-data-table, [data-table-responsive] { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-gutter: stable; -webkit-overflow-scrolling: touch; }
+.table-responsive > table, .pp-data-table table { width: 100%; min-width: 42rem; }
+.table-responsive:focus-visible, .pp-data-table:focus-within { outline: .2rem solid color-mix(in srgb, #087f8c 70%, white); outline-offset: .1rem; }
+.pp-page-hero, .pp-section-heading, .action-bar, .filter-bar, .pp-card-actions, .pp-form-actions { flex-wrap: wrap; }
+.pp-form { width: min(100%, 70rem); margin-inline: auto; }
+.pp-form-section, .pp-form-card { padding: clamp(1rem, 2vw, 1.5rem); }
+.pp-form :is(input, select, textarea) { max-width: 100%; }
+.form-label, .pp-form-label { display: inline-flex; align-items: baseline; gap: .25rem; color: #243b4a; font-weight: 700; }
+.form-help { display: block; margin-top: .35rem; color: #5d7180; font-size: .8rem; line-height: 1.4; }
+.form-required::after { margin-left: .15rem; color: #a51d2d; content: "*"; }
+.validation-summary-errors, .pp-error-panel:not(:empty) { scroll-margin-top: 6rem; }
+.pp-form-sticky-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.pp-form-sticky-footer > :last-child { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+.pp-overlay-root { padding: clamp(.75rem, 3vw, 2rem); }
+.pp-confirm-modal { width: min(34rem, 100%); max-height: calc(100dvh - 2rem); margin: auto; overflow: auto; border-radius: 1rem; box-shadow: 0 1.75rem 5rem rgb(8 30 48 / 28%); }
+.pp-confirm-modal .modal-header, .pp-confirm-modal .modal-footer { gap: .75rem; }
+.pp-confirm-modal .modal-footer { flex-wrap: wrap; }
+.pp-confirm-modal .modal-footer .btn { min-height: 2.75rem; }
+.plantaopro-toast-host, .toast-region { max-width: calc(100vw - 1.5rem); }
+body.pp-modal-open { overflow: hidden; }
+
+@media (max-width: 74.99rem) {
+  .pp-app-shell { grid-template-columns: 1fr; }
+  .pp-main-shell { grid-column: 1; }
+  .pp-sidebar { width: min(19rem, calc(100vw - 2.5rem)); }
+  .pp-topbar__actions > :is(.tenant-context-badge, .plan-usage-mini-card, .pp-live-context) { display: none !important; }
+}
+@media (max-width: 47.99rem) {
+  .pp-content { padding: .85rem .75rem 6rem; }
+  .pp-topbar { min-height: 4rem; padding: .6rem .75rem; }
+  .pp-topbar__actions { flex-wrap: nowrap; }
+  .pp-topbar__actions > :not(.pp-user-menu):not(.notification-menu):not(.btn-icon) { display: none !important; }
+  .pp-page-hero, .pp-section-heading { align-items: stretch; }
+  .pp-page-hero .btn, .pp-form-sticky-footer .btn { flex: 1 1 auto; }
+  .table-responsive > table, .pp-data-table table { min-width: 36rem; }
+  .pp-confirm-modal .modal-footer { display: grid; grid-template-columns: 1fr; }
+  .pp-confirm-modal .modal-footer .btn { width: 100%; }
+  .pp-auth-body .pp-auth-shell { width: 100%; }
+  .pp-auth-body .pp-auth-form-panel { padding-inline: clamp(1rem, 5vw, 1.5rem); }
+}
+@media (max-width: 23rem) {
+  .pp-topbar__actions { gap: .25rem; }
+  .pp-topbar .btn-icon { width: 2.5rem; padding-inline: .45rem; }
+  .pp-form-sticky-footer > :last-child, .pp-form-sticky-footer .btn { width: 100%; }
+}

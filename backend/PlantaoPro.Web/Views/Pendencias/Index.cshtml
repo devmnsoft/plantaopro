@@ -5,9 +5,21 @@
     var totalPages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
     string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.UnitId, page = 1, q.PageSize })!;
     string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? Url.Action("Index", "Pendencias")!;
+    var isGlobal = User.IsInRole("SuperAdmin") || User.IsInRole("SuperAdministrador") || User.IsInRole("AdminMNSOFT");
 }
 <div class="pp-page action-center" data-action-center>
     @Html.AntiForgeryToken()
+    <header class="pending-hero">
+        <div><span class="eyebrow">Prioridades operacionais</span><h1>Central de Pendências</h1><p>Veja o que exige ação, entenda o impacto e siga diretamente para a origem. Os resultados respeitam seu perfil e o contexto da instituição.</p></div>
+        <span class="context-pill @(isGlobal ? "is-global" : "")"><i class="bi @(isGlobal ? "bi-globe2" : "bi-building")" aria-hidden="true"></i>@(isGlobal ? "Visão global MNSOFT" : "Somente minha instituição")</span>
+    </header>
+    <section class="pending-summary" aria-label="Resumo das pendências reais">
+        <article><span>Em aberto</span><strong>@Model.Summary.Active</strong><small>ações ativas</small></article>
+        <article class="is-critical"><span>Críticas</span><strong>@Model.Summary.Critical</strong><small>resolver primeiro</small></article>
+        <article class="is-warning"><span>Vencidas</span><strong>@Model.Summary.Overdue</strong><small>fora do prazo</small></article>
+        <article><span>Para hoje</span><strong>@Model.Summary.Today</strong><small>prioridade do dia</small></article>
+        <article class="is-success"><span>Resolvidas hoje</span><strong>@Model.Summary.CompletedToday</strong><small>progresso da equipe</small></article>
+    </section>
     <nav class="action-tabs" aria-label="Listas da Central de Ações">
         <a class="@(q.Tab == "para-mim" ? "is-active" : null)" href="@TabUrl("para-mim")">Para mim</a>
         @if (Model.CanViewTeam) { <a class="@(q.Tab == "equipe" ? "is-active" : null)" href="@TabUrl("equipe")">Minha equipe</a> }
@@ -21,14 +33,14 @@
         <input type="hidden" name="tab" value="@q.Tab" />
         <label>Prioridade<select name="priority"><option value="">Todas</option>@foreach(var value in new[]{"CRITICA","ALTA","NORMAL","BAIXA"}){<option selected="@(q.Priority == value)">@value</option>}</select></label>
         <label>Módulo<input name="module" value="@q.Module" placeholder="Todos" /></label>
-        <label>Status<input name="status" value="@q.Status" placeholder="Ativos" /></label>
+        <label>Status<select name="status"><option value="">Ativos</option>@foreach(var value in new[]{"ATIVA","PENDENTE","VENCIDA","BLOQUEADA","RESOLVIDA"}){<option selected="@(q.Status == value)">@value</option>}</select></label>
         <label>Prazo<select name="due"><option value="">Qualquer prazo</option><option value="hoje" selected="@(q.Due == "hoje")">Hoje</option><option value="atrasado" selected="@(q.Due == "atrasado")">Atrasado</option></select></label>
         <button class="btn btn-primary" type="submit">Aplicar filtros</button>
         <a class="btn btn-outline-secondary" href="@Url.Action("Index", new { tab = q.Tab })">Limpar</a>
     </form>
 
     @if (!string.IsNullOrWhiteSpace(Model.Error))
-    { <section class="state-panel" role="alert"><i class="bi bi-cloud-slash"></i><h2>Central indisponível</h2><p>@Model.Error</p><a class="btn btn-primary" href="@Context.Request.Path@Context.Request.QueryString">Tentar novamente</a></section> }
+    { <section class="state-panel" role="alert" aria-live="assertive"><i class="bi bi-cloud-slash"></i><h2>Não foi possível carregar as pendências</h2><p>@Model.Error</p><p class="state-panel__hint">Nenhuma ação foi executada. Verifique sua conexão e tente novamente.</p><a class="btn btn-primary" href="@Context.Request.Path@Context.Request.QueryString">Tentar novamente</a></section> }
     else if (Model.Items.Count == 0)
     { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Nenhuma ação nesta visão", "Não há itens reais que correspondam aos filtros selecionados.")' /> }
     else
@@ -48,15 +60,19 @@
         </section>
         <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @totalPages</span>@if(Model.Page < totalPages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
     }
+    <details class="screen-guide-card">
+        <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
+        <div><p><strong>1. Priorize.</strong> Comece pelos itens críticos e vencidos.</p><p><strong>2. Refine.</strong> Use status, prazo e módulo sem sair do contexto autorizado.</p><p><strong>3. Resolva na origem.</strong> O botão principal leva ao registro real; adiar apenas reorganiza sua lista.</p><p><strong>Segurança:</strong> a visão global aparece somente para a equipe MNSOFT autorizada. Demais perfis recebem apenas dados permitidos da própria instituição.</p></div>
+    </details>
 </div>
 <dialog class="pp-snooze-dialog" data-snooze-dialog aria-labelledby="snoozeTitle">
     <form method="dialog" data-snooze-form>
-        <div class="pp-snooze-dialog__header"><div><span class="pp-section-kicker">Organizar prioridade</span><h2 id="snoozeTitle">Adiar ação</h2></div><button class="btn btn-light btn-icon" value="cancel" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
+        <div class="pp-snooze-dialog__header"><div><span class="pp-section-kicker">Organizar prioridade</span><h2 id="snoozeTitle">Adiar ação</h2></div><button class="btn btn-light btn-icon" type="submit" value="cancel" aria-label="Fechar"><i class="bi bi-x-lg" aria-hidden="true"></i></button></div>
         <p>Escolha quando esta ação deve voltar à sua lista. O adiamento não executa nem cancela a operação relacionada.</p>
         <label class="form-label" for="snoozedUntil">Nova data e hora</label>
         <input class="form-control" id="snoozedUntil" name="snoozedUntil" type="datetime-local" required />
         <span class="pp-form-error" data-snooze-error role="alert"></span>
-        <div class="pp-form-actions"><button class="btn btn-outline-secondary" value="cancel">Cancelar</button><button class="btn btn-primary" value="confirm" data-snooze-confirm>Confirmar adiamento</button></div>
+        <div class="pp-form-actions"><button class="btn btn-outline-secondary" type="submit" value="cancel">Cancelar</button><button class="btn btn-primary" type="submit" value="confirm" data-snooze-confirm>Confirmar adiamento</button></div>
     </form>
 </dialog>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }

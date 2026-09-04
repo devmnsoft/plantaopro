@@ -37,7 +37,7 @@
             <p>Use seu identificador cadastrado. Validaremos sua conta, perfil e instituição antes de abrir a área autorizada.</p>
             @if (!string.IsNullOrWhiteSpace(sessionMessage))
             {
-                <div class="pp-auth-context-message" role="status" aria-live="polite"><app-icon name="Info" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
+                <div class="pp-auth-context-message" role="status" aria-live="polite"><app-icon name="Warning" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
             }
             <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-submit-loading="manual" data-focus-invalid>
                 @Html.AntiForgeryToken()
@@ -86,7 +86,7 @@
                 <p>Preencha os dois campos obrigatórios e selecione <strong>Entrar</strong>. O sistema abrirá somente os módulos do seu perfil e da sua instituição. Em caso de bloqueio ou contexto incorreto, procure a administração; nunca envie sua senha ao suporte.</p>
             </details>
             <div class="auth-security"><app-icon name="Lock" size="18" /><span>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</span></div>
-            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.5</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
+            <footer class="pp-login-footer"><span>MNSOFT · PlantãoPro v2.14.6</span><a asp-controller="Lgpd" asp-action="Politica">Privacidade</a></footer>
           </div>
         </section>
     </div>

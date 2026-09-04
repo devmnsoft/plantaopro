@@ -1,63 +1,33 @@
 @model PlantaoPro.Web.Models.AjudaInterativaIndexViewModel
 @{
-    ViewData["Title"] = "Centro de Ajuda";
+    ViewData["Title"] = "Central de Ajuda";
+    var global = Model.Perfil is "ADMINISTRADOR_GLOBAL" or "SUPER_ADMIN";
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Centro de Ajuda", "Manual interativo por perfil, com busca, checklists e links diretos para as telas.", "bi-life-preserver")' />
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Central de Ajuda", "Orientação contextual, primeiros passos e manuais curtos para operar com segurança.", "bi-life-preserver")' />
 
-<div class="alert alert-info d-flex align-items-start gap-2">
-    <i class="bi bi-info-circle fs-5"></i>
-    <div>O manual mostra conteúdos do perfil <strong>@Model.Perfil</strong>. Use a busca para localizar rotinas de SaaS, operação, financeiro, médico, hospital e LGPD.</div>
-</div>
+<details class="pp-screen-guide mb-3" open>
+    <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Guia do perfil</span></summary>
+    <div class="pp-screen-guide__body"><p>Pesquise uma rotina ou abra um atalho. Os conteúdos seguem seu perfil e os módulos liberados pela instituição.</p><ol><li>Comece pelos primeiros passos.</li><li>Consulte o manual antes de uma ação crítica.</li><li>Procure o administrador se uma função necessária não aparecer.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-shield-lock" aria-hidden="true"></i> A ajuda não amplia permissões nem permite consultar outro tenant.</div></div>
+</details>
 
-<form asp-action="Index" method="get" class="card card-body mb-3">
-    <div class="row g-2">
-        <div class="col-md-7"><input name="busca" value="@Model.Busca" class="form-control" placeholder="Buscar tema, tela ou passo" /></div>
-        <div class="col-md-3">
-            <select name="perfil" class="form-select">
-                @foreach (var perfil in new List<string> { "TODOS", "ADMINISTRADOR_GLOBAL", "COORDENACAO", "MEDICO", "FINANCEIRO", "HOSPITAL" })
-                {
-                    <option value="@perfil">@perfil</option>
-                }
-            </select>
-        </div>
-        <div class="col-md-2"><button class="btn btn-primary w-100" type="submit"><i class="bi bi-search"></i> Buscar</button></div>
-    </div>
+<section class="pp-help-welcome" aria-labelledby="helpWelcomeTitle">
+    <div><span class="pp-eyebrow">PlantãoPro por MNSOFT</span><h2 id="helpWelcomeTitle">Olá, perfil @Model.Perfil</h2><p>@(global ? "Você está na ajuda global MNSOFT. Confirme o contexto do cliente antes de prestar acesso assistido." : "Este conteúdo considera sua instituição e as rotinas disponíveis para o seu perfil.")</p></div>
+    <div class="pp-help-welcome__actions"><a class="btn btn-primary" asp-action="PrimeirosPassos"><i class="bi bi-rocket-takeoff" aria-hidden="true"></i> Primeiros passos</a><a class="btn btn-outline-primary" asp-action="Checklist" asp-route-perfil="@Model.Perfil">Meu checklist</a><button class="btn btn-outline-secondary" type="button" data-tour-start="help-center"><i class="bi bi-signpost-split" aria-hidden="true"></i> Fazer tour</button></div>
+</section>
+
+<form asp-action="Index" method="get" class="pp-help-search" role="search" data-tour-step="Busca rápida|Digite uma tarefa, tela ou dúvida e receba apenas resultados permitidos para o seu perfil.">
+    <label for="helpSearch">Como podemos ajudar?</label><div class="input-group"><input id="helpSearch" name="busca" value="@Model.Busca" class="form-control" placeholder="Ex.: criar escala, pagamento ou permissões" /><button class="btn btn-primary" type="submit"><i class="bi bi-search" aria-hidden="true"></i> Buscar</button></div><small>Não informe CPF, dados clínicos, senhas ou outras informações pessoais na busca.</small>
 </form>
 
-<div class="row g-3 mb-4">
-@foreach (var topico in Model.Topicos)
-{
-    <div class="col-lg-4 col-md-6">
-        <a asp-action="Modulo" asp-route-id="@topico.Slug" class="card text-decoration-none h-100">
-            <div class="card-body">
-                <i class="bi @topico.Icone fs-2 text-primary"></i>
-                <h2 class="h5 mt-2">@topico.Titulo</h2>
-                <p class="text-muted mb-0">@topico.Descricao</p>
-            </div>
-        </a>
-    </div>
-}
-</div>
+<nav class="pp-help-shortcuts" aria-label="Atalhos da Central de Ajuda" data-tour-step="Atalhos principais|Vá direto à rotina desejada sem precisar informar códigos ou identificadores.">
+    <a asp-controller="Clientes" asp-action="Index"><i class="bi bi-buildings"></i><span>Clientes</span></a><a asp-controller="Usuarios" asp-action="Index"><i class="bi bi-people"></i><span>Usuários e perfis</span></a><a asp-controller="Escalas" asp-action="Index"><i class="bi bi-calendar2-week"></i><span>Escalas</span></a><a asp-controller="Plantoes" asp-action="Index"><i class="bi bi-clock-history"></i><span>Plantões</span></a><a asp-controller="Medicos" asp-action="Index"><i class="bi bi-heart-pulse"></i><span>Profissionais</span></a><a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-coin"></i><span>Financeiro</span></a><a asp-controller="Relatorios" asp-action="Index"><i class="bi bi-bar-chart"></i><span>Relatórios</span></a><a asp-action="PerguntasFrequentes"><i class="bi bi-question-circle"></i><span>Dúvidas frequentes</span></a>
+</nav>
 
-<div class="d-flex justify-content-between align-items-center mb-2">
-    <h2 class="h5 mb-0">Artigos recomendados</h2>
-    <div class="d-flex gap-2"><a class="btn btn-sm btn-outline-primary" asp-action="PrimeirosPassos">Primeiros passos</a><a class="btn btn-sm btn-outline-secondary" asp-action="Checklist" asp-route-perfil="@Model.Perfil">Checklist</a></div>
-</div>
-@if (Model.Artigos.Any())
-{
-    <div class="list-group">
-    @foreach (var artigo in Model.Artigos)
-    {
-        <a class="list-group-item list-group-item-action" asp-action="Artigo" asp-route-id="@artigo.Id">
-            <div class="d-flex justify-content-between gap-3">
-                <div><strong>@artigo.Titulo</strong><div class="text-muted small">@artigo.Resumo</div></div>
-                <span class="badge bg-light text-dark border align-self-start">@artigo.Perfil</span>
-            </div>
-        </a>
-    }
-    </div>
-}
-else
-{
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-search", "Nenhum artigo encontrado", "Tente outro termo ou selecione o perfil TODOS.")' />
-}
+<section class="mt-4" aria-labelledby="helpTopicsTitle" data-tour-step="Manuais curtos|Cada tema reúne uma explicação objetiva e um caminho direto para executar a tarefa."><div class="pp-section-heading"><div><h2 id="helpTopicsTitle">Manuais por rotina</h2><p>Visão geral, configuração e operação diária.</p></div><span class="pp-badge">@Model.Topicos.Count temas</span></div><div class="pp-help-grid">
+@foreach (var topico in Model.Topicos) { <a asp-action="Modulo" asp-route-id="@topico.Slug" class="pp-help-card"><i class="bi @topico.Icone" aria-hidden="true"></i><span><strong>@topico.Titulo</strong><small>@topico.Descricao</small></span><i class="bi bi-arrow-right" aria-hidden="true"></i></a> }
+</div></section>
+
+<section class="mt-4" aria-labelledby="recommendedTitle"><div class="pp-section-heading"><div><h2 id="recommendedTitle">Recomendados para você</h2><p>Ações iniciais de acordo com seu perfil.</p></div></div>
+@if (Model.Artigos.Any()) { <div class="pp-help-articles">@foreach (var artigo in Model.Artigos) { <a asp-action="Artigo" asp-route-id="@artigo.Id"><span class="pp-help-articles__number">@artigo.Ordem</span><span><strong>@artigo.Titulo</strong><small>@artigo.Resumo</small></span><span class="pp-badge">@artigo.Perfil</span></a> }</div> }
+else { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-search", "Nenhum artigo encontrado", "Tente outro termo. A Central exibe somente conteúdos disponíveis para seu perfil.")' /> }
+</section>

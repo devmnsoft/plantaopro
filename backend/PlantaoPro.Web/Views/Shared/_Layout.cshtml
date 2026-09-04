@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2142-guided-premium.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2143-qa-visual.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2144-responsive-safe-actions.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2145-onboarding-help.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
@@ -94,6 +95,7 @@
     @if (isAuthenticated) { <script type="module" src="~/js/core/app-shell.js" asp-append-version="true"></script> }
     @if (isAuthenticated) { <script src="~/js/session-health.js" asp-append-version="true"></script> }
     <script src="~/js/v2139-premium-library.js" asp-append-version="true"></script>
+    <script src="~/js/v2145-guided-tour.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

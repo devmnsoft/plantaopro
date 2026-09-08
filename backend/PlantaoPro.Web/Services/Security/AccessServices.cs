@@ -108,6 +108,19 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = Normalize(module);
         var actionCode = Normalize(action);
 
+        // Sessões v2.14.9 carregam o catálogo efetivo calculado pela API. Isso torna
+        // menu e autorização coerentes com perfil, overrides e módulos contratados.
+        if (currentUser.User.HasClaim("access_catalog_version", "v2149"))
+        {
+            if (CommonModules.Contains(moduleCode)) return true;
+            var isCoreAdministration = TenantAdministrationModules.Contains(moduleCode) && currentUser.IsTenantAdmin();
+            var moduleEnabled = isCoreAdministration || HasAccessClaim("module", moduleCode);
+            if (!moduleEnabled) return false;
+
+            var requested = $"{moduleCode}.{actionCode}";
+            return isCoreAdministration || HasAccessClaim("permission", requested) || HasAccessClaim("permission", $"{moduleCode}.*");
+        }
+
         if (moduleCode == "MEU_DIA") return true;
 
         if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
@@ -197,7 +210,22 @@ public sealed class PermissionService : IPermissionService
     public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor() || currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Recepcao) || currentUser.HasRole(RolesConstants.AdministradorClinica);
     public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.HasRole(RolesConstants.FinanceiroClinica) || currentUser.HasRole(RolesConstants.FaturamentoConvenio) || currentUser.HasRole(RolesConstants.AdministradorClinica);
 
+    private bool HasAccessClaim(string claimType, string expected) => currentUser.User.FindAll(claimType)
+        .Select(claim => NormalizeAccessCode(claim.Value))
+        .Any(value => value == "*" || string.Equals(value, NormalizeAccessCode(expected), StringComparison.OrdinalIgnoreCase));
+
+    private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO"
+    };
+
+    private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "USUARIOS", "PERFIS", "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL"
+    };
+
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+    private static string NormalizeAccessCode(string? value) => Normalize(value).Replace(':', '.');
 }
 
 public sealed class ModuleAccessService : IModuleAccessService
@@ -213,8 +241,27 @@ public sealed class ModuleAccessService : IModuleAccessService
 
     public bool CanAccessModule(string moduleCode) => IsModuleEnabled(moduleCode) && permissions.HasPermission(moduleCode, "VER");
     public bool CanAccessFeature(string featureCode) => IsFeatureEnabled(featureCode) && permissions.HasPermission(featureCode, "USAR");
-    public bool IsModuleEnabled(string moduleCode) => currentUser.IsGlobalAdmin() || !string.Equals((moduleCode ?? string.Empty).Trim(), "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
-    public bool IsFeatureEnabled(string featureCode) => currentUser.IsGlobalAdmin() || !string.Equals((featureCode ?? string.Empty).Trim(), "WHITE_LABEL_AVANCADO", StringComparison.OrdinalIgnoreCase);
+    public bool IsModuleEnabled(string moduleCode)
+    {
+        if (currentUser.IsGlobalAdmin()) return true;
+        var normalized = Normalize(moduleCode);
+        if (CoreModules.Contains(normalized)) return true;
+        if (!currentUser.User.HasClaim("access_catalog_version", "v2149"))
+            return !string.Equals(normalized, "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
+        return currentUser.User.FindAll("module")
+            .Select(claim => Normalize(claim.Value))
+            .Any(value => value == "*" || string.Equals(value, normalized, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public bool IsFeatureEnabled(string featureCode) => IsModuleEnabled(featureCode);
+
+    private static readonly HashSet<string> CoreModules = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL"
+    };
+
+    private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
 }
 
 public sealed class TenantAccessService : ITenantAccessService

@@ -53,13 +53,14 @@ public sealed class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
     {
-        var normalizedEmail = (model.Email ?? string.Empty).Trim();
+        var loginIdentifier = (model.Email ?? string.Empty).Trim();
+        var identifierKind = ClassifyIdentifier(loginIdentifier);
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-        _logger.LogInformation("Login POST iniciado. Email:{Email} IP:{Ip} ReturnUrl:{ReturnUrl}", normalizedEmail, ip, returnUrl);
+        _logger.LogInformation("Login POST iniciado. TipoIdentificador:{TipoIdentificador} IP:{Ip} ReturnUrl:{ReturnUrl}", identifierKind, ip, returnUrl);
 
         if (!ModelState.IsValid)
         {
-            _logger.LogInformation("Login POST inválido por ModelState. Email:{Email}", normalizedEmail);
+            _logger.LogInformation("Login POST inválido por ModelState. TipoIdentificador:{TipoIdentificador}", identifierKind);
             return View(model);
         }
 
@@ -71,7 +72,7 @@ public sealed class AccountController : Controller
             apiBaseUrl = client.BaseAddress;
             _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", apiBaseUrl);
 
-            var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(normalizedEmail, model.Senha ?? string.Empty));
+            var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(loginIdentifier, model.Senha ?? string.Empty));
             var body = await response.Content.ReadAsStringAsync();
             _logger.LogInformation("Resposta da API de login. Status:{StatusCode}", (int)response.StatusCode);
 
@@ -83,13 +84,13 @@ public sealed class AccountController : Controller
                 {
                     HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
                     (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
-                    HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "E-mail ou senha inválidos.",
+                    HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "Identificador ou senha inválidos.",
                     _ => "Não foi possível autenticar. Tente novamente."
                 };
 
                 TempData["Error"] = errorMessage;
                 ModelState.AddModelError(string.Empty, errorMessage);
-                _logger.LogWarning("Falha no login Web. Email:{Email} Status:{Status} SuccessFlag:{SuccessFlag}", normalizedEmail, (int)response.StatusCode, apiResult?.Success);
+                _logger.LogWarning("Falha no login Web. TipoIdentificador:{TipoIdentificador} Status:{Status} SuccessFlag:{SuccessFlag}", identifierKind, (int)response.StatusCode, apiResult?.Success);
                 return View(model);
             }
 
@@ -120,9 +121,9 @@ public sealed class AccountController : Controller
                 new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
                 new Claim("sub", login.UsuarioId.ToString()),
                 new Claim("uid", login.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? normalizedEmail : login.Nome),
-                new Claim(ClaimTypes.Email, string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),
-                new Claim("email", string.IsNullOrWhiteSpace(login.Email) ? normalizedEmail : login.Email),
+                new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? "Usuário PlantãoPro" : login.Nome),
+                new Claim(ClaimTypes.Email, login.Email ?? string.Empty),
+                new Claim("email", login.Email ?? string.Empty),
                 new Claim(ClaimTypes.Role, primaryRole),
                 new Claim("role", primaryRole),
                 new Claim("Perfil", primaryRole),
@@ -131,8 +132,18 @@ public sealed class AccountController : Controller
                 new Claim("access_scope", accessScope),
                 new Claim("context_mode", contextMode),
                 new Claim("session_id", string.IsNullOrWhiteSpace(login.SessionId) ? HttpContext.Session.Id : login.SessionId),
-                new Claim("jwt", login.Token)
+                new Claim("jwt", login.Token),
+                new Claim("access_catalog_version", "v2149")
             };
+
+            claims.AddRange((login.Permissions ?? Array.Empty<string>())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => new Claim("permission", NormalizeAccessCode(value)))
+                .DistinctBy(claim => claim.Value));
+            claims.AddRange((login.Modules ?? Array.Empty<string>())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Select(value => new Claim("module", NormalizeAccessCode(value)))
+                .DistinctBy(claim => claim.Value));
 
             if (login.ClienteId.HasValue)
             {
@@ -163,20 +174,20 @@ public sealed class AccountController : Controller
                 IsPersistent = true,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
             });
-            _logger.LogInformation("Cookie de autenticação criado. Email:{Email}", normalizedEmail);
+            _logger.LogInformation("Cookie de autenticação criado. UsuarioId:{UsuarioId} TipoIdentificador:{TipoIdentificador}", login.UsuarioId, identifierKind);
 
             HttpContext.Session.SetString("jwt", login.Token);
             HttpContext.Session.SetString("JwtToken", login.Token);
             HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);
-            HttpContext.Session.SetString("UsuarioEmail", normalizedEmail);
+            HttpContext.Session.SetString("UsuarioEmail", login.Email ?? string.Empty);
             HttpContext.Session.SetString("UsuarioPerfil", primaryRole);
             HttpContext.Session.SetString("AccessScope", accessScope);
             HttpContext.Session.SetString("ContextMode", contextMode);
-            _logger.LogInformation("Token salvo na sessão. Email:{Email} Perfil:{Perfil} Escopo:{Escopo}", normalizedEmail, primaryRole, accessScope);
+            _logger.LogInformation("Token salvo na sessão. UsuarioId:{UsuarioId} Perfil:{Perfil} Escopo:{Escopo}", login.UsuarioId, primaryRole, accessScope);
 
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
-                _logger.LogInformation("Redirecionando por returnUrl. Email:{Email} Destino:{Destino}", normalizedEmail, returnUrl);
+                _logger.LogInformation("Redirecionando por returnUrl. UsuarioId:{UsuarioId} Destino:{Destino}", login.UsuarioId, returnUrl);
                 return Redirect(returnUrl);
             }
 
@@ -184,29 +195,29 @@ public sealed class AccountController : Controller
         }
         catch (HttpRequestException ex)
         {
-            return HandleApiConnectionFailure(model, normalizedEmail, apiBaseUrl, ex);
+            return HandleApiConnectionFailure(model, identifierKind, apiBaseUrl, ex);
         }
         catch (TaskCanceledException ex)
         {
-            return HandleApiConnectionFailure(model, normalizedEmail, apiBaseUrl, ex);
+            return HandleApiConnectionFailure(model, identifierKind, apiBaseUrl, ex);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Erro inesperado no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}", normalizedEmail, apiBaseUrl, ex.Message);
+            _logger.LogError(ex, "Erro inesperado no login Web. TipoIdentificador:{TipoIdentificador} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}", identifierKind, apiBaseUrl, ex.Message);
             TempData["Error"] = "Não foi possível realizar o login no momento.";
             return View(model);
         }
     }
 
-    private IActionResult HandleApiConnectionFailure(LoginViewModel model, string email, Uri? apiBaseUrl, Exception exception)
+    private IActionResult HandleApiConnectionFailure(LoginViewModel model, string identifierKind, Uri? apiBaseUrl, Exception exception)
     {
         const string message = "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
         var failureType = exception is TaskCanceledException ? "Timeout" : exception.GetType().Name;
 
         _logger.LogError(
             exception,
-            "Falha de conexão com a API no login Web. Email:{Email} BaseUrl:{ApiBaseUrl} Tipo:{FailureType} Mensagem:{ExceptionMessage}",
-            email,
+            "Falha de conexão com a API no login Web. TipoIdentificador:{TipoIdentificador} BaseUrl:{ApiBaseUrl} Tipo:{FailureType} Mensagem:{ExceptionMessage}",
+            identifierKind,
             apiBaseUrl,
             failureType,
             exception.Message);
@@ -235,10 +246,20 @@ public sealed class AccountController : Controller
         }
     }
 
+    private static string ClassifyIdentifier(string value)
+    {
+        if (value.Contains('@', StringComparison.Ordinal)) return "EMAIL";
+        var digits = new string(value.Where(char.IsDigit).ToArray());
+        return digits.Length switch { 11 => "CPF", 14 => "CNPJ", _ => "INVALIDO" };
+    }
+
+    private static string NormalizeAccessCode(string value) => value.Trim().ToUpperInvariant().Replace(':', '.');
+
     private IActionResult RedirectToActionByPerfil(IEnumerable<string> roles)
     {
         var normalizedRoles = roles
             .Select(NormalizeRole)
+            .OfType<string>()
             .Where(r => !string.IsNullOrWhiteSpace(r))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -246,7 +267,7 @@ public sealed class AccountController : Controller
         // Prioridade explícita para evitar 404, loop de login e destinos inconsistentes quando o usuário possui múltiplos perfis.
         var priority = new List<(string Role, string Controller, string Action)>
         {
-            (RolesConstants.AdministradorGlobal, "AdminSaas", "Index"),
+            (RolesConstants.AdministradorGlobal, "SaasDashboard", "Index"),
             (RolesConstants.AdministradorCliente, "ClientePortal", "Index"),
             (RolesConstants.Administrador, "ClientePortal", "Index"),
             (RolesConstants.Diretor, "ClientePortal", "Index"),

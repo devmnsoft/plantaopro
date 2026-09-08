@@ -222,12 +222,14 @@ public sealed class PerfisController : ControllerBase
 {
     private readonly SelfServiceSaasService _service;
     private readonly IConfiguration _cfg;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<PerfisController> _logger;
 
-    public PerfisController(SelfServiceSaasService service, IConfiguration cfg, ILogger<PerfisController> logger)
+    public PerfisController(SelfServiceSaasService service, IConfiguration cfg, ICurrentUserService currentUser, ILogger<PerfisController> logger)
     {
         _service = service;
         _cfg = cfg;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -242,8 +244,18 @@ public sealed class PerfisController : ControllerBase
     public async Task<IActionResult> Detalhar(Guid id)
     {
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var dto = await cn.QueryFirstOrDefaultAsync<PerfilDto>("select id as \"Id\", tenant_id as \"TenantId\", cliente_id as \"ClienteId\", coalesce(codigo,'') as \"Codigo\", coalesce(nome,'') as \"Nome\", coalesce(descricao,'') as \"Descricao\", base_sistema as \"BaseSistema\", customizado as \"Customizado\", coalesce(status,'') as \"Status\" from plantaopro.perfis where id=@id and reg_status='A'", new { id });
+        var dto = await cn.QueryFirstOrDefaultAsync<PerfilDto>("select id as \"Id\", tenant_id as \"TenantId\", cliente_id as \"ClienteId\", coalesce(codigo,'') as \"Codigo\", coalesce(nome,'') as \"Nome\", coalesce(descricao,'') as \"Descricao\", base_sistema as \"BaseSistema\", customizado as \"Customizado\", coalesce(status,'') as \"Status\" from plantaopro.perfis where id=@id and reg_status='A' and (@global or tenant_id is null or tenant_id=@tenantId)", new { id, global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
         return dto is null ? NotFound(ApiResponse<string>.Fail("Perfil não encontrado.", 404)) : Ok(ApiResponse<PerfilDto>.Ok(dto));
+    }
+
+    [HttpGet("{id:guid}/permissoes")]
+    public async Task<IActionResult> PermissoesAtuais(Guid id)
+    {
+        await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+        var permitido = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.perfis where id=@id and reg_status='A' and (@global or tenant_id is null or tenant_id=@tenantId))", new { id, global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
+        if (!permitido) return NotFound(ApiResponse<string>.Fail("Perfil não encontrado.", 404));
+        var ids = await cn.QueryAsync<Guid>("select permissao_id from plantaopro.perfil_permissoes where perfil_id=@id and permitido=true and reg_status='A' order by permissao_id", new { id });
+        return Ok(ApiResponse<IEnumerable<Guid>>.Ok(ids));
     }
 
     [HttpPost]
@@ -280,9 +292,10 @@ public sealed class PerfisController : ControllerBase
     public async Task<IActionResult> Inativar(Guid id)
     {
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var baseSistema = await cn.ExecuteScalarAsync<bool>("select coalesce(base_sistema,false) from plantaopro.perfis where id=@id and reg_status='A'", new { id });
+        var baseSistema = await cn.ExecuteScalarAsync<bool>("select coalesce(base_sistema,false) from plantaopro.perfis where id=@id and reg_status='A' and (@global or tenant_id=@tenantId)", new { id, global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
         if (baseSistema) return BadRequest(ApiResponse<string>.Fail("Perfis base não podem ser inativados.", 400));
-        await cn.ExecuteAsync("update plantaopro.perfis set status='INATIVO', reg_status='I', reg_update=now() where id=@id", new { id });
+        var affected = await cn.ExecuteAsync("update plantaopro.perfis set status='INATIVO', reg_status='I', reg_update=now() where id=@id and base_sistema=false and (@global or tenant_id=@tenantId)", new { id, global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
+        if (affected == 0) return NotFound(ApiResponse<string>.Fail("Perfil não encontrado ou protegido.", 404));
         return Ok(ApiResponse<string>.Ok("ok", "Perfil inativado."));
     }
 
@@ -301,13 +314,17 @@ public sealed class PerfisController : ControllerBase
 public sealed class PermissoesSistemaController : ControllerBase
 {
     private readonly IConfiguration _cfg;
-    public PermissoesSistemaController(IConfiguration cfg) => _cfg = cfg;
+    private readonly ICurrentUserService _currentUser;
+    public PermissoesSistemaController(IConfiguration cfg, ICurrentUserService currentUser) { _cfg = cfg; _currentUser = currentUser; }
 
     [HttpGet("permissoes")]
     public async Task<IActionResult> Permissoes()
     {
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-        var rows = await cn.QueryAsync<PermissaoDto>(@"select p.id as ""Id"", coalesce(m.nome,'') as ""Modulo"", coalesce(a.nome,'') as ""Acao"", coalesce(p.codigo,'') as ""Codigo"", coalesce(p.nome,'') as ""Nome"", p.sensivel as ""Sensivel"" from plantaopro.permissoes p join plantaopro.modulos_sistema m on m.id=p.modulo_id join plantaopro.acoes_sistema a on a.id=p.acao_id where p.reg_status='A' order by m.ordem,a.ordem limit 500");
+        var rows = await cn.QueryAsync<PermissaoDto>(@"select p.id as ""Id"", coalesce(m.nome,'') as ""Modulo"", coalesce(a.nome,'') as ""Acao"", coalesce(p.codigo,'') as ""Codigo"", coalesce(p.nome,'') as ""Nome"", p.sensivel as ""Sensivel""
+from plantaopro.permissoes p join plantaopro.modulos_sistema m on m.id=p.modulo_id join plantaopro.acoes_sistema a on a.id=p.acao_id
+where p.reg_status='A' and (@global or exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenantId and tm.modulo_id=m.id and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'))
+order by m.ordem,a.ordem limit 500", new { global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
         return Ok(ApiResponse<IEnumerable<PermissaoDto>>.Ok(rows));
     }
 

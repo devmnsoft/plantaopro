@@ -4,9 +4,8 @@ namespace PlantaoPro.Web.Models
 {
     public class LoginViewModel
     {
-        [Required(ErrorMessage = "Informe o e-mail.")]
-        [EmailAddress(ErrorMessage = "E-mail inválido.")]
-        [StringLength(254, ErrorMessage = "O e-mail deve ter no máximo 254 caracteres.")]
+        [Required(ErrorMessage = "Informe seu e-mail, CPF ou CNPJ.")]
+        [StringLength(254, MinimumLength = 5, ErrorMessage = "Informe um identificador válido.")]
         public string Email { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Informe a senha.")]
@@ -40,7 +39,7 @@ namespace PlantaoPro.Web.Models
 
     public record ApiResponse<T>(bool Success, string Message, T? Data, IEnumerable<string>? Errors, int StatusCode, DateTime Timestamp);
     public record LoginRequest(string Email, string Senha);
-    public record LoginResponse(string Token, DateTime ExpiresAt, Guid UsuarioId, string Nome, string Email, string[]? Roles, Guid? ClienteId = null, string? ClienteNome = null, Guid? TenantId = null, string? TenantNome = null, bool MustChangePassword = false, string? PrimaryRole = null, string? AccessScope = null, bool TenantContextRequired = false, bool TenantContextSelected = false, Guid? TenantContextId = null, string? ContextMode = null, string? SessionId = null);
+    public record LoginResponse(string Token, DateTime ExpiresAt, Guid UsuarioId, string Nome, string Email, string[]? Roles, Guid? ClienteId = null, string? ClienteNome = null, Guid? TenantId = null, string? TenantNome = null, bool MustChangePassword = false, string? PrimaryRole = null, string? AccessScope = null, bool TenantContextRequired = false, bool TenantContextSelected = false, Guid? TenantContextId = null, string? ContextMode = null, string? SessionId = null, string[]? Permissions = null, string[]? Modules = null);
     public record ForgotPasswordRequest(string Email);
     public record ResetPasswordRequest(string Email, string Token, string NovaSenha);
     public record DashboardDto(long TotalMedicos, long TotalHospitais, long TotalEspecialidades, long TotalPlantoes, long PlantoesAbertos, long PlantoesConfirmados, long PlantoesRealizados, long PlantoesCancelados, long PagamentosPendentes, long PagamentosPagos, decimal ValorPendente, decimal ValorPagoMes, long NotificacoesNaoLidas);

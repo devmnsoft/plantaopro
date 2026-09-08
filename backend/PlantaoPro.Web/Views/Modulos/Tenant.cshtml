@@ -1,0 +1,18 @@
+@model PlantaoPro.Web.Models.TenantModulePageViewModel
+@{ ViewData["Title"] = "Módulos de " + Model.TenantNome; ViewData["Subtitle"] = "Contrato, limites e bloqueios específicos do cliente."; }
+<div class="pp-page">
+    <header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Contrato por cliente</span><h2>@Model.TenantNome</h2><p>Habilite somente módulos previstos comercialmente e registre o motivo de cada alteração.</p></div><a class="btn btn-outline-secondary" asp-controller="Clientes" asp-action="Index">Voltar aos clientes</a></header>
+    <details class="pp-screen-guide" open><summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary><div class="pp-screen-guide__body"><p>Revise preço e limite contratados. Ao bloquear, o módulo deixa de compor claims e menus no próximo login do usuário.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-check"></i> A confirmação mostra o impacto e a ação é registrada no histórico do contrato e na auditoria global.</div></div></details>
+    <section class="pp-grid">
+    @foreach (var item in Model.Modules)
+    {
+        <article class="pp-card"><div class="d-flex justify-content-between gap-2"><div><span class="pp-eyebrow">@item.Categoria</span><h3>@item.Nome</h3></div><span class="badge @(item.Habilitado ? "text-bg-success" : "text-bg-secondary")">@(item.Habilitado ? "Contratado" : "Não contratado")</span></div><p>@item.Descricao</p><dl class="row small"><dt class="col-6">Preço base</dt><dd class="col-6 text-end">@item.PrecoBase.ToString("C")</dd><dt class="col-6">Preço contratado</dt><dd class="col-6 text-end">@(item.PrecoContratado?.ToString("C") ?? "Usar preço base")</dd><dt class="col-6">Limite</dt><dd class="col-6 text-end">@(item.LimiteContratado?.ToString() ?? item.LimitePadrao?.ToString() ?? "Sem limite")</dd></dl>
+            <form asp-action="ToggleTenant" method="post" data-confirm="true" data-confirm-title="@(item.Habilitado ? "Bloquear módulo" : "Habilitar módulo")" data-confirm-message="Esta ação altera menus e acessos de todos os usuários de @Model.TenantNome no próximo login.">
+                @Html.AntiForgeryToken()<input type="hidden" name="TenantId" value="@Model.TenantId" /><input type="hidden" name="ModuleId" value="@item.Id" /><input type="hidden" name="Enabled" value="@(!item.Habilitado)" />
+                <div class="row g-2"><div class="col-6"><label class="form-label" for="price-@item.Id">Preço contratado</label><input class="form-control" id="price-@item.Id" name="PrecoContratado" value="@item.PrecoContratado" inputmode="decimal" /></div><div class="col-6"><label class="form-label" for="limit-@item.Id">Limite contratado</label><input class="form-control" id="limit-@item.Id" name="LimiteContratado" value="@item.LimiteContratado" inputmode="numeric" /></div><div class="col-12"><label class="form-label" for="reason-@item.Id">Motivo <span aria-label="obrigatório">*</span></label><input class="form-control" id="reason-@item.Id" name="Motivo" required maxlength="500" /></div></div>
+                <button class="btn @(item.Habilitado ? "btn-outline-danger" : "btn-primary") w-100 mt-3" type="submit">@(item.Habilitado ? "Bloquear para o cliente" : "Habilitar para o cliente")</button>
+            </form>
+        </article>
+    }
+    </section>
+</div>

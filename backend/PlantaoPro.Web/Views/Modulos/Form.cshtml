@@ -1,0 +1,27 @@
+@model PlantaoPro.Web.Models.SaasModuleViewModel
+@{
+    var creating = Model.Id == Guid.Empty;
+    ViewData["Title"] = creating ? "Novo módulo" : "Editar módulo";
+    ViewData["Subtitle"] = "Defina a oferta comercial e os recursos do módulo.";
+}
+<div class="pp-page">
+    <header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Catálogo SaaS</span><h2>@ViewData["Title"]</h2><p>Somente o Super Administrador MNSOFT pode alterar catálogo e preços.</p></div></header>
+    <details class="pp-screen-guide" open><summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary><div class="pp-screen-guide__body"><p>Use um código técnico estável, descreva o valor entregue e informe uma funcionalidade por linha. Alterações são auditadas.</p></div></details>
+    <form asp-action="Save" method="post" class="pp-card" data-submit-loading="Salvando módulo...">
+        @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="Codigo" class="form-label">Código <span aria-label="obrigatório">*</span></label><input asp-for="Codigo" class="form-control text-uppercase" autocomplete="off" /><span asp-validation-for="Codigo" class="text-danger"></span><div class="form-text">Ex.: ESCALAS. Não altere depois de integrar permissões.</div></div>
+            <div class="col-md-8"><label asp-for="Nome" class="form-label">Nome <span aria-label="obrigatório">*</span></label><input asp-for="Nome" class="form-control" autocomplete="off" /><span asp-validation-for="Nome" class="text-danger"></span></div>
+            <div class="col-12"><label asp-for="Descricao" class="form-label">Descrição <span aria-label="obrigatório">*</span></label><textarea asp-for="Descricao" class="form-control" rows="3"></textarea><span asp-validation-for="Descricao" class="text-danger"></span><div class="form-text">Explique o resultado que o cliente obtém ao contratar.</div></div>
+            <div class="col-md-4"><label asp-for="Categoria" class="form-label">Categoria <span aria-label="obrigatório">*</span></label><select asp-for="Categoria" class="form-select"><option value="OPERACAO">Operação assistencial</option><option value="ESCALAS">Escalas e plantões</option><option value="FINANCEIRO">Financeiro</option><option value="RELATORIOS">Relatórios</option><option value="INTEGRACOES">Integrações</option><option value="GOVERNANCA">Governança</option></select><span asp-validation-for="Categoria" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="PrecoBase" class="form-label">Preço base mensal <span aria-label="obrigatório">*</span></label><div class="input-group"><span class="input-group-text">R$</span><input asp-for="PrecoBase" class="form-control" inputmode="decimal" /></div><span asp-validation-for="PrecoBase" class="text-danger"></span></div>
+            <div class="col-md-4"><label asp-for="LimitePadrao" class="form-label">Limite padrão</label><input asp-for="LimitePadrao" class="form-control" inputmode="numeric" /><span asp-validation-for="LimitePadrao" class="text-danger"></span><div class="form-text">Deixe vazio quando o recurso não tiver limite.</div></div>
+            <div class="col-md-6"><label asp-for="Status" class="form-label">Status</label><select asp-for="Status" class="form-select"><option value="ATIVO">Ativo</option><option value="INATIVO">Inativo</option></select></div>
+            <div class="col-md-6 d-flex align-items-end"><div class="form-check form-switch mb-2"><input asp-for="Essencial" class="form-check-input" /><label asp-for="Essencial" class="form-check-label">Módulo essencial da plataforma</label></div></div>
+            <div class="col-12"><label asp-for="FuncionalidadesTexto" class="form-label">Funcionalidades incluídas</label><textarea asp-for="FuncionalidadesTexto" class="form-control" rows="5"></textarea><span asp-validation-for="FuncionalidadesTexto" class="text-danger"></span><div class="form-text">Informe uma funcionalidade por linha.</div></div>
+        </div>
+        <div class="d-flex gap-2 justify-content-end mt-4"><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a><button class="btn btn-primary" type="submit"><app-icon name="Check" size="18" /> Salvar módulo</button></div>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -14,18 +14,20 @@ public sealed class SegurancaController : ControllerBase
     [HttpGet("dashboard")] public async Task<IActionResult> Dashboard(CancellationToken ct) => Ok(ApiResponse<object>.Ok(await service.DashboardAsync(ct)));
     [HttpGet("usuarios")] public async Task<IActionResult> Usuarios([FromQuery] string? busca, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) => Ok(ApiResponse<object>.Ok(await service.UsuariosAsync(busca, page, pageSize, ct)));
     [HttpGet("usuarios/{id:guid}")] public async Task<IActionResult> Usuario(Guid id, CancellationToken ct) { var u = await service.UsuarioAsync(id, ct); return u is null ? NotFound(ApiResponse<object>.Fail("Usuário não encontrado no tenant permitido.", 404)) : Ok(ApiResponse<object>.Ok(u)); }
-    [HttpPost("usuarios")] public IActionResult CriarUsuario([FromBody] object request) => StatusCode(202, ApiResponse<object>.Ok(new { recebido = true }, "Criação persistida pelo serviço de usuários existente; contrato reservado para Central de Segurança."));
-    [HttpPut("usuarios/{id:guid}")] public IActionResult EditarUsuario(Guid id, [FromBody] object request) => Ok(ApiResponse<object>.Ok(new { id }, "Edição encaminhada para auditoria e persistência."));
-    [HttpPost("usuarios/{id:guid}/ativar")] public IActionResult Ativar(Guid id) => Ok(ApiResponse<object>.Ok(new { id, status = "A" }));
-    [HttpPost("usuarios/{id:guid}/inativar")] public IActionResult Inativar(Guid id) => Ok(ApiResponse<object>.Ok(new { id, status = "I", protegidoUltimoAdministradorGlobal = true }));
-    [HttpPost("usuarios/{id:guid}/bloquear")] public IActionResult Bloquear(Guid id) => Ok(ApiResponse<object>.Ok(new { id, bloqueado = true }));
-    [HttpPost("usuarios/{id:guid}/desbloquear")] public IActionResult Desbloquear(Guid id) => Ok(ApiResponse<object>.Ok(new { id, bloqueado = false }));
+    [HttpPost("usuarios"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
+    public async Task<IActionResult> CriarUsuario([FromBody] SaasUserUpsertRequest request, CancellationToken ct) { var result = await service.SalvarUsuarioAsync(null, request, Ip(), Request.Headers.UserAgent.ToString(), ct); return StatusCode(result.StatusCode, result); }
+    [HttpPut("usuarios/{id:guid}"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
+    public async Task<IActionResult> EditarUsuario(Guid id, [FromBody] SaasUserUpsertRequest request, CancellationToken ct) { var result = await service.SalvarUsuarioAsync(id, request, Ip(), Request.Headers.UserAgent.ToString(), ct); return StatusCode(result.StatusCode, result); }
+    [HttpPost("usuarios/{id:guid}/ativar"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)] public Task<IActionResult> Ativar(Guid id, CancellationToken ct) => AlterarStatus(id, "ATIVO", ct);
+    [HttpPost("usuarios/{id:guid}/inativar"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)] public Task<IActionResult> Inativar(Guid id, CancellationToken ct) => AlterarStatus(id, "INATIVO", ct);
+    [HttpPost("usuarios/{id:guid}/bloquear"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)] public Task<IActionResult> Bloquear(Guid id, CancellationToken ct) => AlterarStatus(id, "BLOQUEADO", ct);
+    [HttpPost("usuarios/{id:guid}/desbloquear"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)] public Task<IActionResult> Desbloquear(Guid id, CancellationToken ct) => AlterarStatus(id, "ATIVO", ct);
     [HttpPost("usuarios/{id:guid}/exigir-troca-senha")] public IActionResult ExigirTrocaSenha(Guid id) => Ok(ApiResponse<object>.Ok(new { id, mustChangePassword = true }));
-    [HttpPost("usuarios/{id:guid}/revogar-sessoes")] public async Task<IActionResult> RevogarSessoes(Guid id, CancellationToken ct) { await service.RevogarSessoesAsync(id, "REVOGACAO_ADMINISTRATIVA", ct); return Ok(ApiResponse<object>.Ok(new { id }, "Sessões revogadas.")); }
-    [HttpGet("usuarios/{id:guid}/perfis")] public IActionResult PerfisUsuario(Guid id) => Ok(ApiResponse<object>.Ok(new { usuarioId = id, perfis = Array.Empty<object>() }));
-    [HttpPut("usuarios/{id:guid}/perfis")] public IActionResult SalvarPerfisUsuario(Guid id, [FromBody] object request) => Ok(ApiResponse<object>.Ok(new { usuarioId = id }, "Perfis salvos em fluxo auditável."));
+    [HttpPost("usuarios/{id:guid}/revogar-sessoes"), Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)] public async Task<IActionResult> RevogarSessoes(Guid id, CancellationToken ct) { var result = await service.RevogarSessoesAdministrativamenteAsync(id, Ip(), ct); return StatusCode(result.StatusCode, result); }
+    [HttpGet("usuarios/{id:guid}/perfis")] public async Task<IActionResult> PerfisUsuario(Guid id, CancellationToken ct) => Ok(ApiResponse<IEnumerable<Guid>>.Ok(await service.PerfisDoUsuarioAsync(id, ct)));
     [HttpGet("usuarios/{id:guid}/permissoes-efetivas")] public async Task<IActionResult> PermissoesEfetivas(Guid id, [FromQuery] Guid? tenantId, CancellationToken ct) => Ok(ApiResponse<object>.Ok(await service.PermissoesEfetivasAsync(id, tenantId, ct)));
     [HttpGet("perfis")] public async Task<IActionResult> Perfis(CancellationToken ct) => Ok(ApiResponse<object>.Ok(await service.PerfisAsync(ct)));
+    [HttpGet("perfis-atribuiveis")] public async Task<IActionResult> PerfisAtribuiveis([FromQuery] Guid? tenantId, CancellationToken ct) => Ok(ApiResponse<IEnumerable<SaasAssignableProfileDto>>.Ok(await service.PerfisAtribuiveisAsync(tenantId, ct)));
     [HttpGet("perfis/{id:guid}")] public IActionResult Perfil(Guid id) => Ok(ApiResponse<object>.Ok(new { id }));
     [HttpPost("perfis")] public IActionResult CriarPerfil([FromBody] object request) => Ok(ApiResponse<object>.Ok(new { criado = true }));
     [HttpPut("perfis/{id:guid}")] public IActionResult EditarPerfil(Guid id, [FromBody] object request) => Ok(ApiResponse<object>.Ok(new { id }));
@@ -43,4 +45,10 @@ public sealed class SegurancaController : ControllerBase
         var result = await permissions.TestarAsync(request.UsuarioId.Value, request.TenantId, request.Modulo ?? string.Empty, request.Acao ?? "VER", ct);
         return Ok(ApiResponse<object>.Ok(result, result.Motivo));
     }
+    private async Task<IActionResult> AlterarStatus(Guid id, string status, CancellationToken ct)
+    {
+        var result = await service.AlterarStatusUsuarioAsync(id, status, HttpContext.Connection.RemoteIpAddress?.ToString(), ct);
+        return StatusCode(result.StatusCode, result);
+    }
+    private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 }

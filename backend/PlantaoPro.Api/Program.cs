@@ -169,6 +169,7 @@ builder.Services.AddScoped<TenantIsolationValidatorService>();
 builder.Services.AddScoped<B2BLaunchService>();
 builder.Services.AddScoped<B2BCommercialOpsService>();
 builder.Services.AddScoped<CommercialDemoService>();
+builder.Services.AddScoped<SaasModuleCatalogService>();
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();

@@ -120,26 +120,28 @@ where c.id=@conviteId
     public async Task<IActionResult> Login([FromBody] MobileLoginRequestDto request)
     {
         var sw = Stopwatch.StartNew();
+        var identifierKind = LoginIdentifierNormalizer.Classify(request.Email);
+        var auditIdentifier = LoginIdentifierNormalizer.AuditValue(request.Email, identifierKind);
         try
         {
             var response = await _auth.LoginAsync(new LoginRequest(request.Email, request.Senha), GetIp(), Request.Headers.UserAgent.ToString());
             if (!response.Success || response.Data is null)
             {
-                _logger.LogWarning("Mobile login bloqueado email:{Email} ip:{Ip} duracaoMs:{Duracao}", request.Email, GetIp(), sw.ElapsedMilliseconds);
-                await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { email = request.Email, statusCode = response.StatusCode }, false, GetIp(), "sem-perfil");
+                _logger.LogWarning("Mobile login bloqueado identificador:{Identificador} tipo:{Tipo} ip:{Ip} duracaoMs:{Duracao}", auditIdentifier, identifierKind, GetIp(), sw.ElapsedMilliseconds);
+                await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { identifier = auditIdentifier, identifierKind, statusCode = response.StatusCode }, false, GetIp(), "sem-perfil");
                 return StatusCode(response.StatusCode, ApiResponse<MobileLoginResponseDto>.Fail(response.Message, response.StatusCode));
             }
 
             var payload = new MobileLoginResponseDto(response.Data.Token, null, response.Data.ExpiresAt, response.Data.Roles ?? Array.Empty<string>());
             var perfil = string.Join(',', payload.Roles);
-            await _audit.RegistrarAsync(response.Data.UsuarioId, response.Data.ClienteId, AuditoriaConstants.Entidades.ApiMobile, response.Data.UsuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { email = request.Email }, true, GetIp(), string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil);
+            await _audit.RegistrarAsync(response.Data.UsuarioId, response.Data.ClienteId, AuditoriaConstants.Entidades.ApiMobile, response.Data.UsuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { identifier = auditIdentifier, identifierKind }, true, GetIp(), string.IsNullOrWhiteSpace(perfil) ? "sem-perfil" : perfil);
             _logger.LogInformation("Mobile login sucesso uid:{Uid} perfil:{Perfil} ip:{Ip} duracaoMs:{Duracao}", response.Data.UsuarioId, perfil, GetIp(), sw.ElapsedMilliseconds);
             return Ok(ApiResponse<MobileLoginResponseDto>.Ok(payload, "Login realizado com sucesso."));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Mobile login erro ip:{Ip} duracaoMs:{Duracao}", GetIp(), sw.ElapsedMilliseconds);
-            await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { email = request.Email, motivo = "erro_interno" }, false, GetIp(), "sem-perfil");
+            await _audit.RegistrarAsync(null, null, AuditoriaConstants.Entidades.ApiMobile, null, AuditoriaConstants.Acoes.LoginFalha, new { identifier = auditIdentifier, identifierKind, motivo = "erro_interno" }, false, GetIp(), "sem-perfil");
             return StatusCode(500, ApiResponse<MobileLoginResponseDto>.Fail("Não foi possível autenticar no momento.", 500));
         }
     }

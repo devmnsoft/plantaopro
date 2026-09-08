@@ -73,12 +73,33 @@ public sealed class WhiteLabelWebViewModel
 public sealed class PerfilWebViewModel
 {
     public Guid Id { get; set; }
+    [RegularExpression("^[A-Z][A-Z0-9_]{1,79}$", ErrorMessage = "Use letras maiúsculas, números e sublinhado.")]
     public string Codigo { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Informe o nome do perfil."), StringLength(160, MinimumLength = 3)]
     public string Nome { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Descreva a finalidade do perfil."), StringLength(1000, MinimumLength = 10)]
     public string Descricao { get; set; } = string.Empty;
     public bool BaseSistema { get; set; }
     public bool Customizado { get; set; }
     public string Status { get; set; } = string.Empty;
+}
+
+public sealed class PermissaoWebViewModel
+{
+    public Guid Id { get; set; }
+    public string Modulo { get; set; } = string.Empty;
+    public string Acao { get; set; } = string.Empty;
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public bool Sensivel { get; set; }
+}
+
+public sealed class PerfilPermissoesWebViewModel
+{
+    public PerfilWebViewModel Perfil { get; set; } = new();
+    public IEnumerable<PermissaoWebViewModel> Permissoes { get; set; } = Array.Empty<PermissaoWebViewModel>();
+    public Guid[] PermissoesSelecionadas { get; set; } = Array.Empty<Guid>();
+    public bool PodeEditar => !Perfil.BaseSistema;
 }
 
 public sealed class ParametrizacoesWebViewModel

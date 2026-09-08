@@ -1,6 +1,7 @@
 @using PlantaoPro.Web.Security
 @using PlantaoPro.Web.Services.Security
 @inject IPermissionService PermissionService
+@inject IModuleAccessService ModuleAccessService
 @{
     var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Organização";
     var profile = User.Claims.FirstOrDefault(x => x.Type.EndsWith("role"))?.Value ?? "Profissional";
@@ -8,9 +9,9 @@
     var operationRoles = RolesConstants.Operacao.Split(',');
     var clinicalRoles = RolesConstants.Saude360Assistencial.Split(',');
     var financeRoles = RolesConstants.FinanceiroArea.Split(',').Concat(RolesConstants.Saude360Financeiro.Split(','));
-    var canOperate = operationRoles.Any(User.IsInRole);
-    var canUseClinical = clinicalRoles.Any(User.IsInRole);
-    var canUseFinance = financeRoles.Any(User.IsInRole);
+    var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CENTRAL_ESCALA", "CONVITES", "ESCALAS", "FECHAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
+    var canUseClinical = clinicalRoles.Any(User.IsInRole) || new[] { "SAUDE360_DASHBOARD", "SAUDE360_PACIENTES", "SAUDE360_AGENDAMENTO", "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS" }.Any(ModuleAccessService.CanAccessModule);
+    var canUseFinance = financeRoles.Any(User.IsInRole) || new[] { "FINANCEIRO", "SAUDE360_FINANCEIRO", "PAGAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
     var isGlobalAdmin = User.IsInRole(RolesConstants.AdministradorGlobal);
     bool Can(string module, string action = "VER") => PermissionService.HasPermission(module, action);
@@ -73,10 +74,14 @@
         @if (isGlobalAdmin)
         {
             <div class="nav-section-title"><span>Modo Global MNSOFT</span></div>
-            <a class="nav-link-app @Active("AdminSaas")" asp-controller="AdminSaas" asp-action="Dashboard"><app-icon name="Dashboard" size="19" /><span>Central Global</span></a>
+            <a class="nav-link-app @Active("SaasDashboard")" asp-controller="SaasDashboard" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Central Global</span></a>
             <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
+            <a class="nav-link-app @Active("Planos")" asp-controller="Planos" asp-action="Index"><app-icon name="Report" size="19" /><span>Planos comerciais</span></a>
+            <a class="nav-link-app @Active("Assinaturas")" asp-controller="Assinaturas" asp-action="Index"><app-icon name="Check" size="19" /><span>Assinaturas</span></a>
             <a class="nav-link-app @Active("FaturamentoSaas")" asp-controller="FaturamentoSaas" asp-action="Index"><app-icon name="Finance" size="19" /><span>Cobranças SaaS</span></a>
-            <a class="nav-link-app @Active("Modulos")" asp-controller="Modulos" asp-action="Dashboard"><app-icon name="Settings" size="19" /><span>Módulos e recursos</span></a>
+            <a class="nav-link-app @Active("Modulos")" asp-controller="Modulos" asp-action="Index"><app-icon name="Settings" size="19" /><span>Catálogo de módulos</span></a>
+            <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários e acessos</span></a>
+            <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis globais</span></a>
             <a class="nav-link-app @Active("Observabilidade")" asp-controller="Observabilidade" asp-action="Index"><app-icon name="Report" size="19" /><span>Logs e saúde</span></a>
             <a class="nav-link-app @Active("Auditoria")" asp-controller="Auditoria" asp-action="Index"><app-icon name="Security" size="19" /><span>Auditoria</span></a>
         }

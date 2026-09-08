@@ -1,9 +1,53 @@
+@model IEnumerable<PlantaoPro.Web.Models.UsuarioSaasViewModel>
 @{
-    ViewData["Title"] = "Usuários";
+    ViewData["Title"] = "Usuários e acessos";
+    ViewData["Subtitle"] = "Usuários reais no escopo autorizado desta sessão.";
+    var users = Model.ToArray();
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Usuários", "Gestão de acessos do tenant com perfil, status, último acesso e ações seguras.", "bi-person-gear", "Novo usuário", "Create", "Usuarios", true)' />
-<section class="pp-data-state" role="status" aria-labelledby="usuariosStateTitle">
-    <div class="pp-data-state__icon"><app-icon name="User" size="28" /></div>
-    <div><span class="pp-section-kicker">Dados protegidos</span><h2 id="usuariosStateTitle">Gestão de usuários em preparação</h2><p>A listagem será exibida somente quando houver uma fonte real autorizada para o tenant atual. Nenhum usuário de demonstração é apresentado nesta tela.</p></div>
-    <a class="btn btn-outline-primary" asp-controller="Perfis" asp-action="Index">Revisar perfis e permissões</a>
-</section>
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Identidade e acesso</span><h2>Usuários por cliente</h2><p>Acompanhe perfil, status e último acesso sem expor usuários de outro tenant.</p></div>
+        <div class="pp-hero-actions">
+            <a class="btn btn-outline-primary" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="18" /> Gerenciar perfis</a>
+            <a class="btn btn-primary" asp-action="Create"><i class="bi bi-person-plus" aria-hidden="true"></i> Novo usuário</a>
+        </div>
+    </header>
+    <details class="pp-screen-guide">
+        <summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary>
+        <div class="pp-screen-guide__body"><p>Pesquise pelo nome ou e-mail. Bloquear interrompe o acesso e revoga sessões; desbloquear restaura o acesso conforme contrato e permissões.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-check"></i> O último Super Administrador MNSOFT ativo é protegido pelo servidor.</div></div>
+    </details>
+    <form method="get" class="pp-card mb-3">
+        <label class="form-label" for="user-search">Buscar usuário</label>
+        <div class="input-group"><input class="form-control" id="user-search" name="busca" value="@ViewBag.Busca" placeholder="Nome ou e-mail" /><button class="btn btn-outline-primary" type="submit">Buscar</button></div>
+    </form>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div>
+    }
+    <section class="pp-card">
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Usuário</th><th>Cliente</th><th>Perfis</th><th>Último acesso</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
+        @if (users.Length == 0) { <tr><td colspan="6"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o tenant selecionado.</p></div></td></tr> }
+        @foreach (var user in users)
+        {
+            <tr>
+                <td><strong>@user.Nome</strong><div class="text-muted small">@user.Email</div></td>
+                <td>@user.TenantNome</td>
+                <td>@user.Perfis</td>
+                <td>@(user.UltimoLogin?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Nunca acessou")</td>
+                <td><span class="badge @(user.Status == "ATIVO" ? "text-bg-success" : "text-bg-warning")">@user.Status</span></td>
+                <td class="text-end">
+                    <div class="pp-table-actions">
+                        <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@user.Id">Editar e perfis</a>
+                        <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="@(user.Status == "ATIVO" ? "Bloquear usuário" : "Desbloquear usuário")" data-confirm-message="Esta ação altera o acesso de @user.Nome no cliente @user.TenantNome e revoga sessões ativas.">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@user.Id" />
+                            <input type="hidden" name="acao" value="@(user.Status == "ATIVO" ? "bloquear" : "desbloquear")" />
+                            <button class="btn btn-sm @(user.Status == "ATIVO" ? "btn-outline-danger" : "btn-outline-success")" type="submit">@(user.Status == "ATIVO" ? "Bloquear" : "Desbloquear")</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        }
+        </tbody></table></div>
+    </section>
+</div>

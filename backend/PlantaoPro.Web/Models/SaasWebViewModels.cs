@@ -2,6 +2,113 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PlantaoPro.Web.Models;
 
+public sealed class UsuarioSaasViewModel
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Telefone { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? ClienteId { get; set; }
+    public string TenantNome { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public string RegStatus { get; set; } = string.Empty;
+    public DateTime? UltimoLogin { get; set; }
+    public DateTime? BloqueadoAte { get; set; }
+    public DateTime RegDate { get; set; }
+    public string Perfis { get; set; } = string.Empty;
+}
+
+public sealed class UsuarioEditorViewModel : IValidatableObject
+{
+    public Guid Id { get; set; }
+    public Guid? TenantId { get; set; }
+    public string TenantNome { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Informe o nome do usuário."), StringLength(160, MinimumLength = 3, ErrorMessage = "Informe um nome entre 3 e 160 caracteres.")]
+    public string Nome { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Informe o e-mail."), EmailAddress(ErrorMessage = "Informe um e-mail válido."), StringLength(254)]
+    public string Email { get; set; } = string.Empty;
+    [Phone(ErrorMessage = "Informe um telefone válido."), StringLength(30)]
+    public string? Telefone { get; set; }
+    [DataType(DataType.Password), StringLength(128)]
+    public string? SenhaTemporaria { get; set; }
+    public Guid[] PerfilIds { get; set; } = Array.Empty<Guid>();
+    public IEnumerable<PerfilOpcaoUsuarioViewModel> PerfisDisponiveis { get; set; } = Array.Empty<PerfilOpcaoUsuarioViewModel>();
+    public IEnumerable<ClienteDto> Clientes { get; set; } = Array.Empty<ClienteDto>();
+    public bool IsGlobalAdmin { get; set; }
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (Id == Guid.Empty && string.IsNullOrWhiteSpace(SenhaTemporaria))
+            yield return new ValidationResult("Informe uma senha temporária.", new[] { nameof(SenhaTemporaria) });
+        if (!string.IsNullOrWhiteSpace(SenhaTemporaria) &&
+            (SenhaTemporaria.Length < 10 || !SenhaTemporaria.Any(char.IsUpper) || !SenhaTemporaria.Any(char.IsLower) || !SenhaTemporaria.Any(char.IsDigit) || !SenhaTemporaria.Any(ch => !char.IsLetterOrDigit(ch))))
+            yield return new ValidationResult("Use ao menos 10 caracteres, com maiúscula, minúscula, número e símbolo.", new[] { nameof(SenhaTemporaria) });
+        if (PerfilIds is null || PerfilIds.Length == 0)
+            yield return new ValidationResult("Selecione ao menos um perfil.", new[] { nameof(PerfilIds) });
+        if (IsGlobalAdmin && !TenantId.HasValue)
+            yield return new ValidationResult("Selecione o cliente do usuário.", new[] { nameof(TenantId) });
+    }
+}
+
+public sealed class PerfilOpcaoUsuarioViewModel
+{
+    public Guid Id { get; set; }
+    public Guid? TenantId { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string Descricao { get; set; } = string.Empty;
+    public bool BaseSistema { get; set; }
+}
+
+public sealed class SaasModuleViewModel
+{
+    public Guid Id { get; set; }
+    [Required, RegularExpression("^[A-Z][A-Z0-9_]{1,79}$", ErrorMessage = "Use letras maiúsculas, números e sublinhado.")]
+    public string Codigo { get; set; } = string.Empty;
+    [Required, StringLength(500, MinimumLength = 3)]
+    public string Nome { get; set; } = string.Empty;
+    [Required, StringLength(2000, MinimumLength = 10)]
+    public string Descricao { get; set; } = string.Empty;
+    [Required]
+    public string Categoria { get; set; } = "OPERACAO";
+    [Range(typeof(decimal), "0", "10000000")]
+    public decimal PrecoBase { get; set; }
+    public bool Essencial { get; set; }
+    public string Status { get; set; } = "ATIVO";
+    public string FuncionalidadesJson { get; set; } = "[]";
+    public string FuncionalidadesTexto { get; set; } = string.Empty;
+    [Range(0, int.MaxValue)]
+    public int? LimitePadrao { get; set; }
+    public long ClientesAtivos { get; set; }
+    public bool Contratado { get; set; }
+    public bool Habilitado { get; set; }
+    public decimal? PrecoContratado { get; set; }
+    public int? LimiteContratado { get; set; }
+}
+
+public sealed class TenantModulePageViewModel
+{
+    public Guid TenantId { get; set; }
+    public string TenantNome { get; set; } = string.Empty;
+    public IEnumerable<SaasModuleViewModel> Modules { get; set; } = Array.Empty<SaasModuleViewModel>();
+}
+
+public sealed class TenantModuleActionViewModel
+{
+    [NonEmptyGuid]
+    public Guid TenantId { get; set; }
+    [NonEmptyGuid]
+    public Guid ModuleId { get; set; }
+    public bool Enabled { get; set; }
+    [Range(typeof(decimal), "0", "10000000")]
+    public decimal? PrecoContratado { get; set; }
+    [Range(0, int.MaxValue)]
+    public int? LimiteContratado { get; set; }
+    [Required, StringLength(500, MinimumLength = 5)]
+    public string Motivo { get; set; } = string.Empty;
+}
+
 public sealed class PlanoSaasViewModel
 {
     public Guid Id { get; set; }

@@ -1,13 +1,41 @@
-@model CommercialDemoPageViewModel
+@using PlantaoPro.Web.Security
+@model IEnumerable<PlantaoPro.Web.Models.SaasModuleViewModel>
 @{
-    ViewData["Title"] = Model.Title;
+    ViewData["Title"] = "Catálogo de módulos";
+    ViewData["Subtitle"] = "Preços, recursos e adoção por cliente em uma única visão.";
+    var modules = Model?.ToArray() ?? Array.Empty<PlantaoPro.Web.Models.SaasModuleViewModel>();
+    var isGlobal = User.IsInRole(RolesConstants.AdministradorGlobal);
 }
-<section class="pp-page-head"><span class="pp-badge">Dashboard</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
-<section class="pp-grid">
-@foreach (var card in Model.Cards)
-{
-    <article class="pp-card"><h2>@card.Title</h2><p>@card.Description</p><a class="btn btn-outline-primary" asp-controller="@card.ActionController" asp-action="@card.ActionName">@card.ActionText</a></article>
-}
-</section>
-<aside class="pp-card"><h2>Checklist operacional</h2><ul>@foreach (var item in Model.Checklist) { <li>@item</li> }</ul></aside>
-<partial name="_CommercialStyles" />
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">SaaS MNSOFT</span><h2>Módulos que acompanham cada contrato</h2><p>Gerencie catálogo, preço, recursos e disponibilidade sem misturar dados entre clientes.</p></div>
+        <div class="pp-hero-actions">@if (isGlobal) { <a class="btn btn-outline-primary" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="18" /> Selecionar cliente</a><a class="btn btn-primary" asp-action="Create"><app-icon name="Add" size="18" /> Novo módulo</a> }</div>
+    </header>
+    <details class="pp-screen-guide">
+        <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Catálogo e contratação</span></summary>
+        <div class="pp-screen-guide__body"><p>O preço base pertence ao catálogo global. O preço contratado, limite e bloqueio pertencem ao vínculo com cada cliente.</p><ol><li>Cadastre ou revise o módulo.</li><li>Acesse um cliente e abra seus módulos.</li><li>Confirme habilitações e bloqueios com um motivo auditável.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-shield-check" aria-hidden="true"></i> Administradores de cliente visualizam o próprio contrato, mas não alteram preço nem habilitam módulos.</div></div>
+    </details>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string)) { <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div> }
+    <section class="pp-kpi-grid" aria-label="Resumo do catálogo">
+        <article class="pp-kpi-card"><span>Módulos ativos</span><strong>@modules.Count(item => item.Status == "ATIVO")</strong><small>de @modules.Length cadastrados</small></article>
+        <article class="pp-kpi-card"><span>Essenciais</span><strong>@modules.Count(item => item.Essencial)</strong><small>base da plataforma</small></article>
+        <article class="pp-kpi-card"><span>Clientes atendidos</span><strong>@modules.Sum(item => item.ClientesAtivos)</strong><small>vínculos ativos</small></article>
+        <article class="pp-kpi-card"><span>Preço-base mensal</span><strong>@modules.Where(item => item.Status == "ATIVO").Sum(item => item.PrecoBase).ToString("C")</strong><small>composição do catálogo</small></article>
+    </section>
+    <section class="pp-card">
+        <div class="pp-section-heading"><div><span class="pp-eyebrow">Governança</span><h3>Módulos disponíveis</h3><p>Valores exibidos vêm do catálogo persistido.</p></div></div>
+        @if (modules.Length == 0)
+        {
+            <div class="pp-empty-state"><i class="bi bi-grid" aria-hidden="true"></i><h3>Nenhum módulo cadastrado</h3><p>Cadastre o primeiro módulo para montar planos e contratos.</p>@if (isGlobal) { <a class="btn btn-primary" asp-action="Create">Cadastrar módulo</a> }</div>
+        }
+        else
+        {
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Módulo</th><th>Categoria</th><th>Preço base</th><th>Adoção</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
+            @foreach (var item in modules)
+            {
+                <tr><td><strong>@item.Nome</strong><div class="text-muted small">@item.Descricao</div>@if (item.Essencial) { <span class="badge text-bg-info">Essencial</span> }</td><td>@item.Categoria.Replace('_', ' ')</td><td>@item.PrecoBase.ToString("C")</td><td>@item.ClientesAtivos cliente(s)</td><td><span class="badge @(item.Status == "ATIVO" ? "text-bg-success" : "text-bg-secondary")">@item.Status</span></td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">Detalhes</a>@if (isGlobal) { <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@item.Id">Editar</a> }</td></tr>
+            }
+            </tbody></table></div>
+        }
+    </section>
+</div>

@@ -1,65 +1,92 @@
 @model IEnumerable<PlantaoPro.Web.Models.ClienteDto>
 @{
-    ViewData["Title"] = "Clientes";
-    var ativos = Model.Count(x => x.Status == "ATIVO");
-    var suspensos = Model.Count(x => x.Status == "SUSPENSO");
-    var teste = Model.Count(x => x.Status == "TESTE");
-    var cancelados = Model.Count(x => x.Status == "CANCELADO");
+    ViewData["Title"] = "Clientes e tenants";
+    ViewData["Subtitle"] = "Administre instituições com contexto explícito, ações confirmadas e rastreabilidade.";
+    var clientes = Model.ToArray();
+    var ativos = clientes.Count(x => x.Status == "ATIVO");
+    var suspensos = clientes.Count(x => x.Status == "SUSPENSO");
+    var teste = clientes.Count(x => x.Status == "TESTE");
+    var cancelados = clientes.Count(x => x.Status == "CANCELADO");
+    var isGlobalAdmin = User.IsInRole("ADMINISTRADOR_GLOBAL");
 }
 
-<div class="container-fluid">
-    <details class="pp-screen-guide mb-3">
-        <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Orientação rápida</span></summary>
-        <div class="pp-screen-guide__body"><p>Gerencie instituições contratantes, planos, bloqueios e módulos liberados.</p><ol><li>Confira os indicadores para priorizar clientes que exigem atenção.</li><li>Localize a instituição e revise o contexto antes de alterar seu status.</li><li>Use ações de suspensão, reativação ou cancelamento somente após confirmar o impacto.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-shield-check" aria-hidden="true"></i> Estas ações são sensíveis, dependem da autorização do servidor e devem permanecer auditáveis.</div></div>
-    </details>
-    <div class="row g-3 mb-3">
-        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Ativos</h6><h3>@ativos</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Suspensos</h6><h3>@suspensos</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Em teste</h6><h3>@teste</h3></div></div></div>
-        <div class="col-md-3"><div class="card"><div class="card-body"><h6>Cancelados</h6><h3>@cancelados</h3></div></div></div>
+<div class="pp-page pp-clients-workspace">
+    <header class="pp-page-hero" aria-labelledby="clientsTitle">
+        <div class="pp-page-hero__copy">
+            <span class="pp-eyebrow">@(isGlobalAdmin ? "Contexto global MNSOFT" : "Administração autorizada")</span>
+            <h2 id="clientsTitle">Clientes e tenants</h2>
+            <p>Consulte o estado contratual das instituições e confirme o impacto antes de suspender, reativar ou cancelar um acesso.</p>
+        </div>
+        <div class="pp-hero-actions">
+            <a class="btn btn-outline-primary" asp-controller="Auditoria" asp-action="Index"><app-icon name="Audit" size="18" /> Ver auditoria</a>
+            <a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente"><app-icon name="Hospital" size="18" /> Novo cliente</a>
+        </div>
+    </header>
+
+    <div class="pp-scope-guardrails" role="list" aria-label="Proteções desta área">
+        <span role="listitem"><app-icon name="Security" size="17" /><strong>Escopo:</strong> @(isGlobalAdmin ? "todos os tenants" : "contexto autorizado")</span>
+        <span role="listitem"><app-icon name="Lock" size="17" /><strong>Ações críticas:</strong> confirmação obrigatória</span>
+        <span role="listitem"><app-icon name="Audit" size="17" /><strong>Alterações:</strong> auditáveis pelo servidor</span>
     </div>
 
-    <div class="table-responsive pp-premium-table">
-        <table class="table table-striped align-middle">
-            <thead><tr><th>Cliente</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
-            <tbody>
-            @if (!Model.Any())
-            {
-                <tr><td colspan="5"><div class="pp-guided-empty"><i class="bi bi-buildings" aria-hidden="true"></i><strong>Nenhuma instituição encontrada</strong><span>Quando um cadastro real estiver disponível, ele aparecerá aqui. Revise o onboarding ou os filtros aplicados.</span></div></td></tr>
-            }
-            else
-            {
-                foreach (var c in Model)
+    <section class="pp-operational-kpis" aria-label="Resumo dos clientes carregados">
+        <article class="pp-operational-kpi"><span>Ativos</span><strong>@ativos</strong><small>instituições operando</small></article>
+        <article class="pp-operational-kpi is-warning"><span>Suspensos</span><strong>@suspensos</strong><small>acesso interrompido</small></article>
+        <article class="pp-operational-kpi"><span>Em teste</span><strong>@teste</strong><small>validação em andamento</small></article>
+        <article class="pp-operational-kpi is-muted"><span>Cancelados</span><strong>@cancelados</strong><small>contratos encerrados</small></article>
+    </section>
+
+    <section class="pp-operation-panel" aria-labelledby="clientListTitle">
+        <header class="pp-operation-panel__header">
+            <div><h2 id="clientListTitle">Instituições encontradas</h2><p>Os registros abaixo vêm da fonte autorizada para esta sessão.</p></div>
+            <span class="pp-badge">@clientes.Length resultados</span>
+        </header>
+        <div class="table-responsive pp-premium-table">
+            <table class="table align-middle" data-mobile-cards>
+                <caption class="visually-hidden">Clientes, situação contratual e ações administrativas</caption>
+                <thead><tr><th>Cliente</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
+                <tbody>
+                @if (!clientes.Any())
                 {
-                    <tr>
-                        <td><strong>@c.NomeFantasia</strong><div class="text-muted small">@c.RazaoSocial</div></td>
-                        <td>@c.Cnpj</td>
-                        <td>@c.Cidade/@c.Estado</td>
-                        <td><span class="badge bg-@(c.Status=="ATIVO"?"success":c.Status=="TESTE"?"warning text-dark":c.Status=="SUSPENSO"?"danger":"secondary")">@c.Status</span></td>
-                        <td class="text-end">
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Confirma suspender este cliente?" data-confirm-type="warning">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="hidden" name="acao" value="SUSPENDER" />
-                                <button type="submit" class="btn btn-sm btn-outline-warning" @(c.Status == "SUSPENSO" || c.Status == "CANCELADO" ? "disabled" : null)>Suspender</button>
-                            </form>
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Reativar cliente" data-confirm-message="Confirma reativar este cliente?" data-confirm-type="success">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="hidden" name="acao" value="REATIVAR" />
-                                <button type="submit" class="btn btn-sm btn-outline-success" @(c.Status == "ATIVO" ? "disabled" : null)>Reativar</button>
-                            </form>
-                            <form asp-action="AlterarStatus" method="post" class="d-inline" data-confirm="true" data-confirm-title="Cancelar cliente" data-confirm-message="Confirma cancelar este cliente?" data-confirm-type="danger">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@c.Id" />
-                                <input type="hidden" name="acao" value="CANCELAR" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger" @(c.Status == "CANCELADO" ? "disabled" : null)>Cancelar</button>
-                            </form>
-                        </td>
-                    </tr>
+                    <tr><td colspan="5"><div class="pp-guided-empty"><app-icon name="Hospital" size="28" /><strong>Nenhuma instituição encontrada</strong><span>Quando um cadastro real estiver disponível, ele aparecerá aqui. Revise o onboarding ou o contexto da sessão.</span><a class="btn btn-sm btn-primary" asp-controller="Onboarding" asp-action="NovoCliente">Iniciar onboarding</a></div></td></tr>
                 }
-            }
-            </tbody>
-        </table>
-    </div>
+                else
+                {
+                    foreach (var cliente in clientes)
+                    {
+                        var statusClass = cliente.Status switch { "ATIVO" => "is-success", "TESTE" => "is-warning", "SUSPENSO" => "is-danger", _ => "is-muted" };
+                        <tr>
+                            <td data-label="Cliente"><strong>@cliente.NomeFantasia</strong><div class="text-muted small">@cliente.RazaoSocial</div></td>
+                            <td data-label="CNPJ">@cliente.Cnpj</td>
+                            <td data-label="Cidade/UF">@cliente.Cidade/@cliente.Estado</td>
+                            <td data-label="Status"><span class="pp-status-badge @statusClass">@cliente.Status</span></td>
+                            <td data-label="Ações">
+                                <div class="pp-table-actions">
+                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Suspender @cliente.NomeFantasia interrompe o acesso da instituição. Confirma esta ação auditável?" data-confirm-type="warning">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@cliente.Id" />
+                                        <input type="hidden" name="acao" value="SUSPENDER" />
+                                        <button type="submit" class="btn btn-sm btn-outline-warning" aria-label="Suspender @cliente.NomeFantasia" @(cliente.Status == "SUSPENSO" || cliente.Status == "CANCELADO" ? "disabled" : null)>Suspender</button>
+                                    </form>
+                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Reativar cliente" data-confirm-message="Reativar @cliente.NomeFantasia restabelece o acesso conforme plano e permissões. Deseja continuar?" data-confirm-type="success">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@cliente.Id" />
+                                        <input type="hidden" name="acao" value="REATIVAR" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Reativar @cliente.NomeFantasia" @(cliente.Status == "ATIVO" ? "disabled" : null)>Reativar</button>
+                                    </form>
+                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Cancelar cliente" data-confirm-message="Cancelar @cliente.NomeFantasia pode interromper toda a operação do tenant. Revise contrato, cobrança e responsáveis antes de confirmar." data-confirm-type="danger">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@cliente.Id" />
+                                        <input type="hidden" name="acao" value="CANCELAR" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Cancelar @cliente.NomeFantasia" @(cliente.Status == "CANCELADO" ? "disabled" : null)>Cancelar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </section>
 </div>

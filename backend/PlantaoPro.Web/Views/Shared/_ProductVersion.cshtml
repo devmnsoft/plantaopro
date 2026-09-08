@@ -2,6 +2,6 @@
 @{
     var version = typeof(Program).Assembly
         .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-        ?.Split('+')[0] ?? "1.91.0";
+        ?.Split('+')[0] ?? "não informada";
 }
-<span class="sidebar-version">PlantãoPro v@version · operação segura</span>
+<span class="sidebar-version">PlantãoPro v@(version) · operação segura</span>

@@ -1,9 +1,12 @@
 @{
     ViewData["Title"] = "Não encontrado";
 }
-<div class="container py-5 text-center">
-    <i class="bi bi-search display-4 text-secondary"></i>
-    <h1 class="h3 mt-3">Página ou registro não encontrado</h1>
-    <p class="text-muted">O conteúdo solicitado não existe ou não está disponível para o seu perfil.</p>
-    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Voltar ao início</a>
-</div>
+<section class="pp-error-page" aria-labelledby="notFoundTitle">
+    <span class="pp-error-page__icon" aria-hidden="true"><app-icon name="Search" size="30" /></span>
+    <div>
+        <span class="pp-eyebrow">Conteúdo indisponível</span>
+        <h1 id="notFoundTitle">Página ou registro não encontrado</h1>
+        <p>O endereço pode ter mudado, o registro pode não existir ou seu perfil pode não ter acesso a este contexto.</p>
+        <div class="pp-error-page__actions"><a class="btn btn-primary" asp-controller="MinhaCentral" asp-action="Index">Ir para Minha Central</a><a class="btn btn-outline-secondary" asp-controller="Ajuda" asp-action="Index">Consultar ajuda</a></div>
+    </div>
+</section>

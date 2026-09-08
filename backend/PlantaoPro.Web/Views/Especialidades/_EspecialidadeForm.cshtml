@@ -1,14 +1,16 @@
 @model PlantaoPro.Web.Models.EspecialidadeFormViewModel
-<form method="post" data-ajax-form="true">
+<form method="post" data-ajax-form="true" data-focus-invalid data-unsaved-form class="pp-form" novalidate aria-label="Dados da especialidade">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
     <div data-ajax-errors class="alert alert-danger d-none" role="alert"></div>
-    <div class="card shadow-sm border-0">
+    <div class="card pp-operation-panel">
         <div class="card-body">
+            <div class="pp-form-section-title"><h2>Identificação da especialidade</h2><p>Use um nome objetivo e uma descrição que ajude a equipe a reconhecer o cadastro.</p></div>
             <div class="row g-3">
                 <div class="col-md-8">
-                    <label asp-for="Nome" class="form-label">Nome <span class="text-danger">*</span></label>
-                    <input asp-for="Nome" class="form-control" maxlength="120" />
+                    <label asp-for="Nome" class="form-label form-required">Nome</label>
+                    <input asp-for="Nome" class="form-control" maxlength="120" required />
+                    <small class="form-help">Ex.: Clínica médica ou Cardiologia.</small>
                     <span asp-validation-for="Nome" class="text-danger small"></span>
                 </div>
                 <div class="col-md-4">
@@ -17,18 +19,21 @@
                         <option value="A">Ativo</option>
                         <option value="I">Inativo</option>
                     </select>
+                    <small class="form-help">Cadastros inativos não devem ser usados em novas escalas.</small>
                     <span asp-validation-for="RegStatus" class="text-danger small"></span>
                 </div>
                 <div class="col-12">
                     <label asp-for="Descricao" class="form-label">Descrição</label>
-                    <textarea asp-for="Descricao" class="form-control" rows="4" maxlength="500" placeholder="Resumo operacional para triagem e relatórios."></textarea>
+                    <textarea asp-for="Descricao" class="form-control" rows="4" maxlength="500"></textarea>
+                    <small class="form-help">Explique o uso operacional desta especialidade em até 500 caracteres.</small>
                     <span asp-validation-for="Descricao" class="text-danger small"></span>
                 </div>
             </div>
         </div>
-        <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-            <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
-            <button class="btn btn-primary btn-submit" type="submit"><i class="bi bi-check2-circle me-1"></i>Salvar</button>
+        <div class="pp-form-actions">
+            <span class="pp-form-actions__hint" role="status">Aguarde a confirmação de sucesso antes de sair.</span>
+            <div class="d-flex gap-2"><a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            <button class="btn btn-primary btn-submit" type="submit"><app-icon name="Check" size="18" /> Salvar especialidade</button></div>
         </div>
     </div>
 </form>

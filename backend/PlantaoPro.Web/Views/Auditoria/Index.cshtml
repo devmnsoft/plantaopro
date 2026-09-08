@@ -1,7 +1,8 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.AuditoriaDto>
 @{
     ViewData["Title"] = "Auditoria";
-    var items = Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>();
+    ViewData["Subtitle"] = "Investigue eventos de segurança e operação sem perder o contexto de acesso.";
+    var items = (Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.AuditoriaDto>()).ToArray();
     var resumo = ViewBag.Resumo as PlantaoPro.Web.Models.AuditoriaResumoDto;
     var queryString = Context.Request.QueryString.HasValue ? Context.Request.QueryString.Value : string.Empty;
     var downloadUrl = Url.Action("BaixarCsv", "Auditoria") + queryString;
@@ -11,58 +12,83 @@
     var filtroEntidade = Context.Request.Query["entidade"].ToString();
     var filtroAcao = Context.Request.Query["acao"].ToString();
     var filtroTexto = Context.Request.Query["texto"].ToString();
+    var filtroSucesso = Context.Request.Query["sucesso"].ToString();
+    var filtrosAtivos = new List<string>();
+    if (!string.IsNullOrWhiteSpace(filtroDataInicio) || !string.IsNullOrWhiteSpace(filtroDataFim)) filtrosAtivos.Add("período");
+    if (!string.IsNullOrWhiteSpace(filtroPerfil)) filtrosAtivos.Add($"perfil: {filtroPerfil}");
+    if (!string.IsNullOrWhiteSpace(filtroEntidade)) filtrosAtivos.Add($"entidade: {filtroEntidade}");
+    if (!string.IsNullOrWhiteSpace(filtroAcao)) filtrosAtivos.Add($"ação: {filtroAcao}");
+    if (!string.IsNullOrWhiteSpace(filtroTexto)) filtrosAtivos.Add($"texto: {filtroTexto}");
+    if (!string.IsNullOrWhiteSpace(filtroSucesso)) filtrosAtivos.Add(filtroSucesso == "true" ? "somente sucessos" : "somente falhas");
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Auditoria", "Rastreabilidade enterprise de ações críticas, falhas e acessos negados.", "bi-shield-check")' />
-<div class="d-flex justify-content-end mb-3"><a class="btn btn-outline-primary" href="@downloadUrl"><i class="bi bi-download"></i> Baixar CSV</a></div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Ações hoje</span><h3>@(resumo?.AcoesHoje ?? 0)</h3></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Falhas hoje</span><h3 class="text-danger">@(resumo?.FalhasHoje ?? 0)</h3></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Acessos negados</span><h3 class="text-warning">@(resumo?.AcessosNegados ?? 0)</h3></div></div></div>
-    <div class="col-md-3"><div class="card border-0 shadow-sm"><div class="card-body"><span class="text-muted small">Downloads</span><h3 class="text-primary">@(resumo?.Downloads ?? 0)</h3></div></div></div>
-</div>
+<div class="pp-page pp-audit-workspace">
+    <header class="pp-page-hero" aria-labelledby="auditTitle">
+        <div class="pp-page-hero__copy">
+            <span class="pp-eyebrow">Rastreabilidade protegida</span>
+            <h2 id="auditTitle">Auditoria operacional</h2>
+            <p>Consulte ações críticas, falhas e acessos negados no escopo permitido pela sessão. A exportação mantém exatamente os filtros ativos.</p>
+        </div>
+        <div class="pp-hero-actions"><a class="btn btn-outline-primary" href="@downloadUrl"><app-icon name="Report" size="18" /> Baixar CSV filtrado</a></div>
+    </header>
 
-<form method="get" class="card border-0 shadow-sm mb-4">
-    <div class="card-body row g-3">
-        <div class="col-md-2"><label class="form-label">Início</label><input class="form-control" type="date" name="dataInicio" value="@filtroDataInicio" /></div>
-        <div class="col-md-2"><label class="form-label">Fim</label><input class="form-control" type="date" name="dataFim" value="@filtroDataFim" /></div>
-        <div class="col-md-2"><label class="form-label">Perfil</label><input class="form-control" name="perfil" value="@filtroPerfil" placeholder="ADMINISTRADOR" /></div>
-        <div class="col-md-2"><label class="form-label">Entidade</label><input class="form-control" name="entidade" value="@filtroEntidade" placeholder="PLANTAO" /></div>
-        <div class="col-md-2"><label class="form-label">Ação</label><input class="form-control" name="acao" value="@filtroAcao" placeholder="CRIAR" /></div>
-        <div class="col-md-2"><label class="form-label">Texto</label><input class="form-control" name="texto" value="@filtroTexto" placeholder="Busca livre" /></div>
-        <div class="col-md-2"><label class="form-label">Sucesso</label><select class="form-select" name="sucesso"><option value="">Todos</option><option value="true">Sucesso</option><option value="false">Falha</option></select></div>
-        <div class="col-12 d-flex gap-2"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Filtrar</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div>
-    </div>
-</form>
+    <section class="pp-operational-kpis" aria-label="Resumo da auditoria">
+        <article class="pp-operational-kpi"><span>Ações hoje</span><strong>@(resumo?.AcoesHoje ?? 0)</strong><small>eventos processados</small></article>
+        <article class="pp-operational-kpi is-danger"><span>Falhas hoje</span><strong>@(resumo?.FalhasHoje ?? 0)</strong><small>requerem investigação</small></article>
+        <article class="pp-operational-kpi is-warning"><span>Acessos negados</span><strong>@(resumo?.AcessosNegados ?? 0)</strong><small>bloqueios registrados</small></article>
+        <article class="pp-operational-kpi"><span>Downloads</span><strong>@(resumo?.Downloads ?? 0)</strong><small>exportações auditadas</small></article>
+    </section>
 
-<div class="card border-0 shadow-sm">
-    <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-            <thead class="table-light"><tr><th>Data/hora</th><th>Usuário</th><th>Cliente</th><th>Perfil</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-            @if (items.Any())
-            {
-                foreach (var log in items)
+    <form method="get" class="pp-filter-panel" role="search" aria-label="Filtros da auditoria">
+        <div class="pp-filter-panel__grid">
+            <div><label class="form-label" for="auditStart">Início</label><input class="form-control" id="auditStart" type="date" name="dataInicio" value="@filtroDataInicio" /><small class="form-help">Primeiro dia do recorte.</small></div>
+            <div><label class="form-label" for="auditEnd">Fim</label><input class="form-control" id="auditEnd" type="date" name="dataFim" value="@filtroDataFim" /><small class="form-help">Último dia do recorte.</small></div>
+            <div><label class="form-label" for="auditProfile">Perfil</label><input class="form-control" id="auditProfile" name="perfil" value="@filtroPerfil" list="auditProfiles" autocomplete="off" /><small class="form-help">Ex.: Administrador ou Financeiro.</small></div>
+            <div><label class="form-label" for="auditEntity">Entidade</label><input class="form-control" id="auditEntity" name="entidade" value="@filtroEntidade" list="auditEntities" autocomplete="off" /><small class="form-help">Tipo do registro afetado.</small></div>
+            <div><label class="form-label" for="auditAction">Ação</label><input class="form-control" id="auditAction" name="acao" value="@filtroAcao" list="auditActions" autocomplete="off" /><small class="form-help">Evento executado no sistema.</small></div>
+            <div><label class="form-label" for="auditResult">Resultado</label><select class="form-select" id="auditResult" name="sucesso"><option value="">Todos</option><option value="true" selected="@(filtroSucesso == "true")">Sucesso</option><option value="false" selected="@(filtroSucesso == "false")">Falha</option></select><small class="form-help">Filtre operações concluídas ou falhas.</small></div>
+        </div>
+        <div class="mt-3"><label class="form-label" for="auditText">Busca livre</label><input class="form-control" id="auditText" name="texto" value="@filtroTexto" placeholder="Usuário, cliente, origem ou descrição do evento" /><small class="form-help">A busca respeita o escopo e os dados disponíveis na API.</small></div>
+        <datalist id="auditProfiles"><option value="ADMINISTRADOR_GLOBAL"></option><option value="ADMINISTRADOR_CLIENTE"></option><option value="COORDENADOR"></option><option value="FINANCEIRO"></option><option value="MEDICO"></option></datalist>
+        <datalist id="auditEntities"><option value="CLIENTE"></option><option value="USUARIO"></option><option value="PERFIL"></option><option value="PLANTAO"></option><option value="ESCALA"></option></datalist>
+        <datalist id="auditActions"><option value="CRIAR"></option><option value="ALTERAR"></option><option value="BLOQUEAR"></option><option value="LOGIN"></option><option value="EXPORTAR"></option></datalist>
+        <div class="pp-filter-panel__actions">
+            <span class="pp-filter-summary"><strong>Filtros ativos:</strong> @(filtrosAtivos.Any() ? string.Join(" · ", filtrosAtivos) : "nenhum; exibindo o recorte padrão")</span>
+            <div class="d-flex flex-wrap gap-2"><a class="btn btn-outline-secondary" asp-action="Index">Limpar filtros</a><button class="btn btn-primary" type="submit"><app-icon name="Search" size="17" /> Aplicar filtros</button></div>
+        </div>
+    </form>
+
+    <section class="pp-operation-panel" aria-labelledby="auditListTitle">
+        <header class="pp-operation-panel__header"><div><h2 id="auditListTitle">Eventos encontrados</h2><p>Identificadores técnicos aparecem apenas para permitir investigação e correlação.</p></div><span class="pp-badge">@items.Length nesta página</span></header>
+        <div class="table-responsive pp-premium-table">
+            <table class="table align-middle" data-mobile-cards>
+                <caption class="visually-hidden">Eventos de auditoria no contexto atual</caption>
+                <thead><tr><th>Data/hora</th><th>Usuário</th><th>Cliente</th><th>Perfil</th><th>Ação</th><th>Entidade</th><th>IP</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody>
+                @if (items.Any())
                 {
-                    <tr>
-                        <td>@log.DataHora.ToString("dd/MM/yyyy HH:mm")</td>
-                        <td><div>@(string.IsNullOrWhiteSpace(log.UsuarioNome) ? "-" : log.UsuarioNome)</div><code class="small">@(log.UsuarioId?.ToString() ?? "-")</code></td>
-                        <td><div>@(string.IsNullOrWhiteSpace(log.ClienteNome) ? "-" : log.ClienteNome)</div><code class="small">@(log.ClienteId?.ToString() ?? "-")</code></td>
-                        <td><span class="badge bg-secondary">@log.Perfil</span></td>
-                        <td><span class="badge bg-info text-dark">@log.Acao</span></td>
-                        <td>@log.Entidade</td>
-                        <td>@(string.IsNullOrWhiteSpace(log.IpOrigem) ? "-" : log.IpOrigem)</td>
-                        <td>@if (log.Sucesso) { <span class="badge bg-success">Sucesso</span> } else { <span class="badge bg-danger">Falha</span> }</td>
-                        <td><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@log.Id">Detalhes</a></td>
-                    </tr>
+                    foreach (var log in items)
+                    {
+                        <tr>
+                            <td data-label="Data/hora"><time datetime="@log.DataHora.ToString("O")">@log.DataHora.ToString("dd/MM/yyyy HH:mm")</time></td>
+                            <td data-label="Usuário"><div>@(string.IsNullOrWhiteSpace(log.UsuarioNome) ? "Não informado" : log.UsuarioNome)</div><code class="small">@(log.UsuarioId?.ToString() ?? "Sem identificador")</code></td>
+                            <td data-label="Cliente"><div>@(string.IsNullOrWhiteSpace(log.ClienteNome) ? "Não informado" : log.ClienteNome)</div><code class="small">@(log.ClienteId?.ToString() ?? "Contexto global")</code></td>
+                            <td data-label="Perfil"><span class="pp-status-badge is-muted">@log.Perfil</span></td>
+                            <td data-label="Ação"><span class="pp-status-badge is-warning">@log.Acao</span></td>
+                            <td data-label="Entidade">@log.Entidade</td>
+                            <td data-label="IP">@(string.IsNullOrWhiteSpace(log.IpOrigem) ? "Não informado" : log.IpOrigem)</td>
+                            <td data-label="Status"><span class="pp-status-badge @(log.Sucesso ? "is-success" : "is-danger")">@(log.Sucesso ? "Sucesso" : "Falha")</span></td>
+                            <td data-label="Ações"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@log.Id" aria-label="Abrir detalhes do evento de @log.DataHora.ToString("dd/MM/yyyy HH:mm")">Detalhes</a></td>
+                        </tr>
+                    }
                 }
-            }
-            else
-            {
-                <tr><td colspan="9" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x", "Sem registros de auditoria", "Não houve eventos no período selecionado.")' /></td></tr>
-            }
-            </tbody>
-        </table>
-    </div>
-    <div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div>
+                else
+                {
+                    <tr><td colspan="9" class="py-5"><partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-journal-x", "Sem registros neste recorte", "Ajuste ou limpe os filtros. Nenhum evento fora do seu escopo será exibido.")' /></td></tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer bg-white"><partial name="_Pagination" model="Model" /></div>
+    </section>
 </div>

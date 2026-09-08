@@ -1,9 +1,12 @@
 @{
     ViewData["Title"] = "Erro";
 }
-<div class="container py-5 text-center">
-    <i class="bi bi-exclamation-triangle display-4 text-danger"></i>
-    <h1 class="h3 mt-3">Não foi possível concluir a operação</h1>
-    <p class="text-muted">Ocorreu uma instabilidade. Tente novamente em instantes. Nenhum detalhe técnico foi exposto por segurança.</p>
-    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Voltar ao início</a>
-</div>
+<section class="pp-error-page" role="alert" aria-labelledby="errorTitle">
+    <span class="pp-error-page__icon" aria-hidden="true"><app-icon name="Warning" size="30" /></span>
+    <div>
+        <span class="pp-eyebrow">Falha recuperável</span>
+        <h1 id="errorTitle">Não foi possível concluir a operação</h1>
+        <p>Ocorreu uma instabilidade. Seus dados não devem ser reenviados até você confirmar o estado da operação. Nenhum detalhe técnico foi exposto por segurança.</p>
+        <div class="pp-error-page__actions"><a class="btn btn-primary" asp-controller="MinhaCentral" asp-action="Index">Ir para Minha Central</a><a class="btn btn-outline-secondary" asp-controller="Ajuda" asp-action="Index">Obter ajuda</a></div>
+    </div>
+</section>

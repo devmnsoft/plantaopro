@@ -7,15 +7,15 @@ using PlantaoPro.Api.Controllers;
 namespace PlantaoPro.Api;
 
 public sealed record ContextoAtualDto(Guid? UsuarioId, Guid? TenantId, Guid? ClienteId, string ContextMode, string AccessScope, string? PrimaryRole, string? TenantContextId);
-public sealed record TenantDisponivelDto(Guid TenantId, Guid ClienteId, string Cliente, string Tenant, string Plano, bool Ativo);
+public sealed record TenantDisponivelDto(Guid TenantId, Guid? ClienteId, string Cliente, string Tenant, string Plano, bool Ativo);
 public sealed record ContextoTrocaDto(Guid Id, Guid? TenantId, string Evento, DateTime TimestampUtc);
 public sealed record ContextSelectionDto(Guid SessionId, Guid TenantId, Guid? ClienteId, string ContextMode);
 
 public interface IContextoRepository
 {
-    Task<IReadOnlyList<TenantDisponivelDto>> TenantsAsync(Guid userId, CancellationToken ct);
+    Task<IReadOnlyList<TenantDisponivelDto>> TenantsAsync(Guid userId, bool globalAccess, CancellationToken ct);
     Task<IReadOnlyList<ContextoTrocaDto>> HistoryAsync(Guid userId, int take, CancellationToken ct);
-    Task<ContextSelectionDto?> SelectAsync(Guid userId, Guid tenantId, string? reason, CancellationToken ct);
+    Task<ContextSelectionDto?> SelectAsync(Guid userId, Guid tenantId, bool globalAccess, string? reason, CancellationToken ct);
     Task<bool> ReturnGlobalAsync(Guid userId, string? reason, CancellationToken ct);
 }
 
@@ -24,24 +24,37 @@ public sealed class ContextoRepository : IContextoRepository
     private readonly string connectionString;
     public ContextoRepository(IConfiguration configuration) => connectionString = configuration.GetConnectionString("Default") ?? throw new InvalidOperationException("ConnectionStrings:Default não configurada.");
     private NpgsqlConnection Open() => new NpgsqlConnection(connectionString);
-    public async Task<IReadOnlyList<TenantDisponivelDto>> TenantsAsync(Guid userId, CancellationToken ct)
+    public async Task<IReadOnlyList<TenantDisponivelDto>> TenantsAsync(Guid userId, bool globalAccess, CancellationToken ct)
     {
-        const string sql = @"select a.tenant_id TenantId,a.cliente_id ClienteId,coalesce(c.nome,'') Cliente,coalesce(t.nome,'') Tenant,coalesce(s.nome,s.codigo,'') Plano,true Ativo
-from plantaopro.usuario_tenant_acessos a join plantaopro.usuarios u on u.id=a.usuario_id and u.reg_status='A' and u.status='ATIVO'
-join plantaopro.tenants t on t.id=a.tenant_id and t.status='ATIVO' left join plantaopro.clientes c on c.id=a.cliente_id and c.status='ATIVO'
-left join lateral(select nome,codigo from plantaopro.assinaturas s where s.tenant_id=a.tenant_id and s.status='ATIVO' order by s.criado_em desc limit 1)s on true
-where a.usuario_id=@userId and a.reg_status='A' and a.status='ATIVO' and (a.acesso_fim is null or a.acesso_fim>now()) order by c.nome,t.nome";
-        await using var cn=Open(); return (await cn.QueryAsync<TenantDisponivelDto>(new CommandDefinition(sql,new{userId},cancellationToken:ct))).AsList();
+        const string sql = @"select distinct t.id TenantId,t.cliente_id ClienteId,coalesce(c.nome_fantasia,c.razao_social,'') Cliente,coalesce(t.nome,'') Tenant,coalesce(s.nome,s.codigo,'') Plano,true Ativo
+from plantaopro.tenants t
+left join plantaopro.clientes c on c.id=t.cliente_id and c.reg_status='A'
+left join lateral(select nome,codigo from plantaopro.assinaturas s where s.tenant_id=t.id and s.status='ATIVO' and s.reg_status='A' order by s.criado_em desc limit 1)s on true
+where t.reg_status='A' and t.status='ATIVO' and (c.id is null or c.status='ATIVO')
+  and (@globalAccess or exists(
+      select 1 from plantaopro.usuario_tenant_acessos a
+      join plantaopro.usuarios u on u.id=a.usuario_id and u.reg_status='A' and u.status='ATIVO'
+      where a.usuario_id=@userId and a.tenant_id=t.id and a.reg_status='A' and a.status='ATIVO'
+        and (a.acesso_fim is null or a.acesso_fim>now())))
+order by Cliente,Tenant";
+        await using var cn=Open(); return (await cn.QueryAsync<TenantDisponivelDto>(new CommandDefinition(sql,new{userId,globalAccess},cancellationToken:ct))).AsList();
     }
     public async Task<IReadOnlyList<ContextoTrocaDto>> HistoryAsync(Guid userId,int take,CancellationToken ct)
     { await using var cn=Open(); return (await cn.QueryAsync<ContextoTrocaDto>(new CommandDefinition("select id,tenant_destino_id TenantId,modo_destino Evento,reg_date TimestampUtc from plantaopro.contexto_trocas where usuario_id=@userId and reg_status='A' order by reg_date desc limit @take",new{userId,take=Math.Clamp(take,1,100)},cancellationToken:ct))).AsList(); }
-    public async Task<ContextSelectionDto?> SelectAsync(Guid userId,Guid tenantId,string? reason,CancellationToken ct)
+    public async Task<ContextSelectionDto?> SelectAsync(Guid userId,Guid tenantId,bool globalAccess,string? reason,CancellationToken ct)
     {
         await using var cn=Open(); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct);
-        var access=await cn.QuerySingleOrDefaultAsync<(Guid TenantId,Guid? ClienteId,string Perfil)>(new CommandDefinition(@"select a.tenant_id TenantId,a.cliente_id ClienteId,coalesce(p.codigo,p.nome,'USUARIO') Perfil from plantaopro.usuario_tenant_acessos a
-join plantaopro.usuarios u on u.id=a.usuario_id and u.reg_status='A' and u.status='ATIVO' join plantaopro.tenants t on t.id=a.tenant_id and t.status='ATIVO'
-left join plantaopro.clientes c on c.id=a.cliente_id left join plantaopro.perfis p on p.id=a.perfil_id and p.reg_status='A' and p.status='ATIVO'
-where a.usuario_id=@userId and a.tenant_id=@tenantId and a.reg_status='A' and a.status='ATIVO' and (a.acesso_fim is null or a.acesso_fim>now()) and (c.id is null or c.status='ATIVO')",new{userId,tenantId},tx,cancellationToken:ct));
+        var access=await cn.QuerySingleOrDefaultAsync<(Guid TenantId,Guid? ClienteId,string Perfil)>(new CommandDefinition(@"select t.id TenantId,t.cliente_id ClienteId,
+case when @globalAccess then 'ADMINISTRADOR_GLOBAL' else coalesce(p.codigo,p.nome,'USUARIO') end Perfil
+from plantaopro.tenants t
+left join plantaopro.clientes c on c.id=t.cliente_id and c.reg_status='A'
+left join plantaopro.usuario_tenant_acessos a on a.usuario_id=@userId and a.tenant_id=t.id and a.reg_status='A' and a.status='ATIVO' and (a.acesso_fim is null or a.acesso_fim>now())
+left join plantaopro.usuarios u on u.id=a.usuario_id and u.reg_status='A' and u.status='ATIVO'
+left join plantaopro.perfis p on p.id=a.perfil_id and p.reg_status='A' and p.status='ATIVO'
+where t.id=@tenantId and t.reg_status='A' and t.status='ATIVO' and (c.id is null or c.status='ATIVO')
+  and (@globalAccess or u.id is not null)
+order by p.base_sistema desc nulls last,p.nome
+limit 1",new{userId,tenantId,globalAccess},tx,cancellationToken:ct));
         if(access.TenantId==Guid.Empty){await tx.RollbackAsync(ct);return null;}
         await cn.ExecuteAsync(new CommandDefinition("update plantaopro.contexto_sessoes set encerrado_em=now(),reg_status='I' where usuario_id=@userId and encerrado_em is null and reg_status='A'",new{userId},tx,cancellationToken:ct));
         var id=Guid.NewGuid();
@@ -72,12 +85,13 @@ public sealed class ContextoService : IContextoService
     private readonly IContextoRepository repository;
     public ContextoService(IContextoRepository repository)=>this.repository=repository;
     public ContextoAtualDto Atual(ClaimsPrincipal user)=>new(UserId(user),Parse(user.FindFirstValue("tenant_id")),Parse(user.FindFirstValue("cliente_id")),user.FindFirstValue("context_mode")??"GLOBAL",user.FindFirstValue("access_scope")??AccessScopes.Global,user.FindFirstValue("primary_role")??user.FindFirstValue(ClaimTypes.Role),user.FindFirstValue("tenant_context_id"));
-    public Task<IReadOnlyList<TenantDisponivelDto>> TenantsDisponiveisAsync(ClaimsPrincipal u,CancellationToken ct)=>repository.TenantsAsync(Required(u),ct);
+    public Task<IReadOnlyList<TenantDisponivelDto>> TenantsDisponiveisAsync(ClaimsPrincipal u,CancellationToken ct)=>repository.TenantsAsync(Required(u),IsGlobal(u),ct);
     public Task<IReadOnlyList<ContextoTrocaDto>> RecentesAsync(ClaimsPrincipal u,CancellationToken ct)=>repository.HistoryAsync(Required(u),10,ct);
-    public async Task<ContextSelectionDto> SelecionarAsync(ClaimsPrincipal u,SelecionarContextoRequest r,CancellationToken ct)=>await repository.SelectAsync(Required(u),r.TenantId,r.Motivo,ct)??throw new UnauthorizedAccessException("Tenant indisponível para este usuário.");
+    public async Task<ContextSelectionDto> SelecionarAsync(ClaimsPrincipal u,SelecionarContextoRequest r,CancellationToken ct)=>await repository.SelectAsync(Required(u),r.TenantId,IsGlobal(u),r.Motivo,ct)??throw new UnauthorizedAccessException("Tenant indisponível para este usuário.");
     public async Task RetornarGlobalAsync(ClaimsPrincipal u,CancellationToken ct)=>await repository.ReturnGlobalAsync(Required(u),"Retorno solicitado pelo usuário",ct);
     public Task<IReadOnlyList<ContextoTrocaDto>> HistoricoAsync(ClaimsPrincipal u,CancellationToken ct)=>repository.HistoryAsync(Required(u),100,ct);
     private static Guid Required(ClaimsPrincipal u)=>UserId(u)??throw new UnauthorizedAccessException("Usuário não identificado.");
+    private static bool IsGlobal(ClaimsPrincipal u)=>u.IsInRole(RolesConstants.AdministradorGlobal);
     private static Guid? UserId(ClaimsPrincipal u)=>Parse(u.FindFirstValue("uid")??u.FindFirstValue(ClaimTypes.NameIdentifier)); private static Guid? Parse(string? s)=>Guid.TryParse(s,out var id)?id:null;
 }
 

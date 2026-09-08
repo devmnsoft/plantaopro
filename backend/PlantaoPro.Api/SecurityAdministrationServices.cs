@@ -133,17 +133,21 @@ public sealed class SecurityAdministrationService
 {
     private readonly IConfiguration cfg; private readonly ICurrentUserService currentUser; private readonly IEffectivePermissionService permissions; private readonly PlantaoPro.Api.Data.IAuditService audit;
     public SecurityAdministrationService(IConfiguration cfg, ICurrentUserService currentUser, IEffectivePermissionService permissions, PlantaoPro.Api.Data.IAuditService audit) { this.cfg = cfg; this.currentUser = currentUser; this.permissions = permissions; this.audit = audit; }
-    private Guid? TenantScope(Guid? requested) => currentUser.IsGlobalAdmin() ? requested : currentUser.TenantId;
+    private Guid? TenantScope(Guid? requested)
+    {
+        if (currentUser.IsGlobalAdmin()) return requested;
+        return currentUser.TenantId ?? throw new UnauthorizedAccessException("Contexto de tenant obrigatório para administrar segurança.");
+    }
     public async Task<object> DashboardAsync(CancellationToken ct)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default")); var tenantId = TenantScope(null);
         var row = await cn.QuerySingleAsync(new CommandDefinition(@"select
-(select count(*) from plantaopro.usuarios where reg_status='A' and (@tenantId is null or tenant_id=@tenantId)) usuarios_ativos,
-(select count(*) from plantaopro.usuarios where reg_status<>'A' and (@tenantId is null or tenant_id=@tenantId)) usuarios_inativos,
-(select count(*) from plantaopro.usuarios u where not exists (select 1 from plantaopro.usuarios_perfis up where up.usuario_id=u.id and up.reg_status='A') and (@tenantId is null or u.tenant_id=@tenantId)) usuarios_sem_perfil,
-(select count(*) from plantaopro.login_tentativas where sucesso=false) logins_falha,
-(select count(*) from plantaopro.auth_sessoes where revogada_em is null and reg_status='A') sessoes_ativas,
-(select count(*) from plantaopro.auth_sessoes where revogada_em is not null) sessoes_revogadas", new { tenantId }, cancellationToken: ct));
+(select count(*) from plantaopro.usuarios where reg_status='A' and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)) usuarios_ativos,
+(select count(*) from plantaopro.usuarios where reg_status<>'A' and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)) usuarios_inativos,
+(select count(*) from plantaopro.usuarios u where not exists (select 1 from plantaopro.usuarios_perfis up where up.usuario_id=u.id and up.reg_status='A') and (@tenantId is null or coalesce(u.tenant_id,u.cliente_id)=@tenantId)) usuarios_sem_perfil,
+(select count(*) from plantaopro.login_tentativas lt left join plantaopro.usuarios u on u.id=lt.usuario_id where lt.sucesso=false and (@tenantId is null or coalesce(u.tenant_id,u.cliente_id)=@tenantId)) logins_falha,
+(select count(*) from plantaopro.auth_sessoes s where s.revogada_em is null and s.reg_status='A' and (@tenantId is null or coalesce(s.tenant_id,s.cliente_id)=@tenantId)) sessoes_ativas,
+(select count(*) from plantaopro.auth_sessoes s where s.revogada_em is not null and (@tenantId is null or coalesce(s.tenant_id,s.cliente_id)=@tenantId)) sessoes_revogadas", new { tenantId }, cancellationToken: ct));
         return row;
     }
     public async Task<IEnumerable<object>> UsuariosAsync(string? busca, int page, int pageSize, CancellationToken ct)

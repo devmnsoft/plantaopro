@@ -1,7 +1,9 @@
 using Dapper;
 using Npgsql;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Security.Claims;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 
@@ -76,7 +78,7 @@ public sealed class RequestLoggingMiddleware
             var email = context.User?.FindFirst("email")?.Value
                 ?? context.User?.FindFirst(ClaimTypes.Email)?.Value
                 ?? string.Empty;
-            email = MascararTexto(email) ?? string.Empty;
+            email = Fingerprint(email, "email") ?? string.Empty;
 
             var perfil = context.User?.FindFirst("perfil")?.Value
                 ?? context.User?.FindFirst(ClaimTypes.Role)?.Value
@@ -87,7 +89,7 @@ public sealed class RequestLoggingMiddleware
             }
 
             var perfilSeguro = MascararTexto(perfil) ?? string.Empty;
-            var ipOrigem = context.Connection.RemoteIpAddress?.ToString() ?? string.Empty;
+            var ipOrigem = Fingerprint(context.Connection.RemoteIpAddress?.ToString(), "ip") ?? string.Empty;
             var userAgent = MascararTexto(context.Request.Headers["User-Agent"].ToString()) ?? string.Empty;
             var rawQueryString = context.Request.QueryString.HasValue
                 ? context.Request.QueryString.Value ?? string.Empty
@@ -189,7 +191,7 @@ values
                 });
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             OpenLoggingCircuit();
             LogFallbackOnce("Falha ao persistir log estruturado; evento sanitizado descartado até recuperação do banco.");
@@ -257,7 +259,11 @@ values
             "secret",
             "api_key",
             "apikey",
-            "authorization"
+            "authorization",
+            "cpf",
+            "cnpj",
+            "documento",
+            "email"
         };
 
         foreach (var termo in termosSensiveis)
@@ -284,5 +290,12 @@ values
         }
 
         return valor.Length > 1000 ? valor.Substring(0, 1000) : valor;
+    }
+
+    private static string? Fingerprint(string? value, string prefix)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(value.Trim().ToLowerInvariant()));
+        return prefix + ":sha256:" + Convert.ToHexString(hash).Substring(0, 16);
     }
 }

@@ -309,7 +309,7 @@ values
         private int BloqueioMinutos => cfg.GetValue("Authentication:LockoutMinutes", 15);
         private int JanelaTentativasMinutos => cfg.GetValue("Authentication:FailedAttemptWindowMinutes", 30);
         private bool LoginLockoutEnabled => cfg.GetValue("Authentication:LoginLockoutEnabled", true);
-        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; private readonly IRoleCatalog roleCatalog; private readonly IPrimaryRoleResolver primaryRoleResolver; private readonly IAccessScopeResolver accessScopeResolver; private readonly ITenantContextResolver tenantContextResolver; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
+        private readonly IConfiguration cfg; private readonly IAuditService audit; private readonly ILogger<AuthService> logger; private readonly IRoleCatalog roleCatalog; private readonly IPrimaryRoleResolver primaryRoleResolver; private readonly IAccessScopeResolver accessScopeResolver; private readonly ITenantContextResolver tenantContextResolver; private readonly IAuthenticationSessionService sessions; public AuthService(IConfiguration cfg, IAuditService audit, ILogger<AuthService> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver, IAuthenticationSessionService sessions)
         {
             this.cfg = cfg;
             this.audit = audit;
@@ -318,6 +318,7 @@ values
             this.primaryRoleResolver = primaryRoleResolver;
             this.accessScopeResolver = accessScopeResolver;
             this.tenantContextResolver = tenantContextResolver;
+            this.sessions = sessions;
         }
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
         {
@@ -356,7 +357,7 @@ limit 50", new
                 {
                     await RegistrarTentativaAsync(cn, null, auditIdentifier, ip, ua, false, "CNPJ_REQUIRES_INDIVIDUAL_IDENTIFIER");
                     logger.LogWarning("Login institucional exige identificação individual Identificador:{Identificador} Candidatos:{Candidatos} IP:{Ip}", auditIdentifier, candidates.Length, ip);
-                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos. Use seu e-mail ou CPF para acessar esta instituição.", 401);
+                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
 
                 var passwordMatches = new List<(LoginUserRow User, bool Legacy)>();
@@ -419,12 +420,6 @@ limit 50", new
                     logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário bloqueado ou inativo. Contate o administrador.", 403);
                 }
-                if ((user.ClienteId ?? user.TenantId).HasValue && !string.Equals(user.ClienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
-                {
-                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_INACTIVE");
-                    return ApiResponse<LoginResponse>.Fail("O acesso da instituição está bloqueado. Contate o administrador responsável.", 423);
-                }
-
                 if (passwordMatches[0].Legacy)
                 {
                     var migratedHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
@@ -450,24 +445,33 @@ where up.usuario_id=@id
                     logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
-                var clienteId = user.ClienteId;
-                var tenantId = user.TenantId ?? user.ClienteId;
+                var isGlobal = roles.Any(roleCatalog.IsGlobal);
+                if (!isGlobal && (user.ClienteId ?? user.TenantId).HasValue && !string.Equals(user.ClienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_INACTIVE");
+                    return ApiResponse<LoginResponse>.Fail("O acesso da instituição está bloqueado. Contate o administrador responsável.", 423);
+                }
+
+                var clienteId = isGlobal ? null : user.ClienteId;
+                var tenantId = isGlobal ? null : user.TenantId ?? user.ClienteId;
                 var mustChangePassword = user.SenhaAlteracaoObrigatoria;
                 var primaryRole = primaryRoleResolver.Resolve(roles);
                 var tenantContextRequired = tenantContextResolver.RequiresTenant(roles, tenantId);
                 var tenantContextSelected = tenantContextResolver.IsTenantSelected(tenantId);
                 var accessScope = accessScopeResolver.Resolve(roles, tenantContextSelected);
                 var contextMode = tenantContextSelected ? AccessScopes.Tenant : AccessScopes.Global;
-                var sessionId = Guid.NewGuid().ToString("N");
-                var isGlobal = roles.Any(roleCatalog.IsGlobal);
+                var sessionGuid = Guid.NewGuid();
+                var sessionId = sessionGuid.ToString("N");
+                var expiresAtUtc = DateTime.UtcNow.AddHours(8);
                 var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId)).ToArray();
                 var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value)).ToArray() : Array.Empty<string>();
                 var token = GenerateToken(usuarioId, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules);
+                await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua);
                 await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
                 await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, "SUCCESS");
                 await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length }, true, ip, primaryRole);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, user.Nome, user.Email, roles, clienteId, user.ClienteNome, tenantId, user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules), "Login realizado com sucesso.");
+                return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules), "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
@@ -661,15 +665,21 @@ where id=@id", new
     {
         private readonly IConfiguration cfg;
         private readonly IAuditService audit;
+        private readonly ICurrentUserService currentUser;
 
-        public UserService(IConfiguration cfg, IAuditService audit)
+        public UserService(IConfiguration cfg, IAuditService audit, ICurrentUserService currentUser)
         {
             this.cfg = cfg;
             this.audit = audit;
+            this.currentUser = currentUser;
         }
 
         public async Task<IEnumerable<UserListVM>> ListAsync()
         {
+            var isGlobal = currentUser.IsGlobalAdmin();
+            var tenantId = currentUser.TenantId;
+            if (!isGlobal && !tenantId.HasValue) return Array.Empty<UserListVM>();
+
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             return await cn.QueryAsync<UserListVM>(
                 @"select
@@ -688,24 +698,38 @@ where id=@id", new
                   left join plantaopro.usuarios_perfis up on up.usuario_id = u.id and up.reg_status = 'A'
                   left join plantaopro.perfis p on p.id = up.perfil_id and p.reg_status = 'A'
                   where u.reg_status = 'A'
+                    and (@isGlobal or coalesce(u.tenant_id,u.cliente_id) = @tenantId)
                   group by u.id, u.nome, u.email
-                  order by u.nome");
+                  order by u.nome", new { isGlobal, tenantId });
         }
 
         public async Task<bool> UnlockUserAsync(Guid userId, Guid adminId, string? ipAddress, string? userAgent)
         {
+            var isGlobal = currentUser.IsGlobalAdmin();
+            var tenantId = currentUser.TenantId;
+            if (!isGlobal && !tenantId.HasValue) return false;
+
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
 
-            var exists = await cn.ExecuteScalarAsync<int>(
-                "select count(1) from plantaopro.usuarios where id=@id and reg_status='A'",
-                new
-                {
-                    id = userId
-                }, tx);
-            if (exists == 0)
+            var targetTenantId = await cn.QuerySingleOrDefaultAsync<Guid?>(
+                @"select coalesce(tenant_id,cliente_id)
+                  from plantaopro.usuarios
+                  where id=@id and reg_status='A'
+                    and (@isGlobal or coalesce(tenant_id,cliente_id)=@tenantId)",
+                new { id = userId, isGlobal, tenantId }, tx);
+            var targetExists = await cn.ExecuteScalarAsync<bool>(
+                @"select exists(
+                    select 1 from plantaopro.usuarios
+                    where id=@id and reg_status='A'
+                      and (@isGlobal or coalesce(tenant_id,cliente_id)=@tenantId))",
+                new { id = userId, isGlobal, tenantId }, tx);
+            if (!targetExists)
+            {
+                await tx.RollbackAsync();
                 return false;
+            }
 
             await cn.ExecuteAsync(
                 @"update plantaopro.login_tentativas
@@ -717,7 +741,8 @@ where id=@id", new
                 }, tx);
 
             await tx.CommitAsync();
-            await audit.LogAsync(adminId, "UNLOCK_USER", "APP_USER", userId, "Usuário desbloqueado por administrador", ip: ipAddress, userAgent: userAgent);
+            await audit.RegistrarAsync(adminId, targetTenantId, AuditoriaConstants.Entidades.Usuario, userId, AuditoriaConstants.Acoes.Reativar,
+                new { origem = "ADMINISTRACAO", escopoGlobal = isGlobal }, true, ipAddress, string.Join(',', currentUser.Roles));
             return true;
         }
     }

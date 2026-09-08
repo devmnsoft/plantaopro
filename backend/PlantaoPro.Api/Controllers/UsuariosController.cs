@@ -27,7 +27,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = RolesConstants.Administrador)]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<UserListVM>>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListUsers()
     {
@@ -111,7 +111,7 @@ public class UsuariosController : ControllerBase
     }
 
     [HttpPost("unlock/{id:guid}")]
-    [Authorize(Roles = RolesConstants.Administrador + ",ADMINISTRATOR")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
@@ -121,8 +121,9 @@ public class UsuariosController : ControllerBase
         if (adminId == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
 
         var isAdministrator =
+            User.IsInRole(RolesConstants.AdministradorGlobal) ||
             User.IsInRole(RolesConstants.Administrador) ||
-            User.IsInRole("ADMINISTRATOR");
+            User.IsInRole(RolesConstants.AdministradorCliente);
 
         if (!isAdministrator) throw new UnauthorizedAccessException("Somente administradores podem desbloquear usuários.");
 

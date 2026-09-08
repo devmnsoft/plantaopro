@@ -86,11 +86,13 @@ public sealed class CurrentUserService : ICurrentUserService
 public sealed class ModulePermissionService : IPermissionService, IModuleAccessService, ITenantAccessService
 {
     private readonly ICurrentUserService currentUser;
+    private readonly IHttpContextAccessor httpContextAccessor;
     private readonly ILogger<ModulePermissionService> logger;
 
-    public ModulePermissionService(ICurrentUserService currentUser, ILogger<ModulePermissionService> logger)
+    public ModulePermissionService(ICurrentUserService currentUser, IHttpContextAccessor httpContextAccessor, ILogger<ModulePermissionService> logger)
     {
         this.currentUser = currentUser;
+        this.httpContextAccessor = httpContextAccessor;
         this.logger = logger;
     }
 
@@ -101,6 +103,14 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
 
         var code = Normalize(module);
         var actionCode = Normalize(action);
+
+        if (HasClaim("access_catalog_version", "v2149"))
+        {
+            if (CommonModules.Contains(code)) return true;
+            var tenantAdministration = TenantAdministrationModules.Contains(code) && currentUser.IsTenantAdmin();
+            if (!tenantAdministration && !HasClaim("module", code)) return false;
+            return tenantAdministration || HasClaim("permission", $"{code}.{actionCode}") || HasClaim("permission", $"{code}.*");
+        }
 
         if (code == "AJUDA" || code == "LGPD" || code == "CONTA") return true;
 
@@ -132,8 +142,15 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
     public bool CanManageSaas() => currentUser.IsGlobalAdmin();
     public bool CanAccessModule(string moduleCode) => IsModuleEnabled(moduleCode) && HasPermission(moduleCode, "VER");
     public bool CanAccessFeature(string featureCode) => IsFeatureEnabled(featureCode) && HasPermission(featureCode, "USAR");
-    public bool IsModuleEnabled(string moduleCode) => currentUser.IsGlobalAdmin() || !string.Equals((moduleCode ?? string.Empty).Trim(), "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
-    public bool IsFeatureEnabled(string featureCode) => currentUser.IsGlobalAdmin() || !string.Equals((featureCode ?? string.Empty).Trim(), "WHITE_LABEL_AVANCADO", StringComparison.OrdinalIgnoreCase);
+    public bool IsModuleEnabled(string moduleCode)
+    {
+        if (currentUser.IsGlobalAdmin()) return true;
+        var code = Normalize(moduleCode);
+        if (CommonModules.Contains(code) || TenantAdministrationModules.Contains(code)) return true;
+        if (!HasClaim("access_catalog_version", "v2149")) return code != "BI_AVANCADO";
+        return HasClaim("module", code);
+    }
+    public bool IsFeatureEnabled(string featureCode) => IsModuleEnabled(featureCode);
     public bool CanAccessTenant(Guid tenantId) => currentUser.IsGlobalAdmin() || (currentUser.TenantId.HasValue && currentUser.TenantId.Value == tenantId);
     public bool CanAccessCliente(Guid clienteId) => currentUser.IsGlobalAdmin() || (currentUser.ClienteId.HasValue && currentUser.ClienteId.Value == clienteId);
     public bool CanSwitchTenant() => currentUser.IsGlobalAdmin();
@@ -153,5 +170,17 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         return Task.CompletedTask;
     }
 
+    private bool HasClaim(string type, string value)
+    {
+        var principal = httpContextAccessor.HttpContext?.User;
+        if (principal is null) return false;
+        var expected = NormalizeAccessCode(value);
+        return principal.FindAll(type).Select(claim => NormalizeAccessCode(claim.Value))
+            .Any(candidate => candidate == "*" || string.Equals(candidate, expected, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase) { "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO" };
+    private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase) { "USUARIOS", "PERFIS", "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL" };
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
+    private static string NormalizeAccessCode(string? value) => Normalize(value).Replace(':', '.');
 }

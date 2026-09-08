@@ -4,6 +4,7 @@ using Npgsql;
 using PlantaoPro.Api.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
@@ -251,6 +252,57 @@ values
             return texto.Length > 4000 ? texto.Substring(0, 4000) : texto;
         }
     }
+    public enum LoginIdentifierKind
+    {
+        Invalid,
+        Email,
+        Cpf,
+        Cnpj
+    }
+
+    public static class LoginIdentifierNormalizer
+    {
+        public static LoginIdentifierKind Classify(string? value)
+        {
+            var normalized = (value ?? string.Empty).Trim();
+            if (normalized.Contains('@') && normalized.Length <= 254) return LoginIdentifierKind.Email;
+            var digits = Digits(normalized);
+            return digits.Length switch
+            {
+                11 => LoginIdentifierKind.Cpf,
+                14 => LoginIdentifierKind.Cnpj,
+                _ => LoginIdentifierKind.Invalid
+            };
+        }
+
+        public static string Normalize(string? value, LoginIdentifierKind kind) =>
+            kind == LoginIdentifierKind.Email ? (value ?? string.Empty).Trim().ToLowerInvariant() : Digits(value);
+
+        public static string AuditValue(string? value, LoginIdentifierKind kind)
+        {
+            var normalized = Normalize(value, kind);
+            var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).Substring(0, 12);
+            return $"{kind.ToString().ToUpperInvariant()}:{fingerprint}";
+        }
+
+        private static string Digits(string? value) => new((value ?? string.Empty).Where(char.IsDigit).ToArray());
+    }
+
+    public sealed class LoginUserRow
+    {
+        public Guid Id { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string SenhaHash { get; set; } = string.Empty;
+        public string RegStatus { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public Guid? ClienteId { get; set; }
+        public Guid? TenantId { get; set; }
+        public string ClienteNome { get; set; } = string.Empty;
+        public string ClienteStatus { get; set; } = string.Empty;
+        public bool SenhaAlteracaoObrigatoria { get; set; }
+    }
+
     public sealed class AuthService
     {
         private int MaxTentativasFalhas => cfg.GetValue("Authentication:MaxFailedAttempts", 5);
@@ -269,23 +321,84 @@ values
         }
         public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
         {
-            var normalizedEmail = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
-            logger.LogInformation("Tentativa de login recebida Email:{Email} IP:{Ip}", normalizedEmail, ip);
+            var identifierKind = LoginIdentifierNormalizer.Classify(req.Email);
+            var normalizedIdentifier = LoginIdentifierNormalizer.Normalize(req.Email, identifierKind);
+            var auditIdentifier = LoginIdentifierNormalizer.AuditValue(req.Email, identifierKind);
+            logger.LogInformation("Tentativa de login recebida Identificador:{Identificador} Tipo:{Tipo} IP:{Ip}", auditIdentifier, identifierKind, ip);
             try
             {
+                if (identifierKind == LoginIdentifierKind.Invalid)
+                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
+
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
                 await cn.OpenAsync();
-                var user = await cn.QueryFirstOrDefaultAsync("select id,nome,email,senha_hash,reg_status,cliente_id,tenant_id,senha_alteracao_obrigatoria from plantaopro.usuarios where lower(email)=lower(@Email) limit 1", new
+                var candidates = (await cn.QueryAsync<LoginUserRow>(@"select distinct
+    u.id as ""Id"", coalesce(u.nome,'') as ""Nome"", coalesce(u.email,'') as ""Email"",
+    coalesce(u.senha_hash,'') as ""SenhaHash"", coalesce(u.reg_status,'') as ""RegStatus"",
+    coalesce(u.status,'ATIVO') as ""Status"", u.cliente_id as ""ClienteId"", u.tenant_id as ""TenantId"",
+    coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", coalesce(c.status,'ATIVO') as ""ClienteStatus"",
+    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria""
+from plantaopro.usuarios u
+left join plantaopro.medicos m on m.usuario_id=u.id and m.reg_status='A'
+left join plantaopro.clientes c on c.id=coalesce(u.cliente_id,u.tenant_id) and c.reg_status='A'
+where (@kind='EMAIL' and lower(u.email)=@identifier)
+   or (@kind='CPF' and regexp_replace(coalesce(m.cpf,''),'[^0-9]','','g')=@document)
+   or (@kind='CNPJ' and regexp_replace(coalesce(c.cnpj,''),'[^0-9]','','g')=@document)
+order by u.id
+limit 50", new
                 {
-                    Email = normalizedEmail
-                });
-                if (user is null)
+                    kind = identifierKind.ToString().ToUpperInvariant(),
+                    identifier = normalizedIdentifier,
+                    document = normalizedIdentifier
+                })).ToArray();
+
+                if (identifierKind == LoginIdentifierKind.Cnpj && candidates.Length != 1)
                 {
-                    await RegistrarTentativaAsync(cn, null, normalizedEmail, ip, ua, false, "USER_NOT_FOUND");
-                    logger.LogWarning("Login negado: usuário não encontrado Email:{Email} IP:{Ip}", normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    await RegistrarTentativaAsync(cn, null, auditIdentifier, ip, ua, false, "CNPJ_REQUIRES_INDIVIDUAL_IDENTIFIER");
+                    logger.LogWarning("Login institucional exige identificação individual Identificador:{Identificador} Candidatos:{Candidatos} IP:{Ip}", auditIdentifier, candidates.Length, ip);
+                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos. Use seu e-mail ou CPF para acessar esta instituição.", 401);
                 }
-                var usuarioId = (Guid)user.id;
+
+                var passwordMatches = new List<(LoginUserRow User, bool Legacy)>();
+                foreach (var candidate in candidates)
+                {
+                    if (string.IsNullOrWhiteSpace(candidate.SenhaHash)) continue;
+                    try
+                    {
+                        if (BCrypt.Net.BCrypt.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add((candidate, false));
+                    }
+                    catch
+                    {
+                        if (string.Equals(req.Senha, candidate.SenhaHash, StringComparison.Ordinal)) passwordMatches.Add((candidate, true));
+                    }
+                }
+
+                if (passwordMatches.Count != 1)
+                {
+                    var failedUserId = candidates.Length == 1 ? candidates[0].Id : (Guid?)null;
+                    DateTime? newLockout = null;
+                    var reason = passwordMatches.Count > 1 ? "AMBIGUOUS_IDENTIFIER" : "INVALID_CREDENTIALS";
+                    if (failedUserId.HasValue && LoginLockoutEnabled)
+                    {
+                        var failedAttempts = await cn.QueryFirstAsync<int>(
+                            @"select count(*) from plantaopro.login_tentativas
+                              where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - (@JanelaTentativasMinutos * interval '1 minute')",
+                            new { usuarioId = failedUserId.Value, JanelaTentativasMinutos });
+                        if (failedAttempts + 1 >= MaxTentativasFalhas)
+                        {
+                            newLockout = DateTime.UtcNow.AddMinutes(BloqueioMinutos);
+                            reason = "LOCKOUT_THRESHOLD";
+                        }
+                    }
+                    await RegistrarTentativaAsync(cn, failedUserId, auditIdentifier, ip, ua, false, reason, newLockout);
+                    logger.LogWarning("Login negado Identificador:{Identificador} Tipo:{Tipo} Candidatos:{Candidatos} IP:{Ip}", auditIdentifier, identifierKind, candidates.Length, ip);
+                    if (newLockout.HasValue)
+                        return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
+                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
+                }
+
+                var user = passwordMatches[0].User;
+                var usuarioId = user.Id;
                 var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
                     @"select bloqueado_ate from plantaopro.login_tentativas
                       where usuario_id=@usuarioId and sucesso=false and bloqueado_ate is not null
@@ -296,63 +409,27 @@ values
                 if (LoginLockoutEnabled && bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
                 {
                     var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
-                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
                     logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
                     return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
-                var regStatus = ((string?)user.reg_status) ?? "";
-                if (!string.Equals(regStatus, "A", StringComparison.OrdinalIgnoreCase))
+                if (!string.Equals(user.RegStatus, "A", StringComparison.OrdinalIgnoreCase) || !string.Equals(user.Status, "ATIVO", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "USER_INACTIVE");
-                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("Usuário inativo. Contate o administrador.", 403);
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "USER_INACTIVE");
+                    logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
+                    return ApiResponse<LoginResponse>.Fail("Usuário bloqueado ou inativo. Contate o administrador.", 403);
                 }
-                var senhaHash = (string?)user.senha_hash;
-                if (string.IsNullOrWhiteSpace(senhaHash))
+                if ((user.ClienteId ?? user.TenantId).HasValue && !string.Equals(user.ClienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "PASSWORD_HASH_EMPTY");
-                    logger.LogWarning("Login negado: senha_hash ausente UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", usuarioId, normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_INACTIVE");
+                    return ApiResponse<LoginResponse>.Fail("O acesso da instituição está bloqueado. Contate o administrador responsável.", 423);
                 }
-                bool senhaValida = false;
-                try
+
+                if (passwordMatches[0].Legacy)
                 {
-                    // Compatibilidade com bases legadas que armazenavam senha em texto plano
-                    // (ou em formato não BCrypt). Ao autenticar com sucesso em legado, o hash
-                    // é atualizado imediatamente para BCrypt.
-                    senhaValida = BCrypt.Net.BCrypt.Verify(req.Senha, senhaHash);
-                }
-                catch
-                {
-                    senhaValida = string.Equals(req.Senha, senhaHash, StringComparison.Ordinal);
-                    if (senhaValida)
-                    {
-                        var senhaMigradaHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
-                        await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new
-                        {
-                            hash = senhaMigradaHash,
-                            id = (Guid)user.id
-                        });
-                        logger.LogInformation("Senha legada migrada para BCrypt UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
-                    }
-                }
-                if (!senhaValida)
-                {
-                    var tentativasFalhas = await cn.QueryFirstAsync<int>(
-                        @"select count(*) from plantaopro.login_tentativas
-                          where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - (@JanelaTentativasMinutos * interval '1 minute')",
-                        new
-                        {
-                            usuarioId,
-                            JanelaTentativasMinutos
-                        });
-                    var proximaTentativa = tentativasFalhas + 1;
-                    DateTime? novoBloqueio = LoginLockoutEnabled && proximaTentativa >= MaxTentativasFalhas ? DateTime.UtcNow.AddMinutes(BloqueioMinutos) : null;
-                    await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, false, "INVALID_PASSWORD", novoBloqueio);
-                    logger.LogWarning("Login negado: senha inválida UsuarioId:{UsuarioId} Tentativa:{Tentativa} Email:{Email} IP:{Ip}", usuarioId, proximaTentativa, normalizedEmail, ip);
-                    if (novoBloqueio.HasValue)
-                        return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    var migratedHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
+                    await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new { hash = migratedHash, id = usuarioId });
+                    logger.LogInformation("Senha legada migrada para BCrypt UsuarioId:{UsuarioId} IP:{Ip}", usuarioId, ip);
                 }
                 var rolesRaw = await cn.QueryAsync<string>(@"select coalesce(p.codigo,p.nome)
 from plantaopro.perfis p
@@ -360,44 +437,84 @@ join plantaopro.usuarios_perfis up on up.perfil_id=p.id
 where up.usuario_id=@id
   and up.reg_status='A'
   and p.reg_status='A'
+  and (up.tenant_id is null or up.tenant_id=@tenantId)
+  and (p.tenant_id is null or p.tenant_id=@tenantId)
   and coalesce(p.status,'ATIVO') not in ('INATIVO','BLOQUEADO')", new
                 {
-                    id = (Guid)user.id
+                    id = usuarioId,
+                    tenantId = user.TenantId ?? user.ClienteId
                 });
                 var roles = rolesRaw.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
                 if (roles.Length == 0)
                 {
-                    logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Email:{Email} IP:{Ip}", (Guid)user.id, normalizedEmail, ip);
-                    return ApiResponse<LoginResponse>.Fail("E-mail ou senha inválidos.", 401);
+                    logger.LogWarning("Login negado: usuário sem perfil UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
+                    return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
-                Guid? clienteId = null;
-                object? usuarioCliente = user.cliente_id;
-                if (usuarioCliente is Guid usuarioClienteId) clienteId = usuarioClienteId;
-                Guid? tenantId = null;
-                object? usuarioTenant = user.tenant_id;
-                if (usuarioTenant is Guid usuarioTenantId) tenantId = usuarioTenantId;
-                var mustChangePassword = user.senha_alteracao_obrigatoria is bool must && must;
+                var clienteId = user.ClienteId;
+                var tenantId = user.TenantId ?? user.ClienteId;
+                var mustChangePassword = user.SenhaAlteracaoObrigatoria;
                 var primaryRole = primaryRoleResolver.Resolve(roles);
                 var tenantContextRequired = tenantContextResolver.RequiresTenant(roles, tenantId);
                 var tenantContextSelected = tenantContextResolver.IsTenantSelected(tenantId);
                 var accessScope = accessScopeResolver.Resolve(roles, tenantContextSelected);
                 var contextMode = tenantContextSelected ? AccessScopes.Tenant : AccessScopes.Global;
                 var sessionId = Guid.NewGuid().ToString("N");
-                var token = GenerateToken((Guid)user.id, (string)user.email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId);
+                var isGlobal = roles.Any(roleCatalog.IsGlobal);
+                var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId)).ToArray();
+                var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value)).ToArray() : Array.Empty<string>();
+                var token = GenerateToken(usuarioId, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules);
                 await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
-                await RegistrarTentativaAsync(cn, usuarioId, normalizedEmail, ip, ua, true, "SUCCESS");
-                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { accessScope, primaryRole, tenantContextSelected }, true, ip, primaryRole);
-                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Email:{Email} Perfis:{Perfis} Escopo:{Escopo} IP:{Ip}", usuarioId, normalizedEmail, string.Join(',', roles), accessScope, ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, (string)user.nome, (string)user.email, roles, clienteId, null, tenantId, null, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId), "Login realizado com sucesso.");
+                await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, "SUCCESS");
+                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length }, true, ip, primaryRole);
+                logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
+                return ApiResponse<LoginResponse>.Ok(new(token, DateTime.UtcNow.AddHours(8), usuarioId, user.Nome, user.Email, roles, clienteId, user.ClienteNome, tenantId, user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules), "Login realizado com sucesso.");
             }
-            catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
-            catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Email:{Email} IP:{Ip}", normalizedEmail, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
+            catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
+            catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
-        string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId)
+        private static async Task<IEnumerable<string>> LoadPermissionsAsync(NpgsqlConnection cn, Guid usuarioId, Guid? tenantId)
+        {
+            const string sql = @"with granted as (
+    select upper(replace(coalesce(p.codigo,ms.codigo||'.'||ac.codigo),':','.')) codigo
+    from plantaopro.usuarios_perfis up
+    join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
+    join plantaopro.perfil_permissoes pp on pp.perfil_id=pf.id and pp.reg_status='A' and pp.permitido=true
+    join plantaopro.permissoes p on p.id=pp.permissao_id and p.reg_status='A'
+    left join plantaopro.modulos_sistema ms on ms.id=p.modulo_id
+    left join plantaopro.acoes_sistema ac on ac.id=p.acao_id
+    where up.usuario_id=@usuarioId and up.reg_status='A' and (@tenantId is null or up.tenant_id is null or up.tenant_id=@tenantId)
+    union
+    select upper(replace(p.codigo,':','.'))
+    from plantaopro.usuario_permissoes_especiais upe
+    join plantaopro.permissoes p on p.id=upe.permissao_id and p.reg_status='A'
+    where upe.usuario_id=@usuarioId and upe.reg_status='A' and upe.permitido=true and (@tenantId is null or upe.tenant_id is null or upe.tenant_id=@tenantId)
+), denied as (
+    select upper(replace(p.codigo,':','.')) codigo
+    from plantaopro.usuario_permissoes_especiais upe
+    join plantaopro.permissoes p on p.id=upe.permissao_id and p.reg_status='A'
+    where upe.usuario_id=@usuarioId and upe.reg_status='A' and upe.permitido=false and (@tenantId is null or upe.tenant_id is null or upe.tenant_id=@tenantId)
+)
+select distinct g.codigo from granted g where not exists(select 1 from denied d where d.codigo=g.codigo) order by g.codigo";
+            return await cn.QueryAsync<string>(sql, new { usuarioId, tenantId });
+        }
+
+        private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId)
+        {
+            const string sql = @"select distinct upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))
+from plantaopro.tenant_modulos tm
+left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
+where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
+order by 1";
+            return await cn.QueryAsync<string>(sql, new { tenantId });
+        }
+
+        string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId, string[] permissions, string[] modules)
         {
             var jwt = cfg.GetSection("Jwt");
-            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email), new("role", primaryRole), new("roles", string.Join(',', roles)), new("primary_role", primaryRole), new("access_scope", accessScope), new("context_mode", contextMode), new("session_id", sessionId) };
+            var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email), new("role", primaryRole), new("roles", string.Join(',', roles)), new("primary_role", primaryRole), new("access_scope", accessScope), new("context_mode", contextMode), new("session_id", sessionId), new("access_catalog_version", "v2149") };
             claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)).DistinctBy(c => c.Value));
+            claims.AddRange(permissions.Select(p => new Claim("permission", p)));
+            claims.AddRange(modules.Select(m => new Claim("module", m)));
             if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
             if (tenantId.HasValue) claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));

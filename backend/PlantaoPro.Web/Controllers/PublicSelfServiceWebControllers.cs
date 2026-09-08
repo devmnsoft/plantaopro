@@ -97,25 +97,111 @@ public sealed class WhiteLabelController : Controller
 }
 
 [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE")]
-public sealed class PerfisController : Controller
+public sealed class PerfisController : BaseWebController
 {
-    [HttpGet("Perfis")]
-    public IActionResult Index() => View("Index", Perfis());
-    [HttpGet("Perfis/Create")]
-    public IActionResult Create() => View("Create", new PerfilWebViewModel());
-    [HttpGet("Perfis/Edit/{id?}")]
-    public IActionResult Edit(Guid? id) => View("Edit", new PerfilWebViewModel { Id = id ?? Guid.Empty });
-    [HttpGet("Perfis/Details/{id?}")]
-    public IActionResult Details(Guid? id) => View("Details", new PerfilWebViewModel { Id = id ?? Guid.Empty, Nome = "Perfil customizado" });
-    [HttpGet("Perfis/Permissoes/{id?}")]
-    public IActionResult Permissoes(Guid? id) => View("Permissoes", new PerfilWebViewModel { Id = id ?? Guid.Empty, Nome = "Perfil customizado" });
+    public PerfisController(IHttpClientFactory httpClientFactory, ILogger<PerfisController> logger) : base(httpClientFactory, logger) { }
 
-    private static IEnumerable<PerfilWebViewModel> Perfis() => new []
+    [HttpGet("Perfis")]
+    public async Task<IActionResult> Index()
     {
-        new PerfilWebViewModel { Codigo = "ADMINISTRADOR_CLIENTE", Nome = "Administrador cliente", BaseSistema = true, Status = "ATIVO" },
-        new PerfilWebViewModel { Codigo = "COORDENADOR", Nome = "Coordenador", BaseSistema = true, Status = "ATIVO" },
-        new PerfilWebViewModel { Codigo = "MEDICO", Nome = "Médico", BaseSistema = true, Status = "ATIVO" }
-    };
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (profiles, error, _) = await ReadApiListResponseAsync<PerfilWebViewModel>(client, "api/perfis");
+        ViewBag.ErrorMessage = error;
+        return View("Index", profiles);
+    }
+
+    [HttpGet("Perfis/Create")]
+    public IActionResult Create() => View("Form", new PerfilWebViewModel { Status = "ATIVO" });
+
+    [HttpPost("Perfis/Create"), ValidateAntiForgeryToken]
+    public Task<IActionResult> Create(PerfilWebViewModel model) => SaveAsync(model, HttpMethod.Post, "api/perfis");
+
+    [HttpGet("Perfis/Edit/{id?}")]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var profile = await GetProfileAsync(id);
+        return profile is null ? RedirectToAction(nameof(Index)) : View("Form", profile);
+    }
+
+    [HttpPost("Perfis/Edit/{id:guid}"), ValidateAntiForgeryToken]
+    public Task<IActionResult> Edit(Guid id, PerfilWebViewModel model)
+    {
+        model.Id = id;
+        return SaveAsync(model, HttpMethod.Put, "api/perfis/" + id);
+    }
+
+    [HttpGet("Perfis/Details/{id?}")]
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var profile = await GetProfileAsync(id);
+        return profile is null ? RedirectToAction(nameof(Index)) : View("Details", profile);
+    }
+
+    [HttpGet("Perfis/Permissoes/{id?}")]
+    public async Task<IActionResult> Permissoes(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var profile = await GetProfileAsync(id, client);
+        if (profile is null) return RedirectToAction(nameof(Index));
+        var (permissions, error, _) = await ReadApiListResponseAsync<PermissaoWebViewModel>(client, "api/permissoes");
+        var (selected, selectedError, _) = await ReadApiListResponseAsync<Guid>(client, $"api/perfis/{id}/permissoes");
+        ViewBag.ErrorMessage = error ?? selectedError;
+        return View("Permissoes", new PerfilPermissoesWebViewModel { Perfil = profile, Permissoes = permissions, PermissoesSelecionadas = selected.ToArray() });
+    }
+
+    [HttpPost("Perfis/Permissoes/{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Permissoes(Guid id, Guid[] permissoesSelecionadas)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (_, error, status) = await SendApiAsync<object, string>(client, HttpMethod.Post, $"api/perfis/{id}/permissoes", new { permissoesPermitidas = permissoesSelecionadas ?? Array.Empty<Guid>() });
+        TempData[(int)status is >= 200 and <= 299 ? "SuccessMessage" : "ErrorMessage"] = (int)status is >= 200 and <= 299 ? "Permissões atualizadas com sucesso." : error ?? "Não foi possível atualizar as permissões.";
+        return RedirectToAction(nameof(Permissoes), new { id });
+    }
+
+    [HttpPost("Perfis/Inativar/{id:guid}"), ValidateAntiForgeryToken]
+    public async Task<IActionResult> Inativar(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (_, error, status) = await SendApiAsync<object, string>(client, HttpMethod.Post, $"api/perfis/{id}/inativar", new { });
+        TempData[(int)status is >= 200 and <= 299 ? "SuccessMessage" : "ErrorMessage"] = (int)status is >= 200 and <= 299 ? "Perfil inativado." : error ?? "Não foi possível inativar o perfil.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<IActionResult> SaveAsync(PerfilWebViewModel model, HttpMethod method, string endpoint)
+    {
+        if (!ModelState.IsValid) return View("Form", model);
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (id, error, status) = await SendApiAsync<PerfilWebViewModel, Guid>(client, method, endpoint, model);
+        if ((int)status is < 200 or > 299)
+        {
+            ModelState.AddModelError(string.Empty, error ?? "Não foi possível salvar o perfil.");
+            return View("Form", model);
+        }
+        TempData["SuccessMessage"] = "Perfil salvo com sucesso.";
+        return RedirectToAction(nameof(Permissoes), new { id = id == Guid.Empty ? model.Id : id });
+    }
+
+    private async Task<PerfilWebViewModel?> GetProfileAsync(Guid id, HttpClient? suppliedClient = null)
+    {
+        var ownsClient = suppliedClient is null;
+        var client = suppliedClient ?? CreateApiClient();
+        try
+        {
+            if (!AddBearerToken(client)) return null;
+            var (profile, error, _) = await ReadApiResponseAsync<PerfilWebViewModel>(client, "api/perfis/" + id);
+            if (profile is null) TempData["ErrorMessage"] = error ?? "Perfil não encontrado.";
+            return profile;
+        }
+        finally
+        {
+            if (ownsClient) client.Dispose();
+        }
+    }
 }
 
 [Authorize]

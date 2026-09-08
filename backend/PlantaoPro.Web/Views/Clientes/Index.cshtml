@@ -23,6 +23,11 @@
         </div>
     </header>
 
+    <details class="pp-screen-guide">
+        <summary><span><app-icon name="Help" size="17" /><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Gestão global</span></summary>
+        <div class="pp-screen-guide__body"><p>Abra os módulos para revisar o contrato de uma instituição. Antes de suspender, reativar ou cancelar, confirme o cliente e o impacto apresentado no modal.</p></div>
+    </details>
+
     <div class="pp-scope-guardrails" role="list" aria-label="Proteções desta área">
         <span role="listitem"><app-icon name="Security" size="17" /><strong>Escopo:</strong> @(isGlobalAdmin ? "todos os tenants" : "contexto autorizado")</span>
         <span role="listitem"><app-icon name="Lock" size="17" /><strong>Ações críticas:</strong> confirmação obrigatória</span>
@@ -62,6 +67,10 @@
                             <td data-label="Status"><span class="pp-status-badge @statusClass">@cliente.Status</span></td>
                             <td data-label="Ações">
                                 <div class="pp-table-actions">
+                                    @if (isGlobalAdmin)
+                                    {
+                                        <a class="btn btn-sm btn-outline-primary" asp-controller="Modulos" asp-action="Tenant" asp-route-id="@cliente.Id" aria-label="Gerenciar módulos de @cliente.NomeFantasia">Módulos</a>
+                                    }
                                     <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Suspender @cliente.NomeFantasia interrompe o acesso da instituição. Confirma esta ação auditável?" data-confirm-type="warning">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@cliente.Id" />

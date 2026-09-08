@@ -1,6 +1,56 @@
-@model PlantaoPro.Web.Models.PerfilWebViewModel
+@model PlantaoPro.Web.Models.PerfilPermissoesWebViewModel
 @{
-    var modulos = new[] { "Dashboard", "Médicos", "Hospitais", "Plantões", "Financeiro", "LGPD", "White Label" };
-    var acoes = new[] { "Visualizar", "Criar", "Editar", "Inativar", "Configurar", "VerDadosSensiveis" };
+    ViewData["Title"] = "Permissões de " + Model.Perfil.Nome;
+    ViewData["Subtitle"] = "Matriz efetiva limitada aos módulos contratados.";
+    var groups = Model.Permissoes.GroupBy(x => x.Modulo).OrderBy(x => x.Key).ToArray();
+    var selected = Model.PermissoesSelecionadas.ToHashSet();
 }
-<section class="container-fluid py-4"><h1>Matriz de permissões</h1><p class="text-muted">Use checkboxes por módulo e ação; bloqueios de plano prevalecem sobre permissões.</p><div class="card shadow-sm"><div class="table-responsive"><table class="table table-bordered"><thead><tr><th>Módulo</th>@foreach (var acao in acoes){<th>@acao</th>}</tr></thead><tbody>@foreach (var modulo in modulos){<tr><th>@modulo</th>@foreach (var acao in acoes){<td><input class="form-check-input" type="checkbox" aria-label="@modulo @acao" /></td>}</tr>}</tbody></table></div><div class="card-footer"><button type="button" class="btn btn-outline-secondary">Usar modelo</button><button type="button" class="btn btn-outline-secondary">Copiar perfil</button><button type="button" class="btn btn-primary">Salvar permissões</button></div></div></section>
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Perfil @Model.Perfil.Codigo</span><h2>@Model.Perfil.Nome</h2><p>@Model.Perfil.Descricao</p></div>
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar aos perfis</a>
+    </header>
+    <details class="pp-screen-guide" open>
+        <summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Menor privilégio</span></summary>
+        <div class="pp-screen-guide__body"><p>Marque apenas o necessário. Permissões sensíveis exigem confirmação e bloqueios de contrato sempre prevalecem.</p></div>
+    </details>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div>
+    }
+    @if (Model.Perfil.BaseSistema)
+    {
+        <div class="alert alert-info" role="status">Este é um perfil base protegido. Crie um perfil personalizado para alterar permissões.</div>
+    }
+    <form method="post" data-confirm="true" data-confirm-title="Alterar permissões do perfil" data-confirm-message="Esta alteração muda menus e acessos dos usuários vinculados a este perfil no próximo login." data-submit-loading="Salvando permissões...">
+        @Html.AntiForgeryToken()
+        @if (groups.Length == 0)
+        {
+            <div class="pp-empty-state"><i class="bi bi-shield-x"></i><h3>Nenhuma permissão disponível</h3><p>O cliente ainda não possui módulos contratados com permissões configuradas.</p></div>
+        }
+        else
+        {
+            <div class="pp-grid">
+                @foreach (var group in groups)
+                {
+                    <section class="pp-card">
+                        <div class="d-flex justify-content-between"><h3>@group.Key</h3><span class="badge text-bg-light">@group.Count() permissões</span></div>
+                        <div class="vstack gap-2 mt-3">
+                            @foreach (var permission in group)
+                            {
+                                <div class="form-check border rounded p-3">
+                                    <input class="form-check-input" type="checkbox" id="permission-@permission.Id" name="permissoesSelecionadas" value="@permission.Id" checked="@selected.Contains(permission.Id)" disabled="@Model.Perfil.BaseSistema" />
+                                    <label class="form-check-label" for="permission-@permission.Id"><strong>@permission.Acao</strong> — @permission.Nome @if (permission.Sensivel) { <span class="badge text-bg-warning">Crítica</span> }<span class="d-block text-muted small">@permission.Codigo</span></label>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </div>
+            @if (!Model.Perfil.BaseSistema)
+            {
+                <div class="pp-card d-flex justify-content-between align-items-center mt-3"><div><strong>Resumo</strong><span class="d-block text-muted">@selected.Count permissão(ões) ativa(s) antes desta alteração.</span></div><button class="btn btn-primary" type="submit">Salvar permissões</button></div>
+            }
+        }
+    </form>
+</div>

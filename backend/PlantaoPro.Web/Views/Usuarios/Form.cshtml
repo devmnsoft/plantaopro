@@ -1,0 +1,139 @@
+@model PlantaoPro.Web.Models.UsuarioEditorViewModel
+@{
+    var editing = Model.Id != Guid.Empty;
+    ViewData["Title"] = editing ? "Editar usuário" : "Novo usuário";
+    ViewData["Subtitle"] = editing ? "Atualize dados e perfis dentro do tenant atual." : "Crie um acesso individual com senha temporária e menor privilégio.";
+}
+<div class="pp-page">
+    <header class="pp-page-hero">
+        <div class="pp-page-hero__copy"><span class="pp-eyebrow">Identidade e acesso</span><h2>@ViewData["Title"]</h2><p>@ViewData["Subtitle"]</p></div>
+        <a class="btn btn-outline-secondary" asp-action="Index">Voltar aos usuários</a>
+    </header>
+
+    <details class="pp-screen-guide" open>
+        <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Acesso individual</span></summary>
+        <div class="pp-screen-guide__body"><p>Selecione o cliente e somente os perfis necessários. A senha temporária é individual, nunca aparece em logs e deverá ser alterada no primeiro acesso.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-lock" aria-hidden="true"></i> Alterar dados ou perfis revoga as sessões anteriores do usuário.</div></div>
+    </details>
+
+    @if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string))
+    {
+        <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div>
+    }
+
+    <form asp-action="Save" method="post" id="user-editor-form" class="pp-card pp-form" data-focus-invalid data-unsaved-form data-submit-feedback data-confirm="true" data-confirm-title="@(editing ? "Alterar usuário e perfis" : "Criar usuário")" data-confirm-message="@(editing ? $"Confirme a alteração de {Model.Nome} no cliente {Model.TenantNome}; as sessões anteriores serão revogadas." : "Confirme o cliente, os perfis e o impacto deste novo acesso antes de continuar.")">
+        @Html.AntiForgeryToken()
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="IsGlobalAdmin" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+        <div class="row g-3">
+            @if (Model.IsGlobalAdmin)
+            {
+                <div class="col-12">
+                    <label asp-for="TenantId" class="form-label form-required">Cliente</label>
+                    @if (editing)
+                    {
+                        <input asp-for="TenantId" type="hidden" />
+                        <select class="form-select" disabled aria-describedby="tenant-help">
+                            @foreach (var tenant in Model.Clientes)
+                            {
+                                <option selected="@(tenant.Id == Model.TenantId)">@tenant.NomeFantasia</option>
+                            }
+                        </select>
+                    }
+                    else
+                    {
+                        <select asp-for="TenantId" class="form-select" id="TenantId" required aria-describedby="tenant-help">
+                            <option value="">Selecione o cliente</option>
+                            @foreach (var tenant in Model.Clientes)
+                            {
+                                <option value="@tenant.Id">@tenant.NomeFantasia — @tenant.Cnpj</option>
+                            }
+                        </select>
+                    }
+                    <small id="tenant-help" class="form-help">O usuário e seus perfis permanecerão isolados neste tenant.</small>
+                    <span asp-validation-for="TenantId" class="text-danger small"></span>
+                </div>
+            }
+
+            <div class="col-md-6">
+                <label asp-for="Nome" class="form-label form-required">Nome completo</label>
+                <input asp-for="Nome" class="form-control" autocomplete="name" required />
+                <small class="form-help">Nome exibido em auditorias e atividades.</small>
+                <span asp-validation-for="Nome" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Email" class="form-label form-required">E-mail de acesso</label>
+                <input asp-for="Email" class="form-control" type="email" autocomplete="email" required />
+                <small class="form-help">Deve ser único em toda a plataforma.</small>
+                <span asp-validation-for="Email" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Telefone" class="form-label">Telefone</label>
+                <input asp-for="Telefone" class="form-control" type="tel" inputmode="tel" autocomplete="tel" data-mask="phone" />
+                <small class="form-help">Inclua DDD para contato administrativo.</small>
+                <span asp-validation-for="Telefone" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="SenhaTemporaria" class="form-label @(editing ? string.Empty : "form-required")">@(editing ? "Nova senha temporária" : "Senha temporária")</label>
+                <input asp-for="SenhaTemporaria" class="form-control" type="password" autocomplete="new-password" required="@(!editing)" />
+                <small class="form-help">@(editing ? "Deixe em branco para manter a senha atual." : "Mínimo de 10 caracteres, com maiúscula, minúscula, número e símbolo.")</small>
+                <span asp-validation-for="SenhaTemporaria" class="text-danger small"></span>
+            </div>
+        </div>
+
+        <fieldset class="mt-4">
+            <legend class="h5">Perfis de acesso <span class="text-danger" aria-hidden="true">*</span></legend>
+            <p class="text-muted">Perfis globais não podem ser atribuídos por este fluxo.</p>
+            <div class="row g-3" id="profile-options">
+                @foreach (var profile in Model.PerfisDisponiveis)
+                {
+                    var selected = Model.PerfilIds.Contains(profile.Id);
+                    <div class="col-md-6" data-profile-option data-tenant-id="@(profile.TenantId?.ToString() ?? string.Empty)">
+                        <label class="pp-card h-100 d-flex gap-3 align-items-start">
+                            <input class="form-check-input mt-1" type="checkbox" name="PerfilIds" value="@profile.Id" checked="@selected" />
+                            <span><strong>@profile.Nome</strong>@if (profile.BaseSistema){<span class="badge text-bg-secondary ms-2">Base</span>}<small class="d-block text-muted">@profile.Descricao</small></span>
+                        </label>
+                    </div>
+                }
+            </div>
+            @if (!Model.PerfisDisponiveis.Any())
+            {
+                <div class="pp-guided-empty"><i class="bi bi-person-lock" aria-hidden="true"></i><strong>Nenhum perfil atribuível</strong><span>Crie um perfil para o cliente antes de cadastrar o usuário.</span><a class="btn btn-sm btn-outline-primary" asp-controller="Perfis" asp-action="Create">Criar perfil</a></div>
+            }
+            <span asp-validation-for="PerfilIds" class="text-danger small"></span>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-end mt-4">
+            <a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a>
+            <button class="btn btn-primary" type="submit"><span data-submit-label>@(editing ? "Salvar alterações" : "Criar usuário")</span><span class="spinner-border spinner-border-sm d-none" data-submit-spinner aria-hidden="true"></span></button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    @if (Model.IsGlobalAdmin && !editing)
+    {
+        <script>
+            (() => {
+                const tenant = document.getElementById('TenantId');
+                const form = document.getElementById('user-editor-form');
+                const options = document.querySelectorAll('[data-profile-option]');
+                const filterProfiles = () => {
+                    const selectedTenant = (tenant?.value || '').toLowerCase();
+                    const selectedTenantName = tenant?.selectedOptions[0]?.text || 'cliente selecionado';
+                    options.forEach(option => {
+                        const profileTenant = (option.dataset.tenantId || '').toLowerCase();
+                        const visible = profileTenant === '' || profileTenant === selectedTenant;
+                        option.hidden = !visible;
+                        if (!visible) option.querySelector('input[type="checkbox"]').checked = false;
+                    });
+                    if (form) form.dataset.confirmMessage = `Criar acesso individual para ${selectedTenantName}, com os perfis marcados e troca obrigatória da senha temporária?`;
+                };
+                tenant?.addEventListener('change', filterProfiles);
+                filterProfiles();
+            })();
+        </script>
+    }
+}

@@ -30,6 +30,8 @@ namespace PlantaoPro.Api.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest req)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+            var identifierKind = LoginIdentifierNormalizer.Classify(req.Email);
+            var auditIdentifier = LoginIdentifierNormalizer.AuditValue(req.Email, identifierKind);
             try
             {
                 var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString());
@@ -40,17 +42,17 @@ namespace PlantaoPro.Api.Controllers
                     AuditoriaConstants.Entidades.Usuario,
                     r.Data?.UsuarioId,
                     r.Success ? AuditoriaConstants.Acoes.LoginSucesso : AuditoriaConstants.Acoes.LoginFalha,
-                    new { email = req.Email, statusCode = r.StatusCode },
+                    new { identifier = auditIdentifier, identifierKind, statusCode = r.StatusCode },
                     r.Success,
                     ip,
                     perfil);
-                _logger.LogInformation("Login processado Email:{Email} IP:{Ip} Status:{Status} Perfil:{Perfil} DataHoraUtc:{DataHoraUtc}", req.Email, ip, r.StatusCode, perfil, DateTime.UtcNow);
+                _logger.LogInformation("Login processado Identificador:{Identificador} Tipo:{Tipo} IP:{Ip} Status:{Status} Perfil:{Perfil} DataHoraUtc:{DataHoraUtc}", auditIdentifier, identifierKind, ip, r.StatusCode, perfil, DateTime.UtcNow);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Falha inesperada no login Email:{Email} IP:{Ip}", req.Email, ip);
-                await _auditService.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Usuario, null, AuditoriaConstants.Acoes.LoginFalha, new { email = req.Email, motivo = "erro_interno" }, false, ip, "sem-perfil");
+                _logger.LogError(ex, "Falha inesperada no login Identificador:{Identificador} Tipo:{Tipo} IP:{Ip}", auditIdentifier, identifierKind, ip);
+                await _auditService.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Usuario, null, AuditoriaConstants.Acoes.LoginFalha, new { identifier = auditIdentifier, identifierKind, motivo = "erro_interno" }, false, ip, "sem-perfil");
                 return StatusCode(500, ApiResponse<object>.Fail("Não foi possível processar o login no momento.", 500));
             }
         }

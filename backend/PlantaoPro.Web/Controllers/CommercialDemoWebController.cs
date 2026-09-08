@@ -155,11 +155,102 @@ public sealed class PropostasComerciaisController : Controller
     public IActionResult Edit(Guid id) => Create(); public IActionResult Details(Guid id) => Index(); public IActionResult Preview(Guid id) => View("Preview", CommercialPageFactory.Build("Preview da proposta", "HTML imprimível para salvar como PDF pelo navegador.")); public IActionResult Enviar(Guid id) => Index();
 }
 
-[Authorize]
-public sealed class ModulosController : Controller
+[Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
+public sealed class ModulosController : BaseWebController
 {
-    public IActionResult Index() => View("Dashboard", CommercialPageFactory.Build("Governança de módulos", "Controle por plano, tenant, adicionais contratados e beta."));
-    public IActionResult Create() => Index(); public IActionResult Edit(Guid id) => Index(); public IActionResult Details(Guid id) => Index(); public IActionResult Tenant(Guid id) => Index();
+    public ModulosController(IHttpClientFactory httpClientFactory, ILogger<ModulosController> logger) : base(httpClientFactory, logger) { }
+
+    public async Task<IActionResult> Index()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (modules, error, _) = await ReadApiListResponseAsync<SaasModuleViewModel>(client, "api/modulos");
+        ViewBag.ErrorMessage = error;
+        return View("Dashboard", modules);
+    }
+
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
+    public IActionResult Create() => View("Form", new SaasModuleViewModel { Status = "ATIVO", Categoria = "OPERACAO" });
+
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var module = await GetModuleAsync(id);
+        return module is null ? RedirectToAction(nameof(Index)) : View("Form", module);
+    }
+
+    public async Task<IActionResult> Details(Guid id)
+    {
+        var module = await GetModuleAsync(id);
+        return module is null ? RedirectToAction(nameof(Index)) : View(module);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
+    public async Task<IActionResult> Save(SaasModuleViewModel model)
+    {
+        if (!ModelState.IsValid) return View("Form", model);
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var payload = new
+        {
+            model.Codigo,
+            model.Nome,
+            model.Descricao,
+            model.Categoria,
+            model.PrecoBase,
+            model.Essencial,
+            model.Status,
+            funcionalidades = (model.FuncionalidadesTexto ?? string.Empty).Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
+            model.LimitePadrao
+        };
+        var endpoint = model.Id == Guid.Empty ? "api/modulos" : "api/modulos/" + model.Id;
+        var (savedId, error, status) = await SendApiAsync<object, Guid>(client, model.Id == Guid.Empty ? HttpMethod.Post : HttpMethod.Put, endpoint, payload);
+        if ((int)status is < 200 or > 299)
+        {
+            ModelState.AddModelError(string.Empty, error ?? "Não foi possível salvar o módulo.");
+            return View("Form", model);
+        }
+        TempData["SuccessMessage"] = model.Id == Guid.Empty ? "Módulo criado com sucesso." : "Módulo atualizado com sucesso.";
+        return RedirectToAction(nameof(Details), new { id = savedId == Guid.Empty ? model.Id : savedId });
+    }
+
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
+    public async Task<IActionResult> Tenant(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (modules, error, _) = await ReadApiListResponseAsync<SaasModuleViewModel>(client, "api/modulos/tenant/" + id);
+        var (clients, _, _) = await ReadApiListResponseAsync<ClienteDto>(client, "api/clientes");
+        ViewBag.ErrorMessage = error;
+        return View(new TenantModulePageViewModel { TenantId = id, TenantNome = clients.FirstOrDefault(item => item.Id == id)?.NomeFantasia ?? "Cliente selecionado", Modules = modules });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
+    public async Task<IActionResult> ToggleTenant(TenantModuleActionViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Informe um motivo e valores válidos para alterar a contratação.";
+            return RedirectToAction(nameof(Tenant), new { id = model.TenantId });
+        }
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var endpoint = $"api/modulos/{model.ModuleId}/{(model.Enabled ? "habilitar" : "desabilitar")}-tenant";
+        var (_, error, status) = await SendApiAsync<TenantModuleActionViewModel, Guid>(client, HttpMethod.Post, endpoint, model);
+        TempData[(int)status is >= 200 and <= 299 ? "SuccessMessage" : "ErrorMessage"] = (int)status is >= 200 and <= 299 ? "Contratação do módulo atualizada." : error ?? "Não foi possível alterar a contratação.";
+        return RedirectToAction(nameof(Tenant), new { id = model.TenantId });
+    }
+
+    private async Task<SaasModuleViewModel?> GetModuleAsync(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return null;
+        var (module, error, _) = await ReadApiResponseAsync<SaasModuleViewModel>(client, "api/modulos/" + id);
+        if (module is null) TempData["ErrorMessage"] = error ?? "Módulo não encontrado.";
+        return module;
+    }
 }
 
 [Authorize]

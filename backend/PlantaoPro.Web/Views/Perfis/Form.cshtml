@@ -1,0 +1,17 @@
+@model PlantaoPro.Web.Models.PerfilWebViewModel
+@{ var creating = Model.Id == Guid.Empty; ViewData["Title"] = creating ? "Novo perfil" : "Editar perfil"; ViewData["Subtitle"] = "Defina a função antes de escolher permissões por módulo."; }
+<div class="pp-page">
+    <header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Acesso por tenant</span><h2>@ViewData["Title"]</h2><p>Perfis personalizados nunca ultrapassam os módulos contratados pelo cliente.</p></div></header>
+    <details class="pp-screen-guide" open><summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary><div class="pp-screen-guide__body"><p>Dê ao perfil um nome compreensível para a equipe e descreva sua responsabilidade. Depois de salvar, você configurará a matriz de permissões.</p></div></details>
+    <form method="post" class="pp-card" data-submit-loading="Salvando perfil...">
+        @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        <div class="row g-3">
+            <div class="col-md-4"><label asp-for="Codigo" class="form-label">Código</label><input asp-for="Codigo" class="form-control text-uppercase" readonly="@(!creating)" /><span asp-validation-for="Codigo" class="text-danger"></span><div class="form-text">Opcional na criação; se vazio, será gerado pelo nome.</div></div>
+            <div class="col-md-8"><label asp-for="Nome" class="form-label">Nome <span aria-label="obrigatório">*</span></label><input asp-for="Nome" class="form-control" autocomplete="off" /><span asp-validation-for="Nome" class="text-danger"></span></div>
+            <div class="col-12"><label asp-for="Descricao" class="form-label">Finalidade do perfil <span aria-label="obrigatório">*</span></label><textarea asp-for="Descricao" class="form-control" rows="4"></textarea><span asp-validation-for="Descricao" class="text-danger"></span><div class="form-text">Ex.: gerencia escalas e profissionais, sem acesso a valores financeiros.</div></div>
+        </div>
+        <div class="d-flex justify-content-end gap-2 mt-4"><a class="btn btn-outline-secondary" asp-action="Index">Cancelar</a><button class="btn btn-primary" type="submit">Salvar e configurar permissões</button></div>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

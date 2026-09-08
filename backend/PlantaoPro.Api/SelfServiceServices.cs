@@ -346,17 +346,34 @@ on conflict (tenant_id) where reg_status='A' do update set nome_plataforma=exclu
         try
         {
             var ctx = await _tenantContext.ObterAtualAsync();
-            if (!ctx.Success) return ApiResponse<string>.Fail(ctx.Message, ctx.StatusCode);
+            if (!ctx.Success || ctx.Data?.TenantId is null) return ApiResponse<string>.Fail(ctx.Message, ctx.StatusCode);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
+            var profileExists = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.perfis where id=@id and tenant_id=@tenantId and base_sistema=false and reg_status='A')", new { id, tenantId = ctx.Data.TenantId.Value }, tx);
+            if (!profileExists)
+            {
+                await tx.RollbackAsync();
+                return ApiResponse<string>.Fail("Perfil não encontrado no tenant ou protegido pelo sistema.", 404);
+            }
+            var permissionIds = request.PermissoesPermitidas.Distinct().ToArray();
+            var validPermissionCount = await cn.ExecuteScalarAsync<int>(@"select count(*) from plantaopro.permissoes p
+join plantaopro.modulos_sistema m on m.id=p.modulo_id and m.reg_status='A'
+where p.id=any(@permissionIds) and p.reg_status='A'
+and exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenantId and tm.modulo_id=m.id and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO')", new { permissionIds, tenantId = ctx.Data.TenantId.Value }, tx);
+            if (validPermissionCount != permissionIds.Length)
+            {
+                await tx.RollbackAsync();
+                return ApiResponse<string>.Fail("Uma ou mais permissões pertencem a módulos não contratados.", 400);
+            }
+            var before = (await cn.QueryAsync<Guid>("select permissao_id from plantaopro.perfil_permissoes where perfil_id=@id and permitido=true and reg_status='A' order by permissao_id", new { id }, tx)).ToArray();
             await cn.ExecuteAsync("update plantaopro.perfil_permissoes set reg_status='I', reg_update=now() where perfil_id=@id and reg_status='A'", new { id }, tx);
-            foreach (var permissaoId in request.PermissoesPermitidas.Distinct())
+            foreach (var permissaoId in permissionIds)
             {
                 await cn.ExecuteAsync("insert into plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,reg_date,reg_status) values(gen_random_uuid(),@id,@permissaoId,true,now(),'A')", new { id, permissaoId }, tx);
             }
             await tx.CommitAsync();
-            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data?.ClienteId, "PERFIL", id, "ALTERAR_PERMISSOES", new { total = request.PermissoesPermitidas.Length }, true, ip, "ADMINISTRADOR_CLIENTE");
+            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data.ClienteId, "PERFIL", id, "ALTERAR_PERMISSOES", new { antes = before, depois = permissionIds, adicionadas = permissionIds.Except(before).Count(), removidas = before.Except(permissionIds).Count() }, true, ip, "ADMINISTRADOR_CLIENTE");
             return ApiResponse<string>.Ok("ok", "Permissões atualizadas.");
         }
         catch (Exception ex)

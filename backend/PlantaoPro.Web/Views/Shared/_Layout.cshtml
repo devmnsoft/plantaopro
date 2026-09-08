@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="~/css/design-system/v2145-onboarding-help.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2146-pending-notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/v2148-operational-premium.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="pp-body app-body">
@@ -53,6 +54,7 @@
                 <partial name="_AppTopbar" />
                 <main class="pp-content app-content" id="mainContent" tabindex="-1">
                     <div class="pp-content-container">
+                        <partial name="_ContextBar" />
                         <partial name="_ToastMessages" />
                         @if (ViewData["WorkspaceHeader"] is PlantaoPro.Web.Models.WorkspaceHeaderViewModel workspaceHeader) { <partial name="_WorkspaceHeader" model="workspaceHeader" /> } else { @await Component.InvokeAsync("PageContext") }
                         <partial name="_GuidedJourney" />

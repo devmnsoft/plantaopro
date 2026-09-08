@@ -1,2 +1,44 @@
-@* Premium shell partial prepared for v1.20.1. Rendered by _Layout composition as the shell evolves. *@
-<div class="pp-shell-partial" data-component="_ContextBar"></div>
+@using System.Security.Claims
+@{
+    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value;
+    var profile = User.FindFirst(ClaimTypes.Role)?.Value ?? User.FindFirst("perfil")?.Value ?? "Perfil não informado";
+    var userName = User.Identity?.Name ?? "Usuário autenticado";
+    var isGlobalAdmin = User.IsInRole("ADMINISTRADOR_GLOBAL");
+    var isAssisted = User.FindFirst("impersonation")?.Value == "true";
+    var hasTenantInFocus = !string.IsNullOrWhiteSpace(tenantName);
+    var contextTitle = isGlobalAdmin
+        ? (hasTenantInFocus ? $"Cliente em foco: {tenantName}" : "Contexto global MNSOFT")
+        : (hasTenantInFocus ? tenantName : "Instituição vinculada à sessão");
+    var contextDescription = isGlobalAdmin
+        ? (hasTenantInFocus ? "Visão Super Admin com cliente selecionado; ações permanecem auditáveis." : "Visão consolidada de clientes, módulos, cobrança e auditoria.")
+        : "Dados e ações limitados ao tenant e às permissões deste perfil.";
+}
+<section class="pp-context-bar @(isGlobalAdmin ? "is-global" : "is-tenant") @(isAssisted ? "is-assisted" : string.Empty)" aria-label="Contexto de acesso atual" data-context-bar>
+    <div class="pp-context-bar__scope">
+        <span class="pp-context-bar__icon" aria-hidden="true">
+            @if (isGlobalAdmin) { <app-icon name="Security" size="20" /> } else { <app-icon name="Hospital" size="20" /> }
+        </span>
+        <div>
+            <span class="pp-context-bar__eyebrow">@(isGlobalAdmin ? "Super Admin · acesso global auditado" : "Contexto da instituição")</span>
+            <strong>@contextTitle</strong>
+            <small>@contextDescription</small>
+        </div>
+    </div>
+    <dl class="pp-context-bar__identity">
+        <div><dt>Usuário</dt><dd>@userName</dd></div>
+        <div><dt>Perfil</dt><dd>@profile.Replace('_', ' ')</dd></div>
+        <div><dt>Modo</dt><dd>@(isAssisted ? "Acesso assistido" : isGlobalAdmin ? "Global" : "Tenant")</dd></div>
+    </dl>
+    <div class="pp-context-bar__actions">
+        @if (isGlobalAdmin)
+        {
+            <a class="btn btn-sm btn-outline-primary" asp-controller="Clientes" asp-action="Index">
+                <app-icon name="Hospital" size="17" /> @(hasTenantInFocus ? "Trocar cliente" : "Selecionar cliente")
+            </a>
+        }
+        @if (isAssisted)
+        {
+            <a class="btn btn-sm btn-outline-danger" asp-controller="Account" asp-action="Logout">Encerrar acesso assistido</a>
+        }
+    </div>
+</section>

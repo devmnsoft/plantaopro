@@ -1,4 +1,6 @@
 @using PlantaoPro.Web.Security
+@using PlantaoPro.Web.Services.Security
+@inject IPermissionService PermissionService
 @{
     var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Organização";
     var profile = User.Claims.FirstOrDefault(x => x.Type.EndsWith("role"))?.Value ?? "Profissional";
@@ -11,6 +13,7 @@
     var canUseFinance = financeRoles.Any(User.IsInRole);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
     var isGlobalAdmin = User.IsInRole(RolesConstants.AdministradorGlobal);
+    bool Can(string module, string action = "VER") => PermissionService.HasPermission(module, action);
     string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
 <aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navegação principal">
@@ -33,39 +36,39 @@
             {
                 <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
             }
-            <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>Plantões</span></a>
-            <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agenda</span></a>
-            <a class="nav-link-app @Active("Cobertura")" asp-controller="Cobertura" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Cobertura</span></a>
-            <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>Convites</span></a>
-            <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>Escalas</span></a>
-            <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>Fechamentos</span></a>
+            @if (Can("PLANTOES")) { <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>Plantões</span></a> }
+            @if (Can("AGENDA")) { <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agenda</span></a> }
+            @if (Can("CENTRAL_ESCALA")) { <a class="nav-link-app @Active("Cobertura")" asp-controller="Cobertura" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Cobertura</span></a> }
+            @if (Can("CONVITES")) { <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>Convites</span></a> }
+            @if (Can("ESCALAS")) { <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>Escalas</span></a> }
+            @if (Can("FECHAMENTOS")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>Fechamentos</span></a> }
         }
         @if (canUseClinical)
         {
             <div class="nav-section-title"><span>Saúde 360</span></div>
-            <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a>
-            <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a>
-            <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a>
-            <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a>
-            <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a>
+            @if (Can("SAUDE360_DASHBOARD")) { <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a> }
+            @if (Can("SAUDE360_PACIENTES")) { <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a> }
+            @if (Can("SAUDE360_AGENDAMENTO")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a> }
+            @if (Can("SAUDE360_TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a> }
+            @if (Can("SAUDE360_CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a> }
         }
         @if (canUseFinance)
         {
             <div class="nav-section-title"><span>Financeiro</span></div>
-            <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>Visão financeira</span></a>
-            <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>Pagamentos</span></a>
-            <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a>
+            @if (Can("FINANCEIRO") || Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>Visão financeira</span></a> }
+            @if (Can("PAGAMENTOS")) { <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>Pagamentos</span></a> }
+            @if (Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a> }
         }
         @if (canManage)
         {
             <div class="nav-section-title"><span>Gestão</span></div>
-            <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a>
-            <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a>
-            <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a>
-            <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a>
-            <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis</span></a>
-            <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a>
-            <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a>
+            @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a> }
+            @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a> }
+            @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a> }
+            @if (Can("USUARIOS")) { <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a> }
+            @if (Can("PERFIS")) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis</span></a> }
+            @if (Can("SEGURANCA")) { <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a> }
+            @if (Can("CONFIGURACOES")) { <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a> }
         }
         @if (isGlobalAdmin)
         {

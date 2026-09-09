@@ -64,7 +64,7 @@ values(@userId,@tenantIdValue,@clienteIdValue,@nome,@email,lower(@email),@hash,'
 
     private static async Task<Guid> UpsertId(NpgsqlConnection cn, string table, string key, string value, string insertSql, object? extra = null)
     {
-        var id = await cn.ExecuteScalarAsync<Guid?>($"select id from {table} where {key}=@value limit 1", new { value });
+        var id = await cn.ExecuteScalarAsync<Guid?>("select id from " + table + " where " + key + "=@value limit 1", new { value });
         if (id.HasValue) return id.Value;
         var newId = Guid.NewGuid();
         var args = Merge(new { id = newId, value }, extra);

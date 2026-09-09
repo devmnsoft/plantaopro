@@ -15,7 +15,7 @@ public sealed class WorkItemRepository : IWorkItemRepository
     public async Task<IReadOnlyList<WorkItemDto>> ListAsync(Guid tenantId, Guid? unitId, CancellationToken ct)
     {
         await using var cn = Open();
-        var rows = await cn.QueryAsync<WorkItemDto>(new CommandDefinition($"select {Columns} from plantaopro.work_items where {Scope} order by status,posicao,vence_em nulls last", new { tenantId, unitId }, cancellationToken: ct));
+        var rows = await cn.QueryAsync<WorkItemDto>(new CommandDefinition("select " + Columns + " from plantaopro.work_items where " + Scope + " order by status,posicao,vence_em nulls last", new { tenantId, unitId }, cancellationToken: ct));
         return rows.AsList();
     }
 
@@ -28,7 +28,7 @@ public sealed class WorkItemRepository : IWorkItemRepository
     public async Task<IReadOnlyList<WorkItemHistoryDto>> HistoryAsync(Guid tenantId, Guid? unitId, Guid id, CancellationToken ct)
     {
         await using var cn = Open();
-        var sql = $"select h.id,h.acao,h.origem,h.destino,h.usuario_id as UsuarioId,h.criado_em as CriadoEm from plantaopro.work_item_history h join plantaopro.work_items w on w.id=h.work_item_id where w.{Scope} and w.id=@id order by h.criado_em desc";
+        var sql = "select h.id,h.acao,h.origem,h.destino,h.usuario_id as UsuarioId,h.criado_em as CriadoEm from plantaopro.work_item_history h join plantaopro.work_items w on w.id=h.work_item_id where w." + Scope + " and w.id=@id order by h.criado_em desc";
         return (await cn.QueryAsync<WorkItemHistoryDto>(new CommandDefinition(sql, new { tenantId, unitId, id }, cancellationToken: ct))).AsList();
     }
 
@@ -66,5 +66,5 @@ public sealed class WorkItemRepository : IWorkItemRepository
     }
 
     private static Task<WorkItemDto?> GetAsync(NpgsqlConnection cn, NpgsqlTransaction? tx, Guid tenantId, Guid? unitId, Guid id, CancellationToken ct) =>
-        cn.QuerySingleOrDefaultAsync<WorkItemDto>(new CommandDefinition($"select {Columns} from plantaopro.work_items where {Scope} and id=@id", new { tenantId, unitId, id }, tx, cancellationToken: ct));
+        cn.QuerySingleOrDefaultAsync<WorkItemDto>(new CommandDefinition("select " + Columns + " from plantaopro.work_items where " + Scope + " and id=@id", new { tenantId, unitId, id }, tx, cancellationToken: ct));
 }

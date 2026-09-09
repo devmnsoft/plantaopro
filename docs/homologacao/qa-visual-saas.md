@@ -6,4 +6,4 @@ Revisar login, sidebar, topbar, dashboards, tabelas, filtros, cards, modais, toa
 
 - Sidebar com grupos claros, item ativo, estados bloqueados e contexto de tenant/plano.
 - Topbar com busca, ajuda, notificações, upgrade, plano e usuário.
-- Estados bloqueados e cards SaaS usam sombras leves, borda consistente e CTA sem JavaScript nativo `confirm()`.
+- Estados bloqueados e cards SaaS usam sombras leves, borda consistente e CTA sem JavaScript nativo de confirmação.

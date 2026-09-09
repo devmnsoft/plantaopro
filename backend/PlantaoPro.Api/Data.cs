@@ -446,10 +446,12 @@ where up.usuario_id=@id
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
                 var isGlobal = roles.Any(roleCatalog.IsGlobal);
-                if (!isGlobal && (user.ClienteId ?? user.TenantId).HasValue && !string.Equals(user.ClienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
+                var clienteStatus = string.IsNullOrWhiteSpace(user.ClienteStatus) ? "ATIVO" : user.ClienteStatus.Trim().ToUpperInvariant();
+                var clienteBloqueado = !isGlobal && (user.ClienteId ?? user.TenantId).HasValue && !string.Equals(clienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase);
+                if (clienteBloqueado && string.Equals(clienteStatus, "CANCELADO", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_INACTIVE");
-                    return ApiResponse<LoginResponse>.Fail("O acesso da instituição está bloqueado. Contate o administrador responsável.", 423);
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_CANCELLED");
+                    return ApiResponse<LoginResponse>.Fail("O acesso da instituição está cancelado. Contate o suporte MNSOFT.", 423);
                 }
 
                 var clienteId = isGlobal ? null : user.ClienteId;
@@ -465,13 +467,13 @@ where up.usuario_id=@id
                 var expiresAtUtc = DateTime.UtcNow.AddHours(8);
                 var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId)).ToArray();
                 var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value)).ToArray() : Array.Empty<string>();
-                var token = GenerateToken(usuarioId, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules);
+                var token = GenerateToken(usuarioId, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules, clienteStatus);
                 await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua);
                 await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
-                await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, "SUCCESS");
-                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length }, true, ip, primaryRole);
+                await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, clienteBloqueado ? "SUCCESS_TENANT_BLOCKED" : "SUCCESS");
+                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, clienteBloqueado ? AuditoriaConstants.Acoes.BloqueioTenant : AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length, clienteStatus }, !clienteBloqueado, ip, primaryRole);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules), "Login realizado com sucesso.");
+                return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules, isGlobal ? null : clienteStatus), clienteBloqueado ? "Login realizado com restrição operacional por status do cliente." : "Login realizado com sucesso.");
             }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
@@ -512,7 +514,7 @@ order by 1";
             return await cn.QueryAsync<string>(sql, new { tenantId });
         }
 
-        string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId, string[] permissions, string[] modules)
+        string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId, string[] permissions, string[] modules, string? clienteStatus)
         {
             var jwt = cfg.GetSection("Jwt");
             var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, uid.ToString()), new(ClaimTypes.Name, email), new(ClaimTypes.Email, email), new("uid", uid.ToString()), new("email", email), new("role", primaryRole), new("roles", string.Join(',', roles)), new("primary_role", primaryRole), new("access_scope", accessScope), new("context_mode", contextMode), new("session_id", sessionId), new("access_catalog_version", "v2149") };
@@ -521,6 +523,7 @@ order by 1";
             claims.AddRange(modules.Select(m => new Claim("module", m)));
             if (clienteId.HasValue) claims.Add(new Claim("cliente_id", clienteId.Value.ToString()));
             if (tenantId.HasValue) claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
+            if (!string.IsNullOrWhiteSpace(clienteStatus)) claims.Add(new Claim("cliente_status", clienteStatus));
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt["Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             return new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(jwt["Issuer"], jwt["Audience"], claims, expires: DateTime.UtcNow.AddHours(8), signingCredentials: creds));

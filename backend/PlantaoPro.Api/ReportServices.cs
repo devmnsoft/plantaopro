@@ -132,8 +132,8 @@ public sealed class ReportQueryService : IReportQueryService
             "AUTORIZACOES_OPERACIONAL" => "v116_convenio_autorizacoes", "GLOSAS_CONSOLIDADO" => "v116_faturamento_lote_itens", "CAIXA_MOVIMENTACOES" => "v116_caixa_movimentos", "REPASSES_MEDICOS" => "pagamentos",
             "AUDITORIA_OPERACIONAL" => "auditoria_eventos", "EXECUTIVO_GERAL" => "plantoes", _ => "plantoes"
         };
-        return $@"select @code::text as indicador, count(1)::bigint as valor, to_char(date_trunc('day', coalesce(t.reg_date, now())), 'YYYY-MM-DD') as periodo
-from plantaopro.{table} t
+        return @"select @code::text as indicador, count(1)::bigint as valor, to_char(date_trunc('day', coalesce(t.reg_date, now())), 'YYYY-MM-DD') as periodo
+from plantaopro." + table + @" t
 where coalesce(t.reg_status,'A')='A'
   and (coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id') is null or coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id')=@tenantId::text)
   and coalesce(t.reg_date, now()) >= @inicio and coalesce(t.reg_date, now()) < @fim

@@ -119,9 +119,9 @@ for section in sorted(manifest['sections'], key=lambda x:x['order']):
         if 'sql' in obj:
             sql=normalize_sql(obj['sql'], obj.get('name','manifest-inline')); scan_conflicts(sql, obj.get('name','manifest-inline')); add(sql, obj.get('name','manifest-inline'))
         if 'source' in obj:
-            p=ROOT/obj['source']; sql=p.read_text(encoding='utf-8')
+            p=ROOT/obj['source']; source_bytes=p.read_bytes(); sql=source_bytes.decode('utf-8')
             if '\\i ' in sql or '\\ir ' in sql: raise SystemExit(f'Comando include proibido em {p}')
-            source_hash=hashlib.sha256(sql.encode()).hexdigest()
+            source_hash=hashlib.sha256(source_bytes).hexdigest()
             source_checksums[obj['source']]=source_hash
             sql=normalize_sql(sql, obj['source']); scan_conflicts(sql, obj['source'])
             add(f"-- SOURCE: {obj['source']}\n-- SOURCE-SHA256: {source_hash}\n"+sql, obj['source'])
@@ -132,7 +132,7 @@ write_reports()
 script='\n'.join(out)
 if re.search(r'^\s*CREATE\s+DATABASE\b', script, re.I|re.M): raise SystemExit('CREATE DATABASE não é permitido')
 if re.search(r'^\s*\\(?:if|else|endif|set|unset|echo|quit|connect|gexec|prompt|ir|i)\b', script, re.M): raise SystemExit('Metacomando psql não é permitido no SQL puro')
-path=ROOT/'database/scrpt_completo.sql'; path.write_text(script, encoding='utf-8')
+path=ROOT/'database/scrpt_completo.sql'; path.write_text(script, encoding='utf-8', newline='\n')
 sha=hashlib.sha256(script.encode()).hexdigest()
 (ROOT/'database/scrpt_completo.sha256').write_text(f'{sha}  scrpt_completo.sql\n', encoding='utf-8')
 pgadmin=ROOT/'database/pgadmin/instalar_no_banco_atual.sql'; pgadmin.parent.mkdir(parents=True,exist_ok=True)

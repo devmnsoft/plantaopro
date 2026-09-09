@@ -80,9 +80,35 @@ public sealed class CommercialDemoWebController : Controller
 }
 
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
-public sealed class AdminSaasController : Controller
+public sealed class AdminSaasController : BaseWebController
 {
-    public IActionResult Index() => View("Index", Dashboard("Admin SaaS MNSOFT", "Acompanhe governança, implantação, billing e alertas críticos com dados do ambiente."));
+    public AdminSaasController(IHttpClientFactory httpClientFactory, ILogger<AdminSaasController> logger)
+        : base(httpClientFactory, logger)
+    {
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var (resumo, resumoError, _) = await ReadApiResponseAsync<SaasResumoExecutivoViewModel>(client, "api/saas-dashboard/resumo");
+        var (faturamento, faturamentoError, _) = await ReadApiResponseAsync<FaturamentoSaasResumoViewModel>(client, "api/faturamento-saas/resumo");
+        var (alertas, alertasError, _) = await ReadApiListResponseAsync<ClienteAlertaSaasViewModel>(client, "api/saas-dashboard/alertas");
+        var (modulos, modulosError, _) = await ReadApiListResponseAsync<SaasModuleViewModel>(client, "api/modulos");
+
+        var error = resumoError ?? faturamentoError ?? alertasError ?? modulosError;
+        ViewBag.ErrorMessage = error;
+        return View("Index", new AdminSaasCockpitViewModel
+        {
+            Resumo = resumo ?? new SaasResumoExecutivoViewModel(),
+            Faturamento = faturamento ?? new FaturamentoSaasResumoViewModel(),
+            Alertas = alertas,
+            Modulos = modulos,
+            ErrorMessage = error
+        });
+    }
+
     public IActionResult Clientes() => View("Dashboard", Dashboard("Clientes SaaS", "Clientes ativos, trial, implantação, inadimplência e risco."));
     public IActionResult Tenants() => View("Dashboard", Dashboard("Tenants", "Isolamento, status e módulos habilitados por tenant."));
     public IActionResult Planos() => View("Dashboard", Dashboard("Planos", "Comparação, limites e módulos contratados."));

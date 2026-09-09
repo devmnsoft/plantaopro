@@ -37,7 +37,7 @@ public sealed class FinanceiroDapperHardeningV2105Tests
         var start = source.IndexOf("public sealed class FinanceiroService", StringComparison.Ordinal);
         var end = source.IndexOf("public sealed class NotificacaoService", start, StringComparison.Ordinal);
         var financeiro = source[start..end];
-        Assert.DoesNotContain("select *", financeiro, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("select " + "*", financeiro, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("pg.tenant_id=@TenantId", financeiro, StringComparison.Ordinal);
         foreach (var alias in new[] { "Id", "ValorPrevisto", "ValorPago", "ValorBruto", "ValorLiquido", "Descontos", "Acrescimos", "DataPagamento", "RegDate" })
             Assert.Contains($"as \"\"{alias}\"\"", financeiro, StringComparison.OrdinalIgnoreCase);

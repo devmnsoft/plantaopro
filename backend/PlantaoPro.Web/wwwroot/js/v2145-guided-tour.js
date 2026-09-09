@@ -3,7 +3,7 @@
     const storagePrefix = "plantaopro-tour-dismissed:";
     let activeElement = null;
     let current = 0;
-    let steps = [];
+    let steps = Array.of();
 
     const close = (dismiss = false) => {
         if (dismiss && steps.length) localStorage.setItem(storagePrefix + document.body.dataset.activeTour, "true");

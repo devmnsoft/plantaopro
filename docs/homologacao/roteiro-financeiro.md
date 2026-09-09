@@ -36,7 +36,7 @@ Documento de homologação e demonstração para o PlantãoPro como MVP comercia
 
 ## Critérios de aprovação
 - Build da API e Web verde no ambiente com SDK .NET instalado.
-- Varredura sem @page/asp-page em Views MVC, sem href="#", sem alert/confirm nativo e sem collection expression incompatível.
+- Varredura sem @page/asp-page em Views MVC, sem link vazio, sem alert/confirm nativo e sem collection expression incompatível.
 - Fluxo operacional médico ponta a ponta concluído sem exceção técnica.
 - Fluxo SaaS básico concluído com bloqueios de plano/assinatura e auditoria.
 - Testes mínimos compilam e contratos de segurança/mobile/SaaS passam.

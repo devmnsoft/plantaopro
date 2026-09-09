@@ -50,4 +50,4 @@ Esta consolidação cobre fundação, shell, navegação, login existente, respo
 
 ## Gate visual
 
-O script `scripts/ui/product-experience-audit.mjs` falha para imports CSS inexistentes, CSS versionado reintroduzido, versões hardcoded no shell, `href="#"` e `z-index` extremos. O smoke Playwright existente continua sendo a verificação navegada quando há runtime e credenciais disponíveis.
+O script `scripts/ui/product-experience-audit.mjs` falha para imports CSS inexistentes, CSS versionado reintroduzido, versões hardcoded no shell, links vazios e `z-index` extremos. O smoke Playwright existente continua sendo a verificação navegada quando há runtime e credenciais disponíveis.

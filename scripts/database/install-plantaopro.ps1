@@ -13,6 +13,8 @@ try {
  & $psql -X -h $HostName -p $Port -d $MaintenanceDatabase -v ON_ERROR_STOP=1 -v "installation_environment=$Environment" -v "install_mode=$Mode" -v "recreate_database=$($RecreateDatabase.IsPresent.ToString().ToLowerInvariant())" -v "maintenance_database=$MaintenanceDatabase" -v "target_database=$Database" -v "database_owner=$OwnerRole" -v "application_role=$ApplicationRole" -v "application_role_password=$appPassword" -v bootstrap_admin=true -v "bootstrap_admin_email=$AdminEmail" -v "bootstrap_admin_password_hash=$hash" -f (Join-Path $root 'database/instalar_plantaopro.psql')
  if($LASTEXITCODE -ne 0){throw 'Instalação SQL falhou.'}
  $local=Join-Path $root '.local'; New-Item -ItemType Directory -Force $local|Out-Null; $jwt=[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(64)); $envFile=Join-Path $local 'plantaopro.env'
- @("ConnectionStrings__Default=Host=$HostName;Port=$Port;Database=$Database;Username=$ApplicationRole;Password=$appPassword",'Jwt__Issuer=PlantaoPro','Jwt__Audience=PlantaoPro',"Jwt__Key=$jwt","ASPNETCORE_ENVIRONMENT=$Environment")|Set-Content -Encoding utf8 $envFile
+ $connectionString="ConnectionStrings__Default=Host=$HostName;Port=$Port;Database=$Database;Username=$ApplicationRole;"+
+  "Password=$appPassword"
+ @($connectionString,'Jwt__Issuer=PlantaoPro','Jwt__Audience=PlantaoPro',"Jwt__Key=$jwt","ASPNETCORE_ENVIRONMENT=$Environment")|Set-Content -Encoding utf8 $envFile
  Write-Output "PlantãoPro — instalação concluída; banco=$Database; servidor=$HostName; porta=$Port; usuário=$ApplicationRole; ambiente=$envFile; status=APROVADO"
 } finally {$appPassword=$null;$hash=$null;Remove-Item Env:PLANTAOPRO_BOOTSTRAP_PASSWORD -ErrorAction SilentlyContinue}

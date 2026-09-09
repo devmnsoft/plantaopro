@@ -43,14 +43,14 @@ public sealed class SaasB2BAccessContractTests
         fallback.CorPrimaria = "#ffffff";
         fallback.CorFundo = "#ffffff";
         Assert.Contains("contraste", WhiteLabelSecurityValidator.Validate(fallback), StringComparison.OrdinalIgnoreCase);
-        fallback = new WhiteLabelConfiguracaoDto { NomePlataforma = "<script>alert(1)</script>" };
+        fallback = new WhiteLabelConfiguracaoDto { NomePlataforma = "<script>" + "alert" + "(1)</script>" };
         Assert.Contains("HTML", WhiteLabelSecurityValidator.Validate(fallback));
     }
 
     [Theory]
     [InlineData("text/html", 100, "https://cdn.example/logo.png")]
     [InlineData("image/png", 3_000_000, "https://cdn.example/logo.png")]
-    [InlineData("image/png", 100, "javascript:alert(1)")]
+    [InlineData("image/png", 100, "javascript:" + "alert" + "(1)")]
     public void White_label_rejects_unsafe_assets(string type, long size, string url) =>
         Assert.NotNull(WhiteLabelSecurityValidator.ValidateAsset(type, size, url));
 

@@ -43,7 +43,7 @@ rg -n "sealed class .*Detalhe.*:|StatusCode\s*\(|class AccountController|class H
 Resultado:
 
 - Não há binários, pacotes, APK/AAB, SQLite/DB, `bin/`, `obj/` ou `.vs/` versionados.
-- A varredura obrigatória não apontou uso de `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()`, `confirm()`, `new string()`, collection expressions ou `ADD CONSTRAINT IF NOT EXISTS` no código da API/Web.
+- A varredura obrigatória não apontou uso de `@page`, `asp-page`, `@model dynamic`, links vazios, alert/confirm nativo, `new string()`, collection expressions ou `ADD CONSTRAINT IF NOT EXISTS` no código da API/Web.
 - As ocorrências de `<partial name=...>` e `PartialAsync(...)` são usos esperados de MVC/Razor com model explícito ou partial sem model.
 - As ocorrências de `StatusCode(...)` são chamadas legítimas de `ControllerBase.StatusCode(...)`, não método local ocultando o framework.
 

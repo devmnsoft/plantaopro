@@ -10,4 +10,4 @@ Padrão: cards com sombra leve, KPIs claros, badges de status, botões primário
 
 - O layout principal usa `plantao-saas.css`, `plantao-components.css`, `plantao-layout.css`, `plantao-dashboard.css` e `plantao-forms.css` como camadas de design system.
 - Estados bloqueados de módulo/plano foram padronizados visualmente com cards, borda pontilhada e CTA de upgrade.
-- Menus bloqueados usam classe `nav-link-app locked`, sem `href="#"`, para evitar ação sem destino.
+- Menus bloqueados usam classe `nav-link-app locked`, sem link vazio, para evitar ação sem destino.

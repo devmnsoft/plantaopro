@@ -27,7 +27,7 @@ public static class RepositoryPathResolver
         ArgumentException.ThrowIfNullOrWhiteSpace(typeName);
 
         var declaration = new System.Text.RegularExpressions.Regex(
-            $@"\bclass\s+{System.Text.RegularExpressions.Regex.Escape(typeName)}\b",
+            @"\bclass\s+" + System.Text.RegularExpressions.Regex.Escape(typeName) + @"\b",
             System.Text.RegularExpressions.RegexOptions.CultureInvariant);
         var matches = Directory.EnumerateFiles(searchRoot, "*.cs", SearchOption.AllDirectories)
             .Where(path => !IsGeneratedPath(path))

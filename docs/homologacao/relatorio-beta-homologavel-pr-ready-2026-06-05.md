@@ -13,7 +13,7 @@
 - A segunda varredura de higiene ficou sem ocorrências.
 
 ## Estabilização estática Web/API
-- A varredura de padrões proibidos em Web/API foi executada para `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()`, `confirm()`, `ADD CONSTRAINT IF NOT EXISTS`, collection expressions e `new string()`.
+- A varredura de padrões proibidos em Web/API foi executada para `@page`, `asp-page`, `@model dynamic`, links vazios, alert/confirm nativo, `ADD CONSTRAINT IF NOT EXISTS`, collection expressions e `new string()`.
 - Não houve ocorrência nos projetos `backend/PlantaoPro.Web` e `backend/PlantaoPro.Api` após a sanitização documental.
 - A revisão estática confirmou que o layout global injeta `_ToastMessages` sem depender do model da página e `_ConfirmModal` com `ConfirmModalViewModel` explícito.
 

@@ -92,15 +92,29 @@ var jwtIssuer = jwt["Issuer"] ?? string.Empty;
 var jwtAudience = jwt["Audience"] ?? string.Empty;
 JwtConfigurationValidator.Validate(jwtKey, jwtIssuer, jwtAudience);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o => o.TokenValidationParameters = new TokenValidationParameters
+    .AddJwtBearer(o =>
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtIssuer,
-        ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        o.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+        o.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = async context =>
+            {
+                var sessions = context.HttpContext.RequestServices.GetRequiredService<IAuthenticationSessionService>();
+                if (context.Principal is null || !await sessions.ValidateAsync(context.Principal, context.HttpContext.RequestAborted))
+                {
+                    context.Fail("Sessão expirada, revogada ou sem contexto ativo.");
+                }
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -115,6 +129,7 @@ builder.Services.AddScoped<IAuthorizationHandler,EffectiveAccessAuthorizationHan
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<PainelTvService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAuthenticationSessionService, AuthenticationSessionService>();
 builder.Services.AddScoped<MedicoService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<PlantaoService>();

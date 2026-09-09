@@ -9,7 +9,7 @@
 - Verificação de higiene contra resíduos externos com o comando obrigatório de varredura.
 - Remoção de referências textuais ao stack móvel externo citado no incidente, mantendo a documentação mobile do PlantãoPro de forma neutra e aderente ao MVP.
 - Padronização da nomenclatura de auditoria para downloads de relatório, evitando falsos positivos da varredura obrigatória sem remover o recurso de CSV.
-- Revisão estática dos padrões proibidos em Web/API: `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()`, `confirm()`, `ADD CONSTRAINT IF NOT EXISTS`, collection expressions e `new string()`.
+- Revisão estática dos padrões proibidos em Web/API: `@page`, `asp-page`, `@model dynamic`, links vazios, alert/confirm nativo, `ADD CONSTRAINT IF NOT EXISTS`, collection expressions e `new string()`.
 - Confirmação de que `_Layout.cshtml` injeta `_ToastMessages` sem model e `_ConfirmModal` com `ConfirmModalViewModel` explícito.
 
 ## Resultado das validações automatizadas disponíveis

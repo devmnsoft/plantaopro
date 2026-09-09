@@ -150,6 +150,10 @@ public sealed class AccountController : Controller
                 var clienteId = login.ClienteId.Value.ToString();
                 claims.Add(new Claim("cliente_id", clienteId));
                 claims.Add(new Claim("cliente", login.ClienteNome ?? "Cliente PlantãoPro"));
+                if (!string.IsNullOrWhiteSpace(login.ClienteStatus))
+                {
+                    claims.Add(new Claim("cliente_status", login.ClienteStatus.Trim().ToUpperInvariant()));
+                }
             }
             if (login.TenantId.HasValue)
             {
@@ -267,7 +271,7 @@ public sealed class AccountController : Controller
         // Prioridade explícita para evitar 404, loop de login e destinos inconsistentes quando o usuário possui múltiplos perfis.
         var priority = new List<(string Role, string Controller, string Action)>
         {
-            (RolesConstants.AdministradorGlobal, "SaasDashboard", "Index"),
+            (RolesConstants.AdministradorGlobal, "AdminSaas", "Index"),
             (RolesConstants.AdministradorCliente, "ClientePortal", "Index"),
             (RolesConstants.Administrador, "ClientePortal", "Index"),
             (RolesConstants.Diretor, "ClientePortal", "Index"),
@@ -331,7 +335,12 @@ public sealed class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult AccessDenied() => View();
+    public IActionResult AccessDenied(string? module = null, string? reason = null)
+    {
+        ViewBag.Module = module;
+        ViewBag.Reason = reason;
+        return View();
+    }
 
     [HttpGet]
     [AllowAnonymous]

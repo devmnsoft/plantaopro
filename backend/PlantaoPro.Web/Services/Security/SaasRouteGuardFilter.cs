@@ -73,13 +73,23 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         "Demo"
     };
 
+    private static readonly ISet<string> BlockedTenantAllowedControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "Account",
+        "Ajuda",
+        "MinhaAssinatura",
+        "Lgpd"
+    };
+
     private readonly IPermissionService permissions;
+    private readonly IModuleAccessService modules;
     private readonly ICurrentUserService currentUser;
     private readonly ILogger<SaasRouteGuardFilter> logger;
 
-    public SaasRouteGuardFilter(IPermissionService permissions, ICurrentUserService currentUser, ILogger<SaasRouteGuardFilter> logger)
+    public SaasRouteGuardFilter(IPermissionService permissions, IModuleAccessService modules, ICurrentUserService currentUser, ILogger<SaasRouteGuardFilter> logger)
     {
         this.permissions = permissions;
+        this.modules = modules;
         this.currentUser = currentUser;
         this.logger = logger;
     }
@@ -96,16 +106,28 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             return;
         }
 
+        if (IsTenantBlocked() && !BlockedTenantAllowedControllers.Contains(descriptor.ControllerName))
+        {
+            logger.LogWarning("Operação bloqueada por status do cliente. Usuario:{UsuarioId} Controller:{Controller} Action:{Action} Tenant:{TenantId} Cliente:{ClienteId}",
+                currentUser.UserId,
+                descriptor.ControllerName,
+                descriptor.ActionName,
+                currentUser.TenantId,
+                currentUser.ClienteId);
+            context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module = "CLIENTE", reason = "CLIENTE_BLOQUEADO" });
+            return;
+        }
+
         if (!ControllerModules.TryGetValue(descriptor.ControllerName, out var module))
         {
             logger.LogError("Controller autenticado sem módulo no catálogo SaaS. Controller:{Controller} Action:{Action}", descriptor.ControllerName, descriptor.ActionName);
             context.HttpContext.Items["SaasAccessDeniedModule"] = "CATALOGO_NAO_CONFIGURADO";
-            context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty });
+            context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module = "CATALOGO_NAO_CONFIGURADO", reason = "CATALOGO_NAO_CONFIGURADO" });
             return;
         }
 
         var action = ResolvePermissionAction(descriptor.ActionName);
-        if (permissions.HasPermission(module, action))
+        if (permissions.HasPermission(module, action) && modules.IsModuleEnabled(module))
         {
             return;
         }
@@ -121,7 +143,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             currentUser.ClienteId);
 
         context.HttpContext.Items["SaasAccessDeniedModule"] = module;
-        context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty });
+        context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module, reason = modules.IsModuleEnabled(module) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO" });
     }
 
     public void OnActionExecuted(ActionExecutedContext context)
@@ -142,5 +164,12 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         if (string.Equals(actionName, "Exportar", StringComparison.OrdinalIgnoreCase)) return "EXPORTAR";
         if (string.Equals(actionName, "MarcarPaga", StringComparison.OrdinalIgnoreCase) || string.Equals(actionName, "Confirmar", StringComparison.OrdinalIgnoreCase)) return "CONFIRMAR";
         return "VER";
+    }
+
+    private bool IsTenantBlocked()
+    {
+        if (!currentUser.IsAuthenticated() || currentUser.IsGlobalAdmin()) return false;
+        var status = currentUser.User.FindFirst("cliente_status")?.Value ?? currentUser.User.FindFirst("tenant_status")?.Value;
+        return !string.IsNullOrWhiteSpace(status) && !string.Equals(status, "ATIVO", StringComparison.OrdinalIgnoreCase);
     }
 }

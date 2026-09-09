@@ -63,9 +63,9 @@ public sealed class Saude360ClinicalService
         limite = Math.Clamp(limite, 1, 100);
         termo = string.IsNullOrWhiteSpace(termo) ? null : termo.Trim()[..Math.Min(termo.Trim().Length, 120)];
         await using var cn = Cn();
-        var rows = await cn.QueryAsync<LookupItemDto>($@"select id as Id, coalesce(nome, codigo, '') as Text,
+        var rows = await cn.QueryAsync<LookupItemDto>(@"select id as Id, coalesce(nome, codigo, '') as Text,
     coalesce(codigo, '') as Extra, status as Status, '' as Description
-from plantaopro.{entidade}
+from plantaopro." + entidade + @"
 where id <> '00000000-0000-0000-0000-000000000000'::uuid
   and upper(coalesce(status, 'ATIVO')) in ('ATIVO', 'A')
   and ((@IsGlobal and @TenantId is null) or tenant_id=@TenantId)
@@ -109,8 +109,8 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         var table = ResolveTable(tableKey);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
-        var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)) ? " and (medico_id=@uid or created_by=@uid)" : string.Empty;
-        var row = await cn.QueryFirstOrDefaultAsync($"select * from plantaopro.{table} where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))" + ownDoctorSql, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId });
+        var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)) ? " and (t.medico_id=@uid or t.created_by=@uid)" : string.Empty;
+        var row = await cn.QueryFirstOrDefaultAsync("select t.* from plantaopro." + table + " t where t.id=@id and t.reg_status='A' and (@isGlobal or (@tenantId is not null and t.cliente_id=@tenantId))" + ownDoctorSql, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId });
         if (row is null) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado.", 404);
         await AuditAsync(table, id, "VISUALIZAR", new { table });
         return ApiResponse<Saude360RegistroDto>.Ok(ToDto(row), "Registro encontrado.");
@@ -372,7 +372,7 @@ where not exists (select 1 from plantaopro.cid_favoritos where cid_id=@cidId and
         {
             await GarantirBaseClinicaAsync();
             await using var cn = Cn();
-            var modelo = await cn.QueryFirstOrDefaultAsync("select * from plantaopro.prescricao_modelos where id=@modeloId and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { modeloId, tenantId = TenantId, isGlobal = IsGlobal });
+            var modelo = await cn.QueryFirstOrDefaultAsync("select m.* from plantaopro.prescricao_modelos m where m.id=@modeloId and m.reg_status='A' and (@isGlobal or (@tenantId is not null and m.cliente_id=@tenantId))", new { modeloId, tenantId = TenantId, isGlobal = IsGlobal });
             if (modelo is null) return ApiResponse<Saude360RegistroDto>.Fail("Modelo de prescrição não encontrado.", 404);
             var id = Guid.NewGuid();
             await cn.ExecuteAsync(@"insert into plantaopro.prescricoes(id,cliente_id,tenant_id,paciente_id,consulta_id,medico_id,modelo_id,orientacoes,status,created_by)
@@ -515,7 +515,7 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase))) where.Add("(medico_id = @uid or created_by = @uid)");
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
-        return "select * from plantaopro." + table + " where " + string.Join(" and ", where) + " order by reg_date desc limit 200";
+        return "select t.* from plantaopro." + table + " t where " + string.Join(" and ", where) + " order by reg_date desc limit 200";
     }
 
     private static bool HasColumn(string key, string column)
@@ -564,20 +564,20 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
 
     private static string BuildUpdate(string key, string table)
     {
-        if (key == "pacientes") return $@"update plantaopro.{table} set
+        if (key == "pacientes") return "update plantaopro." + table + @" set
 nome=coalesce(nullif(@Nome,''),nome), nome_social=coalesce(nullif(@NomeSocial,''),nome_social), data_nascimento=coalesce(@DataNascimento,data_nascimento), sexo_genero=coalesce(nullif(@SexoGenero,''),sexo_genero), cpf=coalesce(nullif(@Cpf,''),cpf), cns=coalesce(nullif(@Cns,''),cns), documento_alternativo=coalesce(nullif(@DocumentoAlternativo,''),documento_alternativo), email=coalesce(nullif(@Email,''),email), telefone=coalesce(nullif(@Telefone,''),telefone), endereco=coalesce(nullif(@Endereco,''),endereco), responsavel_nome=coalesce(nullif(@ResponsavelNome,''),responsavel_nome), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now()
 where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "agendamentos") return $@"update plantaopro.{table} set
+        if (key == "agendamentos") return "update plantaopro." + table + @" set
 paciente_id=coalesce(@PacienteId,paciente_id), medico_id=coalesce(@MedicoId,medico_id), unidade_id=coalesce(@UnidadeId,unidade_id), sala_id=coalesce(@SalaId,sala_id), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), tipo=coalesce(nullif(@Tipo,''),tipo), especialidade=coalesce(nullif(@Especialidade,''),especialidade), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), valor=coalesce(@Valor,valor), updated_by=@uid, updated_at=now()
 where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "triagens") return $@"update plantaopro.{table} set
+        if (key == "triagens") return "update plantaopro." + table + @" set
 classificacao_risco=coalesce(nullif(@ClassificacaoRisco,''),nullif(@Tipo,''),classificacao_risco), queixa_principal=coalesce(nullif(@QueixaPrincipal,''),nullif(@Descricao,''),queixa_principal), alergias_relatadas=coalesce(nullif(@Alergias,''),alergias_relatadas), medicamentos_uso=coalesce(nullif(@MedicamentosUso,''),medicamentos_uso), observacoes=coalesce(nullif(@Observacoes,''),observacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now()
 where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "consultas") return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), tipo=coalesce(nullif(@Tipo,''),tipo), observacoes=coalesce(nullif(@Observacoes,''),observacoes), anamnese=coalesce(nullif(@QueixaPrincipal,''),anamnese), exame_fisico=coalesce(nullif(@Descricao,''),exame_fisico), diagnostico=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),diagnostico), codigo_cid=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),codigo_cid), conduta=coalesce(nullif(@Justificativa,''),conduta), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "cid") return $@"update plantaopro.{table} set codigo=coalesce(nullif(@Codigo,''),codigo), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "prescricoes") return $@"update plantaopro.{table} set orientacoes=coalesce(nullif(@Observacoes,''),orientacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        if (key == "prescricaoModelos") return $@"update plantaopro.{table} set nome=coalesce(nullif(@Nome,''),nome), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        return $@"update plantaopro.{table} set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        if (key == "consultas") return "update plantaopro." + table + " set status=coalesce(nullif(@Status,''),status), tipo=coalesce(nullif(@Tipo,''),tipo), observacoes=coalesce(nullif(@Observacoes,''),observacoes), anamnese=coalesce(nullif(@QueixaPrincipal,''),anamnese), exame_fisico=coalesce(nullif(@Descricao,''),exame_fisico), diagnostico=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),diagnostico), codigo_cid=coalesce(nullif(@CodigoCid,''),nullif(@Codigo,''),codigo_cid), conduta=coalesce(nullif(@Justificativa,''),conduta), data_inicio=coalesce(@DataInicio,data_inicio), data_fim=coalesce(@DataFim,data_fim), updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        if (key == "cid") return "update plantaopro." + table + " set codigo=coalesce(nullif(@Codigo,''),codigo), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        if (key == "prescricoes") return "update plantaopro." + table + " set orientacoes=coalesce(nullif(@Observacoes,''),orientacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        if (key == "prescricaoModelos") return "update plantaopro." + table + " set nome=coalesce(nullif(@Nome,''),nome), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        return "update plantaopro." + table + " set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
     }
 
     private async Task AplicarEfeitosClinicosAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request)

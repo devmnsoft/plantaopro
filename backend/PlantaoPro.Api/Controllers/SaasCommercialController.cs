@@ -33,8 +33,8 @@ public sealed class PlanosController : ControllerBase
             var s = Math.Clamp(pageSize, 1, 100);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var where = string.IsNullOrWhiteSpace(status) ? "reg_status='A'" : "reg_status='A' and upper(status)=upper(@status)";
-            var total = await cn.ExecuteScalarAsync<long>($"select count(1) from plantaopro.planos where {where}", new { status });
-            var items = await cn.QueryAsync<PlanoComercialDto>($@"select id as ""Id"",
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.planos where " + where, new { status });
+            var items = await cn.QueryAsync<PlanoComercialDto>(@"select id as ""Id"",
        coalesce(nome,'') as ""Nome"",
        coalesce(descricao,'') as ""Descricao"",
        valor_mensal as ""ValorMensal"",
@@ -51,7 +51,7 @@ public sealed class PlanosController : ControllerBase
        coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
        coalesce(status,'') as ""Status""
 from plantaopro.planos
-where {where}
+where " + where + @"
 order by nome
 limit @s offset @offset", new { status, s, offset = (p - 1) * s });
             return Ok(ApiResponse<PagedResult<PlanoComercialDto>>.Ok(new PagedResult<PlanoComercialDto>(items, p, s, total)));
@@ -264,15 +264,15 @@ public sealed class AssinaturasController : ControllerBase
             var s = Math.Clamp(pageSize, 1, 100);
             var where = "a.reg_status='A' and (@clienteId is null or a.cliente_id=@clienteId) and (@status is null or upper(a.status)=upper(@status))";
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var total = await cn.ExecuteScalarAsync<long>($"select count(1) from plantaopro.assinaturas a where {where}", new { clienteId, status });
-            var items = await cn.QueryAsync<AssinaturaComercialDto>($@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.assinaturas a where " + where, new { clienteId, status });
+            var items = await cn.QueryAsync<AssinaturaComercialDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
        a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"",
        coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.dia_vencimento as ""DiaVencimento"",
        coalesce(a.observacoes,'') as ""Observacoes""
 from plantaopro.assinaturas a
 join plantaopro.clientes c on c.id=a.cliente_id
 join plantaopro.planos p on p.id=a.plano_id
-where {where}
+where " + where + @"
 order by a.reg_date desc
 limit @s offset @offset", new { clienteId, status, s, offset = (p - 1) * s });
             return Ok(ApiResponse<PagedResult<AssinaturaComercialDto>>.Ok(new PagedResult<AssinaturaComercialDto>(items, p, s, total)));
@@ -458,12 +458,14 @@ public sealed class FaturamentoSaasController : ControllerBase
 {
     private readonly IConfiguration _cfg;
     private readonly IAuditService _audit;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<FaturamentoSaasController> _logger;
 
-    public FaturamentoSaasController(IConfiguration cfg, IAuditService audit, ILogger<FaturamentoSaasController> logger)
+    public FaturamentoSaasController(IConfiguration cfg, IAuditService audit, ICurrentUserService currentUser, ILogger<FaturamentoSaasController> logger)
     {
         _cfg = cfg;
         _audit = audit;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -480,7 +482,7 @@ coalesce(sum(case when status='PAGA' then coalesce(valor_pago, valor) else 0 end
 count(*) filter (where status='ABERTA')::bigint as ""FaturasAbertas"",
 count(*) filter (where status='VENCIDA')::bigint as ""FaturasVencidas"",
 count(*) filter (where status='EM_CONTESTACAO')::bigint as ""FaturasEmContestacao""
-from plantaopro.faturas_saas where reg_status='A'");
+from plantaopro.faturas_saas where reg_status='A' and (@global or cliente_id=@clienteId)", BillingScope());
             return Ok(ApiResponse<FaturamentoSaasResumoDto>.Ok(dto));
         }
         catch (Exception ex)
@@ -499,16 +501,18 @@ from plantaopro.faturas_saas where reg_status='A'");
             var s = Math.Clamp(pageSize, 1, 100);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await AtualizarVencidasAsync(cn);
-            var where = "f.reg_status='A' and (@clienteId is null or f.cliente_id=@clienteId) and (@status is null or f.status=@status) and (@competencia is null or f.competencia=@competencia)";
-            var args = new { clienteId, status, competencia, s, offset = (p - 1) * s };
-            var total = await cn.ExecuteScalarAsync<long>($"select count(1) from plantaopro.faturas_saas f where {where}", args);
-            var items = await cn.QueryAsync<FaturaSaasDto>($@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", f.assinatura_id as ""AssinaturaId"",
+            var scopedClienteId = ScopedClienteId(clienteId);
+            if (!scopedClienteId.HasValue && !_currentUser.IsGlobalAdmin()) return Forbid();
+            var where = "f.reg_status='A' and (@global or f.cliente_id=@scopedClienteId) and (@requestedClienteId is null or f.cliente_id=@requestedClienteId) and (@status is null or f.status=@status) and (@competencia is null or f.competencia=@competencia)";
+            var args = new { global = _currentUser.IsGlobalAdmin(), scopedClienteId, requestedClienteId = _currentUser.IsGlobalAdmin() ? clienteId : scopedClienteId, status, competencia, s, offset = (p - 1) * s };
+            var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.faturas_saas f where " + where, args);
+            var items = await cn.QueryAsync<FaturaSaasDto>(@"select f.id as ""Id"", f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", f.assinatura_id as ""AssinaturaId"",
        f.competencia as ""Competencia"", f.valor as ""Valor"", f.vencimento as ""Vencimento"", f.status as ""Status"",
        f.valor_pago as ""ValorPago"", f.data_pagamento as ""DataPagamento"", coalesce(f.forma_pagamento,'') as ""FormaPagamento"",
        coalesce(f.motivo_cancelamento,'') as ""MotivoCancelamento"", coalesce(f.motivo_contestacao,'') as ""MotivoContestacao"", f.criado_em as ""CriadoEm""
 from plantaopro.faturas_saas f
 join plantaopro.clientes c on c.id=f.cliente_id
-where {where}
+where " + where + @"
 order by f.vencimento desc, f.criado_em desc
 limit @s offset @offset", args);
             return Ok(ApiResponse<PagedResult<FaturaSaasDto>>.Ok(new PagedResult<FaturaSaasDto>(items, p, s, total)));
@@ -530,7 +534,7 @@ limit @s offset @offset", args);
        f.competencia as ""Competencia"", f.valor as ""Valor"", f.vencimento as ""Vencimento"", f.status as ""Status"",
        f.valor_pago as ""ValorPago"", f.data_pagamento as ""DataPagamento"", coalesce(f.forma_pagamento,'') as ""FormaPagamento"",
        coalesce(f.motivo_cancelamento,'') as ""MotivoCancelamento"", coalesce(f.motivo_contestacao,'') as ""MotivoContestacao"", f.criado_em as ""CriadoEm""
-from plantaopro.faturas_saas f join plantaopro.clientes c on c.id=f.cliente_id where f.id=@id and f.reg_status='A'", new { id });
+from plantaopro.faturas_saas f join plantaopro.clientes c on c.id=f.cliente_id where f.id=@id and f.reg_status='A' and (@global or f.cliente_id=@clienteId)", BillingScope(new { id }));
             return item is null ? NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404)) : Ok(ApiResponse<FaturaSaasDto>.Ok(item));
         }
         catch (Exception ex)
@@ -545,6 +549,7 @@ from plantaopro.faturas_saas f join plantaopro.clientes c on c.id=f.cliente_id w
     {
         try
         {
+            if (!_currentUser.IsGlobalAdmin()) return Forbid();
             var competencia = new DateOnly(request.Competencia.Year, request.Competencia.Month, 1);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
@@ -605,7 +610,7 @@ returning id as ""Id"", cliente_id as ""ClienteId"" ", new { competencia }, tx))
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
+            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A' and (@global or cliente_id=@clienteId)", BillingScope(new { id }), tx);
             if (fatura == default) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
             if (!string.Equals(fatura.Status, "EM_CONTESTACAO", StringComparison.OrdinalIgnoreCase)) return BadRequest(ApiResponse<string>.Fail("Apenas faturas em contestação podem ser resolvidas.", 400));
             await cn.ExecuteAsync("update plantaopro.faturas_saas set status='ABERTA', resposta_contestacao=@Resposta, atualizado_em=now() where id=@id and reg_status='A'", new { id, request.Resposta }, tx);
@@ -629,7 +634,7 @@ returning id as ""Id"", cliente_id as ""ClienteId"" ", new { competencia }, tx))
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var clienteId = await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
+            var clienteId = await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro.faturas_saas where id=@id and reg_status='A' and (@global or cliente_id=@clienteId)", BillingScope(new { id }), tx);
             if (!clienteId.HasValue) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
             await RegistrarEventoCobrancaAsync(cn, tx, clienteId.Value, id, "COBRANCA_NOTIFICADA", "Notificação de cobrança registrada no canal in_app.");
             await RegistrarAlertaFinanceiroAsync(cn, tx, clienteId.Value, "COBRANCA", "Cobrança SaaS notificada", "Existe uma cobrança SaaS pendente de acompanhamento financeiro.", "MEDIA");
@@ -653,15 +658,16 @@ returning id as ""Id"", cliente_id as ""ClienteId"" ", new { competencia }, tx))
             var s = Math.Clamp(pageSize, 1, 100);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await AtualizarVencidasAsync(cn);
-            var total = await cn.ExecuteScalarAsync<long>("select count(distinct cliente_id) from plantaopro.faturas_saas where status='VENCIDA' and reg_status='A'");
+            var scope = BillingScope(new { s, offset = (p - 1) * s });
+            var total = await cn.ExecuteScalarAsync<long>("select count(distinct cliente_id) from plantaopro.faturas_saas where status='VENCIDA' and reg_status='A' and (@global or cliente_id=@clienteId)", scope);
             var items = await cn.QueryAsync<InadimplenciaSaasDto>(@"select f.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
        count(*)::bigint as ""FaturasVencidas"", coalesce(sum(f.valor),0) as ""ValorVencido"", min(f.vencimento) as ""VencimentoMaisAntigo""
 from plantaopro.faturas_saas f
 join plantaopro.clientes c on c.id=f.cliente_id
-where f.status='VENCIDA' and f.reg_status='A'
+where f.status='VENCIDA' and f.reg_status='A' and (@global or f.cliente_id=@clienteId)
 group by f.cliente_id, c.nome_fantasia, c.razao_social
 order by min(f.vencimento)
-limit @s offset @offset", new { s, offset = (p - 1) * s });
+limit @s offset @offset", scope);
             return Ok(ApiResponse<PagedResult<InadimplenciaSaasDto>>.Ok(new PagedResult<InadimplenciaSaasDto>(items, p, s, total)));
         }
         catch (Exception ex)
@@ -678,7 +684,7 @@ limit @s offset @offset", new { s, offset = (p - 1) * s });
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A'", new { id }, tx);
+            var fatura = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, string Status)>("select cliente_id as ClienteId, status as Status from plantaopro.faturas_saas where id=@id and reg_status='A' and (@global or cliente_id=@clienteId)", BillingScope(new { id }), tx);
             if (fatura == default) return NotFound(ApiResponse<string>.Fail("Fatura não encontrada.", 404));
             if (fatura.Status == "CANCELADA") return BadRequest(ApiResponse<string>.Fail("Fatura cancelada não pode ser alterada.", 400));
 
@@ -732,6 +738,16 @@ where not exists (select 1 from plantaopro.pagamentos_saas where fatura_id=@id a
 
     private static Task AtualizarVencidasAsync(NpgsqlConnection cn)
         => cn.ExecuteAsync("update plantaopro.faturas_saas set status='VENCIDA', atualizado_em=now() where status='ABERTA' and vencimento < current_date and reg_status='A'");
+
+    private Guid? ScopedClienteId(Guid? requestedClienteId = null) => _currentUser.IsGlobalAdmin() ? requestedClienteId : _currentUser.ClienteId;
+
+    private object BillingScope(object? values = null)
+    {
+        var parameters = new DynamicParameters(values);
+        parameters.Add("global", _currentUser.IsGlobalAdmin());
+        parameters.Add("clienteId", _currentUser.IsGlobalAdmin() ? null : _currentUser.ClienteId);
+        return parameters;
+    }
 
     private static Task RegistrarEventoCobrancaAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid clienteId, Guid faturaId, string tipo, string mensagem)
     {

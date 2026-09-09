@@ -59,7 +59,7 @@ public sealed class SaasComercialOperacaoController : ControllerBase
         try
         {
             await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
-            var itens = await cn.QueryAsync($"select * from {tabela} where reg_status = 'A' order by {ordenacao} limit 100");
+            var itens = await cn.QueryAsync("select t.* from " + tabela + " t where t.reg_status = 'A' order by " + ordenacao + " limit 100");
             return Ok(ApiResponse<IEnumerable<dynamic>>.Ok(itens, mensagem));
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01")

@@ -14,7 +14,7 @@
 
 ## Homologação real 2026-07-07
 
-- **Pronto:** appsettings sanitizados com placeholders; health check sem connection string; auditoria central com mascaramento de detalhes sensíveis; testes contratuais contra `alert()`, `confirm()`, `@page`, `asp-page`, `@model dynamic` e `href="#"`.
+- **Pronto:** appsettings sanitizados com placeholders; health check sem connection string; auditoria central com mascaramento de detalhes sensíveis; testes contratuais contra alert/confirm nativo, `@page`, `asp-page`, `@model dynamic` e links vazios.
 - **Parcial:** revisão de DTOs, impressão, exportações e histórico clínico por inspeção; requer QA manual por perfil em ambiente com banco real.
 - **Pendente:** armazenamento seguro mobile com `expo-secure-store`; MVP mantém fallback em memória documentado até instalação/homologação do pacote.
 

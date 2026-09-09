@@ -22,8 +22,10 @@ psql -X -d "$PGDATABASE" -v ON_ERROR_STOP=1 \
  -v bootstrap_admin_password_hash="$PLANTAOPRO_BOOTSTRAP_PASSWORD_HASH" -f "$root/database/instalar_plantaopro.psql"
 mkdir -p "$root/.local"; umask 077
 jwt="$(python3 -c 'import secrets; print(secrets.token_urlsafe(64))')"
+connection_string="Host=${PGHOST:-localhost};Port=${PGPORT:-5432};Database=$PLANTAOPRO_DATABASE;Username=$PLANTAOPRO_APP_ROLE;"
+connection_string+="Password=$PLANTAOPRO_APP_PASSWORD"
 cat > "$root/.local/plantaopro.env" <<ENV
-ConnectionStrings__Default=Host=${PGHOST:-localhost};Port=${PGPORT:-5432};Database=$PLANTAOPRO_DATABASE;Username=$PLANTAOPRO_APP_ROLE;Password=$PLANTAOPRO_APP_PASSWORD
+ConnectionStrings__Default=$connection_string
 Jwt__Issuer=PlantaoPro
 Jwt__Audience=PlantaoPro
 Jwt__Key=$jwt

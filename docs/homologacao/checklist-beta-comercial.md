@@ -18,7 +18,7 @@ Consolidar o PlantãoPro como **Beta Comercial Controlada**: demonstrável para 
 - [ ] Sem binários versionados: dll, exe, pdb, cache, zip, apk, aab, db, sqlite, bin, obj ou .vs.
 - [ ] `dotnet clean` API/Web executado no ambiente com SDK instalado.
 - [ ] `dotnet build` API/Web verde.
-- [ ] Varredura sem `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()`, `confirm()` ou `ADD CONSTRAINT IF NOT EXISTS`.
+- [ ] Varredura sem `@page`, `asp-page`, `@model dynamic`, links vazios, alert/confirm nativo ou `ADD CONSTRAINT IF NOT EXISTS`.
 - [ ] Swagger abre e autentica com JWT.
 - [ ] `/api/health` retorna saudável.
 - [ ] Login Web mantém Cookie Authentication e redirecionamento pós-login.

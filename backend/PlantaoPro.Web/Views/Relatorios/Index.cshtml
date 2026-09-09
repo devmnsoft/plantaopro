@@ -2,7 +2,7 @@
     ViewData["Title"] = "Central de Relatórios e BI";
     var reports = new[]
     {
-        new { Title = "Cobertura de plantões", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados do tenant.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Seu tenant", Formats = "Tela" },
+        new { Title = "Plantões por período", Description = "Investigue cobertura e riscos operacionais por período com dados autorizados do tenant.", Icon = "bi-calendar2-check", Action = "Cobertura", Category = "Escalas e plantões", Scope = "Seu tenant", Formats = "Tela" },
         new { Title = "Convites e confirmações", Description = "Analise respostas e conversão dos convites enviados aos profissionais.", Icon = "bi-send-check", Action = "Convites", Category = "Operacional", Scope = "Seu tenant", Formats = "Tela" },
         new { Title = "Produtividade profissional", Description = "Consulte os indicadores operacionais disponíveis sem expor conteúdo clínico.", Icon = "bi-activity", Action = "ProdutividadeMedica", Category = "Profissionais", Scope = "Seu tenant", Formats = "Tela" },
         new { Title = "Nível de serviço", Description = "Visualize os indicadores de SLA existentes e os pontos que exigem atenção.", Icon = "bi-speedometer2", Action = "Sla", Category = "Suporte", Scope = "Conforme permissão", Formats = "Tela" },
@@ -23,7 +23,8 @@
         </div>
         <div class="pp-report-hero__trust" aria-label="Proteções da central">
             <span><i class="bi bi-shield-lock" aria-hidden="true"></i> Escopo protegido</span>
-            <span><i class="bi bi-file-earmark-check" aria-hidden="true"></i> Exportação auditável</span>
+            <span><i class="bi bi-file-earmark-check" aria-hidden="true"></i> Exportação futura bloqueada</span>
+            <span><i class="bi bi-person-lock" aria-hidden="true"></i> LGPD</span>
         </div>
     </header>
 

@@ -12,14 +12,15 @@ A fonte canônica para banco novo é `database/install-manifest.json`, que orden
 Upgrades partem exclusivamente de `database/migration-manifest.json`, na ordem de dependências declarada, por meio de `scripts/apply-canonical-migrations.sh upgrade`. Os scripts `database/PlantaoPro_PostgreSQL_Completo.sql` e `database/instalar_plantaopro.psql` são mantidos como entradas de compatibilidade; não são a fonte canônica. Os projetos backend compartilham a versão 1.95.1; o aplicativo mobile conserva versionamento independente.
 
 ```bash
-PLANTAOPRO_CONNECTION_STRING='Host=localhost;Database=plantaopro;Username=...;Password=...' \
+PLANTAOPRO_CONNECTION_STRING='Host=localhost;Database=plantaopro;Username=...;'\
+'Password=...' \
   dotnet run --project backend/PlantaoPro.Tools.Database -- install
 ```
 
 O banco de dados deve existir antes do `psql`; o script não cria usuários PostgreSQL, não contém senha real, não cria administrador com senha conhecida e não inclui seeds de demonstração.
 
 ## Execução
-1. Configure a connection string por variável de ambiente ou user-secrets, por exemplo `ConnectionStrings__Default="Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;Password=<senha>"`.
+1. Configure a connection string por variável de ambiente ou user-secrets, mantendo usuário e senha fora dos arquivos versionados.
 2. Configure JWT por segredo seguro (`Jwt__Key`, `Jwt__Issuer`, `Jwt__Audience`); não versionar chaves reais.
 3. Crie o administrador inicial por fluxo seguro da aplicação ou comando operacional interno com senha temporária rotacionada fora do repositório.
 4. Backend API: `dotnet run --project backend/PlantaoPro.Api`.

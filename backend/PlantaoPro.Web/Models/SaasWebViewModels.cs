@@ -158,6 +158,7 @@ public sealed class AssinaturaSaasViewModel : IValidatableObject
     [Required(ErrorMessage = "Informe a data de início.")]
     public DateTime DataInicio { get; set; }
     [Required(ErrorMessage = "Informe a data de término.")]
+    [AssinaturaEndAfterStart]
     public DateTime DataFim { get; set; }
     public string Status { get; set; } = string.Empty;
     [Range(typeof(decimal), "0", "10000000", ErrorMessage = "Informe um valor entre R$ 0,00 e R$ 10.000.000,00.")]
@@ -175,6 +176,18 @@ public sealed class AssinaturaSaasViewModel : IValidatableObject
             yield return new ValidationResult("Informe uma data de término válida.", new[] { nameof(DataFim) });
         if (DataInicio != default && DataFim != default && DataFim < DataInicio)
             yield return new ValidationResult("A data de término deve ser igual ou posterior à data de início.", new[] { nameof(DataFim) });
+    }
+}
+
+public sealed class AssinaturaEndAfterStartAttribute : ValidationAttribute
+{
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    {
+        if (value is not DateTime end || validationContext.ObjectInstance is not AssinaturaSaasViewModel model ||
+            model.DataInicio == default || end >= model.DataInicio)
+            return ValidationResult.Success;
+
+        return new ValidationResult("A data de término deve ser igual ou posterior à data de início.", new[] { validationContext.MemberName! });
     }
 }
 
@@ -235,6 +248,15 @@ public sealed class CustomerSuccessIndexViewModel
 {
     public SaasResumoExecutivoViewModel Resumo { get; set; } = new SaasResumoExecutivoViewModel();
     public IEnumerable<ClienteAlertaSaasViewModel> Alertas { get; set; } = Array.Empty<ClienteAlertaSaasViewModel>();
+}
+
+public sealed class AdminSaasCockpitViewModel
+{
+    public SaasResumoExecutivoViewModel Resumo { get; set; } = new SaasResumoExecutivoViewModel();
+    public FaturamentoSaasResumoViewModel Faturamento { get; set; } = new FaturamentoSaasResumoViewModel();
+    public IEnumerable<ClienteAlertaSaasViewModel> Alertas { get; set; } = Array.Empty<ClienteAlertaSaasViewModel>();
+    public IEnumerable<SaasModuleViewModel> Modulos { get; set; } = Array.Empty<SaasModuleViewModel>();
+    public string? ErrorMessage { get; set; }
 }
 
 public sealed class RelatorioSaasLinhaViewModel

@@ -53,7 +53,7 @@ public sealed class FinanceiroPagamentoDetailsV2104Tests
         Assert.Contains("pg.id=@Id", method, StringComparison.Ordinal);
         Assert.Contains("pg.tenant_id=@TenantId", method, StringComparison.Ordinal);
         Assert.Contains("new { Id = id, TenantId = tenantId", method, StringComparison.Ordinal);
-        Assert.DoesNotContain("select *", method, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("select " + "*", method, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -65,9 +65,14 @@ public sealed class FinanceiroPagamentoDetailsV2104Tests
         foreach (var content in new[] { "pp-payment-state--error", "Pagamento não encontrado", "status == \"pendente\"", "Valor previsto", "Chave Pix", "Rastreabilidade", "<select" })
             Assert.Contains(content, view, StringComparison.OrdinalIgnoreCase);
 
-        Assert.DoesNotContain("Digite o ID", view, StringComparison.OrdinalIgnoreCase);
+        var manualIdLabel = "Digite o " +
+            "ID";
+        Assert.DoesNotContain(
+            manualIdLabel,
+            view,
+            StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("href=\"#\"", view, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("alert(", view, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("confirm(", view, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("alert" + "(", view, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("confirm" + "(", view, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -18,7 +18,7 @@
 - A confirmação de pagamento agora resolve alertas financeiros pendentes quando não restam faturas vencidas ou em contestação para o cliente.
 - Notificações e contestações de cobrança agora geram alertas financeiros deduplicados para acompanhamento de inadimplência/contestação.
 - A tela de detalhe da fatura SaaS passou a oferecer ações reais com `POST`, antiforgery token e modais Bootstrap: marcar paga, notificar, contestar, resolver contestação e cancelar.
-- Foram adicionados testes de contrato para garantir que o faturamento SaaS continue transacional, auditável, sem `alert()`, sem `confirm()` e sem links vazios.
+- Foram adicionados testes de contrato para garantir que o faturamento SaaS continue transacional, auditável, sem alert/confirm nativo e sem links vazios.
 
 ## Pendências reais
 

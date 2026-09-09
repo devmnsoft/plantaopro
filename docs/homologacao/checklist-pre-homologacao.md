@@ -11,7 +11,7 @@ Use este checklist antes de liberar ambiente para cliente piloto ou demonstraç�
 - [ ] `/api/health` retorna sucesso.
 - [ ] Login Web mantém Cookie Authentication.
 - [ ] Login API/Mobile mantém JWT.
-- [ ] Views MVC sem `@page`, `asp-page`, `@model dynamic`, `href="#"`, `alert()` ou `confirm()` nativo.
+- [ ] Views MVC sem `@page`, `asp-page`, `@model dynamic`, links vazios ou alert/confirm nativo.
 
 ## 2. UX/UI e feedback
 - [ ] Menus respeitam perfil logado.

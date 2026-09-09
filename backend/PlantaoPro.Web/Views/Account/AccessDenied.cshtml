@@ -1,5 +1,17 @@
 @{
     ViewData["Title"] = "Acesso negado";
+    var reason = (ViewBag.Reason as string ?? string.Empty).ToUpperInvariant();
+    var module = ViewBag.Module as string;
+    var title = reason == "CLIENTE_BLOQUEADO"
+        ? "Operação bloqueada para este cliente"
+        : reason == "MODULO_NAO_CONTRATADO"
+            ? "Módulo não contratado"
+            : "Acesso negado";
+    var description = reason == "CLIENTE_BLOQUEADO"
+        ? "O login foi permitido, mas as operações normais ficam indisponíveis enquanto o status do cliente não for regularizado. Consulte as faturas pendentes ou acione o suporte."
+        : reason == "MODULO_NAO_CONTRATADO"
+            ? "Esta rota exige um módulo contratado e habilitado para o tenant atual. O menu já oculta módulos indisponíveis; esta validação protege o acesso direto."
+            : "Você não possui permissão para acessar este recurso. Se acredita que isso é um erro, procure o administrador do cliente.";
 }
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -7,9 +19,28 @@
             <div class="card border-0 shadow-sm text-center">
                 <div class="card-body p-5">
                     <i class="bi bi-shield-lock display-4 text-warning"></i>
-                    <h1 class="h3 mt-3">Acesso negado</h1>
-                    <p class="text-muted">Você não possui permissão para acessar este recurso. Se acredita que isso é um erro, procure o administrador do cliente.</p>
-                    <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Voltar ao início</a>
+                    <h1 class="h3 mt-3">@title</h1>
+                    <p class="text-muted">@description</p>
+                    @if (!string.IsNullOrWhiteSpace(module))
+                    {
+                        <span class="badge bg-light text-dark border mb-3">Escopo: @module</span>
+                    }
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                        @if (reason == "CLIENTE_BLOQUEADO")
+                        {
+                            <a class="btn btn-primary" asp-controller="MinhaAssinatura" asp-action="Faturas">Ver minhas faturas</a>
+                            <a class="btn btn-outline-primary" asp-controller="Ajuda" asp-action="Index">Acionar suporte</a>
+                        }
+                        else if (reason == "MODULO_NAO_CONTRATADO")
+                        {
+                            <a class="btn btn-primary" asp-controller="MinhaAssinatura" asp-action="Modulos">Ver módulos contratados</a>
+                            <a class="btn btn-outline-primary" asp-controller="MinhaAssinatura" asp-action="Upgrade">Solicitar contratação</a>
+                        }
+                        else
+                        {
+                            <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Voltar ao início</a>
+                        }
+                    </div>
                 </div>
             </div>
         </div>

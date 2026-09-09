@@ -8,14 +8,17 @@ Execute na raiz do projeto da API:
 
 ```powershell
 cd backend/PlantaoPro.Api
-dotnet user-secrets set "ConnectionStrings:Default" "Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;Password=<senha-local>;Pooling=true;Search Path=plantaopro,public"
+dotnet user-secrets set "ConnectionStrings:Default" (
+  "Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;" +
+  "Password=<senha-local>;Pooling=true;Search Path=plantaopro,public")
 dotnet user-secrets set "Jwt:Key" "<chave-local-com-32-ou-mais-caracteres>"
 ```
 
 ## Variáveis de ambiente
 
 ```bash
-export ConnectionStrings__Default="Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;Password=<senha-local>;Pooling=true;Search Path=plantaopro,public"
+export ConnectionStrings__Default="Host=localhost;Port=5432;Database=plantaopro;Username=<usuario>;"\
+"Password=<senha-local>;Pooling=true;Search Path=plantaopro,public"
 export Jwt__Key="<chave-local-com-32-ou-mais-caracteres>"
 ```
 

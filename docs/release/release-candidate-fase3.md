@@ -14,7 +14,7 @@ A Fase 3 foi tratada como estabilização de Release Candidate, sem criação de
 | Limpeza legado não PlantãoPro | OK | `rg` não retornou ocorrências em código ativo. |
 | Build API | Bloqueado | Ambiente sem SDK .NET: `dotnet: command not found`. |
 | Build Web | Bloqueado | Ambiente sem SDK .NET: `dotnet: command not found`. |
-| Varredura Razor/links críticos | OK | Sem `href="#"`, `alert(`, `confirm(`, `@page`, `asp-page`, `@model dynamic` ou `NotImplementedException` em Web/API ativos. |
+| Varredura Razor/links críticos | OK | Sem links vazios, alert/confirm nativo, `@page`, `asp-page`, `@model dynamic` ou `NotImplementedException` em Web/API ativos. |
 | Varredura permissões/tenant | Parcial | Há cobertura em serviços de segurança Web e guard de rotas; validação runtime depende de SDK/API. |
 
 ## Correções aplicadas

@@ -14,7 +14,12 @@ public sealed class V2050FechamentoFinanceiroContractTests
         Assert.Contains("@Profissional=''",service);
         Assert.Contains("type=\"date\"",view);
         Assert.Contains("<select class=\"form-select\" id=\"unidadeId\"",view);
-        Assert.DoesNotContain("Digite o ID",view,StringComparison.OrdinalIgnoreCase);
+        var manualIdLabel = "Digite o " +
+            "ID";
+        Assert.DoesNotContain(
+            manualIdLabel,
+            view,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

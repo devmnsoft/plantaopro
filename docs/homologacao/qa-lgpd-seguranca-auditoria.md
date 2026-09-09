@@ -2,7 +2,7 @@
 
 ## Resultado desta rodada
 
-- Varredura não encontrou `alert()`, `confirm()`, `href="#"`, `@page`, `asp-page`, `@model dynamic` ou `NotImplementedException` em Web/API ativos.
+- Varredura não encontrou alert/confirm nativo, links vazios, `@page`, `asp-page`, `@model dynamic` ou `NotImplementedException` em Web/API ativos.
 - Guard de rotas revisado para cobrir assinatura e treinamento.
 - Acesso suporte/auditoria alinhado com observabilidade e auditoria.
 

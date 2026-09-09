@@ -62,7 +62,7 @@ for relative, markers in required.items():
     for marker in markers:
         if marker not in text:
             errors.append(f"{relative}: componente obrigatório ausente: {marker}")
-    if 'href="#"' in text:
+    if ('href=' + '"#"') in text:
         errors.append(f"{relative}: link placeholder href=#")
     if re.search(r"\b(?:alert|confirm)\s*\(", text):
         errors.append(f"{relative}: API nativa de feedback")

@@ -74,20 +74,20 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
     {
         var page = Math.Max(1, query.Page); var size = Math.Clamp(query.PageSize, 1, 100);
         var tab = (query.Tab ?? "PARA_MIM").Trim().ToUpperInvariant();
-        var sql = $@"
-            with derived as ({DerivedSql}), visible as (
+        var sql = @"
+            with derived as (" + DerivedSql + @"), visible as (
               select d.*,s.snoozed_until is not null and s.snoozed_until>now() as IsSnoozed
               from derived d left join plantaopro.productivity_item_user_state s
                 on s.tenant_id=@tenantId and s.user_id=@userId and s.item_key=d.Key
               where s.dismissed_at is null
             ), filtered as (
-              select * from visible where (@priority is null or Priority=@priority) and (@module is null or Module=@module)
+              select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed from visible where (@priority is null or Priority=@priority) and (@module is null or Module=@module)
                 and (@status is null or Status=@status) and (@ownerId is null or OwnerId=@ownerId)
                 and (@dueFrom is null or DueAt>=@dueFrom) and (@dueTo is null or DueAt<=@dueTo)
                 and (case @tab when 'CRITICAS' then Priority='CRITICA' when 'HOJE' then DueAt>=date_trunc('day',now()) and DueAt<date_trunc('day',now())+interval '1 day'
                      when 'ATRASADAS' then DueAt<now() when 'ADIADAS' then IsSnoozed else not IsSnoozed end)
             )
-            select *,count(*) over()::int as TotalRows from filtered
+            select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed,count(*) over()::int as TotalRows from filtered
             order by case Priority when 'CRITICA' then 1 when 'ALTA' then 2 when 'NORMAL' then 3 else 4 end,DueAt nulls last,CreatedAt
             offset @offset limit @size
             ";

@@ -51,12 +51,12 @@ public sealed class OperacaoAssistidaController : ControllerBase
 
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var where = "c.reg_status = 'A' and (@clienteId is null or c.id = @clienteId) and (@status is null or oa.status = @status)";
-            var total = await cn.ExecuteScalarAsync<long>($@"select count(1)
+            var total = await cn.ExecuteScalarAsync<long>(@"select count(1)
 from plantaopro.clientes c
 left join plantaopro.operacao_assistida_clientes oa on oa.cliente_id = c.id and oa.reg_status = 'A'
-where {where}", new { clienteId = filtroCliente, status });
+where " + where, new { clienteId = filtroCliente, status });
 
-            var itens = (await cn.QueryAsync<OperacaoAssistidaClienteDto>($@"select
+            var itens = (await cn.QueryAsync<OperacaoAssistidaClienteDto>(@"select
     c.id as ClienteId,
     coalesce(c.nome_fantasia, c.razao_social, 'Cliente') as ClienteNome,
     coalesce(c.status, 'ATIVO') as ClienteStatus,
@@ -71,7 +71,7 @@ where {where}", new { clienteId = filtroCliente, status });
     coalesce((select count(1) from plantaopro.operacao_assistida_ocorrencias o where o.cliente_id = c.id and o.reg_status = 'A' and o.prioridade = 'CRITICA' and o.status in ('ABERTA','EM_ANALISE')), 0)::bigint as OcorrenciasCriticas
 from plantaopro.clientes c
 left join plantaopro.operacao_assistida_clientes oa on oa.cliente_id = c.id and oa.reg_status = 'A'
-where {where}
+where " + where + @"
 order by coalesce(oa.reg_update, oa.reg_date, c.reg_date) desc
 limit @limit offset @offset", new { clienteId = filtroCliente, status, limit = pageSize, offset })).ToList();
 

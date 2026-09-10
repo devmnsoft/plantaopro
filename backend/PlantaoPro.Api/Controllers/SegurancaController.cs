@@ -9,8 +9,8 @@ namespace PlantaoPro.Api.Controllers;
 [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Suporte + "," + RolesConstants.Auditor)]
 public sealed class SegurancaController : ControllerBase
 {
-    private readonly SecurityAdministrationService service; private readonly IEffectivePermissionService permissions; private readonly IPasswordPolicyService passwordPolicy;
-    public SegurancaController(SecurityAdministrationService service, IEffectivePermissionService permissions, IPasswordPolicyService passwordPolicy) { this.service = service; this.permissions = permissions; this.passwordPolicy = passwordPolicy; }
+    private readonly SecurityAdministrationService service; private readonly IPasswordPolicyService passwordPolicy;
+    public SegurancaController(SecurityAdministrationService service, IPasswordPolicyService passwordPolicy) { this.service = service; this.passwordPolicy = passwordPolicy; }
     [HttpGet("dashboard")] public async Task<IActionResult> Dashboard(CancellationToken ct) => Ok(ApiResponse<object>.Ok(await service.DashboardAsync(ct)));
     [HttpGet("usuarios")] public async Task<IActionResult> Usuarios([FromQuery] string? busca, [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) => Ok(ApiResponse<object>.Ok(await service.UsuariosAsync(busca, page, pageSize, ct)));
     [HttpGet("usuarios/{id:guid}")] public async Task<IActionResult> Usuario(Guid id, CancellationToken ct) { var u = await service.UsuarioAsync(id, ct); return u is null ? NotFound(ApiResponse<object>.Fail("Usuário não encontrado no tenant permitido.", 404)) : Ok(ApiResponse<object>.Ok(u)); }
@@ -42,7 +42,8 @@ public sealed class SegurancaController : ControllerBase
     [HttpPost("testar-acesso")] public async Task<IActionResult> TestarAcesso([FromBody] TestarAcessoRequest request, CancellationToken ct)
     {
         if (!request.UsuarioId.HasValue) return BadRequest(ApiResponse<object>.Fail("usuarioId é obrigatório.", 400));
-        var result = await permissions.TestarAsync(request.UsuarioId.Value, request.TenantId, request.Modulo ?? string.Empty, request.Acao ?? "VER", ct);
+        var result = await service.TestarPermissaoNoEscopoAsync(request.UsuarioId.Value, request.TenantId, request.Modulo ?? string.Empty, request.Acao ?? "VER", ct);
+        if (result is null) return NotFound(ApiResponse<object>.Fail("Usuário não encontrado no tenant permitido.", 404));
         return Ok(ApiResponse<object>.Ok(result, result.Motivo));
     }
     private async Task<IActionResult> AlterarStatus(Guid id, string status, CancellationToken ct)

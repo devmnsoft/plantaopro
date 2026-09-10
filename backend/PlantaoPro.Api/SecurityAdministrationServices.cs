@@ -27,6 +27,11 @@ public sealed class SaasAssignableProfileDto
     public bool BaseSistema { get; set; }
 }
 
+public sealed record SecurityProfileRequest(string Nome, string? Descricao);
+public sealed record SecurityProfilePermissionRequest(Guid PermissaoId, bool Permitido);
+public sealed record SecurityProfilePermissionsRequest(IReadOnlyList<SecurityProfilePermissionRequest> Permissoes);
+public sealed record SecurityPage<T>(IReadOnlyList<T> Items, int Page, int PageSize, long Total);
+
 public interface IEffectivePermissionService
 {
     Task<EffectivePermissionDiagnostic> TestarAsync(Guid usuarioId, Guid? tenantId, string modulo, string acao, CancellationToken ct = default);
@@ -208,6 +213,62 @@ group by u.id,u.nome,u.email,u.telefone,u.tenant_id,u.cliente_id,c.nome_fantasia
     }
     public async Task<object?> UsuarioAsync(Guid id, CancellationToken ct) { await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default")); return await cn.QuerySingleOrDefaultAsync<object>(new CommandDefinition("select id,nome,email,telefone,coalesce(tenant_id,cliente_id) tenant_id,cliente_id,coalesce(status,'ATIVO') status,reg_status,ultimo_login,bloqueado_ate,reg_date from plantaopro.usuarios where id=@id and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)", new { id, tenantId=TenantScope(null) }, cancellationToken: ct)); }
     public async Task<IEnumerable<object>> PerfisAsync(CancellationToken ct) { await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default")); return await cn.QueryAsync<object>(new CommandDefinition("select id,nome,descricao,reg_status from plantaopro.perfis where (@tenantId is null or tenant_id is null or tenant_id=@tenantId) order by nome", new { tenantId = TenantScope(null) }, cancellationToken: ct)); }
+    public async Task<object?> PerfilAsync(Guid id, CancellationToken ct)
+    {
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        return await cn.QuerySingleOrDefaultAsync<object>(new CommandDefinition(@"select id,tenant_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status
+from plantaopro.perfis where id=@id and reg_status='A' and (@tenantId is null or tenant_id is null or tenant_id=@tenantId)", new { id, tenantId=TenantScope(null) }, cancellationToken: ct));
+    }
+    public async Task<ApiResponse<Guid>> SalvarPerfilAsync(Guid? id, SecurityProfileRequest request, CancellationToken ct)
+    {
+        var nome=(request.Nome??string.Empty).Trim();
+        if(nome.Length is < 3 or > 120) return ApiResponse<Guid>.Fail("Nome deve ter entre 3 e 120 caracteres.",400);
+        var tenantId=TenantScope(null); if(!tenantId.HasValue) return ApiResponse<Guid>.Fail("Selecione um cliente antes de administrar perfis locais.",409);
+        await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default")); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct);
+        var profileId=id??Guid.NewGuid();
+        if(id.HasValue)
+        {
+            var editable=await cn.ExecuteScalarAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.perfis where id=@profileId and tenant_id=@tenantId and reg_status='A' and coalesce(base_sistema,false)=false)",new{profileId,tenantId},tx,cancellationToken:ct));
+            if(!editable) return ApiResponse<Guid>.Fail("Perfil não encontrado ou protegido pelo sistema.",404);
+            await cn.ExecuteAsync(new CommandDefinition("update plantaopro.perfis set nome=@nome,descricao=@descricao,reg_update=now(),updated_by=@actor where id=@profileId",new{profileId,nome,descricao=request.Descricao?.Trim(),actor=currentUser.UserId},tx,cancellationToken:ct));
+        }
+        else
+        {
+            var codigo="CUSTOM_"+profileId.ToString("N").Substring(0,12).ToUpperInvariant();
+            await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,customizado,status,reg_status,created_by) values(@profileId,@tenantId,@tenantId,@codigo,@nome,@descricao,true,'ATIVO','A',@actor)",new{profileId,tenantId,codigo,nome,descricao=request.Descricao?.Trim(),actor=currentUser.UserId},tx,cancellationToken:ct));
+        }
+        await tx.CommitAsync(ct); return ApiResponse<Guid>.Ok(profileId,id.HasValue?"Perfil atualizado.":"Perfil criado.");
+    }
+    public async Task<ApiResponse<Guid>> CopiarPerfilAsync(Guid sourceId, CancellationToken ct)
+    {
+        var source=await PerfilAsync(sourceId,ct); if(source is null) return ApiResponse<Guid>.Fail("Perfil de origem não encontrado.",404);
+        var tenantId=TenantScope(null); if(!tenantId.HasValue) return ApiResponse<Guid>.Fail("Selecione um cliente antes de copiar o perfil.",409);
+        await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default")); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct); var id=Guid.NewGuid();
+        var inserted=await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,customizado,status,reg_status,created_by)
+select @id,@tenantId,@tenantId,@codigo,left(nome||' (cópia)',120),descricao,true,'ATIVO','A',@actor from plantaopro.perfis where id=@sourceId and reg_status='A' and (@global or tenant_id is null or tenant_id=@tenantId)",new{id,tenantId,codigo="CUSTOM_"+id.ToString("N").Substring(0,12).ToUpperInvariant(),actor=currentUser.UserId,sourceId,global=currentUser.IsGlobalAdmin()},tx,cancellationToken:ct));
+        if(inserted==0) return ApiResponse<Guid>.Fail("Perfil de origem não encontrado.",404);
+        await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,bloqueado_por_plano,reg_status,created_by) select gen_random_uuid(),@id,permissao_id,permitido,bloqueado_por_plano,'A',@actor from plantaopro.perfil_permissoes where perfil_id=@sourceId and reg_status='A'",new{id,sourceId,actor=currentUser.UserId},tx,cancellationToken:ct));
+        await tx.CommitAsync(ct); return ApiResponse<Guid>.Ok(id,"Perfil copiado.");
+    }
+    public async Task<IEnumerable<object>> PermissoesPerfilAsync(Guid id,CancellationToken ct)
+    {
+        if(await PerfilAsync(id,ct) is null) return Array.Empty<object>(); await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        return await cn.QueryAsync<object>(new CommandDefinition(@"select p.id,p.codigo,p.nome,coalesce(pp.permitido,false) permitido,coalesce(pp.bloqueado_por_plano,false) bloqueado_por_plano
+from plantaopro.permissoes p left join plantaopro.perfil_permissoes pp on pp.permissao_id=p.id and pp.perfil_id=@id and pp.reg_status='A' where p.reg_status='A' order by p.codigo",new{id},cancellationToken:ct));
+    }
+    public async Task<ApiResponse<Guid>> SalvarPermissoesPerfilAsync(Guid id,SecurityProfilePermissionsRequest request,CancellationToken ct)
+    {
+        var tenantId=TenantScope(null); await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default")); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct);
+        var editable=tenantId.HasValue&&await cn.ExecuteScalarAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.perfis where id=@id and tenant_id=@tenantId and reg_status='A' and coalesce(base_sistema,false)=false)",new{id,tenantId},tx,cancellationToken:ct));
+        if(!editable) return ApiResponse<Guid>.Fail("Perfil não encontrado ou protegido pelo sistema.",404);
+        var entries=(request.Permissoes??Array.Empty<SecurityProfilePermissionRequest>()).Where(x=>x.PermissaoId!=Guid.Empty).GroupBy(x=>x.PermissaoId).Select(x=>x.Last()).ToArray();
+        var valid=await cn.ExecuteScalarAsync<int>(new CommandDefinition("select count(*) from plantaopro.permissoes where id=any(@ids) and reg_status='A'",new{ids=entries.Select(x=>x.PermissaoId).ToArray()},tx,cancellationToken:ct));
+        if(valid!=entries.Length) return ApiResponse<Guid>.Fail("Há permissões inválidas na solicitação.",400);
+        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.perfil_permissoes set reg_status='I',reg_update=now(),updated_by=@actor where perfil_id=@id and reg_status='A'",new{id,actor=currentUser.UserId},tx,cancellationToken:ct));
+        foreach(var entry in entries) await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,bloqueado_por_plano,reg_status,created_by) values(gen_random_uuid(),@id,@permissionId,@allowed,false,'A',@actor)",new{id,permissionId=entry.PermissaoId,allowed=entry.Permitido,actor=currentUser.UserId},tx,cancellationToken:ct));
+        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao='PERMISSOES_PERFIL_ALTERADAS',reg_update=now() where usuario_id in(select usuario_id from plantaopro.usuarios_perfis where perfil_id=@id and reg_status='A') and revogada_em is null",new{id},tx,cancellationToken:ct));
+        await tx.CommitAsync(ct); return ApiResponse<Guid>.Ok(id,"Permissões persistidas e sessões afetadas revogadas.");
+    }
     public async Task<IEnumerable<SaasAssignableProfileDto>> PerfisAtribuiveisAsync(Guid? requestedTenantId, CancellationToken ct)
     {
         var tenantId = TenantScope(requestedTenantId);
@@ -333,6 +394,44 @@ and (@tenantId is null or coalesce(u.tenant_id,u.cliente_id)=@tenantId)", new { 
         await RevogarSessoesAsync(usuarioId, "REVOGACAO_ADMINISTRATIVA", ct);
         await audit.RegistrarAsync(currentUser.UserId, target.TenantId, "USUARIO", usuarioId, "REVOGAR_SESSOES", new { motivo = "REVOGACAO_ADMINISTRATIVA" }, true, ip, string.Join(',', currentUser.Roles), ct);
         return ApiResponse<Guid>.Ok(usuarioId, "Sessões revogadas.");
+    }
+    public async Task<ApiResponse<Guid>> ExigirTrocaSenhaAsync(Guid usuarioId,string? ip,CancellationToken ct)
+    {
+        if(!await UsuarioPertenceAoEscopoAsync(usuarioId,null,ct)) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.",404);
+        await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set senha_alteracao_obrigatoria=true,reg_update=now(),updated_by=@actor where id=@usuarioId",new{usuarioId,actor=currentUser.UserId},cancellationToken:ct));
+        await RevogarSessoesAsync(usuarioId,"TROCA_SENHA_OBRIGATORIA",ct);
+        await audit.RegistrarAsync(currentUser.UserId,TenantScope(null),"USUARIO",usuarioId,"EXIGIR_TROCA_SENHA",new{obrigatoria=true},true,ip,string.Join(',',currentUser.Roles),ct);
+        return ApiResponse<Guid>.Ok(usuarioId,"Troca de senha exigida; sessões anteriores foram revogadas.");
+    }
+    public async Task<SecurityPage<object>> SessoesAsync(int page,int pageSize,CancellationToken ct)
+    {
+        var tenantId=TenantScope(null); var take=Math.Clamp(pageSize,1,100); var currentPage=Math.Max(page,1); await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var total=await cn.ExecuteScalarAsync<long>(new CommandDefinition("select count(*) from plantaopro.auth_sessoes where (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)",new{tenantId},cancellationToken:ct));
+        var items=(await cn.QueryAsync<object>(new CommandDefinition(@"select s.id,s.usuario_id,u.nome usuario,s.dispositivo_nome,s.ip_mascarado,s.iniciado_em,s.ultimo_uso_em,s.expira_em,s.revogada_em,s.motivo_revogacao,
+case when s.id=@currentSession then true else false end sessao_atual from plantaopro.auth_sessoes s join plantaopro.usuarios u on u.id=s.usuario_id where (@tenantId is null or coalesce(s.tenant_id,s.cliente_id)=@tenantId) order by coalesce(s.ultimo_uso_em,s.iniciado_em) desc limit @take offset @skip",new{tenantId,currentSession=currentUser.SessionId,take,skip=(currentPage-1)*take},cancellationToken:ct))).AsList();
+        return new(items,currentPage,take,total);
+    }
+    public async Task<ApiResponse<Guid>> RevogarSessaoAsync(Guid id,string? ip,CancellationToken ct)
+    {
+        var tenantId=TenantScope(null); await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var changed=await cn.ExecuteAsync(new CommandDefinition("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao='REVOGACAO_ADMINISTRATIVA',reg_update=now() where id=@id and revogada_em is null and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)",new{id,tenantId},cancellationToken:ct));
+        if(changed==0)return ApiResponse<Guid>.Fail("Sessão não encontrada ou já revogada.",404);
+        await audit.RegistrarAsync(currentUser.UserId,tenantId,"SESSAO",id,"REVOGAR",new{motivo="REVOGACAO_ADMINISTRATIVA"},true,ip,string.Join(',',currentUser.Roles),ct); return ApiResponse<Guid>.Ok(id,"Sessão revogada.");
+    }
+    public async Task<SecurityPage<object>> TentativasLoginAsync(int page,int pageSize,CancellationToken ct)
+    {
+        var tenantId=TenantScope(null); return await PageAsync("plantaopro.login_tentativas lt left join plantaopro.usuarios u on u.id=lt.usuario_id","(@tenantId is null or coalesce(u.tenant_id,u.cliente_id)=@tenantId)","lt.id,lt.usuario_id,u.nome usuario,lt.email identificador,lt.ip,lt.sucesso,lt.motivo,lt.bloqueado_ate,lt.reg_date",page,pageSize,tenantId,ct);
+    }
+    public async Task<SecurityPage<object>> AuditoriaAsync(int page,int pageSize,CancellationToken ct)
+    {
+        var tenantId=TenantScope(null); return await PageAsync("plantaopro.auditoria_acoes_criticas a","(@tenantId is null or coalesce(a.tenant_id,a.cliente_id)=@tenantId)","a.id,a.usuario_id,coalesce(a.tenant_id,a.cliente_id) tenant_id,a.entidade,a.entidade_id,a.acao,a.sucesso,a.ip_origem,a.perfil,a.reg_date",page,pageSize,tenantId,ct);
+    }
+    private async Task<SecurityPage<object>> PageAsync(string source,string where,string columns,int page,int pageSize,Guid? tenantId,CancellationToken ct)
+    {
+        var take=Math.Clamp(pageSize,1,100);var currentPage=Math.Max(page,1);await using var cn=new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        var total=await cn.ExecuteScalarAsync<long>(new CommandDefinition("select count(*) from "+source+" where "+where,new{tenantId},cancellationToken:ct));
+        var items=(await cn.QueryAsync<object>(new CommandDefinition("select "+columns+" from "+source+" where "+where+" order by reg_date desc limit @take offset @skip",new{tenantId,take,skip=(currentPage-1)*take},cancellationToken:ct))).AsList();return new(items,currentPage,take,total);
     }
     public Task<IEnumerable<string>> PermissoesEfetivasAsync(Guid usuarioId, Guid? tenantId, CancellationToken ct) => permissions.ObterPermissoesAsync(usuarioId, TenantScope(tenantId), ct);
 

@@ -7,6 +7,7 @@ public interface ICurrentUserService
     Guid? UserId { get; }
     Guid? TenantId { get; }
     Guid? ClienteId { get; }
+    Guid? SessionId { get; }
     IReadOnlyCollection<string> Roles { get; }
     bool IsAuthenticated();
     bool IsGlobalAdmin();
@@ -59,6 +60,7 @@ public sealed class CurrentUserService : ICurrentUserService
     public Guid? UserId => ReadGuid("uid") ?? ReadGuid(ClaimTypes.NameIdentifier);
     public Guid? TenantId => ReadGuid("tenant_id") ?? ReadGuid("cliente_id");
     public Guid? ClienteId => ReadGuid("cliente_id") ?? TenantId;
+    public Guid? SessionId => ReadGuid("session_id");
 
     public IReadOnlyCollection<string> Roles => httpContextAccessor.HttpContext?.User.FindAll(ClaimTypes.Role)
         .Select(c => Normalize(c.Value))

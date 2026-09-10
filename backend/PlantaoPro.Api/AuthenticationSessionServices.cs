@@ -10,6 +10,8 @@ public sealed class AuthenticationSessionRow
 {
     public Guid Id { get; set; }
     public Guid UsuarioId { get; set; }
+    public Guid? TenantId { get; set; }
+    public Guid? ClienteId { get; set; }
     public DateTime? ExpiraEm { get; set; }
     public DateTime? RevogadaEm { get; set; }
     public string RegStatus { get; set; } = string.Empty;
@@ -27,8 +29,12 @@ public static class AuthenticationSessionState
         if (session.ExpiraEm.HasValue && session.ExpiraEm.Value <= utcNow) return false;
         if (!string.Equals(session.UsuarioRegStatus, "A", StringComparison.OrdinalIgnoreCase)) return false;
         if (!string.Equals(session.UsuarioStatus, "ATIVO", StringComparison.OrdinalIgnoreCase)) return false;
-        return string.Equals(session.TenantStatus, "ATIVO", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(session.TenantStatus, "ATIVO", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(session.TenantStatus, "SUSPENSO", StringComparison.OrdinalIgnoreCase);
     }
+
+    public static bool ContextMatches(AuthenticationSessionRow session,Guid? claimedTenantId,Guid? claimedClienteId) =>
+        session.TenantId == claimedTenantId && session.ClienteId == claimedClienteId;
 }
 
 public interface IAuthenticationSessionService
@@ -73,7 +79,7 @@ values
         if (!TryGuid(principal, "uid", out var userId) && !TryGuid(principal, ClaimTypes.NameIdentifier, out userId)) return false;
         if (!TryGuid(principal, "session_id", out var sessionId)) return false;
 
-        const string sql = @"select s.id as ""Id"", s.usuario_id as ""UsuarioId"", s.expira_em as ""ExpiraEm"", s.revogada_em as ""RevogadaEm"",
+        const string sql = @"select s.id as ""Id"", s.usuario_id as ""UsuarioId"", s.tenant_id as ""TenantId"", s.cliente_id as ""ClienteId"", s.expira_em as ""ExpiraEm"", s.revogada_em as ""RevogadaEm"",
        coalesce(s.reg_status,'') as ""RegStatus"", coalesce(u.reg_status,'') as ""UsuarioRegStatus"",
        coalesce(u.status,'ATIVO') as ""UsuarioStatus"",
        case
@@ -94,6 +100,9 @@ where s.id=@sessionId and s.usuario_id=@userId";
         var session = await connection.QuerySingleOrDefaultAsync<AuthenticationSessionRow>(
             new CommandDefinition(sql, new { sessionId, userId }, cancellationToken: ct));
         if (!AuthenticationSessionState.IsUsable(session, userId, DateTime.UtcNow)) return false;
+        var claimedTenant = ReadOptionalGuid(principal, "tenant_id");
+        var claimedCliente = ReadOptionalGuid(principal, "cliente_id");
+        if (!AuthenticationSessionState.ContextMatches(session!,claimedTenant,claimedCliente)) return false;
 
         await connection.ExecuteAsync(new CommandDefinition(
             "update plantaopro.auth_sessoes set ultimo_uso_em=now(),reg_update=now() where id=@sessionId and (ultimo_uso_em is null or ultimo_uso_em < now() - interval '1 minute')",
@@ -103,6 +112,8 @@ where s.id=@sessionId and s.usuario_id=@userId";
 
     private static bool TryGuid(ClaimsPrincipal principal, string claimType, out Guid value) =>
         Guid.TryParse(principal.FindFirstValue(claimType), out value);
+    private static Guid? ReadOptionalGuid(ClaimsPrincipal principal,string claimType) =>
+        Guid.TryParse(principal.FindFirstValue(claimType),out var value) ? value : (Guid?)null;
 
     private static string DeviceName(string? userAgent)
     {

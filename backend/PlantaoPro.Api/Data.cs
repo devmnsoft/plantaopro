@@ -1084,17 +1084,29 @@ where id=@id", new
         }
         public async Task<ApiResponse<string>> UpdateAsync(Guid id, UpdatePlantaoRequest r, Guid u, string? ip, string? ua)
         {
+            var validacaoBasica = _regra.ValidarCriacao(new CreatePlantaoRequest(r.HospitalId, r.EspecialidadeId, r.DataInicio, r.DataFim, r.Valor, r.Vagas, r.Tipo, r.Observacoes));
+            if (!validacaoBasica.Success) return ApiResponse<string>.Fail(validacaoBasica.Message, 422);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var status = await cn.ExecuteScalarAsync<string>("select status from plantaopro.plantoes where id=@id", new
-            {
-                id
-            });
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var atual = await cn.QueryFirstOrDefaultAsync<(string Status, int Confirmadas, Guid HospitalId, Guid EspecialidadeId, DateTime Inicio, DateTime Fim, decimal Valor)>(@"select p.status as Status,
+ (select count(1) from plantaopro.escalas e where e.plantao_id=p.id and e.reg_status='A' and lower(e.status) in ('confirmado','confirmada','realizado','realizada'))::int as Confirmadas,
+ p.hospital_id as HospitalId,p.especialidade_id as EspecialidadeId,p.data_inicio as Inicio,p.data_fim as Fim,p.valor as Valor
+ from plantaopro.plantoes p where p.id=@id and p.reg_status='A' for update", new { id }, tx);
+            var status = atual.Status;
             if (status is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
             var validacaoEdicao = _regra.ValidarEdicao(status, r);
             if (!validacaoEdicao.Success)
                 return ApiResponse<string>.Fail(validacaoEdicao.Message);
-            await cn.ExecuteAsync("update plantaopro.plantoes set hospital_id=@h,especialidade_id=@e,data_inicio=@di,data_fim=@df,valor=@v,vagas=@vg,vagas_disponiveis=@vg,tipo=@t,observacoes=@o,reg_update=now(),updated_by=@u where id=@id", new
+            if (r.Vagas < atual.Confirmadas)
+                return ApiResponse<string>.Fail("A capacidade não pode ser menor que as escalas já confirmadas.", 409);
+            if (atual.Confirmadas > 0 && (r.HospitalId != atual.HospitalId || r.EspecialidadeId != atual.EspecialidadeId || r.DataInicio != atual.Inicio || r.DataFim != atual.Fim || r.Valor != atual.Valor))
+                return ApiResponse<string>.Fail("Horário, unidade, especialidade e valor não podem ser alterados após confirmações; use cancelamento/substituição com histórico.", 409);
+            var referenciasAtivas = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.hospitais where id=@h and reg_status='A')
+ and exists(select 1 from plantaopro.especialidades where id=@e and reg_status='A')", new { h = r.HospitalId, e = r.EspecialidadeId }, tx);
+            if (!referenciasAtivas) return ApiResponse<string>.Fail("Hospital ou especialidade inválidos/inativos", 422);
+            await cn.ExecuteAsync("update plantaopro.plantoes set hospital_id=@h,especialidade_id=@e,data_inicio=@di,data_fim=@df,valor=@v,vagas=@vg,vagas_disponiveis=@vg-@ocupadas,tipo=@t,observacoes=@o,reg_update=now(),updated_by=@u where id=@id", new
             {
                 id,
                 h = r.HospitalId,
@@ -1103,10 +1115,12 @@ where id=@id", new
                 df = r.DataFim,
                 v = r.Valor,
                 vg = r.Vagas,
+                ocupadas = atual.Confirmadas,
                 t = r.Tipo,
                 o = r.Observacoes,
                 u
-            });
+            }, tx);
+            await tx.CommitAsync();
             await audit.LogAsync(u, "UPDATE", "plantoes", id, "Edição", ip: ip, userAgent: ua);
             return ApiResponse<string>.Ok("ok", "Plantão atualizado");
         }
@@ -1138,12 +1152,28 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var old = await cn.ExecuteScalarAsync<string>("select status from plantaopro.plantoes where id=@id", new
+            var old = await cn.ExecuteScalarAsync<string>("select status from plantaopro.plantoes where id=@id and reg_status='A' for update", new
             {
                 id
             }, tx);
             if (old is null)
                 return ApiResponse<string>.Fail("Plantão não encontrado", 404);
+            if (novo == "aberto")
+            {
+                var completo = await cn.ExecuteScalarAsync<bool>(@"select p.data_fim>p.data_inicio and p.vagas>0 and p.valor>=0
+ and h.reg_status='A' and e.reg_status='A' from plantaopro.plantoes p
+ join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.id=@id", new { id }, tx);
+                if (!completo) return ApiResponse<string>.Fail("Plantão incompleto ou com unidade/especialidade inativa.", 422);
+            }
+            if (novo == "cancelado")
+            {
+                var obrigacoes = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.escalas e
+ left join plantaopro.pagamentos pg on pg.escala_id=e.id and pg.reg_status='A'
+ where e.plantao_id=@id and e.reg_status='A' and (lower(e.status) in ('confirmado','confirmada','realizado','realizada') or pg.id is not null)", new { id }, tx);
+                if (obrigacoes > 0) return ApiResponse<string>.Fail("Cancele ou ajuste explicitamente escalas confirmadas e obrigações financeiras antes do plantão.", 409);
+                await cn.ExecuteAsync("update plantaopro.escalas set status='cancelado',justificativa=@just,updated_by=@u,reg_update=now() where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','solicitada')", new { id, just, u }, tx);
+                await cn.ExecuteAsync("update plantaopro.plantao_convites set status='CANCELADO',data_resposta=now(),motivo_recusa=@just where plantao_id=@id and reg_status='A' and upper(status) in ('ENVIADO','PENDENTE','PROCESSANDO')", new { id, just }, tx);
+            }
             var valid = _transicao.PodeTransicionar(old, novo);
             if (!valid)
                 return ApiResponse<string>.Fail($"Transição inválida: {old} -> {novo}");
@@ -1351,7 +1381,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var e = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid PlantaoId, Guid MedicoId, string Status)>("select id,plantao_id,medico_id,status from plantaopro.escalas where id=@id and reg_status='A'", new
+                var e = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid PlantaoId, Guid MedicoId, string Status)>("select id,plantao_id,medico_id,status from plantaopro.escalas where id=@id and reg_status='A' for update", new
                 {
                     id
                 }, tx);
@@ -1433,11 +1463,16 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 }
                 else if (novo == "substituido")
                 {
-                    if (!novoMedicoId.HasValue || string.IsNullOrWhiteSpace(justificativa))
-                        return ApiResponse<string>.Fail("Substituição exige novo médico e justificativa");
+                    if (e.Status != "confirmado")
+                        return ApiResponse<string>.Fail("Somente uma escala confirmada pode ser substituída.", 409);
+                    if (!novoMedicoId.HasValue || novoMedicoId == e.MedicoId || string.IsNullOrWhiteSpace(justificativa))
+                        return ApiResponse<string>.Fail("Substituição exige outro médico e justificativa");
                     var med = await ValidarMedicoAsync(novoMedicoId.Value, cn, tx);
                     if (med.Id == Guid.Empty || !med.A || string.IsNullOrWhiteSpace(med.C) || string.IsNullOrWhiteSpace(med.U))
                         return ApiResponse<string>.Fail("Novo médico inválido");
+                    var elegibilidadeSubstituto = await elegibilidade.VerificarElegibilidadeParaPlantaoAsync(novoMedicoId.Value, e.PlantaoId);
+                    if (elegibilidadeSubstituto.Bloqueado)
+                        return ApiResponse<string>.Fail(string.Join("; ", elegibilidadeSubstituto.MotivosBloqueio), 409);
                     var pl = await cn.QueryFirstAsync<(DateTime Di, DateTime Df)>("select data_inicio as Di,data_fim as Df from plantaopro.plantoes where id=@id", new
                     {
                         id = e.PlantaoId
@@ -1624,9 +1659,10 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 }, tx);
                 if (ex > 0)
                     return ApiResponse<Guid>.Fail("Pagamento já gerado para a escala");
-                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, DateTime DataInicio, DateTime DataFim, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,p.data_inicio,p.data_fim,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A'", new
+                var row = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid MedicoId, Guid PlantaoId, decimal Valor, DateTime DataInicio, DateTime DataFim, string Status, Guid UsuarioId)>("select e.id,e.medico_id,e.plantao_id,p.valor,p.data_inicio,p.data_fim,e.status,m.usuario_id from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.medicos m on m.id=e.medico_id where e.id=@id and e.reg_status='A' and p.cliente_id=@clienteId for update of e", new
                 {
-                    id = req.EscalaId
+                    id = req.EscalaId,
+                    clienteId
                 }, tx);
                 if (row.EscalaId == Guid.Empty || row.Status != "realizado")
                     return ApiResponse<Guid>.Fail("Somente escala realizada pode gerar pagamento");
@@ -1652,6 +1688,11 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 await audit.LogAsync(userId, "CREATE", "pagamentos", id, "Pagamento gerado", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 return ApiResponse<Guid>.Ok(id, "Pagamento gerado");
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                await tx.RollbackAsync();
+                return ApiResponse<Guid>.Fail("Pagamento já gerado para a escala.", 409);
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro gerar pagamento"); return ApiResponse<Guid>.Fail("Erro ao gerar pagamento", 500); }
         }

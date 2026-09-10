@@ -417,11 +417,25 @@ limit @lim offset @off", new { medicoId, clienteId, lim = ps, off = (pg - 1) * p
                 return BadRequest(ApiResponse<object>.Fail("Convite não está pendente para aceite.", 400));
             }
 
+            // Reserva idempotente no banco antes da criação da escala. A atualização condicional
+            // serializa duplo aceite e também rejeita convite expirado sem expor outro tenant.
+            var reservado = await cn.ExecuteAsync(@"update plantaopro.plantao_convites
+set status='PROCESSANDO'
+where id=@id and medico_id=@medicoId and reg_status='A'
+  and upper(status) in ('ENVIADO','PENDENTE')
+  and (expira_em is null or expira_em > now())", new { id, medicoId });
+            if (reservado != 1)
+                return Conflict(ApiResponse<object>.Fail("Convite expirado ou já processado. Atualize a lista.", 409));
+
             var response = await _escala.AceitarAsync(convite.PlantaoId, medicoId.Value, uid, GetIp(), Request.Headers.UserAgent.ToString());
             if (response.Success)
             {
                 await cn.ExecuteAsync("update plantaopro.plantao_convites set status='ACEITO', data_resposta=now() where id=@id and medico_id=@medicoId", new { id, medicoId });
                 await _audit.RegistrarAsync(uid, clienteId, AuditoriaConstants.Entidades.Convite, id, AuditoriaConstants.Acoes.AceitarConvite, new { conviteId = id, convite.PlantaoId }, true, GetIp(), GetPerfil());
+            }
+            else
+            {
+                await cn.ExecuteAsync("update plantaopro.plantao_convites set status='PENDENTE' where id=@id and medico_id=@medicoId and status='PROCESSANDO'", new { id, medicoId });
             }
 
             return StatusCode(response.StatusCode, response);

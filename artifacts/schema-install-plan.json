@@ -264,5 +264,13 @@
       "plantaopro.revenue_cycle_v195"
     ],
     "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql"
+  },
+  {
+    "object": "plantaopro.central_operacional_escalas_v2157",
+    "dependsOn": [
+      "plantaopro.notificacoes_v2070",
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/schema/360_v2157_central_operacional_escalas.sql"
   }
 ]

@@ -469,6 +469,23 @@
           ]
         }
       ]
+    },
+    {
+      "order": 45,
+      "name": "plantaopro.central_operacional_escalas_v2157",
+      "objects": [
+        {
+          "name": "plantaopro.central_operacional_escalas_v2157",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATIONAL",
+          "required": true,
+          "source": "database/schema/360_v2157_central_operacional_escalas.sql",
+          "dependsOn": [
+            "plantaopro.notificacoes_v2070",
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [

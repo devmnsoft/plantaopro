@@ -79,22 +79,36 @@ select g.codigo from granted g where not exists(select 1 from denied d where d.c
     public async Task<EffectivePermissionDiagnostic> TestarAsync(Guid usuarioId, Guid? tenantId, string modulo, string acao, CancellationToken ct = default)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        var usuario = await cn.QuerySingleOrDefaultAsync<(string RegStatus, string Status, Guid? TenantId, string TenantStatus)>(new CommandDefinition(@"select u.reg_status RegStatus, coalesce(u.status,'ATIVO') Status,
-coalesce(u.tenant_id,u.cliente_id) TenantId, coalesce(c.status,'ATIVO') TenantStatus
+        var usuario = await cn.QuerySingleOrDefaultAsync<(string RegStatus, string Status, Guid? TenantId)>(new CommandDefinition(@"select u.reg_status RegStatus, coalesce(u.status,'ATIVO') Status,
+coalesce(u.tenant_id,u.cliente_id) TenantId
 from plantaopro.usuarios u
-left join plantaopro.clientes c on c.id=coalesce(u.tenant_id,u.cliente_id) and c.reg_status='A'
 where u.id=@usuarioId", new { usuarioId }, cancellationToken: ct));
         if (string.IsNullOrWhiteSpace(usuario.RegStatus)) return new(false, "USER_NOT_FOUND", "Usuário não encontrado.", "USUARIO");
         if (!string.Equals(usuario.RegStatus, "A", StringComparison.OrdinalIgnoreCase) || !string.Equals(usuario.Status, "ATIVO", StringComparison.OrdinalIgnoreCase)) return new(false, "USER_INACTIVE", "Usuário inativo ou bloqueado.", "USUARIO");
-        if (tenantId.HasValue && usuario.TenantId.HasValue && usuario.TenantId.Value != tenantId.Value) return new(false, "CROSS_TENANT_DENIED", "Usuário pertence a outro tenant.", "TENANT");
         var globalAdmin = await cn.QuerySingleAsync<bool>(new CommandDefinition(@"select exists(
 select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id
 where up.usuario_id=@usuarioId and up.reg_status='A' and p.reg_status='A'
 and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR'))", new { usuarioId }, cancellationToken: ct));
         if (globalAdmin) return new(true, "GLOBAL_ADMIN", "Permitido pelo escopo global MNSOFT.", "PERFIL_GLOBAL");
-        if (!usuario.TenantId.HasValue || !tenantId.HasValue || usuario.TenantId.Value != tenantId.Value)
+        if (!tenantId.HasValue)
             return new(false, "TENANT_CONTEXT_REQUIRED", "Selecione o tenant correto para continuar.", "TENANT");
-        if (!string.Equals(usuario.TenantStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
+
+        var tenantAccess = await cn.QuerySingleOrDefaultAsync<(bool Authorized, string TenantStatus)>(new CommandDefinition(@"select
+  (coalesce(u.tenant_id,u.cliente_id)=t.id or exists(
+    select 1 from plantaopro.usuario_tenant_acessos uta
+    where uta.usuario_id=u.id and uta.tenant_id=t.id
+      and uta.reg_status='A' and uta.status='ATIVO'
+      and (uta.acesso_inicio is null or uta.acesso_inicio<=now())
+      and (uta.acesso_fim is null or uta.acesso_fim>now())
+  )) Authorized,
+  case when t.status='ATIVO' and (c.id is null or c.status='ATIVO') then 'ATIVO' else coalesce(c.status,t.status,'INATIVO') end TenantStatus
+from plantaopro.usuarios u
+join plantaopro.tenants t on t.id=@tenantId and t.reg_status='A'
+left join plantaopro.clientes c on c.id=t.cliente_id and c.reg_status='A'
+where u.id=@usuarioId", new { usuarioId, tenantId }, cancellationToken: ct));
+        if (!tenantAccess.Authorized)
+            return new(false, "CROSS_TENANT_DENIED", "Usuário não possui vínculo ativo com este tenant.", "TENANT");
+        if (!string.Equals(tenantAccess.TenantStatus, "ATIVO", StringComparison.OrdinalIgnoreCase))
             return new(false, "TENANT_INACTIVE", "A instituição está bloqueada ou inativa.", "TENANT");
 
         var moduleCode = Normalize(modulo);
@@ -137,6 +151,36 @@ public sealed class SecurityAdministrationService
     {
         if (currentUser.IsGlobalAdmin()) return requested;
         return currentUser.TenantId ?? throw new UnauthorizedAccessException("Contexto de tenant obrigatório para administrar segurança.");
+    }
+    public async Task<bool> UsuarioPertenceAoEscopoAsync(Guid usuarioId, Guid? requestedTenantId, CancellationToken ct)
+    {
+        var tenantId = TenantScope(requestedTenantId);
+        await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+        if (!tenantId.HasValue)
+            return currentUser.IsGlobalAdmin() && await cn.QuerySingleAsync<bool>(new CommandDefinition(
+                "select exists(select 1 from plantaopro.usuarios where id=@usuarioId and reg_status='A')",
+                new { usuarioId }, cancellationToken: ct));
+
+        return await cn.QuerySingleAsync<bool>(new CommandDefinition(@"select exists(
+select 1
+from plantaopro.usuarios u
+where u.id=@usuarioId and u.reg_status='A'
+  and (
+    coalesce(u.tenant_id,u.cliente_id)=@tenantId
+    or exists(
+      select 1 from plantaopro.usuario_tenant_acessos uta
+      where uta.usuario_id=u.id and uta.tenant_id=@tenantId
+        and uta.reg_status='A' and uta.status='ATIVO'
+        and (uta.acesso_inicio is null or uta.acesso_inicio<=now())
+        and (uta.acesso_fim is null or uta.acesso_fim>now())
+    )
+  )", new { usuarioId, tenantId }, cancellationToken: ct));
+    }
+    public async Task<EffectivePermissionDiagnostic?> TestarPermissaoNoEscopoAsync(Guid usuarioId, Guid? requestedTenantId, string modulo, string acao, CancellationToken ct)
+    {
+        var tenantId = TenantScope(requestedTenantId);
+        if (!await UsuarioPertenceAoEscopoAsync(usuarioId, tenantId, ct)) return null;
+        return await permissions.TestarAsync(usuarioId, tenantId, modulo, acao, ct);
     }
     public async Task<object> DashboardAsync(CancellationToken ct)
     {

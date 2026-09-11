@@ -263,7 +263,7 @@ public sealed class PacientesController : ControllerBase
     [HttpPost("{id:guid}/inativar")] public async Task<IActionResult> Inativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("pacientes", id, "inativar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/reativar")] public async Task<IActionResult> Reativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("pacientes", id, "reativar", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}/historico")] public async Task<IActionResult> Historico(Guid id) { var r = await service.ListarAsync("pacienteHistorico", pacienteId: id); return StatusCode(r.StatusCode, r); }
-    [HttpGet("buscar")] public async Task<IActionResult> Buscar([FromQuery] string? termo) { var r = await service.ListarAsync("pacientes", termo: termo); return StatusCode(r.StatusCode, r); }
+    [HttpGet("buscar")] public async Task<IActionResult> Buscar([FromQuery] string? termo, [FromQuery] int pagina = 1, [FromQuery] int tamanho = 30) { var r = await service.ListarAsync("pacientes", termo: termo, pagina: pagina, tamanho: tamanho); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}/resumo-clinico")] public async Task<IActionResult> ResumoClinico(Guid id) { var r = await service.ObterAsync("pacientes", id); return StatusCode(r.StatusCode, r); }
 }
 

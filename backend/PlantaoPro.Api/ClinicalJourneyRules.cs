@@ -13,10 +13,42 @@ public static class AgendamentoStateMachine
             ["EM_ATENDIMENTO"] = new HashSet<string>(new[] { "ATENDIDO", "CANCELADO" }, StringComparer.OrdinalIgnoreCase)
         };
 
+    private static readonly IReadOnlyDictionary<string, string> ActionTargets =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["confirmar"] = "CONFIRMADO", ["checkin"] = "CHECKIN_REALIZADO",
+            ["cancelar"] = "CANCELADO", ["reagendar"] = "REAGENDADO",
+            ["marcar-falta"] = "FALTOU"
+        };
+
     public static bool PodeTransicionar(string atual, string destino)
     {
         return !string.IsNullOrWhiteSpace(atual) && !string.IsNullOrWhiteSpace(destino)
             && Transitions.TryGetValue(atual, out var allowed) && allowed.Contains(destino);
+    }
+
+    public static bool TryGetTarget(string action, out string target) =>
+        ActionTargets.TryGetValue(action ?? string.Empty, out target!);
+}
+
+public static class PacienteDocumentRules
+{
+    public static string NormalizeCpf(string? cpf) =>
+        new string((cpf ?? string.Empty).Where(char.IsDigit).ToArray());
+
+    public static bool IsValidCpf(string? cpf)
+    {
+        var value = NormalizeCpf(cpf);
+        if (value.Length != 11 || value.Distinct().Count() == 1) return false;
+        return CheckDigit(value, 9) == value[9] - '0' && CheckDigit(value, 10) == value[10] - '0';
+    }
+
+    private static int CheckDigit(string value, int length)
+    {
+        var sum = 0;
+        for (var i = 0; i < length; i++) sum += (value[i] - '0') * ((length + 1) - i);
+        var digit = 11 - sum % 11;
+        return digit >= 10 ? 0 : digit;
     }
 }
 

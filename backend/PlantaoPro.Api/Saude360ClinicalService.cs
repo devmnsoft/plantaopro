@@ -75,7 +75,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         return ApiResponse<IEnumerable<LookupItemDto>>.Ok(rows, "Lookup carregado do PostgreSQL.");
     }
 
-    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null)
+    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null, int pagina = 1, int tamanho = 50)
     {
         var table = ResolveTable(tableKey);
         try
@@ -90,7 +90,9 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             await GarantirBaseClinicaAsync();
             await using var cn = Cn();
             var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo, currentUser.IsDoctor());
-            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, isDoctor = currentUser.IsDoctor(), uid = currentUser.UserId, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%" });
+            tamanho = Math.Clamp(tamanho, 1, 100);
+            pagina = Math.Max(1, pagina);
+            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, isDoctor = currentUser.IsDoctor(), uid = currentUser.UserId, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%", tamanho, offset = (pagina - 1) * tamanho });
             if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
             {
                 await AuditAsync(table, Guid.Empty, "LISTAR", new { tableKey });
@@ -119,6 +121,11 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
     public async Task<ApiResponse<Saude360RegistroDto>> CriarAsync(string tableKey, Saude360CreateRequest request)
     {
         var table = ResolveTable(tableKey);
+        if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
+        {
+            if (!PacienteDocumentRules.IsValidCpf(request.Cpf)) return ApiResponse<Saude360RegistroDto>.Fail("CPF inválido.", 400);
+            request.Cpf = PacienteDocumentRules.NormalizeCpf(request.Cpf);
+        }
         var validation = ValidateCreate(tableKey, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
 
@@ -146,7 +153,11 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
 
         var id = Guid.NewGuid();
         var data = BuildInsert(tableKey, request, id);
-        await cn.ExecuteAsync(data.Sql, data.Args);
+        try { await cn.ExecuteAsync(data.Sql, data.Args); }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ExclusionViolation || ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            return ApiResponse<Saude360RegistroDto>.Fail("Conflito concorrente: o horário ou identificador acabou de ser reservado.", 409);
+        }
         await AuditAsync(table, id, "CRIAR", new { table, request = SafeRequest(request) });
         return await ObterAsync(tableKey, id);
     }
@@ -154,6 +165,11 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
     public async Task<ApiResponse<Saude360RegistroDto>> AtualizarAsync(string tableKey, Guid id, Saude360CreateRequest request)
     {
         var table = ResolveTable(tableKey);
+        if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
+        {
+            if (!PacienteDocumentRules.IsValidCpf(request.Cpf)) return ApiResponse<Saude360RegistroDto>.Fail("CPF inválido.", 400);
+            request.Cpf = PacienteDocumentRules.NormalizeCpf(request.Cpf);
+        }
         var validation = ValidateUpdate(tableKey, request);
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await GarantirBaseClinicaAsync();
@@ -185,6 +201,12 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
+        if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && AgendamentoStateMachine.TryGetTarget(acao, out var target))
+        {
+            var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.agendamentos where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (string.IsNullOrWhiteSpace(currentStatus)) return ApiResponse<Saude360RegistroDto>.Fail("Agendamento não encontrado para ação.", 404);
+            if (!AgendamentoStateMachine.PodeTransicionar(currentStatus, target)) return ApiResponse<Saude360RegistroDto>.Fail($"Transição de {currentStatus} para {target} não é permitida.", 409);
+        }
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
         {
             var missing = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and (paciente_id is null or medico_id is null) and (@isGlobal or (@tenantId is not null and (cliente_id=@tenantId or tenant_id=@tenantId)))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
@@ -515,7 +537,7 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase))) where.Add("(medico_id = @uid or created_by = @uid)");
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
-        return "select t.* from plantaopro." + table + " t where " + string.Join(" and ", where) + " order by reg_date desc limit 200";
+        return "select t.* from plantaopro." + table + " t where " + string.Join(" and ", where) + " order by reg_date desc, id limit @tamanho offset @offset";
     }
 
     private static bool HasColumn(string key, string column)
@@ -587,12 +609,12 @@ where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@t
         if (key == "agendamentos" && acao.Equals("checkin", StringComparison.OrdinalIgnoreCase))
         {
             await cn.ExecuteAsync(@"insert into plantaopro.agendamento_checkins(id,cliente_id,agendamento_id,paciente_id,usuario_id,observacoes)
-select gen_random_uuid(), cliente_id, id, paciente_id, @uid, @obs from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.agendamento_checkins c where c.agendamento_id=@id and c.reg_status='A')", new { id, uid, obs = request.Observacoes });
+select gen_random_uuid(), cliente_id, id, paciente_id, @uid, @obs from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.agendamento_checkins c where c.agendamento_id=@id and c.reg_status='A') on conflict do nothing", new { id, uid, obs = request.Observacoes });
             await cn.ExecuteAsync(@"insert into plantaopro.painel_chamada_fila(id,cliente_id,paciente_id,agendamento_id,senha,paciente_nome,status,created_by)
 select gen_random_uuid(), a.cliente_id, a.paciente_id, a.id, 'P' || lpad((nextval('plantaopro.seq_painel_senhas') % 10000)::text,4,'0'), coalesce(p.nome,'Paciente'), 'AGUARDANDO', @uid
-from plantaopro.agendamentos a left join plantaopro.pacientes p on p.id=a.paciente_id where a.id=@id and not exists (select 1 from plantaopro.painel_chamada_fila f where f.agendamento_id=@id and f.reg_status='A')", new { id, uid });
+from plantaopro.agendamentos a left join plantaopro.pacientes p on p.id=a.paciente_id where a.id=@id and not exists (select 1 from plantaopro.painel_chamada_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid });
             await cn.ExecuteAsync(@"insert into plantaopro.triagem_fila(id,cliente_id,paciente_id,agendamento_id,status,created_by)
-select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.triagem_fila f where f.agendamento_id=@id and f.reg_status='A')", new { id, uid });
+select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.triagem_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid });
         }
         if (key == "triagens" && acao.Equals("finalizar", StringComparison.OrdinalIgnoreCase))
         {

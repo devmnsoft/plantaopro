@@ -37,4 +37,30 @@ public sealed class ClinicalJourneyRulesTests
         var errors = ClinicalMeasurements.Validar(request, true);
         Assert.Equal(3, errors.Count);
     }
+
+    [Theory]
+    [InlineData("529.982.247-25", "52998224725")]
+    [InlineData(" 52998224725 ", "52998224725")]
+    public void Paciente_NormalizaCpfValido(string input, string normalized)
+    {
+        Assert.True(PacienteDocumentRules.IsValidCpf(input));
+        Assert.Equal(normalized, PacienteDocumentRules.NormalizeCpf(input));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("111.111.111-11")]
+    [InlineData("52998224724")]
+    public void Paciente_RejeitaCpfInvalidoQuandoInformado(string input) =>
+        Assert.False(PacienteDocumentRules.IsValidCpf(input));
+
+    [Theory]
+    [InlineData("confirmar", "CONFIRMADO")]
+    [InlineData("checkin", "CHECKIN_REALIZADO")]
+    [InlineData("marcar-falta", "FALTOU")]
+    public void Agendamento_MapeiaAcoesParaTransicao(string action, string expected)
+    {
+        Assert.True(AgendamentoStateMachine.TryGetTarget(action, out var target));
+        Assert.Equal(expected, target);
+    }
 }

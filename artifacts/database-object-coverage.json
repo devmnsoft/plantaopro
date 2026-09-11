@@ -512,6 +512,7 @@
     "database/migrations/2026_v192_saved_views.sql",
     "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
     "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
-    "database/schema/360_v2157_central_operacional_escalas.sql"
+    "database/schema/360_v2157_central_operacional_escalas.sql",
+    "database/schema/360_v2158_financeiro_medico_conferencia.sql"
   ]
 }

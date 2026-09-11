@@ -1625,7 +1625,9 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                 m.email as ""MedicoEmail"", m.telefone as ""MedicoTelefone"",
                 h.nome_fantasia as ""HospitalNome"", h.cidade as ""HospitalCidade"", h.estado as ""HospitalEstado"",
                 esp.nome as ""EspecialidadeNome"", pl.data_inicio as ""DataInicioPlantao"", pl.data_fim as ""DataFimPlantao"",
-                pg.valor_previsto as ""ValorPrevisto"", pg.valor_pago as ""ValorPago"",
+                pg.valor_previsto as ""ValorPrevisto"", coalesce(pg.valor_apurado,pg.valor_previsto) as ""ValorApurado"",
+                coalesce(pg.valor_aprovado,0) as ""ValorAprovado"", pg.valor_pago as ""ValorPago"",
+                greatest(coalesce(pg.valor_aprovado,0)-coalesce(pg.valor_pago,0),0) as ""Saldo"", pg.versao as ""Versao"",
                 pg.valor_previsto as ""ValorBruto"", pg.valor_previsto as ""ValorLiquido"",
                 0::numeric as ""Descontos"", 0::numeric as ""Acrescimos"", pg.status as ""Status"",
                 pg.data_prevista as ""DataPrevista"", pg.data_pagamento as ""DataPagamento"",
@@ -1705,21 +1707,28 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, Guid UsuarioId)>("select pg.status,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A'", new
-                {
-                    id
-                }, tx);
+                var tenantId = currentUser.TenantId; var clienteId = currentUser.ClienteId;
+                if (!tenantId.HasValue || !clienteId.HasValue) return ApiResponse<string>.Fail("Contexto de tenant inválido.", 403);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, Guid UsuarioId, decimal ValorAprovado, long Versao)>(@"select pg.status as ""Status"",m.usuario_id as ""UsuarioId"",coalesce(pg.valor_aprovado,0) as ""ValorAprovado"",pg.versao as ""Versao"" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update", new { id, tenantId, clienteId }, tx);
                 if (pg.Status is null)
                     return ApiResponse<string>.Fail("Pagamento não encontrado", 404);
-                if (pg.Status != "pendente")
-                    return ApiResponse<string>.Fail("Somente pagamento pendente pode ser confirmado");
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=@v,forma_pagamento=@f,data_pagamento=@d,observacoes=@o,updated_by=@u,reg_update=now() where id=@id", new
+                if (pg.Status == "pago") return ApiResponse<string>.Fail("Pagamento já registrado.", 409);
+                if (pg.Status != "aprovado") return ApiResponse<string>.Fail("Somente obrigação aprovada pode receber registro de pagamento.", 409);
+                if (req.VersaoEsperada.HasValue && req.VersaoEsperada.Value != pg.Versao)
+                    return ApiResponse<string>.Fail("O registro foi atualizado por outra pessoa. Recarregue a página.", 409);
+                if (req.ValorPago != pg.ValorAprovado)
+                    return ApiResponse<string>.Fail("Nesta versão, o pagamento deve quitar integralmente o valor aprovado.", 422);
+                if (req.DataPagamento > DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)))
+                    return ApiResponse<string>.Fail("Data de pagamento inválida.", 422);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=@v,forma_pagamento=@f,referencia_pagamento=@r,data_pagamento=@d,origem_pagamento='MANUAL',observacoes=@o,updated_by=@u,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status='aprovado'", new
                 {
                     id,
                     v = req.ValorPago,
                     f = req.FormaPagamento,
                     d = req.DataPagamento,
                     o = req.Observacoes,
+                    r = string.IsNullOrWhiteSpace(req.Referencia) ? null : req.Referencia.Trim(),
+                    tenantId, clienteId,
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, "pago", req.Observacoes ?? "Pagamento confirmado", userId);
@@ -1730,34 +1739,31 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro confirmar pagamento"); return ApiResponse<string>.Fail("Erro ao confirmar pagamento", 500); }
         }
-        public async Task<ApiResponse<PagamentoActionResponse>> MarcarPagoAsync(Guid id, MarcarPagamentoPagoRequest req, Guid userId, string? ip, string? ua)
+        public Task<ApiResponse<PagamentoActionResponse>> MarcarPagoAsync(Guid id, MarcarPagamentoPagoRequest req, Guid userId, string? ip, string? ua)
         {
-            if (string.IsNullOrWhiteSpace(req.FormaPagamento))
-                return ApiResponse<PagamentoActionResponse>.Fail("Forma de pagamento obrigatória.", 400);
-            await using var cn = Cn();
-            await cn.OpenAsync();
-            await using var tx = await cn.BeginTransactionAsync();
-            try
-            {
-                var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
-                if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or exists(select 1 from plantaopro.financeiro_pagamento_origem o where o.pagamento_id=pg.id and o.tenant_id=@tenantId)) for update", new { id,userId,tenantId }, tx);
-                if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
-                if (pg.Status == "pago") return ApiResponse<PagamentoActionResponse>.Fail("Pagamento já está marcado como pago.", 409);
-                if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("O status atual não permite marcar o pagamento como pago.", 409);
-                if (pg.ValorPrevisto <= 0) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento sem valor real não pode ser marcado como pago.", 422);
-                var dataPagamento = DateOnly.FromDateTime(DateTime.UtcNow);
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=valor_previsto,forma_pagamento=@forma,data_pagamento=@data,observacoes=coalesce(@observacoes,observacoes),updated_by=@userId,reg_update=now() where id=@id", new { id, forma = req.FormaPagamento.Trim(), data = dataPagamento, observacoes = string.IsNullOrWhiteSpace(req.Observacoes) ? null : req.Observacoes.Trim(), userId }, tx);
-                await AddHistoricoAsync(cn, tx, id, pg.Status, "pago", req.Observacoes ?? "Pagamento marcado como pago", userId);
-                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento confirmado", "Seu pagamento foi confirmado.", "financeiro", tx);
-                await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "pendente->pago", ip: ip, userAgent: ua);
-                await tx.CommitAsync();
-                return ApiResponse<PagamentoActionResponse>.Ok(new(id, "pago", pg.ValorPrevisto, dataPagamento, "nenhuma"), "Pagamento marcado como pago.");
-            }
-            catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao marcar pagamento {PagamentoId} como pago", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao marcar pagamento como pago.", 500); }
+            // Compatibilidade do endpoint antigo: converge para a baixa integral canônica.
+            var request = new ConfirmarPagamentoRequest(0, DateOnly.FromDateTime(DateTime.UtcNow), req.FormaPagamento, req.Observacoes);
+            return ConfirmarIntegralAsync(id, request, userId, ip, ua);
         }
 
-        public async Task<ApiResponse<PagamentoActionResponse>> ContestarAsync(Guid id, ContestarPagamentoRequest req, Guid userId, string? ip, string? ua)
+        private async Task<ApiResponse<PagamentoActionResponse>> ConfirmarIntegralAsync(Guid id, ConfirmarPagamentoRequest req, Guid userId, string? ip, string? ua)
+        {
+            var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
+            if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",403);
+            await using var cn=Cn(); await cn.OpenAsync(); await using var tx=await cn.BeginTransactionAsync();
+            var pg=await cn.QueryFirstOrDefaultAsync<(string Status,decimal ValorAprovado,Guid UsuarioId)>(@"select pg.status as ""Status"",coalesce(pg.valor_aprovado,0) as ""ValorAprovado"",m.usuario_id as ""UsuarioId"" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update",new{id,tenantId,clienteId},tx);
+            if(pg.Status is null)return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.",404);
+            if(pg.Status!="aprovado")return ApiResponse<PagamentoActionResponse>.Fail("Somente obrigação aprovada pode receber registro de pagamento.",409);
+            if(pg.ValorAprovado<=0||string.IsNullOrWhiteSpace(req.FormaPagamento))return ApiResponse<PagamentoActionResponse>.Fail("Valor aprovado e forma são obrigatórios.",422);
+            var changed=await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=valor_aprovado,forma_pagamento=@forma,data_pagamento=@data,origem_pagamento='MANUAL',observacoes=coalesce(@obs,observacoes),updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status='aprovado'",new{id,tenantId,clienteId,forma=req.FormaPagamento.Trim(),data=req.DataPagamento,obs=req.Observacoes,userId},tx);
+            if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("O registro foi atualizado por outra pessoa. Recarregue a página.",409);
+            await AddHistoricoAsync(cn,tx,id,"aprovado","pago",req.Observacoes??"Pagamento manual registrado",userId);
+            await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento registrado","O pagamento foi registrado manualmente pelo financeiro.","financeiro",tx);
+            await tx.CommitAsync(); await audit.LogAsync(userId,"PAGAMENTO_MANUAL_REGISTRADO","pagamentos",id,"Obrigação aprovada quitada integralmente.",ip:ip,userAgent:ua);
+            return ApiResponse<PagamentoActionResponse>.Ok(new(id,"pago",pg.ValorAprovado,req.DataPagamento,"nenhuma"),"Pagamento registrado.");
+        }
+
+        public async Task<ApiResponse<PagamentoActionResponse>> ContestarAsync(Guid id, ContestarPagamentoRequest req, Guid userId, bool podeGerirTenant, string? ip, string? ua)
         {
             if (string.IsNullOrWhiteSpace(req.Motivo)) return ApiResponse<PagamentoActionResponse>.Fail("Motivo obrigatório.", 400);
             await using var cn = Cn();
@@ -1767,16 +1773,15 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             {
                 var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
                 if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or exists(select 1 from plantaopro.financeiro_pagamento_origem o where o.pagamento_id=pg.id and o.tenant_id=@tenantId)) for update", new { id,userId,tenantId }, tx);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or (@podeGerirTenant and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId)) for update", new { id,userId,tenantId,clienteId,podeGerirTenant }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
-                if (pg.Status != "pendente") return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado.", 409);
+                if (pg.Status is not ("aprovado" or "pago")) return ApiResponse<PagamentoActionResponse>.Fail("Somente obrigação aprovada ou pagamento registrado pode ser contestado.", 409);
                 await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@userId)",new{tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=pg.ValorPrevisto,userId},tx);
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',observacoes=@motivo,updated_by=@userId,reg_update=now() where id=@id", new { id, motivo = req.Motivo.Trim(), userId }, tx);
-                await AddHistoricoAsync(cn, tx, id, pg.Status, "contestado", req.Motivo.Trim(), userId);
+                await AddHistoricoAsync(cn, tx, id, pg.Status, pg.Status, "CONTESTACAO_ABERTA: " + req.Motivo.Trim(), userId);
                 await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);
-                await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "pendente->contestado", ip: ip, userAgent: ua);
+                await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "CONTESTACAO_ABERTA", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
-                return ApiResponse<PagamentoActionResponse>.Ok(new(id, "contestado", pg.ValorPrevisto, null, "aguardar-resolucao"), "Contestação registrada.");
+                return ApiResponse<PagamentoActionResponse>.Ok(new(id, pg.Status, pg.ValorPrevisto, null, "aguardar-resolucao"), "Contestação registrada.");
             }
             catch (PostgresException ex) when(ex.SqlState==PostgresErrorCodes.UniqueViolation) { await tx.RollbackAsync(); return ApiResponse<PagamentoActionResponse>.Fail("Já existe contestação aberta para este pagamento.",409); }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao contestar pagamento {PagamentoId}", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao contestar pagamento.", 500); }
@@ -1793,12 +1798,13 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             {
                 var contestacao=await cn.QueryFirstOrDefaultAsync<(Guid Id,decimal ValorOriginal)>("select id as \"Id\",valor_original as \"ValorOriginal\" from plantaopro.pagamento_contestacoes where tenant_id=@tenantId and cliente_id=@clienteId and pagamento_id=@id and status='ABERTA' for update",new{tenantId,clienteId,id},tx);
                 if(contestacao.Id==Guid.Empty)return ApiResponse<PagamentoActionResponse>.Fail("Contestação aberta não encontrada.",404);
-                var pg=await cn.QueryFirstOrDefaultAsync<(string Status,decimal ValorPrevisto,Guid UsuarioId)>("select pg.status as \"Status\",pg.valor_previsto as \"ValorPrevisto\",m.usuario_id as \"UsuarioId\" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' for update",new{id},tx);
-                if(pg.Status!="contestado")return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não está em contestação.",409);
-                var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":"pendente";var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
+                var pg=await cn.QueryFirstOrDefaultAsync<(string Status,decimal ValorPrevisto,Guid UsuarioId)>("select pg.status as \"Status\",pg.valor_previsto as \"ValorPrevisto\",m.usuario_id as \"UsuarioId\" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update",new{id,tenantId,clienteId},tx);
+                if(pg.Status is not ("aprovado" or "pago"))return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não possui situação compatível com a contestação.",409);
+                if(pg.Status=="pago"&&decisao!="MANTER_VALOR")return ApiResponse<PagamentoActionResponse>.Fail("Pagamento registrado exige estorno antes de ajuste ou cancelamento.",409);
+                var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":pg.Status;var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
                 var changed=await cn.ExecuteAsync("update plantaopro.pagamento_contestacoes set status='RESOLVIDA',decisao=@decisao,justificativa_resolucao=@justificativa,valor_resolvido=@valor,resolvido_por=@userId,resolvido_em=now(),updated_at=now() where id=@contestacaoId and status='ABERTA'",new{decisao,justificativa,valor,userId,contestacaoId=contestacao.Id},tx);if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("Contestação já foi resolvida.",409);
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_previsto=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now() where id=@id and status='contestado'",new{id,novoStatus,valor,justificativa,userId},tx);
-                await AddHistoricoAsync(cn,tx,id,"contestado",novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx);await tx.CommitAsync();
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_aprovado=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now() where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status=@status",new{id,novoStatus,valor,justificativa,userId,tenantId,clienteId,status=pg.Status},tx);
+                await AddHistoricoAsync(cn,tx,id,pg.Status,novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx);await tx.CommitAsync();
                 await audit.LogAsync(userId,"CONTESTACAO_RESOLVIDA","pagamentos",id,$"{pg.ValorPrevisto}->{valor}; {decisao}",ip:ip,userAgent:ua);return ApiResponse<PagamentoActionResponse>.Ok(new(id,novoStatus,valor,null,"nenhuma"),"Contestação resolvida.");
             }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao resolver contestação do pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao resolver contestação.",500);}
         }
@@ -1811,17 +1817,16 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             await using var tx = await cn.BeginTransactionAsync();
             try
             {
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, Guid UsuarioId)>("select pg.status,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A'", new
-                {
-                    id
-                }, tx);
+                var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
+                if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<string>.Fail("Contexto de tenant inválido.",403);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, Guid UsuarioId)>("select pg.status,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update", new { id,tenantId,clienteId }, tx);
                 if (pg.Status is null)
                     return ApiResponse<string>.Fail("Pagamento não encontrado", 404);
-                if (pg.Status != "pendente")
-                    return ApiResponse<string>.Fail("Somente pagamento pendente pode ser cancelado");
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status='cancelado',observacoes=@j,updated_by=@u,reg_update=now() where id=@id", new
+                if (pg.Status is not ("pendente" or "aprovado"))
+                    return ApiResponse<string>.Fail("Somente obrigação ainda não paga pode ser cancelada.", 409);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status='cancelado',observacoes=@j,updated_by=@u,reg_update=now() where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status=@status", new
                 {
-                    id,
+                    id, tenantId, clienteId, status=pg.Status,
                     j = justificativa,
                     u = userId
                 }, tx);
@@ -1848,6 +1853,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         select id
         from plantaopro.medicos
         where usuario_id = @usuarioId
+          and tenant_id = @tenantId
           and reg_status = 'A'
         limit 1;
     ", new
@@ -1891,6 +1897,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
         select id
         from plantaopro.medicos
         where usuario_id = @usuarioId
+          and tenant_id = @tenantId
           and reg_status = 'A'
         limit 1;
     ", new

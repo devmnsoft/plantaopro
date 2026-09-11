@@ -45,3 +45,4 @@
 - `plantaopro.revenue_cycle_v195` depende de: plantaopro.saved_views_v192, plantaopro.regras_faturamento_repasses_v115, plantaopro.operacional_real_v113
 - `plantaopro.notificacoes_v2070` depende de: plantaopro.operacao_assistida_v1310, plantaopro.revenue_cycle_v195
 - `plantaopro.central_operacional_escalas_v2157` depende de: plantaopro.notificacoes_v2070, plantaopro.operacao_plantoes
+- `plantaopro.financeiro_medico_v2158` depende de: plantaopro.fechamento_operacional_v187, plantaopro.pagamentos

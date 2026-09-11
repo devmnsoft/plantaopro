@@ -79,11 +79,11 @@
         </div>
 
         <aside class="d-grid gap-3" aria-label="Ações e histórico do pagamento">
-            @if (status == "pendente")
+            @if (status == "aprovado")
             {
-                <form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="pp-payment-card pp-payment-action" data-ajax-form="true" data-confirm="true" data-confirm-title="Confirmar pagamento" data-confirm-message="Confirma a baixa deste pagamento? A ação será auditada e atualizará o financeiro do médico." data-confirm-type="success">
+                <form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="pp-payment-card pp-payment-action" data-ajax-form="true" data-confirm="true" data-confirm-title="Registrar pagamento" data-confirm-message="Confirma registrar manualmente a quitação desta obrigação aprovada? A ação será auditada e atualizará o financeiro do médico." data-confirm-type="success">
                     @Html.AntiForgeryToken()
-                    <div class="pp-payment-card__heading"><i class="bi bi-check2-circle" aria-hidden="true"></i><div><h2>Confirmar pagamento</h2><p>Registre a liquidação com dados completos.</p></div></div>
+                    <div class="pp-payment-card__heading"><i class="bi bi-check2-circle" aria-hidden="true"></i><div><h2>Registrar pagamento</h2><p>Registre a liquidação com dados completos.</p></div></div>
                     <label for="payment-value" class="form-label">Valor pago</label>
                     <div class="input-group mb-3"><span class="input-group-text">R$</span><input id="payment-value" name="valorPago" type="number" min="0.01" step="0.01" value="@pg.ValorPrevisto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)" class="form-control" inputmode="decimal" required /></div>
                     <label for="payment-date" class="form-label">Data do pagamento</label>
@@ -92,7 +92,7 @@
                     <select id="payment-method" name="formaPagamento" class="form-select mb-3" required><option value="">Selecione</option><option value="PIX">Pix</option><option value="TED">TED</option><option value="DOC">DOC</option><option value="BOLETO">Boleto</option><option value="OUTRO">Outro</option></select>
                     <label for="payment-notes" class="form-label">Observações</label>
                     <textarea id="payment-notes" name="observacoes" class="form-control mb-3" rows="3" maxlength="1000"></textarea>
-                    <button class="btn btn-success w-100" type="submit" data-loading-text="Confirmando…"><i class="bi bi-shield-check" aria-hidden="true"></i> Confirmar pagamento</button>
+                    <button class="btn btn-success w-100" type="submit" data-loading-text="Confirmando…"><i class="bi bi-shield-check" aria-hidden="true"></i> Registrar pagamento</button>
                 </form>
 
                 <form asp-action="CancelarPagamento" asp-route-id="@pg.Id" method="post" class="pp-payment-card pp-payment-action pp-payment-action--danger" data-ajax-form="true" data-confirm="true" data-confirm-title="Cancelar pagamento" data-confirm-message="Confirma cancelar este pagamento? A justificativa ficará no histórico de auditoria." data-confirm-type="danger">
@@ -114,7 +114,7 @@
             else
             {
                 <section class="pp-payment-state pp-payment-state--compact">
-                    <i class="bi @statusIcon" aria-hidden="true"></i><div><h2>Pagamento @statusText</h2><p>Não há ações disponíveis para este status.</p></div>
+                    <i class="bi @statusIcon" aria-hidden="true"></i><div><h2>Pagamento @statusText</h2><p>@(status == "pago" ? "Quitação registrada. Uma contestação não desfaz este pagamento; o financeiro deve tratar eventual estorno separadamente." : "Não há ações disponíveis para este status.")</p></div>
                 </section>
             }
 

@@ -26,7 +26,13 @@ public sealed class PagamentosController : ControllerBase
 
     [HttpPost("{id:guid}/contestar")]
     public Task<IActionResult> Contestar(Guid id, [FromBody] ContestarPagamentoRequest request) =>
-        ExecuteAsync(id, "contestar", uid => service.ContestarAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
+        ExecuteAsync(id, "contestar", uid => service.ContestarAsync(id, request, uid,
+            User.IsInRole(RolesConstants.FinanceiroGestao), Ip(), Request.Headers.UserAgent.ToString()));
+
+    [HttpPost("{id:guid}/contestacao/resolver")]
+    [Authorize(Roles = RolesConstants.FinanceiroGestao)]
+    public Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoPagamentoRequest request) =>
+        ExecuteAsync(id, "resolver contestação", uid => service.ResolverContestacaoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
 
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 

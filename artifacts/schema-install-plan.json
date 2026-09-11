@@ -272,5 +272,13 @@
       "plantaopro.operacao_plantoes"
     ],
     "source": "database/schema/360_v2157_central_operacional_escalas.sql"
+  },
+  {
+    "object": "plantaopro.financeiro_medico_v2158",
+    "dependsOn": [
+      "plantaopro.fechamento_operacional_v187",
+      "plantaopro.pagamentos"
+    ],
+    "source": "database/schema/360_v2158_financeiro_medico_conferencia.sql"
   }
 ]

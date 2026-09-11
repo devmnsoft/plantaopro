@@ -69,9 +69,9 @@ public record RecusarEscalaRequest(string Justificativa);
 public record CancelarEscalaRequest(string Justificativa);
 public record SubstituirEscalaRequest(Guid NovoMedicoId,string Justificativa);
 public record GerarPagamentoRequest(Guid EscalaId,DateOnly? DataPrevista,string? Observacoes);
-public record ConfirmarPagamentoRequest(decimal ValorPago,DateOnly DataPagamento,string FormaPagamento,string? Observacoes);
+public record ConfirmarPagamentoRequest(decimal ValorPago,DateOnly DataPagamento,string FormaPagamento,string? Observacoes,string? Referencia=null,long? VersaoEsperada=null);
 public record MarcarPagamentoPagoRequest(string FormaPagamento,string? Observacoes);
-public record ContestarPagamentoRequest(string Motivo);
+public record ContestarPagamentoRequest(string Motivo,long? VersaoEsperada=null);
 public record ResolverContestacaoPagamentoRequest(string Decisao,string Justificativa,decimal? NovoValor);
 public record PagamentoActionResponse(Guid PagamentoId,string Status,decimal Valor,DateOnly? DataPagamento,string ProximaAcao);
 public sealed class PagamentoDetailsDto
@@ -92,7 +92,11 @@ public sealed class PagamentoDetailsDto
     public DateTime DataInicioPlantao { get; set; }
     public DateTime DataFimPlantao { get; set; }
     public decimal ValorPrevisto { get; set; }
+    public decimal ValorApurado { get; set; }
+    public decimal ValorAprovado { get; set; }
     public decimal? ValorPago { get; set; }
+    public decimal Saldo { get; set; }
+    public long Versao { get; set; }
     public decimal ValorBruto { get; set; }
     public decimal? ValorLiquido { get; set; }
     public decimal Descontos { get; set; }

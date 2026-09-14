@@ -280,5 +280,20 @@
       "plantaopro.pagamentos"
     ],
     "source": "database/schema/360_v2158_financeiro_medico_conferencia.sql"
+  },
+  {
+    "object": "plantaopro.saude360_v2159",
+    "dependsOn": [
+      "plantaopro.saude360"
+    ],
+    "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql"
+  },
+  {
+    "object": "plantaopro.jornada_clinica_v2160",
+    "dependsOn": [
+      "plantaopro.saude360_v2159",
+      "plantaopro.saude360"
+    ],
+    "source": "database/schema/380_v2160_triagem_consulta_jornada.sql"
   }
 ]

@@ -31,11 +31,12 @@ public sealed class ClinicalJourneyRulesTests
     }
 
     [Fact]
-    public void Triagem_FinalizacaoExigeClassificacaoEValidaSinais()
+    public void Triagem_FinalizacaoExigeClassificacaoEMantemValorIncomumComoAlerta()
     {
         var request = new TriagemUpdateRequest { Temperatura = 50m, Saturacao = 30m };
         var errors = ClinicalMeasurements.Validar(request, true);
-        Assert.Equal(3, errors.Count);
+        Assert.Single(errors);
+        Assert.Equal(2, ClinicalMeasurements.AlertasConferencia(request).Count);
     }
 
     [Theory]

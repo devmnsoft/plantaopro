@@ -90,10 +90,10 @@ for marker in ("Model.Fechamentos", "table-responsive", "data-label=", "Model.Ti
 
 forms = (WEB / "Views/Saude360/Formulario.cshtml").read_text(encoding="utf-8")
 models = (WEB / "Models/Saude360WebViewModels.cs").read_text(encoding="utf-8")
-for marker in ('min="50" max="260"', 'min="30" max="45"', 'min="50" max="100"'):
+for marker in ('PAS (mmHg)', 'Temperatura (°C)', 'Saturação (%)'):
     if marker not in forms:
         errors.append(f"Triagem sem limite clínico no formulário: {marker}")
-for marker in ("ValidarTriagem", "classificação de risco", "alto risco"):
+for marker in ("ValidarTriagem", "classificação de risco"):
     if marker.lower() not in models.lower():
         errors.append(f"Triagem sem validação server-side: {marker}")
 

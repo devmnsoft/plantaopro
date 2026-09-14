@@ -24,7 +24,7 @@
     "plantaopro.assinatura_historico",
     "plantaopro.assinatura_uso",
     "plantaopro.assinaturas",
-    "plantaopro.atendimentos",
+    "plantaopro.atendimentos_fila",
     "plantaopro.auditoria",
     "plantaopro.auditoria_acoes_criticas",
     "plantaopro.auditoria_eventos",
@@ -513,6 +513,8 @@
     "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql",
     "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
     "database/schema/360_v2157_central_operacional_escalas.sql",
-    "database/schema/360_v2158_financeiro_medico_conferencia.sql"
+    "database/schema/360_v2158_financeiro_medico_conferencia.sql",
+    "database/schema/370_v2159_saude360_agenda_recepcao.sql",
+    "database/schema/380_v2160_triagem_consulta_jornada.sql"
   ]
 }

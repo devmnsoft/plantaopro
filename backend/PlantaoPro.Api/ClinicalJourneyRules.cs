@@ -64,19 +64,25 @@ public static class ClinicalMeasurements
     public static IReadOnlyList<string> Validar(TriagemUpdateRequest request, bool finalizar)
     {
         var errors = new List<string>();
-        ValidateRange(request.PressaoSistolica, 50, 300, "Pressão sistólica", errors);
-        ValidateRange(request.PressaoDiastolica, 30, 200, "Pressão diastólica", errors);
-        ValidateRange(request.FrequenciaCardiaca, 20, 250, "Frequência cardíaca", errors);
-        ValidateRange(request.Temperatura, 25, 45, "Temperatura", errors);
-        ValidateRange(request.Saturacao, 50, 100, "Saturação", errors);
         if (finalizar && string.IsNullOrWhiteSpace(request.ClassificacaoRisco)) errors.Add("A classificação de risco é obrigatória.");
         return errors;
     }
 
-    private static void ValidateRange(decimal? value, decimal min, decimal max, string field, List<string> errors)
+    // Valores incomuns são evidência clínica e não erro de formato. A API os persiste e
+    // devolve alertas de conferência; nunca os transforma em zero nem decide risco.
+    public static IReadOnlyList<string> AlertasConferencia(TriagemUpdateRequest request)
     {
-        if (value.HasValue && (value < min || value > max)) errors.Add(field + " fora do limite clínico plausível.");
+        var alerts = new List<string>();
+        Alert(request.PressaoSistolica, 50, 300, "Pressão sistólica", alerts);
+        Alert(request.PressaoDiastolica, 30, 200, "Pressão diastólica", alerts);
+        Alert(request.FrequenciaCardiaca, 20, 250, "Frequência cardíaca", alerts);
+        Alert(request.Temperatura, 25, 45, "Temperatura", alerts);
+        Alert(request.Saturacao, 50, 100, "Saturação", alerts);
+        return alerts;
     }
+
+    private static void Alert(decimal? value, decimal min, decimal max, string field, List<string> alerts)
+    { if (value.HasValue && (value < min || value > max)) alerts.Add(field + " fora da faixa usual; confira valor e unidade antes de finalizar."); }
 }
 
 public sealed class TriagemUpdateRequest

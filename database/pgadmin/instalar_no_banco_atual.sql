@@ -5,9 +5,9 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.07.0
+-- Versão do schema: v2.16.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-08-26
+-- Data de geração: 2026-09-11
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -3178,3 +3178,112 @@ create unique index if not exists ux_v2158_pagamento_referencia_manual
  where referencia_pagamento is not null and status='pago' and reg_status='A';
 create index if not exists ix_v2158_pagamento_conferencia
  on plantaopro.pagamentos(tenant_id,cliente_id,status,reg_date desc) where reg_status='A';
+
+-- ============================================================
+-- Seção 47 — plantaopro.saude360_v2159
+-- ============================================================
+
+-- SOURCE: database/schema/370_v2159_saude360_agenda_recepcao.sql
+-- SOURCE-SHA256: aa6bca99eab66147641a60a33054000f79806bcd8d44c45079183f4b9b2fe0e1
+-- v2.15.9 - invariantes concorrentes da jornada Saúde 360.
+-- Incremental e idempotente: não altera migrations já aplicadas.
+set search_path to plantaopro, public;
+
+create extension if not exists btree_gist;
+
+-- CPF é opcional, porém único por cliente quando informado e normalizado.
+create unique index if not exists ux_v2159_paciente_cpf_cliente
+    on plantaopro.pacientes (cliente_id, regexp_replace(cpf, '[^0-9]', '', 'g'))
+    where reg_status = 'A' and cpf is not null and regexp_replace(cpf, '[^0-9]', '', 'g') <> '';
+
+-- O banco, e não somente a validação prévia da API, arbitra reservas concorrentes.
+do $$
+begin
+    if not exists (select 1 from pg_constraint where conname = 'ck_v2159_agendamento_periodo') then
+        alter table plantaopro.agendamentos add constraint ck_v2159_agendamento_periodo check (data_fim > data_inicio) not valid;
+    end if;
+    if not exists (select 1 from pg_constraint where conname = 'ex_v2159_agendamento_medico') then
+        alter table plantaopro.agendamentos add constraint ex_v2159_agendamento_medico
+            exclude using gist (cliente_id with =, medico_id with =, tstzrange(data_inicio, data_fim, '[)') with &&)
+            where (reg_status = 'A' and status not in ('CANCELADO','REAGENDADO','FALTOU'));
+    end if;
+end $$;
+
+-- Repetições/retries não podem gerar duas chegadas ou duas posições ativas.
+create unique index if not exists ux_v2159_checkin_ativo
+    on plantaopro.agendamento_checkins (cliente_id, agendamento_id) where reg_status = 'A';
+create unique index if not exists ux_v2159_fila_painel_ativa
+    on plantaopro.painel_chamada_fila (cliente_id, agendamento_id) where reg_status = 'A' and agendamento_id is not null;
+create unique index if not exists ux_v2159_fila_triagem_ativa
+    on plantaopro.triagem_fila (cliente_id, agendamento_id) where reg_status = 'A' and agendamento_id is not null;
+
+create index if not exists ix_v2159_recepcao_dia
+    on plantaopro.agendamentos (cliente_id, unidade_id, data_inicio, id)
+    where reg_status = 'A';
+create index if not exists ix_v2159_fila_ordenacao
+    on plantaopro.painel_chamada_fila (cliente_id, status, prioridade desc, reg_date, id)
+    where reg_status = 'A';
+
+-- ============================================================
+-- Seção 48 — plantaopro.jornada_clinica_v2160
+-- ============================================================
+
+-- SOURCE: database/schema/380_v2160_triagem_consulta_jornada.sql
+-- SOURCE-SHA256: 2c8256c42ec43a62481c89449d056d7d6e02f291be9a55dae6ed271369659eff
+-- PlantãoPro v2.16.0 — identidade, concorrência e evidência da jornada clínica.
+-- Migration incremental: não altera artefatos já aplicados.
+set search_path to plantaopro, public;
+
+alter table plantaopro.triagens add column if not exists versao integer not null default 1;
+alter table plantaopro.triagens add column if not exists finalizada_em timestamptz;
+alter table plantaopro.triagens add column if not exists finalizada_por uuid;
+alter table plantaopro.triagens add column if not exists assumida_por uuid;
+alter table plantaopro.triagens add column if not exists assumida_em timestamptz;
+
+alter table plantaopro.consultas add column if not exists assumida_por uuid;
+alter table plantaopro.consultas add column if not exists assumida_em timestamptz;
+alter table plantaopro.consultas add column if not exists triagem_snapshot jsonb;
+alter table plantaopro.consultas add column if not exists triagem_snapshot_em timestamptz;
+
+-- Um agendamento só pode possuir um atendimento ainda ativo. Walk-ins continuam
+-- identificados pelo próprio atendimento e jamais por nome/data do paciente.
+create unique index if not exists ux_v2160_atendimento_agendamento_ativo
+    on plantaopro.atendimentos_fila(cliente_id, agendamento_id)
+    where status not in ('FINALIZADO','CANCELADO');
+create unique index if not exists ux_v2160_encaminhamento_triagem_consulta
+    on plantaopro.triagem_encaminhamentos(cliente_id, triagem_id, destino)
+    where destino='CONSULTA' and reg_status='A';
+create index if not exists ix_v2160_triagem_fila_estavel
+    on plantaopro.triagens(cliente_id, status, reg_date, id)
+    where reg_status='A';
+create index if not exists ix_v2160_consulta_fila_estavel
+    on plantaopro.consultas(cliente_id, unidade_id, status, reg_date, id)
+    where reg_status='A';
+create index if not exists ix_v2160_historico_paciente
+    on plantaopro.consulta_historico(cliente_id, paciente_id, reg_date desc, id);
+
+-- Congela a evidência de triagem usada quando a consulta é criada/vinculada.
+create or replace function plantaopro.v2160_snapshot_triagem_consulta() returns trigger
+language plpgsql as $$
+begin
+  if new.triagem_id is not null and (new.triagem_snapshot is null or new.triagem_id is distinct from old.triagem_id) then
+    select jsonb_build_object(
+      'triagemId', t.id, 'versao', t.versao, 'classificacaoRisco', t.classificacao_risco,
+      'queixaPrincipal', t.queixa_principal, 'pressaoSistolica', t.pressao_sistolica,
+      'pressaoDiastolica', t.pressao_diastolica, 'frequenciaCardiaca', t.frequencia_cardiaca,
+      'frequenciaRespiratoria', t.frequencia_respiratoria, 'temperatura', t.temperatura,
+      'saturacao', t.saturacao, 'glicemia', t.glicemia, 'peso', t.peso, 'altura', t.altura,
+      'imc', t.imc, 'alergiasRelatadas', t.alergias_relatadas,
+      'medicamentosEmUso', t.medicamentos_uso, 'observacoes', t.observacoes,
+      'autorId', coalesce(t.finalizada_por,t.updated_by,t.created_by),
+      'finalizadaEm', t.finalizada_em)
+      into new.triagem_snapshot
+      from plantaopro.triagens t
+      where t.id=new.triagem_id and t.cliente_id=new.cliente_id and t.reg_status='A';
+    if new.triagem_snapshot is not null then new.triagem_snapshot_em=now(); end if;
+  end if;
+  return new;
+end $$;
+drop trigger if exists tr_v2160_snapshot_triagem on plantaopro.consultas;
+create trigger tr_v2160_snapshot_triagem before insert or update of triagem_id
+on plantaopro.consultas for each row execute function plantaopro.v2160_snapshot_triagem_consulta();

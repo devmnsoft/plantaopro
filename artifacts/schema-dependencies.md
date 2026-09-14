@@ -46,3 +46,5 @@
 - `plantaopro.notificacoes_v2070` depende de: plantaopro.operacao_assistida_v1310, plantaopro.revenue_cycle_v195
 - `plantaopro.central_operacional_escalas_v2157` depende de: plantaopro.notificacoes_v2070, plantaopro.operacao_plantoes
 - `plantaopro.financeiro_medico_v2158` depende de: plantaopro.fechamento_operacional_v187, plantaopro.pagamentos
+- `plantaopro.saude360_v2159` depende de: plantaopro.saude360
+- `plantaopro.jornada_clinica_v2160` depende de: plantaopro.saude360_v2159, plantaopro.saude360

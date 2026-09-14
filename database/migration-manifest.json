@@ -500,6 +500,28 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_v2159_saude360_agenda_recepcao",
+      "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql",
+      "checksum": "aa6bca99eab66147641a60a33054000f79806bcd8d44c45079183f4b9b2fe0e1",
+      "dependsOn": [
+        "2026_v2158_financeiro_medico_conferencia"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_v2160_triagem_consulta_jornada",
+      "source": "database/schema/380_v2160_triagem_consulta_jornada.sql",
+      "checksum": "2c8256c42ec43a62481c89449d056d7d6e02f291be9a55dae6ed271369659eff",
+      "dependsOn": [
+        "2026_v2159_saude360_agenda_recepcao"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

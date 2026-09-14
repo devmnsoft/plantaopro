@@ -20,7 +20,7 @@ public sealed class ModuleContractingService
  m.preco_base as preco, case when m.preco_base is null then null else 'MENSAL' end as periodicidade,
  case when upper(m.status)='ATIVO' and m.disponivel_comercialmente then 'DISPONIVEL' else 'INDISPONIVEL' end as disponibilidade,
  coalesce(tm.status,case when tm.habilitado then 'ATIVO' else 'SUSPENSO' end,'NAO_CONTRATADO') as estado_contratual,
- coalesce(array_agg(dep.codigo) filter(where dep.codigo is not null),array[]::text[]) as "DependenciasArray"
+ coalesce(array_agg(dep.codigo) filter(where dep.codigo is not null),array[]::text[]) as ""DependenciasArray""
 from plantaopro.modulos_sistema m
 left join plantaopro.tenant_modulos tm on tm.modulo_id=m.id and tm.tenant_id=@tenant and tm.reg_status='A'
 left join plantaopro.modulo_catalogo_dependencias md on md.modulo_id=m.id and md.reg_status='A'

@@ -5,7 +5,7 @@ using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api.Controllers;
 
-[ApiController, Authorize, Route("api/consultas")]
+[ApiController, Authorize, Route("api/consultas"), ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 public sealed class ConsultasWorkspaceController : ControllerBase
 {
     private readonly IConsultaApplicationService service;

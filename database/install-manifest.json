@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.07.0",
-  "generatedAt": "2026-08-26",
+  "schemaVersion": "v2.16.0",
+  "generatedAt": "2026-09-11",
   "sections": [
     {
       "order": 3,
@@ -500,6 +500,39 @@
           "dependsOn": [
             "plantaopro.fechamento_operacional_v187",
             "plantaopro.pagamentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 47,
+      "name": "plantaopro.saude360_v2159",
+      "objects": [
+        {
+          "name": "plantaopro.saude360_v2159",
+          "type": "canonical",
+          "category": "CANONICAL_CLINICAL",
+          "required": true,
+          "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql",
+          "dependsOn": [
+            "plantaopro.saude360"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 48,
+      "name": "plantaopro.jornada_clinica_v2160",
+      "objects": [
+        {
+          "name": "plantaopro.jornada_clinica_v2160",
+          "type": "canonical",
+          "category": "CANONICAL_CLINICAL",
+          "required": true,
+          "source": "database/schema/380_v2160_triagem_consulta_jornada.sql",
+          "dependsOn": [
+            "plantaopro.saude360_v2159",
+            "plantaopro.saude360"
           ]
         }
       ]

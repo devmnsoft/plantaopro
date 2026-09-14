@@ -72,7 +72,7 @@
       root.querySelector('[data-patient-gender]').textContent = workspace.sexoGenero || '';
       root.querySelector('[data-risk]').textContent = workspace.classificacaoRisco || 'Sem classificação';
       root.querySelector('[data-status]').textContent = consulta.status;
-      root.querySelector('[data-allergies]').textContent = workspace.alergias || 'Nenhuma alergia informada';
+      root.querySelector('[data-allergies]').textContent = workspace.alergias || 'Não informado';
       root.querySelector('[data-plan]').textContent = workspace.plano || 'Não informado';
       root.querySelector('[data-unit]').textContent = workspace.unidade || '—';
       ['anamnese', 'exameFisico', 'hipoteseDiagnostica', 'diagnostico', 'conduta', 'orientacoes'].forEach(name => { field(name).value = consulta[name] || ''; });
@@ -104,6 +104,11 @@
   }
 
   form.addEventListener('input', () => { dirty = true; message('Alterações não salvas'); clearTimeout(timer); timer = setTimeout(save, 1800); });
+  window.addEventListener('beforeunload', event => {
+    if (!dirty) return;
+    event.preventDefault();
+    event.returnValue = '';
+  });
   root.querySelector('[data-save]').addEventListener('click', save);
   root.querySelector('[data-reload]').addEventListener('click', () => location.reload());
   root.querySelector('[data-finalize]').addEventListener('click', async () => {

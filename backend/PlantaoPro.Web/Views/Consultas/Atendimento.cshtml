@@ -8,7 +8,7 @@
     <nav aria-label="Seções do prontuário"><a href="#visao">Visão geral</a><a href="#anamnese">Anamnese</a><a href="#exame">Exame físico</a><a href="#diagnostico">Diagnóstico</a><a href="#cid">CID</a><a href="#conduta">Conduta</a><a href="#orientacoes">Orientações</a></nav>
     <form id="clinical-form" novalidate>
       <input type="hidden" name="versao" value="1" />
-      <section id="visao" class="clinical-card"><h2>Contexto clínico</h2><dl><dt>Alergias</dt><dd data-allergies>Não informadas</dd><dt>Plano</dt><dd data-plan>Não informado</dd><dt>Unidade</dt><dd data-unit>—</dd></dl></section>
+      <section id="visao" class="clinical-card"><h2>Contexto clínico</h2><dl><dt>Alergias relatadas</dt><dd data-allergies>Não informado</dd><dt>Plano</dt><dd data-plan>Não informado</dd><dt>Unidade</dt><dd data-unit>—</dd></dl><small>“Não informado” não significa ausência de alergia. Confira a triagem e confirme com o paciente.</small></section>
       <section id="anamnese" class="clinical-card"><label for="anamnese">Anamnese</label><textarea id="anamnese" name="anamnese" rows="7" maxlength="12000"></textarea></section>
       <section id="exame" class="clinical-card"><label for="exameFisico">Exame físico</label><textarea id="exameFisico" name="exameFisico" rows="7" maxlength="12000"></textarea></section>
       <section id="diagnostico" class="clinical-card"><label for="hipoteseDiagnostica">Hipótese diagnóstica</label><textarea id="hipoteseDiagnostica" name="hipoteseDiagnostica"></textarea><label for="diagnosticoTexto">Diagnóstico</label><textarea id="diagnosticoTexto" name="diagnostico"></textarea></section>

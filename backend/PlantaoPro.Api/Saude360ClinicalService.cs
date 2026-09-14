@@ -234,8 +234,17 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
             if (currentStatus == "FINALIZADA") return ApiResponse<Saude360RegistroDto>.Fail("Triagem finalizada não pode ser reiniciada sem permissão especial.", 409);
         }
+        if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
+        {
+            var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (string.IsNullOrWhiteSpace(currentStatus)) return ApiResponse<Saude360RegistroDto>.Fail("Triagem não encontrada para finalização.", 404);
+            // Retry seguro: não repete histórico nem encaminhamento.
+            if (currentStatus == "FINALIZADA") return await ObterAsync(tableKey, id);
+        }
         var actionUpdateSql = string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase)
             ? $"update plantaopro.{table} set status=@status, data_inicio=case when @status='EM_ATENDIMENTO' then coalesce(data_inicio, now()) else data_inicio end, data_fim=case when @status='FINALIZADA' then coalesce(data_fim, now()) else data_fim end, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, motivo_cancelamento=case when @status='CANCELADA' then coalesce(nullif(@motivo,''), nullif(@justificativa,''), motivo_cancelamento) else motivo_cancelamento end, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
+            : string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase)
+                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then coalesce(finalizada_em,now()) else finalizada_em end, finalizada_por=case when @status='FINALIZADA' then coalesce(finalizada_por,@uid) else finalizada_por end, updated_by=@uid, reg_update=now(), versao=versao+1 where id=@id and reg_status='A' and status<>'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
             : string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)
                 ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
                 : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
@@ -620,7 +629,8 @@ select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from p
         {
             await cn.ExecuteAsync("update plantaopro.agendamentos set status='AGUARDANDO_CONSULTA', updated_by=@uid, updated_at=now() where id=(select agendamento_id from plantaopro.triagens where id=@id) and reg_status='A'", new { id, uid });
             await cn.ExecuteAsync(@"insert into plantaopro.triagem_encaminhamentos(id,cliente_id,triagem_id,paciente_id,agendamento_id,destino,status,created_by)
-select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA', 'ENCAMINHADA', @uid from plantaopro.triagens where id=@id", new { id, uid });
+select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA', 'ENCAMINHADA', @uid from plantaopro.triagens where id=@id
+on conflict (cliente_id,triagem_id,destino) where destino='CONSULTA' and reg_status='A' do nothing", new { id, uid });
         }
     }
 

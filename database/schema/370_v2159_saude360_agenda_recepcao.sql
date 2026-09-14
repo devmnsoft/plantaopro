@@ -12,10 +12,10 @@ create unique index if not exists ux_v2159_paciente_cpf_cliente
 -- O banco, e não somente a validação prévia da API, arbitra reservas concorrentes.
 do $$
 begin
-    if not exists (select 1 from pg_constraint where conname = 'ck_v2159_agendamento_periodo') then
+    if not exists (select 1 from pg_constraint where conname = 'ck_v2159_agendamento_periodo' and conrelid = 'plantaopro.agendamentos'::regclass) then
         alter table plantaopro.agendamentos add constraint ck_v2159_agendamento_periodo check (data_fim > data_inicio) not valid;
     end if;
-    if not exists (select 1 from pg_constraint where conname = 'ex_v2159_agendamento_medico') then
+    if not exists (select 1 from pg_constraint where conname = 'ex_v2159_agendamento_medico' and conrelid = 'plantaopro.agendamentos'::regclass) then
         alter table plantaopro.agendamentos add constraint ex_v2159_agendamento_medico
             exclude using gist (cliente_id with =, medico_id with =, tstzrange(data_inicio, data_fim, '[)') with &&)
             where (reg_status = 'A' and status not in ('CANCELADO','REAGENDADO','FALTOU'));

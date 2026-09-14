@@ -16,6 +16,13 @@ Entrar no sistema, revisar pendências, executar a próxima ação recomendada, 
 4. Preencha formulários obrigatórios.
 5. Confirme toasts e auditoria das ações críticas.
 
+### Atendimento médico
+1. Confira o nome, a unidade, o risco e as alergias no cabeçalho fixo antes de digitar.
+2. Preencha as seções em sequência. **Salvar rascunho** mantém o atendimento editável; aguarde a indicação de gravação confirmada pelo servidor.
+3. “Alterações pendentes” significa que o conteúdo ainda não foi confirmado. Em conflito, copie nada para outro paciente: mantenha a tela aberta e recarregue o contexto indicado.
+4. Use **Revisar e finalizar** para ler impedimentos e alertas. A finalização é definitiva; correções posteriores são registradas como adendo e não substituem o histórico.
+5. Faturamento só fica disponível quando a resposta da finalização trouxer uma conta real.
+
 ## Permissões e restrições
 Acesso mínimo necessário. Dados clínicos sensíveis ficam restritos a perfis assistenciais autorizados; financeiro não vê evolução clínica; recepção não vê diagnóstico completo.
 

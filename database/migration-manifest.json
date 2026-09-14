@@ -504,7 +504,7 @@
     {
       "version": "2026_v2159_saude360_agenda_recepcao",
       "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql",
-      "checksum": "aa6bca99eab66147641a60a33054000f79806bcd8d44c45079183f4b9b2fe0e1",
+      "checksum": "f757c7b90e0ba06117e9b6ddfb81cd62828e4036a927bdc3c1d02bc0e6d1bf9c",
       "dependsOn": [
         "2026_v2158_financeiro_medico_conferencia"
       ],
@@ -515,7 +515,7 @@
     {
       "version": "2026_v2160_triagem_consulta_jornada",
       "source": "database/schema/380_v2160_triagem_consulta_jornada.sql",
-      "checksum": "2c8256c42ec43a62481c89449d056d7d6e02f291be9a55dae6ed271369659eff",
+      "checksum": "69690197ad0daca6d7f18ef45238e3633c5e3785a1e097e5205ed85e4fef0a0c",
       "dependsOn": [
         "2026_v2159_saude360_agenda_recepcao"
       ],

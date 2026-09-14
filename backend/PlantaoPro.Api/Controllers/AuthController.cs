@@ -27,14 +27,14 @@ namespace PlantaoPro.Api.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest req)
+        public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken cancellationToken)
         {
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
             var identifierKind = LoginIdentifierNormalizer.Classify(req.Email);
             var auditIdentifier = LoginIdentifierNormalizer.AuditValue(req.Email, identifierKind);
             try
             {
-                var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString());
+                var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString(), cancellationToken);
                 var perfil = r.Data?.Roles is { Length: > 0 } ? string.Join(',', r.Data.Roles) : "sem-perfil";
                 await _auditService.RegistrarAsync(
                     r.Data?.UsuarioId,
@@ -45,9 +45,15 @@ namespace PlantaoPro.Api.Controllers
                     new { identifier = auditIdentifier, identifierKind, statusCode = r.StatusCode },
                     r.Success,
                     ip,
-                    perfil);
+                    perfil,
+                    cancellationToken);
                 _logger.LogInformation("Login processado Identificador:{Identificador} Tipo:{Tipo} IP:{Ip} Status:{Status} Perfil:{Perfil} DataHoraUtc:{DataHoraUtc}", auditIdentifier, identifierKind, ip, r.StatusCode, perfil, DateTime.UtcNow);
                 return StatusCode(r.StatusCode, r);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Login API cancelado pelo solicitante. Identificador:{Identificador}", auditIdentifier);
+                return new EmptyResult();
             }
             catch (Exception ex)
             {

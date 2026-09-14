@@ -56,7 +56,8 @@ public sealed class V2164CompilationAndJourneyContractTests
         Assert.Contains("method=\"post\"", view);
         Assert.Contains("data-focus-invalid", view);
         Assert.Contains("resetSubmission", script);
-        Assert.Contains("window.setTimeout", script);
+        Assert.DoesNotContain("window.setTimeout", script);
+        Assert.Contains("client.Timeout", Read("backend/PlantaoPro.Web/Program.cs"));
         Assert.Contains("window.addEventListener(\"pageshow\"", script);
         Assert.DoesNotContain("alert(", script);
         Assert.DoesNotContain("confirm(", script);

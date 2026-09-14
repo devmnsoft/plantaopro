@@ -12,10 +12,7 @@
     const progressTitle = progress?.querySelector("[data-login-progress-title]");
     const progressDetail = progress?.querySelector("[data-login-progress-detail]");
     const idleLabel = button?.dataset.idleLabel || "Entrar";
-    let recoveryTimer;
-
     const resetSubmission = () => {
-        window.clearTimeout(recoveryTimer);
         button?.removeAttribute("disabled");
         button?.setAttribute("aria-busy", "false");
         button?.querySelector(".spinner-border")?.classList.add("d-none");
@@ -85,15 +82,9 @@
         if (label) label.textContent = "Verificando acesso…";
         setProgress("Validando acesso com segurança", "Aguarde enquanto conferimos sua conta e o contexto autorizado.");
 
-        // Um POST tradicional deve navegar para outra página. Se a navegação for
-        // interrompida pelo navegador, este limite devolve o controle ao usuário.
-        recoveryTimer = window.setTimeout(() => {
-            resetSubmission();
-            delayMessage?.classList.remove("d-none");
-            setProgress("Não recebemos uma resposta", "O botão foi liberado. Confira a conexão e tente novamente; seus campos foram preservados.");
-            const liveRegion = document.getElementById("appLiveRegion");
-            if (liveRegion) liveRegion.textContent = "A resposta está demorando. Você pode tentar entrar novamente.";
-        }, 15000);
+        // O POST é nativo. O timeout pertence ao HttpClient do servidor, que encerra
+        // a operação antes de devolver esta view; nunca liberamos um segundo POST
+        // enquanto a primeira requisição ainda está em andamento.
     });
 
     form?.addEventListener("invalid", showValidationMessage, true);
@@ -116,7 +107,7 @@
 
     if (errorSummary?.textContent?.trim()) {
         resetSubmission();
-        window.setTimeout(() => errorSummary.focus(), 0);
+        window.queueMicrotask(() => errorSummary.focus());
     }
     updateConnectionStatus();
 })();

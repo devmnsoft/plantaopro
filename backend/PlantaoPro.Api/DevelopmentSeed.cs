@@ -74,8 +74,10 @@ select count(*) from (
         if (string.IsNullOrWhiteSpace(expectedDatabase))
             throw new InvalidOperationException("Defina DemoSeed:DevelopmentDatabase com o nome exato do banco local descartável.");
 
-        var superPassword = cfg["DemoSeed:SuperAdminPassword"] ?? "MnSoft!Demo2026#Admin";
-        var managerPassword = cfg["DemoSeed:ManagerPassword"] ?? "SantaCasa!Demo2026#Gestor";
+        var superPassword = cfg["DemoSeed:SuperAdminPassword"];
+        var managerPassword = cfg["DemoSeed:ManagerPassword"];
+        if (string.IsNullOrWhiteSpace(superPassword) || string.IsNullOrWhiteSpace(managerPassword))
+            throw new InvalidOperationException("Forneça DemoSeed:SuperAdminPassword e DemoSeed:ManagerPassword por configuração local segura.");
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
         await cn.OpenAsync(ct);
         var actualDatabase = await cn.ExecuteScalarAsync<string>(new CommandDefinition("select current_database()", cancellationToken: ct));

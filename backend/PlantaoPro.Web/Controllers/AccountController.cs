@@ -51,7 +51,7 @@ public sealed class AccountController : Controller
     [HttpPost]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+    public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
         var loginIdentifier = (model.Email ?? string.Empty).Trim();
         var identifierKind = ClassifyIdentifier(loginIdentifier);
@@ -61,7 +61,7 @@ public sealed class AccountController : Controller
         if (!ModelState.IsValid)
         {
             _logger.LogInformation("Login POST inválido por ModelState. TipoIdentificador:{TipoIdentificador}", identifierKind);
-            return View(model);
+            return LoginFailureView(model);
         }
 
         Uri? apiBaseUrl = null;
@@ -72,8 +72,8 @@ public sealed class AccountController : Controller
             apiBaseUrl = client.BaseAddress;
             _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", apiBaseUrl);
 
-            var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(loginIdentifier, model.Senha ?? string.Empty));
-            var body = await response.Content.ReadAsStringAsync();
+            using var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(loginIdentifier, model.Senha ?? string.Empty), cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
             _logger.LogInformation("Resposta da API de login. Status:{StatusCode}", (int)response.StatusCode);
 
             var apiResult = DeserializeApiResponse<LoginResponse>(body);
@@ -91,7 +91,7 @@ public sealed class AccountController : Controller
                 TempData["Error"] = errorMessage;
                 ModelState.AddModelError(string.Empty, errorMessage);
                 _logger.LogWarning("Falha no login Web. TipoIdentificador:{TipoIdentificador} Status:{Status} SuccessFlag:{SuccessFlag}", identifierKind, (int)response.StatusCode, apiResult?.Success);
-                return View(model);
+                return LoginFailureView(model);
             }
 
             var login = apiResult.Data;
@@ -113,7 +113,7 @@ public sealed class AccountController : Controller
                 const string tenantMessage = "Conta sem tenant configurado. Contate o administrador.";
                 ModelState.AddModelError(string.Empty, tenantMessage);
                 TempData["Error"] = tenantMessage;
-                return View(model);
+                return LoginFailureView(model);
             }
 
             var claims = new List<Claim>
@@ -201,21 +201,29 @@ public sealed class AccountController : Controller
         {
             return HandleApiConnectionFailure(model, identifierKind, apiBaseUrl, ex);
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Login Web cancelado pelo cliente. TipoIdentificador:{TipoIdentificador}", identifierKind);
+            return new EmptyResult();
+        }
         catch (TaskCanceledException ex)
         {
-            return HandleApiConnectionFailure(model, identifierKind, apiBaseUrl, ex);
+            return HandleApiConnectionFailure(model, identifierKind, apiBaseUrl, ex, true);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado no login Web. TipoIdentificador:{TipoIdentificador} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}", identifierKind, apiBaseUrl, ex.Message);
             TempData["Error"] = "Não foi possível realizar o login no momento.";
-            return View(model);
+            ModelState.AddModelError(string.Empty, "Não foi possível realizar o login no momento.");
+            return LoginFailureView(model);
         }
     }
 
-    private IActionResult HandleApiConnectionFailure(LoginViewModel model, string identifierKind, Uri? apiBaseUrl, Exception exception)
+    private IActionResult HandleApiConnectionFailure(LoginViewModel model, string identifierKind, Uri? apiBaseUrl, Exception exception, bool timedOut = false)
     {
-        const string message = "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
+        var message = timedOut
+            ? "A autenticação excedeu o tempo de resposta. Tente novamente em instantes."
+            : "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
         var failureType = exception is TaskCanceledException ? "Timeout" : exception.GetType().Name;
 
         _logger.LogError(
@@ -228,7 +236,15 @@ public sealed class AccountController : Controller
 
         TempData["Error"] = message;
         ModelState.AddModelError(string.Empty, message);
-        return View(model);
+        return LoginFailureView(model);
+    }
+
+    private IActionResult LoginFailureView(LoginViewModel model)
+    {
+        // Passwords must never be copied back into the generated HTML after a failed POST.
+        ModelState.Remove(nameof(LoginViewModel.Senha));
+        model.Senha = string.Empty;
+        return View("Login", model);
     }
 
     private ApiResponse<T>? DeserializeApiResponse<T>(string body)

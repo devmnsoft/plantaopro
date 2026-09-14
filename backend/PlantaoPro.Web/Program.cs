@@ -62,6 +62,7 @@ builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
         throw new InvalidOperationException("Configuração PlantaoProApi:BaseUrl não encontrada.");
 
     client.BaseAddress = new Uri(baseUrl);
+    client.Timeout = TimeSpan.FromSeconds(cfg.GetValue("PlantaoProApi:LoginTimeoutSeconds", 15));
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
     logger.LogInformation("HttpClient PlantaoProApi configurado com BaseUrl: {BaseUrl}", client.BaseAddress);

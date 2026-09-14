@@ -320,7 +320,7 @@ values
             this.tenantContextResolver = tenantContextResolver;
             this.sessions = sessions;
         }
-        public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua)
+        public async Task<ApiResponse<LoginResponse>> LoginAsync(LoginRequest req, string? ip, string? ua, CancellationToken cancellationToken = default)
         {
             var identifierKind = LoginIdentifierNormalizer.Classify(req.Email);
             var normalizedIdentifier = LoginIdentifierNormalizer.Normalize(req.Email, identifierKind);
@@ -332,8 +332,8 @@ values
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
 
                 await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-                await cn.OpenAsync();
-                var candidates = (await cn.QueryAsync<LoginUserRow>(@"select distinct
+                await cn.OpenAsync(cancellationToken);
+                var candidates = (await cn.QueryAsync<LoginUserRow>(new CommandDefinition(@"select distinct
     u.id as ""Id"", coalesce(u.nome,'') as ""Nome"", coalesce(u.email,'') as ""Email"",
     coalesce(u.senha_hash,'') as ""SenhaHash"", coalesce(u.reg_status,'') as ""RegStatus"",
     coalesce(u.status,'ATIVO') as ""Status"", u.cliente_id as ""ClienteId"", u.tenant_id as ""TenantId"",
@@ -346,16 +346,16 @@ where (@kind='EMAIL' and lower(u.email)=@identifier)
    or (@kind='CPF' and regexp_replace(coalesce(m.cpf,''),'[^0-9]','','g')=@document)
    or (@kind='CNPJ' and regexp_replace(coalesce(c.cnpj,''),'[^0-9]','','g')=@document)
 order by u.id
-limit 50", new
+limit 50", parameters: new
                 {
                     kind = identifierKind.ToString().ToUpperInvariant(),
                     identifier = normalizedIdentifier,
                     document = normalizedIdentifier
-                })).ToArray();
+                }, cancellationToken: cancellationToken))).ToArray();
 
                 if (identifierKind == LoginIdentifierKind.Cnpj && candidates.Length != 1)
                 {
-                    await RegistrarTentativaAsync(cn, null, auditIdentifier, ip, ua, false, "CNPJ_REQUIRES_INDIVIDUAL_IDENTIFIER");
+                    await RegistrarTentativaAsync(cn, null, auditIdentifier, ip, ua, false, "CNPJ_REQUIRES_INDIVIDUAL_IDENTIFIER", cancellationToken: cancellationToken);
                     logger.LogWarning("Login institucional exige identificação individual Identificador:{Identificador} Candidatos:{Candidatos} IP:{Ip}", auditIdentifier, candidates.Length, ip);
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
@@ -378,17 +378,17 @@ limit 50", new
                     var reason = passwordMatches.Count > 1 ? "AMBIGUOUS_IDENTIFIER" : "INVALID_CREDENTIALS";
                     if (failedUserId.HasValue && LoginLockoutEnabled)
                     {
-                        var failedAttempts = await cn.QueryFirstAsync<int>(
+                        var failedAttempts = await cn.QueryFirstAsync<int>(new CommandDefinition(
                             @"select count(*) from plantaopro.login_tentativas
                               where usuario_id=@usuarioId and sucesso=false and reg_date >= now() - (@JanelaTentativasMinutos * interval '1 minute')",
-                            new { usuarioId = failedUserId.Value, JanelaTentativasMinutos });
+                              new { usuarioId = failedUserId.Value, JanelaTentativasMinutos }, cancellationToken: cancellationToken));
                         if (failedAttempts + 1 >= MaxTentativasFalhas)
                         {
                             newLockout = DateTime.UtcNow.AddMinutes(BloqueioMinutos);
                             reason = "LOCKOUT_THRESHOLD";
                         }
                     }
-                    await RegistrarTentativaAsync(cn, failedUserId, auditIdentifier, ip, ua, false, reason, newLockout);
+                    await RegistrarTentativaAsync(cn, failedUserId, auditIdentifier, ip, ua, false, reason, newLockout, cancellationToken);
                     logger.LogWarning("Login negado Identificador:{Identificador} Tipo:{Tipo} Candidatos:{Candidatos} IP:{Ip}", auditIdentifier, identifierKind, candidates.Length, ip);
                     if (newLockout.HasValue)
                         return ApiResponse<LoginResponse>.Fail($"Múltiplas tentativas inválidas. Usuário bloqueado por {BloqueioMinutos} minutos.", 423);
@@ -397,27 +397,27 @@ limit 50", new
 
                 var user = passwordMatches[0];
                 var usuarioId = user.Id;
-                var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
+                var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(new CommandDefinition(
                     @"select bloqueado_ate from plantaopro.login_tentativas
                       where usuario_id=@usuarioId and sucesso=false and bloqueado_ate is not null
                       order by reg_date desc limit 1", new
                     {
                         usuarioId
-                    });
+                    }, cancellationToken: cancellationToken));
                 if (LoginLockoutEnabled && bloqueioAte.HasValue && bloqueioAte.Value > DateTime.UtcNow)
                 {
                     var restante = (int)Math.Ceiling((bloqueioAte.Value - DateTime.UtcNow).TotalMinutes);
-                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value);
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "LOCKED_ACTIVE", bloqueioAte.Value, cancellationToken);
                     logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
                     return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
                 if (!string.Equals(user.RegStatus, "A", StringComparison.OrdinalIgnoreCase) || !string.Equals(user.Status, "ATIVO", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "USER_INACTIVE");
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "USER_INACTIVE", cancellationToken: cancellationToken);
                     logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário bloqueado ou inativo. Contate o administrador.", 403);
                 }
-                var rolesRaw = await cn.QueryAsync<string>(@"select coalesce(p.codigo,p.nome)
+                var rolesRaw = await cn.QueryAsync<string>(new CommandDefinition(@"select coalesce(p.codigo,p.nome)
 from plantaopro.perfis p
 join plantaopro.usuarios_perfis up on up.perfil_id=p.id
 where up.usuario_id=@id
@@ -429,7 +429,7 @@ where up.usuario_id=@id
                 {
                     id = usuarioId,
                     tenantId = user.TenantId ?? user.ClienteId
-                });
+                }, cancellationToken: cancellationToken));
                 var roles = rolesRaw.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
                 if (roles.Length == 0)
                 {
@@ -441,7 +441,7 @@ where up.usuario_id=@id
                 var clienteBloqueado = !isGlobal && (user.ClienteId ?? user.TenantId).HasValue && !string.Equals(clienteStatus, "ATIVO", StringComparison.OrdinalIgnoreCase);
                 if (clienteBloqueado && string.Equals(clienteStatus, "CANCELADO", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_CANCELLED");
+                    await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "TENANT_CANCELLED", cancellationToken: cancellationToken);
                     return ApiResponse<LoginResponse>.Fail("O acesso da instituição está cancelado. Contate o suporte MNSOFT.", 423);
                 }
 
@@ -456,20 +456,21 @@ where up.usuario_id=@id
                 var sessionGuid = Guid.NewGuid();
                 var sessionId = sessionGuid.ToString("N");
                 var expiresAtUtc = DateTime.UtcNow.AddHours(8);
-                var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId)).ToArray();
-                var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value)).ToArray() : Array.Empty<string>();
+                var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId, cancellationToken)).ToArray();
+                var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value, cancellationToken)).ToArray() : Array.Empty<string>();
                 var token = GenerateToken(usuarioId, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules, clienteStatus);
-                await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua);
-                await cn.ExecuteAsync("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId });
-                await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, clienteBloqueado ? "SUCCESS_TENANT_BLOCKED" : "SUCCESS");
-                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, clienteBloqueado ? AuditoriaConstants.Acoes.BloqueioTenant : AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length, clienteStatus }, !clienteBloqueado, ip, primaryRole);
+                await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId }, cancellationToken: cancellationToken));
+                await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, clienteBloqueado ? "SUCCESS_TENANT_BLOCKED" : "SUCCESS", cancellationToken: cancellationToken);
+                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, clienteBloqueado ? AuditoriaConstants.Acoes.BloqueioTenant : AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length, clienteStatus }, !clienteBloqueado, ip, primaryRole, cancellationToken);
+                await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua, cancellationToken);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
                 return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules, isGlobal ? null : clienteStatus), clienteBloqueado ? "Login realizado com restrição operacional por status do cliente." : "Login realizado com sucesso.");
             }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
-        private static async Task<IEnumerable<string>> LoadPermissionsAsync(NpgsqlConnection cn, Guid usuarioId, Guid? tenantId)
+        private static async Task<IEnumerable<string>> LoadPermissionsAsync(NpgsqlConnection cn, Guid usuarioId, Guid? tenantId, CancellationToken cancellationToken)
         {
             const string sql = @"with granted as (
     select upper(replace(coalesce(p.codigo,ms.codigo||'.'||ac.codigo),':','.')) codigo
@@ -492,17 +493,17 @@ where up.usuario_id=@id
     where upe.usuario_id=@usuarioId and upe.reg_status='A' and upe.permitido=false and (@tenantId is null or upe.tenant_id is null or upe.tenant_id=@tenantId)
 )
 select distinct g.codigo from granted g where not exists(select 1 from denied d where d.codigo=g.codigo) order by g.codigo";
-            return await cn.QueryAsync<string>(sql, new { usuarioId, tenantId });
+            return await cn.QueryAsync<string>(new CommandDefinition(sql, new { usuarioId, tenantId }, cancellationToken: cancellationToken));
         }
 
-        private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId)
+        private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId, CancellationToken cancellationToken)
         {
             const string sql = @"select distinct upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))
 from plantaopro.tenant_modulos tm
 left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
 where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
 order by 1";
-            return await cn.QueryAsync<string>(sql, new { tenantId });
+            return await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, cancellationToken: cancellationToken));
         }
 
         string GenerateToken(Guid uid, string email, string[] roles, string primaryRole, string accessScope, string contextMode, string sessionId, Guid? clienteId, Guid? tenantId, string[] permissions, string[] modules, string? clienteStatus)

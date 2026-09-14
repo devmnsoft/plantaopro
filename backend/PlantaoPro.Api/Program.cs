@@ -146,6 +146,7 @@ builder.Services.AddScoped<FinanceiroService>();
 builder.Services.AddScoped<NotificacaoService>();
 builder.Services.AddScoped<MedicoAreaService>();
 builder.Services.AddScoped<ProfessionalPortalService>();
+builder.Services.AddScoped<ExecutionConferenceService>();
 builder.Services.AddScoped<ManagerCommandCenterService>();
 builder.Services.AddScoped<UnitDashboardService>();
 builder.Services.AddScoped<ShiftRequestService>();

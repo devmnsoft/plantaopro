@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v2.16.3",
+  "schemaVersion": "v2.16.7",
   "generatedAt": "2026-09-14",
   "migrations": [
     {
@@ -529,6 +529,17 @@
       "checksum": "59ca6fbbdd23e39c9ee86b0f9cd168919f020e8295a0c2f8cd767b5e485dfd53",
       "dependsOn": [
         "2026_v2160_triagem_consulta_jornada"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_v2167_execucao_conferencia",
+      "source": "database/schema/400_v2167_execucao_conferencia.sql",
+      "checksum": "1d1107426a2b42690017aba350eb8365e7f0a3c33d2d441f92c9800eb86b916e",
+      "dependsOn": [
+        "2026_v2163_portal_cliente_modulos"
       ],
       "status": "active",
       "transactional": true,

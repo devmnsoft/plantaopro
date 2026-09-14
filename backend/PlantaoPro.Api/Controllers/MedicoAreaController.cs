@@ -38,18 +38,26 @@ public class MedicoAreaController : ControllerBase
     }
 
     [HttpPost("escalas/{escalaId:guid}/check-in")]
-    public async Task<IActionResult> CheckIn(Guid escalaId)
+    public async Task<IActionResult> CheckIn(Guid escalaId, [FromBody] RegistrarPresencaRequest? request)
     {
         var uid = Uid(); if (uid is null) return Unauthorized();
-        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, false, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
+        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, false, request, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
         return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("escalas/{escalaId:guid}/check-out")]
-    public async Task<IActionResult> CheckOut(Guid escalaId)
+    public async Task<IActionResult> CheckOut(Guid escalaId, [FromBody] RegistrarPresencaRequest? request)
     {
         var uid = Uid(); if (uid is null) return Unauthorized();
-        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, true, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
+        var response = await portal.RegisterPresenceAsync(uid.Value, escalaId, true, request, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", RolesConstants.Medico);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("escalas/{escalaId:guid}/correcoes")]
+    public async Task<IActionResult> SolicitarCorrecao(Guid escalaId, [FromBody] SolicitarCorrecaoPresencaRequest request, CancellationToken ct)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.RequestCorrectionAsync(uid.Value, escalaId, request, ct);
         return StatusCode(response.StatusCode, response);
     }
 

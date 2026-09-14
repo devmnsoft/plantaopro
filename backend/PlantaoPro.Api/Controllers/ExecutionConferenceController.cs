@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Models;
 namespace PlantaoPro.Api.Controllers;
-[ApiController,Route("api/conferencia-execucao"),Authorize(Roles=RolesConstants.EscalasGestao+","+RolesConstants.Administrador+","+RolesConstants.AdministradorCliente)]
+[ApiController,Route("api/conferencia-execucao"),Authorize(Roles=RolesConstants.EscalasGestao)]
 public sealed class ExecutionConferenceController:ControllerBase
 {
  private readonly ExecutionConferenceService service;public ExecutionConferenceController(ExecutionConferenceService service){this.service=service;}

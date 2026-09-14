@@ -188,7 +188,9 @@ public sealed class MedicoPagamentoDto
     public string? FormaPagamento { get; set; }
 }
 public record ProfessionalDashboardDto(MedicoAreaResumoDto Resumo,IEnumerable<MedicoEscalaDto> ProximosPlantoes,IEnumerable<PlantaoConviteDto> ConvitesPendentes,IEnumerable<NotificacaoDto> NotificacoesRecentes,decimal ValorPrevisto,decimal ValorAprovado,decimal ValorPago,int PendenciasCheckIn,int PendenciasCheckOut);
-public record ProfessionalCheckInDto(Guid EscalaId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,DateTime? CheckInEm,DateTime? CheckOutEm,bool PodeCheckIn,bool PodeCheckOut);
+public record ProfessionalCheckInDto(Guid EscalaId,string HospitalNome,string EspecialidadeNome,DateTimeOffset DataInicio,DateTimeOffset DataFim,DateTimeOffset? CheckInEm,DateTimeOffset? CheckOutEm,DateTimeOffset? InicioPropostoEm,DateTimeOffset? FimPropostoEm,DateTimeOffset? InicioAprovadoEm,DateTimeOffset? FimAprovadoEm,string StatusConferencia,string? TimezoneContexto,long Versao,bool PodeCheckIn,bool PodeCheckOut);
+public record RegistrarPresencaRequest(DateTimeOffset? HorarioDeclarado,string? Timezone);
+public record SolicitarCorrecaoPresencaRequest(DateTimeOffset? InicioPropostoEm,DateTimeOffset? FimPropostoEm,string Justificativa,long Versao);
 public record RecusarConviteProfissionalRequest(string Motivo);
 public sealed class DashboardChartItem
 {
@@ -676,3 +678,8 @@ public sealed record MeuDiaDto(IEnumerable<MeuDiaIndicadorDto> Indicadores, IEnu
 public sealed record MeuDiaEstadoRequest(string? Motivo, DateTime? NovaData);
 
 }
+
+public record ExecutionConferenceFilter(DateOnly? Inicio,DateOnly? Fim,Guid? UnidadeId,Guid? ProfissionalId,string? Status,int Page=1,int PageSize=25);
+public record ExecutionConferenceItemDto(Guid CorrecaoId,Guid PresencaId,Guid EscalaId,Guid MedicoId,string Profissional,string Unidade,DateTimeOffset InicioPrevisto,DateTimeOffset FimPrevisto,DateTimeOffset? InicioRegistrado,DateTimeOffset? FimRegistrado,DateTimeOffset? InicioProposto,DateTimeOffset? FimProposto,DateTimeOffset? InicioAprovado,DateTimeOffset? FimAprovado,string Status,string Justificativa,long Versao,DateTimeOffset SolicitadoEm);
+public record ExecutionConferencePageDto(IReadOnlyList<ExecutionConferenceItemDto> Items,long Total,long Pendentes,long Aprovadas,long Recusadas,int Page,int PageSize);
+public record DecideExecutionCorrectionRequest(bool Aprovar,string Justificativa,long Versao);

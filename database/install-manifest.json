@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.16.0",
-  "generatedAt": "2026-09-11",
+  "schemaVersion": "v2.16.7",
+  "generatedAt": "2026-09-14",
   "sections": [
     {
       "order": 3,
@@ -550,6 +550,23 @@
           "dependsOn": [
             "plantaopro.jornada_clinica_v2160",
             "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 50,
+      "name": "plantaopro.execucao_conferencia_v2167",
+      "objects": [
+        {
+          "name": "plantaopro.execucao_conferencia_v2167",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/400_v2167_execucao_conferencia.sql",
+          "dependsOn": [
+            "plantaopro.portal_cliente_modulos_v2163",
+            "plantaopro.executive_commercial_v1450"
           ]
         }
       ]

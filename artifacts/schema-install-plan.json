@@ -303,5 +303,13 @@
       "plantaopro.schema_canonico_base"
     ],
     "source": "database/schema/390_v2163_portal_cliente_modulos.sql"
+  },
+  {
+    "object": "plantaopro.execucao_conferencia_v2167",
+    "dependsOn": [
+      "plantaopro.portal_cliente_modulos_v2163",
+      "plantaopro.executive_commercial_v1450"
+    ],
+    "source": "database/schema/400_v2167_execucao_conferencia.sql"
   }
 ]

@@ -68,8 +68,17 @@ public class MinhaAgendaController : BaseWebController
     {
         var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
         var action = string.Equals(operacao, "checkout", StringComparison.OrdinalIgnoreCase) ? "check-out" : "check-in";
-        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/{action}", new { });
+        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/{action}", new { Timezone="UTC" });
         TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? "Presença registrada com segurança." : "Não foi possível registrar a presença. Verifique se a ação já foi realizada.";
+        return RedirectToAction(nameof(Presencas));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarCorrecao(Guid escalaId,DateTimeOffset? inicioPropostoEm,DateTimeOffset? fimPropostoEm,string justificativa,long versao)
+    {
+        var client=CreateApiClient();if(!AddBearerToken(client))return HandleUnauthorized();
+        var response=await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/correcoes",new{InicioPropostoEm=inicioPropostoEm,FimPropostoEm=fimPropostoEm,Justificativa=justificativa,Versao=versao});
+        TempData[response.IsSuccessStatusCode?"Success":"Error"]=response.IsSuccessStatusCode?"Correção enviada para conferência.":"Não foi possível enviar. Atualize a página e confira os horários.";
         return RedirectToAction(nameof(Presencas));
     }
 

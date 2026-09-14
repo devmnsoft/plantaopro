@@ -295,5 +295,13 @@
       "plantaopro.saude360"
     ],
     "source": "database/schema/380_v2160_triagem_consulta_jornada.sql"
+  },
+  {
+    "object": "plantaopro.portal_cliente_modulos_v2163",
+    "dependsOn": [
+      "plantaopro.jornada_clinica_v2160",
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/schema/390_v2163_portal_cliente_modulos.sql"
   }
 ]

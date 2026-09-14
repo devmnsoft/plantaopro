@@ -48,3 +48,4 @@
 - `plantaopro.financeiro_medico_v2158` depende de: plantaopro.fechamento_operacional_v187, plantaopro.pagamentos
 - `plantaopro.saude360_v2159` depende de: plantaopro.saude360
 - `plantaopro.jornada_clinica_v2160` depende de: plantaopro.saude360_v2159, plantaopro.saude360
+- `plantaopro.portal_cliente_modulos_v2163` depende de: plantaopro.jornada_clinica_v2160, plantaopro.schema_canonico_base

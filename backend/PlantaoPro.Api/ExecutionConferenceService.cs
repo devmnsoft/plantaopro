@@ -9,11 +9,16 @@ public sealed class ExecutionConferenceService
 {
     private readonly IConfiguration configuration;
     private readonly ICurrentUserService current;
+    private readonly PermissionGuardService permissionGuard;
+    private readonly TenantGuardService tenantGuard;
 
-    public ExecutionConferenceService(IConfiguration configuration, ICurrentUserService current)
+    public ExecutionConferenceService(IConfiguration configuration, ICurrentUserService current,
+        PermissionGuardService permissionGuard, TenantGuardService tenantGuard)
     {
         this.configuration = configuration;
         this.current = current;
+        this.permissionGuard = permissionGuard;
+        this.tenantGuard = tenantGuard;
     }
 
     private NpgsqlConnection Connection() => new(configuration.GetConnectionString("Default"));
@@ -25,10 +30,16 @@ public sealed class ExecutionConferenceService
 
     public async Task<ApiResponse<ExecutionConferencePageDto>> ListAsync(ExecutionConferenceFilter filter, CancellationToken ct)
     {
+        var permission = await permissionGuard.ValidarPermissaoAsync(PermissionConstants.EscalasVer);
+        if (!permission.Success) return ApiResponse<ExecutionConferencePageDto>.Fail(permission.Message, permission.StatusCode);
         if (filter.Inicio.HasValue != filter.Fim.HasValue || filter.Inicio > filter.Fim)
             return ApiResponse<ExecutionConferencePageDto>.Fail("Informe um período válido.", 422);
 
         var context = Context();
+        if (filter.UnidadeId.HasValue && !await tenantGuard.PodeAcessarHospitalAsync(context.User, filter.UnidadeId.Value))
+            return ApiResponse<ExecutionConferencePageDto>.Fail("Unidade indisponível no contexto atual.", 403);
+        if (filter.ProfissionalId.HasValue && !await tenantGuard.PodeAcessarMedicoAsync(context.User, filter.ProfissionalId.Value))
+            return ApiResponse<ExecutionConferencePageDto>.Fail("Profissional indisponível no contexto atual.", 403);
         var page = Math.Max(1, filter.Page);
         var size = Math.Clamp(filter.PageSize, 1, 100);
         var status = (filter.Status ?? string.Empty).Trim().ToUpperInvariant();
@@ -97,6 +108,10 @@ select count(*) as ""Total"",
 
     public async Task<ApiResponse<object>> ApprovePresenceAsync(Guid presenceId, DecideExecutionPresenceRequest request, CancellationToken ct)
     {
+        var permission = await permissionGuard.ValidarPermissaoAsync(PermissionConstants.EscalasConfirmar);
+        if (!permission.Success) return ApiResponse<object>.Fail(permission.Message, permission.StatusCode);
+        if (presenceId == Guid.Empty || request.Versao <= 0)
+            return ApiResponse<object>.Fail("Identificador ou versão inválida.", 422);
         var reason = ValidateReason(request.Justificativa);
         if (reason is null)
             return ApiResponse<object>.Fail("A justificativa deve conter entre 3 e 1000 caracteres.", 422);
@@ -108,6 +123,8 @@ select count(*) as ""Total"",
         var presence = await LockPresenceAsync(connection, transaction, presenceId, context, ct);
         if (presence is null)
             return ApiResponse<object>.Fail("Execução não encontrada no contexto atual.", 404);
+        if (!await tenantGuard.PodeAcessarHospitalAsync(context.User, presence.HospitalId))
+            return ApiResponse<object>.Fail("Você não possui vínculo com a unidade desta execução.", 403);
         if (presence.Versao != request.Versao || presence.Status != "PENDENTE")
             return ApiResponse<object>.Fail("A execução foi alterada ou já foi conferida.", 409);
         if (!presence.FimRegistrado.HasValue)
@@ -138,6 +155,11 @@ where id=@presenceId and tenant_id=@Tenant and versao=@Versao and status_confere
 
     private async Task<ApiResponse<object>> DecideCorrectionAsync(Guid id, DecideExecutionCorrectionRequest request, CancellationToken ct)
     {
+        var requiredPermission = request.Aprovar ? PermissionConstants.EscalasConfirmar : PermissionConstants.EscalasRecusar;
+        var permission = await permissionGuard.ValidarPermissaoAsync(requiredPermission);
+        if (!permission.Success) return ApiResponse<object>.Fail(permission.Message, permission.StatusCode);
+        if (id == Guid.Empty || request.PresencaId == Guid.Empty || request.Versao <= 0)
+            return ApiResponse<object>.Fail("Identificador ou versão inválida.", 422);
         var reason = ValidateReason(request.Justificativa);
         if (reason is null)
             return ApiResponse<object>.Fail("A justificativa deve conter entre 3 e 1000 caracteres.", 422);
@@ -157,12 +179,16 @@ where x.id=@id and x.tenant_id=@Tenant and x.cliente_id=@Cliente for update",
             new { id, context.Tenant, context.Cliente }, transaction, cancellationToken: ct));
         if (correction is null)
             return ApiResponse<object>.Fail("Correção não encontrada no contexto atual.", 404);
+        if (correction.PresenceId != request.PresencaId)
+            return ApiResponse<object>.Fail("A correção e a presença não pertencem ao mesmo registro.", 422);
         if (correction.SolicitadoPor == context.User)
             return ApiResponse<object>.Fail("O solicitante não pode decidir a própria correção.", 403);
         if (correction.Status != "PENDENTE" || correction.Versao != request.Versao)
             return ApiResponse<object>.Fail("A correção já foi decidida ou alterada.", 409);
 
         var presence = await LockPresenceAsync(connection, transaction, correction.PresenceId, context, ct);
+        if (presence is not null && !await tenantGuard.PodeAcessarHospitalAsync(context.User, presence.HospitalId))
+            return ApiResponse<object>.Fail("Você não possui vínculo com a unidade desta execução.", 403);
         if (presence is null || presence.Status != "CORRECAO_PENDENTE" || presence.Versao != correction.VersaoPresencaBase)
             return ApiResponse<object>.Fail("Os horários mudaram após a solicitação. A decisão foi cancelada.", 409);
 
@@ -213,7 +239,7 @@ where id=@presenceId and tenant_id=@Tenant and versao=@presenceVersion and statu
     private static Task<PresenceDecisionRow?> LockPresenceAsync(NpgsqlConnection connection, NpgsqlTransaction transaction,
         Guid presenceId, (Guid Tenant, Guid Cliente, Guid User) context, CancellationToken ct) =>
         connection.QueryFirstOrDefaultAsync<PresenceDecisionRow>(new CommandDefinition(@"
-select c.id as ""Id"",c.escala_id as ""EscalaId"",c.checkin_em as ""InicioRegistrado"",
+select c.id as ""Id"",c.escala_id as ""EscalaId"",p.hospital_id as ""HospitalId"",c.checkin_em as ""InicioRegistrado"",
  c.checkout_em as ""FimRegistrado"",c.status_conferencia as ""Status"",c.versao as ""Versao""
 from medico_checkins c
 join plantaopro.escalas e on e.id=c.escala_id and e.reg_status='A'
@@ -253,6 +279,7 @@ values (@Tenant,@Cliente,@presenceId,@correctionId,@eventName,@before::jsonb,@af
         public Guid? CorrecaoId { get; set; }
         public Guid PresencaId { get; set; }
         public Guid EscalaId { get; set; }
+        public Guid HospitalId { get; set; }
         public Guid MedicoId { get; set; }
         public string Profissional { get; set; } = string.Empty;
         public string Unidade { get; set; } = string.Empty;
@@ -294,6 +321,7 @@ values (@Tenant,@Cliente,@presenceId,@correctionId,@eventName,@before::jsonb,@af
     {
         public Guid Id { get; set; }
         public Guid EscalaId { get; set; }
+        public Guid HospitalId { get; set; }
         public DateTimeOffset InicioRegistrado { get; set; }
         public DateTimeOffset? FimRegistrado { get; set; }
         public string Status { get; set; } = string.Empty;

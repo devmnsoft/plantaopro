@@ -210,6 +210,22 @@ public record PremiumOperacoesResumoDto(
     IEnumerable<DashboardChartItem> SeriePagamentos);
 
 public record ClienteDto(Guid Id,string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus,DateTime RegDate,DateTime? RegUpdate);
+public sealed class ClienteCentralDto
+{
+    public Guid Id { get; set; }
+    public string RazaoSocial { get; set; } = string.Empty;
+    public string NomeFantasia { get; set; } = string.Empty;
+    public string Cnpj { get; set; } = string.Empty;
+    public string Cidade { get; set; } = string.Empty;
+    public string Estado { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public long UsuariosAtivos { get; set; }
+    public long Pendencias { get; set; }
+    public string ModulosVigentes { get; set; } = string.Empty;
+}
+public sealed record ClienteCentralTotais(long Clientes, long Ativos, long Suspensos, long UsuariosAtivos, long Pendencias);
+public sealed record ClienteCentralPageDto(IEnumerable<ClienteCentralDto> Items, int Page, int PageSize, long Total, ClienteCentralTotais Totais);
+public sealed record AlterarStatusClienteRequest(string Acao, string Motivo);
 public record CreateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status);
 public record UpdateClienteRequest(string RazaoSocial,string NomeFantasia,string Cnpj,string Email,string Telefone,string Cidade,string Estado,Guid? PlanoId,string Status,string RegStatus);
 

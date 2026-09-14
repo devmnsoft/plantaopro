@@ -1,101 +1,20 @@
-@model IEnumerable<PlantaoPro.Web.Models.ClienteDto>
+@model PlantaoPro.Web.Models.ClienteCentralPageDto
 @{
-    ViewData["Title"] = "Clientes e tenants";
-    ViewData["Subtitle"] = "Administre instituições com contexto explícito, ações confirmadas e rastreabilidade.";
-    var clientes = Model.ToArray();
-    var ativos = clientes.Count(x => x.Status == "ATIVO");
-    var suspensos = clientes.Count(x => x.Status == "SUSPENSO");
-    var teste = clientes.Count(x => x.Status == "TESTE");
-    var cancelados = clientes.Count(x => x.Status == "CANCELADO");
-    var isGlobalAdmin = User.IsInRole("ADMINISTRADOR_GLOBAL");
+    ViewData["Title"] = "Central global de clientes";
+    ViewData["Subtitle"] = "Administração MNSOFT com contexto explícito, indicadores verificáveis e isolamento por cliente.";
+    var busca = ViewBag.Busca as string;
+    var status = ViewBag.Status as string;
+    var pages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Model.PageSize));
 }
-
 <div class="pp-page pp-clients-workspace">
-    <header class="pp-page-hero" aria-labelledby="clientsTitle">
-        <div class="pp-page-hero__copy">
-            <span class="pp-eyebrow">@(isGlobalAdmin ? "Contexto global MNSOFT" : "Administração autorizada")</span>
-            <h2 id="clientsTitle">Clientes e tenants</h2>
-            <p>Consulte o estado contratual das instituições e confirme o impacto antes de suspender, reativar ou cancelar um acesso.</p>
-        </div>
-        <div class="pp-hero-actions">
-            <a class="btn btn-outline-primary" asp-controller="Auditoria" asp-action="Index"><app-icon name="Audit" size="18" /> Ver auditoria</a>
-            <a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente"><app-icon name="Hospital" size="18" /> Novo cliente</a>
-        </div>
-    </header>
-
-    <details class="pp-screen-guide">
-        <summary><span><app-icon name="Help" size="17" /><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Gestão global</span></summary>
-        <div class="pp-screen-guide__body"><p>Abra os módulos para revisar o contrato de uma instituição. Antes de suspender, reativar ou cancelar, confirme o cliente e o impacto apresentado no modal.</p></div>
-    </details>
-
-    <div class="pp-scope-guardrails" role="list" aria-label="Proteções desta área">
-        <span role="listitem"><app-icon name="Security" size="17" /><strong>Escopo:</strong> @(isGlobalAdmin ? "todos os tenants" : "contexto autorizado")</span>
-        <span role="listitem"><app-icon name="Lock" size="17" /><strong>Ações críticas:</strong> confirmação obrigatória</span>
-        <span role="listitem"><app-icon name="Audit" size="17" /><strong>Alterações:</strong> auditáveis pelo servidor</span>
-    </div>
-
-    <section class="pp-operational-kpis" aria-label="Resumo dos clientes carregados">
-        <article class="pp-operational-kpi"><span>Ativos</span><strong>@ativos</strong><small>instituições operando</small></article>
-        <article class="pp-operational-kpi is-warning"><span>Suspensos</span><strong>@suspensos</strong><small>acesso interrompido</small></article>
-        <article class="pp-operational-kpi"><span>Em teste</span><strong>@teste</strong><small>validação em andamento</small></article>
-        <article class="pp-operational-kpi is-muted"><span>Cancelados</span><strong>@cancelados</strong><small>contratos encerrados</small></article>
-    </section>
-
-    <section class="pp-operation-panel" aria-labelledby="clientListTitle">
-        <header class="pp-operation-panel__header">
-            <div><h2 id="clientListTitle">Instituições encontradas</h2><p>Os registros abaixo vêm da fonte autorizada para esta sessão.</p></div>
-            <span class="pp-badge">@clientes.Length resultados</span>
-        </header>
-        <div class="table-responsive pp-premium-table">
-            <table class="table align-middle" data-mobile-cards>
-                <caption class="visually-hidden">Clientes, situação contratual e ações administrativas</caption>
-                <thead><tr><th>Cliente</th><th>CNPJ</th><th>Cidade/UF</th><th>Status</th><th class="text-end">Ações</th></tr></thead>
-                <tbody>
-                @if (!clientes.Any())
-                {
-                    <tr><td colspan="5"><div class="pp-guided-empty"><app-icon name="Hospital" size="28" /><strong>Nenhuma instituição encontrada</strong><span>Quando um cadastro real estiver disponível, ele aparecerá aqui. Revise o onboarding ou o contexto da sessão.</span><a class="btn btn-sm btn-primary" asp-controller="Onboarding" asp-action="NovoCliente">Iniciar onboarding</a></div></td></tr>
-                }
-                else
-                {
-                    foreach (var cliente in clientes)
-                    {
-                        var statusClass = cliente.Status switch { "ATIVO" => "is-success", "TESTE" => "is-warning", "SUSPENSO" => "is-danger", _ => "is-muted" };
-                        <tr>
-                            <td data-label="Cliente"><strong>@cliente.NomeFantasia</strong><div class="text-muted small">@cliente.RazaoSocial</div></td>
-                            <td data-label="CNPJ">@cliente.Cnpj</td>
-                            <td data-label="Cidade/UF">@cliente.Cidade/@cliente.Estado</td>
-                            <td data-label="Status"><span class="pp-status-badge @statusClass">@cliente.Status</span></td>
-                            <td data-label="Ações">
-                                <div class="pp-table-actions">
-                                    @if (isGlobalAdmin)
-                                    {
-                                        <a class="btn btn-sm btn-outline-primary" asp-controller="Modulos" asp-action="Tenant" asp-route-id="@cliente.Id" aria-label="Gerenciar módulos de @cliente.NomeFantasia">Módulos</a>
-                                    }
-                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Suspender cliente" data-confirm-message="Suspender @cliente.NomeFantasia interrompe o acesso da instituição. Confirma esta ação auditável?" data-confirm-type="warning">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@cliente.Id" />
-                                        <input type="hidden" name="acao" value="SUSPENDER" />
-                                        <button type="submit" class="btn btn-sm btn-outline-warning" aria-label="Suspender @cliente.NomeFantasia" @(cliente.Status == "SUSPENSO" || cliente.Status == "CANCELADO" ? "disabled" : null)>Suspender</button>
-                                    </form>
-                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Reativar cliente" data-confirm-message="Reativar @cliente.NomeFantasia restabelece o acesso conforme plano e permissões. Deseja continuar?" data-confirm-type="success">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@cliente.Id" />
-                                        <input type="hidden" name="acao" value="REATIVAR" />
-                                        <button type="submit" class="btn btn-sm btn-outline-success" aria-label="Reativar @cliente.NomeFantasia" @(cliente.Status == "ATIVO" ? "disabled" : null)>Reativar</button>
-                                    </form>
-                                    <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Cancelar cliente" data-confirm-message="Cancelar @cliente.NomeFantasia pode interromper toda a operação do tenant. Revise contrato, cobrança e responsáveis antes de confirmar." data-confirm-type="danger">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@cliente.Id" />
-                                        <input type="hidden" name="acao" value="CANCELAR" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" aria-label="Cancelar @cliente.NomeFantasia" @(cliente.Status == "CANCELADO" ? "disabled" : null)>Cancelar</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                }
-                </tbody>
-            </table>
-        </div>
-    </section>
+<header class="pp-page-hero" aria-labelledby="clientsTitle"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Administração da plataforma · Modo global</span><h2 id="clientsTitle">Central de clientes</h2><p>Compare organizações sem confundir situação administrativa, contrato vigente e permissões individuais.</p></div><div class="pp-hero-actions"><a class="btn btn-outline-primary" asp-controller="Auditoria" asp-action="Index"><app-icon name="Audit" size="18" /> Auditoria</a><a class="btn btn-primary" asp-controller="Onboarding" asp-action="NovoCliente"><app-icon name="Hospital" size="18" /> Novo cliente</a></div></header>
+<details class="pp-screen-guide"><summary><span><app-icon name="Help" size="17" /><strong>Regras e origem dos dados</strong></span><span class="pp-screen-guide__hint">Ajuda</span></summary><div class="pp-screen-guide__body"><p>Os totais abrangem todo o conjunto filtrado. Usuário ativo é a identidade/vínculo ativo agora. Módulo vigente exige concessão habilitada, ativada e não desativada; contratar não concede permissões. Pendências são itens persistidos do onboarding com estado PENDENTE. Ausência de telemetria não é apresentada como falta de uso.</p></div></details>
+<div class="pp-scope-guardrails" role="status"><span><app-icon name="Security" size="17" /><strong>Cliente selecionado:</strong> nenhum · visão global</span><span><app-icon name="Audit" size="17" /><strong>Ator:</strong> @User.Identity?.Name</span><span><app-icon name="Lock" size="17" /><strong>Operações:</strong> autorizadas e auditadas no servidor</span></div>
+<form method="get" class="pp-operation-panel mb-3" aria-label="Filtros da Central"><div class="row g-3 align-items-end"><div class="col-12 col-lg-6"><label class="form-label" for="busca">Nome, razão social ou CNPJ</label><input class="form-control" id="busca" name="busca" value="@busca" autocomplete="off" /></div><div class="col-12 col-sm-6 col-lg-3"><label class="form-label" for="status">Situação administrativa</label><select class="form-select" id="status" name="status"><option value="">Todas</option><option value="ATIVO" selected="@(status == "ATIVO")">Ativo</option><option value="SUSPENSO" selected="@(status == "SUSPENSO")">Suspenso</option><option value="TESTE" selected="@(status == "TESTE")">Em teste</option><option value="CANCELADO" selected="@(status == "CANCELADO")">Cancelado</option></select></div><div class="col-12 col-sm-6 col-lg-3 d-flex gap-2"><button class="btn btn-primary flex-grow-1" type="submit">Aplicar filtros</button><a class="btn btn-outline-secondary" asp-action="Index">Limpar</a></div></div></form>
+@if (!string.IsNullOrWhiteSpace(ViewBag.ErrorMessage as string)) { <div class="alert alert-danger" role="alert"><strong>Falha ao carregar.</strong> @ViewBag.ErrorMessage</div> }
+<section class="pp-operational-kpis" aria-label="Totais do conjunto filtrado"><article class="pp-operational-kpi"><span>Clientes filtrados</span><strong>@Model.Totais.Clientes</strong><small>fonte: clientes ativos no cadastro</small></article><article class="pp-operational-kpi"><span>Em operação</span><strong>@Model.Totais.Ativos</strong><small>situação administrativa ATIVO, agora</small></article><article class="pp-operational-kpi"><span>Usuários ativos</span><strong>@Model.Totais.UsuariosAtivos</strong><small>vínculos ativos no conjunto filtrado</small></article><article class="pp-operational-kpi is-warning"><span>Pendências</span><strong>@Model.Totais.Pendencias</strong><small>checklist persistido, estado PENDENTE</small></article></section>
+<section class="pp-operation-panel" aria-labelledby="listTitle"><header class="pp-operation-panel__header"><div><h2 id="listTitle">Organizações</h2><p>Página @Model.Page de @pages · @Model.Total resultados no filtro.</p></div></header><div class="table-responsive pp-premium-table"><table class="table align-middle" data-mobile-cards><caption class="visually-hidden">Clientes, módulos vigentes, equipe e pendências</caption><thead><tr><th>Cliente</th><th>Situação</th><th>Módulos habilitados e vigentes</th><th>Equipe</th><th>Pendências</th><th class="text-end">Ações</th></tr></thead><tbody>
+@if (!Model.Items.Any()) { <tr><td colspan="6"><div class="pp-guided-empty"><app-icon name="Search" size="28" /><strong>Nenhum cliente encontrado</strong><span>Altere os filtros. Uma falha do serviço é exibida como erro, não como estado vazio.</span></div></td></tr> }
+@foreach (var cliente in Model.Items) { var css=cliente.Status=="ATIVO"?"is-success":cliente.Status=="SUSPENSO"?"is-danger":"is-muted";<tr><td data-label="Cliente"><strong>@cliente.NomeFantasia</strong><div class="small text-muted">@cliente.Cnpj · @cliente.Cidade/@cliente.Estado</div></td><td data-label="Situação"><span class="pp-status-badge @css">@cliente.Status</span></td><td data-label="Módulos">@(string.IsNullOrWhiteSpace(cliente.ModulosVigentes) ? "Nenhum módulo vigente" : cliente.ModulosVigentes)</td><td data-label="Equipe">@cliente.UsuariosAtivos ativos</td><td data-label="Pendências">@cliente.Pendencias</td><td data-label="Ações"><div class="pp-table-actions"><a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@cliente.Id">Abrir contexto</a><a class="btn btn-sm btn-outline-secondary" asp-controller="Modulos" asp-action="Tenant" asp-route-id="@cliente.Id">Contratos</a><form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="Alterar situação de @cliente.NomeFantasia" data-confirm-message="Esta ação afeta o acesso do cliente, não apaga históricos nem altera contratos. Confirme após informar o motivo." data-confirm-type="warning">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@cliente.Id"/><input type="hidden" name="acao" value="@(cliente.Status=="SUSPENSO"?"REATIVAR":"SUSPENDER")"/><input type="hidden" name="busca" value="@busca"/><input type="hidden" name="status" value="@status"/><input type="hidden" name="pagina" value="@Model.Page"/><label class="visually-hidden" for="motivo-@cliente.Id">Motivo</label><input id="motivo-@cliente.Id" class="form-control form-control-sm" name="motivo" required maxlength="300" placeholder="Motivo obrigatório"/><button class="btn btn-sm btn-outline-warning" type="submit">@(cliente.Status=="SUSPENSO"?"Reativar":"Suspender")</button></form></div></td></tr> }
+</tbody></table></div><nav aria-label="Paginação"><div class="d-flex justify-content-between"><a class="btn btn-sm btn-outline-secondary @(Model.Page<=1?"disabled":null)" asp-route-busca="@busca" asp-route-status="@status" asp-route-pagina="@(Model.Page-1)">Anterior</a><span>Página @Model.Page de @pages</span><a class="btn btn-sm btn-outline-secondary @(Model.Page>=pages?"disabled":null)" asp-route-busca="@busca" asp-route-status="@status" asp-route-pagina="@(Model.Page+1)">Próxima</a></div></nav></section>
 </div>

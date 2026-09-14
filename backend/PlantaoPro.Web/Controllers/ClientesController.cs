@@ -6,28 +6,45 @@ using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR")]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL")]
 public class ClientesController : BaseWebController
 {
     public ClientesController(IHttpClientFactory httpClientFactory, ILogger<ClientesController> logger) : base(httpClientFactory, logger) { }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Details(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (data, error, statusCode) = await ReadApiResponse<ClienteDto>(client, $"api/clientes/{id}");
+        if (data is null)
+        {
+            TempData["ErrorMessage"] = error ?? "Cliente não encontrado ou contexto não autorizado.";
+            Logger.LogWarning("Central global não abriu cliente {ClienteId}. Status {Status}", id, (int)statusCode);
+            return RedirectToAction(nameof(Index));
+        }
+        return View(data);
+    }
+
+    public async Task<IActionResult> Index(string? busca, string? status, int pagina = 1, int tamanhoPagina = 20)
     {
         try
         {
             Logger.LogInformation("Iniciando listagem de clientes");
             using var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
-            var (data, error, _) = await ReadApiResponse<IEnumerable<ClienteDto>>(client, "api/clientes");
+            var query = $"api/clientes/central?busca={Uri.EscapeDataString(busca ?? string.Empty)}&status={Uri.EscapeDataString(status ?? string.Empty)}&pagina={Math.Max(1, pagina)}&tamanhoPagina={Math.Clamp(tamanhoPagina, 10, 100)}";
+            var (data, error, _) = await ReadApiResponse<ClienteCentralPageDto>(client, query);
             ViewBag.ErrorMessage = error;
+            ViewBag.Busca = busca;
+            ViewBag.Status = status;
             Logger.LogInformation("Listagem de clientes concluída com sucesso");
-            return View(data ?? Array.Empty<ClienteDto>());
+            return View(data ?? new ClienteCentralPageDto(Array.Empty<ClienteCentralDto>(), 1, 20, 0, new(0, 0, 0, 0, 0)));
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro inesperado ao carregar tela de clientes");
             TempData["ErrorMessage"] = "Não foi possível carregar os clientes no momento.";
-            return View(Array.Empty<ClienteDto>());
+            return View(new ClienteCentralPageDto(Array.Empty<ClienteCentralDto>(), 1, 20, 0, new(0, 0, 0, 0, 0)));
         }
     }
 
@@ -73,7 +90,7 @@ public class ClientesController : BaseWebController
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> AlterarStatus(Guid id, string acao)
+    public async Task<IActionResult> AlterarStatus(Guid id, string acao, string motivo, string? busca, string? status, int pagina = 1)
     {
         try
         {
@@ -81,32 +98,26 @@ public class ClientesController : BaseWebController
             using var client = CreateApiClient();
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
-            var endpoint = acao?.ToUpperInvariant() switch
-            {
-                "SUSPENDER" => $"api/clientes/{id}/suspender",
-                "REATIVAR" => $"api/clientes/{id}/reativar",
-                "CANCELAR" => $"api/clientes/{id}/cancelar",
-                _ => string.Empty
-            };
+            var endpoint = $"api/clientes/{id}/situacao";
 
-            if (string.IsNullOrWhiteSpace(endpoint))
+            if (string.IsNullOrWhiteSpace(acao) || string.IsNullOrWhiteSpace(motivo))
             {
                 TempData["ErrorMessage"] = "Ação inválida para alteração de status.";
                 return RedirectToAction(nameof(Index));
             }
 
-            var response = await client.PostAsync(endpoint, new StringContent(string.Empty, Encoding.UTF8, "application/json"));
+            var response = await client.PostAsync(endpoint, new StringContent(JsonSerializer.Serialize(new AlterarStatusClienteRequest(acao, motivo)), Encoding.UTF8, "application/json"));
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
                 TempData["ErrorMessage"] = $"Não foi possível concluir a ação solicitada. {body}";
                 Logger.LogWarning("Validação bloqueada ao alterar status do cliente {ClienteId}", id);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { busca, status, pagina });
             }
 
             TempData["SuccessMessage"] = "Status do cliente atualizado com sucesso.";
             Logger.LogInformation("Status do cliente {ClienteId} atualizado com sucesso", id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { busca, status, pagina });
         }
         catch (Exception ex)
         {

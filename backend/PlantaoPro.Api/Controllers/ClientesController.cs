@@ -23,6 +23,9 @@ public class ClientesController : ControllerBase
     }
 
     [HttpGet] public async Task<IActionResult> Get() { var r = await service.ListAsync(); return StatusCode(r.StatusCode, r); }
+    [HttpGet("central")]
+    public async Task<IActionResult> Central([FromQuery] string? busca, [FromQuery] string? status, [FromQuery] int pagina = 1, [FromQuery] int tamanhoPagina = 20)
+    { var r = await service.ListCentralAsync(busca, status, pagina, tamanhoPagina); return StatusCode(r.StatusCode, r); }
     [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id){ var r=await service.GetAsync(id); return StatusCode(r.StatusCode,r);}    
 
     [HttpPost]
@@ -75,6 +78,13 @@ public class ClientesController : ControllerBase
             return Ok(ApiResponse<string>.Ok("ok", "Cliente suspenso com sucesso."));
         }
         catch (Exception ex) { logger.LogError(ex, "Erro ao suspender cliente {ClienteId}", id); return StatusCode(500, ApiResponse<string>.Fail("Não foi possível suspender cliente.", 500)); }
+    }
+
+    [HttpPost("{id:guid}/situacao")]
+    public async Task<IActionResult> AlterarSituacao(Guid id, [FromBody] AlterarStatusClienteRequest request, [FromServices] ICurrentUserService currentUser)
+    {
+        var response = await service.AlterarStatusAsync(id, request, currentUser.UserId, HttpContext.Connection.RemoteIpAddress?.ToString(), string.Join(',', currentUser.Roles));
+        return StatusCode(response.StatusCode, response);
     }
 
     [HttpPost("{id:guid}/reativar")]

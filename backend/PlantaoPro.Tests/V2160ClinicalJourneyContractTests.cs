@@ -5,7 +5,7 @@ namespace PlantaoPro.Tests;
 
 public sealed class V2160ClinicalJourneyContractTests
 {
-    private static readonly string Root = RepositoryPathResolver.Root;
+    private static readonly string Root = RepositoryPathResolver.RepoRoot;
     private static string Read(string path) => File.ReadAllText(Path.Combine(Root, path));
 
     [Fact]

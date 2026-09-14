@@ -3,6 +3,25 @@ namespace PlantaoPro.Tests;
 public sealed class RepositoryPathResolverContractTests
 {
     [Fact]
+    public void RepositoryRoot_RemainsEncapsulatedBehindRepoRoot()
+    {
+        var helper = File.ReadAllText(Path.Combine(
+            RepositoryPathResolver.BackendProject("PlantaoPro.Tests"),
+            "RepositoryPathResolver.cs"));
+        var invalidAccess = "RepositoryPathResolver." + "Root";
+        var externalAccesses = Directory
+            .EnumerateFiles(RepositoryPathResolver.BackendProject("PlantaoPro.Tests"), "*.cs")
+            .Where(path => !path.EndsWith("RepositoryPathResolverContractTests.cs", StringComparison.OrdinalIgnoreCase))
+            .SelectMany(File.ReadLines)
+            .Where(line => line.Contains(invalidAccess, StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Contains("private static readonly Lazy<string> Root", helper);
+        Assert.Contains("public static string RepoRoot => Root.Value", helper);
+        Assert.Empty(externalAccesses);
+    }
+
+    [Fact]
     public void Resolver_DeveExporTodosOsCaminhosCanonicosDoRepositorio()
     {
         Assert.True(File.Exists(Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.sln")));

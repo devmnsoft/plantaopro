@@ -26,6 +26,17 @@ public sealed class V2164CompilationAndJourneyContractTests
     }
 
     [Fact]
+    public void ContractReview_AcceptsAnActiveDependencyButNotASuspendedOrScheduledOne()
+    {
+        var service = Read("backend/PlantaoPro.Api/ModuleContractingService.cs");
+
+        Assert.Contains("x.EstadoContratual == \"ATIVO\"", service);
+        Assert.Contains("!selectedCodes.Contains(x) && !contractedCodes.Contains(x)", service);
+        Assert.Contains("Distinct(StringComparer.OrdinalIgnoreCase)", service);
+        Assert.Contains("x.EstadoContratual is \"ATIVO\" or \"SUSPENSO\"", service);
+    }
+
+    [Fact]
     public void Tests_KeepTheApiProjectReferenceInsteadOfABinaryReference()
     {
         var project = Read("backend/PlantaoPro.Tests/PlantaoPro.Tests.csproj");
@@ -43,6 +54,7 @@ public sealed class V2164CompilationAndJourneyContractTests
 
         Assert.Contains("@Html.AntiForgeryToken()", view);
         Assert.Contains("method=\"post\"", view);
+        Assert.Contains("data-focus-invalid", view);
         Assert.Contains("resetSubmission", script);
         Assert.Contains("window.setTimeout", script);
         Assert.Contains("window.addEventListener(\"pageshow\"", script);

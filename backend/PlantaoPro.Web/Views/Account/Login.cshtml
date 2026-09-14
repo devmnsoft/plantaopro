@@ -39,7 +39,7 @@
             {
                 <div class="pp-auth-context-message" role="status" aria-live="polite"><app-icon name="Warning" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
             }
-            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-submit-loading="manual">
+            <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-focus-invalid data-submit-loading="manual">
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" aria-atomic="true" tabindex="-1" data-login-errors></div>
                 @if (ViewData.ModelState.ErrorCount == 0 && TempData["Error"] is string loginError && !string.IsNullOrWhiteSpace(loginError))

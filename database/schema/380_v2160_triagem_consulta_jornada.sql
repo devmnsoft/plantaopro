@@ -7,6 +7,34 @@ alter table plantaopro.triagens add column if not exists finalizada_em timestamp
 alter table plantaopro.triagens add column if not exists finalizada_por uuid;
 alter table plantaopro.triagens add column if not exists assumida_por uuid;
 alter table plantaopro.triagens add column if not exists assumida_em timestamptz;
+alter table plantaopro.triagens add column if not exists atendimento_id uuid;
+alter table plantaopro.triagens add column if not exists unidade_id uuid;
+
+do $$
+declare conflitos text;
+begin
+  select string_agg(format('tenant=%s agendamento=%s atendimentos=%s', cliente_id, agendamento_id, ids), '; ')
+    into conflitos
+    from (
+      select cliente_id, agendamento_id, string_agg(id::text, ',' order by id) ids
+        from plantaopro.atendimentos_fila
+       where status not in ('FINALIZADO','CANCELADO')
+       group by cliente_id, agendamento_id having count(*) > 1
+    ) d;
+  if conflitos is not null then
+    raise exception 'V2160_ATENDIMENTOS_ATIVOS_DUPLICADOS: %. Corrija os estados com registro auditável antes de repetir a migration.', conflitos;
+  end if;
+end $$;
+
+-- Recupera a identidade operacional sem apagar ou fundir registros legados.
+update plantaopro.triagens t
+   set atendimento_id = a.id,
+       unidade_id = coalesce(t.unidade_id, a.unidade_id)
+  from plantaopro.atendimentos_fila a
+ where t.atendimento_id is null
+   and t.agendamento_id = a.agendamento_id
+   and t.cliente_id = a.cliente_id
+   and a.status not in ('FINALIZADO','CANCELADO');
 
 alter table plantaopro.consultas add column if not exists assumida_por uuid;
 alter table plantaopro.consultas add column if not exists assumida_em timestamptz;
@@ -33,8 +61,14 @@ create index if not exists ix_v2160_historico_paciente
 -- Congela a evidência de triagem usada quando a consulta é criada/vinculada.
 create or replace function plantaopro.v2160_snapshot_triagem_consulta() returns trigger
 language plpgsql as $$
+declare deve_capturar boolean;
 begin
-  if new.triagem_id is not null and (new.triagem_snapshot is null or new.triagem_id is distinct from old.triagem_id) then
+  if tg_op = 'INSERT' then
+    deve_capturar := true;
+  else
+    deve_capturar := new.triagem_id is distinct from old.triagem_id;
+  end if;
+  if new.triagem_id is not null and deve_capturar then
     select jsonb_build_object(
       'triagemId', t.id, 'versao', t.versao, 'classificacaoRisco', t.classificacao_risco,
       'queixaPrincipal', t.queixa_principal, 'pressaoSistolica', t.pressao_sistolica,
@@ -47,11 +81,21 @@ begin
       'finalizadaEm', t.finalizada_em)
       into new.triagem_snapshot
       from plantaopro.triagens t
-      where t.id=new.triagem_id and t.cliente_id=new.cliente_id and t.reg_status='A';
-    if new.triagem_snapshot is not null then new.triagem_snapshot_em=now(); end if;
+      where t.id=new.triagem_id and t.cliente_id=new.cliente_id
+        and t.paciente_id=new.paciente_id and t.reg_status='A';
+    if new.triagem_snapshot is null then
+      raise exception 'V2160_TRIAGEM_INCOMPATIVEL: triagem %, consulta %, tenant % e paciente % não possuem vínculo ativo correspondente.', new.triagem_id, new.id, new.cliente_id, new.paciente_id;
+    end if;
+    new.triagem_snapshot_em=now();
   end if;
   return new;
 end $$;
+drop trigger if exists tr_v2160_snapshot_triagem_insert on plantaopro.consultas;
+drop trigger if exists tr_v2160_snapshot_triagem_update on plantaopro.consultas;
 drop trigger if exists tr_v2160_snapshot_triagem on plantaopro.consultas;
-create trigger tr_v2160_snapshot_triagem before insert or update of triagem_id
+create trigger tr_v2160_snapshot_triagem_insert before insert
 on plantaopro.consultas for each row execute function plantaopro.v2160_snapshot_triagem_consulta();
+create trigger tr_v2160_snapshot_triagem_update before update of triagem_id
+on plantaopro.consultas for each row
+when (new.triagem_id is distinct from old.triagem_id)
+execute function plantaopro.v2160_snapshot_triagem_consulta();

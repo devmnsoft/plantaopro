@@ -162,7 +162,26 @@ public sealed class ConsultaApplicationService : IConsultaApplicationService
         if (atual is null) return ApiResponse<FinalizarConsultaResponse>.Fail("Consulta não encontrada.", 404);
         if (!ConsultaStateMachine.PodeTransicionar(atual.Status, ConsultaStatus.FINALIZADA)) return ApiResponse<FinalizarConsultaResponse>.Fail($"O status {atual.Status} não permite finalizar a consulta.", 409);
         if (!await repository.AlterarStatusAsync(id, tenant, atual.Status, ConsultaStatus.FINALIZADA, request.Versao, user.UserId, ct, tx)) { await tx.RollbackAsync(ct); return ApiResponse<FinalizarConsultaResponse>.Fail(Conflito, 409); }
-        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.atendimentos_fila set status='FINALIZADO',finalizado_em=coalesce(finalizado_em,now()),reg_update=now() where id=@atendimentoId and cliente_id=@tenant and status not in ('FINALIZADO','CANCELADO'); update plantaopro.agendamentos set status='ATENDIDO',updated_by=@uid,updated_at=now() where id=@agendamentoId and cliente_id=@tenant and status='EM_ATENDIMENTO'; update plantaopro.fila_atendimento set status='FINALIZADO',reg_update=now() where atendimento_id=@atendimentoId and cliente_id=@tenant and reg_status='A' and status<>'FINALIZADO'", new { atual.AtendimentoId, atual.AgendamentoId, tenant, uid = user.UserId }, tx, cancellationToken: ct));
+        var atendimentoAtualizado = await cn.ExecuteAsync(new CommandDefinition(
+            "update plantaopro.atendimentos_fila set status='FINALIZADO',finalizado_em=coalesce(finalizado_em,now()),reg_update=now() where id=@atendimentoId and cliente_id=@tenant and paciente_id=@pacienteId and unidade_id=@unidadeId and status not in ('FINALIZADO','CANCELADO')",
+            new { atual.AtendimentoId, atual.PacienteId, atual.UnidadeId, tenant }, tx, cancellationToken: ct));
+        if (atendimentoAtualizado != 1)
+        {
+            await tx.RollbackAsync(ct);
+            return ApiResponse<FinalizarConsultaResponse>.Fail("O atendimento vinculado mudou de estado ou não corresponde mais ao paciente, unidade e organização da consulta.", 409);
+        }
+        if (atual.AgendamentoId is Guid agendamentoId)
+        {
+            var agendamentoAtualizado = await cn.ExecuteAsync(new CommandDefinition(
+                "update plantaopro.agendamentos set status='ATENDIDO',updated_by=@uid,updated_at=now() where id=@agendamentoId and cliente_id=@tenant and paciente_id=@pacienteId and unidade_id=@unidadeId and status='EM_ATENDIMENTO'",
+                new { agendamentoId, atual.PacienteId, atual.UnidadeId, tenant, uid = user.UserId }, tx, cancellationToken: ct));
+            if (agendamentoAtualizado != 1)
+            {
+                await tx.RollbackAsync(ct);
+                return ApiResponse<FinalizarConsultaResponse>.Fail("O agendamento vinculado não está mais em atendimento ou pertence a outro contexto. Nenhuma finalização foi gravada.", 409);
+            }
+        }
+        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.fila_atendimento set status='FINALIZADO',reg_update=now() where atendimento_id=@atendimentoId and cliente_id=@tenant and reg_status='A' and status<>'FINALIZADO'", new { atual.AtendimentoId, tenant }, tx, cancellationToken: ct));
         Guid? financeiroId = null;
         if (geraFinanceiro)
         {

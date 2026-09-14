@@ -5,11 +5,16 @@
   const base = root.dataset.apiBase;
   const form = root.querySelector('#clinical-form');
   const status = root.querySelector('[data-save-status]');
+  const saveState = root.querySelector('[data-save-state]');
+  const lastSaved = root.querySelector('[data-last-saved]');
   let saving = false;
   let dirty = false;
   let timer;
   const field = name => form.elements.namedItem(name);
-  const message = text => { status.textContent = text; };
+  const message = (text, state = '') => {
+    saveState.textContent = text;
+    status.dataset.state = state;
+  };
 
   async function api(path, options = {}) {
     const response = await fetch(`${base}/${id}${path}`, {
@@ -64,7 +69,8 @@
   }
 
   async function load() {
-    message('Carregando…');
+    root.setAttribute('aria-busy', 'true');
+    message('Carregando dados…', 'loading');
     try {
       const workspace = await api('/workspace');
       const consulta = workspace.consulta;
@@ -79,23 +85,26 @@
       field('versao').value = consulta.versao;
       renderCids(workspace.cids || []);
       dirty = false;
-      message('Dados atualizados');
-    } catch (error) { message(error.message); }
+      message('Dados atualizados; sem alterações pendentes.', 'saved');
+    } catch (error) { message(error.message, error.status === 403 ? 'denied' : 'error'); }
+    finally { root.removeAttribute('aria-busy'); }
   }
 
   async function save() {
     if (saving || !dirty) return;
     saving = true;
     root.querySelector('[data-save]').disabled = true;
-    message('Salvando…');
+    message('Salvando alterações…', 'loading');
     const body = { versao: Number(field('versao').value), anamnese: field('anamnese').value, exameFisico: field('exameFisico').value, hipoteseDiagnostica: field('hipoteseDiagnostica').value, diagnostico: field('diagnostico').value, conduta: field('conduta').value, orientacoes: field('orientacoes').value, observacoes: null };
     try {
       const consulta = await api('/rascunho', { method: 'PUT', body: JSON.stringify(body) });
       field('versao').value = consulta.versao;
       dirty = false;
-      message(`Salvo às ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+      const confirmedAt = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      message('Rascunho confirmado pelo servidor.', 'saved');
+      lastSaved.textContent = `Última gravação confirmada às ${confirmedAt}.`;
     } catch (error) {
-      message(error.message);
+      message(error.message, error.status === 409 ? 'conflict' : 'error');
       if (error.status === 409) root.querySelector('[data-conflict-modal]').showModal();
     } finally {
       saving = false;
@@ -103,7 +112,7 @@
     }
   }
 
-  form.addEventListener('input', () => { dirty = true; message('Alterações não salvas'); clearTimeout(timer); timer = setTimeout(save, 1800); });
+  form.addEventListener('input', () => { dirty = true; message('Alterações pendentes de gravação.', 'pending'); clearTimeout(timer); timer = setTimeout(save, 1800); });
   window.addEventListener('beforeunload', event => {
     if (!dirty) return;
     event.preventDefault();

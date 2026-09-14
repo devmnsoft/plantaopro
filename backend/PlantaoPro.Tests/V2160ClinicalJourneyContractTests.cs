@@ -37,6 +37,11 @@ public sealed class V2160ClinicalJourneyContractTests
         Assert.Contains("triagem_snapshot", sql);
         Assert.Contains("assumida_por", sql);
         Assert.Contains("versao integer not null", sql);
+        Assert.Contains("V2160_ATENDIMENTOS_ATIVOS_DUPLICADOS", sql);
+        Assert.Contains("t.paciente_id=new.paciente_id", sql);
+        Assert.Contains("before insert", sql);
+        Assert.Contains("before update of triagem_id", sql);
+        Assert.DoesNotContain("before insert or update of triagem_id", sql);
     }
 
     [Fact]
@@ -48,5 +53,15 @@ public sealed class V2160ClinicalJourneyContractTests
         Assert.Contains("beforeunload", script);
         Assert.Contains("data-conflict-modal", script);
         Assert.DoesNotContain("localStorage", script);
+    }
+
+    [Fact]
+    public void Finalizacao_RejeitaEReverteVinculoOperacionalIncompativel()
+    {
+        var service = Read("backend/PlantaoPro.Api/Clinical/ConsultaApplicationService.cs");
+        Assert.Contains("atendimentoAtualizado != 1", service);
+        Assert.Contains("agendamentoAtualizado != 1", service);
+        Assert.Contains("paciente_id=@pacienteId and unidade_id=@unidadeId", service);
+        Assert.Contains("Nenhuma finalização foi gravada", service);
     }
 }

@@ -50,3 +50,4 @@
 - `plantaopro.jornada_clinica_v2160` depende de: plantaopro.saude360_v2159, plantaopro.saude360
 - `plantaopro.portal_cliente_modulos_v2163` depende de: plantaopro.jornada_clinica_v2160, plantaopro.schema_canonico_base
 - `plantaopro.execucao_conferencia_v2167` depende de: plantaopro.portal_cliente_modulos_v2163, plantaopro.executive_commercial_v1450
+- `plantaopro.execucao_conferencia_integridade_v2168` depende de: plantaopro.execucao_conferencia_v2167

@@ -134,6 +134,7 @@
     "plantaopro.mensagens",
     "plantaopro.mobile_dispositivos",
     "plantaopro.mobile_push_tokens",
+    "plantaopro.modulo_catalogo_dependencias",
     "plantaopro.modulos_sistema",
     "plantaopro.notificacao_regras",
     "plantaopro.notificacoes",
@@ -203,7 +204,9 @@
     "plantaopro.schema_migrations",
     "plantaopro.seq_painel_senhas",
     "plantaopro.solicitacao_exame_itens",
+    "plantaopro.solicitacao_modulo_itens",
     "plantaopro.solicitacoes_exames",
+    "plantaopro.solicitacoes_modulos",
     "plantaopro.solicitacoes_plantao",
     "plantaopro.substituicao_aprovacoes",
     "plantaopro.substituicao_candidatos",
@@ -515,6 +518,9 @@
     "database/schema/360_v2157_central_operacional_escalas.sql",
     "database/schema/360_v2158_financeiro_medico_conferencia.sql",
     "database/schema/370_v2159_saude360_agenda_recepcao.sql",
-    "database/schema/380_v2160_triagem_consulta_jornada.sql"
+    "database/schema/380_v2160_triagem_consulta_jornada.sql",
+    "database/schema/390_v2163_portal_cliente_modulos.sql",
+    "database/schema/400_v2167_execucao_conferencia.sql",
+    "database/schema/410_v2168_conferencia_integridade.sql"
   ]
 }

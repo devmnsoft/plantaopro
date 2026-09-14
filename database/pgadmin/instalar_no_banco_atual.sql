@@ -3378,7 +3378,7 @@ update plantaopro.modulos_sistema set preco_base=null,periodicidade=null where p
 -- ============================================================
 
 -- SOURCE: database/schema/400_v2167_execucao_conferencia.sql
--- SOURCE-SHA256: 1d1107426a2b42690017aba350eb8365e7f0a3c33d2d441f92c9800eb86b916e
+-- SOURCE-SHA256: 1794e0cdb6f5785bcdff3c2463b3ec52922509ccd7077eae66e6eb39017cc97e
 -- PlantãoPro v2.16.7 — execução e correção auditável de plantões.
 set search_path to plantaopro, public;
 
@@ -3393,10 +3393,6 @@ alter table medico_checkins
   add column if not exists fim_aprovado_em timestamptz,
   add column if not exists versao bigint not null default 1;
 
-update medico_checkins set checkin_recebido_em=coalesce(checkin_recebido_em,checkin_em),
- checkout_recebido_em=coalesce(checkout_recebido_em,checkout_em),
- status_conferencia=case when checkout_em is null then 'REGISTRO_INCOMPLETO' else 'PENDENTE' end;
-
 do $$ begin alter table medico_checkins add constraint ck_v2167_presenca_aprovada_ordem
  check (fim_aprovado_em is null or (inicio_aprovado_em is not null and fim_aprovado_em>=inicio_aprovado_em));
 exception when duplicate_object then null; end $$;
@@ -3409,6 +3405,7 @@ create table if not exists medico_presenca_correcoes (
  presenca_id uuid not null references medico_checkins(id), escala_id uuid not null, medico_id uuid not null,
  inicio_original_em timestamptz, fim_original_em timestamptz, inicio_proposto_em timestamptz, fim_proposto_em timestamptz,
  justificativa varchar(1000) not null, status varchar(20) not null default 'PENDENTE', versao bigint not null default 1,
+ versao_presenca_base bigint not null default 1,
  solicitado_por uuid not null, solicitado_em timestamptz not null default now(), decidido_por uuid, decidido_em timestamptz,
  justificativa_decisao varchar(1000), inicio_aprovado_em timestamptz, fim_aprovado_em timestamptz,
  constraint ck_v2167_correcao_status check(status in ('PENDENTE','APROVADA','RECUSADA','CANCELADA')),
@@ -3425,3 +3422,45 @@ create table if not exists medico_presenca_historico (
  executado_por uuid not null, executado_em timestamptz not null default now()
 );
 create index if not exists ix_v2167_presenca_historico on medico_presenca_historico(tenant_id,presenca_id,executado_em desc);
+
+alter table medico_presenca_correcoes
+ add column if not exists versao_presenca_base bigint not null default 1;
+update medico_presenca_correcoes x set versao_presenca_base=c.versao
+from medico_checkins c
+where c.id=x.presenca_id and x.status='PENDENTE' and x.versao_presenca_base=1 and c.versao<>1;
+
+-- Backfill only legacy rows which have never entered the conference workflow.
+-- This predicate is deliberately replay-safe: decisions and corrections are evidence
+-- that the default value no longer represents an uninitialised legacy row.
+update medico_checkins c set
+ checkin_recebido_em=coalesce(c.checkin_recebido_em,c.checkin_em),
+ checkout_recebido_em=coalesce(c.checkout_recebido_em,c.checkout_em),
+ status_conferencia=case when c.checkout_em is null then 'REGISTRO_INCOMPLETO' else 'PENDENTE' end
+where c.status_conferencia='REGISTRO_INCOMPLETO'
+  and c.inicio_aprovado_em is null
+  and c.fim_aprovado_em is null
+  and not exists(select 1 from medico_presenca_correcoes x where x.presenca_id=c.id)
+  and not exists(select 1 from medico_presenca_historico hx where hx.presenca_id=c.id);
+
+-- SOURCE: database/schema/410_v2168_conferencia_integridade.sql
+-- SOURCE-SHA256: 4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138
+-- PlantãoPro v2.16.8 — evolução aditiva da conferência sem reabrir decisões.
+set search_path to plantaopro, public;
+
+alter table medico_presenca_correcoes
+ add column if not exists versao_presenca_base bigint not null default 1;
+
+-- Apenas propostas ainda pendentes precisam ser compatibilizadas com a versão
+-- já incrementada pela criação da correção na v2.16.7.
+update medico_presenca_correcoes x set versao_presenca_base=c.versao
+from medico_checkins c
+where c.id=x.presenca_id
+  and x.status='PENDENTE'
+  and x.versao_presenca_base=1
+  and c.versao<>1;
+
+-- Nunca recalcula status: completa somente metadados técnicos ausentes.
+update medico_checkins set
+ checkin_recebido_em=coalesce(checkin_recebido_em,checkin_em),
+ checkout_recebido_em=coalesce(checkout_recebido_em,checkout_em)
+where checkin_recebido_em is null or (checkout_em is not null and checkout_recebido_em is null);

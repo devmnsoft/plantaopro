@@ -536,10 +536,21 @@
     },
     {
       "version": "2026_v2167_execucao_conferencia",
-      "source": "database/schema/400_v2167_execucao_conferencia.sql",
+      "source": "database/migrations/2026_v2167_execucao_conferencia.sql",
       "checksum": "1d1107426a2b42690017aba350eb8365e7f0a3c33d2d441f92c9800eb86b916e",
       "dependsOn": [
         "2026_v2163_portal_cliente_modulos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_v2168_conferencia_integridade",
+      "source": "database/schema/410_v2168_conferencia_integridade.sql",
+      "checksum": "4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138",
+      "dependsOn": [
+        "2026_v2167_execucao_conferencia"
       ],
       "status": "active",
       "transactional": true,

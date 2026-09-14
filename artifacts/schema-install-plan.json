@@ -311,5 +311,12 @@
       "plantaopro.executive_commercial_v1450"
     ],
     "source": "database/schema/400_v2167_execucao_conferencia.sql"
+  },
+  {
+    "object": "plantaopro.execucao_conferencia_integridade_v2168",
+    "dependsOn": [
+      "plantaopro.execucao_conferencia_v2167"
+    ],
+    "source": "database/schema/410_v2168_conferencia_integridade.sql"
   }
 ]

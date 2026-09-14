@@ -14,11 +14,11 @@
         <span class="context-pill @(isGlobal ? "is-global" : "")"><i class="bi @(isGlobal ? "bi-globe2" : "bi-building")" aria-hidden="true"></i>@(isGlobal ? "Visão global MNSOFT" : "Somente minha instituição")</span>
     </header>
     <section class="pending-summary" aria-label="Resumo das pendências reais">
-        <article><span>Em aberto</span><strong>@Model.Summary.Active</strong><small>ações ativas</small></article>
-        <article class="is-critical"><span>Críticas</span><strong>@Model.Summary.Critical</strong><small>resolver primeiro</small></article>
-        <article class="is-warning"><span>Vencidas</span><strong>@Model.Summary.Overdue</strong><small>fora do prazo</small></article>
-        <article><span>Para hoje</span><strong>@Model.Summary.Today</strong><small>prioridade do dia</small></article>
-        <article class="is-success"><span>Resolvidas hoje</span><strong>@Model.Summary.CompletedToday</strong><small>progresso da equipe</small></article>
+        <a href="@TabUrl("para-mim")"><span>Em aberto</span><strong>@Model.Summary.Active</strong><small>ações ativas</small></a>
+        <a class="is-critical" href="@TabUrl("criticas")"><span>Críticas</span><strong>@Model.Summary.Critical</strong><small>regras operacionais</small></a>
+        <a class="is-warning" href="@TabUrl("atrasadas")"><span>Vencidas</span><strong>@Model.Summary.Overdue</strong><small>pela data exibida</small></a>
+        <a href="@TabUrl("hoje")"><span>Para hoje</span><strong>@Model.Summary.Today</strong><small>pela data exibida</small></a>
+        <a class="is-success" href="@TabUrl("adiadas")"><span>Adiadas</span><strong>@Model.Summary.Snoozed</strong><small>prazo real preservado</small></a>
     </section>
     <nav class="action-tabs" aria-label="Listas da Central de Ações">
         <a class="@(q.Tab == "para-mim" ? "is-active" : null)" href="@TabUrl("para-mim")">Para mim</a>
@@ -32,7 +32,7 @@
     <form method="get" class="action-filter" data-filter-form>
         <input type="hidden" name="tab" value="@q.Tab" />
         <label>Prioridade<select name="priority"><option value="">Todas</option>@foreach(var value in new[]{"CRITICA","ALTA","NORMAL","BAIXA"}){<option selected="@(q.Priority == value)">@value</option>}</select></label>
-        <label>Módulo<input name="module" value="@q.Module" placeholder="Todos" /></label>
+        <label>Módulo<select name="module"><option value="">Todos</option>@foreach(var value in new[]{"OPERACAO","CLINICO","FINANCEIRO"}){<option selected="@(q.Module == value)">@value</option>}</select></label>
         <label>Status<select name="status"><option value="">Ativos</option>@foreach(var value in new[]{"ATIVA","PENDENTE","VENCIDA","BLOQUEADA","RESOLVIDA"}){<option selected="@(q.Status == value)">@value</option>}</select></label>
         <label>Prazo<select name="due"><option value="">Qualquer prazo</option><option value="hoje" selected="@(q.Due == "hoje")">Hoje</option><option value="atrasado" selected="@(q.Due == "atrasado")">Atrasado</option></select></label>
         <button class="btn btn-primary" type="submit">Aplicar filtros</button>
@@ -50,7 +50,7 @@
         {
             <article class="productivity-item priority-@item.Priority.ToLowerInvariant()" data-item-key="@item.Key">
                 <span class="productivity-item__icon"><i class="bi @item.Icon" aria-hidden="true"></i></span>
-                <div class="productivity-item__body"><div class="productivity-item__meta"><span class="priority-badge">@item.Priority</span><span>@item.Module</span>@if(item.DueAt.HasValue){<time datetime="@item.DueAt.Value.ToString("O")">@item.DueAt.Value.ToLocalTime().ToString("dd/MM HH:mm")</time>}</div><h2>@item.Title</h2><p>@item.Description</p><small>@item.ContextLabel</small></div>
+                <div class="productivity-item__body"><div class="productivity-item__meta"><span class="priority-badge">@item.Priority</span><span>@item.Module</span><span>@item.Status</span>@if(item.DueAt.HasValue){<time datetime="@item.DueAt.Value.ToString("O")" title="Data usada para ordenar e calcular atraso">Data relevante: @item.DueAt.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time>}</div><h2>@item.Title</h2><p><strong>Motivo:</strong> @item.Description</p><small>Origem: @item.ContextLabel · Responsável: @(item.OwnerType == "USUARIO" ? "profissional vinculado" : "equipe autorizada")</small></div>
                 <div class="productivity-item__actions">
                     @if(item.PrimaryAction is not null){<a class="btn btn-sm btn-primary" href="@ActionUrl(item.PrimaryAction)">@item.PrimaryAction.Label</a>}
                     @if(item.CanSnooze){<button class="btn btn-sm btn-outline-secondary" type="button" data-snooze="@item.Key" aria-label="Adiar @item.Title"><i class="bi bi-clock"></i> Adiar</button>}

@@ -11,6 +11,8 @@ public interface IProductivityActionRepository
     Task<ProductivityActionDto?> FindActiveAsync(Guid tenantId, Guid userId, string key,
         bool operation, bool clinical, bool financial, bool doctorOnly, CancellationToken ct);
     Task SnoozeAsync(Guid tenantId, Guid userId, string key, DateTimeOffset until, CancellationToken ct);
+    Task<ProductivitySummaryDto> SummaryAsync(Guid tenantId, Guid userId,
+        bool operation, bool clinical, bool financial, bool doctorOnly, CancellationToken ct);
 }
 
 public sealed class ProductivityActionRepository : IProductivityActionRepository
@@ -24,25 +26,24 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
 
     // Every row is derived from the current source entity. Only user presentation state is joined.
     private const string DerivedSql = @"
-        select concat('OPERACAO:PLANTAO:',p.id,':COBERTURA') as Key,'OPERACAO' as Module,'PLANTAO' as EntityType,
-          p.id as EntityId,'COBERTURA' as ActionCode,'Plantão sem cobertura' as Title,
-          coalesce(nullif(p.nome,''),'Existem vagas abertas para este plantão.') as Description,
-          case when x.due_at <= now()+interval '12 hours' then 'CRITICA' when x.due_at <= now()+interval '24 hours' then 'ALTA'
-               when x.due_at <= now()+interval '72 hours' then 'NORMAL' else 'BAIXA' end as Priority,
-          'ATIVA' as Status,x.due_at as DueAt,p.criado_em as CreatedAt,'EQUIPE' as OwnerType,null::uuid as OwnerId,
-          'bi-calendar2-x' as Icon,coalesce(nullif(p.nome,''),'Operação') as ContextLabel,
-          '/Plantoes/Detalhes/'||p.id as PrimaryAction,true as CanSnooze,false as CanDismiss,
-          coalesce(p.atualizado_em,p.criado_em) as SourceUpdatedAt
-        from plantaopro.plantoes p
-        cross join lateral (select coalesce(nullif(p.dados->>'dataInicio','')::timestamptz,nullif(p.dados->>'data_inicio','')::timestamptz) due_at,
-          coalesce(nullif(p.dados->>'vagasDisponiveis','')::int,nullif(p.dados->>'vagas_disponiveis','')::int,0) vagas) x
-        where @operation and p.tenant_id=@tenantId and p.status not in ('CANCELADO','CONCLUIDO','INATIVO') and x.vagas>0 and x.due_at is not null and x.due_at>=now()
-        union all
         select concat('OPERACAO:CONVITE:',c.id,':RESPONDER'),'OPERACAO','CONVITE',c.id,'RESPONDER','Convite aguardando resposta',
           'Um convite de plantão aguarda sua resposta.','NORMAL','ATIVA',null,c.criado_em,'USUARIO',c.medico_id,
           'bi-envelope-check','Plantão','/Convites',true,false,coalesce(c.respondido_em,c.reenviado_em,c.criado_em)
         from plantaopro.cobertura_convites c where @operation and c.tenant_id=@tenantId and c.status='PENDENTE'
           and (not @doctorOnly or c.medico_id=@userId)
+        union all
+        select concat('OPERACAO:ESCALA:',e.id,':CONFIRMAR'),'OPERACAO','ESCALA',e.id,'CONFIRMAR','Escala aguardando confirmação',
+          'Confirme ou recuse a escala na tela de origem.','NORMAL','ATIVA',
+          case when coalesce(e.dados->>'dataInicio',e.dados->>'data_inicio','') ~ '^\d{4}-\d{2}-\d{2}' then coalesce(e.dados->>'dataInicio',e.dados->>'data_inicio')::timestamptz end,
+          e.criado_em,'EQUIPE',null::uuid,'bi-calendar2-check',coalesce(nullif(e.nome,''),'Escala'),'/Escalas/Details/'||e.id,true,false,coalesce(e.atualizado_em,e.criado_em)
+        from plantaopro.escalas e where @operation and e.tenant_id=@tenantId and upper(e.status) in ('SOLICITADA','PENDENTE','AGUARDANDO_CONFIRMACAO')
+          and (not @doctorOnly or coalesce(e.dados->>'medicoId',e.dados->>'medico_id')=@userId::text)
+        union all
+        select concat('FINANCEIRO:PAGAMENTO:',pg.id,':CONFERIR'),'FINANCEIRO','PAGAMENTO',pg.id,'CONFERIR','Pagamento aguardando conferência',
+          'Confira valores e dados de pagamento antes de confirmar.','NORMAL','ATIVA',coalesce(pg.data_vencimento,pg.data_prevista)::timestamptz,
+          pg.reg_date,'USUARIO',pg.medico_id,'bi-cash-stack','Pagamento','/Financeiro/Detalhes/'||pg.id,true,false,coalesce(pg.reg_update,pg.reg_date)
+        from plantaopro.pagamentos pg where @financial and pg.tenant_id=@tenantId and pg.reg_status='A' and lower(pg.status) in ('pendente','em_conferencia','atrasado')
+          and (not @doctorOnly or pg.medico_id=@userId)
         union all
         select concat('FINANCEIRO:FECHAMENTO:',f.id,':',case when f.status='COM_DIVERGENCIA' then 'DIVERGENCIA_ABERTA' else f.status end),
           'FINANCEIRO','FECHAMENTO',f.id,case when f.status='COM_DIVERGENCIA' then 'DIVERGENCIA_ABERTA' else f.status end,
@@ -67,6 +68,12 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           and ax.starts_at>=date_trunc('day',now()) and ax.starts_at<date_trunc('day',now())+interval '1 day'
           and not exists(select 1 from plantaopro.checkins ci where ci.tenant_id=@tenantId and ci.status not in ('CANCELADO','INATIVO')
             and coalesce(ci.dados->>'agendamentoId',ci.dados->>'agendamento_id')=a.id::text)
+        union all
+        select concat('CLINICO:CONSULTA:',c.id,':CONTINUAR'),'CLINICO','CONSULTA',c.id,'CONTINUAR','Atendimento em rascunho',
+          'Há informações salvas que ainda precisam ser revisadas e finalizadas.','NORMAL','ATIVA',null,c.criado_em,
+          'USUARIO',c.assumida_por,'bi-journal-medical',coalesce(nullif(c.nome,''),'Atendimento'),'/Consultas/Atendimento/'||c.id,true,false,coalesce(c.atualizado_em,c.criado_em)
+        from plantaopro.consultas c where @clinical and c.tenant_id=@tenantId and upper(c.status) in ('RASCUNHO','EM_ATENDIMENTO')
+          and (not @doctorOnly or c.assumida_por=@userId)
         ";
 
     public async Task<ProductivityPageDto> ListAsync(Guid tenantId, Guid userId, ProductivityQuery query,
@@ -119,6 +126,24 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           ",new{tenantId,userId,key,until},cancellationToken:ct));
     }
 
+    public async Task<ProductivitySummaryDto> SummaryAsync(Guid tenantId, Guid userId,
+        bool operation, bool clinical, bool financial, bool doctorOnly, CancellationToken ct)
+    {
+        const string summarySql = @"with derived as (" + DerivedSql + @"), visible as (
+          select d.*, coalesce(s.snoozed_until>now(),false) snoozed
+          from derived d left join plantaopro.productivity_item_user_state s
+            on s.tenant_id=@tenantId and s.user_id=@userId and s.item_key=d.Key
+          where s.dismissed_at is null)
+          select count(*) filter(where not snoozed)::int Active,
+            count(*) filter(where not snoozed and Priority='CRITICA')::int Critical,
+            count(*) filter(where not snoozed and DueAt>=date_trunc('day',now()) and DueAt<date_trunc('day',now())+interval '1 day')::int Today,
+            count(*) filter(where not snoozed and DueAt<now())::int Overdue,
+            count(*) filter(where snoozed)::int Snoozed from visible";
+        await using var cn=Open();
+        return await cn.QuerySingleAsync<ProductivitySummaryDto>(new CommandDefinition(summarySql,
+            new {tenantId,userId,operation,clinical,financial,doctorOnly},cancellationToken:ct));
+    }
+
     private static string? Normalize(string? value)=>string.IsNullOrWhiteSpace(value)?null:value.Trim().ToUpperInvariant();
     private sealed class ProductivityRow
     {
@@ -155,9 +180,7 @@ public sealed class ProductivityActionService : IProductivityActionService
     public Task<ProductivityPageDto> ListAsync(ProductivityQuery query,CancellationToken ct)=>repository.ListAsync(Tenant,User,query,Operation,Clinical,Financial,current.IsDoctor(),ct);
     public async Task<ProductivitySummaryDto> SummaryAsync(CancellationToken ct)
     {
-        var all=await ListAsync(new ProductivityQuery(PageSize:100),ct); var now=DateTimeOffset.UtcNow;
-        return new(all.Total,all.Items.Count(x=>x.Priority==ProductivityPriority.Critica),all.Items.Count(x=>x.DueAt?.UtcDateTime.Date==now.UtcDateTime.Date),all.Items.Count(x=>x.DueAt<now),
-            (await ListAsync(new ProductivityQuery(Tab:"ADIADAS",PageSize:1),ct)).Total);
+        return await repository.SummaryAsync(Tenant,User,Operation,Clinical,Financial,current.IsDoctor(),ct);
     }
     public async Task SnoozeAsync(string key,DateTimeOffset until,CancellationToken ct)
     {

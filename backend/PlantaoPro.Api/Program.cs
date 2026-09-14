@@ -246,6 +246,14 @@ builder.Services.AddScoped<ISavedViewRepository, SavedViewRepository>();
 builder.Services.AddScoped<ISavedViewService, SavedViewService>();
 
 var app = builder.Build();
+
+var provisionDemo = args.Contains("--provision-demo", StringComparer.OrdinalIgnoreCase);
+var resetDemoPasswords = args.Contains("--reset-demo-passwords", StringComparer.OrdinalIgnoreCase);
+if (provisionDemo || resetDemoPasswords)
+{
+    await DevelopmentSeed.RunAsync(app.Services, resetDemoPasswords);
+    return;
+}
 app.UseHttpLogging();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
@@ -254,10 +262,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))
     app.UseSwaggerUI();
     app.MapGet("/", () => Results.Redirect("/swagger"));
 
-    if (app.Configuration.GetValue<bool>("DevelopmentSeed:Enabled"))
-    {
-        await DevelopmentSeed.RunAsync(app.Services);
-    }
     app.UseCors("DevelopmentCors");
 }
 else

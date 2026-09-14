@@ -64,11 +64,11 @@ public class MinhaAgendaController : BaseWebController
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> RegistrarPresenca(Guid escalaId, string operacao)
+    public async Task<IActionResult> RegistrarPresenca(Guid escalaId, string operacao, string timezone)
     {
         var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
         var action = string.Equals(operacao, "checkout", StringComparison.OrdinalIgnoreCase) ? "check-out" : "check-in";
-        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/{action}", new { Timezone="UTC" });
+        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/{action}", new { Timezone=timezone });
         TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? "Presença registrada com segurança." : "Não foi possível registrar a presença. Verifique se a ação já foi realizada.";
         return RedirectToAction(nameof(Presencas));
     }

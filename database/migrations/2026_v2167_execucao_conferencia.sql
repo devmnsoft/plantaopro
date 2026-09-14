@@ -12,6 +12,10 @@ alter table medico_checkins
   add column if not exists fim_aprovado_em timestamptz,
   add column if not exists versao bigint not null default 1;
 
+update medico_checkins set checkin_recebido_em=coalesce(checkin_recebido_em,checkin_em),
+ checkout_recebido_em=coalesce(checkout_recebido_em,checkout_em),
+ status_conferencia=case when checkout_em is null then 'REGISTRO_INCOMPLETO' else 'PENDENTE' end;
+
 do $$ begin alter table medico_checkins add constraint ck_v2167_presenca_aprovada_ordem
  check (fim_aprovado_em is null or (inicio_aprovado_em is not null and fim_aprovado_em>=inicio_aprovado_em));
 exception when duplicate_object then null; end $$;
@@ -24,7 +28,6 @@ create table if not exists medico_presenca_correcoes (
  presenca_id uuid not null references medico_checkins(id), escala_id uuid not null, medico_id uuid not null,
  inicio_original_em timestamptz, fim_original_em timestamptz, inicio_proposto_em timestamptz, fim_proposto_em timestamptz,
  justificativa varchar(1000) not null, status varchar(20) not null default 'PENDENTE', versao bigint not null default 1,
- versao_presenca_base bigint not null default 1,
  solicitado_por uuid not null, solicitado_em timestamptz not null default now(), decidido_por uuid, decidido_em timestamptz,
  justificativa_decisao varchar(1000), inicio_aprovado_em timestamptz, fim_aprovado_em timestamptz,
  constraint ck_v2167_correcao_status check(status in ('PENDENTE','APROVADA','RECUSADA','CANCELADA')),
@@ -41,22 +44,3 @@ create table if not exists medico_presenca_historico (
  executado_por uuid not null, executado_em timestamptz not null default now()
 );
 create index if not exists ix_v2167_presenca_historico on medico_presenca_historico(tenant_id,presenca_id,executado_em desc);
-
-alter table medico_presenca_correcoes
- add column if not exists versao_presenca_base bigint not null default 1;
-update medico_presenca_correcoes x set versao_presenca_base=c.versao
-from medico_checkins c
-where c.id=x.presenca_id and x.status='PENDENTE' and x.versao_presenca_base=1 and c.versao<>1;
-
--- Backfill only legacy rows which have never entered the conference workflow.
--- This predicate is deliberately replay-safe: decisions and corrections are evidence
--- that the default value no longer represents an uninitialised legacy row.
-update medico_checkins c set
- checkin_recebido_em=coalesce(c.checkin_recebido_em,c.checkin_em),
- checkout_recebido_em=coalesce(c.checkout_recebido_em,c.checkout_em),
- status_conferencia=case when c.checkout_em is null then 'REGISTRO_INCOMPLETO' else 'PENDENTE' end
-where c.status_conferencia='REGISTRO_INCOMPLETO'
-  and c.inicio_aprovado_em is null
-  and c.fim_aprovado_em is null
-  and not exists(select 1 from medico_presenca_correcoes x where x.presenca_id=c.id)
-  and not exists(select 1 from medico_presenca_historico hx where hx.presenca_id=c.id);

@@ -8,4 +8,5 @@ public sealed class ExecutionConferenceController:ControllerBase
  private readonly ExecutionConferenceService service;public ExecutionConferenceController(ExecutionConferenceService service){this.service=service;}
  [HttpGet]public async Task<IActionResult> List([FromQuery]ExecutionConferenceFilter filter,CancellationToken ct){var r=await service.ListAsync(filter,ct);return StatusCode(r.StatusCode,r);}
  [HttpPost("correcoes/{id:guid}/decidir")]public async Task<IActionResult> Decide(Guid id,[FromBody]DecideExecutionCorrectionRequest request,CancellationToken ct){var r=await service.DecideAsync(id,request,ct);return StatusCode(r.StatusCode,r);}
+ [HttpPost("presencas/{id:guid}/aprovar")]public async Task<IActionResult> ApprovePresence(Guid id,[FromBody]DecideExecutionPresenceRequest request,CancellationToken ct){var r=await service.ApprovePresenceAsync(id,request,ct);return StatusCode(r.StatusCode,r);}
 }

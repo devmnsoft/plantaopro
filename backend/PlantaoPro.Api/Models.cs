@@ -680,6 +680,7 @@ public sealed record MeuDiaEstadoRequest(string? Motivo, DateTime? NovaData);
 }
 
 public record ExecutionConferenceFilter(DateOnly? Inicio,DateOnly? Fim,Guid? UnidadeId,Guid? ProfissionalId,string? Status,int Page=1,int PageSize=25);
-public record ExecutionConferenceItemDto(Guid CorrecaoId,Guid PresencaId,Guid EscalaId,Guid MedicoId,string Profissional,string Unidade,DateTimeOffset InicioPrevisto,DateTimeOffset FimPrevisto,DateTimeOffset? InicioRegistrado,DateTimeOffset? FimRegistrado,DateTimeOffset? InicioProposto,DateTimeOffset? FimProposto,DateTimeOffset? InicioAprovado,DateTimeOffset? FimAprovado,string Status,string Justificativa,long Versao,DateTimeOffset SolicitadoEm);
+public record ExecutionConferenceItemDto(Guid? CorrecaoId,Guid PresencaId,Guid EscalaId,Guid MedicoId,string Profissional,string Unidade,DateTimeOffset InicioPrevisto,DateTimeOffset FimPrevisto,DateTimeOffset? InicioRegistrado,DateTimeOffset? FimRegistrado,DateTimeOffset? InicioProposto,DateTimeOffset? FimProposto,DateTimeOffset? InicioAprovado,DateTimeOffset? FimAprovado,string Status,string Justificativa,long Versao,long VersaoPresenca,DateTimeOffset SolicitadoEm);
 public record ExecutionConferencePageDto(IReadOnlyList<ExecutionConferenceItemDto> Items,long Total,long Pendentes,long Aprovadas,long Recusadas,int Page,int PageSize);
 public record DecideExecutionCorrectionRequest(bool Aprovar,string Justificativa,long Versao);
+public record DecideExecutionPresenceRequest(string Justificativa,long Versao);

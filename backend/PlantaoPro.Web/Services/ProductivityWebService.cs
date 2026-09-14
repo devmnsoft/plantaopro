@@ -34,7 +34,9 @@ public sealed class ProductivityWebService
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("Productivity API returned {StatusCode} for {Uri}", response.StatusCode, uri);
-                return new() { Error = "Não foi possível carregar os dados reais agora. Tente novamente." };
+                return new() { Error = response.StatusCode == System.Net.HttpStatusCode.Forbidden
+                    ? "Seu perfil não possui acesso a esta visão ou o acesso foi revogado."
+                    : "Não foi possível carregar os dados reais agora. Tente novamente." };
             }
 
             return await response.Content.ReadFromJsonAsync<ProductivityPageViewModel>(Json, ct) ?? new();
@@ -58,9 +60,12 @@ public sealed class ProductivityWebService
         var values = new Dictionary<string, string?>
         {
             ["tab"] = query.Tab, ["priority"] = query.Priority, ["module"] = query.Module,
-            ["status"] = query.Status, ["due"] = query.Due, ["unitId"] = query.UnitId,
+            ["status"] = query.Status, ["unitId"] = query.UnitId,
             ["page"] = Math.Max(1, query.Page).ToString(), ["pageSize"] = Math.Clamp(query.PageSize, 1, 100).ToString()
         };
+        var now = DateTimeOffset.UtcNow;
+        if (query.Due == "hoje") { values["dueFrom"] = now.Date.ToString("O"); values["dueTo"] = now.Date.AddDays(1).AddTicks(-1).ToString("O"); }
+        else if (query.Due == "atrasado") values["dueTo"] = now.ToString("O");
         return Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(path, values.Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToDictionary(x => x.Key, x => x.Value!));
     }
 }

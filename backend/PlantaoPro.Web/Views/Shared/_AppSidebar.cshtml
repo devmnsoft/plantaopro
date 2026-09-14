@@ -32,7 +32,7 @@
         <a class="nav-link-app @Active("Pendencias")" asp-controller="Pendencias" asp-action="Index"><app-icon name="Warning" size="19" /><span>Central de Pendências</span></a>
         @if (canOperate)
         {
-            <div class="nav-section-title"><span>Operação médica</span></div>
+            <div class="nav-section-title"><span>Operação</span></div>
             @if (canManage || User.IsInRole(RolesConstants.Coordenacao) || User.IsInRole(RolesConstants.Coordenador))
             {
                 <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
@@ -62,7 +62,7 @@
         }
         @if (canManage)
         {
-            <div class="nav-section-title"><span>Gestão</span></div>
+            <div class="nav-section-title"><span>Administração do Cliente</span></div>
             @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a> }
             @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a> }
             @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a> }
@@ -73,7 +73,7 @@
         }
         @if (isGlobalAdmin)
         {
-            <div class="nav-section-title"><span>Modo Global MNSOFT</span></div>
+            <div class="nav-section-title"><span>Administração MNSOFT</span></div>
             <a class="nav-link-app @Active("SaasDashboard")" asp-controller="SaasDashboard" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Central Global</span></a>
             <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
             <a class="nav-link-app @Active("Planos")" asp-controller="Planos" asp-action="Index"><app-icon name="Report" size="19" /><span>Planos comerciais</span></a>

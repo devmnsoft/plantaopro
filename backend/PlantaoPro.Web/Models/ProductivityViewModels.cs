@@ -30,6 +30,8 @@ public sealed class ProductivityItemViewModel
     public DateTimeOffset CreatedAt { get; set; }
     public string Icon { get; set; } = "bi-list-check";
     public string ContextLabel { get; set; } = string.Empty;
+    public string OwnerType { get; set; } = "EQUIPE";
+    public string? OwnerId { get; set; }
     public ProductivityActionViewModel? PrimaryAction { get; set; }
     public bool CanSnooze { get; set; }
     public bool CanDismiss { get; set; }

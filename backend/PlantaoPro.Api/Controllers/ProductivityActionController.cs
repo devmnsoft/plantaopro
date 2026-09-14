@@ -49,7 +49,7 @@ public sealed class ProductivityActionController : ControllerBase
             items = page.Items.Select(x => new
             {
                 x.Key,x.Module,x.EntityType,x.EntityId,x.ActionCode,x.Title,x.Description,x.Priority,x.Status,x.DueAt,x.CreatedAt,
-                x.Icon,x.ContextLabel,
+                x.Icon,x.ContextLabel,x.OwnerType,x.OwnerId,
                 primaryAction = SafeAction(x.PrimaryAction),x.CanSnooze,x.CanDismiss,x.SourceUpdatedAt,x.IsSnoozed
             }),
             summary, quickActions = service.QuickActions(), agenda = Array.Empty<object>(),

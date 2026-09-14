@@ -332,8 +332,8 @@ where plantao_id=@plantaoId and medico_id=@medicoId and reg_status='A' and lower
                 }
 
                 var conviteId = Guid.NewGuid();
-                await cn.ExecuteAsync(@"insert into plantaopro.plantao_convites(id,plantao_id,medico_id,usuario_id,status,mensagem,data_envio,reg_status,reg_date)
-values(@conviteId,@plantaoId,@medicoId,@usuarioId,'ENVIADO',@mensagem,now(),'A',now())", new { conviteId, plantaoId, medicoId, usuarioId = medico.UsuarioId, mensagem }, tx);
+                await cn.ExecuteAsync(@"insert into plantaopro.plantao_convites(id,plantao_id,medico_id,usuario_id,status,mensagem,data_envio,expira_em,reg_status,reg_date)
+values(@conviteId,@plantaoId,@medicoId,@usuarioId,'ENVIADO',@mensagem,now(),now()+interval '24 hours','A',now())", new { conviteId, plantaoId, medicoId, usuarioId = medico.UsuarioId, mensagem }, tx);
                 await _notificacao.CriarNotificacaoAsync(medico.UsuarioId, "Convite recebido", "Você recebeu um convite de plantão.", "convite", tx);
                 await _audit.LogAsync(usuarioId, "CONVIDAR_RECOMENDADO", "plantao_convites", conviteId, "Convite gerado por recomendação médica", ip: ip, userAgent: userAgent);
                 totalCriado++;

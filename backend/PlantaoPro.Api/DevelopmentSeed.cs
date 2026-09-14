@@ -1,81 +1,99 @@
 using Dapper;
 using Npgsql;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.Hosting;
 
 namespace PlantaoPro.Api.Data;
 
+/// <summary>Provisionamento deliberado das duas identidades de demonstração.</summary>
+/// <remarks>Este código só é chamado pelo comando --provision-demo/--reset-demo-passwords.</remarks>
 public static class DevelopmentSeed
 {
-    public static async Task RunAsync(IServiceProvider services)
+    internal const string SuperEmail = "superadmin@mnsoft.example";
+    internal const string ManagerEmail = "gestor@santacasa-demo.example";
+    internal const string DemoTenantCode = "santa-casa-demonstracao";
+    private static readonly Guid DemoClientId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647501");
+    private static readonly Guid DemoTenantId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647502");
+    private static readonly Guid DemoPlanId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647503");
+    private static readonly Guid DemoUnitId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647504");
+    private static readonly Guid SuperUserId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647510");
+    private static readonly Guid ManagerUserId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647511");
+
+    public static async Task RunAsync(IServiceProvider services, bool resetPasswords, CancellationToken ct = default)
     {
         using var scope = services.CreateScope();
         var cfg = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         var env = scope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
         var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DevelopmentSeed");
-        if (!env.IsDevelopment()) return;
+        if (!env.IsDevelopment()) throw new InvalidOperationException("O provisionamento demonstrativo é permitido somente em Development.");
+        if (!cfg.GetValue<bool>("DemoSeed:Enabled")) throw new InvalidOperationException("Habilite explicitamente DemoSeed:Enabled para executar o comando.");
 
-        var demoPassword = cfg["Demo:Password"] ?? cfg["PLANTAOPRO_DEMO_PASSWORD"] ?? Environment.GetEnvironmentVariable("PLANTAOPRO_DEMO_PASSWORD");
-        if (string.IsNullOrWhiteSpace(demoPassword) || demoPassword.Contains("CHANGE_ME", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("DevelopmentSeed habilitado, mas Demo:Password/PLANTAOPRO_DEMO_PASSWORD não foi configurada fora do Git.");
+        var expectedDatabase = cfg["DemoSeed:DevelopmentDatabase"]?.Trim();
+        if (string.IsNullOrWhiteSpace(expectedDatabase))
+            throw new InvalidOperationException("Defina DemoSeed:DevelopmentDatabase com o nome exato do banco local descartável.");
 
+        var superPassword = cfg["DemoSeed:SuperAdminPassword"] ?? "MnSoft!Demo2026#Admin";
+        var managerPassword = cfg["DemoSeed:ManagerPassword"] ?? "SantaCasa!Demo2026#Gestor";
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        await cn.OpenAsync();
+        await cn.OpenAsync(ct);
+        var actualDatabase = await cn.ExecuteScalarAsync<string>(new CommandDefinition("select current_database()", cancellationToken: ct));
+        if (!string.Equals(actualDatabase, expectedDatabase, StringComparison.Ordinal))
+            throw new InvalidOperationException("O banco conectado não corresponde a DemoSeed:DevelopmentDatabase; nenhuma alteração foi realizada.");
 
-        var planoId = await UpsertId(cn, "plantaopro.planos", "slug", "demo", "insert into plantaopro.planos(id,nome,slug,descricao,valor_mensal,status,reg_status,reg_date) values(@id,'Demo Local','demo','Plano demo local',0,'ATIVO','A',now())");
-        var clienteId = await UpsertId(cn, "plantaopro.clientes", "cnpj", "00000000000000", "insert into plantaopro.clientes(id,razao_social,nome_fantasia,cnpj,email,plano_id,status,reg_status,reg_date) values(@id,'PlantãoPro Demo','PlantãoPro Demo','00000000000000','demo@plantaopro.local',@planoId,'ATIVO','A',now())", new { planoId });
-        var tenantId = await UpsertId(cn, "plantaopro.tenants", "slug", "demo", "insert into plantaopro.tenants(id,cliente_id,plano_id,nome,slug,status,reg_status,reg_date) values(@id,@clienteId,@planoId,'Tenant Demo','demo','ATIVO','A',now())", new { clienteId, planoId });
-        await cn.ExecuteAsync("insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,status,valor_contratado,valor_mensal,reg_status,reg_date) select gen_random_uuid(),@tenantId,@clienteId,@planoId,'ATIVA',0,0,'A',now() where not exists(select 1 from plantaopro.assinaturas where tenant_id=@tenantId and reg_status='A')", new { tenantId, clienteId, planoId });
-
-        var roles = new[] { "ADMINISTRADOR_GLOBAL", "ADMINISTRADOR_CLIENTE", "ADMINISTRADOR", "COORDENACAO", "OPERADOR", "FINANCEIRO", "MEDICO", "HOSPITAL", "RECEPCAO", "TRIAGEM" };
-        foreach (var role in roles)
-            await cn.ExecuteAsync(@"insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status,reg_date)
-select gen_random_uuid(),case when @role='ADMINISTRADOR_GLOBAL' then null else @tenantId end,case when @role='ADMINISTRADOR_GLOBAL' then null else @clienteId end,@role,@role,'Perfil demo '||@role,true,false,'ATIVO','A',now()
-where not exists(select 1 from plantaopro.perfis where codigo=@role and coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid)=coalesce(case when @role='ADMINISTRADOR_GLOBAL' then null else @tenantId end,'00000000-0000-0000-0000-000000000000'::uuid) and reg_status='A')", new { role, tenantId, clienteId });
-
-        var users = new[]
+        await using var tx = await cn.BeginTransactionAsync(ct);
+        try
         {
-            ("admin.global@plantaopro.local", "Administrador Global", "ADMINISTRADOR_GLOBAL", true),
-            ("admin@plantaopro.local", "Administrador Cliente", "ADMINISTRADOR_CLIENTE", false),
-            ("coordenacao@plantaopro.local", "Coordenação", "COORDENACAO", false),
-            ("operador@plantaopro.local", "Operador", "OPERADOR", false),
-            ("financeiro@plantaopro.local", "Financeiro", "FINANCEIRO", false),
-            ("medico@plantaopro.local", "Médico", "MEDICO", false),
-            ("hospital@plantaopro.local", "Hospital", "HOSPITAL", false),
-            ("recepcao@plantaopro.local", "Recepção", "RECEPCAO", false),
-            ("triagem@plantaopro.local", "Triagem", "TRIAGEM", false)
-        };
-        foreach (var u in users)
-        {
-            var userId = await cn.ExecuteScalarAsync<Guid?>("select id from plantaopro.usuarios where email_normalizado=lower(@email) or lower(email)=lower(@email) limit 1", new { email = u.Item1 }) ?? Guid.NewGuid();
-            if (!await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.usuarios where id=@userId)", new { userId }))
-            {
-                var hash = BCrypt.Net.BCrypt.HashPassword(demoPassword);
-                await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,reg_date)
-values(@userId,@tenantIdValue,@clienteIdValue,@nome,@email,lower(@email),@hash,'ATIVO','A',false,now())", new { userId, tenantIdValue = u.Item4 ? (Guid?)null : tenantId, clienteIdValue = u.Item4 ? (Guid?)null : clienteId, nome = u.Item2, email = u.Item1, hash });
-            }
-            var perfilId = await cn.ExecuteScalarAsync<Guid>("select id from plantaopro.perfis where codigo=@role and reg_status='A' order by tenant_id nulls first limit 1", new { role = u.Item3 });
-            await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_status,reg_date) select gen_random_uuid(),@tenantIdValue,@clienteIdValue,@userId,@perfilId,'A',now() where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@userId and perfil_id=@perfilId and reg_status='A')", new { tenantIdValue = u.Item4 ? (Guid?)null : tenantId, clienteIdValue = u.Item4 ? (Guid?)null : clienteId, userId, perfilId });
+            await cn.ExecuteAsync(new CommandDefinition("select pg_advisory_xact_lock(7065262026)", transaction: tx, cancellationToken: ct));
+
+            var existingGlobal = await cn.QueryFirstOrDefaultAsync<(Guid Id, string Email)>(new CommandDefinition(@"
+select u.id,u.email from plantaopro.usuarios u join plantaopro.usuarios_perfis up on up.usuario_id=u.id
+join plantaopro.perfis p on p.id=up.perfil_id where p.codigo='ADMINISTRADOR_GLOBAL' and u.reg_status='A' and up.reg_status='A' limit 1", transaction: tx, cancellationToken: ct));
+            if (existingGlobal.Id != Guid.Empty && !string.Equals(existingGlobal.Email, SuperEmail, StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException($"Já existe um administrador global ({existingGlobal.Email}). O registro foi preservado; nenhum segundo administrador foi criado.");
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+insert into plantaopro.planos(id,codigo,nome,status,dados) values(@plan,'DEMO_LOCAL','Plano demonstração local','ATIVO','{\"demonstracao\":true}'::jsonb) on conflict(id) do nothing;
+insert into plantaopro.clientes(id,tenant_id,codigo,nome,status,dados) values(@client,@tenant,'SANTA_CASA_DEMONSTRACAO','Santa Casa Demonstração','ATIVO','{\"demonstracao\":true,\"ficticio\":true}'::jsonb) on conflict(id) do nothing;
+insert into plantaopro.tenants(id,tenant_id,codigo,nome,status,dados) values(@tenant,@tenant,@code,'Santa Casa Demonstração','ATIVO','{\"demonstracao\":true}'::jsonb) on conflict(id) do nothing;
+insert into plantaopro.assinaturas(id,tenant_id,codigo,nome,status,dados) values('d3f6584c-2c64-4e5a-9ea9-4e1428647505',@tenant,'CONTRATO_DEMO','Contrato demonstrativo','ATIVO','{\"externo\":false,\"demonstracao\":true}'::jsonb) on conflict(id) do nothing;
+insert into plantaopro.unidades(id,tenant_id,codigo,nome,status,dados) values(@unit,@tenant,'UNIDADE_DEMO','Unidade Central — Demonstração','ATIVO','{\"demonstracao\":true}'::jsonb) on conflict(id) do nothing;
+insert into plantaopro.tenant_modulos(id,tenant_id,codigo,nome,status,dados)
+select ('d3f6584c-2c64-4e5a-9ea9-' || suffix)::uuid,@tenant,code,name,'ATIVO','{\"demonstracao\":true,\"contratado\":true}'::jsonb
+from (values ('4e1428647521','ESCALAS','Escalas'),('4e1428647522','EXECUCAO','Execução'),('4e1428647523','CONFERENCIA','Conferência')) m(suffix,code,name) on conflict(id) do nothing;",
+                new { plan = DemoPlanId, client = DemoClientId, tenant = DemoTenantId, unit = DemoUnitId, code = DemoTenantCode }, tx, cancellationToken: ct));
+
+            var globalProfile = await EnsureProfile(cn, tx, "ADMINISTRADOR_GLOBAL", "Administrador global", null, null, ct);
+            var managerProfile = await EnsureProfile(cn, tx, "ADMINISTRADOR_CLIENTE", "Administrador do cliente", DemoTenantId, DemoClientId, ct);
+            await EnsureUser(cn, tx, SuperUserId, "Administrador MNSOFT — Demonstração", SuperEmail, superPassword, null, null, globalProfile, resetPasswords, ct);
+            await EnsureUser(cn, tx, ManagerUserId, "Gestor Santa Casa — Demonstração", ManagerEmail, managerPassword, DemoTenantId, DemoClientId, managerProfile, resetPasswords, ct);
+            await tx.CommitAsync(ct);
+            logger.LogInformation("Contas demonstrativas provisionadas em {Database}; senhas existentes foram {PasswordAction}.", actualDatabase, resetPasswords ? "redefinidas explicitamente" : "preservadas");
         }
-        logger.LogInformation("DevelopmentSeed executado com contas demo sem expor senha.");
+        catch { await tx.RollbackAsync(ct); throw; }
     }
 
-    private static async Task<Guid> UpsertId(NpgsqlConnection cn, string table, string key, string value, string insertSql, object? extra = null)
+    private static async Task<Guid> EnsureProfile(NpgsqlConnection cn, NpgsqlTransaction tx, string code, string name, Guid? tenant, Guid? client, CancellationToken ct)
     {
-        var id = await cn.ExecuteScalarAsync<Guid?>("select id from " + table + " where " + key + "=@value limit 1", new { value });
+        var id = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition("select id from plantaopro.perfis where codigo=@code and tenant_id is not distinct from @tenant and reg_status='A' limit 1", new { code, tenant }, tx, cancellationToken: ct));
         if (id.HasValue) return id.Value;
-        var newId = Guid.NewGuid();
-        var args = Merge(new { id = newId, value }, extra);
-        await cn.ExecuteAsync(insertSql, args);
-        return newId;
+        return await cn.ExecuteScalarAsync<Guid>(new CommandDefinition(@"insert into plantaopro.perfis(tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status) values(@tenant,@client,@code,@name,'Perfil canônico para demonstração local',true,false,'ATIVO','A') returning id", new { tenant, client, code, name }, tx, cancellationToken: ct));
     }
-    private static object Merge(object first, object? second)
+
+    private static async Task EnsureUser(NpgsqlConnection cn, NpgsqlTransaction tx, Guid stableId, string name, string email, string password, Guid? tenant, Guid? client, Guid profile, bool reset, CancellationToken ct)
     {
-        var dict = new Dictionary<string, object?>();
-        foreach (var p in first.GetType().GetProperties()) dict[p.Name] = p.GetValue(first);
-        if (second != null) foreach (var p in second.GetType().GetProperties()) dict[p.Name] = p.GetValue(second);
-        return dict;
+        var id = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition("select id from plantaopro.usuarios where lower(email_normalizado)=lower(@email) and reg_status='A' limit 1", new { email }, tx, cancellationToken: ct));
+        if (id.HasValue && id.Value != stableId)
+            throw new InvalidOperationException($"O login demonstrativo {email} já pertence a outro registro. Nenhuma identidade foi alterada.");
+        if (!id.HasValue)
+        {
+            id = stableId;
+            var hash = BCrypt.Net.BCrypt.HashPassword(password);
+            await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria) values(@id,@tenant,@client,@name,@email,lower(@email),@hash,'ATIVO','A',false)", new { id, tenant, client, name, email, hash }, tx, cancellationToken: ct));
+        }
+        else if (reset)
+        {
+            var hash = BCrypt.Net.BCrypt.HashPassword(password);
+            await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new { hash, id }, tx, cancellationToken: ct));
+            await cn.ExecuteAsync(new CommandDefinition("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao='DEMO_PASSWORD_RESET',reg_update=now() where usuario_id=@id and revogada_em is null", new { id }, tx, cancellationToken: ct));
+        }
+        await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.usuarios_perfis(tenant_id,cliente_id,usuario_id,perfil_id,reg_status) select @tenant,@client,@id,@profile,'A' where not exists(select 1 from plantaopro.usuarios_perfis where usuario_id=@id and perfil_id=@profile and reg_status='A')", new { tenant, client, id, profile }, tx, cancellationToken: ct));
     }
 }

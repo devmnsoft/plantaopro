@@ -360,18 +360,15 @@ limit 50", new
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
 
-                var passwordMatches = new List<(LoginUserRow User, bool Legacy)>();
+                var passwordMatches = new List<LoginUserRow>();
                 foreach (var candidate in candidates)
                 {
                     if (string.IsNullOrWhiteSpace(candidate.SenhaHash)) continue;
                     try
                     {
-                        if (BCrypt.Net.BCrypt.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add((candidate, false));
+                        if (BCrypt.Net.BCrypt.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add(candidate);
                     }
-                    catch
-                    {
-                        if (string.Equals(req.Senha, candidate.SenhaHash, StringComparison.Ordinal)) passwordMatches.Add((candidate, true));
-                    }
+                    catch (BCrypt.Net.SaltParseException) { logger.LogWarning("Hash de senha inválido para UsuarioId:{UsuarioId}", candidate.Id); }
                 }
 
                 if (passwordMatches.Count != 1)
@@ -398,7 +395,7 @@ limit 50", new
                     return ApiResponse<LoginResponse>.Fail("Identificador ou senha inválidos.", 401);
                 }
 
-                var user = passwordMatches[0].User;
+                var user = passwordMatches[0];
                 var usuarioId = user.Id;
                 var bloqueioAte = await cn.QueryFirstOrDefaultAsync<DateTime?>(
                     @"select bloqueado_ate from plantaopro.login_tentativas
@@ -419,12 +416,6 @@ limit 50", new
                     await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "USER_INACTIVE");
                     logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);
                     return ApiResponse<LoginResponse>.Fail("Usuário bloqueado ou inativo. Contate o administrador.", 403);
-                }
-                if (passwordMatches[0].Legacy)
-                {
-                    var migratedHash = BCrypt.Net.BCrypt.HashPassword(req.Senha);
-                    await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@hash,reg_update=now() where id=@id", new { hash = migratedHash, id = usuarioId });
-                    logger.LogInformation("Senha legada migrada para BCrypt UsuarioId:{UsuarioId} IP:{Ip}", usuarioId, ip);
                 }
                 var rolesRaw = await cn.QueryAsync<string>(@"select coalesce(p.codigo,p.nome)
 from plantaopro.perfis p

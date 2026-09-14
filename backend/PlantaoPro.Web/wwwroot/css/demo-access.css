@@ -1,0 +1,6 @@
+.pp-auth-shell { max-width: 64rem; }
+.pp-auth-brand-panel { background: linear-gradient(145deg, #071d33, #103d68); min-height: 32rem; }
+.pp-auth-form-panel { background: #f5f8fc; }
+.pp-auth-card { max-width: 27rem; margin-inline: auto; }
+.auth-environment-notice { background: #e8f1fb; color: #09243c; border-bottom: 1px solid #c9d9eb; text-align: center; padding: .45rem 1rem; font-size: .82rem; }
+@media (max-width: 767px) { .pp-auth-brand-panel { min-height: auto; padding-block: 1.5rem; } }

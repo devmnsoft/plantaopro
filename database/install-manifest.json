@@ -536,6 +536,23 @@
           ]
         }
       ]
+    },
+    {
+      "order": 49,
+      "name": "plantaopro.portal_cliente_modulos_v2163",
+      "objects": [
+        {
+          "name": "plantaopro.portal_cliente_modulos_v2163",
+          "type": "canonical",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/schema/390_v2163_portal_cliente_modulos.sql",
+          "dependsOn": [
+            "plantaopro.jornada_clinica_v2160",
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -598,6 +615,9 @@
     "notificacao_agrupamentos_v145",
     "user_saved_dashboards",
     "notification_actions",
-    "notification_outbox"
+    "notification_outbox",
+    "solicitacoes_modulos",
+    "solicitacao_modulo_itens",
+    "modulo_catalogo_dependencias"
   ]
 }

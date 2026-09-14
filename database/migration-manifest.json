@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.07.0",
-  "generatedAt": "2026-08-26",
+  "schemaVersion": "v2.16.3",
+  "generatedAt": "2026-09-14",
   "migrations": [
     {
       "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
@@ -518,6 +518,17 @@
       "checksum": "69690197ad0daca6d7f18ef45238e3633c5e3785a1e097e5205ed85e4fef0a0c",
       "dependsOn": [
         "2026_v2159_saude360_agenda_recepcao"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_v2163_portal_cliente_modulos",
+      "source": "database/schema/390_v2163_portal_cliente_modulos.sql",
+      "checksum": "59ca6fbbdd23e39c9ee86b0f9cd168919f020e8295a0c2f8cd767b5e485dfd53",
+      "dependsOn": [
+        "2026_v2160_triagem_consulta_jornada"
       ],
       "status": "active",
       "transactional": true,

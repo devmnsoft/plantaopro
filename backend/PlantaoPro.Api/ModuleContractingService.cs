@@ -34,10 +34,20 @@ where m.reg_status='A' group by m.id,tm.status,tm.habilitado order by m.nome", n
         RequireTenantAdmin();
         var ids = request.ModuloIds.Where(x => x != Guid.Empty).Distinct().OrderBy(x => x).ToArray();
         if (ids.Length == 0) throw new ArgumentException("Selecione ao menos um módulo.");
-        var catalog = (await CatalogAsync(ct)).Where(x => ids.Contains(x.Id)).ToArray();
+        var fullCatalog = await CatalogAsync(ct);
+        var catalog = fullCatalog.Where(x => ids.Contains(x.Id)).ToArray();
         if (catalog.Length != ids.Length || catalog.Any(x => x.Disponibilidade != "DISPONIVEL" || x.EstadoContratual is "ATIVO" or "SUSPENSO")) throw new InvalidOperationException("Um módulo não está disponível para nova contratação.");
         var selectedCodes = catalog.Select(x => x.Codigo).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var missing = catalog.SelectMany(x => x.Dependencias).Where(x => !selectedCodes.Contains(x)).Distinct().ToArray();
+        // Uma dependência já vigente no tenant não deve ser contratada outra vez.
+        // Suspensa/agendada continua sem satisfazer a dependência operacional.
+        var contractedCodes = fullCatalog
+            .Where(x => x.EstadoContratual == "ATIVO")
+            .Select(x => x.Codigo)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var missing = catalog.SelectMany(x => x.Dependencias)
+            .Where(x => !selectedCodes.Contains(x) && !contractedCodes.Contains(x))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
         if (missing.Length > 0) throw new InvalidOperationException("Inclua as dependências: " + string.Join(", ", missing));
         var start = (request.InicioPrevisto ?? DateTimeOffset.UtcNow).ToUniversalTime();
         if (start < DateTimeOffset.UtcNow.AddMinutes(-1)) throw new ArgumentException("O início previsto não pode estar no passado.");

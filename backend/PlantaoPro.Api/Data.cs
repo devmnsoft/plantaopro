@@ -1367,6 +1367,95 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao aceitar plantão {PlantaoId}", plantaoId); return ApiResponse<string>.Fail("Erro ao aceitar plantão", 500); }
         }
+
+        /// <summary>
+        /// Confirma um convite operacional e a respectiva escala na mesma transação.
+        /// O lock advisory do médico serializa aceites em plantões diferentes, enquanto o
+        /// FOR UPDATE do plantão protege a última vaga. Intervalos adjacentes são permitidos.
+        /// </summary>
+        public async Task<ApiResponse<string>> AceitarConviteAsync(Guid conviteId, Guid medicoId, Guid clienteId, Guid userId, string? ip, string? ua)
+        {
+            await using var cn = Cn();
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.ReadCommitted);
+            try
+            {
+                await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 2166))", new { key = medicoId.ToString("N") }, tx);
+                var convite = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid PlantaoId, string Status, DateTime? ExpiraEm)>(@"select c.id,c.plantao_id as PlantaoId,c.status,c.expira_em as ExpiraEm
+from plantaopro.plantao_convites c
+join plantaopro.plantoes p on p.id=c.plantao_id and p.reg_status='A'
+where c.id=@conviteId and c.medico_id=@medicoId and c.reg_status='A' and p.cliente_id=@clienteId
+for update of c", new { conviteId, medicoId, clienteId }, tx);
+                if (convite.Id == Guid.Empty) return ApiResponse<string>.Fail("Convite não encontrado no cliente ativo.", 404);
+
+                var existente = await cn.ExecuteScalarAsync<Guid?>(@"select id from plantaopro.escalas
+where plantao_id=@plantaoId and medico_id=@medicoId and reg_status='A'
+  and lower(status) in ('solicitado','solicitada','confirmado','confirmada','realizado','realizada')
+order by reg_date limit 1", new { convite.PlantaoId, medicoId }, tx);
+                if (string.Equals(convite.Status, "ACEITO", StringComparison.OrdinalIgnoreCase) && existente.HasValue)
+                {
+                    await tx.CommitAsync();
+                    return ApiResponse<string>.Ok(existente.Value.ToString(), "Convite já aceito; escala confirmada anteriormente.");
+                }
+                var conviteStatus = convite.Status.ToUpperInvariant();
+                if (conviteStatus is not ("ENVIADO" or "PENDENTE") || convite.ExpiraEm is not null && convite.ExpiraEm <= DateTime.UtcNow)
+                    return ApiResponse<string>.Fail("Convite expirado ou já processado. Atualize a lista.", 409);
+
+                var medicoValido = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.medicos
+where id=@medicoId and cliente_id=@clienteId and reg_status='A' and coalesce(bloqueado,false)=false
+  and usuario_id=@userId and nullif(btrim(crm),'') is not null and nullif(btrim(uf_crm),'') is not null)", new { medicoId, clienteId, userId }, tx);
+                if (!medicoValido) return ApiResponse<string>.Fail("Seu vínculo ou elegibilidade profissional mudou.", 409);
+
+                var plantao = await cn.QueryFirstOrDefaultAsync<(Guid Id, string Status, int Vagas, DateTime Inicio, DateTime Fim)>(@"select id,status,vagas_disponiveis as Vagas,data_inicio as Inicio,data_fim as Fim
+from plantaopro.plantoes where id=@plantaoId and cliente_id=@clienteId and reg_status='A' for update", new { convite.PlantaoId, clienteId }, tx);
+                if (plantao.Id == Guid.Empty || plantao.Vagas <= 0 || plantao.Status.ToLowerInvariant() is not ("aberto" or "em_escala"))
+                    return ApiResponse<string>.Fail("A vaga não está mais disponível.", 409);
+
+                var conflito = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.escalas e
+join plantaopro.plantoes p on p.id=e.plantao_id
+where e.medico_id=@medicoId and e.reg_status='A'
+  and lower(e.status) in ('solicitado','solicitada','confirmado','confirmada','em_andamento')
+  and @inicio < p.data_fim and @fim > p.data_inicio)", new { medicoId, plantao.Inicio, plantao.Fim }, tx);
+                if (conflito) return ApiResponse<string>.Fail("Você ficou indisponível nesse horário.", 409);
+
+                var motivos = (await elegibilidade.ObterMotivosInelegibilidadeAsync(medicoId, convite.PlantaoId)).Where(x => x.Bloqueante).Select(x => x.Mensagem).ToArray();
+                if (motivos.Length > 0) return ApiResponse<string>.Fail("As condições do convite mudaram: " + string.Join("; ", motivos), 409);
+
+                var escalaId = Guid.NewGuid();
+                await cn.ExecuteAsync(@"insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date)
+values(@escalaId,@plantaoId,@medicoId,'confirmado','Aceite de convite operacional',@userId,'A',now())", new { escalaId, plantaoId = convite.PlantaoId, medicoId, userId }, tx);
+                await cn.ExecuteAsync(@"update plantaopro.plantoes set vagas_disponiveis=vagas_disponiveis-1,
+status=case when vagas_disponiveis-1=0 then 'preenchido' else 'em_escala' end,updated_by=@userId,reg_update=now()
+where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
+                await cn.ExecuteAsync("update plantaopro.plantao_convites set status='ACEITO',data_resposta=now(),reg_update=now() where id=@conviteId", new { conviteId }, tx);
+                await AddHistoricoAsync(cn, tx, escalaId, null, "confirmado", "Aceite de convite operacional", userId);
+                await notificacao.CriarNotificacaoAsync(userId, "Plantão confirmado", "O compromisso foi confirmado na sua agenda.", "escala", tx);
+                await tx.CommitAsync();
+                try
+                {
+                    await audit.LogAsync(userId, "ACEITAR_CONVITE", "plantao_convites", conviteId, "Convite aceito e escala confirmada", ip: ip, userAgent: ua);
+                }
+                catch (Exception auditException)
+                {
+                    // O compromisso já foi consolidado: falha da trilha auxiliar não pode induzir
+                    // repetição do aceite. O log técnico permite reconciliação observável.
+                    logger.LogError(auditException, "Falha ao auditar convite aceito {ConviteId}", conviteId);
+                }
+                return ApiResponse<string>.Ok(escalaId.ToString(), "Convite aceito e escala confirmada.");
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                await tx.RollbackAsync();
+                logger.LogWarning(ex, "Aceite concorrente consolidado para convite {ConviteId}", conviteId);
+                return ApiResponse<string>.Fail("A vaga ou a escala foi atualizada por outra solicitação. Atualize a agenda.", 409);
+            }
+            catch (Exception ex)
+            {
+                await tx.RollbackAsync();
+                logger.LogError(ex, "Erro transacional ao aceitar convite {ConviteId}", conviteId);
+                return ApiResponse<string>.Fail("Não foi possível confirmar o aceite. Consulte sua agenda antes de tentar novamente.", 500);
+            }
+        }
         public Task<ApiResponse<string>> ConfirmarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "confirmado", justificativa, userId, null, ip, userAgent);
         public Task<ApiResponse<string>> RecusarAsync(Guid id, string justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "recusado", justificativa, userId, null, ip, userAgent);
         public Task<ApiResponse<string>> CancelarAsync(Guid id, string justificativa, Guid userId, string? ip, string? userAgent) => AlterarStatusAsync(id, "cancelado", justificativa, userId, null, ip, userAgent);

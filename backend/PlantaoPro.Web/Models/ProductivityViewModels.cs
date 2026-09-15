@@ -81,6 +81,9 @@ public sealed class ProductivityQueryViewModel
     public string? Module { get; set; }
     public string? Status { get; set; }
     public string? Due { get; set; }
+    public DateOnly? PeriodFrom { get; set; }
+    public DateOnly? PeriodTo { get; set; }
+    public bool Mine { get; set; }
     public string? UnitId { get; set; }
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 25;

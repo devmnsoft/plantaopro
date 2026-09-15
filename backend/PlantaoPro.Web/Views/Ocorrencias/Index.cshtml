@@ -1,0 +1,41 @@
+@model PlantaoPro.Web.Models.OccurrenceDetailViewModel
+@{
+    ViewData["Title"] = "Ocorrência operacional";
+    var returnUrl = Url.Action("Index", "Pendencias", new { module = "OCORRENCIAS" });
+}
+<main class="pp-page" aria-labelledby="occurrence-title">
+    <a class="pp-back-link" href="@returnUrl"><i class="bi bi-arrow-left" aria-hidden="true"></i> Voltar às pendências</a>
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <section class="state-panel" role="alert"><h1 id="occurrence-title">Ocorrência indisponível</h1><p>@Model.Error</p></section>
+    }
+    else
+    {
+        <header class="pending-hero">
+            <div><span class="eyebrow">Ocorrências · @Model.Categoria</span><h1 id="occurrence-title">@Model.Title</h1><p>@Model.Description</p></div>
+            <span class="context-pill">Situação: @Model.Situacao</span>
+        </header>
+        <section class="pp-card" aria-label="Contexto da ocorrência">
+            <dl class="pp-definition-grid">
+                <div><dt>Prioridade</dt><dd>@Model.Prioridade</dd></div>
+                <div><dt>Responsabilidade</dt><dd>@(Model.ResponsavelId.HasValue ? "Responsável atribuído" : "Disponível para equipe autorizada")</dd></div>
+                <div><dt>Prazo de resolução</dt><dd>@(Model.PrazoResolucao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Sem prazo definido")</dd></div>
+            </dl>
+        </section>
+        @if (Model.Situacao is not ("RESOLVIDA" or "CANCELADA") && Model.ResponsavelId.HasValue)
+        {
+            <form asp-action="Resolve" method="post" class="pp-card" data-submit-once>
+                <input type="hidden" name="id" value="@Model.Id" /><input type="hidden" name="version" value="@Model.Versao" />
+                <h2>Registrar resolução</h2><p>Esta ação encerra a ocorrência no módulo de origem e a remove das pendências abertas.</p>
+                <label class="form-label" for="resolution">Providência adotada</label>
+                <textarea class="form-control" id="resolution" name="resolution" minlength="1" maxlength="4000" required>@TempData["OccurrenceResolution"]</textarea>
+                <button class="btn btn-primary mt-3" type="submit">Confirmar resolução da ocorrência</button>
+            </form>
+        }
+        else if (Model.Situacao is "RESOLVIDA" or "CANCELADA")
+        { <div class="alert alert-info" role="status">Esta ocorrência já está @Model.Situacao.ToLowerInvariant() e não exige nova ação.</div> }
+        else
+        { <div class="alert alert-warning" role="status">Atribua um responsável no fluxo operacional antes de registrar a resolução.</div> }
+    }
+</main>
+@section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }

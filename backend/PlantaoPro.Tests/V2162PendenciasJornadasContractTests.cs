@@ -15,6 +15,32 @@ public sealed class V2162PendenciasJornadasContractTests
     }
 
     [Fact]
+    public void Central_DeveIntegrarConferenciaCorrecoesEOcorrenciasSemCopiarEstado()
+    {
+        var source = Api("ProductivityActionServices.cs");
+        foreach (var origin in new[] { "medico_checkins", "medico_presenca_correcoes", "ocorrencias_operacionais" })
+            Assert.Contains(origin, source, StringComparison.Ordinal);
+        foreach (var state in new[] { "status_conferencia", "x.status='PENDENTE'", "o.situacao not in ('RESOLVIDA','CANCELADA')" })
+            Assert.Contains(state, source, StringComparison.Ordinal);
+        Assert.Contains("CreatedAt,Key", source, StringComparison.Ordinal);
+        Assert.Contains("not @mine or OwnerId=@userId", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Central_DeveUsarAcoesObjetivasEAjudarSemConfundirLeituraComResolucao()
+    {
+        var root = Directory.GetParent(RepositoryPathResolver.ApiRoot)!.FullName;
+        var controller = Api(Path.Combine("Controllers", "ProductivityActionController.cs"));
+        var view = File.ReadAllText(Path.Combine(root, "PlantaoPro.Web", "Views", "Pendencias", "Index.cshtml"));
+        foreach (var label in new[] { "Confirmar plantão", "Revisar correção", "Atribuir responsável", "Conferir execução" })
+            Assert.Contains(label, controller, StringComparison.Ordinal);
+        Assert.Contains("ler uma notificação não o resolve", view, StringComparison.Ordinal);
+        Assert.Contains("Sem prazo definido", view, StringComparison.Ordinal);
+        Assert.Contains("name=\"periodFrom\"", view, StringComparison.Ordinal);
+        Assert.Contains("name=\"mine\"", view, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Central_DeveUsarEstadoDaOrigemResumoIntegralEAcaoCanonica()
     {
         var source = Api("ProductivityActionServices.cs");
@@ -32,7 +58,7 @@ public sealed class V2162PendenciasJornadasContractTests
         var view = File.ReadAllText(Path.Combine(root, "PlantaoPro.Web", "Views", "Pendencias", "Index.cshtml"));
         Assert.Contains("Não foi possível carregar as pendências", view, StringComparison.Ordinal);
         Assert.Contains("Nenhuma ação nesta visão", view, StringComparison.Ordinal);
-        foreach (var label in new[] { "Motivo:", "Origem:", "Responsável:", "Data relevante:" }) Assert.Contains(label, view, StringComparison.Ordinal);
+        foreach (var label in new[] { "Motivo:", "Origem:", "Responsabilidade:", "Sem prazo definido" }) Assert.Contains(label, view, StringComparison.Ordinal);
         Assert.DoesNotContain("href=\"#\"", view, StringComparison.Ordinal);
     }
 }

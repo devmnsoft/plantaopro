@@ -4,8 +4,12 @@ using PlantaoPro.Domain.Ocorrencias;
 
 namespace PlantaoPro.Api;
 
-public sealed class OcorrenciaService(IConfiguration configuration, ICurrentUserService currentUser)
+public sealed class OcorrenciaService
 {
+    private readonly IConfiguration configuration;
+    private readonly ICurrentUserService currentUser;
+    public OcorrenciaService(IConfiguration configuration, ICurrentUserService currentUser)
+    { this.configuration = configuration; this.currentUser = currentUser; }
     private Guid Tenant => currentUser.TenantId ?? throw new UnauthorizedAccessException("Contexto da organização obrigatório.");
     private Guid UserId => currentUser.UserId ?? throw new UnauthorizedAccessException("Identidade inválida.");
     private bool Gestor => currentUser.IsTenantAdmin() || currentUser.IsGlobalAdmin() || currentUser.HasRole("COORDENADOR");
@@ -69,4 +73,7 @@ values(@id,@tenant,@unidade,@plantao,@titulo,@descricao,@categoria,@prioridade,@
     private sealed class Counts { public long Total{get;set;} public long Abertas{get;set;} public long SemResponsavel{get;set;} public long EmAtendimento{get;set;} public long ResolvidasPeriodo{get;set;} public long Vencidas{get;set;} }
     private sealed class StateRow { public string Situacao{get;set;}=""; public Guid? ResponsavelId{get;set;} }
 }
-public sealed class OcorrenciaConcurrencyException():Exception("A ocorrência foi alterada por outro usuário. Atualize antes de repetir.");
+public sealed class OcorrenciaConcurrencyException : Exception
+{
+    public OcorrenciaConcurrencyException() : base("A ocorrência foi alterada por outro usuário. Atualize antes de repetir.") { }
+}

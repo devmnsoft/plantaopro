@@ -186,7 +186,17 @@ public sealed class MedicoPagamentoDto
     public DateOnly? DataPrevista { get; set; }
     public DateOnly? DataPagamento { get; set; }
     public string? FormaPagamento { get; set; }
+    public decimal ValorApurado { get; set; }
+    public decimal? ValorAprovado { get; set; }
+    public decimal Saldo { get; set; }
+    public decimal HorasReferencia { get; set; }
+    public decimal ValorHora { get; set; }
+    public Guid? EscalaId { get; set; }
+    public Guid? FechamentoId { get; set; }
+    public string? FechamentoStatus { get; set; }
+    public string? ContestacaoStatus { get; set; }
 }
+public sealed record CriarContestacaoPagamentoRequest(Guid PagamentoId, string Justificativa);
 public record ProfessionalDashboardDto(MedicoAreaResumoDto Resumo,IEnumerable<MedicoEscalaDto> ProximosPlantoes,IEnumerable<PlantaoConviteDto> ConvitesPendentes,IEnumerable<NotificacaoDto> NotificacoesRecentes,decimal ValorPrevisto,decimal ValorAprovado,decimal ValorPago,int PendenciasCheckIn,int PendenciasCheckOut);
 public record ProfessionalCheckInDto(Guid EscalaId,string HospitalNome,string EspecialidadeNome,DateTimeOffset DataInicio,DateTimeOffset DataFim,DateTimeOffset? CheckInEm,DateTimeOffset? CheckOutEm,DateTimeOffset? CheckInRecebidoEm,DateTimeOffset? CheckOutRecebidoEm,Guid? CorrecaoId,long? VersaoCorrecao,string? StatusCorrecao,DateTimeOffset? InicioPropostoEm,DateTimeOffset? FimPropostoEm,DateTimeOffset? InicioAprovadoEm,DateTimeOffset? FimAprovadoEm,string StatusConferencia,string? TimezoneContexto,long Versao,bool PodeCheckIn,bool PodeCheckOut);
 public record RegistrarPresencaRequest(DateTimeOffset? HorarioDeclarado,string? Timezone);

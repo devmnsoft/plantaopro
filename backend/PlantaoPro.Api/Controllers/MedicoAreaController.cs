@@ -125,4 +125,7 @@ public class MedicoAreaController : ControllerBase
         var response = await service.MeusPagamentosAsync(uid.Value, page, pageSize);
         return StatusCode(response.StatusCode, response);
     }
+    [HttpPost("meus-pagamentos/divergencias")]
+    public async Task<IActionResult> CriarDivergencia([FromBody] CriarContestacaoPagamentoRequest request,CancellationToken ct)
+    { var uid=Uid();if(uid is null)return Unauthorized();var response=await service.CriarContestacaoAsync(uid.Value,request,ct);return StatusCode(response.StatusCode,response); }
 }

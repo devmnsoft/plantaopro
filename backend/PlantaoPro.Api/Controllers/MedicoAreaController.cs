@@ -60,6 +60,13 @@ public class MedicoAreaController : ControllerBase
         var response = await portal.RequestCorrectionAsync(uid.Value, escalaId, request, ct);
         return StatusCode(response.StatusCode, response);
     }
+    [HttpPost("escalas/{escalaId:guid}/correcoes/{correcaoId:guid}/cancelar")]
+    public async Task<IActionResult> CancelarCorrecao(Guid escalaId, Guid correcaoId, [FromBody] CancelarCorrecaoPresencaRequest request, CancellationToken ct)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var result = await portal.CancelCorrectionAsync(uid.Value, escalaId, correcaoId, request, ct);
+        return StatusCode(result.StatusCode, result);
+    }
 
     private Guid? Uid()
     {

@@ -12,13 +12,13 @@ public sealed class ConferenciaExecucaoController : BaseWebController
         : base(factory, logger) { }
 
     public async Task<IActionResult> Index(DateOnly? inicio, DateOnly? fim, Guid? unidadeId,
-        Guid? profissionalId, string? status, int page = 1, int pageSize = 25)
+        Guid? profissionalId, string? status, bool? divergencia, int page = 1, int pageSize = 25)
     {
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
         if (inicio.HasValue != fim.HasValue || inicio > fim)
             ModelState.AddModelError(string.Empty, "Informe o início e o fim de um período válido.");
-        var allowedStatuses = new[] { "PENDENTE", "CORRECAO_PENDENTE", "APROVADA", "AJUSTE_POS_APURACAO", "RECUSADA" };
+        var allowedStatuses = new[] { "REGISTRO_INCOMPLETO", "PENDENTE", "CORRECAO_PENDENTE", "APROVADA", "AJUSTE_POS_APURACAO", "RECUSADA" };
         status = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToUpperInvariant();
         if (status is not null && !allowedStatuses.Contains(status))
             ModelState.AddModelError(nameof(status), "Situação inválida.");
@@ -27,25 +27,25 @@ public sealed class ConferenciaExecucaoController : BaseWebController
                 ["inicio"] = inicio?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
                 ["fim"] = fim?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
                 ["unidadeId"] = unidadeId?.ToString(), ["profissionalId"] = profissionalId?.ToString(),
-                ["status"] = status, ["page"] = Math.Max(1, page).ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["status"] = status, ["divergencia"] = divergencia?.ToString(), ["page"] = Math.Max(1, page).ToString(System.Globalization.CultureInfo.InvariantCulture),
                 ["pageSize"] = Math.Clamp(pageSize, 1, 100).ToString(System.Globalization.CultureInfo.InvariantCulture)
             }.Where(pair => pair.Value is not null).ToDictionary(pair => pair.Key, pair => pair.Value!));
         (ExecutionConferencePageDto? Data, string? Error, System.Net.HttpStatusCode StatusCode) result = ModelState.IsValid
             ? await ReadApiResponse<ExecutionConferencePageDto>(client, endpoint)
             : (null, "Revise os filtros informados.", System.Net.HttpStatusCode.UnprocessableEntity);
         ViewBag.Inicio = inicio; ViewBag.Fim = fim; ViewBag.UnidadeId = unidadeId;
-        ViewBag.ProfissionalId = profissionalId; ViewBag.Status = status;
+        ViewBag.ProfissionalId = profissionalId; ViewBag.Status = status; ViewBag.Divergencia = divergencia;
         return View(new DetailsPageViewModel<ExecutionConferencePageDto>(result.Data, result.Error, result.Data is null));
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Decidir(Guid presencaId, Guid? correcaoId, long versao,
         long versaoPresenca, ExecutionConferenceDecision? decisao, string justificativa,
-        DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? profissionalId, string? status, int page = 1)
+        DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? profissionalId, string? status, bool? divergencia, int page = 1)
     {
         foreach (var error in ExecutionConferenceDecisionValidator.Validate(presencaId, correcaoId, versao, versaoPresenca, decisao, justificativa))
             ModelState.AddModelError(error.Field, error.Message);
-        var route = new { inicio, fim, unidadeId, profissionalId, status, page };
+        var route = new { inicio, fim, unidadeId, profissionalId, status, divergencia, page };
         if (!ModelState.IsValid)
         {
             TempData["Error"] = string.Join(" ", ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).Where(message => message.Length > 0));

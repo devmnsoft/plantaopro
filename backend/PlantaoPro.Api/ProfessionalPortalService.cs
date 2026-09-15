@@ -51,7 +51,7 @@ from plantaopro.medicos m where m.id=@medicoId", new { uid, context.MedicoId, co
     {
         await using var cn = Connection(); var context = await ContextAsync(cn, uid);
         if (context is null) return ApiResponse<IEnumerable<ProfessionalCheckInDto>>.Fail("Profissional não encontrado.", 404);
-        var rows = await cn.QueryAsync<ProfessionalCheckInDto>(@"select e.id as ""EscalaId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",c.checkin_em as ""CheckInEm"",c.checkout_em as ""CheckOutEm"",x.inicio_proposto_em as ""InicioPropostoEm"",x.fim_proposto_em as ""FimPropostoEm"",c.inicio_aprovado_em as ""InicioAprovadoEm"",c.fim_aprovado_em as ""FimAprovadoEm"",coalesce(c.status_conferencia,'CONFIRMADO') as ""StatusConferencia"",c.timezone_contexto as ""TimezoneContexto"",coalesce(c.versao,0) as ""Versao"",(c.id is null and now()>=p.data_inicio-interval '2 hours') as ""PodeCheckIn"",(c.id is not null and c.checkout_em is null) as ""PodeCheckOut"" from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id left join medico_checkins c on c.escala_id=e.id and c.tenant_id=@TenantId left join lateral(select inicio_proposto_em,fim_proposto_em from medico_presenca_correcoes where tenant_id=@TenantId and presenca_id=c.id and status='PENDENTE' order by solicitado_em desc limit 1)x on true where e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A' and lower(e.status) in ('confirmado','realizado') and p.data_fim>=now()-interval '365 days' order by p.data_inicio desc", context);
+        var rows = await cn.QueryAsync<ProfessionalCheckInDto>(@"select e.id as ""EscalaId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",c.checkin_em as ""CheckInEm"",c.checkout_em as ""CheckOutEm"",c.checkin_recebido_em as ""CheckInRecebidoEm"",c.checkout_recebido_em as ""CheckOutRecebidoEm"",x.id as ""CorrecaoId"",x.versao as ""VersaoCorrecao"",x.status as ""StatusCorrecao"",x.inicio_proposto_em as ""InicioPropostoEm"",x.fim_proposto_em as ""FimPropostoEm"",c.inicio_aprovado_em as ""InicioAprovadoEm"",c.fim_aprovado_em as ""FimAprovadoEm"",coalesce(c.status_conferencia,'CONFIRMADO') as ""StatusConferencia"",c.timezone_contexto as ""TimezoneContexto"",coalesce(c.versao,0) as ""Versao"",(c.id is null and now()>=p.data_inicio-interval '2 hours') as ""PodeCheckIn"",(c.id is not null and c.checkout_em is null) as ""PodeCheckOut"" from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id left join medico_checkins c on c.escala_id=e.id and c.tenant_id=@TenantId left join lateral(select id,versao,status,inicio_proposto_em,fim_proposto_em from medico_presenca_correcoes where tenant_id=@TenantId and presenca_id=c.id and status='PENDENTE' order by solicitado_em desc limit 1)x on true where e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A' and lower(e.status) in ('confirmado','realizado') and p.data_fim>=now()-interval '365 days' order by p.data_inicio desc", context);
         return ApiResponse<IEnumerable<ProfessionalCheckInDto>>.Ok(rows);
     }
 
@@ -92,7 +92,49 @@ from plantaopro.medicos m where m.id=@medicoId", new { uid, context.MedicoId, co
         var id=Guid.NewGuid();try{var changed=await cn.ExecuteAsync(new CommandDefinition(@"insert into medico_presenca_correcoes(id,tenant_id,cliente_id,presenca_id,escala_id,medico_id,inicio_original_em,fim_original_em,inicio_proposto_em,fim_proposto_em,justificativa,solicitado_por,versao_presenca_base) values(@id,@TenantId,@ClienteId,@PresenceId,@escalaId,@MedicoId,@CheckInEm,@CheckOutEm,@inicio,@fim,@justification,@uid,@baseVersion);update medico_checkins set status_conferencia='CORRECAO_PENDENTE',versao=versao+1,atualizado_em=now() where id=@PresenceId and versao=@Versao and status_conferencia in ('PENDENTE','REGISTRO_INCOMPLETO')",new{id,context.TenantId,context.ClienteId,PresenceId=presence.Id,escalaId,context.MedicoId,presence.CheckInEm,presence.CheckOutEm,inicio=request.InicioPropostoEm?.ToUniversalTime(),fim=request.FimPropostoEm?.ToUniversalTime(),justification,uid,presence.Versao,baseVersion=presence.Versao+1},tx,cancellationToken:ct));if(changed!=2){await tx.RollbackAsync(ct);return ApiResponse<object>.Fail("O registro mudou durante a solicitação. Nenhuma correção foi criada.",409);}await tx.CommitAsync(ct);return ApiResponse<object>.Ok(new{id},"Correção enviada para conferência.");}catch(PostgresException ex)when(ex.SqlState==PostgresErrorCodes.UniqueViolation){await tx.RollbackAsync(ct);return ApiResponse<object>.Fail("Já existe uma correção pendente.",409);}
     }
 
+    public async Task<ApiResponse<object>> CancelCorrectionAsync(Guid uid, Guid escalaId, Guid correctionId,
+        CancelarCorrecaoPresencaRequest request, CancellationToken ct)
+    {
+        if (escalaId == Guid.Empty || correctionId == Guid.Empty || request.VersaoCorrecao <= 0 || request.VersaoPresenca <= 0)
+            return ApiResponse<object>.Fail("Identificador ou versão inválida.", 422);
+        await using var cn = Connection(); await cn.OpenAsync(ct); await using var tx = await cn.BeginTransactionAsync(ct);
+        var context = await ContextAsync(cn, uid);
+        if (context is null || !context.TenantId.HasValue || !context.ClienteId.HasValue)
+            return ApiResponse<object>.Fail("Vínculo profissional inválido.", 403);
+        var row = await cn.QueryFirstOrDefaultAsync<PendingCorrectionRow>(new CommandDefinition(@"
+select x.id as ""Id"",x.presenca_id as ""PresencaId"",c.checkout_em as ""CheckoutEm""
+from medico_presenca_correcoes x
+join medico_checkins c on c.id=x.presenca_id and c.tenant_id=x.tenant_id and c.escala_id=x.escala_id
+join plantaopro.escalas e on e.id=x.escala_id and e.medico_id=x.medico_id and e.reg_status='A'
+join plantaopro.plantoes p on p.id=e.plantao_id and p.cliente_id=@ClienteId and p.reg_status='A'
+where x.id=@correctionId and x.escala_id=@escalaId and x.medico_id=@MedicoId
+ and x.tenant_id=@TenantId and x.solicitado_por=@uid and x.status='PENDENTE'
+ and x.versao=@VersaoCorrecao and c.versao=@VersaoPresenca and c.status_conferencia='CORRECAO_PENDENTE'
+for update of x,c", new { correctionId, escalaId, context.MedicoId, context.TenantId, context.ClienteId,
+                uid, request.VersaoCorrecao, request.VersaoPresenca }, tx, cancellationToken: ct));
+        if (row is null)
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
+        var presenceStatus = row.CheckoutEm.HasValue ? "PENDENTE" : "REGISTRO_INCOMPLETO";
+        var correctionChanged = await cn.ExecuteAsync(new CommandDefinition(@"
+update medico_presenca_correcoes set status='CANCELADA',versao=versao+1
+where id=@correctionId and tenant_id=@TenantId and status='PENDENTE' and versao=@VersaoCorrecao", new {
+            correctionId, context.TenantId, request.VersaoCorrecao }, tx, cancellationToken: ct));
+        var presenceChanged = await cn.ExecuteAsync(new CommandDefinition(@"
+update medico_checkins set status_conferencia=@presenceStatus,versao=versao+1,atualizado_em=now()
+where id=@PresencaId and tenant_id=@TenantId and status_conferencia='CORRECAO_PENDENTE' and versao=@VersaoPresenca", new {
+            row.PresencaId, context.TenantId, request.VersaoPresenca, presenceStatus }, tx, cancellationToken: ct));
+        if (correctionChanged != 1 || presenceChanged != 1)
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
+        await cn.ExecuteAsync(new CommandDefinition(@"
+insert into medico_presenca_historico(tenant_id,cliente_id,presenca_id,correcao_id,evento,valores_anteriores,valores_posteriores,justificativa,executado_por)
+values(@TenantId,@ClienteId,@PresencaId,@correctionId,'CORRECAO_CANCELADA',jsonb_build_object('status','PENDENTE'),jsonb_build_object('status',@presenceStatus),'Cancelada pelo solicitante',@uid)", new {
+            context.TenantId, context.ClienteId, row.PresencaId, correctionId, presenceStatus, uid }, tx, cancellationToken: ct));
+        await tx.CommitAsync(ct);
+        return ApiResponse<object>.Ok(new { correctionId, status = "CANCELADA" }, "Solicitação cancelada; os horários registrados foram preservados.");
+    }
+
     private const string EscalasSql = @"select e.id as ""EscalaId"",e.plantao_id as ""PlantaoId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",p.valor as ""Valor"",e.status as ""Status"",e.justificativa as ""Justificativa"" from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id where e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A'";
     private sealed record ProfessionalContext(Guid MedicoId, Guid? ClienteId, Guid? TenantId);
     private sealed record PresenceRow(Guid Id,DateTimeOffset CheckInEm,DateTimeOffset? CheckOutEm,long Versao);
+    private sealed record PendingCorrectionRow(Guid Id, Guid PresencaId, DateTimeOffset? CheckoutEm);
 }

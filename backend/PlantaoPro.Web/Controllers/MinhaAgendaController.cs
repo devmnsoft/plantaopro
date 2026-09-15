@@ -82,6 +82,20 @@ public class MinhaAgendaController : BaseWebController
         return RedirectToAction(nameof(Presencas));
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarCorrecao(Guid escalaId, Guid correcaoId, long versaoCorrecao, long versaoPresenca)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{escalaId}/correcoes/{correcaoId}/cancelar",
+            new { VersaoCorrecao = versaoCorrecao, VersaoPresenca = versaoPresenca });
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode
+            ? "Solicitação cancelada. Os horários registrados permanecem inalterados."
+            : response.StatusCode == HttpStatusCode.Conflict
+                ? "Este registro foi atualizado. Revise os dados antes de decidir."
+                : "Não foi possível cancelar a solicitação. Consulte o estado atual antes de repetir.";
+        return RedirectToAction(nameof(Presencas));
+    }
+
     public async Task<IActionResult> PlantoesDisponiveis(int page = 1, int pageSize = 20)
     {
         page = Math.Max(1, page);

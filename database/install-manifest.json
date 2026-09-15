@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.16.7",
-  "generatedAt": "2026-09-14",
+  "schemaVersion": "v2.17.0",
+  "generatedAt": "2026-09-15",
   "sections": [
     {
       "order": 3,
@@ -578,6 +578,23 @@
             "plantaopro.execucao_conferencia_v2167"
           ],
           "source": "database/schema/410_v2168_conferencia_integridade.sql"
+        }
+      ]
+    },
+    {
+      "order": 51,
+      "name": "plantaopro.cobertura_substituicoes_v2170",
+      "objects": [
+        {
+          "name": "plantaopro.cobertura_substituicoes_v2170",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/420_v2170_cobertura_substituicoes.sql",
+          "dependsOn": [
+            "plantaopro.execucao_conferencia_integridade_v2168",
+            "plantaopro.operacao_plantoes"
+          ]
         }
       ]
     }

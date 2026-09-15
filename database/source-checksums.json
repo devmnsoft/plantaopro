@@ -39,6 +39,7 @@
   "database/schema/390_v2163_portal_cliente_modulos.sql": "59ca6fbbdd23e39c9ee86b0f9cd168919f020e8295a0c2f8cd767b5e485dfd53",
   "database/schema/400_v2167_execucao_conferencia.sql": "1794e0cdb6f5785bcdff3c2463b3ec52922509ccd7077eae66e6eb39017cc97e",
   "database/schema/410_v2168_conferencia_integridade.sql": "4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138",
+  "database/schema/420_v2170_cobertura_substituicoes.sql": "8169ab265a25053780b4e894c6ef030f2d0ec61629cf581e6eb96b270974870d",
   "database/seeds/system/010_modulos.sql": "ee27f14e0966c5aef1ba6e7669182dc3bec4382de80dabd99dc49506fc2f0bf3",
   "database/seeds/system/020_acoes.sql": "4b192295da67ad56935ed39879bc12eb73825756e21ad7e07e7a45bc95a54238",
   "database/seeds/system/030_permissoes.sql": "af8f4a93a329103f764da681fd3b3b15c72c33724c447d1efff4b5db24416833",

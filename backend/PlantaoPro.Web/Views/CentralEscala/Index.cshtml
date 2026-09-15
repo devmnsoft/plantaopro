@@ -37,6 +37,29 @@
         <div class="alert alert-warning" role="alert"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> @ViewBag.ErrorMessage</div>
     }
 
+    <details class="card border-0 shadow-sm mb-4">
+        <summary class="card-header bg-white fw-semibold">Como usar esta página</summary>
+        <div class="card-body text-muted">
+            <p>Use a Central para localizar vagas sem profissional, atribuições ainda sem confirmação, pedidos de substituição e convites. Selecione candidatos pelos critérios exibidos e acompanhe cada estado separadamente.</p>
+            <ul class="mb-0">
+                <li><strong>Solicitação aberta:</strong> o profissional original continua responsável.</li>
+                <li><strong>Aguardando resposta:</strong> o convite existe, mas a entrega da notificação e o aceite são eventos distintos.</li>
+                <li><strong>Aguardando aprovação:</strong> o aceite ainda não alterou a escala.</li>
+                <li><strong>Cobertura concluída:</strong> somente a efetivação cria a nova atribuição e encerra a anterior; presença e financeiro não são transferidos.</li>
+            </ul>
+        </div>
+    </details>
+
+    <form method="get" class="card border-0 shadow-sm mb-4" aria-label="Filtros da cobertura">
+        <div class="card-body row g-3 align-items-end">
+            <div class="col-6 col-lg-2"><label class="form-label" for="inicio">De</label><input class="form-control" type="date" id="inicio" name="inicio" value="@Context.Request.Query["inicio"]" /></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="fim">Até</label><input class="form-control" type="date" id="fim" name="fim" value="@Context.Request.Query["fim"]" /></div>
+            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="situacao">Situação</label><select class="form-select" id="situacao" name="situacao"><option value="">Todas</option><option value="DESCOBERTA">Vaga descoberta</option><option value="SEM_CONFIRMACAO">Atribuída sem confirmação</option><option value="SOLICITADA">Solicitação aberta</option><option value="AGUARDANDO_RESPOSTA">Aguardando resposta</option><option value="AGUARDANDO_APROVACAO">Aguardando aprovação</option><option value="CONFIRMADA">Cobertura concluída</option><option value="CANCELADA">Cancelada ou expirada</option></select></div>
+            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="busca">Unidade, especialidade ou responsável</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" /></div>
+            <div class="col-12 col-md-4 col-lg-2 d-grid"><button class="btn btn-primary" type="submit">Aplicar filtros</button></div>
+        </div>
+    </form>
+
     <div class="coverage-overview" aria-label="Indicadores de cobertura">
         <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Plantões hoje", Model.TotalPlantoesHoje, "programados no período", "neutral", "Plantoes", "Index"))" />
         <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Confirmados", Model.TotalEscalasConfirmadasHoje, "confirmações concluídas hoje", "positive", "Escalas", "Index"))" />

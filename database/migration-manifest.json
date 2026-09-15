@@ -555,6 +555,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_v2170_cobertura_substituicoes",
+      "source": "database/schema/420_v2170_cobertura_substituicoes.sql",
+      "checksum": "8169ab265a25053780b4e894c6ef030f2d0ec61629cf581e6eb96b270974870d",
+      "dependsOn": [
+        "2026_v2168_conferencia_integridade"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

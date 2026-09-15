@@ -37,6 +37,12 @@ public sealed class MedicosMeDisponibilidadeController : ControllerBase
 
     [HttpPut("api/medicos/me/preferencias")]
     public async Task<IActionResult> AtualizarPreferencias([FromBody] MedicoPreferenciasRequest request) { var r = await service.AtualizarPreferenciasAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+
+    [HttpPost("api/medicos/me/substituicoes")]
+    public async Task<IActionResult> SolicitarSubstituicao([FromBody] SolicitarSubstituicaoRequest request) { var r = await service.SolicitarSubstituicaoAsync(Uid(), request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+
+    [HttpGet("api/medicos/me/substituicoes")]
+    public async Task<IActionResult> MinhasSubstituicoes() { var r = await service.ListarSubstituicoesDoMedicoAsync(Uid()); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]
@@ -79,7 +85,7 @@ public sealed class CentralEscalaSugestoesFase4Controller : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.EscalasGestao)]
 [Route("api/substituicoes")]
 public sealed class SubstituicoesFase4Controller : ControllerBase
 {

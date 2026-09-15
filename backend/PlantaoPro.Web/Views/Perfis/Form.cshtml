@@ -2,8 +2,8 @@
 @{ var creating = Model.Id == Guid.Empty; ViewData["Title"] = creating ? "Novo perfil" : "Editar perfil"; ViewData["Subtitle"] = "Defina a função antes de escolher permissões por módulo."; }
 <div class="pp-page">
     <header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Acesso por tenant</span><h2>@ViewData["Title"]</h2><p>Perfis personalizados nunca ultrapassam os módulos contratados pelo cliente.</p></div></header>
-    <details class="pp-screen-guide" open><summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary><div class="pp-screen-guide__body"><p>Dê ao perfil um nome compreensível para a equipe e descreva sua responsabilidade. Depois de salvar, você configurará a matriz de permissões.</p></div></details>
-    <form method="post" class="pp-card" data-submit-loading="Salvando perfil...">
+    <details class="pp-screen-guide" open><summary><span><i class="bi bi-compass"></i><strong>Como usar esta página</strong></span></summary><div class="pp-screen-guide__body"><p>Dê ao perfil um nome compreensível para a equipe e descreva sua responsabilidade. Depois de salvar, você configurará a matriz de permissões. Perfis base são somente leitura e nomes ou códigos repetidos no mesmo cliente são recusados.</p></div></details>
+    <form method="post" class="pp-card pp-form" novalidate data-focus-invalid data-unsaved-form data-submit-feedback>
         @Html.AntiForgeryToken()<input asp-for="Id" type="hidden" />
         <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
         <div class="row g-3">

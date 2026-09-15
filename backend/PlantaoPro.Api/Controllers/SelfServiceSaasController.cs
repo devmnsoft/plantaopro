@@ -259,6 +259,7 @@ public sealed class PerfisController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Criar([FromBody] PerfilRequest request)
     {
         try
@@ -274,6 +275,7 @@ public sealed class PerfisController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Editar(Guid id, [FromBody] PerfilRequest request)
     {
         try
@@ -289,6 +291,7 @@ public sealed class PerfisController : ControllerBase
     }
 
     [HttpPost("{id:guid}/inativar")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Inativar(Guid id)
     {
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
@@ -300,6 +303,7 @@ public sealed class PerfisController : ControllerBase
     }
 
     [HttpPost("{id:guid}/permissoes")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     public async Task<IActionResult> Permissoes(Guid id, [FromBody] PerfilPermissoesRequest request)
     {
         var result = await _service.AtualizarPermissoesPerfilAsync(id, request, HttpContext.Connection.RemoteIpAddress?.ToString());

@@ -156,6 +156,7 @@ builder.Services.AddScoped<PermissionService>();
 builder.Services.AddScoped<NotificationPreferenceService>();
 builder.Services.AddScoped<PremiumOperacoesService>();
 builder.Services.AddScoped<OperacaoService>();
+builder.Services.AddScoped<OcorrenciaService>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<OnboardingService>();
 builder.Services.AddScoped<BiService>();

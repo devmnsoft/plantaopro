@@ -566,6 +566,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_v2171_ocorrencias_operacionais",
+      "source": "database/schema/430_ocorrencias_operacionais.sql",
+      "checksum": "2689f6f0dcb0529fed9def6b88cca53417e305a12e28e06fa4d64bb618bd8850",
+      "dependsOn": [
+        "2026_v2170_cobertura_substituicoes"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

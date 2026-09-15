@@ -107,14 +107,6 @@ public sealed class AccountController : Controller
             var hasGlobalAccess = normalizedRoles.Any(role => _roleCatalog.IsGlobal(role));
             var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => _roleCatalog.RequiresTenant(role));
 
-            if (requiresTenant && !login.TenantId.HasValue)
-            {
-                const string tenantMessage = "Conta sem tenant configurado. Contate o administrador.";
-                ModelState.AddModelError(string.Empty, tenantMessage);
-                TempData["Error"] = tenantMessage;
-                return LoginFailureView(model);
-            }
-
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
@@ -188,6 +180,15 @@ public sealed class AccountController : Controller
             HttpContext.Session.SetString("ContextMode", contextMode);
             _logger.LogInformation("Token salvo na sessão. UsuarioId:{UsuarioId} Perfil:{Perfil} Escopo:{Escopo}", login.UsuarioId, primaryRole, accessScope);
 
+            // A identidade e a senha já foram validadas pela API. Um vínculo ausente
+            // é um problema de contexto, não de autenticação: mantenha a sessão para
+            // oferecer uma saída segura sem devolver o usuário ao formulário em loop.
+            if (requiresTenant && !login.TenantId.HasValue)
+            {
+                _logger.LogWarning("Login autenticado sem vínculo elegível. UsuarioId:{UsuarioId}", login.UsuarioId);
+                return RedirectToAction(nameof(NoEligibleContext));
+            }
+
             if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 _logger.LogInformation("Redirecionando por returnUrl. UsuarioId:{UsuarioId} Destino:{Destino}", login.UsuarioId, returnUrl);
@@ -222,7 +223,7 @@ public sealed class AccountController : Controller
     {
         var message = timedOut
             ? "A autenticação excedeu o tempo de resposta. Tente novamente em instantes."
-            : "Não foi possível conectar à API do PlantãoPro. Verifique se o backend está em execução.";
+            : "Não foi possível conectar ao serviço de autenticação. Tente novamente em instantes.";
         var failureType = exception is TaskCanceledException ? "Timeout" : exception.GetType().Name;
 
         _logger.LogError(
@@ -353,6 +354,16 @@ public sealed class AccountController : Controller
     {
         ViewBag.Module = module;
         ViewBag.Reason = reason;
+        return View();
+    }
+
+    [HttpGet]
+    [Authorize]
+    public IActionResult NoEligibleContext()
+    {
+        if (!string.IsNullOrWhiteSpace(User.FindFirstValue("tenant_id")))
+            return RedirectToActionByPerfil(User.FindAll(ClaimTypes.Role).Select(claim => claim.Value));
+
         return View();
     }
 

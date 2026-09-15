@@ -1,0 +1,16 @@
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Organização indisponível";
+}
+<main class="pp-auth-page pp-auth" aria-labelledby="context-title">
+    <section class="pp-auth-card pp-section text-center">
+        <span class="pp-page-intro__eyebrow">Acesso autenticado</span>
+        <h1 id="context-title" class="h2">Nenhuma organização disponível</h1>
+        <p>Sua conta foi autenticada, mas não possui um vínculo ativo com uma organização. Peça à administração para revisar seu acesso.</p>
+        <details class="pp-login-help text-start">
+            <summary>Como usar esta página</summary>
+            <p>Depois que um vínculo ativo e um perfil elegível forem atribuídos à sua conta, encerre a sessão e entre novamente para atualizar as permissões.</p>
+        </details>
+        <a class="btn btn-outline-primary mt-3" asp-controller="Account" asp-action="Logout">Sair com segurança</a>
+    </section>
+</main>

@@ -78,4 +78,28 @@ public sealed class V2164CompilationAndJourneyContractTests
         Assert.DoesNotContain("ResponseSample", web);
         Assert.DoesNotContain("Token de desenvolvimento", web);
     }
+
+    [Fact]
+    public void AuthenticatedUserWithoutEligibleTenant_GetsAnExplanatoryPageInsteadOfALoginLoop()
+    {
+        var controller = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs");
+        var view = Read("backend/PlantaoPro.Web/Views/Account/NoEligibleContext.cshtml");
+
+        Assert.Contains("return RedirectToAction(nameof(NoEligibleContext))", controller);
+        Assert.Contains("[Authorize]\n    public IActionResult NoEligibleContext()", controller);
+        Assert.Contains("Nenhuma organização disponível", view);
+        Assert.Contains("asp-action=\"Logout\"", view);
+        Assert.DoesNotContain("href=\"#\"", view);
+    }
+
+    [Fact]
+    public void Login_UsesTheRequestedConciseHeadingAndPublicConnectionErrors()
+    {
+        var view = Read("backend/PlantaoPro.Web/Views/Account/Login.cshtml");
+        var controller = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs");
+
+        Assert.Contains(">Acesse sua conta</h2>", view);
+        Assert.Contains("Não foi possível conectar ao serviço de autenticação", controller);
+        Assert.DoesNotContain("Verifique se o backend está em execução", controller);
+    }
 }

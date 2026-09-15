@@ -56,6 +56,10 @@ public class MinhaAgendaController : BaseWebController
         return View(new ListPageViewModel<MedicoPagamentoDto>(result.Data?.Items ?? Array.Empty<MedicoPagamentoDto>(), result.Error, null, result.Data?.Total ?? 0, result.Data?.Page ?? page, result.Data?.PageSize ?? pageSize));
     }
 
+    [HttpPost,ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarAnalise(Guid pagamentoId,string justificativa)
+    { var client=CreateApiClient();if(!AddBearerToken(client))return HandleUnauthorized();var result=await SendApiAsync<object,string>(client,HttpMethod.Post,"api/medico-area/meus-pagamentos/divergencias",new{PagamentoId=pagamentoId,Justificativa=justificativa});TempData[result.Data is null?"Error":"Success"]=result.Error??"Solicitação recebida para análise. O valor permanece inalterado.";return RedirectToAction(nameof(MeusPagamentos)); }
+
     public async Task<IActionResult> Presencas()
     {
         var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();

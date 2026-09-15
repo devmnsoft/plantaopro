@@ -17,7 +17,6 @@ public sealed class AccountController : Controller
 {
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<AccountController> _logger;
-    private readonly IWebHostEnvironment _environment;
     private readonly IRoleCatalog _roleCatalog;
     private readonly IPrimaryRoleResolver _primaryRoleResolver;
     private readonly IAccessScopeResolver _accessScopeResolver;
@@ -28,11 +27,10 @@ public sealed class AccountController : Controller
         NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
-    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IWebHostEnvironment environment, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
+    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
-        _environment = environment;
         _roleCatalog = roleCatalog;
         _primaryRoleResolver = primaryRoleResolver;
         _accessScopeResolver = accessScopeResolver;
@@ -53,6 +51,7 @@ public sealed class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
+        ViewData["ReturnUrl"] = returnUrl;
         var loginIdentifier = (model.Email ?? string.Empty).Trim();
         var identifierKind = ClassifyIdentifier(loginIdentifier);
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -260,8 +259,7 @@ public sealed class AccountController : Controller
         }
         catch (JsonException ex)
         {
-            var sample = body.Length > 400 ? body[..400] + "..." : body;
-            _logger.LogError(ex, "Resposta JSON inválida recebida da API de autenticação. ResponseSample:{ResponseSample}", sample);
+            _logger.LogError(ex, "Resposta JSON inválida recebida da API de autenticação. Tamanho:{ResponseLength}", body.Length);
             return null;
         }
     }
@@ -371,14 +369,8 @@ public sealed class AccountController : Controller
             return View(model);
         var client = _httpClientFactory.CreateClient("PlantaoProApi");
         var response = await client.PostAsJsonAsync("api/auth/forgot-password", new ForgotPasswordRequest(model.Email));
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var content = DeserializeApiResponse<JsonElement>(responseBody);
         TempData["Info"] = "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.";
-        if (_environment.IsDevelopment() && content?.Data.TryGetProperty("tokenDev", out var tokenDev) == true && tokenDev.GetString() is { Length: > 0 } token)
-        {
-            TempData["Warning"] = $"Token de desenvolvimento: {token}";
-        }
-        _logger.LogInformation("Solicitação de recuperação Email:{Email}", model.Email);
+        _logger.LogInformation("Solicitação Web de recuperação encaminhada. TipoIdentificador:{TipoIdentificador} Status:{Status}", ClassifyIdentifier(model.Email), (int)response.StatusCode);
         return RedirectToAction(nameof(Login));
     }
 

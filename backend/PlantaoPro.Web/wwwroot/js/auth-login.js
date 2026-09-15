@@ -13,6 +13,7 @@
     const progressDetail = progress?.querySelector("[data-login-progress-detail]");
     const idleLabel = button?.dataset.idleLabel || "Entrar";
     const resetSubmission = () => {
+        if (form) delete form.dataset.requestStarted;
         button?.removeAttribute("disabled");
         button?.setAttribute("aria-busy", "false");
         button?.querySelector(".spinner-border")?.classList.add("d-none");
@@ -40,7 +41,8 @@
     const updateConnectionStatus = () => {
         if (!connectionStatus) return;
         connectionStatus.hidden = navigator.onLine;
-        button?.toggleAttribute("disabled", !navigator.onLine);
+        const requestInFlight = form?.dataset.requestStarted === "true";
+        button?.toggleAttribute("disabled", !navigator.onLine || requestInFlight);
         if (!navigator.onLine) button?.setAttribute("aria-disabled", "true");
         else button?.removeAttribute("aria-disabled");
     };
@@ -94,14 +96,8 @@
     });
     window.addEventListener("offline", () => {
         updateConnectionStatus();
-        if (button?.getAttribute("aria-busy") !== "true") return;
-        resetSubmission();
-        if (errorSummary) {
-            errorSummary.textContent = "A conexão foi interrompida. Verifique sua internet e tente novamente.";
-            errorSummary.classList.add("validation-summary-errors");
-            errorSummary.focus();
-        }
-        updateConnectionStatus();
+        // A submissão nativa continua sob responsabilidade do servidor. Não
+        // reabilite o botão enquanto esse POST ainda pode estar em andamento.
     });
     window.addEventListener("online", updateConnectionStatus);
 

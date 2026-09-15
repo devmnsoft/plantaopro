@@ -67,18 +67,21 @@ namespace PlantaoPro.Api.Controllers
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest req)
         {
             await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
-            var usuario = await cn.QueryFirstOrDefaultAsync<(Guid Id, string Nome)>("select id,nome from plantaopro.usuarios where email=@email and reg_status='A'", new { email = req.Email });
-            var rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-            var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+            var normalizedEmail = (req.Email ?? string.Empty).Trim().ToLowerInvariant();
+            var usuario = await cn.QueryFirstOrDefaultAsync<(Guid Id, string Nome)>("select id,nome from plantaopro.usuarios where lower(email)=@email and reg_status='A'", new { email = normalizedEmail });
 
             if (usuario.Id != Guid.Empty)
             {
+                var rawToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+                var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
                 await cn.ExecuteAsync("insert into plantaopro.recuperacao_senha(id,usuario_id,token_hash,expiracao,utilizado,reg_date) values(gen_random_uuid(),@u,@h,now()+interval '30 minutes',false,now())", new { u = usuario.Id, h = tokenHash });
                 await _auditService.LogAsync(usuario.Id, "PASSWORD_FORGOT", "usuarios", usuario.Id, "Solicitação de recuperação de senha", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
+                _logger.LogInformation("Recuperação de senha aceita e token protegido persistido. UsuarioId:{UsuarioId} Entrega:PENDENTE_SEM_PROVEDOR", usuario.Id);
             }
+            else
+                _logger.LogInformation("Recuperação de senha aceita sem conta elegível. Identificador:{Identificador}", LoginIdentifierNormalizer.AuditValue(normalizedEmail, LoginIdentifierKind.Email));
 
-            _logger.LogInformation("Solicitação de recuperação de senha para {Email}", req.Email);
-            return Ok(ApiResponse<object>.Ok(new { TokenDev = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment() ? rawToken : null }, "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."));
+            return Ok(ApiResponse<object>.Ok(new { }, "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação."));
         }
 
         [HttpPost("reset-password")]

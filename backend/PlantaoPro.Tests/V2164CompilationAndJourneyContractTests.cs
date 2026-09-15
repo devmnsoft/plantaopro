@@ -54,12 +54,28 @@ public sealed class V2164CompilationAndJourneyContractTests
 
         Assert.Contains("@Html.AntiForgeryToken()", view);
         Assert.Contains("method=\"post\"", view);
+        Assert.Contains("name=\"returnUrl\"", view);
         Assert.Contains("data-focus-invalid", view);
         Assert.Contains("resetSubmission", script);
         Assert.DoesNotContain("window.setTimeout", script);
         Assert.Contains("client.Timeout", Read("backend/PlantaoPro.Web/Program.cs"));
         Assert.Contains("window.addEventListener(\"pageshow\"", script);
+        Assert.Contains("requestInFlight", script);
+        Assert.DoesNotContain("resetSubmission();\n        if (errorSummary)", script);
         Assert.DoesNotContain("alert(", script);
         Assert.DoesNotContain("confirm(", script);
+    }
+
+    [Fact]
+    public void PasswordRecovery_KeepsThePublicResponseGenericAndDoesNotExposeTokensOrEmail()
+    {
+        var api = Read("backend/PlantaoPro.Api/Controllers/AuthController.cs");
+        var web = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs");
+
+        Assert.DoesNotContain("TokenDev", api);
+        Assert.DoesNotContain("Solicitação de recuperação de senha para {Email}", api);
+        Assert.Contains("Entrega:PENDENTE_SEM_PROVEDOR", api);
+        Assert.DoesNotContain("ResponseSample", web);
+        Assert.DoesNotContain("Token de desenvolvimento", web);
     }
 }

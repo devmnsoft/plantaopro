@@ -5,9 +5,9 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.16.7
+-- Versão do schema: v2.17.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-14
+-- Data de geração: 2026-09-15
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -3464,3 +3464,34 @@ update medico_checkins set
  checkin_recebido_em=coalesce(checkin_recebido_em,checkin_em),
  checkout_recebido_em=coalesce(checkout_recebido_em,checkout_em)
 where checkin_recebido_em is null or (checkout_em is not null and checkout_recebido_em is null);
+
+-- ============================================================
+-- Seção 51 — plantaopro.cobertura_substituicoes_v2170
+-- ============================================================
+
+-- SOURCE: database/schema/420_v2170_cobertura_substituicoes.sql
+-- SOURCE-SHA256: 8169ab265a25053780b4e894c6ef030f2d0ec61629cf581e6eb96b270974870d
+-- PlantãoPro v2.17.0: concorrência e rastreabilidade da cobertura/substituição.
+alter table plantaopro.substituicoes_plantao
+    add column if not exists versao bigint not null default 1,
+    add column if not exists nova_escala_id uuid,
+    add column if not exists cancelada_em timestamptz;
+
+-- Um pedido ativo por atribuição. Estados finais permanecem consultáveis e auditáveis.
+create unique index if not exists ux_v2170_substituicao_ativa_por_escala
+    on plantaopro.substituicoes_plantao(escala_id)
+    where reg_status='A' and status in ('SOLICITADA','APROVADA','SUBSTITUTO_CONVIDADO','AGUARDANDO_APROVACAO');
+
+-- A nova atribuição é exclusiva da efetivação e relaciona as duas pontas sem mover presença/financeiro.
+create unique index if not exists ux_v2170_substituicao_nova_escala
+    on plantaopro.substituicoes_plantao(nova_escala_id)
+    where nova_escala_id is not null;
+
+alter table plantaopro.substituicao_candidatos
+    add column if not exists expira_em timestamptz,
+    add column if not exists respondido_em timestamptz,
+    add column if not exists notificacao_status varchar(24) not null default 'PENDENTE';
+
+create unique index if not exists ux_v2170_candidato_convite_ativo
+    on plantaopro.substituicao_candidatos(substituicao_id,medico_id)
+    where reg_status='A' and status in ('CONVIDADO','ACEITO');

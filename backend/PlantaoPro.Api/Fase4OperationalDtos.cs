@@ -7,7 +7,7 @@ public record SugestaoFeedbackRequest(Guid? MedicoId, string Feedback, string? O
 public record SolicitarSubstituicaoRequest(Guid PlantaoId, Guid? EscalaId, string Motivo);
 public record DecisaoSubstituicaoRequest(string Justificativa);
 public record ConvidarSubstitutoRequest(Guid MedicoId, string? Mensagem);
-public record ConfirmarSubstitutoRequest(Guid MedicoId, string? Observacao);
+public record ConfirmarSubstitutoRequest(Guid MedicoId, string? Observacao, long VersaoEsperada);
 public record CriarPendenciaRequest(string Tipo, string Titulo, string Descricao, string Prioridade, DateTime? Prazo, Guid? ResponsavelUsuarioId, string? Entidade, Guid? EntidadeId);
 public record AtribuirPendenciaRequest(Guid ResponsavelUsuarioId, string? Observacao);
 public record ResolverPendenciaRequest(string Observacao);

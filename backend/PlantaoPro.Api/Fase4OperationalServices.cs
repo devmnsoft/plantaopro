@@ -172,8 +172,19 @@ from plantaopro.medicos m
 left join plantaopro.especialidades e on e.id=m.especialidade_id
 where m.reg_status='A' and (@clienteId is null or m.cliente_id=@clienteId) and (@especialidadeId is null or m.especialidade_id=@especialidadeId)
 order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim, hospitalId, especialidadeId });
-        var result = rows.Select(r => AplicarScore(r)).Where(r => r.Disponivel && !r.Indisponivel).ToArray();
-        return ApiResponse<IEnumerable<Fase4MedicoDisponivelDto>>.Ok(result, "Médicos disponíveis listados.");
+        var result = rows.Select(r =>
+        {
+            var atendidos = new List<string>();
+            var impedimentos = new List<string>();
+            if (r.Disponivel) atendidos.Add("Disponibilidade confirmada para todo o período"); else impedimentos.Add("Sem disponibilidade confirmada para todo o período");
+            if (!r.Indisponivel) atendidos.Add("Sem indisponibilidade cadastrada"); else impedimentos.Add("Indisponível no período");
+            if (!r.PossuiConflito) atendidos.Add("Sem conflito de escala"); else impedimentos.Add("Indisponível por conflito de horário");
+            r.Score = 0; // elegibilidade explicável; não há pontuação contratual configurada
+            r.Motivos = string.Join("; ", atendidos);
+            r.Alertas = string.Join("; ", impedimentos);
+            return r;
+        }).ToArray();
+        return ApiResponse<IEnumerable<Fase4MedicoDisponivelDto>>.Ok(result, "Candidatos e critérios de elegibilidade listados.");
     }
 
     public async Task<ApiResponse<EscalaSugestaoDto>> GerarSugestaoAsync(Guid plantaoId, Guid? uid, Guid? clienteId, string? ip, string? ua)
@@ -233,18 +244,50 @@ order by m.nome limit 200", new { clienteId, inicio = dataInicio, fim = dataFim,
 
     public async Task<ApiResponse<Guid>> SolicitarSubstituicaoAsync(Guid uid, SolicitarSubstituicaoRequest request, string? ip, string? ua)
     {
-        if (string.IsNullOrWhiteSpace(request.Motivo)) return ApiResponse<Guid>.Fail("Informe o motivo da substituição.");
+        if (request.PlantaoId == Guid.Empty || !request.EscalaId.HasValue || request.EscalaId == Guid.Empty)
+            return ApiResponse<Guid>.Fail("Selecione uma atribuição válida.");
+        if (string.IsNullOrWhiteSpace(request.Motivo) || request.Motivo.Trim().Length < 10)
+            return ApiResponse<Guid>.Fail("Informe uma justificativa com pelo menos 10 caracteres.");
+
         await using var cn = Cn();
-        var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
-        if (medico.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Médico não encontrado para o usuário autenticado.", 404);
-        var propria = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.escalas where medico_id=@medicoId and plantao_id=@plantaoId and reg_status='A' and status in ('confirmado','solicitado')", new { medicoId = medico.Id, request.PlantaoId });
-        if (propria == 0) return ApiResponse<Guid>.Fail("Só é possível solicitar substituição de escala própria.", 403);
-        var id = Guid.NewGuid();
-        await cn.ExecuteAsync("insert into plantaopro.substituicoes_plantao(id,cliente_id,plantao_id,escala_id,medico_solicitante_id,motivo,status,created_by,reg_date,reg_status) values(@id,@clienteId,@plantaoId,@escalaId,@medicoId,@motivo,'SOLICITADA',@uid,now(),'A')", new { id, clienteId = medico.ClienteId, request.PlantaoId, escalaId = request.EscalaId, medicoId = medico.Id, motivo = request.Motivo.Trim(), uid });
-        await InserirHistoricoSubstituicaoAsync(cn, medico.ClienteId, id, "SOLICITAR", string.Empty, "SOLICITADA", request.Motivo, uid);
-        await CriarPendenciaInternaAsync(cn, medico.ClienteId, "SUBSTITUICAO_PENDENTE", "Substituição pendente", request.Motivo, "ALTA", null, "substituicoes_plantao", id, uid);
-        await audit.LogAsync(uid, "CREATE", "substituicoes_plantao", id, "Médico solicitou substituição", ip: ip, userAgent: ua);
-        return ApiResponse<Guid>.Ok(id, "Substituição solicitada.");
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
+            if (medico.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Vínculo profissional ativo não encontrado.", 403);
+            var origem = await cn.QueryFirstOrDefaultAsync<(Guid EscalaId, Guid PlantaoId, Guid? ClienteId, string Status, DateTime Inicio)>(@"select e.id as EscalaId,p.id as PlantaoId,p.cliente_id as ClienteId,e.status,p.data_inicio as Inicio
+from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id and p.reg_status='A'
+where e.id=@escalaId and e.plantao_id=@plantaoId and e.medico_id=@medicoId and e.reg_status='A'
+  and lower(e.status) in ('confirmado','confirmada') and p.cliente_id=@clienteId for update of e,p",
+                new { escalaId=request.EscalaId, plantaoId=request.PlantaoId, medicoId=medico.Id, clienteId=medico.ClienteId }, tx);
+            if (origem.EscalaId == Guid.Empty) return ApiResponse<Guid>.Fail("A atribuição não pertence ao profissional ou não está confirmada.", 403);
+            if (origem.Inicio <= DateTime.UtcNow) return ApiResponse<Guid>.Fail("Plantão iniciado deve seguir o fluxo de ocorrência/passagem de responsabilidade.", 409);
+            var bloqueada = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.medico_checkins where escala_id=@escalaId)
+ or exists(select 1 from plantaopro.pagamentos where escala_id=@escalaId and reg_status='A')", new { escalaId=origem.EscalaId }, tx);
+            if (bloqueada) return ApiResponse<Guid>.Fail("A atribuição possui presença ou financeiro consolidado; solicite ajuste operacional.", 409);
+            var ativa = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.substituicoes_plantao where escala_id=@escalaId and reg_status='A' and status in ('SOLICITADA','APROVADA','SUBSTITUTO_CONVIDADO','AGUARDANDO_APROVACAO'))", new { escalaId=origem.EscalaId }, tx);
+            if (ativa) return ApiResponse<Guid>.Fail("Já existe uma solicitação ativa para esta atribuição.", 409);
+
+            var id = Guid.NewGuid();
+            await cn.ExecuteAsync(@"insert into plantaopro.substituicoes_plantao(id,cliente_id,plantao_id,escala_id,medico_solicitante_id,motivo,status,versao,created_by,reg_date,reg_status)
+values(@id,@clienteId,@plantaoId,@escalaId,@medicoId,@motivo,'SOLICITADA',1,@uid,now(),'A')", new { id, clienteId=origem.ClienteId, plantaoId=origem.PlantaoId, escalaId=origem.EscalaId, medicoId=medico.Id, motivo=request.Motivo.Trim(), uid }, tx);
+            await InserirHistoricoSubstituicaoAsync(cn, origem.ClienteId, id, "SOLICITAR", string.Empty, "SOLICITADA", "Responsabilidade permanece com o profissional original até a efetivação. " + request.Motivo.Trim(), uid, tx);
+            await tx.CommitAsync();
+            await audit.LogAsync(uid, "CREATE", "substituicoes_plantao", id, "Profissional solicitou substituição; atribuição original preservada", ip: ip, userAgent: ua);
+            return ApiResponse<Guid>.Ok(id, "Solicitação aberta. Você permanece responsável até a cobertura ser efetivada.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation || ex.SqlState == PostgresErrorCodes.SerializationFailure)
+        {
+            await tx.RollbackAsync();
+            return ApiResponse<Guid>.Fail("A solicitação foi alterada em outra sessão. Atualize antes de tentar novamente.", 409);
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            logger.LogError(ex, "Erro ao solicitar substituição da escala {EscalaId}", request.EscalaId);
+            return ApiResponse<Guid>.Fail("Não foi possível registrar a solicitação.", 500);
+        }
     }
 
     public async Task<ApiResponse<IEnumerable<SubstituicaoDto>>> ListarSubstituicoesDoMedicoAsync(Guid uid)
@@ -301,15 +344,53 @@ order by s.reg_date desc", new { medicoId = medico.Id, clienteId = medico.Client
 
     public async Task<ApiResponse<string>> ConfirmarSubstitutoAsync(Guid id, Guid uid, Guid? clienteId, ConfirmarSubstitutoRequest request, string? ip, string? ua)
     {
+        if (request.MedicoId == Guid.Empty || request.VersaoEsperada <= 0) return ApiResponse<string>.Fail("Candidato e versão atual são obrigatórios.");
         await using var cn = Cn();
-        var s = await cn.QueryFirstOrDefaultAsync<(Guid PlantaoId, Guid? EscalaId, Guid? ClienteId, string Status)>("select plantao_id, escala_id, cliente_id, status from plantaopro.substituicoes_plantao where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { id, clienteId });
-        if (s.PlantaoId == Guid.Empty) return ApiResponse<string>.Fail("Substituição não encontrada.", 404);
-        if (s.EscalaId.HasValue)
-            await cn.ExecuteAsync("update plantaopro.escalas set medico_id=@medicoId,status='confirmado',updated_by=@uid,reg_update=now() where id=@escalaId", new { request.MedicoId, uid, escalaId = s.EscalaId.Value });
-        await cn.ExecuteAsync("update plantaopro.substituicoes_plantao set medico_substituto_id=@medicoId,status='CONFIRMADA',updated_by=@uid,reg_update=now() where id=@id", new { request.MedicoId, uid, id });
-        await InserirHistoricoSubstituicaoAsync(cn, s.ClienteId, id, "CONFIRMAR_SUBSTITUTO", s.Status, "CONFIRMADA", request.Observacao, uid);
-        await audit.LogAsync(uid, "UPDATE", "substituicoes_plantao", id, "Substituto confirmado e escala atualizada", ip: ip, userAgent: ua);
-        return ApiResponse<string>.Ok("ok", "Substituto confirmado.");
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        try
+        {
+            await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 2170))", new { key=request.MedicoId.ToString("N") }, tx);
+            var s = await cn.QueryFirstOrDefaultAsync<(Guid PlantaoId, Guid? EscalaId, Guid? ClienteId, Guid SolicitanteId, Guid? SubstitutoId, string Status, long Versao)>(@"select plantao_id as PlantaoId,escala_id as EscalaId,cliente_id as ClienteId,medico_solicitante_id as SolicitanteId,medico_substituto_id as SubstitutoId,status,versao
+from plantaopro.substituicoes_plantao where id=@id and reg_status='A' and cliente_id=@clienteId for update", new { id, clienteId }, tx);
+            if (s.PlantaoId == Guid.Empty) return ApiResponse<string>.Fail("Solicitação não encontrada no cliente ativo.", 404);
+            if (s.Status == "CONFIRMADA" && s.SubstitutoId == request.MedicoId) { await tx.CommitAsync(); return ApiResponse<string>.Ok("ok", "Cobertura já efetivada anteriormente."); }
+            if (s.Versao != request.VersaoEsperada) return ApiResponse<string>.Fail("A solicitação mudou. Recarregue antes de aprovar.", 409);
+            if (s.Status is not ("SUBSTITUTO_CONVIDADO" or "AGUARDANDO_APROVACAO" or "APROVADA")) return ApiResponse<string>.Fail("A solicitação não está pronta para efetivação.", 409);
+            if (!s.EscalaId.HasValue) return ApiResponse<string>.Fail("A atribuição original não foi identificada.", 409);
+
+            var origem = await cn.QueryFirstOrDefaultAsync<(string Status, DateTime Inicio, DateTime Fim)>(@"select e.status,p.data_inicio as Inicio,p.data_fim as Fim from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id where e.id=@escalaId and e.plantao_id=@plantaoId and e.medico_id=@solicitante and e.reg_status='A' for update of e,p", new { escalaId=s.EscalaId, plantaoId=s.PlantaoId, solicitante=s.SolicitanteId }, tx);
+            if (string.IsNullOrWhiteSpace(origem.Status) || origem.Inicio <= DateTime.UtcNow) return ApiResponse<string>.Fail("A atribuição original mudou ou o plantão já iniciou.", 409);
+            var elegivel = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.medicos m where m.id=@medicoId and m.cliente_id=@clienteId and m.reg_status='A' and coalesce(m.bloqueado,false)=false)
+ and exists(select 1 from plantaopro.medico_disponibilidades d where d.medico_id=@medicoId and d.reg_status='A' and d.status='ATIVA' and d.data_inicio<=@inicio and d.data_fim>=@fim)
+ and not exists(select 1 from plantaopro.medico_indisponibilidades d where d.medico_id=@medicoId and d.reg_status='A' and d.status='ATIVA' and d.data_inicio<@fim and d.data_fim>@inicio)
+ and not exists(select 1 from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id where e.medico_id=@medicoId and e.reg_status='A' and lower(e.status) in ('solicitado','solicitada','confirmado','confirmada','em_andamento') and p.data_inicio<@fim and p.data_fim>@inicio)", new { request.MedicoId, clienteId=s.ClienteId, origem.Inicio, origem.Fim }, tx);
+            if (!elegivel) return ApiResponse<string>.Fail("O candidato não está mais elegível ou não possui disponibilidade confirmada.", 409);
+            var bloqueada = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.medico_checkins where escala_id=@escalaId) or exists(select 1 from plantaopro.pagamentos where escala_id=@escalaId and reg_status='A')", new { escalaId=s.EscalaId }, tx);
+            if (bloqueada) return ApiResponse<string>.Fail("Presença ou financeiro já registrado impede substituição direta.", 409);
+
+            var novaEscalaId = Guid.NewGuid();
+            await cn.ExecuteAsync(@"insert into plantaopro.escalas(id,plantao_id,medico_id,status,justificativa,created_by,reg_status,reg_date)
+values(@id,@plantaoId,@medicoId,'confirmado',@justificativa,@uid,'A',now())", new { id=novaEscalaId, plantaoId=s.PlantaoId, medicoId=request.MedicoId, justificativa="Cobertura da solicitação " + id, uid }, tx);
+            await cn.ExecuteAsync("update plantaopro.escalas set status='substituido',justificativa=@justificativa,updated_by=@uid,reg_update=now() where id=@escalaId", new { escalaId=s.EscalaId, justificativa="Substituída pela escala " + novaEscalaId, uid }, tx);
+            var changed = await cn.ExecuteAsync(@"update plantaopro.substituicoes_plantao set medico_substituto_id=@medicoId,nova_escala_id=@novaEscalaId,status='CONFIRMADA',versao=versao+1,updated_by=@uid,reg_update=now() where id=@id and versao=@versao", new { request.MedicoId, novaEscalaId, uid, id, versao=request.VersaoEsperada }, tx);
+            if (changed != 1) return ApiResponse<string>.Fail("A solicitação mudou em outra sessão.", 409);
+            await cn.ExecuteAsync("update plantaopro.substituicao_candidatos set status=case when medico_id=@medicoId then 'EFETIVADO' else 'REVOGADO' end,updated_by=@uid,reg_update=now() where substituicao_id=@id and reg_status='A' and status in ('CONVIDADO','ACEITO')", new { id, request.MedicoId, uid }, tx);
+            await InserirHistoricoSubstituicaoAsync(cn, s.ClienteId, id, "EFETIVAR", s.Status, "CONFIRMADA", request.Observacao ?? "Cobertura efetivada; presença e financeiro não foram transferidos.", uid, tx);
+            await tx.CommitAsync();
+            await audit.LogAsync(uid, "EFETIVAR", "substituicoes_plantao", id, "Nova atribuição criada e original encerrada", ip: ip, userAgent: ua);
+            return ApiResponse<string>.Ok(novaEscalaId.ToString(), "Cobertura efetivada sem transferir presença ou financeiro.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation || ex.SqlState == PostgresErrorCodes.SerializationFailure)
+        {
+            await tx.RollbackAsync();
+            return ApiResponse<string>.Fail("A cobertura foi atualizada simultaneamente. Consulte o resultado antes de reenviar.", 409);
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync(); logger.LogError(ex, "Erro ao efetivar substituição {Id}", id);
+            return ApiResponse<string>.Fail("Não foi possível efetivar. Consulte o histórico antes de tentar novamente.", 500);
+        }
     }
 
     public async Task<ApiResponse<IEnumerable<object>>> HistoricoSubstituicaoAsync(Guid id, Guid? clienteId)
@@ -441,9 +522,9 @@ order by s.reg_date desc", new { medicoId = medico.Id, clienteId = medico.Client
         await cn.ExecuteAsync("insert into plantaopro.medico_historico_disponibilidade(id,cliente_id,medico_id,entidade,entidade_id,acao,detalhes,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@medicoId,@entidade,@entidadeId,@acao,cast(@detalhes as jsonb),@uid,now(),'A')", new { clienteId, medicoId, entidade, entidadeId, acao, detalhes = JsonSerializer.Serialize(detalhes), uid });
     }
 
-    private static async Task InserirHistoricoSubstituicaoAsync(NpgsqlConnection cn, Guid? clienteId, Guid substituicaoId, string acao, string? anterior, string novo, string? observacao, Guid uid)
+    private static async Task InserirHistoricoSubstituicaoAsync(NpgsqlConnection cn, Guid? clienteId, Guid substituicaoId, string acao, string? anterior, string novo, string? observacao, Guid uid, System.Data.IDbTransaction? tx = null)
     {
-        await cn.ExecuteAsync("insert into plantaopro.substituicao_historico(id,cliente_id,substituicao_id,acao,status_anterior,status_novo,observacao,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@id,@acao,@anterior,@novo,@observacao,@uid,now(),'A')", new { clienteId, id = substituicaoId, acao, anterior, novo, observacao, uid });
+        await cn.ExecuteAsync("insert into plantaopro.substituicao_historico(id,cliente_id,substituicao_id,acao,status_anterior,status_novo,observacao,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@id,@acao,@anterior,@novo,@observacao,@uid,now(),'A')", new { clienteId, id = substituicaoId, acao, anterior, novo, observacao, uid }, tx);
     }
 
     private static async Task<Guid> CriarPendenciaInternaAsync(NpgsqlConnection cn, Guid? clienteId, string tipo, string titulo, string descricao, string prioridade, Guid? responsavel, string? entidade, Guid? entidadeId, Guid uid, DateTime? prazo = null)

@@ -35,6 +35,11 @@
     </div>
 </section>
 
+<details class="card border-0 shadow-sm mb-4">
+    <summary class="card-header bg-white fw-semibold">Como usar esta página</summary>
+    <div class="card-body text-muted">Revise o resumo, confirme o estado canônico e execute apenas a próxima ação disponível. Em substituições, a responsabilidade permanece com o profissional original até a efetivação; recusas e expirações encerram somente o convite, sem concluir nem cancelar a cobertura. Atualize a página antes de repetir uma ação após timeout.</div>
+</details>
+
 @if (Model.HasPlanBlock)
 {
     <partial name="_ModuleLockedNotice" model="Model.PlanBlockMessage" />

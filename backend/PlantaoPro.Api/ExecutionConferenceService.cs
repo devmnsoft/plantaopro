@@ -51,6 +51,7 @@ public sealed class ExecutionConferenceService
             fim = filter.Fim,
             filter.UnidadeId,
             filter.ProfissionalId,
+            filter.Divergencia,
             status,
             limit = size,
             offset = (page - 1) * size
@@ -68,15 +69,15 @@ left join lateral (
     order by x.solicitado_em desc limit 1
 ) x on true
 where c.tenant_id=@Tenant
-  and c.checkout_em is not null
   and (@inicio is null or p.data_inicio::date>=@inicio)
   and (@fim is null or p.data_inicio::date<=@fim)
   and (@UnidadeId is null or p.hospital_id=@UnidadeId)
   and (@ProfissionalId is null or c.medico_id=@ProfissionalId)
+  and (@Divergencia is null or @Divergencia=(x.id is not null or c.checkin_em<>p.data_inicio or c.checkout_em is distinct from p.data_fim))
   and (@status='' or c.status_conferencia=@status or x.status=@status)";
 
         const string select = @"
-select x.id as ""CorrecaoId"",c.id as ""PresencaId"",c.escala_id as ""EscalaId"",
+select case when x.status='PENDENTE' then x.id end as ""CorrecaoId"",c.id as ""PresencaId"",c.escala_id as ""EscalaId"",
  c.medico_id as ""MedicoId"",m.nome as ""Profissional"",
  coalesce(h.nome_fantasia,h.razao_social) as ""Unidade"",
  p.data_inicio as ""InicioPrevisto"",p.data_fim as ""FimPrevisto"",
@@ -84,18 +85,18 @@ select x.id as ""CorrecaoId"",c.id as ""PresencaId"",c.escala_id as ""EscalaId""
  x.inicio_proposto_em as ""InicioProposto"",x.fim_proposto_em as ""FimProposto"",
  c.inicio_aprovado_em as ""InicioAprovado"",c.fim_aprovado_em as ""FimAprovado"",
  c.status_conferencia as ""Status"",coalesce(x.justificativa,'') as ""Justificativa"",
- coalesce(x.versao,c.versao) as ""Versao"",c.versao as ""VersaoPresenca"",
- coalesce(x.solicitado_em,c.checkout_em) as ""SolicitadoEm"" ";
+ case when x.status='PENDENTE' then x.versao else c.versao end as ""Versao"",c.versao as ""VersaoPresenca"",
+ coalesce(x.solicitado_em,c.checkout_em,c.checkin_em) as ""SolicitadoEm"" ";
 
         await using var connection = Connection();
         var rows = (await connection.QueryAsync<ConferenceRow>(new CommandDefinition(
-            select + from + " order by coalesce(x.solicitado_em,c.checkout_em) desc limit @limit offset @offset",
+            select + from + " order by coalesce(x.solicitado_em,c.checkout_em,c.checkin_em) desc,c.id desc limit @limit offset @offset",
             args,
             cancellationToken: ct))).AsList();
         var items = rows.Select(row => row.ToDto()).ToArray();
         var counts = await connection.QuerySingleAsync<ConferenceCounts>(new CommandDefinition(@"
 select count(*) as ""Total"",
- count(*) filter(where c.status_conferencia in ('PENDENTE','CORRECAO_PENDENTE')) as ""Pendentes"",
+ count(*) filter(where c.status_conferencia in ('REGISTRO_INCOMPLETO','PENDENTE','CORRECAO_PENDENTE')) as ""Pendentes"",
  count(*) filter(where c.status_conferencia='APROVADA') as ""Aprovadas"",
  count(*) filter(where x.status='RECUSADA') as ""Recusadas"" " + from, args, cancellationToken: ct));
 
@@ -126,7 +127,7 @@ select count(*) as ""Total"",
         if (!await tenantGuard.PodeAcessarHospitalAsync(context.User, presence.HospitalId))
             return ApiResponse<object>.Fail("Você não possui vínculo com a unidade desta execução.", 403);
         if (presence.Versao != request.Versao || presence.Status != "PENDENTE")
-            return ApiResponse<object>.Fail("A execução foi alterada ou já foi conferida.", 409);
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
         if (!presence.FimRegistrado.HasValue)
             return ApiResponse<object>.Fail("Registre a saída antes da conferência.", 422);
 
@@ -139,7 +140,7 @@ update medico_checkins set inicio_aprovado_em=case when @consolidated then inici
 where id=@presenceId and tenant_id=@Tenant and versao=@Versao and status_conferencia='PENDENTE'",
             new { presenceId, context.Tenant, presence.Versao, consolidated, newStatus }, transaction, cancellationToken: ct));
         if (changed != 1)
-            return ApiResponse<object>.Fail("A execução mudou durante a decisão. Consulte o estado atual.", 409);
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
 
         await InsertHistoryAsync(connection, transaction, context, presenceId, null,
             consolidated ? "CONFERENCIA_APOS_APURACAO" : "EXECUCAO_APROVADA",
@@ -184,13 +185,13 @@ where x.id=@id and x.tenant_id=@Tenant and x.cliente_id=@Cliente for update",
         if (correction.SolicitadoPor == context.User)
             return ApiResponse<object>.Fail("O solicitante não pode decidir a própria correção.", 403);
         if (correction.Status != "PENDENTE" || correction.Versao != request.Versao)
-            return ApiResponse<object>.Fail("A correção já foi decidida ou alterada.", 409);
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
 
         var presence = await LockPresenceAsync(connection, transaction, correction.PresenceId, context, ct);
         if (presence is not null && !await tenantGuard.PodeAcessarHospitalAsync(context.User, presence.HospitalId))
             return ApiResponse<object>.Fail("Você não possui vínculo com a unidade desta execução.", 403);
         if (presence is null || presence.Status != "CORRECAO_PENDENTE" || presence.Versao != correction.VersaoPresencaBase)
-            return ApiResponse<object>.Fail("Os horários mudaram após a solicitação. A decisão foi cancelada.", 409);
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
 
         var effectiveStart = correction.InicioProposto ?? presence.InicioRegistrado;
         var effectiveEnd = correction.FimProposto ?? presence.FimRegistrado;
@@ -214,7 +215,7 @@ update medico_checkins set
 where id=@presenceId and tenant_id=@Tenant and versao=@presenceVersion and status_conferencia='CORRECAO_PENDENTE'",
             new { presenceId = correction.PresenceId, context.Tenant, presenceVersion = presence.Versao, approve = request.Aprovar, consolidated, effectiveStart, effectiveEnd, presenceStatus }, transaction, cancellationToken: ct));
         if (correctionChanged != 1 || presenceChanged != 1)
-            return ApiResponse<object>.Fail("Conflito ao aplicar a decisão. Nenhuma alteração foi confirmada.", 409);
+            return ApiResponse<object>.Fail("Este registro foi atualizado. Revise os dados antes de decidir.", 409);
 
         var after = request.Aprovar
             ? new { Inicio = effectiveStart, Fim = effectiveEnd, status = presenceStatus, pendenciaFinanceira = consolidated }

@@ -315,23 +315,50 @@ on conflict (tenant_id) where reg_status='A' do update set nome_plataforma=exclu
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(request.Nome)) return ApiResponse<Guid>.Fail("Nome do perfil é obrigatório.", 400);
+            var nome = request.Nome?.Trim() ?? string.Empty;
+            var descricao = request.Descricao?.Trim() ?? string.Empty;
+            if (nome.Length is < 3 or > 160) return ApiResponse<Guid>.Fail("Nome deve ter entre 3 e 160 caracteres.", 400);
+            if (descricao.Length is < 10 or > 1000) return ApiResponse<Guid>.Fail("Descrição deve ter entre 10 e 1000 caracteres.", 400);
             var ctx = await _tenantContext.ObterAtualAsync();
             if (!ctx.Success || ctx.Data?.TenantId is null) return ApiResponse<Guid>.Fail(ctx.Message, ctx.StatusCode);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var tenantId = ctx.Data.TenantId.Value;
+            // Serializa nomes/códigos dentro do tenant. A checagem e a escrita precisam
+            // compartilhar a transação para que dois submits concorrentes não criem duplicatas.
+            await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@scope, 0))", new { scope = $"perfil:{tenantId:N}" }, tx);
             var perfilId = id ?? Guid.NewGuid();
             if (id.HasValue)
             {
-                var baseSistema = await cn.ExecuteScalarAsync<bool>("select coalesce(base_sistema,false) from plantaopro.perfis where id=@id and reg_status='A'", new { id });
-                if (baseSistema) return ApiResponse<Guid>.Fail("Perfis base não podem ser editados pelo tenant.", 400);
-                await cn.ExecuteAsync("update plantaopro.perfis set nome=@Nome, descricao=@Descricao, reg_update=now() where id=@id and tenant_id=@tenantId and reg_status='A'", new { id, request.Nome, request.Descricao, tenantId = ctx.Data.TenantId.Value });
+                var affected = await cn.ExecuteAsync(@"update plantaopro.perfis
+set nome=@nome, descricao=@descricao, reg_update=now(), updated_by=@actor
+where id=@id and tenant_id=@tenantId and reg_status='A' and coalesce(base_sistema,false)=false", new { id, nome, descricao, tenantId, actor = _tenantContext.ObterUsuarioId() }, tx);
+                if (affected == 0)
+                {
+                    await tx.RollbackAsync();
+                    return ApiResponse<Guid>.Fail("Perfil não encontrado no tenant ou protegido pelo sistema.", 404);
+                }
             }
             else
             {
-                var codigo = string.IsNullOrWhiteSpace(request.Codigo) ? TenantContextService.Slug(request.Nome).Replace('-', '_').ToUpperInvariant() : request.Codigo.Trim().ToUpperInvariant();
-                await cn.ExecuteAsync("insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_date,reg_status) values(@perfilId,@tenantId,@clienteId,@codigo,@Nome,@Descricao,false,true,'ATIVO',now(),'A')", new { perfilId, tenantId = ctx.Data.TenantId.Value, clienteId = ctx.Data.ClienteId, codigo, request.Nome, request.Descricao });
+                var codigo = string.IsNullOrWhiteSpace(request.Codigo) ? TenantContextService.Slug(nome).Replace('-', '_').ToUpperInvariant() : request.Codigo.Trim().ToUpperInvariant();
+                if (!System.Text.RegularExpressions.Regex.IsMatch(codigo, "^[A-Z][A-Z0-9_]{1,79}$"))
+                {
+                    await tx.RollbackAsync();
+                    return ApiResponse<Guid>.Fail("Código inválido. Use letras maiúsculas, números e sublinhado.", 400);
+                }
+                var duplicate = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.perfis
+where tenant_id=@tenantId and reg_status='A' and (upper(nome)=upper(@nome) or upper(codigo)=upper(@codigo)))", new { tenantId, nome, codigo }, tx);
+                if (duplicate)
+                {
+                    await tx.RollbackAsync();
+                    return ApiResponse<Guid>.Fail("Já existe um perfil ativo com este nome ou código no cliente.", 409);
+                }
+                await cn.ExecuteAsync("insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_date,reg_status,created_by) values(@perfilId,@tenantId,@clienteId,@codigo,@nome,@descricao,false,true,'ATIVO',now(),'A',@actor)", new { perfilId, tenantId, clienteId = ctx.Data.ClienteId, codigo, nome, descricao, actor = _tenantContext.ObterUsuarioId() }, tx);
             }
-            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data.ClienteId, "PERFIL", perfilId, id.HasValue ? "EDITAR_PERFIL" : "CRIAR_PERFIL", new { request.Nome }, true, ip, "ADMINISTRADOR_CLIENTE");
+            await tx.CommitAsync();
+            await _audit.RegistrarAsync(_tenantContext.ObterUsuarioId(), ctx.Data.ClienteId, "PERFIL", perfilId, id.HasValue ? "EDITAR_PERFIL" : "CRIAR_PERFIL", new { nome }, true, ip, "ADMINISTRADOR_CLIENTE");
             return ApiResponse<Guid>.Ok(perfilId, "Perfil salvo com sucesso.");
         }
         catch (Exception ex)

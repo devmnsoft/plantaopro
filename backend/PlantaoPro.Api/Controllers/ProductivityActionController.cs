@@ -50,7 +50,7 @@ public sealed class ProductivityActionController : ControllerBase
             {
                 x.Key,x.Module,x.EntityType,x.EntityId,x.ActionCode,x.Title,x.Description,x.Priority,x.Status,x.DueAt,x.CreatedAt,
                 x.Icon,x.ContextLabel,x.OwnerType,x.OwnerId,
-                primaryAction = SafeAction(x.PrimaryAction),x.CanSnooze,x.CanDismiss,x.SourceUpdatedAt,x.IsSnoozed
+                primaryAction = SafeAction(x),x.CanSnooze,x.CanDismiss,x.SourceUpdatedAt,x.IsSnoozed
             }),
             summary, quickActions = service.QuickActions(), agenda = Array.Empty<object>(),
             page.Page,page.PageSize,page.Total,page.TotalPages,
@@ -58,10 +58,21 @@ public sealed class ProductivityActionController : ControllerBase
         };
     }
 
-    private static object SafeAction(string path)
+    private static object SafeAction(ProductivityActionDto item)
     {
+        var path = item.PrimaryAction;
         var parts = path.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
         var route = parts.Length > 2 ? new Dictionary<string,string>{{"id",parts[2]}} : new Dictionary<string,string>();
-        return new { label="Abrir", controller=parts.ElementAtOrDefault(0)??"Home", action=parts.ElementAtOrDefault(1)??"Index", routeValues=route };
+        var label = item.ActionCode switch
+        {
+            "RESPONDER" => "Responder convite", "CONFIRMAR" => "Confirmar plantão",
+            "CONFERIR" => "Conferir pagamento", "DIVERGENCIA_ABERTA" => "Revisar divergência",
+            "EM_CONFERENCIA" => "Conferir fechamento", "AGUARDANDO_APROVACAO" => "Revisar fechamento",
+            "RESOLVER" => "Analisar contestação", "CHECKIN" => "Registrar chegada",
+            "CONTINUAR" => "Continuar atendimento", "CONFERIR_EXECUCAO" => "Conferir execução",
+            "REVISAR_CORRECAO" => "Revisar correção", "ATRIBUIR_RESPONSAVEL" => "Atribuir responsável",
+            "ACOMPANHAR_OCORRENCIA" => "Acompanhar ocorrência", _ => "Abrir registro"
+        };
+        return new { label, controller=parts.ElementAtOrDefault(0)??"Home", action=parts.ElementAtOrDefault(1)??"Index", routeValues=route };
     }
 }

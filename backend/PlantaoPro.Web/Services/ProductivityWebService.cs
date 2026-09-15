@@ -60,11 +60,13 @@ public sealed class ProductivityWebService
         var values = new Dictionary<string, string?>
         {
             ["tab"] = query.Tab, ["priority"] = query.Priority, ["module"] = query.Module,
-            ["status"] = query.Status, ["unitId"] = query.UnitId,
+            ["status"] = query.Status, ["unitId"] = query.UnitId, ["mine"] = query.Mine ? "true" : null,
             ["page"] = Math.Max(1, query.Page).ToString(), ["pageSize"] = Math.Clamp(query.PageSize, 1, 100).ToString()
         };
         var now = DateTimeOffset.UtcNow;
-        if (query.Due == "hoje") { values["dueFrom"] = now.Date.ToString("O"); values["dueTo"] = now.Date.AddDays(1).AddTicks(-1).ToString("O"); }
+        if (query.PeriodFrom.HasValue) values["dueFrom"] = query.PeriodFrom.Value.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("O");
+        if (query.PeriodTo.HasValue) values["dueTo"] = query.PeriodTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc).ToString("O");
+        if (query.Due == "hoje") { values["dueFrom"] = now.Date.ToString("O"); values["dueTo"] = now.Date.AddDays(1).ToString("O"); }
         else if (query.Due == "atrasado") values["dueTo"] = now.ToString("O");
         return Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(path, values.Where(x => !string.IsNullOrWhiteSpace(x.Value)).ToDictionary(x => x.Key, x => x.Value!));
     }

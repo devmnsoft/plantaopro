@@ -74,6 +74,32 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           'USUARIO',c.assumida_por,'bi-journal-medical',coalesce(nullif(c.nome,''),'Atendimento'),'/Consultas/Atendimento/'||c.id,true,false,coalesce(c.atualizado_em,c.criado_em)
         from plantaopro.consultas c where @clinical and c.tenant_id=@tenantId and upper(c.status) in ('RASCUNHO','EM_ATENDIMENTO')
           and (not @doctorOnly or c.assumida_por=@userId)
+        union all
+        select concat('PRESENCA:EXECUCAO:',mc.id,':CONFERIR'),'PRESENCA','PRESENCA',mc.id,'CONFERIR_EXECUCAO',
+          'Execução aguardando conferência','Confira os horários registrados antes de aprovar a execução.','NORMAL',mc.status_conferencia,
+          null,coalesce(mc.checkout_recebido_em,mc.checkin_recebido_em,mc.checkin_em),'EQUIPE',null::uuid,
+          'bi-clipboard2-check',coalesce(nullif(h.nome_fantasia,''),'Unidade'),'/ConferenciaExecucao/Index',false,false,coalesce(mc.atualizado_em,mc.checkin_em)
+        from plantaopro.medico_checkins mc
+        join plantaopro.escalas e on e.id=mc.escala_id and e.tenant_id=@tenantId
+        join plantaopro.plantoes p on p.id=e.plantao_id and p.cliente_id=@tenantId
+        join plantaopro.hospitais h on h.id=p.hospital_id
+        where @operation and not @doctorOnly and mc.tenant_id=@tenantId and mc.status_conferencia in ('PENDENTE','REGISTRO_INCOMPLETO')
+        union all
+        select concat('PRESENCA:CORRECAO:',x.id,':REVISAR'),'PRESENCA','CORRECAO_PRESENCA',x.id,'REVISAR_CORRECAO',
+          'Correção de presença aguardando decisão','Revise a justificativa e os horários propostos na conferência.','ALTA','CORRECAO_PENDENTE',
+          null,x.solicitado_em,'EQUIPE',null::uuid,'bi-clock-history','Conferência de execução','/ConferenciaExecucao/Index',false,false,x.solicitado_em
+        from plantaopro.medico_presenca_correcoes x
+        where @operation and not @doctorOnly and x.tenant_id=@tenantId and x.status='PENDENTE'
+        union all
+        select concat('OCORRENCIA:OPERACIONAL:',o.id,':',case when o.responsavel_id is null then 'ATRIBUIR' else 'ACOMPANHAR' end),
+          'OCORRENCIAS','OCORRENCIA',o.id,case when o.responsavel_id is null then 'ATRIBUIR_RESPONSAVEL' else 'ACOMPANHAR_OCORRENCIA' end,
+          case when o.responsavel_id is null then 'Ocorrência aberta sem responsável' else 'Ocorrência operacional em acompanhamento' end,
+          concat('A ocorrência “',o.titulo,'” exige tratamento na origem.'),case o.prioridade when 'CRITICA' then 'CRITICA' when 'ALTA' then 'ALTA' else 'NORMAL' end,
+          o.situacao,o.prazo_resolucao,o.criado_em,case when o.responsavel_id is null then 'EQUIPE' else 'USUARIO' end,o.responsavel_id,
+          'bi-exclamation-octagon','Ocorrências','/Ocorrencias/Index/'||o.id,false,false,o.atualizado_em
+        from plantaopro.ocorrencias_operacionais o
+        where @operation and o.tenant_id=@tenantId and o.reg_status='A' and o.situacao not in ('RESOLVIDA','CANCELADA')
+          and (not @doctorOnly or o.solicitante_id=@userId or o.responsavel_id=@userId)
         ";
 
     public async Task<ProductivityPageDto> ListAsync(Guid tenantId, Guid userId, ProductivityQuery query,
@@ -90,18 +116,19 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
             ), filtered as (
               select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed from visible where (@priority is null or Priority=@priority) and (@module is null or Module=@module)
                 and (@status is null or Status=@status) and (@ownerId is null or OwnerId=@ownerId)
-                and (@dueFrom is null or DueAt>=@dueFrom) and (@dueTo is null or DueAt<=@dueTo)
+                and (not @mine or OwnerId=@userId)
+                and (@dueFrom is null or coalesce(DueAt,CreatedAt)>=@dueFrom) and (@dueTo is null or coalesce(DueAt,CreatedAt)<@dueTo)
                 and (case @tab when 'CRITICAS' then Priority='CRITICA' when 'HOJE' then DueAt>=date_trunc('day',now()) and DueAt<date_trunc('day',now())+interval '1 day'
                      when 'ATRASADAS' then DueAt<now() when 'ADIADAS' then IsSnoozed else not IsSnoozed end)
             )
             select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed,count(*) over()::int as TotalRows from filtered
-            order by case Priority when 'CRITICA' then 1 when 'ALTA' then 2 when 'NORMAL' then 3 else 4 end,DueAt nulls last,CreatedAt
+            order by case Priority when 'CRITICA' then 1 when 'ALTA' then 2 when 'NORMAL' then 3 else 4 end,DueAt nulls last,CreatedAt,Key
             offset @offset limit @size
             ";
         await using var cn = Open();
         var args = new { tenantId,userId,operation,clinical,financial,doctorOnly,
             priority=Normalize(query.Priority),module=Normalize(query.Module),status=Normalize(query.Status),query.OwnerId,query.DueFrom,query.DueTo,
-            tab,offset=(page-1)*size,size };
+            query.Mine,tab,offset=(page-1)*size,size };
         var rows = (await cn.QueryAsync<ProductivityRow>(new CommandDefinition(sql,args,cancellationToken:ct))).AsList();
         var total = rows.FirstOrDefault()?.TotalRows ?? 0;
         return new(rows.Select(x => x.ToDto()).ToList(),page,size,total,(int)Math.Ceiling(total/(double)size));

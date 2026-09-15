@@ -5,8 +5,10 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController, Authorize, Route("api/ocorrencias")]
 [Tags("Ocorrências operacionais")]
-public sealed class OcorrenciasController(OcorrenciaService service) : ControllerBase
+public sealed class OcorrenciasController : ControllerBase
 {
+    private readonly OcorrenciaService service;
+    public OcorrenciasController(OcorrenciaService service) => this.service = service;
     [HttpGet] public async Task<IActionResult> Listar([FromQuery] OcorrenciaFiltro filtro,CancellationToken ct)=>Ok(await service.ListarAsync(filtro,ct));
     [HttpGet("{id:guid}")] public async Task<IActionResult> Obter(Guid id,CancellationToken ct){var item=await service.ObterAsync(id,ct);return item is null?NotFound():Ok(item);}
     [HttpGet("{id:guid}/historico")] public async Task<IActionResult> Historico(Guid id,CancellationToken ct)=>await Result(()=>service.HistoricoAsync(id,ct));

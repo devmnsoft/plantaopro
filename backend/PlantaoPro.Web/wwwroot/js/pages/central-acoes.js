@@ -28,8 +28,8 @@ const submitSnooze = async button => {
     const response = await fetch('/Pendencias/adiar', { method: 'POST', body, credentials: 'same-origin', headers: { Accept: 'application/json' } });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(payload.message || 'Não foi possível adiar a ação.');
-    button.closest('[data-item-key]')?.remove();
     notify(payload.message || 'Ação adiada.');
+    window.setTimeout(() => window.location.reload(), 350);
   } catch (error) { notify(error.message, 'error'); button.disabled = false; }
   finally { button.removeAttribute('aria-busy'); if (button.isConnected) button.innerHTML = idleLabel; }
 };

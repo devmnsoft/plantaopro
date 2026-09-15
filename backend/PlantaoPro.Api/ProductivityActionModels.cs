@@ -19,7 +19,7 @@ public sealed record ProductivityQuery(
     string? Tab = null, string? Priority = null, string? Module = null,
     string? Status = null, Guid? OwnerId = null, Guid? UnitId = null,
     DateTimeOffset? DueFrom = null, DateTimeOffset? DueTo = null,
-    int Page = 1, int PageSize = 25);
+    bool Mine = false, int Page = 1, int PageSize = 25);
 
 public sealed record ProductivityPageDto(
     IReadOnlyList<ProductivityActionDto> Items, int Page, int PageSize, int Total, int TotalPages);
@@ -28,4 +28,3 @@ public sealed record ProductivitySummaryDto(int Active, int Critical, int Today,
 public sealed record SnoozeProductivityRequest(DateTimeOffset SnoozedUntil);
 public sealed record QuickActionDto(string Code, string Label, string Icon, string Controller, string Action,
     IReadOnlyDictionary<string, string>? RouteValues = null);
-

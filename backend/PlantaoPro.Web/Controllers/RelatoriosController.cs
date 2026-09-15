@@ -17,7 +17,21 @@ public class RelatoriosController : BaseWebController
 
     public IActionResult Sla() => View();
     public IActionResult Convites() => View();
-    public IActionResult Cobertura() => View();
+    public Task<IActionResult> Cobertura(DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao, int page=1) => OperacionalAsync("Cobertura",inicio,fim,unidadeId,especialidadeId,profissionalId,situacao,page);
+    public Task<IActionResult> Execucao(DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao, int page=1) => OperacionalAsync("Execucao",inicio,fim,unidadeId,especialidadeId,profissionalId,situacao,page);
+    public Task<IActionResult> Apuracao(DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao, int page=1) => OperacionalAsync("Apuracao",inicio,fim,unidadeId,especialidadeId,profissionalId,situacao,page);
+
+    private async Task<IActionResult> OperacionalAsync(string kind, DateOnly? inicio, DateOnly? fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao, int page)
+    {
+        var today=DateOnly.FromDateTime(DateTime.UtcNow); var start=inicio??today.AddDays(-30); var end=fim??today;
+        PlantaoPro.Web.Models.OperationalReportResult? data=null; string? error=null;
+        if(end<start || end.DayNumber-start.DayNumber>366) error="Informe um período válido de até 366 dias.";
+        else { using var client=CreateApiClient(); if(!AddBearerToken(client)) return HandleUnauthorized(); var query=Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString($"api/relatorios-operacionais/{kind}",new Dictionary<string,string?>{{"inicio",start.ToString("yyyy-MM-dd")},{"fim",end.ToString("yyyy-MM-dd")},{"unidadeId",unidadeId?.ToString()},{"especialidadeId",especialidadeId?.ToString()},{"profissionalId",profissionalId?.ToString()},{"situacao",situacao},{"page",Math.Max(1,page).ToString()},{"pageSize","25"}}.Where(x=>x.Value is not null).ToDictionary(x=>x.Key,x=>x.Value!)); var result=await ReadApiResponse<PlantaoPro.Web.Models.OperationalReportResult>(client,query); data=result.Data; error=result.Error; }
+        return View("Operacional",new PlantaoPro.Web.Models.OperationalReportPageViewModel(kind,start,end,unidadeId,especialidadeId,profissionalId,situacao,data,error));
+    }
+
+    public async Task<IActionResult> ExportarOperacional(string kind, DateOnly inicio, DateOnly fim, Guid? unidadeId, Guid? especialidadeId, Guid? profissionalId, string? situacao)
+    { using var client=CreateApiClient(); if(!AddBearerToken(client)) return HandleUnauthorized(); var query=Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString($"api/relatorios-operacionais/{kind}/csv",new Dictionary<string,string?>{{"inicio",inicio.ToString("yyyy-MM-dd")},{"fim",fim.ToString("yyyy-MM-dd")},{"unidadeId",unidadeId?.ToString()},{"especialidadeId",especialidadeId?.ToString()},{"profissionalId",profissionalId?.ToString()},{"situacao",situacao}}.Where(x=>x.Value is not null).ToDictionary(x=>x.Key,x=>x.Value!)); var response=await client.GetAsync(query); if(!response.IsSuccessStatusCode){TempData["Error"]="A exportação foi negada ou falhou; atualize o relatório.";return RedirectToAction(kind,new{inicio,fim,unidadeId,especialidadeId,profissionalId,situacao});} return File(await response.Content.ReadAsByteArrayAsync(),"text/csv; charset=utf-8",$"{kind.ToLowerInvariant()}-{DateTime.UtcNow:yyyyMMddHHmmss}.csv"); }
     public IActionResult ProdutividadeMedica() => View();
     public IActionResult FaturamentoSaas() => View();
     public IActionResult Operacional() => View("Index");

@@ -93,20 +93,56 @@ public sealed class CentralEscalaSugestoesFase4Controller : ControllerBase
 public sealed class SubstituicoesFase4Controller : ControllerBase
 {
     private readonly OperationalAutomationService service;
-    public SubstituicoesFase4Controller(OperationalAutomationService service) { this.service = service; }
+    private readonly PermissionGuardService permissionGuard;
+    private readonly TenantGuardService tenantGuard;
+    public SubstituicoesFase4Controller(OperationalAutomationService service, PermissionGuardService permissionGuard, TenantGuardService tenantGuard) { this.service = service; this.permissionGuard = permissionGuard; this.tenantGuard = tenantGuard; }
     private Guid Uid() => Guid.Parse(User.FindFirstValue("uid") ?? User.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new InvalidOperationException("Usuário inválido"));
 
     [HttpGet]
-    public async Task<IActionResult> Listar() { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.ListarSubstituicoesAsync(ctx.ClienteId); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> Listar()
+    {
+        var permission = await permissionGuard.ValidarPermissaoAsync(PermissionConstants.EscalasVer);
+        if (!permission.Success) return StatusCode(permission.StatusCode, permission);
+        var ctx = await service.ObterContextoUsuarioAsync(User);
+        var result = await service.ListarSubstituicoesAsync(ctx.ClienteId);
+        if (!result.Success || result.Data is null) return StatusCode(result.StatusCode, result);
+        var visible = new List<SubstituicaoDto>();
+        foreach (var item in result.Data)
+            if (await tenantGuard.PodeAcessarHospitalAsync(Uid(), item.HospitalId)) visible.Add(item);
+        return Ok(ApiResponse<IEnumerable<SubstituicaoDto>>.Ok(visible, "Substituições autorizadas listadas."));
+    }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> Obter(Guid id) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.ObterSubstituicaoAsync(id, ctx.ClienteId); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> Obter(Guid id)
+    {
+        var permission = await permissionGuard.ValidarPermissaoAsync(PermissionConstants.EscalasVer);
+        if (!permission.Success) return StatusCode(permission.StatusCode, permission);
+        var ctx = await service.ObterContextoUsuarioAsync(User);
+        var result = await service.ObterSubstituicaoAsync(id, ctx.ClienteId);
+        if (!result.Success || result.Data is null) return StatusCode(result.StatusCode, result);
+        if (!await tenantGuard.PodeAcessarHospitalAsync(Uid(), result.Data.HospitalId))
+            return StatusCode(403, ApiResponse<string>.Fail("Você não possui vínculo com a unidade desta solicitação.", 403));
+        return Ok(result);
+    }
 
     [HttpPost("{id:guid}/aprovar")]
-    public async Task<IActionResult> Aprovar(Guid id, [FromBody] DecisaoSubstituicaoRequest request) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.MudarStatusSubstituicaoAsync(id, Uid(), ctx.ClienteId, "APROVAR", "APROVADA", request.Justificativa, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> Aprovar(Guid id, [FromBody] DecisaoSubstituicaoRequest request) => await Decidir(id, request, true);
 
     [HttpPost("{id:guid}/recusar")]
-    public async Task<IActionResult> Recusar(Guid id, [FromBody] DecisaoSubstituicaoRequest request) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.MudarStatusSubstituicaoAsync(id, Uid(), ctx.ClienteId, "RECUSAR", "RECUSADA", request.Justificativa, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }
+    public async Task<IActionResult> Recusar(Guid id, [FromBody] DecisaoSubstituicaoRequest request) => await Decidir(id, request, false);
+
+    private async Task<IActionResult> Decidir(Guid id, DecisaoSubstituicaoRequest request, bool aprovar)
+    {
+        var permission = await permissionGuard.ValidarPermissaoAsync(aprovar ? PermissionConstants.EscalasConfirmar : PermissionConstants.EscalasRecusar);
+        if (!permission.Success) return StatusCode(permission.StatusCode, permission);
+        var ctx = await service.ObterContextoUsuarioAsync(User);
+        var detail = await service.ObterSubstituicaoAsync(id, ctx.ClienteId);
+        if (!detail.Success || detail.Data is null) return StatusCode(detail.StatusCode, detail);
+        if (!await tenantGuard.PodeAcessarHospitalAsync(Uid(), detail.Data.HospitalId))
+            return StatusCode(403, ApiResponse<string>.Fail("Você não possui vínculo com a unidade desta solicitação.", 403));
+        var result = await service.MudarStatusSubstituicaoAsync(id, Uid(), ctx.ClienteId, aprovar ? "APROVAR" : "RECUSAR", aprovar ? "APROVADA" : "RECUSADA", request.Justificativa, request.VersaoEsperada, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+        return StatusCode(result.StatusCode, result);
+    }
 
     [HttpPost("{id:guid}/convidar-substituto")]
     public async Task<IActionResult> Convidar(Guid id, [FromBody] ConvidarSubstitutoRequest request) { var ctx = await service.ObterContextoUsuarioAsync(User); var r = await service.ConvidarSubstitutoAsync(id, Uid(), ctx.ClienteId, request, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString()); return StatusCode(r.StatusCode, r); }

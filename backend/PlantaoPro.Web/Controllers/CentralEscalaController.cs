@@ -50,8 +50,51 @@ public sealed class CentralEscalaController : BaseWebController
     public IActionResult MedicosDisponiveis() => Operational(nameof(MedicosDisponiveis));
     public IActionResult Sugestoes() => Operational(nameof(Sugestoes));
     public IActionResult MedicosSugeridos() => Operational(nameof(MedicosSugeridos));
-    public IActionResult Substituicoes() => Operational(nameof(Substituicoes));
-    public IActionResult SubstituicaoDetails(Guid id) => Operational(nameof(SubstituicaoDetails));
+    public async Task<IActionResult> Substituicoes(Guid? unidadeId, string? status, DateOnly? inicio, DateOnly? fim, string? profissional, int page = 1, int pageSize = 20)
+    {
+        page = Math.Max(1, page); pageSize = Math.Clamp(pageSize, 10, 50);
+        if (inicio.HasValue != fim.HasValue || inicio > fim) ModelState.AddModelError(string.Empty, "Informe um período de envio completo e válido.");
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = ModelState.IsValid
+            ? await ReadApiResponse<IEnumerable<ManagerSubstitutionDto>>(client, "api/substituicoes")
+            : (null, "Revise os filtros informados.", HttpStatusCode.UnprocessableEntity);
+        var query = (result.Item1 ?? Array.Empty<ManagerSubstitutionDto>()).AsEnumerable();
+        if (unidadeId.HasValue) query = query.Where(x => x.HospitalId == unidadeId);
+        if (!string.IsNullOrWhiteSpace(status)) query = query.Where(x => x.Status.Equals(status.Trim(), StringComparison.OrdinalIgnoreCase));
+        if (inicio.HasValue) query = query.Where(x => DateOnly.FromDateTime(x.RegDate) >= inicio.Value && DateOnly.FromDateTime(x.RegDate) <= fim!.Value);
+        if (!string.IsNullOrWhiteSpace(profissional)) query = query.Where(x => x.MedicoSolicitanteNome.Contains(profissional.Trim(), StringComparison.OrdinalIgnoreCase));
+        var ordered = query.OrderByDescending(x => x.RegDate).ThenByDescending(x => x.Id).ToArray();
+        return View(new ManagerRequestQueueViewModel(ordered.Skip((page - 1) * pageSize).Take(pageSize).ToArray(), result.Item2, status, unidadeId, inicio, fim, profissional, page, pageSize, ordered.LongLength));
+    }
+
+    public async Task<IActionResult> SubstituicaoDetails(Guid id, string? returnUrl)
+    {
+        if (id == Guid.Empty) return NotFound();
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = await ReadApiResponse<ManagerSubstitutionDto>(client, $"api/substituicoes/{id}");
+        ViewBag.ErrorMessage = result.Error; ViewBag.ReturnUrl = LocalReturnUrl(returnUrl);
+        return result.Data is null && result.StatusCode == HttpStatusCode.NotFound ? NotFound() : View(result.Data);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DecidirSubstituicao(Guid id, long versaoEsperada, string? decisao, string? justificativa, string? returnUrl)
+    {
+        justificativa = justificativa?.Trim();
+        if (id == Guid.Empty || versaoEsperada <= 0 || decisao is not ("APROVAR" or "RECUSAR") || justificativa?.Length is < 3 or > 1000)
+        { TempData["Error"] = "Selecione uma decisão explícita e informe justificativa entre 3 e 1.000 caracteres."; TempData["DecisionReason"] = justificativa; return RedirectToAction(nameof(SubstituicaoDetails), new { id, returnUrl = LocalReturnUrl(returnUrl) }); }
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var endpoint = $"api/substituicoes/{id}/{(decisao == "APROVAR" ? "aprovar" : "recusar")}";
+        var response = await client.PostAsJsonAsync(endpoint, new { Justificativa = justificativa, VersaoEsperada = versaoEsperada });
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? "Decisão registrada. O profissional já pode acompanhar a situação no portal." : response.StatusCode switch
+        { HttpStatusCode.Conflict => "A solicitação mudou ou já foi decidida. Revise o estado atual antes de tentar novamente.", HttpStatusCode.Forbidden => "Sua permissão ou vínculo com a unidade não permite esta decisão.", HttpStatusCode.NotFound => "Solicitação indisponível no contexto atual.", _ => "Não foi possível confirmar o resultado. Consulte o estado antes de repetir." };
+        if (!response.IsSuccessStatusCode) TempData["DecisionReason"] = justificativa;
+        return RedirectToAction(nameof(SubstituicaoDetails), new { id, returnUrl = LocalReturnUrl(returnUrl) });
+    }
+
+    private string LocalReturnUrl(string? value) => Url.IsLocalUrl(value) ? value! : Url.Action(nameof(Substituicoes))!;
     public IActionResult ConvitesPendentes() => Operational(nameof(ConvitesPendentes));
     public IActionResult Calendario() => Operational(nameof(Calendario));
 

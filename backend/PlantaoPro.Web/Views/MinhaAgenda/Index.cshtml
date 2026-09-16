@@ -2,7 +2,7 @@
 @{ ViewData["Title"] = "Meu Dia"; var d = Model.Data; }
 @section Styles { <link rel="stylesheet" href="~/css/pages/professional-portal.css" asp-append-version="true" /> }
 <main class="professional-portal" aria-labelledby="professional-title">
-  <header class="professional-hero"><div><span class="eyebrow">Área do profissional</span><h1 id="professional-title">Meu Dia</h1><p>@(d is null ? "Sua rotina clínica em um só lugar." : $"Olá, {d.Resumo.MedicoNome}. Veja o que precisa da sua atenção.")</p></div><div class="hero-actions"><a asp-action="PlantoesDisponiveis" class="btn btn-light">Encontrar plantão</a><a asp-controller="MedicoArea" asp-action="Disponibilidade" class="btn btn-outline-light">Informar disponibilidade</a></div></header>
+  <header class="professional-hero"><div><span class="eyebrow">Área do profissional</span><h1 id="professional-title">Meu Dia</h1><p>@(d is null ? "Sua rotina clínica em um só lugar." : $"Olá, {d.Resumo.MedicoNome}. Veja o que precisa da sua atenção.")</p></div><div class="hero-actions"><a asp-action="Agenda" class="btn btn-light">Abrir minha agenda</a><a asp-action="PlantoesDisponiveis" class="btn btn-outline-light">Encontrar plantão</a><a asp-controller="MedicoArea" asp-action="Disponibilidade" class="btn btn-outline-light">Informar disponibilidade</a></div></header>
   @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage)) { <div class="portal-state" role="alert"><strong>Não foi possível carregar o Meu Dia.</strong><span>@Model.ErrorMessage</span></div> }
   else if (d is null) { <div class="portal-state"><strong>Nada para mostrar agora</strong><span>Atualize a página ou fale com a coordenação se seu vínculo ainda não estiver ativo.</span></div> }
   else {
@@ -11,7 +11,7 @@
     </section>
     <div class="portal-columns"><section class="portal-panel"><div class="panel-heading"><div><span class="eyebrow">Agenda</span><h2>Próximos plantões</h2></div><a asp-action="Presencas">Check-in e check-out</a></div>
       @if (!d.ProximosPlantoes.Any()) { <div class="compact-empty">Nenhum plantão confirmado para os próximos dias.</div> }
-      @foreach (var item in d.ProximosPlantoes) { <article class="shift-card"><time datetime="@item.DataInicio.ToString("O")"><b>@item.DataInicio.ToString("dd MMM")</b><span>@item.DataInicio.ToString("HH:mm")–@item.DataFim.ToString("HH:mm")</span></time><div><h3>@item.HospitalNome</h3><p>@item.EspecialidadeNome</p></div><span class="status-badge">@item.Status</span></article> }
+      @foreach (var item in d.ProximosPlantoes) { <article class="shift-card"><time datetime="@item.DataInicio.ToString("O")"><b>@item.DataInicio.ToString("dd MMM")</b><span>@item.DataInicio.ToString("HH:mm")–@item.DataFim.ToString("HH:mm")</span></time><div><h3>@item.HospitalNome</h3><p>@item.EspecialidadeNome</p></div><span class="status-badge">@item.Status</span><a asp-action="Detalhe" asp-route-id="@item.EscalaId" class="btn btn-sm btn-outline-primary">Detalhes</a></article> }
     </section><aside class="portal-panel"><div class="panel-heading"><div><span class="eyebrow">Financeiro</span><h2>Meus pagamentos</h2></div><a asp-action="MeusPagamentos">Ver detalhes</a></div><div class="finance-highlight"><span>Pago</span><strong>@d.ValorPago.ToString("C")</strong><small>Aprovado: @d.ValorAprovado.ToString("C")</small></div><hr/><h3>Convites recebidos</h3><p class="muted">@d.ConvitesPendentes.Count() convite(s) aguardando sua confirmação.</p><a asp-controller="MedicoArea" asp-action="Convites" class="btn btn-outline-primary w-100">Revisar convites</a></aside></div>
   }
 </main>

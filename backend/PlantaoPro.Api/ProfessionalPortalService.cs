@@ -10,17 +10,26 @@ public sealed class ProfessionalPortalService
     private readonly IConfiguration configuration;
     private readonly IAuditService audit;
     private readonly ILogger<ProfessionalPortalService> logger;
+    private readonly EscalaService escalaService;
+    private readonly UsuarioContextService usuarioContext;
 
-    public ProfessionalPortalService(IConfiguration configuration, IAuditService audit, ILogger<ProfessionalPortalService> logger)
+    public ProfessionalPortalService(IConfiguration configuration, IAuditService audit, ILogger<ProfessionalPortalService> logger, EscalaService escalaService, UsuarioContextService usuarioContext)
     {
         this.configuration = configuration;
         this.audit = audit;
         this.logger = logger;
+        this.escalaService = escalaService;
+        this.usuarioContext = usuarioContext;
     }
 
     private NpgsqlConnection Connection() => new(configuration.GetConnectionString("Default"));
-    private static Task<ProfessionalContext?> ContextAsync(NpgsqlConnection cn, Guid uid) => cn.QueryFirstOrDefaultAsync<ProfessionalContext>(@"select m.id as ""MedicoId"",m.cliente_id as ""ClienteId"",coalesce(m.tenant_id,m.cliente_id) as ""TenantId""
-from plantaopro.medicos m where m.usuario_id=@uid and m.reg_status='A' limit 1", new { uid });
+    private Task<ProfessionalContext?> ContextAsync(NpgsqlConnection cn, Guid uid)
+    {
+        var selectedClientId = usuarioContext.GetClienteId();
+        if (!selectedClientId.HasValue) return Task.FromResult<ProfessionalContext?>(null);
+        return cn.QueryFirstOrDefaultAsync<ProfessionalContext>(@"select m.id as ""MedicoId"",m.cliente_id as ""ClienteId"",coalesce(m.tenant_id,m.cliente_id) as ""TenantId""
+from plantaopro.medicos m where m.usuario_id=@uid and m.cliente_id=@selectedClientId and m.reg_status='A' limit 1", new { uid, selectedClientId });
+    }
 
     public async Task<ApiResponse<ProfessionalDashboardDto>> DashboardAsync(Guid uid)
     {
@@ -53,6 +62,41 @@ from plantaopro.medicos m where m.id=@medicoId", new { uid, context.MedicoId, co
         if (context is null) return ApiResponse<IEnumerable<ProfessionalCheckInDto>>.Fail("Profissional não encontrado.", 404);
         var rows = await cn.QueryAsync<ProfessionalCheckInDto>(@"select e.id as ""EscalaId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",c.checkin_em as ""CheckInEm"",c.checkout_em as ""CheckOutEm"",c.checkin_recebido_em as ""CheckInRecebidoEm"",c.checkout_recebido_em as ""CheckOutRecebidoEm"",x.id as ""CorrecaoId"",x.versao as ""VersaoCorrecao"",x.status as ""StatusCorrecao"",x.inicio_proposto_em as ""InicioPropostoEm"",x.fim_proposto_em as ""FimPropostoEm"",c.inicio_aprovado_em as ""InicioAprovadoEm"",c.fim_aprovado_em as ""FimAprovadoEm"",coalesce(c.status_conferencia,'CONFIRMADO') as ""StatusConferencia"",c.timezone_contexto as ""TimezoneContexto"",coalesce(c.versao,0) as ""Versao"",(c.id is null and now()>=p.data_inicio-interval '2 hours') as ""PodeCheckIn"",(c.id is not null and c.checkout_em is null) as ""PodeCheckOut"" from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id left join medico_checkins c on c.escala_id=e.id and c.tenant_id=@TenantId left join lateral(select id,versao,status,inicio_proposto_em,fim_proposto_em from medico_presenca_correcoes where tenant_id=@TenantId and presenca_id=c.id and status='PENDENTE' order by solicitado_em desc limit 1)x on true where e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A' and lower(e.status) in ('confirmado','realizado') and p.data_fim>=now()-interval '365 days' order by p.data_inicio desc", context);
         return ApiResponse<IEnumerable<ProfessionalCheckInDto>>.Ok(rows);
+    }
+
+    public async Task<ApiResponse<IEnumerable<ProfessionalShiftDto>>> AgendaAsync(Guid uid, DateOnly start, DateOnly end, string? unit, string? status)
+    {
+        if (start == default || end == default || end < start || end.DayNumber - start.DayNumber > 366)
+            return ApiResponse<IEnumerable<ProfessionalShiftDto>>.Fail("Informe um período válido de até 366 dias.", 422);
+        await using var cn = Connection();
+        var context = await ContextAsync(cn, uid);
+        if (context is null || !context.ClienteId.HasValue) return ApiResponse<IEnumerable<ProfessionalShiftDto>>.Fail("Vínculo profissional inválido.", 403);
+        var rows = await cn.QueryAsync<ProfessionalShiftDto>(@"select e.id as ""EscalaId"",e.plantao_id as ""PlantaoId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",coalesce(p.valor,0) as ""Valor"",e.status as ""Status"",e.justificativa as ""Justificativa"",(select he.reg_date from plantaopro.historico_escala he where he.escala_id=e.id and lower(he.status_novo)='confirmado' order by he.reg_date desc limit 1) as ""ConfirmadoEm"",(lower(e.status)='solicitado' and p.data_inicio>now() and p.reg_status='A') as ""PodeConfirmar""
+from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id
+where e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A' and (p.data_inicio is null or p.data_inicio < @endAt) and (p.data_fim is null or p.data_fim >= @startAt) and (@unit is null or h.nome_fantasia ilike '%'||@unit||'%') and (@status is null or lower(e.status)=lower(@status)) order by p.data_inicio nulls last", new { context.MedicoId, context.ClienteId, startAt=start.ToDateTime(TimeOnly.MinValue,DateTimeKind.Utc), endAt=end.AddDays(1).ToDateTime(TimeOnly.MinValue,DateTimeKind.Utc), unit=string.IsNullOrWhiteSpace(unit)?null:unit.Trim(), status=string.IsNullOrWhiteSpace(status)?null:status.Trim() });
+        return ApiResponse<IEnumerable<ProfessionalShiftDto>>.Ok(rows);
+    }
+
+    public async Task<ApiResponse<ProfessionalShiftDetailDto>> ShiftDetailAsync(Guid uid, Guid shiftId)
+    {
+        await using var cn=Connection(); var context=await ContextAsync(cn,uid);
+        if(context is null||!context.ClienteId.HasValue)return ApiResponse<ProfessionalShiftDetailDto>.Fail("Vínculo profissional inválido.",403);
+        var shift=await cn.QueryFirstOrDefaultAsync<ProfessionalShiftDto>(@"select e.id as ""EscalaId"",e.plantao_id as ""PlantaoId"",coalesce(h.nome_fantasia,'') as ""HospitalNome"",coalesce(s.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",coalesce(p.valor,0) as ""Valor"",e.status as ""Status"",e.justificativa as ""Justificativa"",(select he.reg_date from plantaopro.historico_escala he where he.escala_id=e.id and lower(he.status_novo)='confirmado' order by he.reg_date desc limit 1) as ""ConfirmadoEm"",(lower(e.status)='solicitado' and p.data_inicio>now() and p.reg_status='A') as ""PodeConfirmar"" from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id where e.id=@shiftId and e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A'",new{shiftId,context.MedicoId,context.ClienteId});
+        if(shift is null)return ApiResponse<ProfessionalShiftDetailDto>.Fail("Plantão não encontrado no contexto profissional atual.",404);
+        var execution=(await CheckInsAsync(uid)).Data?.FirstOrDefault(x=>x.EscalaId==shiftId);
+        var finance=await cn.QueryFirstOrDefaultAsync<MedicoPagamentoDto>(@"select pg.id as ""PagamentoId"",h.nome_fantasia as ""HospitalNome"",s.nome as ""EspecialidadeNome"",p.data_inicio as ""DataPlantao"",pg.valor_previsto as ""ValorPrevisto"",pg.valor_pago as ""ValorPago"",pg.status as ""Status"",pg.data_prevista as ""DataPrevista"",pg.data_pagamento as ""DataPagamento"",pg.forma_pagamento as ""FormaPagamento"",coalesce(pg.valor_apurado,pg.valor_previsto) as ""ValorApurado"",pg.valor_aprovado as ""ValorAprovado"",greatest(coalesce(pg.valor_aprovado,pg.valor_apurado,pg.valor_previsto)-coalesce(pg.valor_pago,0),0) as ""Saldo"",coalesce(pg.horas_referencia,0) as ""HorasReferencia"",coalesce(pg.valor_hora,0) as ""ValorHora"",pg.escala_id as ""EscalaId"",null::uuid as ""FechamentoId"",null::text as ""FechamentoStatus"",null::text as ""ContestacaoStatus"" from plantaopro.pagamentos pg join plantaopro.plantoes p on p.id=pg.plantao_id join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades s on s.id=p.especialidade_id where pg.escala_id=@shiftId and pg.medico_id=@MedicoId and pg.cliente_id=@ClienteId and pg.reg_status='A' order by pg.reg_date desc limit 1",new{shiftId,context.MedicoId,context.ClienteId});
+        var history=new List<ProfessionalShiftEventDto>(); if(shift.ConfirmadoEm.HasValue)history.Add(new(shift.ConfirmadoEm.Value,"Presença futura confirmada","Profissional"));
+        return ApiResponse<ProfessionalShiftDetailDto>.Ok(new(shift,execution,finance,history));
+    }
+
+    public async Task<ApiResponse<object>> ConfirmShiftAsync(Guid uid,Guid shiftId,string ip,CancellationToken ct)
+    {
+        await using var cn=Connection();await cn.OpenAsync(ct);var context=await ContextAsync(cn,uid);
+        if(context is null||!context.ClienteId.HasValue||!context.TenantId.HasValue)return ApiResponse<object>.Fail("Vínculo profissional inválido ou revogado.",403);
+        var authorized=await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(select 1 from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id where e.id=@shiftId and e.medico_id=@MedicoId and p.cliente_id=@ClienteId and e.reg_status='A' and p.reg_status='A')",new{shiftId,context.MedicoId,context.ClienteId},cancellationToken:ct));
+        if(!authorized)return ApiResponse<object>.Fail("Plantão não encontrado no contexto profissional atual.",404);
+        var result=await escalaService.ConfirmarAsync(shiftId,null,uid,ip,"portal-profissional");
+        return result.Success?ApiResponse<object>.Ok(new{shiftId},"Plantão confirmado"):ApiResponse<object>.Fail(result.Message,result.StatusCode==200?409:result.StatusCode);
     }
 
     public async Task<ApiResponse<object>> RegisterPresenceAsync(Guid uid, Guid escalaId, bool checkout, RegistrarPresencaRequest? request, string ip, string profile)

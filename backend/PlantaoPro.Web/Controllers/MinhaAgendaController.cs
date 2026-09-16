@@ -49,6 +49,41 @@ public class MinhaAgendaController : BaseWebController
         return View(model);
     }
 
+    public async Task<IActionResult> Agenda(DateOnly? inicio, DateOnly? fim, string? unidade, string? situacao, string visualizacao = "semana")
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var start = inicio ?? today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
+        var end = fim ?? start.AddDays(6);
+        if (end < start || end.DayNumber - start.DayNumber > 366)
+            ModelState.AddModelError(string.Empty, "Informe um período válido de até 366 dias.");
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var url = $"api/medico-area/agenda?inicio={start:yyyy-MM-dd}&fim={end:yyyy-MM-dd}&unidade={Uri.EscapeDataString(unidade ?? string.Empty)}&situacao={Uri.EscapeDataString(situacao ?? string.Empty)}";
+        (IEnumerable<ProfessionalShiftDto>? Data, string? Error, HttpStatusCode StatusCode) result = ModelState.IsValid
+            ? await ReadApiResponse<IEnumerable<ProfessionalShiftDto>>(client, url)
+            : (null, null, HttpStatusCode.UnprocessableEntity);
+        return View(new ProfessionalAgendaPageViewModel(result.Data?.ToList() ?? new List<ProfessionalShiftDto>(), result.Error, start, end, unidade, situacao, visualizacao));
+    }
+
+    public async Task<IActionResult> Detalhe(Guid id, string? retorno)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var result = await ReadApiResponse<ProfessionalShiftDetailDto>(client, $"api/medico-area/escalas/{id}");
+        if (result.StatusCode == HttpStatusCode.NotFound) return NotFound();
+        ViewData["Retorno"] = string.IsNullOrWhiteSpace(retorno) ? Url.Action(nameof(Agenda)) : retorno;
+        return View(new DetailsPageViewModel<ProfessionalShiftDetailDto>(result.Data, result.Error, result.Data is null));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Confirmar(Guid id, string? retorno)
+    {
+        var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();
+        var response = await client.PostAsJsonAsync($"api/medico-area/escalas/{id}/confirmar", new { });
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode
+            ? "Plantão confirmado"
+            : response.StatusCode == HttpStatusCode.Conflict ? "Este plantão foi alterado; atualize as informações" : "Ação indisponível nesta situação";
+        return RedirectToAction(nameof(Detalhe), new { id, retorno });
+    }
+
     public async Task<IActionResult> MeusPagamentos(int page = 1, int pageSize = 20)
     {
         var client = CreateApiClient(); if (!AddBearerToken(client)) return HandleUnauthorized();

@@ -30,7 +30,13 @@ public sealed class FechamentoItemDto
     public decimal HorasRealizadas { get; set; } public decimal ValorPrevisto { get; set; }
     public decimal ValorApurado { get; set; } public bool PossuiDivergencia { get; set; }
     public Guid? PagamentoId { get; set; } public string? PagamentoStatus { get; set; }
+    public string BaseCalculo { get; set; } = "Valor cadastrado do plantão (base de 12 horas)";
+    public string RegraAplicada { get; set; } = "VALOR_BASE_12H";
+    public DateTime VigenciaInicio { get; set; }
+    public decimal QuantidadeConsiderada { get; set; }
+    public string Arredondamento { get; set; } = "2 casas, afastado de zero";
 }
+public sealed record FechamentoPendenciaDto(string Codigo, string Mensagem, string Severidade, Guid? EscalaId);
 public sealed class FechamentoDivergenciaDto
 {
     public Guid Id { get; set; } public Guid? FechamentoItemId { get; set; } public string Tipo { get; set; } = string.Empty;
@@ -42,6 +48,11 @@ public sealed class FechamentoDetalheDto : FechamentoResumoDto
 {
     public IReadOnlyList<FechamentoItemDto> Itens { get; set; } = Array.Empty<FechamentoItemDto>();
     public IReadOnlyList<FechamentoDivergenciaDto> Divergencias { get; set; } = Array.Empty<FechamentoDivergenciaDto>();
+    public IReadOnlyList<FechamentoPendenciaDto> Pendencias { get; set; } = Array.Empty<FechamentoPendenciaDto>();
+    public decimal TotalAjustes { get; set; }
+    public decimal TotalFinal => ValorApurado + TotalAjustes;
+    public bool PodeFechar => Pendencias.All(item => item.Severidade != "BLOQUEIO");
+    public string CriterioCompetencia { get; set; } = "Data de início da execução, sem rateio entre competências";
 }
 public sealed class FechamentoTimelineDto
 {

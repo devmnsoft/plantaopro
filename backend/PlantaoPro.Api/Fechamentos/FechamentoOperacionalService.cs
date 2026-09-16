@@ -64,6 +64,7 @@ public sealed class FechamentoOperacionalService
             select i.id as ""Id"",i.escala_id as ""EscalaId"",i.medico_id as ""MedicoId"",coalesce(m.nome,'') as ""Medico"",coalesce(m.crm,'') as ""Crm"",
             i.status_escala as ""StatusEscala"",i.inicio_previsto as ""InicioPrevisto"",i.fim_previsto as ""FimPrevisto"",i.horas_previstas as ""HorasPrevistas"",
             i.horas_realizadas as ""HorasRealizadas"",i.valor_previsto as ""ValorPrevisto"",i.valor_calculado as ""ValorApurado"",i.possui_divergencia as ""PossuiDivergencia"",
+            i.inicio_previsto as ""VigenciaInicio"",i.horas_realizadas as ""QuantidadeConsiderada"",
             o.pagamento_id as ""PagamentoId"",pg.status as ""PagamentoStatus"" from plantaopro.fechamento_plantao_escalas i join plantaopro.medicos m on m.id=i.medico_id
             left join plantaopro.financeiro_pagamento_origem o on o.tenant_id=i.tenant_id and o.fechamento_id=i.fechamento_id and o.escala_id=i.escala_id
             left join plantaopro.pagamentos pg on pg.id=o.pagamento_id where i.tenant_id=@Tenant and i.fechamento_id=@id order by i.inicio_previsto,m.nome
@@ -73,6 +74,10 @@ public sealed class FechamentoOperacionalService
             valor_proposto as ""ValorProposto"",status as ""Status"",resolucao as ""Resolucao"",criada_em as ""CriadoEm"",resolvida_em as ""ResolvidoEm""
             from plantaopro.fechamento_divergencias where tenant_id=@Tenant and fechamento_id=@id order by criada_em desc
             ", new { id, c.Tenant }, cancellationToken: ct))).AsList();
+        header.Pendencias = await ValidarAsync(cn, null, id, c, false, ct);
+        // Divergências registram propostas; não alteram silenciosamente um consolidado.
+        // Ajustes financeiros somente passam a compor o total quando suportados pelo domínio canônico.
+        header.TotalAjustes = 0m;
         return ApiResponse<FechamentoDetalheDto>.Ok(header);
     }
 
@@ -112,11 +117,24 @@ public sealed class FechamentoOperacionalService
     public Task<ApiResponse<FechamentoDetalheDto>> IniciarConferenciaAsync(Guid id, CancellationToken ct) => TransicionarAsync(id, new[] { FechamentoStatus.Aberto,FechamentoStatus.Devolvido }, FechamentoStatus.EmConferencia,"CONFERENCIA_INICIADA",null,ct);
     public async Task<ApiResponse<FechamentoDetalheDto>> ConcluirConferenciaAsync(Guid id, CancellationToken ct)
     {
-        var c=Contexto(); await using var cn=Connection(); var abertas=await cn.ExecuteScalarAsync<int>(new CommandDefinition("select count(*) from plantaopro.fechamento_divergencias where tenant_id=@Tenant and fechamento_id=@id and status='ABERTA'",new{id,c.Tenant},cancellationToken:ct));
-        if(abertas>0) return ApiResponse<FechamentoDetalheDto>.Fail("Resolva as divergências abertas antes de concluir a conferência.",422);
+        var c=Contexto(); await using var cn=Connection(); var pendencias=await ValidarAsync(cn,null,id,c,false,ct);
+        var bloqueios=pendencias.Where(item=>item.Severidade=="BLOQUEIO").ToList();
+        if(bloqueios.Count>0) return ApiResponse<FechamentoDetalheDto>.Fail("A conferência possui bloqueios: "+string.Join("; ",bloqueios.Select(item=>item.Mensagem)),422);
         return await TransicionarAsync(id,new[] { FechamentoStatus.EmConferencia },FechamentoStatus.AguardandoAprovacao,"CONFERENCIA_CONCLUIDA",null,ct);
     }
-    public Task<ApiResponse<FechamentoDetalheDto>> AprovarAsync(Guid id,CancellationToken ct)=>TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Aprovado,"APROVADO",null,ct,"aprovado_por","aprovado_em");
+    public async Task<ApiResponse<FechamentoDetalheDto>> AprovarAsync(Guid id,CancellationToken ct)
+    {
+        var c=Contexto(); await using var cn=Connection(); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct);
+        var f=await Lock(cn,tx,id,c,ct); if(f is null)return ApiResponse<FechamentoDetalheDto>.Fail("Fechamento não encontrado.",404);
+        if(f.Status==FechamentoStatus.Aprovado){await tx.RollbackAsync(ct);return await ObterAsync(id,ct);}
+        if(f.Status!=FechamentoStatus.AguardandoAprovacao)return ApiResponse<FechamentoDetalheDto>.Fail($"Transição de {f.Status} para {FechamentoStatus.Aprovado} não permitida.",409);
+        var bloqueios=(await ValidarAsync(cn,tx,id,c,true,ct)).Where(item=>item.Severidade=="BLOQUEIO").ToList();
+        if(bloqueios.Count>0){await tx.RollbackAsync(ct);return ApiResponse<FechamentoDetalheDto>.Fail("A prévia ficou desatualizada. Atualize e confira novamente: "+string.Join("; ",bloqueios.Select(item=>item.Mensagem)),409);}
+        var changed=await AtualizarStatus(cn,tx,id,c,f.Status,FechamentoStatus.Aprovado,ct,"aprovado_por","aprovado_em");
+        if(changed!=1){await tx.RollbackAsync(ct);return ApiResponse<FechamentoDetalheDto>.Fail("O fechamento foi alterado por outro usuário.",409);}
+        await Historico(cn,tx,c,id,"APROVADO",f.Status,FechamentoStatus.Aprovado,"Pré-condições revalidadas na confirmação; valores históricos preservados.",ct);
+        await tx.CommitAsync(ct); return await ObterAsync(id,ct);
+    }
     public async Task<ApiResponse<FechamentoDetalheDto>> DevolverAsync(Guid id,string motivo,CancellationToken ct)
     { motivo=(motivo??"").Trim(); if(motivo.Length<10||motivo.Length>500)return ApiResponse<FechamentoDetalheDto>.Fail("Motivo deve possuir entre 10 e 500 caracteres.",422); return await TransicionarAsync(id,new[] { FechamentoStatus.AguardandoAprovacao },FechamentoStatus.Devolvido,"DEVOLVIDO",motivo,ct,"devolvido_por","devolvido_em"); }
     public async Task<ApiResponse<FechamentoDetalheDto>> RejeitarAsync(Guid id,RejeitarFechamentoRequest request,CancellationToken ct)
@@ -148,6 +166,7 @@ public sealed class FechamentoOperacionalService
     public async Task<ApiResponse<FechamentoDetalheDto>> GerarFinanceiroAsync(Guid id,CancellationToken ct)
     {
         var c=Contexto(); await using var cn=Connection(); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct); var f=await Lock(cn,tx,id,c,ct); if(f is null)return ApiResponse<FechamentoDetalheDto>.Fail("Fechamento não encontrado.",404); if(f.Status==FechamentoStatus.FinanceiroGerado){await tx.RollbackAsync(ct);return await ObterAsync(id,ct);} if(f.Status!=FechamentoStatus.Aprovado)return ApiResponse<FechamentoDetalheDto>.Fail("Somente fechamento aprovado pode gerar financeiro.",409);
+        var bloqueios=(await ValidarAsync(cn,tx,id,c,true,ct)).Where(item=>item.Severidade=="BLOQUEIO").ToList(); if(bloqueios.Count>0)return ApiResponse<FechamentoDetalheDto>.Fail("O financeiro não pode ser gerado: "+string.Join("; ",bloqueios.Select(item=>item.Mensagem)),409);
         var items=(await cn.QueryAsync<FinanceItem>(new CommandDefinition("select i.id as \"ItemId\",i.escala_id as \"EscalaId\",i.medico_id as \"MedicoId\",i.plantao_id as \"PlantaoId\",i.valor_calculado as \"Valor\",i.horas_realizadas as \"Horas\",i.status_escala as \"Status\" from plantaopro.fechamento_plantao_escalas i where i.tenant_id=@Tenant and i.fechamento_id=@id for update",new{id,c.Tenant},tx,cancellationToken:ct))).AsList();
         foreach(var item in items.Where(x=>x.Status=="realizado"&&x.Valor>0)){var pagamentoId=await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition("select id from plantaopro.pagamentos where escala_id=@EscalaId and reg_status='A' limit 1",item,tx,cancellationToken:ct)); if(!pagamentoId.HasValue){pagamentoId=Guid.NewGuid();await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.pagamentos(id,tenant_id,cliente_id,escala_id,medico_id,plantao_id,valor_previsto,valor_apurado,valor_aprovado,status,data_prevista,observacoes,reg_date,reg_status,created_by,aprovado_por,aprovado_em,horas_referencia,valor_hora,parametros_apuracao,processado_automaticamente) values(@pagamentoId,@Tenant,@Cliente,@EscalaId,@MedicoId,@PlantaoId,@Valor,@Valor,@Valor,'aprovado',current_date+7,'Gerado de fechamento conferido e aprovado',now(),'A',@Usuario,@Usuario,now(),@Horas,case when @Horas>0 then @Valor/@Horas else 0 end,jsonb_build_object('modo','VALOR_BASE_12H','horas',@Horas,'valor_calculado',@Valor,'fechamento_id',@id),true)",new{pagamentoId,item.EscalaId,item.MedicoId,item.PlantaoId,item.Valor,item.Horas,c.Usuario,c.Tenant,c.Cliente,id},tx,cancellationToken:ct));await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.historico_pagamento(id,pagamento_id,status_novo,justificativa,usuario_id,reg_date) values(gen_random_uuid(),@pagamentoId,'aprovado','Obrigação gerada de fechamento conferido e aprovado',@Usuario,now())",new{pagamentoId,c.Usuario},tx,cancellationToken:ct));} await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.financeiro_pagamento_origem(id,tenant_id,pagamento_id,fechamento_id,escala_id) values(gen_random_uuid(),@Tenant,@pagamentoId,@id,@EscalaId) on conflict do nothing",new{c.Tenant,pagamentoId,id,item.EscalaId},tx,cancellationToken:ct));}
         var changed=await AtualizarStatus(cn,tx,id,c,FechamentoStatus.Aprovado,FechamentoStatus.FinanceiroGerado,ct,"financeiro_gerado_por","financeiro_gerado_em"); if(changed!=1)return ApiResponse<FechamentoDetalheDto>.Fail("O fechamento foi alterado por outro usuário.",409); await Historico(cn,tx,c,id,"FINANCEIRO_GERADO",FechamentoStatus.Aprovado,FechamentoStatus.FinanceiroGerado,"Pagamentos médicos gerados ou vinculados.",ct); await notificacoes.CriarNotificacaoAsync(c.Usuario,"Financeiro gerado","Pagamentos médicos vinculados ao fechamento.","financeiro",tx); await tx.CommitAsync(ct); return await ObterAsync(id,ct);
@@ -158,8 +177,26 @@ public sealed class FechamentoOperacionalService
     private static Task<LockedFechamento?> Lock(NpgsqlConnection cn,NpgsqlTransaction tx,Guid id,(Guid Tenant,Guid Cliente,Guid Usuario)c,CancellationToken ct)=>cn.QueryFirstOrDefaultAsync<LockedFechamento>(new CommandDefinition("select id as \"Id\",status as \"Status\" from plantaopro.fechamento_plantao where id=@id and tenant_id=@Tenant and cliente_id=@Cliente for update",new{id,c.Tenant,c.Cliente},tx,cancellationToken:ct));
     private static Task<int> AtualizarStatus(NpgsqlConnection cn,NpgsqlTransaction tx,Guid id,(Guid Tenant,Guid Cliente,Guid Usuario)c,string esperado,string destino,CancellationToken ct,string? userColumn=null,string? dateColumn=null,string? motivo=null){var extra=userColumn is null?"":$",{userColumn}=@Usuario,{dateColumn}=now()"; if(destino==FechamentoStatus.EmConferencia)extra+=",conferido_por=@Usuario,conferido_em=now()"; if(destino==FechamentoStatus.Devolvido)extra+=",motivo_devolucao=@motivo"; return cn.ExecuteAsync(new CommandDefinition($"update plantaopro.fechamento_plantao set status=@destino,atualizado_por=@Usuario,atualizado_em=now(){extra} where id=@id and tenant_id=@Tenant and cliente_id=@Cliente and status=@esperado",new{id,c.Tenant,c.Cliente,c.Usuario,esperado,destino,motivo},tx,cancellationToken:ct));}
     private static Task Historico(NpgsqlConnection cn,NpgsqlTransaction tx,(Guid Tenant,Guid Cliente,Guid Usuario)c,Guid id,string evento,string? anterior,string novo,string? descricao,CancellationToken ct)=>cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.fechamento_historico(id,tenant_id,cliente_id,fechamento_id,evento,status_anterior,status_novo,descricao,executado_por) values(gen_random_uuid(),@Tenant,@Cliente,@id,@evento,@anterior,@novo,@descricao,@Usuario)",new{c.Tenant,c.Cliente,c.Usuario,id,evento,anterior,novo,descricao},tx,cancellationToken:ct));
+    private static async Task<IReadOnlyList<FechamentoPendenciaDto>> ValidarAsync(NpgsqlConnection cn,NpgsqlTransaction? tx,Guid id,(Guid Tenant,Guid Cliente,Guid Usuario)c,bool bloquearOrigens,CancellationToken ct)
+    {
+        var lockClause=bloquearOrigens?" for update of e, p":"";
+        var rows=(await cn.QueryAsync<ValidacaoRow>(new CommandDefinition(@"select i.escala_id as ""EscalaId"",i.status_escala as ""SnapshotStatus"",i.inicio_previsto as ""SnapshotInicio"",i.fim_previsto as ""SnapshotFim"",i.valor_previsto as ""SnapshotValor"",i.valor_calculado as ""ValorCalculado"",e.status as ""StatusAtual"",p.data_inicio as ""InicioAtual"",p.data_fim as ""FimAtual"",p.valor as ""ValorAtual"",e.reg_status as ""RegStatus"",exists(select 1 from plantaopro.medico_checkins mc where mc.tenant_id=@Tenant and mc.escala_id=e.id and mc.status_conferencia='APROVADA') as ""Conferida"" from plantaopro.fechamento_plantao_escalas i join plantaopro.escalas e on e.id=i.escala_id and e.tenant_id=i.tenant_id join plantaopro.plantoes p on p.id=i.plantao_id and p.tenant_id=i.tenant_id where i.tenant_id=@Tenant and i.fechamento_id=@id"+lockClause,new{id,c.Tenant},tx,cancellationToken:ct))).AsList();
+        var result=new List<FechamentoPendenciaDto>();
+        if(rows.Count==0)result.Add(new("SEM_ITENS","Nenhuma execução elegível foi encontrada.","BLOQUEIO",null));
+        foreach(var row in rows)
+        {
+            if(row.SnapshotStatus=="realizado"&&!row.Conferida)result.Add(new("EXECUCAO_NAO_CONFERIDA","A execução deixou de estar conferida.","BLOQUEIO",row.EscalaId));
+            var valorAtualCalculado=PlantaoPaymentCalculator.Calcular(row.ValorAtual,row.InicioAtual,row.FimAtual);
+            if(row.RegStatus!="A"||row.StatusAtual!=row.SnapshotStatus||row.InicioAtual!=row.SnapshotInicio||row.FimAtual!=row.SnapshotFim||valorAtualCalculado!=row.SnapshotValor)result.Add(new("ORIGEM_ALTERADA","A origem foi alterada depois da prévia; gere uma nova conferência.","BLOQUEIO",row.EscalaId));
+            if(row.SnapshotStatus=="realizado"&&(row.SnapshotValor<=0||row.ValorCalculado<=0))result.Add(new("REGRA_REMUNERACAO_AUSENTE","Não há valor de remuneração válido para a execução.","BLOQUEIO",row.EscalaId));
+        }
+        var abertas=await cn.ExecuteScalarAsync<int>(new CommandDefinition("select count(*) from plantaopro.fechamento_divergencias where tenant_id=@Tenant and fechamento_id=@id and status='ABERTA'",new{id,c.Tenant},tx,cancellationToken:ct));
+        if(abertas>0)result.Add(new("CORRECAO_PENDENTE",$"Existem {abertas} correção(ões) impeditiva(s) aberta(s).","BLOQUEIO",null));
+        return result;
+    }
     private sealed class PlantaoSnapshot{public Guid Id{get;set;}public Guid HospitalId{get;set;}public DateTime Inicio{get;set;}public DateTime Fim{get;set;}public decimal Valor{get;set;}public string Status{get;set;}="";}
     private sealed class EscalaSnapshot{public Guid Id{get;set;}public Guid MedicoId{get;set;}public string Status{get;set;}="";public DateTime Inicio{get;set;}public DateTime Fim{get;set;}public decimal Valor{get;set;}}
     private sealed class LockedFechamento{public Guid Id{get;set;}public string Status{get;set;}="";}
     private sealed class FinanceItem{public Guid ItemId{get;set;}public Guid EscalaId{get;set;}public Guid MedicoId{get;set;}public Guid PlantaoId{get;set;}public decimal Valor{get;set;}public decimal Horas{get;set;}public string Status{get;set;}="";}
+    private sealed class ValidacaoRow{public Guid EscalaId{get;set;}public string SnapshotStatus{get;set;}="";public DateTime SnapshotInicio{get;set;}public DateTime SnapshotFim{get;set;}public decimal SnapshotValor{get;set;}public decimal ValorCalculado{get;set;}public string StatusAtual{get;set;}="";public DateTime InicioAtual{get;set;}public DateTime FimAtual{get;set;}public decimal ValorAtual{get;set;}public string RegStatus{get;set;}="";public bool Conferida{get;set;}}
 }

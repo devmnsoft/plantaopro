@@ -67,6 +67,23 @@ public sealed class Fase4OperationalAutomationContractTests
         Assert.Contains("relatorios_exportacoes", service);
     }
 
+    [Fact]
+    public void AvailabilityJourneyRejectsContradictionsAndPreservesCommitments()
+    {
+        var controller = Read("backend/PlantaoPro.Api/Controllers/Fase4OperationalController.cs");
+        var service = Read("backend/PlantaoPro.Api/Fase4OperationalServices.cs");
+
+        Assert.Contains("[HttpGet(\"api/medicos/me/disponibilidade\")]", controller);
+        Assert.Contains("pg_advisory_xact_lock", service);
+        Assert.Contains("IsolationLevel.Serializable", service);
+        Assert.Contains("não são resolvidas automaticamente", service);
+        Assert.Contains("Esta disponibilidade já estava cadastrada", service);
+        Assert.Contains("a atribuição foi preservada", service);
+        Assert.Contains("ContextoPermitidoAsync", service);
+        Assert.Contains("deve ter no máximo", service);
+        Assert.DoesNotContain("delete from plantaopro.escalas", service, StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string GetRepoRoot()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

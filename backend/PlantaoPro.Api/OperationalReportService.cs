@@ -12,6 +12,16 @@ public sealed record OperationalReportIndicator(string Code, string Label, decim
 public sealed record OperationalReportRow(Guid Id, string Reference, string Unit, string Professional, DateTime PeriodDate, string Status, decimal? Value, string ActionUrl);
 public sealed record OperationalReportResult(string Code, string Title, string TimeCriterion, DateTime GeneratedAtUtc, IReadOnlyList<OperationalReportIndicator> Indicators, IReadOnlyList<OperationalReportRow> Items, long Total, int Page, int PageSize, bool CurrentState, string? DetailStatus);
 
+public sealed class OperationalReportExportException : Exception
+{
+    public OperationalReportExportException(string message, int statusCode) : base(message)
+    {
+        StatusCode = statusCode;
+    }
+
+    public int StatusCode { get; }
+}
+
 public sealed class OperationalReportService
 {
     private readonly IConfiguration configuration; private readonly ICurrentUserService current; private readonly PermissionGuardService permission; private readonly TenantGuardService tenantGuard;
@@ -35,8 +45,35 @@ public sealed class OperationalReportService
         return ApiResponse<OperationalReportResult>.Ok(result,"Relatório atualizado com a situação atual dos registros do período.");
     }
     public async Task<(byte[] Content,string Name)> CsvAsync(OperationalReportKind kind, OperationalReportFilter filter,CancellationToken ct)
-    { var all=filter with { Page=1,PageSize=5000 }; var response=await GetAsync(kind,all,ct); if(!response.Success||response.Data is null) throw new UnauthorizedAccessException(response.Message); var sb=new StringBuilder("\uFEFFReferência;Unidade;Profissional;Data;Situação;Valor\r\n"); foreach(var x in response.Data.Items) sb.AppendLine(string.Join(';',new[]{Safe(x.Reference),Safe(x.Unit),Safe(x.Professional),x.PeriodDate.ToString("yyyy-MM-dd HH:mm",CultureInfo.InvariantCulture),Safe(x.Status),x.Value?.ToString("0.00",CultureInfo.InvariantCulture)??""})); return (Encoding.UTF8.GetBytes(sb.ToString()),$"{response.Data.Code.ToLowerInvariant()}-{DateTime.UtcNow:yyyyMMddHHmmss}.csv"); }
-    private static string Safe(string value){ var v=value.Replace("\"","\"\"").Replace("\r"," ").Replace("\n"," "); if(v.Length>0&&"=+-@".Contains(v[0]))v="'"+v; return v.Contains(';')||v.Contains('"')?$"\"{v}\"":v; }
+    {
+        var all = filter with { Page = 1, PageSize = 5000 };
+        var response = await GetAsync(kind, all, ct);
+        if (!response.Success || response.Data is null)
+            throw new OperationalReportExportException(response.Message, response.StatusCode);
+
+        var sb = new StringBuilder("\uFEFFReferência;Unidade;Profissional;Data;Situação;Valor\r\n");
+        foreach (var row in response.Data.Items)
+        {
+            sb.AppendLine(string.Join(';', new[]
+            {
+                EscapeCsvField(row.Reference),
+                EscapeCsvField(row.Unit),
+                EscapeCsvField(row.Professional),
+                row.PeriodDate.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture),
+                EscapeCsvField(row.Status),
+                row.Value?.ToString("0.00", CultureInfo.InvariantCulture) ?? ""
+            }));
+        }
+
+        return (Encoding.UTF8.GetBytes(sb.ToString()), $"{response.Data.Code.ToLowerInvariant()}-{DateTime.UtcNow:yyyyMMddHHmmss}.csv");
+    }
+
+    internal static string EscapeCsvField(string value)
+    {
+        var escaped = value.Replace("\"", "\"\"").Replace("\r", " ").Replace("\n", " ");
+        if (escaped.Length > 0 && "=+-@".Contains(escaped[0])) escaped = "'" + escaped;
+        return escaped.Contains(';') || escaped.Contains('"') ? $"\"{escaped}\"" : escaped;
+    }
     private static HashSet<string> Statuses(OperationalReportKind k)=>new((k switch { OperationalReportKind.Cobertura=>new[]{"ATRIBUIDA","CONFIRMADA","DESCOBERTA","SUBSTITUIDA"},OperationalReportKind.Execucao=>new[]{"REGISTRO_INCOMPLETO","PENDENTE","CORRECAO_PENDENTE","APROVADA","AJUSTE_POS_APURACAO"},_=>new[]{"APURADO","FECHADO","PAGO","PENDENTE"}}),StringComparer.OrdinalIgnoreCase);
     private static string Title(OperationalReportKind k)=>k switch{OperationalReportKind.Cobertura=>"Cobertura de escalas",OperationalReportKind.Execucao=>"Execução e conferência",_=>"Apuração por período"};
     private static string Criterion(OperationalReportKind k)=>k switch{OperationalReportKind.Cobertura=>"início do plantão (intervalo semiaberto no fuso persistido)",OperationalReportKind.Execucao=>"início do plantão associado à execução",_=>"competência pelo início do plantão; pago pela data de pagamento"};

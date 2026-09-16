@@ -174,6 +174,9 @@ public record NotificationFilterRequest(string? Tipo,bool? Lida,DateTime? DataIn
 public record MedicoAreaResumoDto(string MedicoNome,string Crm,string UfCrm,int PlantoesDisponiveis,int SolicitacoesPendentes,int EscalasConfirmadas,int PlantoesRealizados,int PagamentosPendentes,decimal ValorPendente,int NotificacoesNaoLidas);
 public record MedicoPlantaoDisponivelDto(Guid PlantaoId,string HospitalNome,string HospitalCidade,string HospitalEstado,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,int VagasDisponiveis,string Tipo,string Status,bool JaSolicitado,bool TemConflitoHorario);
 public record MedicoEscalaDto(Guid EscalaId,Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTime DataInicio,DateTime DataFim,decimal Valor,string Status,string? Justificativa);
+public record ProfessionalShiftDto(Guid EscalaId,Guid PlantaoId,string HospitalNome,string EspecialidadeNome,DateTimeOffset? DataInicio,DateTimeOffset? DataFim,decimal Valor,string Status,string? Justificativa,DateTimeOffset? ConfirmadoEm,bool PodeConfirmar);
+public record ProfessionalShiftDetailDto(ProfessionalShiftDto Plantao,ProfessionalCheckInDto? Execucao,MedicoPagamentoDto? Financeiro,IEnumerable<ProfessionalShiftEventDto> Historico);
+public record ProfessionalShiftEventDto(DateTimeOffset Data,string Acao,string Autoria);
 public sealed class MedicoPagamentoDto
 {
     public Guid PagamentoId { get; set; }

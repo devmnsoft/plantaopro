@@ -115,6 +115,30 @@ public class MedicoAreaController : ControllerBase
         return StatusCode(response.StatusCode, response);
     }
 
+    [HttpGet("agenda")]
+    public async Task<IActionResult> Agenda([FromQuery] DateOnly inicio, [FromQuery] DateOnly fim, [FromQuery] string? unidade, [FromQuery] string? situacao)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.AgendaAsync(uid.Value, inicio, fim, unidade, situacao);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpGet("escalas/{escalaId:guid}")]
+    public async Task<IActionResult> Detalhe(Guid escalaId)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.ShiftDetailAsync(uid.Value, escalaId);
+        return StatusCode(response.StatusCode, response);
+    }
+
+    [HttpPost("escalas/{escalaId:guid}/confirmar")]
+    public async Task<IActionResult> Confirmar(Guid escalaId, CancellationToken ct)
+    {
+        var uid = Uid(); if (uid is null) return Unauthorized();
+        var response = await portal.ConfirmShiftAsync(uid.Value, escalaId, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido", ct);
+        return StatusCode(response.StatusCode, response);
+    }
+
     [HttpGet("meus-pagamentos")]
     public async Task<IActionResult> MeusPagamentos([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {

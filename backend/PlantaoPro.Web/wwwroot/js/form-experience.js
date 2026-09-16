@@ -56,6 +56,9 @@
     }
 
     function wireSubmitFeedback(form) {
+        if (form.matches('[data-submit-loading="manual"], [data-login-form]')) {
+            return;
+        }
         if (!form.matches('[method="post"], [data-submit-feedback]') || form.matches('[data-ajax-form="true"], [data-saude360-form], [data-confirm="true"]')) return;
         form.addEventListener("submit", event => {
             if (event.defaultPrevented || !form.checkValidity()) return;

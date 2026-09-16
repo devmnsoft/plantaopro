@@ -62,6 +62,7 @@
     password?.addEventListener("blur", () => warning?.classList.add("d-none"));
 
     form?.addEventListener("submit", event => {
+        if (event.defaultPrevented) return;
         const invalid = form.querySelector(":invalid");
         if (invalid instanceof HTMLElement) {
             event.preventDefault();

@@ -43,16 +43,22 @@ public sealed class OperationalAutomationService
         return medico.Id == Guid.Empty ? (Guid.Empty, null) : medico;
     }
 
-    public async Task<ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>> ListarDisponibilidadesAsync(Guid uid)
+    public async Task<ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>> ListarDisponibilidadesAsync(Guid uid, DateTime? inicio = null, DateTime? fim = null)
     {
+        if (inicio.HasValue != fim.HasValue) return ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Fail("Informe início e fim para filtrar o período.");
+        if (inicio.HasValue)
+        {
+            var erro = ValidarPeriodo(inicio.Value, fim!.Value, 366);
+            if (erro is not null) return ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Fail(erro);
+        }
         await using var cn = Cn();
         var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
         if (medico.Id == Guid.Empty) return ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Fail("Médico não encontrado para o usuário autenticado.", 404);
-        var rows = await cn.QueryAsync<MedicoDisponibilidadeDto>(@"select d.id as ""Id"", d.medico_id as ""MedicoId"", d.hospital_id as ""HospitalId"", coalesce(h.nome_fantasia,h.razao_social,'') as ""HospitalNome"", d.especialidade_id as ""EspecialidadeId"", coalesce(e.nome,'') as ""EspecialidadeNome"", d.data_inicio as ""DataInicio"", d.data_fim as ""DataFim"", coalesce(d.turno,'') as ""Turno"", coalesce(d.status,'') as ""Status"", coalesce(d.observacoes,'') as ""Observacoes""
+        var rows = await cn.QueryAsync<MedicoDisponibilidadeDto>(@"select d.id as ""Id"", d.medico_id as ""MedicoId"", d.hospital_id as ""HospitalId"", coalesce(h.nome_fantasia,h.razao_social,'') as ""HospitalNome"", d.especialidade_id as ""EspecialidadeId"", coalesce(e.nome,'') as ""EspecialidadeNome"", d.data_inicio as ""DataInicio"", d.data_fim as ""DataFim"", coalesce(d.turno,'') as ""Turno"", coalesce(d.status,'') as ""Status"", coalesce(d.observacoes,'') as ""Observacoes"", coalesce(d.reg_update,d.reg_date) as ""Versao""
 from plantaopro.medico_disponibilidades d
 left join plantaopro.hospitais h on h.id=d.hospital_id
 left join plantaopro.especialidades e on e.id=d.especialidade_id
-where d.medico_id=@medicoId and d.reg_status='A' order by d.data_inicio desc limit 200", new { medicoId = medico.Id });
+where d.medico_id=@medicoId and d.reg_status='A' and (@inicio is null or (d.data_inicio < @fim and d.data_fim > @inicio)) order by d.data_inicio limit 200", new { medicoId = medico.Id, inicio, fim });
         return ApiResponse<IEnumerable<MedicoDisponibilidadeDto>>.Ok(rows, "Disponibilidades listadas.");
     }
 
@@ -89,14 +95,22 @@ values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno
         erro = ValidarTexto(request.Observacoes, 500, "A observação");
         if (erro is not null) return ApiResponse<string>.Fail(erro);
         await using var cn = Cn();
-        var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var medico = await ObterMedicoDoUsuarioAsync(cn, uid, tx);
         if (medico.Id == Guid.Empty) return ApiResponse<string>.Fail("Médico não encontrado para o usuário autenticado.", 404);
-        if (!await ContextoPermitidoAsync(cn, null, medico.ClienteId, request.HospitalId, request.EspecialidadeId)) return ApiResponse<string>.Fail("Unidade ou especialidade fora do seu contexto autorizado.", 403);
-        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from (select id,data_inicio,data_fim from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' union all select id,data_inicio,data_fim from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA') x where x.id<>@id and x.data_inicio < @fim and x.data_fim > @inicio", new { id, medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim });
+        await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 0))", new { key = $"disponibilidade:{medico.Id}" }, tx);
+        if (!await ContextoPermitidoAsync(cn, tx, medico.ClienteId, request.HospitalId, request.EspecialidadeId)) return ApiResponse<string>.Fail("Unidade ou especialidade fora do seu contexto autorizado.", 403);
+        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from (select id,data_inicio,data_fim from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' union all select id,data_inicio,data_fim from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA') x where x.id<>@id and x.data_inicio < @fim and x.data_fim > @inicio", new { id, medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim }, tx);
         if (conflita > 0) return ApiResponse<string>.Fail("O período se sobrepõe a uma informação existente. Ajuste o intervalo antes de salvar.", 409);
-        var updated = await cn.ExecuteAsync(@"update plantaopro.medico_disponibilidades set hospital_id=@hospitalId, especialidade_id=@especialidadeId, data_inicio=@inicio, data_fim=@fim, turno=@turno, observacoes=@obs, updated_by=@uid, reg_update=now() where id=@id and medico_id=@medicoId and reg_status='A'", new { id, medicoId = medico.Id, hospitalId = request.HospitalId, especialidadeId = request.EspecialidadeId, inicio = request.DataInicio, fim = request.DataFim, turno = Normalizar(request.Turno, "GERAL"), obs = request.Observacoes, uid });
-        if (updated == 0) return ApiResponse<string>.Fail("Disponibilidade não encontrada.", 404);
-        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_disponibilidades", id, "ATUALIZAR", request, uid);
+        var updated = await cn.ExecuteAsync(@"update plantaopro.medico_disponibilidades set hospital_id=@hospitalId, especialidade_id=@especialidadeId, data_inicio=@inicio, data_fim=@fim, turno=@turno, observacoes=@obs, updated_by=@uid, reg_update=now() where id=@id and medico_id=@medicoId and reg_status='A' and (@versao is null or coalesce(reg_update,reg_date)=@versao)", new { id, medicoId = medico.Id, hospitalId = request.HospitalId, especialidadeId = request.EspecialidadeId, inicio = request.DataInicio, fim = request.DataFim, turno = Normalizar(request.Turno, "GERAL"), obs = request.Observacoes, uid, versao = request.VersaoEsperada }, tx);
+        if (updated == 0)
+        {
+            var pertence = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.medico_disponibilidades where id=@id and medico_id=@medicoId and reg_status='A'", new { id, medicoId = medico.Id }, tx) > 0;
+            return ApiResponse<string>.Fail(pertence ? "O registro mudou desde a última consulta. Atualize a tela antes de editar novamente." : "Disponibilidade não encontrada.", pertence ? 409 : 404);
+        }
+        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_disponibilidades", id, "ATUALIZAR", request, uid, tx);
+        await tx.CommitAsync();
         await audit.LogAsync(uid, "UPDATE", "medico_disponibilidades", id, "Médico atualizou disponibilidade", ip: ip, userAgent: ua);
         return ApiResponse<string>.Ok("ok", "Disponibilidade atualizada.");
     }
@@ -531,10 +545,11 @@ values(@id,@plantaoId,@medicoId,'confirmado',@justificativa,@uid,'A',now())", ne
         return ApiResponse<IEnumerable<object>>.Ok(rows, "Filtros salvos listados.");
     }
 
-    private static string? ValidarPeriodo(DateTime inicio, DateTime fim)
+    private static string? ValidarPeriodo(DateTime inicio, DateTime fim, int? maximoDias = null)
     {
         if (inicio == default || fim == default) return "Informe data inicial e final.";
         if (fim <= inicio) return "Data final deve ser maior que a data inicial.";
+        if (maximoDias.HasValue && fim - inicio > TimeSpan.FromDays(maximoDias.Value)) return $"O período de consulta deve ter no máximo {maximoDias.Value} dias.";
         return null;
     }
 

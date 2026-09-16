@@ -1,6 +1,6 @@
 namespace PlantaoPro.Api.Models;
 
-public record MedicoDisponibilidadeRequest(DateTime DataInicio, DateTime DataFim, string Turno, Guid? HospitalId, Guid? EspecialidadeId, string? Observacoes);
+public record MedicoDisponibilidadeRequest(DateTime DataInicio, DateTime DataFim, string Turno, Guid? HospitalId, Guid? EspecialidadeId, string? Observacoes, DateTime? VersaoEsperada = null);
 public record MedicoIndisponibilidadeRequest(DateTime DataInicio, DateTime DataFim, string Motivo);
 public record MedicoPreferenciasRequest(Guid[]? HospitaisPreferidos, Guid[]? EspecialidadesPreferidas, string[]? TurnosPreferidos, int LimitePlantoesSemana, int LimitePlantoesMes, string? Observacoes);
 public record SugestaoFeedbackRequest(Guid? MedicoId, string Feedback, string? Observacao);
@@ -28,6 +28,7 @@ public sealed class MedicoDisponibilidadeDto
     public string Turno { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public string Observacoes { get; set; } = string.Empty;
+    public DateTime Versao { get; set; }
 }
 
 public sealed class MedicoPreferenciasDto

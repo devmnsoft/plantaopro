@@ -5,7 +5,7 @@ public record MedicoIndisponibilidadeRequest(DateTime DataInicio, DateTime DataF
 public record MedicoPreferenciasRequest(Guid[]? HospitaisPreferidos, Guid[]? EspecialidadesPreferidas, string[]? TurnosPreferidos, int LimitePlantoesSemana, int LimitePlantoesMes, string? Observacoes);
 public record SugestaoFeedbackRequest(Guid? MedicoId, string Feedback, string? Observacao);
 public record SolicitarSubstituicaoRequest(Guid PlantaoId, Guid? EscalaId, string Motivo);
-public record DecisaoSubstituicaoRequest(string Justificativa);
+public record DecisaoSubstituicaoRequest(string Justificativa, long VersaoEsperada);
 public record ConvidarSubstitutoRequest(Guid MedicoId, string? Mensagem);
 public record ConfirmarSubstitutoRequest(Guid MedicoId, string? Observacao, long VersaoEsperada);
 public record CriarPendenciaRequest(string Tipo, string Titulo, string Descricao, string Prioridade, DateTime? Prazo, Guid? ResponsavelUsuarioId, string? Entidade, Guid? EntidadeId);
@@ -76,9 +76,15 @@ public sealed class SubstituicaoDto
     public Guid MedicoSolicitanteId { get; set; }
     public Guid? MedicoSubstitutoId { get; set; }
     public string MedicoSolicitanteNome { get; set; } = string.Empty;
+    public Guid HospitalId { get; set; }
+    public string HospitalNome { get; set; } = string.Empty;
+    public string EspecialidadeNome { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
     public string Motivo { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
     public DateTime RegDate { get; set; }
+    public long Versao { get; set; }
 }
 
 public sealed class PendenciaOperacionalDto

@@ -330,26 +330,40 @@ order by s.reg_date desc", new { medicoId = medico.Id, clienteId = medico.Client
     public async Task<ApiResponse<IEnumerable<SubstituicaoDto>>> ListarSubstituicoesAsync(Guid? clienteId)
     {
         await using var cn = Cn();
-        var rows = await cn.QueryAsync<SubstituicaoDto>(@"select s.id as ""Id"", s.plantao_id as ""PlantaoId"", s.escala_id as ""EscalaId"", s.medico_solicitante_id as ""MedicoSolicitanteId"", s.medico_substituto_id as ""MedicoSubstitutoId"", coalesce(m.nome,'') as ""MedicoSolicitanteNome"", coalesce(s.motivo,'') as ""Motivo"", coalesce(s.status,'') as ""Status"", s.reg_date as ""RegDate"" from plantaopro.substituicoes_plantao s join plantaopro.medicos m on m.id=s.medico_solicitante_id where s.reg_status='A' and (@clienteId is null or s.cliente_id=@clienteId) order by s.reg_date desc limit 200", new { clienteId });
+        var rows = await cn.QueryAsync<SubstituicaoDto>(@"select s.id as ""Id"", s.plantao_id as ""PlantaoId"", s.escala_id as ""EscalaId"", s.medico_solicitante_id as ""MedicoSolicitanteId"", s.medico_substituto_id as ""MedicoSubstitutoId"", coalesce(m.nome,'') as ""MedicoSolicitanteNome"",p.hospital_id as ""HospitalId"",coalesce(h.nome_fantasia,h.razao_social,'') as ""HospitalNome"",coalesce(es.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"", coalesce(s.motivo,'') as ""Motivo"", coalesce(s.status,'') as ""Status"", s.reg_date as ""RegDate"",s.versao as ""Versao"" from plantaopro.substituicoes_plantao s join plantaopro.medicos m on m.id=s.medico_solicitante_id join plantaopro.plantoes p on p.id=s.plantao_id and p.reg_status='A' join plantaopro.hospitais h on h.id=p.hospital_id and h.reg_status='A' join plantaopro.especialidades es on es.id=p.especialidade_id and es.reg_status='A' where s.reg_status='A' and (@clienteId is null or s.cliente_id=@clienteId) order by s.reg_date desc,s.id desc limit 200", new { clienteId });
         return ApiResponse<IEnumerable<SubstituicaoDto>>.Ok(rows, "Substituições listadas.");
     }
 
     public async Task<ApiResponse<SubstituicaoDto>> ObterSubstituicaoAsync(Guid id, Guid? clienteId)
     {
         await using var cn = Cn();
-        var row = await cn.QueryFirstOrDefaultAsync<SubstituicaoDto>(@"select s.id as ""Id"", s.plantao_id as ""PlantaoId"", s.escala_id as ""EscalaId"", s.medico_solicitante_id as ""MedicoSolicitanteId"", s.medico_substituto_id as ""MedicoSubstitutoId"", coalesce(m.nome,'') as ""MedicoSolicitanteNome"", coalesce(s.motivo,'') as ""Motivo"", coalesce(s.status,'') as ""Status"", s.reg_date as ""RegDate"" from plantaopro.substituicoes_plantao s join plantaopro.medicos m on m.id=s.medico_solicitante_id where s.id=@id and s.reg_status='A' and (@clienteId is null or s.cliente_id=@clienteId)", new { id, clienteId });
+        var row = await cn.QueryFirstOrDefaultAsync<SubstituicaoDto>(@"select s.id as ""Id"",s.plantao_id as ""PlantaoId"",s.escala_id as ""EscalaId"",s.medico_solicitante_id as ""MedicoSolicitanteId"",s.medico_substituto_id as ""MedicoSubstitutoId"",coalesce(m.nome,'') as ""MedicoSolicitanteNome"",p.hospital_id as ""HospitalId"",coalesce(h.nome_fantasia,h.razao_social,'') as ""HospitalNome"",coalesce(es.nome,'') as ""EspecialidadeNome"",p.data_inicio as ""DataInicio"",p.data_fim as ""DataFim"",coalesce(s.motivo,'') as ""Motivo"",coalesce(s.status,'') as ""Status"",s.reg_date as ""RegDate"",s.versao as ""Versao""
+from plantaopro.substituicoes_plantao s
+join plantaopro.medicos m on m.id=s.medico_solicitante_id
+join plantaopro.plantoes p on p.id=s.plantao_id and p.reg_status='A'
+join plantaopro.hospitais h on h.id=p.hospital_id and h.reg_status='A'
+join plantaopro.especialidades es on es.id=p.especialidade_id and es.reg_status='A'
+where s.id=@id and s.reg_status='A' and (@clienteId is null or s.cliente_id=@clienteId)", new { id, clienteId });
         return row is null ? ApiResponse<SubstituicaoDto>.Fail("Substituição não encontrada.", 404) : ApiResponse<SubstituicaoDto>.Ok(row, "Substituição carregada.");
     }
 
-    public async Task<ApiResponse<string>> MudarStatusSubstituicaoAsync(Guid id, Guid uid, Guid? clienteId, string acao, string novoStatus, string justificativa, string? ip, string? ua)
+    public async Task<ApiResponse<string>> MudarStatusSubstituicaoAsync(Guid id, Guid uid, Guid? clienteId, string acao, string novoStatus, string justificativa, long versaoEsperada, string? ip, string? ua)
     {
-        if (novoStatus == "RECUSADA" && string.IsNullOrWhiteSpace(justificativa)) return ApiResponse<string>.Fail("Recusa exige justificativa.");
+        if (versaoEsperada <= 0) return ApiResponse<string>.Fail("A versão atual da solicitação é obrigatória.", 422);
+        justificativa = justificativa?.Trim() ?? string.Empty;
+        if (justificativa.Length is < 3 or > 1000) return ApiResponse<string>.Fail("A justificativa deve conter entre 3 e 1000 caracteres.", 422);
         await using var cn = Cn();
-        var atual = await cn.QueryFirstOrDefaultAsync<(Guid? ClienteId, string Status)>("select cliente_id, status from plantaopro.substituicoes_plantao where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { id, clienteId });
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var atual = await cn.QueryFirstOrDefaultAsync<(Guid? ClienteId, string Status, long Versao)>("select cliente_id, status, versao from plantaopro.substituicoes_plantao where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId) for update", new { id, clienteId }, tx);
         if (string.IsNullOrWhiteSpace(atual.Status)) return ApiResponse<string>.Fail("Substituição não encontrada.", 404);
-        await cn.ExecuteAsync("update plantaopro.substituicoes_plantao set status=@novoStatus, responsavel_usuario_id=@uid, updated_by=@uid, reg_update=now() where id=@id", new { id, novoStatus, uid });
-        await cn.ExecuteAsync("insert into plantaopro.substituicao_aprovacoes(id,cliente_id,substituicao_id,aprovador_usuario_id,decisao,justificativa,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@id,@uid,@novoStatus,@justificativa,now(),'A')", new { clienteId = atual.ClienteId, id, uid, novoStatus, justificativa });
-        await InserirHistoricoSubstituicaoAsync(cn, atual.ClienteId, id, acao, atual.Status, novoStatus, justificativa, uid);
+        if (atual.Status is not "SOLICITADA") return ApiResponse<string>.Fail("A solicitação já foi decidida ou avançou para outra etapa. Consulte o resultado atual.", 409);
+        if (atual.Versao != versaoEsperada) return ApiResponse<string>.Fail("A solicitação foi alterada durante a análise. Revise antes de decidir.", 409);
+        var changed = await cn.ExecuteAsync("update plantaopro.substituicoes_plantao set status=@novoStatus, responsavel_usuario_id=@uid, updated_by=@uid, reg_update=now(),versao=versao+1 where id=@id and status='SOLICITADA' and versao=@versaoEsperada", new { id, novoStatus, uid, versaoEsperada }, tx);
+        if (changed != 1) return ApiResponse<string>.Fail("A solicitação foi alterada durante a análise. Revise antes de decidir.", 409);
+        await cn.ExecuteAsync("insert into plantaopro.substituicao_aprovacoes(id,cliente_id,substituicao_id,aprovador_usuario_id,decisao,justificativa,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@id,@uid,@novoStatus,@justificativa,now(),'A')", new { clienteId = atual.ClienteId, id, uid, novoStatus, justificativa }, tx);
+        await InserirHistoricoSubstituicaoAsync(cn, atual.ClienteId, id, acao, atual.Status, novoStatus, justificativa, uid, tx);
+        await tx.CommitAsync();
         await audit.LogAsync(uid, "UPDATE", "substituicoes_plantao", id, acao, ip: ip, userAgent: ua);
         return ApiResponse<string>.Ok("ok", "Substituição atualizada.");
     }

@@ -99,7 +99,10 @@ and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','
             return new(false, "TENANT_CONTEXT_REQUIRED", "Selecione o tenant correto para continuar.", "TENANT");
 
         var tenantAccess = await cn.QuerySingleOrDefaultAsync<(bool Authorized, string TenantStatus)>(new CommandDefinition(@"select
-  (coalesce(u.tenant_id,u.cliente_id)=t.id or exists(
+  ((coalesce(u.tenant_id,u.cliente_id)=t.id and not exists(
+    select 1 from plantaopro.usuario_tenant_acessos any_access
+    where any_access.usuario_id=u.id and any_access.tenant_id=t.id and any_access.reg_status='A'
+  )) or exists(
     select 1 from plantaopro.usuario_tenant_acessos uta
     where uta.usuario_id=u.id and uta.tenant_id=t.id
       and uta.reg_status='A' and uta.status='ATIVO'
@@ -202,7 +205,9 @@ where u.id=@usuarioId and u.reg_status='A'
     public async Task<IEnumerable<object>> UsuariosAsync(string? busca, int page, int pageSize, CancellationToken ct)
     {
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default")); var tenantId = TenantScope(null);
-        return await cn.QueryAsync<object>(new CommandDefinition(@"select u.id,u.nome,u.email,u.telefone,coalesce(u.tenant_id,u.cliente_id) tenant_id,u.cliente_id,coalesce(c.nome_fantasia,c.razao_social,'Contexto global MNSOFT') tenant_nome,coalesce(u.status,'ATIVO') status,u.reg_status,u.ultimo_login,u.bloqueado_ate,u.reg_date,
+        return await cn.QueryAsync<object>(new CommandDefinition(@"select u.id,u.nome,u.email,u.telefone,coalesce(u.tenant_id,u.cliente_id) tenant_id,u.cliente_id,coalesce(c.nome_fantasia,c.razao_social,'Contexto global MNSOFT') tenant_nome,
+coalesce((select uta.status from plantaopro.usuario_tenant_acessos uta where uta.usuario_id=u.id and uta.tenant_id=@tenantId and uta.reg_status='A' order by uta.reg_update desc nulls last,uta.reg_date desc limit 1),u.status,'ATIVO') status,
+coalesce(u.status,'ATIVO') identidade_status,u.reg_status,u.ultimo_login,u.bloqueado_ate,u.reg_date,
 coalesce(string_agg(distinct p.nome,', ') filter(where p.id is not null),'Sem perfil') perfis
 from plantaopro.usuarios u
 left join plantaopro.clientes c on c.id=coalesce(u.tenant_id,u.cliente_id) and c.reg_status='A'
@@ -316,9 +321,9 @@ for update", new { tenantId }, tx, cancellationToken: ct));
 coalesce((select p.limite_usuarios from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id
  where a.cliente_id=@tenantId and a.reg_status='A' and upper(coalesce(a.status,'')) in ('ATIVA','TRIAL')
  and (a.data_fim is null or a.data_fim>=current_date)
- order by case when upper(a.status)='ATIVA' then 0 else 1 end,a.reg_date desc limit 1),0) as \"Limit\",
+	 order by case when upper(a.status)='ATIVA' then 0 else 1 end,a.reg_date desc limit 1),0) as ""Limit"",
 (select count(*)::int from plantaopro.usuarios u where coalesce(u.tenant_id,u.cliente_id)=@tenantId
- and u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO') as \"Used\"", new { tenantId }, tx, cancellationToken: ct));
+	 and u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO') as ""Used""", new { tenantId }, tx, cancellationToken: ct));
             if (capacity.Limit > 0 && capacity.Used >= capacity.Limit)
                 return ApiResponse<Guid>.Fail($"Limite contratual de {capacity.Limit} usuários ativos atingido. Regularize a contratação antes de criar outro acesso.", 409);
         }
@@ -328,6 +333,24 @@ where id=any(@profileIds) and reg_status='A' and coalesce(status,'ATIVO')='ATIVO
   and (tenant_id is null or tenant_id=@tenantId)
   and upper(coalesce(codigo,nome)) not in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')", new { profileIds, tenantId }, tx, cancellationToken: ct))).ToArray();
         if (validProfiles.Length != profileIds.Length) return ApiResponse<Guid>.Fail("Um ou mais perfis não pertencem ao cliente ou não podem ser atribuídos.", 400);
+
+        if (id.HasValue)
+        {
+            var administratorChange = await cn.QuerySingleAsync<(bool WasAdmin, bool WillBeAdmin, int ActiveAdmins)>(new CommandDefinition(@"select
+exists(select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A'
+ where up.usuario_id=@userId and up.reg_status='A' and (p.tenant_id=@tenantId or up.tenant_id=@tenantId)
+ and upper(coalesce(p.codigo,p.nome)) in ('ADMINISTRADOR_CLIENTE','ADMIN_CLIENTE')) as ""WasAdmin"",
+exists(select 1 from plantaopro.perfis p where p.id=any(@profileIds) and p.reg_status='A'
+ and upper(coalesce(p.codigo,p.nome)) in ('ADMINISTRADOR_CLIENTE','ADMIN_CLIENTE')) as ""WillBeAdmin"",
+(select count(distinct u.id)::int from plantaopro.usuarios u
+ join plantaopro.usuarios_perfis up on up.usuario_id=u.id and up.reg_status='A'
+ join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A'
+ where coalesce(u.tenant_id,u.cliente_id)=@tenantId and u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO'
+ and (p.tenant_id=@tenantId or up.tenant_id=@tenantId)
+ and upper(coalesce(p.codigo,p.nome)) in ('ADMINISTRADOR_CLIENTE','ADMIN_CLIENTE')) as ""ActiveAdmins""", new { userId=id.Value, profileIds, tenantId }, tx, cancellationToken: ct));
+            if (administratorChange.WasAdmin && !administratorChange.WillBeAdmin && administratorChange.ActiveAdmins <= 1)
+                return ApiResponse<Guid>.Fail("O perfil do último administrador habilitado do cliente não pode ser revogado. Conceda-o a outra pessoa primeiro.", 409);
+        }
 
         var userId = id ?? Guid.NewGuid();
         var before = id.HasValue
@@ -417,18 +440,33 @@ and upper(coalesce(p.codigo,p.nome)) in ('ADMINISTRADOR_CLIENTE','ADMIN_CLIENTE'
 coalesce((select p.limite_usuarios from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id
  where a.cliente_id=@tenantId and a.reg_status='A' and upper(coalesce(a.status,'')) in ('ATIVA','TRIAL')
  and (a.data_fim is null or a.data_fim>=current_date)
- order by case when upper(a.status)='ATIVA' then 0 else 1 end,a.reg_date desc limit 1),0) as \"Limit\",
+	 order by case when upper(a.status)='ATIVA' then 0 else 1 end,a.reg_date desc limit 1),0) as ""Limit"",
 (select count(*)::int from plantaopro.usuarios u where coalesce(u.tenant_id,u.cliente_id)=@tenantId
- and u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO') as \"Used\"", new { tenantId }, tx, cancellationToken: ct));
+	 and u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO') as ""Used""", new { tenantId }, tx, cancellationToken: ct));
             if (capacity.Limit > 0 && capacity.Used >= capacity.Limit)
                 return ApiResponse<Guid>.Fail($"Limite contratual de {capacity.Limit} usuários ativos atingido. Regularize a contratação antes de reativar este acesso.", 409);
         }
-        var regStatus = normalized == "INATIVO" ? "I" : "A";
-        await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set status=@normalized,reg_status=@regStatus,bloqueado_ate=case when @normalized='BLOQUEADO' then 'infinity'::timestamptz else null end,reg_update=now() where id=@id", new { id, normalized, regStatus }, tx, cancellationToken: ct));
+        if (tenantId.HasValue)
+        {
+            var changed = await cn.ExecuteAsync(new CommandDefinition(@"update plantaopro.usuario_tenant_acessos
+set status=@normalized,acesso_fim=case when @normalized='ATIVO' then null else now() end,reg_update=now(),updated_by=@actor
+where usuario_id=@id and tenant_id=@tenantId and reg_status='A'", new { id, tenantId, normalized, actor=currentUser.UserId }, tx, cancellationToken: ct));
+            if (changed == 0)
+                await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.usuario_tenant_acessos
+(id,usuario_id,tenant_id,cliente_id,origem,acesso_inicio,acesso_fim,status,reg_status,created_by)
+values(gen_random_uuid(),@id,@tenantId,@tenantId,'ADMINISTRACAO_ACESSOS',now(),case when @normalized='ATIVO' then null else now() end,@normalized,'A',@actor)", new { id, tenantId, normalized, actor=currentUser.UserId }, tx, cancellationToken: ct));
+        }
+        else
+        {
+            var regStatus = normalized == "INATIVO" ? "I" : "A";
+            await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set status=@normalized,reg_status=@regStatus,bloqueado_ate=case when @normalized='BLOQUEADO' then 'infinity'::timestamptz else null end,reg_update=now(),updated_by=@actor where id=@id", new { id, normalized, regStatus, actor=currentUser.UserId }, tx, cancellationToken: ct));
+        }
         await cn.ExecuteAsync(new CommandDefinition("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao=@motivo,reg_update=now() where usuario_id=@id and revogada_em is null and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId)", new { id, tenantId, motivo = "ALTERACAO_STATUS_" + normalized }, tx, cancellationToken: ct));
         await tx.CommitAsync(ct);
-        await audit.RegistrarAsync(currentUser.UserId, before.TenantId, "USUARIO", id, "ALTERAR_STATUS", new { antes = before.Status, depois = normalized }, true, ip, string.Join(',', currentUser.Roles), ct);
-        return ApiResponse<Guid>.Ok(id, normalized == "ATIVO" ? "Usuário desbloqueado." : "Acesso do usuário interrompido.");
+        await audit.RegistrarAsync(currentUser.UserId, tenantId ?? before.TenantId, tenantId.HasValue ? "VINCULO_USUARIO" : "IDENTIDADE_USUARIO", id, "ALTERAR_STATUS", new { antes = before.Status, depois = normalized, escopo = tenantId.HasValue ? "CLIENTE" : "GLOBAL" }, true, ip, string.Join(',', currentUser.Roles), ct);
+        return ApiResponse<Guid>.Ok(id, tenantId.HasValue
+            ? (normalized == "ATIVO" ? "Vínculo com o cliente reativado." : "Vínculo com o cliente interrompido; a identidade permanece inalterada.")
+            : (normalized == "ATIVO" ? "Identidade desbloqueada." : "Identidade global interrompida."));
     }
     public async Task RevogarSessoesAsync(Guid usuarioId, string motivo, CancellationToken ct)
     {

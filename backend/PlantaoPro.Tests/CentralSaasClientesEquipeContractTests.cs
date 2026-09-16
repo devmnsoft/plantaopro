@@ -24,4 +24,23 @@ public sealed class CentralSaasClientesEquipeContractTests
         Assert.Contains("update plantaopro.auth_sessoes", Service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("await tx.CommitAsync(ct)", Service);
     }
+
+    [Fact]
+    public void AlteracaoLocal_SeparaVinculoDeIdentidadeEProtegeRevogacaoDoUltimoAdministrador()
+    {
+        Assert.Contains("update plantaopro.usuario_tenant_acessos", Service, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("VINCULO_USUARIO", Service);
+        Assert.Contains("a identidade permanece inalterada", Service);
+        Assert.Contains("perfil do último administrador habilitado", Service);
+        Assert.Contains("PERMISSOES_PERFIL_ALTERADAS", Service);
+    }
+
+    [Fact]
+    public void ConsultasDeCapacidade_UsamAliasValidoEmStringVerbatim()
+    {
+        Assert.DoesNotContain("as \\\"Limit\\\"", Service);
+        Assert.DoesNotContain("as \\\"Used\\\"", Service);
+        Assert.Contains("as \"\"Limit\"\"", Service);
+        Assert.Contains("as \"\"Used\"\"", Service);
+    }
 }

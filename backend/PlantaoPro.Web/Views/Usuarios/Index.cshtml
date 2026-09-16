@@ -3,6 +3,7 @@
     ViewData["Title"] = "Usuários e acessos";
     ViewData["Subtitle"] = "Usuários reais no escopo autorizado desta sessão.";
     var users = Model.ToArray();
+    var globalContext = User.IsInRole(PlantaoPro.Web.Security.RolesConstants.AdministradorGlobal);
 }
 <div class="pp-page">
     <header class="pp-page-hero">
@@ -14,7 +15,7 @@
     </header>
     <details class="pp-screen-guide">
         <summary><span><i class="bi bi-compass"></i><strong>Como usar esta tela</strong></span></summary>
-        <div class="pp-screen-guide__body"><p>Pesquise pelo nome ou e-mail. Bloquear interrompe o acesso e revoga sessões; desbloquear restaura o acesso conforme contrato e permissões.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-check"></i> O último Super Administrador MNSOFT ativo é protegido pelo servidor.</div></div>
+        <div class="pp-screen-guide__body"><p>Pesquise pelo nome ou e-mail. A situação da identidade é global; a situação do vínculo controla somente o cliente exibido. Bloquear o vínculo revoga as sessões desse cliente sem bloquear a pessoa em outras organizações.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-check"></i> O último administrador habilitado do cliente e o último Super Administrador MNSOFT são protegidos pelo servidor.</div></div>
     </details>
     <form method="get" class="pp-card mb-3">
         <label class="form-label" for="user-search">Buscar usuário</label>
@@ -25,8 +26,8 @@
         <div class="alert alert-danger" role="alert">@ViewBag.ErrorMessage</div>
     }
     <section class="pp-card">
-        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Usuário</th><th>Cliente</th><th>Perfis</th><th>Último acesso</th><th>Status</th><th class="text-end">Ações</th></tr></thead><tbody>
-        @if (users.Length == 0) { <tr><td colspan="6"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o tenant selecionado.</p></div></td></tr> }
+        <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Usuário</th><th>Cliente</th><th>Perfis</th><th>Último acesso</th><th>Identidade</th><th>Vínculo</th><th class="text-end">Ações</th></tr></thead><tbody>
+        @if (users.Length == 0) { <tr><td colspan="7"><div class="pp-empty-state"><h3>Nenhum usuário encontrado</h3><p>Revise a busca ou o tenant selecionado.</p></div></td></tr> }
         @foreach (var user in users)
         {
             <tr>
@@ -34,15 +35,16 @@
                 <td>@user.TenantNome</td>
                 <td>@user.Perfis</td>
                 <td>@(user.UltimoLogin?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Nunca acessou")</td>
-                <td><span class="badge @(user.Status == "ATIVO" ? "text-bg-success" : "text-bg-warning")">@user.Status</span></td>
+                <td><span class="badge @(user.IdentidadeStatus == "ATIVO" ? "text-bg-success" : "text-bg-danger")">Identidade @user.IdentidadeStatus</span></td>
+                <td><span class="badge @(user.Status == "ATIVO" ? "text-bg-success" : "text-bg-warning")">Vínculo @user.Status</span></td>
                 <td class="text-end">
                     <div class="pp-table-actions">
                         <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@user.Id">Editar e perfis</a>
-                        <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="@(user.Status == "ATIVO" ? "Bloquear usuário" : "Desbloquear usuário")" data-confirm-message="Esta ação altera o acesso de @user.Nome no cliente @user.TenantNome e revoga sessões ativas.">
+                        <form asp-action="AlterarStatus" method="post" data-confirm="true" data-confirm-title="@(globalContext ? (user.Status == "ATIVO" ? "Bloquear identidade global" : "Desbloquear identidade global") : (user.Status == "ATIVO" ? "Bloquear vínculo" : "Desbloquear vínculo"))" data-confirm-message="@(globalContext ? $"Esta ação administrativa global altera a identidade de {user.Nome} e revoga suas sessões. O evento será auditado em nome da sua identidade real." : $"Esta ação altera somente o vínculo de {user.Nome} com {user.TenantNome} e revoga as sessões desse cliente; a identidade global e outros vínculos não serão bloqueados.")">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@user.Id" />
                             <input type="hidden" name="acao" value="@(user.Status == "ATIVO" ? "bloquear" : "desbloquear")" />
-                            <button class="btn btn-sm @(user.Status == "ATIVO" ? "btn-outline-danger" : "btn-outline-success")" type="submit">@(user.Status == "ATIVO" ? "Bloquear" : "Desbloquear")</button>
+                            <button class="btn btn-sm @(user.Status == "ATIVO" ? "btn-outline-danger" : "btn-outline-success")" type="submit">@(globalContext ? (user.Status == "ATIVO" ? "Bloquear identidade" : "Desbloquear identidade") : (user.Status == "ATIVO" ? "Bloquear vínculo" : "Desbloquear vínculo"))</button>
                         </form>
                     </div>
                 </td>

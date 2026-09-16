@@ -26,6 +26,12 @@ public sealed class OcorrenciasController : BaseWebController
         if (!response.IsSuccessStatusCode)
             return View(new OccurrenceDetailViewModel { Error = "Não foi possível consultar o estado atual da ocorrência." });
         var model = await response.Content.ReadFromJsonAsync<OccurrenceDetailViewModel>(cancellationToken: ct) ?? new();
+        var historyResponse = await client.GetAsync($"api/ocorrencias/{id:D}/historico", ct);
+        if (historyResponse.IsSuccessStatusCode)
+            model.Historico = await historyResponse.Content.ReadFromJsonAsync<IReadOnlyList<OccurrenceEventViewModel>>(cancellationToken: ct)
+                ?? Array.Empty<OccurrenceEventViewModel>();
+        else
+            ViewBag.HistoryError = "O detalhe foi carregado, mas o histórico não pôde ser consultado agora.";
         return View(model);
     }
 

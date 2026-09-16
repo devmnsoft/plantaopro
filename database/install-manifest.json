@@ -597,6 +597,23 @@
           ]
         }
       ]
+    },
+    {
+      "order": 52,
+      "name": "plantaopro.ocorrencias_operacionais_v2171",
+      "objects": [
+        {
+          "name": "plantaopro.ocorrencias_operacionais_v2171",
+          "type": "canonical",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/schema/430_ocorrencias_operacionais.sql",
+          "dependsOn": [
+            "plantaopro.cobertura_substituicoes_v2170",
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [

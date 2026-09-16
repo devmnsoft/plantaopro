@@ -12,6 +12,7 @@ public sealed class UsuarioSaasViewModel
     public Guid? ClienteId { get; set; }
     public string TenantNome { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+    public string IdentidadeStatus { get; set; } = string.Empty;
     public string RegStatus { get; set; } = string.Empty;
     public DateTime? UltimoLogin { get; set; }
     public DateTime? BloqueadoAte { get; set; }

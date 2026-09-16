@@ -15,11 +15,16 @@
             <div><span class="eyebrow">Ocorrências · @Model.Categoria</span><h1 id="occurrence-title">@Model.Title</h1><p>@Model.Description</p></div>
             <span class="context-pill">Situação: @Model.Situacao</span>
         </header>
+        <details class="pp-screen-guide" open>
+            <summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta página</strong></span></summary>
+            <div class="pp-screen-guide__body"><p>Confira situação, responsável e histórico antes de agir. Resolver encerra somente esta ocorrência: não aprova presença, não substitui profissional e não altera pagamento.</p><div class="pp-screen-guide__note"><i class="bi bi-shield-check" aria-hidden="true"></i> Se outra pessoa alterar o registro, a versão impede que sua ação sobrescreva a mudança.</div></div>
+        </details>
         <section class="pp-card" aria-label="Contexto da ocorrência">
             <dl class="pp-definition-grid">
                 <div><dt>Prioridade</dt><dd>@Model.Prioridade</dd></div>
                 <div><dt>Responsabilidade</dt><dd>@(Model.ResponsavelId.HasValue ? "Responsável atribuído" : "Disponível para equipe autorizada")</dd></div>
                 <div><dt>Prazo de resolução</dt><dd>@(Model.PrazoResolucao?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "Sem prazo definido")</dd></div>
+                <div><dt>Próxima ação</dt><dd>@(Model.Situacao is "RESOLVIDA" or "CANCELADA" ? "Nenhuma ação pendente" : Model.ResponsavelId.HasValue ? "Registrar atendimento ou resolução" : "Atribuir responsável")</dd></div>
             </dl>
         </section>
         @if (Model.Situacao is not ("RESOLVIDA" or "CANCELADA") && Model.ResponsavelId.HasValue)
@@ -36,6 +41,25 @@
         { <div class="alert alert-info" role="status">Esta ocorrência já está @Model.Situacao.ToLowerInvariant() e não exige nova ação.</div> }
         else
         { <div class="alert alert-warning" role="status">Atribua um responsável no fluxo operacional antes de registrar a resolução.</div> }
+        <section class="pp-card mt-3" aria-labelledby="history-title">
+            <header><span class="pp-eyebrow">Rastreabilidade</span><h2 id="history-title">Histórico real</h2><p>Eventos persistidos na ordem em que ocorreram.</p></header>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.HistoryError as string))
+            { <div class="alert alert-warning" role="status">@ViewBag.HistoryError</div> }
+            else if (Model.Historico.Count == 0)
+            { <div class="pp-empty-state"><h3>Nenhum evento disponível</h3><p>A ocorrência ainda não possui eventos visíveis para o seu vínculo.</p></div> }
+            else
+            {
+                <ol class="list-group list-group-flush" aria-label="Eventos da ocorrência">
+                @foreach (var evento in Model.Historico)
+                {
+                    <li class="list-group-item px-0 d-flex flex-column flex-md-row gap-2 justify-content-between">
+                        <div><span class="badge text-bg-light border">@evento.Tipo</span><p class="mb-0 mt-2">@evento.Descricao</p></div>
+                        <time class="text-muted text-nowrap" datetime="@evento.CriadoEm.ToString("O")">@evento.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time>
+                    </li>
+                }
+                </ol>
+            }
+        </section>
     }
 </main>
 @section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }

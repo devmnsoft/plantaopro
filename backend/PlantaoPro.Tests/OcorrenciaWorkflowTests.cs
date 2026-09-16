@@ -16,4 +16,17 @@ public sealed class OcorrenciaWorkflowTests
 
     [Fact] public void Catalogos_nao_misturam_prioridade_e_situacao()
     { Assert.Contains("CRITICA",OcorrenciaWorkflow.Prioridades); Assert.DoesNotContain("CRITICA",OcorrenciaWorkflow.Situacoes); }
+
+    [Fact]
+    public void Servico_UsaAliasesVerbatimValidosEProtegeTenantVersaoEHistorico()
+    {
+        var service = File.ReadAllText(Path.Combine(RepositoryPathResolver.RepoRoot, "backend/PlantaoPro.Api/OcorrenciaService.cs"));
+        Assert.DoesNotContain("as \\\"Id\\\"", service);
+        Assert.Contains("as \"\"Id\"\"", service);
+        Assert.Contains("@gestor or o.solicitante_id=@user or o.responsavel_id=@user", service);
+        Assert.Contains("versao=@versao", service);
+        Assert.Contains("changed!=1", service);
+        Assert.Contains("insert into plantaopro.ocorrencia_eventos", service, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("delete from plantaopro.ocorrencias_operacionais", service, StringComparison.OrdinalIgnoreCase);
+    }
 }

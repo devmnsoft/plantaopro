@@ -37,9 +37,9 @@ public sealed class OperationalAutomationService
 
     private static Guid? TryGuid(string? value) => Guid.TryParse(value, out var id) ? id : null;
 
-    private async Task<(Guid Id, Guid? ClienteId)> ObterMedicoDoUsuarioAsync(NpgsqlConnection cn, Guid uid)
+    private async Task<(Guid Id, Guid? ClienteId)> ObterMedicoDoUsuarioAsync(NpgsqlConnection cn, Guid uid, System.Data.IDbTransaction? tx = null)
     {
-        var medico = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid? ClienteId)>("select id, cliente_id from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new { uid });
+        var medico = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid? ClienteId)>("select id, cliente_id from plantaopro.medicos where usuario_id=@uid and reg_status='A' limit 1", new { uid }, tx);
         return medico.Id == Guid.Empty ? (Guid.Empty, null) : medico;
     }
 
@@ -60,15 +60,24 @@ where d.medico_id=@medicoId and d.reg_status='A' order by d.data_inicio desc lim
     {
         var erro = ValidarPeriodo(request.DataInicio, request.DataFim);
         if (erro is not null) return ApiResponse<Guid>.Fail(erro);
+        erro = ValidarTexto(request.Observacoes, 500, "A observação");
+        if (erro is not null) return ApiResponse<Guid>.Fail(erro);
         await using var cn = Cn();
-        var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var medico = await ObterMedicoDoUsuarioAsync(cn, uid, tx);
         if (medico.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Médico não encontrado para o usuário autenticado.", 404);
-        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' and data_inicio < @fim and data_fim > @inicio", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim });
-        if (conflita > 0) return ApiResponse<Guid>.Fail("Existe indisponibilidade ativa no período informado.");
+        await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 0))", new { key = $"disponibilidade:{medico.Id}" }, tx);
+        if (!await ContextoPermitidoAsync(cn, tx, medico.ClienteId, request.HospitalId, request.EspecialidadeId)) return ApiResponse<Guid>.Fail("Unidade ou especialidade fora do seu contexto autorizado.", 403);
+        var existente = await cn.ExecuteScalarAsync<Guid?>(@"select id from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' and data_inicio=@inicio and data_fim=@fim and hospital_id is not distinct from @hospitalId and especialidade_id is not distinct from @especialidadeId limit 1", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim, request.HospitalId, request.EspecialidadeId }, tx);
+        if (existente.HasValue) { await tx.CommitAsync(); return ApiResponse<Guid>.Ok(existente.Value, "Esta disponibilidade já estava cadastrada; nenhum registro foi duplicado."); }
+        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from (select data_inicio,data_fim from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' union all select data_inicio,data_fim from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA') x where x.data_inicio < @fim and x.data_fim > @inicio", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim }, tx);
+        if (conflita > 0) return ApiResponse<Guid>.Fail("O período se sobrepõe a uma informação existente. Ajuste ou remova o intervalo anterior; contradições não são resolvidas automaticamente.", 409);
         var id = Guid.NewGuid();
         await cn.ExecuteAsync(@"insert into plantaopro.medico_disponibilidades(id,cliente_id,medico_id,hospital_id,especialidade_id,data_inicio,data_fim,turno,status,observacoes,created_by,reg_date,reg_status)
-values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno,'ATIVA',@obs,@uid,now(),'A')", new { id, clienteId = medico.ClienteId, medicoId = medico.Id, hospitalId = request.HospitalId, especialidadeId = request.EspecialidadeId, inicio = request.DataInicio, fim = request.DataFim, turno = Normalizar(request.Turno, "GERAL"), obs = request.Observacoes, uid });
-        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_disponibilidades", id, "CRIAR", request, uid);
+values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno,'ATIVA',@obs,@uid,now(),'A')", new { id, clienteId = medico.ClienteId, medicoId = medico.Id, hospitalId = request.HospitalId, especialidadeId = request.EspecialidadeId, inicio = request.DataInicio, fim = request.DataFim, turno = Normalizar(request.Turno, "GERAL"), obs = request.Observacoes?.Trim(), uid }, tx);
+        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_disponibilidades", id, "CRIAR", request, uid, tx);
+        await tx.CommitAsync();
         await audit.LogAsync(uid, "CREATE", "medico_disponibilidades", id, "Médico cadastrou disponibilidade", ip: ip, userAgent: ua);
         return ApiResponse<Guid>.Ok(id, "Disponibilidade cadastrada.");
     }
@@ -77,9 +86,14 @@ values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno
     {
         var erro = ValidarPeriodo(request.DataInicio, request.DataFim);
         if (erro is not null) return ApiResponse<string>.Fail(erro);
+        erro = ValidarTexto(request.Observacoes, 500, "A observação");
+        if (erro is not null) return ApiResponse<string>.Fail(erro);
         await using var cn = Cn();
         var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
         if (medico.Id == Guid.Empty) return ApiResponse<string>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+        if (!await ContextoPermitidoAsync(cn, null, medico.ClienteId, request.HospitalId, request.EspecialidadeId)) return ApiResponse<string>.Fail("Unidade ou especialidade fora do seu contexto autorizado.", 403);
+        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from (select id,data_inicio,data_fim from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' union all select id,data_inicio,data_fim from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA') x where x.id<>@id and x.data_inicio < @fim and x.data_fim > @inicio", new { id, medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim });
+        if (conflita > 0) return ApiResponse<string>.Fail("O período se sobrepõe a uma informação existente. Ajuste o intervalo antes de salvar.", 409);
         var updated = await cn.ExecuteAsync(@"update plantaopro.medico_disponibilidades set hospital_id=@hospitalId, especialidade_id=@especialidadeId, data_inicio=@inicio, data_fim=@fim, turno=@turno, observacoes=@obs, updated_by=@uid, reg_update=now() where id=@id and medico_id=@medicoId and reg_status='A'", new { id, medicoId = medico.Id, hospitalId = request.HospitalId, especialidadeId = request.EspecialidadeId, inicio = request.DataInicio, fim = request.DataFim, turno = Normalizar(request.Turno, "GERAL"), obs = request.Observacoes, uid });
         if (updated == 0) return ApiResponse<string>.Fail("Disponibilidade não encontrada.", 404);
         await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_disponibilidades", id, "ATUALIZAR", request, uid);
@@ -113,14 +127,25 @@ values(@id,@clienteId,@medicoId,@hospitalId,@especialidadeId,@inicio,@fim,@turno
         var erro = ValidarPeriodo(request.DataInicio, request.DataFim);
         if (erro is not null) return ApiResponse<Guid>.Fail(erro);
         if (string.IsNullOrWhiteSpace(request.Motivo)) return ApiResponse<Guid>.Fail("Informe o motivo da indisponibilidade.");
+        erro = ValidarTexto(request.Motivo, 500, "O motivo");
+        if (erro is not null) return ApiResponse<Guid>.Fail(erro);
         await using var cn = Cn();
-        var medico = await ObterMedicoDoUsuarioAsync(cn, uid);
+        await cn.OpenAsync();
+        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        var medico = await ObterMedicoDoUsuarioAsync(cn, uid, tx);
         if (medico.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Médico não encontrado para o usuário autenticado.", 404);
+        await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 0))", new { key = $"disponibilidade:{medico.Id}" }, tx);
+        var existente = await cn.ExecuteScalarAsync<Guid?>(@"select id from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' and data_inicio=@inicio and data_fim=@fim limit 1", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim }, tx);
+        if (existente.HasValue) { await tx.CommitAsync(); return ApiResponse<Guid>.Ok(existente.Value, "Esta indisponibilidade já estava cadastrada; nenhum registro foi duplicado."); }
+        var conflita = await cn.ExecuteScalarAsync<int>(@"select count(1) from (select data_inicio,data_fim from plantaopro.medico_disponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA' union all select data_inicio,data_fim from plantaopro.medico_indisponibilidades where medico_id=@medicoId and reg_status='A' and status='ATIVA') x where x.data_inicio < @fim and x.data_fim > @inicio", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim }, tx);
+        if (conflita > 0) return ApiResponse<Guid>.Fail("O período se sobrepõe a uma informação existente. Ajuste ou remova o intervalo anterior; contradições não são resolvidas automaticamente.", 409);
+        var compromissos = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.escalas es join plantaopro.plantoes p on p.id=es.plantao_id where es.medico_id=@medicoId and es.reg_status='A' and es.status in ('confirmado','solicitado') and p.data_inicio < @fim and p.data_fim > @inicio", new { medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim }, tx);
         var id = Guid.NewGuid();
-        await cn.ExecuteAsync(@"insert into plantaopro.medico_indisponibilidades(id,cliente_id,medico_id,data_inicio,data_fim,motivo,status,created_by,reg_date,reg_status) values(@id,@clienteId,@medicoId,@inicio,@fim,@motivo,'ATIVA',@uid,now(),'A')", new { id, clienteId = medico.ClienteId, medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim, motivo = request.Motivo.Trim(), uid });
-        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_indisponibilidades", id, "CRIAR", request, uid);
+        await cn.ExecuteAsync(@"insert into plantaopro.medico_indisponibilidades(id,cliente_id,medico_id,data_inicio,data_fim,motivo,status,created_by,reg_date,reg_status) values(@id,@clienteId,@medicoId,@inicio,@fim,@motivo,'ATIVA',@uid,now(),'A')", new { id, clienteId = medico.ClienteId, medicoId = medico.Id, inicio = request.DataInicio, fim = request.DataFim, motivo = request.Motivo.Trim(), uid }, tx);
+        await RegistrarHistoricoDisponibilidadeAsync(cn, medico.ClienteId, medico.Id, "medico_indisponibilidades", id, "CRIAR", request, uid, tx);
+        await tx.CommitAsync();
         await audit.LogAsync(uid, "CREATE", "medico_indisponibilidades", id, "Médico cadastrou indisponibilidade", ip: ip, userAgent: ua);
-        return ApiResponse<Guid>.Ok(id, "Indisponibilidade cadastrada.");
+        return ApiResponse<Guid>.Ok(id, compromissos > 0 ? "Indisponibilidade cadastrada. Há compromisso no período: a atribuição foi preservada; solicite substituição se necessário." : "Indisponibilidade cadastrada.");
     }
 
     public async Task<ApiResponse<string>> RemoverIndisponibilidadeAsync(Guid uid, Guid id, string? ip, string? ua)
@@ -499,6 +524,16 @@ values(@id,@plantaoId,@medicoId,'confirmado',@justificativa,@uid,'A',now())", ne
         return null;
     }
 
+    private static string? ValidarTexto(string? value, int limite, string campo) => value?.Trim().Length > limite ? $"{campo} deve ter no máximo {limite} caracteres." : null;
+
+    private static async Task<bool> ContextoPermitidoAsync(NpgsqlConnection cn, System.Data.IDbTransaction? tx, Guid? clienteId, Guid? hospitalId, Guid? especialidadeId)
+    {
+        if (!clienteId.HasValue) return !hospitalId.HasValue && !especialidadeId.HasValue;
+        var hospitais = !hospitalId.HasValue || await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.hospitais where id=@hospitalId and cliente_id=@clienteId and reg_status='A'", new { hospitalId, clienteId }, tx) > 0;
+        var especialidades = !especialidadeId.HasValue || await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.especialidades where id=@especialidadeId and reg_status='A'", new { especialidadeId }, tx) > 0;
+        return hospitais && especialidades;
+    }
+
     private static string Normalizar(string? value, string fallback) => string.IsNullOrWhiteSpace(value) ? fallback : value.Trim().ToUpperInvariant();
 
     private static string SanitizarCsv(string value) => (value ?? string.Empty).Replace(";", ",", StringComparison.OrdinalIgnoreCase).Replace("\r", " ", StringComparison.OrdinalIgnoreCase).Replace("\n", " ", StringComparison.OrdinalIgnoreCase);
@@ -517,9 +552,9 @@ values(@id,@plantaoId,@medicoId,'confirmado',@justificativa,@uid,'A',now())", ne
         return dto;
     }
 
-    private static async Task RegistrarHistoricoDisponibilidadeAsync(NpgsqlConnection cn, Guid? clienteId, Guid medicoId, string entidade, Guid entidadeId, string acao, object detalhes, Guid uid)
+    private static async Task RegistrarHistoricoDisponibilidadeAsync(NpgsqlConnection cn, Guid? clienteId, Guid medicoId, string entidade, Guid entidadeId, string acao, object detalhes, Guid uid, System.Data.IDbTransaction? tx = null)
     {
-        await cn.ExecuteAsync("insert into plantaopro.medico_historico_disponibilidade(id,cliente_id,medico_id,entidade,entidade_id,acao,detalhes,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@medicoId,@entidade,@entidadeId,@acao,cast(@detalhes as jsonb),@uid,now(),'A')", new { clienteId, medicoId, entidade, entidadeId, acao, detalhes = JsonSerializer.Serialize(detalhes), uid });
+        await cn.ExecuteAsync("insert into plantaopro.medico_historico_disponibilidade(id,cliente_id,medico_id,entidade,entidade_id,acao,detalhes,usuario_id,reg_date,reg_status) values(gen_random_uuid(),@clienteId,@medicoId,@entidade,@entidadeId,@acao,cast(@detalhes as jsonb),@uid,now(),'A')", new { clienteId, medicoId, entidade, entidadeId, acao, detalhes = JsonSerializer.Serialize(detalhes), uid }, tx);
     }
 
     private static async Task InserirHistoricoSubstituicaoAsync(NpgsqlConnection cn, Guid? clienteId, Guid substituicaoId, string acao, string? anterior, string novo, string? observacao, Guid uid, System.Data.IDbTransaction? tx = null)

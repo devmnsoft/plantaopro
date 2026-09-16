@@ -1,1 +1,2 @@
-<section class="quick-actions" aria-labelledby="quickTitle"><span class="eyebrow">Atalhos permitidos</span><h2 id="quickTitle">Ações rápidas</h2><button class="button button-primary" type="button" data-quick-action-open>Nova ação</button></section>
+@model IReadOnlyList<PlantaoPro.Web.Models.CentralShortcutViewModel>
+<section class="quick-actions" aria-labelledby="quickTitle"><span class="eyebrow">Atalhos autorizados</span><h2 id="quickTitle">Continuar em um módulo</h2>@if(Model.Count==0){<p>Nenhum atalho está disponível para os módulos e permissões deste contexto.</p>}else{<ul>@foreach(var shortcut in Model){<li><a href="@shortcut.Url"><strong>@shortcut.Label</strong><span>@shortcut.Description</span></a></li>}</ul>}</section>

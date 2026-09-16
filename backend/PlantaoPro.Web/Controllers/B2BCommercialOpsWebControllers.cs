@@ -53,7 +53,7 @@ public sealed class MedicoAreaController : Controller
     public IActionResult Index() => Render(nameof(Index));
     public IActionResult Agenda() => Render(nameof(Agenda));
     public IActionResult Convites() => Render(nameof(Convites));
-    public IActionResult Disponibilidade() => Render(nameof(Disponibilidade));
+    public IActionResult Disponibilidade() => View("~/Views/MedicoArea/Disponibilidade.cshtml");
     public IActionResult Indisponibilidades() => Render(nameof(Indisponibilidades));
     public IActionResult Preferencias() => Render(nameof(Preferencias));
     public IActionResult SolicitarSubstituicao() => Render(nameof(SolicitarSubstituicao));

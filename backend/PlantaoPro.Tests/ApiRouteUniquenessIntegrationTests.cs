@@ -24,6 +24,21 @@ public sealed class ApiRouteUniquenessIntegrationTests : IClassFixture<PlantaoPr
         Assert.True(duplicates.Length == 0, message);
     }
 
+    [Fact]
+    public void DisponibilidadeDoTitularPossuiUmUnicoEndpointGetRegistrado()
+    {
+        using var scope = factory.Services.CreateScope();
+        var provider = scope.ServiceProvider.GetRequiredService<IApiDescriptionGroupCollectionProvider>();
+        var endpoints = provider.ApiDescriptionGroups.Items.SelectMany(x => x.Items)
+            .Where(x => string.Equals(x.HttpMethod, "GET", StringComparison.OrdinalIgnoreCase))
+            .Where(x => ApiRouteStartupValidator.NormalizePath(x.RelativePath) == "/api/medicos/me/disponibilidade")
+            .ToArray();
+
+        var endpoint = Assert.Single(endpoints);
+        Assert.Contains(nameof(PlantaoPro.Api.Controllers.MedicosMeDisponibilidadeController), endpoint.ActionDescriptor.DisplayName);
+        Assert.NotEmpty(endpoint.ActionDescriptor.EndpointMetadata.OfType<Microsoft.AspNetCore.Authorization.AuthorizeAttribute>());
+    }
+
     [Theory]
     [InlineData("api/relatorios/exportar-csv?tipo=x", "/api/relatorios/exportar-csv")]
     [InlineData("/API/RELATORIOS/{id:guid}/", "/api/relatorios/{id}")]

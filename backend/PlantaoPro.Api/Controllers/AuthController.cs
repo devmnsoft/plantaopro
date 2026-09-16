@@ -29,6 +29,12 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken cancellationToken)
         {
+            var suppliedCorrelationId = Request.Headers["X-Correlation-ID"].FirstOrDefault();
+            var correlationId = !string.IsNullOrWhiteSpace(suppliedCorrelationId) && suppliedCorrelationId.Length <= 128
+                ? suppliedCorrelationId
+                : HttpContext.TraceIdentifier;
+            Response.Headers["X-Correlation-ID"] = correlationId;
+            using var loginScope = _logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId });
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
             var identifierKind = LoginIdentifierNormalizer.Classify(req.Email);
             var auditIdentifier = LoginIdentifierNormalizer.AuditValue(req.Email, identifierKind);

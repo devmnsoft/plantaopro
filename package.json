@@ -8,6 +8,7 @@
     "audit:experience": "node scripts/ui/product-experience-audit.mjs",
     "smoke:auth": "node scripts/ui/create-storage-state.mjs",
     "diagnose:login": "node scripts/ui/login-submit-diagnostic.mjs",
+    "test:login-submit": "node scripts/ui/login-submit-regression.mjs",
     "playwright:install": "playwright install chromium"
   },
   "devDependencies": {

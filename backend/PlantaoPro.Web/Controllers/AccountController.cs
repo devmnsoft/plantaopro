@@ -51,6 +51,8 @@ public sealed class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
     {
+        var correlationId = HttpContext.TraceIdentifier;
+        using var loginScope = _logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId });
         ViewData["ReturnUrl"] = returnUrl;
         var loginIdentifier = (model.Email ?? string.Empty).Trim();
         var identifierKind = ClassifyIdentifier(loginIdentifier);
@@ -71,6 +73,7 @@ public sealed class AccountController : Controller
             apiBaseUrl = client.BaseAddress;
             _logger.LogInformation("Chamando API de login. BaseUrl:{ApiBaseUrl}", apiBaseUrl);
 
+            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-ID", correlationId);
             using var response = await client.PostAsJsonAsync("api/auth/login", new LoginRequest(loginIdentifier, model.Senha ?? string.Empty), cancellationToken);
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             _logger.LogInformation("Resposta da API de login. Status:{StatusCode}", (int)response.StatusCode);

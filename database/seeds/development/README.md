@@ -1,46 +1,33 @@
 # Seeds de desenvolvimento
 
-Este diretório é deliberadamente opt-in. O instalador canônico nunca cria administrador com senha conhecida, pacientes, prontuários ou dados clínicos fictícios.
+Este diretório é deliberadamente opt-in. O instalador canônico nunca cria administrador com senha conhecida em produção.
 
-## Por que o login falha após instalar o banco
+Em Development a API agora auto-provisiona as contas se `DemoSeed:Enabled` e `DemoSeed:AutoProvisionIfEmpty` estiverem ativos.
 
-`database/scrpt_completo.sql` e o instalador oficial criam só o schema (tabelas `usuarios`, `perfis`, índices). A tabela `plantaopro.usuarios` nasce vazia. O `AuthService` consulta PostgreSQL por `lower(email)` e valida `senha_hash` com BCrypt — sem linha prévia, qualquer tentativa devolve 401.
-
-Há duas formas oficiais de criar as contas locais:
-
-1. CLI da API (Development + `DemoSeed__Enabled=true`):
-
-```bash
-ASPNETCORE_ENVIRONMENT=Development \
-DemoSeed__Enabled=true \
-DemoSeed__DevelopmentDatabase=plantaopro \
-DemoSeed__SuperAdminPassword='MnSoft!Demo2026#Admin' \
-DemoSeed__ManagerPassword='SantaCasa!Demo2026#Gestor' \
-ConnectionStrings__Default='Host=127.0.0.1;Port=5432;Database=plantaopro;Username=postgres;Password=<senha-local>' \
-  dotnet run --project backend/PlantaoPro.Api -- --provision-demo
-```
-
-2. Script SQL opt-in (pgAdmin / psql), no banco da aplicação:
-
-```bash
-psql -d plantaopro -f database/seeds/development/120_acesso_demo_local.sql
-```
-
-## Contas de demonstração (somente desenvolvimento)
+## Contas locais (somente Development)
 
 | Perfil | E-mail | Senha |
 |---|---|---|
 | Super administrador | `superadmin@mnsoft.example` | `MnSoft!Demo2026#Admin` |
-| Administrador do cliente (Santa Casa Demonstração) | `gestor@santacasa-demo.example` | `SantaCasa!Demo2026#Gestor` |
+| Gestor da Santa Casa Demonstração | `gestor@santacasa-demo.example` | `SantaCasa!Demo2026#Gestor` |
+| Médica fictícia | `medico@santacasa-demo.example` | `Medico!Demo2026#Acesso` |
 
-Essas senhas são fixtures de laboratório. Não use em produção. Troque depois do primeiro acesso.
+## SQL manual
 
-## Diagnóstico rápido no banco
-
-```sql
-SELECT email, status, reg_status, left(senha_hash,7) AS hash_prefix, bloqueado_ate
-FROM plantaopro.usuarios
-WHERE lower(email) IN ('superadmin@mnsoft.example','gestor@santacasa-demo.example');
+```bash
+psql -d plantaopro -f database/seeds/development/121_acesso_demo_local.sql
 ```
 
-`hash_prefix` precisa começar com `$2a$` ou `$2y$`. Se a consulta não retornar linhas, o seed não rodou.
+Se a API estiver no banco `postgres` legado, execute o mesmo arquivo nesse banco — desde que o schema `plantaopro` exista.
+
+## Diagnóstico
+
+```sql
+SELECT email, status, reg_status, left(senha_hash,7) AS hash_prefix
+FROM plantaopro.usuarios
+WHERE lower(email) IN (
+  'superadmin@mnsoft.example',
+  'gestor@santacasa-demo.example',
+  'medico@santacasa-demo.example'
+);
+```

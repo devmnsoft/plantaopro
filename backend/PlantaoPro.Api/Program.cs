@@ -256,6 +256,14 @@ if (provisionDemo || resetDemoPasswords)
     await DevelopmentSeed.RunAsync(app.Services, resetDemoPasswords);
     return;
 }
+
+if (app.Environment.IsDevelopment()
+    && app.Configuration.GetValue("DemoSeed:Enabled", false)
+    && app.Configuration.GetValue("DemoSeed:AutoProvisionIfEmpty", false))
+{
+    await DevelopmentSeed.RunIfEmptyAsync(app.Services);
+}
+
 app.UseHttpLogging();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Testing"))

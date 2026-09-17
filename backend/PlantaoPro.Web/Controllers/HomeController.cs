@@ -18,6 +18,10 @@ public class HomeController : BaseWebController
 
     public IActionResult Index()
     {
+        if (User.IsInRole(RolesConstants.AdministradorGlobal))
+            return RedirectToAction("Index", "CommandCenter");
+        if (User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador))
+            return RedirectToAction("Index", "MeuDia");
         return RedirectToAction(nameof(Dashboard));
     }
 

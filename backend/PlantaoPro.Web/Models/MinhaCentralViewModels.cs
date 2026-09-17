@@ -11,13 +11,21 @@ public sealed class WorkItemViewModel
     public string Status { get; set; } = string.Empty;
     [JsonPropertyName("prioridade")] public string Priority { get; set; } = string.Empty;
     [JsonPropertyName("responsavelId")] public Guid? ResponsibleId { get; set; }
+    public Guid? UnitId { get; set; }
     [JsonPropertyName("posicao")] public int Position { get; set; }
     [JsonPropertyName("versao")] public int Version { get; set; }
     [JsonPropertyName("venceEm")] public DateTimeOffset? DueAt { get; set; }
     [JsonPropertyName("criadoEm")] public DateTimeOffset CreatedAt { get; set; }
     [JsonPropertyName("atualizadoEm")] public DateTimeOffset UpdatedAt { get; set; }
+    public string StableKey { get; set; } = string.Empty;
+    public string OriginLabel { get; set; } = string.Empty;
+    public string OriginUrl { get; set; } = string.Empty;
+    public string? NextAction { get; set; }
+    public string? ActionUrl { get; set; }
 }
-public sealed class MinhaCentralViewModel { public CentralSummaryViewModel Summary { get; set; }=new(); public IReadOnlyList<WorkItemViewModel> Items { get; set; }=Array.Empty<WorkItemViewModel>(); public string Error { get; set; }=string.Empty; }
+public sealed class CentralContextViewModel { public Guid TenantId { get; set; } public string Organization { get; set; }=string.Empty; public Guid? UnitId { get; set; } public string? Unit { get; set; } public string Profile { get; set; }=string.Empty; public bool GlobalView { get; set; } public DateTimeOffset UpdatedAt { get; set; } }
+public sealed class CentralShortcutViewModel { public string Label { get; set; }=string.Empty; public string Description { get; set; }=string.Empty; public string Url { get; set; }=string.Empty; public string Module { get; set; }=string.Empty; }
+public sealed class MinhaCentralViewModel { public CentralContextViewModel Context { get; set; }=new(); public CentralSummaryViewModel Summary { get; set; }=new(); public IReadOnlyList<WorkItemViewModel> Items { get; set; }=Array.Empty<WorkItemViewModel>(); public IReadOnlyList<CentralShortcutViewModel> Shortcuts { get; set; }=Array.Empty<CentralShortcutViewModel>(); public string Error { get; set; }=string.Empty; }
 public sealed record BreadcrumbViewModel(string Label,string? Url);
 public sealed record WorkspaceActionViewModel(string Label,string Url);
 public sealed class WorkspaceHeaderViewModel { public IReadOnlyList<BreadcrumbViewModel> Breadcrumbs { get; init; }=Array.Empty<BreadcrumbViewModel>(); public string Title { get; init; }=string.Empty; public string Description { get; init; }=string.Empty; public string? Status { get; init; } public string? Context { get; init; } public WorkspaceActionViewModel? PrimaryAction { get; init; } public IReadOnlyList<WorkspaceActionViewModel> SecondaryActions { get; init; }=Array.Empty<WorkspaceActionViewModel>(); public string? HelpContext { get; init; } }

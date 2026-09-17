@@ -1,12 +1,7 @@
-import {KanbanBoard} from '../components/kanban-board.js';
-import {WorkItemDrawer} from '../components/work-item-drawer.js';
 const root=document.querySelector('[data-central-root]');
-const api=root.dataset.apiBase;
-const toast=(title,message,severity='success')=>window.PlantaoProToast?.show?.(severity,message,{title})||document.dispatchEvent(new CustomEvent('toast:show',{detail:{title,message,severity}}));
-new KanbanBoard(root,api,toast).bind();
-new WorkItemDrawer(api,toast).bind();
 const filters=root.querySelector('[data-work-item-filters]');
-const applyFilters=()=>{const priority=filters.elements[0].value,type=filters.elements[1].value,due=filters.elements[2].value,owner=filters.elements[3].value;let visible=0;const now=new Date(),today=now.toDateString();root.querySelectorAll('[data-work-item]').forEach(card=>{const date=card.dataset.due?new Date(card.dataset.due):null;const dueMatch=!due||(due==='none'&&!date)||(due==='overdue'&&date&&date<now)||(due==='today'&&date&&date.toDateString()===today);const ownerMatch=!owner||(owner==='assigned'&&card.dataset.owner)||(owner==='unassigned'&&!card.dataset.owner);const show=(!priority||card.dataset.priority===priority)&&(!type||card.dataset.type===type)&&dueMatch&&ownerMatch;card.hidden=!show;if(show)visible++;});filters.querySelector('[data-filter-result]').textContent=`${visible} pendência${visible===1?'':'s'} exibida${visible===1?'':'s'}.`;};
-filters?.addEventListener('change',applyFilters);filters?.addEventListener('reset',()=>window.setTimeout(applyFilters));
+const fields=['priority','type','due','owner'];
+const restore=()=>{const params=new URLSearchParams(location.search);fields.forEach((name,index)=>{if(filters?.elements[index]&&params.has(name))filters.elements[index].value=params.get(name);});};
+const applyFilters=()=>{const priority=filters.elements[0].value,type=filters.elements[1].value,due=filters.elements[2].value,owner=filters.elements[3].value;let visible=0;const now=new Date(),today=now.toDateString();root.querySelectorAll('[data-work-item]').forEach(card=>{const date=card.dataset.due?new Date(card.dataset.due):null;const dueMatch=!due||(due==='none'&&!date)||(due==='overdue'&&date&&date<now)||(due==='today'&&date&&date.toDateString()===today);const ownerMatch=!owner||(owner==='assigned'&&card.dataset.owner)||(owner==='unassigned'&&!card.dataset.owner);const show=(!priority||card.dataset.priority===priority)&&(!type||card.dataset.type===type)&&dueMatch&&ownerMatch;card.hidden=!show;if(show)visible++;});filters.querySelector('[data-filter-result]').textContent=`${visible} pendência${visible===1?'':'s'} exibida${visible===1?'':'s'}.`;root.querySelector('[data-filter-empty]')?.toggleAttribute('hidden',visible!==0);const params=new URLSearchParams(location.search);fields.forEach((name,index)=>filters.elements[index].value?params.set(name,filters.elements[index].value):params.delete(name));history.replaceState(null,'',`${location.pathname}${params.size?`?${params}`:''}`);};
+restore();if(filters){applyFilters();filters.addEventListener('change',applyFilters);filters.addEventListener('reset',()=>window.setTimeout(applyFilters));}
 document.querySelector('[data-central-retry]')?.addEventListener('click',()=>window.location.reload());
-document.addEventListener('central:refresh',()=>window.location.reload());

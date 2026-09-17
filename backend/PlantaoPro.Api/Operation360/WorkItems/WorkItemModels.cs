@@ -21,5 +21,11 @@ public sealed record WorkItemCommentRequest(string Comment, int Version, Guid Id
 public sealed record WorkItemForwardRequest(Guid ResponsibleId, int Version, Guid IdempotencyKey);
 public sealed record WorkItemPostponeRequest(DateTimeOffset DueAt, int Version, Guid IdempotencyKey);
 public sealed record CentralSummaryDto(int Open, int Overdue, int Critical, int Waiting, int CompletedToday);
-public sealed record MinhaCentralDto(CentralSummaryDto Summary, IReadOnlyList<WorkItemDto> Items);
+public sealed record CentralContextDto(Guid TenantId, string Organization, Guid? UnitId, string? Unit, string Profile, bool GlobalView, DateTimeOffset UpdatedAt);
+public sealed record CentralWorkItemDto(Guid Id, string StableKey, string Type, string Title, string Description,
+    string Status, string Priority, Guid? ResponsibleId, Guid? UnitId, DateTimeOffset? DueAt,
+    DateTimeOffset UpdatedAt, string OriginLabel, string OriginUrl, string? NextAction, string? ActionUrl);
+public sealed record CentralShortcutDto(string Label, string Description, string Url, string Module);
+public sealed record MinhaCentralDto(CentralContextDto Context, CentralSummaryDto Summary,
+    IReadOnlyList<CentralWorkItemDto> Items, IReadOnlyList<CentralShortcutDto> Shortcuts);
 public sealed record WorkItemMutationResult(bool Found, bool Conflict, bool Duplicate, WorkItemDto? Item);

@@ -3,19 +3,26 @@
 <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
  "Minha Central", "Reúne tarefas, alertas e pendências que exigem sua atenção ou a atuação da sua equipe.",
  "Comece pelos itens prioritários e acompanhe o progresso ao longo do dia.",
- Steps: new[] { "Revise as prioridades do dia.", "Abra um item para consultar o contexto.", "Conclua ou encaminhe a próxima ação." }, Eyebrow: "Seu dia")' />
-<div class="central-workspace" data-central-root data-api-base="/bff/operacao">
+ Steps: new[] { "Revise as prioridades do dia.", "Abra um item para consultar o contexto.", "Abra a origem e execute a ação autorizada no módulo." }, Eyebrow: "Seu dia")' />
+<div class="central-workspace" data-central-root>
  @if(!string.IsNullOrEmpty(Model.Error)){<section class="state-panel" role="alert"><h2>Sua Central não carregou</h2><p>@Model.Error</p><button type="button" class="button button-primary" data-central-retry>Tentar novamente</button></section>}
- else {<partial name="_DaySummary" model="Model.Summary"/><partial name="_PrioritySection" model="Model.Items"/>
- <form class="central-filters" data-work-item-filters aria-label="Filtros de pendências">
+ else {
+ <section class="central-context" aria-labelledby="contextTitle"><div><span class="eyebrow">Contexto atual</span><h2 id="contextTitle">@Model.Context.Organization</h2><p>@(string.IsNullOrWhiteSpace(Model.Context.Unit) ? "Todas as unidades autorizadas" : Model.Context.Unit) · @Model.Context.Profile</p></div><div class="central-context__time"><span>Atualizado em</span><time datetime="@Model.Context.UpdatedAt.ToString("O")">@Model.Context.UpdatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</time></div></section>
+ @if(Model.Context.GlobalView){<section class="global-context-notice" role="status"><h2>Visão global</h2><p>Selecione um cliente na Central Global para consultar pendências operacionais. O cliente escolhido permanecerá identificado no cabeçalho; use o retorno à visão global para encerrar o contexto.</p><a class="button button-primary" href="/SaasDashboard">Abrir Central Global</a></section>}
+ else {<partial name="_DaySummary" model="Model.Summary"/>}
+ <section aria-labelledby="pendingTitle"><div class="section-heading"><div><span class="eyebrow">Lista de trabalho</span><h2 id="pendingTitle">Pendências que exigem ação</h2></div><p>O item sai desta lista somente quando o registro de origem deixa de estar pendente.</p></div>
+ <details class="central-filter-panel" open><summary>Filtrar pendências</summary><form class="central-filters" data-work-item-filters aria-label="Filtros de pendências">
   <label>Prioridade<select data-filter-priority><option value="">Todas</option>@foreach(var value in Model.Items.Select(x=>x.Priority).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
   <label>Tipo<select data-filter-type><option value="">Todos</option>@foreach(var value in Model.Items.Select(x=>x.Type).Distinct().OrderBy(x=>x)){<option value="@value">@value</option>}</select></label>
   <label>Prazo<select data-filter-due><option value="">Todos</option><option value="overdue">Vencidas</option><option value="today">Vencem hoje</option><option value="none">Sem prazo</option></select></label>
   <label>Responsável<select data-filter-owner><option value="">Todos</option><option value="assigned">Atribuídas</option><option value="unassigned">Sem responsável</option></select></label>
   <button type="reset" class="button button-secondary">Limpar filtros</button><span data-filter-result role="status" aria-live="polite"></span>
- </form>
- <partial name="_KanbanBoard" model="Model.Items"/><div class="central-lower"><partial name="_ActivityFeed"/><partial name="_QuickActions"/></div>}
- <partial name="_WorkItemDrawer" />
+ </form></details>
+ @if(Model.Items.Count==0 && !Model.Context.GlobalView){<div class="empty-state" role="status"><h3>Nenhuma pendência operacional</h3><p>Não há registros persistidos que atendam às regras do seu contexto atual.</p></div>}
+ else {<div class="central-work-list" data-work-list>@foreach(var item in Model.Items){<partial name="_WorkItemCard" model="item"/>}</div><div class="empty-state" data-filter-empty hidden><h3>Nenhum resultado para o filtro</h3><p>Altere ou limpe os filtros para voltar a exibir a lista.</p></div>}
+ </section>
+ <partial name="_QuickActions" model="Model.Shortcuts"/>
+ <details class="central-help"><summary>Como usar</summary><p>Revise o contexto antes de agir. Abra o registro de origem para compreender a causa e execute somente a ação oferecida pelo módulo. “Sem prazo definido” significa que o domínio não possui uma regra real de vencimento; marcar uma notificação como lida não remove esta pendência.</p><p>Ações podem ficar indisponíveis quando o módulo não está contratado, seu perfil não tem permissão ou outro usuário já alterou o registro. Nesse caso, atualize a página e confira o estado persistido.</p></details>}
 </div>
 @section Styles{<link rel="stylesheet" href="~/css/pages/minha-central.css" asp-append-version="true" />}
 @section Scripts{<script type="module" src="~/js/pages/minha-central.js" asp-append-version="true"></script>}

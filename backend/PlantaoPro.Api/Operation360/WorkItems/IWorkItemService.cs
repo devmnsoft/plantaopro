@@ -3,6 +3,7 @@ public interface IWorkItemService
 {
     Task<MinhaCentralDto> CentralAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<WorkItemDto>> ListAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<WorkItemDto>> ListAssignedAsync(CancellationToken cancellationToken);
     Task<WorkItemDto?> GetAsync(Guid id, CancellationToken cancellationToken);
     Task<IReadOnlyList<WorkItemHistoryDto>> HistoryAsync(Guid id, CancellationToken cancellationToken);
     Task<WorkItemMutationResult> MoveAsync(WorkItemMoveRequest request, CancellationToken cancellationToken);

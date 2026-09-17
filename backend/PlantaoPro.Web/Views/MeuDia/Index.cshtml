@@ -1,14 +1,151 @@
 @model PlantaoPro.Web.Models.ProductivityPageViewModel
 @using Microsoft.AspNetCore.Routing
-@{ ViewData["Title"] = "Meu Dia"; var now = DateTimeOffset.Now; string Link(PlantaoPro.Web.Models.ProductivityActionViewModel a) => Url.Action(a.Action,a.Controller,new RouteValueDictionary(a.RouteValues)) ?? "#"; }
+@using PlantaoPro.Web.Security
+@{
+    ViewData["Title"] = "Meu Dia";
+    var now = DateTimeOffset.Now;
+    string Link(PlantaoPro.Web.Models.ProductivityActionViewModel a) => Url.Action(a.Action, a.Controller, new RouteValueDictionary(a.RouteValues)) ?? "#";
+    var isGlobal = User.IsInRole(RolesConstants.AdministradorGlobal);
+    var isClientAdmin = User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador);
+}
 <div class="pp-page my-day">
- <section class="day-command-hero"><div><span class="pp-section-kicker">@now.ToString("dddd, dd 'de' MMMM")</span><h1>Seu dia, em ordem de prioridade</h1><p>Agenda e ações reais de acordo com seu perfil e contexto de acesso.</p></div><div class="day-command-hero__signal"><strong>@Model.Summary.Active</strong><span>ações ativas</span></div></section>
- @if(!string.IsNullOrWhiteSpace(Model.Error)){<section class="state-panel" role="alert"><h2>Não foi possível montar seu dia</h2><p>@Model.Error</p><a class="btn btn-primary" asp-action="Index">Tentar novamente</a></section>}
- else {
- <section class="day-kpis" aria-label="Indicadores reais"><article><span>Pendências</span><strong>@Model.Summary.Active</strong></article><article class="is-danger"><span>Críticas</span><strong>@Model.Summary.Critical</strong></article><article class="is-warning"><span>Hoje</span><strong>@Model.Summary.Today</strong></article><article><span>Atrasadas</span><strong>@Model.Summary.Overdue</strong></article></section>
- <div class="day-workspace"><section class="day-timeline"><header><div><span class="pp-section-kicker">Linha do tempo</span><h2>Agora e próximos</h2></div></header>
- @if(Model.Agenda.Count == 0 && Model.Items.Count == 0){<partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-check", "Seu dia está em dia", "Nenhuma agenda ou ação real requer sua atenção agora.")' />}
- else {<ol>@foreach(var agenda in Model.Agenda.OrderBy(x=>x.StartsAt)){<li><span class="day-timeline__marker"></span><div><small>@agenda.Section · @agenda.StartsAt.ToLocalTime().ToString("HH:mm")</small><strong>@agenda.Title</strong><p>@agenda.ContextLabel</p></div></li>}@foreach(var item in Model.Items){<li class="@(item.DueAt < now ? "is-overdue" : null)"><span class="day-timeline__marker"></span><div><small>@item.Priority · @(item.DueAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "sem prazo")</small><strong>@item.Title</strong><p>@item.Description</p></div>@if(item.PrimaryAction is not null){<a class="btn btn-sm btn-outline-primary" href="@Link(item.PrimaryAction)">@item.PrimaryAction.Label</a>}</li>}</ol>}
- </section><aside class="day-shortcuts"><span class="pp-section-kicker">Ações rápidas</span><h2>Continuar o trabalho</h2>@if(Model.QuickActions.Count == 0){<p class="text-muted">Nenhum atalho disponível para seu perfil.</p>}@foreach(var action in Model.QuickActions){<a asp-controller="@action.Controller" asp-action="@action.Action"><i class="bi @action.Icon"></i><span><strong>@action.Label</strong><small>@action.Code</small></span><i class="bi bi-chevron-right"></i></a>}<a asp-controller="Pendencias" asp-action="Index"><i class="bi bi-list-check"></i><span><strong>Central de Ações</strong><small>Ver todas as prioridades</small></span><i class="bi bi-chevron-right"></i></a></aside></div>}
+    <section class="day-command-hero">
+        <div>
+            <span class="pp-section-kicker">@now.ToString("dddd, dd 'de' MMMM")</span>
+            <h1>@(isGlobal ? "Plataforma em um relance" : "Seu dia, em ordem de prioridade")</h1>
+            <p>@(isGlobal
+                ? "Administre clientes, cobertura e saúde operacional sem misturar tenants."
+                : "Agenda, cobertura e conferência da sua instituição, no contexto do seu perfil.")</p>
+        </div>
+        <div class="day-command-hero__signal">
+            <strong>@Model.Summary.Active</strong>
+            <span>ações ativas</span>
+        </div>
+    </section>
+
+    <section class="day-modules" aria-label="Jornadas operacionais">
+        <a class="day-module" asp-controller="Escalas" asp-action="Index">
+            <span class="day-module__code">Escalas</span>
+            <strong>Montar cobertura</strong>
+            <small>Plantões, convites e confirmações</small>
+        </a>
+        <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+            <span class="day-module__code">Execução</span>
+            <strong>Acompanhar o turno</strong>
+            <small>Check-in, ocorrências e status</small>
+        </a>
+        <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+            <span class="day-module__code">Conferência</span>
+            <strong>Fechar o plantão</strong>
+            <small>Apuração e pendências financeiras</small>
+        </a>
+        @if (isGlobal)
+        {
+            <a class="day-module is-platform" asp-controller="Clientes" asp-action="Index">
+                <span class="day-module__code">SaaS</span>
+                <strong>Clientes da plataforma</strong>
+                <small>Tenants, planos e implantação</small>
+            </a>
+        }
+        else if (isClientAdmin)
+        {
+            <a class="day-module is-platform" asp-controller="CommandCenter" asp-action="Index">
+                <span class="day-module__code">Operação</span>
+                <strong>Command Center</strong>
+                <small>Riscos e cobertura da unidade</small>
+            </a>
+        }
+    </section>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <section class="state-panel" role="alert">
+            <h2>Não foi possível montar seu dia</h2>
+            <p>@Model.Error</p>
+            <a class="btn btn-primary" asp-action="Index">Tentar novamente</a>
+        </section>
+    }
+    else
+    {
+        <section class="day-kpis" aria-label="Indicadores reais">
+            <article><span>Pendências</span><strong>@Model.Summary.Active</strong></article>
+            <article class="is-danger"><span>Críticas</span><strong>@Model.Summary.Critical</strong></article>
+            <article class="is-warning"><span>Hoje</span><strong>@Model.Summary.Today</strong></article>
+            <article><span>Atrasadas</span><strong>@Model.Summary.Overdue</strong></article>
+        </section>
+        <div class="day-workspace">
+            <section class="day-timeline">
+                <header>
+                    <div>
+                        <span class="pp-section-kicker">Linha do tempo</span>
+                        <h2>Agora e próximos</h2>
+                    </div>
+                </header>
+                @if (Model.Agenda.Count == 0 && Model.Items.Count == 0)
+                {
+                    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-check", "Seu dia está em dia", "Nenhuma agenda ou ação real requer sua atenção agora. Use os módulos acima para abrir a operação.")' />
+                }
+                else
+                {
+                    <ol>
+                        @foreach (var agenda in Model.Agenda.OrderBy(x => x.StartsAt))
+                        {
+                            <li>
+                                <span class="day-timeline__marker"></span>
+                                <div>
+                                    <small>@agenda.Section · @agenda.StartsAt.ToLocalTime().ToString("HH:mm")</small>
+                                    <strong>@agenda.Title</strong>
+                                    <p>@agenda.ContextLabel</p>
+                                </div>
+                            </li>
+                        }
+                        @foreach (var item in Model.Items)
+                        {
+                            <li class="@(item.DueAt < now ? "is-overdue" : null)">
+                                <span class="day-timeline__marker"></span>
+                                <div>
+                                    <small>@item.Priority · @(item.DueAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "sem prazo")</small>
+                                    <strong>@item.Title</strong>
+                                    <p>@item.Description</p>
+                                </div>
+                                @if (item.PrimaryAction is not null)
+                                {
+                                    <a class="btn btn-sm btn-outline-primary" href="@Link(item.PrimaryAction)">@item.PrimaryAction.Label</a>
+                                }
+                            </li>
+                        }
+                    </ol>
+                }
+            </section>
+            <aside class="day-shortcuts">
+                <span class="pp-section-kicker">Ações rápidas</span>
+                <h2>Continuar o trabalho</h2>
+                @if (Model.QuickActions.Count == 0)
+                {
+                    <p class="text-muted">Nenhum atalho dinâmico agora. Os módulos contratados continuam disponíveis acima.</p>
+                }
+                @foreach (var action in Model.QuickActions)
+                {
+                    <a asp-controller="@action.Controller" asp-action="@action.Action">
+                        <i class="bi @action.Icon"></i>
+                        <span><strong>@action.Label</strong><small>@action.Code</small></span>
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+                <a asp-controller="Pendencias" asp-action="Index">
+                    <i class="bi bi-list-check"></i>
+                    <span><strong>Central de Ações</strong><small>Ver todas as prioridades</small></span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+                <a asp-controller="Notificacoes" asp-action="Index">
+                    <i class="bi bi-bell"></i>
+                    <span><strong>Notificações</strong><small>Alertas da operação</small></span>
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </aside>
+        </div>
+    }
 </div>
-@section Styles { <link rel="stylesheet" href="~/css/pages/meu-dia.css" asp-append-version="true" /> }
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/meu-dia.css" asp-append-version="true" />
+}

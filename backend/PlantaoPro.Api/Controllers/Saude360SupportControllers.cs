@@ -85,7 +85,14 @@ public sealed class PendenciasClinicasApiController : ControllerBase
     public async Task<IActionResult> Resumo(CancellationToken ct) { var central = await service.CentralAsync(ct); return Ok(ApiResponse<CentralSummaryDto>.Ok(central.Summary, "Resumo de pendências carregado.")); }
 
     [HttpGet("minhas")]
-    public async Task<IActionResult> Minhas(CancellationToken ct) { var central = await service.CentralAsync(ct); return Ok(ApiResponse<IReadOnlyList<WorkItemDto>>.Ok(central.Items.Where(x => x.ResponsavelId == current.UserId).ToList(), "Pendências atribuídas carregadas.")); }
+    public async Task<IActionResult> Minhas(CancellationToken ct)
+    {
+        if (current.UserId is not Guid)
+            return Unauthorized(ApiResponse<string>.Fail("Usuário não identificado.", 401));
+
+        var items = await service.ListAssignedAsync(ct);
+        return Ok(ApiResponse<IReadOnlyList<WorkItemDto>>.Ok(items, "Pendências atribuídas carregadas."));
+    }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct) { var item = await service.GetAsync(id, ct); return item is null ? NotFound(ApiResponse<string>.Fail("Pendência não encontrada.", 404)) : Ok(ApiResponse<WorkItemDto>.Ok(item)); }

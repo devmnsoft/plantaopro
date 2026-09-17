@@ -11,12 +11,14 @@ public sealed class DemoDatabaseAccessContractTests
         var seed = Read("backend/PlantaoPro.Api/DevelopmentSeed.cs");
         Assert.Contains("--provision-demo", program);
         Assert.DoesNotContain("DevelopmentSeed:Enabled", program);
+        Assert.Contains("DemoSeed:AutoProvisionIfEmpty", program);
         Assert.Contains("env.IsDevelopment()", seed);
         Assert.Contains("DemoSeed:Enabled", seed);
         Assert.Contains("DemoSeed:DevelopmentDatabase", seed);
         Assert.Contains("current_database()", seed);
         Assert.Contains("BeginTransactionAsync", seed);
         Assert.Contains("pg_advisory_xact_lock", seed);
+        Assert.Contains("AllowLegacyPostgresDatabase", seed);
     }
 
     [Fact]
@@ -34,8 +36,11 @@ public sealed class DemoDatabaseAccessContractTests
         Assert.DoesNotContain("string.Equals(req.Senha, candidate.SenhaHash", auth);
         Assert.DoesNotContain("MnSoft!Demo2026", seed);
         Assert.DoesNotContain("SantaCasa!Demo2026", seed);
+        Assert.DoesNotContain("Medico!Demo2026", seed);
         Assert.Contains("DemoSeed:SuperAdminPassword", seed);
         Assert.Contains("DemoSeed:ManagerPassword", seed);
+        Assert.Contains("DemoSeed:PhysicianPassword", seed);
+        Assert.Contains("medico@santacasa-demo.example", seed);
     }
 
     [Fact]
@@ -63,5 +68,16 @@ public sealed class DemoDatabaseAccessContractTests
         Assert.Contains("DemoSeed:Enabled", layout);
         Assert.DoesNotContain("MnSoft!Demo2026", view);
         Assert.DoesNotContain("SantaCasa!Demo2026", view);
+        Assert.DoesNotContain("Medico!Demo2026", view);
+    }
+
+    [Fact]
+    public void Development_settings_enable_local_demo_accounts()
+    {
+        var api = Read("backend/PlantaoPro.Api/appsettings.Development.json");
+        Assert.Contains("\"Enabled\": true", api);
+        Assert.Contains("AutoProvisionIfEmpty", api);
+        Assert.Contains("superadmin@mnsoft.example", Read("backend/PlantaoPro.Api/DevelopmentSeed.cs"));
+        Assert.Contains("gestor@santacasa-demo.example", Read("backend/PlantaoPro.Api/DevelopmentSeed.cs"));
     }
 }

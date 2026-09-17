@@ -1,5 +1,109 @@
+@model PlantaoPro.Web.Models.ClientModulesPageViewModel
 @{
-    ViewData["Title"] = "Módulos do plano";
+    ViewData["Title"] = "Meus módulos";
+    var ativos = Model.Catalogo.Where(x => x.EstadoContratual is "ATIVO" or "AGENDADO" or "SUSPENSO").ToArray();
+    var disponiveis = Model.Catalogo.Where(x => x.EstadoContratual == "NAO_CONTRATADO").ToArray();
+    var pendentes = Model.Solicitacoes.Where(x => x.Status == "PENDENTE").ToArray();
 }
-<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Módulos contratados", "Veja inclusos, bloqueados e disponíveis para contratação adicional.", "bi-grid")' />
-<div class="row g-4"><div class="col-lg-4"><div class="module-card"><div class="module-icon mb-3"><i class="bi bi-calendar2-week"></i></div><h2 class="h5">Operação de plantões</h2><p class="text-muted">Incluso no plano atual.</p><partial name="_StatusBadge" model='@("ativo")' /></div></div><div class="col-lg-4"><div class="module-card"><div class="module-icon mb-3"><i class="bi bi-palette"></i></div><h2 class="h5">White label</h2><p class="text-muted">Básico no Profissional, completo no Enterprise.</p><a class="btn btn-outline-primary" asp-controller="WhiteLabel" asp-action="Index">Configurar</a></div></div><div class="col-lg-4"><div class="module-card"><div class="module-icon mb-3"><i class="bi bi-code-slash"></i></div><h2 class="h5">API Enterprise</h2><partial name="_ModuleLockedNotice" model='@("Disponível para plano Enterprise ou Revendedor.")' /></div></div></div>
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Meus módulos", "Consulte direitos contratados separadamente das permissões do seu perfil e solicite novas ofertas com segurança.", "bi-grid")' />
+
+@if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+{
+    <div class="alert alert-danger" role="alert"><strong>Não foi possível carregar todos os dados.</strong> @Model.ErrorMessage</div>
+}
+
+<div class="alert alert-info" role="note">
+    <strong>Contrato e permissão são verificações diferentes.</strong> Um módulo ativo só aparece no menu e permite ações quando seu vínculo, perfil e escopo de unidade também autorizam. Solicitações pendentes não liberam acesso.
+</div>
+
+@if (Model.Revisao is not null)
+{
+    <section class="card mb-4 border-primary" aria-labelledby="review-title">
+        <div class="card-header bg-primary text-white"><h2 class="h5 mb-0" id="review-title">Confirme as condições comerciais</h2></div>
+        <div class="card-body">
+            <p>Confira módulo, condição persistida e efeito esperado. A confirmação cria uma <strong>solicitação pendente para análise da MNSOFT</strong>; não ativa funcionalidades imediatamente.</p>
+            <ul>
+                @foreach (var item in Model.Revisao.Itens) { <li><strong>@item.Nome</strong> — @(item.Preco.HasValue ? item.Preco.Value.ToString("C") + " / " + (item.Periodicidade ?? "período informado") : "Preço sob proposta comercial")</li> }
+            </ul>
+            <dl class="row mb-3">
+                <dt class="col-sm-4">Início solicitado</dt><dd class="col-sm-8">@Model.Revisao.InicioPrevisto.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+                <dt class="col-sm-4">Total da oferta</dt><dd class="col-sm-8">@(Model.Revisao.Total.HasValue ? Model.Revisao.Total.Value.ToString("C") : "A definir em proposta — ausência de preço não significa gratuidade")</dd>
+                <dt class="col-sm-4">Revisão válida até</dt><dd class="col-sm-8">@Model.Revisao.ExpiresAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</dd>
+            </dl>
+            <form asp-action="ConfirmarModulos" method="post" data-submit-feedback>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="ConditionsVersion" value="@Model.Revisao.ConditionsVersion" />
+                <input type="hidden" name="IdempotencyKey" value="@Model.Revisao.IdempotencyKey" />
+                <input type="hidden" name="InicioPrevisto" value="@Model.Revisao.InicioPrevisto.ToString("O")" />
+                @foreach (var item in Model.Revisao.Itens) { <input type="hidden" name="ModuloIds" value="@item.Id" /> }
+                <div class="d-flex flex-wrap gap-2"><button class="btn btn-primary" type="submit"><span data-submit-label>Enviar solicitação para análise</span><span class="spinner-border spinner-border-sm d-none" data-submit-spinner aria-hidden="true"></span></button><a class="btn btn-outline-secondary" asp-action="Modulos">Cancelar revisão</a></div>
+            </form>
+        </div>
+    </section>
+}
+
+<section class="mb-5" aria-labelledby="contracted-title">
+    <h2 class="h4" id="contracted-title">Contratados e vigentes</h2>
+    <p class="text-muted">Condições históricas do contrato; mudanças no catálogo não alteram os valores apresentados aqui.</p>
+    @if (ativos.Length == 0) { <div class="alert alert-light border">Nenhum módulo contratado foi localizado para este contexto.</div> }
+    <div class="row g-3">
+        @foreach (var item in ativos)
+        {
+            <div class="col-12 col-lg-6"><article class="module-card h-100">
+                <div class="d-flex justify-content-between gap-3"><h3 class="h5">@item.Nome</h3><partial name="_StatusBadge" model="item.EstadoContratual.ToLowerInvariant()" /></div>
+                <p>@item.Descricao</p>
+                <dl class="row small">
+                    <dt class="col-5">Vigência</dt><dd class="col-7">@(item.VigenciaInicio?.ToLocalTime().ToString("dd/MM/yyyy") ?? "Não informada") a @(item.VigenciaFim?.ToLocalTime().ToString("dd/MM/yyyy") ?? "sem encerramento registrado")</dd>
+                    <dt class="col-5">Condição contratada</dt><dd class="col-7">@(item.PrecoContratado.HasValue ? item.PrecoContratado.Value.ToString("C") + " / " + (item.Periodicidade ?? "período") : "Condição financeira não publicada")</dd>
+                    <dt class="col-5">Limite</dt><dd class="col-7">@(item.LimiteContratado.HasValue ? item.LimiteContratado.Value.ToString("N0") : "Sem limite mensurável informado")</dd>
+                    <dt class="col-5">Utilização</dt><dd class="col-7">Informação indisponível — não há telemetria consolidada verificável para este módulo.</dd>
+                </dl>
+                @if (item.EstadoContratual == "ATIVO") { <a class="btn btn-outline-primary" asp-controller="Dashboard" asp-action="Index">Ver funcionalidades autorizadas</a> }
+                else { <p class="small text-muted mb-0">Este estado contratual não libera uso imediato.</p> }
+            </article></div>
+        }
+    </div>
+</section>
+
+<section class="mb-5" aria-labelledby="pending-title">
+    <h2 class="h4" id="pending-title">Solicitações em análise</h2>
+    <p class="text-muted">Estes itens aguardam decisão comercial e ainda não são contratos ativos.</p>
+    @if (pendentes.Length == 0) { <div class="alert alert-light border">Não há solicitação pendente.</div> }
+    @foreach (var request in pendentes)
+    {
+        <article class="card mb-3"><div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2"><h3 class="h5">@request.Protocolo</h3><partial name="_StatusBadge" model='@("pendente")' /></div>
+            <p>@string.Join(", ", request.Itens.Select(x => x.Nome))</p>
+            <p class="small">Solicitada em @request.CriadoEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · início esperado @request.InicioPrevisto.ToLocalTime().ToString("dd/MM/yyyy HH:mm") · @(request.Total.HasValue ? request.Total.Value.ToString("C") : "valor sob proposta")</p>
+            <form asp-action="CancelarSolicitacaoModulo" asp-route-id="@request.Id" method="post" class="row g-2 align-items-end" data-confirm="true" data-confirm-title="Cancelar solicitação" data-confirm-message="A solicitação comercial será cancelada. Dados operacionais existentes não serão excluídos.">
+                @Html.AntiForgeryToken()
+                <div class="col-12 col-md-8"><label class="form-label" for="reason-@request.Id">Motivo do cancelamento</label><input class="form-control" id="reason-@request.Id" name="justificativa" required maxlength="500" /></div>
+                <div class="col-12 col-md-4"><button class="btn btn-outline-danger w-100" type="submit">Cancelar solicitação</button></div>
+            </form>
+        </div></article>
+    }
+</section>
+
+<section aria-labelledby="catalog-title">
+    <h2 class="h4" id="catalog-title">Disponíveis no catálogo</h2>
+    <p class="text-muted">Selecione ofertas para revisão. Preço, versão, dependências e elegibilidade serão revalidados no servidor antes do registro.</p>
+    <form asp-action="RevisarModulos" method="post" data-unsaved-form data-submit-feedback>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+        <div class="row g-3">
+            @foreach (var item in disponiveis)
+            {
+                var selectable = item.Disponibilidade == "DISPONIVEL";
+                <div class="col-12 col-lg-6"><label class="module-card h-100 d-block" for="module-@item.Id">
+                    <span class="d-flex gap-3 align-items-start"><input class="form-check-input mt-1" type="checkbox" id="module-@item.Id" name="ModuloIds" value="@item.Id" disabled="@(!selectable)" /><span><strong class="d-block">@item.Nome</strong><span class="text-muted">@item.Descricao</span></span></span>
+                    <span class="d-block mt-3"><strong>Condição atual:</strong> @(item.Preco.HasValue ? item.Preco.Value.ToString("C") + " / " + (item.Periodicidade ?? "período") : "Sob proposta; não é gratuito")</span>
+                    @if (item.Dependencias.Length > 0) { <span class="d-block small mt-2">Dependências: @string.Join(", ", item.Dependencias)</span> }
+                    @if (!selectable) { <span class="d-block text-muted small mt-2">Oferta indisponível para solicitação.</span> }
+                </label></div>
+            }
+        </div>
+        @if (disponiveis.Length > 0) { <div class="mt-3"><button class="btn btn-primary" type="submit"><span data-submit-label>Revisar condições</span><span class="spinner-border spinner-border-sm d-none" data-submit-spinner aria-hidden="true"></span></button></div> }
+    </form>
+</section>
+
+<details class="mt-4" data-screen-guide><summary><strong>Como usar</strong></summary><div class="pt-2"><p>1. Confira módulos ativos e suas condições históricas. 2. Selecione apenas ofertas disponíveis. 3. Revise condições obtidas do servidor. 4. Envie para análise. A MNSOFT decide pelo fluxo administrativo existente; até lá, o acesso permanece inalterado.</p><p class="mb-0">Suspensão e encerramento não excluem dados operacionais. A política de acesso histórico após encerramento ainda não está definida, portanto esta tela não concede acesso geral ao histórico.</p></div></details>

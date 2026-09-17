@@ -19,6 +19,16 @@ public sealed class WorkItemRepository : IWorkItemRepository
         return rows.AsList();
     }
 
+    public async Task<IReadOnlyList<WorkItemDto>> ListAssignedAsync(Guid tenantId, Guid? unitId, Guid userId, CancellationToken ct)
+    {
+        await using var cn = Open();
+        var rows = await cn.QueryAsync<WorkItemDto>(new CommandDefinition(
+            "select " + Columns + " from plantaopro.work_items where " + Scope +
+            " and responsavel_id=@userId and status not in ('CONCLUIDO','CANCELADO') order by vence_em nulls last, prioridade, atualizado_em desc",
+            new { tenantId, unitId, userId }, cancellationToken: ct));
+        return rows.AsList();
+    }
+
     public async Task<WorkItemDto?> GetAsync(Guid tenantId, Guid? unitId, Guid id, CancellationToken ct)
     {
         await using var cn = Open();

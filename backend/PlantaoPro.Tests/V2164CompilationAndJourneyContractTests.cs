@@ -21,7 +21,7 @@ public sealed class V2164CompilationAndJourneyContractTests
         Assert.Contains("as \"\"DependenciasArray\"\"", service);
         Assert.Contains("left join plantaopro.tenant_modulos tm on tm.modulo_id=m.id and tm.tenant_id=@tenant", service);
         Assert.Contains("left join plantaopro.modulo_catalogo_dependencias md on md.modulo_id=m.id", service);
-        Assert.Contains("where m.reg_status='A' group by m.id,tm.status,tm.habilitado order by m.nome", service);
+        Assert.Contains("where m.reg_status='A' group by m.id,tm.id,tm.status,tm.habilitado", service);
         Assert.DoesNotContain("$@\"select m.id,m.codigo", service);
     }
 

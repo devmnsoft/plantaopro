@@ -22,6 +22,8 @@ public class HomeController : BaseWebController
             return RedirectToAction("Index", "CommandCenter");
         if (User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador))
             return RedirectToAction("Index", "MeuDia");
+        if (User.IsInRole(RolesConstants.Medico))
+            return RedirectToAction("Index", "MeuDia");
         return RedirectToAction(nameof(Dashboard));
     }
 

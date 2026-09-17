@@ -13,6 +13,7 @@ public sealed class WorkItemService : IWorkItemService
     private Guid UserId => current.UserId ?? throw new UnauthorizedAccessException("Usuário não identificado.");
     private Guid? Unit { get { Guid value; return Guid.TryParse(accessor.HttpContext?.User.FindFirst("unidade_id")?.Value, out value) ? value : null; } }
     public Task<IReadOnlyList<WorkItemDto>> ListAsync(CancellationToken ct) => repository.ListAsync(Tenant, Unit, ct);
+    public Task<IReadOnlyList<WorkItemDto>> ListAssignedAsync(CancellationToken ct) => repository.ListAssignedAsync(Tenant, Unit, UserId, ct);
     public Task<WorkItemDto?> GetAsync(Guid id, CancellationToken ct) => repository.GetAsync(Tenant, Unit, id, ct);
     public Task<IReadOnlyList<WorkItemHistoryDto>> HistoryAsync(Guid id, CancellationToken ct) => repository.HistoryAsync(Tenant, Unit, id, ct);
     public async Task<MinhaCentralDto> CentralAsync(CancellationToken ct)

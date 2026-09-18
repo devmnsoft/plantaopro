@@ -43,7 +43,9 @@ public sealed class ProductivityActionController : ControllerBase
 
     private async Task<object> PageAsync(ProductivityQuery query, CancellationToken ct)
     {
-        var page = await service.ListAsync(query, ct); var summary = await service.SummaryAsync(ct);
+        var page = await service.ListAsync(query, ct);
+        var summary = await service.SummaryAsync(ct);
+        var agenda = await service.GetAgendaAsync(ct);
         return new
         {
             items = page.Items.Select(x => new
@@ -52,7 +54,16 @@ public sealed class ProductivityActionController : ControllerBase
                 x.Icon,x.ContextLabel,x.OwnerType,x.OwnerId,
                 primaryAction = SafeAction(x),x.CanSnooze,x.CanDismiss,x.SourceUpdatedAt,x.IsSnoozed
             }),
-            summary, quickActions = service.QuickActions(), agenda = Array.Empty<object>(),
+            summary,
+            quickActions = service.QuickActions(),
+            agenda = agenda.Select(a => new
+            {
+                title = a.Title,
+                contextLabel = a.ContextLabel,
+                startsAt = a.StartsAt,
+                endsAt = a.EndsAt,
+                section = a.Section
+            }),
             page.Page,page.PageSize,page.Total,page.TotalPages,
             canViewTeam = current.IsTenantAdmin() || current.HasRole(RolesConstants.Coordenacao) || current.HasRole(RolesConstants.Coordenador)
         };

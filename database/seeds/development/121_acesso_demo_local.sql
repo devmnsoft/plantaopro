@@ -58,37 +58,42 @@ BEGIN
 
     INSERT INTO plantaopro.perfis(tenant_id, cliente_id, codigo, nome, descricao, base_sistema, customizado, status, reg_status)
     SELECT NULL, NULL, 'ADMINISTRADOR_GLOBAL', 'Administrador global', 'Perfil canônico para demonstração local', true, false, 'ATIVO', 'A'
-    WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_GLOBAL' AND tenant_id IS NULL AND reg_status = 'A');
+    WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_GLOBAL' AND reg_status = 'A')
+      AND NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE lower(nome) = 'administrador global');
 
     INSERT INTO plantaopro.perfis(tenant_id, cliente_id, codigo, nome, descricao, base_sistema, customizado, status, reg_status)
     SELECT v_tenant_id, v_client_id, 'ADMINISTRADOR_CLIENTE', 'Administrador do cliente', 'Perfil canônico para demonstração local', true, false, 'ATIVO', 'A'
-    WHERE NOT EXISTS (
-        SELECT 1 FROM plantaopro.perfis
-        WHERE codigo = 'ADMINISTRADOR_CLIENTE' AND tenant_id IS NOT DISTINCT FROM v_tenant_id AND reg_status = 'A'
-    );
+    WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_CLIENTE' AND reg_status = 'A')
+      AND NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE lower(nome) = 'administrador do cliente');
 
     INSERT INTO plantaopro.perfis(tenant_id, cliente_id, codigo, nome, descricao, base_sistema, customizado, status, reg_status)
     SELECT v_tenant_id, v_client_id, 'MEDICO', 'Médico', 'Perfil canônico para demonstração local', true, false, 'ATIVO', 'A'
-    WHERE NOT EXISTS (
-        SELECT 1 FROM plantaopro.perfis
-        WHERE codigo = 'MEDICO' AND tenant_id IS NOT DISTINCT FROM v_tenant_id AND reg_status = 'A'
-    );
+    WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE codigo = 'MEDICO' AND reg_status = 'A')
+      AND NOT EXISTS (SELECT 1 FROM plantaopro.perfis WHERE lower(nome) = 'médico');
 
-    SELECT id INTO v_global_profile FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_GLOBAL' AND tenant_id IS NULL AND reg_status = 'A' LIMIT 1;
-    SELECT id INTO v_client_profile FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_CLIENTE' AND tenant_id IS NOT DISTINCT FROM v_tenant_id AND reg_status = 'A' LIMIT 1;
-    SELECT id INTO v_medico_profile FROM plantaopro.perfis WHERE codigo = 'MEDICO' AND tenant_id IS NOT DISTINCT FROM v_tenant_id AND reg_status = 'A' LIMIT 1;
+    SELECT id INTO v_global_profile FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_GLOBAL' AND reg_status = 'A' ORDER BY tenant_id NULLS FIRST LIMIT 1;
+    SELECT id INTO v_client_profile FROM plantaopro.perfis WHERE codigo = 'ADMINISTRADOR_CLIENTE' AND reg_status = 'A' ORDER BY (tenant_id = v_tenant_id) DESC, tenant_id NULLS LAST LIMIT 1;
+    SELECT id INTO v_medico_profile FROM plantaopro.perfis WHERE codigo = 'MEDICO' AND reg_status = 'A' ORDER BY (tenant_id = v_tenant_id) DESC, tenant_id NULLS LAST LIMIT 1;
 
     IF to_regclass('plantaopro.clientes') IS NOT NULL THEN
-        INSERT INTO plantaopro.clientes(id) VALUES (v_client_id) ON CONFLICT (id) DO NOTHING;
-        UPDATE plantaopro.clientes SET
-            tenant_id = COALESCE(tenant_id, v_tenant_id),
-            codigo = COALESCE(codigo, 'SANTA_CASA_DEMONSTRACAO'),
-            nome = COALESCE(nome, 'Santa Casa Demonstração'),
-            razao_social = COALESCE(NULLIF(razao_social,''), 'Santa Casa Demonstração'),
-            nome_fantasia = COALESCE(NULLIF(nome_fantasia,''), 'Santa Casa Demonstração'),
-            status = COALESCE(NULLIF(status,''), 'ATIVO'),
-            reg_status = COALESCE(NULLIF(reg_status,''), 'A')
-        WHERE id = v_client_id;
+        IF EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'plantaopro' AND table_name = 'clientes' AND column_name = 'tenant_id' AND data_type <> 'uuid'
+        ) THEN
+            ALTER TABLE plantaopro.clientes ALTER COLUMN tenant_id TYPE uuid USING NULL;
+        END IF;
+
+        INSERT INTO plantaopro.clientes(id, razao_social, nome_fantasia, cnpj, status, reg_status, tenant_id, codigo, nome)
+        VALUES (v_client_id, 'Santa Casa Demonstração', 'Santa Casa Demonstração', '00.000.000/0001-91', 'ATIVO', 'A', v_tenant_id, 'SANTA_CASA_DEMONSTRACAO', 'Santa Casa Demonstração')
+        ON CONFLICT (id) DO UPDATE SET
+            tenant_id = COALESCE(plantaopro.clientes.tenant_id, EXCLUDED.tenant_id),
+            codigo = COALESCE(plantaopro.clientes.codigo, EXCLUDED.codigo),
+            nome = COALESCE(plantaopro.clientes.nome, EXCLUDED.nome),
+            razao_social = COALESCE(plantaopro.clientes.razao_social, EXCLUDED.razao_social),
+            nome_fantasia = COALESCE(plantaopro.clientes.nome_fantasia, EXCLUDED.nome_fantasia),
+            cnpj = COALESCE(plantaopro.clientes.cnpj, EXCLUDED.cnpj),
+            status = COALESCE(plantaopro.clientes.status, EXCLUDED.status),
+            reg_status = COALESCE(plantaopro.clientes.reg_status, EXCLUDED.reg_status);
     END IF;
 
     IF EXISTS (SELECT 1 FROM plantaopro.usuarios WHERE id = v_super_id OR lower(email) = lower('superadmin@mnsoft.example')) THEN

@@ -7,15 +7,18 @@
     string Link(PlantaoPro.Web.Models.ProductivityActionViewModel a) => Url.Action(a.Action, a.Controller, new RouteValueDictionary(a.RouteValues)) ?? "#";
     var isGlobal = User.IsInRole(RolesConstants.AdministradorGlobal);
     var isClientAdmin = User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador);
+    var isPhysician = User.IsInRole(RolesConstants.Medico);
 }
 <div class="pp-page my-day">
     <section class="day-command-hero">
         <div>
             <span class="pp-section-kicker">@now.ToString("dddd, dd 'de' MMMM")</span>
-            <h1>@(isGlobal ? "Plataforma em um relance" : "Seu dia, em ordem de prioridade")</h1>
+            <h1>@(isGlobal ? "Plataforma em um relance" : isPhysician ? "Seu dia como médica" : "Seu dia, em ordem de prioridade")</h1>
             <p>@(isGlobal
                 ? "Administre clientes, cobertura e saúde operacional sem misturar tenants."
-                : "Agenda, cobertura e conferência da sua instituição, no contexto do seu perfil.")</p>
+                : isPhysician
+                    ? "Acompanhe seus plantões ativos, faça check-in do turno e confira sua produção realizada."
+                    : "Agenda, cobertura e conferência da sua instituição, no contexto do seu perfil.")</p>
         </div>
         <div class="day-command-hero__signal">
             <strong>@Model.Summary.Active</strong>
@@ -24,36 +27,57 @@
     </section>
 
     <section class="day-modules" aria-label="Jornadas operacionais">
-        <a class="day-module" asp-controller="Escalas" asp-action="Index">
-            <span class="day-module__code">Escalas</span>
-            <strong>Montar cobertura</strong>
-            <small>Plantões, convites e confirmações</small>
-        </a>
-        <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
-            <span class="day-module__code">Execução</span>
-            <strong>Acompanhar o turno</strong>
-            <small>Check-in, ocorrências e status</small>
-        </a>
-        <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
-            <span class="day-module__code">Conferência</span>
-            <strong>Fechar o plantão</strong>
-            <small>Apuração e pendências financeiras</small>
-        </a>
-        @if (isGlobal)
+        @if (isPhysician)
         {
-            <a class="day-module is-platform" asp-controller="Clientes" asp-action="Index">
-                <span class="day-module__code">SaaS</span>
-                <strong>Clientes da plataforma</strong>
-                <small>Tenants, planos e implantação</small>
+            <a class="day-module" asp-controller="Escalas" asp-action="Index">
+                <span class="day-module__code">Escalas</span>
+                <strong>Minha Agenda</strong>
+                <small>Próximos plantões e convites</small>
+            </a>
+            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+                <span class="day-module__code">Execução</span>
+                <strong>Meu Turno</strong>
+                <small>Check-in e registro do plantão</small>
+            </a>
+            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+                <span class="day-module__code">Conferência</span>
+                <strong>Minha Produção</strong>
+                <small>Plantões realizados e fechamentos</small>
             </a>
         }
-        else if (isClientAdmin)
+        else
         {
-            <a class="day-module is-platform" asp-controller="CommandCenter" asp-action="Index">
-                <span class="day-module__code">Operação</span>
-                <strong>Command Center</strong>
-                <small>Riscos e cobertura da unidade</small>
+            <a class="day-module" asp-controller="Escalas" asp-action="Index">
+                <span class="day-module__code">Escalas</span>
+                <strong>Montar cobertura</strong>
+                <small>Plantões, convites e confirmações</small>
             </a>
+            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+                <span class="day-module__code">Execução</span>
+                <strong>Acompanhar o turno</strong>
+                <small>Check-in, ocorrências e status</small>
+            </a>
+            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+                <span class="day-module__code">Conferência</span>
+                <strong>Fechar o plantão</strong>
+                <small>Apuração e pendências financeiras</small>
+            </a>
+            @if (isGlobal)
+            {
+                <a class="day-module is-platform" asp-controller="Clientes" asp-action="Index">
+                    <span class="day-module__code">SaaS</span>
+                    <strong>Clientes da plataforma</strong>
+                    <small>Tenants, planos e implantação</small>
+                </a>
+            }
+            else if (isClientAdmin)
+            {
+                <a class="day-module is-platform" asp-controller="CommandCenter" asp-action="Index">
+                    <span class="day-module__code">Operação</span>
+                    <strong>Command Center</strong>
+                    <small>Riscos e cobertura da unidade</small>
+                </a>
+            }
         }
     </section>
 

@@ -15,6 +15,18 @@ public sealed class ExecutionConferenceEvolutionTests
     }
 
     [Fact]
+    public void Conference_queue_only_exposes_actionable_correction_details()
+    {
+        var source = Read("backend/PlantaoPro.Api/ExecutionConferenceService.cs");
+        Assert.Contains("case when x.status='PENDENTE' then x.id end", source);
+        Assert.Contains("case when x.status='PENDENTE' then x.inicio_proposto_em end", source);
+        Assert.Contains("case when x.status='PENDENTE' then x.fim_proposto_em end", source);
+        Assert.Contains("case when x.status='PENDENTE' then coalesce(x.justificativa,'') else '' end", source);
+        Assert.Contains("case when x.status='PENDENTE' then x.versao else c.versao end", source);
+        Assert.Contains("case when x.status='PENDENTE' then x.solicitado_em", source);
+    }
+
+    [Fact]
     public void Pending_correction_can_only_be_cancelled_by_its_versioned_owner()
     {
         var source = Read("backend/PlantaoPro.Api/ProfessionalPortalService.cs");

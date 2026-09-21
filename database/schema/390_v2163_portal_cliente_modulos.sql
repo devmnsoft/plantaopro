@@ -1,6 +1,7 @@
 -- PlantãoPro v2.16.3 - solicitações comerciais de módulos, snapshots e ativação idempotente.
 set search_path to plantaopro, public;
 
+alter table plantaopro.modulos_sistema add column if not exists preco_base numeric(14,2) null;
 alter table plantaopro.modulos_sistema alter column preco_base drop not null;
 alter table plantaopro.modulos_sistema add column if not exists periodicidade text null;
 alter table plantaopro.modulos_sistema add column if not exists disponivel_comercialmente boolean not null default false;

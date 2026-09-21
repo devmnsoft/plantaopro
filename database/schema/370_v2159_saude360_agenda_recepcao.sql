@@ -4,6 +4,78 @@ set search_path to plantaopro, public;
 
 create extension if not exists btree_gist;
 
+alter table plantaopro.pacientes
+    add column if not exists cliente_id uuid,
+    add column if not exists cpf text,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+alter table plantaopro.agendamentos
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists data_inicio timestamptz,
+    add column if not exists data_fim timestamptz,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+create table if not exists plantaopro.agendamento_checkins (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    agendamento_id uuid not null,
+    paciente_id uuid null,
+    usuario_id uuid null,
+    observacoes text null,
+    status text not null default 'REALIZADO',
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
+
+create table if not exists plantaopro.painel_chamada_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    painel_id uuid null,
+    paciente_id uuid null,
+    agendamento_id uuid null,
+    triagem_id uuid null,
+    atendimento_id uuid null,
+    setor_id uuid null,
+    sala_id uuid null,
+    guiche_id uuid null,
+    senha text null,
+    paciente_nome text null,
+    status text not null default 'AGUARDANDO',
+    prioridade int not null default 0,
+    chamada_em timestamptz null,
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
+
+create table if not exists plantaopro.triagem_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    paciente_id uuid null,
+    agendamento_id uuid null,
+    atendimento_id uuid null,
+    status text not null default 'AGUARDANDO',
+    prioridade int not null default 0,
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
+
 -- CPF é opcional, porém único por cliente quando informado e normalizado.
 create unique index if not exists ux_v2159_paciente_cpf_cliente
     on plantaopro.pacientes (cliente_id, regexp_replace(cpf, '[^0-9]', '', 'g'))

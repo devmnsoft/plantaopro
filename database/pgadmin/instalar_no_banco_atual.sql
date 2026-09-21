@@ -47,7 +47,7 @@ SET search_path TO plantaopro, public;
 -- ============================================================
 
 -- SOURCE: database/schema/000_extensions_schema.sql
--- SOURCE-SHA256: c101f4eb90ed73d2ad5aefb9406408a44fd98eb03dc0a4c4b77aa27269be5776
+-- SOURCE-SHA256: 99e4d2708231b7d2cea2569e1b40e1d7150bac865020871035a1ed2885bec7a5
 -- v1.18.7 extensões e schema canônico
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 DO $$
@@ -72,7 +72,7 @@ CREATE SCHEMA IF NOT EXISTS plantaopro;
 SET search_path TO plantaopro, public;
 
 -- SOURCE: database/schema/000_schema_canonico_base.sql
--- SOURCE-SHA256: f64b7628592c32c42c12bbdbed02c8549cd131bb2a82c6af3e4736cd39e5b57e
+-- SOURCE-SHA256: ef9a527339f5c4e65102f959113ab6df36eccb77740f7cd74fcbdc5434e89b84
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -237,7 +237,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.schema_migrations (
 );
 
 -- SOURCE: database/schema/010_identity_access.sql
--- SOURCE-SHA256: 9ba007cec03cf0e623f884026c6534f4219d009e33a30b57478d676e69e8fa4b
+-- SOURCE-SHA256: 73d5cf654c476093e56caf57ab42e9bbaed323ba299acc94cf7ebcc2fd21c51b
 -- v1.18.6 schema canonico base: permissões/perfis/acessos
 SET search_path TO plantaopro, public;
 
@@ -550,7 +550,7 @@ DO $$ BEGIN
 END $$;
 
 -- SOURCE: database/schema/020_saas_tenants.sql
--- SOURCE-SHA256: 3e1a57ad9a97798a78ffa3baab8cbad0b5196604240db2dede04f8d472cdf9ef
+-- SOURCE-SHA256: 9a44e35d7a5fa32b1fea553c3c5a8be7e8e96b26d0b77c3ee70fc02b714ce931
 -- SaaS tenants canônicos mínimos definidos no manifesto para preservar compatibilidade com legados.
 SET search_path TO plantaopro, public;
 
@@ -737,7 +737,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (
 );
 
 -- SOURCE: database/schema/030_operacao_plantoes.sql
--- SOURCE-SHA256: b7e7ba760953e8ed6bd0c3a65b8a828c5866f3ec15901d06d989cb57bfce6881
+-- SOURCE-SHA256: 1b8f162e309f6f7d618975610a30497ffed6314c2267669bf07af2d560523762
 -- Operação de plantões preservada a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -934,7 +934,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.mensagens (
 );
 
 -- SOURCE: database/schema/040_saude360.sql
--- SOURCE-SHA256: 90eaa5768e2391b2636c62d7b4b3e637a33dc306f2c0d7a841d14b1d2951a6fe
+-- SOURCE-SHA256: e5f8c671337109984b3533657fd6336d829bd52d4a77a19ff21dc39cbee5a3d2
 -- Saúde 360 preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1101,7 +1101,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_clinica (
 );
 
 -- SOURCE: database/schema/050_financeiro.sql
--- SOURCE-SHA256: 43237f61fcffb8cb41244672fe447d9ac00e15fd22f5a40303b4100ab1c94ba6
+-- SOURCE-SHA256: 90357b7c1c8d3093091e3a8ec89b2a167f6281695a0e8568435b14c10ae0e255
 -- Financeiro preservado a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1228,7 +1228,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
 );
 
 -- SOURCE: database/schema/060_auditoria_observabilidade.sql
--- SOURCE-SHA256: 34f02c49d3d5bce2beca60a6d16701a3fdf6fb964afffbca1618c1dcc2e07a65
+-- SOURCE-SHA256: 3a13cd50422a3b966d2f714385c585ef9f56bb380274409e2aa4907dedd80665
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1335,7 +1335,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.permissao_logs (
 );
 
 -- SOURCE: database/schema/070_relatorios.sql
--- SOURCE-SHA256: c54ed035de3e7ba1b8f2d94dc64e793c7c0002c7d2492418352ae14d44b2f5ff
+-- SOURCE-SHA256: bbaad4c4aa3eb5cb5befb0ac425c6addafc7ee4280dd3d025a1abe6c5a62cd9d
 -- Relatórios preservados a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1372,23 +1372,23 @@ CREATE TABLE IF NOT EXISTS plantaopro.relatorios_filtros_salvos (
 );
 
 -- SOURCE: database/schema/080_constraints.sql
--- SOURCE-SHA256: 72e593f065c706c8e02d08284445e3d90dbbf63556e87487c6c103eefdb6ff46
+-- SOURCE-SHA256: ba92ad304072b85e769d690d5d1189bf89f6b94759f05f0fa4b1c7fcf8c4eeb0
 -- Constraints canônicas complementares são mantidas idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
 
 -- SOURCE: database/schema/090_indexes.sql
--- SOURCE-SHA256: 584210538344133b1bc98359e3db7a64574bb47ddd0acf77ebb960c43f58880f
+-- SOURCE-SHA256: 4c5a26dce844262569b5a5962f7bdd68b7fa763cccb0786583c441cc7c78e613
 -- Índices canônicos complementares são mantidos idempotentes nas respectivas seções.
 SET search_path TO plantaopro, public;
 
 -- SOURCE: database/schema/100_reference_data.sql
--- SOURCE-SHA256: 1a6a6637aea031658d332fc131267e111f567c3ad3dc509b7db3115e9cb10b7e
+-- SOURCE-SHA256: f8f03c725fcde4386371191121cb8eff14986e521ed914fe1df0c293d75d46ef
 -- Dados referenciais mínimos sem credenciais fixas.
 INSERT INTO plantaopro.politicas_senha(tenant_id)
 SELECT NULL WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
 
 -- SOURCE: database/schema/110_implantacao_go_live.sql
--- SOURCE-SHA256: 219c010bc98a32552392603bd63578dab21132b30366a58dc11acd6599b99d6c
+-- SOURCE-SHA256: 5b7b17163859dcec4a3692f0cc74fd93ad483a6b18fa121de17ffdfe5888c980
 -- v1.18.8 Central de Implantação, Diagnóstico e Go-Live
 SET search_path TO plantaopro, public;
 CREATE TABLE IF NOT EXISTS plantaopro.implantacao_status (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, classificacao text NOT NULL DEFAULT 'NÃO_CONFIGURADO', prontidao_percentual numeric(5,2) NOT NULL DEFAULT 0, versao text NOT NULL DEFAULT 'v1.18.8', ambiente text NOT NULL DEFAULT 'NAO_INFORMADO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL);
@@ -1402,7 +1402,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.go_live_aprovacoes (id uuid PRIMARY KEY DE
 CREATE UNIQUE INDEX IF NOT EXISTS ux_implantacao_etapas_tenant_codigo ON plantaopro.implantacao_etapas(coalesce(tenant_id,'00000000-0000-0000-0000-000000000000'::uuid), lower(codigo)) WHERE reg_status='A';
 
 -- SOURCE: database/schema/120_operacoes_continuidade.sql
--- SOURCE-SHA256: 01909376c31af7016d3cddc4ba045523febc132dc9333c8e98befcf31ec4eb8e
+-- SOURCE-SHA256: 2ed1d710551e69ff287ce2377d2ebdced8333b9236f969da6ccd03d687fbd18c
 -- Operações e continuidade v1.18.9
 SET search_path TO plantaopro, public;
 
@@ -1679,7 +1679,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.manutencao_aprovacoes (
 );
 
 -- SOURCE: database/schema/130_contexto_multiempresa.sql
--- SOURCE-SHA256: f08349be6f286abc56f13ab14ccfb3934acb98b12c3b3c72294743e421f0bd6d
+-- SOURCE-SHA256: 1fd35e5019083382e4d11038006685b47cd898bd18f359f8b9a3b7608c00fe5e
 -- v1.19.0 - Contexto multiempresa e suporte assistido
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_tenant_acessos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(), usuario_id uuid NOT NULL, tenant_id uuid NULL, cliente_id uuid NULL, perfil_id uuid NULL,
@@ -1718,7 +1718,7 @@ WHERE up.reg_status='A' AND p.reg_status='A' AND up.tenant_id IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM plantaopro.usuario_tenant_acessos uta WHERE uta.usuario_id=up.usuario_id AND uta.perfil_id=up.perfil_id AND uta.tenant_id=up.tenant_id AND uta.reg_status='A');
 
 -- SOURCE: database/schema/140_experiencia_premium_meu_dia.sql
--- SOURCE-SHA256: c64c5c9f4865eb89e2243bd2c4f033e2eb7a144abf87fb7c8fe31296fdd66178
+-- SOURCE-SHA256: da8e47e86a7cfc2f7607ea2dcea98f2ab6992f3619d69c9beaecd95019aa60b6
 -- PlantãoPro v1.20.1 - Experiência premium Meu Dia
 CREATE TABLE IF NOT EXISTS plantaopro.usuario_preferencias_interface (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1764,7 +1764,7 @@ CREATE INDEX IF NOT EXISTS ix_meu_dia_historico_usuario ON plantaopro.meu_dia_hi
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_v113_operacional_real.sql
--- SOURCE-SHA256: 5a3ecb94d9cdad2e508dc8c3183a0d2c3ff2f7bc9f67c6247cbd226c0fc68599
+-- SOURCE-SHA256: 5b07ca155fe5d588f683c49f6682b2eb860d9d6c2dababc872dfdbb726bb8f32
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 create table if not exists plantaopro.v113_clientes (id uuid primary key, cliente_id uuid null, tenant_id uuid null, reg_status varchar(20) default 'A', created_at timestamptz default now(), created_by uuid null, updated_at timestamptz null, updated_by uuid null, nome varchar(160), documento varchar(40), email varchar(160), status varchar(40));
@@ -2021,7 +2021,7 @@ create index if not exists ix_v113_auditoria_tenant_id on plantaopro.v113_audito
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_v114_consolidacao_produto.sql
--- SOURCE-SHA256: a120e44846606bb5a714f36c0c3064e985df2231b5768821f09e7a594fdda337
+-- SOURCE-SHA256: f96f73e12ff6e9c528de10d15ec461b5ebde658472f8b473701ce5c86e588e53
 -- v1.14 consolida o domínio PlantãoPro sobre as tabelas persistidas da v1.13.
 -- Não cria módulo paralelo; adiciona estruturas pequenas para favoritos, filtros, atalhos e timelines.
 create schema if not exists plantaopro;
@@ -2035,7 +2035,7 @@ create table if not exists plantaopro.v114_checklist_implantacao(id uuid primary
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_v115_regras_faturamento_repasses.sql
--- SOURCE-SHA256: a2830c43932f4f5c64bdc8835076d18d97f76b6a3312b0b1d2e4b10b60670cb8
+-- SOURCE-SHA256: ca01dae4c1382100894795ceb3d4b08816a6b5301c21d20b0a82f53965c39a4f
 create schema if not exists plantaopro;
 create extension if not exists pgcrypto;
 
@@ -2071,7 +2071,7 @@ create index if not exists ix_v115_mobile_tenant_status_data on plantaopro.v115_
 -- ============================================================
 
 -- SOURCE: database/schema/150_v1243_painel_publico_seguro.sql
--- SOURCE-SHA256: 70a98b8b035155c391136e4b76af84b20145f82f570c7d68b35489eb7aa89ff9
+-- SOURCE-SHA256: 428ca98b9ccfe372db5a02cdffea70d95310e48e8b5f76e000bc60bc1a3680ad
 set search_path to plantaopro, public;
 
 create table if not exists plantaopro.paineis_publicos (
@@ -2109,7 +2109,7 @@ create index if not exists ix_painel_tokens_validade on plantaopro.painel_public
 -- ============================================================
 
 -- SOURCE: database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql
--- SOURCE-SHA256: a91ac25f68d57fdefde5b37fa4831a12c8a347c86616dd61060d01146581a0ed
+-- SOURCE-SHA256: 5d5bca4c43e49330dbc76a917e5f171ea6133ea6c9fa171956295831d94383cd
 -- PlantãoPro v1.44.0 - produto vendável, agenda e operação mobile
 CREATE TABLE IF NOT EXISTS agenda_eventos_operacionais (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, unidade_id uuid NULL,
@@ -2174,7 +2174,7 @@ CREATE INDEX IF NOT EXISTS idx_acoes_rapidas_auditoria_tenant ON acoes_rapidas_a
 -- ============================================================
 
 -- SOURCE: database/schema/210_v1310_consolidacao_operacao_assistida.sql
--- SOURCE-SHA256: 67b91b2ca48bdba2158be6c33971eac190178ea7b5f8fab17e1f389467feacde
+-- SOURCE-SHA256: e4599069e2f876b26f0ca87d13540e6317fbd3c0675ba698e801a21999f74e11
 -- PlantãoPro v1.31.0: operação assistida, persistência e concorrência otimista.
 create schema if not exists plantaopro;
 create table if not exists plantaopro.work_items (
@@ -2217,7 +2217,7 @@ insert into plantaopro.schema_migrations(id,script_path,checksum,applied_at) sel
 -- ============================================================
 
 -- SOURCE: database/schema/250_v1370_bootstrap_superadmin.sql
--- SOURCE-SHA256: 6f5469f6e5fb49e8eb5026c2b22f76c1cf02edcc8b2f0c6f7f5fbc154b91457f
+-- SOURCE-SHA256: 538ebe8b1aae7d858a8fc889b2821dcdb89f8164aea4ec4835f1c285211e90ee
 -- v1.37.0: catálogo mínimo determinístico e infraestrutura do bootstrap.
 SET search_path TO plantaopro, public;
 SELECT pg_advisory_lock(hashtext('plantaopro.install.v1370'));
@@ -2287,7 +2287,7 @@ WHERE NOT EXISTS (SELECT 1 FROM plantaopro.permissoes p WHERE upper(btrim(p.codi
 -- ============================================================
 
 -- SOURCE: database/seeds/system/010_modulos.sql
--- SOURCE-SHA256: ee27f14e0966c5aef1ba6e7669182dc3bec4382de80dabd99dc49506fc2f0bf3
+-- SOURCE-SHA256: af80130879cdf55d6092666251163d89bc42329d20f00679c558358cb0ba8924
 -- Catálogo real de módulos consumidos pelo runtime. IDs determinísticos tornam o replay seguro.
 WITH catalog(codigo,nome,ordem) AS (VALUES
  ('ADMIN_SAAS','Administração SaaS',10),('TENANTS','Tenants',20),('CLIENTES','Clientes',30),('PLANOS','Planos',40),
@@ -2301,7 +2301,7 @@ SELECT md5('module:'||codigo)::uuid,codigo,nome,'Módulo canônico PlantãoPro',
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/020_acoes.sql
--- SOURCE-SHA256: 4b192295da67ad56935ed39879bc12eb73825756e21ad7e07e7a45bc95a54238
+-- SOURCE-SHA256: 2210cfdbbb7e5d9921f4592508c034579f396aab098c25a5b0365a5bdfb67e3e
 WITH catalog(codigo,nome,ordem,sensivel) AS (VALUES
  ('VER','Ver',10,false),('LISTAR','Listar',20,false),('CRIAR','Criar',30,false),('EDITAR','Editar',40,false),
  ('GERENCIAR','Gerenciar',50,true),('SUSPENDER','Suspender',60,true),('IMPERSONAR','Impersonar',70,true),
@@ -2316,7 +2316,7 @@ SELECT md5('action:'||codigo)::uuid,codigo,nome,'Ação canônica PlantãoPro',o
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/030_permissoes.sql
--- SOURCE-SHA256: af8f4a93a329103f764da681fd3b3b15c72c33724c447d1efff4b5db24416833
+-- SOURCE-SHA256: 770d7f5090616789e9865b480c4a17ff7825bc7bd0818038236935dbc92a0fa0
 WITH catalog(modulo,acao) AS (VALUES
  ('ADMIN_SAAS','VER'),('ADMIN_SAAS','GERENCIAR'),('TENANTS','LISTAR'),('TENANTS','CRIAR'),('TENANTS','EDITAR'),('TENANTS','SUSPENDER'),('TENANTS','IMPERSONAR'),
  ('USUARIOS','LISTAR'),('USUARIOS','CRIAR'),('USUARIOS','EDITAR'),('PERFIS','LISTAR'),('PERFIS','GERENCIAR'),
@@ -2335,7 +2335,7 @@ JOIN plantaopro.acoes_sistema a ON a.codigo=c.acao AND a.reg_status='A'
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/040_perfis.sql
--- SOURCE-SHA256: c3c0e38970a10bafcd2fbcbee38ac6e930ef68fd69cb9b0b02d4f9a7a115f7f5
+-- SOURCE-SHA256: d0e0c306aaa29558f8e79c387b508ee914e4e168e10830f5d51ef028c76824ed
 WITH catalog(codigo,nome) AS (VALUES
  ('ADMINISTRADOR_GLOBAL','Administrador global'),('ADMINISTRADOR_CLIENTE','Administrador do cliente'),('ADMINISTRADOR_CLINICA','Administrador da clínica'),
  ('COORDENACAO','Coordenação'),('OPERADOR','Operador'),('MEDICO','Médico'),('HOSPITAL','Hospital'),('RECEPCAO','Recepção'),('TRIAGEM','Triagem'),
@@ -2347,7 +2347,7 @@ SELECT md5('profile:'||codigo)::uuid,NULL,NULL,codigo,nome,'Perfil canônico de 
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/050_perfil_permissoes.sql
--- SOURCE-SHA256: aa6efe9df7c40694b6bbc862a2de123f6a96e16f273b33205a722c4e609992dd
+-- SOURCE-SHA256: 2d3b02e7d018c0f5678d04adf1fa472cf43b9db3ea32d6b31257dbcbc98bdec4
 -- Global recebe o catálogo; demais perfis recebem somente famílias necessárias ao trabalho.
 INSERT INTO plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,bloqueado_por_plano,reg_status)
 SELECT md5('profile-permission:'||p.codigo||':'||x.codigo)::uuid,p.id,x.id,true,false,'A'
@@ -2368,18 +2368,18 @@ JOIN plantaopro.permissoes x ON x.modulo=m.modulo AND x.reg_status='A'
 ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/060_politica_senha.sql
--- SOURCE-SHA256: 3d5ffaab64fdddd3c882f522383d18dc5f06d7bc24802d826bb759aeb6cf873e
+-- SOURCE-SHA256: fec7f151cf00d47f6b72009773d8bd211d36eec68a39d18daecc9be333bcbfa7
 INSERT INTO plantaopro.politicas_senha(id,tenant_id,tamanho_minimo,exige_maiuscula,exige_minuscula,exige_numero,exige_especial,expiracao_dias,tentativas_permitidas,bloqueio_minutos,reg_status)
 SELECT md5('password-policy:global')::uuid,NULL,12,true,true,true,true,90,5,15,'A'
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.politicas_senha WHERE tenant_id IS NULL AND reg_status='A');
 
 -- SOURCE: database/seeds/system/070_planos_recursos.sql
--- SOURCE-SHA256: 078253b958cb25cffef4f040f6e612845d89dcaf3da3683b0c98e14e468bda3d
+-- SOURCE-SHA256: db79ae7ca1184b4e968acf6bc8b94326de9391769f88281ea753c137407cdb1d
 -- O runtime aceita catálogo comercial vazio; nenhum cliente ou assinatura fictícia é criado.
 SELECT 1 AS catalogo_comercial_opcional;
 
 -- SOURCE: database/seeds/system/080_parametros_globais.sql
--- SOURCE-SHA256: 55c6012d5e6d782d95715932118f4f1b458d61f90693316caa6f2343cae28a45
+-- SOURCE-SHA256: 1e1ffe5d74b6f9fa2a6a210d0ef93c4853103447ad929ff568a1ef0cd511492d
 CREATE TABLE IF NOT EXISTS plantaopro.parametros_sistema (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, codigo text NOT NULL, categoria text NOT NULL, nome text NOT NULL,
  descricao text NOT NULL DEFAULT '', tipo text NOT NULL, valor text NULL, valor_padrao text NULL, sensivel boolean NOT NULL DEFAULT false,
@@ -2403,17 +2403,17 @@ INSERT INTO plantaopro.parametros_sistema(id,codigo,categoria,nome,tipo,valor,va
 SELECT md5('parameter:'||codigo)::uuid,codigo,categoria,nome,tipo,valor,valor FROM catalog ON CONFLICT DO NOTHING;
 
 -- SOURCE: database/seeds/system/090_notificacoes.sql
--- SOURCE-SHA256: d0227e5cfa331213531e0465c30fd822aa6baae84173766fc231657f380d6bb6
+-- SOURCE-SHA256: 8131520e5a8419ec144e4341f6e4d502d2c08fc600e3a73022352fe6d6a09c0c
 -- Catálogo notificacoes: estruturas canônicas aceitam estado vazio e configuração posterior.
 SELECT 1 AS seed_090_notificacoes;
 
 -- SOURCE: database/seeds/system/100_status_operacionais.sql
--- SOURCE-SHA256: ef836ab01b0bfd1061176118379ba57f9d3def83c88445ee68917d57973945cb
+-- SOURCE-SHA256: 80db8de1ece47e4e865653963f6c06dea96a25eb124dc200f356d4a08510fdf8
 -- Catálogo status_operacionais: estruturas canônicas aceitam estado vazio e configuração posterior.
 SELECT 1 AS seed_100_status_operacionais;
 
 -- SOURCE: database/seeds/system/110_configuracoes_runtime.sql
--- SOURCE-SHA256: 076be98b9c8f146b3c6166ee6d9caa0d01fc9dc1d5eb24c90f62fe0cbfe932db
+-- SOURCE-SHA256: b5cf4e3cbe7ca237a50a4da5ff5312f7f34f7bf8d499ee94f0cf0a068e608728
 -- Checkpoint de schema concluído somente após todas as estruturas e seeds anteriores.
 INSERT INTO plantaopro.schema_migrations(id,versao,nome,script_path,checksum,iniciado_em,applied_at,aplicado_em,duracao_ms,status,executado_por,ambiente)
 SELECT 'v1.95.1','v1.95.1','One-click database runtime-ready','database/install-manifest.json','manifest-managed',now(),now(),now(),0,'APLICADA',current_user,'INSTALL'
@@ -2424,7 +2424,7 @@ WHERE NOT EXISTS (SELECT 1 FROM plantaopro.schema_migrations WHERE id='v1.95.1')
 -- ============================================================
 
 -- SOURCE: database/schema/260_v1400_produto_operacional_premium.sql
--- SOURCE-SHA256: 5ac8669035bf9cff19eb0c3d576c0a8e6b9e7d49451d35ada413648f6b525174
+-- SOURCE-SHA256: 9c3753a41daa3dc35fefba19136a6570fc03737f11923e37bebeb2af796096d9
 -- PlantãoPro v1.40.0 — trilha operacional, cobertura e fechamento.
 -- Estruturas aditivas, idempotentes e isoladas por tenant.
 
@@ -2487,7 +2487,7 @@ create index if not exists ix_fechamento_auditoria_plantao
 -- ============================================================
 
 -- SOURCE: database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql
--- SOURCE-SHA256: bfc383c6236d37f7863246636f12d111a57a67b8d168ed9b00beacaaa554c721
+-- SOURCE-SHA256: 2a1ada757d85915453fcb087e9cee34d51e9c23246ff97013b7336567fb256c7
 -- PlantãoPro v1.41.0 — cobertura, execução, fechamento e origem financeira.
 -- Modelo aditivo e idempotente; todas as entidades operacionais carregam o tenant.
 set search_path to plantaopro, public;
@@ -2560,7 +2560,7 @@ create table if not exists work_item_contextos (
 -- ============================================================
 
 -- SOURCE: database/schema/310_v1450_design_system_executivo_operacao_comercial.sql
--- SOURCE-SHA256: 58f2affeb86244c30184eaf27922e5562439dbc4afe5f39d7218d09cd9b4856a
+-- SOURCE-SHA256: 393eafa115f81ea8c194246160181bc7ab2380358102bf09d231ad6e13ccf4c1
 -- PlantãoPro v1.45.0 - operação inteligente, comercial B2B e experiência premium
 -- Estruturas são tenant-aware e preservam histórico auditável das decisões operacionais.
 
@@ -2702,7 +2702,7 @@ CREATE INDEX IF NOT EXISTS idx_saved_dashboards_usuario ON user_saved_dashboards
 -- ============================================================
 
 -- SOURCE: database/schema/305_v1951_pagamentos_plantoes.sql
--- SOURCE-SHA256: fcfb9d72d6f208a95433e9357a772aadcd2aa802dd5c1cb1bb69395aaa773da0
+-- SOURCE-SHA256: c2d261f333bb2c851b2f6ff7c3389cbc6e380d661af4e178d0d63848761a6f22
 -- PlantãoPro v1.95.1 — contrato canônico de pagamentos de plantões.
 -- Mantém este domínio separado de pagamentos_medicos e pagamentos_saas.
 set search_path to plantaopro, public;
@@ -2761,7 +2761,7 @@ create index if not exists ix_historico_pagamento_timeline
 -- ============================================================
 
 -- SOURCE: database/schema/320_v187_fechamento_operacional_financeiro.sql
--- SOURCE-SHA256: 5f64684c9f494a9023d31df3334adba89652ef8138edaa0e6ba7a015525a2f13
+-- SOURCE-SHA256: 123060b679befe444a53d310ac7826b5ad52e4235f523d2c467b642ef0332995
 -- PlantaoPro v1.87.0 - fechamento operacional e contestacao financeira reais.
 -- Evolui as estruturas de v1.41 sem criar um dominio concorrente.
 set search_path to plantaopro, public;
@@ -2838,7 +2838,7 @@ create index if not exists ix_contestacoes_status on plantaopro.pagamento_contes
 -- ============================================================
 
 -- SOURCE: database/schema/330_v188_prontuario_longitudinal.sql
--- SOURCE-SHA256: a6d32c3f466bca2dd209dc9b91163700755da2e721aa57079c8e86d223de9e66
+-- SOURCE-SHA256: da82a5dae658af21bb823287f0083e543c5b34b633978e8eb8e71836288dc8d1
 -- PlantaoPro v1.88.0 - camada clinica longitudinal, tenant-safe e auditavel.
 CREATE SCHEMA IF NOT EXISTS plantaopro;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -2916,7 +2916,7 @@ CREATE INDEX IF NOT EXISTS ix_anexos_clinicos_paciente ON plantaopro.anexos_clin
 -- ============================================================
 
 -- SOURCE: database/schema/340_v189_clinical_operational_hardening.sql
--- SOURCE-SHA256: abfa8ca830797ca5589a55292307a021d4741179c0baa552521fd390642941a5
+-- SOURCE-SHA256: 54ae03b820c6c72ab033826a5802013f031867aa41b5cdf757460178b594113c
 -- PlantaoPro v1.89.0 - hardening operacional clínico, incremental e idempotente.
 BEGIN;
 ALTER TABLE plantaopro.solicitacoes_exames DROP CONSTRAINT IF EXISTS ck_solicitacoes_exames_status;
@@ -2945,7 +2945,7 @@ COMMIT;
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_v192_saved_views.sql
--- SOURCE-SHA256: df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6
+-- SOURCE-SHA256: 735c05760d06f694028ba5c4cac48ecbd3e5e4e043d0d9fb086a2e6e524e484e
 -- Canonical Saved Views contract. This migration also upgrades the Portuguese
 -- v1.31/v1.42 contract in place; IDs and rows are never recreated or deleted.
 create table if not exists plantaopro.saved_views (
@@ -3008,7 +3008,7 @@ end $$;
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_08_v195_financeiro_revenue_cycle.sql
--- SOURCE-SHA256: 2fc8ef99593ac024377f398873b0bdaefbffe9bb9a139812479f7de87aaecd72
+-- SOURCE-SHA256: 63d2785de452db67bac40f632703e2587153ec66872b5a00c9803dacd58e5c33
 -- PlantaoPro v1.95: evolução incremental do financeiro clínico; não altera pagamentos de plantão nem faturamento SaaS.
 begin;
 
@@ -3062,7 +3062,7 @@ commit;
 -- ============================================================
 
 -- SOURCE: database/schema/350_v2070_notificacoes_alertas_operacionais.sql
--- SOURCE-SHA256: e7b73da88edb97aa0a99c07edf360a8dd2177603d79642168a39e8766076bac2
+-- SOURCE-SHA256: d99c9b76b7dcebaf09280d776e60bdba02806ef98442c06268b034156d23052a
 -- PlantãoPro v2.07.0: central tenant-safe, rastreabilidade e outbox de notificações.
 alter table plantaopro.notifications add column if not exists tipo_evento varchar(60) not null default 'SISTEMA';
 alter table plantaopro.notifications add column if not exists prioridade varchar(16) not null default 'BAIXA';
@@ -3107,9 +3107,16 @@ create index if not exists ix_notification_outbox_pending
 -- ============================================================
 
 -- SOURCE: database/schema/360_v2157_central_operacional_escalas.sql
--- SOURCE-SHA256: 07c0dc2a5dabbef140d323aedfeb73382fca6316cad447443c6eb94b88eb51a6
+-- SOURCE-SHA256: a9c2502b6503e1e6ff266a448f47ab6c56fb919998cd259a0e675c3732678fad
 -- PlantãoPro v2.15.7: invariantes transacionais do ciclo plantão -> escala -> pagamento.
 -- Os índices parciais preservam o histórico e impedem efeitos duplicados apenas nos estados ativos.
+
+alter table plantaopro.plantoes
+    add column if not exists data_inicio timestamptz,
+    add column if not exists data_fim timestamptz,
+    add column if not exists valor numeric(12,2) default 0,
+    add column if not exists vagas integer default 1,
+    add column if not exists vagas_disponiveis integer default 1;
 
 alter table plantaopro.plantoes
     drop constraint if exists ck_plantoes_vagas_consistentes;
@@ -3119,11 +3126,19 @@ alter table plantaopro.plantoes
     not valid;
 
 alter table plantaopro.plantao_convites
+    add column if not exists plantao_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists reg_status char(1) default 'A',
     add column if not exists expira_em timestamptz;
 
 create unique index if not exists ux_plantao_convite_pendente
     on plantaopro.plantao_convites(plantao_id, medico_id)
     where reg_status='A' and upper(status) in ('ENVIADO', 'PENDENTE', 'PROCESSANDO');
+
+alter table plantaopro.escalas
+    add column if not exists plantao_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists reg_status char(1) default 'A';
 
 create unique index if not exists ux_escala_ocupacao_ativa
     on plantaopro.escalas(plantao_id, medico_id)
@@ -3141,7 +3156,7 @@ create unique index if not exists ux_pagamento_origem_escala
 -- ============================================================
 
 -- SOURCE: database/schema/360_v2158_financeiro_medico_conferencia.sql
--- SOURCE-SHA256: d9df5b1c3e0113e1fdc7e172a7f46d449d2391eefde3ab819edafe2e2509b057
+-- SOURCE-SHA256: dee352f4f088fa6c32711141bd764e4b21307cfd708af05e8568b7cdd60d9a9f
 -- PlantãoPro v2.15.8 — integridade da obrigação e do pagamento médico.
 -- Evolui o domínio canônico plantaopro.pagamentos; não se confunde com cobrança SaaS ou financeiro clínico.
 set search_path to plantaopro, public;
@@ -3184,12 +3199,84 @@ create index if not exists ix_v2158_pagamento_conferencia
 -- ============================================================
 
 -- SOURCE: database/schema/370_v2159_saude360_agenda_recepcao.sql
--- SOURCE-SHA256: f757c7b90e0ba06117e9b6ddfb81cd62828e4036a927bdc3c1d02bc0e6d1bf9c
+-- SOURCE-SHA256: 1a2abecd0e695800e42a15e9edf75ee414b0f42c32eef9d8ee1e96a8ec7f56ce
 -- v2.15.9 - invariantes concorrentes da jornada Saúde 360.
 -- Incremental e idempotente: não altera migrations já aplicadas.
 set search_path to plantaopro, public;
 
 create extension if not exists btree_gist;
+
+alter table plantaopro.pacientes
+    add column if not exists cliente_id uuid,
+    add column if not exists cpf text,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+alter table plantaopro.agendamentos
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists data_inicio timestamptz,
+    add column if not exists data_fim timestamptz,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+create table if not exists plantaopro.agendamento_checkins (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    agendamento_id uuid not null,
+    paciente_id uuid null,
+    usuario_id uuid null,
+    observacoes text null,
+    status text not null default 'REALIZADO',
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
+
+create table if not exists plantaopro.painel_chamada_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    painel_id uuid null,
+    paciente_id uuid null,
+    agendamento_id uuid null,
+    triagem_id uuid null,
+    atendimento_id uuid null,
+    setor_id uuid null,
+    sala_id uuid null,
+    guiche_id uuid null,
+    senha text null,
+    paciente_nome text null,
+    status text not null default 'AGUARDANDO',
+    prioridade int not null default 0,
+    chamada_em timestamptz null,
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
+
+create table if not exists plantaopro.triagem_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid null,
+    tenant_id uuid null,
+    paciente_id uuid null,
+    agendamento_id uuid null,
+    atendimento_id uuid null,
+    status text not null default 'AGUARDANDO',
+    prioridade int not null default 0,
+    created_by uuid null,
+    updated_by uuid null,
+    reg_update timestamptz null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
 
 -- CPF é opcional, porém único por cliente quando informado e normalizado.
 create unique index if not exists ux_v2159_paciente_cpf_cliente
@@ -3229,18 +3316,88 @@ create index if not exists ix_v2159_fila_ordenacao
 -- ============================================================
 
 -- SOURCE: database/schema/380_v2160_triagem_consulta_jornada.sql
--- SOURCE-SHA256: 69690197ad0daca6d7f18ef45238e3633c5e3785a1e097e5205ed85e4fef0a0c
+-- SOURCE-SHA256: f1e993b5938d07adda4d50828c931e4983e5a014350039f8d6a058d97f6671d1
 -- PlantãoPro v2.16.0 — identidade, concorrência e evidência da jornada clínica.
 -- Migration incremental: não altera artefatos já aplicados.
 set search_path to plantaopro, public;
 
-alter table plantaopro.triagens add column if not exists versao integer not null default 1;
-alter table plantaopro.triagens add column if not exists finalizada_em timestamptz;
-alter table plantaopro.triagens add column if not exists finalizada_por uuid;
-alter table plantaopro.triagens add column if not exists assumida_por uuid;
-alter table plantaopro.triagens add column if not exists assumida_em timestamptz;
-alter table plantaopro.triagens add column if not exists atendimento_id uuid;
-alter table plantaopro.triagens add column if not exists unidade_id uuid;
+alter table plantaopro.triagens
+    add column if not exists versao integer not null default 1,
+    add column if not exists finalizada_em timestamptz,
+    add column if not exists finalizada_por uuid,
+    add column if not exists assumida_por uuid,
+    add column if not exists assumida_em timestamptz,
+    add column if not exists atendimento_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists agendamento_id uuid,
+    add column if not exists classificacao_risco text,
+    add column if not exists queixa_principal text,
+    add column if not exists pressao_sistolica numeric(6,2),
+    add column if not exists pressao_diastolica numeric(6,2),
+    add column if not exists frequencia_cardiaca numeric(6,2),
+    add column if not exists frequencia_respiratoria numeric(6,2),
+    add column if not exists temperatura numeric(6,2),
+    add column if not exists saturacao numeric(6,2),
+    add column if not exists peso numeric(8,2),
+    add column if not exists altura numeric(5,2),
+    add column if not exists imc numeric(8,2),
+    add column if not exists glicemia numeric(8,2),
+    add column if not exists alergias_relatadas text,
+    add column if not exists medicamentos_uso text,
+    add column if not exists observacoes text,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now(),
+    add column if not exists created_by uuid,
+    add column if not exists updated_by uuid;
+
+create table if not exists plantaopro.atendimentos_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    unidade_id uuid null,
+    agendamento_id uuid not null,
+    paciente_id uuid null,
+    senha text null,
+    status text not null default 'AGUARDANDO',
+    prioridade integer not null default 0,
+    checkin_em timestamptz not null default now(),
+    chamado_em timestamptz null,
+    finalizado_em timestamptz null,
+    reg_update timestamptz null,
+    reg_status char(1) not null default 'A',
+    reg_date timestamptz not null default now()
+);
+
+alter table plantaopro.consultas
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists triagem_id uuid,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+create table if not exists plantaopro.triagem_encaminhamentos (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    triagem_id uuid not null,
+    destino text not null default 'CONSULTA',
+    status text not null default 'ATIVO',
+    reg_status char(1) not null default 'A',
+    reg_date timestamptz not null default now()
+);
+
+create table if not exists plantaopro.consulta_historico (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    paciente_id uuid null,
+    consulta_id uuid null,
+    evento varchar(50) not null,
+    versao integer not null default 1,
+    created_by uuid null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
 
 do $$
 declare conflitos text;
@@ -3337,10 +3494,11 @@ execute function plantaopro.v2160_snapshot_triagem_consulta();
 -- ============================================================
 
 -- SOURCE: database/schema/390_v2163_portal_cliente_modulos.sql
--- SOURCE-SHA256: 59ca6fbbdd23e39c9ee86b0f9cd168919f020e8295a0c2f8cd767b5e485dfd53
+-- SOURCE-SHA256: 4b7297bd3463183d090841541753447b283688faca2c9b015e8426a35e3e3ced
 -- PlantãoPro v2.16.3 - solicitações comerciais de módulos, snapshots e ativação idempotente.
 set search_path to plantaopro, public;
 
+alter table plantaopro.modulos_sistema add column if not exists preco_base numeric(14,2) null;
 alter table plantaopro.modulos_sistema alter column preco_base drop not null;
 alter table plantaopro.modulos_sistema add column if not exists periodicidade text null;
 alter table plantaopro.modulos_sistema add column if not exists disponivel_comercialmente boolean not null default false;
@@ -3378,7 +3536,7 @@ update plantaopro.modulos_sistema set preco_base=null,periodicidade=null where p
 -- ============================================================
 
 -- SOURCE: database/schema/400_v2167_execucao_conferencia.sql
--- SOURCE-SHA256: 1794e0cdb6f5785bcdff3c2463b3ec52922509ccd7077eae66e6eb39017cc97e
+-- SOURCE-SHA256: 1a141a2b72a52295bdde7184b2f3d72a0d909101cfbf29b56edee9169c6ca29e
 -- PlantãoPro v2.16.7 — execução e correção auditável de plantões.
 set search_path to plantaopro, public;
 
@@ -3443,7 +3601,7 @@ where c.status_conferencia='REGISTRO_INCOMPLETO'
   and not exists(select 1 from medico_presenca_historico hx where hx.presenca_id=c.id);
 
 -- SOURCE: database/schema/410_v2168_conferencia_integridade.sql
--- SOURCE-SHA256: 4d4087ec92c261b8331729416e6cd3ea9620fb33d33b49992cda1e5462669138
+-- SOURCE-SHA256: 5001f77ff9a495c39781aa96208e34b7feed96795dc588aa67a09a526eaa67b2
 -- PlantãoPro v2.16.8 — evolução aditiva da conferência sem reabrir decisões.
 set search_path to plantaopro, public;
 
@@ -3470,12 +3628,17 @@ where checkin_recebido_em is null or (checkout_em is not null and checkout_receb
 -- ============================================================
 
 -- SOURCE: database/schema/420_v2170_cobertura_substituicoes.sql
--- SOURCE-SHA256: 8169ab265a25053780b4e894c6ef030f2d0ec61629cf581e6eb96b270974870d
+-- SOURCE-SHA256: d430e8c077ca15afeb28241e901a5a2e3a78e5b7a7cef47c11a8d7ec467893ce
 -- PlantãoPro v2.17.0: concorrência e rastreabilidade da cobertura/substituição.
 alter table plantaopro.substituicoes_plantao
     add column if not exists versao bigint not null default 1,
+    add column if not exists escala_id uuid,
+    add column if not exists plantao_id uuid,
+    add column if not exists cliente_id uuid,
     add column if not exists nova_escala_id uuid,
-    add column if not exists cancelada_em timestamptz;
+    add column if not exists cancelada_em timestamptz,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
 
 -- Um pedido ativo por atribuição. Estados finais permanecem consultáveis e auditáveis.
 create unique index if not exists ux_v2170_substituicao_ativa_por_escala
@@ -3488,10 +3651,50 @@ create unique index if not exists ux_v2170_substituicao_nova_escala
     where nova_escala_id is not null;
 
 alter table plantaopro.substituicao_candidatos
+    add column if not exists substituicao_id uuid,
+    add column if not exists medico_id uuid,
     add column if not exists expira_em timestamptz,
     add column if not exists respondido_em timestamptz,
-    add column if not exists notificacao_status varchar(24) not null default 'PENDENTE';
+    add column if not exists notificacao_status varchar(24) not null default 'PENDENTE',
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
 
 create unique index if not exists ux_v2170_candidato_convite_ativo
     on plantaopro.substituicao_candidatos(substituicao_id,medico_id)
     where reg_status='A' and status in ('CONVIDADO','ACEITO');
+
+-- ============================================================
+-- Seção 52 — plantaopro.ocorrencias_operacionais_v2171
+-- ============================================================
+
+-- SOURCE: database/schema/430_ocorrencias_operacionais.sql
+-- SOURCE-SHA256: f4b2a2e42a269d66e225d1abe4844147ffeab1252662c8a3f3ace42964d76f2f
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+
+CREATE TABLE IF NOT EXISTS plantaopro.ocorrencias_operacionais (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, unidade_id uuid NOT NULL,
+ plantao_id uuid NULL, titulo varchar(160) NOT NULL, descricao varchar(4000) NOT NULL,
+ categoria varchar(30) NOT NULL, prioridade varchar(10) NOT NULL, situacao varchar(30) NOT NULL DEFAULT 'ABERTA',
+ solicitante_id uuid NOT NULL, responsavel_id uuid NULL, prazo_resolucao timestamptz NULL,
+ resolucao text NULL, cancelamento_motivo text NULL, versao integer NOT NULL DEFAULT 1,
+ criado_em timestamptz NOT NULL DEFAULT now(), atualizado_em timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_ocorrencia_categoria CHECK (categoria IN ('ATRASO','AUSENCIA','ACESSO','INDISPONIBILIDADE','COBERTURA','DIVERGENCIA_REGISTRO','OUTRA')),
+ CONSTRAINT ck_ocorrencia_prioridade CHECK (prioridade IN ('BAIXA','MEDIA','ALTA','CRITICA')),
+ CONSTRAINT ck_ocorrencia_situacao CHECK (situacao IN ('ABERTA','EM_ATENDIMENTO','AGUARDANDO_INFORMACAO','RESOLVIDA','CANCELADA'))
+);
+CREATE INDEX IF NOT EXISTS ix_ocorrencias_tenant_fila ON plantaopro.ocorrencias_operacionais(tenant_id,situacao,atualizado_em DESC,id);
+CREATE INDEX IF NOT EXISTS ix_ocorrencias_unidade ON plantaopro.ocorrencias_operacionais(tenant_id,unidade_id,criado_em DESC);
+
+CREATE TABLE IF NOT EXISTS plantaopro.ocorrencia_eventos (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, ocorrencia_id uuid NOT NULL REFERENCES plantaopro.ocorrencias_operacionais(id),
+ tipo varchar(40) NOT NULL, autor_id uuid NOT NULL, descricao text NOT NULL, visivel_solicitante boolean NOT NULL DEFAULT true,
+ dados jsonb NOT NULL DEFAULT '{}'::jsonb, criado_em timestamptz NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A'
+);
+CREATE INDEX IF NOT EXISTS ix_ocorrencia_eventos_historico ON plantaopro.ocorrencia_eventos(tenant_id,ocorrencia_id,criado_em,id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.ocorrencia_encaminhamentos (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, ocorrencia_id uuid NOT NULL REFERENCES plantaopro.ocorrencias_operacionais(id),
+ tipo varchar(30) NOT NULL, referencia_id uuid NULL, estado varchar(20) NOT NULL, chave_idempotencia varchar(100) NOT NULL,
+ criado_por uuid NOT NULL, criado_em timestamptz NOT NULL DEFAULT now(), atualizado_em timestamptz NULL, reg_status char(1) NOT NULL DEFAULT 'A'
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_ocorrencia_encaminhamento ON plantaopro.ocorrencia_encaminhamentos(tenant_id,ocorrencia_id,tipo,chave_idempotencia) WHERE reg_status='A';

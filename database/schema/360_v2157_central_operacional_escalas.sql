@@ -2,6 +2,13 @@
 -- Os índices parciais preservam o histórico e impedem efeitos duplicados apenas nos estados ativos.
 
 alter table plantaopro.plantoes
+    add column if not exists data_inicio timestamptz,
+    add column if not exists data_fim timestamptz,
+    add column if not exists valor numeric(12,2) default 0,
+    add column if not exists vagas integer default 1,
+    add column if not exists vagas_disponiveis integer default 1;
+
+alter table plantaopro.plantoes
     drop constraint if exists ck_plantoes_vagas_consistentes;
 alter table plantaopro.plantoes
     add constraint ck_plantoes_vagas_consistentes
@@ -9,11 +16,19 @@ alter table plantaopro.plantoes
     not valid;
 
 alter table plantaopro.plantao_convites
+    add column if not exists plantao_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists reg_status char(1) default 'A',
     add column if not exists expira_em timestamptz;
 
 create unique index if not exists ux_plantao_convite_pendente
     on plantaopro.plantao_convites(plantao_id, medico_id)
     where reg_status='A' and upper(status) in ('ENVIADO', 'PENDENTE', 'PROCESSANDO');
+
+alter table plantaopro.escalas
+    add column if not exists plantao_id uuid,
+    add column if not exists medico_id uuid,
+    add column if not exists reg_status char(1) default 'A';
 
 create unique index if not exists ux_escala_ocupacao_ativa
     on plantaopro.escalas(plantao_id, medico_id)

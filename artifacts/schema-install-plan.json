@@ -326,5 +326,13 @@
       "plantaopro.operacao_plantoes"
     ],
     "source": "database/schema/420_v2170_cobertura_substituicoes.sql"
+  },
+  {
+    "object": "plantaopro.ocorrencias_operacionais_v2171",
+    "dependsOn": [
+      "plantaopro.cobertura_substituicoes_v2170",
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/schema/430_ocorrencias_operacionais.sql"
   }
 ]

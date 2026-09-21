@@ -30,8 +30,9 @@ public sealed class DevelopmentConfigurationSecurityTests
         Assert.Equal(string.Empty, root.GetProperty("Jwt").GetProperty("Key").GetString());
         var demoSeed = root.GetProperty("DemoSeed");
         Assert.DoesNotContain(demoSeed.EnumerateObject(), property =>
-            property.Name.Contains("Password", StringComparison.OrdinalIgnoreCase)
-            || property.Name.Contains("Senha", StringComparison.OrdinalIgnoreCase));
+            !string.Equals(property.Name, "ResetPasswordsOnStartup", StringComparison.OrdinalIgnoreCase)
+            && (property.Name.Contains("Password", StringComparison.OrdinalIgnoreCase)
+                || property.Name.Contains("Senha", StringComparison.OrdinalIgnoreCase)));
     }
 
     private static JsonDocument LoadDevelopmentSettings()

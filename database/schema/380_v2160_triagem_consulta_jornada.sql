@@ -2,13 +2,83 @@
 -- Migration incremental: não altera artefatos já aplicados.
 set search_path to plantaopro, public;
 
-alter table plantaopro.triagens add column if not exists versao integer not null default 1;
-alter table plantaopro.triagens add column if not exists finalizada_em timestamptz;
-alter table plantaopro.triagens add column if not exists finalizada_por uuid;
-alter table plantaopro.triagens add column if not exists assumida_por uuid;
-alter table plantaopro.triagens add column if not exists assumida_em timestamptz;
-alter table plantaopro.triagens add column if not exists atendimento_id uuid;
-alter table plantaopro.triagens add column if not exists unidade_id uuid;
+alter table plantaopro.triagens
+    add column if not exists versao integer not null default 1,
+    add column if not exists finalizada_em timestamptz,
+    add column if not exists finalizada_por uuid,
+    add column if not exists assumida_por uuid,
+    add column if not exists assumida_em timestamptz,
+    add column if not exists atendimento_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists agendamento_id uuid,
+    add column if not exists classificacao_risco text,
+    add column if not exists queixa_principal text,
+    add column if not exists pressao_sistolica numeric(6,2),
+    add column if not exists pressao_diastolica numeric(6,2),
+    add column if not exists frequencia_cardiaca numeric(6,2),
+    add column if not exists frequencia_respiratoria numeric(6,2),
+    add column if not exists temperatura numeric(6,2),
+    add column if not exists saturacao numeric(6,2),
+    add column if not exists peso numeric(8,2),
+    add column if not exists altura numeric(5,2),
+    add column if not exists imc numeric(8,2),
+    add column if not exists glicemia numeric(8,2),
+    add column if not exists alergias_relatadas text,
+    add column if not exists medicamentos_uso text,
+    add column if not exists observacoes text,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now(),
+    add column if not exists created_by uuid,
+    add column if not exists updated_by uuid;
+
+create table if not exists plantaopro.atendimentos_fila (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    unidade_id uuid null,
+    agendamento_id uuid not null,
+    paciente_id uuid null,
+    senha text null,
+    status text not null default 'AGUARDANDO',
+    prioridade integer not null default 0,
+    checkin_em timestamptz not null default now(),
+    chamado_em timestamptz null,
+    finalizado_em timestamptz null,
+    reg_update timestamptz null,
+    reg_status char(1) not null default 'A',
+    reg_date timestamptz not null default now()
+);
+
+alter table plantaopro.consultas
+    add column if not exists cliente_id uuid,
+    add column if not exists paciente_id uuid,
+    add column if not exists unidade_id uuid,
+    add column if not exists triagem_id uuid,
+    add column if not exists reg_status char(1) not null default 'A',
+    add column if not exists reg_date timestamptz not null default now();
+
+create table if not exists plantaopro.triagem_encaminhamentos (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    triagem_id uuid not null,
+    destino text not null default 'CONSULTA',
+    status text not null default 'ATIVO',
+    reg_status char(1) not null default 'A',
+    reg_date timestamptz not null default now()
+);
+
+create table if not exists plantaopro.consulta_historico (
+    id uuid primary key default gen_random_uuid(),
+    cliente_id uuid not null,
+    paciente_id uuid null,
+    consulta_id uuid null,
+    evento varchar(50) not null,
+    versao integer not null default 1,
+    created_by uuid null,
+    reg_date timestamptz not null default now(),
+    reg_status char(1) not null default 'A'
+);
 
 do $$
 declare conflitos text;

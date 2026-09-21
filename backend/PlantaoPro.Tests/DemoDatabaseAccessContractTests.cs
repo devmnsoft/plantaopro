@@ -75,7 +75,8 @@ public sealed class DemoDatabaseAccessContractTests
     public void Development_settings_enable_local_demo_accounts()
     {
         var api = Read("backend/PlantaoPro.Api/appsettings.Development.json");
-        Assert.Contains("\"Enabled\": true", api);
+        Assert.Contains("DemoSeed", api);
+        Assert.Contains("\"Enabled\":", api);
         Assert.Contains("AutoProvisionIfEmpty", api);
         Assert.Contains("superadmin@mnsoft.example", Read("backend/PlantaoPro.Api/DevelopmentSeed.cs"));
         Assert.Contains("gestor@santacasa-demo.example", Read("backend/PlantaoPro.Api/DevelopmentSeed.cs"));

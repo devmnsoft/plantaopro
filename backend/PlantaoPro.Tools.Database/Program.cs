@@ -126,7 +126,8 @@ static async Task ExecuteInstallManifest(string cs, string manifest)
         var sql = await File.ReadAllTextAsync(source.FullPath);
         if (string.IsNullOrWhiteSpace(sql)) throw new InvalidOperationException($"Source vazio: {source.Entry.Source}.");
         Console.WriteLine($"install: [{source.Entry.SectionOrder}] {source.Entry.Name} ({source.Entry.Source})");
-        await cn.ExecuteAsync(sql, transaction: tx, commandTimeout: 0);
+        var execSql = StripStandaloneTransactionControl(sql);
+        await cn.ExecuteAsync(execSql, transaction: tx, commandTimeout: 0);
     }
     await cn.ExecuteAsync(@"CREATE TABLE IF NOT EXISTS plantaopro.install_manifest_runs (
         id bigserial PRIMARY KEY,
@@ -172,14 +173,51 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
         error_code text NULL,
         error_message_sanitized text NULL,
         executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.91.0'
-    );");
+    );
+    ALTER TABLE plantaopro.schema_migrations
+        ADD COLUMN IF NOT EXISTS version text,
+        ADD COLUMN IF NOT EXISTS source text,
+        ADD COLUMN IF NOT EXISTS success boolean NOT NULL DEFAULT true,
+        ADD COLUMN IF NOT EXISTS duration_ms integer NULL,
+        ADD COLUMN IF NOT EXISTS error_code text NULL,
+        ADD COLUMN IF NOT EXISTS error_message_sanitized text NULL,
+        ADD COLUMN IF NOT EXISTS executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.91.0';
+    DO $$
+    BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='versao') THEN
+            UPDATE plantaopro.schema_migrations SET version = COALESCE(version, versao) WHERE version IS NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='id' AND data_type='text') THEN
+            UPDATE plantaopro.schema_migrations SET version = COALESCE(version, id) WHERE version IS NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='script_path') THEN
+            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, script_path) WHERE source IS NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='nome') THEN
+            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, nome) WHERE source IS NULL;
+        END IF;
+    END $$;
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_schema_migrations_version ON plantaopro.schema_migrations(version);
+    ");
 
-    var applied = (await cn.QueryAsync<(string Version, string Checksum)>("SELECT version, checksum FROM plantaopro.schema_migrations WHERE success = true")).ToDictionary(x => x.Version, x => x.Checksum);
+    var idIsTextPk = await cn.ExecuteScalarAsync<bool>(
+        "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='id' AND data_type='text')");
+
+    var applied = (await cn.QueryAsync<(string Version, string Checksum)>("SELECT COALESCE(version, id::text) as Version, checksum FROM plantaopro.schema_migrations WHERE success = true")).ToDictionary(x => x.Version, x => x.Checksum);
     foreach (var migration in migrations)
     {
         var fullPath = Path.Combine(root, migration.Source.Replace('/', Path.DirectorySeparatorChar));
         var sql = await File.ReadAllTextAsync(fullPath);
-        var realChecksum = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(sql))).ToLowerInvariant();
+        var normalizedSql = sql.Replace("\r\n", "\n");
+        var realChecksum = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(normalizedSql))).ToLowerInvariant();
+        if (!string.Equals(realChecksum, migration.Checksum, StringComparison.OrdinalIgnoreCase))
+        {
+            var rawChecksum = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(sql))).ToLowerInvariant();
+            if (string.Equals(rawChecksum, migration.Checksum, StringComparison.OrdinalIgnoreCase))
+            {
+                realChecksum = rawChecksum;
+            }
+        }
         if (!string.Equals(realChecksum, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum alterado em {migration.Version}.");
         if (applied.TryGetValue(migration.Version, out var previous))
         {
@@ -194,21 +232,26 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
             if (migration.Transactional)
             {
                 await using var tx = await cn.BeginTransactionAsync();
-                await cn.ExecuteAsync(sql, transaction: tx, commandTimeout: 0);
-                await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true)", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds }, tx);
+                var execSql = StripStandaloneTransactionControl(sql);
+                await cn.ExecuteAsync(execSql, transaction: tx, commandTimeout: 0);
+                await cn.ExecuteAsync(BuildMigrationInsert(idIsTextPk), new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds }, tx);
                 await tx.CommitAsync();
             }
             else
             {
                 await cn.ExecuteAsync(sql, commandTimeout: 0);
-                await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true)", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds });
+                await cn.ExecuteAsync(BuildMigrationInsert(idIsTextPk), new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds });
             }
             applied[migration.Version] = migration.Checksum;
             Console.WriteLine($"{label}: {migration.Version} aplicada.");
         }
         catch (Exception ex)
         {
-            await cn.ExecuteAsync("INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success,error_code,error_message_sanitized) VALUES(@Version,@Source,@Checksum,@Duration,false,@Code,@Message) ON CONFLICT (version) DO NOTHING", new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds, Code = ex.GetType().Name, Message = Sanitize(ex.Message) });
+            Console.Error.WriteLine($"[Migration Error in {migration.Version} ({migration.Source})]: {ex.Message}");
+            var errorInsert = idIsTextPk
+                ? "INSERT INTO plantaopro.schema_migrations(id,version,source,checksum,duration_ms,success,error_code,error_message_sanitized) VALUES(gen_random_uuid()::text,@Version,@Source,@Checksum,@Duration,false,@Code,@Message) ON CONFLICT DO NOTHING"
+                : "INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success,error_code,error_message_sanitized) VALUES(@Version,@Source,@Checksum,@Duration,false,@Code,@Message) ON CONFLICT (version) DO NOTHING";
+            await cn.ExecuteAsync(errorInsert, new { migration.Version, migration.Source, migration.Checksum, Duration = (int)sw.ElapsedMilliseconds, Code = ex.GetType().Name, Message = Sanitize(ex.Message) });
             throw;
         }
     }
@@ -350,3 +393,7 @@ static string QuoteIdentifier(string? value)
     return "\"" + value.Replace("\"", "\"\"") + "\"";
 }
 static string Sanitize(string s)=>Regex.Replace(s, "(?i)(password|senha)=[^;\\s]+", "$1=[omitida]");
+static string StripStandaloneTransactionControl(string sql) => Regex.Replace(sql, @"(?im)^\s*(BEGIN|COMMIT)\s*;\s*$", string.Empty);
+static string BuildMigrationInsert(bool idIsTextPk) => idIsTextPk
+    ? "INSERT INTO plantaopro.schema_migrations(id,version,source,checksum,duration_ms,success) VALUES(gen_random_uuid()::text,@Version,@Source,@Checksum,@Duration,true) ON CONFLICT DO NOTHING"
+    : "INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true) ON CONFLICT (version) DO NOTHING";

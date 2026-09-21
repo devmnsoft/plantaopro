@@ -102,7 +102,7 @@ and w.responsavel_id is not null", new { tenantId }, cancellationToken: ct));
         var tenantManagers = (await cn.QueryAsync<Guid>(new CommandDefinition(@"
 select distinct u.id
 from plantaopro.usuarios u
-join plantaopro.usuario_perfis up on up.usuario_id = u.id
+join plantaopro.usuarios_perfis up on up.usuario_id = u.id and up.reg_status = 'A'
 join plantaopro.perfis pf on pf.id = up.perfil_id
 where (u.tenant_id = @tenantId or u.cliente_id = @tenantId)
   and u.reg_status = 'A'
@@ -148,8 +148,8 @@ where (e.tenant_id = @tenantId or e.cliente_id = @tenantId or p.tenant_id = @ten
   and p.data_inicio <= now() - interval '15 minutes'
   and p.data_fim >= now()
   and not exists (
-      select 1 from plantaopro.presencas pr 
-      where pr.escala_id = e.id and pr.tipo = 'checkin' and pr.reg_status = 'A'
+      select 1 from plantaopro.medico_checkins mc
+      where mc.tenant_id = @tenantId and mc.escala_id = e.id
   )", new { tenantId }, cancellationToken: ct));
 
         foreach (var item in pendingCheckins)
@@ -182,11 +182,11 @@ where (p.tenant_id = @tenantId or p.cliente_id = @tenantId)
 
         // 5. Ocorrências abertas
         var openOccurrences = await cn.QueryAsync<(Guid Id, string Titulo, string Gravidade)>(new CommandDefinition(@"
-select o.id as Id, coalesce(o.titulo, 'Ocorrência operacional') as Titulo, coalesce(o.severidade, 'ALTA') as Gravidade
-from plantaopro.ocorrencias o
-where (o.tenant_id = @tenantId or o.cliente_id = @tenantId)
+select o.id as Id, coalesce(o.titulo, 'Ocorrência operacional') as Titulo, coalesce(o.prioridade, 'ALTA') as Gravidade
+from plantaopro.ocorrencias_operacionais o
+where o.tenant_id = @tenantId
   and o.reg_status = 'A'
-  and o.status in ('aberta', 'em_analise', 'ABERTA')", new { tenantId }, cancellationToken: ct));
+  and o.situacao in ('ABERTA', 'EM_ATENDIMENTO', 'AGUARDANDO_INFORMACAO')", new { tenantId }, cancellationToken: ct));
 
         foreach (var occ in openOccurrences)
         {
@@ -200,15 +200,15 @@ where (o.tenant_id = @tenantId or o.cliente_id = @tenantId)
 
         // 6. Conferência de plantão pendente
         var pendingConferences = await cn.QueryAsync<(Guid Id, Guid EscalaId, string HospitalNome)>(new CommandDefinition(@"
-select pr.id as Id, pr.escala_id as EscalaId, coalesce(h.nome_fantasia, 'Sua Unidade') as HospitalNome
-from plantaopro.presencas pr
-join plantaopro.escalas e on e.id = pr.escala_id
+select mc.id as Id, mc.escala_id as EscalaId, coalesce(h.nome_fantasia, 'Sua Unidade') as HospitalNome
+from plantaopro.medico_checkins mc
+join plantaopro.escalas e on e.id = mc.escala_id
 join plantaopro.plantoes p on p.id = e.plantao_id
 join plantaopro.hospitais h on h.id = p.hospital_id
 where (p.tenant_id = @tenantId or p.cliente_id = @tenantId)
-  and pr.reg_status = 'A'
-  and pr.tipo = 'checkout'
-  and coalesce(pr.status_conferencia, 'pendente') in ('pendente', 'em_revisao')", new { tenantId }, cancellationToken: ct));
+  and mc.tenant_id = @tenantId
+  and mc.checkout_em is not null
+  and mc.status_conferencia in ('PENDENTE', 'CORRECAO_PENDENTE')", new { tenantId }, cancellationToken: ct));
 
         foreach (var conf in pendingConferences)
         {

@@ -490,12 +490,7 @@ where u.id=@userId and u.reg_status='A'", new { userId }, cancellationToken: can
             var rawRoles = (await cn.QueryAsync<string>(new CommandDefinition(@"select pf.codigo
 from plantaopro.usuarios_perfis up
 join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
-where up.usuario_id=@userId and up.reg_status='A'
-union
-select p.codigo
-from plantaopro.usuario_perfis up
-join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A'
-where up.usuario_id=@userId", new { userId }, cancellationToken: cancellationToken))).ToArray();
+where up.usuario_id=@userId and up.reg_status='A'", new { userId }, cancellationToken: cancellationToken))).ToArray();
 
             var roles = rawRoles.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
             var primaryRole = primaryRoleResolver.Resolve(roles);
@@ -510,6 +505,7 @@ where up.usuario_id=@userId", new { userId }, cancellationToken: cancellationTok
             var sessionId = sessionGuid.ToString("N");
             var expiresAtUtc = DateTime.UtcNow.AddHours(8);
             var token = GenerateToken(user.Id, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, effectiveTenant, permissions, modules, user.ClienteStatus);
+            await sessions.CreateAsync(sessionGuid, user.Id, effectiveTenant, clienteId, expiresAtUtc, null, null, cancellationToken);
             var res = new LoginResponse(token, expiresAtUtc, user.Id, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, effectiveTenant, isGlobal ? null : user.ClienteNome, user.SenhaAlteracaoObrigatoria, primaryRole, accessScope, false, true, effectiveTenant, contextMode, sessionId, permissions, modules, isGlobal ? null : user.ClienteStatus);
             return ApiResponse<LoginResponse>.Ok(res, "Contexto atualizado com sucesso.");
         }

@@ -26,6 +26,36 @@ public sealed class SantaCasaOperationalDemoContractTests
     }
 
     [Fact]
+    public void OperationalQueries_UseCanonicalRelations_AndRefreshCreatesSession()
+    {
+        var commandCenter = Read("backend/PlantaoPro.Api/ManagerCommandCenterService.cs");
+        var data = Read("backend/PlantaoPro.Api/Data.cs");
+        var alerts = Read("backend/PlantaoPro.Api/Operation360/Notifications/AlertRuleService.cs");
+
+        Assert.Contains("where cc.tenant_id = @TenantId", commandCenter);
+        Assert.DoesNotContain("cc.cliente_id", commandCenter);
+        Assert.DoesNotContain("plantaopro.usuario_perfis ", data);
+        Assert.Contains("sessions.CreateAsync(sessionGuid, user.Id, effectiveTenant, clienteId", data);
+        Assert.Contains("plantaopro.usuarios_perfis", alerts);
+        Assert.Contains("plantaopro.medico_checkins", alerts);
+        Assert.Contains("plantaopro.ocorrencias_operacionais", alerts);
+        Assert.DoesNotContain("plantaopro.presencas", alerts);
+        Assert.DoesNotContain("plantaopro.ocorrencias o", alerts);
+    }
+
+    [Fact]
+    public void Seed130_RefusesLegacyTenantTypes_WithoutDestructiveConversion()
+    {
+        var seedSql = Read("database/seeds/development/130_operacao_demo_santacasa.sql");
+
+        Assert.Contains("Schema legado incompatível", seedSql);
+        Assert.Contains("c.data_type = 'bigint'", seedSql);
+        Assert.DoesNotContain("TYPE uuid USING NULL", seedSql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP TABLE IF EXISTS plantaopro.tenants", seedSql, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("DROP TABLE IF EXISTS plantaopro.tenant_modulos", seedSql, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void ManagerCommandCenter_EnforcesOperacaoRole_And_PlatformIsolationForGlobalAdmin()
     {
         var controller = Read("backend/PlantaoPro.Api/Controllers/ManagerCommandCenterController.cs");

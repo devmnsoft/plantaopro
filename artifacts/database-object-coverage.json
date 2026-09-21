@@ -130,6 +130,7 @@
     "plantaopro.medico_historico_disponibilidade",
     "plantaopro.medico_indisponibilidades",
     "plantaopro.medico_preferencias_plantao",
+    "plantaopro.medico_presenca_correcoes",
     "plantaopro.medicos",
     "plantaopro.mensagem_leituras",
     "plantaopro.mensagens",
@@ -144,6 +145,9 @@
     "plantaopro.notification_read_states",
     "plantaopro.notification_recipients",
     "plantaopro.notifications",
+    "plantaopro.ocorrencia_eventos",
+    "plantaopro.ocorrencias",
+    "plantaopro.ocorrencias_operacionais",
     "plantaopro.operacao_assistida_checklist",
     "plantaopro.operacao_assistida_clientes",
     "plantaopro.operacao_assistida_ocorrencias",
@@ -184,6 +188,7 @@
     "plantaopro.prescricao_itens",
     "plantaopro.prescricao_modelos",
     "plantaopro.prescricoes",
+    "plantaopro.presencas",
     "plantaopro.productivity_item_user_state",
     "plantaopro.recent_items",
     "plantaopro.recuperacao_senha",
@@ -229,6 +234,7 @@
     "plantaopro.user_favorites",
     "plantaopro.usuario_contextos_recentes",
     "plantaopro.usuario_notificacao_preferencias",
+    "plantaopro.usuario_perfis",
     "plantaopro.usuario_permissoes_especiais",
     "plantaopro.usuario_tenant_acessos",
     "plantaopro.usuarios",
@@ -523,6 +529,7 @@
     "database/schema/390_v2163_portal_cliente_modulos.sql",
     "database/schema/400_v2167_execucao_conferencia.sql",
     "database/schema/410_v2168_conferencia_integridade.sql",
-    "database/schema/420_v2170_cobertura_substituicoes.sql"
+    "database/schema/420_v2170_cobertura_substituicoes.sql",
+    "database/schema/430_ocorrencias_operacionais.sql"
   ]
 }

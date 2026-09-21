@@ -117,6 +117,17 @@ namespace PlantaoPro.Api.Controllers
         }
 
         [Microsoft.AspNetCore.Authorization.Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout([FromServices] IAuthenticationSessionService sessions, CancellationToken ct)
+        {
+            var revoked = await sessions.RevokeAsync(User, "LOGOUT", ct);
+            if (!revoked)
+                return Unauthorized(ApiResponse<object>.Fail("Sessão inválida ou já encerrada.", 401));
+
+            return Ok(ApiResponse<object>.Ok(new { revoked = true }, "Sessão encerrada com sucesso."));
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize]
         [HttpPost("refresh-context")]
         public async Task<IActionResult> RefreshContext(CancellationToken ct)
         {

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "1.1",
   "executedAtUtc": "2026-09-21T00:00:00Z",
   "status": "blocked-environment",
   "productionApproved": false,
@@ -16,20 +16,180 @@
     "uxValidators": "passed"
   },
   "scenarios": [
-    { "id": "api-login-valid", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "api-login-invalid-password", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "api-login-unknown-user", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "api-login-locked-user", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "api-login-suspended-tenant", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "jwt-claims-and-session", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "web-login-cookie-token", "surface": "web", "status": "not-executed", "reason": "SDK .NET e navegador autenticado indisponíveis" },
-    { "id": "web-profile-redirects", "surface": "web", "status": "not-executed", "reason": "SDK .NET e navegador autenticado indisponíveis" },
-    { "id": "logout-revokes-session", "surface": "api-web", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
-    { "id": "revoked-session-denied", "surface": "api-web", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" }
+    {
+      "id": "api-login-valid",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "api-login-invalid-password",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "api-login-unknown-user",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "api-login-locked-user",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "api-login-suspended-tenant",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "jwt-claims-and-session",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "web-login-cookie-token",
+      "surface": "web",
+      "status": "not-executed",
+      "reason": "SDK .NET e navegador autenticado indisponíveis"
+    },
+    {
+      "id": "web-profile-redirects",
+      "surface": "web",
+      "status": "not-executed",
+      "reason": "SDK .NET e navegador autenticado indisponíveis"
+    },
+    {
+      "id": "logout-revokes-session",
+      "surface": "api-web",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "revoked-session-denied",
+      "surface": "api-web",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "jwt-expired-token-denied",
+      "surface": "api",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    },
+    {
+      "id": "web-expired-session-feedback",
+      "surface": "web",
+      "status": "not-executed",
+      "reason": "SDK .NET e navegador autenticado indisponíveis"
+    },
+    {
+      "id": "web-submit-unlocks-after-error",
+      "surface": "web",
+      "status": "not-executed",
+      "reason": "SDK .NET e navegador autenticado indisponíveis"
+    },
+    {
+      "id": "tenant-isolation-cross-access-denied",
+      "surface": "api-web",
+      "status": "not-executed",
+      "reason": "SDK .NET e PostgreSQL indisponíveis"
+    }
   ],
-  "requiredNextCommand": "bash scripts/local/run-homologacao-linux.sh",
+  "requiredNextCommand": "Instalar .NET 10 SDK, Docker e psql; depois executar bash scripts/local/run-homologacao-linux.sh",
   "notes": [
     "Nenhum cenário de autenticação foi promovido a aprovado por inspeção estática.",
     "Os validadores estáticos aprovados não substituem login real, cookie, JWT, revogação ou isolamento de tenant em runtime."
+  ],
+  "execution": {
+    "command": "bash scripts/local/run-homologacao-linux.sh",
+    "exitCode": 127,
+    "result": "blocked-before-runtime",
+    "observedAtUtc": "2026-09-21T00:00:00Z",
+    "blockingEvidence": [
+      "dotnet: command not found",
+      "docker: command not found",
+      "psql: command not found"
+    ],
+    "executedChecks": [
+      {
+        "command": "python scripts/check-controllers-uniqueness.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-csharp10-compatibility.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/database_manifest_validation.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/repository-security-check.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-feedback-ui.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-form-experience.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-layout-regression.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-operational-ux.py",
+        "status": "passed"
+      },
+      {
+        "command": "python scripts/check-saas-ui.py",
+        "status": "passed"
+      }
+    ]
+  },
+  "profiles": [
+    {
+      "id": "ADMINISTRADOR_GLOBAL",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "ADMINISTRADOR",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "COORDENACAO",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "OPERADOR",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "FINANCEIRO",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "MEDICO",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    },
+    {
+      "id": "HOSPITAL",
+      "status": "not-executed",
+      "reason": "runtime autenticado indisponível"
+    }
   ]
 }

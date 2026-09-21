@@ -89,3 +89,43 @@ Passaram com código de saída zero:
 ## 12. Próximo passo recomendado
 
 Em uma estação de homologação com os pré-requisitos instalados e segredos efêmeros fora do Git, executar `bash scripts/local/run-homologacao-linux.sh`; em seguida executar o smoke autenticado e o smoke visual. Atualizar `artifacts/auth-e2e.json` para `passed` somente com respostas, claims, cookies, revogação e isolamento realmente observados.
+
+## 13. Classificação dos itens obrigatórios auditados
+
+| Item | Classificação | Evidência desta rodada |
+|---|---|---|
+| `README.md` e instruções operacionais | pronto com evidência | Fonte canônica e avisos de não produção inspecionados. |
+| `artifacts/auth-e2e.json` | pronto como registro de bloqueio | Registra tentativa, exit code, pré-requisitos ausentes e todos os cenários ainda não executados. |
+| `artifacts/api-route-conflicts.json` | pronto com evidência estática | Catálogo informa zero conflitos; Swagger runtime continua não verificado. |
+| API startup/JWT/sessão | parcial | Configuração e validação de sessão existem; sem processo .NET executável. |
+| Web cookie/login/logout | parcial | Implementação e contratos existem; navegador autenticado não iniciado. |
+| Perfis obrigatórios | não verificado em runtime | Os sete perfis foram mantidos individualmente como `not-executed` no artefato. |
+| Banco, manifests e seeds | parcial | Manifest validado estaticamente; instalação limpa e upgrade bloqueados. |
+| Linux/Windows homologação | bloqueado por ambiente | Script Linux retornou 127; PowerShell não se aplica ao executor Linux. |
+| Controllers, testes e views | parcial | Inventário e contratos estáticos presentes; build/test indisponíveis. |
+| Menu e rotas funcionais | parcial | Menu usa guards de perfil/módulo; navegação HTTP não executada. |
+| Super Admin e onboarding | parcial | Controllers/views/validadores encontrados; jornada real não executada. |
+| Saúde 360 | parcial | Agenda, triagem, consulta e financeiro encontrados; ponta a ponta não executado. |
+
+## 14. Matriz auditada do menu comercial
+
+Esta matriz registra somente o que foi localizado no menu atual; “funcional” abaixo significa **rota MVC implementada e coberta estaticamente**, não aprovação runtime.
+
+| Módulo | Controller/view principal | Rota MVC | Restrição observada | Status |
+|---|---|---|---|---|
+| Dashboard | `Home` / `Dashboard` | `/Home/Dashboard` | usuário autenticado | parcial |
+| Plantões | `Plantoes` / `Index` | `/Plantoes` | permissão `PLANTOES` | parcial |
+| Escalas | `Escalas` / `Index` | `/Escalas` | permissão `ESCALAS` | parcial |
+| Médicos | `Medicos` / `Index` | `/Medicos` | gestão + `MEDICOS` | parcial |
+| Hospitais | `Hospitais` / `Index` | `/Hospitais` | gestão + `HOSPITAIS` | parcial |
+| Financeiro | `Financeiro` / `Index` | `/Financeiro` | perfil financeiro/módulo contratado | parcial |
+| Notificações | `Notificacoes` / `Index` | `/Notificacoes` | usuário autenticado | parcial |
+| Agenda | `Agenda` / `Index` | `/Agenda` | permissão `AGENDA` | parcial |
+| Triagem | `Triagem` / `Index` | `/Triagem` | `SAUDE360_TRIAGEM` | parcial |
+| Consulta | `Consultas` / `Index` | `/Consultas` | `SAUDE360_CONSULTAS` | parcial |
+| Relatórios | `Relatorios` / `Index` | `/Relatorios` | gestão + `RELATORIOS` | parcial |
+| Administração SaaS | `SaasDashboard` / `Index` | `/SaasDashboard` | `ADMINISTRADOR_GLOBAL` | parcial |
+| Configurações | `Configuracoes` / `Index` | `/Configuracoes` | gestão + `CONFIGURACOES` | parcial |
+| Auditoria | `Auditoria` / `Index` | `/Auditoria` | `ADMINISTRADOR_GLOBAL` | parcial |
+
+Itens solicitados que não aparecem como links independentes no menu auditado — Especialidades, Operação Inteligente, Painel de Chamada, Prescrição e Convênios — permanecem corretamente **não promovidos como validados** nesta rodada. Eles devem ser adicionados apenas após confirmar controller, action, autorização, contratação e resposta HTTP sem 404/500 em homologação real.

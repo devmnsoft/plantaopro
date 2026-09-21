@@ -7,6 +7,7 @@ namespace PlantaoPro.Api;
 public sealed class OcorrenciaService(IConfiguration configuration, ICurrentUserService currentUser)
 {
     private Guid Tenant => currentUser.TenantId ?? throw new UnauthorizedAccessException("Contexto da organização obrigatório.");
+    private Guid Cliente => currentUser.ClienteId ?? throw new UnauthorizedAccessException("Contexto do cliente obrigatório.");
     private Guid UserId => currentUser.UserId ?? throw new UnauthorizedAccessException("Identidade inválida.");
     private bool Gestor => currentUser.IsTenantAdmin() || currentUser.IsGlobalAdmin() || currentUser.HasRole("COORDENADOR");
     private NpgsqlConnection Connection() => new(configuration.GetConnectionString("Default"));
@@ -18,8 +19,8 @@ public sealed class OcorrenciaService(IConfiguration configuration, ICurrentUser
         if (!OcorrenciaWorkflow.Prioridades.Contains(prioridade)) throw new ArgumentException("Prioridade inválida.");
         await using var cn = Connection(); await cn.OpenAsync(ct); await using var tx = await cn.BeginTransactionAsync(ct);
         var contextoValido = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(
-select 1 from plantaopro.hospitais h where h.id=@unidade and h.cliente_id=@tenant and h.reg_status='A'
-and (@plantao is null or exists(select 1 from plantaopro.plantoes p where p.id=@plantao and p.hospital_id=h.id and p.cliente_id=@tenant and p.reg_status='A')))", new { unidade=request.UnidadeId, plantao=request.PlantaoId, tenant=Tenant }, tx, cancellationToken:ct));
+select 1 from plantaopro.hospitais h where h.id=@unidade and h.cliente_id=@cliente and h.reg_status='A'
+and (@plantao is null or exists(select 1 from plantaopro.plantoes p where p.id=@plantao and p.hospital_id=h.id and p.cliente_id=@cliente and p.reg_status='A')))", new { unidade=request.UnidadeId, plantao=request.PlantaoId, cliente=Cliente }, tx, cancellationToken:ct));
         if (!contextoValido) throw new UnauthorizedAccessException("Unidade ou plantão fora do escopo autorizado.");
         var id = Guid.NewGuid();
         await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.ocorrencias_operacionais(id,tenant_id,unidade_id,plantao_id,titulo,descricao,categoria,prioridade,solicitante_id)
@@ -31,8 +32,8 @@ values(@id,@tenant,@unidade,@plantao,@titulo,@descricao,@categoria,@prioridade,@
     public async Task<OcorrenciaPagina> ListarAsync(OcorrenciaFiltro f, CancellationToken ct)
     {
         f.Pagina=Math.Max(1,f.Pagina); f.Tamanho=Math.Clamp(f.Tamanho,1,100); var offset=(f.Pagina-1)*f.Tamanho;
-        var p=new {tenant=Tenant,user=UserId,q=string.IsNullOrWhiteSpace(f.Pesquisa)?null:$"%{f.Pesquisa.Trim()}%",f.UnidadeId,f.ResponsavelId,categoria=NormalizeNullable(f.Categoria),situacao=NormalizeNullable(f.Situacao),f.Minhas,f.De,f.Ate,offset,f.Tamanho};
-        const string where=@"o.tenant_id=@tenant and o.reg_status='A' and (@q is null or o.titulo ilike @q or o.descricao ilike @q) and (@UnidadeId is null or o.unidade_id=@UnidadeId) and (@ResponsavelId is null or o.responsavel_id=@ResponsavelId) and (@categoria is null or o.categoria=@categoria) and (@situacao is null or o.situacao=@situacao) and (not @Minhas or o.solicitante_id=@user or o.responsavel_id=@user) and (@De is null or o.criado_em>=@De) and (@Ate is null or o.criado_em<@Ate)";
+        var p=new {tenant=Tenant,user=UserId,gestor=Gestor,q=string.IsNullOrWhiteSpace(f.Pesquisa)?null:$"%{f.Pesquisa.Trim()}%",f.UnidadeId,f.ResponsavelId,categoria=NormalizeNullable(f.Categoria),situacao=NormalizeNullable(f.Situacao),f.Minhas,f.De,f.Ate,offset,f.Tamanho};
+        const string where=@"o.tenant_id=@tenant and o.reg_status='A' and (@gestor or o.solicitante_id=@user or o.responsavel_id=@user) and (@q is null or o.titulo ilike @q or o.descricao ilike @q) and (@UnidadeId is null or o.unidade_id=@UnidadeId) and (@ResponsavelId is null or o.responsavel_id=@ResponsavelId) and (@categoria is null or o.categoria=@categoria) and (@situacao is null or o.situacao=@situacao) and (not @Minhas or o.solicitante_id=@user or o.responsavel_id=@user) and (@De is null or o.criado_em>=@De) and (@Ate is null or o.criado_em<@Ate)";
         await using var cn=Connection();
         var itens=(await cn.QueryAsync<OcorrenciaDto>(new CommandDefinition($@"select id as \"Id\",tenant_id as \"TenantId\",unidade_id as \"UnidadeId\",plantao_id as \"PlantaoId\",titulo as \"Titulo\",descricao as \"Descricao\",categoria as \"Categoria\",prioridade as \"Prioridade\",situacao as \"Situacao\",solicitante_id as \"SolicitanteId\",responsavel_id as \"ResponsavelId\",prazo_resolucao as \"PrazoResolucao\",resolucao as \"Resolucao\",versao as \"Versao\",criado_em as \"CriadoEm\",atualizado_em as \"AtualizadoEm\" from plantaopro.ocorrencias_operacionais o where {where} order by o.atualizado_em desc,o.id limit @Tamanho offset @offset",p,cancellationToken:ct))).AsList();
         var counts=await cn.QuerySingleAsync<Counts>(new CommandDefinition($@"select count(*) as \"Total\",count(*) filter(where situacao not in ('RESOLVIDA','CANCELADA')) as \"Abertas\",count(*) filter(where responsavel_id is null and situacao not in ('RESOLVIDA','CANCELADA')) as \"SemResponsavel\",count(*) filter(where situacao='EM_ATENDIMENTO') as \"EmAtendimento\",count(*) filter(where situacao='RESOLVIDA' and (@De is null or atualizado_em>=@De) and (@Ate is null or atualizado_em<@Ate)) as \"ResolvidasPeriodo\",count(*) filter(where prazo_resolucao is not null and prazo_resolucao<now() and situacao not in ('RESOLVIDA','CANCELADA')) as \"Vencidas\" from plantaopro.ocorrencias_operacionais o where {where}",p,cancellationToken:ct));
@@ -45,7 +46,7 @@ values(@id,@tenant,@unidade,@plantao,@titulo,@descricao,@categoria,@prioridade,@
     public async Task AtribuirAsync(Guid id,AtribuirOcorrenciaRequest r,CancellationToken ct)
     {
         if(!Gestor)throw new UnauthorizedAccessException(); await using var cn=Connection(); await cn.OpenAsync(ct); await using var tx=await cn.BeginTransactionAsync(ct);
-        var habilitado=await cn.ExecuteScalarAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.usuarios where id=@id and cliente_id=@tenant and reg_status='A' and coalesce(status,'ATIVO')='ATIVO')",new{id=r.ResponsavelId,tenant=Tenant},tx,cancellationToken:ct));
+        var habilitado=await cn.ExecuteScalarAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.usuarios where id=@id and cliente_id=@cliente and reg_status='A' and coalesce(status,'ATIVO')='ATIVO')",new{id=r.ResponsavelId,cliente=Cliente},tx,cancellationToken:ct));
         if(!habilitado)throw new ArgumentException("Responsável inativo ou fora da organização.");
         var changed=await cn.ExecuteAsync(new CommandDefinition("update plantaopro.ocorrencias_operacionais set responsavel_id=@responsavel,situacao=case when situacao='ABERTA' then 'EM_ATENDIMENTO' else situacao end,versao=versao+1,atualizado_em=now() where id=@id and tenant_id=@tenant and versao=@versao and situacao not in ('RESOLVIDA','CANCELADA') and reg_status='A'",new{id,tenant=Tenant,responsavel=r.ResponsavelId,versao=r.Versao},tx,cancellationToken:ct));
         if(changed==0)throw new OcorrenciaConcurrencyException(); await Evento(cn,tx,id,"ATRIBUIDA","Responsável atribuído.",true,ct); await tx.CommitAsync(ct);

@@ -11,11 +11,13 @@ namespace PlantaoPro.Api.Controllers
     public class EscalasController : ControllerBase
     {
         private readonly EscalaService service;
+        private readonly ICurrentUserService currentUser;
         private readonly ILogger<EscalasController> logger;
 
-        public EscalasController(EscalaService service, ILogger<EscalasController> logger)
+        public EscalasController(EscalaService service, ICurrentUserService currentUser, ILogger<EscalasController> logger)
         {
             this.service = service;
+            this.currentUser = currentUser;
             this.logger = logger;
         }
 
@@ -23,7 +25,7 @@ namespace PlantaoPro.Api.Controllers
         [HttpGet("escalas")]
         public async Task<IActionResult> Listar([FromQuery] EscalaFilterRequest f)
         {
-            var r = await service.ListarAsync(f);
+            var r = await service.ListarAsync(f, currentUser.TenantId, currentUser.ClienteId, currentUser.UserId, currentUser.IsDoctor());
             return StatusCode(r.StatusCode, r);
         }
 
@@ -31,7 +33,7 @@ namespace PlantaoPro.Api.Controllers
         [HttpGet("escalas/{id:guid}")]
         public async Task<IActionResult> Get(Guid id)
         {
-            var r = await service.GetByIdAsync(id);
+            var r = await service.GetByIdAsync(id, currentUser.TenantId, currentUser.ClienteId);
             return StatusCode(r.StatusCode, r);
         }
 

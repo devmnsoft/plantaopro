@@ -98,12 +98,36 @@ public sealed class NotificacoesController : ControllerBase
 [Route("api/alertas-operacionais")]
 public sealed class AlertasOperacionaisController : ControllerBase
 {
-    private readonly IAlertRuleService rules; private readonly ICurrentUserService user; private readonly ILogger<AlertasOperacionaisController> logger;
-    public AlertasOperacionaisController(IAlertRuleService rules, ICurrentUserService user, ILogger<AlertasOperacionaisController> logger) { this.rules=rules; this.user=user; this.logger=logger; }
+    private readonly IAlertRuleService rules;
+    private readonly ICurrentUserService user;
+    private readonly ILogger<AlertasOperacionaisController> logger;
+
+    public AlertasOperacionaisController(IAlertRuleService rules, ICurrentUserService user, ILogger<AlertasOperacionaisController> logger)
+    {
+        this.rules = rules;
+        this.user = user;
+        this.logger = logger;
+    }
+
     [HttpPost("avaliar")]
     public async Task<ActionResult<ApiResponse<int>>> Evaluate(CancellationToken ct)
     {
-        try { var tenant=user.TenantId ?? throw new UnauthorizedAccessException(); return Ok(ApiResponse<int>.Ok(await rules.EvaluateAsync(tenant,ct),"Regras operacionais avaliadas.")); }
-        catch(Exception ex) { logger.LogError(ex,"Falha ao avaliar regras operacionais."); return StatusCode(500,ApiResponse<int>.Fail("Não foi possível avaliar os alertas agora.",500)); }
+        try
+        {
+            var tenant = user.TenantId ?? user.ClienteId;
+            if (user.IsGlobalAdmin() && !tenant.HasValue)
+            {
+                var globalAlerts = await rules.EvaluatePlatformAsync(user.UserId ?? Guid.Empty, ct);
+                return Ok(ApiResponse<int>.Ok(globalAlerts, "Regras globais da plataforma avaliadas."));
+            }
+
+            if (!tenant.HasValue) throw new UnauthorizedAccessException("Tenant ou cliente não identificado.");
+            return Ok(ApiResponse<int>.Ok(await rules.EvaluateAsync(tenant.Value, ct), "Regras operacionais avaliadas."));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao avaliar regras operacionais.");
+            return StatusCode(500, ApiResponse<int>.Fail("Não foi possível avaliar os alertas agora.", 500));
+        }
     }
 }

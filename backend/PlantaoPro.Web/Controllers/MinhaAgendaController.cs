@@ -211,4 +211,7 @@ public class MinhaAgendaController : BaseWebController
 
         return RedirectToAction(nameof(PlantoesDisponiveis));
     }
+
+    [HttpGet]
+    public IActionResult MeusPlantoes() => RedirectToAction(nameof(MeusPagamentos));
 }

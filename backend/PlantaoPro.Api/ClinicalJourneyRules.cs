@@ -73,15 +73,15 @@ public static class ClinicalMeasurements
     public static IReadOnlyList<string> AlertasConferencia(TriagemUpdateRequest request)
     {
         var alerts = new List<string>();
-        Alert(request.PressaoSistolica, 50, 300, "Pressão sistólica", alerts);
-        Alert(request.PressaoDiastolica, 30, 200, "Pressão diastólica", alerts);
-        Alert(request.FrequenciaCardiaca, 20, 250, "Frequência cardíaca", alerts);
-        Alert(request.Temperatura, 25, 45, "Temperatura", alerts);
-        Alert(request.Saturacao, 50, 100, "Saturação", alerts);
+        RegistrarAlerta(request.PressaoSistolica, 50, 300, "Pressão sistólica", alerts);
+        RegistrarAlerta(request.PressaoDiastolica, 30, 200, "Pressão diastólica", alerts);
+        RegistrarAlerta(request.FrequenciaCardiaca, 20, 250, "Frequência cardíaca", alerts);
+        RegistrarAlerta(request.Temperatura, 25, 45, "Temperatura", alerts);
+        RegistrarAlerta(request.Saturacao, 50, 100, "Saturação", alerts);
         return alerts;
     }
 
-    private static void Alert(decimal? value, decimal min, decimal max, string field, List<string> alerts)
+    private static void RegistrarAlerta(decimal? value, decimal min, decimal max, string field, List<string> alerts)
     { if (value.HasValue && (value < min || value > max)) alerts.Add(field + " fora da faixa usual; confira valor e unidade antes de finalizar."); }
 }
 

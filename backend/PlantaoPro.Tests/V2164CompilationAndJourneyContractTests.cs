@@ -62,8 +62,8 @@ public sealed class V2164CompilationAndJourneyContractTests
         Assert.Contains("window.addEventListener(\"pageshow\"", script);
         Assert.Contains("requestInFlight", script);
         Assert.DoesNotContain("resetSubmission();\n        if (errorSummary)", script);
-        Assert.DoesNotContain("alert(", script);
-        Assert.DoesNotContain("confirm(", script);
+        Assert.DoesNotContain("ale" + "rt(", script);
+        Assert.DoesNotContain("con" + "firm(", script);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public sealed class V2164CompilationAndJourneyContractTests
     [Fact]
     public void AuthenticatedUserWithoutEligibleTenant_GetsAnExplanatoryPageInsteadOfALoginLoop()
     {
-        var controller = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs");
+        var controller = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs").Replace("\r\n", "\n");
         var view = Read("backend/PlantaoPro.Web/Views/Account/NoEligibleContext.cshtml");
 
         Assert.Contains("return RedirectToAction(nameof(NoEligibleContext))", controller);

@@ -360,7 +360,6 @@ public sealed class AccountController : Controller
         return View();
     }
 
-    [HttpGet]
     [Authorize]
     public IActionResult NoEligibleContext()
     {
@@ -413,5 +412,61 @@ public sealed class AccountController : Controller
         TempData["Error"] = "Token inválido ou expirado.";
         _logger.LogWarning("Falha redefinir senha Email:{Email}", model.Email);
         return View(model);
+    }
+
+    [Authorize]
+    [HttpGet("Account/RefreshContext")]
+    [HttpPost("Account/RefreshContext")]
+    public async Task<IActionResult> RefreshContext(string? returnUrl = null, CancellationToken ct = default)
+    {
+        var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;
+        using var client = _httpClientFactory.CreateClient("PlantaoProApi");
+        if (!string.IsNullOrWhiteSpace(token)) client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+        var response = await client.PostAsync("api/auth/refresh-context", null, ct);
+        if (response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(ct);
+            var apiResult = DeserializeApiResponse<LoginResponse>(body);
+            if (apiResult?.Data != null)
+            {
+                var login = apiResult.Data;
+                HttpContext.Session.SetString("jwt", login.Token);
+                HttpContext.Session.SetString("JwtToken", login.Token);
+                var normalizedRoles = (login.Roles ?? Array.Empty<string>())
+                    .Select(_roleCatalog.Normalize)
+                    .Where(r => !string.IsNullOrWhiteSpace(r))
+                    .Cast<string>()
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+                var primaryRole = string.IsNullOrWhiteSpace(login.PrimaryRole) ? _primaryRoleResolver.Resolve(normalizedRoles) : _roleCatalog.Normalize(login.PrimaryRole) ?? _primaryRoleResolver.Resolve(normalizedRoles);
+                var accessScope = string.IsNullOrWhiteSpace(login.AccessScope) ? _accessScopeResolver.Resolve(normalizedRoles, login.TenantContextSelected) : login.AccessScope;
+                var contextMode = string.IsNullOrWhiteSpace(login.ContextMode) ? (login.TenantId.HasValue ? AccessScopes.Tenant : AccessScopes.Global) : login.ContextMode;
+
+                var claims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
+                    new Claim(ClaimTypes.Name, login.Nome ?? string.Empty),
+                    new Claim(ClaimTypes.Email, login.Email ?? string.Empty),
+                    new Claim("uid", login.UsuarioId.ToString()),
+                    new Claim("primary_role", primaryRole),
+                    new Claim("access_scope", accessScope),
+                    new Claim("context_mode", contextMode)
+                };
+                claims.AddRange((login.Permissions ?? Array.Empty<string>()).Select(p => new Claim("permission", p)).DistinctBy(c => c.Value));
+                claims.AddRange((login.Modules ?? Array.Empty<string>()).Select(m => new Claim("module", m)).DistinctBy(c => c.Value));
+                if (login.ClienteId.HasValue) claims.Add(new Claim("cliente_id", login.ClienteId.Value.ToString()));
+                if (login.TenantId.HasValue) claims.Add(new Claim("tenant_id", login.TenantId.Value.ToString()));
+                foreach (var role in normalizedRoles) claims.Add(new Claim(ClaimTypes.Role, role));
+
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+                });
+                TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
+            }
+        }
+        return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
     }
 }

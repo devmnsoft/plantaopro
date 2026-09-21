@@ -115,6 +115,18 @@ namespace PlantaoPro.Api.Controllers
 
             return Ok(ApiResponse<object>.Ok(new { }, "Senha redefinida com sucesso."));
         }
+
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [HttpPost("refresh-context")]
+        public async Task<IActionResult> RefreshContext(CancellationToken ct)
+        {
+            var uidClaim = User.FindFirst("uid")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (!Guid.TryParse(uidClaim, out var uid))
+                return Unauthorized(ApiResponse<object>.Fail("Sessão inválida.", 401));
+
+            var r = await _service.RefreshContextAsync(uid, ct);
+            return StatusCode(r.StatusCode, r);
+        }
     }
 
     public record ForgotPasswordRequest(string Email);

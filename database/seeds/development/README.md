@@ -15,10 +15,25 @@ Em Development a API agora auto-provisiona as contas se `DemoSeed:Enabled` e `De
 ## SQL manual
 
 ```bash
+# 1. Provisionar acesso demo das 3 contas (superadmin, gestor, medica)
 psql -d plantaopro -f database/seeds/development/121_acesso_demo_local.sql
+
+# 2. Provisionar jornada demonstrável da Santa Casa (Escalas -> Execução -> Conferência)
+psql -d plantaopro -f database/seeds/development/130_operacao_demo_santacasa.sql
 ```
 
-Se a API estiver no banco `postgres` legado, execute o mesmo arquivo nesse banco — desde que o schema `plantaopro` exista.
+Se a API estiver no banco `postgres` legado, execute os mesmos arquivos nesse banco — desde que o schema `plantaopro` exista.
+
+### Conteúdo do seed de operação (130_operacao_demo_santacasa.sql)
+
+Garante que o tenant `santa-casa-demonstracao` possua:
+- Módulos contratados: `ESCALAS`, `EXECUCAO`, `CONFERENCIA`.
+- Especialidade `Clínica Médica` e Setor `Pronto Socorro Adulto`.
+- 4 plantões na janela `[ontem, hoje, amanhã, +3 dias]`:
+  - **Ontem:** plantão realizado pela médica demo com fechamento em conferência.
+  - **Hoje:** plantão confirmado com check-in ativo da médica demo e ocorrência aberta.
+  - **Amanhã:** plantão noturno com 1 vaga atribuída à médica e 1 vaga em convite de cobertura.
+  - **+3 dias:** plantão diurno sem médico escalado (descoberto para ação do gestor).
 
 ## Diagnóstico
 

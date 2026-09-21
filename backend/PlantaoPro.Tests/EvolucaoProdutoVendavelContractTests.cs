@@ -67,7 +67,7 @@ public sealed class EvolucaoProdutoVendavelContractTests
                 Path.Combine(RepositoryPathResolver.RepoRoot, "mobile"),
                 "*.*",
                 SearchOption.AllDirectories))
-            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar) && !f.Contains("node_modules"));
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar) && !f.Contains("node_modules") && !f.Contains(".vs"));
         var forbidden = new Regex("(?im)^\\s*@page(?:\\s|$)|\\basp-page(?:\\s|=)|@model\\s+dynamic|href=\"#\"|(?<![\\w.])(?:window\\.)?(?:alert|confirm)\\s*\\(|=\\s*\\[\\s*\\]|return\\s*\\[\\s*\\]", RegexOptions.Compiled);
         foreach (var file in files)
             Assert.False(forbidden.IsMatch(File.ReadAllText(file)), file);

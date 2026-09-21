@@ -5,6 +5,11 @@ using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api;
 
+public sealed record PlatformHealthSummary(
+    long ActiveClients,
+    long ActiveTenants,
+    long ContractedModules);
+
 public sealed record CommandCenterSummary(
     long Today,
     long Uncovered,
@@ -15,7 +20,8 @@ public sealed record CommandCenterSummary(
     long OpenIncidents,
     long PendingReplacements,
     long FinancialPending,
-    long CriticalNotifications);
+    long CriticalNotifications,
+    PlatformHealthSummary? PlatformHealth = null);
 
 public sealed record CoverageItem(
     Guid Id,
@@ -49,30 +55,45 @@ public sealed class ManagerCommandCenterService
             (
                 select count(*)
                 from plantaopro.medicos m
-                where coalesce(m.tenant_id, m.cliente_id) = @TenantId
+                where (m.tenant_id = @TenantId or m.cliente_id = @TenantId)
                   and m.reg_status = 'A'
             ) as ""AvailableProfessionals"",
-            0 as ""PendingCheckIns"",
-            0 as ""OpenIncidents"",
-            0 as ""PendingReplacements"",
             (
                 select count(*)
-                from plantaopro.pagamentos pg
-                join plantaopro.plantoes px on px.id = pg.plantao_id
-                where px.cliente_id = @TenantId
-                  and pg.reg_status = 'A'
-                  and lower(pg.status) = 'pendente'
+                from plantaopro.medico_checkins mc
+                where mc.tenant_id = @TenantId
+                  and mc.checkout_em is null
+                  and mc.status_conferencia = 'REGISTRO_INCOMPLETO'
+            ) as ""PendingCheckIns"",
+            (
+                select count(*)
+                from plantaopro.ocorrencias_operacionais o
+                where o.tenant_id = @TenantId
+                  and o.situacao in ('ABERTA', 'EM_ATENDIMENTO')
+                  and o.reg_status = 'A'
+            ) as ""OpenIncidents"",
+            (
+                select count(*)
+                from plantaopro.cobertura_convites cc
+                where (cc.tenant_id = @TenantId or cc.cliente_id = @TenantId)
+                  and cc.status = 'PENDENTE'
+            ) as ""PendingReplacements"",
+            (
+                select count(*)
+                from plantaopro.fechamento_plantao fp
+                where fp.tenant_id = @TenantId
+                  and fp.status in ('EM_CONFERENCIA', 'AGUARDANDO_APROVACAO', 'COM_DIVERGENCIA')
             ) as ""FinancialPending"",
             (
                 select count(*)
                 from plantaopro.notificacoes n
-                where n.cliente_id = @TenantId
+                where (n.cliente_id = @TenantId or n.tenant_id = @TenantId)
                   and n.reg_status = 'A'
                   and not coalesce(n.lida, false)
                   and lower(n.tipo) in ('critico', 'urgente', 'erro')
             ) as ""CriticalNotifications""
         from plantaopro.plantoes p
-        where p.cliente_id = @TenantId
+        where (p.cliente_id = @TenantId or p.tenant_id = @TenantId)
           and p.reg_status = 'A'
           and p.data_inicio::date between @From and @To;
 
@@ -87,7 +108,7 @@ public sealed class ManagerCommandCenterService
         from plantaopro.plantoes p
         join plantaopro.hospitais h on h.id = p.hospital_id
         join plantaopro.especialidades e on e.id = p.especialidade_id
-        where p.cliente_id = @TenantId
+        where (p.cliente_id = @TenantId or p.tenant_id = @TenantId)
           and p.reg_status = 'A'
           and p.data_inicio::date between @From and @To
           and (@Status is null or lower(p.status) = lower(@Status))
@@ -161,6 +182,45 @@ public sealed class ManagerCommandCenterService
                 exception,
                 "Falha no Command Center do tenant {TenantId}",
                 tenantId);
+            throw;
+        }
+    }
+
+    public async Task<ApiResponse<ManagerCommandCenterDto>> GetGlobalAsync(CancellationToken ct)
+    {
+        try
+        {
+            await using var connection = new NpgsqlConnection(
+                configuration.GetConnectionString("Default"));
+            await connection.OpenAsync(ct);
+
+            const string sql = @"
+                select
+                    (select count(*) from plantaopro.clientes where reg_status = 'A' and status = 'ATIVO') as ""ActiveClients"",
+                    (select count(*) from plantaopro.tenants where status = 'ATIVO') as ""ActiveTenants"",
+                    (select count(*) from plantaopro.tenant_modulos where status = 'ATIVO') as ""ContractedModules"";
+            ";
+
+            var health = await connection.QuerySingleAsync<PlatformHealthSummary>(new CommandDefinition(sql, cancellationToken: ct));
+            var summary = new CommandCenterSummary(
+                Today: 0,
+                Uncovered: 0,
+                PendingConfirmation: 0,
+                Critical: 0,
+                AvailableProfessionals: 0,
+                PendingCheckIns: 0,
+                OpenIncidents: 0,
+                PendingReplacements: 0,
+                FinancialPending: 0,
+                CriticalNotifications: 0,
+                PlatformHealth: health);
+
+            var result = new ManagerCommandCenterDto(summary, Array.Empty<CoverageItem>(), DateTime.UtcNow);
+            return ApiResponse<ManagerCommandCenterDto>.Ok(result);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Falha no Command Center global da plataforma");
             throw;
         }
     }

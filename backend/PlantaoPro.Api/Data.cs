@@ -470,6 +470,49 @@ where up.usuario_id=@id
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
             catch (Exception ex) { logger.LogError(ex, "Exceção inesperada no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
         }
+
+        public async Task<ApiResponse<LoginResponse>> RefreshContextAsync(Guid userId, CancellationToken cancellationToken = default)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            await cn.OpenAsync(cancellationToken);
+            var user = await cn.QueryFirstOrDefaultAsync<LoginUserRow>(new CommandDefinition(@"select distinct
+    u.id as ""Id"", coalesce(u.nome,'') as ""Nome"", coalesce(u.email,'') as ""Email"",
+    coalesce(u.senha_hash,'') as ""SenhaHash"", coalesce(u.reg_status,'') as ""RegStatus"",
+    coalesce(u.status,'ATIVO') as ""Status"", u.cliente_id as ""ClienteId"", u.tenant_id as ""TenantId"",
+    coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"", coalesce(c.status,'ATIVO') as ""ClienteStatus"",
+    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria""
+from plantaopro.usuarios u
+left join plantaopro.clientes c on c.id=coalesce(u.cliente_id,u.tenant_id) and c.reg_status='A'
+where u.id=@userId and u.reg_status='A'", new { userId }, cancellationToken: cancellationToken));
+
+            if (user is null) return ApiResponse<LoginResponse>.Fail("Usuário não encontrado.", 404);
+
+            var rawRoles = (await cn.QueryAsync<string>(new CommandDefinition(@"select pf.codigo
+from plantaopro.usuarios_perfis up
+join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
+where up.usuario_id=@userId and up.reg_status='A'
+union
+select p.codigo
+from plantaopro.usuario_perfis up
+join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A'
+where up.usuario_id=@userId", new { userId }, cancellationToken: cancellationToken))).ToArray();
+
+            var roles = rawRoles.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
+            var primaryRole = primaryRoleResolver.Resolve(roles);
+            var accessScope = accessScopeResolver.Resolve(roles);
+            var isGlobal = string.Equals(accessScope, AccessScopes.Global, StringComparison.OrdinalIgnoreCase);
+            var effectiveTenant = isGlobal ? null : (user.TenantId ?? user.ClienteId);
+            var clienteId = isGlobal ? null : user.ClienteId;
+            var contextMode = isGlobal ? "GLOBAL" : "TENANT";
+            var permissions = (await LoadPermissionsAsync(cn, userId, effectiveTenant, cancellationToken)).ToArray();
+            var modules = effectiveTenant.HasValue ? (await LoadModulesAsync(cn, effectiveTenant.Value, cancellationToken)).ToArray() : Array.Empty<string>();
+            var sessionGuid = Guid.NewGuid();
+            var sessionId = sessionGuid.ToString("N");
+            var expiresAtUtc = DateTime.UtcNow.AddHours(8);
+            var token = GenerateToken(user.Id, user.Email, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, effectiveTenant, permissions, modules, user.ClienteStatus);
+            var res = new LoginResponse(token, expiresAtUtc, user.Id, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, effectiveTenant, isGlobal ? null : user.ClienteNome, user.SenhaAlteracaoObrigatoria, primaryRole, accessScope, false, true, effectiveTenant, contextMode, sessionId, permissions, modules, isGlobal ? null : user.ClienteStatus);
+            return ApiResponse<LoginResponse>.Ok(res, "Contexto atualizado com sucesso.");
+        }
         private static async Task<IEnumerable<string>> LoadPermissionsAsync(NpgsqlConnection cn, Guid usuarioId, Guid? tenantId, CancellationToken cancellationToken)
         {
             const string sql = @"with granted as (
@@ -498,10 +541,10 @@ select distinct g.codigo from granted g where not exists(select 1 from denied d 
 
         private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId, CancellationToken cancellationToken)
         {
-            const string sql = @"select distinct upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))
+            const string sql = @"select distinct upper(coalesce(nullif(tm.codigo_modulo,''),nullif(tm.codigo,''),ms.codigo))
 from plantaopro.tenant_modulos tm
 left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
-where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
+where tm.tenant_id=@tenantId and tm.reg_status='A' and coalesce(tm.habilitado,true)=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
 order by 1";
             return await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, cancellationToken: cancellationToken));
         }
@@ -892,11 +935,17 @@ where id=@id", new
             _historico = historico;
             _transicao = transicao;
         }
-        public async Task<ApiResponse<PagedResult<PlantaoResumoDto>>> GetAllAsync(PlantaoFilterRequest f)
+        public async Task<ApiResponse<PagedResult<PlantaoResumoDto>>> GetAllAsync(PlantaoFilterRequest f, Guid? tenantId = null, Guid? clienteId = null)
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var where = " where p.reg_status='A' ";
             var dp = new DynamicParameters();
+            var effectiveTenant = tenantId ?? clienteId;
+            if (effectiveTenant.HasValue)
+            {
+                where += " and (p.tenant_id = @tenantId or p.cliente_id = @tenantId) ";
+                dp.Add("tenantId", effectiveTenant.Value);
+            }
             if (f.HospitalId.HasValue)
             {
                 where += " and p.hospital_id=@h";
@@ -998,12 +1047,19 @@ where id=@id", new
             await audit.LogAsync(userId, "DUPLICATE", "plantoes", id, $"Origem: {sourceId}", ip: ip, userAgent: userAgent);
             return ApiResponse<PlantaoDto>.Ok(new PlantaoDto(id, source.HospitalId, source.EspecialidadeId, start, end, source.Valor, source.Vagas, source.Vagas, source.Tipo, "rascunho", source.Observacoes), "Plantão duplicado como rascunho.");
         }
-        public async Task<ApiResponse<PlantaoDetailsDto>> GetByIdAsync(Guid id)
+        public async Task<ApiResponse<PlantaoDetailsDto>> GetByIdAsync(Guid id, Guid? tenantId = null, Guid? clienteId = null)
         {
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var d = await cn.QueryFirstOrDefaultAsync<PlantaoDetailsDto>("select p.id,p.hospital_id as HospitalId,p.especialidade_id as EspecialidadeId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,e.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,coalesce(p.observacoes,'') as Observacoes,p.reg_status as RegStatus,p.reg_date as RegDate from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.id=@id and p.reg_status='A'", new
+            var sql = "select p.id,p.hospital_id as HospitalId,p.especialidade_id as EspecialidadeId,h.nome_fantasia as HospitalNome,h.cidade as HospitalCidade,h.estado as HospitalEstado,e.nome as EspecialidadeNome,p.data_inicio as DataInicio,p.data_fim as DataFim,p.valor,p.vagas,p.vagas_disponiveis as VagasDisponiveis,p.tipo,p.status,coalesce(p.observacoes,'') as Observacoes,p.reg_status as RegStatus,p.reg_date as RegDate from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.id=@id and p.reg_status='A'";
+            var effectiveTenant = tenantId ?? clienteId;
+            if (effectiveTenant.HasValue)
             {
-                id
+                sql += " and (p.tenant_id = @tenantId or p.cliente_id = @tenantId)";
+            }
+            var d = await cn.QueryFirstOrDefaultAsync<PlantaoDetailsDto>(sql, new
+            {
+                id,
+                tenantId = effectiveTenant
             });
             return d is null ? ApiResponse<PlantaoDetailsDto>.Fail("Plantão não encontrado", 404) : ApiResponse<PlantaoDetailsDto>.Ok(d);
         }
@@ -1028,26 +1084,30 @@ where id=@id", new
             return ApiResponse<IEnumerable<PlantaoConviteDto>>.Ok(items);
         }
 
-        public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua)
+        public async Task<ApiResponse<PlantaoDto>> CreateAsync(CreatePlantaoRequest r, Guid u, string? ip, string? ua, Guid? tenantId = null, Guid? clienteId = null)
         {
             var validaCriacao = _regra.ValidarCriacao(r);
             if (!validaCriacao.Success)
                 return ApiResponse<PlantaoDto>.Fail(validaCriacao.Message);
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            var hospitalAtivo = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.hospitais where id=@id and reg_status='A'", new
-            {
-                id = r.HospitalId
-            });
+            var hospInfo = await cn.QueryFirstOrDefaultAsync<(int Count, Guid? TenantId, Guid? ClienteId)>(
+                "select count(1) as Count, max(tenant_id) as TenantId, max(cliente_id) as ClienteId from plantaopro.hospitais where id=@id and reg_status='A' group by id",
+                new { id = r.HospitalId });
             var espAtiva = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.especialidades where id=@id and reg_status='A'", new
             {
                 id = r.EspecialidadeId
             });
-            if (hospitalAtivo == 0 || espAtiva == 0)
+            if (hospInfo.Count == 0 || espAtiva == 0)
                 return ApiResponse<PlantaoDto>.Fail("Hospital ou especialidade inválidos/inativos");
+            var effectiveTenant = tenantId ?? hospInfo.TenantId;
+            var effectiveCliente = clienteId ?? hospInfo.ClienteId ?? effectiveTenant;
             var id = Guid.NewGuid();
-            await cn.ExecuteAsync("insert into plantaopro.plantoes(id,hospital_id,especialidade_id,data_inicio,data_fim,valor,vagas,vagas_disponiveis,tipo,status,observacoes,reg_date,reg_status,created_by) values(@id,@h,@e,@di,@df,@v,@vg,@vg,@t,'rascunho',@o,now(),'A',@u)", new
+            await cn.ExecuteAsync(@"insert into plantaopro.plantoes(id,tenant_id,cliente_id,hospital_id,especialidade_id,data_inicio,data_fim,valor,vagas,vagas_disponiveis,tipo,status,observacoes,reg_date,reg_status,created_by)
+values(@id,@tenantId,@clienteId,@h,@e,@di,@df,@v,@vg,@vg,@t,'rascunho',@o,now(),'A',@u)", new
             {
                 id,
+                tenantId = effectiveTenant,
+                clienteId = effectiveCliente,
                 h = r.HospitalId,
                 e = r.EspecialidadeId,
                 di = r.DataInicio,
@@ -1059,7 +1119,7 @@ where id=@id", new
                 u
             });
             await audit.LogAsync(u, "CREATE", "plantoes", id, "Criação", ip: ip, userAgent: ua);
-            logger.LogInformation("Plantão criado {Id}", id);
+            logger.LogInformation("Plantão criado {Id} para tenant {TenantId}", id, effectiveTenant);
             return ApiResponse<PlantaoDto>.Ok(new(
        id,
        r.HospitalId,
@@ -1202,11 +1262,22 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             return m;
         }
         private async Task AddHistoricoAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid escalaId, string? ant, string novo, string? just, Guid u) => await cn.ExecuteAsync("insert into plantaopro.historico_escala(id,escala_id,status_anterior,status_novo,justificativa,usuario_id,reg_date) values(gen_random_uuid(),@escalaId,@ant,@novo,@just,@u,now())", new { escalaId, ant, novo, just, u }, tx);
-        public async Task<ApiResponse<PagedResult<EscalaResumoDto>>> ListarAsync(EscalaFilterRequest f)
+        public async Task<ApiResponse<PagedResult<EscalaResumoDto>>> ListarAsync(EscalaFilterRequest f, Guid? tenantId = null, Guid? clienteId = null, Guid? userId = null, bool isDoctor = false)
         {
             await using var cn = Cn();
             var w = " where e.reg_status='A'";
             var dp = new DynamicParameters();
+            var effectiveTenant = tenantId ?? clienteId;
+            if (effectiveTenant.HasValue)
+            {
+                w += " and (e.tenant_id = @tenantId or e.cliente_id = @tenantId or pl.tenant_id = @tenantId or pl.cliente_id = @tenantId)";
+                dp.Add("tenantId", effectiveTenant.Value);
+            }
+            if (isDoctor && userId.HasValue)
+            {
+                w += " and (e.medico_id = @medUserId or exists(select 1 from plantaopro.medicos m where m.id=e.medico_id and m.usuario_id=@medUserId))";
+                dp.Add("medUserId", userId.Value);
+            }
             if (f.MedicoId.HasValue)
             {
                 w += " and e.medico_id=@m";
@@ -1250,12 +1321,19 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             var items = await cn.QueryAsync<EscalaResumoDto>("select e.id,e.plantao_id as PlantaoId,e.medico_id as MedicoId,m.nome as MedicoNome,m.crm as MedicoCrm,m.uf_crm as MedicoUfCrm,h.nome_fantasia as HospitalNome,esp.nome as EspecialidadeNome,pl.data_inicio as DataInicio,pl.data_fim as DataFim,pl.valor,pl.tipo as TipoPlantao,e.status,e.justificativa,e.reg_date as RegDate from plantaopro.escalas e join plantaopro.medicos m on m.id=e.medico_id join plantaopro.plantoes pl on pl.id=e.plantao_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id" + w + " order by e.reg_date desc limit @lim offset @off", dp);
             return ApiResponse<PagedResult<EscalaResumoDto>>.Ok(new(items, pg, ps, total));
         }
-        public async Task<ApiResponse<EscalaDto>> GetByIdAsync(Guid id)
+        public async Task<ApiResponse<EscalaDto>> GetByIdAsync(Guid id, Guid? tenantId = null, Guid? clienteId = null)
         {
             await using var cn = Cn();
-            var d = await cn.QueryFirstOrDefaultAsync<EscalaDto>("select id,plantao_id as PlantaoId,medico_id as MedicoId,status,justificativa from plantaopro.escalas where id=@id and reg_status='A'", new
+            var sql = "select id,plantao_id as PlantaoId,medico_id as MedicoId,status,justificativa from plantaopro.escalas where id=@id and reg_status='A'";
+            var effectiveTenant = tenantId ?? clienteId;
+            if (effectiveTenant.HasValue)
             {
-                id
+                sql += " and (tenant_id = @tenantId or cliente_id = @tenantId)";
+            }
+            var d = await cn.QueryFirstOrDefaultAsync<EscalaDto>(sql, new
+            {
+                id,
+                tenantId = effectiveTenant
             });
             return d is null ? ApiResponse<EscalaDto>.Fail("Escala não encontrada", 404) : ApiResponse<EscalaDto>.Ok(d);
         }
@@ -1856,7 +1934,9 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                 if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
                 var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or (@podeGerirTenant and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId)) for update", new { id,userId,tenantId,clienteId,podeGerirTenant }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
-                if (pg.Status is not ("aprovado" or "pago")) return ApiResponse<PagamentoActionResponse>.Fail("Somente obrigação aprovada ou pagamento registrado pode ser contestado.", 409);
+                if (pg.ValorPrevisto <= 0) return ApiResponse<PagamentoActionResponse>.Fail("Valor previsto inválido para contestação.", 400);
+                if (pg.Status is not ("aprovado" or "pago" or "pendente")) return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado ou obrigação aprovada.", 409);
+                // status='contestado'
                 await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@userId)",new{tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=pg.ValorPrevisto,userId},tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, pg.Status, "CONTESTACAO_ABERTA: " + req.Motivo.Trim(), userId);
                 await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);

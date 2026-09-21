@@ -68,17 +68,39 @@ namespace PlantaoPro.Api.Data
                         return ApiResponse<OnboardingResumoDto>.Fail("E-mail de usuário já cadastrado.", 400);
                     }
 
-                    // 3. Criar Cliente
+                    // 3. Criar Tenant e Cliente
+                    var tenantId = Guid.NewGuid();
                     var clienteId = Guid.NewGuid();
+                    var slug = System.Text.RegularExpressions.Regex.Replace(
+                        (string.IsNullOrWhiteSpace(req.NomeFantasia) ? req.RazaoSocial : req.NomeFantasia).ToLowerInvariant(),
+                        "[^a-z0-9]+",
+                        "-").Trim('-');
+                    if (string.IsNullOrWhiteSpace(slug)) slug = "tenant-" + tenantId.ToString("N")[..8];
+
+                    await cn.ExecuteAsync(
+                        @"INSERT INTO plantaopro.tenants
+                          (id, tenant_id, codigo, nome, status, dados, criado_em)
+                          VALUES (@tenantId, @tenantId, @slug, @Nome, 'ATIVO', '{}'::jsonb, NOW())
+                          ON CONFLICT (id) DO NOTHING",
+                        new
+                        {
+                            tenantId,
+                            slug,
+                            Nome = string.IsNullOrWhiteSpace(req.NomeFantasia) ? req.RazaoSocial : req.NomeFantasia
+                        },
+                        transaction: tx);
+
                     await cn.ExecuteAsync(
                         @"INSERT INTO plantaopro.clientes
-                          (id, razao_social, nome_fantasia, cnpj, email, telefone, 
+                          (id, tenant_id, codigo, razao_social, nome_fantasia, cnpj, email, telefone, 
                            cidade, estado, plano_id, status, reg_status, reg_date)
-                          VALUES (@id, @RazaoSocial, @NomeFantasia, @Cnpj, @Email, @Telefone,
+                          VALUES (@id, @tenantId, @codigo, @RazaoSocial, @NomeFantasia, @Cnpj, @Email, @Telefone,
                                   @Cidade, @Estado, @PlanoId, @Status, 'A', NOW())",
                         new
                         {
                             id = clienteId,
+                            tenantId,
+                            codigo = slug,
                             req.RazaoSocial,
                             req.NomeFantasia,
                             req.Cnpj,
@@ -91,16 +113,16 @@ namespace PlantaoPro.Api.Data
                         },
                         transaction: tx);
 
-                    logger.LogInformation("Cliente criado: {ClienteId}", clienteId);
+                    logger.LogInformation("Cliente {ClienteId} e Tenant {TenantId} criados", clienteId, tenantId);
 
                     // 4. Criar Assinatura
                     var assinaturaId = Guid.NewGuid();
-                    var valorContratado = await cn.QueryFirstOrDefaultAsync<decimal?>(
-                        "SELECT valor_mensal FROM plantaopro.planos WHERE id = @id AND reg_status = 'A'",
+                    var planoInfo = await cn.QueryFirstOrDefaultAsync<(decimal ValorMensal, string Nome)>(
+                        "SELECT valor_mensal as ValorMensal, coalesce(nome,'Plano Contratado') as Nome FROM plantaopro.planos WHERE id = @id AND reg_status = 'A'",
                         new { id = req.PlanoId },
                         transaction: tx);
 
-                    if (!valorContratado.HasValue)
+                    if (planoInfo.ValorMensal == 0 && planoInfo.Nome is null)
                     {
                         logger.LogWarning("Plano não encontrado ou inativo: {PlanoId}", req.PlanoId);
                         return ApiResponse<OnboardingResumoDto>.Fail("Plano não encontrado ou inativo.", 404);
@@ -112,18 +134,19 @@ namespace PlantaoPro.Api.Data
 
                     await cn.ExecuteAsync(
                         @"INSERT INTO plantaopro.assinaturas
-                          (id, cliente_id, plano_id, data_inicio, data_fim, status,
+                          (id, tenant_id, cliente_id, plano_id, data_inicio, data_fim, status,
                            valor_contratado, dia_vencimento, observacoes, reg_status, reg_date)
-                          VALUES (@id, @ClienteId, @PlanoId, NOW(), @DataFim, @Status,
+                          VALUES (@id, @tenantId, @ClienteId, @PlanoId, NOW(), @DataFim, @Status,
                                   @ValorContratado, @DiaVencimento, @Observacoes, 'A', NOW())",
                         new
                         {
                             id = assinaturaId,
+                            tenantId,
                             ClienteId = clienteId,
                             req.PlanoId,
                             DataFim = dataFim,
                             Status = "ATIVA",
-                            ValorContratado = valorContratado.Value,
+                            ValorContratado = planoInfo.ValorMensal,
                             DiaVencimento = DateTime.UtcNow.Day,
                             Observacoes = $"Assinatura criada via onboarding em {DateTime.UtcNow:dd/MM/yyyy HH:mm}"
                         },
@@ -131,19 +154,41 @@ namespace PlantaoPro.Api.Data
 
                     logger.LogInformation("Assinatura criada: {AssinaturaId}", assinaturaId);
 
-                    // 5. Criar Unidade Inicial
+                    // 5. Contratação explícita dos módulos ESCALAS, EXECUCAO, CONFERENCIA
+                    var modulosIniciais = new (string Code, string Name)[]
+                    {
+                        ("ESCALAS", "Gestão de Escalas"),
+                        ("EXECUCAO", "Acompanhamento da Execução"),
+                        ("CONFERENCIA", "Conferência Operacional e Turnos")
+                    };
+
+                    foreach (var (code, name) in modulosIniciais)
+                    {
+                        await cn.ExecuteAsync(
+                            @"INSERT INTO plantaopro.tenant_modulos
+                              (id, tenant_id, cliente_id, codigo, codigo_modulo, nome, habilitado, status, reg_status, reg_date)
+                              VALUES (gen_random_uuid(), @tenantId, @clienteId, @code, @code, @name, true, 'ATIVO', 'A', NOW())",
+                            new { tenantId, clienteId, code, name },
+                            transaction: tx);
+                    }
+
+                    logger.LogInformation("Módulos operacionais contratados para o tenant {TenantId}", tenantId);
+
+                    // 6. Criar Unidade e Hospital correspondente para operações
                     var unidadeId = Guid.NewGuid();
+                    var unidadeNome = string.IsNullOrWhiteSpace(req.UnidadeNome) ? "Unidade Principal" : req.UnidadeNome;
                     await cn.ExecuteAsync(
                         @"INSERT INTO plantaopro.unidades
-                          (id, cliente_id, nome, tipo, cidade, estado, responsavel, 
+                          (id, tenant_id, cliente_id, nome, tipo, cidade, estado, responsavel, 
                            status, reg_status, reg_date)
-                          VALUES (@id, @ClienteId, @Nome, @Tipo, @Cidade, @Estado,
+                          VALUES (@id, @tenantId, @ClienteId, @Nome, @Tipo, @Cidade, @Estado,
                                   @Responsavel, 'ATIVA', 'A', NOW())",
                         new
                         {
                             id = unidadeId,
+                            tenantId,
                             ClienteId = clienteId,
-                            Nome = req.UnidadeNome,
+                            Nome = unidadeNome,
                             req.UnidadeTipo,
                             req.UnidadeCidade,
                             req.UnidadeEstado,
@@ -151,66 +196,104 @@ namespace PlantaoPro.Api.Data
                         },
                         transaction: tx);
 
-                    logger.LogInformation("Unidade criada: {UnidadeId}", unidadeId);
+                    await cn.ExecuteAsync(
+                        @"INSERT INTO plantaopro.hospitais
+                          (id, tenant_id, cliente_id, nome, nome_fantasia, razao_social, cnpj, cidade, estado, status, reg_status, reg_date)
+                          VALUES (@id, @tenantId, @ClienteId, @Nome, @Nome, @RazaoSocial, @Cnpj, @Cidade, @Estado, 'ATIVO', 'A', NOW())
+                          ON CONFLICT (id) DO NOTHING",
+                        new
+                        {
+                            id = unidadeId,
+                            tenantId,
+                            ClienteId = clienteId,
+                            Nome = unidadeNome,
+                            req.RazaoSocial,
+                            req.Cnpj,
+                            Cidade = req.UnidadeCidade ?? req.Cidade,
+                            Estado = req.UnidadeEstado ?? req.Estado
+                        },
+                        transaction: tx);
 
-                    // 6. Criar Usuário Admin
+                    logger.LogInformation("Unidade e Hospital criados: {UnidadeId}", unidadeId);
+
+                    // 7. Criar Usuário Admin do Cliente
                     var usuarioId = Guid.NewGuid();
                     var senhaHash = BCrypt.Net.BCrypt.HashPassword(req.UsuarioSenha);
 
                     await cn.ExecuteAsync(
                         @"INSERT INTO plantaopro.usuarios
-                          (id, nome, email, telefone, senha_hash, cliente_id,
+                          (id, tenant_id, cliente_id, nome, email, email_normalizado, telefone, senha_hash,
                            status, reg_status, reg_date, criado_por)
-                          VALUES (@id, @Nome, @Email, @Telefone, @SenhaHash, @ClienteId,
+                          VALUES (@id, @tenantId, @ClienteId, @Nome, @Email, LOWER(@Email), @Telefone, @SenhaHash,
                                   'ATIVO', 'A', NOW(), @CriadoPor)",
                         new
                         {
                             id = usuarioId,
+                            tenantId,
+                            ClienteId = clienteId,
                             Nome = req.UsuarioNome,
                             req.UsuarioEmail,
                             req.UsuarioTelefone,
                             SenhaHash = senhaHash,
-                            ClienteId = clienteId,
                             CriadoPor = usuarioAdminGlobalId
                         },
                         transaction: tx);
 
-                    logger.LogInformation("Usuário criado: {UsuarioId}", usuarioId);
+                    logger.LogInformation("Usuário admin do cliente criado: {UsuarioId}", usuarioId);
 
-                    // 7. Atribuir Perfil ADMINISTRADOR
-                    var perfilAdminId = await cn.QueryFirstOrDefaultAsync<Guid?>(
-                        "SELECT id FROM plantaopro.perfis WHERE nome = 'ADMINISTRADOR' AND reg_status = 'A' LIMIT 1",
-                        transaction: tx);
-
-                    if (perfilAdminId.HasValue)
+                    // 8. Atribuir Perfil Canônico ADMINISTRADOR_CLIENTE e ADMINISTRADOR
+                    var perfisDesejados = new[] { "ADMINISTRADOR_CLIENTE", "ADMINISTRADOR" };
+                    foreach (var perfilCodigo in perfisDesejados)
                     {
-                        await cn.ExecuteAsync(
-                            @"INSERT INTO plantaopro.usuarios_perfis
-                              (id, usuario_id, perfil_id, reg_status, reg_date)
-                              VALUES (gen_random_uuid(), @UsuarioId, @PerfilId, 'A', NOW())",
-                            new
-                            {
-                                UsuarioId = usuarioId,
-                                PerfilId = perfilAdminId.Value
-                            },
+                        var perfilId = await cn.QueryFirstOrDefaultAsync<Guid?>(
+                            @"SELECT id FROM plantaopro.perfis 
+                              WHERE (codigo = @codigo OR nome = @codigo) AND reg_status = 'A'
+                              ORDER BY case when tenant_id = @tenantId then 1 when tenant_id is null then 2 else 3 end
+                              LIMIT 1",
+                            new { codigo = perfilCodigo, tenantId },
                             transaction: tx);
 
-                        logger.LogInformation("Perfil ADMINISTRADOR atribuído ao usuário");
+                        if (!perfilId.HasValue)
+                        {
+                            perfilId = Guid.NewGuid();
+                            await cn.ExecuteAsync(
+                                @"INSERT INTO plantaopro.perfis
+                                  (id, tenant_id, cliente_id, codigo, nome, descricao, base_sistema, status, reg_status, reg_date)
+                                  VALUES (@id, @tenantId, @clienteId, @codigo, @codigo, 'Perfil do cliente', true, 'ATIVO', 'A', NOW())",
+                                new { id = perfilId.Value, tenantId, clienteId, codigo = perfilCodigo },
+                                transaction: tx);
+                        }
+
+                        await cn.ExecuteAsync(
+                            @"INSERT INTO plantaopro.usuarios_perfis
+                              (id, tenant_id, cliente_id, usuario_id, perfil_id, reg_status, reg_date)
+                              VALUES (gen_random_uuid(), @tenantId, @clienteId, @UsuarioId, @PerfilId, 'A', NOW())
+                              ON CONFLICT DO NOTHING",
+                            new
+                            {
+                                tenantId,
+                                clienteId,
+                                UsuarioId = usuarioId,
+                                PerfilId = perfilId.Value
+                            },
+                            transaction: tx);
                     }
 
-                    // 8. Registrar Auditoria
+                    logger.LogInformation("Perfis ADMINISTRADOR_CLIENTE e ADMINISTRADOR atribuídos ao usuário {UsuarioId}", usuarioId);
+
+                    // 9. Registrar Auditoria
                     await auditService.LogAsync(
                         usuarioAdminGlobalId,
                         "ONBOARDING_CLIENTE",
                         "clientes",
                         clienteId,
-                        $"Cliente onboarded: {req.RazaoSocial}",
+                        $"Cliente onboarded com sucesso: {req.RazaoSocial} (Tenant: {tenantId})",
                         ip: ip,
                         userAgent: ua);
 
                     await tx.CommitAsync();
 
-                    logger.LogInformation("Onboarding concluído com sucesso para cliente: {ClienteId}", clienteId);
+                    logger.LogInformation("Onboarding concluído com sucesso para cliente: {ClienteId}, tenant: {TenantId}", clienteId, tenantId);
 
                     var resumo = new OnboardingResumoDto(
                         ClienteId: clienteId,

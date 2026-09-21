@@ -28,3 +28,6 @@ public sealed record ProductivitySummaryDto(int Active, int Critical, int Today,
 public sealed record SnoozeProductivityRequest(DateTimeOffset SnoozedUntil);
 public sealed record QuickActionDto(string Code, string Label, string Icon, string Controller, string Action,
     IReadOnlyDictionary<string, string>? RouteValues = null);
+public sealed record ProductivityAgendaItemDto(
+    string Title, string ContextLabel, DateTimeOffset StartsAt, DateTimeOffset? EndsAt, string Section);
+

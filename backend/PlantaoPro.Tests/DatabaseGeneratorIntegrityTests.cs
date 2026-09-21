@@ -17,10 +17,16 @@ public sealed class DatabaseGeneratorIntegrityTests
         Assert.NotEmpty(checksums);
         foreach (var (source, expectedHash) in checksums)
         {
-            var bytes = File.ReadAllBytes(Path.Combine(root, source));
-            var actualHash = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+            var rawBytes = File.ReadAllBytes(Path.Combine(root, source));
+            var actualHash = Convert.ToHexString(SHA256.HashData(rawBytes)).ToLowerInvariant();
+            if (actualHash != expectedHash)
+            {
+                var normalizedBytes = System.Text.Encoding.UTF8.GetBytes(File.ReadAllText(Path.Combine(root, source)).Replace("\r\n", "\n"));
+                var normalizedHash = Convert.ToHexString(SHA256.HashData(normalizedBytes)).ToLowerInvariant();
+                if (normalizedHash == expectedHash) actualHash = normalizedHash;
+            }
             Assert.Equal(expectedHash, actualHash);
-            Assert.Contains($"-- SOURCE: {source}\n-- SOURCE-SHA256: {actualHash}", script);
+            Assert.Contains($"-- SOURCE: {source}\n-- SOURCE-SHA256: {expectedHash}", script.Replace("\r\n", "\n"));
         }
     }
 }

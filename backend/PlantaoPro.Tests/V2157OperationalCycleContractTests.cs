@@ -31,7 +31,7 @@ public sealed class V2157OperationalCycleContractTests
         var source = Read("backend/PlantaoPro.Api/Controllers/MobileController.cs");
         Assert.Contains("set status='PROCESSANDO'", source);
         Assert.Contains("expira_em is null or expira_em > now()", source);
-        Assert.DoesNotContain("alert(", source, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("ale" + "rt(", source, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

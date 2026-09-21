@@ -75,7 +75,7 @@ public sealed class ManagerCommandCenterService
             (
                 select count(*)
                 from plantaopro.cobertura_convites cc
-                where (cc.tenant_id = @TenantId or cc.cliente_id = @TenantId)
+                where cc.tenant_id = @TenantId
                   and cc.status = 'PENDENTE'
             ) as ""PendingReplacements"",
             (

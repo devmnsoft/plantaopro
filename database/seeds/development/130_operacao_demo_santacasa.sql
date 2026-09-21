@@ -38,7 +38,7 @@ DECLARE
     v_invite3_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647582';
     v_incident2_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647591';
 
-    v_col_type text;
+    v_incompatible record;
 BEGIN
     IF v_db IN ('template0', 'template1') THEN
         RAISE EXCEPTION 'Recusado: execute o seed no banco de desenvolvimento (ex: plantaopro ou postgres), não em %.', v_db;
@@ -50,105 +50,27 @@ BEGIN
 
     PERFORM pg_advisory_xact_lock(7065262027);
 
-    -- 1. Normalização defensiva de tipos legados (caso bigint -> uuid)
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'especialidades' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.especialidades ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'especialidades' AND column_name = 'cliente_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.especialidades ALTER COLUMN cliente_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'hospitais' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.hospitais ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'plantoes' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.plantoes ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'escalas' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.escalas ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'clientes' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.clientes ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'assinaturas' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.assinaturas ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'unidades' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.unidades ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'medicos' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.medicos ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'plantao_convites' AND column_name = 'tenant_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.plantao_convites ALTER COLUMN tenant_id TYPE uuid USING NULL;
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'plantao_convites' AND column_name = 'cliente_id';
-    IF v_col_type = 'bigint' THEN
-        ALTER TABLE plantaopro.plantao_convites ALTER COLUMN cliente_id TYPE uuid USING NULL;
-    END IF;
-
-    -- Normalização das tabelas tenants e tenant_modulos se forem bigint sem registros
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'tenants' AND column_name = 'id';
-    IF v_col_type = 'bigint' THEN
-        DROP TABLE IF EXISTS plantaopro.tenants CASCADE;
-        CREATE TABLE plantaopro.tenants (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            tenant_id uuid NULL,
-            codigo text NULL,
-            nome text NULL,
-            status text NOT NULL DEFAULT 'ATIVO',
-            dados jsonb NOT NULL DEFAULT '{}'::jsonb,
-            criado_em timestamptz NOT NULL DEFAULT now(),
-            atualizado_em timestamptz NULL
-        );
-    END IF;
-
-    SELECT data_type INTO v_col_type FROM information_schema.columns
-    WHERE table_schema = 'plantaopro' AND table_name = 'tenant_modulos' AND column_name = 'id';
-    IF v_col_type = 'bigint' THEN
-        DROP TABLE IF EXISTS plantaopro.tenant_modulos CASCADE;
-        CREATE TABLE plantaopro.tenant_modulos (
-            id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-            tenant_id uuid NOT NULL,
-            codigo text NOT NULL,
-            nome text NOT NULL,
-            status text NOT NULL DEFAULT 'ATIVO',
-            dados jsonb NOT NULL DEFAULT '{}'::jsonb,
-            criado_em timestamptz NOT NULL DEFAULT now(),
-            atualizado_em timestamptz NULL
-        );
-    END IF;
+    -- 1. O seed só opera sobre o schema canônico UUID. Recusar schemas legados
+    -- evita converter referências existentes para NULL ou remover dados de tenants.
+    FOR v_incompatible IN
+        SELECT c.table_name, c.column_name
+        FROM information_schema.columns c
+        JOIN (VALUES
+            ('especialidades', 'tenant_id'), ('especialidades', 'cliente_id'),
+            ('hospitais', 'tenant_id'), ('plantoes', 'tenant_id'),
+            ('escalas', 'tenant_id'), ('clientes', 'tenant_id'),
+            ('assinaturas', 'tenant_id'), ('unidades', 'tenant_id'),
+            ('medicos', 'tenant_id'), ('plantao_convites', 'tenant_id'),
+            ('plantao_convites', 'cliente_id'), ('tenants', 'id'),
+            ('tenant_modulos', 'id')
+        ) AS expected(table_name, column_name)
+          ON expected.table_name = c.table_name AND expected.column_name = c.column_name
+        WHERE c.table_schema = 'plantaopro' AND c.data_type = 'bigint'
+    LOOP
+        RAISE EXCEPTION
+            'Schema legado incompatível: plantaopro.%.% usa bigint. Migre o banco para UUID antes de executar este seed; nenhum dado foi alterado.',
+            v_incompatible.table_name, v_incompatible.column_name;
+    END LOOP;
 
     -- 2. Compatibilidade idempotente de colunas essenciais
     IF to_regclass('plantaopro.especialidades') IS NOT NULL THEN

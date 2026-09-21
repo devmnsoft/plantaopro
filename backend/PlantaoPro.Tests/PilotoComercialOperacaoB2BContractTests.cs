@@ -13,7 +13,7 @@ public class PilotoComercialOperacaoB2BContractTests
         {
             typeof(PilotoBetaController), typeof(CustomerSuccessApiController), typeof(ExecutivoController), typeof(WhiteLabelTemplatesApiController),
             typeof(TreinamentoController), typeof(OperacaoAssistidaPlanosController), typeof(CentralEscalaEvoluidaController), typeof(MedicoAgendaMeController),
-            typeof(RenovacoesController), typeof(ExpansoesController)
+            typeof(MedicosMeDisponibilidadeController), typeof(RenovacoesController), typeof(ExpansoesController)
         })
         {
             foreach (var rota in ObterRotas(tipo)) rotas.Add(rota);

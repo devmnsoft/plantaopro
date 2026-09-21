@@ -15,13 +15,15 @@ namespace PlantaoPro.Api.Controllers
         private readonly ILogger<PlantoesController> logger;
         private readonly AssinaturaGuardService assinaturaGuard;
         private readonly UsuarioContextService usuarioContext;
+        private readonly ICurrentUserService currentUser;
 
-        public PlantoesController(PlantaoService service, MedicoRecomendacaoService recomendacaoService, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext, ILogger<PlantoesController> logger)
+        public PlantoesController(PlantaoService service, MedicoRecomendacaoService recomendacaoService, AssinaturaGuardService assinaturaGuard, UsuarioContextService usuarioContext, ICurrentUserService currentUser, ILogger<PlantoesController> logger)
         {
             this.service = service;
             this.recomendacaoService = recomendacaoService;
             this.assinaturaGuard = assinaturaGuard;
             this.usuarioContext = usuarioContext;
+            this.currentUser = currentUser;
             this.logger = logger;
         }
 
@@ -31,7 +33,7 @@ namespace PlantaoPro.Api.Controllers
         {
             try
             {
-                var r = await service.GetAllAsync(filter);
+                var r = await service.GetAllAsync(filter, currentUser.TenantId, currentUser.ClienteId);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)
@@ -47,7 +49,7 @@ namespace PlantaoPro.Api.Controllers
         {
             try
             {
-                var r = await service.GetAllAsync(filter with { Status = "aberto" });
+                var r = await service.GetAllAsync(filter with { Status = "aberto" }, currentUser.TenantId, currentUser.ClienteId);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)
@@ -63,7 +65,7 @@ namespace PlantaoPro.Api.Controllers
         {
             try
             {
-                var r = await service.GetByIdAsync(id);
+                var r = await service.GetByIdAsync(id, currentUser.TenantId, currentUser.ClienteId);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)
@@ -80,7 +82,7 @@ namespace PlantaoPro.Api.Controllers
             try
             {
                 var uid = GetUserId();
-                var r = await service.CreateAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString());
+                var r = await service.CreateAsync(req, uid, HttpContext.Connection.RemoteIpAddress?.ToString(), Request.Headers.UserAgent.ToString(), currentUser.TenantId, currentUser.ClienteId);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)

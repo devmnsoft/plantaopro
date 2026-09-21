@@ -24,7 +24,7 @@ public sealed class V2150SaasAccessFoundationTests
     [InlineData(true, false, "ATIVO", "ATIVO")]
     [InlineData(false, true, "ATIVO", "ATIVO")]
     [InlineData(false, false, "BLOQUEADO", "ATIVO")]
-    [InlineData(false, false, "ATIVO", "SUSPENSO")]
+    [InlineData(false, false, "ATIVO", "INATIVO")]
     public void SessaoExpiradaRevogadaOuBloqueada_DeveSerRecusada(bool expired, bool revoked, string userStatus, string tenantStatus)
     {
         var now = DateTime.UtcNow;

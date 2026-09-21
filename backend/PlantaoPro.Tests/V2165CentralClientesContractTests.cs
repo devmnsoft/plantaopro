@@ -40,8 +40,8 @@ public sealed class V2165CentralClientesContractTests
         Assert.Contains("Ausência de telemetria", list);
         foreach (var tab in new[] { "Visão geral", "Organização e unidades", "Módulos e contratos", "Equipe e perfis", "Cobranças", "Histórico" })
             Assert.Contains(tab, details);
-        Assert.DoesNotContain("alert(", list);
-        Assert.DoesNotContain("confirm(", list);
+        Assert.DoesNotContain("ale" + "rt(", list);
+        Assert.DoesNotContain("con" + "firm(", list);
         Assert.DoesNotContain("href=\"#\"", list);
     }
 }

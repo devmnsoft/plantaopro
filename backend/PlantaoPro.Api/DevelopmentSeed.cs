@@ -42,8 +42,12 @@ insert into plantaopro.unidades(id,tenant_id,codigo,nome,status,dados)
 values(@unitId,@tenantId,@unitCode,@unitName,'ATIVO',cast(@unitData as jsonb))
 on conflict(id) do nothing;
 
-insert into plantaopro.tenant_modulos(id,tenant_id,codigo,nome,status,dados)
-select module.id,@tenantId,module.code,module.name,'ATIVO',cast(@moduleData as jsonb)
+insert into plantaopro.hospitais(id,tenant_id,cliente_id,nome,nome_fantasia,status,dados)
+values(@unitId,@tenantId,@clientId,@unitName,@unitName,'ATIVO',cast(@unitData as jsonb))
+on conflict(id) do nothing;
+
+insert into plantaopro.tenant_modulos(id,tenant_id,codigo,codigo_modulo,nome,habilitado,status,dados)
+select module.id,@tenantId,module.code,module.code,module.name,true,'ATIVO',cast(@moduleData as jsonb)
 from (values
     (cast('d3f6584c-2c64-4e5a-9ea9-4e1428647521' as uuid),'ESCALAS','Escalas'),
     (cast('d3f6584c-2c64-4e5a-9ea9-4e1428647522' as uuid),'EXECUCAO','Execução'),
@@ -146,7 +150,7 @@ join plantaopro.perfis p on p.id=up.perfil_id where p.codigo='ADMINISTRADOR_GLOB
                 planData = JsonSerializer.Serialize(new { demonstracao = true }),
                 clientId = DemoClientId,
                 clientCode = "SANTA_CASA_DEMONSTRACAO",
-                clientName = "Santa Casa Demonstração",
+                clientName = "Cliente Modelo — Demonstração",
                 clientData = JsonSerializer.Serialize(new { demonstracao = true, ficticio = true }),
                 tenantId = DemoTenantId,
                 tenantCode = DemoTenantCode,
@@ -164,8 +168,8 @@ join plantaopro.perfis p on p.id=up.perfil_id where p.codigo='ADMINISTRADOR_GLOB
             await cn.ExecuteAsync(new CommandDefinition(DemoStructureSql, demoParameters, tx, cancellationToken: ct));
             await cn.ExecuteAsync(new CommandDefinition(@"
 update plantaopro.clientes set
-    razao_social = coalesce(nullif(razao_social,''), nome, 'Santa Casa Demonstração'),
-    nome_fantasia = coalesce(nullif(nome_fantasia,''), nome, razao_social, 'Santa Casa Demonstração'),
+    razao_social = coalesce(nullif(razao_social,''), nome, 'Cliente Modelo — Demonstração'),
+    nome_fantasia = coalesce(nullif(nome_fantasia,''), nome, razao_social, 'Cliente Modelo — Demonstração'),
     status = coalesce(nullif(status,''), 'ATIVO'),
     reg_status = coalesce(nullif(reg_status,''), 'A')
 where id=@clientId", new { clientId = DemoClientId }, tx, cancellationToken: ct));
@@ -179,7 +183,7 @@ where id=@clientId", new { clientId = DemoClientId }, tx, cancellationToken: ct)
             var physicianProfile = await EnsureProfile(cn, tx, "MEDICO", "Médico", DemoTenantId, DemoClientId, ct);
             if (!skipSuper)
                 await EnsureUser(cn, tx, SuperUserId, "Administrador MNSOFT — Demonstração", SuperEmail, superPassword, null, null, globalProfile, resetPasswords, ct);
-            await EnsureUser(cn, tx, ManagerUserId, "Gestor Santa Casa — Demonstração", ManagerEmail, managerPassword, DemoTenantId, DemoClientId, managerProfile, resetPasswords, ct);
+            await EnsureUser(cn, tx, ManagerUserId, "Gestor Operacional — Demonstração", ManagerEmail, managerPassword, DemoTenantId, DemoClientId, managerProfile, resetPasswords, ct);
             await EnsureUser(cn, tx, PhysicianUserId, "Dra. Ana Souza — Demonstração", PhysicianEmail, physicianPassword, DemoTenantId, DemoClientId, physicianProfile, resetPasswords, ct);
             await EnsurePhysicianRow(cn, tx, ct);
             await tx.CommitAsync(ct);
@@ -203,6 +207,11 @@ begin
         alter table plantaopro.clientes add column if not exists status text default 'ATIVO';
         alter table plantaopro.clientes add column if not exists dados jsonb default '{}'::jsonb;
         alter table plantaopro.clientes add column if not exists reg_status char(1) default 'A';
+    end if;
+    if to_regclass('plantaopro.hospitais') is not null then
+        alter table plantaopro.hospitais add column if not exists tenant_id uuid;
+        alter table plantaopro.hospitais add column if not exists cliente_id uuid;
+        alter table plantaopro.hospitais add column if not exists dados jsonb default '{}'::jsonb;
     end if;
     if to_regclass('plantaopro.medicos') is null then
         create table plantaopro.medicos (

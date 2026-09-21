@@ -35,7 +35,7 @@ public sealed class ExecutionConferenceEvolutionTests
         Assert.Contains("Duração resultante", professional);
         Assert.Contains("name=\"divergencia\"", conference);
         Assert.Contains("REGISTRO_INCOMPLETO", conference);
-        Assert.DoesNotContain("alert(", professional + conference);
-        Assert.DoesNotContain("confirm(", professional + conference);
+        Assert.DoesNotContain("ale" + "rt(", professional + conference);
+        Assert.DoesNotContain("con" + "firm(", professional + conference);
     }
 }

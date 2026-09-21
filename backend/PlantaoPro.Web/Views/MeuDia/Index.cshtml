@@ -26,20 +26,36 @@
         </div>
     </section>
 
+    @if (Model.Summary.Critical > 0 || Model.Summary.Overdue > 0)
+    {
+        <aside class="pp-alert-banner is-warning mb-3" role="alert" aria-live="polite">
+            <div class="pp-alert-banner__content">
+                <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+                <div>
+                    <strong>Atenção operacional requerida:</strong>
+                    <span>Você possui @(Model.Summary.Critical > 0 ? $"{Model.Summary.Critical} ação(ões) crítica(s)" : "") @(Model.Summary.Overdue > 0 ? $"{Model.Summary.Overdue} ação(ões) atrasada(s)" : "").</span>
+                </div>
+            </div>
+            <div class="pp-alert-banner__actions">
+                <a class="btn btn-sm btn-outline-dark" href="#day-workspace">Ver pendências</a>
+            </div>
+        </aside>
+    }
+
     <section class="day-modules" aria-label="Jornadas operacionais">
         @if (isPhysician)
         {
-            <a class="day-module" asp-controller="Escalas" asp-action="Index">
+            <a class="day-module" asp-controller="MinhaAgenda" asp-action="Index">
                 <span class="day-module__code">Escalas</span>
                 <strong>Minha Agenda</strong>
                 <small>Próximos plantões e convites</small>
             </a>
-            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+            <a class="day-module" asp-controller="MinhaAgenda" asp-action="Presencas">
                 <span class="day-module__code">Execução</span>
                 <strong>Meu Turno</strong>
                 <small>Check-in e registro do plantão</small>
             </a>
-            <a class="day-module" asp-controller="ConferenciaExecucao" asp-action="Index">
+            <a class="day-module" asp-controller="MinhaAgenda" asp-action="MeusPagamentos">
                 <span class="day-module__code">Conferência</span>
                 <strong>Minha Produção</strong>
                 <small>Plantões realizados e fechamentos</small>
@@ -172,4 +188,18 @@
 </div>
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/meu-dia.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (Model.Summary.Critical > 0)
+            {
+                <text>
+                if (window.PlantaoProToast && typeof window.PlantaoProToast.warning === 'function') {
+                    window.PlantaoProToast.warning("Atenção: Você possui @Model.Summary.Critical pendência(s) crítica(s) na operação.");
+                }
+                </text>
+            }
+        });
+    </script>
 }

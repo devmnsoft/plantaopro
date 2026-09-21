@@ -21,7 +21,7 @@ public sealed class WorkItemService : IWorkItemService
         if (current.IsGlobalAdmin() && !current.TenantId.HasValue)
         {
             var globalContext = new CentralContextDto(Guid.Empty, "Visão global MNSOFT", null, null,
-                "Administrador global", true, DateTimeOffset.UtcNow);
+                "Administrador global", GlobalView: true, DateTimeOffset.UtcNow);
             return new MinhaCentralDto(globalContext, new CentralSummaryDto(0, 0, 0, 0, 0),
                 Array.Empty<CentralWorkItemDto>(), new[]
                 {
@@ -38,7 +38,7 @@ public sealed class WorkItemService : IWorkItemService
             .OrderBy(x => x.DueAt.HasValue ? 0 : 1).ThenBy(x => x.DueAt).ThenByDescending(x => x.UpdatedAt).ThenBy(x => x.StableKey)
             .Take(100).ToArray();
         var context = new CentralContextDto(Tenant, Claim("tenant") ?? Claim("cliente") ?? "Organização selecionada", Unit,
-            Claim("unidade"), ResolveProfile(), false, now);
+            Claim("unidade"), ResolveProfile(), GlobalView: false, now);
         var summary = new CentralSummaryDto(items.Length, items.Count(x => x.DueAt < now),
             items.Count(x => x.Priority == "CRITICA"), items.Count(x => x.Status == WorkItemStatus.Aguardando),
             persisted.Count(x => x.Status == WorkItemStatus.Concluido && x.AtualizadoEm.UtcDateTime.Date == now.UtcDateTime.Date));

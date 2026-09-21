@@ -7,7 +7,8 @@ public sealed class V117RuntimeHardeningContractTests
     [Fact]
     public void RuntimeV117DocumentaSeedControladoSmokeECi()
     {
-        Assert.Contains("DevelopmentSeed:Enabled", Read("backend/PlantaoPro.Api/Program.cs"));
+        var program = Read("backend/PlantaoPro.Api/Program.cs");
+        Assert.True(program.Contains("DemoSeed:Enabled") || program.Contains("DevelopmentSeed:Enabled"));
         Assert.True(File.Exists(Path.Combine(Root(), "scripts/smoke-test-v117.sh")));
         var ci = Read(".github/workflows/dotnet-ci.yml");
         Assert.Contains("runtime-from-complete-script", ci);

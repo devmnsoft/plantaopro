@@ -13,7 +13,7 @@ public sealed class V2169ConferenceDecisionTests
         Assert.Equal(expected, RolesConstants.EscalasGestao);
         Assert.DoesNotContain("HOSPITAL", RolesConstants.EscalasGestao);
         Assert.DoesNotContain("AUDITOR", RolesConstants.EscalasGestao);
-        var authorize = Assert.Single(typeof(ConferenciaExecucaoController).GetCustomAttributes(typeof(AuthorizeAttribute), true).Cast<AuthorizeAttribute>());
+        var authorize = Assert.Single(typeof(ConferenciaExecucaoController).GetCustomAttributes(typeof(AuthorizeAttribute), false).Cast<AuthorizeAttribute>());
         Assert.Equal(expected, authorize.Roles);
     }
 

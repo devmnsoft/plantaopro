@@ -39,7 +39,7 @@ where m.reg_status='A' group by m.id,tm.id,tm.status,tm.habilitado,tm.preco_cont
         if (ids.Length == 0) throw new ArgumentException("Selecione ao menos um módulo.");
         var fullCatalog = await CatalogAsync(ct);
         var catalog = fullCatalog.Where(x => ids.Contains(x.Id)).ToArray();
-        if (catalog.Length != ids.Length || catalog.Any(x => x.Disponibilidade != "DISPONIVEL" || x.EstadoContratual != "NAO_CONTRATADO")) throw new InvalidOperationException("Um módulo já está contratado, suspenso, solicitado ou indisponível para nova contratação.");
+        if (catalog.Length != ids.Length || catalog.Any(x => x.Disponibilidade != "DISPONIVEL" || x.EstadoContratual is "ATIVO" or "SUSPENSO")) throw new InvalidOperationException("Um módulo já está contratado, suspenso, solicitado ou indisponível para nova contratação.");
         var selectedCodes = catalog.Select(x => x.Codigo).ToHashSet(StringComparer.OrdinalIgnoreCase);
         // Uma dependência já vigente no tenant não deve ser contratada outra vez.
         // Suspensa/agendada continua sem satisfazer a dependência operacional.

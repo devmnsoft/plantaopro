@@ -79,7 +79,7 @@
         </div>
 
         <aside class="d-grid gap-3" aria-label="Ações e histórico do pagamento">
-            @if (status == "aprovado")
+            @if (status == "aprovado" || status == "pendente")
             {
                 <form asp-action="ConfirmarPagamento" asp-route-id="@pg.Id" method="post" class="pp-payment-card pp-payment-action" data-ajax-form="true" data-confirm="true" data-confirm-title="Registrar pagamento" data-confirm-message="Confirma registrar manualmente a quitação desta obrigação aprovada? A ação será auditada e atualizará o financeiro do médico." data-confirm-type="success">
                     @Html.AntiForgeryToken()

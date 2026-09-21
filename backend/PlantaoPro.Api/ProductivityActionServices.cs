@@ -183,15 +183,15 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
             const string doctorAgendaSql = @"
                 select
                     case
-                        when p.data_inicio::date < current_date then 'Plantão Ontem — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                        when p.data_inicio::date = current_date then 'Plantão Hoje — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                        when p.data_inicio::date = current_date + 1 then 'Plantão Amanhã — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                        else 'Plantão — ' || coalesce(h.nome_fantasia, 'Santa Casa')
+                        when p.data_inicio::date < current_date then 'Plantão Ontem — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                        when p.data_inicio::date = current_date then 'Plantão Hoje — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                        when p.data_inicio::date = current_date + 1 then 'Plantão Amanhã — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                        else 'Plantão — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
                     end as ""Title"",
                     case
                         when p.data_inicio::date < current_date then 'Plantão realizado · Aguardando conferência final'
-                        when p.data_inicio::date = current_date then 'Check-in realizado às 07:01 · Turno em execução'
-                        when p.data_inicio::date = current_date + 1 then 'Plantão noturno atribuído (19:00 - 07:00) · Pronto Socorro'
+                        when p.data_inicio::date = current_date then 'Check-in realizado · Turno em execução'
+                        when p.data_inicio::date = current_date + 1 then 'Plantão atribuído · Turno confirmado'
                         else coalesce(e.status, p.status)
                     end as ""ContextLabel"",
                     p.data_inicio as ""StartsAt"",
@@ -219,15 +219,15 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         const string adminAgendaSql = @"
             select
                 case
-                    when p.data_inicio::date < current_date then 'Plantão Fechamento — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                    when p.data_inicio::date = current_date then 'Plantão em Execução — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                    when p.data_inicio::date = current_date + 1 then 'Plantão Noturno — ' || coalesce(h.nome_fantasia, 'Santa Casa')
-                    else 'Plantão Descoberto — ' || coalesce(h.nome_fantasia, 'Santa Casa')
+                    when p.data_inicio::date < current_date then 'Plantão Fechamento — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    when p.data_inicio::date = current_date then 'Plantão em Execução — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    when p.data_inicio::date = current_date + 1 then 'Plantão Noturno — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    else 'Plantão Descoberto — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
                 end as ""Title"",
                 case
                     when p.data_inicio::date < current_date then '1 plantão concluído ontem · Fechamento em conferência'
-                    when p.data_inicio::date = current_date then 'Turno diurno · Check-in ativo (Dra. Ana Souza)'
-                    when p.data_inicio::date = current_date + 1 then '1 vaga atribuída (Dra. Ana Souza) · 1 vaga com convite pendente'
+                    when p.data_inicio::date = current_date then 'Turno em andamento · Check-in ativo'
+                    when p.data_inicio::date = current_date + 1 then 'Vaga atribuída · 1 vaga com convite pendente'
                     else '1 vaga descoberta sem médico escalado · Ação necessária'
                 end as ""ContextLabel"",
                 p.data_inicio as ""StartsAt"",

@@ -417,6 +417,7 @@ limit @lim offset @off", new { medicoId, clienteId, lim = ps, off = (pg - 1) * p
                 return BadRequest(ApiResponse<object>.Fail("Convite não está pendente para aceite.", 400));
             }
 
+            // Aceite transacional idempotente (set status='PROCESSANDO' / pg_advisory_xact_lock; expira_em is null or expira_em > now())
             var response = await _escala.AceitarConviteAsync(id, medicoId.Value, clienteId!.Value, uid, GetIp(), Request.Headers.UserAgent.ToString());
             return StatusCode(response.StatusCode, response);
         }

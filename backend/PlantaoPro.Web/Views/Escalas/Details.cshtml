@@ -59,6 +59,12 @@
                     </form>
 
                     <a class="btn btn-outline-secondary" asp-action="Substituir" asp-route-id="@e.Id"><i class="bi bi-arrow-repeat me-1"></i>Substituir</a>
+
+                    <form method="post" asp-action="Cancelar" asp-route-id="@e.Id" class="d-inline" data-ajax-form="true" data-confirm="true" data-confirm-title="Cancelar escala" data-confirm-message="Confirma cancelar esta escala? A vaga retornará ao plantão e a ação será auditada." data-confirm-type="danger">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="justificativa" value="Cancelada pela gestão operacional" />
+                        <button class="btn btn-outline-danger" type="submit"><i class="bi bi-slash-circle me-1"></i>Cancelar escala</button>
+                    </form>
                 }
             </div>
         </div>

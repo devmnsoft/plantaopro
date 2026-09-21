@@ -32,6 +32,22 @@
         }
     </nav>
 
+    @if (!isGlobal && (Model.Summary.Critical > 0 || Model.Summary.Uncovered > 0 || Model.Summary.CriticalNotifications > 0))
+    {
+        <aside class="pp-alert-banner is-danger mb-3" role="alert" aria-live="polite">
+            <div class="pp-alert-banner__content">
+                <i class="bi bi-exclamation-octagon-fill" aria-hidden="true"></i>
+                <div>
+                    <strong>Alerta Operacional Crítico:</strong>
+                    <span>Identificados @(Model.Summary.Critical > 0 ? $"{Model.Summary.Critical} plantão(ões) com risco" : "") @(Model.Summary.Uncovered > 0 ? $"{Model.Summary.Uncovered} vaga(s) sem cobertura" : "") @(Model.Summary.CriticalNotifications > 0 ? $"{Model.Summary.CriticalNotifications} alerta(s) de SLA" : "").</span>
+                </div>
+            </div>
+            <div class="pp-alert-banner__actions">
+                <a class="btn btn-sm btn-outline-danger" asp-controller="Escalas" asp-action="Index">Cobrir plantões</a>
+            </div>
+        </aside>
+    }
+
     @if (!string.IsNullOrWhiteSpace(Model.Error))
     {
         <section class="cc-state" role="alert">
@@ -130,4 +146,18 @@
 </main>
 @section Styles {
     <link rel="stylesheet" href="~/css/pages/command-center.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            @if (!isGlobal && (Model.Summary.Critical > 0 || Model.Summary.Uncovered > 0))
+            {
+                <text>
+                if (window.PlantaoProToast && typeof window.PlantaoProToast.warning === 'function') {
+                    window.PlantaoProToast.warning("Atenção: A unidade possui plantões críticos ou vagas descobertas.");
+                }
+                </text>
+            }
+        });
+    </script>
 }

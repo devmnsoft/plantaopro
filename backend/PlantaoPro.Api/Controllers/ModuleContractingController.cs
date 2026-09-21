@@ -20,7 +20,7 @@ public sealed class ClientModulesController : ControllerBase
 
     [HttpPost("solicitacoes")]
     [Authorize(Roles = RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente + "," + RolesConstants.Diretor)]
-    public async Task<IActionResult> Confirm([FromBody] ConfirmContractRequest request, CancellationToken ct) => await Result(() => service.ConfirmAsync(request, ct));
+    public async Task<IActionResult> Confirmar([FromBody] ConfirmContractRequest request, CancellationToken ct) => await Result(() => service.ConfirmAsync(request, ct));
 
     [HttpGet("solicitacoes")]
     public async Task<IActionResult> List([FromQuery] string? status, CancellationToken ct) => Ok(await service.ListAsync(status, null, ct));

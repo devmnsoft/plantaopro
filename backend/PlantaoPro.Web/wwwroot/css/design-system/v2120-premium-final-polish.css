@@ -112,11 +112,11 @@ body.pp-body {
 
 /* Foco é sempre perceptível, inclusive no shell, menus e controles somente com ícone. */
 :where(a, button, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid var(--pp-v2120-focus) !important;
-  outline-offset: 3px !important;
+  outline: 3px solid var(--pp-v2120-focus);
+  outline-offset: 3px;
   box-shadow: 0 0 0 5px rgb(8 126 164 / 16%);
 }
-.skip-link:focus { z-index: 10000; }
+.skip-link:focus { z-index: var(--pp-z-toast); }
 
 /* Login como composição de produto; movimento é decorativo e discreto. */
 .pp-auth-body { min-height: 100dvh; background: radial-gradient(circle at 12% 12%, #dbeefe 0, transparent 34%), #eef4f9; }
@@ -139,7 +139,7 @@ body.pp-body {
 
 @media (max-width: 991.98px) {
   /* A navegação inferior já oferece o acionador: evita dois ícones de menu na mesma tela. */
-  .pp-topbar #sidebarToggle { display: none !important; }
+  .pp-topbar #sidebarToggle { display: none; }
 }
 
 @media (max-width: 767.98px) {
@@ -168,16 +168,16 @@ body.pp-body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  *, *::before, *::after { scroll-behavior: auto; animation-duration: .01ms; animation-iteration-count: 1; transition-duration: .01ms; }
 }
 
 @media (forced-colors: active) {
-  :where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid CanvasText !important; }
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible { outline: 3px solid CanvasText; }
   .nav-link-app.active, .card, .pp-card { border: 1px solid CanvasText; }
 }
 
 @media print {
-  .pp-sidebar, .pp-topbar, .mobile-navigation, .sidebar-overlay, .btn { display: none !important; }
-  .pp-main-shell, .pp-content { margin: 0 !important; width: 100% !important; }
+  .pp-sidebar, .pp-topbar, .mobile-navigation, .sidebar-overlay, .btn { display: none; }
+  .pp-main-shell, .pp-content { margin: 0; width: 100%; }
   .pp-content :is(.card, .pp-card) { box-shadow: none; break-inside: avoid; }
 }

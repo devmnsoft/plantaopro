@@ -82,15 +82,20 @@ select case when x.status='PENDENTE' then x.id end as ""CorrecaoId"",c.id as ""P
  coalesce(h.nome_fantasia,h.razao_social) as ""Unidade"",
  p.data_inicio as ""InicioPrevisto"",p.data_fim as ""FimPrevisto"",
  c.checkin_em as ""InicioRegistrado"",c.checkout_em as ""FimRegistrado"",
- x.inicio_proposto_em as ""InicioProposto"",x.fim_proposto_em as ""FimProposto"",
+ case when x.status='PENDENTE' then x.inicio_proposto_em end as ""InicioProposto"",
+ case when x.status='PENDENTE' then x.fim_proposto_em end as ""FimProposto"",
  c.inicio_aprovado_em as ""InicioAprovado"",c.fim_aprovado_em as ""FimAprovado"",
- c.status_conferencia as ""Status"",coalesce(x.justificativa,'') as ""Justificativa"",
+ c.status_conferencia as ""Status"",
+ case when x.status='PENDENTE' then coalesce(x.justificativa,'') else '' end as ""Justificativa"",
  case when x.status='PENDENTE' then x.versao else c.versao end as ""Versao"",c.versao as ""VersaoPresenca"",
- coalesce(x.solicitado_em,c.checkout_em,c.checkin_em) as ""SolicitadoEm"" ";
+ case when x.status='PENDENTE' then x.solicitado_em
+      else coalesce(c.checkout_em,c.checkin_em) end as ""SolicitadoEm"" ";
 
         await using var connection = Connection();
         var rows = (await connection.QueryAsync<ConferenceRow>(new CommandDefinition(
-            select + from + " order by coalesce(x.solicitado_em,c.checkout_em,c.checkin_em) desc,c.id desc limit @limit offset @offset",
+            select + from + @" order by case when x.status='PENDENTE' then x.solicitado_em
+                                        else coalesce(c.checkout_em,c.checkin_em) end desc,
+                                  c.id desc limit @limit offset @offset",
             args,
             cancellationToken: ct))).AsList();
         var items = rows.Select(row => row.ToDto()).ToArray();

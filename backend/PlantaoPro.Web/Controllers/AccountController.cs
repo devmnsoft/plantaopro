@@ -343,7 +343,7 @@ public sealed class AccountController : Controller
     [Authorize]
     public async Task<IActionResult> Logout()
     {
-        var email = User.FindFirstValue(ClaimTypes.Email);
+        var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var token = HttpContext.Session.GetString("JwtToken");
         if (!string.IsNullOrWhiteSpace(token))
         {
@@ -364,7 +364,7 @@ public sealed class AccountController : Controller
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         HttpContext.Session.Clear();
         TempData["Success"] = "Sessão encerrada com sucesso.";
-        _logger.LogInformation("Logout Email:{Email} IP:{Ip}", email, HttpContext.Connection.RemoteIpAddress?.ToString());
+        _logger.LogInformation("Logout UsuarioId:{UsuarioId} IP:{Ip}", usuarioId, HttpContext.Connection.RemoteIpAddress?.ToString());
         return RedirectToAction(nameof(Login));
     }
 
@@ -422,12 +422,12 @@ public sealed class AccountController : Controller
         if (result?.Success == true)
         {
             TempData["Success"] = "Senha redefinida com sucesso.";
-            _logger.LogInformation("Senha redefinida Email:{Email}", model.Email);
+            _logger.LogInformation("Redefinição de senha Web concluída. TipoIdentificador:{TipoIdentificador}", ClassifyIdentifier(model.Email));
             return RedirectToAction(nameof(Login));
         }
 
         TempData["Error"] = "Token inválido ou expirado.";
-        _logger.LogWarning("Falha redefinir senha Email:{Email}", model.Email);
+        _logger.LogWarning("Redefinição de senha Web recusada. TipoIdentificador:{TipoIdentificador}", ClassifyIdentifier(model.Email));
         return View(model);
     }
 
@@ -469,6 +469,8 @@ public sealed class AccountController : Controller
                     new Claim("access_scope", accessScope),
                     new Claim("context_mode", contextMode)
                 };
+                if (!string.IsNullOrWhiteSpace(login.SessionId)) claims.Add(new Claim("session_id", login.SessionId));
+                if (!string.IsNullOrWhiteSpace(login.Token)) claims.Add(new Claim("jwt", login.Token));
                 claims.AddRange((login.Permissions ?? Array.Empty<string>()).Select(p => new Claim("permission", p)).DistinctBy(c => c.Value));
                 claims.AddRange((login.Modules ?? Array.Empty<string>()).Select(m => new Claim("module", m)).DistinctBy(c => c.Value));
                 if (login.ClienteId.HasValue) claims.Add(new Claim("cliente_id", login.ClienteId.Value.ToString()));
@@ -482,8 +484,16 @@ public sealed class AccountController : Controller
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
                 TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
+                return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
             }
         }
-        return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
+
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        HttpContext.Session.Clear();
+        TempData["Error"] = response.StatusCode == HttpStatusCode.Unauthorized
+            ? "Sua sessão expirou ou foi revogada. Entre novamente para continuar."
+            : "Não foi possível atualizar seu acesso. Entre novamente para continuar com segurança.";
+        _logger.LogWarning("Atualização de contexto recusada. Status:{Status}", (int)response.StatusCode);
+        return RedirectToAction(nameof(Login));
     }
 }

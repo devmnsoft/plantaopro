@@ -93,25 +93,34 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
         {
+            if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.Token) ||
+                string.IsNullOrWhiteSpace(req.NovaSenha) || req.NovaSenha.Length < 12)
+                return BadRequest(ApiResponse<object>.Fail("Solicitação de redefinição inválida. A nova senha deve ter pelo menos 12 caracteres."));
+
             await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
-            var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(req.Token)));
+            var normalizedEmail = req.Email.Trim().ToLowerInvariant();
+            var tokenHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(req.Token.Trim())));
             var row = await cn.QueryFirstOrDefaultAsync<(Guid UsuarioId, bool Utilizado, DateTime Expiracao)>(@"select rs.usuario_id,rs.utilizado,rs.expiracao
                 from plantaopro.recuperacao_senha rs
                 join plantaopro.usuarios u on u.id=rs.usuario_id
-                where u.email=@email and rs.token_hash=@tokenHash
-                order by rs.reg_date desc limit 1", new { email = req.Email, tokenHash });
+                where lower(u.email)=@email and rs.token_hash=@tokenHash and u.reg_status='A'
+                order by rs.reg_date desc limit 1", new { email = normalizedEmail, tokenHash });
 
             if (row.UsuarioId == Guid.Empty || row.Utilizado || row.Expiracao < DateTime.UtcNow)
             {
-                _logger.LogWarning("Token inválido/expirado para reset de senha {Email}", req.Email);
+                _logger.LogWarning("Redefinição de senha recusada. Identificador:{Identificador}", LoginIdentifierNormalizer.AuditValue(normalizedEmail, LoginIdentifierKind.Email));
                 return BadRequest(ApiResponse<object>.Fail("Token inválido ou expirado."));
             }
 
             var hash = BCrypt.Net.BCrypt.HashPassword(req.NovaSenha);
-            await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@h,reg_update=now() where id=@id", new { h = hash, id = row.UsuarioId });
-            await cn.ExecuteAsync("update plantaopro.recuperacao_senha set utilizado=true where usuario_id=@id and token_hash=@tokenHash", new { id = row.UsuarioId, tokenHash });
+            await cn.OpenAsync();
+            await using var transaction = await cn.BeginTransactionAsync();
+            await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@h,reg_update=now() where id=@id", new { h = hash, id = row.UsuarioId }, transaction);
+            await cn.ExecuteAsync("update plantaopro.recuperacao_senha set utilizado=true where usuario_id=@id and utilizado=false", new { id = row.UsuarioId }, transaction);
+            await cn.ExecuteAsync("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao='PASSWORD_RESET',reg_update=now() where usuario_id=@id and revogada_em is null", new { id = row.UsuarioId }, transaction);
+            await transaction.CommitAsync();
             await _auditService.LogAsync(row.UsuarioId, "PASSWORD_RESET", "usuarios", row.UsuarioId, "Senha redefinida", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
-            _logger.LogInformation("Senha redefinida para {Email}", req.Email);
+            _logger.LogInformation("Senha redefinida e sessões anteriores revogadas. UsuarioId:{UsuarioId}", row.UsuarioId);
 
             return Ok(ApiResponse<object>.Ok(new { }, "Senha redefinida com sucesso."));
         }

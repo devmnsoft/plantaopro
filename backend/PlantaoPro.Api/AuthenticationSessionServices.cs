@@ -41,6 +41,7 @@ public interface IAuthenticationSessionService
 {
     Task CreateAsync(Guid sessionId, Guid userId, Guid? tenantId, Guid? clienteId, DateTime expiresAtUtc, string? ip, string? userAgent, CancellationToken ct = default);
     Task<bool> ValidateAsync(ClaimsPrincipal principal, CancellationToken ct = default);
+    Task<bool> RevokeAsync(ClaimsPrincipal principal, string reason, CancellationToken ct = default);
 }
 
 public sealed class AuthenticationSessionService : IAuthenticationSessionService
@@ -108,6 +109,23 @@ where s.id=@sessionId and s.usuario_id=@userId";
             "update plantaopro.auth_sessoes set ultimo_uso_em=now(),reg_update=now() where id=@sessionId and (ultimo_uso_em is null or ultimo_uso_em < now() - interval '1 minute')",
             new { sessionId }, cancellationToken: ct));
         return true;
+    }
+
+    public async Task<bool> RevokeAsync(ClaimsPrincipal principal, string reason, CancellationToken ct = default)
+    {
+        if (!TryGuid(principal, "uid", out var userId) && !TryGuid(principal, ClaimTypes.NameIdentifier, out userId)) return false;
+        if (!TryGuid(principal, "session_id", out var sessionId)) return false;
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        var changed = await connection.ExecuteAsync(new CommandDefinition(
+            @"update plantaopro.auth_sessoes
+set revogada_em=coalesce(revogada_em,now()),
+    motivo_revogacao=coalesce(motivo_revogacao,@reason),
+    reg_update=now()
+where id=@sessionId and usuario_id=@userId and reg_status='A'",
+            new { sessionId, userId, reason = Sanitize(reason, 100) ?? "LOGOUT" },
+            cancellationToken: ct));
+        return changed > 0;
     }
 
     private static bool TryGuid(ClaimsPrincipal principal, string claimType, out Guid value) =>

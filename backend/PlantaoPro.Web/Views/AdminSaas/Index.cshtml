@@ -10,7 +10,7 @@
     var statusOperacional = string.IsNullOrWhiteSpace(Model.ErrorMessage) ? "Operacional" : "Atenção";
 }
 
-<div class="container-fluid py-3 pp-strategic-surface">
+<div class="container-fluid py-3 pp-page pp-strategic-surface pp-admin-governance" data-admin-governance>
     <header class="pp-page-hero mb-3" aria-labelledby="admin-saas-title">
         <div class="pp-page-hero__copy">
             <span class="pp-eyebrow">Administração SaaS MNSOFT</span>
@@ -143,8 +143,8 @@
         </section>
     </div>
 
-    <section class="row g-3 mt-1" aria-label="Ações de governança">
-        <div class="col-12 col-md-4"><a class="card h-100 text-decoration-none text-reset" asp-controller="Usuarios" asp-action="Index"><div class="card-body"><h2 class="h6">Usuários por cliente</h2><p class="text-muted mb-0">Gerencie bloqueio, perfis e acesso por tenant.</p></div></a></div>
+    <section class="row g-3 mt-1" aria-label="Ações de governança" data-admin-next-action>
+        <div class="col-12 col-md-4" data-permissions-matrix><a class="card h-100 text-decoration-none text-reset" asp-controller="Usuarios" asp-action="Index"><div class="card-body"><h2 class="h6">Usuários e matriz de permissões</h2><p class="text-muted mb-0">Gerencie bloqueio, perfis e acesso mínimo necessário por tenant.</p></div></a></div>
         <div class="col-12 col-md-4"><a class="card h-100 text-decoration-none text-reset" asp-controller="Auditoria" asp-action="Index"><div class="card-body"><h2 class="h6">Auditoria recente</h2><p class="text-muted mb-0">Revise ações críticas, bloqueios, billing e contexto assistido.</p></div></a></div>
         <div class="col-12 col-md-4"><a class="card h-100 text-decoration-none text-reset" asp-controller="Observabilidade" asp-action="Index"><div class="card-body"><h2 class="h6">Alertas de segurança</h2><p class="text-muted mb-0">Acompanhe negações, sessões e saúde operacional.</p></div></a></div>
     </section>

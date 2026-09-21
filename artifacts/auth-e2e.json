@@ -1,1 +1,35 @@
-{"status":"not-executed","reason":"dotnet/browser runtime unavailable in container","skipped":false}
+{
+  "schemaVersion": "1.0",
+  "executedAtUtc": "2026-09-21T00:00:00Z",
+  "status": "blocked-environment",
+  "productionApproved": false,
+  "environment": {
+    "dotnet": "unavailable",
+    "docker": "unavailable",
+    "psql": "unavailable",
+    "browserRuntime": "not-started"
+  },
+  "staticEvidence": {
+    "apiRouteConflicts": 0,
+    "repositorySecurityCheck": "passed",
+    "csharp10Compatibility": "passed",
+    "uxValidators": "passed"
+  },
+  "scenarios": [
+    { "id": "api-login-valid", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "api-login-invalid-password", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "api-login-unknown-user", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "api-login-locked-user", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "api-login-suspended-tenant", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "jwt-claims-and-session", "surface": "api", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "web-login-cookie-token", "surface": "web", "status": "not-executed", "reason": "SDK .NET e navegador autenticado indisponíveis" },
+    { "id": "web-profile-redirects", "surface": "web", "status": "not-executed", "reason": "SDK .NET e navegador autenticado indisponíveis" },
+    { "id": "logout-revokes-session", "surface": "api-web", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" },
+    { "id": "revoked-session-denied", "surface": "api-web", "status": "not-executed", "reason": "SDK .NET e PostgreSQL indisponíveis" }
+  ],
+  "requiredNextCommand": "bash scripts/local/run-homologacao-linux.sh",
+  "notes": [
+    "Nenhum cenário de autenticação foi promovido a aprovado por inspeção estática.",
+    "Os validadores estáticos aprovados não substituem login real, cookie, JWT, revogação ou isolamento de tenant em runtime."
+  ]
+}

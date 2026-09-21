@@ -344,6 +344,23 @@ public sealed class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         var email = User.FindFirstValue(ClaimTypes.Email);
+        var token = HttpContext.Session.GetString("JwtToken");
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            try
+            {
+                using var client = _httpClientFactory.CreateClient("PlantaoProApi");
+                client.DefaultRequestHeaders.Authorization = new("Bearer", token);
+                using var response = await client.PostAsync("api/auth/logout", null, HttpContext.RequestAborted);
+                if (!response.IsSuccessStatusCode)
+                    _logger.LogWarning("Logout local concluído, mas a revogação da sessão API respondeu Status:{Status}", (int)response.StatusCode);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                // O cookie local sempre deve ser removido, mesmo se a API estiver indisponível.
+                _logger.LogWarning(ex, "Logout local concluído sem confirmação da revogação da sessão API.");
+            }
+        }
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         HttpContext.Session.Clear();
         TempData["Success"] = "Sessão encerrada com sucesso.";

@@ -55,6 +55,19 @@ public sealed class Saude360BaseClinicaContractTests
         Assert.Contains("ClinicaDashboardController", web);
     }
 
+    [Fact]
+    public void ClinicalEndpointsEnforceServerSideRoleAndPermissionBoundaries()
+    {
+        var controller = Read("backend/PlantaoPro.Api/Controllers/Saude360ClinicalControllers.cs");
+        var roles = Read("backend/PlantaoPro.Api/RolesConstants.cs");
+
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360Recepcao)", controller);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360Triagem)", controller);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360Assistencial)", controller);
+        Assert.Contains("Saude360Triagem =", roles);
+        Assert.DoesNotContain("Saude360Triagem = Saude360Recepcao", roles);
+    }
+
     private static string Read(string relativePath) => File.ReadAllText(Path.Combine(GetRepoRoot(), relativePath));
 
     private static string GetRepoRoot()

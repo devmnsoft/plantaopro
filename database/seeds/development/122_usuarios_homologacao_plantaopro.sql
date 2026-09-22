@@ -8,6 +8,8 @@ DECLARE
     v_tenant uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca001';
     v_cliente uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca002';
     v_plano uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca003';
+    v_tenant_isolamento uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca101';
+    v_cliente_isolamento uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca102';
     v_medico uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca020';
     v_usuario_medico uuid;
     v_rows integer;
@@ -32,6 +34,18 @@ BEGIN
     INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,status,dados)
     VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
     ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',atualizado_em=now();
+
+    -- Contexto sem usuários demonstrativos, reservado a testes negativos de
+    -- isolamento. Identificadores previsíveis facilitam testes sem conceder
+    -- ao navegador qualquer autoridade sobre o tenant consultado.
+    INSERT INTO plantaopro.tenants(id,tenant_id,codigo,nome,status,dados)
+    VALUES(v_tenant_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','ATIVO',
+      jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO','finalidade','ISOLAMENTO'))
+    ON CONFLICT(id) DO UPDATE SET nome=excluded.nome,status='ATIVO',atualizado_em=now();
+    INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,status,dados)
+    VALUES(v_cliente_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','ATIVO',
+      jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO','finalidade','ISOLAMENTO'))
+    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant_isolamento,nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
     -- O login global tambem precisa ser autocontido: bases antigas ou parciais
     -- podem nao ter recebido o perfil criado pela migration de identidade.
@@ -69,7 +83,7 @@ BEGIN
     ) a(id,tenant_id,cliente_id,nome,email,senha_hash)
     LOOP
       UPDATE plantaopro.usuarios SET tenant_id=v_account.tenant_id,cliente_id=v_account.cliente_id,nome=v_account.nome,
-        email=v_account.email,email_normalizado=lower(v_account.email),senha_hash=v_account.senha_hash,status='ATIVO',reg_status='A',
+        email=v_account.email,email_normalizado=lower(v_account.email),status='ATIVO',reg_status='A',
         senha_alteracao_obrigatoria=false,bloqueado_ate=NULL,reg_update=now()
       WHERE lower(email)=lower(v_account.email) OR lower(email_normalizado)=lower(v_account.email);
       GET DIAGNOSTICS v_rows = ROW_COUNT;
@@ -151,6 +165,9 @@ BEGIN
         OR bool_or((lower(u.email)='superadmin@plantaopro.local') IS DISTINCT FROM (u.tenant_id IS NULL))
     ) THEN
       RAISE EXCEPTION 'Seed de homologação inválido: tenant ou perfil ativo divergente.';
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM plantaopro.tenants WHERE id=v_tenant_isolamento AND status='ATIVO') THEN
+      RAISE EXCEPTION 'Seed de homologação inválido: tenant sintético de isolamento ausente.';
     END IF;
 END
 $seed$;

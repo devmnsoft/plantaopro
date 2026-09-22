@@ -22,6 +22,7 @@ public sealed class HomologationUsersSeedContractTests
 
         Assert.Equal(5, System.Text.RegularExpressions.Regex.Matches(seed, @"\$2a\$11\$").Count);
         Assert.Contains("Clínica Modelo PlantãoPro", seed, StringComparison.Ordinal);
+        Assert.Contains("Clínica Sintética Isolamento", seed, StringComparison.Ordinal);
         Assert.Contains("Plano Homologação Saúde 360", seed, StringComparison.Ordinal);
         Assert.Contains("plantaopro.tenant_modulos", seed, StringComparison.Ordinal);
         Assert.Contains("plantaopro.hospitais", seed, StringComparison.Ordinal);
@@ -31,6 +32,21 @@ public sealed class HomologationUsersSeedContractTests
         Assert.Contains("tenant ou perfil ativo divergente", seed, StringComparison.Ordinal);
         Assert.Contains("SET reg_status='I'", seed, StringComparison.Ordinal);
         Assert.Contains("ON CONFLICT(id) DO UPDATE", seed, StringComparison.Ordinal);
+        Assert.DoesNotContain("senha_hash=v_account.senha_hash", seed, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ResetDeCredenciais_DeveSerExplicitoRestritoEAuditadoSemSenhaAberta()
+    {
+        var reset = Read("database/seeds/development/reset_usuarios_homologacao_plantaopro.sql");
+
+        Assert.Contains("demo_environment", reset, StringComparison.Ordinal);
+        Assert.Contains("confirm_demo_password_reset", reset, StringComparison.Ordinal);
+        Assert.Contains("Development','Test", reset, StringComparison.Ordinal);
+        Assert.Contains("contas_redefinidas", reset, StringComparison.Ordinal);
+        Assert.Contains("RESET_CREDENCIAIS_DEMO", reset, StringComparison.Ordinal);
+        Assert.Contains("'senhas_registradas',false", reset, StringComparison.Ordinal);
+        Assert.DoesNotContain("Super@123456", reset, StringComparison.Ordinal);
     }
 
     [Fact]

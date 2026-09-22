@@ -16,6 +16,14 @@ tipado do médico. Geração e verificação foram centralizadas em
 `PasswordHashService`: BCrypt cost 11, com salt aleatório embutido no hash. Não
 há senha em claro, comparação em claro, salt separado ou bypass.
 
+Uma segunda auditoria encontrou outro risco em bases reutilizadas: a reaplicação
+do seed adicionava o perfil esperado, mas preservava vínculos ativos indevidos e
+não reativava o vínculo determinístico quando ele já existia inativo. O seed
+agora inativa previamente os vínculos das cinco contas, reatribui exatamente o
+papel canônico, provisiona o perfil global se necessário e aborta a transação se
+não terminar com cinco contas ativas, tenant coerente e um único perfil ativo
+por identidade.
+
 ## Mapa real
 
 - Usuários: `plantaopro.usuarios`; identificador em `email`/`email_normalizado`,
@@ -56,7 +64,11 @@ há senha em claro, comparação em claro, salt separado ou bypass.
 
 ## Gate e pendências reais
 
-Os testes criptográficos estáticos confirmam os cinco pares e senha incorreta.
+Os testes de contrato incluem os cinco pares e senha incorreta, mas não puderam
+ser executados nesta rodada porque o SDK .NET não está instalado. Os nove
+validadores Python passaram. A tentativa de verificação alternativa via módulo
+`crypt` também ficou bloqueada porque esse módulo não existe no Python 3.13 da
+imagem.
 A execução integrada com PostgreSQL, API e navegador não foi possível neste
 container porque `dotnet`, `psql` e `docker` não estão instalados. Portanto esta
 rodada **não declara os cinco logins navegados como aprovados** e, respeitando o

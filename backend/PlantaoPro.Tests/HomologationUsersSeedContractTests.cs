@@ -27,6 +27,10 @@ public sealed class HomologationUsersSeedContractTests
         Assert.Contains("plantaopro.hospitais", seed, StringComparison.Ordinal);
         Assert.Contains("plantaopro.especialidades", seed, StringComparison.Ordinal);
         Assert.Contains("plantaopro.medicos", seed, StringComparison.Ordinal);
+        Assert.Contains("count(p.id) <> 1", seed, StringComparison.Ordinal);
+        Assert.Contains("tenant ou perfil ativo divergente", seed, StringComparison.Ordinal);
+        Assert.Contains("SET reg_status='I'", seed, StringComparison.Ordinal);
+        Assert.Contains("ON CONFLICT(id) DO UPDATE", seed, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -113,7 +113,9 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         var table = ResolveTable(tableKey);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
-        var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)) ? " and (t.medico_id=@uid or t.created_by=@uid)" : string.Empty;
+        var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
+            ? " and (t.medico_id=@uid or t.created_by=@uid or t.medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and (m.usuario_id=@uid or lower(m.email)=lower((select u.email from plantaopro.usuarios u where u.id=@uid))) and (@tenantId is null or m.cliente_id=@tenantId)))"
+            : string.Empty;
         var row = await cn.QueryFirstOrDefaultAsync("select t.* from plantaopro." + table + " t where t.id=@id and t.reg_status='A' and (@isGlobal or (@tenantId is not null and t.cliente_id=@tenantId))" + ownDoctorSql, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId });
         if (row is null) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado.", 404);
         await AuditAsync(table, id, "VISUALIZAR", new { table });
@@ -545,7 +547,10 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");
         if (HasColumn(key, "agendamento_id")) where.Add("(@agendamentoId is null or agendamento_id = @agendamentoId)");
         if (HasColumn(key, "consulta_id")) where.Add("(@consultaId is null or consulta_id = @consultaId)");
-        if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "repassesMedicos", StringComparison.OrdinalIgnoreCase))) where.Add("medico_id = @uid");
+        if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "repassesMedicos", StringComparison.OrdinalIgnoreCase)))
+        {
+            where.Add("(medico_id = @uid or medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and (m.usuario_id=@uid or lower(m.email)=lower((select u.email from plantaopro.usuarios u where u.id=@uid))) and (@tenantId is null or m.cliente_id=@tenantId)))");
+        }
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
         return "select t.* from plantaopro." + table + " t where " + string.Join(" and ", where) + " order by reg_date desc, id limit @tamanho offset @offset";

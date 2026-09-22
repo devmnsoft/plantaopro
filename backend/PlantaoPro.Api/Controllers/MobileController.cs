@@ -26,8 +26,9 @@ public class MobileController : ControllerBase
     private readonly UsuarioContextService _usuarioContext;
     private readonly AssinaturaGuardService _assinaturaGuard;
     private readonly IAuditService _audit;
+    private readonly Saude360ClinicalService _clinical;
 
-    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, FinanceiroService financeiro, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, EscalaService escala, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, ILogger<MobileController> logger)
+    public MobileController(IConfiguration cfg, AuthService auth, MedicoAreaService medicoArea, FinanceiroService financeiro, MedicoRecomendacaoService recomendacaoService, NotificacaoService notificacao, EscalaService escala, UsuarioContextService usuarioContext, AssinaturaGuardService assinaturaGuard, IAuditService audit, Saude360ClinicalService clinical, ILogger<MobileController> logger)
     {
         _cfg = cfg;
         _auth = auth;
@@ -40,6 +41,7 @@ public class MobileController : ControllerBase
         _usuarioContext = usuarioContext;
         _assinaturaGuard = assinaturaGuard;
         _audit = audit;
+        _clinical = clinical;
     }
 
     private Guid GetUserId()
@@ -57,6 +59,27 @@ public class MobileController : ControllerBase
     private static int NormalizarPage(int page) => Math.Max(1, page);
     private static int NormalizarPageSize(int pageSize) => Math.Clamp(pageSize, 1, 50);
     private static int NormalizarLimite(int limite) => Math.Clamp(limite, 1, 25);
+
+    private static object ToMobileClinicalItem(Saude360RegistroDto item)
+    {
+        object? inicio;
+        object? fim;
+        object? unidadeId;
+        item.Dados.TryGetValue("data_inicio", out inicio);
+        item.Dados.TryGetValue("data_fim", out fim);
+        item.Dados.TryGetValue("unidade_id", out unidadeId);
+        return new { item.Id, item.Status, dataInicio = inicio, dataFim = fim, unidadeId };
+    }
+
+    private static bool IsToday(Saude360RegistroDto item)
+    {
+        object? value;
+        if (!item.Dados.TryGetValue("data_inicio", out value) && !item.Dados.TryGetValue("inicio_em", out value)) value = item.RegDate;
+        if (value is DateTime date) return date.ToUniversalTime().Date == DateTime.UtcNow.Date;
+        if (value is DateTimeOffset offset) return offset.UtcDateTime.Date == DateTime.UtcNow.Date;
+        DateTime parsed;
+        return DateTime.TryParse(value?.ToString(), out parsed) && parsed.ToUniversalTime().Date == DateTime.UtcNow.Date;
+    }
 
 
 
@@ -214,6 +237,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("dashboard")]
+    [HttpGet("medico/dashboard")]
     public async Task<IActionResult> Dashboard()
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -234,6 +258,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("plantoes-disponiveis")]
+    [HttpGet("medico/plantoes-disponiveis")]
     public async Task<IActionResult> PlantoesDisponiveis([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -254,6 +279,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("minhas-escalas")]
+    [HttpGet("medico/escalas")]
     public async Task<IActionResult> MinhasEscalas([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -264,6 +290,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("meus-pagamentos")]
+    [HttpGet("medico/pagamentos")]
     public async Task<IActionResult> MeusPagamentos([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -292,6 +319,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("notificacoes")]
+    [HttpGet("medico/notificacoes")]
     public async Task<IActionResult> Notificacoes([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -321,6 +349,7 @@ where c.id=@conviteId
     }
 
     [HttpGet("convites")]
+    [HttpGet("medico/convites")]
     public async Task<IActionResult> Convites([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -399,6 +428,7 @@ limit @lim offset @off", new { medicoId, clienteId, lim = ps, off = (pg - 1) * p
     }
 
     [HttpPost("convites/{id:guid}/aceitar")]
+    [HttpPost("medico/convites/{id:guid}/aceitar")]
     public async Task<IActionResult> AceitarConvite(Guid id)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -429,6 +459,7 @@ limit @lim offset @off", new { medicoId, clienteId, lim = ps, off = (pg - 1) * p
     }
 
     [HttpPost("convites/{id:guid}/recusar")]
+    [HttpPost("medico/convites/{id:guid}/recusar")]
     public async Task<IActionResult> RecusarConvite(Guid id, [FromBody] MobileRecusarConviteRequest? request)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -564,6 +595,7 @@ where p.id=@id and p.reg_status='A' and (@clienteId is null or p.cliente_id=@cli
     }
 
     [HttpPost("plantoes/{id:guid}/solicitar")]
+    [HttpPost("medico/plantoes/{id:guid}/solicitar")]
     public async Task<IActionResult> SolicitarPlantao(Guid id)
     {
         var bloqueio = await ValidarPlanoMobileAsync();
@@ -599,6 +631,43 @@ where id=@id and reg_status='A' and (@clienteId is null or cliente_id=@clienteId
         {
             _logger.LogError(ex, "Mobile solicitar plantao erro uid:{Uid} id:{Id} duracaoMs:{Duracao}", uid, id, sw.ElapsedMilliseconds);
             return StatusCode(500, ApiResponse<object>.Fail("Não foi possível solicitar plantão.", 500));
+        }
+    }
+
+    [HttpGet("medico/agenda-clinica")]
+    public async Task<IActionResult> AgendaClinica([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        return await ListarAgendaClinicaAsync("agendamentos", "Agenda clínica carregada.", page, pageSize, false);
+    }
+
+    [HttpGet("medico/consultas-do-dia")]
+    public async Task<IActionResult> ConsultasDoDia([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+    {
+        return await ListarAgendaClinicaAsync("consultas", "Consultas do dia carregadas.", page, pageSize, true);
+    }
+
+    private async Task<IActionResult> ListarAgendaClinicaAsync(string recurso, string mensagem, int page, int pageSize, bool somenteHoje)
+    {
+        var bloqueio = await ValidarPlanoMobileAsync();
+        if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
+        var uid = GetUserId();
+        var clienteId = _usuarioContext.GetClienteId();
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var medicoId = await GetMedicoIdAutenticadoAsync(cn, uid, clienteId);
+            if (medicoId is null) return NotFound(ApiResponse<object>.Fail("Médico não encontrado para o usuário autenticado.", 404));
+
+            var response = await _clinical.ListarAsync(recurso, medicoId: medicoId.Value, pagina: NormalizarPage(page), tamanho: NormalizarPageSize(pageSize));
+            if (!response.Success || response.Data is null) return StatusCode(response.StatusCode, response);
+            var registros = somenteHoje ? response.Data.Where(IsToday) : response.Data;
+            var items = registros.Select(ToMobileClinicalItem).ToArray();
+            return Ok(ApiResponse<IEnumerable<object>>.Ok(items, mensagem));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mobile agenda clínica erro uid:{Uid} recurso:{Recurso}", uid, recurso);
+            return StatusCode(500, ApiResponse<object>.Fail("Não foi possível carregar a agenda clínica.", 500));
         }
     }
 

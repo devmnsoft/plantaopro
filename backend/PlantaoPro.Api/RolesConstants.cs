@@ -46,6 +46,13 @@ public static class RolesConstants
     // Clinical data must not inherit reception access. Reception can move the
     // operational queue, but only care roles may read or change triage data.
     public const string Saude360Triagem = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Triagem + "," + Enfermagem + "," + CoordenadorClinico + "," + AuditorClinico + "," + Medico;
+    // Clinical records are deliberately narrower than the operational care
+    // journey. Reception, triage and finance can advance their own queues,
+    // but they must not inherit access to diagnoses or prescriptions.
+    public const string Saude360ClinicoLeitura = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + CoordenadorClinico + "," + AuditorClinico + "," + Medico;
+    public const string Saude360ClinicoEscrita = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + CoordenadorClinico + "," + Medico;
+    public const string Saude360CidLeitura = Saude360ClinicoLeitura + "," + Triagem + "," + Enfermagem;
+    public const string Saude360CidGestao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + AdministradorClinica + "," + CoordenadorClinico;
     public const string Saude360Financeiro = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Financeiro + "," + FinanceiroClinica;
     public const string Saude360Convenios = Saude360Financeiro + "," + FaturamentoConvenio;
     public const string CadastrosCoordenacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador;

@@ -66,6 +66,24 @@ public sealed class Saude360BaseClinicaContractTests
         Assert.Contains("Authorize(Roles = RolesConstants.Saude360Assistencial)", controller);
         Assert.Contains("Saude360Triagem =", roles);
         Assert.DoesNotContain("Saude360Triagem = Saude360Recepcao", roles);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360ClinicoLeitura)", controller);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360ClinicoEscrita)", controller);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360CidLeitura)", controller);
+        Assert.Contains("Authorize(Roles = RolesConstants.Saude360CidGestao)", controller);
+        Assert.Contains("Saude360ClinicoLeitura =", roles);
+        Assert.Contains("Saude360ClinicoEscrita =", roles);
+        Assert.DoesNotContain("Saude360ClinicoLeitura = Saude360Assistencial", roles);
+        Assert.DoesNotContain("Saude360ClinicoEscrita = Saude360ClinicoLeitura", roles);
+
+        var clinicalRead = roles.Split('\n').Single(line => line.Contains("const string Saude360ClinicoLeitura"));
+        var clinicalWrite = roles.Split('\n').Single(line => line.Contains("const string Saude360ClinicoEscrita"));
+        foreach (var forbiddenRole in new[] { "Recepcao", "Financeiro", "FinanceiroClinica", "Triagem", "Enfermagem" })
+        {
+            Assert.DoesNotContain(forbiddenRole, clinicalRead, StringComparison.Ordinal);
+            Assert.DoesNotContain(forbiddenRole, clinicalWrite, StringComparison.Ordinal);
+        }
+        Assert.Contains("AuditorClinico", clinicalRead, StringComparison.Ordinal);
+        Assert.DoesNotContain("AuditorClinico", clinicalWrite, StringComparison.Ordinal);
     }
 
     private static string Read(string relativePath) => File.ReadAllText(Path.Combine(GetRepoRoot(), relativePath));

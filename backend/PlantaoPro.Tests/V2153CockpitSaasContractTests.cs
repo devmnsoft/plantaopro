@@ -21,15 +21,15 @@ public class V2153CockpitSaasContractTests
     }
 
     [Fact]
-    public void Login_DeClienteBloqueado_DeveAutenticarComStatusEAuditarBloqueioOperacional()
+    public void Login_DeClienteBloqueado_DeveRecusarSessaoEAuditarBloqueio()
     {
         var apiAuth = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Data.cs"));
         var apiModels = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Models.cs"));
         var webAccount = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "AccountController.cs"));
 
-        Assert.DoesNotContain("TENANT_INACTIVE", apiAuth, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("SUCCESS_TENANT_BLOCKED", apiAuth, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Login realizado com restrição operacional", apiAuth, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("TENANT_INACTIVE", apiAuth, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Este cliente está suspenso", apiAuth, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("SUCCESS_TENANT_BLOCKED", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("cliente_status", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ClienteStatus", apiModels, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("cliente_status", webAccount, StringComparison.OrdinalIgnoreCase);

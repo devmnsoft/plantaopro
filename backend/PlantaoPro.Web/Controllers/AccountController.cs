@@ -84,7 +84,7 @@ public sealed class AccountController : Controller
             {
                 var errorMessage = response.StatusCode switch
                 {
-                    HttpStatusCode.Forbidden => "Usuário inativo. Contate o administrador.",
+                    HttpStatusCode.Forbidden => "Seu usuário está inativo. Procure o administrador.",
                     (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
                     HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "Identificador ou senha inválidos.",
                     _ => "Não foi possível autenticar. Tente novamente."
@@ -123,6 +123,7 @@ public sealed class AccountController : Controller
                 new Claim("Perfil", primaryRole),
                 new Claim("primary_role", primaryRole),
                 new Claim("roles", string.Join(',', normalizedRoles)),
+                new Claim("is_global_admin", hasGlobalAccess.ToString().ToLowerInvariant()),
                 new Claim("access_scope", accessScope),
                 new Claim("context_mode", contextMode),
                 new Claim("session_id", string.IsNullOrWhiteSpace(login.SessionId) ? HttpContext.Session.Id : login.SessionId),

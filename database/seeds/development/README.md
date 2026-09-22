@@ -12,6 +12,10 @@ Em Development a API agora auto-provisiona as contas se `DemoSeed:Enabled` e `De
 | Gestor da Santa Casa Demonstração | `gestor@santacasa-demo.example` | `SantaCasa!Demo2026#Gestor` |
 | Médica fictícia | `medico@santacasa-demo.example` | `Medico!Demo2026#Acesso` |
 
+As cinco identidades padronizadas solicitadas para a homologação PlantãoPro estão
+documentadas separadamente em [`docs/usuarios-teste.md`](../../../docs/usuarios-teste.md)
+e são provisionadas pelo seed `122_usuarios_homologacao_plantaopro.sql`.
+
 ## SQL manual
 
 ```bash
@@ -20,6 +24,9 @@ psql -d plantaopro -f database/seeds/development/121_acesso_demo_local.sql
 
 # 2. Provisionar jornada demonstrável da Santa Casa (Escalas -> Execução -> Conferência)
 psql -d plantaopro -f database/seeds/development/130_operacao_demo_santacasa.sql
+
+# Alternativa: provisionar as 5 identidades padronizadas da homologação PlantãoPro
+psql -d plantaopro -f database/seeds/development/122_usuarios_homologacao_plantaopro.sql
 ```
 
 Se a API estiver no banco `postgres` legado, execute os mesmos arquivos nesse banco — desde que o schema `plantaopro` exista.

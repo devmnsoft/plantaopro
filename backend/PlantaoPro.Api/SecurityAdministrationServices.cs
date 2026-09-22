@@ -366,7 +366,7 @@ from plantaopro.usuarios where id=@userId and (@scopeTenantId is null or coalesc
 
         if (!id.HasValue)
         {
-            var hash = BCrypt.Net.BCrypt.HashPassword(request.SenhaTemporaria!);
+            var hash = Security.PasswordHashService.Hash(request.SenhaTemporaria!);
             await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,telefone,status,reg_status,senha_alteracao_obrigatoria,reg_date,created_by)
 values(@userId,@tenantId,@tenantId,@nome,@email,upper(@email),@hash,@telefone,'ATIVO','A',true,now(),@actorId)", new { userId, tenantId, nome = request.Nome.Trim(), email, hash, telefone = CleanPhone(request.Telefone), actorId = currentUser.UserId }, tx, cancellationToken: ct));
         }
@@ -381,7 +381,7 @@ reg_update=now(),updated_by=@actorId where id=@userId", new
                 nome = request.Nome.Trim(),
                 email,
                 telefone = CleanPhone(request.Telefone),
-                hash = string.IsNullOrWhiteSpace(request.SenhaTemporaria) ? null : BCrypt.Net.BCrypt.HashPassword(request.SenhaTemporaria),
+                hash = string.IsNullOrWhiteSpace(request.SenhaTemporaria) ? null : Security.PasswordHashService.Hash(request.SenhaTemporaria),
                 actorId = currentUser.UserId
             }, tx, cancellationToken: ct));
         }

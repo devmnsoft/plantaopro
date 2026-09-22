@@ -6,6 +6,7 @@ using Npgsql;
 using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Security;
 
 namespace PlantaoPro.Api.Controllers
 {
@@ -112,7 +113,7 @@ namespace PlantaoPro.Api.Controllers
                 return BadRequest(ApiResponse<object>.Fail("Token inválido ou expirado."));
             }
 
-            var hash = BCrypt.Net.BCrypt.HashPassword(req.NovaSenha);
+            var hash = PasswordHashService.Hash(req.NovaSenha);
             await cn.OpenAsync();
             await using var transaction = await cn.BeginTransactionAsync();
             await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@h,reg_update=now() where id=@id", new { h = hash, id = row.UsuarioId }, transaction);

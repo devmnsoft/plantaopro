@@ -237,7 +237,7 @@ limit 50")).ToList();
             var assinaturaId = Guid.NewGuid();
             var usuarioId = Guid.NewGuid();
             var slug = TenantContextService.Slug(request.Empresa.NomeFantasia);
-            var senhaHash = BCrypt.Net.BCrypt.HashPassword(request.UsuarioAdmin.Senha);
+            var senhaHash = Security.PasswordHashService.Hash(request.UsuarioAdmin.Senha);
 
             await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_solicitacoes(id,plano_id,nome_fantasia,razao_social,cnpj,segmento,qtd_medicos,qtd_hospitais,volume_plantoes_mes,cidade,uf,telefone,email_corporativo,responsavel_nome,responsavel_email,responsavel_telefone,responsavel_cargo,periodicidade,aceite_termos,aceite_privacidade,consentimento_lgpd,status,reg_date,reg_status)
 values(@solicitacaoId,@PlanoId,@NomeFantasia,@RazaoSocial,@Cnpj,@Segmento,@QuantidadeMedicos,@QuantidadeHospitais,@VolumePlantoesMes,@Cidade,@Uf,@Telefone,@EmailCorporativo,@AdminNome,@AdminEmail,@AdminTelefone,@Cargo,@Periodicidade,@AceiteTermos,@AceitePrivacidade,@ConsentimentoLgpd,'FINALIZADO',now(),'A')", new { solicitacaoId, request.Plano.PlanoId, request.Empresa.NomeFantasia, request.Empresa.RazaoSocial, Cnpj = cnpjLimpo, request.Empresa.Segmento, request.Empresa.QuantidadeMedicos, request.Empresa.QuantidadeHospitais, request.Empresa.VolumePlantoesMes, request.Empresa.Cidade, request.Empresa.Uf, request.Empresa.Telefone, request.Empresa.EmailCorporativo, AdminNome = request.UsuarioAdmin.Nome, AdminEmail = request.UsuarioAdmin.Email, AdminTelefone = request.UsuarioAdmin.Telefone, request.UsuarioAdmin.Cargo, request.Plano.Periodicidade, request.Plano.AceiteTermos, request.Plano.AceitePrivacidade, request.Plano.ConsentimentoLgpd }, tx);

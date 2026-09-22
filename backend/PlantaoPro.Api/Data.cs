@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 using PlantaoPro.CrossCutting.Security;
+using PlantaoPro.Api.Security;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
@@ -366,11 +367,7 @@ limit 50", parameters: new
                 foreach (var candidate in candidates)
                 {
                     if (string.IsNullOrWhiteSpace(candidate.SenhaHash)) continue;
-                    try
-                    {
-                        if (BCrypt.Net.BCrypt.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add(candidate);
-                    }
-                    catch (BCrypt.Net.SaltParseException) { logger.LogWarning("Hash de senha inválido para UsuarioId:{UsuarioId}", candidate.Id); }
+                    if (PasswordHashService.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add(candidate);
                 }
 
                 if (passwordMatches.Count != 1)

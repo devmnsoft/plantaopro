@@ -9,6 +9,9 @@ DECLARE
     v_cliente uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca002';
     v_plano uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca003';
     v_medico uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca020';
+    v_usuario_medico uuid;
+    v_rows integer;
+    v_account record;
 BEGIN
     IF current_database() IN ('template0', 'template1') THEN
         RAISE EXCEPTION 'Seed de homologação recusado no banco %.', current_database();
@@ -30,33 +33,53 @@ BEGIN
     VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
     ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
+    UPDATE plantaopro.perfis p SET cliente_id=v_cliente,status='ATIVO',reg_status='A',reg_update=now()
+    WHERE p.tenant_id=v_tenant AND p.codigo IN ('ADMINISTRADOR','MEDICO','RECEPCAO','FINANCEIRO');
     INSERT INTO plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status)
-    VALUES(md5('profile:ADMINISTRADOR')::uuid,v_tenant,v_cliente,'ADMINISTRADOR','Administrador','Administração do próprio tenant',true,false,'ATIVO','A')
-    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,cliente_id=v_cliente,status='ATIVO',reg_status='A';
+    SELECT md5('homolog-profile:'||x.codigo)::uuid,v_tenant,v_cliente,x.codigo,x.nome,x.descricao,true,false,'ATIVO','A'
+    FROM (VALUES
+      ('ADMINISTRADOR','Administrador','Administração do próprio tenant'),
+      ('MEDICO','Médico','Acesso clínico aos próprios atendimentos'),
+      ('RECEPCAO','Recepção','Agenda, cadastro e check-in'),
+      ('FINANCEIRO','Financeiro','Operação financeira sem acesso clínico')
+    ) x(codigo,nome,descricao)
+    WHERE NOT EXISTS (SELECT 1 FROM plantaopro.perfis p WHERE p.tenant_id=v_tenant AND p.codigo=x.codigo AND p.reg_status='A')
+    ON CONFLICT DO NOTHING;
 
-    -- Cria/atualiza contas sempre com hashes BCrypt prontos; nunca persiste segredo em claro.
-    INSERT INTO plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,bloqueado_ate)
-    VALUES
-      ('8b0c8e74-a81b-4ea2-b499-94755a1ca010',NULL,NULL,'Super Admin PlantãoPro','superadmin@plantaopro.local','superadmin@plantaopro.local','$2a$11$KZ80jdGp.ymLQ/E6zk8vluf6o4/.Ur2cEKxjD4Hp4jx5YETf7OaUG','ATIVO','A',false,NULL),
-      ('8b0c8e74-a81b-4ea2-b499-94755a1ca011',v_tenant,v_cliente,'Administrador Clínica Modelo','admin.clinica@plantaopro.local','admin.clinica@plantaopro.local','$2a$11$4jafymzm6xqC48JdaVE3GuH0Dy2evtr/dqT7sKDqUe92OwpbaLbX2','ATIVO','A',false,NULL),
-      ('8b0c8e74-a81b-4ea2-b499-94755a1ca012',v_tenant,v_cliente,'Médico de Teste','medico@plantaopro.local','medico@plantaopro.local','$2a$11$EIMmoQs8gPeaCFShI4.ACeL2WdJFeFulTrXL4JjBKFgJLCmqc11q2','ATIVO','A',false,NULL),
-      ('8b0c8e74-a81b-4ea2-b499-94755a1ca013',v_tenant,v_cliente,'Recepção de Teste','recepcao@plantaopro.local','recepcao@plantaopro.local','$2a$11$1biWFM2YemJyh9DaoRRjXe3K5UpzJdN.GYJMeglzoODIBi9BTW5yK','ATIVO','A',false,NULL),
-      ('8b0c8e74-a81b-4ea2-b499-94755a1ca014',v_tenant,v_cliente,'Financeiro de Teste','financeiro@plantaopro.local','financeiro@plantaopro.local','$2a$11$9URjd.sZ/id/DeASc.y4a.s/fX3GbcINasNKsgRtMwi10u1/b7Ss2','ATIVO','A',false,NULL)
-    ON CONFLICT(id) DO UPDATE SET tenant_id=excluded.tenant_id,cliente_id=excluded.cliente_id,nome=excluded.nome,email=excluded.email,
-      email_normalizado=excluded.email_normalizado,senha_hash=excluded.senha_hash,status='ATIVO',reg_status='A',
-      senha_alteracao_obrigatoria=false,bloqueado_ate=NULL,reg_update=now();
+    -- Atualiza pelo identificador natural antes de inserir. Assim o seed também é
+    -- idempotente em bases onde a conta já existe com outro UUID.
+    FOR v_account IN SELECT * FROM (VALUES
+      ('8b0c8e74-a81b-4ea2-b499-94755a1ca010'::uuid,NULL::uuid,NULL::uuid,'Super Admin PlantãoPro','superadmin@plantaopro.local','$2a$11$KZ80jdGp.ymLQ/E6zk8vluf6o4/.Ur2cEKxjD4Hp4jx5YETf7OaUG'),
+      ('8b0c8e74-a81b-4ea2-b499-94755a1ca011'::uuid,v_tenant,v_cliente,'Administrador Clínica Modelo','admin.clinica@plantaopro.local','$2a$11$4jafymzm6xqC48JdaVE3GuH0Dy2evtr/dqT7sKDqUe92OwpbaLbX2'),
+      ('8b0c8e74-a81b-4ea2-b499-94755a1ca012'::uuid,v_tenant,v_cliente,'Médico de Teste','medico@plantaopro.local','$2a$11$EIMmoQs8gPeaCFShI4.ACeL2WdJFeFulTrXL4JjBKFgJLCmqc11q2'),
+      ('8b0c8e74-a81b-4ea2-b499-94755a1ca013'::uuid,v_tenant,v_cliente,'Recepção de Teste','recepcao@plantaopro.local','$2a$11$1biWFM2YemJyh9DaoRRjXe3K5UpzJdN.GYJMeglzoODIBi9BTW5yK'),
+      ('8b0c8e74-a81b-4ea2-b499-94755a1ca014'::uuid,v_tenant,v_cliente,'Financeiro de Teste','financeiro@plantaopro.local','$2a$11$9URjd.sZ/id/DeASc.y4a.s/fX3GbcINasNKsgRtMwi10u1/b7Ss2')
+    ) a(id,tenant_id,cliente_id,nome,email,senha_hash)
+    LOOP
+      UPDATE plantaopro.usuarios SET tenant_id=v_account.tenant_id,cliente_id=v_account.cliente_id,nome=v_account.nome,
+        email=v_account.email,email_normalizado=lower(v_account.email),senha_hash=v_account.senha_hash,status='ATIVO',reg_status='A',
+        senha_alteracao_obrigatoria=false,bloqueado_ate=NULL,reg_update=now()
+      WHERE lower(email)=lower(v_account.email) OR lower(email_normalizado)=lower(v_account.email);
+      GET DIAGNOSTICS v_rows = ROW_COUNT;
+      IF v_rows = 0 THEN
+        INSERT INTO plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria,bloqueado_ate)
+        VALUES(v_account.id,v_account.tenant_id,v_account.cliente_id,v_account.nome,v_account.email,lower(v_account.email),v_account.senha_hash,'ATIVO','A',false,NULL);
+      END IF;
+    END LOOP;
 
     INSERT INTO plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_status)
     SELECT md5('homolog-role:'||u.email)::uuid,u.tenant_id,u.cliente_id,u.id,p.id,'A'
     FROM plantaopro.usuarios u
-    JOIN plantaopro.perfis p ON p.codigo=CASE u.email
+    JOIN plantaopro.perfis p ON p.codigo=CASE lower(u.email)
       WHEN 'superadmin@plantaopro.local' THEN 'ADMINISTRADOR_GLOBAL'
       WHEN 'admin.clinica@plantaopro.local' THEN 'ADMINISTRADOR'
       WHEN 'medico@plantaopro.local' THEN 'MEDICO'
       WHEN 'recepcao@plantaopro.local' THEN 'RECEPCAO'
       WHEN 'financeiro@plantaopro.local' THEN 'FINANCEIRO' END AND p.reg_status='A'
-    WHERE u.email LIKE '%@plantaopro.local'
-    ON CONFLICT(id) DO UPDATE SET perfil_id=excluded.perfil_id,tenant_id=excluded.tenant_id,cliente_id=excluded.cliente_id,reg_status='A';
+      AND ((lower(u.email)='superadmin@plantaopro.local' AND p.tenant_id IS NULL)
+        OR (lower(u.email)<>'superadmin@plantaopro.local' AND p.tenant_id=v_tenant))
+    WHERE lower(u.email) IN ('superadmin@plantaopro.local','admin.clinica@plantaopro.local','medico@plantaopro.local','recepcao@plantaopro.local','financeiro@plantaopro.local')
+    ON CONFLICT DO NOTHING;
 
     INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,status,dados)
     VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','ATIVO','{}')
@@ -64,9 +87,10 @@ BEGIN
     INSERT INTO plantaopro.especialidades(id,tenant_id,codigo,nome,status,dados)
     VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca031',v_tenant,'CLINICA_MEDICA','Clínica Médica','ATIVO','{}')
     ON CONFLICT(id) DO UPDATE SET status='ATIVO',atualizado_em=now();
-    INSERT INTO plantaopro.medicos(id,tenant_id,codigo,nome,status,dados)
-    VALUES(v_medico,v_tenant,'MEDICO_TESTE','Médico de Teste','ATIVO',jsonb_build_object('usuarioId','8b0c8e74-a81b-4ea2-b499-94755a1ca012','especialidadeId','8b0c8e74-a81b-4ea2-b499-94755a1ca031'))
-    ON CONFLICT(id) DO UPDATE SET status='ATIVO',dados=excluded.dados,atualizado_em=now();
+    SELECT id INTO STRICT v_usuario_medico FROM plantaopro.usuarios WHERE lower(email)='medico@plantaopro.local' AND reg_status='A';
+    INSERT INTO plantaopro.medicos(id,tenant_id,usuario_id,codigo,nome,status,reg_status,dados)
+    VALUES(v_medico,v_tenant,v_usuario_medico,'MEDICO_TESTE','Médico de Teste','ATIVO','A',jsonb_build_object('usuarioId',v_usuario_medico,'especialidadeId','8b0c8e74-a81b-4ea2-b499-94755a1ca031'))
+    ON CONFLICT(id) DO UPDATE SET usuario_id=v_usuario_medico,status='ATIVO',reg_status='A',dados=excluded.dados,atualizado_em=now();
 
     INSERT INTO plantaopro.tenant_modulos(id,tenant_id,codigo,nome,status,dados)
     SELECT md5('homolog-module:'||m)::uuid,v_tenant,m,m,'ATIVO',jsonb_build_object('habilitado',true,'planoId',v_plano)

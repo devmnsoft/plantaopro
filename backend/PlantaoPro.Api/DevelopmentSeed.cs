@@ -271,12 +271,12 @@ where not exists (select 1 from plantaopro.medicos where usuario_id=@userId and 
         if (!id.HasValue)
         {
             id = stableId;
-            var hash = BCrypt.Net.BCrypt.HashPassword(password);
+            var hash = Security.PasswordHashService.Hash(password);
             await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.usuarios(id,tenant_id,cliente_id,nome,email,email_normalizado,senha_hash,status,reg_status,senha_alteracao_obrigatoria) values(@id,@tenant,@client,@name,@email,lower(@email),@hash,'ATIVO','A',false)", new { id, tenant, client, name, email, hash }, tx, cancellationToken: ct));
         }
         else if (reset)
         {
-            var hash = BCrypt.Net.BCrypt.HashPassword(password);
+            var hash = Security.PasswordHashService.Hash(password);
             await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set senha_hash=@hash,status='ATIVO',reg_status='A',senha_alteracao_obrigatoria=false,bloqueado_ate=null,reg_update=now() where id=@id", new { hash, id }, tx, cancellationToken: ct));
             await cn.ExecuteAsync(new CommandDefinition("update plantaopro.auth_sessoes set revogada_em=now(),motivo_revogacao='DEMO_PASSWORD_RESET',reg_update=now() where usuario_id=@id and revogada_em is null", new { id }, tx, cancellationToken: ct));
         }

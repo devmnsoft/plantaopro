@@ -31,8 +31,8 @@ public sealed class DemoDatabaseAccessContractTests
         Assert.Contains("plantaopro.perfis", seed);
         Assert.Contains("plantaopro.clientes", seed);
         Assert.Contains("plantaopro.tenant_modulos", seed);
-        Assert.Contains("BCrypt.Net.BCrypt.HashPassword", seed);
-        Assert.Contains("BCrypt.Net.BCrypt.Verify", auth);
+        Assert.Contains("PasswordHashService.Hash", seed);
+        Assert.Contains("PasswordHashService.Verify", auth);
         Assert.DoesNotContain("string.Equals(req.Senha, candidate.SenhaHash", auth);
         Assert.DoesNotContain("MnSoft!Demo2026", seed);
         Assert.DoesNotContain("SantaCasa!Demo2026", seed);

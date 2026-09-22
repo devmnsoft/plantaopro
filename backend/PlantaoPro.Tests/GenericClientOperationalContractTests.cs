@@ -26,7 +26,7 @@ public class GenericClientOperationalContractTests
         Assert.Contains("\"ADMINISTRADOR\"", onboardingService);
 
         // Password must be hashed via BCrypt
-        Assert.Contains("BCrypt.Net.BCrypt.HashPassword", onboardingService);
+        Assert.Contains("PasswordHashService.Hash", onboardingService);
     }
 
     [Fact]

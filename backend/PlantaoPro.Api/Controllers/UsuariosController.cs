@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Api.Security;
 using System.Security.Claims;
 
 namespace PlantaoPro.Api.Controllers;
@@ -102,9 +103,9 @@ public class UsuariosController : ControllerBase
         await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
         var user = await cn.QueryFirstOrDefaultAsync<(Guid Id, string SenhaHash)>("select id,senha_hash as SenhaHash from plantaopro.usuarios where id=@id and reg_status='A'", new { id = uid });
         if (user.Id == Guid.Empty) return NotFound(ApiResponse<object>.Fail("Usuário não encontrado.", 404));
-        if (!BCrypt.Net.BCrypt.Verify(req.SenhaAtual, user.SenhaHash)) return BadRequest(ApiResponse<object>.Fail("Senha atual inválida."));
+        if (!PasswordHashService.Verify(req.SenhaAtual, user.SenhaHash)) return BadRequest(ApiResponse<object>.Fail("Senha atual inválida."));
 
-        var newHash = BCrypt.Net.BCrypt.HashPassword(req.NovaSenha);
+        var newHash = PasswordHashService.Hash(req.NovaSenha);
         await cn.ExecuteAsync("update plantaopro.usuarios set senha_hash=@h,reg_update=now() where id=@id", new { h = newHash, id = uid });
         await _auditService.LogAsync(uid, "USUARIO_ALTERAR_SENHA", "usuarios", uid, "Alteração de senha do usuário", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
         return Ok(ApiResponse<object>.Ok(new { }, "Senha alterada com sucesso."));

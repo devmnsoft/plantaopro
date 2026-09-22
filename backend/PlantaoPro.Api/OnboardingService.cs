@@ -218,7 +218,7 @@ namespace PlantaoPro.Api.Data
 
                     // 7. Criar Usuário Admin do Cliente
                     var usuarioId = Guid.NewGuid();
-                    var senhaHash = BCrypt.Net.BCrypt.HashPassword(req.UsuarioSenha);
+                    var senhaHash = Security.PasswordHashService.Hash(req.UsuarioSenha);
 
                     await cn.ExecuteAsync(
                         @"INSERT INTO plantaopro.usuarios

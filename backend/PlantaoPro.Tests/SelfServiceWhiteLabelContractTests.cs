@@ -69,7 +69,7 @@ public class SelfServiceWhiteLabelContractTests
         Assert.Contains("insert into plantaopro.usuarios", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("lgpd_consentimentos", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("tenant_onboarding_checklist", service, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("BCrypt.Net.BCrypt.HashPassword", service, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("PasswordHashService.Hash", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("FaqPlanosAsync", service, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("SolicitarCancelamentoAssinaturaAsync", service, StringComparison.OrdinalIgnoreCase);
     }

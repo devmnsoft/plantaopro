@@ -51,10 +51,34 @@ public sealed class HomologationUsersSeedContractTests
 
         Assert.Contains("USER_INACTIVE", auth, StringComparison.Ordinal);
         Assert.Contains("TENANT_INACTIVE", auth, StringComparison.Ordinal);
-        Assert.Contains("BCrypt.Net.BCrypt.Verify", auth, StringComparison.Ordinal);
+        Assert.Contains("PasswordHashService.Verify", auth, StringComparison.Ordinal);
         Assert.Contains("is_global_admin", auth, StringComparison.Ordinal);
         Assert.Contains("tenant_name", auth, StringComparison.Ordinal);
         Assert.Contains("permission", auth, StringComparison.Ordinal);
         Assert.Contains("module", auth, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Super@123456", "$2a$11$KZ80jdGp.ymLQ/E6zk8vluf6o4/.Ur2cEKxjD4Hp4jx5YETf7OaUG")]
+    [InlineData("Cliente@123456", "$2a$11$4jafymzm6xqC48JdaVE3GuH0Dy2evtr/dqT7sKDqUe92OwpbaLbX2")]
+    [InlineData("Medico@123456", "$2a$11$EIMmoQs8gPeaCFShI4.ACeL2WdJFeFulTrXL4JjBKFgJLCmqc11q2")]
+    [InlineData("Recepcao@123456", "$2a$11$1biWFM2YemJyh9DaoRRjXe3K5UpzJdN.GYJMeglzoODIBi9BTW5yK")]
+    [InlineData("Financeiro@123456", "$2a$11$9URjd.sZ/id/DeASc.y4a.s/fX3GbcINasNKsgRtMwi10u1/b7Ss2")]
+    public void HashesDeHomologacao_DevemValidarComOMesmoServicoDaApi(string password, string hash)
+    {
+        Assert.True(PlantaoPro.Api.Security.PasswordHashService.Verify(password, hash));
+        Assert.False(PlantaoPro.Api.Security.PasswordHashService.Verify(password + "-incorreta", hash));
+    }
+
+    [Fact]
+    public void PasswordHashService_DeveGerarSaltEmbutidoERecusarHashMalformado()
+    {
+        var first = PlantaoPro.Api.Security.PasswordHashService.Hash("Senha-Forte@123");
+        var second = PlantaoPro.Api.Security.PasswordHashService.Hash("Senha-Forte@123");
+
+        Assert.NotEqual(first, second);
+        Assert.StartsWith("$2", first, StringComparison.Ordinal);
+        Assert.True(PlantaoPro.Api.Security.PasswordHashService.Verify("Senha-Forte@123", first));
+        Assert.False(PlantaoPro.Api.Security.PasswordHashService.Verify("Senha-Forte@123", "hash-invalido"));
     }
 }

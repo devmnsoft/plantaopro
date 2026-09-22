@@ -28,9 +28,10 @@ public static class ClinicalCommercialRules
 
     public static bool PodeFaturarConvenio(string? statusAutorizacao)
     {
-        return !string.Equals(statusAutorizacao, "NEGADA", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(statusAutorizacao, "CANCELADA", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(statusAutorizacao, "EXPIRADA", StringComparison.OrdinalIgnoreCase);
+        // Fail closed: uma autorização ausente, desconhecida ou ainda pendente
+        // jamais deve liberar faturamento. Novos estados precisam ser incluídos
+        // deliberadamente nesta regra, em vez de serem aceitos por exclusão.
+        return string.Equals(statusAutorizacao?.Trim(), "APROVADA", StringComparison.OrdinalIgnoreCase);
     }
 
     public static bool PlanoPodeSerUsado(string? statusPlano, DateOnly? validade, DateOnly hoje)

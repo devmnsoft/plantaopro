@@ -39,11 +39,27 @@ public sealed class ClinicalCommercialRulesTests
         Assert.True(ClinicalCommercialRules.PodeAutorizarConvenio("ATIVO", hoje, hoje));
     }
 
-    [Fact]
-    public void Autorizacao_negada_bloqueia_faturamento()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("PENDENTE")]
+    [InlineData("NEGADA")]
+    [InlineData("CANCELADA")]
+    [InlineData("EXPIRADA")]
+    [InlineData("DESCONHECIDA")]
+    public void Somente_autorizacao_aprovada_libera_faturamento(string? status)
     {
-        Assert.False(ClinicalCommercialRules.PodeFaturarConvenio("NEGADA"));
+        Assert.False(ClinicalCommercialRules.PodeFaturarConvenio(status));
+    }
+
+    [Theory]
+    [InlineData("APROVADA")]
+    [InlineData("aprovada")]
+    [InlineData(" APROVADA ")]
+    public void Autorizacao_aprovada_libera_faturamento(string status)
+    {
         Assert.True(ClinicalCommercialRules.PodeFaturarConvenio("APROVADA"));
+        Assert.True(ClinicalCommercialRules.PodeFaturarConvenio(status));
     }
 
     [Fact]

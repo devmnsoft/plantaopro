@@ -220,6 +220,7 @@ select p.id as PlantaoId,
 from plantaopro.plantoes p
 join plantaopro.hospitais h on h.id=p.hospital_id
 join plantaopro.especialidades e on e.id=p.especialidade_id
+join plantaopro.medicos medico on medico.id=@medicoId and medico.cliente_id=p.cliente_id and medico.reg_status='A'
 where p.reg_status='A' and lower(coalesce(p.status,'')) in ('aberto','em_escala') and p.data_inicio >= now()
 order by p.data_inicio asc
 limit @buscaLimite", new { medicoId, buscaLimite = Math.Max(limite * 3, 20) })).ToList();
@@ -257,8 +258,8 @@ limit @buscaLimite", new { medicoId, buscaLimite = Math.Max(limite * 3, 20) })).
     public async Task<IEnumerable<MedicoRecomendadoDto>> RecomendarMedicosParaPlantaoAsync(Guid plantaoId, int limite = 20)
     {
         await using var cn = Cn();
-        var plantao = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid EspecialidadeId, DateTime DataInicio, DateTime DataFim)>(
-            "select id,especialidade_id as EspecialidadeId,data_inicio as DataInicio,data_fim as DataFim from plantaopro.plantoes where id=@plantaoId and reg_status='A'", new { plantaoId });
+        var plantao = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid ClienteId, Guid EspecialidadeId, DateTime DataInicio, DateTime DataFim)>(
+            "select id,cliente_id as ClienteId,especialidade_id as EspecialidadeId,data_inicio as DataInicio,data_fim as DataFim from plantaopro.plantoes where id=@plantaoId and reg_status='A'", new { plantaoId });
         if (plantao.Id == Guid.Empty)
         {
             return Array.Empty<MedicoRecomendadoDto>();
@@ -274,9 +275,9 @@ exists(select 1 from plantaopro.escalas esc where esc.plantao_id=@plantaoId and 
 from plantaopro.medicos m
 left join plantaopro.medico_especialidades mep on mep.medico_id=m.id and mep.reg_status='A'
 left join plantaopro.especialidades e on e.id=mep.especialidade_id
-where m.reg_status='A'
+where m.reg_status='A' and m.cliente_id=@clienteId
 order by ScoreRecomendacao desc, m.nome asc
-limit @limite", new { plantaoId, especialidadeId = plantao.EspecialidadeId, limite = Math.Clamp(limite, 1, 100) })).ToList();
+limit @limite", new { plantaoId, clienteId = plantao.ClienteId, especialidadeId = plantao.EspecialidadeId, limite = Math.Clamp(limite, 1, 100) })).ToList();
 
         foreach (var candidato in candidatos)
         {

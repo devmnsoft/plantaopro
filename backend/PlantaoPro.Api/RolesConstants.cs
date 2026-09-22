@@ -43,6 +43,9 @@ public static class RolesConstants
     public const string CadastrosOperacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador + "," + Operador;
     public const string Saude360Recepcao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Recepcao + "," + Coordenacao + "," + Coordenador + "," + Operador;
     public const string Saude360Assistencial = Saude360Recepcao + "," + Triagem + "," + Enfermagem + "," + CoordenadorClinico + "," + AuditorClinico + "," + Medico;
+    // Clinical data must not inherit reception access. Reception can move the
+    // operational queue, but only care roles may read or change triage data.
+    public const string Saude360Triagem = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Triagem + "," + Enfermagem + "," + CoordenadorClinico + "," + AuditorClinico + "," + Medico;
     public const string Saude360Financeiro = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Financeiro + "," + FinanceiroClinica;
     public const string Saude360Convenios = Saude360Financeiro + "," + FaturamentoConvenio;
     public const string CadastrosCoordenacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador;

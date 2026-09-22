@@ -16,7 +16,7 @@ public sealed class ClinicaDashboardController : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Recepcao)]
 [Route("api/painel-chamada")]
 public sealed class PainelChamadaController : ControllerBase
 {
@@ -52,7 +52,7 @@ public sealed class PainelChamadaController : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Assistencial)]
 [Route("api/agendamentos")]
 public sealed class AgendamentosController : ControllerBase
 {
@@ -76,7 +76,7 @@ public sealed class AgendamentosController : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Triagem)]
 [Route("api/triagens")]
 public sealed class TriagensController : ControllerBase
 {
@@ -250,7 +250,7 @@ public sealed class PlanosSaudeController : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Assistencial)]
 [Route("api/pacientes")]
 public sealed class PacientesController : ControllerBase
 {

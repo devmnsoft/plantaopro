@@ -102,6 +102,34 @@ public class MobileAndSecurityContractTests
         Assert.Contains("preferencias", rotas);
         Assert.Contains("suporte/chamados", rotas);
         Assert.Contains("suporte/chamados/{id:guid}", rotas);
+        Assert.Contains("medico/dashboard", rotas);
+        Assert.Contains("medico/plantoes-disponiveis", rotas);
+        Assert.Contains("medico/plantoes/{id:guid}/solicitar", rotas);
+        Assert.Contains("medico/convites", rotas);
+        Assert.Contains("medico/convites/{id:guid}/aceitar", rotas);
+        Assert.Contains("medico/convites/{id:guid}/recusar", rotas);
+        Assert.Contains("medico/escalas", rotas);
+        Assert.Contains("medico/pagamentos", rotas);
+        Assert.Contains("medico/agenda-clinica", rotas);
+        Assert.Contains("medico/consultas-do-dia", rotas);
+        Assert.Contains("medico/notificacoes", rotas);
+    }
+
+    [Fact]
+    public void MobileAgendaClinica_DeveRetornarContratoMinimoSemConteudoClinico()
+    {
+        var helper = typeof(MobileController).GetMethod("ToMobileClinicalItem", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+
+        Assert.NotNull(helper);
+        var source = File.ReadAllText(Path.Combine(RepoRoot(), "backend", "PlantaoPro.Api", "Controllers", "MobileController.cs"));
+        Assert.DoesNotContain("queixa_principal", source[source.IndexOf("ToMobileClinicalItem", StringComparison.Ordinal)..source.IndexOf("private async Task<Guid?>", StringComparison.Ordinal)]);
+    }
+
+    private static string RepoRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null && !Directory.Exists(Path.Combine(directory.FullName, "backend"))) directory = directory.Parent;
+        return directory?.FullName ?? throw new DirectoryNotFoundException("Raiz do repositório não encontrada.");
     }
 
 

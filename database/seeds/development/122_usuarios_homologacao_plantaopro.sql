@@ -33,6 +33,18 @@ BEGIN
     VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
     ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
+    -- O login global tambem precisa ser autocontido: bases antigas ou parciais
+    -- podem nao ter recebido o perfil criado pela migration de identidade.
+    UPDATE plantaopro.perfis SET status='ATIVO',reg_status='A',reg_update=now()
+    WHERE tenant_id IS NULL AND codigo='ADMINISTRADOR_GLOBAL';
+    INSERT INTO plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status)
+    SELECT md5('homolog-profile:ADMINISTRADOR_GLOBAL')::uuid,NULL,NULL,'ADMINISTRADOR_GLOBAL','Administrador Global',
+      'Acesso administrativo global do sistema',true,false,'ATIVO','A'
+    WHERE NOT EXISTS (
+      SELECT 1 FROM plantaopro.perfis WHERE tenant_id IS NULL AND codigo='ADMINISTRADOR_GLOBAL' AND reg_status='A'
+    )
+    ON CONFLICT DO NOTHING;
+
     UPDATE plantaopro.perfis p SET cliente_id=v_cliente,status='ATIVO',reg_status='A',reg_update=now()
     WHERE p.tenant_id=v_tenant AND p.codigo IN ('ADMINISTRADOR','MEDICO','RECEPCAO','FINANCEIRO');
     INSERT INTO plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status)
@@ -67,6 +79,14 @@ BEGIN
       END IF;
     END LOOP;
 
+    -- Remove privilégios residuais das identidades fixas antes de atribuir o
+    -- único perfil esperado. Isso impede que uma reaplicação preserve um papel
+    -- incompatível criado manualmente ou por um seed anterior.
+    UPDATE plantaopro.usuarios_perfis up SET reg_status='I',reg_update=now()
+    FROM plantaopro.usuarios u
+    WHERE up.usuario_id=u.id
+      AND lower(u.email) IN ('superadmin@plantaopro.local','admin.clinica@plantaopro.local','medico@plantaopro.local','recepcao@plantaopro.local','financeiro@plantaopro.local');
+
     INSERT INTO plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_status)
     SELECT md5('homolog-role:'||u.email)::uuid,u.tenant_id,u.cliente_id,u.id,p.id,'A'
     FROM plantaopro.usuarios u
@@ -79,7 +99,8 @@ BEGIN
       AND ((lower(u.email)='superadmin@plantaopro.local' AND p.tenant_id IS NULL)
         OR (lower(u.email)<>'superadmin@plantaopro.local' AND p.tenant_id=v_tenant))
     WHERE lower(u.email) IN ('superadmin@plantaopro.local','admin.clinica@plantaopro.local','medico@plantaopro.local','recepcao@plantaopro.local','financeiro@plantaopro.local')
-    ON CONFLICT DO NOTHING;
+    ON CONFLICT(id) DO UPDATE SET tenant_id=excluded.tenant_id,cliente_id=excluded.cliente_id,
+      usuario_id=excluded.usuario_id,perfil_id=excluded.perfil_id,reg_status='A',reg_update=now();
 
     INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,status,dados)
     VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','ATIVO','{}')
@@ -104,5 +125,32 @@ BEGIN
     WHERE p.codigo='ADMINISTRADOR' AND p.tenant_id=v_tenant AND x.reg_status='A'
       AND upper(coalesce(x.modulo,'')) NOT IN ('SAAS','AUDITORIA_GLOBAL')
     ON CONFLICT(id) DO UPDATE SET permitido=true,bloqueado_por_plano=false,reg_status='A';
+
+    -- Falha fechada: o seed só conclui quando as cinco contas possuem tenant e
+    -- exatamente um perfil ativo coerente. Qualquer divergência aborta toda a
+    -- transação, em vez de deixar credenciais parcialmente utilizáveis.
+    IF (SELECT count(*) FROM plantaopro.usuarios
+        WHERE lower(email) IN ('superadmin@plantaopro.local','admin.clinica@plantaopro.local','medico@plantaopro.local','recepcao@plantaopro.local','financeiro@plantaopro.local')
+          AND status='ATIVO' AND reg_status='A') <> 5 THEN
+      RAISE EXCEPTION 'Seed de homologação inválido: as cinco contas ativas não foram provisionadas.';
+    END IF;
+    IF EXISTS (
+      SELECT 1
+      FROM plantaopro.usuarios u
+      LEFT JOIN plantaopro.usuarios_perfis up ON up.usuario_id=u.id AND up.reg_status='A'
+      LEFT JOIN plantaopro.perfis p ON p.id=up.perfil_id AND p.reg_status='A'
+      WHERE lower(u.email) IN ('superadmin@plantaopro.local','admin.clinica@plantaopro.local','medico@plantaopro.local','recepcao@plantaopro.local','financeiro@plantaopro.local')
+      GROUP BY u.id,u.email,u.tenant_id
+      HAVING count(p.id) <> 1
+        OR bool_or(p.codigo IS DISTINCT FROM CASE lower(u.email)
+          WHEN 'superadmin@plantaopro.local' THEN 'ADMINISTRADOR_GLOBAL'
+          WHEN 'admin.clinica@plantaopro.local' THEN 'ADMINISTRADOR'
+          WHEN 'medico@plantaopro.local' THEN 'MEDICO'
+          WHEN 'recepcao@plantaopro.local' THEN 'RECEPCAO'
+          WHEN 'financeiro@plantaopro.local' THEN 'FINANCEIRO' END)
+        OR bool_or((lower(u.email)='superadmin@plantaopro.local') IS DISTINCT FROM (u.tenant_id IS NULL))
+    ) THEN
+      RAISE EXCEPTION 'Seed de homologação inválido: tenant ou perfil ativo divergente.';
+    END IF;
 END
 $seed$;

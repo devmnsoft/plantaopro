@@ -25,8 +25,11 @@ O seed é idempotente e cria a Clínica Modelo PlantãoPro, o plano de homologa�
 ### Reset local das cinco senhas
 
 Execute novamente o mesmo seed. Ele localiza as contas pelo e-mail normalizado,
-substitui somente `senha_hash` pelos hashes BCrypt homologados, reativa os
-vínculos e não duplica registros. O código fica em
+restaura os dados de acesso e o `senha_hash` homologado, e não duplica registros.
+Antes de atribuir o perfil canônico, o seed
+inativa vínculos residuais dessas cinco identidades. Ao final, valida que cada
+conta possui exatamente um perfil ativo e o tenant esperado; qualquer
+divergência aborta a transação inteira. O código fica em
 `database/seeds/development/122_usuarios_homologacao_plantaopro.sql`.
 
 ### Validação automatizada

@@ -195,7 +195,7 @@ public sealed class PrescricoesController : ControllerBase
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Financeiro)]
 [Route("api/clinica-financeiro")]
 public sealed class ClinicaFinanceiroController : ControllerBase
 {
@@ -210,10 +210,22 @@ public sealed class ClinicaFinanceiroController : ControllerBase
     [HttpGet("caixa")] public async Task<IActionResult> Caixa() { var r = await service.ListarAsync("caixa"); return StatusCode(r.StatusCode, r); }
     [HttpPost("fechar-caixa")] public async Task<IActionResult> FecharCaixa([FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("caixa", request.CaixaId ?? request.Id ?? Guid.Empty, "fechar-caixa", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("relatorios")] public async Task<IActionResult> Relatorios() { var r = await service.ResumoFinanceiroAsync(); return StatusCode(r.StatusCode, r); }
+    [HttpGet("repasses")] public async Task<IActionResult> Repasses() { var r = await service.ListarAsync("repassesMedicos"); return StatusCode(r.StatusCode, r); }
+    [HttpGet("glosas")] public async Task<IActionResult> Glosas() { var r = await service.ListarAsync("convenioGlosas"); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Repasses)]
+[Route("api/repasses-medicos")]
+public sealed class RepassesMedicosClinicosController : ControllerBase
+{
+    private readonly Saude360ClinicalService service;
+    public RepassesMedicosClinicosController(Saude360ClinicalService service) { this.service = service; }
+    [HttpGet] public async Task<IActionResult> Get() { var r = await service.ListarAsync("repassesMedicos"); return StatusCode(r.StatusCode, r); }
+}
+
+[ApiController]
+[Authorize(Roles = RolesConstants.Saude360Convenios)]
 [Route("api/convenios")]
 public sealed class ConveniosController : ControllerBase
 {
@@ -231,10 +243,13 @@ public sealed class ConveniosController : ControllerBase
     [HttpPost("autorizacoes")] public async Task<IActionResult> CriarAutorizacao([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("convenioAutorizacoes", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("autorizacoes/{id:guid}/aprovar")] public async Task<IActionResult> Aprovar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("convenioAutorizacoes", id, "aprovar", request); return StatusCode(r.StatusCode, r); }
     [HttpPost("autorizacoes/{id:guid}/negar")] public async Task<IActionResult> Negar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("convenioAutorizacoes", id, "negar", request); return StatusCode(r.StatusCode, r); }
+    [HttpGet("glosas")] public async Task<IActionResult> Glosas() { var r = await service.ListarAsync("convenioGlosas"); return StatusCode(r.StatusCode, r); }
+    [HttpPost("glosas")] public async Task<IActionResult> CriarGlosa([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("convenioGlosas", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("glosas/{id:guid}/recorrer")] public async Task<IActionResult> RecorrerGlosa(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("convenioGlosas", id, "recorrer", request); return StatusCode(r.StatusCode, r); }
 }
 
 [ApiController]
-[Authorize]
+[Authorize(Roles = RolesConstants.Saude360Convenios)]
 [Route("api/planos-saude")]
 public sealed class PlanosSaudeController : ControllerBase
 {

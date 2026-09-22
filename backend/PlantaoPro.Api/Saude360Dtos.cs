@@ -29,6 +29,8 @@ public sealed class Saude360CreateRequest
     public Guid? ConvenioId { get; set; }
     public Guid? PlanoSaudeId { get; set; }
     public Guid? ProcedimentoId { get; set; }
+    public Guid? ContaReceberId { get; set; }
+    public Guid? CaixaId { get; set; }
     public Guid? UnidadeId { get; set; }
     public Guid? SetorId { get; set; }
     public Guid? SalaId { get; set; }
@@ -66,6 +68,7 @@ public sealed class Saude360CreateRequest
     public DateOnly? DataNascimento { get; set; }
     public DateOnly? Vencimento { get; set; }
     public DateOnly? Validade { get; set; }
+    public DateTime? DataPagamento { get; set; }
     public decimal? PressaoSistolica { get; set; }
     public decimal? PressaoDiastolica { get; set; }
     public decimal? FrequenciaCardiaca { get; set; }
@@ -76,6 +79,8 @@ public sealed class Saude360CreateRequest
     public decimal? Altura { get; set; }
     public decimal? Glicemia { get; set; }
     public decimal? Valor { get; set; }
+    public decimal? Desconto { get; set; }
+    public decimal? Coparticipacao { get; set; }
     public bool Principal { get; set; }
     public bool ConsentimentoLgpd { get; set; }
     public string ConsentimentoLgpdCanal { get; set; } = string.Empty;

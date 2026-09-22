@@ -55,5 +55,6 @@ public static class RolesConstants
     public const string Saude360CidGestao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + AdministradorClinica + "," + CoordenadorClinico;
     public const string Saude360Financeiro = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + AdministradorClinica + "," + Financeiro + "," + FinanceiroClinica;
     public const string Saude360Convenios = Saude360Financeiro + "," + FaturamentoConvenio;
+    public const string Saude360Repasses = Saude360Financeiro + "," + Medico;
     public const string CadastrosCoordenacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador;
 }

@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.17.0",
-  "generatedAt": "2026-09-15",
+  "schemaVersion": "v2.18.0",
+  "generatedAt": "2026-09-22",
   "sections": [
     {
       "order": 3,
@@ -614,6 +614,24 @@
           ]
         }
       ]
+    },
+    {
+      "order": 53,
+      "name": "plantaopro.financeiro_clinico_convenios_v2180",
+      "objects": [
+        {
+          "name": "plantaopro.financeiro_clinico_convenios_v2180",
+          "type": "canonical",
+          "category": "CANONICAL_FINANCE",
+          "required": true,
+          "source": "database/schema/440_v2180_financeiro_clinico_convenios.sql",
+          "dependsOn": [
+            "plantaopro.saude360",
+            "plantaopro.financeiro",
+            "plantaopro.ocorrencias_operacionais_v2171"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [
@@ -679,6 +697,14 @@
     "notification_outbox",
     "solicitacoes_modulos",
     "solicitacao_modulo_itens",
-    "modulo_catalogo_dependencias"
+    "modulo_catalogo_dependencias",
+    "fechamento_caixa",
+    "clinica_caixa_movimentos",
+    "convenio_contratos",
+    "convenio_tabelas_procedimentos",
+    "convenio_glosas",
+    "regras_repasse_medico",
+    "repasses_medicos_clinicos",
+    "auditoria_financeira_clinica"
   ]
 }

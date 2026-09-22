@@ -39,7 +39,9 @@ public sealed class Saude360ClinicalService
         { "convenioPlanos", "convenio_planos" },
         { "convenioAutorizacoes", "convenio_autorizacoes" },
         { "planosSaude", "planos_saude" },
-        { "planoSaudePacientes", "plano_saude_pacientes" }
+        { "planoSaudePacientes", "plano_saude_pacientes" },
+        { "convenioGlosas", "convenio_glosas" },
+        { "repassesMedicos", "repasses_medicos_clinicos" }
     };
 
     public Saude360ClinicalService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<Saude360ClinicalService> logger)
@@ -543,7 +545,7 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");
         if (HasColumn(key, "agendamento_id")) where.Add("(@agendamentoId is null or agendamento_id = @agendamentoId)");
         if (HasColumn(key, "consulta_id")) where.Add("(@consultaId is null or consulta_id = @consultaId)");
-        if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase))) where.Add("(medico_id = @uid or created_by = @uid)");
+        if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "repassesMedicos", StringComparison.OrdinalIgnoreCase))) where.Add("medico_id = @uid");
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");
         return "select t.* from plantaopro." + table + " t where " + string.Join(" and ", where) + " order by reg_date desc, id limit @tamanho offset @offset";
@@ -584,12 +586,13 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (key == "prescricoes") return ("insert into plantaopro.prescricoes(id,cliente_id,paciente_id,consulta_id,medico_id,modelo_id,orientacoes,status,created_by) values(@id,@tenantId,@pacienteId,@consultaId,@medicoId,@modeloId,@orientacoes,'RASCUNHO',@uid)", new { id, tenantId, r.PacienteId, r.ConsultaId, r.MedicoId, r.ModeloId, orientacoes = r.Observacoes, uid });
         if (key == "prescricaoModelos") return ("insert into plantaopro.prescricao_modelos(id,cliente_id,nome,medico_id,descricao,status,created_by) values(@id,@tenantId,@nome,@medicoId,@descricao,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, r.MedicoId, descricao = r.Descricao, uid });
         if (key == "contasReceber") return ("insert into plantaopro.clinica_contas_receber(id,cliente_id,paciente_id,agendamento_id,consulta_id,descricao,valor_total,valor_pendente,vencimento,status,created_by) values(@id,@tenantId,@pacienteId,@agendamentoId,@consultaId,@descricao,@valor,@valor,@vencimento,'ABERTO',@uid)", new { id, tenantId, r.PacienteId, r.AgendamentoId, r.ConsultaId, descricao = r.Descricao, valor = r.Valor ?? 0, vencimento = r.Vencimento, uid });
-        if (key == "recebimentos") return ("insert into plantaopro.clinica_recebimentos(id,cliente_id,conta_receber_id,valor,forma_pagamento,status,created_by) values(@id,@tenantId,@contaId,@valor,@forma,'CONFIRMADO',@uid)", new { id, tenantId, contaId = r.AgendamentoId, valor = r.Valor ?? 0, forma = r.FormaPagamento, uid });
+        if (key == "recebimentos") return ("insert into plantaopro.clinica_recebimentos(id,cliente_id,conta_receber_id,caixa_id,valor,forma_pagamento,data_recebimento,status,created_by) values(@id,@tenantId,@contaId,@caixaId,@valor,@forma,@dataPagamento,'CONFIRMADO',@uid)", new { id, tenantId, contaId = r.ContaReceberId, caixaId = r.CaixaId, valor = r.Valor ?? 0, forma = r.FormaPagamento, dataPagamento = r.DataPagamento ?? DateTime.UtcNow, uid });
         if (key == "caixa") return ("insert into plantaopro.clinica_caixa(id,cliente_id,saldo_inicial,status,created_by) values(@id,@tenantId,@valor,'ABERTO',@uid)", new { id, tenantId, valor = r.Valor ?? 0, uid });
         if (key == "convenios") return ("insert into plantaopro.convenios(id,cliente_id,nome,codigo,status,created_by) values(@id,@tenantId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, codigo = r.Codigo, uid });
         if (key == "convenioPlanos") return ("insert into plantaopro.convenio_planos(id,cliente_id,convenio_id,nome,codigo,status,created_by) values(@id,@tenantId,@convenioId,@nome,@codigo,'ATIVO',@uid)", new { id, tenantId, r.ConvenioId, nome = r.Nome, codigo = r.Codigo, uid });
         if (key == "convenioAutorizacoes") return ("insert into plantaopro.convenio_autorizacoes(id,cliente_id,convenio_id,paciente_id,agendamento_id,consulta_id,procedimento_id,motivo,procedimento,status,created_by) values(@id,@tenantId,@convenioId,@pacienteId,@agendamentoId,@consultaId,@procedimentoId,@motivo,@motivo,'PENDENTE',@uid)", new { id, tenantId, r.ConvenioId, r.PacienteId, r.AgendamentoId, r.ConsultaId, r.ProcedimentoId, motivo = r.Motivo, uid });
         if (key == "planosSaude") return ("insert into plantaopro.planos_saude(id,cliente_id,nome,operadora,codigo,status,created_by) values(@id,@tenantId,@nome,@operadora,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, operadora = r.Descricao, codigo = r.Codigo, uid });
+        if (key == "convenioGlosas") return ("insert into plantaopro.convenio_glosas(id,cliente_id,convenio_id,conta_receber_id,motivo,valor_glosado,status,created_by) values(@id,@tenantId,@convenioId,@contaId,@motivo,@valor,'ABERTA',@uid)", new { id, tenantId, r.ConvenioId, contaId = r.ContaReceberId, motivo = r.Motivo, valor = r.Valor ?? 0, uid });
         return ("insert into plantaopro.plano_saude_pacientes(id,cliente_id,plano_saude_id,paciente_id,numero_carteirinha,principal,validade,status,created_by) values(@id,@tenantId,@planoSaudeId,@pacienteId,@carteira,@principal,@validade,'ATIVO',@uid)", new { id, tenantId, r.PlanoSaudeId, r.PacienteId, carteira = r.NumeroCarteirinha, r.Principal, r.Validade, uid });
     }
 
@@ -666,9 +669,10 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
         if (key == "cid" && (string.IsNullOrWhiteSpace(r.Codigo) || string.IsNullOrWhiteSpace(r.Descricao))) return "CID exige código e descrição.";
         if (key == "prescricoes" && (!r.PacienteId.HasValue || !r.MedicoId.HasValue || !r.ConsultaId.HasValue)) return "Prescrição exige consulta, paciente e médico.";
         if (key == "contasReceber" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.Descricao))) return "Conta a receber exige valor e descrição.";
-        if (key == "recebimentos" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento))) return "Recebimento exige valor e forma de pagamento.";
+        if (key == "recebimentos" && (!r.ContaReceberId.HasValue || r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento) || !r.DataPagamento.HasValue)) return "Recebimento exige conta, valor positivo, data e forma de pagamento.";
         if ((key == "convenios" || key == "planosSaude" || key == "prescricaoModelos") && string.IsNullOrWhiteSpace(r.Nome)) return "Nome é obrigatório.";
         if (key == "planoSaudePacientes" && (!r.PacienteId.HasValue || !r.PlanoSaudeId.HasValue)) return "Vínculo de plano exige paciente e plano.";
+        if (key == "convenioGlosas" && (!r.ConvenioId.HasValue || !r.ContaReceberId.HasValue || r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.Motivo))) return "Glosa exige convênio, conta, valor positivo e motivo.";
         return null;
     }
 
@@ -694,6 +698,7 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
     {
         var normalized = acao.ToLowerInvariant();
         if ((normalized == "cancelar" || normalized == "ausente" || normalized == "negar" || normalized == "estornar") && string.IsNullOrWhiteSpace(r.Motivo) && string.IsNullOrWhiteSpace(r.Justificativa)) return "A ação exige motivo ou justificativa.";
+        if (normalized == "recorrer" && string.IsNullOrWhiteSpace(r.Justificativa)) return "Recurso de glosa exige justificativa.";
         if (normalized == "receber" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento))) return "Recebimento exige valor e forma de pagamento.";
         return null;
     }
@@ -717,6 +722,7 @@ where id=@id", new { id, acao, detalhe = detalhes, uid });
         if (a == "receber") return "RECEBIDO";
         if (a == "estornar") return "ESTORNADO";
         if (a == "fechar-caixa") return "FECHADO";
+        if (a == "recorrer") return "EM_RECURSO";
         return acao.ToUpperInvariant();
     }
 

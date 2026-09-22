@@ -334,5 +334,14 @@
       "plantaopro.operacao_plantoes"
     ],
     "source": "database/schema/430_ocorrencias_operacionais.sql"
+  },
+  {
+    "object": "plantaopro.financeiro_clinico_convenios_v2180",
+    "dependsOn": [
+      "plantaopro.saude360",
+      "plantaopro.financeiro",
+      "plantaopro.ocorrencias_operacionais_v2171"
+    ],
+    "source": "database/schema/440_v2180_financeiro_clinico_convenios.sql"
   }
 ]

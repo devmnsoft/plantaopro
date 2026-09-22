@@ -53,3 +53,4 @@
 - `plantaopro.execucao_conferencia_integridade_v2168` depende de: plantaopro.execucao_conferencia_v2167
 - `plantaopro.cobertura_substituicoes_v2170` depende de: plantaopro.execucao_conferencia_integridade_v2168, plantaopro.operacao_plantoes
 - `plantaopro.ocorrencias_operacionais_v2171` depende de: plantaopro.cobertura_substituicoes_v2170, plantaopro.operacao_plantoes
+- `plantaopro.financeiro_clinico_convenios_v2180` depende de: plantaopro.saude360, plantaopro.financeiro, plantaopro.ocorrencias_operacionais_v2171

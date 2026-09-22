@@ -73,6 +73,7 @@
     "plantaopro.contexto_trocas",
     "plantaopro.contratos_operacionais",
     "plantaopro.convenio_autorizacoes",
+    "plantaopro.convenio_glosas",
     "plantaopro.convenio_planos",
     "plantaopro.convenios",
     "plantaopro.conversa_participantes",
@@ -530,6 +531,7 @@
     "database/schema/400_v2167_execucao_conferencia.sql",
     "database/schema/410_v2168_conferencia_integridade.sql",
     "database/schema/420_v2170_cobertura_substituicoes.sql",
-    "database/schema/430_ocorrencias_operacionais.sql"
+    "database/schema/430_ocorrencias_operacionais.sql",
+    "database/schema/440_v2180_financeiro_clinico_convenios.sql"
   ]
 }

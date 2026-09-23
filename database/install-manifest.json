@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v2.18.0",
-  "generatedAt": "2026-09-22",
+  "generatedAt": "2026-09-23",
   "sections": [
     {
       "order": 3,
@@ -458,6 +458,16 @@
       "name": "plantaopro.notificacoes_v2070",
       "objects": [
         {
+          "name": "plantaopro.base_notificacoes_v2069",
+          "type": "canonical",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/schema/345_v2069_reparar_base_notificacoes.sql",
+          "dependsOn": [
+            "plantaopro.operacao_assistida_v1310"
+          ]
+        },
+        {
           "name": "plantaopro.notificacoes_v2070",
           "type": "canonical",
           "category": "CANONICAL_SPRINT0",
@@ -465,6 +475,7 @@
           "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql",
           "dependsOn": [
             "plantaopro.operacao_assistida_v1310",
+            "plantaopro.base_notificacoes_v2069",
             "plantaopro.revenue_cycle_v195"
           ]
         }

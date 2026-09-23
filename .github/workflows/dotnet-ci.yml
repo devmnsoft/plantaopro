@@ -331,8 +331,15 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Setup Node.js for browser regression
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
       - name: Apply complete database script
         run: psql -v ON_ERROR_STOP=1 -f database/scrpt_completo.sql
+      - name: Provision explicit homologation identities
+        run: psql -v ON_ERROR_STOP=1 -f database/seeds/development/122_usuarios_homologacao_plantaopro.sql
       - name: Restore
         run: dotnet restore backend/PlantaoPro.sln
       - name: Build API and Web
@@ -354,6 +361,14 @@ jobs:
           for i in {1..30}; do curl -fsS http://localhost:5259/Account/Login >/dev/null && exit 0; sleep 2; done
           cat artifacts/web.log
           exit 1
+      - name: Browser login submission regression
+        env:
+          PLANTAOPRO_WEB_URL: http://localhost:5259
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          set -o pipefail
+          npm run test:login-submit 2>&1 | tee artifacts/login-submit-browser.log
       - name: Smoke v1.17 chain
         run: bash scripts/smoke-test-v117.sh
       - name: Export E2E evidence
@@ -371,36 +386,7 @@ jobs:
             artifacts/web.log
             artifacts/e2e-result.md
             artifacts/e2e-result.json
-
-  auth-e2e:
-    runs-on: ubuntu-latest
-    needs: [runtime-from-complete-script]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Record auth E2E contract evidence
-        run: |
-          mkdir -p artifacts
-          printf '%s\n' '{"status":"covered-by-runtime-from-complete-script","flows":["api-health","db-health","auth-health","swagger","web-login"]}' > artifacts/auth-e2e.json
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: auth-e2e-evidence
-          path: artifacts/auth-e2e.json
-
-  security-access-e2e:
-    runs-on: ubuntu-latest
-    needs: [runtime-from-complete-script]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Record security access E2E contract evidence
-        run: |
-          mkdir -p artifacts
-          printf '%s\n' '{"status":"contract-routes-added","area":"/Seguranca","api":"/api/seguranca"}' > artifacts/security-access-e2e.json
-      - if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: security-access-e2e-evidence
-          path: artifacts/security-access-e2e.json
+            artifacts/login-submit-browser.log
 
   mobile-check:
     runs-on: ubuntu-latest

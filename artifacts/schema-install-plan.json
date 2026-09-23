@@ -258,9 +258,17 @@
     "source": "database/migrations/2026_08_v195_financeiro_revenue_cycle.sql"
   },
   {
+    "object": "plantaopro.base_notificacoes_v2069",
+    "dependsOn": [
+      "plantaopro.operacao_assistida_v1310"
+    ],
+    "source": "database/schema/345_v2069_reparar_base_notificacoes.sql"
+  },
+  {
     "object": "plantaopro.notificacoes_v2070",
     "dependsOn": [
       "plantaopro.operacao_assistida_v1310",
+      "plantaopro.base_notificacoes_v2069",
       "plantaopro.revenue_cycle_v195"
     ],
     "source": "database/schema/350_v2070_notificacoes_alertas_operacionais.sql"

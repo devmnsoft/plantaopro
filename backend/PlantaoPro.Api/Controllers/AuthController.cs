@@ -7,6 +7,7 @@ using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
+using PlantaoPro.Domain.Identity;
 
 namespace PlantaoPro.Api.Controllers
 {

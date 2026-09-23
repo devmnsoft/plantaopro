@@ -6,6 +6,7 @@ using Npgsql;
 using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Domain.Identity;
 
 namespace PlantaoPro.Api.Controllers;
 

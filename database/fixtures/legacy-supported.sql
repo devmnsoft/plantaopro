@@ -28,3 +28,18 @@ create table if not exists plantaopro.plantoes (
     especialidade_id uuid, data_inicio timestamp, data_fim timestamp,
     valor numeric(12,2) default 0, vagas integer default 1, tipo text,
     status text default 'ABERTO', reg_status char(1) default 'A');
+
+-- Dados reais do dominio usados para provar preservacao no upgrade (nao apenas
+-- uma tabela auxiliar de marcadores).
+insert into plantaopro.perfis(id, nome, reg_status) values
+('10000000-0000-0000-0000-000000000001', 'Perfil legado preservado', 'A')
+on conflict (id) do nothing;
+insert into plantaopro.usuarios(id, nome, email, senha_hash, reg_status) values
+('20000000-0000-0000-0000-000000000001', 'Usuario legado preservado', 'legado.preservado@example.invalid', 'HASH_LEGADO_NAO_AUTENTICAVEL', 'A')
+on conflict (id) do nothing;
+insert into plantaopro.usuarios_perfis(id, usuario_id, perfil_id, reg_status) values
+('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'A')
+on conflict (id) do nothing;
+insert into plantaopro.plantoes(id, data_inicio, data_fim, valor, vagas, tipo, status, reg_status) values
+('40000000-0000-0000-0000-000000000001', timestamp '2026-01-10 08:00:00', timestamp '2026-01-10 20:00:00', 1575.50, 2, 'LEGADO', 'ABERTO', 'A')
+on conflict (id) do nothing;

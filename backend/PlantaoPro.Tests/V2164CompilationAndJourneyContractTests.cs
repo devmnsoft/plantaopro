@@ -51,6 +51,7 @@ public sealed class V2164CompilationAndJourneyContractTests
     {
         var view = Read("backend/PlantaoPro.Web/Views/Account/Login.cshtml");
         var script = Read("backend/PlantaoPro.Web/wwwroot/js/auth-login.js");
+        var browserRegression = Read("scripts/ui/login-submit-regression.mjs");
 
         Assert.Contains("@Html.AntiForgeryToken()", view);
         Assert.Contains("method=\"post\"", view);
@@ -61,7 +62,14 @@ public sealed class V2164CompilationAndJourneyContractTests
         Assert.Contains("client.Timeout", Read("backend/PlantaoPro.Web/Program.cs"));
         Assert.Contains("window.addEventListener(\"pageshow\"", script);
         Assert.Contains("requestInFlight", script);
-        Assert.DoesNotContain("resetSubmission();\n        if (errorSummary)", script);
+        // A prova de comportamento fica no teste de navegador; nao acople este
+        // contrato a uma ordem textual interna do handler.
+        Assert.Contains("clique envia uma vez", browserRegression);
+        Assert.Contains("duplo clique não duplica", browserRegression);
+        Assert.Contains("campos inválidos permanecem utilizáveis", browserRegression);
+        Assert.Contains("histórico recupera estado", browserRegression);
+        Assert.Contains("POST sem antiforgery", browserRegression);
+        Assert.Contains("erro de credenciais permite nova tentativa", browserRegression);
         Assert.DoesNotContain("ale" + "rt(", script);
         Assert.DoesNotContain("con" + "firm(", script);
     }

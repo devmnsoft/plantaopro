@@ -11,6 +11,10 @@ async function scenario(name, exercise, expectedPosts) {
 
   await page.route(/\/Account\/Login(?:\?.*)?$/i, async route => {
     if (route.request().method() !== "POST") return route.continue();
+    const submitted = route.request().postDataBuffer()?.toString("utf8") || "";
+    if (!submitted.includes("__RequestVerificationToken=")) {
+      throw new Error(`${name}: POST sem antiforgery`);
+    }
     posts.push(route.request().url());
     await route.fulfill({ status: 200, contentType: "text/html; charset=utf-8", body: loginHtml });
   });
@@ -75,6 +79,14 @@ try {
     if (await page.locator("#btnLogin").isDisabled()) throw new Error("botão permaneceu desabilitado após pageshow");
     if (await page.locator("#btnLogin").getAttribute("aria-busy") === "true") throw new Error("loading permaneceu ativo após pageshow");
   }, 1);
+
+  await scenario("erro de credenciais permite nova tentativa", async page => {
+    await fillValid(page);
+    await page.locator("#btnLogin").click();
+    await page.waitForLoadState("domcontentloaded");
+    await fillValid(page);
+    await page.locator("#btnLogin").click();
+  }, 2);
 } finally {
   await browser.close();
 }

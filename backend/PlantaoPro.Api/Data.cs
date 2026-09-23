@@ -10,6 +10,7 @@ using System.Text.Json;
 using Microsoft.IdentityModel.Tokens;
 using PlantaoPro.CrossCutting.Security;
 using PlantaoPro.Api.Security;
+using PlantaoPro.Domain.Identity;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
@@ -253,42 +254,6 @@ values
             return texto.Length > 4000 ? texto.Substring(0, 4000) : texto;
         }
     }
-    public enum LoginIdentifierKind
-    {
-        Invalid,
-        Email,
-        Cpf,
-        Cnpj
-    }
-
-    public static class LoginIdentifierNormalizer
-    {
-        public static LoginIdentifierKind Classify(string? value)
-        {
-            var normalized = (value ?? string.Empty).Trim();
-            if (normalized.Contains('@') && normalized.Length <= 254) return LoginIdentifierKind.Email;
-            var digits = Digits(normalized);
-            return digits.Length switch
-            {
-                11 => LoginIdentifierKind.Cpf,
-                14 => LoginIdentifierKind.Cnpj,
-                _ => LoginIdentifierKind.Invalid
-            };
-        }
-
-        public static string Normalize(string? value, LoginIdentifierKind kind) =>
-            kind == LoginIdentifierKind.Email ? (value ?? string.Empty).Trim().ToLowerInvariant() : Digits(value);
-
-        public static string AuditValue(string? value, LoginIdentifierKind kind)
-        {
-            var normalized = Normalize(value, kind);
-            var fingerprint = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalized))).Substring(0, 12);
-            return $"{kind.ToString().ToUpperInvariant()}:{fingerprint}";
-        }
-
-        private static string Digits(string? value) => new((value ?? string.Empty).Where(char.IsDigit).ToArray());
-    }
-
     public sealed class LoginUserRow
     {
         public Guid Id { get; set; }
@@ -370,7 +335,7 @@ limit 50", parameters: new
                     if (PasswordHashService.Verify(req.Senha, candidate.SenhaHash)) passwordMatches.Add(candidate);
                 }
 
-                if (passwordMatches.Count != 1)
+                if (!IdentityEligibilityPolicy.HasExactlyOneCredentialMatch(passwordMatches.Count))
                 {
                     var failedUserId = candidates.Length == 1 ? candidates[0].Id : (Guid?)null;
                     DateTime? newLockout = null;
@@ -410,7 +375,7 @@ limit 50", parameters: new
                     logger.LogWarning("Login bloqueado temporariamente UsuarioId:{UsuarioId} Ate:{BloqueadoAte}", usuarioId, bloqueioAte.Value);
                     return ApiResponse<LoginResponse>.Fail($"Usuário bloqueado temporariamente. Tente novamente em {Math.Max(restante, 1)} minuto(s).", 423);
                 }
-                if (!string.Equals(user.RegStatus, "A", StringComparison.OrdinalIgnoreCase) || !string.Equals(user.Status, "ATIVO", StringComparison.OrdinalIgnoreCase))
+                if (!IdentityEligibilityPolicy.IsActive(user.RegStatus, user.Status))
                 {
                     await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, false, "USER_INACTIVE", cancellationToken: cancellationToken);
                     logger.LogWarning("Login negado: usuário inativo UsuarioId:{UsuarioId} Identificador:{Identificador} IP:{Ip}", usuarioId, auditIdentifier, ip);

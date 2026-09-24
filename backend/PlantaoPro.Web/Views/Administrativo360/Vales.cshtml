@@ -1,0 +1,193 @@
+@model IReadOnlyList<PlantaoPro.Web.Models.ValeResumoViewModel>
+@{
+    ViewData["Title"] = "Vales de Consignação — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Vales de Consignação</h2>
+            <p class="text-muted small mb-0">Rastreabilidade ponta a ponta: separação, conferência móvel, expedição com transferência de custódia e reconciliação.</p>
+        </div>
+        <div>
+            <a asp-action="ValeNovo" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Novo Vale
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Ciclo de Vida do Vale de Consignação</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Rascunho & Separação</strong>
+                    Itens e lotes reservados são alocados. A separação confere fisicamente cada item sem transferir saldo nem gerar receita.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. Expedição Transacional</strong>
+                    A baixa do almoxarifado interno e a entrada em custódia externa no hospital ocorrem na mesma transação atômica.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. Consumo & Retorno</strong>
+                    Consumos baixam a custódia hospitalar. Materiais devolvidos retornam em Quarentena para inspeção de qualidade.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Reconciliação</strong>
+                    Expedido = Consumido + Devolvido + Perdas aprovadas. Com pendência zero, o vale é reconciliado e liberado para valorização.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary">Busca (Vale, Cirurgia, Orçamento ou Hospital)</label>
+                    <input type="text" name="busca" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@ViewBag.Busca" placeholder="Ex: VAL-000001, Hospital Central..." />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-secondary">Situação</label>
+                    <select name="situacao" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todas as situações</option>
+                        <option value="RASCUNHO" selected="@(ViewBag.Situacao == "RASCUNHO")">Rascunho</option>
+                        <option value="EM_SEPARACAO" selected="@(ViewBag.Situacao == "EM_SEPARACAO")">Em Separação</option>
+                        <option value="PRONTO_PARA_EXPEDICAO" selected="@(ViewBag.Situacao == "PRONTO_PARA_EXPEDICAO")">Pronto para Expedição</option>
+                        <option value="EXPEDIDO" selected="@(ViewBag.Situacao == "EXPEDIDO")">Expedido</option>
+                        <option value="RETORNO_PARCIAL" selected="@(ViewBag.Situacao == "RETORNO_PARCIAL")">Retorno Parcial</option>
+                        <option value="RECONCILIADO" selected="@(ViewBag.Situacao == "RECONCILIADO")">Reconciliado</option>
+                        <option value="CANCELADO" selected="@(ViewBag.Situacao == "CANCELADO")">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-secondary">De</label>
+                    <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-secondary">Até</label>
+                    <input type="date" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" />
+                </div>
+                <div class="col-md-1 d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-outline-info w-100" title="Filtrar">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a asp-action="Vales" class="btn btn-sm btn-outline-secondary" title="Limpar filtros">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Vales -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0">
+                    <thead class="table-secondary text-secondary small">
+                        <tr>
+                            <th>Número</th>
+                            <th>Cirurgia / Orçamento</th>
+                            <th>Hospital</th>
+                            <th>Origem & Destino</th>
+                            <th>Saída Prevista</th>
+                            <th>Saída Efetiva</th>
+                            <th class="text-end">Qtd Itens</th>
+                            <th>Situação</th>
+                            <th>Situação Financeira</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        @if (Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center py-4 text-muted">
+                                    Nenhum vale de consignação encontrado com os filtros informados.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var v in Model)
+                            {
+                                var badgeClass = v.Situacao switch
+                                {
+                                    "RASCUNHO" => "bg-secondary",
+                                    "EM_SEPARACAO" => "bg-info text-dark",
+                                    "PRONTO_PARA_EXPEDICAO" => "bg-primary",
+                                    "EXPEDIDO" => "bg-warning text-dark",
+                                    "RETORNO_PARCIAL" => "bg-warning",
+                                    "RECONCILIADO" => "bg-success",
+                                    "CANCELADO" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+
+                                <tr>
+                                    <td class="fw-bold">
+                                        <a asp-action="ValeDetalhes" asp-route-id="@v.Id" class="text-info text-decoration-none">
+                                            @v.Numero
+                                        </a>
+                                    </td>
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(v.CirurgiaNumero))
+                                        {
+                                            <span class="d-block">@v.CirurgiaNumero</span>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(v.OrcamentoNumero))
+                                        {
+                                            <span class="text-muted small">@v.OrcamentoNumero</span>
+                                        }
+                                    </td>
+                                    <td>@v.Hospital</td>
+                                    <td>
+                                        <span class="d-block text-truncate" style="max-width: 140px;">De: @v.LocalOrigem</span>
+                                        <span class="text-secondary small d-block text-truncate" style="max-width: 140px;">Para: @v.LocalDestino</span>
+                                    </td>
+                                    <td>@v.DataSaidaPrevista.ToString("dd/MM/yyyy")</td>
+                                    <td>@(v.DataSaidaEfetiva.HasValue ? v.DataSaidaEfetiva.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                    <td class="text-end fw-bold">@v.TotalItens.ToString("0.00")</td>
+                                    <td><span class="badge @badgeClass">@v.Situacao</span></td>
+                                    <td><span class="badge bg-dark border border-secondary text-light">@v.SituacaoFinanceira</span></td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="ValeDetalhes" asp-route-id="@v.Id" class="btn btn-outline-info" title="Abrir Vale">
+                                                <i class="bi bi-eye"></i> Detalhes
+                                            </a>
+                                            <a asp-action="ValeImprimir" asp-route-id="@v.Id" target="_blank" class="btn btn-outline-secondary" title="Imprimir Documento Operacional">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

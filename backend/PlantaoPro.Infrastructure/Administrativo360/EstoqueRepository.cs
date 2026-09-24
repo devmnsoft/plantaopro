@@ -189,7 +189,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
                 ) VALUES(
                     gen_random_uuid(), @tenantId, @ProdutoId, @LoteId, @LocalId, @Quantidade, 'ATIVA', @Origem, @OrigemId, @key, @usuarioId
                 )",
-                new { tenantId, c.ProdutoId, c.LoteId, c.LocalId, c.Quantidade, c.Origem, c.OrigemId, key = c.IdempotencyKey, usuarioId }, tx, cancellationToken: ct));
+                new { tenantId, c.ProdutoId, c.LoteId, c.LocalId, c.Quantidade, Origem = c.Motivo, c.OrigemId, key = c.IdempotencyKey, usuarioId }, tx, cancellationToken: ct));
         }, ct);
     }
 }

@@ -1,0 +1,367 @@
+@model PlantaoPro.Web.Models.ValeDetalhesViewModel
+@{
+    ViewData["Title"] = $"{Model.Numero} — Vale de Consignação — Administrativo 360";
+    var badgeClass = Model.Situacao switch
+    {
+        "RASCUNHO" => "bg-secondary",
+        "EM_SEPARACAO" => "bg-info text-dark",
+        "PRONTO_PARA_EXPEDICAO" => "bg-primary",
+        "EXPEDIDO" => "bg-warning text-dark",
+        "RETORNO_PARCIAL" => "bg-warning",
+        "RECONCILIADO" => "bg-success",
+        "CANCELADO" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    var totalPendente = Model.Itens.Sum(i => i.PendenteCustodia);
+    var podeReconciliar = (Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL") && totalPendente == 0;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h4 mb-0 text-light fw-bold">Vale @Model.Numero</h2>
+                <span class="badge @badgeClass">@Model.Situacao</span>
+                <span class="badge bg-dark border border-secondary text-light">@Model.SituacaoFinanceira</span>
+            </div>
+            <p class="text-muted small mb-0">Destinado a @Model.Hospital — Local de Custódia: @Model.LocalDestino</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Vales" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <a asp-action="ValeImprimir" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-info">
+                <i class="bi bi-printer me-1"></i> Imprimir Documento
+            </a>
+            @if (Model.Situacao == "PRONTO_PARA_EXPEDICAO")
+            {
+                <form asp-action="ValeExpedir" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary" onclick="this.disabled=true; this.form.submit();">
+                        <i class="bi bi-send-check me-1"></i> Confirmar Expedição Transacional
+                    </button>
+                </form>
+            }
+            @if (Model.Situacao is "RASCUNHO" or "EM_SEPARACAO")
+            {
+                <form asp-action="ValeConcluirSeparacao" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="bi bi-check2-all me-1"></i> Concluir Separação
+                    </button>
+                </form>
+            }
+            @if (podeReconciliar)
+            {
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalReconciliar">
+                    <i class="bi bi-award me-1"></i> Concluir Reconciliação
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cabeçalho de Dados -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title h6 mb-0 text-light">Informações Operacionais da Consignação</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3 small">
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Hospital</span>
+                    <strong class="text-light">@Model.Hospital</strong>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Origem (Interno)</span>
+                    <span class="text-light">@Model.LocalOrigem</span>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Destino (Custódia Externa)</span>
+                    <strong class="text-info">@Model.LocalDestino</strong>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Cirurgia Vinculada</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.CirurgiaNumero))
+                    {
+                        <a asp-action="CirurgiaDetalhes" asp-route-id="@Model.CirurgiaId" class="text-info text-decoration-none fw-bold">
+                            @Model.CirurgiaNumero
+                        </a>
+                    }
+                    else
+                    {
+                        <span class="text-muted">—</span>
+                    }
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Data Prevista de Saída</span>
+                    <span class="text-light">@Model.DataSaidaPrevista.ToString("dd/MM/yyyy")</span>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Saída Efetiva</span>
+                    <span class="text-light">@(Model.DataSaidaEfetiva.HasValue ? Model.DataSaidaEfetiva.Value.ToString("dd/MM/yyyy HH:mm") : "Aguardando expedição")</span>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Previsão de Retorno</span>
+                    <span class="text-light">@(Model.DataRetornoPrevista.HasValue ? Model.DataRetornoPrevista.Value.ToString("dd/MM/yyyy") : "Não estipulada")</span>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-secondary d-block">Pendente em Custódia</span>
+                    <strong class="@(totalPendente > 0 ? "text-warning" : "text-success") fs-6">@totalPendente.ToString("0.00") un</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens e Rastreabilidade -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <h5 class="card-title h6 mb-0 text-light">Itens do Vale de Consignação</h5>
+            <span class="badge bg-secondary">Total: @Model.Itens.Count itens</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0">
+                    <thead class="table-secondary text-secondary small">
+                        <tr>
+                            <th>Produto</th>
+                            <th>Lote</th>
+                            <th>Validade</th>
+                            <th class="text-end">Solicitado</th>
+                            <th class="text-end">Separado</th>
+                            <th class="text-end">Expedido</th>
+                            <th class="text-end text-info">Consumido</th>
+                            <th class="text-end text-success">Devolvido</th>
+                            <th class="text-end text-danger">Perda</th>
+                            <th class="text-end text-warning">Pendente</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        @foreach (var it in Model.Itens)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="d-block">@it.Produto</strong>
+                                    <span class="text-muted small">SKU: @it.Sku</span>
+                                </td>
+                                <td class="font-monospace">@it.Lote</td>
+                                <td>@(it.Validade.HasValue ? it.Validade.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                <td class="text-end">@it.QuantidadeSolicitada.ToString("0.00")</td>
+                                <td class="text-end">@it.QuantidadeSeparada.ToString("0.00")</td>
+                                <td class="text-end fw-bold">@it.QuantidadeExpedida.ToString("0.00")</td>
+                                <td class="text-end text-info fw-bold">@it.QuantidadeConsumida.ToString("0.00")</td>
+                                <td class="text-end text-success fw-bold">@it.QuantidadeDevolvida.ToString("0.00")</td>
+                                <td class="text-end text-danger fw-bold">@it.QuantidadePerda.ToString("0.00")</td>
+                                <td class="text-end text-warning fw-bold">@it.PendenteCustodia.ToString("0.00")</td>
+                                <td class="text-end">
+                                    @if (Model.Situacao is "RASCUNHO" or "EM_SEPARACAO")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalSeparar_@it.Id">
+                                            <i class="bi bi-box-seam me-1"></i> Separar
+                                        </button>
+                                    }
+                                    else if (Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL" && it.PendenteCustodia > 0)
+                                    {
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalEvento_@it.Id" data-tipo="CONSUMO" title="Registrar Consumo">
+                                                Consumo
+                                            </button>
+                                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalEvento_@it.Id" data-tipo="RETORNO" title="Devolver (Quarentena)">
+                                                Retorno
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalEvento_@it.Id" data-tipo="PERDA" title="Registrar Perda/Avaria">
+                                                Perda
+                                            </button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Conferido</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Eventos -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title h6 mb-0 text-light">Eventos e Rastreabilidade do Vale</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0">
+                    <thead class="table-secondary text-secondary small">
+                        <tr>
+                            <th>Data & Hora</th>
+                            <th>Tipo de Evento</th>
+                            <th>Produto</th>
+                            <th>Lote</th>
+                            <th class="text-end">Quantidade</th>
+                            <th>Motivo / Justificativa</th>
+                            <th>Registrado Por</th>
+                        </tr>
+                    </thead>
+                    <tbody class="small">
+                        @if (Model.Eventos.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-3 text-muted">
+                                    Nenhum evento registrado ainda para este vale de consignação.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var e in Model.Eventos)
+                            {
+                                var badgeEvento = e.Tipo switch
+                                {
+                                    "CONSUMO" => "bg-info text-dark",
+                                    "RETORNO" => "bg-success",
+                                    "PERDA" => "bg-danger",
+                                    "AVARIA" => "bg-danger",
+                                    _ => "bg-secondary"
+                                };
+
+                                <tr>
+                                    <td>@e.DataEvento.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td><span class="badge @badgeEvento">@e.Tipo</span></td>
+                                    <td>@e.Produto</td>
+                                    <td class="font-monospace">@e.Lote</td>
+                                    <td class="text-end fw-bold">@e.Quantidade.ToString("0.00")</td>
+                                    <td>@(string.IsNullOrWhiteSpace(e.Motivo) ? "—" : e.Motivo)</td>
+                                    <td>@e.RegistradoPor</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modais de Separação de Itens -->
+@foreach (var it in Model.Itens)
+{
+    if (Model.Situacao is "RASCUNHO" or "EM_SEPARACAO")
+    {
+        <div class="modal fade" id="modalSeparar_@it.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title h6">Conferência de Separação: @it.Produto</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <form asp-action="ValeSepararItem" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@it.Id" />
+                        <div class="modal-body small">
+                            <p class="text-secondary mb-2">Lote: <strong class="text-light">@it.Lote</strong> | Qtd Solicitada: <strong class="text-light">@it.QuantidadeSolicitada.ToString("0.00")</strong></p>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Quantidade Separada e Conferida</label>
+                                <input type="number" step="0.0001" min="0" max="@it.QuantidadeSolicitada" name="quantidade" value="@it.QuantidadeSolicitada" class="form-control bg-dark text-light border-secondary" required />
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Registrar Separação</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL" && it.PendenteCustodia > 0)
+    {
+        <div class="modal fade" id="modalEvento_@it.Id" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title h6">Registrar Evento: @it.Produto</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <form asp-action="ValeEvento" asp-route-id="@Model.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="itemId" value="@it.Id" />
+                        <div class="modal-body small">
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Tipo de Evento</label>
+                                <select name="tipo" class="form-select bg-dark text-light border-secondary" required>
+                                    <option value="CONSUMO">Consumo Cirúrgico (Baixa em custódia externa)</option>
+                                    <option value="RETORNO">Retorno do Material (Entrada em Quarentena)</option>
+                                    <option value="PERDA">Perda ou Avaria (Decisão autorizada)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Quantidade (Máximo pendente: @it.PendenteCustodia.ToString("0.00"))</label>
+                                <input type="number" step="0.0001" min="0.0001" max="@it.PendenteCustodia" name="quantidade" value="@it.PendenteCustodia" class="form-control bg-dark text-light border-secondary" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-secondary">Motivo / Justificativa</label>
+                                <input type="text" name="motivo" class="form-control bg-dark text-light border-secondary" placeholder="Ex: Utilizado em sala / Sobra cirúrgica devolvida" />
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Confirmar Evento</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}
+
+<!-- Modal Reconciliação -->
+@if (podeReconciliar)
+{
+    <div class="modal fade" id="modalReconciliar" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6">Confirmar Reconciliação do Vale</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form asp-action="ValeReconciliar" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body small">
+                        <p class="text-success fw-bold mb-2">Conferência matemática atendida:</p>
+                        <p class="text-secondary mb-3">Todos os materiais expedidos foram totalmente justificados entre consumo, retorno a quarentena e perdas autorizadas. O saldo pendente em custódia é zero.</p>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Observações da Reconciliação</label>
+                            <textarea name="observacoes" class="form-control bg-dark text-light border-secondary" rows="2" placeholder="Observações finais da conferência..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-sm btn-success">Concluir Reconciliação</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

@@ -621,6 +621,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao",
+      "source": "database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql",
+      "checksum": "6442e40d9cf12b1bd48a6c0d75a48da889a688d424a3fac328e4c7c50abd695e",
+      "dependsOn": [
+        "2026_09_v2192_administrativo360_regras_estoque_orcamentos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

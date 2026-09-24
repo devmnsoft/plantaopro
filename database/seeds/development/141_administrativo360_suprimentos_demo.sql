@@ -152,10 +152,149 @@ BEGIN
 
     -- Reserva parcial: solicitados 5, reservados 2 de lote_livre no local_cd (restam 3 a atender)
     INSERT INTO plantaopro.adm360_reservas(
-        id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, idempotency_key, created_by
+        id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, orcamento_item_id, idempotency_key, created_by
     ) VALUES (
-        reserva_1, t1, produto, lote_livre, local_cd, 2, 'ATIVA', 'ORCAMENTO_CIRURGICO', orc_aprovado, 'seed:reserva:orc2:item2', usr1
+        reserva_1, t1, produto, lote_livre, local_cd, 2, 'ATIVA', 'ORCAMENTO_CIRURGICO', orc_aprovado, orc_item_2, 'seed:reserva:orc2:item2', usr1
     ) ON CONFLICT(id) DO NOTHING;
+
+    -- =========================================================================
+    -- CENÁRIO DEMONSTRATIVO SEÇÃO 15:
+    -- 1) Uma cirurgia, Orçamento aprovado, Lote com 10 liberadas, Reserva de 6, Vale em preparação.
+    -- 2) Cenário concluído e reconciliado para consulta de relatórios.
+    -- =========================================================================
+    DECLARE
+        lote_10 uuid := 'a3610000-0000-4000-8000-000000000050';
+        orc_demo_10 uuid := 'a3610000-0000-4000-8000-000000000051';
+        item_demo_10 uuid := 'a3610000-0000-4000-8000-000000000052';
+        reserva_6 uuid := 'a3610000-0000-4000-8000-000000000053';
+        cirurgia_1 uuid := 'a3610000-0000-4000-8000-000000000054';
+        vale_1 uuid := 'a3610000-0000-4000-8000-000000000055';
+        vale_item_1 uuid := 'a3610000-0000-4000-8000-000000000056';
+
+        -- Cenário 2 (Reconciliado)
+        cirurgia_rec uuid := 'a3610000-0000-4000-8000-000000000060';
+        vale_rec uuid := 'a3610000-0000-4000-8000-000000000061';
+        vale_rec_item uuid := 'a3610000-0000-4000-8000-000000000062';
+        op_rec uuid := 'a3610000-0000-4000-8000-000000000063';
+
+        -- Cenário 3 (Pendente com Atraso para Relatórios)
+        cirurgia_pend uuid := 'a3610000-0000-4000-8000-000000000070';
+        vale_pend uuid := 'a3610000-0000-4000-8000-000000000071';
+        vale_pend_item uuid := 'a3610000-0000-4000-8000-000000000072';
+    BEGIN
+        -- Lote com 10 liberadas
+        INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade)
+        VALUES(lote_10, t1, produto, 'LOTE-DEMO-10UN', date '2027-12-31')
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_movimentos(id, tenant_id, produto_id, lote_id, local_id, tipo, condicao, quantidade, origem_tipo, origem_id, idempotency_key, created_by)
+        VALUES('a3610000-0000-4000-8000-000000000057', t1, produto, lote_10, local_cd, 'ENTRADA', 'LIBERADO', 10, 'SEED', lote_10, 'seed:movimento:lote10', usr1)
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Orçamento aprovado de 10 unidades
+        INSERT INTO plantaopro.adm360_orcamentos(
+            id, tenant_id, numero, revisao, hospital_id, procedimento, responsavel_financeiro_id,
+            data_prevista, validade, situacao, total_produtos, desconto_geral, total_geral, observacoes, aprovado_em, aprovado_por, created_by
+        ) VALUES (
+            orc_demo_10, t1, 'ORC-DEMO-010', 1, hospital_p, 'Artroplastia de Joelho Bilateral', hospital_p,
+            date '2026-11-25', date '2026-11-15', 'APROVADO', 6000.00, 0, 6000.00, 'Orçamento aprovado para jornada de consignação', now(), usr1, usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamento_itens(id, tenant_id, orcamento_id, produto_id, quantidade, preco_unitario, desconto, total)
+        VALUES(item_demo_10, t1, orc_demo_10, produto, 10, 600.00, 0, 6000.00)
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Reserva de 6 unidades
+        INSERT INTO plantaopro.adm360_reservas(
+            id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, orcamento_item_id, idempotency_key, created_by
+        ) VALUES (
+            reserva_6, t1, produto, lote_10, local_cd, 6, 'ATIVA', 'ORCAMENTO_CIRURGICO', orc_demo_10, item_demo_10, 'seed:reserva:demo:6', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Cirurgia 1
+        INSERT INTO plantaopro.adm360_cirurgias(
+            id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+            orcamento_id, orcamento_revisao, local_destino_id, situacao, observacoes, created_by
+        ) VALUES (
+            cirurgia_1, t1, 'CIR-DEMO-001', hospital_p, 'Artroplastia de Joelho Bilateral', date '2026-11-25', time '08:00',
+            orc_demo_10, 1, local_hosp, 'AGENDADA', 'Cirurgia demonstrativa com vale em preparação', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Vale 1 em preparação (EM_SEPARACAO)
+        INSERT INTO plantaopro.adm360_vales(
+            id, tenant_id, numero, cirurgia_id, orcamento_id, orcamento_revisao, hospital_id,
+            local_origem_id, local_destino_id, data_saida_prevista, data_retorno_prevista,
+            situacao, situacao_financeira, observacoes, created_by
+        ) VALUES (
+            vale_1, t1, 'VAL-DEMO-001', cirurgia_1, orc_demo_10, 1, hospital_p,
+            local_cd, local_hosp, date '2026-11-24', date '2026-11-28',
+            'EM_SEPARACAO', 'PENDENTE_VALORIZACAO', 'Vale em fase de separação no almoxarifado', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_itens(
+            id, tenant_id, vale_id, produto_id, lote_id, reserva_id, quantidade_solicitada, quantidade_separada, preco_unitario
+        ) VALUES (
+            vale_item_1, t1, vale_1, produto, lote_10, reserva_6, 6, 3, 600.00
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Cenário 2: Vale Reconciliado (Expedido 6 = Consumido 4 + Devolvido 2, pendente 0)
+        INSERT INTO plantaopro.adm360_cirurgias(
+            id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+            local_destino_id, situacao, observacoes, created_by
+        ) VALUES (
+            cirurgia_rec, t1, 'CIR-DEMO-REC', hospital_p, 'Cirurgia Concluída Reconciliada', date '2026-09-10', time '09:00',
+            local_hosp, 'REALIZADA', 'Cirurgia concluída com sucesso e vale reconciliado', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vales(
+            id, tenant_id, numero, cirurgia_id, hospital_id, local_origem_id, local_destino_id,
+            data_saida_prevista, data_saida_efetiva, data_retorno_prevista, data_reconciliacao,
+            situacao, situacao_financeira, observacoes, created_by
+        ) VALUES (
+            vale_rec, t1, 'VAL-DEMO-REC', cirurgia_rec, hospital_p, local_cd, local_hosp,
+            date '2026-09-09', now() - interval '14 days', date '2026-09-15', now() - interval '10 days',
+            'RECONCILIADO', 'PENDENTE_VALORIZACAO', 'Vale reconciliado: 4 consumidos, 2 devolvidos', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_itens(
+            id, tenant_id, vale_id, produto_id, lote_id, quantidade_solicitada, quantidade_separada,
+            quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda, preco_unitario
+        ) VALUES (
+            vale_rec_item, t1, vale_rec, produto, lote_livre, 6, 6, 6, 4, 2, 0, 500.00
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_eventos(id, tenant_id, vale_id, vale_item_id, tipo, quantidade, data_evento, motivo, registrado_por)
+        VALUES
+            ('a3610000-0000-4000-8000-000000000064', t1, vale_rec, vale_rec_item, 'CONSUMO', 4, now() - interval '12 days', 'Implantes fixados no paciente', usr1),
+            ('a3610000-0000-4000-8000-000000000065', t1, vale_rec, vale_rec_item, 'RETORNO', 2, now() - interval '11 days', 'Sobra cirúrgica íntegra devolvida para quarentena', usr1)
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Cenário 3: Vale com atraso no retorno previsto (para relatórios de pendência)
+        INSERT INTO plantaopro.adm360_cirurgias(
+            id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+            local_destino_id, situacao, observacoes, created_by
+        ) VALUES (
+            cirurgia_pend, t1, 'CIR-DEMO-ATRASO', hospital_p, 'Cirurgia Emergencial Ortopédica', date '2026-09-01', time '14:00',
+            local_hosp, 'REALIZADA', 'Cirurgia realizada, aguardando devolução de materiais', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vales(
+            id, tenant_id, numero, cirurgia_id, hospital_id, local_origem_id, local_destino_id,
+            data_saida_prevista, data_saida_efetiva, data_retorno_prevista,
+            situacao, situacao_financeira, observacoes, created_by
+        ) VALUES (
+            vale_pend, t1, 'VAL-DEMO-ATRASO', cirurgia_pend, hospital_p, local_cd, local_hosp,
+            date '2026-08-31', now() - interval '20 days', date '2026-09-05',
+            'EXPEDIDO', 'PENDENTE_VALORIZACAO', 'Materiais pendentes de recolhimento no hospital', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_itens(
+            id, tenant_id, vale_id, produto_id, lote_id, quantidade_solicitada, quantidade_separada,
+            quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda, preco_unitario
+        ) VALUES (
+            vale_pend_item, t1, vale_pend, produto, lote_livre, 5, 5, 5, 2, 0, 0, 500.00
+        ) ON CONFLICT(id) DO NOTHING;
+    END;
 
     -- =========================================================================
     -- TENANT 2: TESTE DE ISOLAMENTO MULTI-TENANT

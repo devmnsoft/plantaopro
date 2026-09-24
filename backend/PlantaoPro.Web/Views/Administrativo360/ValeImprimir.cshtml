@@ -1,0 +1,153 @@
+@model PlantaoPro.Web.Models.ValeDetalhesViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vale de Consignação Operacional @Model.Numero — PlantãoPro</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; color: #111; }
+        .documento-header { border-bottom: 2px solid #222; padding-bottom: 12px; margin-bottom: 16px; }
+        .aviso-operacional { border: 1px dashed #666; background: #f8f9fa; padding: 6px 12px; font-size: 11px; margin-bottom: 14px; text-align: center; }
+        .bloco-info { background: #fafafa; border: 1px solid #ddd; padding: 10px; margin-bottom: 14px; }
+        .table-itens th { background-color: #eee !important; color: #000; }
+        .bloco-assinatura { margin-top: 40px; }
+        .linha-assinatura { border-top: 1px solid #333; margin-top: 45px; padding-top: 4px; text-align: center; font-size: 11px; }
+        @@media print {
+            .no-print { display: none !important; }
+            body { margin: 0; padding: 10mm; }
+        }
+    </style>
+</head>
+<body class="bg-white p-4">
+    <div class="no-print d-flex justify-content-between align-items-center mb-3 p-2 bg-light border">
+        <span class="fw-bold">Visualização de Impressão — Documento Operacional</span>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+            Imprimir Documento
+        </button>
+    </div>
+
+    <!-- Cabeçalho -->
+    <div class="documento-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="h5 mb-0 fw-bold">PLANTÃOPRO CIRÚRGICA</h2>
+            <p class="mb-0 text-muted small">Logística e Distribuição de Materiais e Implantes OPME</p>
+        </div>
+        <div class="text-end">
+            <span class="d-block fw-bold fs-6">VALE DE CONSIGNAÇÃO</span>
+            <span class="d-block font-monospace fw-bold fs-5 text-primary">@Model.Numero</span>
+        </div>
+    </div>
+
+    <div class="aviso-operacional">
+        <strong>DOCUMENTO OPERACIONAL DE TRANSPORTE E CUSTÓDIA.</strong>
+        Este comprovante destina-se exclusivamente ao controle logístico de consignação e rastreabilidade hospitalar, não constituindo documento fiscal.
+    </div>
+
+    <!-- Informações da Cirurgia e Destino -->
+    <div class="bloco-info">
+        <div class="row g-2">
+            <div class="col-6">
+                <span class="d-block text-muted small">Hospital de Destino:</span>
+                <strong>@Model.Hospital</strong>
+            </div>
+            <div class="col-6">
+                <span class="d-block text-muted small">Local de Custódia Externa:</span>
+                <strong>@Model.LocalDestino</strong>
+            </div>
+            <div class="col-4">
+                <span class="d-block text-muted small">Data Prevista de Saída:</span>
+                <span>@Model.DataSaidaPrevista.ToString("dd/MM/yyyy")</span>
+            </div>
+            <div class="col-4">
+                <span class="d-block text-muted small">Data Efetiva de Saída:</span>
+                <span>@(Model.DataSaidaEfetiva.HasValue ? Model.DataSaidaEfetiva.Value.ToString("dd/MM/yyyy HH:mm") : "Aguardando saída")</span>
+            </div>
+            <div class="col-4">
+                <span class="d-block text-muted small">Previsão de Retorno:</span>
+                <span>@(Model.DataRetornoPrevista.HasValue ? Model.DataRetornoPrevista.Value.ToString("dd/MM/yyyy") : "A definir pós-cirurgia")</span>
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.CirurgiaNumero))
+            {
+                <div class="col-6">
+                    <span class="d-block text-muted small">Cirurgia Logística:</span>
+                    <span>@Model.CirurgiaNumero</span>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.OrcamentoNumero))
+            {
+                <div class="col-6">
+                    <span class="d-block text-muted small">Proposta Aprovada:</span>
+                    <span>@Model.OrcamentoNumero (Rev. @Model.OrcamentoRevisao)</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Lista de Materiais -->
+    <table class="table table-bordered table-sm table-itens mb-4">
+        <thead>
+            <tr>
+                <th style="width: 40px;" class="text-center">#</th>
+                <th>Código / SKU</th>
+                <th>Descrição do Material</th>
+                <th>Lote</th>
+                <th>Validade</th>
+                <th style="width: 100px;" class="text-end">Qtd Solicitada</th>
+                <th style="width: 100px;" class="text-end">Qtd Expedida</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int index = 1; }
+            @foreach (var item in Model.Itens)
+            {
+                <tr>
+                    <td class="text-center">@index</td>
+                    <td class="font-monospace">@item.Sku</td>
+                    <td>@item.Produto</td>
+                    <td class="font-monospace">@item.Lote</td>
+                    <td>@(item.Validade.HasValue ? item.Validade.Value.ToString("dd/MM/yyyy") : "—")</td>
+                    <td class="text-end">@item.QuantidadeSolicitada.ToString("0.00")</td>
+                    <td class="text-end fw-bold">@item.QuantidadeExpedida.ToString("0.00")</td>
+                </tr>
+                index++;
+            }
+        </tbody>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Observacoes))
+    {
+        <div class="p-2 border mb-4 bg-light small">
+            <strong>Observações Logísticas:</strong> @Model.Observacoes
+        </div>
+    }
+
+    <!-- Assinaturas e Custódia -->
+    <div class="bloco-assinatura">
+        <div class="row">
+            <div class="col-4">
+                <div class="linha-assinatura">
+                    <strong>Almoxarifado / Expedição</strong><br />
+                    <span>Responsável pela Separação</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="linha-assinatura">
+                    <strong>Transportador / Portador</strong><br />
+                    <span>Conferência de Carga</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="linha-assinatura">
+                    <strong>Recepção do Hospital</strong><br />
+                    <span>Recebido e sob Custódia</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

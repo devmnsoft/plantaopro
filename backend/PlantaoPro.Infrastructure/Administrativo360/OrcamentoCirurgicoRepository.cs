@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Dapper;
 using PlantaoPro.Application.Administrativo360;
@@ -54,6 +55,36 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
         public decimal Fisico { get; set; }
         public decimal Reservado { get; set; }
         public decimal Disponivel { get; set; }
+    }
+
+    private sealed class OrcamentoItemRow
+    {
+        public Guid Id { get; set; }
+        public Guid ProdutoId { get; set; }
+        public decimal Quantidade { get; set; }
+    }
+
+    private sealed class OrcamentoItemPlanejamentoRow
+    {
+        public Guid ItemId { get; set; }
+        public Guid ProdutoId { get; set; }
+        public string Sku { get; set; } = string.Empty;
+        public string Produto { get; set; } = string.Empty;
+        public decimal Quantidade { get; set; }
+    }
+
+    private sealed class OperacaoExistenteRow
+    {
+        public Guid Id { get; set; }
+        public string PayloadHash { get; set; } = string.Empty;
+        public string? Resultado { get; set; }
+    }
+
+    private sealed class LoteValidacaoRow
+    {
+        public Guid Id { get; set; }
+        public Guid ProdutoId { get; set; }
+        public DateOnly? Validade { get; set; }
     }
 
     private sealed class OrcamentoResumoRow
@@ -455,20 +486,22 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
     {
         await using var cn = Connection();
         var header = await cn.QuerySingleOrDefaultAsync<OrcamentoHeaderRow>(new CommandDefinition(@"
-            SELECT o.id AS Id, o.numero AS Numero, o.situacao AS Situacao, o.data_prevista AS DataPrevista, h.nome AS Hospital
+            SELECT o.id AS Id, o.numero AS Numero, o.situacao AS Situacao, o.data_prevista AS DataPrevista,
+                   COALESCE(h.nome, hosp.nome, 'Hospital') AS Hospital
             FROM plantaopro.adm360_orcamentos o
-            JOIN plantaopro.adm360_parceiros h ON h.id = o.hospital_id AND h.tenant_id = o.tenant_id
+            LEFT JOIN plantaopro.adm360_parceiros h ON h.id = o.hospital_id AND h.tenant_id = o.tenant_id
+            LEFT JOIN plantaopro.hospitais hosp ON hosp.id = o.hospital_id AND hosp.tenant_id = o.tenant_id
             WHERE o.id = @orcamentoId AND o.tenant_id = @tenantId",
             new { orcamentoId, tenantId }, cancellationToken: ct));
 
         if (header is null) return null;
 
-        var items = (await cn.QueryAsync<OrcamentoItemQueryRow>(new CommandDefinition(@"
-            SELECT i.produto_id AS ProdutoId, p.sku AS Sku, p.nome AS Produto, i.quantidade AS Quantidade
+        var items = (await cn.QueryAsync<OrcamentoItemPlanejamentoRow>(new CommandDefinition(@"
+            SELECT i.id AS ItemId, i.produto_id AS ProdutoId, p.sku AS Sku, p.nome AS Produto, i.quantidade AS Quantidade
             FROM plantaopro.adm360_orcamento_itens i
             JOIN plantaopro.adm360_produtos p ON p.id = i.produto_id AND p.tenant_id = i.tenant_id
             WHERE i.orcamento_id = @orcamentoId AND i.tenant_id = @tenantId
-            ORDER BY p.nome",
+            ORDER BY p.nome, i.id",
             new { orcamentoId, tenantId }, cancellationToken: ct))).ToList();
 
         var planejados = new List<ItemReservaPlanejamento>();
@@ -479,8 +512,9 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                 SELECT COALESCE(SUM(quantidade), 0)
                 FROM plantaopro.adm360_reservas
                 WHERE tenant_id = @tenantId AND origem_tipo = 'ORCAMENTO_CIRURGICO' AND origem_id = @orcamentoId
-                  AND produto_id = @produtoId AND situacao = 'ATIVA'",
-                new { tenantId, orcamentoId, produtoId = it.ProdutoId }, cancellationToken: ct));
+                  AND (orcamento_item_id = @itemId OR (orcamento_item_id IS NULL AND produto_id = @produtoId))
+                  AND situacao = 'ATIVA'",
+                new { tenantId, orcamentoId, itemId = it.ItemId, produtoId = it.ProdutoId }, cancellationToken: ct));
 
             var falta = Math.Max(0m, it.Quantidade - reservada);
 
@@ -500,7 +534,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                     l.LoteId, l.Lote, l.Validade, l.LocalId, l.Local, l.Fisico, l.Reservado, l.Disponivel, compativel);
             }).ToList();
 
-            planejados.Add(new ItemReservaPlanejamento(it.ProdutoId, it.Produto, it.Sku, it.Quantidade, reservada, falta, lotesElegiveis));
+            planejados.Add(new ItemReservaPlanejamento(it.ProdutoId, it.Produto, it.Sku, it.Quantidade, reservada, falta, lotesElegiveis, it.ItemId));
         }
 
         return new PlanejamentoReservaOrcamento(header.Id, header.Numero, header.Situacao, header.DataPrevista, header.Hospital, planejados);
@@ -510,8 +544,32 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
     {
         Estoque.ValidarQuantidade(command.Quantidade);
 
+        var payloadHash = IdempotenciaHelper.CalcularHash(
+            "RESERVA",
+            tenantId,
+            orcamentoId,
+            command.ProdutoId,
+            command.LoteId,
+            command.LocalId,
+            command.Quantidade.ToString("0.0000", CultureInfo.InvariantCulture),
+            command.OrcamentoItemId?.ToString() ?? string.Empty);
+
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
         {
+            // 1.2: Idempotência ANTES de revalidar saldo consumido pela própria operação
+            var opExistente = await cn.QuerySingleOrDefaultAsync<OperacaoExistenteRow>(new CommandDefinition(
+                "SELECT id, payload_hash AS PayloadHash, resultado FROM plantaopro.adm360_operacoes WHERE tenant_id = @tenantId AND idempotency_key = @key",
+                new { tenantId, key = command.IdempotencyKey }, tx, cancellationToken: ct));
+
+            if (opExistente is not null)
+            {
+                if (string.Equals(opExistente.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase))
+                {
+                    return; // Retry com mesmo conteúdo: devolução do sucesso sem reexecutar
+                }
+                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+            }
+
             var orc = await cn.QuerySingleOrDefaultAsync<OrcamentoHeaderRow>(new CommandDefinition(@"
                 SELECT id AS Id, situacao AS Situacao, data_prevista AS DataPrevista
                 FROM plantaopro.adm360_orcamentos
@@ -523,6 +581,79 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             if (!OrcamentoCirurgicoRegras.PodeReservar(orc.Situacao))
                 throw new InvalidOperationException($"Somente orçamento APROVADO pode receber reservas de materiais. Situação atual: {orc.Situacao}.");
 
+            // Validação de local ativo do tenant
+            var localAtivo = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(
+                "SELECT EXISTS(SELECT 1 FROM plantaopro.adm360_locais WHERE id = @LocalId AND tenant_id = @tenantId AND ativo)",
+                new { command.LocalId, tenantId }, tx, cancellationToken: ct));
+            if (!localAtivo) throw new ArgumentException("Local de estoque informado é inválido ou inativo.");
+
+            // Validação do lote pertencente ao produto e tenant
+            var loteRow = await cn.QuerySingleOrDefaultAsync<LoteValidacaoRow>(new CommandDefinition(
+                "SELECT id, produto_id AS ProdutoId, validade AS Validade FROM plantaopro.adm360_lotes WHERE id = @LoteId AND tenant_id = @tenantId",
+                new { command.LoteId, tenantId }, tx, cancellationToken: ct));
+            if (loteRow is null || loteRow.ProdutoId != command.ProdutoId)
+                throw new ArgumentException("O lote informado não pertence ao produto especificado ou não existe.");
+
+            // 1.1: Identidade do item e validação de limite do orçamento
+            OrcamentoItemRow? orcItem = null;
+            if (command.OrcamentoItemId.HasValue)
+            {
+                orcItem = await cn.QuerySingleOrDefaultAsync<OrcamentoItemRow>(new CommandDefinition(@"
+                    SELECT id AS Id, orcamento_id AS OrcamentoId, produto_id AS ProdutoId, quantidade AS Quantidade
+                    FROM plantaopro.adm360_orcamento_itens
+                    WHERE id = @ItemId AND orcamento_id = @orcamentoId AND tenant_id = @tenantId",
+                    new { ItemId = command.OrcamentoItemId.Value, orcamentoId, tenantId }, tx, cancellationToken: ct));
+
+                if (orcItem is null)
+                    throw new ArgumentException("Item de orçamento especificado não foi encontrado no orçamento aprovado.");
+                if (orcItem.ProdutoId != command.ProdutoId)
+                    throw new ArgumentException("O produto da reserva diverge do produto cadastrado na linha do orçamento.");
+            }
+            else
+            {
+                var itensProduto = (await cn.QueryAsync<OrcamentoItemRow>(new CommandDefinition(@"
+                    SELECT id AS Id, orcamento_id AS OrcamentoId, produto_id AS ProdutoId, quantidade AS Quantidade
+                    FROM plantaopro.adm360_orcamento_itens
+                    WHERE orcamento_id = @orcamentoId AND produto_id = @ProdutoId AND tenant_id = @tenantId
+                    ORDER BY id",
+                    new { orcamentoId, command.ProdutoId, tenantId }, tx, cancellationToken: ct))).ToList();
+
+                if (itensProduto.Count == 0)
+                    throw new ArgumentException("O produto informado não pertence a este orçamento.");
+
+                foreach (var candidate in itensProduto)
+                {
+                    var jaReservadoCand = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
+                        SELECT COALESCE(SUM(quantidade), 0)
+                        FROM plantaopro.adm360_reservas
+                        WHERE tenant_id = @tenantId AND origem_tipo = 'ORCAMENTO_CIRURGICO' AND origem_id = @orcamentoId
+                          AND (orcamento_item_id = @itemId OR (orcamento_item_id IS NULL AND produto_id = @ProdutoId))
+                          AND situacao = 'ATIVA'",
+                        new { tenantId, orcamentoId, itemId = candidate.Id, command.ProdutoId }, tx, cancellationToken: ct));
+
+                    if (candidate.Quantidade - jaReservadoCand >= command.Quantidade)
+                    {
+                        orcItem = candidate;
+                        break;
+                    }
+                }
+                orcItem ??= itensProduto[0];
+            }
+
+            var totalJaReservadoItem = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
+                SELECT COALESCE(SUM(quantidade), 0)
+                FROM plantaopro.adm360_reservas
+                WHERE tenant_id = @tenantId AND origem_tipo = 'ORCAMENTO_CIRURGICO' AND origem_id = @orcamentoId
+                  AND (orcamento_item_id = @itemId OR (orcamento_item_id IS NULL AND produto_id = @ProdutoId))
+                  AND situacao = 'ATIVA'",
+                new { tenantId, orcamentoId, itemId = orcItem.Id, command.ProdutoId }, tx, cancellationToken: ct));
+
+            var saldoNecessidade = orcItem.Quantidade - totalJaReservadoItem;
+            if (command.Quantidade > saldoNecessidade)
+            {
+                throw new InvalidOperationException($"Quantidade solicitada ({command.Quantidade}) excede a necessidade ainda não atendida do item do orçamento ({saldoNecessidade}).");
+            }
+
             var lockKey = $"{tenantId}:{command.ProdutoId}:{command.LoteId}:{command.LocalId}";
             await BloquearChavesDeterministasAsync(cn, tx, new[] { lockKey }, ct);
 
@@ -530,11 +661,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             await ValidarBloqueioInventarioAsync(cn, tx, tenantId, command.LocalId, ct);
 
             // Validar compatibilidade de data de validade com a data prevista da cirurgia
-            var validadeLote = await cn.QuerySingleOrDefaultAsync<DateOnly?>(new CommandDefinition(
-                "SELECT validade FROM plantaopro.adm360_lotes WHERE id = @LoteId AND tenant_id = @tenantId",
-                new { command.LoteId, tenantId }, tx, cancellationToken: ct));
-
-            OrcamentoCirurgicoRegras.ValidarDataCirurgiaEValidadeLote(orc.DataPrevista, validadeLote);
+            OrcamentoCirurgicoRegras.ValidarDataCirurgiaEValidadeLote(orc.DataPrevista, loteRow.Validade);
 
             // Validar quantidade disponível
             var available = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
@@ -546,21 +673,17 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             if (available < command.Quantidade)
                 throw new InvalidOperationException("Quantidade solicitada excede o estoque disponível do lote.");
 
-            // Idempotência da reserva
-            var existente = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"
-                SELECT EXISTS(
-                    SELECT 1 FROM plantaopro.adm360_reservas
-                    WHERE tenant_id = @tenantId AND idempotency_key = @key
-                )",
-                new { tenantId, key = command.IdempotencyKey }, tx, cancellationToken: ct));
-
-            if (existente) return;
+            var opId = Guid.NewGuid();
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                INSERT INTO plantaopro.adm360_operacoes(id, tenant_id, tipo, idempotency_key, payload_hash, resultado, created_by)
+                VALUES(@opId, @tenantId, 'RESERVA', @key, @payloadHash, 'CONCLUIDO', @usuarioId)",
+                new { opId, tenantId, key = command.IdempotencyKey, payloadHash, usuarioId }, tx, cancellationToken: ct));
 
             await cn.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_reservas(
-                    id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, idempotency_key, created_by
+                    id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, orcamento_item_id, idempotency_key, created_by
                 ) VALUES(
-                    gen_random_uuid(), @tenantId, @ProdutoId, @LoteId, @LocalId, @Quantidade, 'ATIVA', 'ORCAMENTO_CIRURGICO', @orcamentoId, @key, @usuarioId
+                    gen_random_uuid(), @tenantId, @ProdutoId, @LoteId, @LocalId, @Quantidade, 'ATIVA', 'ORCAMENTO_CIRURGICO', @orcamentoId, @orcamentoItemId, @key, @usuarioId
                 )",
                 new
                 {
@@ -570,6 +693,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                     command.LocalId,
                     command.Quantidade,
                     orcamentoId,
+                    orcamentoItemId = orcItem.Id,
                     key = command.IdempotencyKey,
                     usuarioId
                 }, tx, cancellationToken: ct));

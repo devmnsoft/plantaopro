@@ -385,6 +385,555 @@ public sealed class Administrativo360Controller : BaseWebController
     public async Task<IActionResult> Contrato(Guid colaboradorId, string tipo, DateOnly inicio, DateOnly? fim, decimal salario, int cargaHorariaSemanal) =>
         await Send("api/administrativo360/contratos", new { colaboradorId, tipo, inicio, fim, salario, cargaHorariaSemanal }, "Contratação registrada.");
 
+    // ==========================================
+    // CIRURGIAS OPERACIONAIS
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Cirurgias(string? busca, string? situacao, DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(busca)) query.Add($"busca={Uri.EscapeDataString(busca)}");
+        if (!string.IsNullOrWhiteSpace(situacao)) query.Add($"situacao={Uri.EscapeDataString(situacao)}");
+        if (inicio.HasValue) query.Add($"inicio={inicio:yyyy-MM-dd}");
+        if (fim.HasValue) query.Add($"fim={fim:yyyy-MM-dd}");
+
+        var path = "api/administrativo360/cirurgias" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var res = await ReadApiResponse<List<CirurgiaResumoViewModel>>(client, path);
+
+        ViewBag.Busca = busca;
+        ViewBag.Situacao = situacao;
+        ViewBag.Inicio = inicio;
+        ViewBag.Fim = fim;
+
+        return View(res.Data ?? new List<CirurgiaResumoViewModel>());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CirurgiaNova(Guid? orcamentoId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var model = new CirurgiaFormViewModel();
+        if (orcamentoId.HasValue)
+        {
+            var res = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{orcamentoId.Value}");
+            var orc = res.Data;
+            if (orc is not null)
+            {
+                model.OrcamentoId = orc.Id;
+                model.OrcamentoRevisao = orc.Revisao;
+                model.HospitalId = orc.HospitalId;
+                model.MedicoId = orc.MedicoId;
+                model.Procedimento = orc.Procedimento;
+                model.DataPrevista = orc.DataPrevista;
+            }
+        }
+
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CirurgiaNova(CirurgiaFormViewModel model)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (string.IsNullOrWhiteSpace(model.Procedimento))
+        {
+            ModelState.AddModelError(nameof(model.Procedimento), "Informe o procedimento cirúrgico.");
+            return View(model);
+        }
+
+        var payload = new
+        {
+            model.HospitalId,
+            model.MedicoId,
+            model.Procedimento,
+            model.DataPrevista,
+            model.HoraPrevista,
+            model.OrcamentoId,
+            model.OrcamentoRevisao,
+            model.ResponsavelId,
+            model.LocalDestinoId,
+            model.Observacoes
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cirurgias", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+        {
+            TempData["SuccessMessage"] = "Cirurgia operacional agendada com sucesso.";
+            return RedirectToAction(nameof(Cirurgias));
+        }
+
+        TempData["ErrorMessage"] = resp.Error ?? "Falha ao agendar cirurgia.";
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CirurgiaDetalhes(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<CirurgiaDetalhesViewModel>(client, $"api/administrativo360/cirurgias/{id}");
+        if (resp.Data is null) return NotFound();
+
+        return View(resp.Data);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CirurgiaCancelar(Guid id, string motivo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { CirurgiaId = id, Motivo = motivo };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/cirurgias/{id}/cancelar", payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Cirurgia cancelada com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar cirurgia.";
+
+        return RedirectToAction(nameof(CirurgiaDetalhes), new { id });
+    }
+
+    // ==========================================
+    // VALES DE CONSIGNAÇÃO
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Vales(string? busca, string? situacao, DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(busca)) query.Add($"busca={Uri.EscapeDataString(busca)}");
+        if (!string.IsNullOrWhiteSpace(situacao)) query.Add($"situacao={Uri.EscapeDataString(situacao)}");
+        if (inicio.HasValue) query.Add($"inicio={inicio:yyyy-MM-dd}");
+        if (fim.HasValue) query.Add($"fim={fim:yyyy-MM-dd}");
+
+        var path = "api/administrativo360/vales" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var res = await ReadApiResponse<List<ValeResumoViewModel>>(client, path);
+
+        ViewBag.Busca = busca;
+        ViewBag.Situacao = situacao;
+        ViewBag.Inicio = inicio;
+        ViewBag.Fim = fim;
+
+        return View(res.Data ?? new List<ValeResumoViewModel>());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ValeNovo(Guid? orcamentoId, Guid? cirurgiaId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var model = new ValeFormViewModel
+        {
+            OrcamentoId = orcamentoId,
+            CirurgiaId = cirurgiaId
+        };
+
+        if (cirurgiaId.HasValue)
+        {
+            var res = await ReadApiResponse<CirurgiaDetalhesViewModel>(client, $"api/administrativo360/cirurgias/{cirurgiaId.Value}");
+            var cirurgia = res.Data;
+            if (cirurgia is not null)
+            {
+                model.HospitalId = cirurgia.HospitalId;
+                model.LocalDestinoId = cirurgia.LocalDestinoId;
+                model.OrcamentoId ??= cirurgia.OrcamentoId;
+                model.OrcamentoRevisao = cirurgia.OrcamentoRevisao;
+                model.DataSaidaPrevista = cirurgia.DataPrevista;
+                model.DataRetornoPrevista = cirurgia.DataPrevista.AddDays(7);
+            }
+        }
+        else if (orcamentoId.HasValue)
+        {
+            var res = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{orcamentoId.Value}");
+            var orc = res.Data;
+            if (orc is not null)
+            {
+                model.HospitalId = orc.HospitalId;
+                model.OrcamentoRevisao = orc.Revisao;
+                model.DataSaidaPrevista = orc.DataPrevista;
+                model.DataRetornoPrevista = orc.DataPrevista.AddDays(7);
+            }
+        }
+
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeNovo(ValeFormViewModel model)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (model.Itens.Count == 0)
+        {
+            TempData["ErrorMessage"] = "Adicione ao menos um item ao vale de consignação.";
+            return View(model);
+        }
+
+        var payload = new
+        {
+            model.CirurgiaId,
+            model.OrcamentoId,
+            model.OrcamentoRevisao,
+            model.HospitalId,
+            model.CustodianteId,
+            model.LocalOrigemId,
+            model.LocalDestinoId,
+            model.DataSaidaPrevista,
+            model.DataRetornoPrevista,
+            model.Observacoes,
+            Itens = model.Itens.Select(i => new
+            {
+                i.ProdutoId,
+                i.LoteId,
+                i.ReservaId,
+                i.QuantidadeSolicitada,
+                i.PrecoUnitario
+            }).ToList(),
+            IdempotencyKey = Guid.NewGuid().ToString("N")
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/vales", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+        {
+            TempData["SuccessMessage"] = "Vale de consignação criado com sucesso.";
+            return RedirectToAction(nameof(Vales));
+        }
+
+        TempData["ErrorMessage"] = resp.Error ?? "Falha ao criar vale de consignação.";
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ValeDetalhes(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<ValeDetalhesViewModel>(client, $"api/administrativo360/vales/{id}");
+        if (resp.Data is null) return NotFound();
+
+        return View(resp.Data);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeSepararItem(Guid id, Guid itemId, decimal quantidade)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { ValeItemId = itemId, QuantidadeSeparada = quantidade };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/separar-item", payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Conferência do item registrada.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar conferência do item.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeConcluirSeparacao(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/concluir-separacao", new { });
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Separação de materiais concluída. Vale pronto para expedição.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao concluir separação de materiais.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeExpedir(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { ValeId = id, IdempotencyKey = Guid.NewGuid().ToString("N") };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/expedir", payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Vale expedido com sucesso! Materiais transferidos para custódia externa no hospital.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao expedir vale.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeEvento(Guid id, Guid itemId, string tipo, decimal quantidade, string? motivo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var endpoint = tipo switch
+        {
+            "CONSUMO" => $"api/administrativo360/vales/{id}/consumo",
+            "RETORNO" => $"api/administrativo360/vales/{id}/retorno",
+            "PERDA" => $"api/administrativo360/vales/{id}/perda",
+            _ => throw new ArgumentException("Tipo de evento inválido.")
+        };
+
+        var payload = new
+        {
+            ValeId = id,
+            ValeItemId = itemId,
+            Quantidade = quantidade,
+            Motivo = motivo,
+            IdempotencyKey = Guid.NewGuid().ToString("N")
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, endpoint, payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = $"Evento de {tipo} registrado com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? $"Falha ao registrar evento de {tipo}.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeReconciliar(Guid id, string? observacoes)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new
+        {
+            ValeId = id,
+            Observacoes = observacoes,
+            IdempotencyKey = Guid.NewGuid().ToString("N")
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/reconciliar", payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Vale reconciliado com sucesso! Pronto para valorização no próximo incremento.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao reconciliar vale.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ValeCancelar(Guid id, string motivo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { ValeId = id, Motivo = motivo };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/cancelar", payload);
+
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Vale cancelado com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar vale.";
+
+        return RedirectToAction(nameof(ValeDetalhes), new { id });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ValeImprimir(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<ValeDetalhesViewModel>(client, $"api/administrativo360/vales/{id}");
+        if (resp.Data is null) return NotFound();
+
+        return View(resp.Data);
+    }
+
+    // ==========================================
+    // RELATÓRIOS FUNCIONAIS E EXPORTAÇÃO CSV
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Relatorios(string? aba, string? busca)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        aba = string.IsNullOrWhiteSpace(aba) ? "pendentes" : aba.ToLowerInvariant();
+
+        var respPendentes = await ReadApiResponse<List<RelatorioValesPendentesViewModel>>(client, "api/administrativo360/relatorios/vales-pendentes");
+        var pendentes = respPendentes.Data ?? new();
+
+        var respCustodia = await ReadApiResponse<List<RelatorioCustodiaExternaViewModel>>(client, "api/administrativo360/relatorios/custodia-externa");
+        var custodia = respCustodia.Data ?? new();
+
+        var respReconciliacao = await ReadApiResponse<List<RelatorioReconciliacaoViewModel>>(client, "api/administrativo360/relatorios/reconciliacao");
+        var reconciliacao = respReconciliacao.Data ?? new();
+
+        var rastreioPath = "api/administrativo360/relatorios/rastreabilidade" + (!string.IsNullOrWhiteSpace(busca) ? $"?busca={Uri.EscapeDataString(busca)}" : "");
+        var respRastreio = await ReadApiResponse<List<RelatorioRastreabilidadeViewModel>>(client, rastreioPath);
+        var rastreabilidade = respRastreio.Data ?? new();
+
+        var model = new Adm360RelatoriosIndexViewModel
+        {
+            AbaAtiva = aba,
+            Busca = busca,
+            ValesPendentes = pendentes,
+            CustodiaExterna = custodia,
+            Reconciliacao = reconciliacao,
+            Rastreabilidade = rastreabilidade
+        };
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarValesPendentesCsv()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<List<RelatorioValesPendentesViewModel>>(client, "api/administrativo360/relatorios/vales-pendentes");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Vale;Hospital;Cirurgia;DataSaida;RetornoPrevisto;QuantidadePendente;Responsavel;DiasAtraso");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Numero),
+                SanitizarCsv(it.Hospital),
+                SanitizarCsv(it.CirurgiaNumero ?? ""),
+                it.DataSaida?.ToString("yyyy-MM-dd HH:mm") ?? "",
+                it.DataRetornoPrevista?.ToString("yyyy-MM-dd") ?? "",
+                it.QuantidadePendente.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                SanitizarCsv(it.Responsavel),
+                it.DiasAtraso.ToString()));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"vales_pendentes_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarCustodiaExternaCsv()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<List<RelatorioCustodiaExternaViewModel>>(client, "api/administrativo360/relatorios/custodia-externa");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Local;Produto;Sku;Lote;Validade;Hospital;Vale;Quantidade");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Local),
+                SanitizarCsv(it.Produto),
+                SanitizarCsv(it.Sku),
+                SanitizarCsv(it.Lote),
+                it.Validade?.ToString("yyyy-MM-dd") ?? "",
+                SanitizarCsv(it.Hospital),
+                SanitizarCsv(it.ValeNumero),
+                it.Quantidade.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"custodia_externa_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarReconciliacaoCsv()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<List<RelatorioReconciliacaoViewModel>>(client, "api/administrativo360/relatorios/reconciliacao");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Vale;Hospital;Cirurgia;TotalExpedido;TotalConsumido;TotalDevolvido;TotalPerda;PendenteCustodia;Situacao");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Numero),
+                SanitizarCsv(it.Hospital),
+                SanitizarCsv(it.Cirurgia ?? ""),
+                it.TotalExpedido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.TotalConsumido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.TotalDevolvido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.TotalPerda.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.PendenteCustodia.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                SanitizarCsv(it.Situacao)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"reconciliacao_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarRastreabilidadeCsv(string? busca)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var path = "api/administrativo360/relatorios/rastreabilidade" + (!string.IsNullOrWhiteSpace(busca) ? $"?busca={Uri.EscapeDataString(busca)}" : "");
+        var resp = await ReadApiResponse<List<RelatorioRastreabilidadeViewModel>>(client, path);
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Produto;Lote;Validade;OrigemTipo;Documento;Vale;Hospital;LocalAtual;Condicao;Quantidade;DataMovimento");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Produto),
+                SanitizarCsv(it.Lote),
+                it.Validade?.ToString("yyyy-MM-dd") ?? "",
+                SanitizarCsv(it.OrigemTipo),
+                SanitizarCsv(it.DocumentoOrigem ?? ""),
+                SanitizarCsv(it.ValeNumero ?? ""),
+                SanitizarCsv(it.Hospital ?? ""),
+                SanitizarCsv(it.LocalAtual),
+                SanitizarCsv(it.Condicao),
+                it.Quantidade.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.DataMovimento.ToString("yyyy-MM-dd HH:mm")));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"rastreabilidade_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    private static string SanitizarCsv(string? valor)
+    {
+        if (string.IsNullOrEmpty(valor)) return string.Empty;
+        var limpo = valor.Replace("\"", "\"\"");
+        // Prevenção contra Formula Injection no Excel (=, +, -, @)
+        if (limpo.StartsWith('=') || limpo.StartsWith('+') || limpo.StartsWith('-') || limpo.StartsWith('@'))
+            limpo = "'" + limpo;
+        return $"\"{limpo}\"";
+    }
+
     private async Task<IActionResult> Send<T>(string endpoint, T payload, string success)
     {
         using var client = CreateApiClient();
@@ -395,3 +944,4 @@ public sealed class Administrativo360Controller : BaseWebController
         return RedirectToAction(nameof(Index));
     }
 }
+

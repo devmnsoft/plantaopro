@@ -1,0 +1,208 @@
+@model PlantaoPro.Web.Models.ValeFormViewModel
+@{
+    ViewData["Title"] = "Emitir Vale de Consignação — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Novo Vale de Consignação</h2>
+            <p class="text-muted small mb-0">Alocação de materiais reservados e preparação da expedição em consignação para o hospital.</p>
+        </div>
+        <div>
+            <a asp-action="Vales" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Orientações Operacionais</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Formalizar o lote de materiais que sairá em consignação para o procedimento cirúrgico sob custódia externa no hospital.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Cria o vale em situação RASCUNHO e gera uma tarefa móvel no módulo de coleta para conferência física da separação.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Atenção</strong>
+                    A criação do vale ainda não transfere estoque nem gera faturamento. A transferência física ocorrerá na etapa de Expedição.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <form asp-action="ValeNovo" method="post" id="formVale">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="CirurgiaId" />
+        <input type="hidden" asp-for="OrcamentoId" />
+        <input type="hidden" asp-for="OrcamentoRevisao" />
+
+        <div class="card bg-dark border-secondary text-light mb-4">
+            <div class="card-header bg-dark border-secondary">
+                <h5 class="card-title h6 mb-0 text-light">Cabeçalho do Vale</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Hospital Participante <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="HospitalId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="Identificador UUID do hospital" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Custodiante Responsável (Opcional)</label>
+                        <input type="text" asp-for="CustodianteId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="UUID do parceiro ou responsável pela custódia" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Local de Origem (Almoxarifado Interno) <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="LocalOrigemId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="UUID do local interno de saída" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Local de Destino (Custódia Externa no Hospital) <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="LocalDestinoId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="UUID do local externo de custódia" required />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-secondary">Data Prevista de Saída <span class="text-danger">*</span></label>
+                        <input type="date" asp-for="DataSaidaPrevista" class="form-control bg-dark text-light border-secondary" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-secondary">Previsão de Retorno do Sobrante</label>
+                        <input type="date" asp-for="DataRetornoPrevista" class="form-control bg-dark text-light border-secondary" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Observações Operacionais</label>
+                        <input type="text" asp-for="Observacoes" class="form-control bg-dark text-light border-secondary"
+                               placeholder="Orientações de entrega, motorista ou restrições" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itens do Vale -->
+        <div class="card bg-dark border-secondary text-light mb-4">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <h5 class="card-title h6 mb-0 text-light">Itens a Consignar</h5>
+                <button type="button" class="btn btn-sm btn-outline-info" id="btnAddItem">
+                    <i class="bi bi-plus-circle me-1"></i> Adicionar Item
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0" id="tabelaItens">
+                        <thead class="table-secondary text-secondary small">
+                            <tr>
+                                <th>Produto (UUID) <span class="text-danger">*</span></th>
+                                <th>Lote (UUID) <span class="text-danger">*</span></th>
+                                <th>Reserva Vinculada (UUID)</th>
+                                <th style="width: 130px;">Quantidade <span class="text-danger">*</span></th>
+                                <th style="width: 140px;">Preço Unit. (R$)</th>
+                                <th style="width: 60px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyItens" class="small">
+                            <!-- Primeira linha padrão -->
+                            <tr class="item-linha">
+                                <td>
+                                    <input type="text" name="Itens[0].ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do produto" required />
+                                </td>
+                                <td>
+                                    <input type="text" name="Itens[0].LoteId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do lote" required />
+                                </td>
+                                <td>
+                                    <input type="text" name="Itens[0].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa" />
+                                </td>
+                                <td>
+                                    <input type="number" step="0.0001" min="0.0001" name="Itens[0].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required />
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+            <a asp-action="Vales" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check2-circle me-1"></i> Criar Vale de Consignação
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tbody = document.getElementById("tbodyItens");
+        var btnAdd = document.getElementById("btnAddItem");
+
+        function atualizarIndices() {
+            var linhas = tbody.querySelectorAll(".item-linha");
+            for (var i = 0; i < linhas.length; i++) {
+                var row = linhas[i];
+                var inputs = row.querySelectorAll("input");
+                inputs[0].name = "Itens[" + i + "].ProdutoId";
+                inputs[1].name = "Itens[" + i + "].LoteId";
+                inputs[2].name = "Itens[" + i + "].ReservaId";
+                inputs[3].name = "Itens[" + i + "].QuantidadeSolicitada";
+                inputs[4].name = "Itens[" + i + "].PrecoUnitario";
+            }
+        }
+
+        btnAdd.addEventListener("click", function () {
+            var index = tbody.querySelectorAll(".item-linha").length;
+            var tr = document.createElement("tr");
+            tr.className = "item-linha";
+            tr.innerHTML = '<td><input type="text" name="Itens[' + index + '].ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do produto" required /></td>' +
+                '<td><input type="text" name="Itens[' + index + '].LoteId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do lote" required /></td>' +
+                '<td><input type="text" name="Itens[' + index + '].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa" /></td>' +
+                '<td><input type="number" step="0.0001" min="0.0001" name="Itens[' + index + '].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required /></td>' +
+                '<td><input type="number" step="0.01" min="0" name="Itens[' + index + '].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" /></td>' +
+                '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item"><i class="bi bi-trash"></i></button></td>';
+            tbody.appendChild(tr);
+        });
+
+        tbody.addEventListener("click", function (e) {
+            var btn = e.target.closest(".btn-remover");
+            if (btn) {
+                var linhas = tbody.querySelectorAll(".item-linha");
+                if (linhas.length > 1) {
+                    btn.closest("tr").remove();
+                    atualizarIndices();
+                }
+            }
+        });
+    });
+</script>

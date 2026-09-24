@@ -1,0 +1,183 @@
+@model PlantaoPro.Web.Models.CirurgiaDetalhesViewModel
+@{
+    ViewData["Title"] = $"{Model.Numero} — Cirurgia Operacional — Administrativo 360";
+    var badgeClass = Model.Situacao switch
+    {
+        "AGENDADA" => "bg-primary",
+        "EM_ANDAMENTO" => "bg-warning text-dark",
+        "REALIZADA" => "bg-success",
+        "CANCELADA" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h4 mb-0 text-light fw-bold">Cirurgia @Model.Numero</h2>
+                <span class="badge @badgeClass">@Model.Situacao</span>
+            </div>
+            <p class="text-muted small mb-0">Agendada para @Model.DataPrevista.ToString("dd/MM/yyyy") @(Model.HoraPrevista.HasValue ? Model.HoraPrevista.Value.ToString("HH:mm") : "") no @Model.Hospital</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Cirurgias" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            @if (Model.Situacao == "AGENDADA")
+            {
+                <a asp-action="ValeNovo" asp-route-cirurgiaId="@Model.Id" class="btn btn-success">
+                    <i class="bi bi-box-arrow-right me-1"></i> Emitir Vale de Consignação
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Informações da Cirurgia -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="card-title h6 mb-0 text-light">Dados do Procedimento</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Procedimento</span>
+                            <span class="fw-bold fs-6">@Model.Procedimento</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Hospital</span>
+                            <span class="fw-bold">@Model.Hospital</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Médico Cirurgião</span>
+                            <span>@(string.IsNullOrWhiteSpace(Model.Medico) ? "Não informado" : Model.Medico)</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Local de Custódia (Destino)</span>
+                            <span class="text-info fw-bold">@Model.LocalDestino</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Orçamento Vinculado</span>
+                            @if (!string.IsNullOrWhiteSpace(Model.OrcamentoNumero))
+                            {
+                                <a asp-action="OrcamentoDetalhes" asp-route-id="@Model.OrcamentoId" class="text-info text-decoration-none fw-bold">
+                                    @Model.OrcamentoNumero (Rev. @Model.OrcamentoRevisao)
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sem proposta vinculada</span>
+                            }
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-secondary small d-block">Responsável Operacional</span>
+                            <span>@(string.IsNullOrWhiteSpace(Model.Responsavel) ? "Não informado" : Model.Responsavel)</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-secondary small d-block">Observações</span>
+                            <p class="text-secondary small mb-0">@(string.IsNullOrWhiteSpace(Model.Observacoes) ? "Nenhuma observação informada." : Model.Observacoes)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="card-title h6 mb-0 text-light">Gestão e Ações</h5>
+                </div>
+                <div class="card-body d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="mb-3">
+                            <span class="text-secondary small d-block">Situação Logística</span>
+                            <span class="badge @badgeClass fs-6">@Model.Situacao</span>
+                        </div>
+                        <div class="mb-3">
+                            <span class="text-secondary small d-block">Data do Cadastro</span>
+                            <span>@Model.CriadoEm.ToString("dd/MM/yyyy HH:mm")</span>
+                        </div>
+                        <div class="small text-secondary mb-3">
+                            <strong>Próxima Ação:</strong><br />
+                            @if (Model.Situacao == "AGENDADA")
+                            {
+                                <span>Criar o vale de consignação com os materiais e encaminhar para separação no almoxarifado.</span>
+                            }
+                            else if (Model.Situacao == "CANCELADA")
+                            {
+                                <span>Cirurgia cancelada. Reservas não expedidas foram liberadas.</span>
+                            }
+                            else
+                            {
+                                <span>Acompanhar devoluções e reconciliação dos vales de consignação.</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.Situacao == "AGENDADA")
+                    {
+                        <div class="border-top border-secondary pt-3 mt-3">
+                            <button type="button" class="btn btn-outline-danger w-100 btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelar">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar Cirurgia
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelar Cirurgia -->
+@if (Model.Situacao == "AGENDADA")
+{
+    <div class="modal fade" id="modalCancelar" tabindex="-1" aria-labelledby="modalCancelarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalCancelarLabel">Confirmar Cancelamento da Cirurgia</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form asp-action="CirurgiaCancelar" asp-route-id="@Model.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body small">
+                        <p class="text-danger fw-bold mb-2">Atenção ao efeito da confirmação:</p>
+                        <ul class="text-secondary ps-3 mb-3">
+                            <li>O cancelamento libera apenas reservas ativas ainda não expedidas.</li>
+                            <li>Materiais já expedidos em trânsito permanecerão sob controle até seu retorno e reconciliação.</li>
+                            <li>Nenhum movimento físico é estornado automaticamente de forma fictícia.</li>
+                        </ul>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Motivo do Cancelamento <span class="text-danger">*</span></label>
+                            <textarea name="motivo" class="form-control bg-dark text-light border-secondary" rows="3" required
+                                      placeholder="Informe o motivo do cancelamento do procedimento..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Confirmar Cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

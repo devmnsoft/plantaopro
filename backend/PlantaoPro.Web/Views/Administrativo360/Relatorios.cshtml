@@ -1,0 +1,340 @@
+@model PlantaoPro.Web.Models.Adm360RelatoriosIndexViewModel
+@{
+    ViewData["Title"] = "Relatórios Operacionais e Rastreabilidade — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Relatórios Operacionais & Rastreabilidade</h2>
+            <p class="text-muted small mb-0">Consultas analíticas de consignação, custódia externa em hospitais, conferência de reconciliação e trilha de auditoria.</p>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Como utilizar os Relatórios Operacionais</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Vales Pendentes</strong>
+                    Identifica materiais em trânsito com atraso no retorno previsto da cirurgia e os responsáveis pela cobrança hospitalar.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Custódia Externa</strong>
+                    Demonstra a posição física real de materiais alocados em cada hospital ou custodiante externo.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Reconciliação</strong>
+                    Conferência matemática da balança de materiais: Expedido = Consumido + Devolvido + Perdas.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Rastreabilidade</strong>
+                    Rastreamento de ponta a ponta do ciclo de vida de cada produto e lote até a localização atual.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs border-secondary mb-3">
+        <li class="nav-item">
+            <a class="nav-link text-light @(Model.AbaAtiva == "pendentes" ? "active bg-secondary fw-bold" : "")"
+               asp-action="Relatorios" asp-route-aba="pendentes">
+                <i class="bi bi-clock-history me-1"></i> Vales Pendentes
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-light @(Model.AbaAtiva == "custodia" ? "active bg-secondary fw-bold" : "")"
+               asp-action="Relatorios" asp-route-aba="custodia">
+                <i class="bi bi-building me-1"></i> Custódia Externa
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-light @(Model.AbaAtiva == "reconciliacao" ? "active bg-secondary fw-bold" : "")"
+               asp-action="Relatorios" asp-route-aba="reconciliacao">
+                <i class="bi bi-check2-circle me-1"></i> Reconciliação
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-light @(Model.AbaAtiva == "rastreabilidade" ? "active bg-secondary fw-bold" : "")"
+               asp-action="Relatorios" asp-route-aba="rastreabilidade">
+                <i class="bi bi-diagram-3 me-1"></i> Rastreabilidade
+            </a>
+        </li>
+    </ul>
+
+    <!-- Conteúdo da Aba Ativa -->
+    @if (Model.AbaAtiva == "pendentes")
+    {
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <h5 class="card-title h6 mb-0 text-light">Vales em Aberto / Pendentes de Retorno</h5>
+                <a asp-action="ExportarValesPendentesCsv" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead class="table-secondary text-secondary small">
+                            <tr>
+                                <th>Vale</th>
+                                <th>Hospital</th>
+                                <th>Cirurgia</th>
+                                <th>Saída Efetiva</th>
+                                <th>Retorno Previsto</th>
+                                <th class="text-end text-warning">Qtd Pendente</th>
+                                <th>Responsável</th>
+                                <th class="text-center">Atraso</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @if (Model.ValesPendentes.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">
+                                        Nenhum vale com pendência de retorno no momento.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.ValesPendentes)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">
+                                            <a asp-action="ValeDetalhes" asp-route-id="@item.ValeId" class="text-info text-decoration-none">
+                                                @item.Numero
+                                            </a>
+                                        </td>
+                                        <td>@item.Hospital</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.CirurgiaNumero) ? "—" : item.CirurgiaNumero)</td>
+                                        <td>@(item.DataSaida.HasValue ? item.DataSaida.Value.ToString("dd/MM/yyyy HH:mm") : "—")</td>
+                                        <td>@(item.DataRetornoPrevista.HasValue ? item.DataRetornoPrevista.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                        <td class="text-end text-warning fw-bold">@item.QuantidadePendente.ToString("0.00")</td>
+                                        <td>@item.Responsavel</td>
+                                        <td class="text-center">
+                                            @if (item.DiasAtraso > 0)
+                                            {
+                                                <span class="badge bg-danger">@item.DiasAtraso dias</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">No prazo</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.AbaAtiva == "custodia")
+    {
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <h5 class="card-title h6 mb-0 text-light">Materiais em Custódia Externa (Hospitais)</h5>
+                <a asp-action="ExportarCustodiaExternaCsv" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead class="table-secondary text-secondary small">
+                            <tr>
+                                <th>Local de Custódia</th>
+                                <th>Hospital</th>
+                                <th>Produto</th>
+                                <th>SKU</th>
+                                <th>Lote</th>
+                                <th>Validade</th>
+                                <th>Vale Origem</th>
+                                <th class="text-end text-info">Quantidade em Custódia</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @if (Model.CustodiaExterna.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-4 text-muted">
+                                        Nenhum material registrado em custódia externa no momento.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.CustodiaExterna)
+                                {
+                                    <tr>
+                                        <td class="fw-bold">@item.Local</td>
+                                        <td>@item.Hospital</td>
+                                        <td>@item.Produto</td>
+                                        <td class="font-monospace">@item.Sku</td>
+                                        <td class="font-monospace">@item.Lote</td>
+                                        <td>@(item.Validade.HasValue ? item.Validade.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                        <td>
+                                            <a asp-action="ValeDetalhes" asp-route-id="@item.ValeId" class="text-info text-decoration-none">
+                                                @item.ValeNumero
+                                            </a>
+                                        </td>
+                                        <td class="text-end text-info fw-bold">@item.Quantidade.ToString("0.00")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.AbaAtiva == "reconciliacao")
+    {
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <h5 class="card-title h6 mb-0 text-light">Balanço de Reconciliação dos Vales</h5>
+                <a asp-action="ExportarReconciliacaoCsv" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead class="table-secondary text-secondary small">
+                            <tr>
+                                <th>Vale</th>
+                                <th>Hospital</th>
+                                <th>Cirurgia</th>
+                                <th class="text-end">Expedido</th>
+                                <th class="text-end text-info">Consumido</th>
+                                <th class="text-end text-success">Devolvido</th>
+                                <th class="text-end text-danger">Perdas</th>
+                                <th class="text-end text-warning">Pendente</th>
+                                <th>Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @if (Model.Reconciliacao.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="9" class="text-center py-4 text-muted">
+                                        Nenhum registro para conciliação.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.Reconciliacao)
+                                {
+                                    var badgeClass = item.Situacao switch
+                                    {
+                                        "RECONCILIADO" => "bg-success",
+                                        "EXPEDIDO" => "bg-warning text-dark",
+                                        "RETORNO_PARCIAL" => "bg-warning",
+                                        _ => "bg-secondary"
+                                    };
+
+                                    <tr>
+                                        <td class="fw-bold">
+                                            <a asp-action="ValeDetalhes" asp-route-id="@item.ValeId" class="text-info text-decoration-none">
+                                                @item.Numero
+                                            </a>
+                                        </td>
+                                        <td>@item.Hospital</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.Cirurgia) ? "—" : item.Cirurgia)</td>
+                                        <td class="text-end fw-bold">@item.TotalExpedido.ToString("0.00")</td>
+                                        <td class="text-end text-info fw-bold">@item.TotalConsumido.ToString("0.00")</td>
+                                        <td class="text-end text-success fw-bold">@item.TotalDevolvido.ToString("0.00")</td>
+                                        <td class="text-end text-danger fw-bold">@item.TotalPerda.ToString("0.00")</td>
+                                        <td class="text-end text-warning fw-bold">@item.PendenteCustodia.ToString("0.00")</td>
+                                        <td><span class="badge @badgeClass">@item.Situacao</span></td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.AbaAtiva == "rastreabilidade")
+    {
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <form method="get" asp-action="Relatorios" class="d-flex gap-2">
+                    <input type="hidden" name="aba" value="rastreabilidade" />
+                    <input type="text" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           placeholder="Buscar por Produto ou Lote..." />
+                    <button type="submit" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <a asp-action="ExportarRastreabilidadeCsv" asp-route-busca="@Model.Busca" class="btn btn-sm btn-outline-success">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead class="table-secondary text-secondary small">
+                            <tr>
+                                <th>Data & Hora</th>
+                                <th>Produto</th>
+                                <th>Lote</th>
+                                <th>Validade</th>
+                                <th>Origem</th>
+                                <th>Documento</th>
+                                <th>Hospital</th>
+                                <th>Local Atual</th>
+                                <th>Condição</th>
+                                <th class="text-end">Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            @if (Model.Rastreabilidade.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-center py-4 text-muted">
+                                        Nenhuma movimentação localizada para o critério informado.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var item in Model.Rastreabilidade)
+                                {
+                                    var condClass = item.Condicao switch
+                                    {
+                                        "LIBERADO" => "bg-success",
+                                        "QUARENTENA" => "bg-warning text-dark",
+                                        "REJEITADO" => "bg-danger",
+                                        _ => "bg-secondary"
+                                    };
+
+                                    <tr>
+                                        <td>@item.DataMovimento.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="fw-bold">@item.Produto</td>
+                                        <td class="font-monospace">@item.Lote</td>
+                                        <td>@(item.Validade.HasValue ? item.Validade.Value.ToString("dd/MM/yyyy") : "—")</td>
+                                        <td>@item.OrigemTipo</td>
+                                        <td class="font-monospace small">@(string.IsNullOrWhiteSpace(item.DocumentoOrigem) ? "—" : item.DocumentoOrigem)</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.Hospital) ? "—" : item.Hospital)</td>
+                                        <td>@item.LocalAtual</td>
+                                        <td><span class="badge @condClass">@item.Condicao</span></td>
+                                        <td class="text-end fw-bold">@item.Quantidade.ToString("0.00")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

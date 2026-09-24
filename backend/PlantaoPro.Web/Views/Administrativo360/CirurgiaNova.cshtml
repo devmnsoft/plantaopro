@@ -1,0 +1,121 @@
+@model PlantaoPro.Web.Models.CirurgiaFormViewModel
+@{
+    ViewData["Title"] = "Agendar Cirurgia Operacional — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Agendamento de Cirurgia</h2>
+            <p class="text-muted small mb-0">Cadastre a cirurgia logística vinculada ao hospital, médico e proposta aprovada.</p>
+        </div>
+        <div>
+            <a asp-action="Cirurgias" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar para Lista
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Orientações Operacionais</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Definir a data e hora do procedimento cirúrgico, o hospital participante e o local de custódia onde os materiais serão recebidos.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    A cirurgia fica registrada na situação AGENDADA, pronta para inclusão em rotas logísticas e emissão do vale de consignação.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Importante</strong>
+                    Não importe dados clínicos sensíveis ou diagnósticos desnecessários. Mantenha o foco estritamente na logística e materiais.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title h6 mb-0 text-light">Dados do Procedimento Cirúrgico</h5>
+        </div>
+        <div class="card-body">
+            <form asp-action="CirurgiaNova" method="post">
+                @Html.AntiForgeryToken()
+
+                <input type="hidden" asp-for="OrcamentoId" />
+                <input type="hidden" asp-for="OrcamentoRevisao" />
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Procedimento Cirúrgico <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="Procedimento" class="form-control bg-dark text-light border-secondary"
+                               placeholder="Ex: Artroplastia Total de Joelho com Implante Primário" required />
+                        <span asp-validation-for="Procedimento" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Hospital Participante <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="HospitalId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="Identificador UUID do hospital ou parceiro" required />
+                        <span asp-validation-for="HospitalId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label small text-secondary">Data Prevista <span class="text-danger">*</span></label>
+                        <input type="date" asp-for="DataPrevista" class="form-control bg-dark text-light border-secondary" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-secondary">Horário Previsto</label>
+                        <input type="time" asp-for="HoraPrevista" class="form-control bg-dark text-light border-secondary" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Médico Cirurgião (Opcional)</label>
+                        <input type="text" asp-for="MedicoId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="Identificador UUID do médico parceiro" />
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Local Externo de Destino (Custódia Hospitalar) <span class="text-danger">*</span></label>
+                        <input type="text" asp-for="LocalDestinoId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="Identificador UUID do local de custódia hospitalar" required />
+                        <div class="form-text text-secondary small">Local externo cadastrado onde o consignado permanecerá sob custódia até a cirurgia.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small text-secondary">Responsável Operacional / Instrumentador</label>
+                        <input type="text" asp-for="ResponsavelId" class="form-control bg-dark text-light border-secondary font-monospace"
+                               placeholder="Identificador UUID do colaborador responsável" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label small text-secondary">Observações Logísticas</label>
+                    <textarea asp-for="Observacoes" class="form-control bg-dark text-light border-secondary" rows="3"
+                              placeholder="Observações para a equipe de entrega, restrições de doca ou orientações especiais do centro cirúrgico."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a asp-action="Cirurgias" class="btn btn-outline-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-calendar-check me-1"></i> Confirmar Agendamento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

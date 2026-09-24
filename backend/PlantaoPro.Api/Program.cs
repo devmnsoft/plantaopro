@@ -198,6 +198,9 @@ builder.Services.AddScoped<IQualidadeRepository>(_=>new QualidadeRepository(conn
 builder.Services.AddScoped<IColetaRepository>(_=>new ColetaRepository(connectionString!));
 builder.Services.AddScoped<IInventarioRepository>(_=>new InventarioRepository(connectionString!));
 builder.Services.AddScoped<IOrcamentoCirurgicoRepository>(_=>new OrcamentoCirurgicoRepository(connectionString!));
+builder.Services.AddScoped<ICirurgiaRepository>(_=>new CirurgiaRepository(connectionString!));
+builder.Services.AddScoped<IValeConsignacaoRepository>(_=>new ValeConsignacaoRepository(connectionString!));
+builder.Services.AddScoped<IAdm360RelatoriosRepository>(_=>new Adm360RelatoriosRepository(connectionString!));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();

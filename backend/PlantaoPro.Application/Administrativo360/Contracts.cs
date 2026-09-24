@@ -143,3 +143,311 @@ public interface IAdm360RelatoriosRepository
     Task<IReadOnlyList<RelatorioReconciliacaoItem>> ReconciliacaoAsync(Guid tenantId, CancellationToken ct);
     Task<IReadOnlyList<RelatorioRastreabilidadeItem>> RastreabilidadeAsync(Guid tenantId, string? produtoOuLote, CancellationToken ct);
 }
+
+// ---------------------------------------------------------
+// BLOCOS B, C, D: VALORIZAÇÃO, VENDAS, CONTAS A RECEBER, CAIXA E COMISSÕES
+// ---------------------------------------------------------
+
+public sealed record PreviaValorizacaoItemDto(
+    Guid ValeItemId,
+    Guid ProdutoId,
+    string Sku,
+    string Produto,
+    Guid LoteId,
+    string Lote,
+    decimal QuantidadeConsumida,
+    decimal PrecoUnitario,
+    decimal Desconto,
+    decimal Subtotal,
+    decimal CustoUnitario,
+    decimal CustoTotal,
+    bool CustoAusente);
+
+public sealed record PreviaValorizacaoDto(
+    Guid ValeId,
+    string ValeNumero,
+    Guid? CirurgiaId,
+    string? CirurgiaNumero,
+    Guid? OrcamentoId,
+    int? OrcamentoRevisao,
+    Guid HospitalId,
+    string Hospital,
+    Guid PagadorId,
+    string Pagador,
+    Guid? VendedorId,
+    string? Vendedor,
+    decimal TotalBruto,
+    decimal DescontoTotal,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPercentual,
+    decimal ComissaoPrevista,
+    IReadOnlyList<PreviaValorizacaoItemDto> Itens,
+    IReadOnlyList<string> Pendencias);
+
+public sealed record ValorizarValeCommand(
+    Guid ValeId,
+    Guid PagadorId,
+    Guid? VendedorId,
+    decimal ComissaoPercentual,
+    decimal DescontoGeral,
+    string IdempotencyKey,
+    string? Observacoes);
+
+public sealed record VendaResumoDto(
+    Guid Id,
+    string Numero,
+    Guid? ValorizacaoId,
+    string OrigemTipo,
+    string Hospital,
+    string Pagador,
+    string? Vendedor,
+    DateOnly Competencia,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPrevista,
+    string CondicaoPagamento,
+    string Situacao);
+
+public sealed record VendaItemDto(
+    Guid Id,
+    Guid ProdutoId,
+    string Sku,
+    string Produto,
+    Guid LoteId,
+    string Lote,
+    decimal Quantidade,
+    decimal PrecoUnitario,
+    decimal Desconto,
+    decimal Subtotal,
+    decimal CustoUnitario,
+    decimal CustoTotal);
+
+public sealed record VendaDetalhesDto(
+    Guid Id,
+    string Numero,
+    Guid? ValorizacaoId,
+    Guid? ValeId,
+    string? ValeNumero,
+    Guid ClienteId,
+    string Cliente,
+    Guid PagadorId,
+    string Pagador,
+    Guid? VendedorId,
+    string? Vendedor,
+    DateOnly Competencia,
+    decimal TotalBruto,
+    decimal Desconto,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPercentual,
+    decimal ComissaoPrevista,
+    string CondicaoPagamento,
+    int QuantidadeParcelas,
+    string Situacao,
+    string? Observacoes,
+    DateTime CriadoEm,
+    IReadOnlyList<VendaItemDto> Itens,
+    IReadOnlyList<TituloReceberResumoDto> Titulos);
+
+public sealed record ConfirmarVendaCommand(
+    Guid ValorizacaoId,
+    string CondicaoPagamento,
+    int QuantidadeParcelas,
+    string IdempotencyKey,
+    string? Observacoes);
+
+public sealed record TituloReceberResumoDto(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    string Numero,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido);
+
+public sealed record TituloBaixaDto(
+    Guid Id,
+    Guid TituloId,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataRecebimento,
+    decimal ValorRecebido,
+    string MeioPagamento,
+    string? Referencia,
+    bool Estornado,
+    string? RecebidoPor,
+    DateTime CriadoEm);
+
+public sealed record TituloEstornoDto(
+    Guid Id,
+    Guid BaixaId,
+    decimal ValorEstornado,
+    string Motivo,
+    string? EstornadoPor,
+    DateTime CriadoEm);
+
+public sealed record TituloReceberDetalhesDto(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    string Numero,
+    Guid PagadorId,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorDesconto,
+    decimal ValorJuros,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido,
+    IReadOnlyList<TituloBaixaDto> Baixas,
+    IReadOnlyList<TituloEstornoDto> Estornos);
+
+public sealed record ReceberTituloCommand(
+    Guid TituloId,
+    Guid ContaId,
+    DateOnly DataRecebimento,
+    decimal Valor,
+    string MeioPagamento,
+    string? Referencia,
+    string IdempotencyKey);
+
+public sealed record EstornarBaixaCommand(
+    Guid BaixaId,
+    string Motivo,
+    string IdempotencyKey);
+
+public sealed record ContaFinanceiraDto(
+    Guid Id,
+    string Nome,
+    string Tipo,
+    string? Banco,
+    string? Agencia,
+    string? Conta,
+    decimal SaldoInicial,
+    decimal SaldoAtual,
+    bool Ativo);
+
+public sealed record CriarContaFinanceiraCommand(
+    string Nome,
+    string Tipo,
+    string? Banco,
+    string? Agencia,
+    string? Conta,
+    decimal SaldoInicial);
+
+public sealed record MovimentoFinanceiroDto(
+    Guid Id,
+    Guid ContaId,
+    string ContaNome,
+    string Tipo,
+    decimal Valor,
+    DateOnly DataMovimento,
+    string Descricao,
+    string OrigemTipo,
+    DateTime CriadoEm);
+
+public sealed record ExtratoContaDto(
+    ContaFinanceiraDto Conta,
+    decimal TotalEntradas,
+    decimal TotalSaidas,
+    decimal SaldoFinal,
+    IReadOnlyList<MovimentoFinanceiroDto> Movimentos);
+
+public sealed record FluxoCaixaItemDto(
+    DateOnly Data,
+    string Descricao,
+    string Origem,
+    decimal PrevistoEntrada,
+    decimal RealizadoEntrada,
+    decimal RealizadoSaida,
+    decimal SaldoAcumulado);
+
+public sealed record FluxoCaixaDto(
+    decimal SaldoAtualContas,
+    decimal TotalPrevistoReceber,
+    decimal TotalRealizadoRecebido,
+    IReadOnlyList<FluxoCaixaItemDto> Itens);
+
+public sealed record RelatorioVendasItem(
+    string VendaNumero,
+    DateOnly Competencia,
+    string Hospital,
+    string Pagador,
+    string Vendedor,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPrevista,
+    string Situacao);
+
+public sealed record RelatorioComissaoItem(
+    string Vendedor,
+    string VendaNumero,
+    DateOnly DataRecebimento,
+    decimal BaseCalculo,
+    decimal Percentual,
+    decimal ComissaoApropriada,
+    string Situacao);
+
+public sealed record RelatorioMargemItem(
+    string VendaNumero,
+    string ValeNumero,
+    string Hospital,
+    decimal ReceitaLiquida,
+    decimal CustoConsumido,
+    decimal ComissaoPrevista,
+    decimal ComissaoApropriada,
+    decimal MargemContribuicao,
+    decimal MargemPercentual);
+
+public interface IValorizacaoRepository
+{
+    Task<IReadOnlyList<ValeResumo>> ListarValesPendentesAsync(Guid tenantId, CancellationToken ct);
+    Task<PreviaValorizacaoDto?> ObterPreviaAsync(Guid tenantId, Guid valeId, CancellationToken ct);
+    Task<Guid> ValorizarAsync(Guid tenantId, Guid usuarioId, ValorizarValeCommand command, CancellationToken ct);
+}
+
+public interface IVendaRepository
+{
+    Task<IReadOnlyList<VendaResumoDto>> ListarAsync(Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<VendaDetalhesDto?> ObterPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
+    Task<Guid> ConfirmarVendaAsync(Guid tenantId, Guid usuarioId, ConfirmarVendaCommand command, CancellationToken ct);
+    Task CancelarVendaAsync(Guid tenantId, Guid usuarioId, Guid vendaId, string motivo, CancellationToken ct);
+}
+
+public interface IContasReceberRepository
+{
+    Task<IReadOnlyList<TituloReceberResumoDto>> ListarAsync(Guid tenantId, string? busca, string? situacao, Guid? pagadorId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<TituloReceberDetalhesDto?> ObterPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
+    Task<Guid> ReceberAsync(Guid tenantId, Guid usuarioId, ReceberTituloCommand command, CancellationToken ct);
+    Task<Guid> EstornarAsync(Guid tenantId, Guid usuarioId, EstornarBaixaCommand command, CancellationToken ct);
+}
+
+public interface ICaixaRepository
+{
+    Task<IReadOnlyList<ContaFinanceiraDto>> ListarContasAsync(Guid tenantId, CancellationToken ct);
+    Task<ContaFinanceiraDto?> ObterContaPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
+    Task<Guid> CriarContaAsync(Guid tenantId, Guid usuarioId, CriarContaFinanceiraCommand command, CancellationToken ct);
+    Task<ExtratoContaDto> ExtratoContaAsync(Guid tenantId, Guid contaId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<FluxoCaixaDto> FluxoCaixaAsync(Guid tenantId, DateOnly inicio, DateOnly fim, CancellationToken ct);
+}
+
+public interface IAdm360FinanceiroRelatoriosRepository
+{
+    Task<IReadOnlyList<RelatorioVendasItem>> RelatorioVendasAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? hospitalId, Guid? vendedorId, CancellationToken ct);
+    Task<IReadOnlyList<RelatorioComissaoItem>> RelatorioComissoesAsync(Guid tenantId, Guid? vendedorId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<IReadOnlyList<RelatorioMargemItem>> RelatorioMargemAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+}
+

@@ -294,6 +294,23 @@ BEGIN
         ) VALUES (
             vale_pend_item, t1, vale_pend, produto, lote_livre, 5, 5, 5, 2, 0, 0, 500.00
         ) ON CONFLICT(id) DO NOTHING;
+
+        -- =========================================================================
+        -- CONTAS FINANCEIRAS DEMONSTRATIVAS
+        -- =========================================================================
+        INSERT INTO plantaopro.adm360_contas_financeiras(
+            id, tenant_id, nome, tipo, banco, agencia, conta, saldo_inicial, ativo, created_at
+        ) VALUES
+            ('a3610000-0000-4000-8000-000000000080', t1, 'Banco do Brasil - Conta Movimento', 'BANCO', '001 - BB', '1234-5', '98765-4', 10000.00, true, now()),
+            ('a3610000-0000-4000-8000-000000000081', t1, 'Caixa Físico Tesouraria', 'CAIXA', NULL, NULL, NULL, 500.00, true, now())
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Movimento financeiro demonstrativo
+        INSERT INTO plantaopro.adm360_movimentos_financeiros(
+            id, tenant_id, conta_id, tipo, valor, data_movimento, descricao, origem_tipo, origem_id, idempotency_key
+        ) VALUES
+            ('a3610000-0000-4000-8000-000000000082', t1, 'a3610000-0000-4000-8000-000000000080', 'ENTRADA', 300.00, date '2026-09-20', 'Recebimento demonstrativo', 'RECEBIMENTO_TITULO', 'a3610000-0000-4000-8000-000000000080', 'seed:movimento:1')
+        ON CONFLICT(id) DO NOTHING;
     END;
 
     -- =========================================================================

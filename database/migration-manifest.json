@@ -632,6 +632,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro",
+      "source": "database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql",
+      "checksum": "26243e62271f5b1ecab4d9fc1b95e80224d2149d70c029272cfbfc2b088b6d2d",
+      "dependsOn": [
+        "2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

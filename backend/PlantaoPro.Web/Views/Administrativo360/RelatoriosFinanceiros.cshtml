@@ -1,0 +1,283 @@
+@model PlantaoPro.Web.Models.RelatoriosFinanceirosPageViewModel
+@{
+    ViewData["Title"] = "Relatórios Financeiros — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Relatórios Financeiros & Resultado</h2>
+            <p class="text-muted small mb-0">Visão executiva de vendas, apropriação de comissões e margem de contribuição cirúrgica.</p>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo os Relatórios Financeiros</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Permite auditar as vendas efetuadas, a liquidação de comissões por vendedor e a rentabilidade gerencial dos procedimentos cirúrgicos.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Diretoria, controladoria, gerência comercial e auditoria interna.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Selecione a visão desejada nas abas, aplique os filtros de período e exporte em CSV caso necessite de análises em planilhas.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Os relatórios utilizam custos históricos reais e comissões efetivamente apropriadas pelas liquidações de caixa.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Utilizar as exportações protegidas para fechamento contábil e conciliação de pagamentos.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs border-secondary mb-3">
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "vendas" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+                <i class="bi bi-graph-up me-1"></i> Vendas por Período
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "comissoes" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="comissoes"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+                <i class="bi bi-people me-1"></i> Comissões Apropriadas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "margem" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="margem"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+                <i class="bi bi-pie-chart me-1"></i> Margem por Cirurgia
+            </a>
+        </li>
+    </ul>
+
+    <!-- Filtro Superior -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <input type="hidden" name="aba" value="@Model.AbaAtiva" />
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary" for="dataInicio">Início</label>
+                    <input type="date" id="dataInicio" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@Model.Inicio?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary" for="dataFim">Fim</label>
+                    <input type="date" id="dataFim" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@Model.Fim?.ToString("yyyy-MM-dd")" />
+                </div>
+                <div class="col-12 col-md-6 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search me-1"></i> Atualizar Relatório
+                    </button>
+                    @if (Model.AbaAtiva == "vendas")
+                    {
+                        <a asp-action="ExportarVendasCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                    }
+                    else if (Model.AbaAtiva == "comissoes")
+                    {
+                        <a asp-action="ExportarComissoesCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                    }
+                    else if (Model.AbaAtiva == "margem")
+                    {
+                        <a asp-action="ExportarMargemCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                    }
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.AbaAtiva == "vendas")
+    {
+        <!-- Conteúdo Aba Vendas -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Vendas Faturadas no Período</span>
+                <span class="badge bg-secondary">@Model.Vendas.Count vendas</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Número</th>
+                            <th scope="col">Data</th>
+                            <th scope="col">Hospital</th>
+                            <th scope="col">Pagador</th>
+                            <th scope="col">Vendedor</th>
+                            <th scope="col" class="text-end">Total Bruto</th>
+                            <th scope="col" class="text-end">Desconto</th>
+                            <th scope="col" class="text-end">Total Líquido</th>
+                            <th scope="col" class="text-end">Comissão Prev.</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Vendas.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">Nenhuma venda encontrada no período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var it in Model.Vendas)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-info">@it.Numero</td>
+                                    <td>@it.Data.ToString("dd/MM/yyyy")</td>
+                                    <td>@it.Hospital</td>
+                                    <td>@it.Pagador</td>
+                                    <td>@(it.Vendedor ?? "—")</td>
+                                    <td class="text-end font-monospace">@it.TotalBruto.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-warning">@it.Desconto.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace fw-bold text-success">@it.TotalLiquido.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-light">@it.ComissaoPrevista.ToString("C2", ptBr)</td>
+                                    <td><span class="badge bg-success">@it.Situacao</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.AbaAtiva == "comissoes")
+    {
+        <!-- Conteúdo Aba Comissões -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Apropriação de Comissões por Recebimentos Efetivos</span>
+                <span class="badge bg-secondary">@Model.Comissoes.Count baixas</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Vendedor</th>
+                            <th scope="col">Venda</th>
+                            <th scope="col">Data do Recebimento</th>
+                            <th scope="col" class="text-end">Base de Cálculo (Recebido)</th>
+                            <th scope="col" class="text-end">% Comissão</th>
+                            <th scope="col" class="text-end">Comissão Apropriada</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Comissoes.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">Nenhuma comissão apropriada no período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var c in Model.Comissoes)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-light">@c.Vendedor</td>
+                                    <td class="text-info">@c.VendaNumero</td>
+                                    <td>@c.DataBaixa.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end font-monospace">@c.BaseCalculo.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace">@c.Percentual.ToString("N1", ptBr)%</td>
+                                    <td class="text-end font-monospace fw-bold text-success">@c.ComissaoApropriada.ToString("C2", ptBr)</td>
+                                    <td><span class="badge bg-success">@c.Situacao</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    <tfoot class="table-dark border-secondary">
+                        <tr class="fw-bold">
+                            <td colspan="5" class="text-end">Total Apropriado:</td>
+                            <td class="text-end text-success fs-6 font-monospace">
+                                @Model.Comissoes.Sum(x => x.ComissaoApropriada).ToString("C2", ptBr)
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+    else if (Model.AbaAtiva == "margem")
+    {
+        <!-- Conteúdo Aba Margem -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Resultado Gerencial e Margem por Cirurgia</span>
+                <span class="badge bg-secondary">@Model.Margens.Count cirurgias</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Venda</th>
+                            <th scope="col">Vale</th>
+                            <th scope="col">Hospital</th>
+                            <th scope="col" class="text-end">Receita Líquida</th>
+                            <th scope="col" class="text-end">Custo Materiais</th>
+                            <th scope="col" class="text-end">Comissão Prev.</th>
+                            <th scope="col" class="text-end">Comissão Aprop.</th>
+                            <th scope="col" class="text-end">Margem Bruta (R$)</th>
+                            <th scope="col" class="text-end">Margem (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Margens.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">Nenhum resultado gerencial encontrado no período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var m in Model.Margens)
+                            {
+                                <tr>
+                                    <td class="fw-bold text-info">@m.VendaNumero</td>
+                                    <td>@m.ValeNumero</td>
+                                    <td>@m.Hospital</td>
+                                    <td class="text-end font-monospace text-success">@m.ReceitaLiquida.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@m.CustoConsumido.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@m.ComissaoPrevista.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-info">@m.ComissaoApropriada.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace fw-bold @(m.MargemContribuicao >= 0 ? "text-success" : "text-danger")">
+                                        @m.MargemContribuicao.ToString("C2", ptBr)
+                                    </td>
+                                    <td class="text-end font-monospace fw-bold @(m.MargemPercentual >= 0 ? "text-success" : "text-danger")">
+                                        @m.MargemPercentual.ToString("N1", ptBr)%
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

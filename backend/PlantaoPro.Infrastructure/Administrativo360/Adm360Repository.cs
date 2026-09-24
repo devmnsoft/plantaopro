@@ -27,6 +27,14 @@ public abstract class Adm360Repository
         SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
     }
 
+    protected static DateOnly ToDateOnly(object? value)
+    {
+        if (value is null) return default;
+        if (value is DateOnly d) return d;
+        if (value is DateTime dt) return DateOnly.FromDateTime(dt);
+        return DateOnly.Parse(value.ToString()!);
+    }
+
     private readonly string connectionString;
     protected Adm360Repository(string connectionString) => this.connectionString = connectionString;
     protected NpgsqlConnection Connection() => new(connectionString);

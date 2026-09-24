@@ -1,0 +1,296 @@
+@model PlantaoPro.Web.Models.VendaDetalhesPageViewModel
+@{
+    ViewData["Title"] = $"Venda {Model.Venda.Numero} — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var v = Model.Venda;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Venda Interna @v.Numero</h2>
+            <p class="text-muted small mb-0">Origem: Vale de Consignação @(v.ValeNumero ?? "Direto") — Competência: @v.Competencia.ToString("dd/MM/yyyy")</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Vendas" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar às Vendas
+            </a>
+            @if (v.Situacao != "CANCELADA")
+            {
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelarVendaModal">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar Venda
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Controle da Venda e Títulos</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Exibe a composição comercial completa dos materiais faturados, parcelas a receber e apropriação de comissão.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Setores financeiro, contábil e faturamento hospitalar.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Clique nos títulos gerados para registrar recebimentos ou auditar as baixas financeiras vinculadas.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Os títulos refletem na previsão financeira imediata do contas a receber.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Receber as parcelas pelo módulo de <em>Contas a Receber</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cards de Informações Principais -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Cliente / Hospital</span>
+                    <strong class="text-light fs-6">@v.Cliente</strong>
+                    <div class="text-secondary small mt-1">Local da Intervenção</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Pagador Faturado</span>
+                    <strong class="text-info fs-6">@v.Pagador</strong>
+                    <div class="text-secondary small mt-1">Responsável pela Cobrança</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Vendedor</span>
+                    <strong class="text-light fs-6">@(v.Vendedor ?? "Não atribuído")</strong>
+                    <div class="text-secondary small mt-1">Comissão acordada: @v.ComissaoPercentual.ToString("N1", ptBr)%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Situação / Condição</span>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        @if (v.Situacao == "CONFIRMADA")
+                        {
+                            <span class="badge bg-success">Confirmada</span>
+                        }
+                        else if (v.Situacao == "CANCELADA")
+                        {
+                            <span class="badge bg-danger">Cancelada</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-info">@v.Situacao</span>
+                        }
+                        <span class="badge bg-secondary">@v.CondicaoPagamento</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumo dos Totais da Venda -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center">
+                <span class="text-muted small">Total Bruto</span>
+                <span class="fs-5 fw-bold font-monospace">@v.TotalBruto.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center">
+                <span class="text-muted small">Desconto Aplicado</span>
+                <span class="fs-5 fw-bold font-monospace text-warning">- @v.Desconto.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center border-success">
+                <span class="text-muted small">Total Líquido Faturado</span>
+                <span class="fs-5 fw-bold font-monospace text-success">@v.TotalLiquido.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center">
+                <span class="text-muted small">Comissão Total Prevista</span>
+                <span class="fs-5 fw-bold font-monospace text-info">@v.ComissaoPrevista.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens da Venda -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary fw-bold">
+            Itens Comerciais da Venda
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Produto</th>
+                        <th scope="col">Lote</th>
+                        <th scope="col" class="text-end">Quantidade</th>
+                        <th scope="col" class="text-end">Preço Unitário</th>
+                        <th scope="col" class="text-end">Desconto</th>
+                        <th scope="col" class="text-end">Subtotal</th>
+                        <th scope="col" class="text-end">Custo Histórico</th>
+                        <th scope="col" class="text-end">Custo Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var it in v.Itens)
+                    {
+                        <tr>
+                            <td>
+                                <strong class="text-light">@it.Produto</strong>
+                                <span class="d-block small text-muted">@it.Sku</span>
+                            </td>
+                            <td><span class="badge bg-secondary">@it.Lote</span></td>
+                            <td class="text-end font-monospace">@it.Quantidade.ToString("N2", ptBr)</td>
+                            <td class="text-end font-monospace">@it.PrecoUnitario.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-muted">@it.Desconto.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-success fw-bold">@it.Subtotal.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-muted">@it.CustoUnitario.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-muted">@it.CustoTotal.ToString("C2", ptBr)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Títulos a Receber Gerados pela Venda -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Parcelas / Contas a Receber Geradas</span>
+            <span class="badge bg-secondary">@v.Titulos.Count parcelas</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Título</th>
+                        <th scope="col">Parcela</th>
+                        <th scope="col">Emissão</th>
+                        <th scope="col">Vencimento</th>
+                        <th scope="col" class="text-end">Valor Principal</th>
+                        <th scope="col" class="text-end">Valor Recebido</th>
+                        <th scope="col" class="text-end">Saldo em Aberto</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var t in v.Titulos)
+                    {
+                        <tr>
+                            <td class="fw-bold text-info">@t.Numero</td>
+                            <td>@t.Parcela / @t.TotalParcelas</td>
+                            <td>@t.DataEmissao.ToString("dd/MM/yyyy")</td>
+                            <td class="@(t.Vencido ? "text-danger fw-bold" : "")">
+                                @t.DataVencimento.ToString("dd/MM/yyyy")
+                                @if (t.Vencido)
+                                {
+                                    <span class="badge bg-danger ms-1">Vencido</span>
+                                }
+                            </td>
+                            <td class="text-end font-monospace">@t.ValorPrincipal.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-success">@t.ValorRecebido.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace fw-bold @(t.SaldoAberto > 0 ? "text-warning" : "text-muted")">
+                                @t.SaldoAberto.ToString("C2", ptBr)
+                            </td>
+                            <td>
+                                @if (t.Situacao == "QUITADO")
+                                {
+                                    <span class="badge bg-success">Quitado</span>
+                                }
+                                else if (t.Situacao == "PARCIAL")
+                                {
+                                    <span class="badge bg-info text-dark">Parcial</span>
+                                }
+                                else if (t.Situacao == "CANCELADO")
+                                {
+                                    <span class="badge bg-danger">Cancelado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning text-dark">Em Aberto</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="TituloDetalhes" asp-route-id="@t.Id" class="btn btn-sm btn-outline-primary" title="Abrir Título e Registrar Baixa">
+                                    <i class="bi bi-wallet2 me-1"></i> Abrir Título
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Cancelamento de Venda -->
+<div class="modal fade" id="cancelarVendaModal" tabindex="-1" aria-labelledby="cancelarVendaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form asp-action="CancelarVenda" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@v.Id" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6 text-danger" id="cancelarVendaModalLabel">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Cancelar Venda Interna
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-secondary">
+                        Atenção: o cancelamento da venda cancelará todos os títulos a receber que não possuem recebimentos. Caso existam recebimentos registrados, realize o estorno das baixas antes de cancelar a venda.
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="motivoCancelamento">Motivo do Cancelamento</label>
+                        <textarea id="motivoCancelamento" name="motivo" class="form-control form-control-sm bg-dark text-light border-secondary" rows="3" required
+                                  placeholder="Informe o motivo da anulação comercial..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-sm btn-danger">Confirmar Cancelamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

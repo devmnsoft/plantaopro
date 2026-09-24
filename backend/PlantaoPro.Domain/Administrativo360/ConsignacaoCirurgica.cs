@@ -40,11 +40,12 @@ public static class ConsignacaoCirurgicaRegras
 
     public static decimal CalcularPendenteCustodia(decimal expedida, decimal consumida, decimal devolvida, decimal perda)
     {
-        var consumidaEfetiva = Math.Max(0m, consumida);
-        var devolvidaEfetiva = Math.Max(0m, devolvida);
-        var perdaEfetiva = Math.Max(0m, perda);
+        if (expedida < 0) throw new ArgumentOutOfRangeException(nameof(expedida), "Quantidade expedida não pode ser negativa.");
+        if (consumida < 0) throw new ArgumentOutOfRangeException(nameof(consumida), "Quantidade consumida não pode ser negativa.");
+        if (devolvida < 0) throw new ArgumentOutOfRangeException(nameof(devolvida), "Quantidade devolvida não pode ser negativa.");
+        if (perda < 0) throw new ArgumentOutOfRangeException(nameof(perda), "Quantidade de perda não pode ser negativa.");
 
-        var totalAtendido = consumidaEfetiva + devolvidaEfetiva + perdaEfetiva;
+        var totalAtendido = consumida + devolvida + perda;
         if (totalAtendido > expedida)
             throw new InvalidOperationException($"Soma dos eventos ({totalAtendido}) excede a quantidade expedida ({expedida}).");
 
@@ -88,9 +89,7 @@ public static class CirurgiaRegras
 public static class ValeConsignacaoRegras
 {
     public static bool PodeExpedir(string situacao) =>
-        string.Equals(situacao, "PRONTO_PARA_EXPEDICAO", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(situacao, "EM_SEPARACAO", StringComparison.OrdinalIgnoreCase) ||
-        string.Equals(situacao, "RASCUNHO", StringComparison.OrdinalIgnoreCase);
+        ConsignacaoCirurgicaRegras.PodeExpedirVale(situacao);
 
     public static decimal CalcularPendenteCustodia(decimal expedida, decimal consumida, decimal devolvida, decimal perda) =>
         ConsignacaoCirurgicaRegras.CalcularPendenteCustodia(expedida, consumida, devolvida, perda);

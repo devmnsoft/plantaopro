@@ -1,0 +1,262 @@
+@model PlantaoPro.Web.Models.ValorizacaoPreviaViewModel
+@{
+    ViewData["Title"] = $"Prévia de Valorização — {Model.Previa.ValeNumero}";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var hasImpeditivos = Model.Previa.Pendencias.Count > 0;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Prévia de Valorização Comercial — @Model.Previa.ValeNumero</h2>
+            <p class="text-muted small mb-0">Apuração financeira dos itens consumidos antes da emissão definitiva da venda interna.</p>
+        </div>
+        <div>
+            <a asp-action="Valorizacao" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar à Lista
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo a Prévia Comercial</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Verifica a integridade de preços, custos e comissões antes da geração dos títulos financeiros.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Responsáveis pela conferência de contas médicas e faturamento hospitalar.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Confira se os preços unitários conferem com a proposta comercial aprovada e se não há impedimentos cadastrais.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Gera a venda interna confirmada, cria as parcelas no Contas a Receber e trava o vale contra revalorizações.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Acompanhar o recebimento das parcelas geradas em <em>Contas a Receber</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (hasImpeditivos)
+    {
+        <div class="alert alert-danger mb-4" role="alert">
+            <h5 class="alert-heading h6 fw-bold"><i class="bi bi-shield-slash me-2"></i>Existem pendências impeditivas para valorização:</h5>
+            <ul class="mb-0 small">
+                @foreach (var p in Model.Previa.Pendencias)
+                {
+                    <li>@p</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <!-- Dados da Cirurgia e Parceiros -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Hospital / Local</span>
+                    <strong class="text-light fs-6">@Model.Previa.Hospital</strong>
+                    <div class="text-secondary small mt-1">Cirurgia: @(Model.Previa.CirurgiaNumero ?? "Não vinculada")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Responsável Financeiro / Pagador</span>
+                    <strong class="text-light fs-6">@Model.Previa.Pagador</strong>
+                    <div class="text-secondary small mt-1">Cliente Cobrado na Fatura</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Vendedor Responsável</span>
+                    <strong class="text-light fs-6">@(Model.Previa.Vendedor ?? "Não informado")</strong>
+                    <div class="text-secondary small mt-1">Comissão acordada: @Model.Previa.ComissaoPercentual.ToString("N1", ptBr)%</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small d-block">Revisão Comercial</span>
+                    <strong class="text-info fs-6">Orçamento Rev. @(Model.Previa.OrcamentoRevisao?.ToString() ?? "1")</strong>
+                    <div class="text-secondary small mt-1">Preços congelados na aprovação</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens Consumidos -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Materiais Consumidos e Base Comercial</span>
+            <span class="badge bg-secondary">@Model.Previa.Itens.Count itens</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">SKU / Produto</th>
+                        <th scope="col">Lote</th>
+                        <th scope="col" class="text-end">Consumido</th>
+                        <th scope="col" class="text-end">Preço Unitário</th>
+                        <th scope="col" class="text-end">Desconto</th>
+                        <th scope="col" class="text-end">Subtotal Venda</th>
+                        <th scope="col" class="text-end">Custo Unitário</th>
+                        <th scope="col" class="text-end">Custo Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Previa.Itens)
+                    {
+                        <tr>
+                            <td>
+                                <strong class="text-light">@item.Produto</strong>
+                                <span class="d-block small text-muted">@item.Sku</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">@item.Lote</span>
+                            </td>
+                            <td class="text-end font-monospace">@item.QuantidadeConsumida.ToString("N2", ptBr)</td>
+                            <td class="text-end font-monospace">@item.PrecoUnitario.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-muted">@item.Desconto.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-success fw-bold">@item.Subtotal.ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace @(item.CustoAusente ? "text-danger" : "text-muted")">
+                                @item.CustoUnitario.ToString("C2", ptBr)
+                                @if (item.CustoAusente)
+                                {
+                                    <i class="bi bi-exclamation-circle text-warning ms-1" title="Custo não documentado"></i>
+                                }
+                            </td>
+                            <td class="text-end font-monospace text-muted">@item.CustoTotal.ToString("C2", ptBr)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot class="table-dark border-secondary">
+                    <tr class="fw-bold">
+                        <td colspan="5" class="text-end">Totais:</td>
+                        <td class="text-end text-success fs-6">@Model.Previa.TotalBruto.ToString("C2", ptBr)</td>
+                        <td colspan="1"></td>
+                        <td class="text-end text-light fs-6">@Model.Previa.TotalCusto.ToString("C2", ptBr)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Resumo dos Valores e Formulário de Confirmação -->
+    <div class="row g-4">
+        <div class="col-12 col-lg-5">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary fw-bold">
+                    Resumo Financeiro da Operação
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush bg-dark text-light">
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                            <span>Total Bruto dos Materiais</span>
+                            <span class="fw-bold font-monospace">@Model.Previa.TotalBruto.ToString("C2", ptBr)</span>
+                        </li>
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                            <span>Desconto Geral Previsto</span>
+                            <span class="text-warning font-monospace">- @Model.Previa.DescontoTotal.ToString("C2", ptBr)</span>
+                        </li>
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center fs-5">
+                            <span class="text-success fw-bold">Total Líquido da Venda</span>
+                            <span class="text-success fw-bold font-monospace">@Model.Previa.TotalLiquido.ToString("C2", ptBr)</span>
+                        </li>
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                            <span class="text-muted">Custo Histórico dos Materiais</span>
+                            <span class="text-muted font-monospace">@Model.Previa.TotalCusto.ToString("C2", ptBr)</span>
+                        </li>
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                            <span class="text-info">Margem de Contribuição Bruta</span>
+                            <span class="text-info font-monospace">@((Model.Previa.TotalLiquido - Model.Previa.TotalCusto).ToString("C2", ptBr))</span>
+                        </li>
+                        <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                            <span>Comissão Prevista (@Model.Previa.ComissaoPercentual.ToString("N1", ptBr)%)</span>
+                            <span class="text-light font-monospace">@Model.Previa.ComissaoPrevista.ToString("C2", ptBr)</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary fw-bold">
+                    Condições Comerciais e Confirmação da Venda
+                </div>
+                <div class="card-body">
+                    <form asp-action="ConfirmarValorizacao" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="valeId" value="@Model.Previa.ValeId" />
+                        <input type="hidden" name="pagadorId" value="@Model.Previa.PagadorId" />
+                        <input type="hidden" name="vendedorId" value="@Model.Previa.VendedorId" />
+                        <input type="hidden" name="idempotencyKey" value="@Guid.NewGuid().ToString("N")" />
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small text-secondary" for="condicaoPagamento">Condição de Pagamento</label>
+                                <select id="condicaoPagamento" name="condicaoPagamento" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                    <option value="A_VISTA">À Vista</option>
+                                    <option value="30_DIAS">30 Dias</option>
+                                    <option value="30_60_DIAS">30 / 60 Dias</option>
+                                    <option value="30_60_90_DIAS">30 / 60 / 90 Dias</option>
+                                    <option value="PERSONALIZADA">Personalizada</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small text-secondary" for="quantidadeParcelas">Quantidade de Parcelas</label>
+                                <input type="number" id="quantidadeParcelas" name="quantidadeParcelas" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       value="1" min="1" max="12" required />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small text-secondary" for="descontoGeral">Desconto Comercial Adicional (R$)</label>
+                                <input type="number" step="0.01" id="descontoGeral" name="descontoGeral" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       value="@Model.Previa.DescontoTotal" min="0" />
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label small text-secondary" for="comissaoPercentual">Comissão do Vendedor (%)</label>
+                                <input type="number" step="0.1" id="comissaoPercentual" name="comissaoPercentual" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       value="@Model.Previa.ComissaoPercentual" min="0" max="100" />
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small text-secondary" for="observacoes">Observações Internas</label>
+                            <textarea id="observacoes" name="observacoes" rows="2" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                      placeholder="Informações adicionais para faturamento e auditoria..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a asp-action="Valorizacao" class="btn btn-sm btn-outline-secondary">Cancelar</a>
+                            <button type="submit" class="btn btn-sm btn-success px-4" @(hasImpeditivos ? "disabled" : "")>
+                                <i class="bi bi-check2-circle me-1"></i> Confirmar Valorização & Gerar Venda
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

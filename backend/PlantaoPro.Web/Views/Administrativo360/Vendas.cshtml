@@ -1,0 +1,170 @@
+@model PlantaoPro.Web.Models.VendasIndexViewModel
+@{
+    ViewData["Title"] = "Vendas Internas — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Vendas Internas</h2>
+            <p class="text-muted small mb-0">Controle comercial de faturamento originado de vales de consignação e cirurgias.</p>
+        </div>
+    </div>
+
+    <!-- Guia de Operação da Tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Gestão de Vendas Internas</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Consolida os pedidos de venda interna emitidos a partir dos consumos aprovados de consignação cirúrgica.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Equipes de faturamento, gerentes comerciais e diretoria financeira.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Filtre por período, pagador ou situação. Clique em <em>Detalhes</em> para visualizar os títulos gerados e a composição de itens.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    A venda confirmada gera os títulos a receber que alimentam o fluxo financeiro. O cancelamento exige estorno prévio de recebimentos.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Acompanhar as parcelas em <em>Contas a Receber</em> e a liquidação das baixas manuais.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros de Pesquisa -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-4 col-lg-4">
+                    <label class="form-label small text-secondary" for="filtroBusca">Busca (Número, Hospital, Pagador ou Vendedor)</label>
+                    <input type="text" id="filtroBusca" name="busca" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@Model.Busca" placeholder="Ex: VEN-000001, Hospital..." />
+                </div>
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label small text-secondary" for="filtroSituacao">Situação</label>
+                    <select id="filtroSituacao" name="situacao" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todas</option>
+                        <option value="CONFIRMADA" selected="@(Model.Situacao == "CONFIRMADA")">Confirmada</option>
+                        <option value="CANCELADA" selected="@(Model.Situacao == "CANCELADA")">Cancelada</option>
+                        <option value="QUITADA" selected="@(Model.Situacao == "QUITADA")">Quitada</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2 col-lg-2">
+                    <label class="form-label small text-secondary" for="filtroInicio">Início</label>
+                    <input type="date" id="filtroInicio" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(Model.Inicio?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-6 col-md-2 col-lg-2">
+                    <label class="form-label small text-secondary" for="filtroFim">Fim</label>
+                    <input type="date" id="filtroFim" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(Model.Fim?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-6 col-md-1 col-lg-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i> Filtrar
+                    </button>
+                    <a asp-action="Vendas" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Vendas -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Vendas Internas Registradas</span>
+            <span class="badge bg-secondary">@Model.Vendas.Count registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Número</th>
+                        <th scope="col">Competência</th>
+                        <th scope="col">Hospital</th>
+                        <th scope="col">Pagador</th>
+                        <th scope="col">Vendedor</th>
+                        <th scope="col" class="text-end">Total Líquido</th>
+                        <th scope="col" class="text-end">Comissão Prev.</th>
+                        <th scope="col">Condição</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Vendas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Nenhuma venda encontrada para os filtros informados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var v in Model.Vendas)
+                        {
+                            <tr>
+                                <td class="fw-bold text-info">@v.Numero</td>
+                                <td>@v.Competencia.ToString("dd/MM/yyyy")</td>
+                                <td>@v.Hospital</td>
+                                <td>@v.Pagador</td>
+                                <td>@(v.Vendedor ?? "—")</td>
+                                <td class="text-end font-monospace fw-bold text-success">@v.TotalLiquido.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-light">@v.ComissaoPrevista.ToString("C2", ptBr)</td>
+                                <td><span class="badge bg-secondary">@v.CondicaoPagamento</span></td>
+                                <td>
+                                    @if (v.Situacao == "CONFIRMADA")
+                                    {
+                                        <span class="badge bg-success">Confirmada</span>
+                                    }
+                                    else if (v.Situacao == "CANCELADA")
+                                    {
+                                        <span class="badge bg-danger">Cancelada</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">@v.Situacao</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="VendaDetalhes" asp-route-id="@v.Id" class="btn btn-sm btn-outline-info" title="Ver Detalhes da Venda">
+                                        <i class="bi bi-eye me-1"></i> Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

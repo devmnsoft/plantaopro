@@ -470,7 +470,15 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
 
             foreach (var it in itens)
             {
-                decimal qtd = it.quantidade_separada > 0 ? it.quantidade_separada : it.quantidade_solicitada;
+                decimal qtdSeparada = (decimal)it.quantidade_separada;
+                decimal qtdSolicitada = (decimal)it.quantidade_solicitada;
+                if (qtdSeparada <= 0 || qtdSeparada != qtdSolicitada)
+                    throw new InvalidOperationException($"O item não foi conferido/separado integralmente para expedição (Solicitado: {qtdSolicitada}, Separado: {qtdSeparada}).");
+            }
+
+            foreach (var it in itens)
+            {
+                decimal qtd = (decimal)it.quantidade_separada;
                 Guid prodId = it.produto_id;
                 Guid loteId = it.lote_id;
                 Guid? reservaId = it.reserva_id;
@@ -509,14 +517,34 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                     )",
                     new { movEntradaId, tenantId, prodId, loteId, destId, qtd, command.ValeId, keyEntrada = $"{payloadHash}:{it.id}:ENTRADA", usuarioId }, tx, cancellationToken: ct));
 
-                // Se houver reserva ativa associada, atualiza para CONSUMIDA
+                // Se houver reserva ativa associada, consome ou preserva saldo residual
                 if (reservaId.HasValue)
                 {
-                    await cn.ExecuteAsync(new CommandDefinition(@"
-                        UPDATE plantaopro.adm360_reservas
-                        SET situacao = 'CONSUMIDA'
-                        WHERE id = @reservaId AND tenant_id = @tenantId AND situacao = 'ATIVA'",
+                    var resRow = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                        SELECT quantidade FROM plantaopro.adm360_reservas
+                        WHERE id = @reservaId AND tenant_id = @tenantId AND situacao = 'ATIVA' FOR UPDATE",
                         new { reservaId = reservaId.Value, tenantId }, tx, cancellationToken: ct));
+
+                    if (resRow is not null)
+                    {
+                        decimal qtdReserva = (decimal)resRow.quantidade;
+                        if (qtd >= qtdReserva)
+                        {
+                            await cn.ExecuteAsync(new CommandDefinition(@"
+                                UPDATE plantaopro.adm360_reservas
+                                SET situacao = 'CONSUMIDA'
+                                WHERE id = @reservaId AND tenant_id = @tenantId",
+                                new { reservaId = reservaId.Value, tenantId }, tx, cancellationToken: ct));
+                        }
+                        else
+                        {
+                            await cn.ExecuteAsync(new CommandDefinition(@"
+                                UPDATE plantaopro.adm360_reservas
+                                SET quantidade = quantidade - @qtd
+                                WHERE id = @reservaId AND tenant_id = @tenantId",
+                                new { qtd, reservaId = reservaId.Value, tenantId }, tx, cancellationToken: ct));
+                        }
+                    }
                 }
 
                 // Atualiza item do vale

@@ -1,5 +1,7 @@
 namespace PlantaoPro.Web.Models;
 
+public sealed record SelectListItemViewModel(string Value, string Text);
+
 public sealed record Administrativo360ResumoViewModel(int Departamentos, int Cargos, int ColaboradoresAtivos, int ContratosVigentes);
 public sealed record Departamento360ViewModel(Guid Id, string Codigo, string Nome, bool Ativo);
 public sealed record Cargo360ViewModel(Guid Id, string Codigo, string Nome, Guid? DepartamentoId, string? Departamento, bool Ativo);
@@ -340,4 +342,293 @@ public sealed class Adm360RelatoriosIndexViewModel
     public string AbaAtiva { get; init; } = "pendentes";
     public string? Busca { get; init; }
 }
+
+public sealed class ValorizacaoIndexViewModel
+{
+    public IReadOnlyList<ValeResumoViewModel> ValesPendentes { get; init; } = Array.Empty<ValeResumoViewModel>();
+    public string? Busca { get; init; }
+}
+
+public sealed record PreviaValorizacaoItemViewModel(
+    Guid ValeItemId,
+    Guid ProdutoId,
+    string Sku,
+    string Produto,
+    Guid LoteId,
+    string Lote,
+    decimal QuantidadeConsumida,
+    decimal PrecoUnitario,
+    decimal Desconto,
+    decimal Subtotal,
+    decimal CustoUnitario,
+    decimal CustoTotal,
+    bool CustoAusente);
+
+public sealed record PreviaValorizacaoViewModel(
+    Guid ValeId,
+    string ValeNumero,
+    Guid? CirurgiaId,
+    string? CirurgiaNumero,
+    Guid? OrcamentoId,
+    int? OrcamentoRevisao,
+    Guid HospitalId,
+    string Hospital,
+    Guid PagadorId,
+    string Pagador,
+    Guid? VendedorId,
+    string? Vendedor,
+    decimal TotalBruto,
+    decimal DescontoTotal,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPercentual,
+    decimal ComissaoPrevista,
+    IReadOnlyList<PreviaValorizacaoItemViewModel> Itens,
+    IReadOnlyList<string> Pendencias);
+
+public sealed record VendaResumoViewModel(
+    Guid Id,
+    string Numero,
+    Guid? ValorizacaoId,
+    string OrigemTipo,
+    string Hospital,
+    string Pagador,
+    string? Vendedor,
+    DateOnly Competencia,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPrevista,
+    string CondicaoPagamento,
+    string Situacao);
+
+public sealed record VendaItemViewModel(
+    Guid Id,
+    Guid ProdutoId,
+    string Sku,
+    string Produto,
+    Guid LoteId,
+    string Lote,
+    decimal Quantidade,
+    decimal PrecoUnitario,
+    decimal Desconto,
+    decimal Subtotal,
+    decimal CustoUnitario,
+    decimal CustoTotal);
+
+public sealed record TituloReceberResumoViewModel(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    string Numero,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido);
+
+public sealed record VendaDetalhesViewModel(
+    Guid Id,
+    string Numero,
+    Guid? ValorizacaoId,
+    Guid? ValeId,
+    string? ValeNumero,
+    Guid ClienteId,
+    string Cliente,
+    Guid PagadorId,
+    string Pagador,
+    Guid? VendedorId,
+    string? Vendedor,
+    DateOnly Competencia,
+    decimal TotalBruto,
+    decimal Desconto,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPercentual,
+    decimal ComissaoPrevista,
+    string CondicaoPagamento,
+    int QuantidadeParcelas,
+    string Situacao,
+    string? Observacoes,
+    DateTime CriadoEm,
+    IReadOnlyList<VendaItemViewModel> Itens,
+    IReadOnlyList<TituloReceberResumoViewModel> Titulos);
+
+public sealed record TituloBaixaViewModel(
+    Guid Id,
+    Guid TituloId,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataRecebimento,
+    decimal ValorRecebido,
+    string MeioPagamento,
+    string? Referencia,
+    bool Estornado,
+    string? MotivoEstorno,
+    DateTime CriadoEm);
+
+public sealed record TituloReceberDetalhesViewModel(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    string Numero,
+    Guid PagadorId,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido,
+    string? Observacoes,
+    DateTime CriadoEm,
+    IReadOnlyList<TituloBaixaViewModel> Baixas);
+
+public sealed record ContaFinanceiraViewModel(
+    Guid Id,
+    string Nome,
+    string Tipo,
+    string? Banco,
+    string? Agencia,
+    string? Conta,
+    decimal SaldoAtual,
+    bool Ativa,
+    DateTime CriadoEm);
+
+public sealed record ExtratoLancamentoViewModel(
+    Guid Id,
+    DateOnly Data,
+    string Tipo,
+    string OrigemTipo,
+    Guid? OrigemId,
+    string? Documento,
+    string? Historico,
+    decimal Valor,
+    decimal SaldoApos);
+
+public sealed record ExtratoContaViewModel(
+    Guid ContaId,
+    string ContaNome,
+    decimal SaldoInicial,
+    decimal TotalEntradas,
+    decimal TotalSaidas,
+    decimal SaldoFinal,
+    IReadOnlyList<ExtratoLancamentoViewModel> Lancamentos);
+
+public sealed record FluxoCaixaItemViewModel(
+    DateOnly Data,
+    decimal EntradasRealizadas,
+    decimal SaidasRealizadas,
+    decimal SaldoRealizadoDia,
+    decimal EntradasPrevistas,
+    decimal SaidasPrevistas,
+    decimal SaldoPrevistoDia);
+
+public sealed record FluxoCaixaViewModel(
+    decimal SaldoAtualConsolidado,
+    decimal TotalEntradasPeriodo,
+    decimal TotalSaidasPeriodo,
+    decimal SaldoFinalPeriodo,
+    decimal TotalEntradasPrevistas,
+    decimal TotalSaidasPrevistas,
+    IReadOnlyList<FluxoCaixaItemViewModel> Dias);
+
+public sealed record RelatorioVendasItemViewModel(
+    string Numero,
+    DateOnly Data,
+    string Hospital,
+    string Pagador,
+    string? Vendedor,
+    decimal TotalBruto,
+    decimal Desconto,
+    decimal TotalLiquido,
+    decimal TotalCusto,
+    decimal ComissaoPrevista,
+    string Situacao);
+
+public sealed record RelatorioComissaoItemViewModel(
+    string Vendedor,
+    string VendaNumero,
+    DateOnly DataBaixa,
+    decimal BaseCalculo,
+    decimal Percentual,
+    decimal ComissaoApropriada,
+    string Situacao);
+
+public sealed record RelatorioMargemItemViewModel(
+    string VendaNumero,
+    string ValeNumero,
+    string Hospital,
+    decimal ReceitaLiquida,
+    decimal CustoConsumido,
+    decimal ComissaoPrevista,
+    decimal ComissaoApropriada,
+    decimal MargemContribuicao,
+    decimal MargemPercentual);
+
+public sealed class ValorizacaoPreviaViewModel
+{
+    public PreviaValorizacaoViewModel Previa { get; init; } = null!;
+    public IReadOnlyList<SelectListItemViewModel> Parceiros { get; init; } = Array.Empty<SelectListItemViewModel>();
+    public IReadOnlyList<SelectListItemViewModel> Vendedores { get; init; } = Array.Empty<SelectListItemViewModel>();
+}
+
+public sealed class VendasIndexViewModel
+{
+    public IReadOnlyList<VendaResumoViewModel> Vendas { get; init; } = Array.Empty<VendaResumoViewModel>();
+    public string? Busca { get; init; }
+    public string? Situacao { get; init; }
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+}
+
+public sealed class VendaDetalhesPageViewModel
+{
+    public VendaDetalhesViewModel Venda { get; init; } = null!;
+}
+
+public sealed class TitulosIndexViewModel
+{
+    public IReadOnlyList<TituloReceberResumoViewModel> Titulos { get; init; } = Array.Empty<TituloReceberResumoViewModel>();
+    public IReadOnlyList<SelectListItemViewModel> Pagadores { get; init; } = Array.Empty<SelectListItemViewModel>();
+    public string? Busca { get; init; }
+    public string? Situacao { get; init; }
+    public Guid? PagadorId { get; init; }
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+}
+
+public sealed class TituloDetalhesPageViewModel
+{
+    public TituloReceberDetalhesViewModel Titulo { get; init; } = null!;
+    public IReadOnlyList<ContaFinanceiraViewModel> Contas { get; init; } = Array.Empty<ContaFinanceiraViewModel>();
+}
+
+public sealed class FluxoCaixaPageViewModel
+{
+    public FluxoCaixaViewModel Fluxo { get; init; } = null!;
+    public IReadOnlyList<ContaFinanceiraViewModel> Contas { get; init; } = Array.Empty<ContaFinanceiraViewModel>();
+    public DateOnly Inicio { get; init; }
+    public DateOnly Fim { get; init; }
+}
+
+public sealed class RelatoriosFinanceirosPageViewModel
+{
+    public IReadOnlyList<RelatorioVendasItemViewModel> Vendas { get; init; } = Array.Empty<RelatorioVendasItemViewModel>();
+    public IReadOnlyList<RelatorioComissaoItemViewModel> Comissoes { get; init; } = Array.Empty<RelatorioComissaoItemViewModel>();
+    public IReadOnlyList<RelatorioMargemItemViewModel> Margens { get; init; } = Array.Empty<RelatorioMargemItemViewModel>();
+    public string AbaAtiva { get; init; } = "vendas";
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+    public Guid? VendedorId { get; init; }
+    public IReadOnlyList<SelectListItemViewModel> Vendedores { get; init; } = Array.Empty<SelectListItemViewModel>();
+}
+
 

@@ -1,0 +1,138 @@
+@model PlantaoPro.Web.Models.ValorizacaoIndexViewModel
+@{
+    ViewData["Title"] = "Valorização de Vales — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Valorização de Vales de Consignação</h2>
+            <p class="text-muted small mb-0">Transformação de consumo cirúrgico reconciliado em venda comercial auditada.</p>
+        </div>
+    </div>
+
+    <!-- Guia de Operação da Tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Guia de Valorização Comercial</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Converte os materiais efetivamente consumidos na cirurgia em proposta de cobrança comercial com base nos preços acordados no orçamento.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Faturistas, gerentes comerciais e coordenadores autorizados do setor financeiro.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Localize o vale na lista de reconciliados, clique em <em>Abrir Prévia</em>, revise as quantidades consumidas e confirme a geração da venda.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Gera um registro imutável de valorização comercial e disponibiliza a venda interna para emissão das parcelas de cobrança. Não baixa estoque novamente.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Acessar o módulo de <em>Vendas Internas</em> para aprovar condições de faturamento e emitir os títulos a receber.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros de Pesquisa -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-8 col-lg-6">
+                    <label class="form-label small text-secondary" for="filtroBusca">Buscar por Vale, Hospital, Cirurgia ou Orçamento</label>
+                    <input type="text" id="filtroBusca" name="busca" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@Model.Busca" placeholder="Ex: VAL-000001, Hospital Santa Casa..." accesskey="s" />
+                </div>
+                <div class="col-12 col-md-4 col-lg-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i> Filtrar
+                    </button>
+                    <a asp-action="Valorizacao" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Vales Pendentes de Valorização -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Vales Reconciliados Aptos para Valorização</span>
+            <span class="badge bg-secondary">@Model.ValesPendentes.Count registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 720px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Número</th>
+                        <th scope="col">Hospital</th>
+                        <th scope="col">Cirurgia</th>
+                        <th scope="col">Orçamento</th>
+                        <th scope="col">Itens Reconciliados</th>
+                        <th scope="col">Status Operacional</th>
+                        <th scope="col">Status Financeiro</th>
+                        <th scope="col" class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ValesPendentes.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                Nenhum vale reconciliado pendente de valorização no momento.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var v in Model.ValesPendentes)
+                        {
+                            <tr>
+                                <td class="fw-bold text-info">@v.Numero</td>
+                                <td>@v.Hospital</td>
+                                <td>@(v.CirurgiaNumero ?? "—")</td>
+                                <td>@(v.OrcamentoNumero ?? "—")</td>
+                                <td>@v.TotalItens.ToString("N0", ptBr) itens</td>
+                                <td>
+                                    <span class="badge bg-success">@v.Situacao</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark">@v.SituacaoFinanceira</span>
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="ValorizacaoPrevia" asp-route-id="@v.Id" class="btn btn-sm btn-outline-info" title="Abrir Prévia Comercial">
+                                        <i class="bi bi-calculator me-1"></i> Abrir Prévia
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

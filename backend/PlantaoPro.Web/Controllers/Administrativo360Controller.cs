@@ -924,6 +924,509 @@ public sealed class Administrativo360Controller : BaseWebController
         return File(bytes, "text/csv; charset=utf-8", $"rastreabilidade_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
     }
 
+    // ==========================================
+    // BLOCO B - VALORIZAÇÃO E VENDA INTERNA
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Valorizacao(string? busca)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var path = "api/administrativo360/valorizacoes/pendentes";
+        var resp = await ReadApiResponse<List<ValeResumoViewModel>>(client, path);
+        var pendentes = resp.Data ?? new List<ValeResumoViewModel>();
+
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            pendentes = pendentes.Where(v =>
+                v.Numero.Contains(busca, StringComparison.OrdinalIgnoreCase) ||
+                (v.Hospital != null && v.Hospital.Contains(busca, StringComparison.OrdinalIgnoreCase)) ||
+                (v.CirurgiaNumero != null && v.CirurgiaNumero.Contains(busca, StringComparison.OrdinalIgnoreCase)) ||
+                (v.OrcamentoNumero != null && v.OrcamentoNumero.Contains(busca, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+
+        ViewBag.Busca = busca;
+        ViewBag.Erro = resp.Error;
+
+        return View(new ValorizacaoIndexViewModel
+        {
+            ValesPendentes = pendentes,
+            Busca = busca
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ValorizacaoPrevia(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<PreviaValorizacaoViewModel>(client, $"api/administrativo360/valorizacoes/previa/{id}");
+        if (resp.Data is null)
+        {
+            TempData["ErrorMessage"] = resp.Error ?? "Vale não encontrado para valorização prévia.";
+            return RedirectToAction(nameof(Valorizacao));
+        }
+
+        return View(new ValorizacaoPreviaViewModel
+        {
+            Previa = resp.Data
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmarValorizacao(
+        Guid valeId,
+        Guid pagadorId,
+        Guid? vendedorId,
+        decimal descontoGeral,
+        decimal comissaoPercentual,
+        string condicaoPagamento,
+        int quantidadeParcelas,
+        string? observacoes,
+        string? idempotencyKey)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var key = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey;
+
+        // 1. Executa a valorização
+        var cmdVal = new
+        {
+            ValeId = valeId,
+            PagadorId = pagadorId,
+            VendedorId = vendedorId,
+            DescontoGeral = descontoGeral,
+            ComissaoPercentual = comissaoPercentual,
+            IdempotencyKey = $"VAL-{key}",
+            Observacoes = observacoes
+        };
+
+        var respVal = await SendApiAsync<object, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, "api/administrativo360/valorizacoes", cmdVal);
+
+        if (respVal.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
+        {
+            TempData["ErrorMessage"] = respVal.Error ?? "Erro ao valorizar o vale.";
+            return RedirectToAction(nameof(ValorizacaoPrevia), new { id = valeId });
+        }
+
+        Guid valorizacaoId = Guid.Empty;
+        if (respVal.Data.TryGetProperty("id", out var idProp) && idProp.TryGetGuid(out var valId))
+        {
+            valorizacaoId = valId;
+        }
+
+        // 2. Confirma a venda correspondente gerando títulos de cobrança
+        var cmdVenda = new
+        {
+            ValorizacaoId = valorizacaoId,
+            CondicaoPagamento = string.IsNullOrWhiteSpace(condicaoPagamento) ? "A_VISTA" : condicaoPagamento,
+            QuantidadeParcelas = quantidadeParcelas <= 0 ? 1 : quantidadeParcelas,
+            IdempotencyKey = $"VEN-{key}",
+            Observacoes = observacoes
+        };
+
+        var respVenda = await SendApiAsync<object, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, "api/administrativo360/vendas/confirmar", cmdVenda);
+
+        if (respVenda.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
+        {
+            TempData["ErrorMessage"] = respVenda.Error ?? "Vale valorizado, mas houve erro ao gerar a venda e títulos.";
+            return RedirectToAction(nameof(Vendas));
+        }
+
+        Guid vendaId = Guid.Empty;
+        if (respVenda.Data.TryGetProperty("id", out var vProp) && vProp.TryGetGuid(out var vId))
+        {
+            vendaId = vId;
+        }
+
+        TempData["SuccessMessage"] = "Vale valorizado com sucesso e venda interna gerada!";
+        return RedirectToAction(nameof(VendaDetalhes), new { id = vendaId != Guid.Empty ? vendaId : valorizacaoId });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Vendas(string? busca, string? situacao, DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(busca)) query.Add($"busca={Uri.EscapeDataString(busca)}");
+        if (!string.IsNullOrWhiteSpace(situacao)) query.Add($"situacao={Uri.EscapeDataString(situacao)}");
+        if (inicio.HasValue) query.Add($"inicio={inicio:yyyy-MM-dd}");
+        if (fim.HasValue) query.Add($"fim={fim:yyyy-MM-dd}");
+
+        var path = "api/administrativo360/vendas" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var resp = await ReadApiResponse<List<VendaResumoViewModel>>(client, path);
+
+        return View(new VendasIndexViewModel
+        {
+            Vendas = (IReadOnlyList<VendaResumoViewModel>?)resp.Data ?? Array.Empty<VendaResumoViewModel>(),
+            Busca = busca,
+            Situacao = situacao,
+            Inicio = inicio,
+            Fim = fim
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> VendaDetalhes(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<VendaDetalhesViewModel>(client, $"api/administrativo360/vendas/{id}");
+        if (resp.Data is null)
+        {
+            TempData["ErrorMessage"] = resp.Error ?? "Venda não encontrada.";
+            return RedirectToAction(nameof(Vendas));
+        }
+
+        return View(new VendaDetalhesPageViewModel { Venda = resp.Data });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarVenda(Guid id, string motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+        {
+            TempData["ErrorMessage"] = "O motivo do cancelamento é obrigatório.";
+            return RedirectToAction(nameof(VendaDetalhes), new { id });
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<string, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, $"api/administrativo360/vendas/{id}/cancelar", motivo);
+
+        var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Venda cancelada com sucesso." : resp.Error;
+        return RedirectToAction(nameof(VendaDetalhes), new { id });
+    }
+
+    // ==========================================
+    // BLOCO C - CONTAS A RECEBER E TÍTULOS
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> TitulosReceber(string? busca, string? situacao, Guid? pagadorId, DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(busca)) query.Add($"busca={Uri.EscapeDataString(busca)}");
+        if (!string.IsNullOrWhiteSpace(situacao)) query.Add($"situacao={Uri.EscapeDataString(situacao)}");
+        if (pagadorId.HasValue) query.Add($"pagadorId={pagadorId.Value}");
+        if (inicio.HasValue) query.Add($"inicio={inicio:yyyy-MM-dd}");
+        if (fim.HasValue) query.Add($"fim={fim:yyyy-MM-dd}");
+
+        var path = "api/administrativo360/titulos" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var resp = await ReadApiResponse<List<TituloReceberResumoViewModel>>(client, path);
+
+        return View(new TitulosIndexViewModel
+        {
+            Titulos = (IReadOnlyList<TituloReceberResumoViewModel>?)resp.Data ?? Array.Empty<TituloReceberResumoViewModel>(),
+            Busca = busca,
+            Situacao = situacao,
+            PagadorId = pagadorId,
+            Inicio = inicio,
+            Fim = fim
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TituloDetalhes(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<TituloReceberDetalhesViewModel>(client, $"api/administrativo360/titulos/{id}");
+        if (resp.Data is null)
+        {
+            TempData["ErrorMessage"] = resp.Error ?? "Título não encontrado.";
+            return RedirectToAction(nameof(TitulosReceber));
+        }
+
+        var contasResp = await ReadApiResponse<List<ContaFinanceiraViewModel>>(client, "api/administrativo360/caixa/contas");
+
+        return View(new TituloDetalhesPageViewModel
+        {
+            Titulo = resp.Data,
+            Contas = (IReadOnlyList<ContaFinanceiraViewModel>?)contasResp.Data ?? Array.Empty<ContaFinanceiraViewModel>()
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReceberTitulo(
+        Guid id,
+        Guid contaFinanceiraId,
+        DateOnly dataRecebimento,
+        decimal valorRecebido,
+        string meioPagamento,
+        string? referencia,
+        string? observacoes,
+        string? idempotencyKey)
+    {
+        if (valorRecebido <= 0m)
+        {
+            TempData["ErrorMessage"] = "O valor recebido deve ser positivo.";
+            return RedirectToAction(nameof(TituloDetalhes), new { id });
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var key = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey;
+
+        var cmd = new
+        {
+            TituloId = id,
+            ContaFinanceiraId = contaFinanceiraId,
+            DataRecebimento = dataRecebimento,
+            ValorRecebido = valorRecebido,
+            MeioPagamento = meioPagamento,
+            Referencia = referencia,
+            IdempotencyKey = key,
+            Observacoes = observacoes
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, "api/administrativo360/titulos/receber", cmd);
+
+        var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Recebimento registrado manualmente com sucesso." : resp.Error;
+        return RedirectToAction(nameof(TituloDetalhes), new { id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> EstornarRecebimento(Guid tituloId, Guid baixaId, string motivo, string? idempotencyKey)
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+        {
+            TempData["ErrorMessage"] = "O motivo do estorno é obrigatório.";
+            return RedirectToAction(nameof(TituloDetalhes), new { id = tituloId });
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var key = string.IsNullOrWhiteSpace(idempotencyKey) ? Guid.NewGuid().ToString("N") : idempotencyKey;
+
+        var cmd = new
+        {
+            BaixaId = baixaId,
+            Motivo = motivo,
+            IdempotencyKey = key
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, "api/administrativo360/titulos/estornar", cmd);
+
+        var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Baixa estornada com sucesso. Saldo e caixa revertidos." : resp.Error;
+        return RedirectToAction(nameof(TituloDetalhes), new { id = tituloId });
+    }
+
+    // ==========================================
+    // BLOCO C/D - FLUXO DE CAIXA E CONTAS
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> FluxoCaixa(DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var dtInicio = inicio ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
+        var dtFim = fim ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(30));
+
+        var contasResp = await ReadApiResponse<List<ContaFinanceiraViewModel>>(client, "api/administrativo360/caixa/contas");
+        var fluxoResp = await ReadApiResponse<FluxoCaixaViewModel>(client, $"api/administrativo360/caixa/fluxo?inicio={dtInicio:yyyy-MM-dd}&fim={dtFim:yyyy-MM-dd}");
+
+        return View(new FluxoCaixaPageViewModel
+        {
+            Contas = (IReadOnlyList<ContaFinanceiraViewModel>?)contasResp.Data ?? Array.Empty<ContaFinanceiraViewModel>(),
+            Fluxo = fluxoResp.Data ?? new FluxoCaixaViewModel(0m, 0m, 0m, 0m, 0m, 0m, Array.Empty<FluxoCaixaItemViewModel>()),
+            Inicio = dtInicio,
+            Fim = dtFim
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CriarContaFinanceira(
+        string nome,
+        string tipo,
+        string? banco,
+        string? agencia,
+        string? conta,
+        decimal saldoInicial,
+        DateOnly? dataSaldoInicial)
+    {
+        if (string.IsNullOrWhiteSpace(nome))
+        {
+            TempData["ErrorMessage"] = "O nome da conta financeira é obrigatório.";
+            return RedirectToAction(nameof(FluxoCaixa));
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var cmd = new
+        {
+            Nome = nome,
+            Tipo = tipo,
+            Banco = banco,
+            Agencia = agencia,
+            Conta = conta,
+            SaldoInicial = saldoInicial,
+            DataSaldoInicial = dataSaldoInicial ?? DateOnly.FromDateTime(DateTime.UtcNow)
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(
+            client, HttpMethod.Post, "api/administrativo360/caixa/contas", cmd);
+
+        var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Conta financeira cadastrada com sucesso." : resp.Error;
+        return RedirectToAction(nameof(FluxoCaixa));
+    }
+
+    // ==========================================
+    // BLOCO D/E - RELATÓRIOS FINANCEIROS & CSV
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> RelatoriosFinanceiros(string? aba, DateOnly? inicio, DateOnly? fim, Guid? vendedorId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var dtInicio = inicio ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
+        var dtFim = fim ?? DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var query = $"?inicio={dtInicio:yyyy-MM-dd}&fim={dtFim:yyyy-MM-dd}";
+        if (vendedorId.HasValue) query += $"&vendedorId={vendedorId.Value}";
+
+        var respVendas = await ReadApiResponse<List<RelatorioVendasItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/vendas{query}");
+        var respComissoes = await ReadApiResponse<List<RelatorioComissaoItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/comissoes{query}");
+        var respMargem = await ReadApiResponse<List<RelatorioMargemItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/margem{query}");
+
+        return View(new RelatoriosFinanceirosPageViewModel
+        {
+            Vendas = (IReadOnlyList<RelatorioVendasItemViewModel>?)respVendas.Data ?? Array.Empty<RelatorioVendasItemViewModel>(),
+            Comissoes = (IReadOnlyList<RelatorioComissaoItemViewModel>?)respComissoes.Data ?? Array.Empty<RelatorioComissaoItemViewModel>(),
+            Margens = (IReadOnlyList<RelatorioMargemItemViewModel>?)respMargem.Data ?? Array.Empty<RelatorioMargemItemViewModel>(),
+            AbaAtiva = string.IsNullOrWhiteSpace(aba) ? "vendas" : aba,
+            Inicio = dtInicio,
+            Fim = dtFim,
+            VendedorId = vendedorId
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarVendasCsv(DateOnly? inicio, DateOnly? fim, Guid? vendedorId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = $"?inicio={inicio:yyyy-MM-dd}&fim={fim:yyyy-MM-dd}";
+        if (vendedorId.HasValue) query += $"&vendedorId={vendedorId.Value}";
+
+        var resp = await ReadApiResponse<List<RelatorioVendasItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/vendas{query}");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Numero;Data;Hospital;Pagador;Vendedor;TotalBruto;Desconto;TotalLiquido;TotalCusto;ComissaoPrevista;Situacao");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Numero),
+                it.Data.ToString("yyyy-MM-dd"),
+                SanitizarCsv(it.Hospital),
+                SanitizarCsv(it.Pagador),
+                SanitizarCsv(it.Vendedor ?? ""),
+                it.TotalBruto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.Desconto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.TotalLiquido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.TotalCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.ComissaoPrevista.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                SanitizarCsv(it.Situacao)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"vendas_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarComissoesCsv(DateOnly? inicio, DateOnly? fim, Guid? vendedorId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = $"?inicio={inicio:yyyy-MM-dd}&fim={fim:yyyy-MM-dd}";
+        if (vendedorId.HasValue) query += $"&vendedorId={vendedorId.Value}";
+
+        var resp = await ReadApiResponse<List<RelatorioComissaoItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/comissoes{query}");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Vendedor;VendaNumero;DataBaixa;BaseCalculo;Percentual;ComissaoApropriada;Situacao");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Vendedor),
+                SanitizarCsv(it.VendaNumero),
+                it.DataBaixa.ToString("yyyy-MM-dd"),
+                it.BaseCalculo.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.Percentual.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.ComissaoApropriada.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                SanitizarCsv(it.Situacao)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"comissoes_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportarMargemCsv(DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = $"?inicio={inicio:yyyy-MM-dd}&fim={fim:yyyy-MM-dd}";
+        var resp = await ReadApiResponse<List<RelatorioMargemItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/margem{query}");
+        var itens = resp.Data ?? new();
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("VendaNumero;ValeNumero;Hospital;ReceitaLiquida;CustoConsumido;ComissaoPrevista;ComissaoApropriada;MargemContribuicao;MargemPercentual");
+
+        foreach (var it in itens)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.VendaNumero),
+                SanitizarCsv(it.ValeNumero),
+                SanitizarCsv(it.Hospital),
+                it.ReceitaLiquida.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.CustoConsumido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.ComissaoPrevista.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.ComissaoApropriada.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.MargemContribuicao.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                it.MargemPercentual.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"margem_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
     private static string SanitizarCsv(string? valor)
     {
         if (string.IsNullOrEmpty(valor)) return string.Empty;
@@ -944,4 +1447,5 @@ public sealed class Administrativo360Controller : BaseWebController
         return RedirectToAction(nameof(Index));
     }
 }
+
 

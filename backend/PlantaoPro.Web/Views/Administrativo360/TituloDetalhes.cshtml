@@ -1,0 +1,295 @@
+@model PlantaoPro.Web.Models.TituloDetalhesPageViewModel
+@{
+    ViewData["Title"] = $"Título {Model.Titulo.Numero} — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var t = Model.Titulo;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Título a Receber @t.Numero</h2>
+            <p class="text-muted small mb-0">Parcela @t.Parcela de @t.TotalParcelas — Venda @t.VendaNumero — Pagador: @t.Pagador</p>
+        </div>
+        <div>
+            <a asp-action="TitulosReceber" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar aos Títulos
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Liquidação e Estorno de Títulos</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Registra o recebimento manual de valores pagos pelo cliente ou estorna baixas indevidas com reconciliação imediata.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Operadores e gerentes com permissão de baixa financeira e tesouraria.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Selecione a conta de destino, informe a data e o valor recebido e confirme. A baixa não pode superar o saldo em aberto.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Reduz o saldo a receber, gera movimento no caixa selecionado e apropria proporcionalmente a comissão do vendedor.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Visualizar o saldo consolidado no <em>Fluxo de Caixa</em> e os relatórios de comissão.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cards de Resumo do Título -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center">
+                <span class="text-muted small">Valor Principal</span>
+                <span class="fs-5 fw-bold font-monospace">@t.ValorPrincipal.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center border-success">
+                <span class="text-muted small">Valor Recebido</span>
+                <span class="fs-5 fw-bold font-monospace text-success">@t.ValorRecebido.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center @(t.SaldoAberto > 0 ? "border-warning" : "")">
+                <span class="text-muted small">Saldo em Aberto</span>
+                <span class="fs-5 fw-bold font-monospace @(t.SaldoAberto > 0 ? "text-warning" : "text-muted")">
+                    @t.SaldoAberto.ToString("C2", ptBr)
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center">
+                <span class="text-muted small">Vencimento</span>
+                <span class="fs-5 fw-bold @(t.Vencido ? "text-danger" : "text-light")">
+                    @t.DataVencimento.ToString("dd/MM/yyyy")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Formulário de Recebimento Manual -->
+        <div class="col-12 col-lg-5">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary fw-bold text-success">
+                    <i class="bi bi-cash-stack me-2"></i>Registrar Recebimento Manual
+                </div>
+                <div class="card-body">
+                    @if (t.SaldoAberto <= 0m)
+                    {
+                        <div class="alert alert-success text-center mb-0" role="alert">
+                            <i class="bi bi-check-circle fs-3 d-block mb-2"></i>
+                            Este título está totalmente liquidado.
+                        </div>
+                    }
+                    else if (t.Situacao == "CANCELADO")
+                    {
+                        <div class="alert alert-danger text-center mb-0" role="alert">
+                            <i class="bi bi-x-circle fs-3 d-block mb-2"></i>
+                            Este título foi cancelado e não aceita baixas.
+                        </div>
+                    }
+                    else
+                    {
+                        <form asp-action="ReceberTitulo" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@t.Id" />
+                            <input type="hidden" name="idempotencyKey" value="@Guid.NewGuid().ToString("N")" />
+
+                            <div class="mb-3">
+                                <label class="form-label small text-secondary" for="contaFinanceiraId">Conta Financeira (Caixa / Banco)</label>
+                                <select id="contaFinanceiraId" name="contaFinanceiraId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                    <option value="">Selecione uma conta ativa...</option>
+                                    @foreach (var c in Model.Contas.Where(x => x.Ativa))
+                                    {
+                                        <option value="@c.Id">@c.Nome (@c.Tipo - Saldo: @c.SaldoAtual.ToString("C2", ptBr))</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small text-secondary" for="dataRecebimento">Data do Recebimento</label>
+                                    <input type="date" id="dataRecebimento" name="dataRecebimento" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                           value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-secondary" for="valorRecebido">Valor Recebido (R$)</label>
+                                    <input type="number" step="0.01" id="valorRecebido" name="valorRecebido" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                           value="@t.SaldoAberto" min="0.01" max="@t.SaldoAberto" required />
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small text-secondary" for="meioPagamento">Meio de Pagamento</label>
+                                    <select id="meioPagamento" name="meioPagamento" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                        <option value="PIX">PIX</option>
+                                        <option value="TED">TED / Transferência</option>
+                                        <option value="BOLETO">Boleto Bancário</option>
+                                        <option value="CHEQUE">Cheque</option>
+                                        <option value="DINHEIRO">Dinheiro</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-secondary" for="referencia">Nº Comprovante / Doc.</label>
+                                    <input type="text" id="referencia" name="referencia" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                           placeholder="Ex: DOC-123456" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small text-secondary" for="observacoes">Observações</label>
+                                <textarea id="observacoes" name="observacoes" rows="2" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                          placeholder="Anotações internas sobre o recebimento..."></textarea>
+                            </div>
+
+                            <div class="alert alert-secondary small text-muted mb-3" role="note">
+                                <i class="bi bi-info-circle me-1"></i> Recebimento registrado manualmente pelo operador interno. Sem confirmação bancária automática por API.
+                            </div>
+
+                            <button type="submit" class="btn btn-sm btn-success w-100">
+                                <i class="bi bi-check-circle me-1"></i> Confirmar Recebimento Manual
+                            </button>
+                        </form>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Histórico de Baixas e Estornos -->
+        <div class="col-12 col-lg-7">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Histórico de Baixas e Liquidações</span>
+                    <span class="badge bg-secondary">@t.Baixas.Count registros</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 600px;">
+                        <thead class="table-secondary text-dark">
+                            <tr>
+                                <th scope="col">Data</th>
+                                <th scope="col">Conta</th>
+                                <th scope="col">Meio</th>
+                                <th scope="col" class="text-end">Valor</th>
+                                <th scope="col">Situação</th>
+                                <th scope="col" class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (t.Baixas.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">
+                                        Nenhuma baixa registrada para este título até o momento.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var b in t.Baixas)
+                                {
+                                    <tr>
+                                        <td>@b.DataRecebimento.ToString("dd/MM/yyyy")</td>
+                                        <td>@b.ContaNome</td>
+                                        <td><span class="badge bg-secondary">@b.MeioPagamento</span></td>
+                                        <td class="text-end font-monospace fw-bold @(b.Estornado ? "text-decoration-line-through text-muted" : "text-success")">
+                                            @b.ValorRecebido.ToString("C2", ptBr)
+                                        </td>
+                                        <td>
+                                            @if (b.Estornado)
+                                            {
+                                                <span class="badge bg-danger">Estornada</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Confirmada</span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            @if (!b.Estornado)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                                        data-bs-target="#estornoModal-@b.Id" title="Estornar Baixa">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Estornar
+                                                </button>
+
+                                                <!-- Modal de Estorno Individual -->
+                                                <div class="modal fade" id="estornoModal-@b.Id" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content bg-dark text-light border-secondary">
+                                                            <form asp-action="EstornarRecebimento" method="post">
+                                                                @Html.AntiForgeryToken()
+                                                                <input type="hidden" name="tituloId" value="@t.Id" />
+                                                                <input type="hidden" name="baixaId" value="@b.Id" />
+                                                                <input type="hidden" name="idempotencyKey" value="@Guid.NewGuid().ToString("N")" />
+
+                                                                <div class="modal-header border-secondary">
+                                                                    <h5 class="modal-title h6 text-warning">
+                                                                        <i class="bi bi-exclamation-triangle me-2"></i>Estornar Recebimento de @b.ValorRecebido.ToString("C2", ptBr)
+                                                                    </h5>
+                                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                                </div>
+                                                                <div class="modal-body text-start">
+                                                                    <p class="small text-secondary">
+                                                                        O estorno reverterá o saldo em aberto do título, gerará lançamento de saída compensatório no fluxo de caixa da conta <strong>@b.ContaNome</strong> e cancelará a apropriação proporcional da comissão do vendedor.
+                                                                    </p>
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label small text-secondary" for="motivoEstorno-@b.Id">Motivo do Estorno</label>
+                                                                        <textarea id="motivoEstorno-@b.Id" name="motivo" class="form-control form-control-sm bg-dark text-light border-secondary" rows="3" required
+                                                                                  placeholder="Informe a justificativa do cancelamento do recebimento..."></textarea>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer border-secondary">
+                                                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-sm btn-warning">Confirmar Estorno</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Estornado: @b.MotivoEstorno</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

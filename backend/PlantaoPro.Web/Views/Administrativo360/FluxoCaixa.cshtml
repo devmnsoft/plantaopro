@@ -1,0 +1,302 @@
+@model PlantaoPro.Web.Models.FluxoCaixaPageViewModel
+@{
+    ViewData["Title"] = "Fluxo de Caixa — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var f = Model.Fluxo;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Fluxo de Caixa & Contas Bancárias</h2>
+            <p class="text-muted small mb-0">Controle financeiro consolidado: saldos bancários, entradas realizadas e projeções de liquidez.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#novaContaModal">
+                <i class="bi bi-plus-circle me-1"></i> Nova Conta Financeira
+            </button>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Gestão de Caixa e Disponibilidades</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Acompanha a movimentação de caixa das contas bancárias, distinguindo entradas realizadas de previsões a receber.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Tesoureiros, coordenadores financeiros e controladoria.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Cadastre as contas caixa/banco da empresa com saldo inicial documentado e filtre o período desejado para análise.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    O saldo de cada conta deriva estritamente dos movimentos confirmados. Venda faturada não altera caixa até o recebimento.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Consultar os relatórios gerenciais e apropriação de comissões em <em>Relatórios Financeiros</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cards de Resumo Consolidado -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Saldo Atual Consolidado</span>
+                <span class="fs-5 fw-bold font-monospace text-info">@f.SaldoAtualConsolidado.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-success">
+                <span class="text-muted small">Entradas Realizadas</span>
+                <span class="fs-5 fw-bold font-monospace text-success">+ @f.TotalEntradasPeriodo.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-danger">
+                <span class="text-muted small">Saídas / Estornos</span>
+                <span class="fs-5 fw-bold font-monospace text-danger">- @f.TotalSaidasPeriodo.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Saldo Realizado Período</span>
+                <span class="fs-5 fw-bold font-monospace @(f.SaldoFinalPeriodo >= 0 ? "text-success" : "text-danger")">
+                    @f.SaldoFinalPeriodo.ToString("C2", ptBr)
+                </span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
+                <span class="text-muted small">Entradas Previstas</span>
+                <span class="fs-5 fw-bold font-monospace text-warning">+ @f.TotalEntradasPrevistas.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Saídas Previstas</span>
+                <span class="fs-5 fw-bold font-monospace text-muted">- @f.TotalSaidasPrevistas.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contas Financeiras Cadastradas -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Contas Financeiras (Caixa / Bancos)</span>
+            <span class="badge bg-secondary">@Model.Contas.Count contas</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 720px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Conta</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Banco</th>
+                        <th scope="col">Agência / Conta</th>
+                        <th scope="col" class="text-end">Saldo Atual</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Contas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                Nenhuma conta financeira cadastrada. Clique em "Nova Conta Financeira" para iniciar.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in Model.Contas)
+                        {
+                            <tr>
+                                <td><strong class="text-light">@c.Nome</strong></td>
+                                <td><span class="badge bg-secondary">@c.Tipo</span></td>
+                                <td>@(c.Banco ?? "—")</td>
+                                <td>@(c.Agencia != null && c.Conta != null ? $"{c.Agencia} / {c.Conta}" : "—")</td>
+                                <td class="text-end font-monospace fw-bold @(c.SaldoAtual >= 0 ? "text-success" : "text-danger")">
+                                    @c.SaldoAtual.ToString("C2", ptBr)
+                                </td>
+                                <td>
+                                    @if (c.Ativa)
+                                    {
+                                        <span class="badge bg-success">Ativa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativa</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Filtro de Período e Movimentação Diária -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-bold">Movimento Diário & Projeção Financeira</span>
+            <form method="get" class="d-flex align-items-center gap-2">
+                <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                       value="@Model.Inicio.ToString("yyyy-MM-dd")" />
+                <span class="text-muted">até</span>
+                <input type="date" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                       value="@Model.Fim.ToString("yyyy-MM-dd")" />
+                <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+            </form>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Data</th>
+                        <th scope="col" class="text-end">Entradas Realizadas</th>
+                        <th scope="col" class="text-end">Saídas Realizadas</th>
+                        <th scope="col" class="text-end">Saldo Realizado</th>
+                        <th scope="col" class="text-end">Entradas Previstas</th>
+                        <th scope="col" class="text-end">Saídas Previstas</th>
+                        <th scope="col" class="text-end">Saldo Previsto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (f.Dias.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                Nenhum lançamento ou previsão encontrado no período selecionado.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var d in f.Dias)
+                        {
+                            <tr>
+                                <td><strong>@d.Data.ToString("dd/MM/yyyy")</strong></td>
+                                <td class="text-end font-monospace text-success">
+                                    @(d.EntradasRealizadas > 0 ? d.EntradasRealizadas.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace text-danger">
+                                    @(d.SaidasRealizadas > 0 ? d.SaidasRealizadas.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace fw-bold @(d.SaldoRealizadoDia >= 0 ? "text-light" : "text-danger")">
+                                    @d.SaldoRealizadoDia.ToString("C2", ptBr)
+                                </td>
+                                <td class="text-end font-monospace text-warning">
+                                    @(d.EntradasPrevistas > 0 ? d.EntradasPrevistas.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace text-muted">
+                                    @(d.SaidasPrevistas > 0 ? d.SaidasPrevistas.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace @(d.SaldoPrevistoDia >= 0 ? "text-info" : "text-danger")">
+                                    @d.SaldoPrevistoDia.ToString("C2", ptBr)
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Conta Financeira -->
+<div class="modal fade" id="novaContaModal" tabindex="-1" aria-labelledby="novaContaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form asp-action="CriarContaFinanceira" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6 text-info" id="novaContaModalLabel">
+                        <i class="bi bi-bank me-2"></i>Cadastrar Conta Financeira
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="nomeConta">Nome da Conta / Identificação</label>
+                        <input type="text" id="nomeConta" name="nome" class="form-control form-control-sm bg-dark text-light border-secondary"
+                               placeholder="Ex: Banco do Brasil - Conta Movimento" required />
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="tipoConta">Tipo</label>
+                            <select id="tipoConta" name="tipo" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                <option value="CORRENTE">Conta Corrente</option>
+                                <option value="CAIXA_FISICO">Caixa Físico</option>
+                                <option value="APLICACAO">Aplicação Financeira</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="bancoConta">Banco</label>
+                            <input type="text" id="bancoConta" name="banco" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 001 - BB" />
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="agenciaConta">Agência</label>
+                            <input type="text" id="agenciaConta" name="agencia" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 1234-5" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="numeroConta">Nº Conta</label>
+                            <input type="text" id="numeroConta" name="conta" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 98765-4" />
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="saldoInicialConta">Saldo Inicial (R$)</label>
+                            <input type="number" step="0.01" id="saldoInicialConta" name="saldoInicial" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="0.00" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="dataSaldoInicialConta">Data do Saldo</label>
+                            <input type="date" id="dataSaldoInicialConta" name="dataSaldoInicial" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+                    <div class="alert alert-secondary small text-muted mb-0" role="note">
+                        <i class="bi bi-info-circle me-1"></i> O saldo inicial é uma referência contábil documentada e não gera lançamento artificial de receita.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Cadastrar Conta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

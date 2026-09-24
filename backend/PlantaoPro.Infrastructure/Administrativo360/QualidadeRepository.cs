@@ -36,7 +36,19 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
             WHERE r.tenant_id = @tenantId
               AND r.condicao IN ('QUARENTENA', 'VENCIDO')
               AND r.quantidade_decidida < r.quantidade
-            ORDER BY r.created_at",
+            UNION ALL
+            SELECT ve.id AS RecebimentoItemId, p.nome AS Produto, l.codigo AS Lote,
+                   ve.quantidade AS Recebida, ve.quantidade - COALESCE(ve.quantidade_decidida, 0) AS Pendente, o.nome AS Local
+            FROM plantaopro.adm360_vale_eventos ve
+            JOIN plantaopro.adm360_vale_itens vi ON vi.id = ve.vale_item_id AND vi.tenant_id = ve.tenant_id
+            JOIN plantaopro.adm360_vales v ON v.id = ve.vale_id AND v.tenant_id = ve.tenant_id
+            JOIN plantaopro.adm360_produtos p ON p.id = vi.produto_id AND p.tenant_id = ve.tenant_id
+            JOIN plantaopro.adm360_lotes l ON l.id = vi.lote_id AND l.tenant_id = ve.tenant_id
+            JOIN plantaopro.adm360_locais o ON o.id = v.local_origem_id AND o.tenant_id = ve.tenant_id
+            WHERE ve.tenant_id = @tenantId
+              AND ve.tipo = 'RETORNO'
+              AND COALESCE(ve.quantidade_decidida, 0) < ve.quantidade
+            ORDER BY Produto",
             new { tenantId }, cancellationToken: ct))).AsList();
     }
 
@@ -67,8 +79,34 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
                 FOR UPDATE",
                 new { id = c.RecebimentoItemId, tenantId }, tx, cancellationToken: ct));
 
+            bool isRetornoConsignacao = false;
+
             if (r is null || r.ProdutoId == Guid.Empty)
-                throw new InvalidOperationException("Item de recebimento não encontrado.");
+            {
+                // Verifica se é um retorno de consignação em adm360_vale_eventos
+                var retRow = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                    SELECT vi.produto_id, vi.lote_id, v.local_origem_id AS local_id,
+                           ve.quantidade - COALESCE(ve.quantidade_decidida, 0) AS pendente
+                    FROM plantaopro.adm360_vale_eventos ve
+                    JOIN plantaopro.adm360_vale_itens vi ON vi.id = ve.vale_item_id AND vi.tenant_id = ve.tenant_id
+                    JOIN plantaopro.adm360_vales v ON v.id = ve.vale_id AND v.tenant_id = ve.tenant_id
+                    WHERE ve.id = @id AND ve.tenant_id = @tenantId AND ve.tipo = 'RETORNO'
+                    FOR UPDATE",
+                    new { id = c.RecebimentoItemId, tenantId }, tx, cancellationToken: ct));
+
+                if (retRow is null)
+                    throw new InvalidOperationException("Item de recebimento ou retorno de consignação não encontrado.");
+
+                isRetornoConsignacao = true;
+                r = new InspectionRow
+                {
+                    ProdutoId = (Guid)retRow.produto_id,
+                    LoteId = (Guid)retRow.lote_id,
+                    LocalId = (Guid)retRow.local_id,
+                    Pendente = (decimal)retRow.pendente,
+                    Condicao = "QUARENTENA"
+                };
+            }
 
             Inspecao.ValidarDecisao(r.Pendente, c.Aprovada, c.Reprovada, c.Justificativa);
 
@@ -85,16 +123,32 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
             var iid = Guid.NewGuid();
             var total = c.Aprovada + c.Reprovada;
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_inspecoes(
-                    id, tenant_id, recebimento_item_id, aprovada, reprovada, justificativa, destino, idempotency_key, decidido_por, decidido_em
-                ) VALUES(
-                    @iid, @tenantId, @RecebimentoItemId, @Aprovada, @Reprovada, @Justificativa, @Destino, @key, @usuarioId, now()
-                );
-                UPDATE plantaopro.adm360_recebimento_itens
-                SET quantidade_decidida = quantidade_decidida + @total
-                WHERE id = @RecebimentoItemId",
-                new { iid, tenantId, c.RecebimentoItemId, c.Aprovada, c.Reprovada, c.Justificativa, c.Destino, key = c.IdempotencyKey, usuarioId, total }, tx, cancellationToken: ct));
+            if (isRetornoConsignacao)
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_inspecoes(
+                        id, tenant_id, retorno_evento_id, origem_tipo, aprovada, reprovada, justificativa, destino, idempotency_key, decidido_por, decidido_em
+                    ) VALUES(
+                        @iid, @tenantId, @RecebimentoItemId, 'RETORNO_CONSIGNACAO', @Aprovada, @Reprovada, @Justificativa, @Destino, @key, @usuarioId, now()
+                    );
+                    UPDATE plantaopro.adm360_vale_eventos
+                    SET quantidade_decidida = COALESCE(quantidade_decidida, 0) + @total
+                    WHERE id = @RecebimentoItemId",
+                    new { iid, tenantId, c.RecebimentoItemId, c.Aprovada, c.Reprovada, c.Justificativa, c.Destino, key = c.IdempotencyKey, usuarioId, total }, tx, cancellationToken: ct));
+            }
+            else
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_inspecoes(
+                        id, tenant_id, recebimento_item_id, origem_tipo, aprovada, reprovada, justificativa, destino, idempotency_key, decidido_por, decidido_em
+                    ) VALUES(
+                        @iid, @tenantId, @RecebimentoItemId, 'RECEBIMENTO', @Aprovada, @Reprovada, @Justificativa, @Destino, @key, @usuarioId, now()
+                    );
+                    UPDATE plantaopro.adm360_recebimento_itens
+                    SET quantidade_decidida = quantidade_decidida + @total
+                    WHERE id = @RecebimentoItemId",
+                    new { iid, tenantId, c.RecebimentoItemId, c.Aprovada, c.Reprovada, c.Justificativa, c.Destino, key = c.IdempotencyKey, usuarioId, total }, tx, cancellationToken: ct));
+            }
 
             // Definição de pernas com identificação estável e distinta por perna para eliminar qualquer risco de colisão
             var pernas = new List<(string Condicao, decimal Qty, string PernaIdentificador)>();

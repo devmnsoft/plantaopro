@@ -35,3 +35,32 @@ public static class EscalaStateMachine
     private static bool RequiresReason(EscalaEstado target) =>
         target is EscalaEstado.Recusada or EscalaEstado.Cancelada or EscalaEstado.Substituida or EscalaEstado.Ausente;
 }
+
+public static class ConvitePolicy
+{
+    public static bool IsEligibleForAcceptance(string status, DateTimeOffset? expiresAt, DateTimeOffset now) =>
+        (string.Equals(status, "ENVIADO", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(status, "PENDENTE", StringComparison.OrdinalIgnoreCase)) &&
+        (!expiresAt.HasValue || expiresAt.Value > now);
+
+    public static bool IntervalsConflict(DateTimeOffset firstStart, DateTimeOffset firstEnd, DateTimeOffset secondStart, DateTimeOffset secondEnd)
+    {
+        if (firstEnd <= firstStart) throw new ArgumentOutOfRangeException(nameof(firstEnd));
+        if (secondEnd <= secondStart) throw new ArgumentOutOfRangeException(nameof(secondEnd));
+        return firstStart < secondEnd && firstEnd > secondStart;
+    }
+}
+
+public static class SubstitutionPolicy
+{
+    public static EscalaTransitionResult ValidateRequest(EscalaEstado current, Guid currentDoctorId, Guid replacementDoctorId, string? reason)
+    {
+        if (current != EscalaEstado.Confirmada)
+            return new(false, "Somente uma escala confirmada pode solicitar substituição.");
+        if (currentDoctorId == replacementDoctorId)
+            return new(false, "O substituto deve ser outro médico.");
+        if (string.IsNullOrWhiteSpace(reason))
+            return new(false, "Informe o motivo da substituição.");
+        return new(true, null);
+    }
+}

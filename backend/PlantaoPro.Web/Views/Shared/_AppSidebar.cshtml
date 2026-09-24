@@ -63,6 +63,7 @@
         @if (canManage)
         {
             <div class="nav-section-title"><span>Administração do Cliente</span></div>
+            <a class="nav-link-app @Active("Administrativo360")" asp-controller="Administrativo360" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Administrativo 360</span></a>
             @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a> }
             @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a> }
             @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a> }

@@ -1,0 +1,194 @@
+@model PlantaoPro.Web.Models.OrcamentoFormViewModel
+@{
+    ViewData["Title"] = $"Editar Orçamento {ViewBag.Numero} — Administrativo 360";
+    var situacao = (string)ViewBag.Situacao;
+    var isRascunho = situacao == "RASCUNHO";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Editar Orçamento Cirúrgico <span class="text-info">@ViewBag.Numero</span></h2>
+            <p class="text-muted small mb-0">
+                Situação Atual: <span class="badge @(isRascunho ? "bg-warning text-dark" : "bg-success")">@situacao</span>
+                (Revisão @ViewBag.Revisao)
+            </p>
+        </div>
+        <a asp-action="OrcamentoDetalhes" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Voltar aos Detalhes
+        </a>
+    </div>
+
+    @if (!isRascunho)
+    {
+        <div class="alert alert-warning d-flex align-items-center mb-3">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                <strong>Atenção:</strong> Este orçamento já foi aprovado. Qualquer alteração gerará uma <strong>nova revisão histórica</strong> (R@(ViewBag.Revisao + 1)) e retornará o orçamento para conferência em Rascunho.
+            </div>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <form asp-action="OrcamentoEditar" asp-route-id="@Model.Id" method="post" id="formOrcamento">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="Id" value="@Model.Id" />
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-header border-secondary text-info fw-bold">
+                        <i class="bi bi-pencil-square me-2"></i>Parâmetros do Orçamento
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @if (!isRascunho)
+                            {
+                                <div class="col-12">
+                                    <label class="form-label text-warning small fw-bold">Motivo da Revisão Comercial *</label>
+                                    <input type="text" name="MotivoRevisao" value="@Model.MotivoRevisao" class="form-control form-control-sm bg-black text-light border-warning" placeholder="Informe o motivo da alteração dos materiais ou preços aprovados" required>
+                                </div>
+                            }
+                            <div class="col-md-6">
+                                <label class="form-label text-light small fw-bold">Hospital *</label>
+                                <input type="text" name="HospitalId" value="@Model.HospitalId" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-light small fw-bold">Responsável Financeiro *</label>
+                                <input type="text" name="ResponsavelFinanceiroId" value="@Model.ResponsavelFinanceiroId" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label text-light small fw-bold">Procedimento Cirúrgico *</label>
+                                <input type="text" name="Procedimento" value="@Model.Procedimento" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small">Médico Cirurgião</label>
+                                <input type="text" name="MedicoId" value="@Model.MedicoId" class="form-control form-control-sm bg-black text-light border-secondary">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small fw-bold">Data Prevista da Cirurgia *</label>
+                                <input type="date" name="DataPrevista" value="@Model.DataPrevista.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small fw-bold">Validade da Proposta *</label>
+                                <input type="date" name="Validade" value="@Model.Validade.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small">Vendedor</label>
+                                <input type="text" name="VendedorId" value="@Model.VendedorId" class="form-control form-control-sm bg-black text-light border-secondary">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-light small">Observações</label>
+                                <textarea name="Observacoes" class="form-control form-control-sm bg-black text-light border-secondary" rows="2">@Model.Observacoes</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Itens -->
+                <div class="card bg-dark border-secondary">
+                    <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                        <span class="text-info fw-bold"><i class="bi bi-box me-2"></i>Itens do Orçamento</span>
+                        <button type="button" class="btn btn-xs btn-outline-info" id="btnAddItem"><i class="bi bi-plus"></i> Adicionar Item</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark mb-0 align-middle small" id="tabelaItens">
+                                <thead class="table-black text-secondary">
+                                    <tr>
+                                        <th style="width: 45%;">Produto ID</th>
+                                        <th style="width: 15%;">Quantidade</th>
+                                        <th style="width: 20%;">Preço Unitário (R$)</th>
+                                        <th style="width: 15%;">Desconto (R$)</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Itens.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input type="text" name="Itens[@i].ProdutoId" value="@Model.Itens[i].ProdutoId" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.0001" min="0.0001" name="Itens[@i].Quantidade" value="@Model.Itens[i].Quantidade" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" min="0" name="Itens[@i].PrecoUnitario" value="@Model.Itens[i].PrecoUnitario" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="0.01" min="0" name="Itens[@i].Desconto" value="@Model.Itens[i].Desconto" class="form-control form-control-sm bg-black text-light border-secondary">
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card bg-dark border-secondary text-light">
+                    <div class="card-body">
+                        <button type="submit" class="btn @(isRascunho ? "btn-success" : "btn-warning") w-100 py-2 fw-bold mb-2">
+                            <i class="bi bi-save me-1"></i> @(isRascunho ? "Salvar Alterações" : "Gravar Nova Revisão")
+                        </button>
+                        <a asp-action="OrcamentoDetalhes" asp-route-id="@Model.Id" class="btn btn-outline-secondary w-100">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('btnAddItem').addEventListener('click', function() {
+        var tbody = document.querySelector('#tabelaItens tbody');
+        var index = tbody.querySelectorAll('tr').length;
+        var tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <input type="text" name="Itens[${index}].ProdutoId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Produto" required>
+            </td>
+            <td>
+                <input type="number" step="0.0001" min="0.0001" name="Itens[${index}].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        bindRemoveButtons();
+    });
+
+    function bindRemoveButtons() {
+        document.querySelectorAll('.btnRemoveItem').forEach(btn => {
+            btn.onclick = function() {
+                var trs = document.querySelectorAll('#tabelaItens tbody tr');
+                if (trs.length > 1) {
+                    btn.closest('tr').remove();
+                }
+            };
+        });
+    }
+    bindRemoveButtons();
+</script>

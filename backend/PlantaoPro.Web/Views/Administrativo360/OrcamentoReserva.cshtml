@@ -1,0 +1,192 @@
+@model PlantaoPro.Web.Models.PlanejamentoReservaOrcamentoViewModel
+@{
+    ViewData["Title"] = $"Reserva de Materiais — {Model.Numero}";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h4 mb-0 text-light fw-bold">Reserva de Materiais — @Model.Numero</h2>
+                <span class="badge bg-success">@Model.Situacao</span>
+            </div>
+            <p class="text-muted small mb-0">
+                Hospital: <strong class="text-light">@Model.Hospital</strong> |
+                Data Prevista do Procedimento: <strong class="text-info">@Model.DataPrevista.ToString("dd/MM/yyyy")</strong>
+            </p>
+        </div>
+        <div>
+            <a asp-action="OrcamentoDetalhes" asp-route-id="@Model.OrcamentoId" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Voltar ao Orçamento
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia de Reserva FEFO -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-shield-check me-2"></i>Critérios Sanitários e Concorrentes de Reserva FEFO</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Validade vs Data da Cirurgia</strong>
+                    Lotes que vencem antes de <strong>@Model.DataPrevista.ToString("dd/MM/yyyy")</strong> são estritamente bloqueados para seleção.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Sugestão FEFO Automática</strong>
+                    A lista de lotes é ordenada pelo vencimento mais próximo (First Expired, First Out) dentre os liberados.
+                </div>
+                <div class="col-md-4">
+                    <strong class="text-light d-block mb-1">Sem Estoque Negativo</strong>
+                    A reserva vinculada reduz a quantidade disponível e protege contra consumo simultâneo por outra sessão.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Seções por Produto Solicitado -->
+    @foreach (var item in Model.Itens)
+    {
+        var atendido = item.FaltaAtender == 0;
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div>
+                    <h5 class="h6 mb-0 text-light fw-bold">@item.Produto</h5>
+                    <small class="text-muted">SKU: @item.Sku</small>
+                </div>
+                <div class="d-flex gap-3 align-items-center">
+                    <div class="small">
+                        <span class="text-secondary">Solicitado:</span> <strong class="text-light">@item.QuantidadeSolicitada.ToString("N2")</strong>
+                    </div>
+                    <div class="small">
+                        <span class="text-secondary">Reservado:</span> <strong class="text-info">@item.QuantidadeReservada.ToString("N2")</strong>
+                    </div>
+                    <div class="small">
+                        <span class="text-secondary">Falta:</span>
+                        <strong class="@(item.FaltaAtender > 0 ? "text-warning" : "text-success")">@item.FaltaAtender.ToString("N2")</strong>
+                    </div>
+                    @if (atendido)
+                    {
+                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Atendido</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Pendente</span>
+                    }
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0 align-middle small">
+                        <thead class="table-black text-secondary text-uppercase">
+                            <tr>
+                                <th>Lote</th>
+                                <th>Validade</th>
+                                <th>Local de Estoque</th>
+                                <th class="text-center">Físico</th>
+                                <th class="text-center">Reservado</th>
+                                <th class="text-center">Disponível</th>
+                                <th>Conformidade FEFO / Cirurgia</th>
+                                <th class="text-end" style="width: 280px;">Ação de Reserva</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (item.LotesElegiveis.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="8" class="text-center py-3 text-muted">
+                                        Nenhum lote liberado com saldo físico encontrado para este produto no momento.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var lote in item.LotesElegiveis)
+                                {
+                                    var vencidoCirurgia = !lote.ElegivelParaDataCirurgia;
+                                    var semSaldo = lote.Disponivel <= 0;
+                                    var podeReservar = !vencidoCirurgia && !semSaldo && !atendido;
+                                    <tr>
+                                        <td><strong class="text-light">@lote.Lote</strong></td>
+                                        <td>
+                                            @if (lote.Validade.HasValue)
+                                            {
+                                                <span class="@(vencidoCirurgia ? "text-danger fw-bold" : "text-light")">
+                                                    @lote.Validade.Value.ToString("dd/MM/yyyy")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Sem validade</span>
+                                            }
+                                        </td>
+                                        <td>@lote.Local</td>
+                                        <td class="text-center">@lote.Fisico.ToString("N2")</td>
+                                        <td class="text-center text-muted">@lote.Reservado.ToString("N2")</td>
+                                        <td class="text-center fw-bold @(lote.Disponivel > 0 ? "text-success" : "text-secondary")">
+                                            @lote.Disponivel.ToString("N2")
+                                        </td>
+                                        <td>
+                                            @if (vencidoCirurgia)
+                                            {
+                                                <span class="badge bg-danger" title="Vence antes da data cirúrgica (@Model.DataPrevista.ToString("dd/MM/yyyy"))">
+                                                    <i class="bi bi-x-circle me-1"></i>Incompatível (Vence antes)
+                                                </span>
+                                            }
+                                            else if (semSaldo)
+                                            {
+                                                <span class="badge bg-secondary">Sem saldo disponível</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">
+                                                    <i class="bi bi-check me-1"></i>Elegível FEFO
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-end">
+                                            @if (podeReservar)
+                                            {
+                                                var sugestaoQtd = Math.Min(item.FaltaAtender, lote.Disponivel);
+                                                <form asp-action="OrcamentoReservarItem" asp-route-id="@Model.OrcamentoId" method="post" class="d-flex gap-2 justify-content-end align-items-center">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="produtoId" value="@item.ProdutoId" />
+                                                    <input type="hidden" name="loteId" value="@lote.LoteId" />
+                                                    <input type="hidden" name="localId" value="@lote.LocalId" />
+                                                    <input type="number" step="0.0001" min="0.0001" max="@Math.Min(item.FaltaAtender, lote.Disponivel)" name="quantidade" value="@sugestaoQtd.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture)" class="form-control form-control-sm bg-black text-light border-secondary" style="width: 100px;" required>
+                                                    <button type="submit" class="btn btn-sm btn-success fw-bold text-nowrap">
+                                                        <i class="bi bi-bookmark-plus me-1"></i> Reservar
+                                                    </button>
+                                                </form>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-sm btn-outline-secondary" disabled>Indisponível</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

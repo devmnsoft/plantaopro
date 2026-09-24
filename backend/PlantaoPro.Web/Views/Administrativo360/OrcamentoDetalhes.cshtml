@@ -1,0 +1,211 @@
+@model PlantaoPro.Web.Models.OrcamentoDetalhesViewModel
+@{
+    ViewData["Title"] = $"Orçamento {Model.Numero} (R{Model.Revisao}) — Administrativo 360";
+    var isRascunho = Model.Situacao == "RASCUNHO";
+    var isAprovado = Model.Situacao == "APROVADO";
+    var badgeClass = Model.Situacao switch
+    {
+        "APROVADO" => "bg-success",
+        "RASCUNHO" => "bg-warning text-dark",
+        "REJEITADO" => "bg-danger",
+        "CANCELADO" => "bg-secondary",
+        _ => "bg-info text-dark"
+    };
+    var revisoes = (IReadOnlyList<PlantaoPro.Web.Models.OrcamentoRevisaoHistoricoViewModel>?)ViewBag.Revisoes ?? Array.Empty<PlantaoPro.Web.Models.OrcamentoRevisaoHistoricoViewModel>();
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <h2 class="h4 mb-0 text-light fw-bold">@Model.Numero</h2>
+                <span class="badge @badgeClass fs-6">@Model.Situacao</span>
+                <span class="badge bg-secondary">Revisão @Model.Revisao</span>
+            </div>
+            <p class="text-muted small mb-0">Procedimento: <strong class="text-light">@Model.Procedimento</strong> | Hospital: <strong class="text-light">@Model.Hospital</strong></p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-action="Orcamentos" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <a asp-action="OrcamentoImprimir" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-printer me-1"></i> Imprimir Orçamento
+            </a>
+            @if (isRascunho)
+            {
+                <a asp-action="OrcamentoEditar" asp-route-id="@Model.Id" class="btn btn-warning btn-sm">
+                    <i class="bi bi-pencil me-1"></i> Editar Rascunho
+                </a>
+                <form asp-action="OrcamentoAprovar" asp-route-id="@Model.Id" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success btn-sm fw-bold">
+                        <i class="bi bi-check2-circle me-1"></i> Aprovar Orçamento
+                    </button>
+                </form>
+            }
+            @if (isAprovado)
+            {
+                <a asp-action="OrcamentoReserva" asp-route-id="@Model.Id" class="btn btn-success btn-sm fw-bold">
+                    <i class="bi bi-box-seam me-1"></i> Reserva de Materiais
+                </a>
+                <a asp-action="OrcamentoEditar" asp-route-id="@Model.Id" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-pencil-square me-1"></i> Criar Revisão
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Dados do Orçamento -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 p-3">
+                <small class="text-secondary text-uppercase fw-bold">Data Prevista Cirurgia</small>
+                <div class="fs-5 text-light fw-bold">@Model.DataPrevista.ToString("dd/MM/yyyy")</div>
+                <small class="text-muted">Validade Proposta: @Model.Validade.ToString("dd/MM/yyyy")</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 p-3">
+                <small class="text-secondary text-uppercase fw-bold">Responsável Financeiro</small>
+                <div class="fs-6 text-light fw-bold text-truncate" title="@Model.ResponsavelFinanceiro">@Model.ResponsavelFinanceiro</div>
+                <small class="text-muted">Médico: @(string.IsNullOrWhiteSpace(Model.Medico) ? "Não atribuído" : Model.Medico)</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary h-100 p-3">
+                <small class="text-secondary text-uppercase fw-bold">Total Produtos</small>
+                <div class="fs-5 text-light">@Model.TotalProdutos.ToString("C")</div>
+                <small class="text-muted">Desconto: @Model.DescontoGeral.ToString("C")</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-success h-100 p-3 bg-opacity-25">
+                <small class="text-success text-uppercase fw-bold">Valor Total Geral</small>
+                <div class="fs-4 text-success fw-bold">@Model.TotalGeral.ToString("C")</div>
+                <small class="text-muted">Calculado no servidor</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens e Status de Reserva -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+            <span class="text-light fw-bold"><i class="bi bi-card-checklist me-2"></i>Composição de Materiais e Implantes</span>
+            @if (isAprovado)
+            {
+                <span class="badge bg-outline-info text-info border border-info">Status: Proposta Comercial Congelada</span>
+            }
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead class="table-black text-secondary small text-uppercase">
+                        <tr>
+                            <th>Produto / SKU</th>
+                            <th class="text-center">Qtd Solicitada</th>
+                            <th class="text-end">Preço Unitário</th>
+                            <th class="text-end">Desconto</th>
+                            <th class="text-end">Total Item</th>
+                            <th class="text-center">Qtd Reservada</th>
+                            <th class="text-center">Falta Atender</th>
+                            <th class="text-center">Status Atendimento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var it in Model.Itens)
+                        {
+                            var atendido = it.FaltaAtender == 0;
+                            var parcial = it.QuantidadeReservada > 0 && it.FaltaAtender > 0;
+                            <tr>
+                                <td>
+                                    <div class="text-light fw-bold">@it.Produto</div>
+                                    <small class="text-muted">SKU: @it.Sku | Un: @it.Unidade</small>
+                                </td>
+                                <td class="text-center fw-bold text-light">@it.Quantidade.ToString("N2")</td>
+                                <td class="text-end">@it.PrecoUnitario.ToString("C")</td>
+                                <td class="text-end text-muted">@it.Desconto.ToString("C")</td>
+                                <td class="text-end fw-bold text-success">@it.Total.ToString("C")</td>
+                                <td class="text-center text-info fw-bold">@it.QuantidadeReservada.ToString("N2")</td>
+                                <td class="text-center text-warning fw-bold">@it.FaltaAtender.ToString("N2")</td>
+                                <td class="text-center">
+                                    @if (atendido)
+                                    {
+                                        <span class="badge bg-success"><i class="bi bi-check me-1"></i>Totalmente Reservado</span>
+                                    }
+                                    else if (parcial)
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-pie-chart me-1"></i>Parcial</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-clock me-1"></i>Pendente</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Observacoes))
+    {
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header border-secondary text-secondary small fw-bold">Observações / Recomendações</div>
+            <div class="card-body text-light">
+                @Model.Observacoes
+            </div>
+        </div>
+    }
+
+    <!-- Histórico de Revisões -->
+    @if (revisoes.Count > 0)
+    {
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header border-secondary text-info fw-bold">
+                <i class="bi bi-clock-history me-2"></i>Histórico de Revisões Comerciais
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-dark table-sm mb-0 align-middle small">
+                        <thead class="table-black text-secondary">
+                            <tr>
+                                <th>Revisão</th>
+                                <th>Motivo da Alteração</th>
+                                <th>Registrado Em</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rev in revisoes)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary">R@rev.Revisao</span></td>
+                                    <td>@rev.Motivo</td>
+                                    <td>@rev.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

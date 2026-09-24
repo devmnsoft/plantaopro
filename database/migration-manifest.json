@@ -610,6 +610,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2192_administrativo360_regras_estoque_orcamentos",
+      "source": "database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql",
+      "checksum": "b5cc310b22733357834e1c566fe61425f7007d74a9a542749aaaaa4e1fc2f612",
+      "dependsOn": [
+        "2026_09_v2191_administrativo360_suprimentos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

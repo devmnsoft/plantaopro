@@ -1,0 +1,176 @@
+@model IReadOnlyList<PlantaoPro.Web.Models.OrcamentoResumoViewModel>
+@{
+    ViewData["Title"] = "Orçamentos Cirúrgicos — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Orçamentos Cirúrgicos</h2>
+            <p class="text-muted small mb-0">Gestão comercial de propostas cirúrgicas, controle de revisões e vinculação com reservas FEFO de materiais.</p>
+        </div>
+        <div>
+            <a asp-action="OrcamentoNovo" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Novo Orçamento
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Como funciona a jornada de Orçamento e Reserva</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Rascunho Comercial</strong>
+                    Cadastre hospital, médico, procedimento e materiais com preços e descontos. O total é apurado no servidor.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. Aprovação e Congelamento</strong>
+                    A aprovação congela a versão comercial. Não movimenta físico nem gera financeiro. Alterações posteriores criam revisão.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. Reserva de Materiais FEFO</strong>
+                    Vincule lotes liberados elegíveis à cirurgia. O sistema valida se o lote vencerá antes da data do procedimento.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Próxima Etapa</strong>
+                    Após a reserva de materiais, o próximo ciclo receberá a separação, vale de consignação, consumo e retorno cirúrgico.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary">Busca (Número, Hospital, Procedimento)</label>
+                    <input type="text" name="busca" value="@ViewBag.Busca" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: ORC-000001, São Lucas...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-secondary">Situação</label>
+                    <select name="situacao" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todas as situações</option>
+                        <option value="RASCUNHO" selected="@(ViewBag.Situacao == "RASCUNHO")">Rascunho</option>
+                        <option value="APROVADO" selected="@(ViewBag.Situacao == "APROVADO")">Aprovado</option>
+                        <option value="REJEITADO" selected="@(ViewBag.Situacao == "REJEITADO")">Rejeitado</option>
+                        <option value="CANCELADO" selected="@(ViewBag.Situacao == "CANCELADO")">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-secondary">Data Prevista (Início / Fim)</label>
+                    <div class="input-group input-group-sm">
+                        <input type="date" name="inicio" value="@(ViewBag.Inicio != null ? ((DateOnly)ViewBag.Inicio).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary">
+                        <input type="date" name="fim" value="@(ViewBag.Fim != null ? ((DateOnly)ViewBag.Fim).ToString("yyyy-MM-dd") : "")" class="form-control bg-black text-light border-secondary">
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-outline-info w-100"><i class="bi bi-funnel me-1"></i> Filtrar</button>
+                    <a asp-action="Orcamentos" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Orçamentos -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead class="table-black border-secondary text-secondary small text-uppercase">
+                        <tr>
+                            <th>Número / Rev</th>
+                            <th>Hospital</th>
+                            <th>Procedimento / Médico</th>
+                            <th>Resp. Financeiro</th>
+                            <th>Data Cirurgia</th>
+                            <th>Validade</th>
+                            <th>Total</th>
+                            <th>Situação</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model == null || Model.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                                    Nenhum orçamento encontrado. Cadastre um novo orçamento para iniciar a jornada cirúrgica.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var o in Model)
+                            {
+                                var badgeClass = o.Situacao switch
+                                {
+                                    "APROVADO" => "bg-success",
+                                    "RASCUNHO" => "bg-warning text-dark",
+                                    "REJEITADO" => "bg-danger",
+                                    "CANCELADO" => "bg-secondary",
+                                    _ => "bg-info text-dark"
+                                };
+                                <tr>
+                                    <td>
+                                        <strong class="text-light">@o.Numero</strong>
+                                        <span class="badge bg-secondary ms-1">R@o.Revisao</span>
+                                    </td>
+                                    <td>@o.Hospital</td>
+                                    <td>
+                                        <div class="text-light">@o.Procedimento</div>
+                                        <small class="text-muted">@(string.IsNullOrWhiteSpace(o.Medico) ? "Médico não atribuído" : o.Medico)</small>
+                                    </td>
+                                    <td><small class="text-secondary">@o.ResponsavelFinanceiro</small></td>
+                                    <td>@o.DataPrevista.ToString("dd/MM/yyyy")</td>
+                                    <td><small class="text-muted">@o.Validade.ToString("dd/MM/yyyy")</small></td>
+                                    <td><strong class="text-success">@o.TotalGeral.ToString("C")</strong></td>
+                                    <td><span class="badge @badgeClass">@o.Situacao</span></td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a asp-action="OrcamentoDetalhes" asp-route-id="@o.Id" class="btn btn-outline-info" title="Ver Detalhes">
+                                                <i class="bi bi-eye"></i> Detalhes
+                                            </a>
+                                            @if (o.Situacao == "APROVADO")
+                                            {
+                                                <a asp-action="OrcamentoReserva" asp-route-id="@o.Id" class="btn btn-outline-success" title="Reserva de Materiais">
+                                                    <i class="bi bi-box-seam me-1"></i> Reservar
+                                                </a>
+                                            }
+                                            @if (o.Situacao == "RASCUNHO")
+                                            {
+                                                <a asp-action="OrcamentoEditar" asp-route-id="@o.Id" class="btn btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

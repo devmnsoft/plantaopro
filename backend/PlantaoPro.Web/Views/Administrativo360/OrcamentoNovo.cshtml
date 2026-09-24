@@ -1,0 +1,188 @@
+@model PlantaoPro.Web.Models.OrcamentoFormViewModel
+@{
+    ViewData["Title"] = "Novo Orçamento Cirúrgico — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Novo Orçamento Cirúrgico</h2>
+            <p class="text-muted small mb-0">Cadastre os parâmetros da cirurgia e a composição de materiais solicitados.</p>
+        </div>
+        <a asp-action="Orcamentos" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Voltar aos Orçamentos
+        </a>
+    </div>
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <form asp-action="OrcamentoNovo" method="post" id="formOrcamento">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+            <!-- Dados do Cabeçalho -->
+            <div class="col-lg-8">
+                <div class="card bg-dark border-secondary mb-3">
+                    <div class="card-header border-secondary text-info fw-bold">
+                        <i class="bi bi-hospital me-2"></i>Dados Principais do Procedimento
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label text-light small fw-bold">Hospital (Destinatário / Execução) *</label>
+                                <input type="text" name="HospitalId" value="@(Model.HospitalId != Guid.Empty ? Model.HospitalId.ToString() : "a3610000-0000-4000-8000-000000000020")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Hospital" required>
+                                <small class="text-muted">Ex: a3610000-0000-4000-8000-000000000020 (Hospital São Lucas Demo)</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label text-light small fw-bold">Responsável Financeiro (Convênio / Pagador) *</label>
+                                <input type="text" name="ResponsavelFinanceiroId" value="@(Model.ResponsavelFinanceiroId != Guid.Empty ? Model.ResponsavelFinanceiroId.ToString() : "a3610000-0000-4000-8000-000000000022")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Pagador" required>
+                                <small class="text-muted">Ex: a3610000-0000-4000-8000-000000000022 (Saúde Segura Operadora)</small>
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label text-light small fw-bold">Procedimento Cirúrgico *</label>
+                                <input type="text" name="Procedimento" value="@Model.Procedimento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Artroplastia Total de Quadril Não Cimentada" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small">Médico Cirurgião</label>
+                                <input type="text" name="MedicoId" value="@(Model.MedicoId.HasValue ? Model.MedicoId.Value.ToString() : "a3610000-0000-4000-8000-000000000021")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Médico">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small fw-bold">Data Prevista da Cirurgia *</label>
+                                <input type="date" name="DataPrevista" value="@Model.DataPrevista.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                <small class="text-muted">Lotes com validade anterior serão rejeitados.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small fw-bold">Validade da Proposta Comercial *</label>
+                                <input type="date" name="Validade" value="@Model.Validade.ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label text-light small">Vendedor Responsável</label>
+                                <input type="text" name="VendedorId" value="@Model.VendedorId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="UUID do Vendedor (opcional)">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label text-light small">Observações / Recomendações Logísticas</label>
+                                <textarea name="Observacoes" class="form-control form-control-sm bg-black text-light border-secondary" rows="2" placeholder="Instruções de instrumental, restrições de entrega ou especificações técnicas...">@Model.Observacoes</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Itens / Materiais -->
+                <div class="card bg-dark border-secondary">
+                    <div class="card-header border-secondary d-flex justify-content-between align-items-center">
+                        <span class="text-info fw-bold"><i class="bi bi-box me-2"></i>Materiais e Implantes Solicitados</span>
+                        <button type="button" class="btn btn-xs btn-outline-info" id="btnAddItem"><i class="bi bi-plus"></i> Adicionar Item</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-dark mb-0 align-middle small" id="tabelaItens">
+                                <thead class="table-black text-secondary">
+                                    <tr>
+                                        <th style="width: 45%;">Produto ID / SKU</th>
+                                        <th style="width: 15%;">Quantidade</th>
+                                        <th style="width: 20%;">Preço Unitário (R$)</th>
+                                        <th style="width: 15%;">Desconto (R$)</th>
+                                        <th style="width: 5%;"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <input type="text" name="Itens[0].ProdutoId" value="a3610000-0000-4000-8000-000000000002" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Produto" required>
+                                            <small class="text-muted">IMP-DEMO - Implante controlado</small>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.0001" min="0.0001" name="Itens[0].Quantidade" value="5" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="1200.00" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                        </td>
+                                        <td>
+                                            <input type="number" step="0.01" min="0" name="Itens[0].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumo e Ações -->
+            <div class="col-lg-4">
+                <div class="card bg-dark border-secondary mb-3 text-light">
+                    <div class="card-header border-secondary text-light fw-bold">
+                        <i class="bi bi-shield-check me-2"></i>Invariantes Comerciais
+                    </div>
+                    <div class="card-body small text-secondary">
+                        <ul class="ps-3 mb-0">
+                            <li class="mb-2">O orçamento nasce como <strong>RASCUNHO</strong>, podendo ser editado livremente.</li>
+                            <li class="mb-2">Ao aprovar, as condições comerciais serão <strong>congeladas</strong>.</li>
+                            <li class="mb-2">Nenhum movimento físico ou financeiro ocorre no orçamento.</li>
+                            <li>A reserva de materiais ocorrerá após a aprovação com conferência FEFO.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card bg-dark border-secondary text-light">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-success w-100 py-2 fw-bold mb-2">
+                            <i class="bi bi-check-circle me-1"></i> Salvar Orçamento Rascunho
+                        </button>
+                        <a asp-action="Orcamentos" class="btn btn-outline-secondary w-100">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('btnAddItem').addEventListener('click', function() {
+        var tbody = document.querySelector('#tabelaItens tbody');
+        var index = tbody.querySelectorAll('tr').length;
+        var tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                <input type="text" name="Itens[${index}].ProdutoId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Produto" required>
+            </td>
+            <td>
+                <input type="number" step="0.0001" min="0.0001" name="Itens[${index}].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" required>
+            </td>
+            <td>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger btnRemoveItem"><i class="bi bi-trash"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        bindRemoveButtons();
+    });
+
+    function bindRemoveButtons() {
+        document.querySelectorAll('.btnRemoveItem').forEach(btn => {
+            btn.onclick = function() {
+                var trs = document.querySelectorAll('#tabelaItens tbody tr');
+                if (trs.length > 1) {
+                    btn.closest('tr').remove();
+                }
+            };
+        });
+    }
+    bindRemoveButtons();
+</script>

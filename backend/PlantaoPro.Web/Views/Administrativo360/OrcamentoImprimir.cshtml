@@ -1,0 +1,132 @@
+@model PlantaoPro.Web.Models.OrcamentoDetalhesViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orçamento Cirúrgico @Model.Numero - Impressão</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #ffffff; color: #212529; }
+        .watermark-banner { border: 2px dashed #dc3545; color: #dc3545; padding: 10px; text-align: center; font-weight: bold; font-size: 1.1rem; text-transform: uppercase; margin-bottom: 25px; border-radius: 6px; }
+        .header-box { border-bottom: 2px solid #343a40; padding-bottom: 15px; margin-bottom: 20px; }
+        @@media print {
+            .no-print { display: none !important; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="no-print mb-4 d-flex justify-content-between align-items-center bg-light p-3 rounded border">
+        <div>
+            <strong>Visualização para Impressão / Exportação PDF</strong>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn btn-primary btn-sm me-2"><i class="bi bi-printer"></i> Imprimir</button>
+            <button onclick="window.close()" class="btn btn-outline-secondary btn-sm">Fechar</button>
+        </div>
+    </div>
+
+    <div class="watermark-banner">
+        ORÇAMENTO CIRÚRGICO — DOCUMENTO NÃO FISCAL (SEM VALOR TRIBUTÁRIO OU DE COBRANÇA)
+    </div>
+
+    <div class="header-box d-flex justify-content-between align-items-start">
+        <div>
+            <h1 class="h3 fw-bold mb-1">PlantãoPro — Administrativo 360</h1>
+            <p class="text-muted mb-0 small">Distribuição e Suprimentos Cirúrgicos Hospitalares</p>
+        </div>
+        <div class="text-end">
+            <h2 class="h4 text-primary fw-bold mb-0">@Model.Numero</h2>
+            <div class="text-secondary small">Revisão: <strong>@Model.Revisao</strong> | Situação: <strong>@Model.Situacao</strong></div>
+            <div class="text-muted small">Emissão: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="border p-3 rounded h-100">
+                <h3 class="h6 text-muted text-uppercase mb-2">Dados do Procedimento</h3>
+                <div><strong>Procedimento:</strong> @Model.Procedimento</div>
+                <div><strong>Data Prevista:</strong> @Model.DataPrevista.ToString("dd/MM/yyyy")</div>
+                <div><strong>Médico Cirurgião:</strong> @(string.IsNullOrWhiteSpace(Model.Medico) ? "Não especificado" : Model.Medico)</div>
+                <div><strong>Validade da Proposta:</strong> @Model.Validade.ToString("dd/MM/yyyy")</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="border p-3 rounded h-100">
+                <h3 class="h6 text-muted text-uppercase mb-2">Dados das Instituições</h3>
+                <div><strong>Hospital Executante:</strong> @Model.Hospital</div>
+                <div><strong>Responsável Financeiro:</strong> @Model.ResponsavelFinanceiro</div>
+                @if (Model.AprovadoEm.HasValue)
+                {
+                    <div><strong>Aprovado Em:</strong> @Model.AprovadoEm.Value.ToString("dd/MM/yyyy HH:mm")</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <h3 class="h5 fw-bold mb-3">Composição dos Materiais Solicitados</h3>
+    <table class="table table-bordered table-sm mb-4">
+        <thead class="table-light">
+            <tr>
+                <th>Item / SKU</th>
+                <th>Descrição do Material / Implante</th>
+                <th class="text-center" style="width: 80px;">Unidade</th>
+                <th class="text-center" style="width: 100px;">Quantidade</th>
+                <th class="text-end" style="width: 120px;">Preço Unitário</th>
+                <th class="text-end" style="width: 100px;">Desconto</th>
+                <th class="text-end" style="width: 130px;">Valor Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Itens.Count; i++)
+            {
+                var it = Model.Itens[i];
+                <tr>
+                    <td class="text-muted small">@(i + 1) / @it.Sku</td>
+                    <td><strong>@it.Produto</strong></td>
+                    <td class="text-center">@it.Unidade</td>
+                    <td class="text-center">@it.Quantidade.ToString("N2")</td>
+                    <td class="text-end">@it.PrecoUnitario.ToString("C")</td>
+                    <td class="text-end">@it.Desconto.ToString("C")</td>
+                    <td class="text-end fw-bold">@it.Total.ToString("C")</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" class="text-end fw-bold">Subtotal de Produtos:</td>
+                <td class="text-end fw-bold">@Model.TotalProdutos.ToString("C")</td>
+            </tr>
+            @if (Model.DescontoGeral > 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-end text-danger">Desconto Comercial Global:</td>
+                    <td class="text-end text-danger">-@Model.DescontoGeral.ToString("C")</td>
+                </tr>
+            }
+            <tr class="table-light">
+                <td colspan="6" class="text-end fs-5 fw-bold">TOTAL GERAL DO ORÇAMENTO:</td>
+                <td class="text-end fs-5 fw-bold text-success">@Model.TotalGeral.ToString("C")</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Observacoes))
+    {
+        <div class="border p-3 rounded mb-4">
+            <h4 class="h6 text-muted text-uppercase mb-2">Observações Técnicas e Logísticas</h4>
+            <p class="mb-0 small">@Model.Observacoes</p>
+        </div>
+    }
+
+    <div class="border-top pt-3 mt-5 small text-muted text-center">
+        Este documento é uma estimativa orçamentária e proposta comercial sujeita a disponibilidade e confirmação de reserva de lote FEFO.<br />
+        Não constitui documento fiscal, faturamento ou recibo de quitação.
+    </div>
+</body>
+</html>

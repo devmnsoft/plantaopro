@@ -184,17 +184,26 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
         ADD COLUMN IF NOT EXISTS executor_version text NOT NULL DEFAULT 'PlantaoPro.Tools.Database v1.91.0';
     DO $$
     BEGIN
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='script_path') THEN
+            ALTER TABLE plantaopro.schema_migrations ALTER COLUMN script_path DROP NOT NULL;
+            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, script_path) WHERE source IS NULL;
+        END IF;
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='versao') THEN
+            ALTER TABLE plantaopro.schema_migrations ALTER COLUMN versao DROP NOT NULL;
             UPDATE plantaopro.schema_migrations SET version = COALESCE(version, versao) WHERE version IS NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='nome') THEN
+            ALTER TABLE plantaopro.schema_migrations ALTER COLUMN nome DROP NOT NULL;
+            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, nome) WHERE source IS NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='duracao_ms') THEN
+            ALTER TABLE plantaopro.schema_migrations ALTER COLUMN duracao_ms DROP NOT NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='status') THEN
+            ALTER TABLE plantaopro.schema_migrations ALTER COLUMN status DROP NOT NULL;
         END IF;
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='id' AND data_type='text') THEN
             UPDATE plantaopro.schema_migrations SET version = COALESCE(version, id) WHERE version IS NULL;
-        END IF;
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='script_path') THEN
-            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, script_path) WHERE source IS NULL;
-        END IF;
-        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='nome') THEN
-            UPDATE plantaopro.schema_migrations SET source = COALESCE(source, nome) WHERE source IS NULL;
         END IF;
     END $$;
     CREATE UNIQUE INDEX IF NOT EXISTS ux_schema_migrations_version ON plantaopro.schema_migrations(version);
@@ -329,8 +338,13 @@ static async Task Status(string cs)
     using var document = JsonDocument.Parse(await File.ReadAllTextAsync(Path.Combine(root, "database", "migration-manifest.json")));
     var expected = document.RootElement.GetProperty("migrations").EnumerateArray()
         .Count(item => !item.TryGetProperty("status", out var status) || status.GetString() == "active");
-    var applied = await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=true");
-    var failed = await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=false");
+    var hasSuccess = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from information_schema.columns where table_schema='plantaopro' and table_name='schema_migrations' and column_name='success')");
+    var applied = hasSuccess
+        ? await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=true")
+        : await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where status='APLICADA'");
+    var failed = hasSuccess
+        ? await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where success=false")
+        : await cn.ExecuteScalarAsync<int>("select count(*) from plantaopro.schema_migrations where status<>'APLICADA'");
     Console.WriteLine($"Migrations: aplicadas={applied} esperadas={expected} falhas={failed} pendentes={Math.Max(0, expected - applied)}.");
 }
 

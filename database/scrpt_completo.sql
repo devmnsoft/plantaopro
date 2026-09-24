@@ -1,7 +1,7 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.18.0
+-- Versão do schema: v2.19.1
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-23
+-- Data de geração: 2026-09-24
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -3894,3 +3894,95 @@ CREATE INDEX IF NOT EXISTS ix_glosa_tenant_status_convenio ON plantaopro.conveni
 CREATE INDEX IF NOT EXISTS ix_plano_paciente_tenant_paciente_status ON plantaopro.plano_saude_pacientes(cliente_id,paciente_id,status);
 CREATE INDEX IF NOT EXISTS ix_repasse_tenant_medico_status ON plantaopro.repasses_medicos_clinicos(cliente_id,medico_id,status);
 CREATE INDEX IF NOT EXISTS ix_auditoria_financeira_tenant_data ON plantaopro.auditoria_financeira_clinica(cliente_id,ocorrido_em DESC);
+
+-- ============================================================
+-- Seção 54 — plantaopro.administrativo360_base
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2190_administrativo360_base.sql
+-- SOURCE-SHA256: 49da91626a61ed59b8566c0a4c504ccc11d7b0b4b9d438adfb1a913c3a632fb6
+-- Administrativo360 / Prompt 1: base multiempresa, cadastros e contratação.
+-- Idempotente e seguro para upgrade: todos os vínculos carregam tenant_id.
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm_departamentos (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
+ codigo varchar(30) NOT NULL, nome varchar(120) NOT NULL, ativo boolean NOT NULL DEFAULT true,
+ created_by uuid NULL, reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL, reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_adm_departamentos_reg_status CHECK(reg_status IN ('A','I'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm_departamentos_tenant_codigo ON plantaopro.adm_departamentos(tenant_id,lower(codigo)) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm_cargos (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
+ departamento_id uuid NULL REFERENCES plantaopro.adm_departamentos(id), codigo varchar(30) NOT NULL, nome varchar(120) NOT NULL,
+ ativo boolean NOT NULL DEFAULT true, created_by uuid NULL, reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL, reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_adm_cargos_reg_status CHECK(reg_status IN ('A','I'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm_cargos_tenant_codigo ON plantaopro.adm_cargos(tenant_id,lower(codigo)) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm_colaboradores (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id), cargo_id uuid NOT NULL REFERENCES plantaopro.adm_cargos(id),
+ matricula varchar(30) NOT NULL, nome varchar(160) NOT NULL, cpf char(11) NOT NULL, email varchar(180) NOT NULL, status varchar(20) NOT NULL DEFAULT 'ATIVO',
+ created_by uuid NULL, reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL, reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_adm_colaborador_cpf CHECK(cpf ~ '^[0-9]{11}$'), CONSTRAINT ck_adm_colaborador_status CHECK(status IN ('ATIVO','AFASTADO','DESLIGADO')),
+ CONSTRAINT ck_adm_colaborador_reg_status CHECK(reg_status IN ('A','I'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm_colaboradores_tenant_matricula ON plantaopro.adm_colaboradores(tenant_id,lower(matricula)) WHERE reg_status='A';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm_colaboradores_tenant_cpf ON plantaopro.adm_colaboradores(tenant_id,cpf) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm_contratos_trabalho (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id), colaborador_id uuid NOT NULL REFERENCES plantaopro.adm_colaboradores(id),
+ tipo varchar(20) NOT NULL, inicio date NOT NULL, fim date NULL, salario numeric(14,2) NOT NULL, carga_horaria_semanal smallint NOT NULL,
+ status varchar(20) NOT NULL DEFAULT 'VIGENTE', created_by uuid NULL, reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz NULL, reg_status char(1) NOT NULL DEFAULT 'A',
+ CONSTRAINT ck_adm_contrato_tipo CHECK(tipo IN ('CLT','PJ','ESTAGIO','TEMPORARIO')), CONSTRAINT ck_adm_contrato_vigencia CHECK(fim IS NULL OR fim>=inicio),
+ CONSTRAINT ck_adm_contrato_valores CHECK(salario>0 AND carga_horaria_semanal BETWEEN 1 AND 60), CONSTRAINT ck_adm_contrato_status CHECK(status IN ('VIGENTE','ENCERRADO','CANCELADO')),
+ CONSTRAINT ck_adm_contrato_reg_status CHECK(reg_status IN ('A','I'))
+);
+CREATE INDEX IF NOT EXISTS ix_adm_contratos_tenant_status ON plantaopro.adm_contratos_trabalho(tenant_id,status) WHERE reg_status='A';
+
+-- Impede referências cruzadas entre tenants, inclusive por SQL direto.
+CREATE OR REPLACE FUNCTION plantaopro.adm360_validar_tenant() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+ IF TG_TABLE_NAME='adm_cargos' AND NEW.departamento_id IS NOT NULL AND NOT EXISTS(SELECT 1 FROM plantaopro.adm_departamentos d WHERE d.id=NEW.departamento_id AND d.tenant_id=NEW.tenant_id) THEN RAISE EXCEPTION 'Departamento pertence a outro tenant'; END IF;
+ IF TG_TABLE_NAME='adm_colaboradores' AND NOT EXISTS(SELECT 1 FROM plantaopro.adm_cargos c WHERE c.id=NEW.cargo_id AND c.tenant_id=NEW.tenant_id) THEN RAISE EXCEPTION 'Cargo pertence a outro tenant'; END IF;
+ IF TG_TABLE_NAME='adm_contratos_trabalho' AND NOT EXISTS(SELECT 1 FROM plantaopro.adm_colaboradores p WHERE p.id=NEW.colaborador_id AND p.tenant_id=NEW.tenant_id) THEN RAISE EXCEPTION 'Colaborador pertence a outro tenant'; END IF;
+ RETURN NEW;
+END $$;
+DROP TRIGGER IF EXISTS trg_adm_cargos_tenant ON plantaopro.adm_cargos;
+CREATE TRIGGER trg_adm_cargos_tenant BEFORE INSERT OR UPDATE ON plantaopro.adm_cargos FOR EACH ROW EXECUTE FUNCTION plantaopro.adm360_validar_tenant();
+DROP TRIGGER IF EXISTS trg_adm_colaboradores_tenant ON plantaopro.adm_colaboradores;
+CREATE TRIGGER trg_adm_colaboradores_tenant BEFORE INSERT OR UPDATE ON plantaopro.adm_colaboradores FOR EACH ROW EXECUTE FUNCTION plantaopro.adm360_validar_tenant();
+DROP TRIGGER IF EXISTS trg_adm_contratos_tenant ON plantaopro.adm_contratos_trabalho;
+CREATE TRIGGER trg_adm_contratos_tenant BEFORE INSERT OR UPDATE ON plantaopro.adm_contratos_trabalho FOR EACH ROW EXECUTE FUNCTION plantaopro.adm360_validar_tenant();
+
+-- ============================================================
+-- Seção 55 — plantaopro.administrativo360_suprimentos
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2191_administrativo360_suprimentos.sql
+-- SOURCE-SHA256: 6716a5d00d63e6693eb3f2f654b5c60ec9b0861daa978939ce788ee6fc2aaf11
+-- Administrativo 360 bloco 2: suprimentos, qualidade, estoque e coleta.
+CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_pedido_numero;
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_parceiros(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),nome varchar(160) not null,documento varchar(20),fornecedor boolean not null default false,ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id));
+CREATE UNIQUE INDEX ux_adm360_parceiro_documento ON plantaopro.adm360_parceiros(tenant_id,documento) WHERE documento IS NOT NULL;
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_produtos(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),sku varchar(40) not null,nome varchar(180) not null,unidade varchar(12) not null,codigo_barras varchar(80),controla_lote boolean not null default false,controla_serie boolean not null default false,exige_inspecao boolean not null default true,ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,sku));
+CREATE UNIQUE INDEX ux_adm360_produto_barcode ON plantaopro.adm360_produtos(tenant_id,codigo_barras) WHERE codigo_barras IS NOT NULL;
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_locais(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),codigo varchar(30) not null,nome varchar(120) not null,tipo varchar(10) not null check(tipo in('INTERNO','EXTERNO')),ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,codigo));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_pedidos(id uuid primary key,tenant_id uuid not null references plantaopro.tenants(id),numero varchar(30) not null,fornecedor_id uuid not null,situacao varchar(15) not null default 'RASCUNHO' check(situacao in('RASCUNHO','APROVADO','PARCIAL','RECEBIDO','CANCELADO')),previsao date,frete numeric(18,4) not null default 0 check(frete>=0),aprovado_em timestamptz,aprovado_por uuid,idempotency_key varchar(120),versao bigint not null default 1,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,numero),unique(tenant_id,idempotency_key),foreign key(tenant_id,fornecedor_id) references plantaopro.adm360_parceiros(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_pedido_itens(id uuid primary key,tenant_id uuid not null,pedido_id uuid not null,produto_id uuid not null,quantidade numeric(18,4) not null check(quantidade>0),quantidade_recebida numeric(18,4) not null default 0 check(quantidade_recebida>=0 and quantidade_recebida<=quantidade),preco_unitario numeric(18,4) not null check(preco_unitario>=0),desconto numeric(18,4) not null default 0 check(desconto>=0),unique(tenant_id,id),foreign key(tenant_id,pedido_id) references plantaopro.adm360_pedidos(tenant_id,id),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_lotes(id uuid primary key,tenant_id uuid not null,produto_id uuid not null,codigo varchar(80) not null,fabricacao date,validade date,versao bigint not null default 1,unique(tenant_id,id),unique(tenant_id,produto_id,codigo),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id),check(validade is null or fabricacao is null or validade>=fabricacao));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_recebimentos(id uuid primary key,tenant_id uuid not null,pedido_id uuid not null,documento varchar(80) not null,idempotency_key varchar(120) not null,confirmado_em timestamptz not null,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,idempotency_key),foreign key(tenant_id,pedido_id) references plantaopro.adm360_pedidos(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_recebimento_itens(id uuid primary key,tenant_id uuid not null,recebimento_id uuid not null,pedido_item_id uuid not null,produto_id uuid not null,lote_id uuid not null,local_id uuid not null,quantidade numeric(18,4) not null check(quantidade>0),quantidade_decidida numeric(18,4) not null default 0 check(quantidade_decidida>=0 and quantidade_decidida<=quantidade),condicao varchar(15) not null check(condicao in('QUARENTENA','LIBERADO','VENCIDO')),created_at timestamptz not null default now(),unique(tenant_id,id),foreign key(tenant_id,recebimento_id) references plantaopro.adm360_recebimentos(tenant_id,id),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id),foreign key(tenant_id,lote_id) references plantaopro.adm360_lotes(tenant_id,id),foreign key(tenant_id,local_id) references plantaopro.adm360_locais(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_inspecoes(id uuid primary key,tenant_id uuid not null,recebimento_item_id uuid not null,aprovada numeric(18,4) not null check(aprovada>=0),reprovada numeric(18,4) not null check(reprovada>=0),justificativa text,destino varchar(80),idempotency_key varchar(120) not null,decidido_por uuid,decidido_em timestamptz not null,unique(tenant_id,idempotency_key),foreign key(tenant_id,recebimento_item_id) references plantaopro.adm360_recebimento_itens(tenant_id,id),check(aprovada+reprovada>0),check(reprovada=0 or length(trim(justificativa))>0));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_movimentos(id uuid primary key,tenant_id uuid not null,produto_id uuid not null,lote_id uuid not null,local_id uuid not null,tipo varchar(30) not null,condicao varchar(15) not null check(condicao in('QUARENTENA','LIBERADO','BLOQUEADO','REPROVADO','VENCIDO')),quantidade numeric(18,4) not null check(quantidade<>0),motivo text,origem_tipo varchar(30) not null,origem_id uuid not null,idempotency_key varchar(160) not null,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,idempotency_key),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id),foreign key(tenant_id,lote_id) references plantaopro.adm360_lotes(tenant_id,id),foreign key(tenant_id,local_id) references plantaopro.adm360_locais(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_reservas(id uuid primary key,tenant_id uuid not null,produto_id uuid not null,lote_id uuid not null,local_id uuid not null,quantidade numeric(18,4) not null check(quantidade>0),situacao varchar(12) not null default 'ATIVA' check(situacao in('ATIVA','CONSUMIDA','CANCELADA')),origem_tipo varchar(30) not null,origem_id uuid not null,idempotency_key varchar(120) not null,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,idempotency_key),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id),foreign key(tenant_id,lote_id) references plantaopro.adm360_lotes(tenant_id,id),foreign key(tenant_id,local_id) references plantaopro.adm360_locais(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_inventarios(id uuid primary key,tenant_id uuid not null,local_id uuid not null,situacao varchar(12) not null check(situacao in('ABERTO','CONTAGEM','REVISAO','APROVADO','CANCELADO')),escopo text not null,motivo_ajuste text,idempotency_aprovacao varchar(120),versao bigint not null default 1,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,idempotency_aprovacao),foreign key(tenant_id,local_id) references plantaopro.adm360_locais(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_inventario_itens(id uuid primary key,tenant_id uuid not null,inventario_id uuid not null,produto_id uuid not null,lote_id uuid not null,esperado numeric(18,4) not null,contado numeric(18,4),ajustado numeric(18,4),unique(tenant_id,inventario_id,produto_id,lote_id),foreign key(tenant_id,inventario_id) references plantaopro.adm360_inventarios(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_ocorrencias(id uuid primary key,tenant_id uuid not null,recebimento_item_id uuid,lote_id uuid not null,produto_id uuid not null,local_id uuid not null,tipo varchar(40) not null,descricao text not null,quantidade numeric(18,4) not null check(quantidade>0),situacao varchar(15) not null default 'ABERTA',responsavel_id uuid,prazo date,destino text,justificativa_encerramento text,versao bigint not null default 1,created_at timestamptz not null default now(),unique(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_tarefas_coleta(id uuid primary key,tenant_id uuid not null references plantaopro.tenants(id),tipo varchar(15) not null check(tipo in('RECEBIMENTO','INVENTARIO','SEPARACAO')),descricao varchar(180) not null,situacao varchar(12) not null default 'ABERTA',atribuida_a uuid,origem_id uuid not null,created_at timestamptz not null default now(),unique(tenant_id,id));
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_leituras(id uuid primary key,tenant_id uuid not null,tarefa_id uuid not null,scan_id uuid not null,codigo varchar(100) not null,lote varchar(80),quantidade numeric(18,4) not null check(quantidade>0),created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,scan_id),foreign key(tenant_id,tarefa_id) references plantaopro.adm360_tarefas_coleta(tenant_id,id));
+CREATE INDEX IF NOT EXISTS ix_adm360_movimentos_saldo ON plantaopro.adm360_movimentos(tenant_id,produto_id,lote_id,local_id,condicao,created_at);
+CREATE INDEX IF NOT EXISTS ix_adm360_pedidos_filtro ON plantaopro.adm360_pedidos(tenant_id,situacao,created_at,fornecedor_id);
+CREATE INDEX IF NOT EXISTS ix_adm360_lotes_validade ON plantaopro.adm360_lotes(tenant_id,validade);
+CREATE OR REPLACE VIEW plantaopro.adm360_saldos AS SELECT m.tenant_id,m.produto_id,p.nome produto,m.lote_id,l.codigo lote,l.validade,m.local_id,o.nome local,m.condicao,sum(m.quantidade)::numeric(18,4) fisico,coalesce((select sum(r.quantidade) from plantaopro.adm360_reservas r where r.tenant_id=m.tenant_id and r.produto_id=m.produto_id and r.lote_id=m.lote_id and r.local_id=m.local_id and r.situacao='ATIVA'),0)::numeric(18,4) reservado,(case when m.condicao='LIBERADO' and (l.validade is null or l.validade>=current_date) then sum(m.quantidade)-coalesce((select sum(r.quantidade) from plantaopro.adm360_reservas r where r.tenant_id=m.tenant_id and r.produto_id=m.produto_id and r.lote_id=m.lote_id and r.local_id=m.local_id and r.situacao='ATIVA'),0) else 0 end)::numeric(18,4) disponivel from plantaopro.adm360_movimentos m join plantaopro.adm360_produtos p on p.id=m.produto_id and p.tenant_id=m.tenant_id join plantaopro.adm360_lotes l on l.id=m.lote_id and l.tenant_id=m.tenant_id join plantaopro.adm360_locais o on o.id=m.local_id and o.tenant_id=m.tenant_id group by m.tenant_id,m.produto_id,p.nome,m.lote_id,l.codigo,l.validade,m.local_id,o.nome,m.condicao;

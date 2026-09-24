@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.18.0",
-  "generatedAt": "2026-09-23",
+  "schemaVersion": "v2.19.1",
+  "generatedAt": "2026-09-24",
   "sections": [
     {
       "order": 3,
@@ -640,6 +640,38 @@
             "plantaopro.saude360",
             "plantaopro.financeiro",
             "plantaopro.ocorrencias_operacionais_v2171"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 54,
+      "name": "plantaopro.administrativo360_base",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_base",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2190_administrativo360_base.sql",
+          "dependsOn": [
+            "plantaopro.ocorrencias_operacionais_v2171"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 55,
+      "name": "plantaopro.administrativo360_suprimentos",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_suprimentos",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_base"
           ]
         }
       ]

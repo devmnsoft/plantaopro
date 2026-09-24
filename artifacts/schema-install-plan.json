@@ -351,5 +351,19 @@
       "plantaopro.ocorrencias_operacionais_v2171"
     ],
     "source": "database/schema/440_v2180_financeiro_clinico_convenios.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_base",
+    "dependsOn": [
+      "plantaopro.ocorrencias_operacionais_v2171"
+    ],
+    "source": "database/migrations/2026_09_v2190_administrativo360_base.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_suprimentos",
+    "dependsOn": [
+      "plantaopro.administrativo360_base"
+    ],
+    "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql"
   }
 ]

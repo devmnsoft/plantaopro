@@ -56,3 +56,5 @@ WHERE lower(email) IN (
   'medico@santacasa-demo.example'
 );
 ```
+
+- `141_administrativo360_suprimentos_demo.sql`: massa opt-in e idempotente de compras, lotes, quarentena, vencimento, ocorrência, inventário e coleta do bloco 2. Execute após as migrations v2190/v2191 e o seed base 121.

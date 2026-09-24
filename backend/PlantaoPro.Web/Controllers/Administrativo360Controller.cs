@@ -18,6 +18,14 @@ public sealed class Administrativo360Controller : BaseWebController
   var contratos=await ReadApiResponse<IReadOnlyList<Contrato360ViewModel>>(client,"api/administrativo360/contratos");
   return View(new Administrativo360PageViewModel { Resumo=resumo.Data??new(0,0,0,0),Departamentos=departamentos.Data??Array.Empty<Departamento360ViewModel>(),Cargos=cargos.Data??Array.Empty<Cargo360ViewModel>(),Colaboradores=colaboradores.Data??Array.Empty<Colaborador360ViewModel>(),Contratos=contratos.Data??Array.Empty<Contrato360ViewModel>(),Erro=resumo.Error??departamentos.Error??cargos.Error??colaboradores.Error??contratos.Error });
  }
+ public IActionResult PedidosCompra()=>View();
+ public IActionResult Recebimentos()=>View();
+ public IActionResult Inspecoes()=>View();
+ public IActionResult Ocorrencias()=>View();
+ public IActionResult Estoque()=>View();
+ public IActionResult Movimentacoes()=>View();
+ public IActionResult Inventarios()=>View();
+ public IActionResult Coleta()=>View();
  [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Departamento(string codigo,string nome)=>await Send("api/administrativo360/departamentos",new{codigo,nome},"Departamento cadastrado.");
  [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Cargo(string codigo,string nome,Guid? departamentoId)=>await Send("api/administrativo360/cargos",new{codigo,nome,departamentoId},"Cargo cadastrado.");
  [HttpPost,ValidateAntiForgeryToken] public async Task<IActionResult> Colaborador(string matricula,string nome,string cpf,string email,Guid cargoId)=>await Send("api/administrativo360/colaboradores",new{matricula,nome,cpf,email,cargoId},"Colaborador cadastrado.");

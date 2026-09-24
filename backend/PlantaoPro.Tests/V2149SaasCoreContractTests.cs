@@ -3,6 +3,7 @@ using PlantaoPro.Api;
 using PlantaoPro.Api.Controllers;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
+using PlantaoPro.Domain.Identity;
 using System.ComponentModel.DataAnnotations;
 using UsuarioEditorViewModel = PlantaoPro.Web.Models.UsuarioEditorViewModel;
 

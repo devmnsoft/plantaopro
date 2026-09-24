@@ -25,6 +25,9 @@ psql -d plantaopro -f database/seeds/development/121_acesso_demo_local.sql
 # 2. Provisionar jornada demonstrável da Santa Casa (Escalas -> Execução -> Conferência)
 psql -d plantaopro -f database/seeds/development/130_operacao_demo_santacasa.sql
 
+# 3. Provisionar cadastros e contratação do Administrativo360
+psql -d plantaopro -f database/seeds/development/140_administrativo360_demo.sql
+
 # Alternativa: provisionar as 5 identidades padronizadas da homologação PlantãoPro
 psql -d plantaopro -f database/seeds/development/122_usuarios_homologacao_plantaopro.sql
 ```

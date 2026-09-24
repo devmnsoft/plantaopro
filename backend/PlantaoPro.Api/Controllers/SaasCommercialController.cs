@@ -15,12 +15,14 @@ public sealed class PlanosController : ControllerBase
 {
     private readonly IConfiguration _cfg;
     private readonly IAuditService _audit;
+    private readonly ICurrentUserService _currentUser;
     private readonly ILogger<PlanosController> _logger;
 
-    public PlanosController(IConfiguration cfg, IAuditService audit, ILogger<PlanosController> logger)
+    public PlanosController(IConfiguration cfg, IAuditService audit, ICurrentUserService currentUser, ILogger<PlanosController> logger)
     {
         _cfg = cfg;
         _audit = audit;
+        _currentUser = currentUser;
         _logger = logger;
     }
 
@@ -88,6 +90,7 @@ from plantaopro.planos where id=@id and reg_status='A'", new { id });
     }
 
     [HttpPost]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public async Task<IActionResult> Criar([FromBody] PlanoComercialRequest request)
     {
         try
@@ -110,6 +113,7 @@ values(@id,@Nome,@Descricao,@ValorMensal,@LimiteMedicos,@LimiteHospitais,@Limite
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public async Task<IActionResult> Editar(Guid id, [FromBody] PlanoComercialRequest request)
     {
         try
@@ -139,9 +143,11 @@ where id=@id and reg_status='A'", new { id, request.Nome, request.Descricao, req
     }
 
     [HttpPost("{id:guid}/inativar")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public Task<IActionResult> Inativar(Guid id) => AlterarStatus(id, "INATIVO", "Plano inativado com sucesso.");
 
     [HttpPost("{id:guid}/reativar")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public Task<IActionResult> Reativar(Guid id) => AlterarStatus(id, "ATIVO", "Plano reativado com sucesso.");
 
 
@@ -168,6 +174,7 @@ order by codigo", new { id });
     }
 
     [HttpPut("{id:guid}/recursos")]
+    [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public async Task<IActionResult> AtualizarRecursos(Guid id, [FromBody] IEnumerable<PlanoRecursoRequest> request)
     {
         try
@@ -233,7 +240,7 @@ values(gen_random_uuid(), @id, upper(@Codigo), @Nome, @Descricao, @Habilitado, @
     }
 
     private Task AuditarAsync(string entidade, Guid entidadeId, string acao, object detalhes)
-        => _audit.RegistrarAsync(null, null, entidade, entidadeId, acao, detalhes, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
+        => _audit.RegistrarAsync(_currentUser.UserId, null, entidade, entidadeId, acao, detalhes, true, HttpContext.Connection.RemoteIpAddress?.ToString(), "ADMINISTRADOR_GLOBAL");
 }
 
 [ApiController]

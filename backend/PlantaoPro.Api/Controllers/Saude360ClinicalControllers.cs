@@ -237,7 +237,7 @@ public sealed class ConveniosController : ControllerBase
     [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("convenios", request); return StatusCode(r.StatusCode, r); }
     [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("convenios", id, request); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/inativar")] public async Task<IActionResult> Inativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("convenios", id, "inativar", request); return StatusCode(r.StatusCode, r); }
-    [HttpGet("{id:guid}/planos")] public async Task<IActionResult> Planos(Guid id) { var r = await service.ListarAsync("convenioPlanos"); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{id:guid}/planos")] public async Task<IActionResult> Planos(Guid id) { var r = await service.ListarAsync("convenioPlanos", convenioId: id); return StatusCode(r.StatusCode, r); }
     [HttpPost("{id:guid}/planos")] public async Task<IActionResult> CriarPlano(Guid id, [FromBody] Saude360CreateRequest request) { request.ConvenioId = id; var r = await service.CriarAsync("convenioPlanos", request); return StatusCode(r.StatusCode, r); }
     [HttpGet("autorizacoes")] public async Task<IActionResult> Autorizacoes() { var r = await service.ListarAsync("convenioAutorizacoes"); return StatusCode(r.StatusCode, r); }
     [HttpPost("autorizacoes")] public async Task<IActionResult> CriarAutorizacao([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("convenioAutorizacoes", request); return StatusCode(r.StatusCode, r); }

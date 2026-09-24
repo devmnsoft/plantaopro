@@ -77,7 +77,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         return ApiResponse<IEnumerable<LookupItemDto>>.Ok(rows, "Lookup carregado do PostgreSQL.");
     }
 
-    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null, int pagina = 1, int tamanho = 50)
+    public async Task<ApiResponse<IEnumerable<Saude360RegistroDto>>> ListarAsync(string tableKey, string? status = null, Guid? pacienteId = null, Guid? medicoId = null, Guid? agendamentoId = null, Guid? consultaId = null, string? termo = null, int pagina = 1, int tamanho = 50, Guid? convenioId = null)
     {
         var table = ResolveTable(tableKey);
         try
@@ -94,7 +94,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             var sql = BuildListSql(table, tableKey, pacienteId, medicoId, agendamentoId, consultaId, termo, currentUser.IsDoctor());
             tamanho = Math.Clamp(tamanho, 1, 100);
             pagina = Math.Max(1, pagina);
-            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, isDoctor = currentUser.IsDoctor(), uid = currentUser.UserId, status, pacienteId, medicoId, agendamentoId, consultaId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%", tamanho, offset = (pagina - 1) * tamanho });
+            var rows = await cn.QueryAsync(sql, new { tenantId = TenantId, isGlobal = IsGlobal, isDoctor = currentUser.IsDoctor(), uid = currentUser.UserId, status, pacienteId, medicoId, agendamentoId, consultaId, convenioId, termo, likeTermo = string.IsNullOrWhiteSpace(termo) ? null : "%" + termo.Trim() + "%", tamanho, offset = (pagina - 1) * tamanho });
             if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
             {
                 await AuditAsync(table, Guid.Empty, "LISTAR", new { tableKey });
@@ -496,33 +496,6 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@
     {
         await using var cn = Cn();
         await Saude360ClinicalSchema.GarantirBaseClinicaAsync(cn, logger);
-        await cn.ExecuteAsync(@"create table if not exists plantaopro.cid_tabela(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, codigo text not null default '', descricao text not null default '', categoria text not null default '', status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
-create table if not exists plantaopro.cid_favoritos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, cid_id uuid null, medico_id uuid null, usuario_id uuid null, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
-create table if not exists plantaopro.cid_uso_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, cid_id uuid null, consulta_id uuid null, paciente_id uuid null, medico_id uuid null, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-alter table if exists plantaopro.consultas add column if not exists anamnese text not null default '', add column if not exists exame_fisico text not null default '', add column if not exists diagnostico text not null default '', add column if not exists cid_id uuid null, add column if not exists codigo_cid text not null default '', add column if not exists conduta text not null default '', add column if not exists orientacoes text not null default '', add column if not exists finalizada_em timestamptz null, add column if not exists cancelada_em timestamptz null;
-create table if not exists plantaopro.consulta_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, consulta_id uuid not null, paciente_id uuid null, acao text not null, detalhe text not null default '', detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create table if not exists plantaopro.prescricoes(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, paciente_id uuid null, consulta_id uuid null, medico_id uuid null, modelo_id uuid null, orientacoes text not null default '', status text not null default 'RASCUNHO', finalizada_em timestamptz null, cancelada_em timestamptz null, created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
-create table if not exists plantaopro.prescricao_itens(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, medicamento text not null default '', posologia text not null default '', frequencia text not null default '', duracao text not null default '', orientacoes text not null default '', ordem integer not null default 1, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
-create table if not exists plantaopro.prescricao_modelos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, nome text not null default '', medico_id uuid null, descricao text not null default '', conteudo jsonb not null default '{}'::jsonb, status text not null default 'ATIVO', created_by uuid null, updated_by uuid null, created_at timestamptz not null default now(), updated_at timestamptz null, reg_date timestamptz not null default now(), reg_update timestamptz null, reg_status char(1) not null default 'A');
-create table if not exists plantaopro.prescricao_historico(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, acao text not null, detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, status text not null default 'REGISTRADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create table if not exists plantaopro.prescricao_cancelamentos(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, prescricao_id uuid not null, justificativa text not null default '', usuario_id uuid null, status text not null default 'CANCELADO', created_by uuid null, created_at timestamptz not null default now(), reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-alter table if exists plantaopro.cid_tabela add column if not exists versao text not null default 'CID-10';
-alter table if exists plantaopro.cid_tabela add column if not exists descricao_normalizada text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists capitulo_codigo text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists capitulo_nome text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists grupo_codigo text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists grupo_nome text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists fonte text not null default '';
-alter table if exists plantaopro.cid_tabela add column if not exists fonte_url text not null default '';
-create table if not exists plantaopro.cid_capitulos(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', codigo text not null default '', nome text not null default '', descricao text not null default '', status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create table if not exists plantaopro.cid_grupos(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', capitulo_codigo text not null default '', codigo text not null default '', nome text not null default '', descricao text not null default '', status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create table if not exists plantaopro.cid_importacoes(id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, versao text not null default 'CID-10', fonte text not null default '', fonte_url text not null default '', arquivo_nome text not null default '', total_linhas int not null default 0, total_inseridos int not null default 0, total_atualizados int not null default 0, total_erros int not null default 0, status text not null default 'PROCESSADA', detalhes text not null default '', created_by uuid null, reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create table if not exists plantaopro.cid_fontes(id uuid primary key default gen_random_uuid(), versao text not null default 'CID-10', nome text not null default '', url text not null default '', oficial boolean not null default false, status text not null default 'ATIVO', reg_date timestamptz not null default now(), reg_status char(1) not null default 'A');
-create unique index if not exists ux_cid_tabela_versao_codigo_ativo on plantaopro.cid_tabela(versao, upper(codigo)) where reg_status='A' and codigo <> '';
-create index if not exists ix_cid_tabela_codigo on plantaopro.cid_tabela(codigo);
-create index if not exists ix_consulta_historico_consulta_id on plantaopro.consulta_historico(consulta_id);
-create index if not exists ix_prescricoes_consulta_id on plantaopro.prescricoes(consulta_id);
-create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao_modelos(cliente_id, medico_id);");
     }
 
     private static string BuildListSql(string table, string key, Guid? pacienteId, Guid? medicoId, Guid? agendamentoId, Guid? consultaId, string? termo, bool isDoctor)
@@ -547,6 +520,7 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
         if (HasColumn(key, "medico_id")) where.Add("(@medicoId is null or medico_id = @medicoId)");
         if (HasColumn(key, "agendamento_id")) where.Add("(@agendamentoId is null or agendamento_id = @agendamentoId)");
         if (HasColumn(key, "consulta_id")) where.Add("(@consultaId is null or consulta_id = @consultaId)");
+        if (HasColumn(key, "convenio_id")) where.Add("(@convenioId is null or convenio_id = @convenioId)");
         if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "repassesMedicos", StringComparison.OrdinalIgnoreCase)))
         {
             where.Add("(medico_id = @uid or medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and (m.usuario_id=@uid or lower(m.email)=lower((select u.email from plantaopro.usuarios u where u.id=@uid))) and (@tenantId is null or m.cliente_id=@tenantId)))");
@@ -570,7 +544,8 @@ create index if not exists ix_prescricao_modelos_medico on plantaopro.prescricao
             { "contasReceber", new string[] { "paciente_id", "agendamento_id", "consulta_id" } },
             { "convenioAutorizacoes", new string[] { "paciente_id", "agendamento_id", "consulta_id" } },
             { "planoSaudePacientes", new string[] { "paciente_id" } },
-            { "pacienteHistorico", new string[] { "paciente_id" } }
+            { "pacienteHistorico", new string[] { "paciente_id" } },
+            { "convenioPlanos", new string[] { "convenio_id" } }
         };
         string[] cols;
         return map.TryGetValue(key, out cols) && cols.Any(c => string.Equals(c, column, StringComparison.OrdinalIgnoreCase));

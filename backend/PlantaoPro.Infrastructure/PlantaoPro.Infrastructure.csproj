@@ -1,3 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable></PropertyGroup><ItemGroup>
-  <PackageReference Include="Npgsql" Version="10.0.2" />
-</ItemGroup></Project>
+<PackageReference Include="Npgsql" Version="10.0.2" />
+  <PackageReference Include="Dapper" Version="2.1.35" />
+</ItemGroup><ItemGroup><ProjectReference Include="../PlantaoPro.Application/PlantaoPro.Application.csproj" /><ProjectReference Include="../PlantaoPro.Domain/PlantaoPro.Domain.csproj" /></ItemGroup></Project>

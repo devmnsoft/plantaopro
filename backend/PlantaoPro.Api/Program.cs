@@ -17,6 +17,8 @@ using PlantaoPro.Api.SavedViews;
 using System.Text;
 
 using PlantaoPro.CrossCutting.Security;
+using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Infrastructure.Administrativo360;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default");
@@ -121,7 +123,7 @@ builder.Services.AddAuthorization(options =>
 {
     var scopes=new[]{"GlobalAccess","TenantAccess","HybridAccess","TenantContextRequired","TenantContextOptional"};
     foreach(var name in scopes)options.AddPolicy(name,p=>p.RequireAuthenticatedUser().AddRequirements(new EffectiveAccessRequirement(name)));
-    var permissions=new Dictionary<string,string>{["CanSwitchTenant"]="CONTEXTO:TROCAR",["CanImpersonateTenant"]="TENANT_SUPORTE:ENTRAR",["CanManageSaas"]="SAAS:GERENCIAR",["CanViewGlobalAudit"]="AUDITORIA:VER",["CentralAtendimento.Ver"]="CENTRAL_ATENDIMENTO:VER",["Agendamento.Criar"]="AGENDAMENTO:CRIAR",["Agendamento.Confirmar"]="AGENDAMENTO:CONFIRMAR",["Agendamento.CheckIn"]="AGENDAMENTO:CHECKIN",["PainelChamada.Operar"]="PAINEL_CHAMADA:OPERAR",["Triagem.Iniciar"]="TRIAGEM:INICIAR",["Triagem.Finalizar"]="TRIAGEM:FINALIZAR",["Consulta.Iniciar"]="CONSULTA:INICIAR",["Consulta.Editar"]="CONSULTA:EDITAR",["Consulta.Finalizar"]="CONSULTA:FINALIZAR",["Consulta.Adendo"]="CONSULTA:ADENDO",["Consulta.VerDadosSensiveis"]="CONSULTA:VER_DADOS_SENSIVEIS",["CID.Vincular"]="CID:VINCULAR",["CID.Remover"]="CID:REMOVER",["Prescricao.Criar"]="PRESCRICAO:CRIAR",["Prescricao.Editar"]="PRESCRICAO:EDITAR",["Prescricao.Finalizar"]="PRESCRICAO:FINALIZAR",["Relatorios.Ver"]="RELATORIOS:VER",["Relatorios.Exportar"]="RELATORIOS:EXPORTAR",["Relatorios.Executivos"]="RELATORIOS:EXECUTIVOS",["Relatorios.Financeiros"]="RELATORIOS:FINANCEIROS",["Relatorios.Clinicos"]="RELATORIOS:CLINICOS",["Relatorios.DadosSensiveis"]="RELATORIOS:DADOS_SENSIVEIS"};
+    var permissions=new Dictionary<string,string>{["Adm360.Ver"]="ADM360:VER",["Adm360.Compras"]="ADM360:COMPRAS",["Adm360.Estoque"]="ADM360:ESTOQUE",["Adm360.Qualidade"]="ADM360:LIBERAR_QUALIDADE",["Adm360.InventarioAprovar"]="ADM360:INVENTARIO_APROVAR",["CanSwitchTenant"]="CONTEXTO:TROCAR",["CanImpersonateTenant"]="TENANT_SUPORTE:ENTRAR",["CanManageSaas"]="SAAS:GERENCIAR",["CanViewGlobalAudit"]="AUDITORIA:VER",["CentralAtendimento.Ver"]="CENTRAL_ATENDIMENTO:VER",["Agendamento.Criar"]="AGENDAMENTO:CRIAR",["Agendamento.Confirmar"]="AGENDAMENTO:CONFIRMAR",["Agendamento.CheckIn"]="AGENDAMENTO:CHECKIN",["PainelChamada.Operar"]="PAINEL_CHAMADA:OPERAR",["Triagem.Iniciar"]="TRIAGEM:INICIAR",["Triagem.Finalizar"]="TRIAGEM:FINALIZAR",["Consulta.Iniciar"]="CONSULTA:INICIAR",["Consulta.Editar"]="CONSULTA:EDITAR",["Consulta.Finalizar"]="CONSULTA:FINALIZAR",["Consulta.Adendo"]="CONSULTA:ADENDO",["Consulta.VerDadosSensiveis"]="CONSULTA:VER_DADOS_SENSIVEIS",["CID.Vincular"]="CID:VINCULAR",["CID.Remover"]="CID:REMOVER",["Prescricao.Criar"]="PRESCRICAO:CRIAR",["Prescricao.Editar"]="PRESCRICAO:EDITAR",["Prescricao.Finalizar"]="PRESCRICAO:FINALIZAR",["Relatorios.Ver"]="RELATORIOS:VER",["Relatorios.Exportar"]="RELATORIOS:EXPORTAR",["Relatorios.Executivos"]="RELATORIOS:EXECUTIVOS",["Relatorios.Financeiros"]="RELATORIOS:FINANCEIROS",["Relatorios.Clinicos"]="RELATORIOS:CLINICOS",["Relatorios.DadosSensiveis"]="RELATORIOS:DADOS_SENSIVEIS"};
     foreach(var item in permissions)options.AddPolicy(item.Key,p=>p.RequireAuthenticatedUser().AddRequirements(new EffectiveAccessRequirement(item.Key,item.Value)));
 });
 builder.Services.AddScoped<IAuthorizationHandler,EffectiveAccessAuthorizationHandler>();
@@ -190,6 +192,11 @@ builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<SaasModuleCatalogService>();
 builder.Services.AddScoped<ModuleContractingService>();
 builder.Services.AddScoped<Administrativo360Service>();
+builder.Services.AddScoped<IComprasRepository>(_=>new ComprasRepository(connectionString!));
+builder.Services.AddScoped<IEstoqueRepository>(_=>new EstoqueRepository(connectionString!));
+builder.Services.AddScoped<IQualidadeRepository>(_=>new QualidadeRepository(connectionString!));
+builder.Services.AddScoped<IColetaRepository>(_=>new ColetaRepository(connectionString!));
+builder.Services.AddScoped<IInventarioRepository>(_=>new InventarioRepository(connectionString!));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
 builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();

@@ -599,6 +599,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2191_administrativo360_suprimentos",
+      "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
+      "checksum": "6716a5d00d63e6693eb3f2f654b5c60ec9b0861daa978939ce788ee6fc2aaf11",
+      "dependsOn": [
+        "2026_09_v2190_administrativo360_base"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

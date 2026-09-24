@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using PlantaoPro.CrossCutting.Security;
 using PlantaoPro.Api.Security;
 using PlantaoPro.Domain.Identity;
+using PlantaoPro.Domain.Escalas;
 namespace PlantaoPro.Api.Data
 {
     public interface IAuditService
@@ -1420,7 +1421,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             try
             {
                 await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended(@key, 2166))", new { key = medicoId.ToString("N") }, tx);
-                var convite = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid PlantaoId, string Status, DateTime? ExpiraEm)>(@"select c.id,c.plantao_id as PlantaoId,c.status,c.expira_em as ExpiraEm
+                var convite = await cn.QueryFirstOrDefaultAsync<(Guid Id, Guid PlantaoId, string Status, DateTimeOffset? ExpiraEm)>(@"select c.id,c.plantao_id as PlantaoId,c.status,c.expira_em as ExpiraEm
 from plantaopro.plantao_convites c
 join plantaopro.plantoes p on p.id=c.plantao_id and p.reg_status='A'
 where c.id=@conviteId and c.medico_id=@medicoId and c.reg_status='A' and p.cliente_id=@clienteId
@@ -1436,8 +1437,7 @@ order by reg_date limit 1", new { convite.PlantaoId, medicoId }, tx);
                     await tx.CommitAsync();
                     return ApiResponse<string>.Ok(existente.Value.ToString(), "Convite já aceito; escala confirmada anteriormente.");
                 }
-                var conviteStatus = convite.Status.ToUpperInvariant();
-                if (conviteStatus is not ("ENVIADO" or "PENDENTE") || convite.ExpiraEm is not null && convite.ExpiraEm <= DateTime.UtcNow)
+                if (!ConvitePolicy.IsEligibleForAcceptance(convite.Status, convite.ExpiraEm, DateTimeOffset.UtcNow))
                     return ApiResponse<string>.Fail("Convite expirado ou já processado. Atualize a lista.", 409);
 
                 var medicoValido = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.medicos

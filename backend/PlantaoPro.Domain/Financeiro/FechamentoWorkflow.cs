@@ -32,7 +32,7 @@ public static class PlantaoPaymentCalculator
     public static decimal Calcular(decimal valorPlantao, DateTime inicio, DateTime fim)
     {
         if (valorPlantao <= 0 || fim <= inicio) return 0;
-        var horas = Math.Max(1m, (decimal)(fim - inicio).TotalHours);
-        return Math.Round((valorPlantao / 12m) * horas, 2, MidpointRounding.AwayFromZero);
+        var horas = (decimal)(fim - inicio).TotalHours;
+        return RemunerationCalculator.Calculate(RemunerationMode.ValorBase12H, valorPlantao, horas);
     }
 }

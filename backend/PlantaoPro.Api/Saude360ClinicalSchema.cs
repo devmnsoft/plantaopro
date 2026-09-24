@@ -11,7 +11,11 @@ internal static class Saude360ClinicalSchema
         "pacientes", "paciente_contatos", "paciente_enderecos", "paciente_documentos",
         "paciente_historico", "agendamentos", "agendamento_checkins", "painel_chamada",
         "painel_chamada_fila", "agendamento_historico", "triagens", "triagem_fila",
-        "triagem_historico", "triagem_encaminhamentos"
+        "triagem_historico", "triagem_encaminhamentos",
+        "cid_tabela", "cid_favoritos", "cid_uso_historico", "cid_capitulos",
+        "cid_grupos", "cid_importacoes", "cid_fontes", "consultas", "consulta_historico",
+        "prescricoes", "prescricao_itens", "prescricao_modelos", "prescricao_historico",
+        "prescricao_cancelamentos"
     };
 
     public static async Task GarantirBaseClinicaAsync(NpgsqlConnection cn, ILogger logger)

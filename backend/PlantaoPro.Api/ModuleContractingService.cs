@@ -41,6 +41,7 @@ where m.reg_status='A' group by m.id,tm.id,tm.status,tm.habilitado,tm.preco_cont
         var catalog = fullCatalog.Where(x => ids.Contains(x.Id)).ToArray();
         if (catalog.Length != ids.Length || catalog.Any(x => x.Disponibilidade != "DISPONIVEL" || x.EstadoContratual is "ATIVO" or "SUSPENSO")) throw new InvalidOperationException("Um módulo já está contratado, suspenso, solicitado ou indisponível para nova contratação.");
         var selectedCodes = catalog.Select(x => x.Codigo).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        EnsureAcyclicDependencies(fullCatalog, selectedCodes);
         // Uma dependência já vigente no tenant não deve ser contratada outra vez.
         // Suspensa/agendada continua sem satisfazer a dependência operacional.
         var contractedCodes = fullCatalog
@@ -100,6 +101,28 @@ values(gen_random_uuid(),@id,@module,@code,@name,@description,@features::jsonb,@
         if(row.Status!="PENDENTE"||!FixedEquals(row.ConditionsVersion,request.ConditionsVersion)) throw new ConditionsChangedException();
         var conflictingContracts=await cn.QueryAsync<Guid>(new CommandDefinition(@"select tm.id from plantaopro.tenant_modulos tm join plantaopro.solicitacao_modulo_itens i on i.modulo_id=tm.modulo_id and i.solicitacao_id=@id and i.reg_status='A' where tm.tenant_id=@tenant and tm.reg_status='A' for update",new{id,tenant=row.TenantId},tx,cancellationToken:ct));
         if(approve&&conflictingContracts.Any())throw new ConditionsChangedException();
+        // O catálogo pode mudar entre a revisão pelo cliente e a decisão global.
+        // Revalida as dependências dentro da mesma transação da aprovação: uma
+        // dependência é válida quando já está ativa ou integra a própria
+        // solicitação. Contratos suspensos/agendados não liberam o módulo.
+        var missingDependency=approve&&await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(
+select 1
+from plantaopro.solicitacao_modulo_itens item
+join plantaopro.modulo_catalogo_dependencias dependency on dependency.modulo_id=item.modulo_id and dependency.reg_status='A'
+where item.solicitacao_id=@id and item.reg_status='A'
+  and not exists(
+    select 1 from plantaopro.tenant_modulos active_contract
+    where active_contract.tenant_id=@tenant
+      and active_contract.modulo_id=dependency.modulo_dependencia_id
+      and active_contract.reg_status='A'
+      and active_contract.habilitado=true
+      and upper(coalesce(active_contract.status,'ATIVO'))='ATIVO')
+  and not exists(
+    select 1 from plantaopro.solicitacao_modulo_itens selected_dependency
+    where selected_dependency.solicitacao_id=@id
+      and selected_dependency.modulo_id=dependency.modulo_dependencia_id
+      and selected_dependency.reg_status='A'))",new{id,tenant=row.TenantId},tx,cancellationToken:ct));
+        if(missingDependency)throw new ConditionsChangedException();
         var status=approve?"APROVADA":"RECUSADA";
         await cn.ExecuteAsync(new CommandDefinition("update plantaopro.solicitacoes_modulos set status=@status,justificativa=@reason,decidido_por=@user,decidido_em=now(),reg_update=now() where id=@id",new{id,status,reason=request.Justificativa?.Trim(),user=currentUser.UserId},tx,cancellationToken:ct));
         if(approve) await cn.ExecuteAsync(new CommandDefinition(@"insert into plantaopro.tenant_modulos(id,tenant_id,modulo_id,codigo,codigo_modulo,habilitado,status,origem,preco_contratado,ativado_em,created_by,reg_date,reg_status)
@@ -114,6 +137,22 @@ on conflict (tenant_id,modulo_id) where reg_status='A' and modulo_id is not null
     private NpgsqlConnection Connection()=>new(configuration.GetConnectionString("Default"));
     private static CommercialModuleDto Map(ModuleRow x)=>new(){Id=x.Id,Codigo=x.Codigo,Nome=x.Nome,Descricao=x.Descricao,Funcionalidades=Parse(x.Funcionalidades),Dependencias=x.DependenciasArray??Parse(x.Dependencias),Preco=x.Preco,PrecoContratado=x.PrecoContratado,Periodicidade=x.Periodicidade,LimiteContratado=x.LimiteContratado,VigenciaInicio=x.VigenciaInicio,VigenciaFim=x.VigenciaFim,Disponibilidade=x.Disponibilidade,EstadoContratual=x.EstadoContratual};
     private static string[] Parse(string? json){try{return JsonSerializer.Deserialize<string[]>(json??"[]")??Array.Empty<string>();}catch{return Array.Empty<string>();}}
+    private static void EnsureAcyclicDependencies(IEnumerable<CommercialModuleDto> catalog,IReadOnlySet<string> selectedCodes)
+    {
+        var dependencies=catalog.ToDictionary(x=>x.Codigo,x=>x.Dependencias,StringComparer.OrdinalIgnoreCase);
+        var visiting=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visited=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        bool HasCycle(string code)
+        {
+            if(visiting.Contains(code))return true;
+            if(!visited.Add(code))return false;
+            visiting.Add(code);
+            if(dependencies.TryGetValue(code,out var children)&&children.Any(HasCycle))return true;
+            visiting.Remove(code);
+            return false;
+        }
+        if(selectedCodes.Any(HasCycle))throw new InvalidOperationException("O catálogo possui ciclo de dependências e a contratação não pode prosseguir.");
+    }
     private static string Version(Guid tenant,DateTimeOffset start,IEnumerable<CommercialModuleDto> items){var canonical=$"{tenant:N}|{start:O}|"+string.Join("|",items.OrderBy(x=>x.Id).Select(x=>$"{x.Id:N}:{x.Preco?.ToString(System.Globalization.CultureInfo.InvariantCulture)??"PROPOSTA"}:{x.Periodicidade}"));return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(canonical))).ToLowerInvariant();}
     private static bool FixedEquals(string a,string b){var x=Encoding.UTF8.GetBytes(a??"");var y=Encoding.UTF8.GetBytes(b??"");return x.Length==y.Length&&CryptographicOperations.FixedTimeEquals(x,y);}
     private sealed class ModuleRow{public Guid Id{get;set;}public string Codigo{get;set;}="";public string Nome{get;set;}="";public string Descricao{get;set;}="";public string? Funcionalidades{get;set;}public string? Dependencias{get;set;}public string[]? DependenciasArray{get;set;}public decimal? Preco{get;set;}public decimal? PrecoContratado{get;set;}public int? LimiteContratado{get;set;}public DateTimeOffset? VigenciaInicio{get;set;}public DateTimeOffset? VigenciaFim{get;set;}public string? Periodicidade{get;set;}public string Disponibilidade{get;set;}="";public string EstadoContratual{get;set;}="";}

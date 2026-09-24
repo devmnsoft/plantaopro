@@ -588,6 +588,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2190_administrativo360_base",
+      "source": "database/migrations/2026_09_v2190_administrativo360_base.sql",
+      "checksum": "49da91626a61ed59b8566c0a4c504ccc11d7b0b4b9d438adfb1a913c3a632fb6",
+      "dependsOn": [
+        "2026_v2171_ocorrencias_operacionais"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

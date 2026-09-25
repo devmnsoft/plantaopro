@@ -197,7 +197,14 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
 
     public async Task<Guid> ConfirmarVendaAsync(Guid tenantId, Guid usuarioId, ConfirmarVendaCommand command, CancellationToken ct)
     {
-        var payloadHash = IdempotenciaHelper.CalcularHash("CONFIRMAR_VENDA", tenantId, command.ValorizacaoId);
+        var payloadHash = IdempotenciaHelper.CalcularHash(
+            "CONFIRMAR_VENDA",
+            tenantId,
+            command.ValorizacaoId,
+            command.CondicaoPagamento,
+            command.QuantidadeParcelas,
+            command.Observacoes ?? ""
+        );
         Guid vendaId = Guid.Empty;
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>

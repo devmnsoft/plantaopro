@@ -298,11 +298,13 @@ BEGIN
         -- =========================================================================
         -- CONTAS FINANCEIRAS DEMONSTRATIVAS
         -- =========================================================================
+        -- 6. CONTAS FINANCEIRAS, CAIXA E CONTAS A PAGAR
+        -- =========================================================================
         INSERT INTO plantaopro.adm360_contas_financeiras(
-            id, tenant_id, nome, tipo, banco, agencia, conta, saldo_inicial, ativo, created_at
+            id, tenant_id, nome, tipo, banco, agencia, conta, saldo_inicial, data_saldo_inicial, ativo, created_at
         ) VALUES
-            ('a3610000-0000-4000-8000-000000000080', t1, 'Banco do Brasil - Conta Movimento', 'BANCO', '001 - BB', '1234-5', '98765-4', 10000.00, true, now()),
-            ('a3610000-0000-4000-8000-000000000081', t1, 'Caixa Físico Tesouraria', 'CAIXA', NULL, NULL, NULL, 500.00, true, now())
+            ('a3610000-0000-4000-8000-000000000080', t1, 'Banco do Brasil - Conta Movimento', 'BANCO', '001 - BB', '1234-5', '98765-4', 10000.00, date '2026-09-01', true, now()),
+            ('a3610000-0000-4000-8000-000000000081', t1, 'Caixa Físico Tesouraria', 'CAIXA', NULL, NULL, NULL, 500.00, date '2026-09-01', true, now())
         ON CONFLICT(id) DO NOTHING;
 
         -- Movimento financeiro demonstrativo
@@ -311,6 +313,58 @@ BEGIN
         ) VALUES
             ('a3610000-0000-4000-8000-000000000082', t1, 'a3610000-0000-4000-8000-000000000080', 'ENTRADA', 300.00, date '2026-09-20', 'Recebimento demonstrativo', 'RECEBIMENTO_TITULO', 'a3610000-0000-4000-8000-000000000080', 'seed:movimento:1')
         ON CONFLICT(id) DO NOTHING;
+
+        -- Título a pagar demonstrativo: Compra de Implantes (Aprovado)
+        INSERT INTO plantaopro.adm360_titulos_pagar(
+            id, tenant_id, numero, origem_tipo, fornecedor_id, documento, competencia, data_emissao, data_vencimento,
+            parcela, total_parcelas, valor_principal, saldo_aberto, valor_pago, situacao, observacoes, created_by
+        ) VALUES (
+            'a3610000-0000-4000-8000-000000000090', t1, 'PAG-DEMO-001', 'RECEBIMENTO_COMPRA', 'a3610000-0000-4000-8000-000000000001',
+            'NF-5544', date '2026-09-01', date '2026-09-01', date '2026-09-30', 1, 1, 1500.00, 1500.00, 0.00, 'APROVADO', 'Fatura de fornecedor OPME', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Título a pagar demonstrativo: Despesa de Logística (Pendente de Aprovação)
+        INSERT INTO plantaopro.adm360_titulos_pagar(
+            id, tenant_id, numero, origem_tipo, fornecedor_id, documento, competencia, data_emissao, data_vencimento,
+            parcela, total_parcelas, valor_principal, saldo_aberto, valor_pago, centro_custo, situacao, observacoes, created_by
+        ) VALUES (
+            'a3610000-0000-4000-8000-000000000091', t1, 'PAG-DEMO-002', 'DESPESA_MANUAL', 'a3610000-0000-4000-8000-000000000001',
+            'CTE-9988', date '2026-09-05', date '2026-09-05', date '2026-09-25', 1, 1, 350.00, 350.00, 0.00, 'LOGISTICA', 'PENDENTE_APROVACAO', 'Frete aéreo emergencial', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Título a pagar demonstrativo: Aluguel de Instrumentais (Pago)
+        INSERT INTO plantaopro.adm360_titulos_pagar(
+            id, tenant_id, numero, origem_tipo, fornecedor_id, documento, competencia, data_emissao, data_vencimento,
+            parcela, total_parcelas, valor_principal, saldo_aberto, valor_pago, situacao, observacoes, created_by
+        ) VALUES (
+            'a3610000-0000-4000-8000-000000000092', t1, 'PAG-DEMO-003', 'DESPESA_MANUAL', 'a3610000-0000-4000-8000-000000000001',
+            'REC-1212', date '2026-09-01', date '2026-09-01', date '2026-09-10', 1, 1, 400.00, 0.00, 400.00, 'PAGO', 'Locação caixa instrumental', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Movimento financeiro do pagamento do aluguel
+        INSERT INTO plantaopro.adm360_movimentos_financeiros(
+            id, tenant_id, conta_id, tipo, valor, data_movimento, descricao, origem_tipo, origem_id, idempotency_key
+        ) VALUES
+            ('a3610000-0000-4000-8000-000000000093', t1, 'a3610000-0000-4000-8000-000000000080', 'SAIDA', 400.00, date '2026-09-10', 'Pagamento título PAG-DEMO-003', 'PAGAMENTO_TITULO', 'a3610000-0000-4000-8000-000000000092', 'seed:movimento:2')
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Baixa de pagamento manual
+        INSERT INTO plantaopro.adm360_titulo_pagamentos(
+            id, tenant_id, titulo_id, conta_id, data_pagamento, valor_pago, meio_pagamento, referencia, estornado, movimento_financeiro_id, idempotency_key, pago_por
+        ) VALUES (
+            'a3610000-0000-4000-8000-000000000094', t1, 'a3610000-0000-4000-8000-000000000092', 'a3610000-0000-4000-8000-000000000080',
+            date '2026-09-10', 400.00, 'PIX', 'DOC-BANCO-4433', false, 'a3610000-0000-4000-8000-000000000093', 'seed:pagamento:1', usr1
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Fechamento de Caixa demonstrativo (Período 01 a 10 de Setembro)
+        INSERT INTO plantaopro.adm360_caixa_fechamentos(
+            id, tenant_id, conta_id, data_inicio, data_fim, data_fechamento, saldo_abertura, total_entradas, total_saidas, entradas, saidas,
+            saldo_calculado, saldo_conferido, diferenca, situacao, fechado_por, fechado_em, created_at
+        ) VALUES (
+            'a3610000-0000-4000-8000-000000000095', t1, 'a3610000-0000-4000-8000-000000000080',
+            date '2026-09-01', date '2026-09-10', date '2026-09-10', 10000.00, 0.00, 400.00, 0.00, 400.00,
+            9600.00, 9600.00, 0.00, 'FECHADO', usr1, now(), now()
+        ) ON CONFLICT(id) DO NOTHING;
     END;
 
     -- =========================================================================

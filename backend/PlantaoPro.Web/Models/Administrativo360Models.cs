@@ -498,6 +498,8 @@ public sealed record ContaFinanceiraViewModel(
     string? Banco,
     string? Agencia,
     string? Conta,
+    decimal SaldoInicial,
+    DateOnly DataSaldoInicial,
     decimal SaldoAtual,
     bool Ativa,
     DateTime CriadoEm);
@@ -524,21 +526,27 @@ public sealed record ExtratoContaViewModel(
 
 public sealed record FluxoCaixaItemViewModel(
     DateOnly Data,
-    decimal EntradasRealizadas,
-    decimal SaidasRealizadas,
-    decimal SaldoRealizadoDia,
-    decimal EntradasPrevistas,
-    decimal SaidasPrevistas,
-    decimal SaldoPrevistoDia);
+    string Tipo,
+    string Descricao,
+    string Origem,
+    decimal PrevistoEntrada,
+    decimal PrevistoSaida,
+    decimal RealizadoEntrada,
+    decimal RealizadoSaida,
+    decimal SaldoAcumulado);
 
 public sealed record FluxoCaixaViewModel(
-    decimal SaldoAtualConsolidado,
-    decimal TotalEntradasPeriodo,
-    decimal TotalSaidasPeriodo,
-    decimal SaldoFinalPeriodo,
+    DateOnly DataBase,
+    decimal SaldoAtualContas,
+    decimal SaldoAberturaPeriodo,
+    decimal SaldoFechamentoPeriodo,
     decimal TotalEntradasPrevistas,
     decimal TotalSaidasPrevistas,
-    IReadOnlyList<FluxoCaixaItemViewModel> Dias);
+    decimal TotalEntradasRealizadas,
+    decimal TotalSaidasRealizadas,
+    decimal TotalVencidosReceber,
+    decimal TotalVencidosPagar,
+    IReadOnlyList<FluxoCaixaItemViewModel> Itens);
 
 public sealed record RelatorioVendasItemViewModel(
     string Numero,
@@ -630,5 +638,177 @@ public sealed class RelatoriosFinanceirosPageViewModel
     public Guid? VendedorId { get; init; }
     public IReadOnlyList<SelectListItemViewModel> Vendedores { get; init; } = Array.Empty<SelectListItemViewModel>();
 }
+
+// ==========================================
+// CONTAS A PAGAR & FECHAMENTO DE CAIXA VIEWMODELS
+// ==========================================
+
+public sealed record TituloPagarResumoViewModel(
+    Guid Id,
+    string Numero,
+    Guid FornecedorId,
+    string Fornecedor,
+    string OrigemTipo,
+    Guid? OrigemId,
+    string? Documento,
+    DateOnly Competencia,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    int Parcela,
+    int TotalParcelas,
+    decimal ValorPrincipal,
+    decimal ValorPago,
+    decimal SaldoAberto,
+    string Situacao,
+    string? CentroCusto,
+    bool Vencido);
+
+public sealed record TituloPagamentoViewModel(
+    Guid Id,
+    Guid TituloId,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataPagamento,
+    decimal ValorPago,
+    string MeioPagamento,
+    string? Referencia,
+    bool Estornado,
+    string? PagoPor,
+    DateTime CriadoEm);
+
+public sealed record PagamentoEstornoViewModel(
+    Guid Id,
+    Guid PagamentoId,
+    decimal ValorEstornado,
+    string Motivo,
+    string? EstornadoPor,
+    DateTime CriadoEm);
+
+public sealed record TituloPagarDetalhesViewModel(
+    Guid Id,
+    string Numero,
+    Guid FornecedorId,
+    string Fornecedor,
+    string OrigemTipo,
+    Guid? OrigemId,
+    string? Documento,
+    DateOnly Competencia,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    int Parcela,
+    int TotalParcelas,
+    decimal ValorPrincipal,
+    decimal ValorDesconto,
+    decimal ValorJuros,
+    decimal ValorPago,
+    decimal SaldoAberto,
+    string Situacao,
+    string? CentroCusto,
+    string? Observacoes,
+    DateTime? AprovadoEm,
+    string? AprovadoPor,
+    string? CriadoPor,
+    DateTime CriadoEm,
+    bool Vencido,
+    IReadOnlyList<TituloPagamentoViewModel> Pagamentos,
+    IReadOnlyList<PagamentoEstornoViewModel> Estornos);
+
+public sealed class TitulosPagarIndexViewModel
+{
+    public IReadOnlyList<TituloPagarResumoViewModel> Titulos { get; init; } = Array.Empty<TituloPagarResumoViewModel>();
+    public IReadOnlyList<SelectListItemViewModel> Fornecedores { get; init; } = Array.Empty<SelectListItemViewModel>();
+    public string? Busca { get; init; }
+    public string? Situacao { get; init; }
+    public Guid? FornecedorId { get; init; }
+    public string? CentroCusto { get; init; }
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+}
+
+public sealed class TituloPagarDetalhesPageViewModel
+{
+    public TituloPagarDetalhesViewModel Titulo { get; init; } = null!;
+    public IReadOnlyList<ContaFinanceiraViewModel> Contas { get; init; } = Array.Empty<ContaFinanceiraViewModel>();
+}
+
+public sealed class DespesaManualFormViewModel
+{
+    public Guid FornecedorId { get; set; }
+    public string? Documento { get; set; }
+    public DateOnly Competencia { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly DataVencimento { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(30));
+    public decimal ValorPrincipal { get; set; }
+    public string? CentroCusto { get; set; } = "ADMINISTRATIVO";
+    public string? Observacoes { get; set; }
+    public IReadOnlyList<SelectListItemViewModel> Fornecedores { get; set; } = Array.Empty<SelectListItemViewModel>();
+}
+
+public sealed record ComissaoPendenteViewModel(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    Guid BaixaId,
+    Guid VendedorId,
+    string VendedorNome,
+    decimal BaseCalculo,
+    decimal Percentual,
+    decimal ValorComissao,
+    string Situacao,
+    DateTime CriadoEm);
+
+public sealed class ComissoesPendentesIndexViewModel
+{
+    public IReadOnlyList<ComissaoPendenteViewModel> Comissoes { get; init; } = Array.Empty<ComissaoPendenteViewModel>();
+    public IReadOnlyList<SelectListItemViewModel> Vendedores { get; init; } = Array.Empty<SelectListItemViewModel>();
+    public Guid? VendedorId { get; init; }
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+}
+
+public sealed record CaixaFechamentoViewModel(
+    Guid Id,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataInicio,
+    DateOnly DataFim,
+    decimal SaldoAbertura,
+    decimal TotalEntradas,
+    decimal TotalSaidas,
+    decimal SaldoCalculado,
+    decimal SaldoConferido,
+    decimal Diferenca,
+    string? Justificativa,
+    string Situacao,
+    string? MotivoReabertura,
+    DateTime? ReabertoEm,
+    string? ReabertoPor,
+    string FechadoPor,
+    DateTime CriadoEm);
+
+public sealed class FechamentoCaixaIndexViewModel
+{
+    public IReadOnlyList<CaixaFechamentoViewModel> Fechamentos { get; init; } = Array.Empty<CaixaFechamentoViewModel>();
+    public IReadOnlyList<ContaFinanceiraViewModel> Contas { get; init; } = Array.Empty<ContaFinanceiraViewModel>();
+    public Guid? ContaId { get; init; }
+}
+
+public sealed class ContasFinanceirasIndexViewModel
+{
+    public IReadOnlyList<ContaFinanceiraViewModel> Contas { get; init; } = Array.Empty<ContaFinanceiraViewModel>();
+}
+
+public sealed class ContaFinanceiraFormViewModel
+{
+    public Guid? Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "BANCO";
+    public string? Banco { get; set; }
+    public string? Agencia { get; set; }
+    public string? Conta { get; set; }
+    public decimal SaldoInicial { get; set; }
+    public DateOnly? DataSaldoInicial { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public bool Ativo { get; set; } = true;
+}
+
 
 

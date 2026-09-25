@@ -78,8 +78,13 @@ public abstract class Adm360Repository
             }
             catch (NpgsqlException ex) when ((ex.SqlState is "40001" or "40P01") && tentativa < maxTentativas)
             {
-                await tx.RollbackAsync(ct);
+                try { await tx.RollbackAsync(ct); } catch { }
                 await Task.Delay(25 * tentativa, ct);
+            }
+            catch
+            {
+                try { await tx.RollbackAsync(ct); } catch { }
+                throw;
             }
         }
     }

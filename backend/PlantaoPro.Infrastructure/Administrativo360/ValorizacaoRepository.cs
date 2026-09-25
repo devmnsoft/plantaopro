@@ -101,7 +101,8 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
                    l.codigo AS Lote,
                    vi.quantidade_consumida AS QuantidadeConsumida,
                    vi.preco_unitario AS PrecoUnitario,
-                   COALESCE(l.custo_unitario, p.preco_custo, 0) AS CustoUnitario
+                   l.custo_unitario AS CustoUnitarioDoc,
+                   p.preco_custo AS PrecoCustoCadastro
             FROM plantaopro.adm360_vale_itens vi
             JOIN plantaopro.adm360_produtos p ON p.id = vi.produto_id AND p.tenant_id = vi.tenant_id
             JOIN plantaopro.adm360_lotes l ON l.id = vi.lote_id AND l.tenant_id = vi.tenant_id
@@ -121,8 +122,14 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
         {
             decimal qtdConsumida = (decimal)r.quantidadeconsumida;
             decimal precoUnitario = (decimal)r.precounitario;
-            decimal custoUnitario = (decimal)r.custounitario;
-            bool custoAusente = custoUnitario <= 0m;
+            decimal? custoDoc = r.custounitariodoc is not null ? (decimal)r.custounitariodoc : null;
+            bool custoAusente = custoDoc == null;
+            decimal custoUnitario = custoDoc ?? 0m;
+
+            if (custoAusente)
+            {
+                pendencias.Add($"O produto {r.Produto} (Lote: {r.Lote}) não possui custo documental rastreado de entrada. A margem de contribuição ficará pendente de conferência.");
+            }
 
             if (precoUnitario <= 0m)
                 pendencias.Add($"O produto {r.Produto} (Lote: {r.Lote}) está com preço unitário zerado ou ausente.");
@@ -182,7 +189,15 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
 
     public async Task<Guid> ValorizarAsync(Guid tenantId, Guid usuarioId, ValorizarValeCommand command, CancellationToken ct)
     {
-        var payloadHash = IdempotenciaHelper.CalcularHash("VALORIZACAO_VALE", tenantId, command.ValeId);
+        var payloadHash = IdempotenciaHelper.CalcularHash(
+            "VALORIZACAO_VALE",
+            tenantId,
+            command.ValeId,
+            command.PagadorId,
+            command.VendedorId ?? Guid.Empty,
+            command.DescontoGeral,
+            command.ComissaoPercentual
+        );
         Guid valorizacaoId = Guid.Empty;
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
@@ -219,7 +234,7 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
 
             var itens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
                 SELECT vi.id AS vale_item_id, vi.produto_id, vi.lote_id, vi.quantidade_consumida,
-                       vi.preco_unitario, COALESCE(l.custo_unitario, p.preco_custo, 0) AS custo_unitario
+                       vi.preco_unitario, l.custo_unitario AS custo_unitario_doc
                 FROM plantaopro.adm360_vale_itens vi
                 JOIN plantaopro.adm360_produtos p ON p.id = vi.produto_id AND p.tenant_id = vi.tenant_id
                 JOIN plantaopro.adm360_lotes l ON l.id = vi.lote_id AND l.tenant_id = vi.tenant_id
@@ -238,15 +253,17 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
             {
                 decimal qtd = (decimal)it.quantidade_consumida;
                 decimal preco = (decimal)it.preco_unitario;
-                decimal custo = (decimal)it.custo_unitario;
+                decimal? custoDoc = it.custo_unitario_doc is not null ? (decimal)it.custo_unitario_doc : null;
+                decimal custo = custoDoc ?? 0m;
                 var (subtotal, custoTot) = ValorizacaoRegras.CalcularTotaisItem(qtd, preco, 0m, custo);
                 totalBruto += subtotal;
                 totalCusto += custoTot;
                 itensValorizados.Add(((Guid)it.vale_item_id, (Guid)it.produto_id, (Guid)it.lote_id, qtd, preco, 0m, subtotal, custo, custoTot));
             }
 
+            ValorizacaoRegras.ValidarDesconto(totalBruto, command.DescontoGeral);
             decimal descontoGeral = command.DescontoGeral;
-            decimal totalLiquido = Math.Max(0m, totalBruto - descontoGeral);
+            decimal totalLiquido = totalBruto - descontoGeral;
             decimal comissaoPrevista = Math.Round(totalLiquido * (command.ComissaoPercentual / 100m), 2);
 
             valorizacaoId = Guid.NewGuid();

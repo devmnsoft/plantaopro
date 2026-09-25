@@ -1,0 +1,205 @@
+@model PlantaoPro.Web.Models.ComissoesPendentesIndexViewModel
+@{
+    ViewData["Title"] = "Comissões a Pagar — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var totalComissao = Model.Comissoes.Sum(c => c.ValorComissao);
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="TitulosPagar" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <h2 class="h4 mb-0 text-light fw-bold">Comissões Apropriadas Pendentes</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Geração de títulos de Contas a Pagar para comissões já auferidas a partir de recebimentos de clientes.</p>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Apropriação e Pagamento de Comissão</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Origem dos Direitos</strong>
+                    Comissões são apropriadas automaticamente e proporcionalmente quando um recebimento de cliente é confirmado em Contas a Receber.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Geração de AP</strong>
+                    Selecione as apropriações desejadas de um vendedor e gere um título único em Contas a Pagar com vínculo estrito.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Impedimento de Duplicidade</strong>
+                    Parcelas vinculadas a uma obrigação a pagar não podem ser selecionadas novamente.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Estorno de Venda/Recebimento</strong>
+                    Se o cliente for estornado após a comissão ser paga, o sistema preserva o histórico sem exclusão física.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtro de Vendedor -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary" for="filtroVendedor">Filtrar por Vendedor</label>
+                    <select id="filtroVendedor" name="vendedorId" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os Vendedores</option>
+                        @foreach (var v in Model.Vendedores)
+                        {
+                            <option value="@v.Value" selected="@(Model.VendedorId?.ToString() == v.Value)">@v.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    <a asp-action="ComissoesPendentes" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+                <div class="col-md-6 text-end">
+                    <span class="text-muted small">Total Pendente Listado: </span>
+                    <strong class="fs-5 font-monospace text-warning">@totalComissao.ToString("C2", ptBr)</strong>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lista e Formulário de Geração de AP -->
+    @if (Model.Comissoes.Count == 0)
+    {
+        <div class="card bg-dark border-secondary text-light p-5 text-center text-muted">
+            <i class="bi bi-check-circle fs-1 text-success mb-2"></i>
+            <p class="mb-0">Não há comissões pendentes de geração de contas a pagar.</p>
+        </div>
+    }
+    else
+    {
+        <form asp-action="GerarTituloComissao" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="card bg-dark border-secondary text-light mb-4">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                    <span class="fw-bold">Comissões Prontas para Pagamento</span>
+                    <span class="badge bg-secondary">@Model.Comissoes.Count itens</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+                        <thead class="table-secondary text-dark">
+                            <tr>
+                                <th scope="col" style="width: 40px;">
+                                    <input type="checkbox" id="selectAllComissoes" class="form-check-input" />
+                                </th>
+                                <th scope="col">Vendedor</th>
+                                <th scope="col">Venda / Título</th>
+                                <th scope="col" class="text-end">Base de Cálculo</th>
+                                <th scope="col" class="text-end">% Comissão</th>
+                                <th scope="col" class="text-end">Valor Comissão</th>
+                                <th scope="col">Apropriado Em</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.Comissoes)
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" name="comissaoIds" value="@c.Id" class="form-check-input comissao-checkbox"
+                                               data-vendedor-id="@c.VendedorId" />
+                                    </td>
+                                    <td><strong class="text-light">@c.VendedorNome</strong></td>
+                                    <td>
+                                        <span class="font-monospace">@c.VendaNumero</span>
+                                    </td>
+                                    <td class="text-end font-monospace">@c.BaseCalculo.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace">@c.Percentual.ToString("F2")%</td>
+                                    <td class="text-end font-monospace text-success fw-bold">@c.ValorComissao.ToString("C2", ptBr)</td>
+                                    <td><span class="small text-secondary">@c.CriadoEm.ToString("dd/MM/yyyy HH:mm")</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Painel de Confirmação para Geração do AP -->
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-dark border-secondary text-info fw-bold">
+                    <i class="bi bi-box-arrow-right me-1"></i> Gerar Obrigação a Pagar (AP)
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label small text-secondary" for="vendedorDestino">Vendedor / Beneficiário Selecionado</label>
+                            <select id="vendedorDestino" name="vendedorId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                <option value="">Selecione o vendedor...</option>
+                                @foreach (var v in Model.Vendedores)
+                                {
+                                    <option value="@v.Value">@v.Text</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary" for="vencimentoComissao">Data de Vencimento do AP</label>
+                            <input type="date" id="vencimentoComissao" name="dataVencimento" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="@DateTime.UtcNow.AddDays(5).ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-secondary" for="obsComissao">Observações</label>
+                            <input type="text" id="obsComissao" name="observacoes" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: Folha de comissões do mês" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-sm btn-primary w-100">
+                                <i class="bi bi-check2-circle me-1"></i> Gerar AP
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var selectAll = document.getElementById('selectAllComissoes');
+                var checkboxes = document.querySelectorAll('.comissao-checkbox');
+                var vendedorSelect = document.getElementById('vendedorDestino');
+
+                if (selectAll) {
+                    selectAll.addEventListener('change', function () {
+                        checkboxes.forEach(function (cb) { cb.checked = selectAll.checked; });
+                    });
+                }
+
+                checkboxes.forEach(function (cb) {
+                    cb.addEventListener('change', function () {
+                        if (cb.checked && vendedorSelect && !vendedorSelect.value) {
+                            var vid = cb.getAttribute('data-vendedor-id');
+                            if (vid) vendedorSelect.value = vid;
+                        }
+                    });
+                });
+            });
+        </script>
+    }
+</div>

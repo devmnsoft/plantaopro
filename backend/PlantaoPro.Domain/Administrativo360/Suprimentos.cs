@@ -73,7 +73,34 @@ public static class IdempotenciaHelper
         foreach (var p in partes)
         {
             sb.Append(':');
-            sb.Append(p?.ToString() ?? "null");
+            if (p is null)
+            {
+                sb.Append("null");
+            }
+            else if (p is decimal m)
+            {
+                sb.Append(m.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else if (p is DateOnly d)
+            {
+                sb.Append(d.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else if (p is DateTime dt)
+            {
+                sb.Append(dt.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else if (p is DateTimeOffset dto)
+            {
+                sb.Append(dto.ToUniversalTime().ToString("O", System.Globalization.CultureInfo.InvariantCulture));
+            }
+            else if (p is Guid g)
+            {
+                sb.Append(g.ToString("D"));
+            }
+            else
+            {
+                sb.Append(p.ToString()?.Trim() ?? "null");
+            }
         }
         var bytes = Encoding.UTF8.GetBytes(sb.ToString());
         var hash = SHA256.HashData(bytes);

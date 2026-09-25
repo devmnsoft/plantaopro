@@ -66,42 +66,55 @@
 
     <!-- Cards de Resumo Consolidado -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4 col-lg-2">
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saldo Atual Consolidado</span>
-                <span class="fs-5 fw-bold font-monospace text-info">@f.SaldoAtualConsolidado.ToString("C2", ptBr)</span>
+                <span class="text-muted small">Saldo Atual das Contas (@f.DataBase.ToString("dd/MM/yyyy"))</span>
+                <span class="fs-5 fw-bold font-monospace text-info">@f.SaldoAtualContas.ToString("C2", ptBr)</span>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Saldo Abertura Período</span>
+                <span class="fs-5 fw-bold font-monospace text-light">@f.SaldoAberturaPeriodo.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-success">
                 <span class="text-muted small">Entradas Realizadas</span>
-                <span class="fs-5 fw-bold font-monospace text-success">+ @f.TotalEntradasPeriodo.ToString("C2", ptBr)</span>
+                <span class="fs-5 fw-bold font-monospace text-success">+ @f.TotalEntradasRealizadas.ToString("C2", ptBr)</span>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-danger">
-                <span class="text-muted small">Saídas / Estornos</span>
-                <span class="fs-5 fw-bold font-monospace text-danger">- @f.TotalSaidasPeriodo.ToString("C2", ptBr)</span>
+                <span class="text-muted small">Saídas Realizadas</span>
+                <span class="fs-5 fw-bold font-monospace text-danger">- @f.TotalSaidasRealizadas.ToString("C2", ptBr)</span>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
-            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saldo Realizado Período</span>
-                <span class="fs-5 fw-bold font-monospace @(f.SaldoFinalPeriodo >= 0 ? "text-success" : "text-danger")">
-                    @f.SaldoFinalPeriodo.ToString("C2", ptBr)
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-info">
+                <span class="text-muted small">Saldo Fechamento Período</span>
+                <span class="fs-5 fw-bold font-monospace @(f.SaldoFechamentoPeriodo >= 0 ? "text-success" : "text-danger")">
+                    @f.SaldoFechamentoPeriodo.ToString("C2", ptBr)
                 </span>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
-                <span class="text-muted small">Entradas Previstas</span>
+                <span class="text-muted small">Entradas Previstas (AR Aberto)</span>
                 <span class="fs-5 fw-bold font-monospace text-warning">+ @f.TotalEntradasPrevistas.ToString("C2", ptBr)</span>
             </div>
         </div>
-        <div class="col-6 col-md-4 col-lg-2">
+        <div class="col-6 col-md-4 col-lg-3">
             <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
-                <span class="text-muted small">Saídas Previstas</span>
+                <span class="text-muted small">Saídas Previstas (AP Aberto)</span>
                 <span class="fs-5 fw-bold font-monospace text-muted">- @f.TotalSaidasPrevistas.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
+                <span class="text-muted small">Vencidos em Aberto</span>
+                <span class="fs-6 font-monospace text-warning d-block">AR: @f.TotalVencidosReceber.ToString("C2", ptBr)</span>
+                <span class="fs-6 font-monospace text-danger d-block">AP: @f.TotalVencidosPagar.ToString("C2", ptBr)</span>
             </div>
         </div>
     </div>
@@ -163,10 +176,10 @@
         </div>
     </div>
 
-    <!-- Filtro de Período e Movimentação Diária -->
+    <!-- Filtro de Período e Movimentação Detalhada -->
     <div class="card bg-dark border-secondary text-light">
         <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <span class="fw-bold">Movimento Diário & Projeção Financeira</span>
+            <span class="fw-bold">Movimentos e Projeção do Período</span>
             <form method="get" class="d-flex align-items-center gap-2">
                 <input type="date" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
                        value="@Model.Inicio.ToString("yyyy-MM-dd")" />
@@ -177,50 +190,65 @@
             </form>
         </div>
         <div class="table-responsive">
-            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 900px;">
                 <thead class="table-secondary text-dark">
                     <tr>
                         <th scope="col">Data</th>
-                        <th scope="col" class="text-end">Entradas Realizadas</th>
-                        <th scope="col" class="text-end">Saídas Realizadas</th>
-                        <th scope="col" class="text-end">Saldo Realizado</th>
-                        <th scope="col" class="text-end">Entradas Previstas</th>
-                        <th scope="col" class="text-end">Saídas Previstas</th>
-                        <th scope="col" class="text-end">Saldo Previsto</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Descrição</th>
+                        <th scope="col">Origem</th>
+                        <th scope="col" class="text-end">Prev. Entrada</th>
+                        <th scope="col" class="text-end">Prev. Saída</th>
+                        <th scope="col" class="text-end">Realiz. Entrada</th>
+                        <th scope="col" class="text-end">Realiz. Saída</th>
+                        <th scope="col" class="text-end">Saldo Acumulado</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @if (f.Dias.Count == 0)
+                    @if (f.Itens.Count == 0)
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="9" class="text-center text-muted py-4">
                                 Nenhum lançamento ou previsão encontrado no período selecionado.
                             </td>
                         </tr>
                     }
                     else
                     {
-                        @foreach (var d in f.Dias)
+                        @foreach (var it in f.Itens)
                         {
                             <tr>
-                                <td><strong>@d.Data.ToString("dd/MM/yyyy")</strong></td>
-                                <td class="text-end font-monospace text-success">
-                                    @(d.EntradasRealizadas > 0 ? d.EntradasRealizadas.ToString("C2", ptBr) : "—")
+                                <td><strong>@it.Data.ToString("dd/MM/yyyy")</strong></td>
+                                <td>
+                                    @if (it.Tipo == "REALIZADO")
+                                    {
+                                        <span class="badge bg-success">Realizado</span>
+                                    }
+                                    else if (it.Tipo == "PREVISTO_RECEBER")
+                                    {
+                                        <span class="badge bg-warning text-dark">Prev. Receber</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Prev. Pagar</span>
+                                    }
                                 </td>
-                                <td class="text-end font-monospace text-danger">
-                                    @(d.SaidasRealizadas > 0 ? d.SaidasRealizadas.ToString("C2", ptBr) : "—")
-                                </td>
-                                <td class="text-end font-monospace fw-bold @(d.SaldoRealizadoDia >= 0 ? "text-light" : "text-danger")">
-                                    @d.SaldoRealizadoDia.ToString("C2", ptBr)
-                                </td>
+                                <td>@it.Descricao</td>
+                                <td><span class="badge bg-dark border border-secondary text-secondary">@it.Origem</span></td>
                                 <td class="text-end font-monospace text-warning">
-                                    @(d.EntradasPrevistas > 0 ? d.EntradasPrevistas.ToString("C2", ptBr) : "—")
+                                    @(it.PrevistoEntrada > 0 ? it.PrevistoEntrada.ToString("C2", ptBr) : "—")
                                 </td>
                                 <td class="text-end font-monospace text-muted">
-                                    @(d.SaidasPrevistas > 0 ? d.SaidasPrevistas.ToString("C2", ptBr) : "—")
+                                    @(it.PrevistoSaida > 0 ? it.PrevistoSaida.ToString("C2", ptBr) : "—")
                                 </td>
-                                <td class="text-end font-monospace @(d.SaldoPrevistoDia >= 0 ? "text-info" : "text-danger")">
-                                    @d.SaldoPrevistoDia.ToString("C2", ptBr)
+                                <td class="text-end font-monospace text-success">
+                                    @(it.RealizadoEntrada > 0 ? it.RealizadoEntrada.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace text-danger">
+                                    @(it.RealizadoSaida > 0 ? it.RealizadoSaida.ToString("C2", ptBr) : "—")
+                                </td>
+                                <td class="text-end font-monospace fw-bold @(it.SaldoAcumulado >= 0 ? "text-light" : "text-danger")">
+                                    @it.SaldoAcumulado.ToString("C2", ptBr)
                                 </td>
                             </tr>
                         }

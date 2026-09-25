@@ -1,0 +1,368 @@
+@model PlantaoPro.Web.Models.TituloPagarDetalhesPageViewModel
+@{
+    ViewData["Title"] = $"Título {Model.Titulo.Numero} — Contas a Pagar";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var t = Model.Titulo;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="TitulosPagar" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar
+                </a>
+                <h2 class="h4 mb-0 text-light fw-bold">Título a Pagar @t.Numero</h2>
+                @if (t.Situacao == "PAGO")
+                {
+                    <span class="badge bg-success">Pago</span>
+                }
+                else if (t.Situacao == "PARCIALMENTE_PAGO")
+                {
+                    <span class="badge bg-info text-dark">Parcialmente Pago</span>
+                }
+                else if (t.Situacao == "APROVADO")
+                {
+                    <span class="badge bg-primary">Aprovado</span>
+                }
+                else if (t.Situacao == "PENDENTE_APROVACAO")
+                {
+                    <span class="badge bg-warning text-dark">Pendente de Aprovação</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">@t.Situacao</span>
+                }
+                @if (t.Vencido && t.SaldoAberto > 0)
+                {
+                    <span class="badge bg-danger">Vencido</span>
+                }
+            </div>
+            <p class="text-muted small mb-0 mt-1">Obrigação com @t.Fornecedor — Parcela @t.Parcela de @t.TotalParcelas</p>
+        </div>
+        <div class="d-flex gap-2">
+            @if (t.Situacao == "PENDENTE_APROVACAO")
+            {
+                <form asp-action="AprovarTituloPagar" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@t.Id" />
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-check2-circle me-1"></i> Aprovar Obrigação
+                    </button>
+                </form>
+            }
+            @if ((t.Situacao == "APROVADO" || t.Situacao == "PARCIALMENTE_PAGO") && t.SaldoAberto > 0)
+            {
+                <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#pagamentoModal">
+                    <i class="bi bi-cash-stack me-1"></i> Registrar Pagamento
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cards de Resumo Financeiro -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Valor Principal</span>
+                <span class="fs-5 fw-bold font-monospace">@t.ValorPrincipal.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-success">
+                <span class="text-muted small">Total Pago</span>
+                <span class="fs-5 fw-bold font-monospace text-success">@t.ValorPago.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100 border-warning">
+                <span class="text-muted small">Saldo a Pagar</span>
+                <span class="fs-5 fw-bold font-monospace text-warning">@t.SaldoAberto.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card bg-dark border-secondary text-light p-3 text-center h-100">
+                <span class="text-muted small">Vencimento</span>
+                <span class="fs-5 fw-bold font-monospace @(t.Vencido && t.SaldoAberto > 0 ? "text-danger" : "text-light")">
+                    @t.DataVencimento.ToString("dd/MM/yyyy")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações do Título -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary fw-bold text-info">
+                    <i class="bi bi-receipt me-1"></i> Dados da Obrigação
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-4 text-secondary">Fornecedor / Beneficiário</dt>
+                        <dd class="col-sm-8 text-light fw-bold">@t.Fornecedor</dd>
+
+                        <dt class="col-sm-4 text-secondary">Origem</dt>
+                        <dd class="col-sm-8 text-light">@t.OrigemTipo</dd>
+
+                        <dt class="col-sm-4 text-secondary">Documento / Nota Fiscal</dt>
+                        <dd class="col-sm-8 text-light font-monospace">@(t.Documento ?? "Não informado")</dd>
+
+                        <dt class="col-sm-4 text-secondary">Competência</dt>
+                        <dd class="col-sm-8 text-light">@t.Competencia.ToString("MM/yyyy")</dd>
+
+                        <dt class="col-sm-4 text-secondary">Data de Emissão</dt>
+                        <dd class="col-sm-8 text-light">@t.DataEmissao.ToString("dd/MM/yyyy")</dd>
+
+                        <dt class="col-sm-4 text-secondary">Centro de Custo</dt>
+                        <dd class="col-sm-8 text-light">@(t.CentroCusto ?? "Geral / Operacional")</dd>
+
+                        <dt class="col-sm-4 text-secondary">Observações</dt>
+                        <dd class="col-sm-8 text-light">@(t.Observacoes ?? "Nenhuma")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-header bg-dark border-secondary fw-bold text-info">
+                    <i class="bi bi-shield-check me-1"></i> Aprovação e Auditoria
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-sm-4 text-secondary">Cadastrado em</dt>
+                        <dd class="col-sm-8 text-light">@t.CriadoEm.ToString("dd/MM/yyyy HH:mm")</dd>
+
+                        <dt class="col-sm-4 text-secondary">Aprovação</dt>
+                        <dd class="col-sm-8 text-light">
+                            @if (t.AprovadoEm.HasValue)
+                            {
+                                <span class="text-success"><i class="bi bi-check-circle me-1"></i>Aprovado por @t.AprovadoPor em @t.AprovadoEm.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                            }
+                            else
+                            {
+                                <span class="text-warning"><i class="bi bi-clock me-1"></i>Pendente de aprovação</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-4 text-secondary">Descontos / Retenções</dt>
+                        <dd class="col-sm-8 text-light font-monospace">@t.ValorDesconto.ToString("C2", ptBr)</dd>
+
+                        <dt class="col-sm-4 text-secondary">Juros / Multa</dt>
+                        <dd class="col-sm-8 text-light font-monospace">@t.ValorJuros.ToString("C2", ptBr)</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Histórico de Pagamentos -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Histórico de Pagamentos e Baixas</span>
+            <span class="badge bg-secondary">@t.Pagamentos.Count baixas</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Data Pagamento</th>
+                        <th scope="col">Conta Financeira</th>
+                        <th scope="col">Meio</th>
+                        <th scope="col">Documento / Ref</th>
+                        <th scope="col" class="text-end">Valor Pago</th>
+                        <th scope="col">Registrado Por</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (t.Pagamentos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Nenhum pagamento registrado para esta obrigação.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var p in t.Pagamentos)
+                        {
+                            var estornosDestePagamento = t.Estornos.Where(e => e.PagamentoId == p.Id).ToList();
+                            <tr>
+                                <td><strong>@p.DataPagamento.ToString("dd/MM/yyyy")</strong></td>
+                                <td>@p.ContaNome</td>
+                                <td><span class="badge bg-secondary">@p.MeioPagamento</span></td>
+                                <td class="font-monospace">@(p.Referencia ?? "—")</td>
+                                <td class="text-end font-monospace text-success fw-bold">@p.ValorPago.ToString("C2", ptBr)</td>
+                                <td><span class="small text-secondary">@(p.PagoPor ?? "Sistema") (@p.CriadoEm.ToString("dd/MM HH:mm"))</span></td>
+                                <td>
+                                    @if (p.Estornado)
+                                    {
+                                        <span class="badge bg-danger">Estornado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Confirmado</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (!p.Estornado)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-bs-toggle="modal" data-bs-target="#estornoModal-@p.Id">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Estornar
+                                        </button>
+
+                                        <!-- Modal de Estorno -->
+                                        <div class="modal fade" id="estornoModal-@p.Id" tabindex="-1" aria-labelledby="estornoModalLabel-@p.Id" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content bg-dark text-light border-secondary">
+                                                    <form asp-action="EstornarPagamento" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="tituloId" value="@t.Id" />
+                                                        <input type="hidden" name="pagamentoId" value="@p.Id" />
+                                                        <div class="modal-header border-secondary">
+                                                            <h5 class="modal-title h6 text-danger" id="estornoModalLabel-@p.Id">
+                                                                <i class="bi bi-exclamation-triangle me-2"></i>Estornar Pagamento
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                        </div>
+                                                        <div class="modal-body text-start">
+                                                            <div class="alert alert-warning small mb-3">
+                                                                <i class="bi bi-info-circle me-1"></i>
+                                                                O estorno é um movimento compensatório no livro caixa da conta <strong>@p.ContaNome</strong> e recompõe o saldo da obrigação no valor de <strong>@p.ValorPago.ToString("C2", ptBr)</strong>. Não efetua devolução bancária automática.
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small text-secondary" for="motivoEstorno-@p.Id">Motivo do Estorno (obrigatório)</label>
+                                                                <textarea id="motivoEstorno-@p.Id" name="motivo" class="form-control form-control-sm bg-dark text-light border-secondary" rows="3" required placeholder="Descreva a justificativa para auditoria"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-secondary">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-sm btn-danger">Confirmar Estorno</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var est in estornosDestePagamento)
+                                        {
+                                            <span class="small text-danger d-block" title="@est.Motivo">
+                                                Motivo: @est.Motivo
+                                            </span>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Registrar Pagamento -->
+@if ((t.Situacao == "APROVADO" || t.Situacao == "PARCIALMENTE_PAGO") && t.SaldoAberto > 0)
+{
+    <div class="modal fade" id="pagamentoModal" tabindex="-1" aria-labelledby="pagamentoModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <form asp-action="PagarTitulo" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="tituloId" value="@t.Id" />
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title h6 text-info" id="pagamentoModalLabel">
+                            <i class="bi bi-cash me-2"></i>Registrar Pagamento Manual
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-secondary small text-muted mb-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <strong>Pagamento registrado manualmente.</strong> O sistema não realiza transferência bancária nem comunica ao banco. Esta operação dá baixa na obrigação e debita a conta financeira indicada.
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary" for="contaFinanceiraId">Conta Financeira de Saída</label>
+                            <select id="contaFinanceiraId" name="contaFinanceiraId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                <option value="">Selecione uma conta...</option>
+                                @foreach (var c in Model.Contas.Where(c => c.Ativa))
+                                {
+                                    <option value="@c.Id">@c.Nome (Saldo: @c.SaldoAtual.ToString("C2", ptBr))</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-secondary" for="valorPago">Valor a Pagar (R$)</label>
+                                <input type="number" step="0.01" min="0.01" max="@t.SaldoAberto" id="valorPago" name="valor"
+                                       class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       value="@t.SaldoAberto.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)" required />
+                                <span class="form-text text-muted small">Saldo aberto: @t.SaldoAberto.ToString("C2", ptBr)</span>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary" for="dataPagamento">Data do Pagamento</label>
+                                <input type="date" id="dataPagamento" name="dataPagamento" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small text-secondary" for="meioPagamento">Meio de Pagamento</label>
+                                <select id="meioPagamento" name="meioPagamento" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                    <option value="PIX">PIX</option>
+                                    <option value="TED">TED / Transferência</option>
+                                    <option value="BOLETO">Boleto Bancário</option>
+                                    <option value="CARTAO">Cartão Corporativo</option>
+                                    <option value="DINHEIRO">Dinheiro / Espécie</option>
+                                    <option value="OUTRO">Outro Meio</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small text-secondary" for="numeroDoc">Nº Doc / Comprovante</label>
+                                <input type="text" id="numeroDoc" name="numeroDocumento" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                       placeholder="Ex: Aut 982341" />
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary" for="obsPagamento">Observações</label>
+                            <input type="text" id="obsPagamento" name="observacoes" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Opcional" />
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Confirmar Pagamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

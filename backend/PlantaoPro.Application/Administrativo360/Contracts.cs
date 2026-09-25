@@ -337,6 +337,7 @@ public sealed record ContaFinanceiraDto(
     string? Agencia,
     string? Conta,
     decimal SaldoInicial,
+    DateOnly? DataSaldoInicial,
     decimal SaldoAtual,
     bool Ativo);
 
@@ -346,7 +347,18 @@ public sealed record CriarContaFinanceiraCommand(
     string? Banco,
     string? Agencia,
     string? Conta,
-    decimal SaldoInicial);
+    decimal SaldoInicial,
+    DateOnly? DataSaldoInicial = null);
+
+public sealed record AtualizarContaFinanceiraCommand(
+    Guid ContaId,
+    string Nome,
+    string Tipo,
+    string? Banco,
+    string? Agencia,
+    string? Conta,
+    DateOnly? DataSaldoInicial,
+    bool Ativo);
 
 public sealed record MovimentoFinanceiroDto(
     Guid Id,
@@ -361,9 +373,11 @@ public sealed record MovimentoFinanceiroDto(
 
 public sealed record ExtratoContaDto(
     ContaFinanceiraDto Conta,
+    decimal SaldoAbertura,
     decimal TotalEntradas,
     decimal TotalSaidas,
-    decimal SaldoFinal,
+    decimal SaldoFechamento,
+    decimal SaldoAtual,
     IReadOnlyList<MovimentoFinanceiroDto> Movimentos);
 
 public sealed record FluxoCaixaItemDto(
@@ -371,15 +385,166 @@ public sealed record FluxoCaixaItemDto(
     string Descricao,
     string Origem,
     decimal PrevistoEntrada,
+    decimal PrevistoSaida,
     decimal RealizadoEntrada,
     decimal RealizadoSaida,
     decimal SaldoAcumulado);
 
 public sealed record FluxoCaixaDto(
+    DateOnly DataBase,
     decimal SaldoAtualContas,
-    decimal TotalPrevistoReceber,
-    decimal TotalRealizadoRecebido,
+    decimal SaldoAberturaPeriodo,
+    decimal SaldoFechamentoPeriodo,
+    decimal TotalEntradasPrevistas,
+    decimal TotalSaidasPrevistas,
+    decimal TotalEntradasRealizadas,
+    decimal TotalSaidasRealizadas,
+    decimal TotalVencidosReceber,
+    decimal TotalVencidosPagar,
     IReadOnlyList<FluxoCaixaItemDto> Itens);
+
+public sealed record CaixaFechamentoDto(
+    Guid Id,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataInicio,
+    DateOnly DataFim,
+    decimal SaldoAbertura,
+    decimal TotalEntradas,
+    decimal TotalSaidas,
+    decimal SaldoCalculado,
+    decimal SaldoConferido,
+    decimal Diferenca,
+    string? Justificativa,
+    string Situacao,
+    string? MotivoReabertura,
+    DateTime? ReabertoEm,
+    string? ReabertoPor,
+    string FechadoPor,
+    DateTime CriadoEm);
+
+public sealed record FecharCaixaCommand(
+    Guid ContaId,
+    DateOnly DataInicio,
+    DateOnly DataFim,
+    decimal SaldoConferido,
+    string? Justificativa,
+    string IdempotencyKey);
+
+public sealed record ReabrirCaixaCommand(
+    Guid FechamentoId,
+    string Motivo);
+
+// Contas a Pagar
+public sealed record TituloPagarResumoDto(
+    Guid Id,
+    string Numero,
+    Guid FornecedorId,
+    string Fornecedor,
+    string OrigemTipo,
+    Guid? OrigemId,
+    string? Documento,
+    DateOnly Competencia,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    int Parcela,
+    int TotalParcelas,
+    decimal ValorPrincipal,
+    decimal ValorPago,
+    decimal SaldoAberto,
+    string Situacao,
+    string? CentroCusto,
+    bool Vencido);
+
+public sealed record TituloPagamentoDto(
+    Guid Id,
+    Guid TituloId,
+    Guid ContaId,
+    string ContaNome,
+    DateOnly DataPagamento,
+    decimal ValorPago,
+    string MeioPagamento,
+    string? Referencia,
+    bool Estornado,
+    string? PagoPor,
+    DateTime CriadoEm);
+
+public sealed record PagamentoEstornoDto(
+    Guid Id,
+    Guid PagamentoId,
+    decimal ValorEstornado,
+    string Motivo,
+    string? EstornadoPor,
+    DateTime CriadoEm);
+
+public sealed record TituloPagarDetalhesDto(
+    Guid Id,
+    string Numero,
+    Guid FornecedorId,
+    string Fornecedor,
+    string OrigemTipo,
+    Guid? OrigemId,
+    string? Documento,
+    DateOnly Competencia,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    int Parcela,
+    int TotalParcelas,
+    decimal ValorPrincipal,
+    decimal ValorDesconto,
+    decimal ValorJuros,
+    decimal ValorPago,
+    decimal SaldoAberto,
+    string Situacao,
+    string? CentroCusto,
+    string? Observacoes,
+    DateTime? AprovadoEm,
+    string? AprovadoPor,
+    string? CriadoPor,
+    DateTime CriadoEm,
+    bool Vencido,
+    IReadOnlyList<TituloPagamentoDto> Pagamentos,
+    IReadOnlyList<PagamentoEstornoDto> Estornos);
+
+
+public sealed record CriarDespesaManualCommand(
+    Guid FornecedorId,
+    string? Documento,
+    DateOnly Competencia,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    string? CentroCusto,
+    string? Observacoes,
+    string IdempotencyKey);
+
+public sealed record AprovarTituloPagarCommand(
+    Guid TituloId,
+    string IdempotencyKey);
+
+public sealed record PagarTituloCommand(
+    Guid TituloId,
+    Guid ContaId,
+    DateOnly DataPagamento,
+    decimal Valor,
+    string MeioPagamento,
+    string? Referencia,
+    string IdempotencyKey);
+
+public sealed record EstornarPagamentoCommand(
+    Guid PagamentoId,
+    string Motivo,
+    string IdempotencyKey);
+
+public sealed record GerarTituloPagarDeRecebimentoCommand(
+    Guid RecebimentoId,
+    DateOnly DataVencimento,
+    string IdempotencyKey);
+
+public sealed record GerarTituloPagarDeComissaoCommand(
+    Guid VendedorId,
+    IReadOnlyList<Guid> ComissaoIds,
+    DateOnly DataVencimento,
+    string IdempotencyKey);
 
 public sealed record RelatorioVendasItem(
     string VendaNumero,
@@ -435,13 +600,45 @@ public interface IContasReceberRepository
     Task<Guid> EstornarAsync(Guid tenantId, Guid usuarioId, EstornarBaixaCommand command, CancellationToken ct);
 }
 
+public sealed record ComissaoPendenteDto(
+    Guid Id,
+    Guid VendaId,
+    string VendaNumero,
+    Guid BaixaId,
+    Guid VendedorId,
+    string VendedorNome,
+    decimal BaseCalculo,
+    decimal Percentual,
+    decimal ValorComissao,
+    string Situacao,
+    DateTime CriadoEm);
+
+public interface IContasPagarRepository
+{
+    Task<IReadOnlyList<TituloPagarResumoDto>> ListarAsync(Guid tenantId, string? busca, string? situacao, Guid? fornecedorId, string? centroCusto, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    Task<TituloPagarDetalhesDto?> ObterPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
+    Task<Guid> CriarDespesaManualAsync(Guid tenantId, Guid usuarioId, CriarDespesaManualCommand command, CancellationToken ct);
+    Task AprovarAsync(Guid tenantId, Guid usuarioId, AprovarTituloPagarCommand command, CancellationToken ct);
+    Task<Guid> PagarAsync(Guid tenantId, Guid usuarioId, PagarTituloCommand command, CancellationToken ct);
+    Task<Guid> EstornarPagamentoAsync(Guid tenantId, Guid usuarioId, EstornarPagamentoCommand command, CancellationToken ct);
+    Task<Guid> GerarDeRecebimentoAsync(Guid tenantId, Guid usuarioId, GerarTituloPagarDeRecebimentoCommand command, CancellationToken ct);
+    Task<Guid> GerarDeComissaoAsync(Guid tenantId, Guid usuarioId, GerarTituloPagarDeComissaoCommand command, CancellationToken ct);
+    Task<IReadOnlyList<ComissaoPendenteDto>> ListarComissoesPendentesAsync(Guid tenantId, Guid? vendedorId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+}
+
+
 public interface ICaixaRepository
 {
     Task<IReadOnlyList<ContaFinanceiraDto>> ListarContasAsync(Guid tenantId, CancellationToken ct);
     Task<ContaFinanceiraDto?> ObterContaPorIdAsync(Guid tenantId, Guid id, CancellationToken ct);
     Task<Guid> CriarContaAsync(Guid tenantId, Guid usuarioId, CriarContaFinanceiraCommand command, CancellationToken ct);
+    Task AtualizarContaAsync(Guid tenantId, Guid usuarioId, AtualizarContaFinanceiraCommand command, CancellationToken ct);
+    Task InativarContaAsync(Guid tenantId, Guid usuarioId, Guid contaId, CancellationToken ct);
     Task<ExtratoContaDto> ExtratoContaAsync(Guid tenantId, Guid contaId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
     Task<FluxoCaixaDto> FluxoCaixaAsync(Guid tenantId, DateOnly inicio, DateOnly fim, CancellationToken ct);
+    Task<IReadOnlyList<CaixaFechamentoDto>> ListarFechamentosAsync(Guid tenantId, Guid? contaId, CancellationToken ct);
+    Task<Guid> FecharCaixaAsync(Guid tenantId, Guid usuarioId, FecharCaixaCommand command, CancellationToken ct);
+    Task ReabrirCaixaAsync(Guid tenantId, Guid usuarioId, ReabrirCaixaCommand command, CancellationToken ct);
 }
 
 public interface IAdm360FinanceiroRelatoriosRepository

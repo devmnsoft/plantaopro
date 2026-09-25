@@ -51,6 +51,27 @@ public sealed class Adm360CaixaController : ControllerBase
         return CreatedAtAction(nameof(ObterConta), new { id }, new { id });
     }
 
+    [HttpPut("contas/{id:guid}")]
+    public async Task<IActionResult> AtualizarConta(Guid id, [FromBody] AtualizarContaFinanceiraCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        if (id != command.ContaId)
+            command = command with { ContaId = id };
+
+        await repository.AtualizarContaAsync(tenant, user, command, ct);
+        logger.LogInformation("Conta financeira {ContaId} atualizada.", id);
+        return Ok(new { success = true });
+    }
+
+    [HttpDelete("contas/{id:guid}")]
+    public async Task<IActionResult> InativarConta(Guid id, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.InativarContaAsync(tenant, user, id, ct);
+        logger.LogInformation("Conta financeira {ContaId} inativada.", id);
+        return Ok(new { success = true });
+    }
+
     [HttpGet("contas/{id:guid}/extrato")]
     public async Task<IActionResult> Extrato(
         Guid id, [FromQuery] DateOnly? inicio, [FromQuery] DateOnly? fim, CancellationToken ct)
@@ -68,4 +89,34 @@ public sealed class Adm360CaixaController : ControllerBase
         var fluxo = await repository.FluxoCaixaAsync(tenant, inicio, fim, ct);
         return Ok(fluxo);
     }
+
+    [HttpGet("fechamentos")]
+    public async Task<IActionResult> ListarFechamentos([FromQuery] Guid? contaId, CancellationToken ct)
+    {
+        var (tenant, _) = Context();
+        var lista = await repository.ListarFechamentosAsync(tenant, contaId, ct);
+        return Ok(lista);
+    }
+
+    [HttpPost("fechar"), Authorize(Policy = "Adm360.FecharCaixa")]
+    public async Task<IActionResult> FecharCaixa([FromBody] FecharCaixaCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        var fechamentoId = await repository.FecharCaixaAsync(tenant, user, command, ct);
+        logger.LogInformation("Fechamento de caixa {FechamentoId} registrado para a conta {ContaId}.", fechamentoId, command.ContaId);
+        return Ok(new { id = fechamentoId });
+    }
+
+    [HttpPost("fechamentos/{id:guid}/reabrir"), Authorize(Policy = "Adm360.FecharCaixa")]
+    public async Task<IActionResult> ReabrirCaixa(Guid id, [FromBody] ReabrirCaixaCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        if (id != command.FechamentoId)
+            command = command with { FechamentoId = id };
+
+        await repository.ReabrirCaixaAsync(tenant, user, command, ct);
+        logger.LogInformation("Fechamento de caixa {FechamentoId} reaberto.", id);
+        return Ok(new { success = true });
+    }
 }
+

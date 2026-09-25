@@ -1,0 +1,267 @@
+@model PlantaoPro.Web.Models.FechamentoCaixaIndexViewModel
+@{
+    ViewData["Title"] = "Fechamento de Caixa — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="FluxoCaixa" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Fluxo de Caixa
+                </a>
+                <h2 class="h4 mb-0 text-light fw-bold">Fechamento e Conferência de Caixa</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Conferência periódica de saldos bancários e físicos, com bloqueio retroativo e reabertura auditada.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novoFechamentoModal">
+                <i class="bi bi-lock me-1"></i> Realizar Fechamento
+            </button>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Regras de Fechamento de Caixa</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Consolida a conferência entre o saldo calculado pelo sistema e o saldo apurado fisicamente ou no extrato bancário.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Sem Ajuste Artificial</strong>
+                    O fechamento não cria ajustes fictícios para forçar saldo zero ou igualdade. Diferenças exigem justificativa formal.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Bloqueio Retroativo</strong>
+                    Uma vez fechado, lançamentos de recebimento, pagamento ou estorno com data até o encerramento são bloqueados pelo banco de dados.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Reabertura Auditada</strong>
+                    Reabrir um período requer permissão de gestão financeira e justificativa obrigatória registrada em trilha de auditoria.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtro por Conta -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small text-secondary" for="filtroConta">Filtrar por Conta Financeira</label>
+                    <select id="filtroConta" name="contaId" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todas as Contas</option>
+                        @foreach (var c in Model.Contas)
+                        {
+                            <option value="@c.Id" selected="@(Model.ContaId == c.Id)">@c.Nome</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
+                    <a asp-action="FechamentoCaixa" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Fechamentos -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Histórico de Fechamentos</span>
+            <span class="badge bg-secondary">@Model.Fechamentos.Count registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 950px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Conta</th>
+                        <th scope="col">Período</th>
+                        <th scope="col" class="text-end">Abertura</th>
+                        <th scope="col" class="text-end">Entradas</th>
+                        <th scope="col" class="text-end">Saídas</th>
+                        <th scope="col" class="text-end">Calculado</th>
+                        <th scope="col" class="text-end">Conferido</th>
+                        <th scope="col" class="text-end">Diferença</th>
+                        <th scope="col">Fechado Por</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Fechamentos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">
+                                Nenhum fechamento de caixa registrado para o filtro selecionado.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var f in Model.Fechamentos)
+                        {
+                            <tr>
+                                <td><strong class="text-light">@f.ContaNome</strong></td>
+                                <td>
+                                    <span>@f.DataInicio.ToString("dd/MM/yy") até @f.DataFim.ToString("dd/MM/yy")</span>
+                                </td>
+                                <td class="text-end font-monospace text-light">@f.SaldoAbertura.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-success">+@f.TotalEntradas.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-danger">-@f.TotalSaidas.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-info fw-bold">@f.SaldoCalculado.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace fw-bold">@f.SaldoConferido.ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace @(f.Diferenca == 0 ? "text-success" : "text-danger fw-bold")">
+                                    @f.Diferenca.ToString("C2", ptBr)
+                                    @if (!string.IsNullOrWhiteSpace(f.Justificativa))
+                                    {
+                                        <i class="bi bi-info-circle ms-1" title="@f.Justificativa"></i>
+                                    }
+                                </td>
+                                <td><span class="small text-secondary">@f.FechadoPor (@f.CriadoEm.ToString("dd/MM HH:mm"))</span></td>
+                                <td>
+                                    @if (f.Situacao == "FECHADO")
+                                    {
+                                        <span class="badge bg-danger"><i class="bi bi-lock-fill me-1"></i>Fechado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-unlock-fill me-1"></i>Reaberto</span>
+                                        @if (f.ReabertoEm.HasValue)
+                                        {
+                                            <span class="d-block small text-secondary">por @f.ReabertoPor em @f.ReabertoEm.Value.ToString("dd/MM")</span>
+                                        }
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (f.Situacao == "FECHADO")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-warning"
+                                                data-bs-toggle="modal" data-bs-target="#reabrirModal-@f.Id">
+                                            <i class="bi bi-unlock me-1"></i> Reabrir
+                                        </button>
+
+                                        <!-- Modal Reabrir Caixa -->
+                                        <div class="modal fade" id="reabrirModal-@f.Id" tabindex="-1" aria-labelledby="reabrirModalLabel-@f.Id" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content bg-dark text-light border-secondary">
+                                                    <form asp-action="ReabrirCaixa" method="post">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@f.Id" />
+                                                        <div class="modal-header border-secondary">
+                                                            <h5 class="modal-title h6 text-warning" id="reabrirModalLabel-@f.Id">
+                                                                <i class="bi bi-unlock me-2"></i>Reabrir Caixa @f.ContaNome
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                        </div>
+                                                        <div class="modal-body text-start">
+                                                            <div class="alert alert-warning small mb-3">
+                                                                <i class="bi bi-exclamation-triangle me-1"></i>
+                                                                A reabertura remove o bloqueio de lançamentos retroativos no período de <strong>@f.DataInicio.ToString("dd/MM/yyyy")</strong> a <strong>@f.DataFim.ToString("dd/MM/yyyy")</strong>. A operação é auditada.
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label small text-secondary" for="motivoReabertura-@f.Id">Motivo da Reabertura (obrigatório)</label>
+                                                                <textarea id="motivoReabertura-@f.Id" name="motivo" class="form-control form-control-sm bg-dark text-light border-secondary" rows="3" required placeholder="Justifique a necessidade de novos lançamentos no período"></textarea>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-secondary">
+                                                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-sm btn-warning">Confirmar Reabertura</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Realizar Fechamento -->
+<div class="modal fade" id="novoFechamentoModal" tabindex="-1" aria-labelledby="novoFechamentoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form asp-action="FecharCaixa" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6 text-info" id="novoFechamentoModalLabel">
+                        <i class="bi bi-lock me-2"></i>Realizar Fechamento de Período
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="contaFechamento">Conta Financeira</label>
+                        <select id="contaFechamento" name="contaId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                            <option value="">Selecione uma conta...</option>
+                            @foreach (var c in Model.Contas.Where(c => c.Ativa))
+                            {
+                                <option value="@c.Id">@c.Nome (Saldo Atual: @c.SaldoAtual.ToString("C2", ptBr))</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="dataInicioFechamento">Data Início</label>
+                            <input type="date" id="dataInicioFechamento" name="dataInicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="@DateTime.UtcNow.AddDays(-30).ToString("yyyy-MM-dd")" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="dataFimFechamento">Data Fim</label>
+                            <input type="date" id="dataFimFechamento" name="dataFim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="saldoConferido">Saldo Conferido / Extrato Físico (R$)</label>
+                        <input type="number" step="0.01" id="saldoConferido" name="saldoConferido" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace"
+                               placeholder="0.00" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="justificativaFechamento">Justificativa de Divergência</label>
+                        <textarea id="justificativaFechamento" name="justificativa" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                  rows="2" placeholder="Obrigatório caso haja diferença entre o saldo apurado e o calculado"></textarea>
+                    </div>
+
+                    <div class="alert alert-secondary small text-muted mb-0">
+                        <i class="bi bi-shield-lock me-1"></i> Após fechar o período, o sistema bloqueia novos recebimentos ou pagamentos com data anterior ou igual à data fim selecionada.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Fechar Caixa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

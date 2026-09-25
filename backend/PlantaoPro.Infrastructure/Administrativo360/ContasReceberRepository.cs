@@ -168,7 +168,16 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
 
     public async Task<Guid> ReceberAsync(Guid tenantId, Guid usuarioId, ReceberTituloCommand command, CancellationToken ct)
     {
-        var payloadHash = IdempotenciaHelper.CalcularHash("RECEBER_TITULO", tenantId, command.TituloId, command.Valor, command.ContaId);
+        var payloadHash = IdempotenciaHelper.CalcularHash(
+            "RECEBER_TITULO",
+            tenantId,
+            command.TituloId,
+            command.ContaId,
+            command.Valor,
+            command.DataRecebimento,
+            command.MeioPagamento,
+            command.Referencia ?? ""
+        );
         Guid baixaId = Guid.Empty;
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
@@ -210,6 +219,19 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
 
             if (conta is null) throw new InvalidOperationException("Conta financeira de destino não encontrada.");
             if (!(bool)conta.ativo) throw new InvalidOperationException("Conta financeira inativa não pode receber lançamentos.");
+
+            // Bloqueio de período fechado
+            var fechamentoBloqueador = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT data_fim FROM plantaopro.adm360_caixa_fechamentos
+                WHERE tenant_id = @tenantId AND conta_id = @ContaId AND situacao = 'FECHADO' AND data_fim >= @dataRecebimento
+                ORDER BY data_fim DESC LIMIT 1",
+                new { tenantId, command.ContaId, dataRecebimento = command.DataRecebimento }, tx, cancellationToken: ct));
+
+            if (fechamentoBloqueador is not null)
+            {
+                DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
+                throw new InvalidOperationException($"Não é permitido lançar recebimentos na data {command.DataRecebimento:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+            }
 
             baixaId = Guid.NewGuid();
             var movId = Guid.NewGuid();
@@ -316,7 +338,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
 
     public async Task<Guid> EstornarAsync(Guid tenantId, Guid usuarioId, EstornarBaixaCommand command, CancellationToken ct)
     {
-        var payloadHash = IdempotenciaHelper.CalcularHash("ESTORNO_BAIXA", tenantId, command.BaixaId);
+        var payloadHash = IdempotenciaHelper.CalcularHash("ESTORNO_BAIXA", tenantId, command.BaixaId, command.Motivo);
         Guid estornoId = Guid.Empty;
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
@@ -351,6 +373,21 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
 
             TituloRegras.ValidarEstorno((bool)baixa.estornado, (decimal)baixa.valor_recebido, (decimal)baixa.valor_recebido);
 
+            var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            // Bloqueio de período fechado
+            var fechamentoBloqueador = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT data_fim FROM plantaopro.adm360_caixa_fechamentos
+                WHERE tenant_id = @tenantId AND conta_id = @contaId AND situacao = 'FECHADO' AND data_fim >= @hoje
+                ORDER BY data_fim DESC LIMIT 1",
+                new { tenantId, contaId = (Guid)baixa.conta_id, hoje }, tx, cancellationToken: ct));
+
+            if (fechamentoBloqueador is not null)
+            {
+                DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
+                throw new InvalidOperationException($"Não é permitido lançar estorno na data {hoje:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+            }
+
             estornoId = Guid.NewGuid();
             var movEstornoId = Guid.NewGuid();
             decimal valorEstorno = (decimal)baixa.valor_recebido;
@@ -361,13 +398,13 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                     id, tenant_id, conta_id, tipo, valor, data_movimento,
                     descricao, origem_tipo, origem_id, idempotency_key, created_by
                 ) VALUES(
-                    @movEstornoId, @tenantId, @contaId, 'SAIDA', @valorEstorno, current_date,
+                    @movEstornoId, @tenantId, @contaId, 'SAIDA', @valorEstorno, @hoje,
                     'Estorno de recebimento: ' || @motivo, 'ESTORNO_RECEBIMENTO', @estornoId, @keyMov, @usuarioId
                 )",
                 new
                 {
                     movEstornoId, tenantId, contaId = (Guid)baixa.conta_id, valorEstorno,
-                    motivo = command.Motivo, estornoId, keyMov = $"{command.IdempotencyKey}:MOV", usuarioId
+                    hoje, motivo = command.Motivo, estornoId, keyMov = $"{command.IdempotencyKey}:MOV", usuarioId
                 }, tx, cancellationToken: ct));
 
             // Registra evento de estorno
@@ -403,11 +440,11 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                 WHERE id = @tituloId AND tenant_id = @tenantId",
                 new { valorEstorno, tituloId = (Guid)baixa.titulo_id, tenantId }, tx, cancellationToken: ct));
 
-            // Reverte comissão apropriada desta baixa
+            // Reverte apenas comissão apropriada pendente (não apaga comissão já paga)
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_comissoes_apropriadas
                 SET situacao = 'ESTORNADA'
-                WHERE baixa_id = @BaixaId AND tenant_id = @tenantId",
+                WHERE baixa_id = @BaixaId AND tenant_id = @tenantId AND situacao = 'APROPRIADA'",
                 new { command.BaixaId, tenantId }, tx, cancellationToken: ct));
 
             // Registra operação de estorno

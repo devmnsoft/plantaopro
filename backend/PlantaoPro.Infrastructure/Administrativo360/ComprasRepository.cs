@@ -11,6 +11,9 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
         public bool ControlaLote { get; set; }
         public bool Inspecao { get; set; }
         public decimal Saldo { get; set; }
+        public decimal PrecoUnitario { get; set; }
+        public decimal Desconto { get; set; }
+        public decimal QtdTotal { get; set; }
     }
 
     public ComprasRepository(string connectionString) : base(connectionString) { }
@@ -101,9 +104,12 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             return existing.Value;
         }
 
-        var status = await cn.ExecuteScalarAsync<string?>(new CommandDefinition(
-            "SELECT situacao FROM plantaopro.adm360_pedidos WHERE id = @id AND tenant_id = @tenantId FOR UPDATE",
+        var pedido = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
+            "SELECT numero, fornecedor_id, previsao, situacao FROM plantaopro.adm360_pedidos WHERE id = @id AND tenant_id = @tenantId FOR UPDATE",
             new { id = c.PedidoId, tenantId }, tx, cancellationToken: ct));
+
+        if (pedido is null) throw new InvalidOperationException("Pedido de compra não encontrado.");
+        string status = (string)pedido.situacao;
         if (status is not ("APROVADO" or "PARCIAL"))
             throw new InvalidOperationException("Somente pedido aprovado ou parcial pode ser recebido.");
 
@@ -112,12 +118,16 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             "INSERT INTO plantaopro.adm360_recebimentos(id, tenant_id, pedido_id, documento, idempotency_key, confirmado_em, created_by) VALUES(@rid, @tenantId, @PedidoId, @Documento, @key, now(), @usuarioId)",
             new { rid, tenantId, c.PedidoId, c.Documento, key = c.IdempotencyKey, usuarioId }, tx, cancellationToken: ct));
 
+        decimal totalRecebimento = 0m;
+
         foreach (var item in c.Itens)
         {
             if (item.Quantidade <= 0) throw new ArgumentException("Quantidade recebida deve ser positiva.");
 
             var row = await cn.QuerySingleOrDefaultAsync<ReceivingRow>(new CommandDefinition(@"
-                SELECT i.produto_id AS ProdutoId, p.controla_lote AS ControlaLote, p.exige_inspecao AS Inspecao, i.quantidade - i.quantidade_recebida AS Saldo
+                SELECT i.produto_id AS ProdutoId, p.controla_lote AS ControlaLote, p.exige_inspecao AS Inspecao,
+                       i.quantidade - i.quantidade_recebida AS Saldo,
+                       i.preco_unitario AS PrecoUnitario, i.desconto AS Desconto, i.quantidade AS QtdTotal
                 FROM plantaopro.adm360_pedido_itens i
                 JOIN plantaopro.adm360_produtos p ON p.id = i.produto_id AND p.tenant_id = i.tenant_id
                 WHERE i.id = @id AND i.pedido_id = @PedidoId AND i.tenant_id = @tenantId
@@ -137,17 +147,22 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             // Bloqueio de inventário no local de recebimento
             await ValidarBloqueioInventarioAsync(cn, tx, tenantId, item.LocalId, ct);
 
+            decimal descUnit = row.QtdTotal > 0 ? (row.Desconto / row.QtdTotal) : 0m;
+            decimal custoUnit = Math.Max(0m, row.PrecoUnitario - descUnit);
+            totalRecebimento += item.Quantidade * custoUnit;
+
             var condicao = item.Validade.HasValue && item.Validade.Value < DateOnly.FromDateTime(DateTime.UtcNow)
                 ? "VENCIDO"
                 : row.Inspecao ? "QUARENTENA" : "LIBERADO";
 
             var loteId = await cn.ExecuteScalarAsync<Guid>(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade)
-                VALUES(gen_random_uuid(), @tenantId, @produto, @lote, @validade)
+                INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade, custo_unitario)
+                VALUES(gen_random_uuid(), @tenantId, @produto, @lote, @validade, @custoUnit)
                 ON CONFLICT(tenant_id, produto_id, codigo) DO UPDATE
-                SET validade = COALESCE(plantaopro.adm360_lotes.validade, excluded.validade)
+                SET validade = COALESCE(plantaopro.adm360_lotes.validade, excluded.validade),
+                    custo_unitario = COALESCE(plantaopro.adm360_lotes.custo_unitario, excluded.custo_unitario)
                 RETURNING id",
-                new { tenantId, produto = row.ProdutoId, lote = item.Lote ?? "SEM-LOTE", validade = item.Validade }, tx, cancellationToken: ct));
+                new { tenantId, produto = row.ProdutoId, lote = item.Lote ?? "SEM-LOTE", validade = item.Validade, custoUnit }, tx, cancellationToken: ct));
 
             var ri = Guid.NewGuid();
             await cn.ExecuteAsync(new CommandDefinition(@"
@@ -168,6 +183,36 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
                 versao = versao + 1
             WHERE id = @PedidoId",
             new { c.PedidoId }, tx, cancellationToken: ct));
+
+        // Gera obrigação em Contas a Pagar para este recebimento
+        totalRecebimento = Math.Round(totalRecebimento, 2);
+        if (totalRecebimento > 0)
+        {
+            var seq = await cn.ExecuteScalarAsync<long>("SELECT nextval('plantaopro.adm360_titulo_pagar_numero')", transaction: tx);
+            var numeroTitulo = $"PAG-{seq:D6}";
+            var tituloId = Guid.NewGuid();
+            var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+            DateOnly vencimento = pedido.previsao != null ? ToDateOnly(pedido.previsao) : hoje.AddDays(30);
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                INSERT INTO plantaopro.adm360_titulos_pagar(
+                    id, tenant_id, numero, fornecedor_id, origem_tipo, origem_id,
+                    documento, competencia, data_emissao, data_vencimento, parcela, total_parcelas,
+                    valor_principal, valor_pago, saldo_aberto, situacao, centro_custo,
+                    idempotency_key, created_by
+                ) VALUES(
+                    @tituloId, @tenantId, @numeroTitulo, @fornecedorId, 'RECEBIMENTO_COMPRA', @rid,
+                    @documento, @hoje, @hoje, @vencimento, 1, 1,
+                    @totalRecebimento, 0, @totalRecebimento, 'APROVADO', 'SUPRIMENTOS',
+                    @keyTitulo, @usuarioId
+                )",
+                new
+                {
+                    tituloId, tenantId, numeroTitulo, fornecedorId = (Guid)pedido.fornecedor_id,
+                    rid, documento = c.Documento ?? (string)pedido.numero, hoje, vencimento,
+                    totalRecebimento, keyTitulo = $"{c.IdempotencyKey}:AP", usuarioId
+                }, tx, cancellationToken: ct));
+        }
 
         await tx.CommitAsync(ct);
         return rid;

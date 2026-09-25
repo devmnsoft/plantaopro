@@ -643,6 +643,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2195_administrativo360_contas_pagar_fechamento",
+      "source": "database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql",
+      "checksum": "008797d3f103fe9b2cf867e89ff6c2fd01ba22665b73df953c9a65543455d81e",
+      "dependsOn": [
+        "2026_09_v2194_administrativo360_valorizacao_vendas_financeiro"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

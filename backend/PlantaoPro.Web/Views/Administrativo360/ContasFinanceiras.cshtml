@@ -1,0 +1,293 @@
+@model PlantaoPro.Web.Models.ContasFinanceirasIndexViewModel
+@{
+    ViewData["Title"] = "Contas Financeiras — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    var saldoTotal = Model.Contas.Where(c => c.Ativa).Sum(c => c.SaldoAtual);
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <div class="d-flex align-items-center gap-2">
+                <a asp-action="FluxoCaixa" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Fluxo de Caixa
+                </a>
+                <h2 class="h4 mb-0 text-light fw-bold">Contas Financeiras (Caixa & Bancos)</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Gerenciamento de contas correntes, caixas físicos e aplicações da empresa.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#novaContaModal">
+                <i class="bi bi-plus-circle me-1"></i> Nova Conta
+            </button>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Gestão de Contas e Disponibilidades</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Centraliza os canais de movimentação financeira (caixa interno, contas bancárias e aplicações).
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Saldo Inicial Documentado</strong>
+                    O saldo inicial possui data-base documental e não altera períodos anteriores à sua vigência contábil.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Inativação Segura</strong>
+                    Contas inativas não podem receber novos lançamentos ou pagamentos, mas preservam todo o histórico de extrato.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Acompanhar as movimentações em <em>Fluxo de Caixa</em> e realizar <em>Fechamento de Caixa</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Card de Saldo Geral -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary text-light p-3">
+                <span class="text-muted small">Saldo Total em Contas Ativas</span>
+                <span class="fs-4 fw-bold font-monospace text-info">@saldoTotal.ToString("C2", ptBr)</span>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card bg-dark border-secondary text-light p-3">
+                <span class="text-muted small">Total de Contas</span>
+                <span class="fs-4 fw-bold font-monospace text-light">@Model.Contas.Count (@Model.Contas.Count(c => c.Ativa) ativas)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Contas -->
+    <div class="card bg-dark border-secondary text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <span class="fw-bold">Contas Cadastradas</span>
+            <span class="badge bg-secondary">@Model.Contas.Count contas</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
+                <thead class="table-secondary text-dark">
+                    <tr>
+                        <th scope="col">Nome / Identificação</th>
+                        <th scope="col">Tipo</th>
+                        <th scope="col">Banco</th>
+                        <th scope="col">Agência / Conta</th>
+                        <th scope="col">Saldo Inicial</th>
+                        <th scope="col" class="text-end">Saldo Atual</th>
+                        <th scope="col">Status</th>
+                        <th scope="col" class="text-center">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Contas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">
+                                Nenhuma conta financeira cadastrada. Clique em "Nova Conta" para cadastrar.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in Model.Contas)
+                        {
+                            <tr>
+                                <td><strong class="text-light">@c.Nome</strong></td>
+                                <td><span class="badge bg-secondary">@c.Tipo</span></td>
+                                <td>@(c.Banco ?? "—")</td>
+                                <td>@(c.Agencia != null && c.Conta != null ? $"{c.Agencia} / {c.Conta}" : "—")</td>
+                                <td>
+                                    <span class="font-monospace text-muted small">@c.SaldoInicial.ToString("C2", ptBr)</span>
+                                    <span class="text-secondary small d-block">em @c.DataSaldoInicial.ToString("dd/MM/yyyy")</span>
+                                </td>
+                                <td class="text-end font-monospace fw-bold @(c.SaldoAtual >= 0 ? "text-success" : "text-danger")">
+                                    @c.SaldoAtual.ToString("C2", ptBr)
+                                </td>
+                                <td>
+                                    @if (c.Ativa)
+                                    {
+                                        <span class="badge bg-success">Ativa</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inativa</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-info"
+                                                data-bs-toggle="modal" data-bs-target="#editarContaModal-@c.Id">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        @if (c.Ativa)
+                                        {
+                                            <form asp-action="InativarContaFinanceira" method="post" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@c.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Inativar conta">
+                                                    <i class="bi bi-pause-circle"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+
+                                    <!-- Modal Editar Conta -->
+                                    <div class="modal fade" id="editarContaModal-@c.Id" tabindex="-1" aria-labelledby="editarContaModalLabel-@c.Id" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content bg-dark text-light border-secondary">
+                                                <form asp-action="AtualizarContaFinanceira" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@c.Id" />
+                                                    <div class="modal-header border-secondary">
+                                                        <h5 class="modal-title h6 text-info" id="editarContaModalLabel-@c.Id">
+                                                            <i class="bi bi-pencil-square me-2"></i>Editar Conta @c.Nome
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                    </div>
+                                                    <div class="modal-body text-start">
+                                                        <div class="mb-3">
+                                                            <label class="form-label small text-secondary" for="nome-@c.Id">Nome da Conta</label>
+                                                            <input type="text" id="nome-@c.Id" name="nome" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                                   value="@c.Nome" required />
+                                                        </div>
+                                                        <div class="row g-3 mb-3">
+                                                            <div class="col-6">
+                                                                <label class="form-label small text-secondary" for="tipo-@c.Id">Tipo</label>
+                                                                <select id="tipo-@c.Id" name="tipo" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                                                    <option value="CORRENTE" selected="@(c.Tipo == "CORRENTE")">Conta Corrente</option>
+                                                                    <option value="CAIXA_FISICO" selected="@(c.Tipo == "CAIXA_FISICO")">Caixa Físico</option>
+                                                                    <option value="APLICACAO" selected="@(c.Tipo == "APLICACAO")">Aplicação Financeira</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="form-label small text-secondary" for="banco-@c.Id">Banco</label>
+                                                                <input type="text" id="banco-@c.Id" name="banco" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                                       value="@c.Banco" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="row g-3 mb-3">
+                                                            <div class="col-6">
+                                                                <label class="form-label small text-secondary" for="agencia-@c.Id">Agência</label>
+                                                                <input type="text" id="agencia-@c.Id" name="agencia" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                                       value="@c.Agencia" />
+                                                            </div>
+                                                            <div class="col-6">
+                                                                <label class="form-label small text-secondary" for="conta-@c.Id">Conta</label>
+                                                                <input type="text" id="conta-@c.Id" name="conta" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                                       value="@c.Conta" />
+                                                            </div>
+                                                        </div>
+                                                        <div class="alert alert-secondary small text-muted mb-0">
+                                                            <i class="bi bi-info-circle me-1"></i> O saldo inicial é fixado no momento da abertura e não pode ser editado para preservar a integridade contábil do histórico.
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer border-secondary">
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-sm btn-primary">Salvar Alterações</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Conta Financeira -->
+<div class="modal fade" id="novaContaModal" tabindex="-1" aria-labelledby="novaContaModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form asp-action="CriarContaFinanceira" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6 text-info" id="novaContaModalLabel">
+                        <i class="bi bi-bank me-2"></i>Cadastrar Nova Conta Financeira
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-secondary" for="nomeNova">Nome da Conta / Identificação</label>
+                        <input type="text" id="nomeNova" name="nome" class="form-control form-control-sm bg-dark text-light border-secondary"
+                               placeholder="Ex: Santander - Conta Operacional" required />
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="tipoNova">Tipo</label>
+                            <select id="tipoNova" name="tipo" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                <option value="CORRENTE">Conta Corrente</option>
+                                <option value="CAIXA_FISICO">Caixa Físico</option>
+                                <option value="APLICACAO">Aplicação Financeira</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="bancoNova">Banco</label>
+                            <input type="text" id="bancoNova" name="banco" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 033 - Santander" />
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="agenciaNova">Agência</label>
+                            <input type="text" id="agenciaNova" name="agencia" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 1234" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="contaNova">Nº Conta</label>
+                            <input type="text" id="contaNova" name="conta" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   placeholder="Ex: 56789-0" />
+                        </div>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="saldoInicialNova">Saldo Inicial (R$)</label>
+                            <input type="number" step="0.01" id="saldoInicialNova" name="saldoInicial" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="0.00" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-secondary" for="dataSaldoInicialNova">Data do Saldo</label>
+                            <input type="date" id="dataSaldoInicialNova" name="dataSaldoInicial" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                   value="@DateTime.UtcNow.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+                    <div class="alert alert-secondary small text-muted mb-0">
+                        <i class="bi bi-info-circle me-1"></i> O saldo inicial é uma referência contábil com data documentada e não cria movimentação fictícia no fluxo de caixa.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Cadastrar Conta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

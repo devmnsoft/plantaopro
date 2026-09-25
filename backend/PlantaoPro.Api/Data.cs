@@ -463,7 +463,10 @@ where u.id=@userId and u.reg_status='A'", new { userId }, cancellationToken: can
             var rawRoles = (await cn.QueryAsync<string>(new CommandDefinition(@"select pf.codigo
 from plantaopro.usuarios_perfis up
 join plantaopro.perfis pf on pf.id=up.perfil_id and pf.reg_status='A'
-where up.usuario_id=@userId and up.reg_status='A'", new { userId }, cancellationToken: cancellationToken))).ToArray();
+where up.usuario_id=@userId and up.reg_status='A'
+  and (up.tenant_id is null or up.tenant_id=@tenantId)
+  and (pf.tenant_id is null or pf.tenant_id=@tenantId)
+  and coalesce(pf.status,'ATIVO') not in ('INATIVO','BLOQUEADO')", new { userId, tenantId = user.TenantId ?? user.ClienteId }, cancellationToken: cancellationToken))).ToArray();
 
             var roles = rawRoles.Select(roleCatalog.Normalize).Where(r => !string.IsNullOrWhiteSpace(r)).Cast<string>().Distinct(StringComparer.OrdinalIgnoreCase).OrderByDescending(r => roleCatalog.Find(r)?.Priority ?? 0).ToArray();
             var primaryRole = primaryRoleResolver.Resolve(roles);
@@ -472,8 +475,8 @@ where up.usuario_id=@userId and up.reg_status='A'", new { userId }, cancellation
             var effectiveTenant = isGlobal ? null : (user.TenantId ?? user.ClienteId);
             var clienteId = isGlobal ? null : user.ClienteId;
             var contextMode = isGlobal ? "GLOBAL" : "TENANT";
-            var permissions = (await LoadPermissionsAsync(cn, userId, effectiveTenant, cancellationToken)).ToArray();
-            var modules = effectiveTenant.HasValue ? (await LoadModulesAsync(cn, effectiveTenant.Value, cancellationToken)).ToArray() : Array.Empty<string>();
+            var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, userId, effectiveTenant, cancellationToken)).ToArray();
+            var modules = isGlobal ? new[] { "*" } : effectiveTenant.HasValue ? (await LoadModulesAsync(cn, effectiveTenant.Value, cancellationToken)).ToArray() : Array.Empty<string>();
             var sessionGuid = Guid.NewGuid();
             var sessionId = sessionGuid.ToString("N");
             var expiresAtUtc = DateTime.UtcNow.AddHours(8);
@@ -510,10 +513,10 @@ select distinct g.codigo from granted g where not exists(select 1 from denied d 
 
         private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId, CancellationToken cancellationToken)
         {
-            const string sql = @"select distinct upper(coalesce(nullif(tm.codigo_modulo,''),nullif(tm.codigo,''),ms.codigo))
+            const string sql = @"select distinct upper(ms.codigo)
 from plantaopro.tenant_modulos tm
-left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
-where tm.tenant_id=@tenantId and tm.reg_status='A' and coalesce(tm.habilitado,true)=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
+join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A' and upper(ms.status)='ATIVO'
+where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true and upper(tm.status)='ATIVO'
 order by 1";
             return await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, cancellationToken: cancellationToken));
         }

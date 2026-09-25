@@ -80,13 +80,19 @@ BEGIN
     INSERT INTO plantaopro.modulos_sistema (id, codigo, nome, status, reg_status, reg_date)
     VALUES (v_modulo_adm360_id, 'ADM360', 'Administrativo 360', 'ATIVO', 'A', v_now)
     ON CONFLICT (id) DO NOTHING;
+    SELECT id INTO v_modulo_adm360_id FROM plantaopro.modulos_sistema
+    WHERE upper(btrim(codigo))='ADM360' AND reg_status='A' ORDER BY id LIMIT 1;
 
-    -- Contratação do Módulo ADM360 para a Santa Casa no SaaS
-    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='plantaopro' AND table_name='tenant_modulos') THEN
-        INSERT INTO plantaopro.tenant_modulos (id, tenant_id, codigo, nome, status, dados, criado_em)
-        VALUES (gen_random_uuid(), v_tenant_id, 'ADM360', 'Administrativo 360', 'ATIVO', '{}'::jsonb, v_now)
-        ON CONFLICT DO NOTHING;
+    -- Contratação pelo contrato canônico (v2197), compartilhado por login,
+    -- autorização, menu e serviço comercial.
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='tenant_modulos' AND column_name='modulo_id') THEN
+        RAISE EXCEPTION 'Contrato canônico de módulos ausente. Aplique a migration v2197 antes deste script.';
     END IF;
+    INSERT INTO plantaopro.tenant_modulos
+        (id,tenant_id,modulo_id,codigo,codigo_modulo,habilitado,status,origem,ativado_em,reg_date,reg_status)
+    VALUES(gen_random_uuid(),v_tenant_id,v_modulo_adm360_id,'ADM360','ADM360',true,'ATIVO','SEED_DEMO',v_now,v_now,'A')
+    ON CONFLICT (tenant_id,modulo_id) WHERE reg_status='A' AND modulo_id IS NOT NULL
+    DO UPDATE SET codigo='ADM360',codigo_modulo='ADM360',habilitado=true,status='ATIVO',reg_update=v_now;
 
     -- Obter ou criar ação padrão para permissões
     SELECT id INTO v_acao_acessar_id FROM plantaopro.acoes_sistema WHERE codigo = 'ACESSAR' OR codigo = 'LISTAR' LIMIT 1;

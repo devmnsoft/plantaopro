@@ -665,6 +665,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2197_reconciliar_contratos_modulos",
+      "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
+      "checksum": "71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4",
+      "dependsOn": [
+        "2026_09_v2196_administrativo360_cotacoes_xml_dashboard"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

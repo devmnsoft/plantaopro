@@ -29,6 +29,14 @@ BEGIN
 
     PERFORM pg_advisory_xact_lock(7065262026);
 
+    IF EXISTS (SELECT 1 FROM plantaopro.usuarios WHERE lower(email)=lower('gestor@santacasa-demo.example') AND id<>v_manager_id) THEN
+        RAISE EXCEPTION 'E-mail do gestor demo já pertence a outra identidade; nenhuma conta foi alterada.';
+    END IF;
+
+    INSERT INTO plantaopro.tenants(id,codigo,nome,status,dados,criado_em)
+    VALUES(v_tenant_id,'SANTACASA-DEMO','Santa Casa Demonstração','ATIVO','{}'::jsonb,now())
+    ON CONFLICT(id) DO UPDATE SET nome=excluded.nome;
+
     IF to_regclass('plantaopro.clientes') IS NOT NULL THEN
         ALTER TABLE plantaopro.clientes ADD COLUMN IF NOT EXISTS tenant_id uuid;
         ALTER TABLE plantaopro.clientes ADD COLUMN IF NOT EXISTS codigo text;
@@ -77,10 +85,10 @@ BEGIN
 
     IF to_regclass('plantaopro.clientes') IS NOT NULL THEN
         IF EXISTS (
-            SELECT 1 FROM information_schema.columns 
+            SELECT 1 FROM information_schema.columns
             WHERE table_schema = 'plantaopro' AND table_name = 'clientes' AND column_name = 'tenant_id' AND data_type <> 'uuid'
         ) THEN
-            ALTER TABLE plantaopro.clientes ALTER COLUMN tenant_id TYPE uuid USING NULL;
+            RAISE EXCEPTION 'clientes.tenant_id não é uuid; aplique a correção estrutural antes do seed (nenhum vínculo foi descartado).';
         END IF;
 
         INSERT INTO plantaopro.clientes(id, razao_social, nome_fantasia, cnpj, status, reg_status, tenant_id, codigo, nome)
@@ -101,7 +109,6 @@ BEGIN
             nome = 'Administrador MNSOFT — Demonstração',
             email = 'superadmin@mnsoft.example',
             email_normalizado = 'superadmin@mnsoft.example',
-            senha_hash = '$2a$11$ZqHfNeWgejMB0D8rMXjJdeIT5LAomItKhK2f184rYL6M8gFIlkMsC',
             status = 'ATIVO', reg_status = 'A', senha_alteracao_obrigatoria = false,
             bloqueado_ate = NULL, tenant_id = NULL, cliente_id = NULL, reg_update = now()
         WHERE id = v_super_id OR lower(email) = lower('superadmin@mnsoft.example');
@@ -123,7 +130,6 @@ BEGIN
             nome = 'Gestor Santa Casa — Demonstração',
             email = 'gestor@santacasa-demo.example',
             email_normalizado = 'gestor@santacasa-demo.example',
-            senha_hash = '$2a$11$mNmgw83PBauw.5XsFVB5TuMB1.8OgFZ0SpfujQSuGzUgzwvs7d8S.',
             status = 'ATIVO', reg_status = 'A', senha_alteracao_obrigatoria = false,
             bloqueado_ate = NULL, tenant_id = v_tenant_id, cliente_id = v_client_id, reg_update = now()
         WHERE id = v_manager_id OR lower(email) = lower('gestor@santacasa-demo.example');
@@ -145,7 +151,6 @@ BEGIN
             nome = 'Dra. Ana Souza — Demonstração',
             email = 'medico@santacasa-demo.example',
             email_normalizado = 'medico@santacasa-demo.example',
-            senha_hash = '$2b$11$IgKzuHNrOEWgc/ExL.InS.cP3WajR8y0RY9hW2uKtKpbydU57i82m',
             status = 'ATIVO', reg_status = 'A', senha_alteracao_obrigatoria = false,
             bloqueado_ate = NULL, tenant_id = v_tenant_id, cliente_id = v_client_id, reg_update = now()
         WHERE id = v_physician_id OR lower(email) = lower('medico@santacasa-demo.example');
@@ -165,6 +170,20 @@ BEGIN
     INSERT INTO plantaopro.medicos(id, usuario_id, cpf, status, reg_status)
     SELECT 'd3f6584c-2c64-4e5a-9ea9-4e1428647530', v_physician_id, '52998224725', 'ATIVO', 'A'
     WHERE NOT EXISTS (SELECT 1 FROM plantaopro.medicos WHERE usuario_id = v_physician_id AND coalesce(reg_status,'A') = 'A');
+
+    -- Contratação demo pelo mesmo contrato canônico consumido por login, menu e
+    -- autorização. Não cria nem habilita módulos clínicos/operacionais.
+    INSERT INTO plantaopro.tenant_modulos
+        (id,tenant_id,modulo_id,codigo,codigo_modulo,habilitado,status,origem,ativado_em,reg_date,reg_status)
+    SELECT gen_random_uuid(),v_tenant_id,m.id,m.codigo,m.codigo,true,'ATIVO','SEED_DEMO',now(),now(),'A'
+    FROM plantaopro.modulos_sistema m
+    WHERE upper(m.codigo)='ADM360' AND m.reg_status='A'
+      AND NOT EXISTS (SELECT 1 FROM plantaopro.tenant_modulos tm WHERE tm.tenant_id=v_tenant_id AND tm.modulo_id=m.id AND tm.reg_status='A');
+
+    IF NOT EXISTS (SELECT 1 FROM plantaopro.tenant_modulos tm JOIN plantaopro.modulos_sistema m ON m.id=tm.modulo_id
+                   WHERE tm.tenant_id=v_tenant_id AND m.codigo='ADM360' AND tm.reg_status='A' AND tm.habilitado AND tm.status='ATIVO') THEN
+        RAISE EXCEPTION 'Contrato ADM360 não foi criado; aplique a migration v2197 antes do seed 121.';
+    END IF;
 
     RAISE NOTICE 'Acesso local confirmado no banco %.', v_db;
 END

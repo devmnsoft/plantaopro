@@ -365,5 +365,50 @@
       "plantaopro.administrativo360_base"
     ],
     "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_regras_estoque_orcamentos",
+    "dependsOn": [
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_cirurgia_vales_reconciliacao",
+    "dependsOn": [
+      "plantaopro.administrativo360_regras_estoque_orcamentos",
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_valorizacao_vendas_financeiro",
+    "dependsOn": [
+      "plantaopro.administrativo360_cirurgia_vales_reconciliacao",
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_contas_pagar_fechamento",
+    "dependsOn": [
+      "plantaopro.administrativo360_valorizacao_vendas_financeiro"
+    ],
+    "source": "database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql"
+  },
+  {
+    "object": "plantaopro.administrativo360_cotacoes_xml_dashboard",
+    "dependsOn": [
+      "plantaopro.administrativo360_contas_pagar_fechamento"
+    ],
+    "source": "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql"
+  },
+  {
+    "object": "plantaopro.tenant_modulos_canonico",
+    "dependsOn": [
+      "plantaopro.saas_tenants",
+      "plantaopro.administrativo360_cotacoes_xml_dashboard"
+    ],
+    "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql"
   }
 ]

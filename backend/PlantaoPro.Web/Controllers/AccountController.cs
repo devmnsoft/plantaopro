@@ -87,7 +87,7 @@ public sealed class AccountController : Controller
                     HttpStatusCode.Forbidden => "Seu usuário está inativo. Procure o administrador.",
                     (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
                     HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "Identificador ou senha inválidos.",
-                    _ => "Não foi possível autenticar. Tente novamente."
+                    _ => apiResult?.Message ?? $"Não foi possível autenticar. Tente novamente. Referência: {correlationId}"
                 };
 
                 TempData["Error"] = errorMessage;

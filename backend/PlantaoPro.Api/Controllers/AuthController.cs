@@ -43,6 +43,10 @@ namespace PlantaoPro.Api.Controllers
             try
             {
                 var r = await _service.LoginAsync(req, ip, Request.Headers.UserAgent.ToString(), cancellationToken);
+                if (r.StatusCode >= 500)
+                {
+                    r = ApiResponse<LoginResponse>.Fail($"Não foi possível processar o login no momento. Referência: {correlationId}", 500);
+                }
                 var perfil = r.Data?.Roles is { Length: > 0 } ? string.Join(',', r.Data.Roles) : "sem-perfil";
                 await _auditService.RegistrarAsync(
                     r.Data?.UsuarioId,
@@ -67,7 +71,7 @@ namespace PlantaoPro.Api.Controllers
             {
                 _logger.LogError(ex, "Falha inesperada no login Identificador:{Identificador} Tipo:{Tipo} IP:{Ip}", auditIdentifier, identifierKind, ip);
                 await _auditService.RegistrarAsync(null, null, AuditoriaConstants.Entidades.Usuario, null, AuditoriaConstants.Acoes.LoginFalha, new { identifier = auditIdentifier, identifierKind, motivo = "erro_interno" }, false, ip, "sem-perfil");
-                return StatusCode(500, ApiResponse<object>.Fail("Não foi possível processar o login no momento.", 500));
+                return StatusCode(500, ApiResponse<object>.Fail($"Não foi possível processar o login no momento. Referência: {correlationId}", 500));
             }
         }
 

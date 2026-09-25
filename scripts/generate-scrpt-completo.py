@@ -23,7 +23,7 @@ def normalize_sql(s, origin):
             line='SET search_path TO plantaopro, public;'
         line=re.sub(r'(?<![\w.])uuid_generate_v4\s*\(', 'gen_random_uuid(', line)
         line=re.sub(r'(?i)public\.unaccent\s*\(', 'unaccent(', line)
-        normalized.append(line)
+        normalized.append(line.rstrip())
     return '\n'.join(normalized)
 
 def validate_sql(s, origin):

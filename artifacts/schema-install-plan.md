@@ -57,3 +57,9 @@
 - `plantaopro.financeiro_clinico_convenios_v2180` depende de: plantaopro.saude360, plantaopro.financeiro, plantaopro.ocorrencias_operacionais_v2171
 - `plantaopro.administrativo360_base` depende de: plantaopro.ocorrencias_operacionais_v2171
 - `plantaopro.administrativo360_suprimentos` depende de: plantaopro.administrativo360_base
+- `plantaopro.administrativo360_regras_estoque_orcamentos` depende de: plantaopro.administrativo360_suprimentos
+- `plantaopro.administrativo360_cirurgia_vales_reconciliacao` depende de: plantaopro.administrativo360_regras_estoque_orcamentos, plantaopro.administrativo360_suprimentos
+- `plantaopro.administrativo360_valorizacao_vendas_financeiro` depende de: plantaopro.administrativo360_cirurgia_vales_reconciliacao, plantaopro.administrativo360_suprimentos
+- `plantaopro.administrativo360_contas_pagar_fechamento` depende de: plantaopro.administrativo360_valorizacao_vendas_financeiro
+- `plantaopro.administrativo360_cotacoes_xml_dashboard` depende de: plantaopro.administrativo360_contas_pagar_fechamento
+- `plantaopro.tenant_modulos_canonico` depende de: plantaopro.saas_tenants, plantaopro.administrativo360_cotacoes_xml_dashboard

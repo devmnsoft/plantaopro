@@ -1,7 +1,7 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.19.1
+-- Versão do schema: v2.19.7
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-24
+-- Data de geração: 2026-09-25
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -3988,11 +3988,13 @@ CREATE INDEX IF NOT EXISTS ix_adm360_lotes_validade ON plantaopro.adm360_lotes(t
 CREATE OR REPLACE VIEW plantaopro.adm360_saldos AS SELECT m.tenant_id,m.produto_id,p.nome produto,m.lote_id,l.codigo lote,l.validade,m.local_id,o.nome local,m.condicao,sum(m.quantidade)::numeric(18,4) fisico,coalesce((select sum(r.quantidade) from plantaopro.adm360_reservas r where r.tenant_id=m.tenant_id and r.produto_id=m.produto_id and r.lote_id=m.lote_id and r.local_id=m.local_id and r.situacao='ATIVA'),0)::numeric(18,4) reservado,(case when m.condicao='LIBERADO' and (l.validade is null or l.validade>=current_date) then sum(m.quantidade)-coalesce((select sum(r.quantidade) from plantaopro.adm360_reservas r where r.tenant_id=m.tenant_id and r.produto_id=m.produto_id and r.lote_id=m.lote_id and r.local_id=m.local_id and r.situacao='ATIVA'),0) else 0 end)::numeric(18,4) disponivel from plantaopro.adm360_movimentos m join plantaopro.adm360_produtos p on p.id=m.produto_id and p.tenant_id=m.tenant_id join plantaopro.adm360_lotes l on l.id=m.lote_id and l.tenant_id=m.tenant_id join plantaopro.adm360_locais o on o.id=m.local_id and o.tenant_id=m.tenant_id group by m.tenant_id,m.produto_id,p.nome,m.lote_id,l.codigo,l.validade,m.local_id,o.nome,m.condicao;
 
 -- ============================================================
--- Seção 56 — plantaopro.administrativo360_orcamentos_regras
+-- Seção 56 — Administrativo360 Regras Estoque Orcamentos
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql
 -- SOURCE-SHA256: b5cc310b22733357834e1c566fe61425f7007d74a9a542749aaaaa4e1fc2f612
+-- Administrativo 360 bloco 3: Idempotência de operações, inventário por condição e orçamentos cirúrgicos com reservas.
+
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_orcamento_numero;
 
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_operacoes (
@@ -4009,10 +4011,11 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_operacoes (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_operacoes_tenant_tipo ON plantaopro.adm360_operacoes(tenant_id, tipo, created_at);
 
+-- Ajuste de granularidade de inventário por condição
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM information_schema.columns 
+        SELECT 1 FROM information_schema.columns
         WHERE table_schema='plantaopro' AND table_name='adm360_inventario_itens' AND column_name='condicao'
     ) THEN
         ALTER TABLE plantaopro.adm360_inventario_itens ADD COLUMN condicao varchar(15) NOT NULL DEFAULT 'LIBERADO' CHECK(condicao IN ('QUARENTENA','LIBERADO','BLOQUEADO','REPROVADO','VENCIDO'));
@@ -4022,6 +4025,7 @@ END $$;
 ALTER TABLE plantaopro.adm360_inventario_itens DROP CONSTRAINT IF EXISTS adm360_inventario_itens_tenant_id_inventario_id_produto_id_l_key;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_inv_itens_condicao ON plantaopro.adm360_inventario_itens(tenant_id, inventario_id, produto_id, lote_id, condicao);
 
+-- Orçamentos Cirúrgicos
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_orcamentos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4084,12 +4088,17 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_orcamento_revisoes (
 CREATE INDEX IF NOT EXISTS ix_adm360_orcamento_revisoes_orc ON plantaopro.adm360_orcamento_revisoes(tenant_id, orcamento_id, revisao);
 
 -- ============================================================
--- Seção 57 — Administrativo 360: Cirurgias, Vales, Expedição e Reconciliação
+-- Seção 57 — Administrativo360 Cirurgia Vales Reconciliacao
 -- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql
+-- SOURCE-SHA256: 6442e40d9cf12b1bd48a6c0d75a48da889a688d424a3fac328e4c7c50abd695e
+-- Administrativo 360 bloco 4: Cirurgias operacionais, Vales de consignação, Expedição, Consumo/Retorno e Reconciliação.
 
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_cirurgia_numero;
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_vale_numero;
 
+-- Vinculação de item de orçamento e situação em reservas
 ALTER TABLE plantaopro.adm360_reservas ADD COLUMN IF NOT EXISTS orcamento_item_id uuid;
 
 DO $$
@@ -4101,6 +4110,7 @@ EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
 
+-- Cirurgias Operacionais
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_cirurgias (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4127,6 +4137,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_cirurgias (
 CREATE INDEX IF NOT EXISTS ix_adm360_cirurgias_tenant_data ON plantaopro.adm360_cirurgias(tenant_id, data_prevista, situacao);
 CREATE INDEX IF NOT EXISTS ix_adm360_cirurgias_orcamento ON plantaopro.adm360_cirurgias(tenant_id, orcamento_id);
 
+-- Vales de Consignação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_vales (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4164,6 +4175,7 @@ CREATE INDEX IF NOT EXISTS ix_adm360_vales_tenant_situacao ON plantaopro.adm360_
 CREATE INDEX IF NOT EXISTS ix_adm360_vales_tenant_hospital ON plantaopro.adm360_vales(tenant_id, hospital_id);
 CREATE INDEX IF NOT EXISTS ix_adm360_vales_cirurgia ON plantaopro.adm360_vales(tenant_id, cirurgia_id);
 
+-- Itens do Vale de Consignação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_vale_itens (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4186,6 +4198,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_vale_itens (
 CREATE INDEX IF NOT EXISTS ix_adm360_vale_itens_tenant_vale ON plantaopro.adm360_vale_itens(tenant_id, vale_id);
 CREATE INDEX IF NOT EXISTS ix_adm360_vale_itens_reserva ON plantaopro.adm360_vale_itens(tenant_id, reserva_id);
 
+-- Eventos do Vale: Consumo, Retorno, Perda, Avaria
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_vale_eventos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4205,7 +4218,16 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_vale_eventos (
 CREATE INDEX IF NOT EXISTS ix_adm360_vale_eventos_tenant_vale ON plantaopro.adm360_vale_eventos(tenant_id, vale_id);
 CREATE INDEX IF NOT EXISTS ix_adm360_vale_eventos_item ON plantaopro.adm360_vale_eventos(tenant_id, vale_item_id);
 
--- SECAO 58: ADMINISTRATIVO 360 - VALORIZACAO, VENDAS INTERNAS, CONTAS A RECEBER, CAIXA E COMISSOES (v2194)
+-- ============================================================
+-- Seção 58 — Administrativo360 Valorizacao Vendas Financeiro
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql
+-- SOURCE-SHA256: 26243e62271f5b1ecab4d9fc1b95e80224d2149d70c029272cfbfc2b088b6d2d
+-- Migration 2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql
+-- Jornada: Vale Reconciliado -> Valorização -> Venda Interna -> Contas a Receber -> Recebimento Manual -> Estorno -> Comissão e Fluxo de Caixa
+
+-- 1. Suporte a inspeção de retorno de consignação na Qualidade
 DO $$
 BEGIN
     ALTER TABLE plantaopro.adm360_inspecoes ALTER COLUMN recebimento_item_id DROP NOT NULL;
@@ -4216,6 +4238,7 @@ EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
 
+-- 2. Custo histórico em produtos e lotes
 DO $$
 BEGIN
     ALTER TABLE plantaopro.adm360_produtos ADD COLUMN IF NOT EXISTS preco_custo numeric(18,4) NOT NULL DEFAULT 0;
@@ -4224,8 +4247,10 @@ EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
 
+-- 3. Sequência de número da venda interna
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_venda_numero START 1;
 
+-- 4. Valorização do Vale de Consignação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_valorizacoes (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4269,6 +4294,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_valorizacao_itens (
     UNIQUE(tenant_id, valorizacao_id, vale_item_id)
 );
 
+-- 5. Vendas Internas
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_vendas (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4317,6 +4343,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_venda_itens (
     UNIQUE(tenant_id, id)
 );
 
+-- 6. Contas Financeiras e Caixa
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_contas_financeiras (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4350,6 +4377,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_movimentos_financeiros (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_movfin_tenant_conta ON plantaopro.adm360_movimentos_financeiros(tenant_id, conta_id, data_movimento);
 
+-- 7. Contas a Receber (Títulos, Baixas, Estornos)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_titulos_receber (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4413,6 +4441,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_titulo_estornos (
     UNIQUE(tenant_id, idempotency_key)
 );
 
+-- 8. Comissões Apropriadas
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_comissoes_apropriadas (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4430,7 +4459,15 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_comissoes_apropriadas (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_comissoes_vendedor ON plantaopro.adm360_comissoes_apropriadas(tenant_id, vendedor_id, situacao);
 
+-- ============================================================
+-- Seção 59 — Administrativo360 Contas Pagar Fechamento
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql
+-- SOURCE-SHA256: 008797d3f103fe9b2cf867e89ff6c2fd01ba22665b73df953c9a65543455d81e
 -- Migration 2026_09_v2195_administrativo360_contas_pagar_fechamento.sql
+-- Jornada: Compra/Recebimento -> Contas a Pagar -> Pagamento Manual -> Estorno -> Caixa Consolidado -> Fechamento
+
 DO $$
 BEGIN
     ALTER TABLE plantaopro.adm360_contas_financeiras
@@ -4439,8 +4476,10 @@ EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
 
+-- 1. Sequência para títulos a pagar
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_titulo_pagar_numero START 1;
 
+-- 2. Tabela de Contas a Pagar (Obrigações)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_titulos_pagar (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4478,6 +4517,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_titulos_pagar_origem ON plantaopro.a
 CREATE INDEX IF NOT EXISTS ix_adm360_titulos_pagar_fornecedor ON plantaopro.adm360_titulos_pagar(tenant_id, fornecedor_id, situacao);
 CREATE INDEX IF NOT EXISTS ix_adm360_titulos_pagar_venc ON plantaopro.adm360_titulos_pagar(tenant_id, data_vencimento, situacao);
 
+-- 3. Tabela de Pagamentos Manuais (Baixas de AP)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_titulo_pagamentos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4499,6 +4539,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_titulo_pagamentos (
 CREATE INDEX IF NOT EXISTS ix_adm360_titpag_tenant_tit ON plantaopro.adm360_titulo_pagamentos(tenant_id, titulo_id);
 CREATE INDEX IF NOT EXISTS ix_adm360_titpag_tenant_data ON plantaopro.adm360_titulo_pagamentos(tenant_id, data_pagamento);
 
+-- 4. Tabela de Estornos de Pagamento
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_pagamento_estornos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4514,6 +4555,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_pagamento_estornos (
     UNIQUE(tenant_id, idempotency_key)
 );
 
+-- 5. Fechamento de Caixa por Conta e Período/Data
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_caixa_fechamentos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4560,6 +4602,7 @@ END $$;
 
 CREATE INDEX IF NOT EXISTS ix_adm360_caixa_fech_tenant_conta ON plantaopro.adm360_caixa_fechamentos(tenant_id, conta_id, data_fim);
 
+-- 6. Suporte a comissão vinculada a título a pagar
 DO $$
 BEGIN
     ALTER TABLE plantaopro.adm360_comissoes_apropriadas
@@ -4575,7 +4618,22 @@ EXCEPTION
     WHEN OTHERS THEN NULL;
 END $$;
 
+-- ============================================================
+-- Seção 60 — Administrativo360 Cotacoes Xml Dashboard
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql
+-- SOURCE-SHA256: 1a61b839c29de84ccfbf0db263698a668eaee55033d8929f4d4eaaa3f6744885
 -- Migration 2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql
+-- Ampliação do Administrativo 360 do PlantãoPro:
+-- 1. Estabelecimentos e Capacidades Contratadas (Portais de Cotação, XML Recebidos, Dashboard Gerencial)
+-- 2. Conexões de Portais de Cotação (OPMENEXO, INPART Saúde, Importação Manual)
+-- 3. Captação de Cotações, Itens e Anexos
+-- 4. Relacionamento de Dados (De/Para de Hospitais, Médicos, Unidades, Produtos)
+-- 5. Outbox de Respostas de Cotação e Orçamento Vinculado
+-- 6. Sincronização DF-e e Documentos XML Recebidos (NF-e modelo 55), Itens e Eventos
+
+-- 1. Estabelecimentos (Unidades / CNPJs autorizados no Tenant)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_estabelecimentos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4593,6 +4651,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_estabelecimentos (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_estab_tenant_cnpj ON plantaopro.adm360_estabelecimentos(tenant_id, cnpj);
 
+-- 2. Capacidades Contratadas por Tenant
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_capacidades_contratadas (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4604,6 +4663,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_capacidades_contratadas (
     UNIQUE(tenant_id, capacidade)
 );
 
+-- 3. Contas de Conexão com Portais Externos (OPMENEXO, INPART, Importação Manual)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_portal_contas (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4625,6 +4685,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_portal_contas (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_pcontas_tenant_prov ON plantaopro.adm360_portal_contas(tenant_id, provedor, status_integracao);
 
+-- 4. De/Para de Dados e Cadastros (Hospitais, Médicos, Unidades, Produtos)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_mapeamentos_de_para (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4646,6 +4707,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_mapeamentos_de_para (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_depara_tenant_tipo ON plantaopro.adm360_mapeamentos_de_para(tenant_id, provedor, tipo_entidade, codigo_externo);
 
+-- 5. Cotações Pré-Cirúrgicas Captadas
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacoes (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4677,6 +4739,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacoes (
 CREATE INDEX IF NOT EXISTS ix_adm360_cot_tenant_prazo ON plantaopro.adm360_cotacoes(tenant_id, prazo_resposta, status_interno);
 CREATE INDEX IF NOT EXISTS ix_adm360_cot_tenant_ext ON plantaopro.adm360_cotacoes(tenant_id, provedor, identificador_externo);
 
+-- 6. Itens da Cotação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_itens (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4703,6 +4766,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_itens (
     UNIQUE(tenant_id, cotacao_id, numero_item)
 );
 
+-- 7. Anexos de Cotação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_anexos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4716,6 +4780,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_anexos (
     UNIQUE(tenant_id, id)
 );
 
+-- 8. Fila Outbox de Respostas de Cotação
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_respostas (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4740,6 +4805,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_respostas (
 
 CREATE INDEX IF NOT EXISTS ix_adm360_respcot_tenant_status ON plantaopro.adm360_cotacao_respostas(tenant_id, status_transmissao, proxima_tentativa);
 
+-- 9. Sincronização DF-e (NFeDistribuicaoDFe)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_dfe_sincronizacoes (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4758,6 +4824,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_dfe_sincronizacoes (
     UNIQUE(tenant_id, estabelecimento_id, ambiente)
 );
 
+-- 10. Documentos Fiscais Recebidos (NF-e modelo 55)
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_documentos_recebidos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4794,6 +4861,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_documentos_recebidos (
 CREATE INDEX IF NOT EXISTS ix_adm360_docrec_tenant_chave ON plantaopro.adm360_documentos_recebidos(tenant_id, chave_acesso);
 CREATE INDEX IF NOT EXISTS ix_adm360_docrec_tenant_status ON plantaopro.adm360_documentos_recebidos(tenant_id, status_conferencia, quarentena);
 
+-- 11. Itens do Documento Fiscal Recebido
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_documento_itens (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4816,6 +4884,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_documento_itens (
     UNIQUE(tenant_id, documento_id, numero_item)
 );
 
+-- 12. Eventos e Histórico do Documento Fiscal
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_documento_eventos (
     id uuid PRIMARY KEY,
     tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
@@ -4831,7 +4900,160 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_documento_eventos (
     UNIQUE(tenant_id, id)
 );
 
+-- ============================================================
+-- Seção 61 — Reconciliação canônica de contratos de módulos v2.19.7
+-- ============================================================
 
+-- SOURCE: database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql
+-- SOURCE-SHA256: 71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4
+-- PlantãoPro v2.19.7 - contrato canônico e reconciliação segura de tenant_modulos.
+-- Não remove dados: códigos sem correspondência ou ambíguos permanecem intactos e
+-- são registrados em tenant_modulos_reconciliacao para correção administrativa.
+set search_path to plantaopro, public;
 
+do $migration$
+begin
+    if to_regclass('plantaopro.tenant_modulos') is null
+       or to_regclass('plantaopro.modulos_sistema') is null then
+        raise exception 'Pré-requisitos ausentes: tenant_modulos e modulos_sistema devem existir';
+    end if;
+end $migration$;
 
+-- Acrescentar primeiro como nullable evita que o DEFAULT transforme contratos
+-- cancelados/bloqueados legados em contratos habilitados durante o backfill.
+alter table plantaopro.tenant_modulos add column if not exists modulo_id uuid null;
+alter table plantaopro.tenant_modulos add column if not exists codigo text null;
+alter table plantaopro.tenant_modulos add column if not exists codigo_modulo text null;
+alter table plantaopro.tenant_modulos add column if not exists habilitado boolean null;
+alter table plantaopro.tenant_modulos add column if not exists origem text null;
+alter table plantaopro.tenant_modulos add column if not exists status text null;
+alter table plantaopro.tenant_modulos add column if not exists reg_status char(1) null;
+alter table plantaopro.tenant_modulos add column if not exists reg_date timestamptz null;
+alter table plantaopro.tenant_modulos add column if not exists reg_update timestamptz null;
+alter table plantaopro.tenant_modulos add column if not exists ativado_em timestamptz null;
+alter table plantaopro.tenant_modulos add column if not exists desativado_em timestamptz null;
+alter table plantaopro.tenant_modulos add column if not exists limite_contratado integer null;
+alter table plantaopro.tenant_modulos add column if not exists preco_contratado numeric(14,2) null;
+alter table plantaopro.tenant_modulos add column if not exists created_by uuid null;
+alter table plantaopro.tenant_modulos add column if not exists updated_by uuid null;
 
+-- Datas legadas são copiadas quando essas colunas existem; SQL dinâmico mantém a
+-- migration compatível com as duas famílias de schema encontradas no repositório.
+do $dates$
+begin
+    if exists(select 1 from information_schema.columns where table_schema='plantaopro' and table_name='tenant_modulos' and column_name='criado_em') then
+        execute 'update plantaopro.tenant_modulos set reg_date=coalesce(reg_date,criado_em) where reg_date is null';
+    end if;
+    if exists(select 1 from information_schema.columns where table_schema='plantaopro' and table_name='tenant_modulos' and column_name='atualizado_em') then
+        execute 'update plantaopro.tenant_modulos set reg_update=coalesce(reg_update,atualizado_em) where reg_update is null';
+    end if;
+end $dates$;
+
+update plantaopro.tenant_modulos
+set codigo_modulo = nullif(btrim(coalesce(codigo_modulo,codigo)),''),
+    codigo = nullif(btrim(coalesce(codigo,codigo_modulo)),''),
+    status = upper(coalesce(nullif(btrim(status),''),'ATIVO')),
+    reg_status = upper(coalesce(nullif(btrim(reg_status),''),'A')),
+    reg_date = coalesce(reg_date,now()),
+    origem = coalesce(nullif(btrim(origem),''),'LEGADO')
+where codigo_modulo is distinct from nullif(btrim(coalesce(codigo_modulo,codigo)),'')
+   or codigo is distinct from nullif(btrim(coalesce(codigo,codigo_modulo)),'')
+   or status is null or reg_status is null or reg_date is null or origem is null;
+
+-- A ausência do flag só herda acesso para um contrato realmente ATIVO. Estados
+-- AGENDADO, SUSPENSO, BLOQUEADO, CANCELADO e INATIVO continuam sem acesso.
+update plantaopro.tenant_modulos
+set habilitado = (upper(coalesce(status,''))='ATIVO' and reg_status='A')
+where habilitado is null;
+
+create table if not exists plantaopro.tenant_modulos_reconciliacao (
+    tenant_modulo_id uuid primary key,
+    tenant_id uuid null,
+    codigo_legado text null,
+    motivo text not null,
+    candidatos uuid[] not null default '{}',
+    detectado_em timestamptz not null default now(),
+    resolvido_em timestamptz null
+);
+
+-- O Administrativo 360 é um produto independente: entra no catálogo sem criar
+-- dependências implícitas com Saúde 360 ou Plantões.
+insert into plantaopro.modulos_sistema(id,codigo,nome,descricao,ordem,status,reg_status,reg_date)
+select 'a3600000-0000-4000-8000-000000000099','ADM360','Administrativo 360',
+       'Gestão administrativa independente',2190,'ATIVO','A',now()
+where not exists(select 1 from plantaopro.modulos_sistema where upper(btrim(codigo))='ADM360' and reg_status='A');
+
+-- Relaciona somente códigos com exatamente um módulo ativo no catálogo.
+with matches as (
+    select tm.id tenant_modulo_id, (array_agg(ms.id order by ms.id))[1] modulo_id, count(*) quantidade
+    from plantaopro.tenant_modulos tm
+    join plantaopro.modulos_sistema ms
+      on upper(btrim(ms.codigo))=upper(btrim(coalesce(tm.codigo_modulo,tm.codigo)))
+     and ms.reg_status='A'
+    where tm.modulo_id is null and nullif(btrim(coalesce(tm.codigo_modulo,tm.codigo)),'') is not null
+    group by tm.id
+)
+update plantaopro.tenant_modulos tm
+set modulo_id=m.modulo_id, reg_update=coalesce(tm.reg_update,now())
+from matches m where tm.id=m.tenant_modulo_id and m.quantidade=1;
+
+update plantaopro.tenant_modulos tm
+set codigo_modulo=ms.codigo, codigo=coalesce(nullif(tm.codigo,''),ms.codigo)
+from plantaopro.modulos_sistema ms
+where tm.modulo_id=ms.id and ms.reg_status='A'
+  and (tm.codigo_modulo is null or upper(btrim(tm.codigo_modulo))<>upper(btrim(ms.codigo)));
+
+insert into plantaopro.tenant_modulos_reconciliacao(tenant_modulo_id,tenant_id,codigo_legado,motivo,candidatos,detectado_em,resolvido_em)
+select tm.id,tm.tenant_id,coalesce(tm.codigo_modulo,tm.codigo),
+       case when count(ms.id)=0 then 'CATALOGO_SEM_CORRESPONDENCIA' else 'CATALOGO_AMBIGUO' end,
+       coalesce(array_agg(ms.id order by ms.id) filter(where ms.id is not null),'{}'),now(),null
+from plantaopro.tenant_modulos tm
+left join plantaopro.modulos_sistema ms
+  on upper(btrim(ms.codigo))=upper(btrim(coalesce(tm.codigo_modulo,tm.codigo))) and ms.reg_status='A'
+where tm.modulo_id is null and tm.reg_status='A'
+group by tm.id,tm.tenant_id,tm.codigo_modulo,tm.codigo
+on conflict(tenant_modulo_id) do update set codigo_legado=excluded.codigo_legado,motivo=excluded.motivo,
+ candidatos=excluded.candidatos,detectado_em=excluded.detectado_em,resolvido_em=null;
+
+update plantaopro.tenant_modulos_reconciliacao r set resolvido_em=now()
+where resolvido_em is null and exists(select 1 from plantaopro.tenant_modulos tm where tm.id=r.tenant_modulo_id and tm.modulo_id is not null);
+
+do $validate$
+begin
+    if exists(select 1 from plantaopro.tenant_modulos tm left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id
+              where tm.modulo_id is not null and ms.id is null) then
+        raise exception 'tenant_modulos contém modulo_id órfão; consulte tenant_modulos antes de prosseguir';
+    end if;
+    if exists(select 1 from plantaopro.tenant_modulos where tenant_id is null and reg_status='A') then
+        raise exception 'tenant_modulos contém contrato ativo sem tenant_id';
+    end if;
+    if exists(select 1 from plantaopro.tenant_modulos where reg_status='A' and modulo_id is not null
+              group by tenant_id,modulo_id having count(*)>1) then
+        raise exception 'tenant_modulos contém contratos ativos duplicados para tenant/módulo';
+    end if;
+end $validate$;
+
+alter table plantaopro.tenant_modulos alter column habilitado set default true;
+alter table plantaopro.tenant_modulos alter column habilitado set not null;
+alter table plantaopro.tenant_modulos alter column origem set default 'CONTRATO';
+alter table plantaopro.tenant_modulos alter column origem set not null;
+alter table plantaopro.tenant_modulos alter column status set default 'ATIVO';
+alter table plantaopro.tenant_modulos alter column status set not null;
+alter table plantaopro.tenant_modulos alter column reg_status set default 'A';
+alter table plantaopro.tenant_modulos alter column reg_status set not null;
+alter table plantaopro.tenant_modulos alter column reg_date set default now();
+alter table plantaopro.tenant_modulos alter column reg_date set not null;
+
+create unique index if not exists ux_tenant_modulos_contrato_ativo
+ on plantaopro.tenant_modulos(tenant_id,modulo_id) where reg_status='A' and modulo_id is not null;
+create index if not exists ix_tenant_modulos_acesso
+ on plantaopro.tenant_modulos(tenant_id,habilitado,status) where reg_status='A';
+
+do $constraints$
+begin
+    if not exists(select 1 from pg_constraint where conname='fk_tenant_modulos_modulo_id' and conrelid='plantaopro.tenant_modulos'::regclass) then
+        alter table plantaopro.tenant_modulos add constraint fk_tenant_modulos_modulo_id
+          foreign key(modulo_id) references plantaopro.modulos_sistema(id) not valid;
+        alter table plantaopro.tenant_modulos validate constraint fk_tenant_modulos_modulo_id;
+    end if;
+end $constraints$;

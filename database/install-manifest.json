@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.19.1",
-  "generatedAt": "2026-09-24",
+  "schemaVersion": "v2.19.7",
+  "generatedAt": "2026-09-25",
   "sections": [
     {
       "order": 3,
@@ -672,6 +672,105 @@
           "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
           "dependsOn": [
             "plantaopro.administrativo360_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 56,
+      "name": "Administrativo360 Regras Estoque Orcamentos",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_regras_estoque_orcamentos",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 57,
+      "name": "Administrativo360 Cirurgia Vales Reconciliacao",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_cirurgia_vales_reconciliacao",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_regras_estoque_orcamentos",
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 58,
+      "name": "Administrativo360 Valorizacao Vendas Financeiro",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_valorizacao_vendas_financeiro",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cirurgia_vales_reconciliacao",
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 59,
+      "name": "Administrativo360 Contas Pagar Fechamento",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_contas_pagar_fechamento",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_valorizacao_vendas_financeiro"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 60,
+      "name": "Administrativo360 Cotacoes Xml Dashboard",
+      "objects": [
+        {
+          "name": "plantaopro.administrativo360_cotacoes_xml_dashboard",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_contas_pagar_fechamento"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 61,
+      "name": "Reconciliação canônica de contratos de módulos v2.19.7",
+      "objects": [
+        {
+          "name": "plantaopro.tenant_modulos_canonico",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants",
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
           ]
         }
       ]

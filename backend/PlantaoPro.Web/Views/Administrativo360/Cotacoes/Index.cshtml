@@ -1,0 +1,216 @@
+@model PlantaoPro.Web.Models.CotacoesIndexViewModel
+@{
+    ViewData["Title"] = "Central de Cotações — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-inbox-fill text-warning me-2"></i>Central de Cotações Pré-Cirúrgicas
+            </h2>
+            <p class="text-muted small mb-0">Captação, relacionamento De/Para, geração de orçamentos e transmissão de respostas a portais OPMENEXO e INPART Saúde.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Administrativo360/Cotacoes/Relacionamento" class="btn btn-outline-warning">
+                <i class="bi bi-diagram-3 me-1"></i> De/Para Geral
+            </a>
+            <a href="/Administrativo360/Cotacoes/ContasPortal" class="btn btn-outline-light">
+                <i class="bi bi-gear me-1"></i> Configurar Contas
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-warning h6 mb-2"><i class="bi bi-info-circle me-2"></i>Como Funciona o Ciclo de Cotação Pré-Cirúrgica</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Captação & Entrada</strong>
+                    As cotações são captadas via conector de portal ou importação manual com unicidade por revisão externa e proteção de payload.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. De/Para & Validação</strong>
+                    Itens solicitados devem ser mapeados para produtos internos com fator de conversão. Pendências impedem envio.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. Orçamento Vinculado</strong>
+                    Gera rascunho cirúrgico canônico idempotente no Administrativo 360, mantendo rastreabilidade total.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Fila Outbox Segura</strong>
+                    A resposta aprovada gera snapshot imutável e entra na fila de envio com retentativa e consulta de processamento.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Erro))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body p-3">
+            <form method="get" action="/Administrativo360/Cotacoes" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-light small">Provedor</label>
+                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os portais</option>
+                        <option value="OPMENEXO" selected="@(Model.Provedor == "OPMENEXO")">OPMENEXO</option>
+                        <option value="INPART" selected="@(Model.Provedor == "INPART")">INPART Saúde</option>
+                        <option value="IMPORTACAO_MANUAL" selected="@(Model.Provedor == "IMPORTACAO_MANUAL")">Importação Manual</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light small">Status Interno</label>
+                    <select name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todas as situações</option>
+                        <option value="RECEBIDA" selected="@(Model.Status == "RECEBIDA")">Recebida</option>
+                        <option value="EM_RELACIONAMENTO" selected="@(Model.Status == "EM_RELACIONAMENTO")">Em Relacionamento</option>
+                        <option value="EM_ORCAMENTO" selected="@(Model.Status == "EM_ORCAMENTO")">Em Orçamento</option>
+                        <option value="AGUARDANDO_APROVACAO" selected="@(Model.Status == "AGUARDANDO_APROVACAO")">Aguardando Aprovação</option>
+                        <option value="PRONTA_PARA_ENVIO" selected="@(Model.Status == "PRONTA_PARA_ENVIO")">Pronta para Envio</option>
+                        <option value="RESPONDIDA" selected="@(Model.Status == "RESPONDIDA")">Respondida</option>
+                        <option value="EXPIRADA" selected="@(Model.Status == "EXPIRADA")">Expirada</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-sm btn-primary me-2">
+                        <i class="bi bi-filter me-1"></i> Filtrar
+                    </button>
+                    <a href="/Administrativo360/Cotacoes" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Cotações -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-list-task me-2"></i>Cotações Registradas (@Model.Cotacoes.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Provedor</th>
+                            <th>ID Externo / Rev</th>
+                            <th>Hospital / Solicitante</th>
+                            <th>Procedimento</th>
+                            <th>Prazo de Resposta</th>
+                            <th>Itens</th>
+                            <th>Status Interno</th>
+                            <th>Orçamento</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Cotacoes.Any())
+                        {
+                            <tr>
+                                <td colspan="9" class="text-center py-4 text-muted">
+                                    Nenhuma cotação encontrada para os critérios selecionados.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var c in Model.Cotacoes)
+                        {
+                            var expirado = c.PrazoResposta < DateTime.UtcNow && c.StatusInterno != "RESPONDIDA";
+                            <tr>
+                                <td>
+                                    <span class="badge bg-secondary">@c.Provedor</span>
+                                </td>
+                                <td>
+                                    <strong class="text-light">@c.IdentificadorExterno</strong>
+                                    <span class="badge bg-dark border border-secondary ms-1">v@(c.RevisaoExterna)</span>
+                                    <div class="small text-muted">@c.Origem</div>
+                                </td>
+                                <td>
+                                    <div class="text-light">@c.HospitalNome</div>
+                                </td>
+                                <td>
+                                    <span class="text-muted small">@(c.Procedimento ?? "Não especificado")</span>
+                                </td>
+                                <td>
+                                    <div class="@(expirado ? "text-danger fw-bold" : "text-light")">
+                                        @c.PrazoResposta.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                    @if (expirado)
+                                    {
+                                        <span class="badge bg-danger small">Prazo Expirado</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@c.TotalItens itens</span>
+                                    @if (c.ItensPendentes > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1">@c.ItensPendentes pendentes</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success ms-1">100% De/Para</span>
+                                    }
+                                </td>
+                                <td>
+                                    @switch (c.StatusInterno)
+                                    {
+                                        case "RECEBIDA":
+                                            <span class="badge bg-secondary">Recebida</span>
+                                            break;
+                                        case "EM_RELACIONAMENTO":
+                                            <span class="badge bg-warning text-dark">Em Relacionamento</span>
+                                            break;
+                                        case "EM_ORCAMENTO":
+                                            <span class="badge bg-primary">Em Orçamento</span>
+                                            break;
+                                        case "AGUARDANDO_APROVACAO":
+                                            <span class="badge bg-info text-dark">Aguardando Aprovação</span>
+                                            break;
+                                        case "PRONTA_PARA_ENVIO":
+                                            <span class="badge bg-success">Pronta p/ Envio</span>
+                                            break;
+                                        case "RESPONDIDA":
+                                            <span class="badge bg-success">Respondida</span>
+                                            break;
+                                        case "EXPIRADA":
+                                            <span class="badge bg-danger">Expirada</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-dark border">@c.StatusInterno</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    @if (c.OrcamentoId.HasValue)
+                                    {
+                                        <span class="badge bg-outline-info text-info border border-info">Vinculado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Pendente</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a href="/Administrativo360/Cotacoes/Detalhes/@c.Id" class="btn btn-sm btn-outline-warning">
+                                        <i class="bi bi-eye me-1"></i> Abrir Cotação
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

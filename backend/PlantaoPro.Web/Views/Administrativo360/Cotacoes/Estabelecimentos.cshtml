@@ -1,0 +1,135 @@
+@model PlantaoPro.Web.Models.EstabelecimentosPageViewModel
+@{
+    ViewData["Title"] = "Estabelecimentos Autorizados — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-building text-info me-2"></i>Estabelecimentos e CNPJs Autorizados
+            </h2>
+            <p class="text-muted small mb-0">Unidades da empresa autorizadas a captar cotações e receber documentos fiscais (DF-e).</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalNovoEstabelecimento">
+                <i class="bi bi-plus-circle me-1"></i> Novo Estabelecimento
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Tabela de Estabelecimentos -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                Unidades Cadastradas (@Model.Estabelecimentos.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>CNPJ</th>
+                            <th>Razão Social</th>
+                            <th>Nome Fantasia</th>
+                            <th>Inscrição Estadual</th>
+                            <th>Ambiente</th>
+                            <th>Situação</th>
+                            <th>Cadastrado Em</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Estabelecimentos.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhum estabelecimento cadastrado.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var e in Model.Estabelecimentos)
+                        {
+                            <tr>
+                                <td><code class="text-warning">@e.Cnpj</code></td>
+                                <td><strong class="text-light">@e.RazaoSocial</strong></td>
+                                <td class="text-muted">@(e.NomeFantasia ?? "-")</td>
+                                <td>@(e.InscricaoEstadual ?? "-")</td>
+                                <td><span class="badge bg-dark border">@e.Ambiente</span></td>
+                                <td>
+                                    <span class="badge @(e.Ativo ? "bg-success" : "bg-secondary")">
+                                        @(e.Ativo ? "Ativo" : "Inativo")
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@e.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Estabelecimento -->
+<div class="modal fade" id="modalNovoEstabelecimento" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form method="post" action="/Administrativo360/Cotacoes/CriarEstabelecimento">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalLabel">Novo Estabelecimento / CNPJ</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">CNPJ</label>
+                        <input type="text" name="Cnpj" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="00.000.000/0000-00" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Razão Social</label>
+                        <input type="text" name="RazaoSocial" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Nome Fantasia (Opcional)</label>
+                        <input type="text" name="NomeFantasia" class="form-control form-control-sm bg-dark text-light border-secondary" />
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small">Inscrição Estadual</label>
+                            <input type="text" name="InscricaoEstadual" class="form-control form-control-sm bg-dark text-light border-secondary" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Ambiente</label>
+                            <select name="Ambiente" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                <option value="HOMOLOGACAO">Homologação</option>
+                                <option value="PRODUCAO">Produção</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-info">Salvar Estabelecimento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

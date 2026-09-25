@@ -654,6 +654,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2196_administrativo360_cotacoes_xml_dashboard",
+      "source": "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql",
+      "checksum": "1a61b839c29de84ccfbf0db263698a668eaee55033d8929f4d4eaaa3f6744885",
+      "dependsOn": [
+        "2026_09_v2195_administrativo360_contas_pagar_fechamento"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

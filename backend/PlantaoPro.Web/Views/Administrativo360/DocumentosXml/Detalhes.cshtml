@@ -1,0 +1,279 @@
+@model PlantaoPro.Web.Models.DocumentoXmlDetalhesPageViewModel
+@{
+    ViewData["Title"] = $"NF-e {Model.Documento.Numero} — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/Administrativo360/DocumentosXml" class="text-info">XML Recebidos</a></li>
+                    <li class="breadcrumb-item active text-light" aria-current="page">NF-e @Model.Documento.Numero</li>
+                </ol>
+            </nav>
+            <h2 class="h4 mb-0 text-light fw-bold">
+                NF-e @Model.Documento.Numero / Série @Model.Documento.Serie
+                @if (Model.Documento.Quarentena)
+                {
+                    <span class="badge bg-danger ms-2">Em Quarentena: @Model.Documento.MotivoQuarentena</span>
+                }
+            </h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Administrativo360/DocumentosXml" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+            <a href="/Administrativo360/DocumentosXml/Download/@Model.Documento.Id" class="btn btn-outline-light">
+                <i class="bi bi-download me-1"></i> Baixar XML Original
+            </a>
+            @if (!Model.Documento.Quarentena && Model.Documento.StatusConferencia != "VINCULADO")
+            {
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalVincularRecebimento">
+                    <i class="bi bi-link-45deg me-1"></i> Vincular a Recebimento de Compra
+                </button>
+            }
+            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalManifestacao">
+                <i class="bi bi-patch-check me-1"></i> Manifestar DF-e
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Sucesso))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@Model.Sucesso
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.Erro))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Cabeçalho Informativo -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Emitente (Fornecedor)</span>
+                    <h5 class="fw-bold text-light mb-1">@Model.Documento.EmitenteNome</h5>
+                    <div class="small text-muted">CNPJ: @Model.Documento.EmitenteCnpj</div>
+                    <div class="mt-2 small text-secondary">Chave de Acesso:</div>
+                    <code class="text-info font-monospace small d-block text-break">@Model.Documento.ChaveAcesso</code>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Destinatário (Estabelecimento Autorizado)</span>
+                    <h5 class="fw-bold text-light mb-1">@Model.Documento.DestinatarioNome</h5>
+                    <div class="small text-warning">CNPJ: @Model.Documento.DestinatarioCnpj</div>
+                    <div class="mt-2 small text-muted">Estabelecimento: @Model.Documento.EstabelecimentoNome</div>
+                    <div class="small text-muted">Emissão: @Model.Documento.DataEmissao.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Valores e Situação Fiscal</span>
+                    <h4 class="fw-bold text-success mb-1">R$ @Model.Documento.ValorTotal.ToString("N2")</h4>
+                    <div class="small text-muted">Produtos: R$ @Model.Documento.ValorProdutos.ToString("N2")</div>
+                    <div class="mt-2">
+                        <span class="badge bg-secondary me-1">@Model.Documento.TipoDocumento</span>
+                        <span class="badge bg-info text-dark me-1">Manifestação: @Model.Documento.StatusManifestacao</span>
+                        <span class="badge @(Model.Documento.StatusConferencia == "VINCULADO" ? "bg-success" : "bg-warning text-dark")">
+                            Conferência: @Model.Documento.StatusConferencia
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Itens do Documento Fiscal -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-box-seam me-2"></i>Itens da Nota Fiscal (@Model.Documento.Itens.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Código / Descrição do Emitente</th>
+                            <th>NCM / CFOP</th>
+                            <th>Qtd / Unid Comercial</th>
+                            <th>Valor Unitário</th>
+                            <th>Valor Total</th>
+                            <th>Produto Vinculado Interno</th>
+                            <th>Fator / Qtd Convertida</th>
+                            <th>Conferido</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Documento.Itens)
+                        {
+                            <tr>
+                                <td>@item.NumeroItem</td>
+                                <td>
+                                    <strong class="text-light">@item.DescricaoProdutoEmitente</strong>
+                                    <div class="small text-muted">Cód: @item.CodigoProdutoEmitente</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark border">@item.Ncm</span>
+                                    <span class="badge bg-secondary">@item.Cfop</span>
+                                </td>
+                                <td>
+                                    @item.QuantidadeComercial.ToString("N2") <span class="badge bg-secondary">@item.UnidadeComercial</span>
+                                </td>
+                                <td>R$ @item.ValorUnitario.ToString("N2")</td>
+                                <td><strong class="text-light">R$ @item.ValorTotal.ToString("N2")</strong></td>
+                                <td>
+                                    @if (item.ProdutoId.HasValue)
+                                    {
+                                        <div class="text-light fw-bold">@item.ProdutoNome</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-warning small">Pendente de vinculação</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.ProdutoId.HasValue)
+                                    {
+                                        <div>Fator: @item.FatorConversao.ToString("N4")</div>
+                                        <strong>@item.QuantidadeConvertida.ToString("N2")</strong> <span class="badge bg-dark border">@item.UnidadeInterna</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge @(item.Conferido ? "bg-success" : "bg-warning text-dark")">
+                                        @(item.Conferido ? "Sim" : "Não")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eventos do Documento -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-clock-history me-2"></i>Eventos e Rastreabilidade Fiscal (@Model.Documento.Eventos.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <ul class="list-group list-group-flush bg-dark">
+                @if (!Model.Documento.Eventos.Any())
+                {
+                    <li class="list-group-item bg-dark text-muted py-3">Nenhum evento registrado para este documento.</li>
+                }
+                @foreach (var ev in Model.Documento.Eventos)
+                {
+                    <li class="list-group-item bg-dark text-light border-secondary">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-info text-dark me-2">@ev.TipoEvento</span>
+                                <strong>@ev.DescricaoEvento</strong>
+                                @if (!string.IsNullOrWhiteSpace(ev.Protocolo))
+                                {
+                                    <span class="small text-muted ms-2">Protocolo: @ev.Protocolo</span>
+                                }
+                            </div>
+                            <span class="small text-muted">@ev.DataEvento.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(ev.Detalhes))
+                        {
+                            <div class="small text-secondary mt-1">@ev.Detalhes</div>
+                        }
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Vincular Recebimento -->
+<div class="modal fade" id="modalVincularRecebimento" tabindex="-1" aria-labelledby="modalVincularLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form method="post" action="/Administrativo360/DocumentosXml/VincularRecebimento">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="DocumentoId" value="@Model.Documento.Id" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalVincularLabel">Vincular a Recebimento de Compra</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        O vínculo cria a rastreabilidade fiscal entre o XML importado e a recepção física do pedido de compra. A operação é idempotente e auditada.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">ID do Pedido de Compra (UUID)</label>
+                        <input type="text" name="PedidoId" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="00000000-0000-0000-0000-000000000000" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">ID do Local de Estoque (UUID)</label>
+                        <input type="text" name="LocalId" class="form-control form-control-sm bg-dark text-light border-secondary" required placeholder="00000000-0000-0000-0000-000000000000" />
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-success">Confirmar Vinculação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Manifestação DF-e -->
+<div class="modal fade" id="modalManifestacao" tabindex="-1" aria-labelledby="modalManifestarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form method="post" action="/Administrativo360/DocumentosXml/Manifestar/@Model.Documento.Id">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalManifestarLabel">Manifestação do Destinatário (DF-e)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">Tipo de Manifestação</label>
+                        <select name="tipoManifestacao" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                            <option value="CIENCIA_OPERACAO">Ciência da Operação</option>
+                            <option value="CONFIRMACAO_OPERACAO">Confirmação da Operação</option>
+                            <option value="DESCONHECIMENTO">Desconhecimento da Operação</option>
+                            <option value="OPERACAO_NAO_REALIZADA">Operação não Realizada</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Justificativa (obrigatória para Desconhecimento ou Não Realizada)</label>
+                        <textarea name="justificativa" class="form-control form-control-sm bg-dark text-light border-secondary" rows="3" placeholder="Mínimo de 15 caracteres"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-warning">Enviar Manifestação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

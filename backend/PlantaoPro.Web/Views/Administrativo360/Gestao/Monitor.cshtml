@@ -1,0 +1,226 @@
+@model PlantaoPro.Web.Models.MonitorIntegracoesViewModel
+@{
+    ViewData["Title"] = "Monitor de Integrações — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-activity text-success me-2"></i>Monitor Geral de Integrações
+            </h2>
+            <p class="text-muted small mb-0">Visão técnica e operacional de saúde dos conectores OPMENEXO, INPART e DF-e Sefaz.</p>
+        </div>
+        <div>
+            <a href="/Administrativo360/Gestao/Dashboard" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Contas de Portais de Cotação -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-diagram-2 me-2"></i>Conexões com Portais de Cotação (@Model.ContasPortal.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Provedor</th>
+                            <th>Estabelecimento</th>
+                            <th>Nome da Conta</th>
+                            <th>Ambiente</th>
+                            <th>Status da Conexão</th>
+                            <th>Última Sincronização</th>
+                            <th>Situação Cadastral</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.ContasPortal.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhuma conta de portal configurada.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var c in Model.ContasPortal)
+                        {
+                            <tr>
+                                <td><span class="badge bg-secondary">@c.Provedor</span></td>
+                                <td class="text-light">@c.EstabelecimentoNome</td>
+                                <td>@c.NomeConta</td>
+                                <td><span class="badge bg-dark border">@c.Ambiente</span></td>
+                                <td>
+                                    @switch (c.StatusIntegracao)
+                                    {
+                                        case "CONFIGURADA":
+                                            <span class="badge bg-success">Operacional</span>
+                                            break;
+                                        case "BLOQUEADA":
+                                            <span class="badge bg-danger">Bloqueada / Não Homologada</span>
+                                            @if (!string.IsNullOrWhiteSpace(c.MotivoBloqueio))
+                                            {
+                                                <div class="small text-danger">@c.MotivoBloqueio</div>
+                                            }
+                                            break;
+                                        default:
+                                            <span class="badge bg-warning text-dark">@c.StatusIntegracao</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-muted small">
+                                    @(c.UltimaSincronizacao?.ToString("dd/MM/yyyy HH:mm") ?? "Nenhuma")
+                                </td>
+                                <td>
+                                    <span class="badge @(c.Ativo ? "bg-success" : "bg-secondary")">
+                                        @(c.Ativo ? "Ativo" : "Inativo")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sincronizações DF-e Sefaz -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-cloud-arrow-down me-2"></i>Sincronizações Fiscais DF-e Sefaz (@Model.SincronizacoesDfe.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Estabelecimento / CNPJ</th>
+                            <th>Ambiente</th>
+                            <th>Último NSU</th>
+                            <th>Máx NSU</th>
+                            <th>Última Consulta</th>
+                            <th>Próxima Consulta Permitida</th>
+                            <th>Status Sefaz</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.SincronizacoesDfe.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhuma sincronização DF-e registrada.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var s in Model.SincronizacoesDfe)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="text-light">@s.EstabelecimentoNome</strong>
+                                    <div class="small text-warning">@s.Cnpj</div>
+                                </td>
+                                <td><span class="badge bg-dark border">@s.Ambiente</span></td>
+                                <td><code>@s.UltimoNsu</code></td>
+                                <td><code>@s.MaxNsu</code></td>
+                                <td class="small text-light">@(s.DataConsulta?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Nunca")</td>
+                                <td class="small text-light">@s.ProximaConsultaPermitida.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <span class="badge @(s.Status == "SUCESSO" ? "bg-success" : "bg-danger")">
+                                        @s.Status
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(s.MensagemErro))
+                                    {
+                                        <div class="small text-danger">@s.MensagemErro</div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transmissões Recentes e Outbox -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-send-check me-2"></i>Fila e Transmissões Outbox (@Model.RespostasRecentes.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Cotação / Identificador</th>
+                            <th>Revisão</th>
+                            <th>Status Transmissão</th>
+                            <th>Status Comercial</th>
+                            <th>Tentativas</th>
+                            <th>Protocolo Externo</th>
+                            <th>Último Envio</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.RespostasRecentes.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhuma transmissão outbox registrada.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var r in Model.RespostasRecentes)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="text-light">@r.IdentificadorExterno</strong>
+                                </td>
+                                <td>v@(r.Revisao)</td>
+                                <td>
+                                    @switch (r.StatusTransmissao)
+                                    {
+                                        case "ACEITA_PELO_PORTAL":
+                                            <span class="badge bg-success">Aceita pelo Portal</span>
+                                            break;
+                                        case "REJEITADA_PELO_PORTAL":
+                                            <span class="badge bg-danger">Rejeitada pelo Portal</span>
+                                            break;
+                                        case "NA_FILA":
+                                            <span class="badge bg-warning text-dark">Na Fila</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@r.StatusTransmissao</span>
+                                            break;
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(r.MensagemRetorno))
+                                    {
+                                        <div class="small text-muted">@r.MensagemRetorno</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-dark border">@r.StatusComercialExterno</span>
+                                </td>
+                                <td>@r.Tentativas</td>
+                                <td>@(r.ProtocoloExterno ?? "-")</td>
+                                <td class="small text-muted">
+                                    @(r.EnviadoEm?.ToString("dd/MM/yyyy HH:mm") ?? "Pendente")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

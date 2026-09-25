@@ -1,0 +1,84 @@
+@model PlantaoPro.Web.Models.ImportarXmlManualFormModel
+@{
+    ViewData["Title"] = "Importar XML Manual — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/Administrativo360/DocumentosXml" class="text-info">XML Recebidos</a></li>
+                    <li class="breadcrumb-item active text-light" aria-current="page">Importação Manual</li>
+                </ol>
+            </nav>
+            <h2 class="h4 mb-0 text-light fw-bold">
+                <i class="bi bi-upload text-info me-2"></i>Importação Manual de XML (NF-e Modelo 55)
+            </h2>
+        </div>
+        <div>
+            <a href="/Administrativo360/DocumentosXml" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar à Lista
+            </a>
+        </div>
+    </div>
+
+    <!-- Regras e Segurança -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-warning h6 mb-2"><i class="bi bi-shield-exclamation me-2"></i>Critérios Obrigatórios de Validação</h5>
+            <ul class="small text-secondary mb-0">
+                <li>O XML deve ser um documento fiscal eletrônico <strong>NF-e (modelo 55)</strong> válido e bem formado.</li>
+                <li>O CNPJ do destinatário deve coincidir com um dos <strong>estabelecimentos cadastrados e autorizados</strong> da empresa.</li>
+                <li>Processamento com proteção contra ataques XML (DTD e entidades externas são estritamente desabilitados).</li>
+                <li>Documentos inválidos, malformados ou com destinatário não autorizado serão direcionados para a <strong>quarentena</strong> para auditoria.</li>
+            </ul>
+        </div>
+    </div>
+
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger" role="alert">
+            <div asp-validation-summary="All" class="mb-0"></div>
+        </div>
+    }
+
+    <!-- Formulário de Importação -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">Envio do Arquivo ou Conteúdo XML</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/Administrativo360/DocumentosXml/Importar" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-4">
+                    <label class="form-label text-light fw-bold">Opção 1: Selecionar Arquivo .xml</label>
+                    <input type="file" name="arquivoXml" class="form-control bg-dark text-light border-secondary" accept=".xml,text/xml,application/xml" />
+                    <div class="form-text text-muted">Tamanho máximo permitido: 10 MB.</div>
+                </div>
+
+                <div class="text-center text-muted my-3 fw-bold">— OU —</div>
+
+                <div class="mb-4">
+                    <label class="form-label text-light fw-bold">Opção 2: Colar Conteúdo XML Bruto</label>
+                    <textarea name="XmlConteudo" class="form-control bg-dark text-light border-secondary font-monospace" rows="12" placeholder="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&lt;nfeProc ...&gt;&#10;...&#10;&lt;/nfeProc&gt;">@Model.XmlConteudo</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-light small">Nome do Arquivo / Referência (Opcional)</label>
+                    <input type="text" name="NomeArquivo" class="form-control form-control-sm bg-dark text-light border-secondary" value="@Model.NomeArquivo" placeholder="Ex: NFe_35260900000000000000550010000000011000000010.xml" />
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/Administrativo360/DocumentosXml" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-info">
+                        <i class="bi bi-file-earmark-check me-1"></i> Validar e Importar XML
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

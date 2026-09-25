@@ -1,0 +1,379 @@
+@model PlantaoPro.Web.Models.CotacaoDetalhesPageViewModel
+@{
+    ViewData["Title"] = $"Cotação {Model.Cotacao.IdentificadorExterno} — Administrativo 360";
+    var expirado = Model.Cotacao.PrazoResposta < DateTime.UtcNow && Model.Cotacao.StatusInterno != "RESPONDIDA";
+    var itensPendentes = Model.Cotacao.Itens.Count(i => i.StatusRelacionamento == "PENDENTE");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/Administrativo360/Cotacoes" class="text-warning">Cotações</a></li>
+                    <li class="breadcrumb-item active text-light" aria-current="page">@Model.Cotacao.IdentificadorExterno</li>
+                </ol>
+            </nav>
+            <h2 class="h4 mb-0 text-light fw-bold">
+                Cotação @Model.Cotacao.IdentificadorExterno <span class="badge bg-secondary ms-1">v@(Model.Cotacao.RevisaoExterna)</span>
+            </h2>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Administrativo360/Cotacoes" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar
+            </a>
+
+            @if (!Model.Cotacao.OrcamentoId.HasValue && itensPendentes == 0)
+            {
+                <form method="post" action="/Administrativo360/Cotacoes/GerarOrcamento/@Model.Cotacao.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-calculator me-1"></i> Gerar Orçamento Cirúrgico
+                    </button>
+                </form>
+            }
+
+            @if (Model.Cotacao.StatusInterno is "EM_ORCAMENTO" or "AGUARDANDO_APROVACAO" && !expirado)
+            {
+                <form method="post" action="/Administrativo360/Cotacoes/AprovarResposta/@Model.Cotacao.Id" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle me-1"></i> Aprovar Resposta e Enfileirar
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Sucesso))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@Model.Sucesso
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Erro))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    @if (itensPendentes > 0)
+    {
+        <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+            <div>
+                <strong>Existem @itensPendentes itens pendentes de relacionamento De/Para.</strong>
+                <p class="mb-0 small">A aprovação da resposta e o envio ao portal ficam bloqueados até que todos os itens tenham produtos internos correspondentes ou justificativa de não atendimento.</p>
+            </div>
+        </div>
+    }
+
+    <!-- Cabeçalho Informativo -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Provedor e Origem</span>
+                    <h5 class="fw-bold text-warning mb-1">@Model.Cotacao.Provedor</h5>
+                    <span class="badge bg-secondary">@Model.Cotacao.Origem</span>
+                    <div class="mt-2 small text-muted">Estabelecimento: @Model.Cotacao.EstabelecimentoNome</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Hospital Solicitante</span>
+                    <h5 class="fw-bold text-light mb-1">@(Model.Cotacao.HospitalNome ?? Model.Cotacao.HospitalSolicitanteExterno ?? "Não identificado")</h5>
+                    <div class="small text-muted">Procedimento: @(Model.Cotacao.Procedimento ?? "N/D")</div>
+                    <div class="small text-muted">Data Prevista: @(Model.Cotacao.DataPrevista?.ToString("dd/MM/yyyy") ?? "N/D")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Prazo de Resposta</span>
+                    <h5 class="fw-bold @(expirado ? "text-danger" : "text-light") mb-1">
+                        @Model.Cotacao.PrazoResposta.ToString("dd/MM/yyyy HH:mm")
+                    </h5>
+                    <span class="badge @(expirado ? "bg-danger" : "bg-info")">
+                        @(expirado ? "Expirada" : "Dentro do Prazo")
+                    </span>
+                    <div class="small text-muted mt-1">Fuso: @Model.Cotacao.FusoHorario</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <span class="text-muted small">Status e Orçamento</span>
+                    <h5 class="fw-bold text-light mb-1">@Model.Cotacao.StatusInterno</h5>
+                    <div class="small text-muted">Portal: @Model.Cotacao.StatusExterno</div>
+                    @if (Model.Cotacao.OrcamentoId.HasValue)
+                    {
+                        <div class="mt-1">
+                            <span class="badge bg-success">Orçamento: @Model.Cotacao.OrcamentoNumero</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens e De/Para -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-box-seam me-2"></i>Itens Solicitados e Relacionamento de Produtos (@Model.Cotacao.Itens.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>#</th>
+                            <th>Item Solicitado (Externo)</th>
+                            <th>Qtd / Unid</th>
+                            <th>Produto Ofertado (Interno)</th>
+                            <th>Conversão / Qtd Ofertada</th>
+                            <th>Preço Unit (R$)</th>
+                            <th>Desconto (R$)</th>
+                            <th>Total Ofertado</th>
+                            <th>Status De/Para</th>
+                            <th class="text-end">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Cotacao.Itens)
+                        {
+                            <tr>
+                                <td>@item.NumeroItem</td>
+                                <td>
+                                    <strong class="text-light">@item.DescricaoExterna</strong>
+                                    @if (!string.IsNullOrWhiteSpace(item.CodigoExterno))
+                                    {
+                                        <div class="small text-muted">Cód: @item.CodigoExterno</div>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.FabricanteExterno))
+                                    {
+                                        <div class="small text-secondary">Fab: @item.FabricanteExterno / Mod: @item.ModeloExterno</div>
+                                    }
+                                </td>
+                                <td>
+                                    @item.QuantidadeSolicitada.ToString("N2") <span class="badge bg-secondary">@item.UnidadeSolicitada</span>
+                                </td>
+                                <td>
+                                    @if (item.ProdutoId.HasValue)
+                                    {
+                                        <div class="text-light fw-bold">@item.ProdutoNome</div>
+                                        @if (!string.IsNullOrWhiteSpace(item.JustificativaSubstituicao))
+                                        {
+                                            <div class="small text-info">Subst: @item.JustificativaSubstituicao</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger small"><i class="bi bi-x-circle me-1"></i>Pendente de mapeamento</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (item.ProdutoId.HasValue)
+                                    {
+                                        <div>Fator: @item.FatorConversao.ToString("N4")</div>
+                                        <strong>@item.QuantidadeConvertida.ToString("N2")</strong> <span class="badge bg-dark border">@item.UnidadeInterna</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>R$ @item.PrecoUnitarioOfertado.ToString("N2")</td>
+                                <td>R$ @item.Desconto.ToString("N2")</td>
+                                <td>
+                                    <strong class="text-warning">R$ @item.PrecoTotalOfertado.ToString("N2")</strong>
+                                </td>
+                                <td>
+                                    @switch (item.StatusRelacionamento)
+                                    {
+                                        case "RELACIONADO":
+                                            <span class="badge bg-success">Relacionado</span>
+                                            break;
+                                        case "PENDENTE":
+                                            <span class="badge bg-warning text-dark">Pendente</span>
+                                            break;
+                                        case "NAO_ATENDIDO":
+                                            <span class="badge bg-danger">Não Atendido</span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-secondary">@item.StatusRelacionamento</span>
+                                            break;
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalItem-@item.Id">
+                                        <i class="bi bi-pencil-square me-1"></i> Mapear
+                                    </button>
+                                </td>
+                            </tr>
+
+                            <!-- Modal de Mapeamento do Item -->
+                            <div class="modal fade" id="modalItem-@item.Id" tabindex="-1" aria-labelledby="modalLabel-@item.Id" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content bg-dark text-light border-secondary">
+                                        <form method="post" action="/Administrativo360/Cotacoes/RelacionarItem">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="CotacaoId" value="@Model.Cotacao.Id" />
+                                            <input type="hidden" name="CotacaoItemId" value="@item.Id" />
+                                            <div class="modal-header border-secondary">
+                                                <h5 class="modal-title h6" id="modalLabel-@item.Id">
+                                                    Mapear Item #@item.NumeroItem: @item.DescricaoExterna
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label small">Status de Atendimento</label>
+                                                    <select name="StatusRelacionamento" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                                        <option value="RELACIONADO" selected="@(item.StatusRelacionamento == "RELACIONADO")">Relacionado com Produto Interno</option>
+                                                        <option value="NAO_ATENDIDO" selected="@(item.StatusRelacionamento == "NAO_ATENDIDO")">Não Atendido</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small">Produto Interno (UUID)</label>
+                                                    <input type="text" name="ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                           value="@item.ProdutoId" placeholder="Ex: d3f6584c-2c64-4e5a-9ea9-4e1428647520" />
+                                                    <div class="form-text text-muted small">Informe o identificador do produto no estoque interno.</div>
+                                                </div>
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Fator de Conversão</label>
+                                                        <input type="number" step="0.0001" name="FatorConversao" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                               value="@(item.FatorConversao > 0 ? item.FatorConversao : 1.0000m)" />
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small">Preço Unitário (R$)</label>
+                                                        <input type="number" step="0.01" name="PrecoUnitarioOfertado" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                               value="@item.PrecoUnitarioOfertado" />
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small">Desconto (R$)</label>
+                                                    <input type="number" step="0.01" name="Desconto" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                           value="@item.Desconto" />
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small">Justificativa de Substituição (se aplicável)</label>
+                                                    <input type="text" name="JustificativaSubstituicao" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                           value="@item.JustificativaSubstituicao" placeholder="Ex: Material equivalente autorizado pela ANVISA" />
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small">Motivo de Não Atendimento (se não atendido)</label>
+                                                    <input type="text" name="MotivoNaoAtendimento" class="form-control form-control-sm bg-dark text-light border-secondary"
+                                                           value="@item.MotivoNaoAtendimento" placeholder="Ex: Sem estoque ou descontinuado" />
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-secondary">
+                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-sm btn-warning">Salvar Mapeamento</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anexos e Respostas Outbox -->
+    <div class="row g-4">
+        <!-- Anexos -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="card-title text-light mb-0 h6">
+                        <i class="bi bi-paperclip me-2"></i>Anexos Pré-Cirúrgicos (@Model.Cotacao.Anexos.Count)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush bg-dark">
+                        @if (!Model.Cotacao.Anexos.Any())
+                        {
+                            <li class="list-group-item bg-dark text-muted py-3">Nenhum anexo associado a esta cotação.</li>
+                        }
+                        @foreach (var anexo in Model.Cotacao.Anexos)
+                        {
+                            <li class="list-group-item bg-dark text-light border-secondary d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold">@anexo.NomeArquivo</div>
+                                    <div class="small text-muted">@((anexo.TamanhoBytes / 1024.0).ToString("N1")) KB — SHA256: @anexo.Sha256Hash[..8]...</div>
+                                </div>
+                                <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Anexos/@anexo.Id" class="btn btn-sm btn-outline-light">
+                                    <i class="bi bi-download me-1"></i> Baixar
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fila de Respostas / Outbox -->
+        <div class="col-md-6">
+            <div class="card bg-dark border-secondary h-100">
+                <div class="card-header bg-dark border-secondary">
+                    <h5 class="card-title text-light mb-0 h6">
+                        <i class="bi bi-send-check me-2"></i>Histórico e Fila Outbox de Transmissão (@Model.Respostas.Count)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush bg-dark">
+                        @if (!Model.Respostas.Any())
+                        {
+                            <li class="list-group-item bg-dark text-muted py-3">Nenhuma resposta transmitida ou em fila.</li>
+                        }
+                        @foreach (var resp in Model.Respostas)
+                        {
+                            <li class="list-group-item bg-dark text-light border-secondary">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div>
+                                        <strong class="text-light">Transmissão v@(resp.Revisao)</strong>
+                                        <span class="badge bg-secondary ms-1">@resp.StatusTransmissao</span>
+                                    </div>
+                                    <div>
+                                        @if (resp.StatusTransmissao is "NA_FILA" or "REJEITADA_PELO_PORTAL" or "RESULTADO_DESCONHECIDO")
+                                        {
+                                            <form method="post" action="/Administrativo360/Cotacoes/TransmitirResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id" class="d-inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-sm btn-outline-warning">
+                                                    <i class="bi bi-arrow-repeat me-1"></i> Retentar Envio
+                                                </button>
+                                            </form>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="small text-muted">
+                                    Tentativas: @resp.Tentativas | Protocolo: @(resp.ProtocoloExterno ?? "Pendente")
+                                </div>
+                                @if (!string.IsNullOrWhiteSpace(resp.MensagemRetorno))
+                                {
+                                    <div class="small text-info mt-1">@resp.MensagemRetorno</div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

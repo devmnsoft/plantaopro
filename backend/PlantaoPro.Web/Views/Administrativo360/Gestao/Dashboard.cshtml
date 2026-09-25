@@ -1,0 +1,315 @@
+@model PlantaoPro.Web.Models.DashboardGestaoViewModel
+@{
+    ViewData["Title"] = "Dashboard Gerencial — Administrativo 360";
+    var c = Model.Dashboard.Cotacoes;
+    var x = Model.Dashboard.DocumentosXml;
+    var i = Model.Dashboard.Integracoes;
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-graph-up text-success me-2"></i>Dashboard Gerencial & Estatístico 360
+            </h2>
+            <p class="text-muted small mb-0">Indicadores reais e consolidados de cotações de portais, documentos fiscais NF-e e integrações.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/api/administrativo360/gestao/exportar-cotacoes" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-filetype-csv me-1"></i> Exportar Cotações (CSV)
+            </a>
+            <a href="/api/administrativo360/gestao/exportar-documentos" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-filetype-csv me-1"></i> Exportar Documentos (CSV)
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros de Dashboard -->
+    <div class="card bg-dark border-secondary mb-4">
+        <div class="card-body p-3">
+            <form method="get" action="/Administrativo360/Gestao/Dashboard" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label text-light small">Provedor</label>
+                    <select name="provedor" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os portais</option>
+                        <option value="OPMENEXO" selected="@(Model.Provedor == "OPMENEXO")">OPMENEXO</option>
+                        <option value="INPART" selected="@(Model.Provedor == "INPART")">INPART Saúde</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light small">Data Início</label>
+                    <input type="date" name="dataInicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(Model.DataInicio?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-light small">Data Fim</label>
+                    <input type="date" name="dataFim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="@(Model.DataFim?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-sm btn-primary me-2">
+                        <i class="bi bi-filter me-1"></i> Filtrar
+                    </button>
+                    <a href="/Administrativo360/Gestao/Dashboard" class="btn btn-sm btn-outline-secondary">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Capacidades Contratadas do Tenant -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-toggle-on text-info me-2"></i>Capacidades Contratadas no Tenant
+            </h5>
+            <span class="badge bg-secondary">Isolamento Multi-tenant Ativo</span>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 rounded border @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? "border-success bg-black" : "border-secondary bg-dark")">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-light">Portais de Cotação</strong>
+                            <span class="badge @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? "bg-success" : "bg-secondary")">
+                                @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? "Habilitado" : "Desabilitado")
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-2">Captação OPMENEXO, INPART e transmissão outbox.</p>
+                        <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="capacidade" value="PORTAIS_COTACAO" />
+                            <input type="hidden" name="habilitado" value="@(!Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO"))" />
+                            <button type="submit" class="btn btn-sm @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? "btn-outline-danger" : "btn-outline-success")">
+                                @(Model.CapacidadesAtivas.Contains("PORTAIS_COTACAO") ? "Desabilitar" : "Habilitar")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="p-3 rounded border @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? "border-success bg-black" : "border-secondary bg-dark")">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-light">Central XML Recebidos</strong>
+                            <span class="badge @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? "bg-success" : "bg-secondary")">
+                                @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? "Habilitado" : "Desabilitado")
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-2">Importação NF-e mod 55 e sincronização DF-e Sefaz.</p>
+                        <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="capacidade" value="XML_RECEBIDOS" />
+                            <input type="hidden" name="habilitado" value="@(!Model.CapacidadesAtivas.Contains("XML_RECEBIDOS"))" />
+                            <button type="submit" class="btn btn-sm @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? "btn-outline-danger" : "btn-outline-success")">
+                                @(Model.CapacidadesAtivas.Contains("XML_RECEBIDOS") ? "Desabilitar" : "Habilitar")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="p-3 rounded border @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? "border-success bg-black" : "border-secondary bg-dark")">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong class="text-light">Dashboard Gerencial</strong>
+                            <span class="badge @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? "bg-success" : "bg-secondary")">
+                                @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? "Habilitado" : "Desabilitado")
+                            </span>
+                        </div>
+                        <p class="small text-muted mb-2">Métricas e estatísticas apuradas via consultas reais em SQL.</p>
+                        <form method="post" action="/Administrativo360/Gestao/HabilitarCapacidade" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="capacidade" value="DASHBOARD_GERENCIAL" />
+                            <input type="hidden" name="habilitado" value="@(!Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL"))" />
+                            <button type="submit" class="btn btn-sm @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? "btn-outline-danger" : "btn-outline-success")">
+                                @(Model.CapacidadesAtivas.Contains("DASHBOARD_GERENCIAL") ? "Desabilitar" : "Habilitar")
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRUPO 1: COTAÇÕES -->
+    <h5 class="text-warning h6 mb-3 fw-bold">
+        <i class="bi bi-inbox-fill me-2"></i>Indicadores de Cotações Pré-Cirúrgicas
+    </h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Cotações Recebidas</div>
+                    <h3 class="fw-bold text-light mb-0">@c.TotalRecebidas</h3>
+                    <div class="small text-muted mt-2">
+                        <a href="/Administrativo360/Cotacoes" class="text-warning text-decoration-none">Ver lista completa &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Aguardando De/Para</div>
+                    <h3 class="fw-bold text-warning mb-0">@c.AguardandoRelacionamento</h3>
+                    <div class="small text-muted mt-2">Pendências de produto ou cadastro</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Próximas do Prazo (24h)</div>
+                    <h3 class="fw-bold @(c.ProximasDoPrazo > 0 ? "text-danger" : "text-light") mb-0">@c.ProximasDoPrazo</h3>
+                    <div class="small text-muted mt-2">Exigem ação prioritária</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Orçamentos Vinculados</div>
+                    <h3 class="fw-bold text-info mb-0">@c.OrcamentosGerados</h3>
+                    <div class="small text-muted mt-2">Integrados ao fluxo cirúrgico</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Respostas Aceitas (Portal)</div>
+                    <h3 class="fw-bold text-success mb-0">@c.RespostasAceitas</h3>
+                    <div class="small text-muted mt-2">Transmissão técnica bem-sucedida</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Propostas Vencedoras</div>
+                    <h3 class="fw-bold text-success mb-0">@c.PropostasVencedoras</h3>
+                    <div class="small text-muted mt-2">Perdidas: @c.PropostasPerdidas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Taxa de Sucesso / Conversão</div>
+                    <h3 class="fw-bold text-primary mb-0">@c.TaxaSucessoPercentual.ToString("N1")%</h3>
+                    <div class="small text-muted mt-2">Fórmula: Vencedoras / Finalizadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Tempo Médio de Resposta</div>
+                    <h3 class="fw-bold text-light mb-0">@c.TempoMedioRespostaHoras.ToString("N1") h</h3>
+                    <div class="small text-muted mt-2">Falhas de integração: @c.FalhasIntegracao</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRUPO 2: DOCUMENTOS XML -->
+    <h5 class="text-info h6 mb-3 fw-bold">
+        <i class="bi bi-file-earmark-code me-2"></i>Indicadores de Documentos XML (NF-e Modelo 55)
+    </h5>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Total de Documentos</div>
+                    <h3 class="fw-bold text-light mb-0">@x.TotalRecebidos</h3>
+                    <div class="small text-muted mt-2">
+                        <span class="badge bg-success">@x.Completos completos</span>
+                        <span class="badge bg-secondary ms-1">@x.Resumos resumos</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Pendentes de Conferência</div>
+                    <h3 class="fw-bold text-warning mb-0">@x.PendentesConferencia</h3>
+                    <div class="small text-muted mt-2">
+                        <a href="/Administrativo360/DocumentosXml?status=PENDENTE" class="text-info text-decoration-none">Realizar conferência &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Vinculados a Recebimento / Quarentena</div>
+                    <h3 class="fw-bold text-success mb-0">@x.Vinculados</h3>
+                    <div class="small text-muted mt-2">
+                        @if (x.Quarentenados > 0)
+                        {
+                            <span class="badge bg-danger">@x.Quarentenados em quarentena</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-dark border text-muted">0 em quarentena</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRUPO 3: INTEGRAÇÕES -->
+    <h5 class="text-success h6 mb-3 fw-bold">
+        <i class="bi bi-activity me-2"></i>Monitor Geral de Integrações
+    </h5>
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Contas de Portais Ativas</div>
+                    <h3 class="fw-bold text-success mb-0">@i.ContasAtivas</h3>
+                    <div class="small text-muted mt-2">Bloqueadas: @i.ConexoesBloqueadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Falhas nas Últimas 24h</div>
+                    <h3 class="fw-bold @(i.FalhasUltimas24h > 0 ? "text-danger" : "text-light") mb-0">@i.FalhasUltimas24h</h3>
+                    <div class="small text-muted mt-2">Tentativas de outbox e comunicação</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-dark border-secondary text-light h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Última Sincronização Geral</div>
+                    <h4 class="fw-bold text-light mb-0">
+                        @(i.UltimaSincronizacaoGeral?.ToString("dd/MM/yyyy HH:mm") ?? "Nenhuma")
+                    </h4>
+                    <div class="small text-muted mt-2">
+                        <a href="/Administrativo360/Gestao/Monitor" class="text-success text-decoration-none">Abrir monitor completo &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

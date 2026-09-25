@@ -1,0 +1,169 @@
+@model PlantaoPro.Web.Models.SincronizacaoDfeViewModel
+@{
+    ViewData["Title"] = "Sincronização DF-e Sefaz — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-cloud-arrow-down text-info me-2"></i>Sincronização DF-e (Distribuição DF-e Sefaz)
+            </h2>
+            <p class="text-muted small mb-0">Monitoramento e execução de consultas de documentos fiscais emitidos contra o CNPJ da empresa.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalSincronizar">
+                <i class="bi bi-arrow-repeat me-1"></i> Executar Consulta DF-e
+            </button>
+        </div>
+    </div>
+
+    @if (TempData["Sucesso"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@TempData["Sucesso"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Regras Oficiais Sefaz -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-2"><i class="bi bi-info-circle me-2"></i>Regras do Serviço de Distribuição DF-e (NFeDistribuicaoDFe)</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">1. Cursor NSU</strong>
+                    Cada consulta consome em lotes de até 50 documentos a partir do <code>UltimoNSU</code> até atingir o <code>MaxNSU</code> informado pelo Sefaz.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">2. Intervalo Obrigatório</strong>
+                    O Sefaz exige tempo mínimo de espera (cStat 137 / consumo indevido). O sistema bloqueia repetições antes do prazo permitido.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">3. Certificado Digital</strong>
+                    A consulta exige certificado digital A1 válido do CNPJ autorizado. Credenciais e senhas residem em cofre seguro.
+                </div>
+                <div class="col-md-3">
+                    <strong class="text-light d-block mb-1">4. Rastreabilidade</strong>
+                    Falhas e tentativas são persistidas por escopo de tenant e CNPJ, garantindo retomada sem perda de lote.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de Sincronizações -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                Histórico e Estado da Sincronização por Estabelecimento (@Model.Sincronizacoes.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Estabelecimento / CNPJ</th>
+                            <th>Ambiente</th>
+                            <th>Provedor</th>
+                            <th>Último NSU</th>
+                            <th>Máx NSU</th>
+                            <th>Última Consulta</th>
+                            <th>Próxima Permitida</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Sincronizacoes.Any())
+                        {
+                            <tr>
+                                <td colspan="8" class="text-center py-4 text-muted">
+                                    Nenhuma sincronização DF-e registrada até o momento.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var s in Model.Sincronizacoes)
+                        {
+                            <tr>
+                                <td>
+                                    <strong class="text-light">@s.EstabelecimentoNome</strong>
+                                    <div class="small text-warning">@s.Cnpj</div>
+                                </td>
+                                <td><span class="badge bg-dark border">@s.Ambiente</span></td>
+                                <td><span class="badge bg-secondary">@s.Provedor</span></td>
+                                <td><code>@s.UltimoNsu</code></td>
+                                <td><code>@s.MaxNsu</code></td>
+                                <td class="text-light small">
+                                    @(s.DataConsulta?.ToString("dd/MM/yyyy HH:mm:ss") ?? "Nunca")
+                                </td>
+                                <td class="text-light small">
+                                    @s.ProximaConsultaPermitida.ToString("dd/MM/yyyy HH:mm:ss")
+                                </td>
+                                <td>
+                                    @switch (s.Status)
+                                    {
+                                        case "SUCESSO":
+                                            <span class="badge bg-success">Sucesso</span>
+                                            break;
+                                        case "ERRO":
+                                            <span class="badge bg-danger">Erro</span>
+                                            @if (!string.IsNullOrWhiteSpace(s.MensagemErro))
+                                            {
+                                                <div class="small text-danger">@s.MensagemErro</div>
+                                            }
+                                            break;
+                                        default:
+                                            <span class="badge bg-warning text-dark">@s.Status</span>
+                                            break;
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Executar Sincronização -->
+<div class="modal fade" id="modalSincronizar" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form method="post" action="/Administrativo360/DocumentosXml/ExecutarSincronizacao">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalLabel">Executar Consulta DF-e Sefaz</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small">Selecione o Estabelecimento Autorizado</label>
+                        <select name="estabelecimentoId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                            @foreach (var est in Model.Estabelecimentos)
+                            {
+                                <option value="@est.Id">@est.RazaoSocial (@est.Cnpj)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="alert alert-warning small mb-0">
+                        Atenção: se a consulta for executada antes do intervalo permitido pelo Sefaz, a requisição será rejeitada para evitar consumo indevido.
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-info">Executar Sincronização</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

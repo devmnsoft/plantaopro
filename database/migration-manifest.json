@@ -669,7 +669,7 @@
     {
       "version": "2026_09_v2197_reconciliar_contratos_modulos",
       "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
-      "checksum": "d17826cca92841a95e4201dbd9a3ea00df8dfba6e3cc1ebeed394acfc590555d",
+      "checksum": "71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4",
       "dependsOn": [
         "2026_09_v2196_administrativo360_cotacoes_xml_dashboard"
       ],

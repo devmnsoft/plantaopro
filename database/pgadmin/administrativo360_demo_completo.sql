@@ -31,6 +31,8 @@ DECLARE
     v_modulo_adm360_id uuid := 'a3600000-0000-4000-8000-000000000099';
     v_acao_acessar_id uuid;
     v_perfil_adm_id uuid;
+    v_perfil_consulta_id uuid;
+    v_perm_ver_id uuid;
     v_perm_code text;
     v_perm_id uuid;
     v_now timestamp with time zone := clock_timestamp();
@@ -156,14 +158,43 @@ BEGIN
     -- Usuário de consulta restrita para testes de autorização
     IF NOT EXISTS (SELECT 1 FROM plantaopro.usuarios WHERE lower(email) = 'consulta@santacasa-demo.example') THEN
         INSERT INTO plantaopro.usuarios (
-            id, tenant_id, nome, email, email_normalizado, senha_hash, status, reg_status, senha_alteracao_obrigatoria, reg_date
+            id, tenant_id, cliente_id, nome, email, email_normalizado, senha_hash, status, reg_status, senha_alteracao_obrigatoria, reg_date
         ) VALUES (
-            v_user_consulta_id, v_tenant_id, 'Auditor Restrito — Demonstração',
+            v_user_consulta_id, v_tenant_id, 'd3f6584c-2c64-4e5a-9ea9-4e1428647501', 'Auditor Restrito — Demonstração',
             'consulta@santacasa-demo.example', 'consulta@santacasa-demo.example',
             '$2a$11$mNmgw83PBauw.5XsFVB5TuMB1.8OgFZ0SpfujQSuGzUgzwvs7d8S.',
             'ATIVO', 'A', false, v_now
-        ) ON CONFLICT (id) DO NOTHING;
+        ) ON CONFLICT (id) DO UPDATE SET cliente_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647501', tenant_id = v_tenant_id;
+    ELSE
+        UPDATE plantaopro.usuarios
+        SET cliente_id = 'd3f6584c-2c64-4e5a-9ea9-4e1428647501', tenant_id = v_tenant_id, status = 'ATIVO', reg_status = 'A'
+        WHERE lower(email) = 'consulta@santacasa-demo.example';
     END IF;
+
+    -- Perfil de Consulta/Auditoria (Apenas leitura)
+    SELECT id INTO v_perfil_consulta_id 
+    FROM plantaopro.perfis 
+    WHERE (tenant_id = v_tenant_id OR tenant_id IS NULL) 
+      AND (codigo = 'CONSULTA_CLIENTE' OR codigo = 'AUDITOR')
+      AND reg_status = 'A'
+    ORDER BY (tenant_id = v_tenant_id) DESC LIMIT 1;
+
+    IF v_perfil_consulta_id IS NULL THEN
+        v_perfil_consulta_id := gen_random_uuid();
+        INSERT INTO plantaopro.perfis (id, tenant_id, codigo, nome, descricao, base_sistema, customizado, status, reg_status, reg_date)
+        VALUES (v_perfil_consulta_id, v_tenant_id, 'CONSULTA_CLIENTE', 'Consulta e Auditoria do Cliente', 'Perfil de consulta restrita', true, false, 'ATIVO', 'A', v_now);
+    END IF;
+
+    SELECT id INTO v_perm_ver_id FROM plantaopro.permissoes WHERE lower(codigo) = 'adm360:ver' AND reg_status = 'A' LIMIT 1;
+    IF v_perm_ver_id IS NOT NULL THEN
+        INSERT INTO plantaopro.perfil_permissoes (id, perfil_id, permissao_id, permitido, reg_status, reg_date)
+        VALUES (gen_random_uuid(), v_perfil_consulta_id, v_perm_ver_id, true, 'A', v_now)
+        ON CONFLICT (perfil_id, permissao_id) WHERE reg_status = 'A' DO UPDATE SET permitido = true;
+    END IF;
+
+    INSERT INTO plantaopro.usuarios_perfis (id, tenant_id, usuario_id, perfil_id, reg_status, reg_date)
+    VALUES (gen_random_uuid(), v_tenant_id, v_user_consulta_id, v_perfil_consulta_id, 'A', v_now)
+    ON CONFLICT (usuario_id, perfil_id) WHERE reg_status = 'A' DO NOTHING;
 
     -- 3. HABILITAR CAPACIDADES CONTRATADAS NO ADMINISTRATIVO 360
     INSERT INTO plantaopro.adm360_capacidades_contratadas (id, tenant_id, capacidade, habilitado, ativado_em, configuracoes)

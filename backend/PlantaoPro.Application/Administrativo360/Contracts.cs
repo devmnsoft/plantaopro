@@ -650,6 +650,7 @@ public interface IAdm360FinanceiroRelatoriosRepository
 
 // Cadastros e Lookups Administrativo 360
 public sealed record Parceiro360(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Medico360(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
 public sealed record Lote360(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
@@ -657,7 +658,17 @@ public sealed record Lookups360Bundle(
     IReadOnlyList<Parceiro360> Parceiros,
     IReadOnlyList<Produto360> Produtos,
     IReadOnlyList<Local360> Locais,
-    IReadOnlyList<Lote360> Lotes);
+    IReadOnlyList<Lote360> Lotes,
+    IReadOnlyList<Medico360>? Medicos = null,
+    IReadOnlyList<Parceiro360>? Hospitais = null,
+    IReadOnlyList<Parceiro360>? Pagadores = null,
+    IReadOnlyList<Parceiro360>? Fornecedores = null)
+{
+    public IReadOnlyList<Medico360> Medicos { get; init; } = Medicos ?? Array.Empty<Medico360>();
+    public IReadOnlyList<Parceiro360> Hospitais { get; init; } = Hospitais ?? Array.Empty<Parceiro360>();
+    public IReadOnlyList<Parceiro360> Pagadores { get; init; } = Pagadores ?? Array.Empty<Parceiro360>();
+    public IReadOnlyList<Parceiro360> Fornecedores { get; init; } = Fornecedores ?? Array.Empty<Parceiro360>();
+}
 
 public interface ICadastrosRepository
 {

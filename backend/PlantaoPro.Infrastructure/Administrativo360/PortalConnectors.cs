@@ -18,11 +18,9 @@ public sealed class OpmenexoConnector : IPortalCotacaoConnector
             ));
         }
 
-        // Caso haja credenciais configuradas, documenta o endpoint oficial e validação
-        // Em ambiente de produção, este conector despacha requisição mTLS/Bearer ao endpoint oficial da Bionexo/OPMENEXO
         return Task.FromResult(new PortalConexaoStatusResult(
             Conectado: false,
-            Status: "BLOQUEADA",
+            Status: "CONFIGURACAO_PENDENTE",
             Mensagem: "Endpoint oficial OPMENEXO requer homologação prévia de IP e certificado de cliente corporativo.",
             VerificadoEm: DateTime.UtcNow
         ));
@@ -43,9 +41,9 @@ public sealed class OpmenexoConnector : IPortalCotacaoConnector
     {
         return Task.FromResult(new EnvioRespostaPortalResult(
             Sucesso: false,
-            StatusTransmissao: "REJEITADA_PELO_PORTAL",
+            StatusTransmissao: "CONFIGURACAO_PENDENTE",
             Protocolo: null,
-            Mensagem: "Integração oficial OPMENEXO não configurada com credenciais corporativas no cofre de segredos. Transmissão cancelada."
+            Mensagem: "Integração oficial OPMENEXO não configurada com credenciais corporativas no cofre de segredos. Transmissão automática pendente de configuração."
         ));
     }
 }
@@ -56,6 +54,16 @@ public sealed class InpartConnector : IPortalCotacaoConnector
 
     public Task<PortalConexaoStatusResult> TestarConexaoAsync(PortalContaDto conta, CancellationToken ct = default)
     {
+        if (string.Equals(conta.StatusIntegracao, "BLOQUEADA", StringComparison.OrdinalIgnoreCase))
+        {
+            return Task.FromResult(new PortalConexaoStatusResult(
+                Conectado: false,
+                Status: "BLOQUEADA",
+                Mensagem: conta.MotivoBloqueio ?? "Integração INPART bloqueada.",
+                VerificadoEm: DateTime.UtcNow
+            ));
+        }
+
         if (string.IsNullOrWhiteSpace(conta.UsuarioAcesso))
         {
             return Task.FromResult(new PortalConexaoStatusResult(
@@ -68,7 +76,7 @@ public sealed class InpartConnector : IPortalCotacaoConnector
 
         return Task.FromResult(new PortalConexaoStatusResult(
             Conectado: false,
-            Status: "BLOQUEADA",
+            Status: "CONFIGURACAO_PENDENTE",
             Mensagem: "Homologação de credencial INPART Saúde pendente de autorização do convênio.",
             VerificadoEm: DateTime.UtcNow
         ));
@@ -89,9 +97,9 @@ public sealed class InpartConnector : IPortalCotacaoConnector
     {
         return Task.FromResult(new EnvioRespostaPortalResult(
             Sucesso: false,
-            StatusTransmissao: "REJEITADA_PELO_PORTAL",
+            StatusTransmissao: "CONFIGURACAO_PENDENTE",
             Protocolo: null,
-            Mensagem: "Integração oficial INPART Saúde não configurada com credenciais corporativas. Transmissão cancelada."
+            Mensagem: "Integração oficial INPART Saúde não configurada com credenciais corporativas. Transmissão automática pendente de configuração."
         ));
     }
 }
@@ -117,12 +125,11 @@ public sealed class ImportacaoManualConnector : IPortalCotacaoConnector
 
     public Task<EnvioRespostaPortalResult> TransmitirPropostaAsync(PortalContaDto conta, CotacaoRespostaDto resposta, CotacaoDetalhesDto cotacao, CancellationToken ct = default)
     {
-        var protocolo = $"MANUAL-{DateTime.UtcNow:yyyyMMddHHmmss}-{cotacao.IdentificadorExterno}";
         return Task.FromResult(new EnvioRespostaPortalResult(
             Sucesso: true,
-            StatusTransmissao: "ACEITA_PELO_PORTAL",
-            Protocolo: protocolo,
-            Mensagem: "Proposta gerada e registrada com sucesso para conferência interna manual."
+            StatusTransmissao: "EXPORTADA_MANUALMENTE",
+            Protocolo: null,
+            Mensagem: "Proposta exportada manualmente para conferência e envio pelo operador ao portal."
         ));
     }
 }

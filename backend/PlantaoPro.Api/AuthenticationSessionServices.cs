@@ -90,11 +90,12 @@ values
            where up.usuario_id=u.id and up.reg_status='A'
              and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')) then 'ATIVO'
          when coalesce(s.tenant_id,s.cliente_id,u.tenant_id,u.cliente_id) is null then 'ATIVO'
-         else coalesce(c.status,'INATIVO')
+         else coalesce(t.status, c.status, 'INATIVO')
        end as ""TenantStatus""
 from plantaopro.auth_sessoes s
 join plantaopro.usuarios u on u.id=s.usuario_id
-left join plantaopro.clientes c on c.id=coalesce(s.tenant_id,s.cliente_id,u.tenant_id,u.cliente_id) and c.reg_status='A'
+left join plantaopro.clientes c on c.id=coalesce(s.cliente_id,u.cliente_id,s.tenant_id,u.tenant_id) and c.reg_status='A'
+left join plantaopro.tenants t on t.id=coalesce(s.tenant_id,u.tenant_id)
 where s.id=@sessionId and s.usuario_id=@userId";
 
         await using var connection = new NpgsqlConnection(connectionString);

@@ -5,7 +5,7 @@ using PlantaoPro.Web.Models;
 namespace PlantaoPro.Web.Controllers;
 
 [Authorize(Roles = "ADMINISTRADOR,ADMINISTRADOR_CLIENTE,DIRETOR,COORDENACAO,COORDENADOR")]
-public sealed class Administrativo360Controller : BaseWebController
+public partial class Administrativo360Controller : BaseWebController
 {
     public Administrativo360Controller(IHttpClientFactory factory, ILogger<Administrativo360Controller> logger)
         : base(factory, logger) { }
@@ -35,15 +35,19 @@ public sealed class Administrativo360Controller : BaseWebController
     private async Task<Lookups360ViewModel> CarregarLookupsAsync(HttpClient client)
     {
         var resp = await ReadApiResponse<Lookups360ViewModel>(client, "api/administrativo360/cadastros/lookups");
+        if (!string.IsNullOrEmpty(resp.Error))
+        {
+            Logger.LogWarning("Falha ao carregar lookups do Administrativo 360: {Error}", resp.Error);
+        }
         return resp.Data ?? new Lookups360ViewModel();
     }
 
     private async Task PreencherLookupsOrcamentoAsync(HttpClient client, OrcamentoFormViewModel model)
     {
         var lookups = await CarregarLookupsAsync(client);
-        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
-        model.Medicos = lookups.Parceiros.ToArray();
-        model.Pagadores = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        model.Medicos = lookups.Medicos ?? Array.Empty<Medico360ViewModel>();
+        model.Pagadores = (lookups.Pagadores?.Count > 0 ? lookups.Pagadores : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
         model.ProdutosDisponiveis = lookups.Produtos;
     }
 
@@ -51,8 +55,8 @@ public sealed class Administrativo360Controller : BaseWebController
     {
         var lookups = await CarregarLookupsAsync(client);
         var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
-        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
-        model.Medicos = lookups.Parceiros.ToArray();
+        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        model.Medicos = lookups.Medicos ?? Array.Empty<Medico360ViewModel>();
         model.Locais = lookups.Locais;
         model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
     }
@@ -62,7 +66,7 @@ public sealed class Administrativo360Controller : BaseWebController
         var lookups = await CarregarLookupsAsync(client);
         var respCir = await ReadApiResponse<IReadOnlyList<CirurgiaResumoViewModel>>(client, "api/administrativo360/cirurgias");
         var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
-        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
         model.LocaisOrigem = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray();
         model.LocaisDestino = lookups.Locais.ToArray();
         model.Cirurgias = respCir.Data ?? Array.Empty<CirurgiaResumoViewModel>();

@@ -38,20 +38,42 @@ public sealed class Adm360CadastrosController : ControllerBase
 
     public sealed record SalvarParceiroRequest(Guid? Id, string Nome, string? Documento, bool Fornecedor, bool Ativo);
 
-    [HttpPost("parceiros")]
+    [HttpPost("parceiros"), Authorize(Policy = "Adm360.MapearCadastros")]
     public async Task<IActionResult> SalvarParceiro([FromBody] SalvarParceiroRequest req, CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var id = await repository.SalvarParceiroAsync(tenant, req.Id, req.Nome, req.Documento, req.Fornecedor, req.Ativo, ct);
-        return Ok(new { id });
+        try
+        {
+            var id = await repository.SalvarParceiroAsync(tenant, req.Id, req.Nome, req.Documento, req.Fornecedor, req.Ativo, ct);
+            return Ok(new { id });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpPatch("parceiros/{id:guid}/status")]
+    [HttpPatch("parceiros/{id:guid}/status"), Authorize(Policy = "Adm360.MapearCadastros")]
     public async Task<IActionResult> AlternarStatusParceiro(Guid id, [FromQuery] bool ativo, CancellationToken ct)
     {
         var (tenant, _) = Context();
-        await repository.AlternarStatusParceiroAsync(tenant, id, ativo, ct);
-        return NoContent();
+        try
+        {
+            await repository.AlternarStatusParceiroAsync(tenant, id, ativo, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 
     [HttpGet("produtos")]
@@ -64,20 +86,42 @@ public sealed class Adm360CadastrosController : ControllerBase
 
     public sealed record SalvarProdutoRequest(Guid? Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 
-    [HttpPost("produtos")]
+    [HttpPost("produtos"), Authorize(Policy = "Adm360.MapearProdutos")]
     public async Task<IActionResult> SalvarProduto([FromBody] SalvarProdutoRequest req, CancellationToken ct = default)
     {
         var (tenant, _) = Context();
-        var id = await repository.SalvarProdutoAsync(tenant, req.Id, req.Sku, req.Nome, req.Unidade, req.CodigoBarras, req.ControlaLote, req.ExigeInspecao, req.PrecoCusto, req.Ativo, ct);
-        return Ok(new { id });
+        try
+        {
+            var id = await repository.SalvarProdutoAsync(tenant, req.Id, req.Sku, req.Nome, req.Unidade, req.CodigoBarras, req.ControlaLote, req.ExigeInspecao, req.PrecoCusto, req.Ativo, ct);
+            return Ok(new { id });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    [HttpPatch("produtos/{id:guid}/status")]
+    [HttpPatch("produtos/{id:guid}/status"), Authorize(Policy = "Adm360.MapearProdutos")]
     public async Task<IActionResult> AlternarStatusProduto(Guid id, [FromQuery] bool ativo, CancellationToken ct = default)
     {
         var (tenant, _) = Context();
-        await repository.AlternarStatusProdutoAsync(tenant, id, ativo, ct);
-        return NoContent();
+        try
+        {
+            await repository.AlternarStatusProdutoAsync(tenant, id, ativo, ct);
+            return NoContent();
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
     }
 
     [HttpGet("locais")]
@@ -90,12 +134,27 @@ public sealed class Adm360CadastrosController : ControllerBase
 
     public sealed record SalvarLocalRequest(Guid? Id, string Codigo, string Nome, string Tipo, bool Ativo);
 
-    [HttpPost("locais")]
+    [HttpPost("locais"), Authorize(Policy = "Adm360.MapearCadastros")]
     public async Task<IActionResult> SalvarLocal([FromBody] SalvarLocalRequest req, CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var id = await repository.SalvarLocalAsync(tenant, req.Id, req.Codigo, req.Nome, req.Tipo, req.Ativo, ct);
-        return Ok(new { id });
+        try
+        {
+            var id = await repository.SalvarLocalAsync(tenant, req.Id, req.Codigo, req.Nome, req.Tipo, req.Ativo, ct);
+            return Ok(new { id });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("lotes")]

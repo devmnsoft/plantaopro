@@ -904,7 +904,7 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                 sucesso = resultado.Sucesso
             }, cancellationToken: ct));
 
-        if (resultado.Sucesso && resultado.StatusTransmissao == "ACEITA_PELO_PORTAL")
+        if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
         {
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_cotacoes

@@ -32,7 +32,7 @@ public sealed class RoleCatalog : IRoleCatalog
     {
         new("ADMINISTRADOR_GLOBAL", "Administrador Global", AccessScopes.Global, 1000, false, true, true, "/AdminSaas"),
         new("SUPORTE", "Suporte", AccessScopes.Global, 900, false, true, true, "/AdminSaas"),
-        new("AUDITOR", "Auditor", AccessScopes.Global, 800, false, true, false, "/Auditoria"),
+        new("AUDITOR", "Auditor", AccessScopes.Tenant, 800, true, false, false, "/Auditoria"),
         new("ADMINISTRADOR_CLIENTE", "Administrador Cliente", AccessScopes.Tenant, 700, true, false, false, "/ClientePortal"),
         new("ADMINISTRADOR", "Administrador", AccessScopes.Tenant, 650, true, false, false, "/ClientePortal"),
         new("DIRETOR", "Diretor", AccessScopes.Tenant, 600, true, false, false, "/ClientePortal"),

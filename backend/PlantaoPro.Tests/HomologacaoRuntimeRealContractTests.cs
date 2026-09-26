@@ -46,7 +46,7 @@ public sealed class HomologacaoRuntimeRealContractTests
         }
 
         var controllerClasses = Directory.EnumerateFiles(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers"), "*.cs", SearchOption.AllDirectories)
-            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"class\s+(\w+Controller)").Cast<Match>().Select(match => match.Groups[1].Value))
+            .SelectMany(file => Regex.Matches(File.ReadAllText(file), @"(?<!\bpartial\s+)class\s+(\w+Controller)").Cast<Match>().Select(match => match.Groups[1].Value))
             .GroupBy(name => name)
             .Where(group => group.Count() > 1)
             .Select(group => group.Key)

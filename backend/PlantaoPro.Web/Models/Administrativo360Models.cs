@@ -117,7 +117,7 @@ public sealed class OrcamentoFormViewModel
     public string? MotivoRevisao { get; set; }
     public List<OrcamentoItemInputModel> Itens { get; set; } = new();
     public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; set; } = Array.Empty<Parceiro360ViewModel>();
-    public IReadOnlyList<Parceiro360ViewModel> Medicos { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Medico360ViewModel> Medicos { get; set; } = Array.Empty<Medico360ViewModel>();
     public IReadOnlyList<Parceiro360ViewModel> Pagadores { get; set; } = Array.Empty<Parceiro360ViewModel>();
     public IReadOnlyList<Produto360ViewModel> ProdutosDisponiveis { get; set; } = Array.Empty<Produto360ViewModel>();
 }
@@ -179,7 +179,7 @@ public sealed class CirurgiaFormViewModel
     public Guid LocalDestinoId { get; set; }
     public string? Observacoes { get; set; }
     public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; set; } = Array.Empty<Parceiro360ViewModel>();
-    public IReadOnlyList<Parceiro360ViewModel> Medicos { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Medico360ViewModel> Medicos { get; set; } = Array.Empty<Medico360ViewModel>();
     public IReadOnlyList<Local360ViewModel> Locais { get; set; } = Array.Empty<Local360ViewModel>();
     public IReadOnlyList<OrcamentoResumoViewModel> Orcamentos { get; set; } = Array.Empty<OrcamentoResumoViewModel>();
 }
@@ -827,6 +827,7 @@ public sealed class ContaFinanceiraFormViewModel
 
 // Cadastros e Lookups Administrativo 360
 public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Medico360ViewModel(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
 public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
@@ -840,12 +841,58 @@ public sealed class CadastrosIndexViewModel
     public string? Erro { get; init; }
 }
 
+public sealed class ParceirosIndexViewModel
+{
+    public IReadOnlyList<Parceiro360ViewModel> Parceiros { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public string? Busca { get; init; }
+    public string? Papel { get; init; }
+    public bool? Fornecedor { get; init; }
+    public bool? Status { get; init; }
+    public string? Erro { get; init; }
+    public string? Sucesso { get; init; }
+}
+
+public sealed class ProdutosIndexViewModel
+{
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public string? Busca { get; init; }
+    public bool? Status { get; init; }
+    public bool ApenasAtivos { get; init; }
+    public string? Erro { get; init; }
+    public string? Sucesso { get; init; }
+}
+
+public sealed class LocaisIndexViewModel
+{
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public string? Busca { get; init; }
+    public string? Tipo { get; init; }
+    public bool? Status { get; init; }
+    public bool ApenasAtivos { get; init; }
+    public string? Erro { get; init; }
+    public string? Sucesso { get; init; }
+}
+
+public sealed class LotesIndexViewModel
+{
+    public IReadOnlyList<Lote360ViewModel> Lotes { get; init; } = Array.Empty<Lote360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public string? Busca { get; init; }
+    public Guid? ProdutoId { get; init; }
+    public string? Erro { get; init; }
+    public string? Sucesso { get; init; }
+}
+
 public sealed class Lookups360ViewModel
 {
     public IReadOnlyList<Parceiro360ViewModel> Parceiros { get; init; } = Array.Empty<Parceiro360ViewModel>();
     public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
     public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
     public IReadOnlyList<Lote360ViewModel> Lotes { get; init; } = Array.Empty<Lote360ViewModel>();
+    public IReadOnlyList<Medico360ViewModel> Medicos { get; init; } = Array.Empty<Medico360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Pagadores { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Fornecedores { get; init; } = Array.Empty<Parceiro360ViewModel>();
 }
 
 // Suprimentos e Estoque ViewModels

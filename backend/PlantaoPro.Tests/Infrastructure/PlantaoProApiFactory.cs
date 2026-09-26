@@ -12,12 +12,13 @@ public sealed class PlantaoProApiFactory : WebApplicationFactory<PlantaoPro.Api.
         builder.ConfigureAppConfiguration((_, configuration) => configuration.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["ConnectionStrings:Default"] = Environment.GetEnvironmentVariable("PLANTAOPRO_TEST_CONNECTION")
-                ?? "Host=localhost;Port=5432;Database=plantaopro_test;Username=postgres;"
-                + "Password=postgres",
-            ["Jwt:Key"] = "testing-only-key-with-at-least-thirty-two-characters",
-            ["Jwt:Issuer"] = "PlantaoPro",
-            ["Jwt:Audience"] = "PlantaoPro",
-            ["DatabaseStartup:Validate"] = "true"
+                ?? Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
+                ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
+                ?? "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Search Path=PlantaoPro,public",
+            ["Jwt:Key"] = "__SET_VIA_USER_SECRETS_OR_CI_SECRET_32_CHARS__",
+            ["Jwt:Issuer"] = "PlantaoPro.Testing",
+            ["Jwt:Audience"] = "PlantaoPro.Testing",
+            ["DatabaseStartup:Validate"] = "false"
         }));
     }
 }

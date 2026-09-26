@@ -1,0 +1,236 @@
+@model PlantaoPro.Web.Models.LocaisIndexViewModel
+@{
+    ViewData["Title"] = "Locais de Estoque — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.Erro))
+    {
+        <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+            <div><strong>Erro:</strong> @Model.Erro</div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Model.Sucesso))
+    {
+        <div class="alert alert-success d-flex align-items-center mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+            <div>@Model.Sucesso</div>
+        </div>
+    }
+
+    <!-- Header Executivo -->
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h3 mb-1 text-dark fw-bold">Locais de Estoque &amp; Armazenagem</h1>
+            <p class="text-muted mb-0 small">
+                Gestão de almoxarifados centrais, quarentenas, farmácias satélites e locais externos de consignação.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#comoUsarLocais" aria-expanded="false">
+                <i class="bi bi-info-circle me-1"></i> Como Usar
+            </button>
+            <button class="btn btn-primary btn-sm px-3" type="button" onclick="abrirModalNovoLocal()">
+                <i class="bi bi-plus-lg me-1"></i> Novo Local
+            </button>
+        </div>
+    </div>
+
+    <!-- Guia Como Usar -->
+    <div class="collapse mb-4" id="comoUsarLocais">
+        <div class="card card-body bg-light border-0 shadow-sm rounded-3">
+            <h6 class="fw-bold mb-2 text-primary"><i class="bi bi-geo-alt me-1"></i> Classificação e Tipos de Local</h6>
+            <ul class="mb-0 small text-secondary">
+                <li><strong>INTERNO:</strong> Almoxarifado central, quarentena e áreas de armazenagem sob custódia física direta da sua instituição.</li>
+                <li><strong>EXTERNO:</strong> Hospitais parceiros e veículos de transporte utilizados nas transferências e expedições de consignados.</li>
+                <li><strong>Código Único:</strong> O código deve ser exclusivo no seu cliente. Não são aceitos valores vazios ou tipos divergentes.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Filtros de Consulta -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4">
+        <div class="card-body p-3">
+            <form method="get" asp-action="Locais" class="row g-2 align-items-center">
+                <div class="col-md-7 col-lg-8">
+                    <select name="tipo" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="">Todos os Tipos (Interno e Externo)</option>
+                        <option value="INTERNO" selected="@(Model.Tipo == "INTERNO")">Apenas Locais Internos</option>
+                        <option value="EXTERNO" selected="@(Model.Tipo == "EXTERNO")">Apenas Locais Externos (Consignação)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 col-lg-2">
+                    <div class="form-check form-switch pt-1">
+                        <input class="form-check-input" type="checkbox" name="apenasAtivos" id="filtroLocaisAtivos" value="true" checked="@Model.ApenasAtivos" onchange="this.form.submit()" />
+                        <label class="form-check-label small" for="filtroLocaisAtivos">Apenas Ativos</label>
+                    </div>
+                </div>
+                <div class="col-md-2 col-lg-2 d-flex gap-1">
+                    <button type="submit" class="btn btn-secondary btn-sm flex-fill">Filtrar</button>
+                    <a asp-action="Locais" class="btn btn-outline-secondary btn-sm">Limpar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Locais -->
+    <div class="card border-0 shadow-sm rounded-3">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-dark">
+                Locais de Armazenagem <span class="badge bg-secondary ms-1">@Model.Locais.Count</span>
+            </h6>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th style="min-width: 140px;">Código</th>
+                        <th style="min-width: 250px;">Nome do Local</th>
+                        <th>Tipo Operacional</th>
+                        <th>Status</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    @if (Model.Locais.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-geo fs-2 d-block mb-2 text-secondary"></i>
+                                Nenhum local de estoque encontrado com os filtros aplicados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var l in Model.Locais)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark font-monospace border">@l.Codigo</span>
+                                </td>
+                                <td>
+                                    <strong class="text-dark">@l.Nome</strong>
+                                </td>
+                                <td>
+                                    @if (l.Tipo == "INTERNO")
+                                    {
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <i class="bi bi-building me-1"></i> Interno
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                            <i class="bi bi-arrow-up-right-circle me-1"></i> Externo / Consignação
+                                        </span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (l.Ativo)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Ativo</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inativo</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-outline-primary btn-sm py-0 px-2" type="button"
+                                            onclick="editarLocal('@l.Id', '@l.Codigo', '@l.Nome', '@l.Tipo', @l.Ativo.ToString().ToLower())">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Cadastro / Edição de Local -->
+<div class="modal fade" id="modalLocal" tabindex="-1" aria-labelledby="modalLocalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <form method="post" asp-action="SalvarLocal" id="formLocal" onsubmit="return desabilitarAoEnviar(this);">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="modalLocalLabel">Novo Local de Estoque</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <input type="hidden" name="Id" id="localId" value="" />
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label for="localCodigo" class="form-label small fw-bold">Código do Local <span class="text-danger">*</span></label>
+                            <input type="text" name="Codigo" id="localCodigo" class="form-control form-control-sm font-monospace text-uppercase" required maxlength="30" placeholder="Ex.: ALMOX-CENTRAL" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="localTipo" class="form-label small fw-bold">Tipo <span class="text-danger">*</span></label>
+                            <select name="Tipo" id="localTipo" class="form-select form-select-sm" required>
+                                <option value="INTERNO">INTERNO — Instalação Própria</option>
+                                <option value="EXTERNO">EXTERNO — Em Trânsito / Hospital</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="localNome" class="form-label small fw-bold">Nome do Local <span class="text-danger">*</span></label>
+                        <input type="text" name="Nome" id="localNome" class="form-control form-control-sm" required maxlength="120" placeholder="Ex.: Almoxarifado Central de OPME" />
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" name="Ativo" id="localAtivo" value="true" checked />
+                            <label class="form-check-label small fw-bold" for="localAtivo">Local Ativo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnSalvarLocal" class="btn btn-primary btn-sm px-4">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function abrirModalNovoLocal() {
+        document.getElementById('modalLocalLabel').innerText = 'Novo Local de Estoque';
+        document.getElementById('localId').value = '';
+        document.getElementById('localCodigo').value = '';
+        document.getElementById('localNome').value = '';
+        document.getElementById('localTipo').value = 'INTERNO';
+        document.getElementById('localAtivo').checked = true;
+        new bootstrap.Modal(document.getElementById('modalLocal')).show();
+    }
+
+    function editarLocal(id, codigo, nome, tipo, ativo) {
+        document.getElementById('modalLocalLabel').innerText = 'Editar Local de Estoque';
+        document.getElementById('localId').value = id;
+        document.getElementById('localCodigo').value = codigo;
+        document.getElementById('localNome').value = nome;
+        document.getElementById('localTipo').value = tipo || 'INTERNO';
+        document.getElementById('localAtivo').checked = ativo;
+        new bootstrap.Modal(document.getElementById('modalLocal')).show();
+    }
+
+    function desabilitarAoEnviar(form) {
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Processando...';
+        }
+        return true;
+    }
+</script>
+}

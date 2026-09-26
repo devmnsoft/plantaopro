@@ -111,8 +111,8 @@ and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','
   )) Authorized,
   case when t.status='ATIVO' and (c.id is null or c.status='ATIVO') then 'ATIVO' else coalesce(c.status,t.status,'INATIVO') end TenantStatus
 from plantaopro.usuarios u
-join plantaopro.tenants t on t.id=@tenantId and t.reg_status='A'
-left join plantaopro.clientes c on c.id=t.cliente_id and c.reg_status='A'
+join plantaopro.tenants t on t.id=@tenantId
+left join plantaopro.clientes c on c.id=u.cliente_id and c.reg_status='A'
 where u.id=@usuarioId", new { usuarioId, tenantId }, cancellationToken: ct));
         if (!tenantAccess.Authorized)
             return new(false, "CROSS_TENANT_DENIED", "Usuário não possui vínculo ativo com este tenant.", "TENANT");

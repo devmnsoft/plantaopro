@@ -1,1 +1,228 @@
-@{ViewData["Title"]="Inventários";}<main class="container-fluid py-4"><h1>Inventários</h1><p class="lead">Abra uma contagem por local, revise divergências e encaminhe para aprovação.</p><partial name="_SuprimentosNav"/><div class="alert alert-warning">Movimentações do escopo ficam bloqueadas durante a contagem. Cancelar libera sem ajuste; aprovar exige permissão e justificativa e cria um único movimento.</div><div class="card"><div class="card-body"><h2 class="h5">Contagens</h2><p class="text-muted">Contar não concede permissão para aprovar. Após revisar, solicite a um aprovador autorizado.</p></div></div></main>
+@model PlantaoPro.Web.Models.InventariosIndexViewModel
+@{
+    ViewData["Title"] = "Inventários de Estoque — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Inventários</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Inventários e Auditoria Física</h1>
+            <p class="text-secondary small mb-0">Contagem de estoque, conciliação e ajuste com trava preventiva de movimentações.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAbrirInventario">
+                <i class="bi bi-clipboard-plus me-1"></i>Abrir Novo Inventário
+            </button>
+        </div>
+    </div>
+
+    <!-- Regra de Negócio Alert -->
+    <div class="alert alert-info bg-dark border-info text-light d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-shield-lock-fill fs-5 text-info"></i>
+        <div class="small">
+            <strong>Bloqueio Automático Durante Inventário:</strong> Enquanto um almoxarifado estiver com inventário ativo em contagem ou revisão, movimentações concorrentes e expedições são bloqueadas para garantir acurácia e integridade contábil.
+        </div>
+    </div>
+
+    <!-- Tabela de Inventários -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-clipboard-check me-2 text-info"></i>Histórico e Inventários Ativos</span>
+            <span class="text-secondary small">Total: @Model.Inventarios.Count inventários</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Local Auditado</th>
+                        <th>Escopo da Auditoria</th>
+                        <th>Data Abertura</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Inventarios.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-secondary">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum inventário registrado.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var inv in Model.Inventarios)
+                    {
+                        <tr>
+                            <td><strong class="text-light">@inv.Local</strong></td>
+                            <td class="text-secondary">@inv.Escopo</td>
+                            <td class="text-secondary small">@inv.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                @switch (inv.Situacao)
+                                {
+                                    case "ABERTO":
+                                    case "CONTAGEM":
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Em Contagem</span>
+                                        break;
+                                    case "REVISAO":
+                                        <span class="badge bg-info text-dark"><i class="bi bi-search me-1"></i>Em Revisão</span>
+                                        break;
+                                    case "APROVADO":
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Aprovado</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@inv.Situacao</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (inv.Situacao is "ABERTO" or "CONTAGEM" or "REVISAO")
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalContagem" onclick="document.getElementById('contagemInventarioId').value='@inv.Id'; document.getElementById('contagemLocalNome').innerText='@inv.Local';">
+                                        <i class="bi bi-plus-circle me-1"></i>Contar
+                                    </button>
+                                    <form asp-action="AprovarInventario" method="post" class="d-inline me-1">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="inventarioId" value="@inv.Id" />
+                                        <input type="hidden" name="justificativa" value="Ajuste auditado e conferido pelo responsável técnico de estoque" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Aprovar e consolidar os ajustes deste inventário">
+                                            <i class="bi bi-check-lg me-1"></i>Aprovar
+                                        </button>
+                                    </form>
+                                    <form asp-action="CancelarInventario" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="inventarioId" value="@inv.Id" />
+                                        <input type="hidden" name="motivo" value="Cancelamento de rotina de contagem" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancelar este inventário">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Abrir Inventário -->
+<div class="modal fade" id="modalAbrirInventario" tabindex="-1" aria-labelledby="tituloModalAbrir" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="AbrirInventario" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalAbrir"><i class="bi bi-clipboard-plus me-2 text-info"></i>Abertura de Inventário</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Local a Inventariar *</label>
+                    <select name="localId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                        <option value="">Selecione o Local...</option>
+                        @foreach (var loc in Model.Locais)
+                        {
+                            <option value="@loc.Id">@loc.Codigo — @loc.Nome (@loc.Tipo)</option>
+                        }
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Escopo do Inventário *</label>
+                    <textarea name="escopo" class="form-control form-control-sm bg-black text-light border-secondary" rows="3" placeholder="Ex: Auditoria cíclica de implantes estéreis e próteses ortopédicas de alto custo..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-play-fill me-1"></i>Abrir Inventário</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Contagem de Item -->
+<div class="modal fade" id="modalContagem" tabindex="-1" aria-labelledby="tituloModalContar" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="ContarInventario" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="inventarioId" id="contagemInventarioId" />
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalContar"><i class="bi bi-plus-circle me-2 text-info"></i>Registrar Contagem Física</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dark border-secondary p-2 mb-3">
+                    <div class="small text-secondary">Local:</div>
+                    <strong class="text-light" id="contagemLocalNome">—</strong>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Produto / Material *</label>
+                    <select name="produtoId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                        <option value="">Selecione o Produto...</option>
+                        @foreach (var prod in Model.Produtos)
+                        {
+                            <option value="@prod.Id">@prod.Sku — @prod.Nome</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Lote Auditado *</label>
+                    <select name="loteId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                        <option value="">Selecione o Lote...</option>
+                        @foreach (var l in Model.Lotes)
+                        {
+                            <option value="@l.Id">@l.Codigo (@l.ProdutoNome) — Val: @(l.Validade?.ToString("dd/MM/yyyy") ?? "Sem data")</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Qtd. Contada *</label>
+                        <input type="number" step="1" min="0" name="quantidade" value="10" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Condição</label>
+                        <select name="condicao" class="form-select form-select-sm bg-black text-light border-secondary">
+                            <option value="LIBERADO">Liberado</option>
+                            <option value="QUARENTENA">Quarentena</option>
+                            <option value="BLOQUEADO">Bloqueado</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-info btn-sm"><i class="bi bi-save me-1"></i>Salvar Contagem</button>
+            </div>
+        </form>
+    </div>
+</div>

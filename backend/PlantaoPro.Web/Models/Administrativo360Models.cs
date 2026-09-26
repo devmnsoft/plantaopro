@@ -116,6 +116,10 @@ public sealed class OrcamentoFormViewModel
     public string? Observacoes { get; set; }
     public string? MotivoRevisao { get; set; }
     public List<OrcamentoItemInputModel> Itens { get; set; } = new();
+    public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Medicos { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Pagadores { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> ProdutosDisponiveis { get; set; } = Array.Empty<Produto360ViewModel>();
 }
 
 public sealed class OrcamentoItemInputModel
@@ -174,6 +178,10 @@ public sealed class CirurgiaFormViewModel
     public Guid? ResponsavelId { get; set; }
     public Guid LocalDestinoId { get; set; }
     public string? Observacoes { get; set; }
+    public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Medicos { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; set; } = Array.Empty<Local360ViewModel>();
+    public IReadOnlyList<OrcamentoResumoViewModel> Orcamentos { get; set; } = Array.Empty<OrcamentoResumoViewModel>();
 }
 
 // Vales de Consignação
@@ -262,6 +270,13 @@ public sealed class ValeFormViewModel
     public DateOnly? DataRetornoPrevista { get; set; } = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
     public string? Observacoes { get; set; }
     public List<ValeItemInputModel> Itens { get; set; } = new();
+    public IReadOnlyList<Parceiro360ViewModel> Hospitais { get; set; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> LocaisOrigem { get; set; } = Array.Empty<Local360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> LocaisDestino { get; set; } = Array.Empty<Local360ViewModel>();
+    public IReadOnlyList<CirurgiaResumoViewModel> Cirurgias { get; set; } = Array.Empty<CirurgiaResumoViewModel>();
+    public IReadOnlyList<OrcamentoResumoViewModel> Orcamentos { get; set; } = Array.Empty<OrcamentoResumoViewModel>();
+    public IReadOnlyList<Produto360ViewModel> ProdutosDisponiveis { get; set; } = Array.Empty<Produto360ViewModel>();
+    public IReadOnlyList<Lote360ViewModel> LotesDisponiveis { get; set; } = Array.Empty<Lote360ViewModel>();
 }
 
 public sealed class ValeItemInputModel
@@ -808,6 +823,105 @@ public sealed class ContaFinanceiraFormViewModel
     public decimal SaldoInicial { get; set; }
     public DateOnly? DataSaldoInicial { get; set; } = DateOnly.FromDateTime(DateTime.Today);
     public bool Ativo { get; set; } = true;
+}
+
+// Cadastros e Lookups Administrativo 360
+public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
+public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
+public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
+
+public sealed class CadastrosIndexViewModel
+{
+    public IReadOnlyList<Parceiro360ViewModel> Parceiros { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public string AbaAtiva { get; init; } = "parceiros";
+    public string? Erro { get; init; }
+}
+
+public sealed class Lookups360ViewModel
+{
+    public IReadOnlyList<Parceiro360ViewModel> Parceiros { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public IReadOnlyList<Lote360ViewModel> Lotes { get; init; } = Array.Empty<Lote360ViewModel>();
+}
+
+// Suprimentos e Estoque ViewModels
+public sealed record PedidoCompraResumoViewModel(Guid Id, string Numero, string Fornecedor, string Situacao, decimal Total, DateTimeOffset CriadoEm);
+
+public sealed class PedidosCompraIndexViewModel
+{
+    public IReadOnlyList<PedidoCompraResumoViewModel> Pedidos { get; init; } = Array.Empty<PedidoCompraResumoViewModel>();
+    public IReadOnlyList<Parceiro360ViewModel> Fornecedores { get; init; } = Array.Empty<Parceiro360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public string? Fornecedor { get; init; }
+    public string? Situacao { get; init; }
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+    public string? Erro { get; init; }
+}
+
+public sealed class RecebimentosIndexViewModel
+{
+    public IReadOnlyList<PedidoCompraResumoViewModel> PedidosPendentes { get; init; } = Array.Empty<PedidoCompraResumoViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public string? Erro { get; init; }
+}
+
+public sealed record InspecaoPendenteViewModel(Guid RecebimentoItemId, string Produto, string Lote, decimal Recebida, decimal Pendente, string Local);
+
+public sealed class InspecoesIndexViewModel
+{
+    public IReadOnlyList<InspecaoPendenteViewModel> Pendentes { get; init; } = Array.Empty<InspecaoPendenteViewModel>();
+    public string? Erro { get; init; }
+}
+
+public sealed record OcorrenciaViewModel(Guid Id, string Tipo, string Descricao, decimal Quantidade, string Situacao, DateOnly? Prazo, string? Destino, DateTimeOffset CriadoEm);
+
+public sealed class OcorrenciasIndexViewModel
+{
+    public IReadOnlyList<OcorrenciaViewModel> Ocorrencias { get; init; } = Array.Empty<OcorrenciaViewModel>();
+    public string? Erro { get; init; }
+}
+
+public sealed record SaldoEstoqueViewModel(Guid ProdutoId, string Produto, Guid LoteId, string Lote, DateOnly? Validade, Guid LocalId, string Local, string Condicao, decimal Fisico, decimal Reservado, decimal Disponivel);
+
+public sealed class EstoqueIndexViewModel
+{
+    public IReadOnlyList<SaldoEstoqueViewModel> Saldos { get; init; } = Array.Empty<SaldoEstoqueViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public string? Busca { get; init; }
+    public string? Condicao { get; init; }
+    public Guid? LocalId { get; init; }
+    public string? Erro { get; init; }
+}
+
+public sealed class MovimentacoesIndexViewModel
+{
+    public IReadOnlyList<SaldoEstoqueViewModel> Saldos { get; init; } = Array.Empty<SaldoEstoqueViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public string? Erro { get; init; }
+}
+
+public sealed record InventarioResumoViewModel(Guid Id, string Local, string Escopo, string Situacao, DateTimeOffset CriadoEm);
+
+public sealed class InventariosIndexViewModel
+{
+    public IReadOnlyList<InventarioResumoViewModel> Inventarios { get; init; } = Array.Empty<InventarioResumoViewModel>();
+    public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
+    public IReadOnlyList<Lote360ViewModel> Lotes { get; init; } = Array.Empty<Lote360ViewModel>();
+    public string? Erro { get; init; }
+}
+
+public sealed record TarefaColetaViewModel(Guid Id, string Tipo, string Descricao, string Situacao);
+
+public sealed class ColetaIndexViewModel
+{
+    public IReadOnlyList<TarefaColetaViewModel> Tarefas { get; init; } = Array.Empty<TarefaColetaViewModel>();
+    public string? Erro { get; init; }
 }
 
 

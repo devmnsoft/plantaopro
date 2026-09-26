@@ -38,13 +38,23 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Hospital (Destinatário / Execução) *</label>
-                                <input type="text" name="HospitalId" value="@(Model.HospitalId != Guid.Empty ? Model.HospitalId.ToString() : "a3610000-0000-4000-8000-000000000020")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Hospital" required>
-                                <small class="text-muted">Ex: a3610000-0000-4000-8000-000000000020 (Hospital São Lucas Demo)</small>
+                                <select name="HospitalId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                    <option value="">-- Selecione o Hospital --</option>
+                                    @foreach (var h in Model.Hospitais)
+                                    {
+                                        <option value="@h.Id" selected="@(h.Id == Model.HospitalId ? "selected" : null)">@h.Nome (@(h.Documento ?? "Sem doc"))</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-light small fw-bold">Responsável Financeiro (Convênio / Pagador) *</label>
-                                <input type="text" name="ResponsavelFinanceiroId" value="@(Model.ResponsavelFinanceiroId != Guid.Empty ? Model.ResponsavelFinanceiroId.ToString() : "a3610000-0000-4000-8000-000000000022")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Pagador" required>
-                                <small class="text-muted">Ex: a3610000-0000-4000-8000-000000000022 (Saúde Segura Operadora)</small>
+                                <select name="ResponsavelFinanceiroId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                    <option value="">-- Selecione o Pagador / Convênio --</option>
+                                    @foreach (var p in Model.Pagadores)
+                                    {
+                                        <option value="@p.Id" selected="@(p.Id == Model.ResponsavelFinanceiroId ? "selected" : null)">@p.Nome (@(p.Documento ?? "Sem doc"))</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-8">
                                 <label class="form-label text-light small fw-bold">Procedimento Cirúrgico *</label>
@@ -52,7 +62,13 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small">Médico Cirurgião</label>
-                                <input type="text" name="MedicoId" value="@(Model.MedicoId.HasValue ? Model.MedicoId.Value.ToString() : "a3610000-0000-4000-8000-000000000021")" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Médico">
+                                <select name="MedicoId" class="form-select form-select-sm bg-black text-light border-secondary">
+                                    <option value="">-- Selecione o Médico (Opcional) --</option>
+                                    @foreach (var m in Model.Medicos)
+                                    {
+                                        <option value="@m.Id" selected="@(m.Id == Model.MedicoId ? "selected" : null)">@m.Nome</option>
+                                    }
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-light small fw-bold">Data Prevista da Cirurgia *</label>
@@ -86,7 +102,7 @@
                             <table class="table table-dark mb-0 align-middle small" id="tabelaItens">
                                 <thead class="table-black text-secondary">
                                     <tr>
-                                        <th style="width: 45%;">Produto ID / SKU</th>
+                                        <th style="width: 45%;">Produto / SKU</th>
                                         <th style="width: 15%;">Quantidade</th>
                                         <th style="width: 20%;">Preço Unitário (R$)</th>
                                         <th style="width: 15%;">Desconto (R$)</th>
@@ -96,14 +112,19 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <input type="text" name="Itens[0].ProdutoId" value="a3610000-0000-4000-8000-000000000002" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Produto" required>
-                                            <small class="text-muted">IMP-DEMO - Implante controlado</small>
+                                            <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required>
+                                                <option value="">-- Selecione o Produto --</option>
+                                                @foreach (var prod in Model.ProdutosDisponiveis)
+                                                {
+                                                    <option value="@prod.Id" data-preco="@prod.PrecoCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">@prod.Sku - @prod.Nome (@prod.Unidade)</option>
+                                                }
+                                            </select>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.0001" min="0.0001" name="Itens[0].Quantidade" value="5" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            <input type="number" step="0.0001" min="0.0001" name="Itens[0].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
                                         </td>
                                         <td>
-                                            <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="1200.00" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                                            <input type="number" step="0.01" min="0" name="Itens[0].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required>
                                         </td>
                                         <td>
                                             <input type="number" step="0.01" min="0" name="Itens[0].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
@@ -148,20 +169,47 @@
     </form>
 </div>
 
+<template id="produtoOptionsTemplate">
+    <option value="">-- Selecione o Produto --</option>
+    @foreach (var prod in Model.ProdutosDisponiveis)
+    {
+        <option value="@prod.Id" data-preco="@prod.PrecoCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">@prod.Sku - @prod.Nome (@prod.Unidade)</option>
+    }
+</template>
+
 <script>
+    function bindProdutoChange(select) {
+        select.addEventListener('change', function() {
+            var selected = select.options[select.selectedIndex];
+            var preco = selected.getAttribute('data-preco');
+            if (preco) {
+                var row = select.closest('tr');
+                var precoInput = row.querySelector('.input-preco');
+                if (precoInput && (!precoInput.value || precoInput.value === '0.00' || precoInput.value === '0')) {
+                    precoInput.value = preco;
+                }
+            }
+        });
+    }
+
+    document.querySelectorAll('.select-produto').forEach(bindProdutoChange);
+
     document.getElementById('btnAddItem').addEventListener('click', function() {
         var tbody = document.querySelector('#tabelaItens tbody');
         var index = tbody.querySelectorAll('tr').length;
         var tr = document.createElement('tr');
+        var options = document.getElementById('produtoOptionsTemplate').innerHTML;
         tr.innerHTML = `
             <td>
-                <input type="text" name="Itens[${index}].ProdutoId" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="ID do Produto" required>
+                <select name="Itens[${index}].ProdutoId" class="form-select form-select-sm bg-black text-light border-secondary select-produto" required>
+                    ${options}
+                </select>
             </td>
             <td>
                 <input type="number" step="0.0001" min="0.0001" name="Itens[${index}].Quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required>
             </td>
             <td>
-                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" required>
+                <input type="number" step="0.01" min="0" name="Itens[${index}].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary input-preco" required>
             </td>
             <td>
                 <input type="number" step="0.01" min="0" name="Itens[${index}].Desconto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary">
@@ -171,6 +219,7 @@
             </td>
         `;
         tbody.appendChild(tr);
+        bindProdutoChange(tr.querySelector('.select-produto'));
         bindRemoveButtons();
     });
 

@@ -1,30 +1,137 @@
-<nav class="nav nav-pills flex-wrap gap-2 mb-4 p-2 bg-dark rounded border border-secondary" aria-label="Suprimentos e Distribuição Cirúrgica Administrativo 360">
-    <a class="nav-link text-light" asp-action="PedidosCompra">Pedidos</a>
-    <a class="nav-link text-light" asp-action="Recebimentos">Recebimentos</a>
-    <a class="nav-link text-light" asp-action="Inspecoes">Qualidade</a>
-    <a class="nav-link text-light" asp-action="Ocorrencias">Ocorrências</a>
-    <a class="nav-link text-light" asp-action="Estoque">Estoque & Lotes</a>
-    <a class="nav-link text-light" asp-action="Movimentacoes">Transferências</a>
-    <a class="nav-link text-light" asp-action="Inventarios">Inventários</a>
-    <a class="nav-link text-light" asp-action="Coleta">Coleta Móvel</a>
-    <a class="nav-link text-light" asp-action="Orcamentos">Orçamentos</a>
-    <a class="nav-link text-light" asp-action="Cirurgias">Cirurgias</a>
-    <a class="nav-link text-light" asp-action="Vales">Vales de Consignação</a>
-    <a class="nav-link text-light" asp-action="Valorizacao">Valorização</a>
-    <a class="nav-link text-light" asp-action="Vendas">Vendas Internas</a>
-    <a class="nav-link text-light" asp-action="TitulosReceber">Contas a Receber</a>
-    <a class="nav-link text-light" asp-action="TitulosPagar">Contas a Pagar</a>
-    <a class="nav-link text-light" asp-action="ComissoesPendentes">Comissões a Pagar</a>
-    <a class="nav-link text-light" asp-action="ContasFinanceiras">Contas Financeiras</a>
-    <a class="nav-link text-light" asp-action="FluxoCaixa">Fluxo de Caixa</a>
-    <a class="nav-link text-light" asp-action="FechamentoCaixa">Fechamento de Caixa</a>
-    <a class="nav-link text-warning fw-bold" href="/Administrativo360/Cotacoes"><i class="bi bi-inbox-fill me-1"></i>Central Cotações</a>
-    <a class="nav-link text-warning fw-bold" href="/Administrativo360/Cotacoes/Relacionamento"><i class="bi bi-diagram-3 me-1"></i>De/Para Cotações</a>
-    <a class="nav-link text-info fw-bold" href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-1"></i>XML Recebidos (NF-e)</a>
-    <a class="nav-link text-info fw-bold" href="/Administrativo360/DocumentosXml/Sincronizacao"><i class="bi bi-cloud-arrow-down me-1"></i>DF-e Sefaz</a>
-    <a class="nav-link text-success fw-bold" href="/Administrativo360/Gestao/Dashboard"><i class="bi bi-graph-up me-1"></i>Dashboard 360</a>
-    <a class="nav-link text-success fw-bold" href="/Administrativo360/Gestao/Monitor"><i class="bi bi-activity me-1"></i>Monitor Integrações</a>
-    <a class="nav-link text-light" asp-action="Relatorios">Relatórios Operacionais</a>
-    <a class="nav-link text-light" asp-action="RelatoriosFinanceiros">Relatórios Financeiros</a>
-</nav>
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentPath = ViewContext.HttpContext.Request.Path.Value ?? "";
 
+    bool IsActive(string action, string? controller = "Administrativo360") =>
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(currentAction, action, StringComparison.OrdinalIgnoreCase);
+
+    bool IsPathActive(string path) =>
+        currentPath.StartsWith(path, StringComparison.OrdinalIgnoreCase);
+}
+
+<nav class="adm360-nav-wrapper mb-4" aria-label="Navegação Administrativo 360">
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-body p-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom border-secondary pb-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-2 py-1"><i class="bi bi-shield-check me-1"></i>Administrativo 360</span>
+                    <span class="text-secondary small d-none d-md-inline">| ERP de Gestão Hospitalar, Suprimentos e OPME</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="/Administrativo360/Gestao/Dashboard" class="btn btn-sm @(IsPathActive("/Administrativo360/Gestao/Dashboard") ? "btn-info" : "btn-outline-info")">
+                        <i class="bi bi-graph-up me-1"></i>Dashboard 360
+                    </a>
+                    <a asp-action="Index" asp-controller="Administrativo360" class="btn btn-sm @(IsActive("Index") ? "btn-secondary text-white" : "btn-outline-secondary")">
+                        <i class="bi bi-building me-1"></i>Resumo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Grupos de Navegação -->
+            <div class="d-flex flex-wrap gap-1 align-items-center" role="menubar">
+                <!-- 1. Cadastros -->
+                <div class="btn-group">
+                    <a asp-action="Cadastros" asp-controller="Administrativo360" class="btn btn-sm @(IsActive("Cadastros") ? "btn-light text-dark fw-bold" : "btn-outline-secondary text-light")">
+                        <i class="bi bi-folder me-1"></i>Cadastros
+                    </a>
+                </div>
+
+                <!-- 2. Comercial & Cotações -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsPathActive("/Administrativo360/Cotacoes") || IsActive("Orcamentos") || IsActive("OrcamentoNovo") || IsActive("Vendas") ? "btn-warning text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-tag me-1"></i>Comercial & Cotações
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsPathActive("/Administrativo360/Cotacoes") && !IsPathActive("/Administrativo360/Cotacoes/Relacionamento") ? "active" : "")" href="/Administrativo360/Cotacoes"><i class="bi bi-inbox me-2"></i>Central de Cotações</a></li>
+                        <li><a class="dropdown-item @(IsPathActive("/Administrativo360/Cotacoes/Relacionamento") ? "active" : "")" href="/Administrativo360/Cotacoes/Relacionamento"><i class="bi bi-diagram-3 me-2"></i>De/Para de Produtos</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li><a class="dropdown-item @(IsActive("Orcamentos") || IsActive("OrcamentoNovo") ? "active" : "")" asp-action="Orcamentos" asp-controller="Administrativo360"><i class="bi bi-receipt me-2"></i>Orçamentos Cirúrgicos</a></li>
+                        <li><a class="dropdown-item @(IsActive("Vendas") ? "active" : "")" asp-action="Vendas" asp-controller="Administrativo360"><i class="bi bi-cart-check me-2"></i>Vendas Internas</a></li>
+                    </ul>
+                </div>
+
+                <!-- 3. Compras -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("PedidosCompra") || IsActive("Recebimentos") ? "btn-primary text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bag-check me-1"></i>Compras
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("PedidosCompra") ? "active" : "")" asp-action="PedidosCompra" asp-controller="Administrativo360"><i class="bi bi-cart-plus me-2"></i>Pedidos de Compra</a></li>
+                        <li><a class="dropdown-item @(IsActive("Recebimentos") ? "active" : "")" asp-action="Recebimentos" asp-controller="Administrativo360"><i class="bi bi-box-arrow-in-down me-2"></i>Recebimento & Conferência</a></li>
+                    </ul>
+                </div>
+
+                <!-- 4. Estoque & Qualidade -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("Estoque") || IsActive("Movimentacoes") || IsActive("Inspecoes") || IsActive("Ocorrencias") || IsActive("Inventarios") || IsActive("Coleta") ? "btn-success text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-boxes me-1"></i>Estoque & Qualidade
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("Estoque") ? "active" : "")" asp-action="Estoque" asp-controller="Administrativo360"><i class="bi bi-boxes me-2"></i>Estoque & Lotes (FEFO)</a></li>
+                        <li><a class="dropdown-item @(IsActive("Movimentacoes") ? "active" : "")" asp-action="Movimentacoes" asp-controller="Administrativo360"><i class="bi bi-arrow-left-right me-2"></i>Transferências</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li><a class="dropdown-item @(IsActive("Inspecoes") ? "active" : "")" asp-action="Inspecoes" asp-controller="Administrativo360"><i class="bi bi-shield-check me-2"></i>Inspeções & Quarentena</a></li>
+                        <li><a class="dropdown-item @(IsActive("Ocorrencias") ? "active" : "")" asp-action="Ocorrencias" asp-controller="Administrativo360"><i class="bi bi-exclamation-octagon me-2"></i>Ocorrências da Qualidade</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li><a class="dropdown-item @(IsActive("Inventarios") ? "active" : "")" asp-action="Inventarios" asp-controller="Administrativo360"><i class="bi bi-clipboard-check me-2"></i>Inventários</a></li>
+                        <li><a class="dropdown-item @(IsActive("Coleta") ? "active" : "")" asp-action="Coleta" asp-controller="Administrativo360"><i class="bi bi-upc-scan me-2"></i>Coleta Móvel</a></li>
+                    </ul>
+                </div>
+
+                <!-- 5. Operação Cirúrgica -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("Cirurgias") || IsActive("CirurgiaNova") || IsActive("Vales") || IsActive("ValeNovo") || IsActive("Valorizacao") ? "btn-danger text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-heart-pulse me-1"></i>Operação Cirúrgica
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("Cirurgias") || IsActive("CirurgiaNova") ? "active" : "")" asp-action="Cirurgias" asp-controller="Administrativo360"><i class="bi bi-calendar-check me-2"></i>Agendamentos Cirúrgicos</a></li>
+                        <li><a class="dropdown-item @(IsActive("Vales") || IsActive("ValeNovo") ? "active" : "")" asp-action="Vales" asp-controller="Administrativo360"><i class="bi bi-truck me-2"></i>Vales de Consignação</a></li>
+                        <li><a class="dropdown-item @(IsActive("Valorizacao") ? "active" : "")" asp-action="Valorizacao" asp-controller="Administrativo360"><i class="bi bi-cash-coin me-2"></i>Consumo, Devolução & Valorização</a></li>
+                    </ul>
+                </div>
+
+                <!-- 6. Financeiro -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("TitulosReceber") || IsActive("TitulosPagar") || IsActive("ComissoesPendentes") || IsActive("ContasFinanceiras") || IsActive("FluxoCaixa") || IsActive("FechamentoCaixa") ? "btn-info text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-wallet2 me-1"></i>Financeiro
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("TitulosReceber") ? "active" : "")" asp-action="TitulosReceber" asp-controller="Administrativo360"><i class="bi bi-arrow-down-left-circle me-2 text-success"></i>Contas a Receber</a></li>
+                        <li><a class="dropdown-item @(IsActive("TitulosPagar") ? "active" : "")" asp-action="TitulosPagar" asp-controller="Administrativo360"><i class="bi bi-arrow-up-right-circle me-2 text-danger"></i>Contas a Pagar</a></li>
+                        <li><a class="dropdown-item @(IsActive("ComissoesPendentes") ? "active" : "")" asp-action="ComissoesPendentes" asp-controller="Administrativo360"><i class="bi bi-percent me-2 text-warning"></i>Comissões a Pagar</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li><a class="dropdown-item @(IsActive("ContasFinanceiras") ? "active" : "")" asp-action="ContasFinanceiras" asp-controller="Administrativo360"><i class="bi bi-bank me-2"></i>Contas Financeiras</a></li>
+                        <li><a class="dropdown-item @(IsActive("FluxoCaixa") ? "active" : "")" asp-action="FluxoCaixa" asp-controller="Administrativo360"><i class="bi bi-graph-down me-2"></i>Fluxo de Caixa</a></li>
+                        <li><a class="dropdown-item @(IsActive("FechamentoCaixa") ? "active" : "")" asp-action="FechamentoCaixa" asp-controller="Administrativo360"><i class="bi bi-lock me-2"></i>Fechamento de Caixa</a></li>
+                    </ul>
+                </div>
+
+                <!-- 7. Documentos & Integrações -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsPathActive("/Administrativo360/DocumentosXml") || IsPathActive("/Administrativo360/Gestao/Monitor") ? "btn-light text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-file-earmark-code me-1"></i>Documentos & Integrações
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml") && !IsPathActive("/Administrativo360/DocumentosXml/Sincronizacao") ? "active" : "")" href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-2"></i>Central XML (NF-e 55)</a></li>
+                        <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml/Sincronizacao") ? "active" : "")" href="/Administrativo360/DocumentosXml/Sincronizacao"><i class="bi bi-cloud-arrow-down me-2"></i>DF-e Sefaz</a></li>
+                        <li><hr class="dropdown-divider border-secondary"></li>
+                        <li><a class="dropdown-item @(IsPathActive("/Administrativo360/Gestao/Monitor") ? "active" : "")" href="/Administrativo360/Gestao/Monitor"><i class="bi bi-activity me-2"></i>Monitor de Integrações</a></li>
+                    </ul>
+                </div>
+
+                <!-- 8. Relatórios -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("Relatorios") || IsActive("RelatoriosFinanceiros") ? "btn-secondary text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-file-earmark-bar-graph me-1"></i>Relatórios
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("Relatorios") ? "active" : "")" asp-action="Relatorios" asp-controller="Administrativo360"><i class="bi bi-file-earmark-text me-2"></i>Relatórios Operacionais & Rastreabilidade</a></li>
+                        <li><a class="dropdown-item @(IsActive("RelatoriosFinanceiros") ? "active" : "")" asp-action="RelatoriosFinanceiros" asp-controller="Administrativo360"><i class="bi bi-file-earmark-ruled me-2"></i>Relatórios Financeiros & DRE</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>

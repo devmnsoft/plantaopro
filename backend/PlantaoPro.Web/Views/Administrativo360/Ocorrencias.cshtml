@@ -1,1 +1,82 @@
-@{ViewData["Title"]="Não conformidades";}<main class="container-fluid py-4"><h1>Não conformidades e ocorrências</h1><p class="lead">Qualidade acompanha bloqueios e tratamentos ligados ao recebimento, produto, lote e local.</p><partial name="_SuprimentosNav"/><div class="alert alert-warning">Bloqueio exige motivo. Encerramento exige justificativa, evidência e destino; movimentos anteriores nunca são apagados.</div><div class="card"><div class="card-body"><h2 class="h5">Ocorrências abertas</h2><p class="text-muted">Pesquise por produto ou lote. O próximo passo é tratar, decidir e encerrar a ocorrência.</p></div></div></main>
+@model PlantaoPro.Web.Models.OcorrenciasIndexViewModel
+@{
+    ViewData["Title"] = "Ocorrências da Qualidade — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Ocorrências da Qualidade</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Ocorrências e Não Conformidades</h1>
+            <p class="text-secondary small mb-0">Rastreamento de desvios de recebimento, divergências documentais e lotes retidos.</p>
+        </div>
+        <div>
+            <a asp-action="Inspecoes" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-shield-check me-1"></i>Ir para Fila de Inspeções
+            </a>
+        </div>
+    </div>
+
+    <!-- Tabela de Ocorrências -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-exclamation-octagon me-2 text-danger"></i>Ocorrências Registradas</span>
+            <span class="text-secondary small">Total: @Model.Ocorrencias.Count</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Tipo do Desvio</th>
+                        <th>Descrição da Ocorrência</th>
+                        <th>Local Afetado</th>
+                        <th class="text-end">Qtd. Envolvida</th>
+                        <th>Prazo de Resolução</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Ocorrencias.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>Nenhuma não-conformidade aberta no momento.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var oc in Model.Ocorrencias)
+                    {
+                        <tr>
+                            <td><span class="badge bg-danger"><i class="bi bi-exclamation-triangle me-1"></i>@oc.Tipo</span></td>
+                            <td><strong class="text-light">@oc.Descricao</strong></td>
+                            <td><span class="badge bg-secondary">@(oc.Destino ?? "Almoxarifado")</span></td>
+                            <td class="text-end font-monospace text-warning fw-bold">@oc.Quantidade.ToString("N0")</td>
+                            <td class="text-secondary small">@(oc.Prazo?.ToString("dd/MM/yyyy") ?? "Imediato")</td>
+                            <td>
+                                @if (oc.Situacao == "ABERTA")
+                                {
+                                    <span class="badge bg-warning text-dark">Em Aberto</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Concluída</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

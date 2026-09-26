@@ -1,0 +1,409 @@
+@model PlantaoPro.Web.Models.CadastrosIndexViewModel
+@{
+    ViewData["Title"] = "Cadastros Organizacionais — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Cadastros Mestre</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    <!-- Feedback messages -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Cadastros Mestre</h1>
+            <p class="text-secondary small mb-0">Gestão de parceiros comerciais, hospitais, produtos OPME e locais de armazenagem.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalNovoParceiro">
+                <i class="bi bi-person-plus me-1"></i>Novo Parceiro
+            </button>
+            <button class="btn btn-outline-info btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+                <i class="bi bi-box-seam me-1"></i>Novo Produto
+            </button>
+            <button class="btn btn-outline-light btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#modalNovoLocal">
+                <i class="bi bi-geo-alt me-1"></i>Novo Local
+            </button>
+        </div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <ul class="nav nav-pills mb-3 border-bottom border-secondary pb-2" id="cadastrosTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.AbaAtiva == "parceiros" ? "active bg-primary" : "text-light")" id="parceiros-tab" data-bs-toggle="tab" data-bs-target="#tabParceiros" type="button" role="tab">
+                <i class="bi bi-people me-1"></i>Parceiros & Clientes <span class="badge bg-secondary ms-1">@Model.Parceiros.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.AbaAtiva == "produtos" ? "active bg-info text-dark fw-bold" : "text-light")" id="produtos-tab" data-bs-toggle="tab" data-bs-target="#tabProdutos" type="button" role="tab">
+                <i class="bi bi-boxes me-1"></i>Produtos OPME <span class="badge bg-secondary ms-1">@Model.Produtos.Count</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(Model.AbaAtiva == "locais" ? "active bg-light text-dark fw-bold" : "text-light")" id="locais-tab" data-bs-toggle="tab" data-bs-target="#tabLocais" type="button" role="tab">
+                <i class="bi bi-building me-1"></i>Locais de Armazenamento <span class="badge bg-secondary ms-1">@Model.Locais.Count</span>
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="cadastrosTabContent">
+        <!-- 1. PARCEIROS -->
+        <div class="tab-pane fade @(Model.AbaAtiva == "parceiros" ? "show active" : "")" id="tabParceiros" role="tabpanel">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+                    <span class="text-light fw-bold small"><i class="bi bi-person-lines-fill me-2 text-info"></i>Clientes, Fornecedores, Médicos e Hospitais</span>
+                    <span class="text-secondary small">Total: @Model.Parceiros.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small">
+                                <th>Nome / Razão Social</th>
+                                <th>Documento (CNPJ/CPF)</th>
+                                <th>Tipo de Relação</th>
+                                <th>Status</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Parceiros.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-secondary">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum parceiro cadastrado.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var p in Model.Parceiros)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong class="text-light">@p.Nome</strong>
+                                    </td>
+                                    <td>
+                                        <span class="font-monospace text-secondary small">@(string.IsNullOrWhiteSpace(p.Documento) ? "—" : p.Documento)</span>
+                                    </td>
+                                    <td>
+                                        @if (p.Fornecedor)
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-truck me-1"></i>Fornecedor</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-info text-dark"><i class="bi bi-hospital me-1"></i>Cliente / Hospital / Pagador</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (p.Ativo)
+                                        {
+                                            <span class="badge bg-success">Ativo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inativo</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-action="AlternarStatusParceiro" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@p.Id" />
+                                            <input type="hidden" name="ativo" value="@(!p.Ativo)" />
+                                            <button type="submit" class="btn btn-sm @(p.Ativo ? "btn-outline-danger" : "btn-outline-success")" title="@(p.Ativo ? "Inativar parceiro" : "Ativar parceiro")">
+                                                <i class="bi @(p.Ativo ? "bi-slash-circle" : "bi-check-circle")"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PRODUTOS -->
+        <div class="tab-pane fade @(Model.AbaAtiva == "produtos" ? "show active" : "")" id="tabProdutos" role="tabpanel">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+                    <span class="text-light fw-bold small"><i class="bi bi-box-seam me-2 text-info"></i>Catálogo de Produtos e Materiais Cirúrgicos</span>
+                    <span class="text-secondary small">Total: @Model.Produtos.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small">
+                                <th>SKU</th>
+                                <th>Nome do Material</th>
+                                <th>Unidade</th>
+                                <th>Controles</th>
+                                <th class="text-end">Custo Base</th>
+                                <th>Status</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Produtos.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-secondary">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum produto cadastrado.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var prod in Model.Produtos)
+                            {
+                                <tr>
+                                    <td>
+                                        <code class="text-info fw-bold">@prod.Sku</code>
+                                    </td>
+                                    <td>
+                                        <strong class="text-light">@prod.Nome</strong>
+                                        @if (!string.IsNullOrWhiteSpace(prod.CodigoBarras))
+                                        {
+                                            <div class="text-secondary small font-monospace"><i class="bi bi-upc me-1"></i>@prod.CodigoBarras</div>
+                                        }
+                                    </td>
+                                    <td><span class="badge bg-secondary">@prod.Unidade</span></td>
+                                    <td>
+                                        @if (prod.ControlaLote)
+                                        {
+                                            <span class="badge bg-primary me-1" title="Controle de lote e validade obrigatório"><i class="bi bi-qr-code me-1"></i>Lote</span>
+                                        }
+                                        @if (prod.ExigeInspecao)
+                                        {
+                                            <span class="badge bg-warning text-dark" title="Exige inspeção de qualidade"><i class="bi bi-shield-check me-1"></i>Inspeção</span>
+                                        }
+                                    </td>
+                                    <td class="text-end font-monospace text-light">
+                                        @prod.PrecoCusto.ToString("C")
+                                    </td>
+                                    <td>
+                                        @if (prod.Ativo)
+                                        {
+                                            <span class="badge bg-success">Ativo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inativo</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <form asp-action="AlternarStatusProduto" method="post" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@prod.Id" />
+                                            <input type="hidden" name="ativo" value="@(!prod.Ativo)" />
+                                            <button type="submit" class="btn btn-sm @(prod.Ativo ? "btn-outline-danger" : "btn-outline-success")" title="@(prod.Ativo ? "Inativar produto" : "Ativar produto")">
+                                                <i class="bi @(prod.Ativo ? "bi-slash-circle" : "bi-check-circle")"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. LOCAIS DE ARMAZENAMENTO -->
+        <div class="tab-pane fade @(Model.AbaAtiva == "locais" ? "show active" : "")" id="tabLocais" role="tabpanel">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+                    <span class="text-light fw-bold small"><i class="bi bi-geo-alt me-2 text-info"></i>Almoxarifados, CDs e Custódias Hospitalares</span>
+                    <span class="text-secondary small">Total: @Model.Locais.Count</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-striped align-middle mb-0">
+                        <thead>
+                            <tr class="text-secondary small">
+                                <th>Código</th>
+                                <th>Nome do Local</th>
+                                <th>Tipo de Armazenamento</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Locais.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-secondary">
+                                        <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum local cadastrado.
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (var l in Model.Locais)
+                            {
+                                <tr>
+                                    <td><code class="text-info fw-bold">@l.Codigo</code></td>
+                                    <td><strong class="text-light">@l.Nome</strong></td>
+                                    <td>
+                                        @if (l.Tipo == "INTERNO")
+                                        {
+                                            <span class="badge bg-success"><i class="bi bi-house-door me-1"></i>INTERNO (Almoxarifado / CD)</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-hospital me-1"></i>EXTERNO (Custódia em Hospital)</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (l.Ativo)
+                                        {
+                                            <span class="badge bg-success">Ativo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">Inativo</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Parceiro -->
+<div class="modal fade" id="modalNovoParceiro" tabindex="-1" aria-labelledby="tituloModalParceiro" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="SalvarParceiro" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalParceiro"><i class="bi bi-person-plus me-2 text-info"></i>Cadastrar Parceiro</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nome / Razão Social *</label>
+                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Hospital Municipal Central" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Documento (CNPJ / CPF)</label>
+                    <input type="text" name="documento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Apenas números ou formatado" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Tipo de Relação *</label>
+                    <select name="fornecedor" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="false">Cliente / Hospital / Pagador</option>
+                        <option value="true">Fornecedor / Fabricante</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar Parceiro</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Novo Produto -->
+<div class="modal fade" id="modalNovoProduto" tabindex="-1" aria-labelledby="tituloModalProduto" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="SalvarProduto" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalProduto"><i class="bi bi-box-seam me-2 text-info"></i>Cadastrar Produto OPME</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <label class="form-label small fw-bold">SKU *</label>
+                        <input type="text" name="sku" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: STENT-01" required />
+                    </div>
+                    <div class="col-8">
+                        <label class="form-label small fw-bold">Nome do Material *</label>
+                        <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Stent Coronário Sirolimus" required />
+                    </div>
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-4">
+                        <label class="form-label small fw-bold">Unidade *</label>
+                        <input type="text" name="unidade" value="UN" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small">Preço Custo (R$)</label>
+                        <input type="number" step="0.01" name="precoCusto" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label small">Cód. Barras</label>
+                        <input type="text" name="codigoBarras" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="EAN-13" />
+                    </div>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="controlaLote" value="true" checked id="checkLote">
+                    <label class="form-check-label small" for="checkLote">Controlar Lote e Validade</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" name="exigeInspecao" value="true" checked id="checkInspecao">
+                    <label class="form-check-label small" for="checkInspecao">Exigir Inspeção de Qualidade (Quarentena na Entrada)</label>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-info btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar Produto</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Novo Local -->
+<div class="modal fade" id="modalNovoLocal" tabindex="-1" aria-labelledby="tituloModalLocal" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="SalvarLocal" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalLocal"><i class="bi bi-geo-alt me-2 text-info"></i>Cadastrar Local de Armazenamento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Código do Local *</label>
+                    <input type="text" name="codigo" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: ALMOX-CENTRAL" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Nome / Descrição *</label>
+                    <input type="text" name="nome" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Almoxarifado Central de Cirurgia" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Tipo *</label>
+                    <select name="tipo" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="INTERNO">INTERNO (CD / Almoxarifado Próprio)</option>
+                        <option value="EXTERNO">EXTERNO (Custódia em Hospital / Clínica)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-light btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar Local</button>
+            </div>
+        </form>
+    </div>
+</div>

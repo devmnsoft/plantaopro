@@ -1,1 +1,180 @@
-@{ViewData["Title"]="Recebimentos";}<main class="container-fluid py-4"><h1>Recebimentos</h1><p class="lead">Estoquistas conferem pedido, documento, lote, validade e local.</p><partial name="_SuprimentosNav"/><div class="alert alert-warning">Confirmar cria a entrada atomicamente. Itens controlados permanecem em quarentena e vencidos ficam bloqueados.</div><div class="card"><div class="card-body"><h2 class="h5">Nova conferência</h2><p>Pesquise um pedido aprovado pelo fornecedor, confira cada item e informe lote quando solicitado. O próximo passo é a inspeção da Qualidade.</p><button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#confirmarRecebimento">Revisar confirmação</button></div></div><div class="modal fade" id="confirmarRecebimento" tabindex="-1" aria-labelledby="tituloConfirmar"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title fs-5" id="tituloConfirmar">Confirmar recebimento?</h2><button class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div><div class="modal-body">A operação não libera o material para venda.</div></div></div></div></main>
+@model PlantaoPro.Web.Models.RecebimentosIndexViewModel
+@{
+    ViewData["Title"] = "Recebimento e Conferência — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Compras</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Recebimentos</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Recebimento & Conferência Cega</h1>
+            <p class="text-secondary small mb-0">Entrada física e fiscal de mercadorias com direcionamento automático para Quarentena / Qualidade.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoRecebimento">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Registrar Nova Entrada (NF-e)
+            </button>
+        </div>
+    </div>
+
+    <!-- Regra de Negócio Alert -->
+    <div class="alert alert-info bg-dark border-info text-light d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-info-circle-fill fs-5 text-info"></i>
+        <div class="small">
+            <strong>Controle de Qualidade Ativo:</strong> Ao confirmar o recebimento, materiais que exigem inspeção entram automaticamente em <code>QUARENTENA</code> no almoxarifado interno e uma obrigação correspondente é gerada no Contas a Pagar. A liberação para venda ou cirurgia ocorre após aprovação na Qualidade.
+        </div>
+    </div>
+
+    <!-- Pedidos Pendentes de Recebimento -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-hourglass-split me-2 text-warning"></i>Pedidos Aprovados Aguardando Recebimento</span>
+            <span class="text-secondary small">Total: @Model.PedidosPendentes.Count pedidos</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Pedido de Compra</th>
+                        <th>Fornecedor</th>
+                        <th>Data Aprovação</th>
+                        <th class="text-end">Valor Autorizado</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.PedidosPendentes.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                <i class="bi bi-check2-circle fs-3 d-block mb-2 text-success"></i>Todos os pedidos aprovados foram recebidos.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var ped in Model.PedidosPendentes)
+                    {
+                        <tr>
+                            <td><code class="text-info fw-bold">@ped.Numero</code></td>
+                            <td><strong class="text-light">@ped.Fornecedor</strong></td>
+                            <td class="text-secondary small">@ped.CriadoEm.ToString("dd/MM/yyyy")</td>
+                            <td class="text-end font-monospace text-light">@ped.Total.ToString("C")</td>
+                            <td>
+                                @if (ped.Situacao == "PARCIAL")
+                                {
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-pie-chart me-1"></i>Recebido Parcial</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark"><i class="bi bi-clock me-1"></i>Aguardando Entrada</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNovoRecebimento" onclick="document.getElementById('selectPedidoId').value='@ped.Id';">
+                                    <i class="bi bi-box-arrow-in-down me-1"></i>Conferir Entrada
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Recebimento -->
+<div class="modal fade" id="modalNovoRecebimento" tabindex="-1" aria-labelledby="tituloModalRecebimento" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form asp-action="ConfirmarRecebimento" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalRecebimento"><i class="bi bi-box-arrow-in-down me-2 text-info"></i>Conferência e Entrada de Mercadoria</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold">Pedido de Compra Autorizado *</label>
+                        <select name="pedidoId" id="selectPedidoId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                            <option value="">Selecione o Pedido...</option>
+                            @foreach (var ped in Model.PedidosPendentes)
+                            {
+                                <option value="@ped.Id">@ped.Numero — @ped.Fornecedor (@ped.Situacao)</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold">Documento / Nota Fiscal (DANFE) *</label>
+                        <input type="text" name="documento" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: NF-e 001.248.910" required />
+                    </div>
+                </div>
+
+                <div class="card bg-black border-secondary p-3 mb-3">
+                    <h6 class="text-info small fw-bold mb-3"><i class="bi bi-upc-scan me-1"></i>Identificação do Material e Rastreabilidade</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Local de Armazenamento (Destino Interno) *</label>
+                            <select name="localId" class="form-select form-select-sm bg-dark text-light border-secondary" required>
+                                <option value="">Selecione o Almoxarifado...</option>
+                                @foreach (var loc in Model.Locais)
+                                {
+                                    <option value="@loc.Id">@loc.Codigo — @loc.Nome</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Quantidade Recebida *</label>
+                            <input type="number" step="1" min="1" name="quantidade" value="10" class="form-control form-control-sm bg-dark text-light border-secondary" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Lote do Fabricante *</label>
+                            <input type="text" name="lote" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ex: LOTE-2026-X1" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Data de Validade (ANVISA)</label>
+                            <input type="date" name="validade" value="@DateTime.Today.AddYears(2).ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-dark text-light border-secondary" />
+                            <small class="text-secondary">Lotes com validade vencida serão bloqueados automaticamente.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <input type="hidden" name="pedidoItemId" value="@Guid.Empty" id="hiddenPedidoItemId" />
+                            <label class="form-label small text-secondary">Rastreabilidade & Conformidade</label>
+                            <div class="form-control form-control-sm bg-dark text-secondary border-secondary">
+                                <i class="bi bi-shield-lock me-1 text-warning"></i>Entrada inicial em Quarentena
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar Recebimento</button>
+            </div>
+        </form>
+    </div>
+</div>

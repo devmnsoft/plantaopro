@@ -22,6 +22,39 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         {
             await using var cn = new NpgsqlConnection(cs);
             await cn.OpenAsync();
+
+            var hasModuloId = await cn.ExecuteScalarAsync<bool>(@"
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'plantaopro' AND table_name = 'tenant_modulos' AND column_name = 'modulo_id'
+                );");
+
+            if (!hasModuloId)
+            {
+                var migrationPath = Path.Combine(RepositoryPathResolver.RepoRoot, "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql");
+                if (File.Exists(migrationPath))
+                {
+                    var sql = await File.ReadAllTextAsync(migrationPath);
+                    await cn.ExecuteAsync(sql);
+                }
+            }
+
+            var hasAdm360 = await cn.ExecuteScalarAsync<bool>(@"
+                SELECT EXISTS (
+                    SELECT 1 FROM plantaopro.tenant_modulos tm
+                    JOIN plantaopro.modulos_sistema ms ON ms.id = tm.modulo_id
+                    WHERE tm.tenant_id = @TenantSantaCasa AND ms.codigo = 'ADM360' AND tm.reg_status = 'A' AND tm.habilitado = true
+                );", new { TenantSantaCasa });
+
+            if (!hasAdm360)
+            {
+                await cn.ExecuteAsync(@"
+                    INSERT INTO plantaopro.tenant_modulos (id, tenant_id, modulo_id, codigo, codigo_modulo, habilitado, status, origem, reg_status, reg_date)
+                    SELECT gen_random_uuid(), @TenantSantaCasa, m.id, m.codigo, m.codigo, true, 'ATIVO', 'DEMO_MIGRATION', 'A', now()
+                    FROM plantaopro.modulos_sistema m
+                    WHERE upper(m.codigo) = 'ADM360' AND m.reg_status = 'A'
+                    ON CONFLICT DO NOTHING;", new { TenantSantaCasa });
+            }
         }
         catch (Exception ex)
         {
@@ -72,6 +105,16 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         Assert.Equal("ATIVO", (string)user.status);
         Assert.True(BCrypt.Net.BCrypt.Verify("SantaCasa!Demo2026#Gestor", (string)user.senha_hash),
             "A senha inicial informada na especificação deve validar via BCrypt contra o hash do banco.");
+
+        var modulos = (await cn.QueryAsync<string>(@"
+            SELECT distinct upper(ms.codigo)
+            FROM plantaopro.tenant_modulos tm
+            JOIN plantaopro.modulos_sistema ms ON ms.id=tm.modulo_id AND ms.reg_status='A' AND upper(ms.status)='ATIVO'
+            WHERE tm.tenant_id=@TenantSantaCasa AND tm.reg_status='A' AND tm.habilitado=true AND upper(tm.status)='ATIVO'
+            ORDER BY 1",
+            new { TenantSantaCasa })).ToList();
+
+        Assert.Contains("ADM360", modulos);
     }
 
     // =========================================================================

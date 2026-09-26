@@ -1,1 +1,154 @@
-@{ViewData["Title"]="Movimentações";}<main class="container-fluid py-4"><h1>Movimentações e transferências</h1><p class="lead">Estoquistas consultam entradas, transferências, saídas, bloqueios e estornos.</p><partial name="_SuprimentosNav"/><div class="alert alert-warning">Transferir registra saída e entrada na mesma transação, sem venda ou receita. Motivo é obrigatório para bloqueio e estorno.</div><div class="card"><div class="card-body"><h2 class="h5">Nova transferência</h2><p>Escolha produto/lote e locais pelo nome. O sistema impede saldo negativo e locais de outro tenant.</p></div></div></main>
+@model PlantaoPro.Web.Models.MovimentacoesIndexViewModel
+@{
+    ViewData["Title"] = "Transferências de Estoque — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Transferências</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Transferências entre Locais</h1>
+            <p class="text-secondary small mb-0">Movimentação física rastreável entre almoxarifados internos e hospitais parceiros.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTransferencia">
+                <i class="bi bi-arrow-left-right me-1"></i>Nova Transferência
+            </button>
+        </div>
+    </div>
+
+    <!-- Tabela de Saldos Disponíveis para Transferência -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-boxes me-2 text-info"></i>Saldos Liberados Elegíveis para Transferência</span>
+            <span class="text-secondary small">Total: @Model.Saldos.Count(s => s.Condicao == "LIBERADO" && s.Disponivel > 0) disponíveis</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Material / Produto</th>
+                        <th>Lote</th>
+                        <th>Local Atual</th>
+                        <th>Validade</th>
+                        <th class="text-end">Disponível</th>
+                        <th class="text-end">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model.Saldos.Where(x => x.Condicao == "LIBERADO" && x.Disponivel > 0))
+                    {
+                        <tr>
+                            <td><strong class="text-light">@s.Produto</strong></td>
+                            <td><code class="text-info">@s.Lote</code></td>
+                            <td><span class="badge bg-secondary">@s.Local</span></td>
+                            <td class="text-secondary small">@(s.Validade?.ToString("dd/MM/yyyy") ?? "—")</td>
+                            <td class="text-end font-monospace text-success fw-bold">@s.Disponivel.ToString("N0")</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalTransferencia" onclick="prepararTransferencia('@s.ProdutoId', '@s.LoteId', '@s.LocalId', '@s.Produto', '@s.Lote', @s.Disponivel);">
+                                    <i class="bi bi-arrow-right-short me-1"></i>Transferir
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nova Transferência -->
+<div class="modal fade" id="modalTransferencia" tabindex="-1" aria-labelledby="tituloModalTransf" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="TransferirEstoque" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="produtoId" id="transfProdutoId" />
+            <input type="hidden" name="loteId" id="transfLoteId" />
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalTransf"><i class="bi bi-arrow-left-right me-2 text-info"></i>Transferência de Material</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dark border-secondary p-2 mb-3">
+                    <div class="small text-secondary">Material Selecionado:</div>
+                    <strong class="text-light d-block" id="transfProdutoNome">Selecione na tabela</strong>
+                    <div class="small text-info" id="transfLoteNome">—</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Local de Origem *</label>
+                    <select name="origemId" id="transfOrigemId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                        <option value="">Selecione o Local de Origem...</option>
+                        @foreach (var loc in Model.Locais)
+                        {
+                            <option value="@loc.Id">@loc.Codigo — @loc.Nome</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Local de Destino *</label>
+                    <select name="destinoId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                        <option value="">Selecione o Local de Destino...</option>
+                        @foreach (var loc in Model.Locais)
+                        {
+                            <option value="@loc.Id">@loc.Codigo — @loc.Nome (@loc.Tipo)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Quantidade a Transferir *</label>
+                    <input type="number" step="1" min="1" name="quantidade" id="transfQtd" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small">Motivo / Justificativa</label>
+                    <input type="text" name="motivo" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Abastecimento de estoque hospitalar para procedimentos do fim de semana" />
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar Transferência</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function prepararTransferencia(produtoId, loteId, localId, produto, lote, disponivel) {
+        document.getElementById('transfProdutoId').value = produtoId;
+        document.getElementById('transfLoteId').value = loteId;
+        document.getElementById('transfOrigemId').value = localId;
+        document.getElementById('transfProdutoNome').innerText = produto;
+        document.getElementById('transfLoteNome').innerText = 'Lote: ' + lote + ' | Disponível: ' + disponivel;
+        document.getElementById('transfQtd').max = disponivel;
+        document.getElementById('transfQtd').value = Math.min(disponivel, 1);
+    }
+</script>

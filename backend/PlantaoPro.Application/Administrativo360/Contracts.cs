@@ -648,3 +648,31 @@ public interface IAdm360FinanceiroRelatoriosRepository
     Task<IReadOnlyList<RelatorioMargemItem>> RelatorioMargemAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
 }
 
+// Cadastros e Lookups Administrativo 360
+public sealed record Parceiro360(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
+public sealed record Local360(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
+public sealed record Lote360(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
+public sealed record Lookups360Bundle(
+    IReadOnlyList<Parceiro360> Parceiros,
+    IReadOnlyList<Produto360> Produtos,
+    IReadOnlyList<Local360> Locais,
+    IReadOnlyList<Lote360> Lotes);
+
+public interface ICadastrosRepository
+{
+    Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct);
+    Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct);
+    Task AlternarStatusParceiroAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
+
+    Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct);
+    Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct);
+    Task AlternarStatusProdutoAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
+
+    Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct);
+    Task<Guid> SalvarLocalAsync(Guid tenantId, Guid? id, string codigo, string nome, string tipo, bool ativo, CancellationToken ct);
+
+    Task<IReadOnlyList<Lote360>> ListarLotesAsync(Guid tenantId, Guid? produtoId, CancellationToken ct);
+    Task<Lookups360Bundle> ObterLookupsAsync(Guid tenantId, CancellationToken ct);
+}
+

@@ -1,1 +1,225 @@
-@{ViewData["Title"]="Pedidos de compra";}<main class="container-fluid py-4"><h1>Pedidos de compra</h1><p class="lead">Compras cadastra rascunhos, aprova valores e acompanha recebimentos parciais.</p><partial name="_SuprimentosNav"/><div class="alert alert-info">A aprovação congela preços, descontos e frete. Mudanças posteriores exigem aditivo rastreado.</div><section class="card"><div class="card-body"><h2 class="h5">Pesquisar pedidos</h2><form method="get" class="row g-3"><div class="col-md-5"><label class="form-label" for="fornecedor">Fornecedor</label><input id="fornecedor" name="fornecedor" class="form-control" placeholder="Nome do fornecedor"/></div><div class="col-md-3"><label class="form-label" for="situacao">Situação</label><select id="situacao" class="form-select"><option>Todas</option><option>Rascunho</option><option>Aprovado</option><option>Parcial</option></select></div><div class="col-md-4 align-self-end"><button class="btn btn-primary">Pesquisar</button></div></form><p class="text-muted mt-4 mb-0">Após aprovar, siga para Recebimentos. A confirmação ocorre somente depois da persistência pela API.</p></div></section></main>
+@model PlantaoPro.Web.Models.PedidosCompraIndexViewModel
+@{
+    ViewData["Title"] = "Pedidos de Compra — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Compras</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Pedidos de Compra</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Pedidos de Compra</h1>
+            <p class="text-secondary small mb-0">Gestão de aquisições de OPME e insumos hospitalares com aprovação e congelamento de preços.</p>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNovoPedido">
+                <i class="bi bi-cart-plus me-1"></i>Novo Pedido de Compra
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-secondary mb-1">Fornecedor</label>
+                    <input type="text" name="fornecedor" value="@Model.Fornecedor" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Nome do fornecedor" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Situação</label>
+                    <select name="situacao" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todas</option>
+                        <option value="RASCUNHO" selected="@(Model.Situacao == "RASCUNHO")">Rascunho</option>
+                        <option value="APROVADO" selected="@(Model.Situacao == "APROVADO")">Aprovado</option>
+                        <option value="PARCIAL" selected="@(Model.Situacao == "PARCIAL")">Parcial</option>
+                        <option value="RECEBIDO" selected="@(Model.Situacao == "RECEBIDO")">Recebido Total</option>
+                        <option value="CANCELADO" selected="@(Model.Situacao == "CANCELADO")">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-secondary mb-1">A partir de</label>
+                    <input type="date" name="inicio" value="@(Model.Inicio?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm bg-black text-light border-secondary" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-secondary mb-1">Até</label>
+                    <input type="date" name="fim" value="@(Model.Fim?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm bg-black text-light border-secondary" />
+                </div>
+                <div class="col-6 col-md-1">
+                    <button type="submit" class="btn btn-outline-info btn-sm w-100"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Pedidos -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-list-check me-2 text-info"></i>Pedidos Registrados</span>
+            <span class="text-secondary small">Total: @Model.Pedidos.Count pedidos</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Número</th>
+                        <th>Fornecedor</th>
+                        <th>Data Emissão</th>
+                        <th class="text-end">Valor Total</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Pedidos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum pedido de compra encontrado.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var ped in Model.Pedidos)
+                    {
+                        <tr>
+                            <td><code class="text-info fw-bold">@ped.Numero</code></td>
+                            <td><strong class="text-light">@ped.Fornecedor</strong></td>
+                            <td class="text-secondary small">@ped.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end font-monospace text-light fw-bold">@ped.Total.ToString("C")</td>
+                            <td>
+                                @switch (ped.Situacao)
+                                {
+                                    case "RASCUNHO":
+                                        <span class="badge bg-secondary"><i class="bi bi-pencil me-1"></i>Rascunho</span>
+                                        break;
+                                    case "APROVADO":
+                                        <span class="badge bg-info text-dark"><i class="bi bi-check-circle me-1"></i>Aprovado</span>
+                                        break;
+                                    case "PARCIAL":
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-pie-chart me-1"></i>Recebido Parcial</span>
+                                        break;
+                                    case "RECEBIDO":
+                                        <span class="badge bg-success"><i class="bi bi-box-seam me-1"></i>Recebido Total</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-danger">@ped.Situacao</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (ped.Situacao == "RASCUNHO")
+                                {
+                                    <form asp-action="AprovarPedidoCompra" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@ped.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Aprovar Pedido e Congelar Preços">
+                                            <i class="bi bi-check-lg me-1"></i>Aprovar
+                                        </button>
+                                    </form>
+                                }
+                                else if (ped.Situacao is "APROVADO" or "PARCIAL")
+                                {
+                                    <a asp-action="Recebimentos" class="btn btn-sm btn-outline-info" title="Ir para Recebimento e Conferência">
+                                        <i class="bi bi-box-arrow-in-down me-1"></i>Receber
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Novo Pedido de Compra -->
+<div class="modal fade" id="modalNovoPedido" tabindex="-1" aria-labelledby="tituloModalNovoPedido" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form asp-action="CriarPedidoCompra" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalNovoPedido"><i class="bi bi-cart-plus me-2 text-info"></i>Novo Pedido de Compra</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold">Fornecedor *</label>
+                        <select name="fornecedorId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                            <option value="">Selecione o Fornecedor...</option>
+                            @foreach (var forn in Model.Fornecedores)
+                            {
+                                <option value="@forn.Id">@forn.Nome @(!string.IsNullOrWhiteSpace(forn.Documento) ? $"({forn.Documento})" : "")</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label small">Previsão de Entrega</label>
+                        <input type="date" name="previsao" value="@DateTime.Today.AddDays(5).ToString("yyyy-MM-dd")" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label small">Valor do Frete (R$)</label>
+                        <input type="number" step="0.01" name="frete" value="0.00" class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                </div>
+
+                <div class="border-top border-secondary pt-3">
+                    <h6 class="text-info small fw-bold mb-2"><i class="bi bi-boxes me-1"></i>Itens do Pedido de Compra</h6>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-5">
+                            <label class="form-label small">Produto / Material *</label>
+                            <select name="produtoId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                <option value="">Selecione o Produto...</option>
+                                @foreach (var prod in Model.Produtos)
+                                {
+                                    <option value="@prod.Id">@prod.Sku — @prod.Nome (@prod.Unidade)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Quantidade *</label>
+                            <input type="number" step="1" name="quantidade" value="10" min="1" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Preço Unitário (R$) *</label>
+                            <input type="number" step="0.01" name="precoUnitario" value="100.00" min="0" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small">Desconto (R$)</label>
+                            <input type="number" step="0.01" name="desconto" value="0.00" min="0" class="form-control form-control-sm bg-black text-light border-secondary" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar Pedido em Rascunho</button>
+            </div>
+        </form>
+    </div>
+</div>

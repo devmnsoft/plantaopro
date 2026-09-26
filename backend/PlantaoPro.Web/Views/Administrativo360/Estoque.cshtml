@@ -1,1 +1,180 @@
-@{ViewData["Title"]="Estoque e lotes";}<main class="container-fluid py-4"><h1>Estoque e lotes</h1><p class="lead">Consulta saldos derivados de movimentos por produto, lote, validade, local e condição.</p><partial name="_SuprimentosNav"/><div class="alert alert-info">Disponível = físico liberado − reservas ativas. Quarentena, bloqueado e vencido nunca ficam disponíveis. A ordem sugerida é FEFO.</div><div class="card"><div class="card-body"><h2 class="h5">Consultar saldo</h2><label for="busca" class="form-label">Produto ou lote</label><input id="busca" class="form-control" placeholder="Digite nome, SKU, código de barras ou lote"/><p class="text-muted mt-3">Use Movimentações para transferir; o saldo não é editável diretamente.</p></div></div></main>
+@model PlantaoPro.Web.Models.EstoqueIndexViewModel
+@{
+    ViewData["Title"] = "Estoque e Lotes — Administrativo 360";
+    decimal totalFisico = Model.Saldos.Sum(s => s.Fisico);
+    decimal totalReservado = Model.Saldos.Sum(s => s.Reservado);
+    decimal totalDisponivel = Model.Saldos.Sum(s => s.Disponivel);
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Estoque e Lotes (FEFO)</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Posição de Estoque & Lotes (FEFO)</h1>
+            <p class="text-secondary small mb-0">Disponibilidade calculada atomicamente: Físico Liberado menos Reservas Ativas com ordenação FEFO.</p>
+        </div>
+        <div>
+            <a asp-action="Movimentacoes" class="btn btn-outline-info btn-sm">
+                <i class="bi bi-arrow-left-right me-1"></i>Transferir Estoque
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Saldo Físico em Custódia</span>
+                    <strong class="fs-4 text-light">@totalFisico.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Soma de todos os lotes e almoxarifados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Reservas Cirúrgicas Ativas</span>
+                    <strong class="fs-4 text-warning">@totalReservado.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Bloqueadas para procedimentos agendados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Saldo Imediatamente Disponível</span>
+                    <strong class="fs-4 text-success">@totalDisponivel.ToString("N0") <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Lotes liberados e não vencidos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label class="form-label small text-secondary mb-1">Buscar por Produto ou Lote</label>
+                    <input type="text" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Nome do produto, SKU ou código do lote" />
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Condição Técnica</label>
+                    <select name="condicao" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todas as Condições</option>
+                        <option value="LIBERADO" selected="@(Model.Condicao == "LIBERADO")">Liberado</option>
+                        <option value="QUARENTENA" selected="@(Model.Condicao == "QUARENTENA")">Quarentena</option>
+                        <option value="VENCIDO" selected="@(Model.Condicao == "VENCIDO")">Vencido</option>
+                        <option value="BLOQUEADO" selected="@(Model.Condicao == "BLOQUEADO")">Bloqueado</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Local de Armazenamento</label>
+                    <select name="localId" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todos os Locais</option>
+                        @foreach (var loc in Model.Locais)
+                        {
+                            <option value="@loc.Id" selected="@(Model.LocalId == loc.Id)">@loc.Codigo — @loc.Nome</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-1">
+                    <button type="submit" class="btn btn-outline-info btn-sm w-100"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Saldos -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-boxes me-2 text-info"></i>Saldos e Validades por Lote</span>
+            <span class="text-secondary small">Total: @Model.Saldos.Count registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Material / Produto</th>
+                        <th>Lote</th>
+                        <th>Validade (FEFO)</th>
+                        <th>Local de Armazenamento</th>
+                        <th>Condição</th>
+                        <th class="text-end">Físico</th>
+                        <th class="text-end">Reservado</th>
+                        <th class="text-end">Disponível</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Saldos.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-secondary">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum saldo encontrado para os filtros selecionados.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var s in Model.Saldos)
+                    {
+                        bool vencido = s.Validade.HasValue && s.Validade.Value < DateOnly.FromDateTime(DateTime.Today);
+                        <tr>
+                            <td><strong class="text-light">@s.Produto</strong></td>
+                            <td><code class="text-info fw-bold">@s.Lote</code></td>
+                            <td>
+                                @if (s.Validade.HasValue)
+                                {
+                                    <span class="@(vencido ? "text-danger fw-bold" : "text-light")">
+                                        @s.Validade.Value.ToString("dd/MM/yyyy")
+                                        @if (vencido)
+                                        {
+                                            <i class="bi bi-exclamation-triangle ms-1" title="Lote vencido!"></i>
+                                        }
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary">—</span>
+                                }
+                            </td>
+                            <td><span class="badge bg-secondary">@s.Local</span></td>
+                            <td>
+                                @switch (s.Condicao)
+                                {
+                                    case "LIBERADO":
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Liberado</span>
+                                        break;
+                                    case "QUARENTENA":
+                                        <span class="badge bg-warning text-dark"><i class="bi bi-shield-exclamation me-1"></i>Quarentena</span>
+                                        break;
+                                    case "VENCIDO":
+                                        <span class="badge bg-danger"><i class="bi bi-calendar-x me-1"></i>Vencido</span>
+                                        break;
+                                    default:
+                                        <span class="badge bg-secondary">@s.Condicao</span>
+                                        break;
+                                }
+                            </td>
+                            <td class="text-end font-monospace text-light">@s.Fisico.ToString("N0")</td>
+                            <td class="text-end font-monospace text-warning">@(s.Reservado > 0 ? s.Reservado.ToString("N0") : "0")</td>
+                            <td class="text-end font-monospace fw-bold @(s.Disponivel > 0 ? "text-success" : "text-secondary")">
+                                @s.Disponivel.ToString("N0")
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

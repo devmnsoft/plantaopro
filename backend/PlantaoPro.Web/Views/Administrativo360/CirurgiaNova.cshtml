@@ -67,8 +67,13 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Hospital Participante <span class="text-danger">*</span></label>
-                        <input type="text" asp-for="HospitalId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="Identificador UUID do hospital ou parceiro" required />
+                        <select asp-for="HospitalId" class="form-select bg-dark text-light border-secondary" required>
+                            <option value="">-- Selecione o Hospital --</option>
+                            @foreach (var h in Model.Hospitais)
+                            {
+                                <option value="@h.Id" selected="@(h.Id == Model.HospitalId ? "selected" : null)">@h.Nome (@(h.Documento ?? "Sem doc"))</option>
+                            }
+                        </select>
                         <span asp-validation-for="HospitalId" class="text-danger small"></span>
                     </div>
                 </div>
@@ -84,22 +89,37 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Médico Cirurgião (Opcional)</label>
-                        <input type="text" asp-for="MedicoId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="Identificador UUID do médico parceiro" />
+                        <select asp-for="MedicoId" class="form-select bg-dark text-light border-secondary">
+                            <option value="">-- Selecione o Médico (Opcional) --</option>
+                            @foreach (var m in Model.Medicos)
+                            {
+                                <option value="@m.Id" selected="@(m.Id == Model.MedicoId ? "selected" : null)">@m.Nome</option>
+                            }
+                        </select>
                     </div>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label small text-secondary">Local Externo de Destino (Custódia Hospitalar) <span class="text-danger">*</span></label>
-                        <input type="text" asp-for="LocalDestinoId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="Identificador UUID do local de custódia hospitalar" required />
-                        <div class="form-text text-secondary small">Local externo cadastrado onde o consignado permanecerá sob custódia até a cirurgia.</div>
+                        <label class="form-label small text-secondary">Local de Destino (Custódia / Almoxarifado) <span class="text-danger">*</span></label>
+                        <select asp-for="LocalDestinoId" class="form-select bg-dark text-light border-secondary" required>
+                            <option value="">-- Selecione o Local de Destino --</option>
+                            @foreach (var loc in Model.Locais)
+                            {
+                                <option value="@loc.Id" selected="@(loc.Id == Model.LocalDestinoId ? "selected" : null)">@loc.Codigo - @loc.Nome (@loc.Tipo)</option>
+                            }
+                        </select>
+                        <div class="form-text text-secondary small">Local cadastrado onde o consignado permanecerá sob custódia até a cirurgia.</div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small text-secondary">Responsável Operacional / Instrumentador</label>
-                        <input type="text" asp-for="ResponsavelId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="Identificador UUID do colaborador responsável" />
+                        <label class="form-label small text-secondary">Orçamento / Proposta Comercial Vinculada</label>
+                        <select asp-for="OrcamentoId" class="form-select bg-dark text-light border-secondary">
+                            <option value="">-- Sem vínculo inicial (Avulso) --</option>
+                            @foreach (var o in Model.Orcamentos)
+                            {
+                                <option value="@o.Id" selected="@(o.Id == Model.OrcamentoId ? "selected" : null)">@o.Numero (v@o.Revisao) - @o.Hospital (@o.Procedimento) - @o.Situacao</option>
+                            }
+                        </select>
                     </div>
                 </div>
 

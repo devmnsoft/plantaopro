@@ -1,7 +1,8 @@
 @model PlantaoPro.Web.Models.Administrativo360PageViewModel
 @{ ViewData["Title"]="Administrativo 360"; }
 <div class="container-fluid py-4">
- <div class="d-flex justify-content-between align-items-start mb-4"><div><span class="badge bg-primary mb-2">Base administrativa</span><h1 class="h2 mb-1">Administrativo 360</h1><p class="text-muted">Cadastros organizacionais e contratos de trabalho da sua empresa.</p></div></div>
+    <partial name="_SuprimentosNav" />
+    <div class="d-flex justify-content-between align-items-start mb-4"><div><span class="badge bg-primary mb-2">Base administrativa</span><h1 class="h2 mb-1">Administrativo 360</h1><p class="text-muted">Cadastros organizacionais e contratos de trabalho da sua empresa.</p></div></div>
  @if(!string.IsNullOrWhiteSpace(Model.Erro)){<div class="alert alert-danger" role="alert">@Model.Erro</div>}
  <div class="row g-3 mb-4">
   <div class="col-6 col-lg-3"><div class="card shadow-sm h-100"><div class="card-body"><small class="text-muted">Departamentos</small><div class="display-6">@Model.Resumo.Departamentos</div></div></div></div>

@@ -1,1 +1,132 @@
-@{ViewData["Title"]="Coleta móvel";}<main class="container-fluid py-3 adm360-mobile"><h1>Coleta móvel</h1><p class="lead">Selecione uma tarefa autorizada de recebimento, inventário ou separação antes de ler.</p><partial name="_SuprimentosNav"/><div class="alert alert-info">Cada leitura tem um identificador persistido. Repetir a mesma requisição não soma; uma nova leitura intencional soma. Sem modo offline.</div><div class="card"><div class="card-body"><label class="form-label" for="tarefa">Tarefa</label><select id="tarefa" class="form-select form-select-lg"><option value="">Selecione pelo nome</option></select><label class="form-label mt-3" for="codigo">Código de barras</label><div class="input-group"><input id="codigo" inputmode="numeric" autocomplete="off" class="form-control form-control-lg" placeholder="Leia ou digite"/><button id="camera" type="button" class="btn btn-outline-primary">Usar câmera</button></div><label class="form-label mt-3" for="lote">Lote ou série, quando não estiver no código</label><input id="lote" class="form-control form-control-lg"/><button class="btn btn-primary btn-lg w-100 mt-3" type="button">Registrar leitura</button><p class="text-muted mt-3">Código desconhecido ou ambíguo exige escolha explícita; nenhum item será escolhido silenciosamente.</p></div></div></main>
+@model PlantaoPro.Web.Models.ColetaIndexViewModel
+@{
+    ViewData["Title"] = "Coleta Móvel — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Coleta Móvel</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Coleta Móvel e Leituras Barcode</h1>
+            <p class="text-secondary small mb-0">Interface de conferência por leitor de código de barras ou terminal portátil.</p>
+        </div>
+    </div>
+
+    <!-- Tarefas de Coleta -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-upc-scan me-2 text-info"></i>Tarefas Operacionais Atribuídas</span>
+            <span class="text-secondary small">Total: @Model.Tarefas.Count tarefas</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Tipo de Operação</th>
+                        <th>Descrição da Tarefa</th>
+                        <th>Situação</th>
+                        <th class="text-end">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Tarefas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center py-4 text-secondary">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhuma tarefa de coleta aberta para o usuário.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var t in Model.Tarefas)
+                    {
+                        <tr>
+                            <td><span class="badge bg-primary"><i class="bi bi-tag me-1"></i>@t.Tipo</span></td>
+                            <td><strong class="text-light">@t.Descricao</strong></td>
+                            <td>
+                                @if (t.Situacao == "ABERTA")
+                                {
+                                    <span class="badge bg-warning text-dark">Aberta</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Concluída</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalLeitura" onclick="document.getElementById('leituraTarefaId').value='@t.Id'; document.getElementById('leituraDescricao').innerText='@t.Descricao';">
+                                    <i class="bi bi-upc me-1"></i>Ler Código
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Leitura de Código de Barras -->
+<div class="modal fade" id="modalLeitura" tabindex="-1" aria-labelledby="tituloModalLeitura" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="RegistrarLeitura" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="tarefaId" id="leituraTarefaId" />
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalLeitura"><i class="bi bi-upc-scan me-2 text-info"></i>Captura de Código de Barras</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dark border-secondary p-2 mb-3">
+                    <div class="small text-secondary">Tarefa em Execução:</div>
+                    <strong class="text-light d-block" id="leituraDescricao">—</strong>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Código de Barras (EAN / GS1 / Datamatrix) *</label>
+                    <input type="text" name="codigo" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" placeholder="Aponte o leitor óptico ou digite" autofocus required />
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small">Lote Lido</label>
+                        <input type="text" name="lote" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: LOTE-DEMO-01" />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Quantidade *</label>
+                        <input type="number" step="1" min="1" name="quantidade" value="1" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fechar</button>
+                <button type="submit" class="btn btn-info btn-sm"><i class="bi bi-check-lg me-1"></i>Registrar Leitura</button>
+            </div>
+        </form>
+    </div>
+</div>

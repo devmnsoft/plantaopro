@@ -62,26 +62,46 @@
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Hospital Participante <span class="text-danger">*</span></label>
-                        <input type="text" asp-for="HospitalId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="Identificador UUID do hospital" required />
+                        <select asp-for="HospitalId" class="form-select bg-dark text-light border-secondary" required>
+                            <option value="">-- Selecione o Hospital --</option>
+                            @foreach (var h in Model.Hospitais)
+                            {
+                                <option value="@h.Id" selected="@(h.Id == Model.HospitalId ? "selected" : null)">@h.Nome (@(h.Documento ?? "Sem doc"))</option>
+                            }
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Custodiante Responsável (Opcional)</label>
-                        <input type="text" asp-for="CustodianteId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="UUID do parceiro ou responsável pela custódia" />
+                        <select asp-for="CustodianteId" class="form-select bg-dark text-light border-secondary">
+                            <option value="">-- Selecione o Responsável pela Custódia (Opcional) --</option>
+                            @foreach (var c in Model.Hospitais)
+                            {
+                                <option value="@c.Id" selected="@(c.Id == Model.CustodianteId ? "selected" : null)">@c.Nome</option>
+                            }
+                        </select>
                     </div>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Local de Origem (Almoxarifado Interno) <span class="text-danger">*</span></label>
-                        <input type="text" asp-for="LocalOrigemId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="UUID do local interno de saída" required />
+                        <select asp-for="LocalOrigemId" class="form-select bg-dark text-light border-secondary" required>
+                            <option value="">-- Selecione o Almoxarifado de Origem --</option>
+                            @foreach (var lo in Model.LocaisOrigem)
+                            {
+                                <option value="@lo.Id" selected="@(lo.Id == Model.LocalOrigemId ? "selected" : null)">@lo.Codigo - @lo.Nome (@lo.Tipo)</option>
+                            }
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label small text-secondary">Local de Destino (Custódia Externa no Hospital) <span class="text-danger">*</span></label>
-                        <input type="text" asp-for="LocalDestinoId" class="form-control bg-dark text-light border-secondary font-monospace"
-                               placeholder="UUID do local externo de custódia" required />
+                        <select asp-for="LocalDestinoId" class="form-select bg-dark text-light border-secondary" required>
+                            <option value="">-- Selecione o Local Externo de Destino --</option>
+                            @foreach (var ld in Model.LocaisDestino)
+                            {
+                                <option value="@ld.Id" selected="@(ld.Id == Model.LocalDestinoId ? "selected" : null)">@ld.Codigo - @ld.Nome (@ld.Tipo)</option>
+                            }
+                        </select>
                     </div>
                 </div>
 
@@ -116,8 +136,8 @@
                     <table class="table table-dark table-hover table-striped align-middle mb-0" id="tabelaItens">
                         <thead class="table-secondary text-secondary small">
                             <tr>
-                                <th>Produto (UUID) <span class="text-danger">*</span></th>
-                                <th>Lote (UUID) <span class="text-danger">*</span></th>
+                                <th>Produto <span class="text-danger">*</span></th>
+                                <th>Lote <span class="text-danger">*</span></th>
                                 <th>Reserva Vinculada (UUID)</th>
                                 <th style="width: 130px;">Quantidade <span class="text-danger">*</span></th>
                                 <th style="width: 140px;">Preço Unit. (R$)</th>
@@ -128,13 +148,25 @@
                             <!-- Primeira linha padrão -->
                             <tr class="item-linha">
                                 <td>
-                                    <input type="text" name="Itens[0].ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do produto" required />
+                                    <select name="Itens[0].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required>
+                                        <option value="">-- Selecione o Produto --</option>
+                                        @foreach (var prod in Model.ProdutosDisponiveis)
+                                        {
+                                            <option value="@prod.Id">@prod.Sku - @prod.Nome</option>
+                                        }
+                                    </select>
                                 </td>
                                 <td>
-                                    <input type="text" name="Itens[0].LoteId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do lote" required />
+                                    <select name="Itens[0].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required>
+                                        <option value="">-- Selecione o Lote --</option>
+                                        @foreach (var lote in Model.LotesDisponiveis)
+                                        {
+                                            <option value="@lote.Id" data-prod="@lote.ProdutoId">@lote.Codigo (Validade: @(lote.Validade?.ToString("dd/MM/yyyy") ?? "Sem validade"))</option>
+                                        }
+                                    </select>
                                 </td>
                                 <td>
-                                    <input type="text" name="Itens[0].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa" />
+                                    <input type="text" name="Itens[0].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa (opcional)" />
                                 </td>
                                 <td>
                                     <input type="number" step="0.0001" min="0.0001" name="Itens[0].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required />
@@ -163,21 +195,43 @@
     </form>
 </div>
 
+<template id="tmplProdOptions">
+    <option value="">-- Selecione o Produto --</option>
+    @foreach (var prod in Model.ProdutosDisponiveis)
+    {
+        <option value="@prod.Id">@prod.Sku - @prod.Nome</option>
+    }
+</template>
+
+<template id="tmplLoteOptions">
+    <option value="">-- Selecione o Lote --</option>
+    @foreach (var lote in Model.LotesDisponiveis)
+    {
+        <option value="@lote.Id" data-prod="@lote.ProdutoId">@lote.Codigo (Validade: @(lote.Validade?.ToString("dd/MM/yyyy") ?? "Sem validade"))</option>
+    }
+</template>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         var tbody = document.getElementById("tbodyItens");
         var btnAdd = document.getElementById("btnAddItem");
+        var prodHtml = document.getElementById("tmplProdOptions").innerHTML;
+        var loteHtml = document.getElementById("tmplLoteOptions").innerHTML;
 
         function atualizarIndices() {
             var linhas = tbody.querySelectorAll(".item-linha");
             for (var i = 0; i < linhas.length; i++) {
                 var row = linhas[i];
+                var sProds = row.querySelectorAll(".select-prod");
+                var sLotes = row.querySelectorAll(".select-lote");
                 var inputs = row.querySelectorAll("input");
-                inputs[0].name = "Itens[" + i + "].ProdutoId";
-                inputs[1].name = "Itens[" + i + "].LoteId";
-                inputs[2].name = "Itens[" + i + "].ReservaId";
-                inputs[3].name = "Itens[" + i + "].QuantidadeSolicitada";
-                inputs[4].name = "Itens[" + i + "].PrecoUnitario";
+                if (sProds.length > 0) sProds[0].name = "Itens[" + i + "].ProdutoId";
+                if (sLotes.length > 0) sLotes[0].name = "Itens[" + i + "].LoteId";
+                if (inputs.length >= 3) {
+                    inputs[0].name = "Itens[" + i + "].ReservaId";
+                    inputs[1].name = "Itens[" + i + "].QuantidadeSolicitada";
+                    inputs[2].name = "Itens[" + i + "].PrecoUnitario";
+                }
             }
         }
 
@@ -185,9 +239,9 @@
             var index = tbody.querySelectorAll(".item-linha").length;
             var tr = document.createElement("tr");
             tr.className = "item-linha";
-            tr.innerHTML = '<td><input type="text" name="Itens[' + index + '].ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do produto" required /></td>' +
-                '<td><input type="text" name="Itens[' + index + '].LoteId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID do lote" required /></td>' +
-                '<td><input type="text" name="Itens[' + index + '].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa" /></td>' +
+            tr.innerHTML = '<td><select name="Itens[' + index + '].ProdutoId" class="form-select form-select-sm bg-dark text-light border-secondary select-prod" required>' + prodHtml + '</select></td>' +
+                '<td><select name="Itens[' + index + '].LoteId" class="form-select form-select-sm bg-dark text-light border-secondary select-lote" required>' + loteHtml + '</select></td>' +
+                '<td><input type="text" name="Itens[' + index + '].ReservaId" class="form-control form-control-sm bg-dark text-light border-secondary font-monospace" placeholder="UUID da reserva ativa (opcional)" /></td>' +
                 '<td><input type="number" step="0.0001" min="0.0001" name="Itens[' + index + '].QuantidadeSolicitada" value="1.0000" class="form-control form-control-sm bg-dark text-light border-secondary text-end" required /></td>' +
                 '<td><input type="number" step="0.01" min="0" name="Itens[' + index + '].PrecoUnitario" value="0.00" class="form-control form-control-sm bg-dark text-light border-secondary text-end" /></td>' +
                 '<td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger btn-remover" title="Remover item"><i class="bi bi-trash"></i></button></td>';

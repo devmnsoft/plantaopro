@@ -1,1 +1,156 @@
-@{ViewData["Title"]="Inspeções e quarentena";}<main class="container-fluid py-4"><h1>Inspeções e quarentena</h1><p class="lead">Somente a Qualidade pode decidir sobre integridade, identificação e documentos.</p><partial name="_SuprimentosNav"/><div class="alert alert-info">Aprovação parcial libera apenas a quantidade aprovada; reprovação exige justificativa e destino. O registro não certifica automaticamente a Anvisa.</div><div class="card"><div class="card-body"><h2 class="h5">Fila pendente</h2><p class="text-muted">Selecione um recebimento pendente, registre as quantidades e evidências. Decisões confirmadas permanecem no histórico.</p></div></div></main>
+@model PlantaoPro.Web.Models.InspecoesIndexViewModel
+@{
+    ViewData["Title"] = "Inspeções e Qualidade — Administrativo 360";
+}
+
+<div class="container-fluid py-3">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
+            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
+            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
+            <li class="breadcrumb-item active text-light" aria-current="page">Inspeções & Quarentena</li>
+        </ol>
+    </nav>
+
+    <partial name="_SuprimentosNav" />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">Inspeções e Quarentena</h1>
+            <p class="text-secondary small mb-0">Controle de qualidade e liberação técnica de materiais cirúrgicos e implantes controlados.</p>
+        </div>
+    </div>
+
+    <!-- Regra de Negócio Alert -->
+    <div class="alert alert-warning bg-dark border-warning text-light d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-shield-exclamation fs-5 text-warning"></i>
+        <div class="small">
+            <strong>Critério de Aceite:</strong> Somente a Qualidade pode decidir sobre conformidade documental e física. Aprovações parciais liberam apenas a quantidade especificada para estoque vendível; reprovações exigem justificativa e destino (devolução ao fornecedor ou descarte rastreado).
+        </div>
+    </div>
+
+    <!-- Fila de Itens Pendentes -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-clipboard-pulse me-2 text-warning"></i>Fila de Inspeção Técnica</span>
+            <span class="text-secondary small">Total: @Model.Pendentes.Count itens pendentes</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Material / Produto</th>
+                        <th>Lote</th>
+                        <th>Local de Quarentena</th>
+                        <th class="text-end">Qtd. Recebida</th>
+                        <th class="text-end">Qtd. Pendente</th>
+                        <th class="text-end">Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Pendentes.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                <i class="bi bi-check-circle fs-3 d-block mb-2 text-success"></i>Nenhum material em quarentena. Todos os recebimentos foram inspecionados.
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var p in Model.Pendentes)
+                    {
+                        <tr>
+                            <td><strong class="text-light">@p.Produto</strong></td>
+                            <td><code class="text-warning">@p.Lote</code></td>
+                            <td><span class="badge bg-secondary">@p.Local</span></td>
+                            <td class="text-end font-monospace text-secondary">@p.Recebida.ToString("N0")</td>
+                            <td class="text-end font-monospace text-warning fw-bold">@p.Pendente.ToString("N0")</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#modalInspecao" onclick="prepararInspecao('@p.RecebimentoItemId', '@p.Produto', '@p.Lote', @p.Pendente);">
+                                    <i class="bi bi-shield-check me-1"></i>Decidir Laudo
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Laudo de Inspeção -->
+<div class="modal fade" id="modalInspecao" tabindex="-1" aria-labelledby="tituloModalInspecao" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="DecidirInspecao" method="post" class="modal-content bg-dark text-light border-secondary">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="recebimentoItemId" id="inspRecebimentoItemId" />
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="tituloModalInspecao"><i class="bi bi-shield-check me-2 text-warning"></i>Laudo de Qualidade</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-dark border-secondary p-2 mb-3">
+                    <div class="small text-secondary">Material em Avaliação:</div>
+                    <strong class="text-light d-block" id="inspMaterialNome">—</strong>
+                    <div class="small text-warning" id="inspLoteCodigo">—</div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-success">Qtd. Aprovada (Liberada)</label>
+                        <input type="number" step="1" min="0" name="aprovada" id="inspQtdAprovada" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold text-danger">Qtd. Reprovada (Bloqueada)</label>
+                        <input type="number" step="1" min="0" name="reprovada" id="inspQtdReprovada" value="0" class="form-control form-control-sm bg-black text-light border-secondary" required />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Destino do Material</label>
+                    <select name="destino" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="ALMOXARIFADO_LIBERADO">Almoxarifado Principal (Disponível para Uso/Venda)</option>
+                        <option value="DEVOLUCAO_FORNECEDOR">Devolução ao Fornecedor</option>
+                        <option value="DESCARTE_TECNICO">Descarte Técnico / Incineração</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Parecer Técnico / Justificativa</label>
+                    <textarea name="justificativa" class="form-control form-control-sm bg-black text-light border-secondary" rows="3" placeholder="Inspeção visual da embalagem estéril, conferência de certificado e lacres de fábrica..."></textarea>
+                    <small class="text-secondary">Obrigatório em caso de reprovação total ou parcial.</small>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning btn-sm text-dark fw-bold"><i class="bi bi-check2 me-1"></i>Registrar Decisão</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function prepararInspecao(id, produto, lote, pendente) {
+        document.getElementById('inspRecebimentoItemId').value = id;
+        document.getElementById('inspMaterialNome').innerText = produto;
+        document.getElementById('inspLoteCodigo').innerText = 'Lote: ' + lote + ' | Saldo Pendente: ' + pendente;
+        document.getElementById('inspQtdAprovada').value = pendente;
+        document.getElementById('inspQtdReprovada').value = 0;
+    }
+</script>

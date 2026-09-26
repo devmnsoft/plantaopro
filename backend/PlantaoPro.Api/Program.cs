@@ -192,6 +192,7 @@ builder.Services.AddScoped<CommercialDemoService>();
 builder.Services.AddScoped<SaasModuleCatalogService>();
 builder.Services.AddScoped<ModuleContractingService>();
 builder.Services.AddScoped<Administrativo360Service>();
+builder.Services.AddScoped<ICadastrosRepository>(_=>new CadastrosRepository(connectionString!));
 builder.Services.AddScoped<IComprasRepository>(_=>new ComprasRepository(connectionString!));
 builder.Services.AddScoped<IEstoqueRepository>(_=>new EstoqueRepository(connectionString!));
 builder.Services.AddScoped<IQualidadeRepository>(_=>new QualidadeRepository(connectionString!));

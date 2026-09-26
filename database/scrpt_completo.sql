@@ -4905,7 +4905,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.adm360_documento_eventos (
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql
--- SOURCE-SHA256: 71eb03eda2961fbaa29d80df37c0f6c7f846bd3472d7002684e894493aceb2a4
+-- SOURCE-SHA256: d17826cca92841a95e4201dbd9a3ea00df8dfba6e3cc1ebeed394acfc590555d
 -- PlantãoPro v2.19.7 - contrato canônico e reconciliação segura de tenant_modulos.
 -- Não remove dados: códigos sem correspondência ou ambíguos permanecem intactos e
 -- são registrados em tenant_modulos_reconciliacao para correção administrativa.
@@ -5017,6 +5017,17 @@ on conflict(tenant_modulo_id) do update set codigo_legado=excluded.codigo_legado
 
 update plantaopro.tenant_modulos_reconciliacao r set resolvido_em=now()
 where resolvido_em is null and exists(select 1 from plantaopro.tenant_modulos tm where tm.id=r.tenant_modulo_id and tm.modulo_id is not null);
+
+-- Reconciliação segura de contratos ativos duplicados para o mesmo tenant e módulo:
+-- preserva o contrato mais recente como ativo ('A') e marca os legados como inativos ('I')
+with duplicatas as (
+    select id, row_number() over (partition by tenant_id, modulo_id order by reg_date desc, id desc) as rn
+    from plantaopro.tenant_modulos
+    where reg_status = 'A' and modulo_id is not null
+)
+update plantaopro.tenant_modulos
+set reg_status = 'I', habilitado = false, status = 'INATIVO'
+where id in (select id from duplicatas where rn > 1);
 
 do $validate$
 begin

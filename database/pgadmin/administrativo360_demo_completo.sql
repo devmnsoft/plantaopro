@@ -10,7 +10,7 @@ DO $DEMO_BLOCK$
 DECLARE
     v_tenant_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647502';
     v_user_id   uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647511';
-    v_user_consulta_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647512';
+    v_user_consulta_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647515';
     v_tenant2_id uuid := 'd3f6584c-2c64-4e5a-9ea9-4e1428647599';
     v_estab_matriz_id uuid := 'a3600000-0000-4000-8000-000000000010';
     v_estab_filial_id uuid := 'a3600000-0000-4000-8000-000000000011';
@@ -162,7 +162,7 @@ BEGIN
             'consulta@santacasa-demo.example', 'consulta@santacasa-demo.example',
             '$2a$11$mNmgw83PBauw.5XsFVB5TuMB1.8OgFZ0SpfujQSuGzUgzwvs7d8S.',
             'ATIVO', 'A', false, v_now
-        );
+        ) ON CONFLICT (id) DO NOTHING;
     END IF;
 
     -- 3. HABILITAR CAPACIDADES CONTRATADAS NO ADMINISTRATIVO 360
@@ -327,6 +327,217 @@ BEGIN
         '<nfeProc><NFe><infNFe Id="NFe35260999999999999999550010000000021000000020"><ide><mod>55</mod><nNF>2</nNF></ide><emit><CNPJ>99888777000100</CNPJ></emit><dest><CNPJ>00000000000000</CNPJ></dest><total><ICMSTot><vNF>1200.00</vNF></ICMSTot></total></infNFe></NFe></nfeProc>',
         'hash-sha256-nfe-quarentena', true, 'DESTINATARIO_NAO_AUTORIZADO', 'DADOS_DE_TESTE', v_now
     ) ON CONFLICT (tenant_id, chave_acesso) DO NOTHING;
+
+    -- 13. SUPRIMENTOS, ESTOQUE, CIRURGIAS E VALES DE CONSIGNAÇÃO
+    DECLARE
+        v_sup_fornecedor uuid := 'a3610000-0000-4000-8000-000000000001'; 
+        v_sup_hospital uuid := 'a3610000-0000-4000-8000-000000000030';
+        v_sup_produto uuid := 'a3610000-0000-4000-8000-000000000002'; 
+        v_sup_local_cd uuid := 'a3610000-0000-4000-8000-000000000003'; 
+        v_sup_local_hosp uuid := 'a3610000-0000-4000-8000-000000000004'; 
+        v_sup_local_inv uuid := 'a3610000-0000-4000-8000-000000000020';
+        v_sup_lote_livre uuid := 'a3610000-0000-4000-8000-000000000005'; 
+        v_sup_lote_q uuid := 'a3610000-0000-4000-8000-000000000006'; 
+        v_sup_lote_v uuid := 'a3610000-0000-4000-8000-000000000007'; 
+        v_sup_lote_vence_antes uuid := 'a3610000-0000-4000-8000-000000000025';
+        v_sup_pedido uuid := 'a3610000-0000-4000-8000-000000000008'; 
+        v_sup_item uuid := 'a3610000-0000-4000-8000-000000000009'; 
+        v_sup_receb uuid := 'a3610000-0000-4000-8000-000000000010'; 
+        v_sup_ri uuid := 'a3610000-0000-4000-8000-000000000011';
+        v_sup_orc_rascunho uuid := 'a3610000-0000-4000-8000-000000000040';
+        v_sup_orc_aprovado uuid := 'a3610000-0000-4000-8000-000000000041';
+        v_sup_orc_item_1 uuid := 'a3610000-0000-4000-8000-000000000042';
+        v_sup_orc_item_2 uuid := 'a3610000-0000-4000-8000-000000000043';
+        v_sup_reserva_1 uuid := 'a3610000-0000-4000-8000-000000000044';
+        v_sup_lote_10 uuid := 'a3610000-0000-4000-8000-000000000050';
+        v_sup_orc_demo_10 uuid := 'a3610000-0000-4000-8000-000000000051';
+        v_sup_item_demo_10 uuid := 'a3610000-0000-4000-8000-000000000052';
+        v_sup_reserva_6 uuid := 'a3610000-0000-4000-8000-000000000053';
+        v_sup_cirurgia_1 uuid := 'a3610000-0000-4000-8000-000000000054';
+        v_sup_vale_1 uuid := 'a3610000-0000-4000-8000-000000000055';
+        v_sup_vale_item_1 uuid := 'a3610000-0000-4000-8000-000000000056';
+        v_sup_cirurgia_rec uuid := 'a3610000-0000-4000-8000-000000000060';
+        v_sup_vale_rec uuid := 'a3610000-0000-4000-8000-000000000061';
+        v_sup_vale_rec_item uuid := 'a3610000-0000-4000-8000-000000000062';
+    BEGIN
+        -- Parceiros e Hospital
+        INSERT INTO plantaopro.adm360_parceiros(id,tenant_id,nome,documento,fornecedor,ativo) 
+        VALUES
+            (v_sup_fornecedor,v_tenant_id,'Orto Demo Fornecimentos','11222333000181',true,true),
+            (v_sup_hospital,v_tenant_id,'Hospital São Lucas Demonstração','44555666000199',false,true)
+        ON CONFLICT(id) DO UPDATE SET ativo=true;
+
+        -- Produtos
+        INSERT INTO plantaopro.adm360_produtos(id,tenant_id,sku,nome,unidade,codigo_barras,controla_lote,exige_inspecao,preco_custo,ativo) 
+        VALUES(v_sup_produto,v_tenant_id,'IMP-DEMO','Implante controlado demonstrativo','UN','7890000003602',true,true,600.00,true) 
+        ON CONFLICT(id) DO UPDATE SET ativo=true, preco_custo=600.00;
+
+        -- Locais
+        INSERT INTO plantaopro.adm360_locais(id,tenant_id,codigo,nome,tipo,ativo) 
+        VALUES
+            (v_sup_local_cd,v_tenant_id,'CD-DEMO','Centro de distribuição','INTERNO',true),
+            (v_sup_local_hosp,v_tenant_id,'HOSP-DEMO','Hospital Demo (custódia)','EXTERNO',true),
+            (v_sup_local_inv,v_tenant_id,'ALMOX-INV','Almoxarifado em Contagem de Inventário','INTERNO',true) 
+        ON CONFLICT(id) DO UPDATE SET ativo=true;
+
+        -- Lotes
+        INSERT INTO plantaopro.adm360_lotes(id,tenant_id,produto_id,codigo,validade) 
+        VALUES
+            (v_sup_lote_livre,v_tenant_id,v_sup_produto,'DEMO-LIVRE',date '2027-09-24'),
+            (v_sup_lote_q,v_tenant_id,v_sup_produto,'DEMO-QUARENTENA',date '2027-06-30'),
+            (v_sup_lote_v,v_tenant_id,v_sup_produto,'DEMO-VENCIDO',date '2025-01-01'),
+            (v_sup_lote_vence_antes,v_tenant_id,v_sup_produto,'DEMO-VENCE-ANTES',date '2026-10-15'),
+            (v_sup_lote_10,v_tenant_id,v_sup_produto,'LOTE-DEMO-10UN',date '2027-12-31')
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Pedido de Compra e Recebimento
+        INSERT INTO plantaopro.adm360_pedidos(id,tenant_id,numero,fornecedor_id,situacao,previsao,frete,aprovado_em,aprovado_por,created_by) 
+        VALUES(v_sup_pedido,v_tenant_id,'PC-DEMO-001',v_sup_fornecedor,'PARCIAL',date '2026-09-25',0,now(),v_user_id,v_user_id) 
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_pedido_itens(id,tenant_id,pedido_id,produto_id,quantidade,quantidade_recebida,preco_unitario,desconto) 
+        VALUES(v_sup_item,v_tenant_id,v_sup_pedido,v_sup_produto,20,10,100,0) 
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_recebimentos(id,tenant_id,pedido_id,documento,idempotency_key,confirmado_em,created_by) 
+        VALUES(v_sup_receb,v_tenant_id,v_sup_pedido,'NF-DEMO-PARCIAL','seed:recebimento:1',now(),v_user_id) 
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_recebimento_itens(id,tenant_id,recebimento_id,pedido_item_id,produto_id,lote_id,local_id,quantidade,condicao) 
+        VALUES(v_sup_ri,v_tenant_id,v_sup_receb,v_sup_item,v_sup_produto,v_sup_lote_q,v_sup_local_cd,10,'QUARENTENA') 
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Estoques no mesmo local (CD-DEMO): LIBERADO, QUARENTENA, VENCIDO e LOTE QUE VENCE ANTES
+        INSERT INTO plantaopro.adm360_movimentos(id,tenant_id,produto_id,lote_id,local_id,tipo,condicao,quantidade,origem_tipo,origem_id,idempotency_key,created_by) 
+        VALUES
+            ('a3610000-0000-4000-8000-000000000012',v_tenant_id,v_sup_produto,v_sup_lote_q,v_sup_local_cd,'ENTRADA','QUARENTENA',10,'RECEBIMENTO',v_sup_ri,'seed:movimento:q',v_user_id),
+            ('a3610000-0000-4000-8000-000000000013',v_tenant_id,v_sup_produto,v_sup_lote_livre,v_sup_local_cd,'ENTRADA','LIBERADO',15,'SEED',v_sup_lote_livre,'seed:movimento:livre',v_user_id),
+            ('a3610000-0000-4000-8000-000000000014',v_tenant_id,v_sup_produto,v_sup_lote_v,v_sup_local_cd,'ENTRADA','VENCIDO',2,'SEED',v_sup_lote_v,'seed:movimento:vencido',v_user_id),
+            ('a3610000-0000-4000-8000-000000000026',v_tenant_id,v_sup_produto,v_sup_lote_vence_antes,v_sup_local_cd,'ENTRADA','LIBERADO',5,'SEED',v_sup_lote_vence_antes,'seed:movimento:vence_antes',v_user_id),
+            ('a3610000-0000-4000-8000-000000000057',v_tenant_id,v_sup_produto,v_sup_lote_10,v_sup_local_cd,'ENTRADA','LIBERADO',10,'SEED',v_sup_lote_10,'seed:movimento:lote10',v_user_id)
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Ocorrência
+        INSERT INTO plantaopro.adm360_ocorrencias(id,tenant_id,recebimento_item_id,lote_id,produto_id,local_id,tipo,descricao,quantidade,situacao,responsavel_id,prazo) 
+        VALUES('a3610000-0000-4000-8000-000000000015',v_tenant_id,v_sup_ri,v_sup_lote_q,v_sup_produto,v_sup_local_cd,'DOCUMENTACAO','Divergência documental demonstrativa',2,'ABERTA',v_user_id,date '2026-09-30') 
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Inventário ativo somente no local_inv
+        DELETE FROM plantaopro.adm360_inventarios WHERE id='a3610000-0000-4000-8000-000000000016';
+        INSERT INTO plantaopro.adm360_inventarios(id,tenant_id,local_id,situacao,escopo,created_by) 
+        VALUES('a3610000-0000-4000-8000-000000000016',v_tenant_id,v_sup_local_inv,'CONTAGEM','Implantes controlados em conferência',v_user_id) 
+        ON CONFLICT(id) DO UPDATE SET local_id=v_sup_local_inv, situacao='CONTAGEM';
+
+        -- Tarefas de coleta
+        INSERT INTO plantaopro.adm360_tarefas_coleta(id,tenant_id,tipo,descricao,situacao,atribuida_a,origem_id) 
+        VALUES
+            ('a3610000-0000-4000-8000-000000000017',v_tenant_id,'INVENTARIO','Contar almoxarifado em inventário','ABERTA',v_user_id,'a3610000-0000-4000-8000-000000000016'),
+            ('a3610000-0000-4000-8000-000000000018',v_tenant_id,'SEPARACAO','Separação interna demonstrativa','ABERTA',v_user_id,v_sup_lote_livre) 
+        ON CONFLICT(id) DO NOTHING;
+
+        -- Orçamentos Cirúrgicos e Reservas
+        INSERT INTO plantaopro.adm360_orcamentos(
+            id, tenant_id, numero, revisao, hospital_id, procedimento, responsavel_financeiro_id,
+            data_prevista, validade, situacao, total_produtos, desconto_geral, total_geral, observacoes, created_by
+        ) VALUES (
+            v_sup_orc_rascunho, v_tenant_id, 'ORC-DEMO-001', 1, v_sup_hospital, 'Artroplastia Total de Quadril Direita', v_sup_hospital,
+            date '2026-11-20', date '2026-11-05', 'RASCUNHO', 1200.00, 0, 1200.00, 'Orçamento em fase de elaboração e cotação', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamento_itens(
+            id, tenant_id, orcamento_id, produto_id, quantidade, preco_unitario, desconto, total
+        ) VALUES (
+            v_sup_orc_item_1, v_tenant_id, v_sup_orc_rascunho, v_sup_produto, 2, 600.00, 0, 1200.00
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamentos(
+            id, tenant_id, numero, revisao, hospital_id, procedimento, responsavel_financeiro_id,
+            data_prevista, validade, situacao, total_produtos, desconto_geral, total_geral, observacoes, aprovado_em, aprovado_por, created_by
+        ) VALUES (
+            v_sup_orc_aprovado, v_tenant_id, 'ORC-DEMO-002', 1, v_sup_hospital, 'Reconstrução Ligamentar Joelho Esquerdo', v_sup_hospital,
+            date '2026-11-20', date '2026-11-10', 'APROVADO', 2500.00, 100.00, 2400.00, 'Orçamento aprovado pelo convênio / hospital', now(), v_user_id, v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamento_itens(
+            id, tenant_id, orcamento_id, produto_id, quantidade, preco_unitario, desconto, total
+        ) VALUES (
+            v_sup_orc_item_2, v_tenant_id, v_sup_orc_aprovado, v_sup_produto, 5, 500.00, 100.00, 2400.00
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_reservas(
+            id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, orcamento_item_id, idempotency_key, created_by
+        ) VALUES (
+            v_sup_reserva_1, v_tenant_id, v_sup_produto, v_sup_lote_livre, v_sup_local_cd, 2, 'ATIVA', 'ORCAMENTO_CIRURGICO', v_sup_orc_aprovado, v_sup_orc_item_2, 'seed:reserva:orc2:item2', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamentos(
+            id, tenant_id, numero, revisao, hospital_id, procedimento, responsavel_financeiro_id,
+            data_prevista, validade, situacao, total_produtos, desconto_geral, total_geral, observacoes, aprovado_em, aprovado_por, created_by
+        ) VALUES (
+            v_sup_orc_demo_10, v_tenant_id, 'ORC-DEMO-010', 1, v_sup_hospital, 'Artroplastia de Joelho Bilateral', v_sup_hospital,
+            date '2026-11-25', date '2026-11-15', 'APROVADO', 6000.00, 0, 6000.00, 'Orçamento aprovado para jornada de consignação', now(), v_user_id, v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_orcamento_itens(id, tenant_id, orcamento_id, produto_id, quantidade, preco_unitario, desconto, total)
+        VALUES(v_sup_item_demo_10, v_tenant_id, v_sup_orc_demo_10, v_sup_produto, 10, 600.00, 0, 6000.00)
+        ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_reservas(
+            id, tenant_id, produto_id, lote_id, local_id, quantidade, situacao, origem_tipo, origem_id, orcamento_item_id, idempotency_key, created_by
+        ) VALUES (
+            v_sup_reserva_6, v_tenant_id, v_sup_produto, v_sup_lote_10, v_sup_local_cd, 6, 'ATIVA', 'ORCAMENTO_CIRURGICO', v_sup_orc_demo_10, v_sup_item_demo_10, 'seed:reserva:demo:6', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        -- Cirurgias e Vales
+        INSERT INTO plantaopro.adm360_cirurgias(
+            id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+            orcamento_id, orcamento_revisao, local_destino_id, situacao, observacoes, created_by
+        ) VALUES (
+            v_sup_cirurgia_1, v_tenant_id, 'CIR-DEMO-001', v_sup_hospital, 'Artroplastia de Joelho Bilateral', date '2026-11-25', time '08:00',
+            v_sup_orc_demo_10, 1, v_sup_local_hosp, 'AGENDADA', 'Cirurgia demonstrativa com vale em preparação', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vales(
+            id, tenant_id, numero, cirurgia_id, orcamento_id, orcamento_revisao, hospital_id,
+            local_origem_id, local_destino_id, data_saida_prevista, data_retorno_prevista,
+            situacao, situacao_financeira, observacoes, created_by
+        ) VALUES (
+            v_sup_vale_1, v_tenant_id, 'VAL-DEMO-001', v_sup_cirurgia_1, v_sup_orc_demo_10, 1, v_sup_hospital,
+            v_sup_local_cd, v_sup_local_hosp, date '2026-11-24', date '2026-11-28',
+            'EM_SEPARACAO', 'PENDENTE_VALORIZACAO', 'Vale em fase de separação no almoxarifado', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_itens(
+            id, tenant_id, vale_id, produto_id, lote_id, reserva_id, quantidade_solicitada, quantidade_separada, preco_unitario
+        ) VALUES (
+            v_sup_vale_item_1, v_tenant_id, v_sup_vale_1, v_sup_produto, v_sup_lote_10, v_sup_reserva_6, 6, 3, 600.00
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_cirurgias(
+            id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+            local_destino_id, situacao, observacoes, created_by
+        ) VALUES (
+            v_sup_cirurgia_rec, v_tenant_id, 'CIR-DEMO-REC', v_sup_hospital, 'Cirurgia Concluída Reconciliada', date '2026-09-10', time '09:00',
+            v_sup_local_hosp, 'REALIZADA', 'Cirurgia concluída com sucesso e vale reconciliado', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vales(
+            id, tenant_id, numero, cirurgia_id, hospital_id, local_origem_id, local_destino_id,
+            data_saida_prevista, data_saida_efetiva, situacao, situacao_financeira, observacoes, created_by
+        ) VALUES (
+            v_sup_vale_rec, v_tenant_id, 'VAL-DEMO-REC', v_sup_cirurgia_rec, v_sup_hospital,
+            v_sup_local_cd, v_sup_local_hosp, date '2026-09-09', date '2026-09-09 07:30:00+00',
+            'RECONCILIADO', 'VALORIZADO', 'Vale reconciliado com devolução e consumo faturado', v_user_id
+        ) ON CONFLICT(id) DO NOTHING;
+
+        INSERT INTO plantaopro.adm360_vale_itens(
+            id, tenant_id, vale_id, produto_id, lote_id, quantidade_solicitada, quantidade_separada,
+            quantidade_expedida, quantidade_consumida, quantidade_devolvida, preco_unitario
+        ) VALUES (
+            v_sup_vale_rec_item, v_tenant_id, v_sup_vale_rec, v_sup_produto, v_sup_lote_10,
+            6, 6, 6, 4, 2, 600.00
+        ) ON CONFLICT(id) DO NOTHING;
+    END;
 
     RAISE NOTICE 'Carga demonstrativa do Administrativo 360 concluída com sucesso para o tenant % (Santa Casa).', v_tenant_id;
 END $DEMO_BLOCK$;

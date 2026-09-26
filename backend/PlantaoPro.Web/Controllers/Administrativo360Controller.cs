@@ -32,14 +32,627 @@ public sealed class Administrativo360Controller : BaseWebController
         });
     }
 
-    public IActionResult PedidosCompra() => View();
-    public IActionResult Recebimentos() => View();
-    public IActionResult Inspecoes() => View();
-    public IActionResult Ocorrencias() => View();
-    public IActionResult Estoque() => View();
-    public IActionResult Movimentacoes() => View();
-    public IActionResult Inventarios() => View();
-    public IActionResult Coleta() => View();
+    private async Task<Lookups360ViewModel> CarregarLookupsAsync(HttpClient client)
+    {
+        var resp = await ReadApiResponse<Lookups360ViewModel>(client, "api/administrativo360/cadastros/lookups");
+        return resp.Data ?? new Lookups360ViewModel();
+    }
+
+    private async Task PreencherLookupsOrcamentoAsync(HttpClient client, OrcamentoFormViewModel model)
+    {
+        var lookups = await CarregarLookupsAsync(client);
+        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.Medicos = lookups.Parceiros.ToArray();
+        model.Pagadores = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.ProdutosDisponiveis = lookups.Produtos;
+    }
+
+    private async Task PreencherLookupsCirurgiaAsync(HttpClient client, CirurgiaFormViewModel model)
+    {
+        var lookups = await CarregarLookupsAsync(client);
+        var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
+        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.Medicos = lookups.Parceiros.ToArray();
+        model.Locais = lookups.Locais;
+        model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
+    }
+
+    private async Task PreencherLookupsValeAsync(HttpClient client, ValeFormViewModel model)
+    {
+        var lookups = await CarregarLookupsAsync(client);
+        var respCir = await ReadApiResponse<IReadOnlyList<CirurgiaResumoViewModel>>(client, "api/administrativo360/cirurgias");
+        var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
+        model.Hospitais = lookups.Parceiros.Where(p => !p.Fornecedor).ToArray();
+        model.LocaisOrigem = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray();
+        model.LocaisDestino = lookups.Locais.ToArray();
+        model.Cirurgias = respCir.Data ?? Array.Empty<CirurgiaResumoViewModel>();
+        model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
+        model.ProdutosDisponiveis = lookups.Produtos;
+        model.LotesDisponiveis = lookups.Lotes;
+    }
+
+    // ==========================================
+    // CADASTROS MESTRES (PARCEIROS, PRODUTOS, LOCAIS)
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Cadastros(string? aba)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var lookups = await CarregarLookupsAsync(client);
+        return View(new CadastrosIndexViewModel
+        {
+            Parceiros = lookups.Parceiros,
+            Produtos = lookups.Produtos,
+            Locais = lookups.Locais,
+            AbaAtiva = string.IsNullOrWhiteSpace(aba) ? "parceiros" : aba
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarParceiro(Guid? id, string nome, string? documento, bool fornecedor, bool ativo = true)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { Id = id, Nome = nome, Documento = documento, Fornecedor = fornecedor, Ativo = ativo };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/parceiros", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Parceiro cadastrado/atualizado com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar parceiro.";
+
+        return RedirectToAction(nameof(Cadastros), new { aba = "parceiros" });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AlternarStatusParceiro(Guid id, bool ativo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Patch, $"api/administrativo360/cadastros/parceiros/{id}/status?ativo={ativo}", new { });
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = $"Parceiro {(ativo ? "ativado" : "inativado")} com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do parceiro.";
+
+        return RedirectToAction(nameof(Cadastros), new { aba = "parceiros" });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarProduto(Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo = true)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { Id = id, Sku = sku, Nome = nome, Unidade = unidade, CodigoBarras = codigoBarras, ControlaLote = controlaLote, ExigeInspecao = exigeInspecao, PrecoCusto = precoCusto, Ativo = ativo };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/produtos", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Produto cadastrado/atualizado com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar produto.";
+
+        return RedirectToAction(nameof(Cadastros), new { aba = "produtos" });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AlternarStatusProduto(Guid id, bool ativo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Patch, $"api/administrativo360/cadastros/produtos/{id}/status?ativo={ativo}", new { });
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = $"Produto {(ativo ? "ativado" : "inativado")} com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do produto.";
+
+        return RedirectToAction(nameof(Cadastros), new { aba = "produtos" });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarLocal(Guid? id, string codigo, string nome, string tipo, bool ativo = true)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { Id = id, Codigo = codigo, Nome = nome, Tipo = tipo, Ativo = ativo };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/locais", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Local de armazenamento cadastrado/atualizado com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar local.";
+
+        return RedirectToAction(nameof(Cadastros), new { aba = "locais" });
+    }
+
+    // ==========================================
+    // COMPRAS E SUPRIMENTOS
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> PedidosCompra(string? fornecedor, string? situacao, DateOnly? inicio, DateOnly? fim)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var q = new List<string>();
+        if (!string.IsNullOrWhiteSpace(fornecedor)) q.Add($"fornecedor={Uri.EscapeDataString(fornecedor)}");
+        if (!string.IsNullOrWhiteSpace(situacao) && situacao != "Todas") q.Add($"situacao={Uri.EscapeDataString(situacao)}");
+        if (inicio.HasValue) q.Add($"inicio={inicio:yyyy-MM-dd}");
+        if (fim.HasValue) q.Add($"fim={fim:yyyy-MM-dd}");
+
+        var query = "api/administrativo360/compras" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
+        var resp = await ReadApiResponse<IReadOnlyList<PedidoCompraResumoViewModel>>(client, query);
+        var lookups = await CarregarLookupsAsync(client);
+
+        return View(new PedidosCompraIndexViewModel
+        {
+            Pedidos = resp.Data ?? Array.Empty<PedidoCompraResumoViewModel>(),
+            Fornecedores = lookups.Parceiros.Where(p => p.Fornecedor).ToArray(),
+            Produtos = lookups.Produtos,
+            Fornecedor = fornecedor,
+            Situacao = situacao,
+            Inicio = inicio,
+            Fim = fim,
+            Erro = resp.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CriarPedidoCompra(Guid fornecedorId, DateOnly? previsao, decimal frete, Guid[] produtoId, decimal[] quantidade, decimal[] precoUnitario, decimal[] desconto)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (fornecedorId == Guid.Empty || produtoId == null || produtoId.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Fornecedor e ao menos um produto são obrigatórios.";
+            return RedirectToAction(nameof(PedidosCompra));
+        }
+
+        var itens = new List<object>();
+        for (int i = 0; i < produtoId.Length; i++)
+        {
+            var pId = produtoId[i];
+            var qtd = quantidade != null && i < quantidade.Length ? quantidade[i] : 0;
+            var preco = precoUnitario != null && i < precoUnitario.Length ? precoUnitario[i] : 0;
+            var desc = desconto != null && i < desconto.Length ? desconto[i] : 0;
+            if (pId != Guid.Empty && qtd > 0)
+            {
+                itens.Add(new { ProdutoId = pId, Quantidade = qtd, PrecoUnitario = preco, Desconto = desc });
+            }
+        }
+
+        if (itens.Count == 0)
+        {
+            TempData["ErrorMessage"] = "Informe ao menos um produto com quantidade maior que zero.";
+            return RedirectToAction(nameof(PedidosCompra));
+        }
+
+        var payload = new
+        {
+            FornecedorId = fornecedorId,
+            Previsao = previsao,
+            Frete = frete,
+            Itens = itens
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/compras", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Pedido de compra cadastrado com sucesso em rascunho.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao criar pedido de compra.";
+
+        return RedirectToAction(nameof(PedidosCompra));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AprovarPedidoCompra(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        client.DefaultRequestHeaders.Remove("Idempotency-Key");
+        client.DefaultRequestHeaders.Add("Idempotency-Key", $"APROV-{id:N}");
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/compras/{id}/aprovar", new { });
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Pedido de compra aprovado com sucesso. Valores congelados.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao aprovar pedido de compra.";
+
+        return RedirectToAction(nameof(PedidosCompra));
+    }
+
+    // ==========================================
+    // RECEBIMENTOS E CONFERÊNCIA
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Recebimentos()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var respAprov = await ReadApiResponse<IReadOnlyList<PedidoCompraResumoViewModel>>(client, "api/administrativo360/compras?situacao=APROVADO");
+        var respParc = await ReadApiResponse<IReadOnlyList<PedidoCompraResumoViewModel>>(client, "api/administrativo360/compras?situacao=PARCIAL");
+        var lookups = await CarregarLookupsAsync(client);
+
+        var list = new List<PedidoCompraResumoViewModel>();
+        if (respAprov.Data != null) list.AddRange(respAprov.Data);
+        if (respParc.Data != null) list.AddRange(respParc.Data);
+
+        return View(new RecebimentosIndexViewModel
+        {
+            PedidosPendentes = list,
+            Locais = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray(),
+            Erro = respAprov.Error ?? respParc.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmarRecebimento(Guid pedidoId, string documento, Guid pedidoItemId, decimal quantidade, string? lote, DateOnly? validade, Guid localId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (pedidoId == Guid.Empty || string.IsNullOrWhiteSpace(documento) || quantidade <= 0 || localId == Guid.Empty)
+        {
+            TempData["ErrorMessage"] = "Pedido, documento da nota fiscal, quantidade e local de destino são obrigatórios.";
+            return RedirectToAction(nameof(Recebimentos));
+        }
+
+        var key = $"REC-{Guid.NewGuid():N}";
+        var payload = new
+        {
+            PedidoId = pedidoId,
+            Documento = documento.Trim(),
+            IdempotencyKey = key,
+            Itens = new[]
+            {
+                new
+                {
+                    PedidoItemId = pedidoItemId,
+                    Quantidade = quantidade,
+                    Lote = string.IsNullOrWhiteSpace(lote) ? "LOTE-PADRAO" : lote.Trim(),
+                    Validade = validade,
+                    LocalId = localId
+                }
+            }
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/compras/recebimentos", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Recebimento confirmado com sucesso. Material direcionado para quarentena/inspeção e obrigação gerada no financeiro.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar recebimento.";
+
+        return RedirectToAction(nameof(Recebimentos));
+    }
+
+    // ==========================================
+    // QUALIDADE E INSPEÇÕES
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Inspecoes()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<IReadOnlyList<InspecaoPendenteViewModel>>(client, "api/administrativo360/qualidade/pendentes");
+
+        return View(new InspecoesIndexViewModel
+        {
+            Pendentes = resp.Data ?? Array.Empty<InspecaoPendenteViewModel>(),
+            Erro = resp.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DecidirInspecao(Guid recebimentoItemId, decimal aprovada, decimal reprovada, string? justificativa, string? destino)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (aprovada + reprovada <= 0)
+        {
+            TempData["ErrorMessage"] = "Informe uma quantidade aprovada ou reprovada.";
+            return RedirectToAction(nameof(Inspecoes));
+        }
+
+        if (reprovada > 0 && string.IsNullOrWhiteSpace(justificativa))
+        {
+            TempData["ErrorMessage"] = "A reprovação exige justificativa técnica obrigatória.";
+            return RedirectToAction(nameof(Inspecoes));
+        }
+
+        var payload = new
+        {
+            RecebimentoItemId = recebimentoItemId,
+            Aprovada = aprovada,
+            Reprovada = reprovada,
+            Justificativa = string.IsNullOrWhiteSpace(justificativa) ? "Inspeção visual e documental conforme normas da Qualidade" : justificativa.Trim(),
+            Destino = string.IsNullOrWhiteSpace(destino) ? "ALMOXARIFADO_LIBERADO" : destino.Trim(),
+            IdempotencyKey = $"INSP-{Guid.NewGuid():N}"
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/qualidade/decisoes", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Decisão de inspeção registrada com sucesso. Material liberado para estoque conforme quantidade aprovada.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar decisão da inspeção.";
+
+        return RedirectToAction(nameof(Inspecoes));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Ocorrencias()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<IReadOnlyList<InspecaoPendenteViewModel>>(client, "api/administrativo360/qualidade/pendentes");
+        var lista = (resp.Data ?? Array.Empty<InspecaoPendenteViewModel>()).Select(p => new OcorrenciaViewModel(
+            p.RecebimentoItemId, "QUARENTENA_RECEBIMENTO",
+            $"Item em quarentena aguardando laudo de qualidade: {p.Produto} (Lote: {p.Lote})",
+            p.Pendente, "ABERTA", DateOnly.FromDateTime(DateTime.Today.AddDays(2)), p.Local, DateTimeOffset.UtcNow
+        )).ToList();
+
+        return View(new OcorrenciasIndexViewModel
+        {
+            Ocorrencias = lista,
+            Erro = resp.Error
+        });
+    }
+
+    // ==========================================
+    // ESTOQUE, LOTES E MOVIMENTAÇÕES
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Estoque(string? busca, string? condicao, Guid? localId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var q = new List<string>();
+        if (!string.IsNullOrWhiteSpace(busca)) q.Add($"busca={Uri.EscapeDataString(busca)}");
+        if (!string.IsNullOrWhiteSpace(condicao)) q.Add($"condicao={Uri.EscapeDataString(condicao)}");
+        if (localId.HasValue && localId.Value != Guid.Empty) q.Add($"localId={localId.Value}");
+
+        var query = "api/administrativo360/estoque" + (q.Count > 0 ? "?" + string.Join("&", q) : "");
+        var resp = await ReadApiResponse<IReadOnlyList<SaldoEstoqueViewModel>>(client, query);
+        var lookups = await CarregarLookupsAsync(client);
+
+        return View(new EstoqueIndexViewModel
+        {
+            Saldos = resp.Data ?? Array.Empty<SaldoEstoqueViewModel>(),
+            Locais = lookups.Locais,
+            Busca = busca,
+            Condicao = condicao,
+            LocalId = localId,
+            Erro = resp.Error
+        });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Movimentacoes()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<IReadOnlyList<SaldoEstoqueViewModel>>(client, "api/administrativo360/estoque");
+        var lookups = await CarregarLookupsAsync(client);
+
+        return View(new MovimentacoesIndexViewModel
+        {
+            Saldos = resp.Data ?? Array.Empty<SaldoEstoqueViewModel>(),
+            Locais = lookups.Locais,
+            Erro = resp.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> TransferirEstoque(Guid produtoId, Guid loteId, Guid origemId, Guid destinoId, decimal quantidade, string motivo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (origemId == destinoId)
+        {
+            TempData["ErrorMessage"] = "Local de origem e destino devem ser diferentes.";
+            return RedirectToAction(nameof(Movimentacoes));
+        }
+
+        if (quantidade <= 0)
+        {
+            TempData["ErrorMessage"] = "Quantidade a transferir deve ser positiva.";
+            return RedirectToAction(nameof(Movimentacoes));
+        }
+
+        var payload = new
+        {
+            ProdutoId = produtoId,
+            LoteId = loteId,
+            OrigemId = origemId,
+            DestinoId = destinoId,
+            Quantidade = quantidade,
+            Motivo = string.IsNullOrWhiteSpace(motivo) ? "Transferência interna entre locais de armazenagem" : motivo.Trim(),
+            IdempotencyKey = $"TRANSF-{Guid.NewGuid():N}"
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/estoque/transferencias", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Transferência de estoque concluída com sucesso.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao transferir estoque.";
+
+        return RedirectToAction(nameof(Movimentacoes));
+    }
+
+    // ==========================================
+    // INVENTÁRIOS E AJUSTES DE ESTOQUE
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Inventarios()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<IReadOnlyList<InventarioResumoViewModel>>(client, "api/administrativo360/inventarios");
+        var lookups = await CarregarLookupsAsync(client);
+
+        return View(new InventariosIndexViewModel
+        {
+            Inventarios = resp.Data ?? Array.Empty<InventarioResumoViewModel>(),
+            Locais = lookups.Locais,
+            Produtos = lookups.Produtos,
+            Lotes = lookups.Lotes,
+            Erro = resp.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AbrirInventario(Guid localId, string escopo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { LocalId = localId, Escopo = string.IsNullOrWhiteSpace(escopo) ? "Contagem geral de estoque" : escopo.Trim() };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/inventarios", payload);
+
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["SuccessMessage"] = "Inventário aberto com sucesso. O local está em contagem de estoque.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao abrir inventário.";
+
+        return RedirectToAction(nameof(Inventarios));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ContarInventario(Guid inventarioId, Guid produtoId, Guid loteId, decimal quantidade, string? condicao)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new
+        {
+            ProdutoId = produtoId,
+            LoteId = loteId,
+            Quantidade = quantidade,
+            Condicao = string.IsNullOrWhiteSpace(condicao) ? "LIBERADO" : condicao
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Put, $"api/administrativo360/inventarios/{inventarioId}/contagens", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Contagem registrada no inventário.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar contagem.";
+
+        return RedirectToAction(nameof(Inventarios));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AprovarInventario(Guid inventarioId, string? justificativa)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        client.DefaultRequestHeaders.Remove("Idempotency-Key");
+        client.DefaultRequestHeaders.Add("Idempotency-Key", $"INV-APROV-{inventarioId:N}");
+
+        var formContent = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("justificativa", string.IsNullOrWhiteSpace(justificativa) ? "Ajuste de inventário aprovado pela gerência" : justificativa.Trim())
+        });
+
+        var message = new HttpRequestMessage(HttpMethod.Post, $"api/administrativo360/inventarios/{inventarioId}/aprovar") { Content = formContent };
+        var response = await client.SendAsync(message);
+
+        if (response.IsSuccessStatusCode)
+            TempData["SuccessMessage"] = "Inventário aprovado e ajustes de saldo consolidados com sucesso.";
+        else
+            TempData["ErrorMessage"] = "Falha ao aprovar inventário.";
+
+        return RedirectToAction(nameof(Inventarios));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarInventario(Guid inventarioId, string? motivo)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var formContent = new FormUrlEncodedContent(new[]
+        {
+            new KeyValuePair<string, string>("motivo", string.IsNullOrWhiteSpace(motivo) ? "Cancelado pelo usuário" : motivo.Trim())
+        });
+
+        var message = new HttpRequestMessage(HttpMethod.Post, $"api/administrativo360/inventarios/{inventarioId}/cancelar") { Content = formContent };
+        var response = await client.SendAsync(message);
+
+        if (response.IsSuccessStatusCode)
+            TempData["SuccessMessage"] = "Inventário cancelado com sucesso.";
+        else
+            TempData["ErrorMessage"] = "Falha ao cancelar inventário.";
+
+        return RedirectToAction(nameof(Inventarios));
+    }
+
+    // ==========================================
+    // COLETA MÓVEL
+    // ==========================================
+
+    [HttpGet]
+    public async Task<IActionResult> Coleta()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var resp = await ReadApiResponse<IReadOnlyList<TarefaColetaViewModel>>(client, "api/administrativo360/coleta/tarefas");
+
+        return View(new ColetaIndexViewModel
+        {
+            Tarefas = resp.Data ?? Array.Empty<TarefaColetaViewModel>(),
+            Erro = resp.Error
+        });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegistrarLeitura(Guid tarefaId, string codigo, string? lote, decimal quantidade)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        if (string.IsNullOrWhiteSpace(codigo) || quantidade <= 0)
+        {
+            TempData["ErrorMessage"] = "Código de barras e quantidade positiva são obrigatórios.";
+            return RedirectToAction(nameof(Coleta));
+        }
+
+        var payload = new
+        {
+            TarefaId = tarefaId,
+            ScanId = Guid.NewGuid(),
+            Codigo = codigo.Trim(),
+            Lote = lote?.Trim(),
+            Quantidade = quantidade
+        };
+
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/coleta/leituras", payload);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["SuccessMessage"] = "Leitura de código de barras registrada com sucesso na tarefa.";
+        else
+            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar leitura.";
+
+        return RedirectToAction(nameof(Coleta));
+    }
 
     // ==========================================
     // ORÇAMENTOS CIRÚRGICOS E RESERVAS DE MATERIAIS
@@ -66,29 +679,35 @@ public sealed class Administrativo360Controller : BaseWebController
     }
 
     [HttpGet]
-    public IActionResult OrcamentoNovo()
+    public async Task<IActionResult> OrcamentoNovo()
     {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
         var model = new OrcamentoFormViewModel();
+        await PreencherLookupsOrcamentoAsync(client, model);
         return View(model);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> OrcamentoNovo(OrcamentoFormViewModel form)
     {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
         if (form.HospitalId == Guid.Empty || form.ResponsavelFinanceiroId == Guid.Empty || string.IsNullOrWhiteSpace(form.Procedimento))
         {
             TempData["ErrorMessage"] = "Hospital, Responsável Financeiro e Procedimento são obrigatórios.";
+            await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
 
         if (form.Itens.Count == 0 || form.Itens.All(x => x.Quantidade <= 0))
         {
             TempData["ErrorMessage"] = "Informe ao menos um produto com quantidade positiva.";
+            await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
-
-        using var client = CreateApiClient();
-        if (!AddBearerToken(client)) return HandleUnauthorized();
 
         var payload = new
         {
@@ -117,6 +736,7 @@ public sealed class Administrativo360Controller : BaseWebController
         }
 
         TempData["ErrorMessage"] = resp.Error ?? "Falha ao cadastrar orçamento.";
+        await PreencherLookupsOrcamentoAsync(client, form);
         return View(form);
     }
 
@@ -434,6 +1054,7 @@ public sealed class Administrativo360Controller : BaseWebController
             }
         }
 
+        await PreencherLookupsCirurgiaAsync(client, model);
         return View(model);
     }
 
@@ -446,6 +1067,7 @@ public sealed class Administrativo360Controller : BaseWebController
         if (string.IsNullOrWhiteSpace(model.Procedimento))
         {
             ModelState.AddModelError(nameof(model.Procedimento), "Informe o procedimento cirúrgico.");
+            await PreencherLookupsCirurgiaAsync(client, model);
             return View(model);
         }
 
@@ -471,6 +1093,7 @@ public sealed class Administrativo360Controller : BaseWebController
         }
 
         TempData["ErrorMessage"] = resp.Error ?? "Falha ao agendar cirurgia.";
+        await PreencherLookupsCirurgiaAsync(client, model);
         return View(model);
     }
 
@@ -569,6 +1192,7 @@ public sealed class Administrativo360Controller : BaseWebController
             }
         }
 
+        await PreencherLookupsValeAsync(client, model);
         return View(model);
     }
 
@@ -581,6 +1205,7 @@ public sealed class Administrativo360Controller : BaseWebController
         if (model.Itens.Count == 0)
         {
             TempData["ErrorMessage"] = "Adicione ao menos um item ao vale de consignação.";
+            await PreencherLookupsValeAsync(client, model);
             return View(model);
         }
 
@@ -615,6 +1240,7 @@ public sealed class Administrativo360Controller : BaseWebController
         }
 
         TempData["ErrorMessage"] = resp.Error ?? "Falha ao criar vale de consignação.";
+        await PreencherLookupsValeAsync(client, model);
         return View(model);
     }
 

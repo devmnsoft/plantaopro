@@ -11,6 +11,7 @@ DECLARE
     v_tenant_isolamento uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca101';
     v_cliente_isolamento uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca102';
     v_medico uuid := '8b0c8e74-a81b-4ea2-b499-94755a1ca020';
+    v_especialidade uuid;
     v_usuario_medico uuid;
     v_rows integer;
     v_account record;
@@ -25,15 +26,15 @@ BEGIN
 
     INSERT INTO plantaopro.planos(id,tenant_id,codigo,nome,status,dados)
     VALUES(v_plano,NULL,'HOMOLOGACAO_360','Plano Homologação Saúde 360','ATIVO','{"whiteLabel":true,"ambiente":"HOMOLOGACAO"}'::jsonb)
-    ON CONFLICT(id) DO UPDATE SET status='ATIVO', atualizado_em=now();
+    ON CONFLICT(id) DO UPDATE SET status='ATIVO';
 
     INSERT INTO plantaopro.tenants(id,tenant_id,codigo,nome,status,dados)
     VALUES(v_tenant,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
     ON CONFLICT(id) DO UPDATE SET nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
-    INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,status,dados)
-    VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
-    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',atualizado_em=now();
+    INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,razao_social,nome_fantasia,cnpj,status,dados)
+    VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','Clínica Modelo PlantãoPro','Clinica Modelo','12345678000199','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
+    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',reg_update=now();
 
     -- Contexto sem usuários demonstrativos, reservado a testes negativos de
     -- isolamento. Identificadores previsíveis facilitam testes sem conceder
@@ -42,10 +43,10 @@ BEGIN
     VALUES(v_tenant_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','ATIVO',
       jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO','finalidade','ISOLAMENTO'))
     ON CONFLICT(id) DO UPDATE SET nome=excluded.nome,status='ATIVO',atualizado_em=now();
-    INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,status,dados)
-    VALUES(v_cliente_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','ATIVO',
+    INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,razao_social,nome_fantasia,cnpj,status,dados)
+    VALUES(v_cliente_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','Clínica Sintética Isolamento','Isolamento','98765432000110','ATIVO',
       jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO','finalidade','ISOLAMENTO'))
-    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant_isolamento,nome=excluded.nome,status='ATIVO',atualizado_em=now();
+    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant_isolamento,nome=excluded.nome,status='ATIVO',reg_update=now();
 
     -- O login global tambem precisa ser autocontido: bases antigas ou parciais
     -- podem nao ter recebido o perfil criado pela migration de identidade.
@@ -62,7 +63,7 @@ BEGIN
     UPDATE plantaopro.perfis p SET cliente_id=v_cliente,status='ATIVO',reg_status='A',reg_update=now()
     WHERE p.tenant_id=v_tenant AND p.codigo IN ('ADMINISTRADOR','MEDICO','RECEPCAO','FINANCEIRO');
     INSERT INTO plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_status)
-    SELECT md5('homolog-profile:'||x.codigo)::uuid,v_tenant,v_cliente,x.codigo,x.nome,x.descricao,true,false,'ATIVO','A'
+    SELECT md5('homolog-profile:'||x.codigo)::uuid,v_tenant,v_cliente,x.codigo,x.nome || ' - ' || (SELECT coalesce(c.nome_fantasia,c.nome) FROM plantaopro.clientes c WHERE c.id=v_cliente),x.descricao,true,false,'ATIVO','A'
     FROM (VALUES
       ('ADMINISTRADOR','Administrador','Administração do próprio tenant'),
       ('MEDICO','Médico','Acesso clínico aos próprios atendimentos'),
@@ -116,16 +117,20 @@ BEGIN
     ON CONFLICT(id) DO UPDATE SET tenant_id=excluded.tenant_id,cliente_id=excluded.cliente_id,
       usuario_id=excluded.usuario_id,perfil_id=excluded.perfil_id,reg_status='A',reg_update=now();
 
-    INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,status,dados)
-    VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','ATIVO','{}')
-    ON CONFLICT(id) DO UPDATE SET status='ATIVO',atualizado_em=now();
-    INSERT INTO plantaopro.especialidades(id,tenant_id,codigo,nome,status,dados)
-    VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca031',v_tenant,'CLINICA_MEDICA','Clínica Médica','ATIVO','{}')
-    ON CONFLICT(id) DO UPDATE SET status='ATIVO',atualizado_em=now();
+    INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,nome_fantasia,cnpj,cidade,estado,status,dados)
+    VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','Unidade Modelo','98765432000164','Sao Paulo','SP','ATIVO','{}')
+    ON CONFLICT(id) DO UPDATE SET status='ATIVO',reg_update=now();
+    IF EXISTS(SELECT 1 FROM plantaopro.especialidades WHERE lower(nome)=lower('Clínica Médica')) THEN
+        UPDATE plantaopro.especialidades SET status='ATIVO',reg_update=now() WHERE lower(nome)=lower('Clínica Médica');
+    ELSE
+        INSERT INTO plantaopro.especialidades(id,tenant_id,codigo,nome,status,dados)
+        VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca031',v_tenant,'CLINICA_MEDICA','Clínica Médica','ATIVO','{}');
+    END IF;
+    SELECT id INTO STRICT v_especialidade FROM plantaopro.especialidades WHERE lower(nome)=lower('Clínica Médica');
     SELECT id INTO STRICT v_usuario_medico FROM plantaopro.usuarios WHERE lower(email)='medico@plantaopro.local' AND reg_status='A';
     INSERT INTO plantaopro.medicos(id,tenant_id,usuario_id,codigo,nome,status,reg_status,dados)
-    VALUES(v_medico,v_tenant,v_usuario_medico,'MEDICO_TESTE','Médico de Teste','ATIVO','A',jsonb_build_object('usuarioId',v_usuario_medico,'especialidadeId','8b0c8e74-a81b-4ea2-b499-94755a1ca031'))
-    ON CONFLICT(id) DO UPDATE SET usuario_id=v_usuario_medico,status='ATIVO',reg_status='A',dados=excluded.dados,atualizado_em=now();
+    VALUES(v_medico,v_tenant,v_usuario_medico,'MEDICO_TESTE','Médico de Teste','ATIVO','A',jsonb_build_object('usuarioId',v_usuario_medico,'especialidadeId',v_especialidade))
+    ON CONFLICT(id) DO UPDATE SET usuario_id=v_usuario_medico,status='ATIVO',reg_status='A',dados=excluded.dados,reg_update=now();
 
     INSERT INTO plantaopro.tenant_modulos(id,tenant_id,codigo,nome,status,dados)
     SELECT md5('homolog-module:'||m)::uuid,v_tenant,m,m,'ATIVO',jsonb_build_object('habilitado',true,'planoId',v_plano)

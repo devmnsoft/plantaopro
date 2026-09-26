@@ -687,6 +687,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2199_corrigir_trigger_adm360_validar_tenant",
+      "source": "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql",
+      "checksum": "06c4dc1ea9c82cc242357bd6a11d5d691dc768f8b114ecdbcae7892c1df73a65",
+      "dependsOn": [
+        "2026_09_v2198_reconciliar_duplicidades_contratos_modulos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

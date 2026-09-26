@@ -72,6 +72,7 @@ DECLARE
     ];
     v_mod_code text;
     v_mod_id uuid;
+    v_mod_nome text;
 BEGIN
     -- 1. VALIDAÇÃO DE SCHEMA E PRÉ-REQUISITOS
     IF NOT EXISTS (
@@ -108,14 +109,14 @@ BEGIN
     -- Contratação canônica dos módulos destinados ao cliente Santa Casa Demonstração:
     -- ADM360, ESCALAS, CONFERENCIA, EXECUCAO, RELATORIOS
     FOREACH v_mod_code IN ARRAY ARRAY['ADM360', 'ESCALAS', 'CONFERENCIA', 'EXECUCAO', 'RELATORIOS'] LOOP
-        SELECT id INTO v_mod_id FROM plantaopro.modulos_sistema WHERE upper(btrim(codigo)) = v_mod_code AND reg_status = 'A' LIMIT 1;
+        SELECT id, coalesce(nome, codigo) INTO v_mod_id, v_mod_nome FROM plantaopro.modulos_sistema WHERE upper(btrim(codigo)) = v_mod_code AND reg_status = 'A' LIMIT 1;
         IF v_mod_id IS NOT NULL THEN
             INSERT INTO plantaopro.tenant_modulos
-                (id, tenant_id, modulo_id, codigo, codigo_modulo, habilitado, status, origem, ativado_em, reg_date, reg_status)
+                (id, tenant_id, modulo_id, codigo, codigo_modulo, nome, habilitado, status, origem, ativado_em, reg_date, reg_status)
             VALUES
-                (gen_random_uuid(), v_tenant_id, v_mod_id, v_mod_code, v_mod_code, true, 'ATIVO', 'CONTRATO_DEMO', v_now, v_now, 'A')
+                (gen_random_uuid(), v_tenant_id, v_mod_id, v_mod_code, v_mod_code, coalesce(v_mod_nome, v_mod_code), true, 'ATIVO', 'CONTRATO_DEMO', v_now, v_now, 'A')
             ON CONFLICT (tenant_id, modulo_id) WHERE reg_status = 'A' AND modulo_id IS NOT NULL
-            DO UPDATE SET habilitado = true, status = 'ATIVO', reg_update = v_now;
+            DO UPDATE SET nome = coalesce(excluded.nome, plantaopro.tenant_modulos.nome), habilitado = true, status = 'ATIVO', reg_update = v_now;
         END IF;
     END LOOP;
 
@@ -223,9 +224,11 @@ BEGIN
     ON CONFLICT (usuario_id, perfil_id) WHERE reg_status = 'A' DO NOTHING;
 
     -- Garantir médico canônico ativo vinculado diretamente ao tenant Santa Casa Demonstração
-    INSERT INTO plantaopro.medicos (id, tenant_id, nome, crm, crm_uf, especialidade, status, reg_status, reg_date)
-    VALUES ('d3f6584c-2c64-4e5a-9ea9-4e1428647530', v_tenant_id, 'Dra. Ana Souza — Demonstração', '123456', 'SP', 'Cardiologia e Cirurgia Geral', 'ATIVO', 'A', v_now)
-    ON CONFLICT (id) DO UPDATE SET tenant_id = v_tenant_id, status = 'ATIVO', reg_status = 'A';
+    INSERT INTO plantaopro.medicos (id, tenant_id, nome, crm, uf_crm, status, reg_status, reg_date, dados)
+    VALUES ('d3f6584c-2c64-4e5a-9ea9-4e1428647530', v_tenant_id, 'Dra. Ana Souza — Demonstração', '123456', 'SP', 'ATIVO', 'A', v_now, '{"especialidade":"Cardiologia e Cirurgia Geral"}'::jsonb)
+    ON CONFLICT (id) DO UPDATE SET tenant_id = v_tenant_id, status = 'ATIVO', reg_status = 'A',
+      crm = EXCLUDED.crm, uf_crm = EXCLUDED.uf_crm,
+      dados = COALESCE(plantaopro.medicos.dados, '{}'::jsonb) || EXCLUDED.dados;
 
     -- 3. HABILITAR CAPACIDADES CONTRATADAS NO ADMINISTRATIVO 360
     INSERT INTO plantaopro.adm360_capacidades_contratadas (id, tenant_id, capacidade, habilitado, ativado_em, configuracoes)

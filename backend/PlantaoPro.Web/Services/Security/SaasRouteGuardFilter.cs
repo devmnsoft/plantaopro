@@ -60,7 +60,11 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Convenios"] = "CONVENIOS",
         ["PlanosSaude"] = "PLANOS_SAUDE",
         ["ClinicaDashboard"] = "CLINICA_DASHBOARD",
-        ["PendenciasClinicas"] = "PENDENCIAS_CLINICAS"
+        ["PendenciasClinicas"] = "PENDENCIAS_CLINICAS",
+        ["Administrativo360"] = "ADM360",
+        ["Adm360GestaoWeb"] = "ADM360",
+        ["Adm360DocumentosXmlWeb"] = "ADM360",
+        ["Adm360CotacoesWeb"] = "ADM360"
     };
 
     private static readonly ISet<string> PublicControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

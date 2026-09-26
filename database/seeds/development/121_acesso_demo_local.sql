@@ -174,8 +174,8 @@ BEGIN
     -- Contratação demo pelo mesmo contrato canônico consumido por login, menu e
     -- autorização. Não cria nem habilita módulos clínicos/operacionais.
     INSERT INTO plantaopro.tenant_modulos
-        (id,tenant_id,modulo_id,codigo,codigo_modulo,habilitado,status,origem,ativado_em,reg_date,reg_status)
-    SELECT gen_random_uuid(),v_tenant_id,m.id,m.codigo,m.codigo,true,'ATIVO','SEED_DEMO',now(),now(),'A'
+        (id,tenant_id,modulo_id,codigo,codigo_modulo,nome,habilitado,status,origem,ativado_em,reg_date,reg_status)
+    SELECT gen_random_uuid(),v_tenant_id,m.id,m.codigo,m.codigo,coalesce(m.nome,m.codigo),true,'ATIVO','SEED_DEMO',now(),now(),'A'
     FROM plantaopro.modulos_sistema m
     WHERE upper(m.codigo)='ADM360' AND m.reg_status='A'
       AND NOT EXISTS (SELECT 1 FROM plantaopro.tenant_modulos tm WHERE tm.tenant_id=v_tenant_id AND tm.modulo_id=m.id AND tm.reg_status='A');

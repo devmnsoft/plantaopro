@@ -127,6 +127,7 @@ builder.Services.AddAuthorization(options =>
     foreach(var item in permissions)options.AddPolicy(item.Key,p=>p.RequireAuthenticatedUser().AddRequirements(new EffectiveAccessRequirement(item.Key,item.Value)));
 });
 builder.Services.AddScoped<IAuthorizationHandler,EffectiveAccessAuthorizationHandler>();
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationMiddlewareResultHandler>();
 
 builder.Services.AddScoped<IAuditService, AuditService>();
 builder.Services.AddScoped<PainelTvService>();

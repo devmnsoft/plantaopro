@@ -38,6 +38,24 @@ DECLARE
     v_now timestamp with time zone := clock_timestamp();
     v_perms text[] := ARRAY[
         'ADM360:VER',
+        'ADM360:COMPRAS',
+        'ADM360:ESTOQUE',
+        'ADM360:LIBERAR_QUALIDADE',
+        'ADM360:INVENTARIO_APROVAR',
+        'ADM360:COMERCIAL',
+        'ADM360:CIRURGIAS',
+        'ADM360:SEPARAR',
+        'ADM360:EXPEDIR',
+        'ADM360:RECONCILIAR',
+        'ADM360:VALORIZAR',
+        'ADM360:VENDAS',
+        'ADM360:RECEBER',
+        'ADM360:ESTORNAR',
+        'ADM360:FINANCEIRO',
+        'ADM360:PAGAR',
+        'ADM360:APROVAR_DESPESA',
+        'ADM360:CRIAR_DESPESA',
+        'ADM360:FECHAR_CAIXA',
         'ADM360:CONFIGURAR_INTEGRACAO',
         'ADM360:COTACAO_CONSULTAR',
         'ADM360:MAPEAR_CADASTROS',
@@ -52,6 +70,8 @@ DECLARE
         'ADM360:EXPORTAR',
         'ADM360:AUDITAR'
     ];
+    v_mod_code text;
+    v_mod_id uuid;
 BEGIN
     -- 1. VALIDAÇÃO DE SCHEMA E PRÉ-REQUISITOS
     IF NOT EXISTS (
@@ -85,16 +105,19 @@ BEGIN
     SELECT id INTO v_modulo_adm360_id FROM plantaopro.modulos_sistema
     WHERE upper(btrim(codigo))='ADM360' AND reg_status='A' ORDER BY id LIMIT 1;
 
-    -- Contratação pelo contrato canônico (v2197), compartilhado por login,
-    -- autorização, menu e serviço comercial.
-    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='tenant_modulos' AND column_name='modulo_id') THEN
-        RAISE EXCEPTION 'Contrato canônico de módulos ausente. Aplique a migration v2197 antes deste script.';
-    END IF;
-    INSERT INTO plantaopro.tenant_modulos
-        (id,tenant_id,modulo_id,codigo,codigo_modulo,habilitado,status,origem,ativado_em,reg_date,reg_status)
-    VALUES(gen_random_uuid(),v_tenant_id,v_modulo_adm360_id,'ADM360','ADM360',true,'ATIVO','SEED_DEMO',v_now,v_now,'A')
-    ON CONFLICT (tenant_id,modulo_id) WHERE reg_status='A' AND modulo_id IS NOT NULL
-    DO UPDATE SET codigo='ADM360',codigo_modulo='ADM360',habilitado=true,status='ATIVO',reg_update=v_now;
+    -- Contratação canônica dos módulos destinados ao cliente Santa Casa Demonstração:
+    -- ADM360, ESCALAS, CONFERENCIA, EXECUCAO, RELATORIOS
+    FOREACH v_mod_code IN ARRAY ARRAY['ADM360', 'ESCALAS', 'CONFERENCIA', 'EXECUCAO', 'RELATORIOS'] LOOP
+        SELECT id INTO v_mod_id FROM plantaopro.modulos_sistema WHERE upper(btrim(codigo)) = v_mod_code AND reg_status = 'A' LIMIT 1;
+        IF v_mod_id IS NOT NULL THEN
+            INSERT INTO plantaopro.tenant_modulos
+                (id, tenant_id, modulo_id, codigo, codigo_modulo, habilitado, status, origem, ativado_em, reg_date, reg_status)
+            VALUES
+                (gen_random_uuid(), v_tenant_id, v_mod_id, v_mod_code, v_mod_code, true, 'ATIVO', 'CONTRATO_DEMO', v_now, v_now, 'A')
+            ON CONFLICT (tenant_id, modulo_id) WHERE reg_status = 'A' AND modulo_id IS NOT NULL
+            DO UPDATE SET habilitado = true, status = 'ATIVO', reg_update = v_now;
+        END IF;
+    END LOOP;
 
     -- Obter ou criar ação padrão para permissões
     SELECT id INTO v_acao_acessar_id FROM plantaopro.acoes_sistema WHERE codigo = 'ACESSAR' OR codigo = 'LISTAR' LIMIT 1;
@@ -118,7 +141,7 @@ BEGIN
         VALUES (v_perfil_adm_id, v_tenant_id, 'ADMINISTRADOR_CLIENTE', 'Administrador do Cliente', 'Perfil do Gestor Santa Casa', true, false, 'ATIVO', 'A', v_now);
     END IF;
 
-    -- Cadastrar Permissões ADM360 e Vincular ao Perfil
+    -- Cadastrar Permissões ADM360 e Vincular ao Perfil do Gestor (32 permissões operacionais completas)
     FOREACH v_perm_code IN ARRAY v_perms LOOP
         SELECT id INTO v_perm_id FROM plantaopro.permissoes WHERE lower(codigo) = lower(v_perm_code) AND reg_status = 'A';
         IF v_perm_id IS NULL THEN
@@ -171,7 +194,7 @@ BEGIN
         WHERE lower(email) = 'consulta@santacasa-demo.example';
     END IF;
 
-    -- Perfil de Consulta/Auditoria (Apenas leitura)
+    -- Perfil de Consulta/Auditoria (Apenas leitura sem escrita)
     SELECT id INTO v_perfil_consulta_id 
     FROM plantaopro.perfis 
     WHERE (tenant_id = v_tenant_id OR tenant_id IS NULL) 
@@ -185,16 +208,24 @@ BEGIN
         VALUES (v_perfil_consulta_id, v_tenant_id, 'CONSULTA_CLIENTE', 'Consulta e Auditoria do Cliente', 'Perfil de consulta restrita', true, false, 'ATIVO', 'A', v_now);
     END IF;
 
-    SELECT id INTO v_perm_ver_id FROM plantaopro.permissoes WHERE lower(codigo) = 'adm360:ver' AND reg_status = 'A' LIMIT 1;
-    IF v_perm_ver_id IS NOT NULL THEN
-        INSERT INTO plantaopro.perfil_permissoes (id, perfil_id, permissao_id, permitido, reg_status, reg_date)
-        VALUES (gen_random_uuid(), v_perfil_consulta_id, v_perm_ver_id, true, 'A', v_now)
-        ON CONFLICT (perfil_id, permissao_id) WHERE reg_status = 'A' DO UPDATE SET permitido = true;
-    END IF;
+    -- Atribuir exclusivamente permissões de leitura ao perfil de consulta
+    FOREACH v_perm_code IN ARRAY ARRAY['ADM360:VER', 'ADM360:COTACAO_CONSULTAR', 'ADM360:CONSULTAR_ANEXOS', 'ADM360:AUDITAR'] LOOP
+        SELECT id INTO v_perm_id FROM plantaopro.permissoes WHERE upper(codigo) = upper(v_perm_code) AND reg_status = 'A' LIMIT 1;
+        IF v_perm_id IS NOT NULL THEN
+            INSERT INTO plantaopro.perfil_permissoes (id, perfil_id, permissao_id, permitido, reg_status, reg_date)
+            VALUES (gen_random_uuid(), v_perfil_consulta_id, v_perm_id, true, 'A', v_now)
+            ON CONFLICT (perfil_id, permissao_id) WHERE reg_status = 'A' DO UPDATE SET permitido = true;
+        END IF;
+    END LOOP;
 
     INSERT INTO plantaopro.usuarios_perfis (id, tenant_id, usuario_id, perfil_id, reg_status, reg_date)
     VALUES (gen_random_uuid(), v_tenant_id, v_user_consulta_id, v_perfil_consulta_id, 'A', v_now)
     ON CONFLICT (usuario_id, perfil_id) WHERE reg_status = 'A' DO NOTHING;
+
+    -- Garantir médico canônico ativo vinculado diretamente ao tenant Santa Casa Demonstração
+    INSERT INTO plantaopro.medicos (id, tenant_id, nome, crm, crm_uf, especialidade, status, reg_status, reg_date)
+    VALUES ('d3f6584c-2c64-4e5a-9ea9-4e1428647530', v_tenant_id, 'Dra. Ana Souza — Demonstração', '123456', 'SP', 'Cardiologia e Cirurgia Geral', 'ATIVO', 'A', v_now)
+    ON CONFLICT (id) DO UPDATE SET tenant_id = v_tenant_id, status = 'ATIVO', reg_status = 'A';
 
     -- 3. HABILITAR CAPACIDADES CONTRATADAS NO ADMINISTRATIVO 360
     INSERT INTO plantaopro.adm360_capacidades_contratadas (id, tenant_id, capacidade, habilitado, ativado_em, configuracoes)
@@ -214,13 +245,24 @@ BEGIN
     ON CONFLICT (tenant_id, cnpj) DO UPDATE 
         SET razao_social = excluded.razao_social, ativo = true;
 
-    -- 5. PARCEIROS (HOSPITAL, PAGADOR E FORNECEDOR)
-    INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, ativo, created_at)
+    -- 5. PARCEIROS (HOSPITAL, PAGADOR E FORNECEDOR COM PAPÉIS EXPLÍCITOS)
+    -- Garante colunas caso o seed seja executado antes da migration
+    ALTER TABLE plantaopro.adm360_parceiros ADD COLUMN IF NOT EXISTS eh_hospital boolean NOT NULL DEFAULT false;
+    ALTER TABLE plantaopro.adm360_parceiros ADD COLUMN IF NOT EXISTS eh_pagador boolean NOT NULL DEFAULT false;
+    ALTER TABLE plantaopro.adm360_parceiros ADD COLUMN IF NOT EXISTS eh_cliente boolean NOT NULL DEFAULT false;
+
+    INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, eh_hospital, eh_pagador, eh_cliente, ativo, created_at)
     VALUES 
-        (v_hospital_parceiro_id, v_tenant_id, 'Hospital Regional Parceiro', '12345678000199', false, true, v_now),
-        (v_pagador_parceiro_id, v_tenant_id, 'Unimed Seguros Saúde', '98765432000188', false, true, v_now),
-        (v_fornecedor_parceiro_id, v_tenant_id, 'Ortopedia & Cirurgia Distribuidora Ltda', '11222333000144', true, true, v_now)
-    ON CONFLICT (id) DO UPDATE SET nome = excluded.nome;
+        (v_hospital_parceiro_id, v_tenant_id, 'Hospital Regional Parceiro', '12345678000199', false, true, false, false, true, v_now),
+        (v_pagador_parceiro_id, v_tenant_id, 'Unimed Seguros Saúde', '98765432000188', false, false, true, false, true, v_now),
+        (v_fornecedor_parceiro_id, v_tenant_id, 'Ortopedia & Cirurgia Distribuidora Ltda', '11222333000144', true, false, false, false, true, v_now)
+    ON CONFLICT (id) DO UPDATE 
+        SET nome = excluded.nome,
+            fornecedor = excluded.fornecedor,
+            eh_hospital = excluded.eh_hospital,
+            eh_pagador = excluded.eh_pagador,
+            eh_cliente = excluded.eh_cliente,
+            ativo = true;
 
     -- 6. CONTAS DE PORTAIS DE COTAÇÃO (OPMENEXO E INPART SAÚDE)
     INSERT INTO plantaopro.adm360_portal_contas (

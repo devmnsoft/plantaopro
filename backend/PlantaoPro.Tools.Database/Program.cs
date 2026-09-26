@@ -230,11 +230,31 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
         if (!string.Equals(realChecksum, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum alterado em {migration.Version}.");
         if (applied.TryGetValue(migration.Version, out var previous))
         {
-            if (!string.Equals(previous, migration.Checksum, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");
+            if (!string.Equals(previous, migration.Checksum, StringComparison.OrdinalIgnoreCase))
+            {
+                // Recuperação excepcional controlada: versão intermediária v2197 conhecida no commit 5a576ab
+                if (migration.Version == "2026_09_v2197_reconciliar_contratos_modulos" &&
+                    string.Equals(previous, "d17826cca92841a95e4201dbd9a3ea00df8dfba6e3cc1ebeed394acfc590555d", StringComparison.OrdinalIgnoreCase))
+                {
+                    await ReconcileIntermediateV2197Async(cn, migration.Version, previous, migration.Checksum);
+                    applied[migration.Version] = migration.Checksum;
+                }
+                else
+                {
+                    throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");
+                }
+            }
             continue;
         }
         await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE version=@Version AND success=false", new { migration.Version });
         foreach (var dep in migration.DependsOn) if (!applied.ContainsKey(dep)) throw new InvalidOperationException($"Dependência pendente: {dep} antes de {migration.Version}.");
+
+        // Tratamento prévio de duplicidades legadas em tenant_modulos antes da v2197
+        if (migration.Version == "2026_09_v2197_reconciliar_contratos_modulos")
+        {
+            await PreReconcileLegacyDuplicateContractsAsync(cn);
+        }
+
         var sw = Stopwatch.StartNew();
         try
         {
@@ -411,3 +431,146 @@ static string StripStandaloneTransactionControl(string sql) => Regex.Replace(sql
 static string BuildMigrationInsert(bool idIsTextPk) => idIsTextPk
     ? "INSERT INTO plantaopro.schema_migrations(id,version,source,checksum,duration_ms,success) VALUES(gen_random_uuid()::text,@Version,@Source,@Checksum,@Duration,true) ON CONFLICT DO NOTHING"
     : "INSERT INTO plantaopro.schema_migrations(version,source,checksum,duration_ms,success) VALUES(@Version,@Source,@Checksum,@Duration,true) ON CONFLICT (version) DO NOTHING";
+
+static async Task ReconcileIntermediateV2197Async(NpgsqlConnection cn, string version, string previousChecksum, string targetChecksum)
+{
+    // Validar pré-condições da versão modificada conhecida
+    var colunasModuloId = await cn.ExecuteScalarAsync<bool>(@"
+        SELECT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_schema = 'plantaopro' AND table_name = 'tenant_modulos' AND column_name = 'modulo_id'
+        )");
+
+    if (!colunasModuloId)
+    {
+        throw new InvalidOperationException($"Recuperação v2197 abortada: pré-condições de schema não encontradas no banco.");
+    }
+
+    // Preservar evidências em tabela de auditoria de reparos
+    await cn.ExecuteAsync(@"
+        CREATE TABLE IF NOT EXISTS plantaopro.schema_migration_repairs (
+            id bigserial PRIMARY KEY,
+            version text NOT NULL,
+            previous_checksum text NOT NULL,
+            target_checksum text NOT NULL,
+            reason text NOT NULL,
+            repaired_at timestamptz NOT NULL DEFAULT now(),
+            details text NULL
+        );
+        INSERT INTO plantaopro.schema_migration_repairs(version, previous_checksum, target_checksum, reason, details)
+        VALUES (@version, @previousChecksum, @targetChecksum, 'RECONCILIACAO_CHECKSUM_INTERMEDIARIO_CONHECIDO', 'Reconciliação controlada do checksum v2197 intermediário do commit 5a576ab para a versão canônica.');
+        UPDATE plantaopro.schema_migrations
+        SET checksum = @targetChecksum
+        WHERE version = @version;
+    ", new { version, previousChecksum, targetChecksum });
+
+    Console.WriteLine($"[RECOVERY] v2197 checksum intermediário {previousChecksum[..8]} reconciliado para o canônico {targetChecksum[..8]}.");
+}
+
+static async Task PreReconcileLegacyDuplicateContractsAsync(NpgsqlConnection cn)
+{
+    var tableExists = await cn.ExecuteScalarAsync<bool>(@"
+        SELECT EXISTS (
+            SELECT 1 FROM information_schema.tables
+            WHERE table_schema = 'plantaopro' AND table_name = 'tenant_modulos'
+        )");
+
+    if (!tableExists) return;
+
+    var temDuplicatas = await cn.ExecuteScalarAsync<bool>(@"
+        SELECT EXISTS (
+            SELECT 1 FROM plantaopro.tenant_modulos
+            WHERE reg_status = 'A'
+            GROUP BY tenant_id, coalesce(codigo_modulo, codigo, modulo_id::text)
+            HAVING count(*) > 1
+        )");
+
+    if (!temDuplicatas) return;
+
+    Console.WriteLine("[RECOVERY] Detectadas duplicidades ativas legadas em tenant_modulos antes da v2197. Executando reconciliação prévia auditável...");
+
+    await cn.ExecuteAsync(@"
+        CREATE TABLE IF NOT EXISTS plantaopro.tenant_modulos_reconciliacao (
+            tenant_modulo_id uuid primary key,
+            tenant_id uuid null,
+            codigo_legado text null,
+            motivo text not null,
+            candidatos uuid[] not null default '{}',
+            detectado_em timestamptz not null default now(),
+            resolvido_em timestamptz null
+        );
+
+        CREATE TABLE IF NOT EXISTS plantaopro.schema_migration_repairs (
+            id bigserial PRIMARY KEY,
+            version text NOT NULL,
+            previous_checksum text NOT NULL,
+            target_checksum text NOT NULL,
+            reason text NOT NULL,
+            repaired_at timestamptz NOT NULL DEFAULT now(),
+            details text NULL
+        );
+
+        DO $pre_reconciliar$
+        DECLARE
+            v_rec record;
+            v_ativo_id uuid;
+            v_outro_id uuid;
+            v_qtd_ativos integer;
+        BEGIN
+            FOR v_rec IN
+                SELECT tenant_id, coalesce(codigo_modulo, codigo, modulo_id::text) as cod, count(*) as total
+                FROM plantaopro.tenant_modulos
+                WHERE reg_status = 'A'
+                GROUP BY tenant_id, coalesce(codigo_modulo, codigo, modulo_id::text)
+                HAVING count(*) > 1
+            LOOP
+                SELECT count(*) INTO v_qtd_ativos
+                FROM plantaopro.tenant_modulos
+                WHERE tenant_id = v_rec.tenant_id
+                  AND coalesce(codigo_modulo, codigo, modulo_id::text) = v_rec.cod
+                  AND reg_status = 'A'
+                  AND coalesce(habilitado, true) = true
+                  AND upper(coalesce(status, 'ATIVO')) = 'ATIVO';
+
+                SELECT id INTO v_ativo_id
+                FROM plantaopro.tenant_modulos
+                WHERE tenant_id = v_rec.tenant_id
+                  AND coalesce(codigo_modulo, codigo, modulo_id::text) = v_rec.cod
+                  AND reg_status = 'A'
+                ORDER BY (CASE WHEN coalesce(habilitado, true) = true AND upper(coalesce(status, 'ATIVO')) = 'ATIVO' THEN 0 ELSE 1 END),
+                         reg_date ASC, id ASC
+                LIMIT 1;
+
+                FOR v_outro_id IN
+                    SELECT id FROM plantaopro.tenant_modulos
+                    WHERE tenant_id = v_rec.tenant_id
+                      AND coalesce(codigo_modulo, codigo, modulo_id::text) = v_rec.cod
+                      AND reg_status = 'A'
+                      AND id <> v_ativo_id
+                LOOP
+                    UPDATE plantaopro.tenant_modulos
+                    SET reg_status = 'I',
+                        habilitado = false,
+                        status = CASE WHEN v_qtd_ativos > 1 THEN 'INATIVO_AMBIGUIDADE' ELSE 'INATIVO' END,
+                        reg_update = now()
+                    WHERE id = v_outro_id;
+
+                    INSERT INTO plantaopro.tenant_modulos_reconciliacao
+                        (tenant_modulo_id, tenant_id, codigo_legado, motivo, candidatos, detectado_em, resolvido_em)
+                    VALUES
+                        (v_outro_id, v_rec.tenant_id, v_rec.cod, 
+                         CASE WHEN v_qtd_ativos > 1 THEN 'CONTRATO_DUPLICADO_AMBIGUO' ELSE 'DUPLICIDADE_RESOLVIDA_PRESERVADO_ATIVO' END,
+                         ARRAY[v_ativo_id], now(),
+                         CASE WHEN v_qtd_ativos > 1 THEN null ELSE now() END)
+                    ON CONFLICT (tenant_modulo_id) DO UPDATE
+                    SET motivo = excluded.motivo;
+                END LOOP;
+            END LOOP;
+        END $pre_reconciliar$;
+
+        INSERT INTO plantaopro.schema_migration_repairs(version, previous_checksum, target_checksum, reason, details)
+        VALUES ('2026_09_v2197_reconciliar_contratos_modulos', 'PRE_MIGRATION', 'CANONICAL', 'PRE_V2197_DUPLICATE_RECONCILIATION', 'Reconciliação prévia de contratos duplicados legados executada para permitir migração limpa da v2197.');
+    ");
+
+    Console.WriteLine("[RECOVERY] Reconciliação prévia de contratos duplicados concluída com sucesso.");
+}

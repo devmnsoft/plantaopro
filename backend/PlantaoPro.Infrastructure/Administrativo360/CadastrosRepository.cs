@@ -11,7 +11,10 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
     {
         await using var cn = Connection();
         return (await cn.QueryAsync<Parceiro360>(new CommandDefinition(@"
-            SELECT id, nome, documento, fornecedor, ativo, created_at AS CriadoEm
+            SELECT id, nome, documento, fornecedor, ativo, created_at AS CriadoEm,
+                   coalesce(eh_hospital, false) AS EhHospital,
+                   coalesce(eh_pagador, false) AS EhPagador,
+                   coalesce(eh_cliente, false) AS EhCliente
             FROM plantaopro.adm360_parceiros
             WHERE tenant_id = @tenantId
               AND (@busca IS NULL OR nome ILIKE '%' || @busca || '%' OR documento ILIKE '%' || @busca || '%')
@@ -20,7 +23,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             new { tenantId, busca, fornecedor }, cancellationToken: ct))).AsList();
     }
 
-    public async Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct)
+    public async Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct, bool ehHospital = false, bool ehPagador = false, bool ehCliente = false)
     {
         if (string.IsNullOrWhiteSpace(nome)) throw new ArgumentException("Nome do parceiro é obrigatório.");
 
@@ -49,9 +52,9 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             }
 
             await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, ativo, created_at)
-                VALUES (@novoId, @tenantId, @normNome, @normDoc, @fornecedor, @ativo, now())",
-                new { novoId, tenantId, normNome, normDoc, fornecedor, ativo }, cancellationToken: ct));
+                INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, eh_hospital, eh_pagador, eh_cliente, ativo, created_at)
+                VALUES (@novoId, @tenantId, @normNome, @normDoc, @fornecedor, @ehHospital, @ehPagador, @ehCliente, @ativo, now())",
+                new { novoId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
 
             return novoId;
         }
@@ -86,9 +89,12 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             SET nome = @normNome,
                 documento = @normDoc,
                 fornecedor = @fornecedor,
+                eh_hospital = @ehHospital,
+                eh_pagador = @ehPagador,
+                eh_cliente = @ehCliente,
                 ativo = @ativo
             WHERE id = @targetId AND tenant_id = @tenantId",
-            new { targetId, tenantId, normNome, normDoc, fornecedor, ativo }, cancellationToken: ct));
+            new { targetId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
 
         if (affected == 0)
             throw new KeyNotFoundException("Parceiro não encontrado ou não pertence a este cliente.");
@@ -335,7 +341,10 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
     {
         await using var cn = Connection();
         var parceiros = (await cn.QueryAsync<Parceiro360>(new CommandDefinition(@"
-            SELECT id, nome, documento, fornecedor, ativo, created_at AS CriadoEm
+            SELECT id, nome, documento, fornecedor, ativo, created_at AS CriadoEm,
+                   coalesce(eh_hospital, false) AS EhHospital,
+                   coalesce(eh_pagador, false) AS EhPagador,
+                   coalesce(eh_cliente, false) AS EhCliente
             FROM plantaopro.adm360_parceiros
             WHERE tenant_id = @tenantId AND ativo = true
             ORDER BY nome",
@@ -365,23 +374,35 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             ORDER BY l.validade NULLS LAST, l.codigo",
             new { tenantId }, cancellationToken: ct))).AsList();
 
-        // Carregar médicos canônicos de plantaopro.medicos vinculados ao tenant ou globais ativos
+        // Carregar médicos canônicos de plantaopro.medicos vinculados explicitamente ao tenant ou com acesso concedido
         var medicos = (await cn.QueryAsync<Medico360>(new CommandDefinition(@"
             SELECT m.id,
                    coalesce(nullif(m.nome, ''), u.nome, 'Médico') AS Nome,
-                   coalesce(nullif(m.codigo, ''), m.cpf, '') AS Documento,
+                   coalesce(nullif(m.crm, ''), coalesce(nullif(m.codigo, ''), m.cpf, '')) AS Documento,
                    (coalesce(m.status, 'ATIVO') = 'ATIVO' AND coalesce(m.reg_status, 'A') = 'A') AS Ativo
             FROM plantaopro.medicos m
             LEFT JOIN plantaopro.usuarios u ON u.id = m.usuario_id
-            WHERE (m.tenant_id = @tenantId OR m.tenant_id IS NULL)
+            WHERE (
+                m.tenant_id = @tenantId
+                OR u.tenant_id = @tenantId
+                OR EXISTS (
+                    SELECT 1 FROM plantaopro.usuario_tenant_acessos uta
+                    WHERE uta.usuario_id = m.usuario_id
+                      AND uta.tenant_id = @tenantId
+                      AND uta.reg_status = 'A'
+                      AND uta.status = 'ATIVO'
+                      AND (uta.acesso_inicio IS NULL OR uta.acesso_inicio <= now())
+                      AND (uta.acesso_fim IS NULL OR uta.acesso_fim > now())
+                )
+            )
               AND coalesce(m.reg_status, 'A') = 'A'
               AND coalesce(m.status, 'ATIVO') = 'ATIVO'
             ORDER BY Nome",
             new { tenantId }, cancellationToken: ct))).AsList();
 
         var fornecedores = parceiros.Where(p => p.Fornecedor).ToList();
-        var hospitais = parceiros.Where(p => !p.Fornecedor).ToList();
-        var pagadores = parceiros.Where(p => !p.Fornecedor).ToList();
+        var hospitais = parceiros.Where(p => p.EhHospital || (!p.Fornecedor && !p.EhPagador)).ToList();
+        var pagadores = parceiros.Where(p => p.EhPagador || (!p.Fornecedor && !p.EhHospital)).ToList();
 
         return new Lookups360Bundle(
             Parceiros: parceiros,

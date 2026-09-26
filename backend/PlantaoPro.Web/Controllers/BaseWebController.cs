@@ -517,7 +517,7 @@ public abstract class BaseWebController : Controller
         {
             HttpStatusCode.BadRequest => apiMessage ?? "Não foi possível processar a solicitação. Revise os dados e tente novamente.",
             HttpStatusCode.Unauthorized => "Sessão expirada. Faça login novamente.",
-            HttpStatusCode.Forbidden => "Você não possui permissão para realizar esta ação.",
+            HttpStatusCode.Forbidden => apiMessage ?? "Você não possui permissão para realizar esta ação.",
             HttpStatusCode.NotFound => apiMessage ?? "Registro não encontrado ou não está mais disponível.",
             HttpStatusCode.Conflict => apiMessage ?? "Conflito de dados detectado. Atualize a tela e tente novamente.",
             HttpStatusCode.InternalServerError => "Ocorreu uma instabilidade interna. Tente novamente em instantes.",

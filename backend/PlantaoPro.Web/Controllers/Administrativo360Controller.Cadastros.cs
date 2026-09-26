@@ -22,8 +22,12 @@ public partial class Administrativo360Controller
 
         if (papel == "FORNECEDOR")
             itens = itens.Where(p => p.Fornecedor);
+        else if (papel == "HOSPITAL")
+            itens = itens.Where(p => p.EhHospital);
+        else if (papel == "PAGADOR")
+            itens = itens.Where(p => p.EhPagador);
         else if (papel == "CLIENTE")
-            itens = itens.Where(p => !p.Fornecedor);
+            itens = itens.Where(p => p.EhCliente);
 
         if (status.HasValue)
             itens = itens.Where(p => p.Ativo == status.Value);

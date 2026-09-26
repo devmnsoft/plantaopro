@@ -649,7 +649,16 @@ public interface IAdm360FinanceiroRelatoriosRepository
 }
 
 // Cadastros e Lookups Administrativo 360
-public sealed record Parceiro360(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Parceiro360(
+    Guid Id,
+    string Nome,
+    string? Documento,
+    bool Fornecedor,
+    bool Ativo,
+    DateTime CriadoEm,
+    bool EhHospital = false,
+    bool EhPagador = false,
+    bool EhCliente = false);
 public sealed record Medico360(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
@@ -673,7 +682,7 @@ public sealed record Lookups360Bundle(
 public interface ICadastrosRepository
 {
     Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct);
-    Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct);
+    Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct, bool ehHospital = false, bool ehPagador = false, bool ehCliente = false);
     Task AlternarStatusParceiroAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
 
     Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct);

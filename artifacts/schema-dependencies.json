@@ -410,5 +410,13 @@
       "plantaopro.administrativo360_cotacoes_xml_dashboard"
     ],
     "source": "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql"
+  },
+  {
+    "object": "plantaopro.tenant_modulos_duplicidades_reconciliadas",
+    "dependsOn": [
+      "plantaopro.tenant_modulos_canonico",
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql"
   }
 ]

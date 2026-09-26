@@ -4,7 +4,7 @@ using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = "ADMINISTRADOR,ADMINISTRADOR_CLIENTE,DIRETOR,COORDENACAO,COORDENADOR")]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
 public partial class Administrativo360Controller : BaseWebController
 {
     public Administrativo360Controller(IHttpClientFactory factory, ILogger<Administrativo360Controller> logger)
@@ -96,17 +96,21 @@ public partial class Administrativo360Controller : BaseWebController
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SalvarParceiro(Guid? id, string nome, string? documento, bool fornecedor, bool ativo = true)
+    public async Task<IActionResult> SalvarParceiro(Guid? id, string nome, string? documento, bool fornecedor, bool ativo = true, bool ehHospital = false, bool ehPagador = false, bool ehCliente = false)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var payload = new { Id = id, Nome = nome, Documento = documento, Fornecedor = fornecedor, Ativo = ativo };
+        var payload = new { Id = id, Nome = nome, Documento = documento, Fornecedor = fornecedor, Ativo = ativo, EhHospital = ehHospital, EhPagador = ehPagador, EhCliente = ehCliente };
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/parceiros", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
             TempData["SuccessMessage"] = "Parceiro cadastrado/atualizado com sucesso.";
         else
             TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar parceiro.";
+
+        var referer = Request.Headers["Referer"].ToString();
+        if (referer.Contains("/Parceiros", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Parceiros));
 
         return RedirectToAction(nameof(Cadastros), new { aba = "parceiros" });
     }
@@ -122,6 +126,10 @@ public partial class Administrativo360Controller : BaseWebController
             TempData["SuccessMessage"] = $"Parceiro {(ativo ? "ativado" : "inativado")} com sucesso.";
         else
             TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do parceiro.";
+
+        var referer = Request.Headers["Referer"].ToString();
+        if (referer.Contains("/Parceiros", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Parceiros));
 
         return RedirectToAction(nameof(Cadastros), new { aba = "parceiros" });
     }
@@ -139,6 +147,10 @@ public partial class Administrativo360Controller : BaseWebController
         else
             TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar produto.";
 
+        var referer = Request.Headers["Referer"].ToString();
+        if (referer.Contains("/Produtos", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Produtos));
+
         return RedirectToAction(nameof(Cadastros), new { aba = "produtos" });
     }
 
@@ -153,6 +165,10 @@ public partial class Administrativo360Controller : BaseWebController
             TempData["SuccessMessage"] = $"Produto {(ativo ? "ativado" : "inativado")} com sucesso.";
         else
             TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do produto.";
+
+        var referer = Request.Headers["Referer"].ToString();
+        if (referer.Contains("/Produtos", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Produtos));
 
         return RedirectToAction(nameof(Cadastros), new { aba = "produtos" });
     }
@@ -169,6 +185,10 @@ public partial class Administrativo360Controller : BaseWebController
             TempData["SuccessMessage"] = "Local de armazenamento cadastrado/atualizado com sucesso.";
         else
             TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar local.";
+
+        var referer = Request.Headers["Referer"].ToString();
+        if (referer.Contains("/Locais", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction(nameof(Locais));
 
         return RedirectToAction(nameof(Cadastros), new { aba = "locais" });
     }

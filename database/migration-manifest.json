@@ -676,6 +676,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2198_reconciliar_duplicidades_contratos_modulos",
+      "source": "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
+      "checksum": "0d4b352f984115ab6a956b72fc2c1f5b3a398ad2aa5b02a3d3e083229b931cf5",
+      "dependsOn": [
+        "2026_09_v2197_reconciliar_contratos_modulos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

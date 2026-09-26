@@ -5,7 +5,7 @@ using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = "ADMINISTRADOR,ADMINISTRADOR_CLIENTE,DIRETOR,COORDENACAO,COORDENADOR")]
+[Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE,ADMIN_CLIENTE,GESTOR_OPERACIONAL,DIRETOR,COORDENACAO,COORDENADOR,CONSULTA_CLIENTE,AUDITOR")]
 [Route("Administrativo360/DocumentosXml")]
 public sealed class Adm360DocumentosXmlWebController : BaseWebController
 {

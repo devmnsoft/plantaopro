@@ -826,7 +826,7 @@ public sealed class ContaFinanceiraFormViewModel
 }
 
 // Cadastros e Lookups Administrativo 360
-public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm);
+public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm, bool EhHospital = false, bool EhPagador = false, bool EhCliente = false);
 public sealed record Medico360ViewModel(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
@@ -970,6 +970,21 @@ public sealed class ColetaIndexViewModel
     public IReadOnlyList<TarefaColetaViewModel> Tarefas { get; init; } = Array.Empty<TarefaColetaViewModel>();
     public string? Erro { get; init; }
 }
-
-
-
+public sealed class DiagnosticoAcessoViewModel
+{
+    public Guid? UsuarioId { get; set; }
+    public Guid? TenantId { get; set; }
+    public string? UsuarioNome { get; set; }
+    public bool IsGlobalAdmin { get; set; }
+    public IReadOnlyList<string> Roles { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> ModulosContratados { get; set; } = Array.Empty<string>();
+    public IReadOnlyList<string> Permissoes { get; set; } = Array.Empty<string>();
+    public string? TestModulo { get; set; }
+    public string? TestAcao { get; set; }
+    public bool? TestPermitido { get; set; }
+    public string? TestCodigo { get; set; }
+    public string? TestMotivo { get; set; }
+    public string? TestOrigem { get; set; }
+    public string? Erro { get; set; }
+    public string? Mensagem { get; set; }
+}

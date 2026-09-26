@@ -774,6 +774,23 @@
           ]
         }
       ]
+    },
+    {
+      "order": 62,
+      "name": "Reconciliação e permissões granulares v2.19.8",
+      "objects": [
+        {
+          "name": "plantaopro.tenant_modulos_duplicidades_reconciliadas",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
+          "dependsOn": [
+            "plantaopro.tenant_modulos_canonico",
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [

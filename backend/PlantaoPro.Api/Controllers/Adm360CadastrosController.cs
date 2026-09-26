@@ -36,7 +36,15 @@ public sealed class Adm360CadastrosController : ControllerBase
         return Ok(lista);
     }
 
-    public sealed record SalvarParceiroRequest(Guid? Id, string Nome, string? Documento, bool Fornecedor, bool Ativo);
+    public sealed record SalvarParceiroRequest(
+        Guid? Id,
+        string Nome,
+        string? Documento,
+        bool Fornecedor,
+        bool Ativo,
+        bool EhHospital = false,
+        bool EhPagador = false,
+        bool EhCliente = false);
 
     [HttpPost("parceiros"), Authorize(Policy = "Adm360.MapearCadastros")]
     public async Task<IActionResult> SalvarParceiro([FromBody] SalvarParceiroRequest req, CancellationToken ct)
@@ -44,7 +52,9 @@ public sealed class Adm360CadastrosController : ControllerBase
         var (tenant, _) = Context();
         try
         {
-            var id = await repository.SalvarParceiroAsync(tenant, req.Id, req.Nome, req.Documento, req.Fornecedor, req.Ativo, ct);
+            var id = await repository.SalvarParceiroAsync(
+                tenant, req.Id, req.Nome, req.Documento, req.Fornecedor, req.Ativo, ct,
+                req.EhHospital, req.EhPagador, req.EhCliente);
             return Ok(new { id });
         }
         catch (KeyNotFoundException ex)

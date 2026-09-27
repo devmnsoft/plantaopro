@@ -39,3 +39,6 @@ Thumbs.db
 .env.*
 !.env.example
 artifacts/auth/
+
+# Estado de runtime do ciclo de dev local (PIDs, logs, last-run.json)
+artifacts/runtime-logs/

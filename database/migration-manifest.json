@@ -698,6 +698,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade",
+      "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
+      "checksum": "bb703b73ad764f20145df24a79c34d7e0b80dcf73b48972fcc9e823ee1eccf35",
+      "dependsOn": [
+        "2026_09_v2199_corrigir_trigger_adm360_validar_tenant"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

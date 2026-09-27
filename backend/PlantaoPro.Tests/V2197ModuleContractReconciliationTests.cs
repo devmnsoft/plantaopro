@@ -34,7 +34,7 @@ public sealed class V2197ModuleContractReconciliationTests
     {
         var seed = Read("database/seeds/development/121_acesso_demo_local.sql");
         var reset = Read("database/seeds/development/121b_restaurar_senha_gestor_demo.sql");
-        Assert.Contains("modulo_id,codigo,codigo_modulo,habilitado,status", seed, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("modulo_id,codigo,codigo_modulo,nome,habilitado,status", seed, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("id=v_id", reset, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("gestor@santacasa-demo.example", reset);
         Assert.DoesNotContain("superadmin@mnsoft.example", reset);

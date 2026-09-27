@@ -29,4 +29,21 @@ public sealed class DatabaseGeneratorIntegrityTests
             Assert.Contains($"-- SOURCE: {source}\n-- SOURCE-SHA256: {expectedHash}", script.Replace("\r\n", "\n"));
         }
     }
+
+    [Fact]
+    public void ScriptCompleto_NaoContemCriacaoDeIndiceSemIdempotencia()
+    {
+        var root = RepositoryPathResolver.ResolveRoot();
+        var sql = File.ReadAllText(Path.Combine(root, "database", "scrpt_completo.sql")).Replace("\r\n", "\n");
+        var idempotente = new System.Text.RegularExpressions.Regex(
+            @"^\s*CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\b|CONCURRENTLY\b)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        foreach (var line in sql.Split('\n'))
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(line, @"^\s*CREATE\s+(?:UNIQUE\s+)?INDEX\s+", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                continue;
+            if (!idempotente.IsMatch(line))
+                Assert.Fail($"Criação de índice não idempotente impede reexecução do script: {line.Trim()}");
+        }
+    }
 }

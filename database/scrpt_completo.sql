@@ -1,7 +1,7 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.19.7
+-- Versão do schema: v2.20.0
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-25
+-- Data de geração: 2026-09-27
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -3965,9 +3965,9 @@ CREATE TRIGGER trg_adm_contratos_tenant BEFORE INSERT OR UPDATE ON plantaopro.ad
 -- Administrativo 360 bloco 2: suprimentos, qualidade, estoque e coleta.
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_pedido_numero;
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_parceiros(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),nome varchar(160) not null,documento varchar(20),fornecedor boolean not null default false,ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id));
-CREATE UNIQUE INDEX ux_adm360_parceiro_documento ON plantaopro.adm360_parceiros(tenant_id,documento) WHERE documento IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_parceiro_documento ON plantaopro.adm360_parceiros(tenant_id,documento) WHERE documento IS NOT NULL;
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_produtos(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),sku varchar(40) not null,nome varchar(180) not null,unidade varchar(12) not null,codigo_barras varchar(80),controla_lote boolean not null default false,controla_serie boolean not null default false,exige_inspecao boolean not null default true,ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,sku));
-CREATE UNIQUE INDEX ux_adm360_produto_barcode ON plantaopro.adm360_produtos(tenant_id,codigo_barras) WHERE codigo_barras IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_produto_barcode ON plantaopro.adm360_produtos(tenant_id,codigo_barras) WHERE codigo_barras IS NOT NULL;
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_locais(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),codigo varchar(30) not null,nome varchar(120) not null,tipo varchar(10) not null check(tipo in('INTERNO','EXTERNO')),ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,codigo));
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_pedidos(id uuid primary key,tenant_id uuid not null references plantaopro.tenants(id),numero varchar(30) not null,fornecedor_id uuid not null,situacao varchar(15) not null default 'RASCUNHO' check(situacao in('RASCUNHO','APROVADO','PARCIAL','RECEBIDO','CANCELADO')),previsao date,frete numeric(18,4) not null default 0 check(frete>=0),aprovado_em timestamptz,aprovado_por uuid,idempotency_key varchar(120),versao bigint not null default 1,created_by uuid,created_at timestamptz not null default now(),unique(tenant_id,id),unique(tenant_id,numero),unique(tenant_id,idempotency_key),foreign key(tenant_id,fornecedor_id) references plantaopro.adm360_parceiros(tenant_id,id));
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_pedido_itens(id uuid primary key,tenant_id uuid not null,pedido_id uuid not null,produto_id uuid not null,quantidade numeric(18,4) not null check(quantidade>0),quantidade_recebida numeric(18,4) not null default 0 check(quantidade_recebida>=0 and quantidade_recebida<=quantidade),preco_unitario numeric(18,4) not null check(preco_unitario>=0),desconto numeric(18,4) not null default 0 check(desconto>=0),unique(tenant_id,id),foreign key(tenant_id,pedido_id) references plantaopro.adm360_pedidos(tenant_id,id),foreign key(tenant_id,produto_id) references plantaopro.adm360_produtos(tenant_id,id));
@@ -5345,3 +5345,98 @@ end $constraints$;
 
 create unique index if not exists ux_adm360_locais_tenant_codigo
     on plantaopro.adm360_locais(tenant_id, upper(codigo)) where ativo = true;
+
+-- ============================================================
+-- Seção 63 — Correção do gatilho de validação de tenant ADM360 v2.19.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql
+-- SOURCE-SHA256: 06c4dc1ea9c82cc242357bd6a11d5d691dc768f8b114ecdbcae7892c1df73a65
+-- ============================================================================
+-- Migration: 2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql
+-- Objetivo: Corrigir a funcao de validacao de tenant criada em v2190.
+--           A funcao v2190 avaliava os tres ramos em expressoes separadas, cada
+--           uma contendo subconsulta que referencia NEW.<coluna> existente em
+--           apenas UMA das tabelas cobertas (adm_cargos.departamento_id,
+--           adm_colaboradores.cargo_id, adm_contratos_trabalho.colaborador_id).
+--           O PL/pgSQL resolve o campo do registro NEW dentro das subconsultas
+--           contra o rowtype da tabela onde o gatilho disparou, mesmo quando a
+--           condicao anterior do AND deveria curto-circuitar, causando falha em
+--           QUALQUER INSERT/UPDATE nas tres tabelas:
+--             ERRO: registro "new" nao tem campo "cargo_id"
+--           Este script reorganiza a funcao em IF/ELSIF por tabela: cada ramo so
+--           referencia colunas da propria tabela e so e planejado/executado quando
+--           o gatilho dispara naquela tabela. Gatilhos, nomes e mensagens de erro
+--           sao mantidos identicos (semantica preservada); nenhuma alteracao de
+--           dados ou de estrutura.
+-- Idempotencia: CREATE OR REPLACE FUNCTION. Nao altera triggers existentes
+--               (trg_adm_cargos_tenant, trg_adm_colaboradores_tenant,
+--                trg_adm_contratos_tenant continuam apontando para esta funcao).
+-- ============================================================================
+
+create or replace function plantaopro.adm360_validar_tenant()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_table_name = 'adm_cargos' then
+    if new.departamento_id is not null
+       and not exists(select 1 from plantaopro.adm_departamentos d where d.id = new.departamento_id and d.tenant_id = new.tenant_id) then
+      raise exception 'Departamento pertence a outro tenant';
+    end if;
+  elsif tg_table_name = 'adm_colaboradores' then
+    if not exists(select 1 from plantaopro.adm_cargos c where c.id = new.cargo_id and c.tenant_id = new.tenant_id) then
+      raise exception 'Cargo pertence a outro tenant';
+    end if;
+  elsif tg_table_name = 'adm_contratos_trabalho' then
+    if not exists(select 1 from plantaopro.adm_colaboradores p where p.id = new.colaborador_id and p.tenant_id = new.tenant_id) then
+      raise exception 'Colaborador pertence a outro tenant';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+-- ============================================================
+-- Seção 64 — Reconciliação de colunas de médicos compatibilidade v2.20.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql
+-- SOURCE-SHA256: 926b11c2d6da671365a22e590491196857f2d6cc1a4edc3b8dd59fa5c0261ae6
+-- ============================================================================
+-- Migration: 2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql
+-- Objetivo: Reconciliar bases legadas cuja tabela plantaopro.medicos foi criada
+--           por instaladores antigos (sem as colunas de CRM, contato, vinculo
+--           clinico e identidade multitenant). Idempotente em bases novas ou ja
+--           migradas: somente adiciona colunas ausentes, com os tipos exatos do
+--           DDL canônico (PlantaoPro_PostgreSQL_Completo.sql + evolucao vivo).
+-- Causa: ObterLookupsAsync (GET /api/administrativo360/cadastros/lookups)
+--        consulta m.crm, m.codigo, m.cpf e o seed demo completo insere
+--        crm/uf_crm/reg_date; bases legadas sem essas colunas produziam
+--        Npgsql 42703 "coluna m.crm nao existe" nos endpoints ADM360.
+-- Regras: nenhuma coluna existente é alterada nem removida; sem chaves
+--        estrangeiras (compatibilidade com bases legadas); histórico preservado.
+-- ============================================================================
+
+alter table plantaopro.medicos add column if not exists especialidade_id uuid;
+alter table plantaopro.medicos add column if not exists crm varchar(20);
+alter table plantaopro.medicos add column if not exists uf_crm char(2);
+alter table plantaopro.medicos add column if not exists telefone varchar(20);
+alter table plantaopro.medicos add column if not exists email varchar(120);
+alter table plantaopro.medicos add column if not exists cidade varchar(80);
+alter table plantaopro.medicos add column if not exists estado char(2);
+alter table plantaopro.medicos add column if not exists pix_chave varchar(120);
+alter table plantaopro.medicos add column if not exists dados_bancarios jsonb;
+alter table plantaopro.medicos add column if not exists observacoes text;
+alter table plantaopro.medicos add column if not exists reg_date timestamp default now();
+alter table plantaopro.medicos add column if not exists reg_update timestamp;
+alter table plantaopro.medicos add column if not exists created_by uuid;
+alter table plantaopro.medicos add column if not exists updated_by uuid;
+alter table plantaopro.medicos add column if not exists cliente_id uuid;
+alter table plantaopro.medicos add column if not exists plano_id bigint;
+alter table plantaopro.medicos add column if not exists parceiro_id bigint;
+alter table plantaopro.medicos add column if not exists dominio varchar(250);
+alter table plantaopro.medicos add column if not exists subdominio varchar(120);
+alter table plantaopro.medicos add column if not exists api_key_hash varchar(128);
+alter table plantaopro.medicos add column if not exists created_at timestamptz not null default now();
+alter table plantaopro.medicos add column if not exists updated_at timestamptz;

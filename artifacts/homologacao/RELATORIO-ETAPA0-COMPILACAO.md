@@ -61,18 +61,29 @@ pré-checagem de conflitos), nunca "compilar e tentar de novo".
 
 ## 6. Scripts criados (`scripts\local\`)
 
+Contrato atual (reescrita do BLOCO A — segredos em user-secrets, launchSettings sem credenciais):
+
 | Script | Função | Códigos de saída |
 |---|---|---|
-| `run-dev-stop.ps1` | Identifica instâncias desta cópia por caminho/cmdline (e registra em `last-run.json`); pré-checagem de conflitos; parada dirigida | 0 ok · 2 instâncias alheias detectadas · 4 timeout |
-| `run-dev-build.ps1` | Pré-verifica artefatos livres; `dotnet build` da solução com log em `artifacts\runtime-logs\dev\build-*.log` | 0 ok · 3 artefatos bloqueados · outro=erro de build |
-| `run-dev-start.ps1` | `dotnet run --no-build --launch-profile https` (API e Web); registra PIDs; readiness por polling de porta + probe HTTP | 0 ok · 3 já em execução · 5 timeout de readiness |
+| `setup-local-config.ps1` | Cria/verifica os user-secrets locais (API + Web); idempotente (`-Force` sobrescreve e gera nova `Jwt:Key`); imprime só NOMES, nunca valores; limpa chaves legadas em formato `__` | 0 ok · 2 SDK ausente |
+| `run-dev-stop.ps1` | Identifica instâncias desta cópia por nome+caminho do exe (e pais `dotnet run`); mata em ordem filho→pai, reconfirmando a identidade imediatamente antes de cada kill (force restrito ao projeto) | 0 ok · 2 não encerrou no prazo · 4 artefato ainda bloqueado |
+| `run-dev-build.ps1` | Pré-checagem de conflito; `dotnet build` da solução (Debug); registra `artifacts\runtime-logs\dev\last-build.json` (status, log, git head) | 0 ok · 2 SDK ausente · 3 instância em execução · outro ≠ 0 = falha do dotnet |
+| `run-dev-start.ps1` | Dispara o build (`--no-build`); **readiness HTTP real** (API `GET /api/health` → 200+Healthy; Web `GET /Account/Login` → 200+form antiforgery) com retry; **liveness** re-probe a 5s pós-init; em falha: diagnóstico com segredos redigidos + cleanup apenas dos processos desta tentativa | 0 ok · 2 pré-requisitos ausentes · 3 já em execução · 4 sem build ok registrado · 5 readiness/liveness falhou |
+
+Regra de segredos: os `launchSettings.json` versionam apenas URLs e `ASPNETCORE_ENVIRONMENT`;
+valores privados vivem em user-secrets por projeto (IDs `plantaopro-api-development` /
+`plantaopro-web-development`). Chaves do store usam ':' (`ConnectionStrings:Default`, `Jwt:Key`) —
+o separador '__' só é convertido em variáveis de ambiente, nunca no JSON plano do store.
+Rotação das credenciais já versionadas: ver `docs\dev\segredos-locais-e-rotacao.md`.
 
 Docker **não** é requisito obrigatório; os scripts usam o mesmo perfil de lançamento do fluxo VS.
 
 ## 7. Comandos de referência
 
 ```powershell
-# Parar instâncias desta copia
+# Configuracao local unica (ou apos rotacao): user-secrets por projeto
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\local\setup-local-config.ps1
+# Parar instancias desta copia
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\local\run-dev-stop.ps1
 # Compilar
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\local\run-dev-build.ps1

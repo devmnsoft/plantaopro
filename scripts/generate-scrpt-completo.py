@@ -23,6 +23,7 @@ def normalize_sql(s, origin):
             line='SET search_path TO plantaopro, public;'
         line=re.sub(r'(?<![\w.])uuid_generate_v4\s*\(', 'gen_random_uuid(', line)
         line=re.sub(r'(?i)public\.unaccent\s*\(', 'unaccent(', line)
+        line=re.sub(r'(?i)^(\s*CREATE\s+(?:UNIQUE\s+)?INDEX\s+)(?!IF\s+NOT\s+EXISTS\b)(?!CONCURRENTLY\b)', r'\1IF NOT EXISTS ', line)
         normalized.append(line.rstrip())
     return '\n'.join(normalized)
 

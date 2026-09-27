@@ -64,3 +64,5 @@
 - `plantaopro.administrativo360_cotacoes_xml_dashboard` depende de: plantaopro.administrativo360_contas_pagar_fechamento
 - `plantaopro.tenant_modulos_canonico` depende de: plantaopro.saas_tenants, plantaopro.administrativo360_cotacoes_xml_dashboard
 - `plantaopro.tenant_modulos_duplicidades_reconciliadas` depende de: plantaopro.tenant_modulos_canonico, plantaopro.administrativo360_suprimentos
+- `plantaopro.adm360_trigger_tenant_corrigido` depende de: nenhuma
+- `plantaopro.medicos_compatibilidade_v2200` depende de: plantaopro.operacao_plantoes

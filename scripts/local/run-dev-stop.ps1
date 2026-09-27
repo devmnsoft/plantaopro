@@ -1,6 +1,12 @@
 # run-dev-stop.ps1 -- para as instancias da API e da Web desta copia do PlantaoPro
 # e libera os artefatos de build (DLLs) para compilacao.
 #
+# Regras de seguranca:
+#   - somente processos desta copia (exe sob <root>\backend\** ou "dotnet run" pai deles);
+#   - ordem filho -> pai;
+#   - identidade (nome + caminho do exe) reconfirmada imediatamente antes de cada Stop-Process;
+#   - -Force restrito aos PIDs identificados acima (nada alheio ao projeto e tocado).
+#
 # Uso:
 #   powershell -ExecutionPolicy Bypass -File scripts/local/run-dev-stop.ps1 [-WaitSeconds 30]
 #
@@ -11,47 +17,54 @@ $ErrorActionPreference = 'Stop'
 $Root = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
 $BinPattern = Join-Path $Root 'backend*'
 
-function Find-AppInstances {
-  # 1) exes desta copia (rodeado direto ou por "dotnet run" / depuracao do VS)
-  $direct = @(Get-CimInstance Win32_Process | Where-Object {
-    $_.Name -match '^PlantaoPro\.(Web|Api)\.exe$' -and $_.ExecutablePath -and ($_.ExecutablePath -like $BinPattern)
-  })
-  # 2) pais "dotnet run" cujos filhos sao os exes acima (para nao deixar o launcher zombie)
-  $parentIds = @()
-  foreach ($d in $direct) {
-    $pp = Get-CimInstance Win32_Process -Filter ('ProcessId={0}' -f [int]$d.ParentProcessId) -ErrorAction SilentlyContinue
-    if ($pp -and $pp.Name -eq 'dotnet.exe' -and $pp.CommandLine -match '\brun\b') { $parentIds += [int]$pp.ProcessId }
-  }
-  $parents = @()
-  foreach ($id in ($parentIds | Sort-Object -Unique)) {
-    $p = Get-CimInstance Win32_Process -Filter ('ProcessId={0}' -f $id) -ErrorAction SilentlyContinue
-    if ($p) { $parents += $p }
-  }
-  ,@{ Direct = $direct; Parents = $parents }
+function Is-AppExe([psobject]$p) {
+  return ($p.Name -match '^PlantaoPro\.(Web|Api)\.exe$' -and $p.ExecutablePath -and ($p.ExecutablePath -like $BinPattern))
 }
 
-$result = Find-AppInstances
-$apps = @($result.Direct); $runs = @($result.Parents)
-if (-not $apps.Count -and -not $runs.Count) {
+function Confirm-AndKill([int]$pid_, [string]$kind) {
+  # reconfirma identidade no momento exato da matança (evita race com reuso de PID)
+  $p = Get-CimInstance Win32_Process -Filter ('ProcessId={0}' -f $pid_) -ErrorAction SilentlyContinue
+  if (-not $p) { Write-Host ('  ja encerrado antes: PID ' + $pid_); return }
+  $isApp = ($p.Name -match '^PlantaoPro\.(Web|Api)\.exe$')
+  $isLauncher = ($p.Name -eq 'dotnet.exe' -and $p.CommandLine -match '\brun\b')
+  if (-not $isApp -and -not $isLauncher) {
+    Write-Host ('  ignorado (identidade mudou, nao matado): PID ' + $pid_ + ' agora=' + $p.Name)
+    return
+  }
+  Stop-Process -Id $pid_ -Force -ErrorAction SilentlyContinue
+  Write-Host ('  parado ({0}): PID {1} {2}' -f $kind, $pid_, $p.Name)
+}
+
+# 1) exes desta copia (rodeado direto ou por "dotnet run" / depuracao do VS)
+$direct = @(Get-CimInstance Win32_Process | Where-Object { Is-AppExe $_ })
+# 2) pais "dotnet run" cujos filhos sao os exes acima (para nao deixar o launcher zombie)
+$parentIds = @()
+foreach ($d in $direct) {
+  $pp = Get-CimInstance Win32_Process -Filter ('ProcessId={0}' -f [int]$d.ParentProcessId) -ErrorAction SilentlyContinue
+  if ($pp -and $pp.Name -eq 'dotnet.exe' -and $pp.CommandLine -match '\brun\b') { $parentIds += [int]$pp.ProcessId }
+}
+$parentIds = @($parentIds | Sort-Object -Unique)
+
+if (-not $direct.Count -and -not $parentIds.Count) {
   Write-Host 'OK: nenhuma instancia da API/Web em execucao (nada a fazer).'
   exit 0
 }
 
 $t0 = Get-Date
 Write-Host 'Instancias desta copia identificadas:'
-foreach ($d in $apps)  { Write-Host ('  PID {0} {1} [app]   {2}' -f $d.ProcessId, $d.Name, $d.ExecutablePath) }
-foreach ($p in $runs)  { Write-Host ('  PID {0} dotnet.exe  [dotnet run]  {1}' -f $p.ProcessId, $p.CommandLine) }
-
-# filhos primeiro (o "dotnet run" percebe a saida e tambem termina), depois os launchers
-foreach ($d in $apps) { Stop-Process -Id ([int]$d.ProcessId) -Force -ErrorAction SilentlyContinue; Write-Host ('  parado (app): PID ' + $d.ProcessId) }
-Start-Sleep -Milliseconds 500
-foreach ($p in $runs) {
-  $still = Get-Process -Id ([int]$p.ProcessId) -ErrorAction SilentlyContinue
-  if ($still) { Stop-Process -Id ([int]$p.ProcessId) -Force -ErrorAction SilentlyContinue; Write-Host ('  parado (launcher): PID ' + $p.ProcessId) }
+foreach ($d in $direct) { Write-Host ('  PID {0} {1} [app]       {2}' -f $d.ProcessId, $d.Name, $d.ExecutablePath) }
+foreach ($id in $parentIds) {
+  $p = Get-CimInstance Win32_Process -Filter ('ProcessId={0}' -f $id) -ErrorAction SilentlyContinue
+  if ($p) { Write-Host ('  PID {0} dotnet.exe  [dotnet run]  {1}' -f $id, $p.CommandLine) }
 }
 
+# filhos primeiro, depois os launchers (cada matada reconfirma a identidade)
+foreach ($d in $direct) { Confirm-AndKill ([int]$d.ProcessId) 'app' }
+Start-Sleep -Milliseconds 500
+foreach ($id in $parentIds) { Confirm-AndKill $id 'launcher' }
+
 # aguarda saida completa com limite de tempo
-$ids = @(); foreach ($d in $apps) { $ids += [int]$d.ProcessId }; foreach ($p in $runs) { $ids += [int]$p.ProcessId }
+$ids = @(); foreach ($d in $direct) { $ids += [int]$d.ProcessId }; $ids += $parentIds
 $deadline = (Get-Date).AddSeconds($WaitSeconds)
 $left = @()
 do {

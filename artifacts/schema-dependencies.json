@@ -418,5 +418,17 @@
       "plantaopro.administrativo360_suprimentos"
     ],
     "source": "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql"
+  },
+  {
+    "object": "plantaopro.adm360_trigger_tenant_corrigido",
+    "dependsOn": [],
+    "source": "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql"
+  },
+  {
+    "object": "plantaopro.medicos_compatibilidade_v2200",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql"
   }
 ]

@@ -7,14 +7,14 @@ $dotnet=Get-Command dotnet -ErrorAction SilentlyContinue; if(-not $dotnet){throw
 if([int]((& $psql --version)-replace '^.*?([0-9]+)\..*$','$1') -lt 16){throw 'psql 16+ é obrigatório.'}
 function Convert-Secure([Security.SecureString]$value){$ptr=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($value);try{[Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)}finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)}}
 $appSecure=Read-Host 'Senha da role da aplicação' -AsSecureString; $adminSecure=Read-Host 'Senha inicial do superadministrador' -AsSecureString
-$appPassword=Convert-Secure $appSecure; $env:PLANTAOPRO_BOOTSTRAP_PASSWORD=Convert-Secure $adminSecure
+$appPassword=Convert-Secure $appSecure; $env:PLANTAOPRO_BOOTSTRAP_PASSWORD=Convert-Secure $adminSecure; $script:bootEnvDefault=-not $env:PLANTAOPRO_BOOTSTRAP_ENVIRONMENT; if($script:bootEnvDefault){$env:PLANTAOPRO_BOOTSTRAP_ENVIRONMENT=$Environment}
 try {
  $hash=& $dotnet run --project (Join-Path $root 'backend/PlantaoPro.Tools.Bootstrap/PlantaoPro.Tools.Bootstrap.csproj') -- hash-password
  & $psql -X -h $HostName -p $Port -d $MaintenanceDatabase -v ON_ERROR_STOP=1 -v "installation_environment=$Environment" -v "install_mode=$Mode" -v "recreate_database=$($RecreateDatabase.IsPresent.ToString().ToLowerInvariant())" -v "maintenance_database=$MaintenanceDatabase" -v "target_database=$Database" -v "database_owner=$OwnerRole" -v "application_role=$ApplicationRole" -v "application_role_password=$appPassword" -v bootstrap_admin=true -v "bootstrap_admin_email=$AdminEmail" -v "bootstrap_admin_password_hash=$hash" -f (Join-Path $root 'database/instalar_plantaopro.psql')
  if($LASTEXITCODE -ne 0){throw 'Instalação SQL falhou.'}
- $local=Join-Path $root '.local'; New-Item -ItemType Directory -Force $local|Out-Null; $jwt=[Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(64)); $envFile=Join-Path $local 'plantaopro.env'
+ $local=Join-Path $root '.local'; New-Item -ItemType Directory -Force $local|Out-Null; $rb=New-Object byte[] 64; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($rb); $jwt=[Convert]::ToBase64String($rb); $envFile=Join-Path $local 'plantaopro.env'
  $connectionString="ConnectionStrings__Default=Host=$HostName;Port=$Port;Database=$Database;Username=$ApplicationRole;"+
   "Password=$appPassword"
  @($connectionString,'Jwt__Issuer=PlantaoPro','Jwt__Audience=PlantaoPro',"Jwt__Key=$jwt","ASPNETCORE_ENVIRONMENT=$Environment")|Set-Content -Encoding utf8 $envFile
  Write-Output "PlantãoPro — instalação concluída; banco=$Database; servidor=$HostName; porta=$Port; usuário=$ApplicationRole; ambiente=$envFile; status=APROVADO"
-} finally {$appPassword=$null;$hash=$null;Remove-Item Env:PLANTAOPRO_BOOTSTRAP_PASSWORD -ErrorAction SilentlyContinue}
+} finally {$appPassword=$null;$hash=$null;Remove-Item Env:PLANTAOPRO_BOOTSTRAP_PASSWORD -ErrorAction SilentlyContinue; if($script:bootEnvDefault){ Remove-Item Env:PLANTAOPRO_BOOTSTRAP_ENVIRONMENT -ErrorAction SilentlyContinue } }

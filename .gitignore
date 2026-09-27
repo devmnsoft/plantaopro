@@ -42,3 +42,6 @@ artifacts/auth/
 
 # Estado de runtime do ciclo de dev local (PIDs, logs, last-run.json)
 artifacts/runtime-logs/
+
+# Cache de bytecode Python (scripts de geração/validação)
+__pycache__/

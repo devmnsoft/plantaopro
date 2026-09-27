@@ -13,8 +13,6 @@
 --        estrangeiras (compatibilidade com bases legadas); histórico preservado.
 -- ============================================================================
 
-begin;
-
 alter table plantaopro.medicos add column if not exists especialidade_id uuid;
 alter table plantaopro.medicos add column if not exists crm varchar(20);
 alter table plantaopro.medicos add column if not exists uf_crm char(2);
@@ -37,5 +35,3 @@ alter table plantaopro.medicos add column if not exists subdominio varchar(120);
 alter table plantaopro.medicos add column if not exists api_key_hash varchar(128);
 alter table plantaopro.medicos add column if not exists created_at timestamptz not null default now();
 alter table plantaopro.medicos add column if not exists updated_at timestamptz;
-
-commit;

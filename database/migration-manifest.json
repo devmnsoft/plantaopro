@@ -336,7 +336,7 @@
     {
       "version": "2026_v1186_schema_permissoes_compatibilidade",
       "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
-      "checksum": "0ce82226482671dd31e32dc1d54a50ab29fe5c1d432519a7d06a4f263329ad0e",
+      "checksum": "7e0300da69ae292b91574aef00a82190e487a64b55a1b908ca881baa0338e60e",
       "dependsOn": [
         "2026_v117_hardening_v116_runtime"
       ],
@@ -395,7 +395,7 @@
     {
       "version": "2026_v1250_jornada_clinica_operacional",
       "source": "database/migrations/2026_v1250_jornada_clinica_operacional.sql",
-      "checksum": "68def1a2c6832edfbad1c495503acac1e055c27c2f9fa27c74f987c6a62b8f9c",
+      "checksum": "2695c0500536102d0948e19512264529471dd219bff8fcc4d1310b3a4d14a8e5",
       "dependsOn": [
         "2026_v1201_experiencia_premium_meu_dia"
       ],
@@ -460,7 +460,7 @@
     {
       "version": "2026_v192_saved_views",
       "source": "database/migrations/2026_v192_saved_views.sql",
-      "checksum": "36085c17bba5fd2329e5831ecdea7e4053c0788d68f9949174946128e14ab5f8",
+      "checksum": "df55fc3e7c192bc4d6d7d6c8064d38638980e782215fea5a33e5c2ace2bef7b6",
       "dependsOn": [
         "2026_v189_clinical_operational_hardening"
       ],
@@ -515,7 +515,7 @@
     {
       "version": "2026_v2159_saude360_agenda_recepcao",
       "source": "database/schema/370_v2159_saude360_agenda_recepcao.sql",
-      "checksum": "f757c7b90e0ba06117e9b6ddfb81cd62828e4036a927bdc3c1d02bc0e6d1bf9c",
+      "checksum": "cec52f65dc1477179d1e90453c2262e7d4a4b9d5fcc8e250fbafd922145b0211",
       "dependsOn": [
         "2026_v2158_financeiro_medico_conferencia"
       ],
@@ -526,7 +526,7 @@
     {
       "version": "2026_v2160_triagem_consulta_jornada",
       "source": "database/schema/380_v2160_triagem_consulta_jornada.sql",
-      "checksum": "69690197ad0daca6d7f18ef45238e3633c5e3785a1e097e5205ed85e4fef0a0c",
+      "checksum": "313d92fe8c3319ad979d9e1af2808ac748e932110204d0b321cddaed62141403",
       "dependsOn": [
         "2026_v2159_saude360_agenda_recepcao"
       ],
@@ -537,7 +537,7 @@
     {
       "version": "2026_v2163_portal_cliente_modulos",
       "source": "database/schema/390_v2163_portal_cliente_modulos.sql",
-      "checksum": "59ca6fbbdd23e39c9ee86b0f9cd168919f020e8295a0c2f8cd767b5e485dfd53",
+      "checksum": "496b631938ba68ac14d8b582644a985eb3d5535337d020f10c313a74b2eeaab7",
       "dependsOn": [
         "2026_v2160_triagem_consulta_jornada"
       ],
@@ -570,7 +570,7 @@
     {
       "version": "2026_v2170_cobertura_substituicoes",
       "source": "database/schema/420_v2170_cobertura_substituicoes.sql",
-      "checksum": "8169ab265a25053780b4e894c6ef030f2d0ec61629cf581e6eb96b270974870d",
+      "checksum": "7c7fd13bb91f61ad13f1c1da01903d7af52208aef5dc01345888bc15f591d30b",
       "dependsOn": [
         "2026_v2168_conferencia_integridade"
       ],
@@ -702,7 +702,7 @@
     {
       "version": "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade",
       "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
-      "checksum": "bb703b73ad764f20145df24a79c34d7e0b80dcf73b48972fcc9e823ee1eccf35",
+      "checksum": "926b11c2d6da671365a22e590491196857f2d6cc1a4edc3b8dd59fa5c0261ae6",
       "dependsOn": [
         "2026_09_v2199_corrigir_trigger_adm360_validar_tenant"
       ],

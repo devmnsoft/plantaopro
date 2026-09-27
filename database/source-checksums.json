@@ -9,6 +9,8 @@
   "database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql": "1a61b839c29de84ccfbf0db263698a668eaee55033d8929f4d4eaaa3f6744885",
   "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql": "16432ef2198eb03d5b2c216da1cd97ad82af501d6d52f96035c7b7c7050df7ba",
   "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql": "0d4b352f984115ab6a956b72fc2c1f5b3a398ad2aa5b02a3d3e083229b931cf5",
+  "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql": "06c4dc1ea9c82cc242357bd6a11d5d691dc768f8b114ecdbcae7892c1df73a65",
+  "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql": "926b11c2d6da671365a22e590491196857f2d6cc1a4edc3b8dd59fa5c0261ae6",
   "database/migrations/2026_v113_operacional_real.sql": "5b07ca155fe5d588f683c49f6682b2eb860d9d6c2dababc872dfdbb726bb8f32",
   "database/migrations/2026_v114_consolidacao_produto.sql": "f96f73e12ff6e9c528de10d15ec461b5ebde658472f8b473701ce5c86e588e53",
   "database/migrations/2026_v115_regras_faturamento_repasses.sql": "ca01dae4c1382100894795ceb3d4b08816a6b5301c21d20b0a82f53965c39a4f",

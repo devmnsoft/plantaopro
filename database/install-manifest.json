@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.19.7",
-  "generatedAt": "2026-09-25",
+  "schemaVersion": "v2.20.0",
+  "generatedAt": "2026-09-27",
   "sections": [
     {
       "order": 3,
@@ -788,6 +788,35 @@
           "dependsOn": [
             "plantaopro.tenant_modulos_canonico",
             "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 63,
+      "name": "Correção do gatilho de validação de tenant ADM360 v2.19.9",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_trigger_tenant_corrigido",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql"
+        }
+      ]
+    },
+    {
+      "order": 64,
+      "name": "Reconciliação de colunas de médicos compatibilidade v2.20.0",
+      "objects": [
+        {
+          "name": "plantaopro.medicos_compatibilidade_v2200",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
           ]
         }
       ]

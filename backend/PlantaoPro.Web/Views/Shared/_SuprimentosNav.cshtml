@@ -31,7 +31,20 @@
 
             <!-- Grupos de Navegação -->
             <div class="d-flex flex-wrap gap-1 align-items-center" role="menubar">
-                <!-- 1. Cadastros -->
+                <!-- 1. Gestão Organizacional -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-sm @(IsActive("Departamentos") || IsActive("Cargos") || IsActive("Colaboradores") || IsActive("Contratos") || IsActive("ContratoDetalhes") ? "btn-primary text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-diagram-3 me-1"></i>Gestão Organizacional
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark border-secondary shadow">
+                        <li><a class="dropdown-item @(IsActive("Departamentos") ? "active" : "")" asp-action="Departamentos" asp-controller="Administrativo360"><i class="bi bi-building me-2"></i>Departamentos</a></li>
+                        <li><a class="dropdown-item @(IsActive("Cargos") ? "active" : "")" asp-action="Cargos" asp-controller="Administrativo360"><i class="bi bi-person-badge me-2"></i>Cargos</a></li>
+                        <li><a class="dropdown-item @(IsActive("Colaboradores") ? "active" : "")" asp-action="Colaboradores" asp-controller="Administrativo360"><i class="bi bi-people me-2"></i>Colaboradores</a></li>
+                        <li><a class="dropdown-item @(IsActive("Contratos") || IsActive("ContratoDetalhes") ? "active" : "")" asp-action="Contratos" asp-controller="Administrativo360"><i class="bi bi-file-earmark-text me-2"></i>Contratos de Trabalho</a></li>
+                    </ul>
+                </div>
+
+                <!-- 2. Cadastros -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("Cadastros") || IsActive("Parceiros") || IsActive("Produtos") || IsActive("Locais") || IsActive("Lotes") ? "btn-light text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-folder me-1"></i>Cadastros
@@ -46,7 +59,7 @@
                     </ul>
                 </div>
 
-                <!-- 2. Comercial & Cotações -->
+                <!-- 3. Comercial & Cotações -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsPathActive("/Administrativo360/Cotacoes") || IsActive("Orcamentos") || IsActive("OrcamentoNovo") || IsActive("Vendas") ? "btn-warning text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-tag me-1"></i>Comercial & Cotações
@@ -60,7 +73,7 @@
                     </ul>
                 </div>
 
-                <!-- 3. Compras -->
+                <!-- 4. Compras -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("PedidosCompra") || IsActive("Recebimentos") ? "btn-primary text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-bag-check me-1"></i>Compras
@@ -71,7 +84,7 @@
                     </ul>
                 </div>
 
-                <!-- 4. Estoque & Qualidade -->
+                <!-- 5. Estoque & Qualidade -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("Estoque") || IsActive("Movimentacoes") || IsActive("Inspecoes") || IsActive("Ocorrencias") || IsActive("Inventarios") || IsActive("Coleta") ? "btn-success text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-boxes me-1"></i>Estoque & Qualidade
@@ -88,7 +101,7 @@
                     </ul>
                 </div>
 
-                <!-- 5. Operação Cirúrgica -->
+                <!-- 6. Operação Cirúrgica -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("Cirurgias") || IsActive("CirurgiaNova") || IsActive("Vales") || IsActive("ValeNovo") || IsActive("Valorizacao") ? "btn-danger text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-heart-pulse me-1"></i>Operação Cirúrgica
@@ -100,7 +113,7 @@
                     </ul>
                 </div>
 
-                <!-- 6. Financeiro -->
+                <!-- 7. Financeiro -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("TitulosReceber") || IsActive("TitulosPagar") || IsActive("ComissoesPendentes") || IsActive("ContasFinanceiras") || IsActive("FluxoCaixa") || IsActive("FechamentoCaixa") ? "btn-info text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-wallet2 me-1"></i>Financeiro
@@ -116,7 +129,7 @@
                     </ul>
                 </div>
 
-                <!-- 7. Documentos & Integrações -->
+                <!-- 8. Documentos & Integrações -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsPathActive("/Administrativo360/DocumentosXml") || IsPathActive("/Administrativo360/Gestao/Monitor") ? "btn-light text-dark fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-file-earmark-code me-1"></i>Documentos & Integrações
@@ -129,7 +142,7 @@
                     </ul>
                 </div>
 
-                <!-- 8. Relatórios -->
+                <!-- 9. Relatórios -->
                 <div class="btn-group">
                     <button type="button" class="btn btn-sm @(IsActive("Relatorios") || IsActive("RelatoriosFinanceiros") ? "btn-secondary text-white fw-bold" : "btn-outline-secondary text-light") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-file-earmark-bar-graph me-1"></i>Relatórios

@@ -1,0 +1,212 @@
+@model PlantaoPro.Web.Models.ContratoDetalhesViewModel
+@{
+    ViewData["Title"] = "Detalhes do Contrato — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    string Moeda(decimal valor) => valor.ToString("C2", ptBr);
+    string DataBr(DateOnly? data) => data?.ToString("dd/MM/yyyy") ?? "—";
+    string TipoLabel(string tipo) => tipo switch
+    {
+        "CLT" => "CLT",
+        "PJ" => "PJ",
+        "ESTAGIO" => "Estágio",
+        "TEMPORARIO" => "Temporário",
+        _ => tipo
+    };
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/administrativo360-organizacao.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-3 pp-a360-org">
+    <partial name="_SuprimentosNav" />
+    <partial name="_AlertasAcao" />
+
+    <a asp-action="Contratos" class="d-inline-flex align-items-center text-secondary small text-decoration-none me-3 mt-2"><i class="bi bi-arrow-left me-1"></i>Voltar para contratos</a>
+
+    @if (Model.Contrato is null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@(Model.Erro ?? "Contrato não encontrado ou sem acesso neste tenant.")
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    else
+    {
+        var c = Model.Contrato;
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 my-3">
+            <div>
+                <h2 class="h4 mb-1 fw-bold">Contrato de Trabalho <span class="text-secondary fw-normal">· @c.Colaborador</span></h2>
+                <p class="text-muted small mb-0">Matrícula @c.Matricula · registrado em @c.CriadoEm.ToString("dd/MM/yyyy HH:mm")</p>
+            </div>
+            @switch (c.Status)
+            {
+                case "VIGENTE":
+                    <span class="badge bg-success fs-6">Vigente</span>
+                    break;
+                case "ENCERRADO":
+                    <span class="badge bg-secondary fs-6">Encerrado</span>
+                    break;
+                case "CANCELADO":
+                    <span class="badge bg-danger fs-6">Cancelado</span>
+                    break;
+                default:
+                    <span class="badge bg-secondary fs-6">@c.Status</span>
+                    break;
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.Erro))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            </div>
+        }
+
+        <!-- Próxima ação válida / pendência -->
+        @if (c.Status == "VIGENTE")
+        {
+            @if (c.Fim is { } fimVencido && fimVencido < DateOnly.FromDateTime(DateTime.Today))
+            {
+                <div class="alert alert-warning py-2" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>A data final (@DataBr(fimVencido)) já passou e o contrato continua vigente. Próxima ação: encerrar o contrato informando a data real de término.
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info py-2" role="alert">
+                    <i class="bi bi-info-circle me-2"></i>Contrato ativo. Próxima ação válida: encerrar (informando a data final) ou cancelar (quando o registro foi criado incorretamente).
+                </div>
+            }
+        }
+        else if (c.Status == "ENCERRADO")
+        {
+            <div class="alert alert-light py-2 text-dark" role="alert">
+                <i class="bi bi-check-lg me-2"></i>Contrato encerrado em @DataBr(c.Fim). Situação final preservada para auditoria — nenhuma ação adicional está disponível.
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-light py-2 text-dark" role="alert">
+                <i class="bi bi-info-circle me-2"></i>Contrato cancelado por erro de cadastro. O registro permanece no histórico para auditoria — nenhuma ação adicional está disponível.
+            </div>
+        }
+
+        <!-- Informações do contrato -->
+        <div class="row g-3 mt-3">
+            <div class="col-md-6">
+                <div class="card bg-dark border-secondary text-light h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-person-badge me-2 text-info"></i>Colaborador</h5></div>
+                    <div class="card-body">
+                        <div class="fw-bold">@c.Colaborador</div>
+                        <small class="text-secondary">Matrícula @c.Matricula</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-dark border-secondary text-light h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-file-earmark-text me-2 text-info"></i>Registro</h5></div>
+                    <div class="card-body">
+                        <div class="fw-bold">@TipoLabel(c.Tipo)</div>
+                        <small class="text-secondary">Criado em @c.CriadoEm.ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-dark border-secondary text-light h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-calendar-check me-2 text-info"></i>Vigência</h5></div>
+                    <div class="card-body">
+                        <div class="fw-bold">@DataBr(c.Inicio) — @(c.Fim.HasValue ? DataBr(c.Fim.Value) : "prazo indeterminado")</div>
+                        <small class="text-secondary">A data final fica registrada no histórico quando o contrato é encerrado.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-dark border-secondary text-light h-100">
+                    <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-cash-coin me-2 text-info"></i>Remuneração</h5></div>
+                    <div class="card-body">
+                        <div class="fw-bold">@Moeda(c.Salario) / mês</div>
+                        <small class="text-secondary">Carga de @c.CargaHorariaSemanal h semanais</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações disponíveis -->
+        @if (c.Status == "VIGENTE")
+        {
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <div class="card bg-dark border-secondary text-light h-100">
+                        <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-stop-circle me-2 text-warning"></i>Encerrar contrato</h5></div>
+                        <div class="card-body">
+                            <form asp-action="EncerrarContrato" method="post" data-single-submit>
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@c.Id" />
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold" for="encerrarFim">Data final do contrato</label>
+                                    <input type="date" id="encerrarFim" name="fim" value="@(Model.Fim?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm bg-black text-light border-secondary" />
+                                    <div class="form-text text-secondary">Deixe em branco para usar a data de hoje.</div>
+                                </div>
+                                <button type="submit" class="btn btn-warning btn-sm"><i class="bi bi-check-lg me-1"></i>Encerrar contrato</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-dark border-secondary text-light h-100">
+                        <div class="card-header bg-transparent border-secondary"><h5 class="card-title mb-0 h6"><i class="bi bi-x-octagon me-2 text-danger"></i>Cancelar contrato</h5></div>
+                        <div class="card-body">
+                            <p class="small text-secondary mb-2">Indicado quando o registro foi criado incorretamente (datas trocadas, colaborador errado). O contrato passará a status <strong class="text-danger">CANCELADO</strong> e permanecerá no histórico.</p>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalCancelarCt"><i class="bi bi-x-circle me-1"></i>Cancelar contrato</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="mt-3">
+                <div class="card bg-dark border-secondary text-light">
+                    <div class="card-body small text-secondary">
+                        <i class="bi bi-lock me-1"></i>Este contrato está @(c.Status == "ENCERRADO" ? "encerrado" : "cancelado") — situação final preservada para auditoria. Nenhuma ação adicional está disponível.
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Modal: confirmar cancelamento -->
+        <div class="modal fade" id="modalCancelarCt" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <form asp-action="CancelarContrato" method="post" class="modal-content bg-dark text-light border-secondary" data-single-submit>
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@c.Id" />
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title"><i class="bi bi-x-octagon me-2 text-danger"></i>Cancelar contrato?</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="mb-0 small text-secondary">O contrato de "@c.Colaborador" passará a status CANCELADO e permanecerá no histórico para auditoria. Esta ação é indicada quando o registro foi criado incorretamente. Para término normal, use Encerrar.</p>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <script>
+        (function () {
+            document.querySelectorAll('form[data-single-submit]').forEach(function (f) {
+                f.addEventListener('submit', function () {
+                    var b = f.querySelector('button[type="submit"]');
+                    if (b) { b.disabled = true; b.classList.add('opacity-50'); }
+                });
+            });
+        })();
+    </script>
+</div>

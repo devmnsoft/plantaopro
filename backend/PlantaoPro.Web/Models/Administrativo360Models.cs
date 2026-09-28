@@ -2,20 +2,98 @@ namespace PlantaoPro.Web.Models;
 
 public sealed record SelectListItemViewModel(string Value, string Text);
 
-public sealed record Administrativo360ResumoViewModel(int Departamentos, int Cargos, int ColaboradoresAtivos, int ContratosVigentes);
+// COUNT(*) no PostgreSQL retorna bigint; o ViewModel espelha o DTO com long.
+public sealed record Administrativo360ResumoViewModel(long Departamentos, long Cargos, long ColaboradoresAtivos, long ContratosVigentes);
 public sealed record Departamento360ViewModel(Guid Id, string Codigo, string Nome, bool Ativo);
 public sealed record Cargo360ViewModel(Guid Id, string Codigo, string Nome, Guid? DepartamentoId, string? Departamento, bool Ativo);
 public sealed record Colaborador360ViewModel(Guid Id, string Matricula, string Nome, string Cpf, string Email, Guid CargoId, string Cargo, Guid? DepartamentoId, string? Departamento, string Status);
 public sealed record Contrato360ViewModel(Guid Id, Guid ColaboradorId, string Colaborador, string Tipo, DateOnly Inicio, DateOnly? Fim, decimal Salario, int CargaHorariaSemanal, string Status);
 
-public sealed class Administrativo360PageViewModel
+// ===== Gestão Organizacional: uma página por área (resumo, departamentos, cargos, colaboradores, contratos) =====
+
+// Visão geral organizacional (Indicadores + atalhos para as áreas de gestão).
+public sealed class OrganizacaoIndexViewModel
 {
     public Administrativo360ResumoViewModel Resumo { get; init; } = new(0, 0, 0, 0);
-    public IReadOnlyList<Departamento360ViewModel> Departamentos { get; init; } = Array.Empty<Departamento360ViewModel>();
-    public IReadOnlyList<Cargo360ViewModel> Cargos { get; init; } = Array.Empty<Cargo360ViewModel>();
-    public IReadOnlyList<Colaborador360ViewModel> Colaboradores { get; init; } = Array.Empty<Colaborador360ViewModel>();
-    public IReadOnlyList<Contrato360ViewModel> Contratos { get; init; } = Array.Empty<Contrato360ViewModel>();
     public string? Erro { get; init; }
+}
+
+public sealed record DepartamentoEdicaoModel(Guid Id, string Codigo, string Nome);
+public sealed record CargoEdicaoModel(Guid Id, string Codigo, string Nome, Guid? DepartamentoId);
+public sealed record ColaboradorEdicaoModel(Guid Id, string Nome, string Email);
+
+// Listas com paginação real no banco (limit/offset) e contagem total.
+public sealed class DepartamentosIndexViewModel
+{
+    public PagedResult<Departamento360ViewModel> Pagina { get; set; } = PagedResult<Departamento360ViewModel>.Empty();
+    public int Page { get; set; } = 1;
+    public string? Busca { get; set; }
+    public string? ErroLista { get; set; }
+    // Valores do formulário preservados quando a API rejeita o cadastro.
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string? FormError { get; set; }
+    // Preenchida em re-render após falha de edição: a view reabre o modal com os valores.
+    public DepartamentoEdicaoModel? Editar { get; set; }
+}
+
+public sealed class CargosIndexViewModel
+{
+    public PagedResult<Cargo360ViewModel> Pagina { get; set; } = PagedResult<Cargo360ViewModel>.Empty();
+    public int Page { get; set; } = 1;
+    // Departamentos ativos para o seletor (o atual é mantido mesmo inativo na edição).
+    public IReadOnlyList<Departamento360ViewModel> Departamentos { get; set; } = Array.Empty<Departamento360ViewModel>();
+    public string? Busca { get; set; }
+    public string? ErroLista { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public Guid? DepartamentoId { get; set; }
+    public string? FormError { get; set; }
+    public CargoEdicaoModel? Editar { get; set; }
+}
+
+public sealed class ColaboradoresIndexViewModel
+{
+    public PagedResult<Colaborador360ViewModel> Pagina { get; set; } = PagedResult<Colaborador360ViewModel>.Empty();
+    public int Page { get; set; } = 1;
+    public IReadOnlyList<Cargo360ViewModel> Cargos { get; set; } = Array.Empty<Cargo360ViewModel>();
+    public string? Busca { get; set; }
+    public string? Status { get; set; }
+    public string? ErroLista { get; set; }
+    public string Matricula { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string Cpf { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public Guid CargoId { get; set; }
+    public string? FormError { get; set; }
+    public ColaboradorEdicaoModel? Editar { get; set; }
+}
+
+public sealed record Contrato360DetalheViewModel(Guid Id, Guid ColaboradorId, string Colaborador, string Matricula, string Tipo, DateOnly Inicio, DateOnly? Fim, decimal Salario, int CargaHorariaSemanal, string Status, DateTime CriadoEm);
+
+public sealed class ContratoDetalhesViewModel
+{
+    public Contrato360DetalheViewModel? Contrato { get; init; }
+    public string? Erro { get; init; }
+    // Data final preservada quando o encerramento é rejeitado pela API.
+    public DateOnly? Fim { get; init; }
+}
+
+public sealed class ContratosIndexViewModel
+{
+    public PagedResult<Contrato360ViewModel> Pagina { get; set; } = PagedResult<Contrato360ViewModel>.Empty();
+    public int Page { get; set; } = 1;
+    public IReadOnlyList<Colaborador360ViewModel> Colaboradores { get; set; } = Array.Empty<Colaborador360ViewModel>();
+    public string? Busca { get; set; }
+    public string? Status { get; set; }
+    public string? ErroLista { get; set; }
+    public Guid ColaboradorId { get; set; }
+    public string Tipo { get; set; } = "CLT";
+    public DateOnly? Inicio { get; set; }
+    public DateOnly? Fim { get; set; }
+    public decimal Salario { get; set; }
+    public int CargaHorariaSemanal { get; set; } = 40;
+    public string? FormError { get; set; }
 }
 
 public sealed record OrcamentoItemViewModel(

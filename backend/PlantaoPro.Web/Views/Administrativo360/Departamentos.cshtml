@@ -1,0 +1,259 @@
+@model PlantaoPro.Web.Models.DepartamentosIndexViewModel
+@{
+    ViewData["Title"] = "Departamentos — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    string Num(long valor) => valor.ToString("N0", ptBr);
+    var total = Model.Pagina.Total;
+    var fimItem = Math.Min((long)Model.Page * Model.Pagina.PageSize, total);
+    var iniItem = total == 0 ? 0L : fimItem - Model.Pagina.PageSize + 1;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/administrativo360-organizacao.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-3 pp-a360-org">
+    <partial name="_SuprimentosNav" />
+    <partial name="_AlertasAcao" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 fw-bold">Departamentos</h2>
+            <p class="text-muted small mb-0">Estrutura organizacional. Inativar um departamento preserva cargos, colaboradores e todo o histórico.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErroLista))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" data-pp-persist>
+            <i class="bi bi-exclamation-triangle me-2"></i>Não foi possível carregar a lista de departamentos. @Model.ErroLista
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Lista -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-building me-2 text-info"></i>Departamentos cadastrados
+                        <span class="badge bg-secondary ms-1">@Num(total)</span>
+                    </h5>
+                    <form method="get" class="d-flex gap-1">
+                        <input type="hidden" name="page" value="1" />
+                        <input type="text" name="busca" value="@Model.Busca" placeholder="Buscar por código ou nome" class="form-control form-control-sm bg-dark text-light border-secondary" aria-label="Buscar departamento" />
+                        <button type="submit" class="btn btn-sm btn-outline-info" title="Filtrar"><i class="bi bi-search"></i></button>
+                        @if (!string.IsNullOrEmpty(Model.Busca))
+                        {
+                            <a asp-action="Departamentos" class="btn btn-sm btn-outline-secondary" title="Limpar busca"><i class="bi bi-x-circle"></i></a>
+                        }
+                    </form>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0" id="tabelaDeps">
+                            <thead class="table-secondary text-secondary small">
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nome</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                @if (Model.Pagina.HasItems)
+                                {
+                                    foreach (var d in Model.Pagina.Items)
+                                    {
+                                        <tr class="@(d.Ativo ? "" : "opacity-75")">
+                                            <td class="fw-bold">@d.Codigo</td>
+                                            <td>@d.Nome</td>
+                                            <td>
+                                                @if (d.Ativo)
+                                                { <span class="badge bg-success">Ativo</span> }
+                                                else
+                                                { <span class="badge bg-secondary">Inativo</span> }
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    @if (d.Ativo)
+                                                    {
+                                                        <button type="button" class="btn btn-outline-primary" data-editar-dep data-id="@d.Id" data-codigo="@d.Codigo" data-nome="@d.Nome" title="Editar" aria-label="Editar @d.Nome"><i class="bi bi-pencil"></i></button>
+                                                        <button type="button" class="btn btn-outline-warning" data-impacto-dep data-acao="inativar" data-id="@d.Id" data-nome="@d.Nome" title="Inativar" aria-label="Inativar @d.Nome"><i class="bi bi-pause-circle"></i></button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn btn-outline-success" data-impacto-dep data-acao="ativar" data-id="@d.Id" data-nome="@d.Nome" title="Reativar" aria-label="Reativar @d.Nome"><i class="bi bi-play-circle"></i></button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            @if (!string.IsNullOrWhiteSpace(Model.Busca))
+                                            { <span>Nenhum departamento encontrado para a busca "@Model.Busca".</span> }
+                                            else
+                                            { <span>Nenhum departamento cadastrado ainda — use o formulário ao lado.</span> }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.Pagina.TotalPages > 1)
+                    {
+                        <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-top border-secondary gap-2">
+                            <span class="small text-muted">Exibindo @Num(iniItem)–@Num(fimItem) de @Num(total)</span>
+                            <div class="d-flex gap-1">
+                                <a asp-action="Departamentos" asp-route-busca="Model.Busca" asp-route-page="Model.Page - 1" class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")"><i class="bi bi-chevron-left me-1"></i>Anterior</a>
+                                <span class="btn btn-sm btn-secondary disabled">Página @Model.Page de @Model.Pagina.TotalPages</span>
+                                <a asp-action="Departamentos" asp-route-busca="Model.Busca" asp-route-page="Model.Page + 1" class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.Pagina.TotalPages ? "disabled" : "")">Próxima<i class="bi bi-chevron-right ms-1"></i></a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de criação -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-plus-circle me-2 text-info"></i>Novo Departamento</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.FormError))
+                    {
+                        <div class="alert alert-danger py-2 small" role="alert" data-pp-persist>
+                            <i class="bi bi-exclamation-triangle me-1"></i>@Model.FormError
+                        </div>
+                    }
+                    <form asp-action="Departamento" method="post" data-single-submit>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="busca" value="@Model.Busca" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="depCodigo">Código *</label>
+                            <input type="text" id="depCodigo" name="codigo" value="@Model.Codigo" maxlength="30" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: ADM-01" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="depNome">Nome *</label>
+                            <input type="text" id="depNome" name="nome" value="@Model.Nome" maxlength="120" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Administração" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-sm"><i class="bi bi-check-lg me-1"></i>Cadastrar Departamento</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: editar -->
+    <div class="modal fade" id="modalEditarDep" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="AtualizarDepartamento" method="post" class="modal-content bg-dark text-light border-secondary" data-single-submit>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="edDepId" value="" />
+                <input type="hidden" name="busca" value="@Model.Busca" />
+                <input type="hidden" name="page" value="@Model.Page" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2 text-info"></i>Editar Departamento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="edDepCodigo">Código *</label>
+                        <input type="text" id="edDepCodigo" name="codigo" maxlength="30" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="edDepNome">Nome *</label>
+                        <input type="text" id="edDepNome" name="nome" maxlength="120" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: impacto (inativar / reativar) -->
+    <div class="modal fade" id="modalImpactoDep" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="InativarDepartamento" method="post" class="modal-content bg-dark text-light border-secondary" data-single-submit>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="impDepId" value="" />
+                <input type="hidden" name="busca" value="@Model.Busca" />
+                <input type="hidden" name="page" value="@Model.Page" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="impDepTitulo"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Confirmar mudança</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="impDepTexto" class="mb-0 small text-secondary"></p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Editar is not null)
+    {
+        <span id="editarInicial" class="d-none" data-id="@Model.Editar.Id" data-codigo="@Model.Editar.Codigo" data-nome="@Model.Editar.Nome"></span>
+    }
+
+    <script>
+        (function () {
+            document.querySelectorAll('form[data-single-submit]').forEach(function (f) {
+                f.addEventListener('submit', function () {
+                    var b = f.querySelector('button[type="submit"]');
+                    if (b) { b.disabled = true; b.classList.add('opacity-50'); }
+                });
+            });
+
+            var modalEditar = document.getElementById('modalEditarDep');
+            function abrirEdicao(id, codigo, nome) {
+                document.getElementById('edDepId').value = id;
+                document.getElementById('edDepCodigo').value = codigo || '';
+                document.getElementById('edDepNome').value = nome || '';
+                bootstrap.Modal.getOrCreateInstance(modalEditar).show();
+            }
+
+            var formImp = document.querySelector('#modalImpactoDep form');
+            function abrirImpacto(acao, id, nome) {
+                var inativar = acao === 'inativar';
+                formImp.action = inativar ? '/Administrativo360/InativarDepartamento' : '/Administrativo360/AtivarDepartamento';
+                document.getElementById('impDepTitulo').innerHTML = '<i class="bi bi-exclamation-triangle me-2 text-warning"></i>' + (inativar ? 'Inativar departamento?' : 'Reativar departamento?');
+                document.getElementById('impDepTexto').textContent = inativar
+                    ? '"' + nome + '" será marcado como inativo. Ele sai dos seletores de novos cadastros, mas cargos e colaboradores vinculados permanecem com todo o histórico preservado.'
+                    : '"' + nome + '" voltará a aparecer nos seletores para novos vínculos. O histórico anterior permanece intacto.';
+                document.getElementById('impDepId').value = id;
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalImpactoDep')).show();
+            }
+
+            var tabela = document.getElementById('tabelaDeps');
+            if (tabela) {
+                tabela.addEventListener('click', function (e) {
+                    var ed = e.target.closest('[data-editar-dep]');
+                    if (ed) abrirEdicao(ed.dataset.id, ed.dataset.codigo, ed.dataset.nome);
+                    var im = e.target.closest('[data-impacto-dep]');
+                    if (im) abrirImpacto(im.dataset.acao, im.dataset.id, im.dataset.nome);
+                });
+            }
+
+            var inicial = document.getElementById('editarInicial');
+            if (inicial) {
+                (function abrirQuandoPronto(n) {
+                    if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.codigo, inicial.dataset.nome); return; }
+                    if (n < 250) setTimeout(function () { abrirQuandoPronto(n + 1); }, 40);
+                })(0);
+            }
+        })();
+    </script>
+</div>

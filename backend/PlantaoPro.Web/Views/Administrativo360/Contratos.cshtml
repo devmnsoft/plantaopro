@@ -1,0 +1,236 @@
+@model PlantaoPro.Web.Models.ContratosIndexViewModel
+@{
+    ViewData["Title"] = "Contratos de Trabalho — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    string Num(long valor) => valor.ToString("N0", ptBr);
+    string Moeda(decimal valor) => valor.ToString("C2", ptBr);
+    string DataBr(DateOnly data) => data.ToString("dd/MM/yyyy");
+    string TipoLabel(string tipo) => tipo switch
+    {
+        "CLT" => "CLT",
+        "PJ" => "PJ",
+        "ESTAGIO" => "Estágio",
+        "TEMPORARIO" => "Temporário",
+        _ => tipo
+    };
+    var total = Model.Pagina.Total;
+    var fimItem = Math.Min((long)Model.Page * Model.Pagina.PageSize, total);
+    var iniItem = total == 0 ? 0L : fimItem - Model.Pagina.PageSize + 1;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/administrativo360-organizacao.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-3 pp-a360-org">
+    <partial name="_SuprimentosNav" />
+    <partial name="_AlertasAcao" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 fw-bold">Contratos de Trabalho</h2>
+            <p class="text-muted small mb-0">Admissão, vigência e remuneração dos colaboradores do plantão. Encerrar ou cancelar preserva o registro para auditoria.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErroLista))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" data-pp-persist>
+            <i class="bi bi-exclamation-triangle me-2"></i>Não foi possível carregar a lista de contratos. @Model.ErroLista
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5 col-lg-4">
+                    <label for="ctrBusca" class="form-label small text-secondary">Busca (colaborador)</label>
+                    <input type="text" id="ctrBusca" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ex: nome do colaborador..." />
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <label for="ctrStatus" class="form-label small text-secondary">Status</label>
+                    <select id="ctrStatus" name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os status</option>
+                        <option value="VIGENTE" selected="@(Model.Status == "VIGENTE" ? "selected" : null)">Vigente</option>
+                        <option value="ENCERRADO" selected="@(Model.Status == "ENCERRADO" ? "selected" : null)">Encerrado</option>
+                        <option value="CANCELADO" selected="@(Model.Status == "CANCELADO" ? "selected" : null)">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-auto d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-outline-info"><i class="bi bi-search me-1"></i>Filtrar</button>
+                    <a asp-action="Contratos" class="btn btn-sm btn-outline-secondary" title="Limpar filtros"><i class="bi bi-x-circle"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Lista -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-file-earmark-text me-2 text-info"></i>Contratos
+                        <span class="badge bg-secondary ms-1">@Num(total)</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0">
+                            <thead class="table-secondary text-secondary small">
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th>Tipo</th>
+                                    <th>Início</th>
+                                    <th>Fim</th>
+                                    <th class="text-end">Salário</th>
+                                    <th>Carga/Sem</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Detalhes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                @if (Model.Pagina.HasItems)
+                                {
+                                    foreach (var item in Model.Pagina.Items)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@item.Colaborador</td>
+                                            <td>@TipoLabel(item.Tipo)</td>
+                                            <td>@DataBr(item.Inicio)</td>
+                                            <td>@(item.Fim.HasValue ? DataBr(item.Fim.Value) : "Indefinida")</td>
+                                            <td class="text-end">@Moeda(item.Salario)</td>
+                                            <td>@item.CargaHorariaSemanal h</td>
+                                            <td>
+                                                @switch (item.Status)
+                                                {
+                                                    case "VIGENTE":
+                                                        <span class="badge bg-success">Vigente</span>
+                                                        break;
+                                                    case "ENCERRADO":
+                                                        <span class="badge bg-secondary">Encerrado</span>
+                                                        break;
+                                                    case "CANCELADO":
+                                                        <span class="badge bg-danger">Cancelado</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@item.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <a asp-action="ContratoDetalhes" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Ver detalhes" aria-label="Detalhes do contrato de @item.Colaborador"><i class="bi bi-eye"></i></a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            @if (!string.IsNullOrWhiteSpace(Model.Busca) || !string.IsNullOrWhiteSpace(Model.Status))
+                                            { <span>Nenhum contrato encontrado com os filtros informados.</span> }
+                                            else
+                                            { <span>Nenhum contrato registrado ainda — use o formulário ao lado.</span> }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.Pagina.TotalPages > 1)
+                    {
+                        <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-top border-secondary gap-2">
+                            <span class="small text-muted">Exibindo @Num(iniItem)–@Num(fimItem) de @Num(total)</span>
+                            <div class="d-flex gap-1">
+                                <a asp-action="Contratos" asp-route-busca="Model.Busca" asp-route-status="Model.Status" asp-route-page="Model.Page - 1" class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")"><i class="bi bi-chevron-left me-1"></i>Anterior</a>
+                                <span class="btn btn-sm btn-secondary disabled">Página @Model.Page de @Model.Pagina.TotalPages</span>
+                                <a asp-action="Contratos" asp-route-busca="Model.Busca" asp-route-status="Model.Status" asp-route-page="Model.Page + 1" class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.Pagina.TotalPages ? "disabled" : "")">Próxima<i class="bi bi-chevron-right ms-1"></i></a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de contratação -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-plus-circle me-2 text-info"></i>Nova Contratação</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.FormError))
+                    {
+                        <div class="alert alert-danger py-2 small" role="alert" data-pp-persist>
+                            <i class="bi bi-exclamation-triangle me-1"></i>@Model.FormError
+                        </div>
+                    }
+                    <form asp-action="Contrato" method="post" data-single-submit>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="busca" value="@Model.Busca" />
+                        <input type="hidden" name="status" value="@Model.Status" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="ctrColab">Colaborador ativo *</label>
+                            <select id="ctrColab" name="colaboradorId" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                <option value="">Selecione o colaborador...</option>
+                                @foreach (var colab in Model.Colaboradores)
+                                {
+                                    <option value="@colab.Id" selected="@(Model.ColaboradorId == colab.Id ? "selected" : null)">@colab.Nome (@colab.Matricula)</option>
+                                }
+                            </select>
+                            @if (Model.Colaboradores.Count == 0)
+                            {
+                                <div class="form-text text-secondary">Não há colaboradores ativos no momento — cadastre um primeiro.</div>
+                            }
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="ctrTipo">Tipo de contrato *</label>
+                            <select id="ctrTipo" name="tipo" class="form-select form-select-sm bg-black text-light border-secondary" required>
+                                <option value="CLT" selected="@(Model.Tipo == "CLT" ? "selected" : null)">CLT</option>
+                                <option value="PJ" selected="@(Model.Tipo == "PJ" ? "selected" : null)">PJ</option>
+                                <option value="ESTAGIO" selected="@(Model.Tipo == "ESTAGIO" ? "selected" : null)">Estágio</option>
+                                <option value="TEMPORARIO" selected="@(Model.Tipo == "TEMPORARIO" ? "selected" : null)">Temporário</option>
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold" for="ctrInicio">Início *</label>
+                                <input type="date" id="ctrInicio" name="inicio" value="@(Model.Inicio?.ToString("yyyy-MM-dd"))" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold" for="ctrFim">Fim</label>
+                                <input type="date" id="ctrFim" name="fim" value="@(Model.Fim?.ToString("yyyy-MM-dd"))" class="form-control form-control-sm bg-black text-light border-secondary" />
+                                <div class="form-text text-secondary">Em branco = prazo indeterminado.</div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-7">
+                                <label class="form-label small fw-bold" for="ctrSalario">Salário (R$) *</label>
+                                <input type="number" id="ctrSalario" name="salario" min="0.01" step="0.01" value="@(Model.Salario > 0 ? Model.Salario.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) : "")" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label small fw-bold" for="ctrCarga">Carga (h/sem) *</label>
+                                <input type="number" id="ctrCarga" name="cargaHorariaSemanal" min="1" max="60" step="1" value="@(Model.CargaHorariaSemanal > 0 ? Model.CargaHorariaSemanal.ToString() : "")" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-sm"><i class="bi bi-check-lg me-1"></i>Registrar Contratação</button>
+                        <div class="form-text text-secondary mt-2">O sistema valida elegibilidade do colaborador e sobreposição de vigência contra outros contratos.</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            document.querySelectorAll('form[data-single-submit]').forEach(function (f) {
+                f.addEventListener('submit', function () {
+                    var b = f.querySelector('button[type="submit"]');
+                    if (b) { b.disabled = true; b.classList.add('opacity-50'); }
+                });
+            });
+        })();
+    </script>
+</div>

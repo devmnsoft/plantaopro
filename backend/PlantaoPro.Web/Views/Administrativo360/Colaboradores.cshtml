@@ -1,0 +1,348 @@
+@model PlantaoPro.Web.Models.ColaboradoresIndexViewModel
+@{
+    ViewData["Title"] = "Colaboradores — Administrativo 360";
+    var ptBr = new System.Globalization.CultureInfo("pt-BR");
+    string Num(long valor) => valor.ToString("N0", ptBr);
+    string CpfBr(string cpf)
+    {
+        var d = (cpf ?? "").Replace(".", "").Replace("-", "");
+        return d.Length == 11 ? $"{d[..3]}.{d[3..6]}.{d[6..9]}-{d[9..11]}" : cpf;
+    }
+    var total = Model.Pagina.Total;
+    var fimItem = Math.Min((long)Model.Page * Model.Pagina.PageSize, total);
+    var iniItem = total == 0 ? 0L : fimItem - Model.Pagina.PageSize + 1;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/administrativo360-organizacao.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-3 pp-a360-org">
+    <partial name="_SuprimentosNav" />
+    <partial name="_AlertasAcao" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 fw-bold">Colaboradores</h2>
+            <p class="text-muted small mb-0">Matrículas, vínculos funcionais e status. Somente colaboradores ativos podem ser contratados.</p>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErroLista))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" data-pp-persist>
+            <i class="bi bi-exclamation-triangle me-2"></i>Não foi possível carregar a lista de colaboradores. @Model.ErroLista
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary text-light mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-5 col-lg-4">
+                    <label for="colabBusca" class="form-label small text-secondary">Busca (matrícula, nome, CPF ou e-mail)</label>
+                    <input type="text" id="colabBusca" name="busca" value="@Model.Busca" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Ex: MAT-001, João..." />
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <label for="colabStatus" class="form-label small text-secondary">Status</label>
+                    <select id="colabStatus" name="status" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os status</option>
+                        <option value="ATIVO" selected="@(Model.Status == "ATIVO" ? "selected" : null)">Ativo</option>
+                        <option value="AFASTADO" selected="@(Model.Status == "AFASTADO" ? "selected" : null)">Afastado</option>
+                        <option value="DESLIGADO" selected="@(Model.Status == "DESLIGADO" ? "selected" : null)">Desligado</option>
+                    </select>
+                </div>
+                <div class="col-auto d-flex gap-1">
+                    <button type="submit" class="btn btn-sm btn-outline-info"><i class="bi bi-search me-1"></i>Filtrar</button>
+                    <a asp-action="Colaboradores" class="btn btn-sm btn-outline-secondary" title="Limpar filtros"><i class="bi bi-x-circle"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Lista -->
+        <div class="col-lg-8 col-xl-9">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-people me-2 text-info"></i>Colaboradores
+                        <span class="badge bg-secondary ms-1">@Num(total)</span>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover align-middle mb-0" id="tabelaCols">
+                            <thead class="table-secondary text-secondary small">
+                                <tr>
+                                    <th>Matrícula</th>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Cargo</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody class="small">
+                                @if (Model.Pagina.HasItems)
+                                {
+                                    foreach (var item in Model.Pagina.Items)
+                                    {
+                                        <tr>
+                                            <td class="fw-bold">@item.Matricula</td>
+                                            <td>
+                                                @item.Nome
+                                                @if (!string.IsNullOrWhiteSpace(item.Departamento))
+                                                {
+                                                    <div class="text-secondary">Dep. @item.Departamento</div>
+                                                }
+                                                <div class="text-secondary">@item.Email</div>
+                                            </td>
+                                            <td>@CpfBr(item.Cpf)</td>
+                                            <td>@item.Cargo</td>
+                                            <td>
+                                                @switch (item.Status)
+                                                {
+                                                    case "ATIVO":
+                                                        <span class="badge bg-success">Ativo</span>
+                                                        break;
+                                                    case "AFASTADO":
+                                                        <span class="badge bg-warning text-dark">Afastado</span>
+                                                        break;
+                                                    case "DESLIGADO":
+                                                        <span class="badge bg-secondary">Desligado</span>
+                                                        break;
+                                                    default:
+                                                        <span class="badge bg-secondary">@item.Status</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button type="button" class="btn btn-outline-primary" data-editar-colab data-id="@item.Id" data-nome="@item.Nome" data-email="@item.Email" title="Editar dados de contato" aria-label="Editar @item.Nome"><i class="bi bi-pencil"></i></button>
+                                                    @if (item.Status == "ATIVO")
+                                                    {
+                                                        <button type="button" class="btn btn-outline-warning" data-status-colab data-alvo="AFASTADO" data-id="@item.Id" data-nome="@item.Nome" title="Marcar como afastado" aria-label="Afastar @item.Nome"><i class="bi bi-pause-circle"></i></button>
+                                                        <button type="button" class="btn btn-outline-danger" data-status-colab data-alvo="DESLIGADO" data-id="@item.Id" data-nome="@item.Nome" title="Desligar" aria-label="Desligar @item.Nome"><i class="bi bi-person-x"></i></button>
+                                                    }
+                                                    else if (item.Status == "AFASTADO")
+                                                    {
+                                                        <button type="button" class="btn btn-outline-success" data-status-colab data-alvo="ATIVO" data-id="@item.Id" data-nome="@item.Nome" title="Reativar" aria-label="Reativar @item.Nome"><i class="bi bi-person-check"></i></button>
+                                                        <button type="button" class="btn btn-outline-danger" data-status-colab data-alvo="DESLIGADO" data-id="@item.Id" data-nome="@item.Nome" title="Desligar" aria-label="Desligar @item.Nome"><i class="bi bi-person-x"></i></button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn btn-outline-success" data-status-colab data-alvo="ATIVO" data-id="@item.Id" data-nome="@item.Nome" title="Reativar" aria-label="Reativar @item.Nome"><i class="bi bi-person-check"></i></button>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            @if (!string.IsNullOrWhiteSpace(Model.Busca) || !string.IsNullOrWhiteSpace(Model.Status))
+                                            { <span>Nenhum colaborador encontrado com os filtros informados.</span> }
+                                            else
+                                            { <span>Nenhum colaborador cadastrado ainda — use o formulário ao lado.</span> }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (Model.Pagina.TotalPages > 1)
+                    {
+                        <div class="d-flex flex-wrap justify-content-between align-items-center px-3 py-2 border-top border-secondary gap-2">
+                            <span class="small text-muted">Exibindo @Num(iniItem)–@Num(fimItem) de @Num(total)</span>
+                            <div class="d-flex gap-1">
+                                <a asp-action="Colaboradores" asp-route-busca="Model.Busca" asp-route-status="Model.Status" asp-route-page="Model.Page - 1" class="btn btn-sm btn-outline-secondary @(Model.Page <= 1 ? "disabled" : "")"><i class="bi bi-chevron-left me-1"></i>Anterior</a>
+                                <span class="btn btn-sm btn-secondary disabled">Página @Model.Page de @Model.Pagina.TotalPages</span>
+                                <a asp-action="Colaboradores" asp-route-busca="Model.Busca" asp-route-status="Model.Status" asp-route-page="Model.Page + 1" class="btn btn-sm btn-outline-secondary @(Model.Page >= Model.Pagina.TotalPages ? "disabled" : "")">Próxima<i class="bi bi-chevron-right ms-1"></i></a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulário de criação -->
+        <div class="col-lg-4 col-xl-3">
+            <div class="card bg-dark border-secondary text-light">
+                <div class="card-header bg-transparent border-secondary">
+                    <h5 class="card-title mb-0 h6"><i class="bi bi-plus-circle me-2 text-info"></i>Novo Colaborador</h5>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.FormError))
+                    {
+                        <div class="alert alert-danger py-2 small" role="alert" data-pp-persist>
+                            <i class="bi bi-exclamation-triangle me-1"></i>@Model.FormError
+                        </div>
+                    }
+                    <form asp-action="Colaborador" method="post" data-single-submit>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="busca" value="@Model.Busca" />
+                        <input type="hidden" name="status" value="@Model.Status" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="colabMatricula">Matrícula *</label>
+                            <input type="text" id="colabMatricula" name="matricula" value="@Model.Matricula" maxlength="30" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: MAT-0001" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="colabNome">Nome completo *</label>
+                            <input type="text" id="colabNome" name="nome" value="@Model.Nome" maxlength="160" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Ex: Maria Souza" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="colabCpf">CPF *</label>
+                            <input type="text" id="colabCpf" name="cpf" value="@Model.Cpf" maxlength="14" inputmode="numeric" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="000.000.000-00" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="colabEmail">E-mail *</label>
+                            <input type="email" id="colabEmail" name="email" value="@Model.Email" maxlength="180" required class="form-control form-control-sm bg-black text-light border-secondary" placeholder="nome@empresa.com.br" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold" for="colabCargo">Cargo *</label>
+                            <select id="colabCargo" name="cargoId" class="form-select form-select-sm bg-black text-light border-secondary">
+                                <option value="">Selecione o cargo...</option>
+                                @foreach (var cargo in Model.Cargos.Where(c => c.Ativo))
+                                {
+                                    <option value="@cargo.Id" selected="@(Model.CargoId == cargo.Id ? "selected" : null)">@cargo.Nome (@cargo.Codigo)</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 btn-sm"><i class="bi bi-check-lg me-1"></i>Cadastrar Colaborador</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: editar dados de contato -->
+    <div class="modal fade" id="modalEditarColab" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="AtualizarColaborador" method="post" class="modal-content bg-dark text-light border-secondary" data-single-submit>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="edColabId" value="" />
+                <input type="hidden" name="busca" value="@Model.Busca" />
+                <input type="hidden" name="status" value="@Model.Status" />
+                <input type="hidden" name="page" value="@Model.Page" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-pencil me-2 text-info"></i>Editar Dados do Colaborador</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="edColabNome">Nome completo *</label>
+                        <input type="text" id="edColabNome" name="nome" maxlength="160" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="edColabEmail">E-mail *</label>
+                        <input type="email" id="edColabEmail" name="email" maxlength="180" required class="form-control form-control-sm bg-black text-light border-secondary" />
+                    </div>
+                    <div class="form-text text-secondary">Matrícula, CPF e cargo não mudam aqui — identidades e vínculos funcionais seguem processo próprio.</div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Salvar alterações</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: mudar status -->
+    <div class="modal fade" id="modalStatusColab" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <form asp-action="StatusColaborador" method="post" class="modal-content bg-dark text-light border-secondary" data-single-submit>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" id="stColabId" value="" />
+                <input type="hidden" name="busca" value="@Model.Busca" />
+                <input type="hidden" name="status" value="@Model.Status" />
+                <input type="hidden" name="page" value="@Model.Page" />
+                <input type="hidden" name="novoStatus" id="stColabAlvo" value="" />
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="stColabTitulo"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Confirmar mudança de status</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="stColabTexto" class="mb-0 small text-secondary"></p>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.Editar is not null)
+    {
+        <span id="editarInicial" class="d-none" data-id="@Model.Editar.Id" data-nome="@Model.Editar.Nome" data-email="@Model.Editar.Email"></span>
+    }
+
+    <script>
+        (function () {
+            document.querySelectorAll('form[data-single-submit]').forEach(function (f) {
+                f.addEventListener('submit', function () {
+                    var b = f.querySelector('button[type="submit"]');
+                    if (b) { b.disabled = true; b.classList.add('opacity-50'); }
+                });
+            });
+
+            // Máscara de CPF (exibição 000.000.000-00; envio sempre sem máscara)
+            var cpfEl = document.getElementById('colabCpf');
+            if (cpfEl) {
+                function mascaraCpf(v) {
+                    v = v.replace(/\D/g, '').slice(0, 11);
+                    v = v.replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                    return v;
+                }
+                var digitos = cpfEl.value.replace(/\D/g, '');
+                if (digitos.length === 11) cpfEl.value = mascaraCpf(digitos);
+                cpfEl.addEventListener('input', function () { cpfEl.value = mascaraCpf(cpfEl.value); });
+                var cpfForm = cpfEl.closest('form');
+                cpfForm.addEventListener('submit', function () { cpfEl.value = cpfEl.value.replace(/\D/g, ''); });
+            }
+
+            var modalEditar = document.getElementById('modalEditarColab');
+            function abrirEdicao(id, nome, email) {
+                document.getElementById('edColabId').value = id;
+                document.getElementById('edColabNome').value = nome || '';
+                document.getElementById('edColabEmail').value = email || '';
+                bootstrap.Modal.getOrCreateInstance(modalEditar).show();
+            }
+
+            var modaisStatus = {
+                AFASTADO: { titulo: 'Afastar colaborador?', texto: '"NOME" será marcado como AFASTADO. O colaborador deixa de ser elegível para novas contratações até ser reativado.' },
+                DESLIGADO: { titulo: 'Desligar colaborador?', texto: '"NOME" será marcado como DESLIGADO. Contratos vigentes NÃO são encerrados automaticamente — encerre-os individualmente após esta ação. O histórico fica preservado.' },
+                ATIVO: { titulo: 'Reativar colaborador?', texto: '"NOME" voltará ao status ATIVO e poderá receber novas contratações.' }
+            };
+            function abrirStatus(alvo, id, nome) {
+                var cfg = modaisStatus[alvo];
+                document.getElementById('stColabTitulo').innerHTML = '<i class="bi bi-exclamation-triangle me-2 text-warning"></i>' + cfg.titulo;
+                document.getElementById('stColabTexto').textContent = cfg.texto.replace('"NOME"', '"' + nome + '"');
+                document.getElementById('stColabId').value = id;
+                document.getElementById('stColabAlvo').value = alvo;
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalStatusColab')).show();
+            }
+
+            var tabela = document.getElementById('tabelaCols');
+            if (tabela) {
+                tabela.addEventListener('click', function (e) {
+                    var ed = e.target.closest('[data-editar-colab]');
+                    if (ed) abrirEdicao(ed.dataset.id, ed.dataset.nome, ed.dataset.email);
+                    var st = e.target.closest('[data-status-colab]');
+                    if (st) abrirStatus(st.dataset.alvo, st.dataset.id, st.dataset.nome);
+                });
+            }
+
+            var inicial = document.getElementById('editarInicial');
+            if (inicial) {
+                (function abrirQuandoPronto(n) {
+                    if (window.bootstrap && window.bootstrap.Modal) { abrirEdicao(inicial.dataset.id, inicial.dataset.nome, inicial.dataset.email); return; }
+                    if (n < 250) setTimeout(function () { abrirQuandoPronto(n + 1); }, 40);
+                })(0);
+            }
+        })();
+    </script>
+</div>

@@ -1,0 +1,118 @@
+/* ============================================================================
+   Administrativo 360 — Gestão Organizacional (Resumo, Departamentos, Cargos,
+   Colaboradores, Contratos e ContratoDetalhes)
+
+   As telas do módulo usam painéis escuros (cards/modais/table-dark) sobre o
+   canvas claro do app. O design system global (tema claro) sobrescreve as
+   variáveis de tabela, rótulos e títulos definidos pelo Bootstrap, o que
+   gerava texto ilegível (ex.: células white-on-white e labels escuras sobre
+   fundo escuro). Este arquivo reafirma o tema dark APENAS dentro do marcador
+   .pp-a360-org (raiz das 6 views do módulo) e é carregado por último via
+   @section Styles, vencendo os conflitos por ordem e especificidade.
+   ============================================================================ */
+
+/* ---- Títulos e rótulos em superfícies escuras ----------------------------- */
+
+.pp-a360-org .card.bg-dark .card-title,
+.pp-a360-org .card.bg-dark .card-header h5,
+.pp-a360-org .card.bg-dark .card-header h6,
+.pp-a360-org .modal-content.bg-dark .modal-title,
+.pp-a360-org .modal-content.bg-dark h5,
+.pp-a360-org .modal-content.bg-dark h6 {
+    color: #f8f9fa;
+}
+
+.pp-a360-org .card.bg-dark .form-label,
+.pp-a360-org .modal-content.bg-dark .form-label {
+    color: rgba(248, 249, 250, .85);
+    font-weight: 700;
+}
+
+/* Texto secundário/atenuado legível sobre fundo escuro (≥4.5:1) */
+.pp-a360-org .card.bg-dark .text-muted,
+.pp-a360-org .card.bg-dark .text-secondary,
+.pp-a360-org .modal-content.bg-dark .text-muted,
+.pp-a360-org .modal-content.bg-dark .text-secondary {
+    color: rgba(248, 249, 250, .72);
+}
+
+.pp-a360-org .card.bg-dark .form-control::placeholder,
+.pp-a360-org .modal-content.bg-dark .form-control::placeholder {
+    color: rgba(248, 249, 250, .45);
+}
+
+/* Links dentro dos cards escuros (o tema global pinta links com tinta clara) */
+.pp-a360-org .card.bg-dark a:not(.btn) {
+    color: #e9ecef;
+}
+
+.pp-a360-org .card.bg-dark a:not(.btn):hover,
+.pp-a360-org .card.bg-dark a:not(.btn):focus-visible {
+    color: #ffffff;
+}
+
+/* Ícone de fechar visível apenas quando não é o .btn-close-white já claro */
+.pp-a360-org .modal-content.bg-dark .btn-close:not(.btn-close-white) {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ---- Tabelas escuras ------------------------------------------------------- */
+
+/* O tema global força painel branco atrás da tabela (.table-responsive) */
+.pp-a360-org .table-responsive {
+    background-color: #212529;
+    box-shadow: none;
+    border-radius: .5rem;
+}
+
+/* Reafirma as variáveis de tabela que o tema global zera/altera
+   (v2000-premium define --bs-table-bg: transparent em .table) */
+.pp-a360-org .table-dark {
+    --bs-table-bg: #212529;
+    --bs-table-color: #f8f9fa;
+    --bs-table-border-color: #3a424a;
+    --bs-table-hover-bg: #2b3138;
+    --bs-table-active-bg: #2b3138;
+    min-width: 0;
+}
+
+.pp-a360-org .table-dark > :not(caption) > * > * {
+    background-color: #212529;
+    color: #f8f9fa;
+    border-bottom-color: #3a424a;
+}
+
+.pp-a360-org .table-dark tbody td {
+    background-color: #212529;
+}
+
+/* Cabeçalho: o tema global pinta thead th com fundo claro + tinta escura */
+.pp-a360-org .table-dark thead th {
+    background-color: #2a3037;
+    color: rgba(248, 249, 250, .75);
+    border-bottom-color: #4a525a;
+    padding-block: .65rem;
+}
+
+.pp-a360-org .table-dark.table-hover > tbody > tr:hover > * {
+    background-color: #2b3138;
+    color: #ffffff;
+}
+
+/* Estado inativo: mantém atenuação, mas preserva leitura */
+.pp-a360-org .table-dark tbody tr.opacity-75 > * {
+    background-color: rgba(42, 48, 55, .6);
+}
+
+/* Botões contornado dentro de superfícies escuras (legibilidade do rótulo) */
+.pp-a360-org .table-dark .btn-outline-secondary,
+.pp-a360-org .card.bg-dark .btn-outline-secondary {
+    color: #ced4da;
+    border-color: #6c757d;
+}
+
+.pp-a360-org .table-dark .btn-outline-secondary:hover,
+.pp-a360-org .card.bg-dark .btn-outline-secondary:hover {
+    color: #212529;
+    background-color: #dee2e6;
+}

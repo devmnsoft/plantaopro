@@ -20,6 +20,9 @@ using PlantaoPro.CrossCutting.Security;
 using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Infrastructure.Administrativo360;
 
+// O Dapper não mapeia DateOnly em parâmetros; registro global antes de qualquer consulta.
+DapperTypeHandlerRegistrar.RegistrarTodos();
+
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("Default");
 DatabaseStartupReadinessValidator.Validate(connectionString, builder.Environment, builder.Configuration);

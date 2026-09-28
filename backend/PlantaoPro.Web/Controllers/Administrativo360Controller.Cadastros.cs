@@ -238,25 +238,6 @@ public partial class Administrativo360Controller
     }
 
     // ==========================================
-    // COMPRAS E SUPRIMENTOS
-    // ==========================================
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Departamento(string codigo, string nome) =>
-        await Send("api/administrativo360/departamentos", new { codigo, nome }, "Departamento cadastrado.");
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Cargo(string codigo, string nome, Guid? departamentoId) =>
-        await Send("api/administrativo360/cargos", new { codigo, nome, departamentoId }, "Cargo cadastrado.");
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Colaborador(string matricula, string nome, string cpf, string email, Guid cargoId) =>
-        await Send("api/administrativo360/colaboradores", new { matricula, nome, cpf, email, cargoId }, "Colaborador cadastrado.");
-
-    [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> Contrato(Guid colaboradorId, string tipo, DateOnly inicio, DateOnly? fim, decimal salario, int cargaHorariaSemanal) =>
-        await Send("api/administrativo360/contratos", new { colaboradorId, tipo, inicio, fim, salario, cargaHorariaSemanal }, "Contratação registrada.");
-
-    // ==========================================
     // CIRURGIAS OPERACIONAIS
     // ==========================================
 }

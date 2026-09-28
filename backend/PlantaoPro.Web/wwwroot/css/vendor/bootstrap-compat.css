@@ -1,0 +1,9 @@
+/* Compatibilidade Bootstrap 5 (vendorizado em ~/css/vendor/bootstrap.min.css).
+   O Bootstrap 5.3 define color-scheme "light dark" em :root, fazendo widgets nativos
+   (select, date picker) seguirem o tema do sistema operacional. O app mantém tema próprio:
+   light por padrão e dark apenas nas superfícies escuras explícitas. */
+:root { color-scheme: light; }
+
+.bg-black.form-control,
+.bg-black.form-select,
+.bg-black.input-group-text { color-scheme: dark; }

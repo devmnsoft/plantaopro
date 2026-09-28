@@ -34,7 +34,7 @@ BEGIN
 
     INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,razao_social,nome_fantasia,cnpj,status,dados)
     VALUES(v_cliente,v_tenant,'CLINICA_MODELO','Clínica Modelo PlantãoPro','Clínica Modelo PlantãoPro','Clinica Modelo','12345678000199','ATIVO',jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO'))
-    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',reg_update=now();
+    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant,nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
     -- Contexto sem usuários demonstrativos, reservado a testes negativos de
     -- isolamento. Identificadores previsíveis facilitam testes sem conceder
@@ -46,7 +46,7 @@ BEGIN
     INSERT INTO plantaopro.clientes(id,tenant_id,codigo,nome,razao_social,nome_fantasia,cnpj,status,dados)
     VALUES(v_cliente_isolamento,v_tenant_isolamento,'CLINICA_ISOLAMENTO','Clínica Sintética Isolamento','Clínica Sintética Isolamento','Isolamento','98765432000110','ATIVO',
       jsonb_build_object('planoId',v_plano,'ambiente','HOMOLOGACAO','finalidade','ISOLAMENTO'))
-    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant_isolamento,nome=excluded.nome,status='ATIVO',reg_update=now();
+    ON CONFLICT(id) DO UPDATE SET tenant_id=v_tenant_isolamento,nome=excluded.nome,status='ATIVO',atualizado_em=now();
 
     -- O login global tambem precisa ser autocontido: bases antigas ou parciais
     -- podem nao ter recebido o perfil criado pela migration de identidade.
@@ -117,11 +117,12 @@ BEGIN
     ON CONFLICT(id) DO UPDATE SET tenant_id=excluded.tenant_id,cliente_id=excluded.cliente_id,
       usuario_id=excluded.usuario_id,perfil_id=excluded.perfil_id,reg_status='A',reg_update=now();
 
-    INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,nome_fantasia,cnpj,cidade,estado,status,dados)
-    VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','Unidade Modelo','98765432000164','Sao Paulo','SP','ATIVO','{}')
-    ON CONFLICT(id) DO UPDATE SET status='ATIVO',reg_update=now();
+    -- Shape atual da tabela hospitais (v2200): dados auxiliais via jsonb "dados".
+    INSERT INTO plantaopro.hospitais(id,tenant_id,codigo,nome,status,dados)
+    VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca030',v_tenant,'UNIDADE_MODELO','Unidade Clínica Modelo','ATIVO','{"nomeFantasia":"Unidade Modelo","cnpj":"98765432000164","cidade":"Sao Paulo","estado":"SP"}'::jsonb)
+    ON CONFLICT(id) DO UPDATE SET status='ATIVO',atualizado_em=now();
     IF EXISTS(SELECT 1 FROM plantaopro.especialidades WHERE lower(nome)=lower('Clínica Médica')) THEN
-        UPDATE plantaopro.especialidades SET status='ATIVO',reg_update=now() WHERE lower(nome)=lower('Clínica Médica');
+        UPDATE plantaopro.especialidades SET status='ATIVO',atualizado_em=now() WHERE lower(nome)=lower('Clínica Médica');
     ELSE
         INSERT INTO plantaopro.especialidades(id,tenant_id,codigo,nome,status,dados)
         VALUES('8b0c8e74-a81b-4ea2-b499-94755a1ca031',v_tenant,'CLINICA_MEDICA','Clínica Médica','ATIVO','{}');

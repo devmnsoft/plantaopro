@@ -4,6 +4,7 @@ Data: 2026-09-26 · Ambiente: local dev · Banco: `postgres`/schema `plantaopro`
 
 > Atualização 2026-09-28: execuções BLOCO A+B concluídas. P1, P3, P5 e P6 desta seção foram resolvidos; novos achados da execução estão no §3.
 > Atualização 2026-09-28 (BLOCOS C–D): **P2 e P8 RESOLVIDOS** (§3.1); split do `Administrativo360Controller` em parciais por domínio; template `_AlertasAcao` compartilhado com renderização byte-idêntica às variantes pré-refatoração.
+> Atualização 2026-09-28 (BLOCO E): testes reproduzíveis no repo (matriz de API + check de idempotência de seeds), banco unificado em `plantaopro_test` e seeds legados reparados/idempotentes (×2 sem duplicação) — ver §3.4.
 
 Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do gestor. Classificação: **Alto** (bloqueia uso real), **Médio** (confusão/risco operacional), **Baixo** (higiene/técnica).
 
@@ -96,4 +97,16 @@ Fase 1 concluída quando: P1–P3 com testes verdes em CI e sem regressão no fl
 - **Trade-off do fix P8**: as 48 permissões continuam viajando na claim única `permissions` (cookie único de 3.184 B, dentro da diretriz de ~4 KB); o follow-up recomendado continua sendo store server-side (cookie só id + tenant + hash) se o catálogo crescer.
 - **Flake de teste**: `IsolamentoCadastros_ValidacoesDeNegocio_DuplicidadeEBloqueios` passa isolado/em build limpo; suíte final 668/668 no build da jornada. Reobservado em 2026-09-28 (ciclo do BLOCO D): 667/668 na corrida completa, 1/1 isolado e 668/668 na reexecução imediata — mesmo padrão de timing/concorrência, sem relação com as mudanças do bloco.
 - **`SaveAsync` do AdminSaas** (SaasCoreServices L122-126) também escrevia as 4 colunas órfãs do v2149 — coberto pela v2201 em qualquer base.
+
+### 3.4 Resolvidos no BLOCO E (2026-09-28)
+
+| Item | Resolução | Prova |
+|---|---|---|
+| Matriz de API fora do repo | Movida para `scripts/homologacao/api_matrix.ps1` (autocontida, suporta `-LogPath`); novo `check-seed-idempotency.ps1` no mesmo diretório | 10/10 PASS pré e pós-seed; check idempotência fails=0 |
+| Banco único dev/test | Secrets API+Web → `Database=plantaopro_test`; senha padrão do `PostgreSqlTestFixture` alinhada ao ambiente | Suíte 668/668 sobre o MESMO banco dos servidores |
+| Seeds legados vs schema v2200 | 12 arquivos reparados (`seeds.sql` canônico, 8 shims top-level, v114, dev 122/130): dedupe por chave natural, guardas `to_regclass`, mapping duplo jsonb `dados` (v2200) × colunas ricas (legado `clinica_*`) | Probe de 20 arquivos OK sobre base semeada |
+| Seed ×2 duplicando linhas | `v114_*`: `ON CONFLICT DO NOTHING` sem alvo nunca disparava (só unique é o pkey uuid) → `not exists` na chave natural; `escalas`: guarda por status não batia com formas femininas existentes contra o índice parcial único `ux_escala_ocupacao_ativa` → exclusão de pares ocupados + ordem determinística | `seed-idempotencia.log`: delta zero nas 324 tabelas na segunda aplicação |
+| Gatilho quebrado (função v2190 `adm360_validar_tenant()`) | `v2199` (IF/ELSIF por tabela) aplicada e registrada em `plantaopro_test`; `postgres` congelado como referência (exceção de aplicação manual — P7) | Seed 140 verde sem edição após v2199 |
+
+Causas raízes detalhadas em `RELATORIO-BLOCO-E-TESTES-REPRODUZIVEIS.md` (declaração final: **MVP INTERNO APTO PARA HOMLOGAÇÃO**).
 

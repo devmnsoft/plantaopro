@@ -137,6 +137,7 @@ BEGIN
         ALTER TABLE plantaopro.plantoes ADD COLUMN IF NOT EXISTS observacoes text;
         ALTER TABLE plantaopro.plantoes ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A';
         ALTER TABLE plantaopro.plantoes ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now();
+        ALTER TABLE plantaopro.plantoes ADD COLUMN IF NOT EXISTS created_by uuid;
     END IF;
 
     IF to_regclass('plantaopro.escalas') IS NOT NULL THEN
@@ -149,6 +150,8 @@ BEGIN
         ALTER TABLE plantaopro.escalas ADD COLUMN IF NOT EXISTS created_by uuid;
         ALTER TABLE plantaopro.escalas ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A';
         ALTER TABLE plantaopro.escalas ADD COLUMN IF NOT EXISTS reg_date timestamptz DEFAULT now();
+        ALTER TABLE plantaopro.escalas ADD COLUMN IF NOT EXISTS data_inicio timestamptz;
+        ALTER TABLE plantaopro.escalas ADD COLUMN IF NOT EXISTS data_fim timestamptz;
     END IF;
 
     -- 3. Garantir dados básicos do tenant demo se não existirem
@@ -174,6 +177,8 @@ BEGIN
     END IF;
 
     IF to_regclass('plantaopro.unidades') IS NOT NULL THEN
+        ALTER TABLE plantaopro.unidades ADD COLUMN IF NOT EXISTS cliente_id uuid;
+        ALTER TABLE plantaopro.unidades ADD COLUMN IF NOT EXISTS reg_status char(1) DEFAULT 'A';
         INSERT INTO plantaopro.unidades(id, cliente_id, tenant_id, codigo, nome, status, reg_status)
         VALUES (v_unit_id, v_client_id, v_tenant_id, 'UNIDADE_DEMO', 'Unidade Central — Demonstração', 'ATIVA', 'A')
         ON CONFLICT (id) DO UPDATE SET
@@ -480,6 +485,9 @@ BEGIN
     END IF;
 
     IF to_regclass('plantaopro.plantao_convites') IS NOT NULL THEN
+        ALTER TABLE plantaopro.plantao_convites ADD COLUMN IF NOT EXISTS usuario_id uuid;
+        ALTER TABLE plantaopro.plantao_convites ADD COLUMN IF NOT EXISTS mensagem text;
+        ALTER TABLE plantaopro.plantao_convites ADD COLUMN IF NOT EXISTS data_envio timestamptz;
         INSERT INTO plantaopro.plantao_convites(
             id, tenant_id, plantao_id, medico_id, usuario_id, status, mensagem, data_envio, reg_status
         ) VALUES (

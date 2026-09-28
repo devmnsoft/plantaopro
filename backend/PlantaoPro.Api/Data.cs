@@ -428,7 +428,8 @@ where up.usuario_id=@id
                 var token = GenerateToken(usuarioId, user.Nome, user.Email, user.ClienteNome, isGlobal, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules, clienteStatus);
                 await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId }, cancellationToken: cancellationToken));
                 await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, "SUCCESS", cancellationToken: cancellationToken);
-                await audit.RegistrarAsync(usuarioId, clienteId, AuditoriaConstants.Entidades.Usuario, usuarioId, AuditoriaConstants.Acoes.LoginSucesso, new { identifierKind, accessScope, primaryRole, tenantContextSelected, modules = modules.Length, clienteStatus }, true, ip, primaryRole, cancellationToken);
+                // Auditoria LOGIN_SUCESSO: fonte unica no controller (AuthController/MobileController).
+                // A escrita anterior aqui somava 2 linhas por login (duplicidade controller+servico).
                 await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua, cancellationToken);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
                 return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules, isGlobal ? null : clienteStatus), "Login realizado com sucesso.");

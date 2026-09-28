@@ -54,7 +54,7 @@ namespace PlantaoPro.Api.Controllers
                     AuditoriaConstants.Entidades.Usuario,
                     r.Data?.UsuarioId,
                     r.Success ? AuditoriaConstants.Acoes.LoginSucesso : AuditoriaConstants.Acoes.LoginFalha,
-                    new { identifier = auditIdentifier, identifierKind, statusCode = r.StatusCode },
+                    new { identifier = auditIdentifier, identifierKind, statusCode = r.StatusCode, accessScope = r.Data?.AccessScope, primaryRole = r.Data?.PrimaryRole, tenantContextSelected = r.Data?.TenantContextSelected, modulos = r.Data?.Modules.Length, clienteStatus = r.Data?.ClienteStatus },
                     r.Success,
                     ip,
                     perfil,

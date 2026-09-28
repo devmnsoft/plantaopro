@@ -3,6 +3,7 @@
 Data: 2026-09-26 · Ambiente: local dev · Banco: `postgres`/schema `plantaopro`
 
 > Atualização 2026-09-28: execuções BLOCO A+B concluídas. P1, P3, P5 e P6 desta seção foram resolvidos; novos achados da execução estão no §3.
+> Atualização 2026-09-28 (BLOCOS C–D): **P2 e P8 RESOLVIDOS** (§3.1); split do `Administrativo360Controller` em parciais por domínio; template `_AlertasAcao` compartilhado com renderização byte-idêntica às variantes pré-refatoração.
 
 Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do gestor. Classificação: **Alto** (bloqueia uso real), **Médio** (confusão/risco operacional), **Baixo** (higiene/técnica).
 
@@ -15,7 +16,7 @@ Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do g
 | # | Item | Onde | Descrição | Mitigação atual | Ação sugerida |
 |---|---|---|---|---|---|
 | P1 | Assimetria de papéis Web × API | `backend/PlantaoPro.Web` (atributos `[Authorize(Roles=...)]` dos controladores ADM360) × `CrossCutting\AccessScope.cs` (RoleCatalog) | Os controladores ADM360 no Web admitem papéis (`GESTOR_OPERACIONAL`, `CONSULTA_CLIENTE`, `AUDITOR`) que não constam no RoleCatalog usado pela API; a API usa um conjunto menor de papéis | Permissão (grant) continua sendo o gate efetivo em ambos os lados; a homologação provou o comportamento por permissão | Unificar catálogo: registrar os papéis ADM360 no RoleCatalog e usar a mesma lista nos dois lados; adicionar teste que compara as duas listas |
-| P2 | Anomalia de roteamento: todo `POST /Account/*` → 405 `Allow: GET` | `backend/PlantaoPro.Web\Program.cs` (template único `{controller=Account}/{action=Login}/{id?}`) + `AccountController.cs` | Comportamento vivo reproduzível: `POST /` funciona (é onde o form aponta → 302 login OK); `POST /Account/Login` e `POST /Account/RefreshContext` (declarações `[HttpPost]`) retornam 405. GET nas mesmas rotas funciona. Build fresco confirmada; sem código customizado produzindo esse 405 (busca por "Allow" vazia). Suspeita: interação default-value de segmento + seleção de endpoint | Funcional: login e renovação de contexto funcionam pelas variantes existentes (form no `/`; RefreshContext via `GET /Account/RefreshContext?returnUrl=…`) | Investigar com route mapper log (DI `IActionDescriptorCollectionProvider`) num ambiente isolado; decidir se normaliza para `[Route("Account/Login")]` explícito; registrar teste de contrato `POST /Account/Login → 200/302` |
+| P2 | **RESOLVIDO (BLOCO D)** — anomalia de roteamento: todo `POST /Account/*` → 405 `Allow: GET` | `backend/PlantaoPro.Web\Program.cs` (template único `{controller=Account}/{action=Login}/{id?}`) + `AccountController.cs` | Comportamento vivo reproduzível: `POST /` funciona (é onde o form aponta → 302 login OK); `POST /Account/Login` e `POST /Account/RefreshContext` (declarações `[HttpPost]`) retornam 405. GET nas mesmas rotas funciona. Build fresco confirmada; sem código customizado produzindo esse 405 (busca por "Allow" vazia). Suspeita: interação default-value de segmento + seleção de endpoint | Funcional: login e renovação de contexto funcionam pelas variantes existentes (form no `/`; RefreshContext via `GET /Account/RefreshContext?returnUrl=…`) | Investigar com route mapper log (DI `IActionDescriptorCollectionProvider`) num ambiente isolado; decidir se normaliza para `[Route("Account/Login")]` explícito; registrar teste de contrato `POST /Account/Login → 200/302` |
 | P3 | Home padrão do AUDITOR cai em AccessDenied | Web — perfil AUDITOR | Login como consulta/AUDITOR redireciona para `/Account/AccessDenied?ReturnUrl=%2FAuditoria%2FIndex`; o AUDITOR não abre sua própria página `/Auditoria/Index` | Fora do caminho crítico ADM360 (ele abre a home ADM360 normalmente — screenshot) | Verificar grant/catálogo da rota Auditoria para AUDITOR; definir home correta por perfil |
 | P4 | Rotas de ações de `Adm360CadastrosController` possivelmente inalcançáveis via attribute routing | `backend/PlantaoPro.Api\Controllers\Adm360CadastrosController.cs` | Ações com `[Http*("...")]` podem não casar com o template de rota do controller; as rotas usadas na matriz (`gestao/dashboard`, `cotacoes`, `cotacoes/mapeamentos`) estão validadas, mas o mapa completo das ações não foi exercitado uma a uma | Escrita crítica coberta pela matriz M3 com persistência | Percorrer todas as ações do controller e executar 1 request cada (teste de fumaça por rota) |
 | P5 | `RefreshContext` reemitir claims de permissão **sem normalização** | `Program.cs` (mapa política → código) + fluxo refresh | No refresh os claims voltam na forma dois-pontos do DB (`ADM360:VER`) enquanto o login normaliza para pontual maiúsculo (`ADM360.MAPEAR_CADASTROS`); as policies resolvem por request, então o impacto é cosmético/defensivo | Homologação passou após refresh (R4b/R5: 302 + ticket novo + página 200) | Fazer o refresh passar pelo mesmo pipeline de normalização do login |
@@ -26,7 +27,7 @@ Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do g
 |---|---|---|---|---|
 | P6 | INSERT sem coluna `nome` | `ModuleContractingService.cs` L128 | O caminho de contratação via serviço não preenche `nome` em `tenant_modulos` (as seeds/pgadmin agora preenchem); pode gerar contrato com nome nulo pela API | Incluir `nome = coalesce(m.nome, m.codigo)` |
 | P7 | `schema_migrations` vazio (0 linhas) | DB `postgres`/`plantaopro` | Migrations aplicadas manualmente neste ambiente (decisão documentada); o runner `Tools.Database` não foi usado para não divergir checksums | Decidir política oficial: backfill de registro com checksums atuais, ou manter manual com manifest como fonte única — documentar |
-| P8 | Cookie de autenticação grande (~14 KB em 3 chunks) | Sessão Web `PlantaoPro.AuthC1..C3` | Acima da diretriz de ~4 KB por cookie (mitigado pelo chunking); aumenta overhead por request | Avaliar mover claims pesadas (lista de 48 permissões) para store server-side; manter no cookie só id + tenant + hash |
+| P8 | **RESOLVIDO (BLOCO D)** — cookie de autenticação grande (~14 KB em 3 chunks) | Sessão Web `PlantaoPro.AuthC1..C3` | Acima da diretriz de ~4 KB por cookie (mitigado pelo chunking); aumenta overhead por request | Avaliar mover claims pesadas (lista de 48 permissões) para store server-side; manter no cookie só id + tenant + hash |
 | P9 | Referências desatualizadas em SQL | `scrpt_completo.sql` (header diz v2.1.9.7) e `121_acesso_demo_local.sql` (RAISE menciona "migration v2197") | Textos históricos inconsistentes com a versão real | Alinhar versões comentadas |
 
 ### Observações de ferramenta (não-produto)
@@ -38,7 +39,7 @@ Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do g
 ## 2. Roadmap atualizado
 
 ### Fase 1 — Estabilizar o que foi homologado (imediato, 1–3 dias)
-- [ ] Fix P2 (anomalia POST `/Account/*`) com teste de contrato; é a fonte de mais confusão operacional (mitigada: form no `/` + Logout GET/POST; quirk documentado em §3.3)
+- [x] P2 (anomalia POST `/Account/*`) — RESOLVIDO (BLOCO D): diagnóstico empírico descartou anomalia de produto (os 4 POSTs retornam 302 corretos; causa raiz estava nos scripts de teste — ver §3.1)
 - [x] Fix P1 (RoleCatalog único Web/API) + teste comparativo — BLOCO B
 - [x] Fix P3 (home do AUDITOR) — BLOCO B (seed 121 + grupo AuditoriaAcesso)
 - [x] Registrar em CI: execução dos seeds numa base fresh (prova de fresh-install) — BLOCO A (cenários A–E + guardiã de manifests)
@@ -50,7 +51,7 @@ Nenhuma pendência abaixo bloqueia o MVP do Administrativo 360 nem o acesso do g
 - [ ] Backfill/política de `schema_migrations` (P7)
 
 ### Fase 3 — Reforço de produção (2–4 semanas)
-- [ ] Reduzir tamanho do cookie de sessão (P8)
+- [x] Reduzir tamanho do cookie de sessão (P8) — RESOLVIDO (BLOCO D): claim única `permissions` + JWT fora do cookie (cópia em sessão local); cookie único `PlantaoPro.Auth` 3.184 B; follow-up server-side segue documentado no §3.3
 - [ ] Auditoria de escrita (hoje apenas LOGIN_* e ACESSO_NEGADO; criar `OPERACAO_ESCRITA` ou estender `OPERACAO_RESUMO` para mutações ADM360)
 - [ ] Contrato via `ModuleContractingService` com `nome` (P6) + idempotência testada contra base com contrato duplicado
 - [ ] Limpeza de referências/versiones em SQL (P9)
@@ -72,6 +73,8 @@ Fase 1 concluída quando: P1–P3 com testes verdes em CI e sem regressão no fl
 | P5 (claims de refresh sem normalização) | `SessionClaimsBuilder` único compartilhado por Login e RefreshContext (mesma resposta da API → cookie idêntico); V1200/V2153/V2156 apontam para o builder; normalização canônica `:` → `.` | Testes `SessionClaimsBuilderTests` + jornada P6 (recusa/liberação por RefreshContext sem novo login) |
 | P6 (INSERT sem `nome`) | `nome = coalesce(m.nome, m.codigo)` no upsert de contratação | Jornada P6: linha criada com `nome='Financeiro'` pelo fluxo real (revisão→solicitação→aprovação) |
 | B6 (Logout só GET) | Logout exposto em GET e POST | Matriz de rotas/sessão |
+| P2 (anomalia POST `/Account/*` → 405) | Não se reproduz: os 4 POSTs (`/Account/Login`, `/`, `/Account/RefreshContext`, `/Account/Logout`) retornam 302 corretos, com revogação real no logout (Set-Cookie expired). O 405 de 09-26 tinha causa raiz nos scripts de teste (PS 5.1 descarta arg string vazio para nativos → `--data ''` fazia o curl engolir o próximo flag) | Requisições/response headers capturados com `-D` nos scripts de BLOCO C/D |
+| P8 (cookie ~14 KB em 3 chunks) | JWT (~2,8 KB) removido do cookie (cópia canônica em sessão local, gravada no login/RefreshContext, fonte primária de `BaseWebController.GetJwtToken()`); 48 permissões consolidadas em UMA claim `permissions` (separador vírgula) | Cookie único `PlantaoPro.Auth` (3.184 B), zero chunks `AuthC*`; dashboard byte-idêntica ao snapshot BLOCO C; ACESSO_NEGADO estável em 124; Jornada F 8/8; suíte verde |
 
 ### 3.2 Causas raízes identificadas e corrigidas no BLOCO B
 
@@ -89,7 +92,8 @@ Fase 1 concluída quando: P1–P3 com testes verdes em CI e sem regressão no fl
 - **Drift estrutural `tenants.cliente_id` (bigint) × `clientes.id` (uuid)**: além do `GetAsync` corrigido (F2), o mesmo padrão afeta `ProductivityActionServices.cs` L296 (API do Meu dia 500 com `42883 bigint = uuid`). Requer decisão canônica de tipo e migration dedicada.
 - **Dapper/timestamptz sistêmico**: mapeamento de colunas `timestamptz` para `DateTime?` raw em outros DTOs pode apresentar o mesmo comportamento latente do F3 (só aparece quando o alias não está citado). Corrigir por DTO conforme consumo real, não cegamente.
 - **Comportamento do toggle**: `habilitar/desabilitar-tenant` escreve `PrecoContratado`/`LimiteContratado` como recebidos; body sem preço zera o preço do contrato (observado na jornada: `250.00 → null` na revogação). Sugerido coalescer nulo→valor existente em ciclo futuro.
-- **Sessões em memória**: store de sessões da API some no restart; o cookie mantém as claims (JWT embutido) e páginas normais funcionam, mas `/Account/RefreshContext` exige sessão viva → re-login após cada restart. Avaliar persistência para ambientes compartilhados.
-- **Flake de teste**: `IsolamentoCadastros_ValidacoesDeNegocio_DuplicidadeEBloqueios` passa isolado/em build limpo; suíte final 668/668 no build da jornada.
+- **Sessões em memória**: store de sessões da API some no restart; páginas normais funcionam (claims via cookie), mas `/Account/RefreshContext` exige sessão viva → re-login após cada restart. Avaliar persistência para ambientes compartilhados.
+- **Trade-off do fix P8**: as 48 permissões continuam viajando na claim única `permissions` (cookie único de 3.184 B, dentro da diretriz de ~4 KB); o follow-up recomendado continua sendo store server-side (cookie só id + tenant + hash) se o catálogo crescer.
+- **Flake de teste**: `IsolamentoCadastros_ValidacoesDeNegocio_DuplicidadeEBloqueios` passa isolado/em build limpo; suíte final 668/668 no build da jornada. Reobservado em 2026-09-28 (ciclo do BLOCO D): 667/668 na corrida completa, 1/1 isolado e 668/668 na reexecução imediata — mesmo padrão de timing/concorrência, sem relação com as mudanças do bloco.
 - **`SaveAsync` do AdminSaas** (SaasCoreServices L122-126) também escrevia as 4 colunas órfãs do v2149 — coberto pela v2201 em qualquer base.
 

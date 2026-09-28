@@ -68,7 +68,9 @@ public sealed class V2156SessionSecurityTests
 
         Assert.Contains("SessionClaimsBuilder.Build", refresh);
         Assert.Contains("string.IsNullOrWhiteSpace(ctx.SessionId) ? fallbackSessionId : ctx.SessionId", builder);
-        Assert.Contains("new Claim(\"jwt\", ctx.Token)", builder);
+        // P8: o JWT deixou de ser embutido como claim do cookie (copia canônica na sessão
+        // local); antes disso o cookie saía em 3 chunks (> 4 KB) via ChunkingCookieManager.
+        Assert.DoesNotContain("new Claim(\"jwt\", ctx.Token)", builder);
         Assert.Contains("HttpContext.SignOutAsync", refresh);
         Assert.Contains("HttpContext.Session.Clear()", refresh);
         Assert.Contains("Sua sessão expirou ou foi revogada", refresh);

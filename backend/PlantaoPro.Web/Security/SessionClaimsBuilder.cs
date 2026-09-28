@@ -78,14 +78,30 @@ public static class SessionClaimsBuilder
             new Claim("access_scope", accessScope),
             new Claim("context_mode", contextMode),
             new Claim("session_id", string.IsNullOrWhiteSpace(ctx.SessionId) ? fallbackSessionId : ctx.SessionId),
-            new Claim("jwt", ctx.Token),
+            // P8 (cookie ~14 KB): o JWT da API (~2,8 KB) não é mais embutido no principal/cookie.
+            // A cópia canônica fica na sessão local (AccountController grava "jwt" no login e no
+            // RefreshContext) e é a fonte primária de BaseWebController.GetJwtToken(). Com o JWT
+            // dentro do ticket, o payload protegido passava de 6 KB e o CookieManager do
+            // framework fatiava o cookie em 3 chunks (PlantaoPro.Auth=chunks-3 + AuthC1..C3),
+            // acima do guideline de ~4 KB por cookie. Revogação e isolamento seguem intactos:
+            // o ticket continua assinado/por usuário e RefreshContext reemite o mesmo conjunto.
             new Claim("access_catalog_version", "v2149")
         };
 
-        claims.AddRange((ctx.Permissions ?? Array.Empty<string>())
+        // P8 (cookie ~14 KB): as permissões viram UMA claim combinada ("permissions", separada
+        // por vírgula) em vez de ~48 claims individuais — cada claim do ticket serializado
+        // adiciona ~22 bytes de overhead e somadas elas empurravam o cookie além do limite de
+        // 1 chunk (~4 KB) do CookieManager do framework. O PermissionService lê a claim
+        // combinada, com fallback para o formato antigo em cookies já emitidos antes do fix.
+        var permissionCodes = (ctx.Permissions ?? Array.Empty<string>())
             .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => new Claim("permission", NormalizeAccessCode(value)))
-            .DistinctBy(claim => claim.Value));
+            .Select(value => NormalizeAccessCode(value))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        if (permissionCodes.Length > 0)
+        {
+            claims.Add(new Claim("permissions", string.Join(',', permissionCodes)));
+        }
         claims.AddRange((ctx.Modules ?? Array.Empty<string>())
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => new Claim("module", NormalizeAccessCode(value)))

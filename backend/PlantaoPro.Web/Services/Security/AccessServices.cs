@@ -210,9 +210,27 @@ public sealed class PermissionService : IPermissionService
     public bool CanAccessMedicalArea() => currentUser.IsGlobalAdmin() || currentUser.IsDoctor() || currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Recepcao) || currentUser.HasRole(RolesConstants.AdministradorClinica);
     public bool CanAccessFinancialArea() => currentUser.IsGlobalAdmin() || currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Financeiro) || currentUser.HasRole(RolesConstants.FinanceiroClinica) || currentUser.HasRole(RolesConstants.FaturamentoConvenio) || currentUser.HasRole(RolesConstants.AdministradorClinica);
 
-    private bool HasAccessClaim(string claimType, string expected) => currentUser.User.FindAll(claimType)
-        .Select(claim => NormalizeAccessCode(claim.Value))
-        .Any(value => value == "*" || string.Equals(value, NormalizeAccessCode(expected), StringComparison.OrdinalIgnoreCase));
+    private bool HasAccessClaim(string claimType, string expected)
+    {
+        IEnumerable<string> values;
+        if (string.Equals(claimType, "permission", StringComparison.OrdinalIgnoreCase))
+        {
+            // P8: sessões novas trazem a claim combinada "permissions" (cookie <= ~4 KB);
+            // cookies emitidos antes do fix ainda levam claims individuais "permission" —
+            // mantemos o fallback até esses tickets expirarem.
+            var combined = currentUser.User.FindFirst("permissions")?.Value;
+            values = string.IsNullOrWhiteSpace(combined)
+                ? currentUser.User.FindAll("permission").Select(claim => claim.Value)
+                : combined.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        }
+        else
+        {
+            values = currentUser.User.FindAll(claimType).Select(claim => claim.Value);
+        }
+        return values
+            .Select(value => NormalizeAccessCode(value))
+            .Any(value => value == "*" || string.Equals(value, NormalizeAccessCode(expected), StringComparison.OrdinalIgnoreCase));
+    }
 
     private static readonly HashSet<string> CommonModules = new(StringComparer.OrdinalIgnoreCase)
     {

@@ -144,15 +144,21 @@ public sealed class SessionClaimsBuilderTests
         Assert.Contains(claims, c => c.Type == "cliente" && c.Value == "Santa Casa Demonstração");
         Assert.Contains(claims, c => c.Type == "tenant_id" && c.Value == TenantId.ToString());
         Assert.Contains(claims, c => c.Type == "session_id" && c.Value == "sess-1");
-        Assert.Contains(claims, c => c.Type == "jwt" && c.Value == "token-teste");
+        // P8 (cookie ~14 KB): o JWT da API saiu do principal/cookie para caber no guideline de
+        // ~4 KB por cookie (evita o chunking PlantaoPro.AuthC1..C3 do CookieManager do
+        // framework). Ele segue disponível via sessão local (BaseWebController.GetJwtToken()).
+        Assert.DoesNotContain(claims, c => c.Type == "jwt");
     }
 
     [Fact]
     public void PermissoesEModulosSaoNormalizadosComPontoComoSeparador()
     {
         var (principal, _, _, _, _) = SessionClaimsBuilder.Build(Ctx(), Catalog, Primary, Scopes, "fallback");
-        var permissoes = principal.Claims.Where(c => c.Type == "permission").Select(c => c.Value).OrderBy(v => v).ToArray();
+        // P8: permissões em uma única claim combinada (vírgula), normalizadas ':' -> '.'
+        var combined = principal.Claims.FirstOrDefault(c => c.Type == "permissions")?.Value;
+        var permissoes = (combined ?? string.Empty).Split(',', System.StringSplitOptions.RemoveEmptyEntries | System.StringSplitOptions.TrimEntries).OrderBy(v => v).ToArray();
         Assert.Equal(new[] { "ADM360.ESTOQUE", "ADM360.VER" }, permissoes);
+        Assert.DoesNotContain(principal.Claims, c => c.Type == "permission");
         var modulos = principal.Claims.Where(c => c.Type == "module").Select(c => c.Value).ToArray();
         Assert.Equal(new[] { "ADM360" }, modulos);
     }

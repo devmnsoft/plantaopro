@@ -32,7 +32,7 @@
             <p>Use seu identificador cadastrado para abrir somente a organização e os módulos autorizados.</p>
             @if (!string.IsNullOrWhiteSpace(sessionMessage))
             {
-                <div class="pp-auth-context-message" role="status" aria-live="polite"><app-icon name="Warning" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
+                <div class="pp-auth-context-message" role="status" aria-live="polite" tabindex="-1"><app-icon name="Warning" size="20" /><div><strong>Atenção ao seu acesso</strong><span>@sessionMessage</span></div></div>
             }
             <form asp-controller="Account" asp-action="Login" method="post" id="loginForm" class="pp-form pp-login-form" novalidate data-login-form data-focus-invalid data-submit-loading="manual">
                 @Html.AntiForgeryToken()

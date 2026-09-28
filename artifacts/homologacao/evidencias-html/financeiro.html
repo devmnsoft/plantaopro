@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09243c" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Financeiro</title>
+    <link rel="icon" type="image/svg+xml" href="/media/brand/favicon.svg" />
+    <link rel="apple-touch-icon" href="/media/brand/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/css/plantaopro.css?v=jzR-cAU65azzNmlApjvTPhhQG0awBt6j9Q12TlVvn-M" />
+    <link rel="stylesheet" href="/css/app-icons.css?v=Z1hrew2O18d_ZbiZw3_OLSScBU9xjPHHVrH-hUbdkC4" />
+    <link rel="stylesheet" href="/css/design-system/v2000-premium.css?v=_N-vUVsgKq85R-RaMA_kPdQ9xOrD7rBSkjkPXHVWGxo" />
+    <link rel="stylesheet" href="/css/design-system/v2010-screen-polish.css?v=rnpPhlFlS7vQkJukA3Xk9JIEUE9Zggahgs9ACaEyvYg" />
+    <link rel="stylesheet" href="/css/design-system/v2116-premium-review.css?v=-m6FHWkBRjHYNJRXB2lLZ2O73s-5bOj2gT2U6bMSnTw" />
+    <link rel="stylesheet" href="/css/design-system/v2117-design-stabilization.css?v=3L8w0MuMvlCedU-wa0SgxhePr9vtxxiqgP43n981G00" />
+    <link rel="stylesheet" href="/css/design-system/v2118-functional-polish.css?v=o-EcUzuPsV4hxvUX8lzCGuHDCVjH8qxXp7XWFP6iYbk" />
+    <link rel="stylesheet" href="/css/design-system/v2120-premium-final-polish.css?v=Fd0VrlsLkGAg2PdYnoueGM4n53ihK7aL_QUjPsu8t7Y" />
+    <link rel="stylesheet" href="/css/design-system/v2130-forms.css?v=gzpcd4_djr5-j1HkXNv2dl6x3iwJKsgKwpVyg09Ievw" />
+    <link rel="stylesheet" href="/css/design-system/v2121-saas-guided.css?v=_QAwLsgypc1SD7RqapWzPWmzKjoWgFyw6U2BrwkGqlI" />
+    <link rel="stylesheet" href="/css/design-system/v2122-saas-commerce.css?v=vOoxJM79Tpmi6JMgw_HxJQeb4iP5WQkrDNgsPcvKtbo" />
+    <link rel="stylesheet" href="/css/design-system/v2123-saas-operations.css?v=5ukN1SfFoLaUrWDBnQON6uLNOf2uKAxVcPrbJRk3DZQ" />
+    <link rel="stylesheet" href="/css/design-system/v2124-operational-intelligence.css?v=uMLPqPh1jKfWSIkOvrsMrj62LqhH1I4dnRvrx5Tb11o" />
+    <link rel="stylesheet" href="/css/design-system/drawers.css?v=imyysg1O2yLVq4Oroz59E2k_rRGbGqO7i-0xhNldcgs" />
+    <link rel="stylesheet" href="/css/design-system/v2126-form-feedback.css?v=yRYHi0HK4e8I0q7-aM6XifCUh0noDbzAGcEc7Ayi4iY" />
+    <link rel="stylesheet" href="/css/design-system/v2132-premium-global.css?v=zEFmRSh5A8oyFu2J1hMb2beDAN4iKkhWysDcp0mzbcg" />
+    <link rel="stylesheet" href="/css/design-system/v2133-real-screens.css?v=4H6f-Elt9zlGC4f6O2yE0F22j1IhaioGEvntF2Im4DY" />
+    <link rel="stylesheet" href="/css/design-system/v2134-premium-qa.css?v=AyB2JY0MUZZeGJDwUQoxaZDQ38GmjunhMEy9-e06XKs" />
+    <link rel="stylesheet" href="/css/design-system/v2137-global-ux.css?v=Aufiz3wJw60B61NNL6Ud_PVivSL_uJpnTI59JJtNCEY" />
+    <link rel="stylesheet" href="/css/design-system/v2138-session-internal.css?v=_S1sZqY01x-lkEGIQei31v9komdk8mR7FO5Gy-vc-JQ" />
+    <link rel="stylesheet" href="/css/design-system/v2139-premium-library.css?v=yfHO-if0Wguynqe0VB9IoutSRycEvet4wonzo24wPOs" />
+    <link rel="stylesheet" href="/css/design-system/v2140-guided-journeys.css?v=V9UXNfWM8KYGpF9Aop6ZaAANf6dR8NVGcSXeUHw8G-k" />
+    <link rel="stylesheet" href="/css/design-system/v2141-premium-cockpit.css?v=_-Qfztjiv3kIanGMRY1NHgFd-MQwDZtWaNJMTE-Zz9s" />
+    <link rel="stylesheet" href="/css/design-system/v2142-guided-premium.css?v=g8SJo06tZLuoQVx5ysA8erVxpBrXUK1j5dYQX51C_8o" />
+    <link rel="stylesheet" href="/css/design-system/v2143-qa-visual.css?v=6e6Lv6QJNd2e32C-AMmw6lG0bQlVZn5UgxTe9FfkAJc" />
+    <link rel="stylesheet" href="/css/design-system/v2144-responsive-safe-actions.css?v=ez16XwyezUaCY9IdVvdrtXGqERmYWDa9Fg_t8cvJyBs" />
+    <link rel="stylesheet" href="/css/design-system/v2145-onboarding-help.css?v=dLZdKJ-a09qlH6FnNYEklFtEeRn-vf4RuK8HjxfwdtU" />
+    <link rel="stylesheet" href="/css/design-system/v2146-pending-notifications.css?v=AHi0MX1a-Pg-7XvFRGcAGvPAaz9x8UC6CIrRtRfvWg4" />
+    <link rel="stylesheet" href="/css/design-system/kanban.css?v=rNGyfW0pMWiHAYAY3D200bCrh8r0I_Rk96TNBtyFH3c" />
+    <link rel="stylesheet" href="/css/design-system/v2148-operational-premium.css?v=HoDSmH-GF3dnDm4y5MI8pmL79T1ZQIM8mPLvSEFj2L4" />
+    
+</head>
+<body class="pp-body app-body">
+    <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
+        
+        <div class="pp-app-shell" data-app-shell="true">
+            <aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navegação principal">
+    <header class="sidebar-brand">
+        <a class="sidebar-logo" aria-label="PlantãoPro — início" href="/MinhaCentral"><img class="brand-logo" src="/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
+        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg></button>
+        <div class="sidebar-tenant"><span class="tenant-status" aria-hidden="true"></span><div><strong>Santa Casa Demonstra&#xE7;&#xE3;o</strong><span>ADMINISTRADOR CLIENTE</span></div></div>
+        <button class="sidebar-search" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Abrir busca rápida"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg><span>Busca rápida</span><kbd>Ctrl K</kbd></button>
+    </header>
+    <nav class="sidebar-nav">
+        <div class="nav-section-title"><span>Visão geral</span></div>
+        <a class="nav-link-app " href="/MinhaCentral"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Minha Central</span></a>
+        <a class="nav-link-app " href="/MeuDia"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#calendar"></use></svg><span>Meu dia</span></a>
+        <a class="nav-link-app " href="/Home/Dashboard"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chart-bar"></use></svg><span>Dashboard</span></a>
+        <a class="nav-link-app " href="/Pendencias/MinhasPendencias"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg><span>Central de Pendências</span></a>
+            <div class="nav-section-title"><span>Operação</span></div>
+                <a class="nav-link-app " href="/CommandCenter"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Command Center</span></a>
+            <div class="nav-section-title"><span>Saúde 360</span></div>
+            <div class="nav-section-title"><span>Financeiro</span></div>
+ <a class="nav-link-app active" href="/Financeiro/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg><span>Visão financeira</span></a>             <div class="nav-section-title"><span>Administração do Cliente</span></div>
+ <a class="nav-link-app " href="/Administrativo360/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>Administrativo 360</span></a>  <a class="nav-link-app " href="/Usuarios/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>Usuários</span></a>  <a class="nav-link-app " href="/Perfis"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg><span>Perfis</span></a>  <a class="nav-link-app " href="/Permissoes/Matriz"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#shield-lock"></use></svg><span>Permissões</span></a>  <a class="nav-link-app " href="/Configuracoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg><span>Configurações</span></a>         <div class="nav-section-title"><span>Acompanhamento</span></div>
+        <a class="nav-link-app " href="/Notificacoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#bell"></use></svg><span>Notificações</span></a>
+    </nav>
+    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" href="/Ajuda/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg><span>Central de ajuda</span></a><a class="nav-link-app" href="/Lgpd/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#lock"></use></svg><span>Privacidade e LGPD</span></a><span class="sidebar-version">PlantãoPro v1.95.1 · operação segura</span>
+</footer>
+</aside>
+
+            <div class="pp-main-shell">
+                <header class="pp-topbar app-topbar">
+    <div class="pp-topbar__identity topbar-left">
+        <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg>
+        </button>
+        <div>
+            <nav class="pp-breadcrumb" aria-label="Você está em">
+                <ol class="app-breadcrumb">
+                    <li><a href="/Home/Dashboard">Minha Central</a></li>
+                    <li aria-current="page">Financeiro</li>
+                </ol>
+            </nav>
+            <h1 class="pp-topbar__title page-title">Financeiro</h1>
+            <p class="pp-topbar__subtitle pp-caption d-none d-md-block">Acompanhe prioridades e continue sua jornada.</p>
+        </div>
+    </div>
+    <div class="pp-topbar__actions topbar-actions">
+        <span class="pp-live-context d-none d-xxl-inline-flex" role="status"><span aria-hidden="true"></span> Ambiente operacional</span>
+        <div class="pp-session-health d-none d-xl-flex" role="status" aria-live="polite" data-session-health data-online="true">
+            <span class="pp-session-health__dot" aria-hidden="true"></span>
+            <span><small>Conexão</small><strong data-session-health-label>Protegida</strong></span>
+        </div>
+        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Buscar no PlantãoPro">
+            <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg>
+            <span>Buscar no PlantãoPro</span>
+            <kbd>Ctrl K</kbd>
+        </button>
+        <span class="tenant-context-badge d-none d-lg-inline-flex is-tenant" role="status" aria-label="&#xC1;rea da institui&#xE7;&#xE3;o: Santa Casa Demonstra&#xE7;&#xE3;o"><i class="bi bi-building" aria-hidden="true"></i><span><small>&#xC1;rea da institui&#xE7;&#xE3;o</small><strong>Santa Casa Demonstra&#xE7;&#xE3;o</strong></span></span>
+
+        <span class="plan-usage-mini d-none d-lg-inline-flex"><i class="bi bi-speedometer2"></i><span>Plano n&#xE3;o informado</span><small>uso saudável</small></span>
+
+        <a class="btn btn-light btn-icon" title="Ajuda contextual" aria-label="Ajuda contextual" href="/Ajuda/Index">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg>
+        </a>
+        <button class="btn btn-light btn-icon position-relative notification-menu" type="button" data-notification-open
+        aria-label="Abrir central de notificações" aria-haspopup="dialog" aria-controls="notificationDrawer">
+    <i class="bi bi-bell" aria-hidden="true"></i>
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+          data-notification-count hidden><span data-notification-count-value></span><span class="visually-hidden"> notificações não lidas</span></span>
+</button>
+
+            <a class="btn btn-warning btn-sm d-none d-md-inline-flex" href="/MinhaAssinatura/Upgrade">
+                <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg> Upgrade
+            </a>
+        <div class="pp-user-menu pp-calm-user-menu" data-user-menu>
+    <button class="pp-user-menu__trigger" type="button" data-user-menu-trigger aria-controls="userMenuDropdown" aria-expanded="false" aria-haspopup="menu">
+        <span class="user-avatar" aria-hidden="true"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg></span>
+        <span class="user-info"><span class="user-name">Gestor Santa Casa &#x2014; Demonstra&#xE7;&#xE3;o</span><small>ADMINISTRADOR_CLIENTE</small></span>
+        <svg class="pp-icon" width="16" height="16" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chevron-down"></use></svg>
+    </button>
+    <div class="pp-user-menu__dropdown" id="userMenuDropdown" role="menu" hidden>
+        <div class="pp-user-menu__summary"><strong>Gestor Santa Casa &#x2014; Demonstra&#xE7;&#xE3;o</strong><span>Santa Casa Demonstra&#xE7;&#xE3;o</span></div>
+        <a role="menuitem" href="/Configuracoes/MeuPerfil"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg> Meu perfil</a>
+        <a role="menuitem" href="/Configuracoes/Index"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg> Configurações</a>
+        <div class="pp-user-menu__divider" role="separator"></div>
+        <a class="pp-user-menu__logout" role="menuitem" href="/Account/Logout"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#logout"></use></svg> Sair</a>
+    </div>
+</div>
+
+    </div>
+</header>
+
+                <main class="pp-content app-content" id="mainContent" tabindex="-1">
+                    <div class="pp-content-container">
+                        <section class="pp-context-bar is-tenant " aria-label="Contexto de acesso atual" data-context-bar>
+    <div class="pp-context-bar__scope">
+        <span class="pp-context-bar__icon" aria-hidden="true">
+ <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#building-hospital"></use></svg>         </span>
+        <div>
+            <span class="pp-context-bar__eyebrow">Contexto da institui&#xE7;&#xE3;o</span>
+            <strong>Santa Casa Demonstra&#xE7;&#xE3;o</strong>
+            <small>Dados e a&#xE7;&#xF5;es limitados ao tenant e &#xE0;s permiss&#xF5;es deste perfil.</small>
+        </div>
+    </div>
+    <dl class="pp-context-bar__identity">
+        <div><dt>Usuário</dt><dd>Gestor Santa Casa &#x2014; Demonstra&#xE7;&#xE3;o</dd></div>
+        <div><dt>Perfil</dt><dd>ADMINISTRADOR CLIENTE</dd></div>
+        <div><dt>Modo</dt><dd>Tenant</dd></div>
+    </dl>
+    <div class="pp-context-bar__actions">
+    </div>
+</section>
+
+                        
+
+
+<header class="page-header pp-future-page-header" aria-labelledby="page-context-title">
+    <nav aria-label="Navegação estrutural">
+    <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item">In&#xED;cio</li>
+    </ol>
+</nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mt-3">
+        <div>
+            <p class="text-uppercase text-muted small mb-1"></p>
+            <h1 id="page-context-title" class="h2 mb-2">P&#xE1;gina</h1>
+            <p class="text-muted mb-0">Consulte as informa&#xE7;&#xF5;es e a&#xE7;&#xF5;es dispon&#xED;veis.</p>
+        </div>
+    </div>
+</header>
+
+                        <section class="pp-guided-journey" aria-label="Jornada da institui&#xE7;&#xE3;o" data-guided-journey>
+    <div class="pp-guided-journey__intro">
+        <span class="pp-guided-journey__eyebrow">Experiência guiada</span>
+        <strong>Jornada da institui&#xE7;&#xE3;o</strong>
+        <p>Configure sua institui&#xE7;&#xE3;o e acompanhe a opera&#xE7;&#xE3;o sem sair do contexto contratado.</p>
+    </div>
+    <ol class="pp-guided-journey__steps">
+            <li class="">
+                <a href="/Home/Index">
+                    <span aria-hidden="true">1</span>
+                    <strong>Vis&#xE3;o geral</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Usuarios/Index">
+                    <span aria-hidden="true">2</span>
+                    <strong>Equipe</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Perfis">
+                    <span aria-hidden="true">3</span>
+                    <strong>Perfis</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Plantoes/Index">
+                    <span aria-hidden="true">4</span>
+                    <strong>Opera&#xE7;&#xE3;o</strong>
+                </a>
+            </li>
+    </ol>
+</section>
+
+                        <details class="pp-screen-guide" data-screen-guide>
+    <summary>
+        <span class="pp-screen-guide__icon" aria-hidden="true">?</span>
+        <span>Como usar esta tela</span>
+        <span class="pp-screen-guide__chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="pp-screen-guide__content">
+        <div>
+            <strong data-screen-guide-purpose>Acompanhe valores, pend&#xEA;ncias e etapas do fluxo financeiro.</strong>
+            <p data-screen-guide-audience><span class="pp-screen-guide__label">Quem pode usar:</span> Perfis financeiros e administradores autorizados.</p>
+            <p class="pp-screen-guide__scope"><span class="pp-screen-guide__label">Contexto:</span> somente a institui&#xE7;&#xE3;o vinculada &#xE0; sua sess&#xE3;o.</p>
+        </div>
+        <ol aria-label="Orientação rápida">
+            <li data-screen-guide-action>Use os filtros, confira compet&#xEA;ncia e abra o registro antes de decidir.</li>
+            <li data-screen-guide-care>Baixas e ajustes geram impacto financeiro e trilha de auditoria.</li>
+            <li data-screen-guide-next>Depois de concluir, confirme a mensagem de resultado antes de sair.</li>
+        </ol>
+    </div>
+</details>
+
+                        
+
+<div class="pp-page pp-financial-workspace">
+<header class="pp-page-intro" aria-labelledby="pageTitle">
+    <div class="pp-page-intro__copy">
+        <span class="pp-page-intro__eyebrow">Controle financeiro</span>
+        <h1 id="pageTitle">Financeiro</h1>
+        <p>Acompanhe pagamentos, repasses, diverg&#xEA;ncias, vencimentos e fechamentos operacionais.</p>
+        <p class="pp-page-intro__benefit">Identifique pend&#xEA;ncias financeiras e aja com rastreabilidade.</p>
+    </div>
+        <details class="pp-how-it-works">
+            <summary><span aria-hidden="true">?</span> Como usar esta tela</summary>
+            <ol>
+ <li>Confira valores previstos e realizados.</li>  <li>Analise diverg&#xEA;ncias e pend&#xEA;ncias.</li>  <li>Registre a resolu&#xE7;&#xE3;o antes do fechamento.</li>             </ol>
+        </details>
+</header>
+
+
+<nav class="pp-financial-journey" aria-label="Jornada financeira" data-financial-mvp-journey>
+    <span>Faturamento</span><span class="is-current">Financeiro</span><span>Glosa / contestação</span><span>Pagamento</span><span>Repasse</span><span>Relatório</span>
+</nav>
+
+<form method="get" class="pp-payment-card mb-3" aria-label="Filtros de pagamentos">
+    <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-3"><label class="form-label" for="filter-start">Período inicial</label><input class="form-control" id="filter-start" name="dataInicio" type="date" value="" /></div>
+        <div class="col-12 col-md-3"><label class="form-label" for="filter-end">Período final</label><input class="form-control" id="filter-end" name="dataFim" type="date" value="" /></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="filter-status">Status</label><select class="form-select" id="filter-status" name="status"><option value="">Todos</option><option value="pendente">Pendente</option><option value="pago">Pago</option><option value="contestado">Contestado</option><option value="cancelado">Cancelado</option></select></div>
+        <div class="col-12 col-md-2"><label class="form-label" for="filter-method">Forma de pagamento</label><select class="form-select" id="filter-method" name="formaPagamento"><option value="">Todas</option><option value="PIX">Pix</option><option value="TED">TED</option><option value="DOC">DOC</option><option value="BOLETO">Boleto</option><option value="OUTRO">Outro</option></select></div>
+        <div class="col-12 col-md-2 d-grid"><button class="btn btn-primary" type="submit"><i class="bi bi-funnel" aria-hidden="true"></i> Filtrar</button></div>
+    </div>
+</form>
+
+<section class="pp-kpi-strip" aria-label="Resumo financeiro da página atual">
+    <article class="pp-kpi-card"><span>Total previsto</span><strong>R$ 0,00</strong><small>Composição dos registros exibidos</small></article>
+    <article class="pp-kpi-card"><span>Total pago</span><strong class="text-success">N&#xE3;o informado</strong><small>Somente valores realizados retornados pela API</small></article>
+    <article class="pp-kpi-card pp-kpi-card--warning"><span>Pendentes</span><strong>0</strong><small>Aguardando avanço operacional</small></article>
+    <article class="pp-kpi-card"><span>Cancelados</span><strong>0</strong><small>Registros sem continuidade</small></article>
+</section>
+
+<section class="pp-section" aria-labelledby="financial-status-title">
+    <div class="pp-section-heading"><div><span class="pp-section-kicker">Competência atual</span><h2 id="financial-status-title">Consolidação por status</h2><p>Distribuição calculada somente com os registros retornados nesta página.</p></div></div>
+    <div class="card-body">
+            <section class="empty-state pp-future-empty-state text-center" role="status" aria-label="Sem dados para consolidar">
+    <div class="empty-state-icon" aria-hidden="true"><i class="bi bi-bar-chart"></i></div>
+    <h2 class="h5 mb-2">Sem dados para consolidar</h2>
+    <p class="text-muted mb-3">Ajuste os filtros para analisar a consolida&#xE7;&#xE3;o financeira.</p>
+</section>
+
+    </div>
+</section>
+
+    <div class="pp-empty-state" data-financial-status-honest data-glosa-rules data-repasse-rules>
+        <i class="bi bi-calendar2-x"></i>
+        <h5>Sem pagamentos</h5>
+        <p>A API não retornou lançamentos para os filtros atuais. Isso não significa saldo zero, pagamento pendente, glosa ou repasse.</p><p><strong>Glosas e repasses:</strong> serão exibidos somente quando a fonte financeira fornecer registros vinculados.</p>
+    </div>
+
+<div class="card-footer bg-white">
+    
+</div>
+</div>
+
+                    </div>
+                </main>
+                <footer class="pp-footer app-footer"><span>PlantãoPro • v1.95.1.0</span><span>Development</span><span>Powered by MNSOFT</span></footer>
+
+            </div>
+        </div>
+        <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="Fechar menu" tabindex="-1"></button>
+        <nav class="mobile-navigation d-lg-none" aria-label="Navegação mobile"><a class="mobile-nav-item" href="/Home/Dashboard"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#home"></use></svg><span>Início</span></a><a class="mobile-nav-item" href="/MeuDia"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Meu dia</span></a><button class="mobile-nav-item" id="mobileMenuToggle" type="button" aria-controls="appSidebar" aria-expanded="false"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg><span>Menu</span></button></nav>
+
+        <dialog class="pp-dialog" id="commandPalette" aria-labelledby="commandPaletteTitle">
+    <header class="pp-command-header"><span class="pp-eyebrow">Navegação inteligente</span><h2 id="commandPaletteTitle">Busca rápida</h2></header>
+    <form class="p-3 border-bottom" role="search" data-command-search>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <label class="visually-hidden" for="commandSearchInput">Pesquisar no PlantãoPro</label>
+            <input class="form-control border-0 shadow-none"
+                   id="commandSearchInput"
+                   name="q"
+                   type="search"
+                   minlength="2"
+                   autocomplete="off"
+                   aria-controls="commandSearchResults"
+                   aria-describedby="commandSearchHint"
+                   placeholder="Pacientes, médicos, plantões e unidades" />
+            <button class="btn btn-light btn-sm" type="button" data-command-close aria-label="Fechar busca">
+                <kbd>Esc</kbd>
+            </button>
+        </div>
+        <p class="pp-caption mb-0 mt-2" id="commandSearchHint">Digite ao menos dois caracteres. Dados clínicos não são exibidos.</p>
+    </form>
+    <div class="pp-command-results" id="commandSearchResults" role="listbox" aria-live="polite">
+        <p class="text-secondary p-3 mb-0">Encontre rapidamente o que precisa sem sair da sua jornada.</p>
+    </div>
+</dialog>
+
+        <div id="pp-overlay-root" class="pp-overlay-root" aria-live="polite">
+    <button class="pp-overlay-backdrop" type="button" data-pp-confirm-cancel aria-label="Fechar confirmação"></button>
+    
+<section class="pp-modal pp-confirm-modal pp-future-modal pp-confirm-modal-warning " id="pp-confirm-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="pp-confirm-modal-title" aria-describedby="pp-confirm-modal-description" aria-busy="false" hidden>
+            <div class="modal-header">
+                <div class="pp-confirm-heading">
+                    <span class="pp-confirm-icon" aria-hidden="true"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg></span>
+                    <div>
+                    <span class="pp-confirm-kicker">Confirmação necessária</span>
+                    <h5 class="modal-title mb-0" id="pp-confirm-modal-title" data-pp-confirm-title>Confirmar a&#xE7;&#xE3;o</h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="pp-delete-confirmation"><strong>Revise antes de continuar</strong><p class="mb-0" id="pp-confirm-modal-description" data-pp-confirm-message>Deseja realmente continuar?</p></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" data-pp-confirm-action>
+                        <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#check"></use></svg>
+                    <span>Confirmar</span>
+                    <span class="spinner-border spinner-border-sm d-none" data-pp-confirm-loading aria-hidden="true"></span>
+                </button>
+                <span class="visually-hidden" aria-live="polite" data-pp-confirm-status></span>
+            </div>
+
+</section>
+
+</div>
+<div class="overlay-backdrop" data-overlay-backdrop hidden></div>
+<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden>
+    <header><div><span class="eyebrow">Atualizações reais</span><h2 id="notificationTitle">Notificações</h2></div><button type="button" data-notification-close aria-label="Fechar notificações"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header>
+    <div class="drawer-toolbar">
+        <select aria-label="Filtrar notificações por tipo" data-notification-filter>
+            <option value="">Todos os tipos</option><option value="LOGIN">Login</option><option value="SESSAO">Sessão</option><option value="PLANTAO">Plantão</option><option value="ESCALA">Escala</option><option value="FINANCEIRO">Financeiro</option><option value="CLIENTE">Cliente</option><option value="USUARIO">Usuário</option><option value="PERMISSAO">Permissão</option><option value="COBRANCA">Cobrança</option><option value="AUDITORIA">Auditoria</option><option value="SISTEMA">Sistema</option>
+        </select>
+        <button type="button" class="button button-subtle" data-notification-read-all disabled hidden>Marcar todas como lidas</button>
+    </div>
+    <div class="drawer-body" data-notification-list aria-live="polite" aria-busy="false"></div>
+    <footer class="drawer-footer"><a class="button button-subtle" href="/Notificacoes/Index">Abrir histórico de notificações</a></footer>
+</section>
+
+<section class="app-drawer pp-future-drawer" id="quickActionDrawer" role="dialog" aria-modal="true" aria-labelledby="quickActionTitle" hidden><header><div><span class="eyebrow">Produtividade</span><h2 id="quickActionTitle">Nova ação</h2></div><button type="button" data-drawer-close aria-label="Fechar ações"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header><div class="drawer-body quick-action-list" data-quick-actions></div></section>
+
+<aside class="context-panel" aria-label="Contexto da página" hidden data-context-panel><div data-context-content></div></aside>
+
+
+        <section class="toast-region" aria-label="Mensagens" aria-live="polite" aria-relevant="additions" data-toast-region></section>
+
+        <aside class="app-drawer pp-detail-drawer pp-future-drawer" data-pp-detail-drawer role="dialog" aria-modal="true" aria-labelledby="ppDetailDrawerTitle" aria-describedby="ppDetailDrawerSummary" tabindex="-1" hidden>
+    <header><div><span class="pp-eyebrow" data-detail-kind>Detalhe operacional</span><h2 id="ppDetailDrawerTitle" data-detail-title>Detalhes</h2><span class="pp-detail-drawer__status" data-detail-status></span></div><button type="button" data-detail-close aria-label="Fechar painel de detalhes"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header>
+    <div class="drawer-body" data-detail-body aria-live="polite" aria-busy="false">
+        <div class="pp-detail-drawer__loading" data-detail-loading role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Carregando contexto operacional…</div>
+        <div data-detail-error role="alert" hidden>Não foi possível abrir os detalhes. Tente novamente.</div>
+        <div data-detail-content hidden>
+            <section aria-labelledby="ppDetailSummaryTitle"><h3 id="ppDetailSummaryTitle">Resumo</h3><p id="ppDetailDrawerSummary" data-detail-summary></p><dl class="pp-detail-drawer__metadata" data-detail-metadata></dl></section>
+            <section aria-labelledby="ppDetailTimelineTitle"><h3 id="ppDetailTimelineTitle">Timeline e histórico</h3><ol class="pp-detail-drawer__timeline" data-detail-timeline></ol></section>
+            <section aria-labelledby="ppDetailActionsTitle"><h3 id="ppDetailActionsTitle">Ações disponíveis</h3><div class="pp-detail-drawer__actions" data-detail-actions></div></section>
+        </div>
+    </div>
+</aside>
+
+        <button class="pp-help-trigger" type="button" data-context-help-open aria-controls="contextHelpDrawer" aria-expanded="false">
+    <i class="bi bi-question-circle" aria-hidden="true"></i><span>Ajuda desta tela</span>
+</button>
+<div class="pp-help-backdrop" data-context-help-close hidden></div>
+<aside class="pp-help-drawer" id="contextHelpDrawer" aria-labelledby="contextHelpTitle" aria-hidden="true" tabindex="-1">
+    <header class="pp-help-drawer__header">
+        <div><span class="pp-eyebrow">Guia rápido</span><h2 id="contextHelpTitle">Como usar esta tela</h2></div>
+        <button class="btn btn-sm btn-light" type="button" data-context-help-close aria-label="Fechar ajuda"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </header>
+    <div class="pp-help-drawer__body">
+        <p>Comece pela ação principal no topo e use os filtros para encontrar o que precisa.</p>
+        <ol class="pp-help-steps">
+            <li><strong>Confira o contexto</strong><span>Valide a unidade, o período e o perfil exibidos.</span></li>
+            <li><strong>Revise os status</strong><span>Abra um item para entender detalhes e próximos passos.</span></li>
+            <li><strong>Ajuste a busca</strong><span>Se nada aparecer, limpe ou amplie os filtros.</span></li>
+        </ol>
+        <section class="pp-help-note" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Acesso e permissões</strong><p>As ações disponíveis respeitam seu perfil e a unidade ativa. Se uma opção esperada não aparecer, fale com o administrador.</p></div></section>
+    </div>
+</aside>
+
+    <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="/js/plantaopro-toast.js?v=vmolcyDRKpGeNWHCLQWRrYbtKO0dRpZRycRGgeqMJXs"></script>
+    <script src="/js/plantaopro-ui.js?v=SCj_unGUQyjEPJIQmXkLefwRiOJduudqx3PbEGyIM_c"></script>
+    <script src="/js/form-experience.js?v=oEbsbhB_4Y3dudGGOhMzSv6KhADf7NX7hpAq04gCmRg"></script>
+    <script src="/js/lookup.js?v=c3xISsbXdegU5h9ZtBbINX69g8a1QcqFtPCIPyBQrpM"></script>
+    <script src="/js/components/business-actions.js?v=OarzxE__NK-ZuVGAs-HEyuVdCa35eU_ha_sy3A6AdEg"></script>
+    <script src="/js/v155-medical-ui.js?v=F_x7bFt07fVxqG_FCBylz98FWJNoGc04yAqnlD48lJg"></script>
+    <script src="/js/detail-drawer.js?v=IbY5Z416xJZl-qOvWwvrx8XK90ocY7DjAQ_qlHao71E"></script>
+    <script src="/js/context-help.js?v=qx-wCZzhHxw76GHvFkUYch8y-ivT4OySJHYrp1NABzs"></script>
+        <script src="/js/command-palette.js?v=GufQiEtcJDGL67BKg-ddBHLSKQEv_J7oEYYlbFfZvtI"></script>
+    <script src="/js/service-worker-registration.js?v=2ss7Y4sSqR1TLulSJtUEU8YQoLR0ZvvlknvQZjree5s"></script>
+ <script type="module" src="/js/core/app-shell.js?v=XGaBQq4kkoLtYhC8jS18AsGTgZarFpxas_zCkJw1txo"></script>  <script src="/js/session-health.js?v=Q5n93TqZ0perO6wS6vlzer1Z7WcN6b1MZVUbXXa-lHo"></script>     <script src="/js/v2139-premium-library.js?v=w8cAWWow8B_s8BwI2BtwLvxY3RooWlidnYiyibuhKmM"></script>
+    <script src="/js/v2145-guided-tour.js?v=ov49nq4fYWZQvv5dELqiyuqyyKfPSw6XSwiGD1rG11w"></script>
+    
+</body>
+</html>

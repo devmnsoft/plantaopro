@@ -102,9 +102,14 @@
     });
     window.addEventListener("online", updateConnectionStatus);
 
+    const contextMessage = document.querySelector(".pp-auth-context-message");
     if (errorSummary?.textContent?.trim()) {
         resetSubmission();
         window.queueMicrotask(() => errorSummary.focus());
+    } else if (contextMessage) {
+        // Chegada via ?reason=... (sessão expirada, logout etc.): leva o foco
+        // até a mensagem de contexto para teclado e leitores de tela.
+        window.queueMicrotask(() => contextMessage.focus());
     }
     updateConnectionStatus();
 })();

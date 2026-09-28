@@ -20,9 +20,12 @@ public sealed class V1200BuildAndDatabaseContractTests
     public void WebAccountController_uses_sub_claim_without_jwt_dependency()
     {
         var source = File.ReadAllText(Path.Combine(RepositoryPathResolver.ResolveRoot(), "backend", "PlantaoPro.Web", "Controllers", "AccountController.cs"));
+        var builder = File.ReadAllText(Path.Combine(RepositoryPathResolver.ResolveRoot(), "backend", "PlantaoPro.Web", "Security", "SessionClaimsBuilder.cs"));
         Assert.DoesNotContain("System.IdentityModel.Tokens.Jwt", source);
         Assert.DoesNotContain("JwtRegisteredClaimNames.Sub", source);
-        Assert.Contains("new Claim(\"sub\", login.UsuarioId.ToString())", source);
+        // O claim "sub" é criado no construtor único de sessões consumido por Login e RefreshContext.
+        Assert.Contains("SessionClaimsBuilder.Build", source);
+        Assert.Contains("new Claim(\"sub\", ctx.UsuarioId.ToString())", builder);
     }
 
     [Fact]

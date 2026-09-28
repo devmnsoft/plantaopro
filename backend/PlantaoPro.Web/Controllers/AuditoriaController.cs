@@ -5,7 +5,7 @@ using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
-[Authorize(Roles = "ADMINISTRADOR_GLOBAL," + RolesConstants.Administrador)]
+[Authorize(Roles = RolesConstants.AuditoriaAcesso)]
 public class AuditoriaController : BaseWebController
 {
     public AuditoriaController(IHttpClientFactory f, ILogger<AuditoriaController> l) : base(f, l) { }

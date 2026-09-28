@@ -430,5 +430,12 @@
       "plantaopro.operacao_plantoes"
     ],
     "source": "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql"
+  },
+  {
+    "object": "plantaopro.modulos_sistema_comercial_v2201",
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql"
   }
 ]

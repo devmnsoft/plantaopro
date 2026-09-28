@@ -62,9 +62,13 @@ public sealed class V2156SessionSecurityTests
     {
         var web = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Controllers/AccountController.cs"));
         var refresh = web[web.IndexOf("public async Task<IActionResult> RefreshContext", StringComparison.Ordinal)..];
+        // session_id e jwt seguem o construtor único de claims: preservados quando a API
+        // devolve, com fallback para a sessão local quando não devolve.
+        var builder = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Security/SessionClaimsBuilder.cs"));
 
-        Assert.Contains("new Claim(\"session_id\", login.SessionId)", refresh);
-        Assert.Contains("new Claim(\"jwt\", login.Token)", refresh);
+        Assert.Contains("SessionClaimsBuilder.Build", refresh);
+        Assert.Contains("string.IsNullOrWhiteSpace(ctx.SessionId) ? fallbackSessionId : ctx.SessionId", builder);
+        Assert.Contains("new Claim(\"jwt\", ctx.Token)", builder);
         Assert.Contains("HttpContext.SignOutAsync", refresh);
         Assert.Contains("HttpContext.Session.Clear()", refresh);
         Assert.Contains("Sua sessão expirou ou foi revogada", refresh);

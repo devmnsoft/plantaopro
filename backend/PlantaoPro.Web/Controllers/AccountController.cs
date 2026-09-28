@@ -97,76 +97,10 @@ public sealed class AccountController : Controller
             }
 
             var login = apiResult.Data;
-            var normalizedRoles = (login.Roles ?? Array.Empty<string>())
-                .Select(_roleCatalog.Normalize)
-                .Where(r => !string.IsNullOrWhiteSpace(r))
-                .Cast<string>()
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToArray();
-            var primaryRole = string.IsNullOrWhiteSpace(login.PrimaryRole) ? _primaryRoleResolver.Resolve(normalizedRoles) : _roleCatalog.Normalize(login.PrimaryRole) ?? _primaryRoleResolver.Resolve(normalizedRoles);
-            var accessScope = string.IsNullOrWhiteSpace(login.AccessScope) ? _accessScopeResolver.Resolve(normalizedRoles, login.TenantContextSelected) : login.AccessScope;
-            var contextMode = string.IsNullOrWhiteSpace(login.ContextMode) ? (login.TenantId.HasValue ? AccessScopes.Tenant : AccessScopes.Global) : login.ContextMode;
-
+            var (principal, primaryRole, accessScope, contextMode, normalizedRoles) = SessionClaimsBuilder.Build(
+                ToSessionLoginContext(login), _roleCatalog, _primaryRoleResolver, _accessScopeResolver, HttpContext.Session.Id);
             var hasGlobalAccess = normalizedRoles.Any(role => _roleCatalog.IsGlobal(role));
             var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => _roleCatalog.RequiresTenant(role));
-
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
-                new Claim("sub", login.UsuarioId.ToString()),
-                new Claim("uid", login.UsuarioId.ToString()),
-                new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(login.Nome) ? "Usuário PlantãoPro" : login.Nome),
-                new Claim(ClaimTypes.Email, login.Email ?? string.Empty),
-                new Claim("email", login.Email ?? string.Empty),
-                new Claim(ClaimTypes.Role, primaryRole),
-                new Claim("role", primaryRole),
-                new Claim("Perfil", primaryRole),
-                new Claim("primary_role", primaryRole),
-                new Claim("roles", string.Join(',', normalizedRoles)),
-                new Claim("is_global_admin", hasGlobalAccess.ToString().ToLowerInvariant()),
-                new Claim("access_scope", accessScope),
-                new Claim("context_mode", contextMode),
-                new Claim("session_id", string.IsNullOrWhiteSpace(login.SessionId) ? HttpContext.Session.Id : login.SessionId),
-                new Claim("jwt", login.Token),
-                new Claim("access_catalog_version", "v2149")
-            };
-
-            claims.AddRange((login.Permissions ?? Array.Empty<string>())
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => new Claim("permission", NormalizeAccessCode(value)))
-                .DistinctBy(claim => claim.Value));
-            claims.AddRange((login.Modules ?? Array.Empty<string>())
-                .Where(value => !string.IsNullOrWhiteSpace(value))
-                .Select(value => new Claim("module", NormalizeAccessCode(value)))
-                .DistinctBy(claim => claim.Value));
-
-            if (login.ClienteId.HasValue)
-            {
-                var clienteId = login.ClienteId.Value.ToString();
-                claims.Add(new Claim("cliente_id", clienteId));
-                claims.Add(new Claim("cliente", login.ClienteNome ?? "Cliente PlantãoPro"));
-                if (!string.IsNullOrWhiteSpace(login.ClienteStatus))
-                {
-                    claims.Add(new Claim("cliente_status", login.ClienteStatus.Trim().ToUpperInvariant()));
-                }
-            }
-            if (login.TenantId.HasValue)
-            {
-                claims.Add(new Claim("tenant_id", login.TenantId.Value.ToString()));
-                claims.Add(new Claim("tenant", login.TenantNome ?? login.ClienteNome ?? "Tenant PlantãoPro"));
-            }
-
-            foreach (var role in normalizedRoles)
-            {
-                var normalizedRole = _roleCatalog.Normalize(role);
-                if (!string.IsNullOrWhiteSpace(normalizedRole) && !claims.Any(c => c.Type == ClaimTypes.Role && c.Value == normalizedRole))
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, normalizedRole));
-                }
-            }
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
             {
@@ -276,7 +210,26 @@ public sealed class AccountController : Controller
         return digits.Length switch { 11 => "CPF", 14 => "CNPJ", _ => "INVALIDO" };
     }
 
-    private static string NormalizeAccessCode(string value) => value.Trim().ToUpperInvariant().Replace(':', '.');
+    // Mapeia a resposta da API para o contexto imutável consumido pelo SessionClaimsBuilder,
+    // usado pelos dois caminhos (Login e RefreshContext) para produzir o mesmo conjunto de claims.
+    private static SessionLoginContext ToSessionLoginContext(LoginResponse login) => new(
+        login.UsuarioId,
+        login.Nome,
+        login.Email,
+        login.Roles,
+        login.Permissions,
+        login.Modules,
+        login.PrimaryRole,
+        login.AccessScope,
+        login.TenantContextSelected,
+        login.ContextMode,
+        login.ClienteId,
+        login.ClienteNome,
+        login.ClienteStatus,
+        login.TenantId,
+        login.TenantNome,
+        login.SessionId,
+        login.Token);
 
     private IActionResult RedirectToActionByPerfil(IEnumerable<string> roles)
     {
@@ -342,6 +295,8 @@ public sealed class AccountController : Controller
     }
 
     [Authorize]
+    [HttpGet]
+    [HttpPost]
     public async Task<IActionResult> Logout()
     {
         var usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -448,42 +403,25 @@ public sealed class AccountController : Controller
             if (apiResult?.Data != null)
             {
                 var login = apiResult.Data;
-                HttpContext.Session.SetString("jwt", login.Token);
-                HttpContext.Session.SetString("JwtToken", login.Token);
-                var normalizedRoles = (login.Roles ?? Array.Empty<string>())
-                    .Select(_roleCatalog.Normalize)
-                    .Where(r => !string.IsNullOrWhiteSpace(r))
-                    .Cast<string>()
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-                var primaryRole = string.IsNullOrWhiteSpace(login.PrimaryRole) ? _primaryRoleResolver.Resolve(normalizedRoles) : _roleCatalog.Normalize(login.PrimaryRole) ?? _primaryRoleResolver.Resolve(normalizedRoles);
-                var accessScope = string.IsNullOrWhiteSpace(login.AccessScope) ? _accessScopeResolver.Resolve(normalizedRoles, login.TenantContextSelected) : login.AccessScope;
-                var contextMode = string.IsNullOrWhiteSpace(login.ContextMode) ? (login.TenantId.HasValue ? AccessScopes.Tenant : AccessScopes.Global) : login.ContextMode;
+                // Mesmo construtor de claims do Login: a atualização de contexto produz o
+                // conjunto completo e normalizado (inclui access_catalog_version, permissões/
+                // módulos normalizados e status do cliente), eliminando o desvio entre
+                // login e refresh que quebrava o gate por módulo contratado.
+                var (principal, primaryRole, accessScope, contextMode, _) = SessionClaimsBuilder.Build(
+                    ToSessionLoginContext(login), _roleCatalog, _primaryRoleResolver, _accessScopeResolver, HttpContext.Session.Id);
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, login.UsuarioId.ToString()),
-                    new Claim(ClaimTypes.Name, login.Nome ?? string.Empty),
-                    new Claim(ClaimTypes.Email, login.Email ?? string.Empty),
-                    new Claim("uid", login.UsuarioId.ToString()),
-                    new Claim("primary_role", primaryRole),
-                    new Claim("access_scope", accessScope),
-                    new Claim("context_mode", contextMode)
-                };
-                if (!string.IsNullOrWhiteSpace(login.SessionId)) claims.Add(new Claim("session_id", login.SessionId));
-                if (!string.IsNullOrWhiteSpace(login.Token)) claims.Add(new Claim("jwt", login.Token));
-                claims.AddRange((login.Permissions ?? Array.Empty<string>()).Select(p => new Claim("permission", p)).DistinctBy(c => c.Value));
-                claims.AddRange((login.Modules ?? Array.Empty<string>()).Select(m => new Claim("module", m)).DistinctBy(c => c.Value));
-                if (login.ClienteId.HasValue) claims.Add(new Claim("cliente_id", login.ClienteId.Value.ToString()));
-                if (login.TenantId.HasValue) claims.Add(new Claim("tenant_id", login.TenantId.Value.ToString()));
-                foreach (var role in normalizedRoles) claims.Add(new Claim(ClaimTypes.Role, role));
-
-                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
                 {
                     IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
+                HttpContext.Session.SetString("jwt", login.Token);
+                HttpContext.Session.SetString("JwtToken", login.Token);
+                HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);
+                HttpContext.Session.SetString("UsuarioEmail", login.Email ?? string.Empty);
+                HttpContext.Session.SetString("UsuarioPerfil", primaryRole);
+                HttpContext.Session.SetString("AccessScope", accessScope);
+                HttpContext.Session.SetString("ContextMode", contextMode);
                 TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
                 return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
             }

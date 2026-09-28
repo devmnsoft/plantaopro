@@ -66,3 +66,4 @@
 - `plantaopro.tenant_modulos_duplicidades_reconciliadas` depende de: plantaopro.tenant_modulos_canonico, plantaopro.administrativo360_suprimentos
 - `plantaopro.adm360_trigger_tenant_corrigido` depende de: nenhuma
 - `plantaopro.medicos_compatibilidade_v2200` depende de: plantaopro.operacao_plantoes
+- `plantaopro.modulos_sistema_comercial_v2201` depende de: plantaopro.schema_canonico_base

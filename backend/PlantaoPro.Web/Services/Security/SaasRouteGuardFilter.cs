@@ -40,6 +40,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Relatorios"] = "RELATORIOS",
         ["MedicoArea"] = "MEDICO_AREA",
         ["MinhaAgenda"] = "MINHA_AGENDA",
+        ["MeuDia"] = "MEU_DIA",
         ["HospitalArea"] = "HOSPITAL_AREA",
         ["ParceiroPortal"] = "PARCEIRO",
         ["Comercial"] = "COMERCIAL",
@@ -106,6 +107,16 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         }
 
         if (IsAnonymousAllowed(descriptor) || PublicControllers.Contains(descriptor.ControllerName))
+        {
+            return;
+        }
+
+        // APIs JSON (proxies BFF) têm contrato próprio: autenticação por Bearer,
+        // permissões por endpoint e status do cliente são aplicados pela própria
+        // API operacional. O catálogo de módulos abaixo se aplica às páginas
+        // renderizadas pelo servidor; redirecionar chamadas JSON para HTML quebra
+        // os consumers JS (ex.: central de notificações).
+        if (descriptor.EndpointMetadata.OfType<ApiControllerAttribute>().Any())
         {
             return;
         }

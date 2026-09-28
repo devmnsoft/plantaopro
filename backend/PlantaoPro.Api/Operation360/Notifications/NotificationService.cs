@@ -5,9 +5,12 @@ using PlantaoPro.Api.Operation360.Realtime;
 
 namespace PlantaoPro.Api.Operation360.Notifications;
 
+// NOTE: Dapper/Npgsql devolvem timestamptz como System.DateTime (mapeamento legado padrão).
+// Parâmetros de construtor com DateTimeOffset quebram o match do Dapper em runtime
+// ("A parameterless default constructor ... is required for NotificationDto materialization").
 public sealed record NotificationDto(Guid Id, string Categoria, string Titulo, string Mensagem, string Prioridade,
     string Status, string? OrigemTipo, Guid? OrigemId, string? DestinoUrl, bool Lida,
-    DateTimeOffset CriadaEm, DateTimeOffset? ExpiraEm);
+    DateTime CriadaEm, DateTime? ExpiraEm);
 public sealed record NotificationReadResult(Guid Id, bool AlreadyRead);
 public sealed record NotificationFilter(string? Tipo, string? Modulo, string? Prioridade, string? Status,
     DateTimeOffset? De, DateTimeOffset? Ate, int Limit = 100);

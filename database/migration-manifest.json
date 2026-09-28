@@ -709,6 +709,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial",
+      "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
+      "checksum": "8a24bfa9b0b5209748b201f60080ad57bcc705b06cd395ed23439aec689fa4ff",
+      "dependsOn": [
+        "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

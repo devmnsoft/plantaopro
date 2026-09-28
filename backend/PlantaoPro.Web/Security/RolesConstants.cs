@@ -27,6 +27,7 @@ public static class RolesConstants
     public const string AdministradorClinica = "ADMINISTRADOR_CLINICA";
 
     public const string AdminSaas = AdministradorGlobal + "," + Suporte + "," + Auditor;
+    public const string AuditoriaAcesso = AdministradorGlobal + "," + Administrador + "," + Auditor;
     public const string TenantAdmin = Administrador + "," + AdministradorCliente + "," + Diretor;
     public const string Operacao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador + "," + Operador + "," + Hospital;
     public const string EscalasGestao = AdministradorGlobal + "," + Administrador + "," + AdministradorCliente + "," + Diretor + "," + Coordenacao + "," + Coordenador + "," + Operador;

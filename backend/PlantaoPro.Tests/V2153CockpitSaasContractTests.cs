@@ -26,13 +26,16 @@ public class V2153CockpitSaasContractTests
         var apiAuth = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Data.cs"));
         var apiModels = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "Models.cs"));
         var webAccount = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Controllers", "AccountController.cs"));
+        var builder = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Security", "SessionClaimsBuilder.cs"));
 
         Assert.Contains("TENANT_INACTIVE", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("Este cliente está suspenso", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("SUCCESS_TENANT_BLOCKED", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("cliente_status", apiAuth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("ClienteStatus", apiModels, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("cliente_status", webAccount, StringComparison.OrdinalIgnoreCase);
+        // O claim cliente_status é construído no SessionClaimsBuilder (único caminho de Login/Refresh).
+        Assert.Contains("SessionClaimsBuilder.Build", webAccount);
+        Assert.Contains("cliente_status", builder, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]

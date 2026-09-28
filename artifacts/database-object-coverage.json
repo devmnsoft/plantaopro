@@ -605,6 +605,7 @@
     "database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql",
     "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
     "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql",
-    "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql"
+    "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
+    "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql"
   ]
 }

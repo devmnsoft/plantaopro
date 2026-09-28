@@ -153,7 +153,7 @@ limite_padrao=excluded.limite_padrao,reg_update=now(),updated_by=@userId";
         await connection.OpenAsync(ct);
         await using var transaction = await connection.BeginTransactionAsync(ct);
         var module = await connection.QuerySingleOrDefaultAsync<SaasModuleDto>(new CommandDefinition("select id as \"Id\", codigo as \"Codigo\", nome as \"Nome\" from plantaopro.modulos_sistema where id=@moduleId and reg_status='A'", new { moduleId }, transaction, cancellationToken: ct));
-        var tenantExists = await connection.QuerySingleAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.clientes where id=@tenantId and reg_status='A')", new { tenantId = request.TenantId }, transaction, cancellationToken: ct));
+        var tenantExists = await connection.QuerySingleAsync<bool>(new CommandDefinition("select exists(select 1 from plantaopro.tenants where id=@tenantId)", new { tenantId = request.TenantId }, transaction, cancellationToken: ct));
         if (module is null || !tenantExists)
         {
             await transaction.RollbackAsync(ct);
@@ -163,7 +163,7 @@ limite_padrao=excluded.limite_padrao,reg_update=now(),updated_by=@userId";
         var before = await connection.QuerySingleOrDefaultAsync<object>(new CommandDefinition("select id,habilitado,status,preco_contratado,limite_contratado from plantaopro.tenant_modulos where tenant_id=@tenantId and modulo_id=@moduleId and reg_status='A'", new { tenantId = request.TenantId, moduleId }, transaction, cancellationToken: ct));
         var contractId = await connection.QuerySingleAsync<Guid>(new CommandDefinition(@"insert into plantaopro.tenant_modulos(id,tenant_id,modulo_id,codigo_modulo,codigo,nome,habilitado,origem,status,preco_contratado,limite_contratado,ativado_em,desativado_em,reg_status,reg_date,created_by)
 values(gen_random_uuid(),@tenantId,@moduleId,@code,@code,@name,@enabled,'CONTRATO',@status,@price,@limit,case when @enabled then now() else null end,case when @enabled then null else now() end,'A',now(),@userId)
-on conflict (tenant_id,modulo_id) where reg_status='A' do update set habilitado=@enabled,status=@status,preco_contratado=@price,limite_contratado=@limit,
+on conflict (tenant_id,modulo_id) where reg_status='A' and modulo_id is not null do update set habilitado=@enabled,status=@status,preco_contratado=@price,limite_contratado=@limit,
 codigo_modulo=@code,codigo=@code,nome=@name,ativado_em=case when @enabled then now() else plantaopro.tenant_modulos.ativado_em end,
 desativado_em=case when @enabled then null else now() end,reg_update=now(),updated_by=@userId returning id", new
         {

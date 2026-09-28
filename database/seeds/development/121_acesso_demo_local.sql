@@ -185,6 +185,50 @@ BEGIN
         RAISE EXCEPTION 'Contrato ADM360 não foi criado; aplique a migration v2197 antes do seed 121.';
     END IF;
 
+    -- A home do auditor (/Auditoria) depende do módulo AUDITORIA contratado no tenant
+    -- (catálogo v2.14.9 habilita telas por claim de módulo). Mesmo contrato canônico do ADM360.
+    INSERT INTO plantaopro.tenant_modulos
+        (id,tenant_id,modulo_id,codigo,codigo_modulo,nome,habilitado,status,origem,ativado_em,reg_date,reg_status)
+    SELECT gen_random_uuid(),v_tenant_id,m.id,m.codigo,m.codigo,coalesce(m.nome,m.codigo),true,'ATIVO','SEED_DEMO',now(),now(),'A'
+    FROM plantaopro.modulos_sistema m
+    WHERE upper(m.codigo)='AUDITORIA' AND m.reg_status='A'
+      AND NOT EXISTS (SELECT 1 FROM plantaopro.tenant_modulos tm WHERE tm.tenant_id=v_tenant_id AND tm.modulo_id=m.id AND tm.reg_status='A');
+
+    IF NOT EXISTS (SELECT 1 FROM plantaopro.tenant_modulos tm JOIN plantaopro.modulos_sistema m ON m.id=tm.modulo_id
+                   WHERE tm.tenant_id=v_tenant_id AND m.codigo='AUDITORIA' AND tm.reg_status='A' AND tm.habilitado AND tm.status='ATIVO') THEN
+        RAISE EXCEPTION 'Contrato AUDITORIA não foi criado; verifique se o módulo AUDITORIA existe em modulos_sistema antes do seed 121.';
+    END IF;
+
+    -- Disponibilidade comercial do módulo FINANCEIRO (jornada P6 de contratação):
+    -- sem um módulo DISPONIVEL (status ATIVO + disponivel_comercialmente) o fluxo
+    -- revisão -> solicitação -> aprovação não tem como iniciar. Idempotente:
+    -- preenche apenas valores vazios, sem resetar dados já definidos por operação.
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'plantaopro' AND table_name = 'modulos_sistema' AND column_name = 'disponivel_comercialmente') THEN
+        UPDATE plantaopro.modulos_sistema
+        SET disponivel_comercialmente = true,
+            preco_base = COALESCE(preco_base, 250.00),
+            periodicidade = COALESCE(periodicidade, 'MENSAL')
+        WHERE upper(codigo) = 'FINANCEIRO' AND reg_status = 'A';
+    END IF;
+
+    -- Acesso do perfil ADMINISTRADOR_CLIENTE ao módulo FINANCEIRO (jornada P6):
+    -- as sessões v2.14.9 autorizam telas apenas pelas permissões efetivas do
+    -- perfil (claim permission), e o perfil canônico demo não cobre FINANCEIRO
+    -- (o guard responde PERMISSAO_NEGADA mesmo com o módulo contratado).
+    -- Concede somente VER, suficiente para /Financeiro/Index; demais ações
+    -- permanecem como configuração de perfil do cliente. Idempotente: não
+    -- duplica vínculo ativo (índice parcial ux_perfil_permissoes_ativo).
+    IF v_client_profile IS NOT NULL THEN
+        INSERT INTO plantaopro.perfil_permissoes(perfil_id, permissao_id, permitido, reg_status)
+        SELECT v_client_profile, per.id, true, 'A'
+        FROM plantaopro.permissoes per
+        WHERE per.reg_status = 'A'
+          AND upper(replace(coalesce(per.codigo, ''), ':', '.')) = 'FINANCEIRO.VER'
+          AND NOT EXISTS (SELECT 1 FROM plantaopro.perfil_permissoes pp
+                          WHERE pp.perfil_id = v_client_profile AND pp.permissao_id = per.id AND pp.reg_status = 'A');
+    END IF;
+
     RAISE NOTICE 'Acesso local confirmado no banco %.', v_db;
 END
 $seed$;

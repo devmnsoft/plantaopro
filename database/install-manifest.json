@@ -820,6 +820,22 @@
           ]
         }
       ]
+    },
+    {
+      "order": 65,
+      "name": "Reconciliação de colunas comerciais de módulos v2.20.1",
+      "objects": [
+        {
+          "name": "plantaopro.modulos_sistema_comercial_v2201",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [

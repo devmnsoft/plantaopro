@@ -11,7 +11,7 @@ public sealed class Compras360Controller : ControllerBase
  private readonly ICurrentUserService current;
  public Compras360Controller(IComprasRepository repository, ICurrentUserService current) { this.repository=repository; this.current=current; }
  private (Guid Tenant,Guid User) Context()=> (current.TenantId??throw new UnauthorizedAccessException(),current.UserId??throw new UnauthorizedAccessException());
- [HttpGet] public async Task<IActionResult> Listar([FromQuery]string? fornecedor,[FromQuery]string? situacao,[FromQuery]DateOnly? inicio,[FromQuery]DateOnly? fim,CancellationToken ct){var x=Context();return Ok(await repository.ListarAsync(x.Tenant,fornecedor,situacao,inicio,fim,ct));}
+ [HttpGet] public async Task<IActionResult> Listar([FromQuery]string? fornecedor,[FromQuery]string? situacao,[FromQuery]DateOnly? inicio,[FromQuery]DateOnly? fim,CancellationToken ct){var x=Context();try{return Ok(await repository.ListarAsync(x.Tenant,fornecedor,situacao,inicio,fim,ct));}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}}
  [HttpPost] public async Task<IActionResult> Criar(CriarPedidoCommand command,CancellationToken ct){var x=Context();var id=await repository.CriarAsync(x.Tenant,x.User,command,ct);return CreatedAtAction(nameof(Listar),new{id});}
  [HttpPost("{id:guid}/aprovar")] public async Task<IActionResult> Aprovar(Guid id,[FromHeader(Name="Idempotency-Key")]string key,CancellationToken ct){var x=Context();await repository.AprovarAsync(x.Tenant,x.User,id,key,ct);return NoContent();}
  [HttpPost("recebimentos")] public async Task<IActionResult> Receber(ConfirmarRecebimentoCommand command,CancellationToken ct){var x=Context();return Ok(new{id=await repository.ReceberAsync(x.Tenant,x.User,command,ct)});}

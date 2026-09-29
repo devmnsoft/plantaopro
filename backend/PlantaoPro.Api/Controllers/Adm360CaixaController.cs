@@ -77,8 +77,15 @@ public sealed class Adm360CaixaController : ControllerBase
         Guid id, [FromQuery] DateOnly? inicio, [FromQuery] DateOnly? fim, CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var extrato = await repository.ExtratoContaAsync(tenant, id, inicio, fim, ct);
-        return Ok(extrato);
+        try
+        {
+            var extrato = await repository.ExtratoContaAsync(tenant, id, inicio, fim, ct);
+            return Ok(extrato);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("fluxo")]

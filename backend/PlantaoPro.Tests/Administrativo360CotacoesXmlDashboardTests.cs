@@ -3,18 +3,14 @@ using Npgsql;
 using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Domain.Administrativo360;
 using PlantaoPro.Infrastructure.Administrativo360;
+using PlantaoPro.Tests.Infrastructure;
 using Xunit;
 
 namespace PlantaoPro.Tests;
 
 public sealed class Administrativo360CotacoesXmlDashboardTests
 {
-    private static string ObterConnectionString()
-    {
-        return Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-            ?? "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Pooling=true;Maximum Pool Size=50;Minimum Pool Size=0;Timeout=30;Command Timeout=60;Search Path=PlantaoPro,public;Application Name=PlantaoPro.tests";
-    }
+    private static string ObterConnectionString() => TestDatabase.ConnectionString;
 
     private static async Task GarantirConexaoBancoAsync(string cs)
     {

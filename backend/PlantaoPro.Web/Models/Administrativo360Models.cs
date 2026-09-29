@@ -926,6 +926,8 @@ public sealed class ParceirosIndexViewModel
     public string? Papel { get; init; }
     public bool? Fornecedor { get; init; }
     public bool? Status { get; init; }
+    public int Pagina { get; init; } = 1;
+    public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
     public string? Sucesso { get; init; }
 }
@@ -936,6 +938,8 @@ public sealed class ProdutosIndexViewModel
     public string? Busca { get; init; }
     public bool? Status { get; init; }
     public bool ApenasAtivos { get; init; }
+    public int Pagina { get; init; } = 1;
+    public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
     public string? Sucesso { get; init; }
 }
@@ -947,6 +951,8 @@ public sealed class LocaisIndexViewModel
     public string? Tipo { get; init; }
     public bool? Status { get; init; }
     public bool ApenasAtivos { get; init; }
+    public int Pagina { get; init; } = 1;
+    public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
     public string? Sucesso { get; init; }
 }

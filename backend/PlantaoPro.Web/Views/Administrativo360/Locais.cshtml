@@ -152,6 +152,32 @@
                 </tbody>
             </table>
         </div>
+        @if (Model.Pagina > 1 || Model.TemProximaPagina)
+        {
+            <nav class="d-flex justify-content-between align-items-center pt-3" aria-label="Paginação de locais">
+                @if (Model.Pagina > 1)
+                {
+                    <a class="btn btn-outline-secondary btn-sm" href="@Url.Action("Locais", new { busca = Model.Busca, tipo = Model.Tipo, status = Model.Status, pagina = Model.Pagina - 1 })">
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </a>
+                }
+                else
+                {
+                    <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true"><i class="bi bi-chevron-left"></i> Anterior</span>
+                }
+                <span class="small text-muted">@Model.Locais.Count local(is) na página @Model.Pagina · máximo 100 por página</span>
+                @if (Model.TemProximaPagina)
+                {
+                    <a class="btn btn-outline-secondary btn-sm" href="@Url.Action("Locais", new { busca = Model.Busca, tipo = Model.Tipo, status = Model.Status, pagina = Model.Pagina + 1 })">
+                        Próxima <i class="bi bi-chevron-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">Próxima <i class="bi bi-chevron-right"></i></span>
+                }
+            </nav>
+        }
     </div>
 </div>
 

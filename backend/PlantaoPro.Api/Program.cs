@@ -36,6 +36,7 @@ builder.Services.AddSignalR();
 builder.Services.AddControllers(options =>
 {
     options.Filters.Add<RequestLogContextFilter>();
+    options.Filters.Add<Adm360BusinessExceptionFilter>();
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddHttpLogging(_ => { });

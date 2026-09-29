@@ -1,5 +1,8 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using Dapper;
+using Npgsql;
 using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Domain.Administrativo360;
 
@@ -797,9 +800,11 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             SELECT r.id, r.cotacao_id, c.identificador_externo, r.orcamento_id, r.revisao,
                    r.status_transmissao, r.status_comercial_externo, r.tentativas,
                    r.proxima_tentativa, r.protocolo_externo, r.mensagem_retorno,
-                   r.created_at, r.enviado_em
+                   r.created_at, r.enviado_em,
+                   x.id AS exportacao_id, x.nome_arquivo AS exportacao_nome_arquivo, x.sha256_hash AS exportacao_sha256_hash
             FROM plantaopro.adm360_cotacao_respostas r
             JOIN plantaopro.adm360_cotacoes c ON c.id = r.cotacao_id AND c.tenant_id = r.tenant_id
+            LEFT JOIN plantaopro.adm360_cotacao_exportacoes x ON x.resposta_id = r.id AND x.tenant_id = r.tenant_id
             WHERE r.id = @respostaId AND r.tenant_id = @tenantId",
             new { respostaId, tenantId }, cancellationToken: ct));
 
@@ -818,7 +823,10 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             (string?)r.protocolo_externo,
             (string?)r.mensagem_retorno,
             (DateTime)r.created_at,
-            r.enviado_em is not null ? (DateTime?)r.enviado_em : null
+            r.enviado_em is not null ? (DateTime?)r.enviado_em : null,
+            (Guid?)r.exportacao_id,
+            (string?)r.exportacao_nome_arquivo,
+            (string?)r.exportacao_sha256_hash
         );
     }
 
@@ -829,9 +837,11 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             SELECT r.id, r.cotacao_id, c.identificador_externo, r.orcamento_id, r.revisao,
                    r.status_transmissao, r.status_comercial_externo, r.tentativas,
                    r.proxima_tentativa, r.protocolo_externo, r.mensagem_retorno,
-                   r.created_at, r.enviado_em
+                   r.created_at, r.enviado_em,
+                   x.id AS exportacao_id, x.nome_arquivo AS exportacao_nome_arquivo, x.sha256_hash AS exportacao_sha256_hash
             FROM plantaopro.adm360_cotacao_respostas r
             JOIN plantaopro.adm360_cotacoes c ON c.id = r.cotacao_id AND c.tenant_id = r.tenant_id
+            LEFT JOIN plantaopro.adm360_cotacao_exportacoes x ON x.resposta_id = r.id AND x.tenant_id = r.tenant_id
             WHERE r.tenant_id = @tenantId
               AND (@status IS NULL OR r.status_transmissao = @status)
             ORDER BY r.created_at DESC";
@@ -851,7 +861,10 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             (string?)r.protocolo_externo,
             (string?)r.mensagem_retorno,
             (DateTime)r.created_at,
-            r.enviado_em is not null ? (DateTime?)r.enviado_em : null
+            r.enviado_em is not null ? (DateTime?)r.enviado_em : null,
+            (Guid?)r.exportacao_id,
+            (string?)r.exportacao_nome_arquivo,
+            (string?)r.exportacao_sha256_hash
         )).ToList();
     }
 
@@ -906,12 +919,75 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
         if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
         {
+            // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
+            // a primeira geração vence — retransmissões preservam o arquivo original).
+            if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
+            {
+                await RegistrarExportacaoManualAsync(cn, tenantId, command.RespostaId, ct);
+            }
+
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_cotacoes
                 SET status_interno = 'RESPONDIDA', updated_at = now()
                 WHERE id = @cotacaoId AND tenant_id = @tenantId",
                 new { cotacaoId = resp.CotacaoId, tenantId }, cancellationToken: ct));
         }
+    }
+
+    private async Task RegistrarExportacaoManualAsync(NpgsqlConnection cn, Guid tenantId, Guid respostaId, CancellationToken ct)
+    {
+        var meta = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+            SELECT r.cotacao_id, r.snapshot_proposta::text AS snapshot_text,
+                   r.aprovado_por, r.aprovado_em,
+                   c.identificador_externo, c.revisao_externa
+            FROM plantaopro.adm360_cotacao_respostas r
+            JOIN plantaopro.adm360_cotacoes c ON c.id = r.cotacao_id AND c.tenant_id = r.tenant_id
+            WHERE r.id = @respostaId AND r.tenant_id = @tenantId",
+            new { respostaId, tenantId }, cancellationToken: ct));
+
+        if (meta is null) return;
+
+        System.Text.Json.Nodes.JsonNode? snapshotNode;
+        try
+        {
+            snapshotNode = System.Text.Json.Nodes.JsonNode.Parse((string)meta.snapshot_text);
+        }
+        catch (JsonException)
+        {
+            snapshotNode = null;
+        }
+
+        var documento = new
+        {
+            tipo_documento = "PROPOSTA_APROVADA_EXPORTACAO_MANUAL",
+            cotacao = new { identificador_externo = (string)meta.identificador_externo, revisao_externa = (int)meta.revisao_externa },
+            aprovacao = new
+            {
+                aprovado_por = meta.aprovado_por is null ? null : ((Guid)meta.aprovado_por).ToString(),
+                aprovado_em = meta.aprovado_em is null ? null : ((DateTime)meta.aprovado_em).ToString("O")
+            },
+            gerado_em_utc = DateTime.UtcNow.ToString("O"),
+            proposta_aprovada = snapshotNode
+        };
+
+        var bytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(documento, new JsonSerializerOptions { WriteIndented = true }));
+        var sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
+        var nomeArquivo = $"COT_{meta.identificador_externo}_R{(int)meta.revisao_externa}_PROPOSTA_EXPORTADA.json";
+
+        // Imutabilidade de aplicação: UNIQUE(tenant_id, resposta_id) + DO NOTHING =>
+        // retransmissões nunca substituem o arquivo da primeira geração.
+        await cn.ExecuteAsync(new CommandDefinition(@"
+            INSERT INTO plantaopro.adm360_cotacao_exportacoes(
+                id, tenant_id, cotacao_id, resposta_id, nome_arquivo, tamanho_bytes, content_type, sha256_hash, conteudo
+            ) VALUES (
+                @id, @tenantId, @cotacaoId, @respostaId, @nomeArquivo, @tamanhoBytes, 'application/json', @sha256, @conteudo
+            )
+            ON CONFLICT (tenant_id, resposta_id) DO NOTHING",
+            new
+            {
+                id = Guid.NewGuid(), tenantId, cotacaoId = (Guid)meta.cotacao_id, respostaId,
+                nomeArquivo, tamanhoBytes = bytes.Length, sha256, conteudo = bytes
+            }, cancellationToken: ct));
     }
 
     public async Task<(byte[]? Bytes, string Nome, string ContentType)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default)
@@ -926,5 +1002,31 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
         if (a is null) return null;
 
         return ((byte[]?)a.conteudo, (string)a.nome_arquivo, (string)a.content_type);
+    }
+
+    public async Task<CotacaoExportacaoArquivoDto?> ObterExportacaoPorRespostaAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default)
+    {
+        await using var cn = Connection();
+        var row = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+            SELECT x.id, x.tenant_id, x.cotacao_id, x.resposta_id, x.nome_arquivo, x.tamanho_bytes,
+                   x.content_type, x.sha256_hash, x.gerado_em, x.conteudo
+            FROM plantaopro.adm360_cotacao_exportacoes x
+            JOIN plantaopro.adm360_cotacao_respostas r ON r.id = x.resposta_id
+            WHERE x.resposta_id = @respostaId AND x.tenant_id = @tenantId AND r.tenant_id = @tenantId",
+            new { respostaId, tenantId }, cancellationToken: ct));
+
+        if (row is null) return null;
+
+        return new CotacaoExportacaoArquivoDto(
+            (Guid)row.id,
+            (Guid)row.tenant_id,
+            (Guid)row.cotacao_id,
+            (Guid)row.resposta_id,
+            (string)row.nome_arquivo,
+            (int)row.tamanho_bytes,
+            (string)row.content_type,
+            (string)row.sha256_hash,
+            (DateTime)row.gerado_em,
+            (byte[])row.conteudo);
     }
 }

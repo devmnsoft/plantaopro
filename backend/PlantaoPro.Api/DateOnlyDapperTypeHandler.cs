@@ -20,6 +20,8 @@ public sealed class DateOnlyDapperTypeHandler : SqlMapper.TypeHandler<DateOnly>
         parameter.DbType = DbType.Date;
     }
 
+    // Quando o valor é nulo (DateOnly?), o Dapper 2.1.35 envia o parâmetro sem tipo; a proteção
+    // contra 42P08 vem dos casts no lado do parâmetro nas consultas ("@param::date", "@param::uuid").
     public override DateOnly Parse(object value) => value switch
     {
         DateOnly d => d,

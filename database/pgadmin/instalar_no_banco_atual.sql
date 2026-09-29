@@ -1228,7 +1228,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
 );
 
 -- SOURCE: database/schema/060_auditoria_observabilidade.sql
--- SOURCE-SHA256: 3a13cd50422a3b966d2f714385c585ef9f56bb380274409e2aa4907dedd80665
+-- SOURCE-SHA256: d2cfd5bf74b43736a28f610c55a44ccb6bedf2bcfe763675c0ac44a7903df8d5
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1245,14 +1245,43 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria (
 );
 CREATE TABLE IF NOT EXISTS plantaopro.auditoria_acoes_criticas (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id uuid NULL,
-    codigo text NULL,
-    nome text NULL,
-    status text NOT NULL DEFAULT 'ATIVO',
-    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
-    criado_em timestamptz NOT NULL DEFAULT now(),
-    atualizado_em timestamptz NULL
+    usuario_id uuid NULL,
+    cliente_id uuid NULL,
+    entidade varchar(100) NOT NULL DEFAULT 'SISTEMA',
+    entidade_id uuid NULL,
+    acao varchar(100) NOT NULL DEFAULT 'ACAO',
+    detalhes jsonb NULL,
+    sucesso boolean NOT NULL DEFAULT true,
+    ip_origem varchar(64) NULL,
+    perfil varchar(80) NULL,
+    user_agent text NULL,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A'
 );
+
+-- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
+-- adiciona as colunas de auditoria usadas pelo código em execução.
+ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS entidade varchar(100) NOT NULL DEFAULT 'SISTEMA',
+    ADD COLUMN IF NOT EXISTS entidade_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS acao varchar(100) NOT NULL DEFAULT 'ACAO',
+    ADD COLUMN IF NOT EXISTS detalhes jsonb NULL,
+    ADD COLUMN IF NOT EXISTS sucesso boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+
+ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_cliente_data ON plantaopro.auditoria_acoes_criticas(cliente_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_usuario_data ON plantaopro.auditoria_acoes_criticas(usuario_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_entidade ON plantaopro.auditoria_acoes_criticas(entidade, entidade_id);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_acao_data ON plantaopro.auditoria_acoes_criticas(acao, reg_date DESC);
 CREATE TABLE IF NOT EXISTS plantaopro.auditoria_eventos (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
@@ -1265,24 +1294,112 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_eventos (
 );
 CREATE TABLE IF NOT EXISTS plantaopro.api_request_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id uuid NULL,
-    codigo text NULL,
-    nome text NULL,
-    status text NOT NULL DEFAULT 'ATIVO',
-    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
-    criado_em timestamptz NOT NULL DEFAULT now(),
-    atualizado_em timestamptz NULL
+    endpoint text NOT NULL DEFAULT '',
+    metodo varchar(10) NOT NULL DEFAULT 'GET',
+    method varchar(12) NOT NULL DEFAULT 'GET',
+    status_code integer NOT NULL DEFAULT 0,
+    sucesso boolean NOT NULL DEFAULT true,
+    duracao_ms bigint NOT NULL DEFAULT 0,
+    duration_ms bigint NOT NULL DEFAULT 0,
+    usuario_id uuid NULL,
+    cliente_id uuid NULL,
+    email varchar(255) NULL,
+    perfil varchar(80) NULL,
+    ip_origem varchar(64) NULL,
+    ip varchar(80) NULL,
+    user_agent text NULL,
+    query_string text NULL,
+    erro text NULL,
+    error_message text NULL,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A'
 );
+
+-- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
+-- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers.
+ALTER TABLE IF EXISTS plantaopro.api_request_logs
+    ADD COLUMN IF NOT EXISTS endpoint text NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS metodo varchar(10) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS method varchar(12) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS status_code integer NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS sucesso boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS duracao_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS duration_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS email varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS ip varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS query_string text NULL,
+    ADD COLUMN IF NOT EXISTS erro text NULL,
+    ADD COLUMN IF NOT EXISTS error_message text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+
+ALTER TABLE IF EXISTS plantaopro.api_request_logs
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_reg_date ON plantaopro.api_request_logs(reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_endpoint_data ON plantaopro.api_request_logs(endpoint, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_status_data ON plantaopro.api_request_logs(status_code, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_usuario_data ON plantaopro.api_request_logs(usuario_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_cliente_data ON plantaopro.api_request_logs(cliente_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_perfil_data ON plantaopro.api_request_logs(perfil, reg_date DESC);
 CREATE TABLE IF NOT EXISTS plantaopro.api_error_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id uuid NULL,
-    codigo text NULL,
-    nome text NULL,
-    status text NOT NULL DEFAULT 'ATIVO',
-    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
-    criado_em timestamptz NOT NULL DEFAULT now(),
-    atualizado_em timestamptz NULL
+    endpoint text NULL,
+    metodo varchar(10) NULL,
+    method varchar(12) NOT NULL DEFAULT 'GET',
+    status_code integer NULL,
+    success boolean NOT NULL DEFAULT true,
+    usuario_id uuid NULL,
+    cliente_id uuid NULL,
+    email varchar(255) NULL,
+    perfil varchar(80) NULL,
+    ip_origem varchar(64) NULL,
+    ip varchar(80) NULL,
+    user_agent text NULL,
+    query_string text NULL,
+    duration_ms bigint NOT NULL DEFAULT 0,
+    mensagem text NOT NULL DEFAULT '',
+    error_message text NULL,
+    exception_type varchar(255) NULL,
+    stack_trace text NULL,
+    reg_date timestamptz NOT NULL DEFAULT now(),
+    reg_status char(1) NOT NULL DEFAULT 'A'
 );
+
+-- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
+-- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers.
+ALTER TABLE IF EXISTS plantaopro.api_error_logs
+    ADD COLUMN IF NOT EXISTS endpoint text NULL,
+    ADD COLUMN IF NOT EXISTS metodo varchar(10) NULL,
+    ADD COLUMN IF NOT EXISTS method varchar(12) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS status_code integer NULL,
+    ADD COLUMN IF NOT EXISTS success boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS email varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS ip varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS query_string text NULL,
+    ADD COLUMN IF NOT EXISTS duration_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS mensagem text NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS error_message text NULL,
+    ADD COLUMN IF NOT EXISTS exception_type varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS stack_trace text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+
+ALTER TABLE IF EXISTS plantaopro.api_error_logs
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_api_error_logs_reg_date ON plantaopro.api_error_logs(reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_error_logs_status_data ON plantaopro.api_error_logs(status_code, reg_date DESC);
 CREATE TABLE IF NOT EXISTS plantaopro.background_job_logs (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id uuid NULL,
@@ -5498,3 +5615,73 @@ begin
         alter table plantaopro.tenant_modulos_historico add constraint fk_tenant_modulos_historico_modulo foreign key (modulo_id) references plantaopro.modulos_sistema(id);
     end if;
 end $$;
+-- ============================================================================
+-- v2200 (2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql)
+-- Arquivo real da proposta aprovada para o canal IMPORTACAO_MANUAL (imutavel por trigger).
+-- ============================================================================
+-- Migration 2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql
+-- Administrativo 360 — Bloco 7 (Exportação e Integrações):
+-- Arquivo real da proposta aprovada para o canal IMPORTACAO_MANUAL (EXPORTADA_MANUALMENTE).
+-- Regras de negócio:
+-- 1. O arquivo é gerado UMA única vez por resposta transmitida (UNIQUE tenant_id + resposta_id);
+--    retransmissões preservam a primeira geração (ON CONFLICT DO NOTHING na aplicação).
+-- 2. O registro é IMUTÁVEL após a geração: UPDATE/DELETE bloqueados por trigger.
+--    (TRUNCATE não dispara row triggers — usado apenas em limpeza de testes/homologação.)
+-- 3. Escopo multi-tenant: UNIQUE(tenant_id, id) e FOREIGN KEY em tenants.
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_cotacao_exportacoes (
+    id uuid PRIMARY KEY,
+    tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
+    cotacao_id uuid NOT NULL REFERENCES plantaopro.adm360_cotacoes(id),
+    resposta_id uuid NOT NULL REFERENCES plantaopro.adm360_cotacao_respostas(id),
+    nome_arquivo varchar(255) NOT NULL,
+    tamanho_bytes integer NOT NULL CHECK(tamanho_bytes > 0),
+    content_type varchar(64) NOT NULL,
+    sha256_hash char(64) NOT NULL,
+    conteudo bytea NOT NULL,
+    gerado_em timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(tenant_id, id),
+    UNIQUE(tenant_id, resposta_id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_adm360_export_tenant_cotacao
+    ON plantaopro.adm360_cotacao_exportacoes(tenant_id, cotacao_id);
+
+-- Imutabilidade: a proposta exportada não pode ser alterada nem apagada por UPDATE/DELETE.
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_cotacao_exportacao_imutavel()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RAISE EXCEPTION 'Arquivo de exportação da cotação é imutável após a geração (registro %).', OLD.id;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_adm360_cotacao_exportacao_imutavel ON plantaopro.adm360_cotacao_exportacoes;
+CREATE TRIGGER trg_adm360_cotacao_exportacao_imutavel
+    BEFORE UPDATE OR DELETE ON plantaopro.adm360_cotacao_exportacoes
+    FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_cotacao_exportacao_imutavel();
+
+-- ============================================================================
+-- v2300 (2026_09_v2300_administrativo360_status_transmissao_exportacao.sql)
+-- Estende o CHECK de status_transmissao com os estados do Bloco 7:
+-- EXPORTADA_MANUALMENTE (canal manual, arquivo imutável) e CONFIGURACAO_PENDENTE
+-- (provedor oficial ainda sem integração — sem protocolo, cotação segue
+-- PRONTA_PARA_ENVIO). Mantém os estados existentes. Idempotente.
+-- ============================================================================
+
+ALTER TABLE plantaopro.adm360_cotacao_respostas
+    DROP CONSTRAINT IF EXISTS adm360_cotacao_respostas_status_transmissao_check;
+
+ALTER TABLE plantaopro.adm360_cotacao_respostas
+    ADD CONSTRAINT adm360_cotacao_respostas_status_transmissao_check
+    CHECK (status_transmissao IN (
+        'NA_FILA',
+        'ENVIANDO',
+        'EXPORTADA_MANUALMENTE',
+        'CONFIGURACAO_PENDENTE',
+        'ACEITA_PELO_PORTAL',
+        'REJEITADA_PELO_PORTAL',
+        'RESULTADO_DESCONHECIDO'
+    ));
+

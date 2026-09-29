@@ -16,12 +16,29 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
         public decimal QtdTotal { get; set; }
     }
 
+    // Mesmo padrão do CirurgiaRow: classe intermediária com propriedades setáveis absorve a
+    // conversão timestamptz→DateTimeOffset feita pelo Npgsql (o reader expõe DateTime). O
+    // mapeamento direto no record exigiria construtor com tipo exato e falharia em qualquer
+    // lista não vazia.
+    private sealed class PedidoRow
+    {
+        public Guid Id { get; set; }
+        public string Numero { get; set; } = string.Empty;
+        public string Fornecedor { get; set; } = string.Empty;
+        public string Situacao { get; set; } = string.Empty;
+        public decimal Total { get; set; }
+        public DateTimeOffset CriadoEm { get; set; }
+    }
+
     public ComprasRepository(string connectionString) : base(connectionString) { }
 
     public async Task<IReadOnlyList<PedidoResumo>> ListarAsync(Guid tenantId, string? fornecedor, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
     {
+        if (inicio.HasValue && fim.HasValue && inicio.Value > fim.Value)
+            throw new ArgumentException("Período inválido: a data inicial não pode ser posterior à data final.");
+
         await using var cn = Connection();
-        return (await cn.QueryAsync<PedidoResumo>(new CommandDefinition(@"
+        var rows = await cn.QueryAsync<PedidoRow>(new CommandDefinition(@"
             SELECT p.id, p.numero, f.nome AS fornecedor, p.situacao,
                    (SELECT COALESCE(SUM(i.quantidade * i.preco_unitario - i.desconto), 0) FROM plantaopro.adm360_pedido_itens i WHERE i.pedido_id = p.id) + p.frete AS total,
                    p.created_at AS criadoem
@@ -30,9 +47,10 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             WHERE p.tenant_id = @tenantId
               AND (@fornecedor IS NULL OR f.nome ILIKE '%' || @fornecedor || '%')
               AND (@situacao IS NULL OR p.situacao = @situacao)
-              AND (@inicio IS NULL OR p.created_at::date >= @inicio)
-              AND (@fim IS NULL OR p.created_at::date <= @fim)
-            ORDER BY p.created_at DESC", new { tenantId, fornecedor, situacao, inicio, fim }, cancellationToken: ct))).AsList();
+              AND (@inicio::date IS NULL OR p.created_at::date >= @inicio::date)
+              AND (@fim::date IS NULL OR p.created_at::date <= @fim::date)
+            ORDER BY p.created_at DESC", new { tenantId, fornecedor, situacao, inicio, fim }, cancellationToken: ct));
+        return rows.Select(p => new PedidoResumo(p.Id, p.Numero, p.Fornecedor, p.Situacao, p.Total, p.CriadoEm)).ToList();
     }
 
     public async Task<Guid> CriarAsync(Guid tenantId, Guid usuarioId, CriarPedidoCommand c, CancellationToken ct)

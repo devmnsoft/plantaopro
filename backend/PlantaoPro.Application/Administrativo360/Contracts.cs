@@ -681,15 +681,15 @@ public sealed record Lookups360Bundle(
 
 public interface ICadastrosRepository
 {
-    Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct);
+    Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct, int pagina = 1, int limite = 100, bool? ehHospital = null, bool? ehPagador = null, bool? ehCliente = null, bool apenasAtivos = false, bool apenasInativos = false);
     Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct, bool ehHospital = false, bool ehPagador = false, bool ehCliente = false);
     Task AlternarStatusParceiroAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
 
-    Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct);
+    Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false);
     Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct);
     Task AlternarStatusProdutoAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
 
-    Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct);
+    Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false, string? busca = null);
     Task<Guid> SalvarLocalAsync(Guid tenantId, Guid? id, string codigo, string nome, string tipo, bool ativo, CancellationToken ct);
 
     Task<IReadOnlyList<Lote360>> ListarLotesAsync(Guid tenantId, Guid? produtoId, CancellationToken ct);

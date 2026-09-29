@@ -240,7 +240,24 @@ public sealed record CotacaoRespostaDto(
     string? ProtocoloExterno,
     string? MensagemRetorno,
     DateTime CriadoEm,
-    DateTime? EnviadoEm
+    DateTime? EnviadoEm,
+    Guid? ExportacaoId = null,
+    string? ExportacaoNomeArquivo = null,
+    string? ExportacaoSha256Hash = null
+);
+
+// 5.1 Arquivo real da proposta aprovada exportada via canal manual (imutável)
+public sealed record CotacaoExportacaoArquivoDto(
+    Guid Id,
+    Guid TenantId,
+    Guid CotacaoId,
+    Guid RespostaId,
+    string NomeArquivo,
+    int TamanhoBytes,
+    string ContentType,
+    string Sha256Hash,
+    DateTime GeradoEm,
+    byte[] Conteudo
 );
 
 // 6. Central de XML Recebidos (NF-e mod 55)
@@ -437,6 +454,7 @@ public interface ICotacoesRepository
     Task<IReadOnlyList<CotacaoRespostaDto>> ListarRespostasAsync(Guid tenantId, string? status = null, CancellationToken ct = default);
     Task TransmitirRespostaAsync(Guid tenantId, Guid usuarioId, TransmitirRespostaCommand command, CancellationToken ct = default);
     Task<(byte[]? Bytes, string Nome, string ContentType)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default);
+    Task<CotacaoExportacaoArquivoDto?> ObterExportacaoPorRespostaAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default);
 }
 
 public interface IDocumentosXmlRepository

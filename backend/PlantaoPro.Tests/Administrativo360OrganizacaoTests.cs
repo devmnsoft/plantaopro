@@ -28,11 +28,7 @@ public sealed class Administrativo360OrganizacaoTests : IClassFixture<PlantaoPro
     // =========================================================================
     // Infra de teste
     // =========================================================================
-    private static string ObterConnectionString() =>
-        Environment.GetEnvironmentVariable("PLANTAOPRO_TEST_CONNECTION")
-        ?? Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
-        ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-        ?? "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Pooling=true;Maximum Pool Size=50;Minimum Pool Size=0;Timeout=30;Command Timeout=60;Search Path=PlantaoPro,public;Application Name=PlantaoPro.tests";
+    private static string ObterConnectionString() => TestDatabase.ConnectionString;
 
     private static string Sufixo() => Guid.NewGuid().ToString("N")[..8];
     private static string CpfValido() => "1" + Random.Shared.NextInt64(1_000_000_000L, 9_999_999_999L).ToString("D10");

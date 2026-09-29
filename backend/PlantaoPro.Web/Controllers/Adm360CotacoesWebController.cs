@@ -310,4 +310,26 @@ public sealed class Adm360CotacoesWebController : BaseWebController
 
         return File(content, contentType, fileName.Trim('"'));
     }
+
+    [HttpGet("{id:guid}/Exportacao/{respostaId:guid}")]
+    public async Task<IActionResult> DownloadExportacao(Guid id, Guid respostaId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var response = await client.GetAsync($"api/administrativo360/cotacoes/respostas/{respostaId}/exportacao");
+        if (!response.IsSuccessStatusCode)
+        {
+            TempData["Error"] = "Não foi possível baixar o arquivo de exportação da proposta.";
+            return RedirectToAction(nameof(Detalhes), new { id });
+        }
+
+        var content = await response.Content.ReadAsByteArrayAsync();
+        var contentType = response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream";
+        var fileName = response.Content.Headers.ContentDisposition?.FileNameStar
+                       ?? response.Content.Headers.ContentDisposition?.FileName
+                       ?? $"exportacao_{respostaId}";
+
+        return File(content, contentType, fileName.Trim('"'));
+    }
 }

@@ -35,7 +35,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
             WHERE tenant_id = @tenantId
               AND (@busca IS NULL OR produto ILIKE '%' || @busca || '%' OR lote ILIKE '%' || @busca || '%')
               AND (@condicao IS NULL OR condicao = @condicao)
-              AND (@localId IS NULL OR local_id = @localId)
+              AND (@localId::uuid IS NULL OR local_id = @localId::uuid)
             ORDER BY produto, validade NULLS LAST",
             new { tenantId, busca, condicao, localId }, cancellationToken: ct))).AsList();
     }

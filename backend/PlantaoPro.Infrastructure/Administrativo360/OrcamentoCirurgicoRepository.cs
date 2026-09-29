@@ -715,14 +715,26 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             throw new InvalidOperationException("Reserva não encontrada ou já encerrada/cancelada.");
     }
 
+    // Mesma motivação dos demais resumos deste arquivo: classe intermediária absorve a conversão
+    // timestamptz→DateTimeOffset do Npgsql; o mapeamento direto no record falharia com linhas.
+    private sealed class OrcamentoRevisaoRow
+    {
+        public Guid Id { get; set; }
+        public int Revisao { get; set; }
+        public string Motivo { get; set; } = string.Empty;
+        public string SnapshotJson { get; set; } = string.Empty;
+        public DateTimeOffset CriadoEm { get; set; }
+    }
+
     public async Task<IReadOnlyList<OrcamentoRevisaoHistorico>> ObterRevisoesAsync(Guid tenantId, Guid orcamentoId, CancellationToken ct)
     {
         await using var cn = Connection();
-        return (await cn.QueryAsync<OrcamentoRevisaoHistorico>(new CommandDefinition(@"
+        var rows = await cn.QueryAsync<OrcamentoRevisaoRow>(new CommandDefinition(@"
             SELECT id AS Id, revisao AS Revisao, motivo AS Motivo, snapshot_json AS SnapshotJson, criado_em AS CriadoEm
             FROM plantaopro.adm360_orcamento_revisoes
             WHERE orcamento_id = @orcamentoId AND tenant_id = @tenantId
             ORDER BY revisao DESC",
-            new { orcamentoId, tenantId }, cancellationToken: ct))).AsList();
+            new { orcamentoId, tenantId }, cancellationToken: ct));
+        return rows.Select(r => new OrcamentoRevisaoHistorico(r.Id, r.Revisao, r.Motivo, r.SnapshotJson, r.CriadoEm)).ToList();
     }
 }

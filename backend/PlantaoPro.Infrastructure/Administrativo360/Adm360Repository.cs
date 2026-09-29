@@ -12,6 +12,8 @@ public sealed class DateOnlyTypeHandler : SqlMapper.TypeHandler<DateOnly>
         parameter.Value = value.ToDateTime(TimeOnly.MinValue);
     }
 
+    // Obs.: neste Dapper (2.1.35) o TypeHandler<T> não expõe GetDbType(); a proteção contra
+    // 42P08 para valores nulos vem dos casts no lado do parâmetro nas consultas ("@param::date").
     public override DateOnly Parse(object value)
     {
         if (value is DateTime dt) return DateOnly.FromDateTime(dt);

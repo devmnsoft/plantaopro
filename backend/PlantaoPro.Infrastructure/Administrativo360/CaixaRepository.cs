@@ -194,8 +194,8 @@ public sealed class CaixaRepository : Adm360Repository, ICaixaRepository
             FROM plantaopro.adm360_movimentos_financeiros m
             JOIN plantaopro.adm360_contas_financeiras c ON c.id = m.conta_id AND c.tenant_id = m.tenant_id
             WHERE m.conta_id = @contaId AND m.tenant_id = @tenantId
-              AND (@inicio IS NULL OR m.data_movimento >= @inicio)
-              AND (@fim IS NULL OR m.data_movimento <= @fim)
+              AND (@inicio::date IS NULL OR m.data_movimento >= @inicio::date)
+              AND (@fim::date IS NULL OR m.data_movimento <= @fim::date)
             ORDER BY m.data_movimento ASC, m.created_at ASC, m.id ASC",
             new { contaId, tenantId, inicio, fim }, cancellationToken: ct));
 

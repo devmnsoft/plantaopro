@@ -92,7 +92,10 @@ public sealed record CotacaoRespostaViewModel(
     string? ProtocoloExterno,
     string? MensagemRetorno,
     DateTime CriadoEm,
-    DateTime? EnviadoEm
+    DateTime? EnviadoEm,
+    Guid? ExportacaoId = null,
+    string? ExportacaoNomeArquivo = null,
+    string? ExportacaoSha256Hash = null
 );
 
 public sealed record MapeamentoDeParaViewModel(

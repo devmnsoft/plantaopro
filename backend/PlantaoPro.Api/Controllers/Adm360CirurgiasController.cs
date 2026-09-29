@@ -34,8 +34,15 @@ public sealed class Adm360CirurgiasController : ControllerBase
         CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var lista = await repository.ListarAsync(tenant, busca, situacao, inicio, fim, ct);
-        return Ok(lista);
+        try
+        {
+            var lista = await repository.ListarAsync(tenant, busca, situacao, inicio, fim, ct);
+            return Ok(lista);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpGet("{id:guid}")]

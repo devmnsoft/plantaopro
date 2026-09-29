@@ -191,10 +191,12 @@ values
                 });
             }
         }
-        catch (Exception)
+        catch (Exception logEx)
         {
             OpenLoggingCircuit();
-            LogFallbackOnce("Falha ao persistir log estruturado; evento sanitizado descartado até recuperação do banco.");
+            var detalhe = (logEx.Message ?? string.Empty).Replace('\n', ' ').Replace('\r', ' ');
+            detalhe = detalhe.Length > 240 ? detalhe.Substring(0, 240) : detalhe;
+            LogFallbackOnce("Falha ao persistir log estruturado; evento sanitizado descartado até recuperação do banco. Detalhe: " + detalhe);
         }
     }
 

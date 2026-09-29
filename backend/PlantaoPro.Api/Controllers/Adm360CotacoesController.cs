@@ -68,6 +68,18 @@ public sealed class Adm360CotacoesController : ControllerBase
         return File(anexo.Value.Bytes, anexo.Value.ContentType, anexo.Value.Nome);
     }
 
+    [HttpGet("respostas/{respostaId:guid}/exportacao")]
+    [Authorize(Policy = "Adm360.CotacaoConsultar")]
+    public async Task<IActionResult> ObterExportacaoResposta(Guid respostaId, CancellationToken ct)
+    {
+        var (tenant, _) = Context();
+        var arquivo = await repository.ObterExportacaoPorRespostaAsync(tenant, respostaId, ct);
+        if (arquivo is null) return NotFound("Nenhum arquivo de exportação registrado para esta resposta.");
+
+        HttpContext.Response.Headers.Append("X-File-SHA256", arquivo.Sha256Hash);
+        return File(arquivo.Conteudo, arquivo.ContentType, arquivo.NomeArquivo);
+    }
+
     [HttpGet("mapeamentos")]
     [Authorize(Policy = "Adm360.MapearCadastros")]
     public async Task<IActionResult> ListarMapeamentos([FromQuery] string? provedor, [FromQuery] string? tipoEntidade, CancellationToken ct)

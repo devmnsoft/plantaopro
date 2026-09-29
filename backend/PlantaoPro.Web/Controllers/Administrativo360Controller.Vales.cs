@@ -25,6 +25,7 @@ public partial class Administrativo360Controller
         ViewBag.Situacao = situacao;
         ViewBag.Inicio = inicio;
         ViewBag.Fim = fim;
+        ViewBag.Erro = res.Error;
 
         return View(res.Data ?? new List<ValeResumoViewModel>());
     }

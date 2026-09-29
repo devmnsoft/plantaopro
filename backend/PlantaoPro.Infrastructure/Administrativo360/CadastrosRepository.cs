@@ -1,4 +1,5 @@
 using Dapper;
+using Npgsql;
 using PlantaoPro.Application.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
@@ -7,8 +8,11 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
 {
     public CadastrosRepository(string connectionString) : base(connectionString) { }
 
-    public async Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct)
+    public async Task<IReadOnlyList<Parceiro360>> ListarParceirosAsync(Guid tenantId, string? busca, bool? fornecedor, CancellationToken ct, int pagina = 1, int limite = 100, bool? ehHospital = null, bool? ehPagador = null, bool? ehCliente = null, bool apenasAtivos = false, bool apenasInativos = false)
     {
+        pagina = Math.Max(1, pagina);
+        limite = Math.Clamp(limite, 1, 100);
+
         await using var cn = Connection();
         return (await cn.QueryAsync<Parceiro360>(new CommandDefinition(@"
             SELECT id, nome, documento, fornecedor, ativo, created_at AS CriadoEm,
@@ -18,9 +22,15 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             FROM plantaopro.adm360_parceiros
             WHERE tenant_id = @tenantId
               AND (@busca IS NULL OR nome ILIKE '%' || @busca || '%' OR documento ILIKE '%' || @busca || '%')
-              AND (@fornecedor IS NULL OR fornecedor = @fornecedor)
-            ORDER BY nome",
-            new { tenantId, busca, fornecedor }, cancellationToken: ct))).AsList();
+              AND (@fornecedor::boolean IS NULL OR fornecedor = @fornecedor::boolean)
+              AND (@ehHospital::boolean IS NULL OR coalesce(eh_hospital, false) = @ehHospital::boolean)
+              AND (@ehPagador::boolean IS NULL OR coalesce(eh_pagador, false) = @ehPagador::boolean)
+              AND (@ehCliente::boolean IS NULL OR coalesce(eh_cliente, false) = @ehCliente::boolean)
+              AND (@apenasAtivos = false OR ativo = true)
+              AND (@apenasInativos = false OR ativo = false)
+            ORDER BY nome
+            LIMIT @limite OFFSET @offset",
+            new { tenantId, busca, fornecedor, ehHospital, ehPagador, ehCliente, apenasAtivos, apenasInativos, limite, offset = (pagina - 1) * limite }, cancellationToken: ct))).AsList();
     }
 
     public async Task<Guid> SalvarParceiroAsync(Guid tenantId, Guid? id, string nome, string? documento, bool fornecedor, bool ativo, CancellationToken ct, bool ehHospital = false, bool ehPagador = false, bool ehCliente = false)
@@ -51,10 +61,18 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                     throw new InvalidOperationException("Já existe um parceiro cadastrado com este documento neste cliente.");
             }
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, eh_hospital, eh_pagador, eh_cliente, ativo, created_at)
-                VALUES (@novoId, @tenantId, @normNome, @normDoc, @fornecedor, @ehHospital, @ehPagador, @ehCliente, @ativo, now())",
-                new { novoId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
+            try
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_parceiros (id, tenant_id, nome, documento, fornecedor, eh_hospital, eh_pagador, eh_cliente, ativo, created_at)
+                    VALUES (@novoId, @tenantId, @normNome, @normDoc, @fornecedor, @ehHospital, @ehPagador, @ehCliente, @ativo, now())",
+                    new { novoId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                // Backstop em banco (ux_adm360_parceiro_documento) para a janela TOCTOU do pré-checagem.
+                throw new InvalidOperationException("Já existe um parceiro cadastrado com este documento neste cliente.");
+            }
 
             return novoId;
         }
@@ -84,20 +102,28 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                 throw new InvalidOperationException("Já existe outro parceiro cadastrado com este documento neste cliente.");
         }
 
-        var affected = await cn.ExecuteAsync(new CommandDefinition(@"
-            UPDATE plantaopro.adm360_parceiros
-            SET nome = @normNome,
-                documento = @normDoc,
-                fornecedor = @fornecedor,
-                eh_hospital = @ehHospital,
-                eh_pagador = @ehPagador,
-                eh_cliente = @ehCliente,
-                ativo = @ativo
-            WHERE id = @targetId AND tenant_id = @tenantId",
-            new { targetId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
+        try
+        {
+            var affected = await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_parceiros
+                SET nome = @normNome,
+                    documento = @normDoc,
+                    fornecedor = @fornecedor,
+                    eh_hospital = @ehHospital,
+                    eh_pagador = @ehPagador,
+                    eh_cliente = @ehCliente,
+                    ativo = @ativo
+                WHERE id = @targetId AND tenant_id = @tenantId",
+                new { targetId, tenantId, normNome, normDoc, fornecedor, ehHospital, ehPagador, ehCliente, ativo }, cancellationToken: ct));
 
-        if (affected == 0)
-            throw new KeyNotFoundException("Parceiro não encontrado ou não pertence a este cliente.");
+            if (affected == 0)
+                throw new KeyNotFoundException("Parceiro não encontrado ou não pertence a este cliente.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            // Backstop em banco (ux_adm360_parceiro_documento) para a janela TOCTOU do pré-checagem.
+            throw new InvalidOperationException("Já existe outro parceiro cadastrado com este documento neste cliente.");
+        }
 
         return targetId;
     }
@@ -115,8 +141,11 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             throw new KeyNotFoundException("Parceiro não encontrado ou não pertence a este cliente.");
     }
 
-    public async Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct)
+    public async Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false)
     {
+        pagina = Math.Max(1, pagina);
+        limite = Math.Clamp(limite, 1, 100);
+
         await using var cn = Connection();
         return (await cn.QueryAsync<Produto360>(new CommandDefinition(@"
             SELECT id, sku, nome, unidade, codigo_barras AS CodigoBarras,
@@ -125,9 +154,11 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             FROM plantaopro.adm360_produtos
             WHERE tenant_id = @tenantId
               AND (@apenasAtivos = false OR ativo = true)
+              AND (@apenasInativos = false OR ativo = false)
               AND (@busca IS NULL OR nome ILIKE '%' || @busca || '%' OR sku ILIKE '%' || @busca || '%' OR codigo_barras ILIKE '%' || @busca || '%')
-            ORDER BY nome",
-            new { tenantId, busca, apenasAtivos }, cancellationToken: ct))).AsList();
+            ORDER BY nome
+            LIMIT @limite OFFSET @offset",
+            new { tenantId, busca, apenasAtivos, apenasInativos, limite, offset = (pagina - 1) * limite }, cancellationToken: ct))).AsList();
     }
 
     public async Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct)
@@ -158,10 +189,18 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             if (skuExiste)
                 throw new InvalidOperationException("Já existe um produto com este SKU neste cliente.");
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_produtos (id, tenant_id, sku, nome, unidade, codigo_barras, controla_lote, exige_inspecao, preco_custo, ativo, created_at)
-                VALUES (@novoId, @tenantId, @normSku, @normNome, @normUnidade, @normBarras, @controlaLote, @exigeInspecao, @precoCusto, @ativo, now())",
-                new { novoId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo }, cancellationToken: ct));
+            try
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_produtos (id, tenant_id, sku, nome, unidade, codigo_barras, controla_lote, exige_inspecao, preco_custo, ativo, created_at)
+                    VALUES (@novoId, @tenantId, @normSku, @normNome, @normUnidade, @normBarras, @controlaLote, @exigeInspecao, @precoCusto, @ativo, now())",
+                    new { novoId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo }, cancellationToken: ct));
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                // Backstop em banco (unique(tenant_id,sku)) para a janela TOCTOU do pré-checagem.
+                throw new InvalidOperationException("Já existe um produto com este SKU neste cliente.");
+            }
 
             return novoId;
         }
@@ -205,21 +244,29 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         if (skuDuplicado)
             throw new InvalidOperationException("Já existe outro produto com este SKU neste cliente.");
 
-        var affected = await cn.ExecuteAsync(new CommandDefinition(@"
-            UPDATE plantaopro.adm360_produtos
-            SET sku = @normSku,
-                nome = @normNome,
-                unidade = @normUnidade,
-                codigo_barras = @normBarras,
-                controla_lote = @controlaLote,
-                exige_inspecao = @exigeInspecao,
-                preco_custo = @precoCusto,
-                ativo = @ativo
-            WHERE id = @targetId AND tenant_id = @tenantId",
-            new { targetId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo }, cancellationToken: ct));
+        try
+        {
+            var affected = await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_produtos
+                SET sku = @normSku,
+                    nome = @normNome,
+                    unidade = @normUnidade,
+                    codigo_barras = @normBarras,
+                    controla_lote = @controlaLote,
+                    exige_inspecao = @exigeInspecao,
+                    preco_custo = @precoCusto,
+                    ativo = @ativo
+                WHERE id = @targetId AND tenant_id = @tenantId",
+                new { targetId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo }, cancellationToken: ct));
 
-        if (affected == 0)
-            throw new KeyNotFoundException("Produto não encontrado ou não pertence a este cliente.");
+            if (affected == 0)
+                throw new KeyNotFoundException("Produto não encontrado ou não pertence a este cliente.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            // Backstop em banco (unique(tenant_id,sku)) para a janela TOCTOU do pré-checagem.
+            throw new InvalidOperationException("Já existe outro produto com este SKU neste cliente.");
+        }
 
         return targetId;
     }
@@ -237,17 +284,23 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             throw new KeyNotFoundException("Produto não encontrado ou não pertence a este cliente.");
     }
 
-    public async Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct)
+    public async Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false, string? busca = null)
     {
+        pagina = Math.Max(1, pagina);
+        limite = Math.Clamp(limite, 1, 100);
+
         await using var cn = Connection();
         return (await cn.QueryAsync<Local360>(new CommandDefinition(@"
             SELECT id, codigo, nome, tipo, ativo
             FROM plantaopro.adm360_locais
             WHERE tenant_id = @tenantId
               AND (@apenasAtivos = false OR ativo = true)
+              AND (@apenasInativos = false OR ativo = false)
               AND (@tipo IS NULL OR tipo = @tipo)
-            ORDER BY nome",
-            new { tenantId, tipo, apenasAtivos }, cancellationToken: ct))).AsList();
+              AND (@busca IS NULL OR nome ILIKE '%' || @busca || '%' OR codigo ILIKE '%' || @busca || '%')
+            ORDER BY nome
+            LIMIT @limite OFFSET @offset",
+            new { tenantId, tipo, busca, apenasAtivos, apenasInativos, limite, offset = (pagina - 1) * limite }, cancellationToken: ct))).AsList();
     }
 
     public async Task<Guid> SalvarLocalAsync(Guid tenantId, Guid? id, string codigo, string nome, string tipo, bool ativo, CancellationToken ct)
@@ -279,10 +332,18 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             if (codigoExiste)
                 throw new InvalidOperationException("Já existe um local de estoque com este código neste cliente.");
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_locais (id, tenant_id, codigo, nome, tipo, ativo, created_at)
-                VALUES (@novoId, @tenantId, @normCodigo, @normNome, @normTipo, @ativo, now())",
-                new { novoId, tenantId, normCodigo, normNome, normTipo, ativo }, cancellationToken: ct));
+            try
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_locais (id, tenant_id, codigo, nome, tipo, ativo, created_at)
+                    VALUES (@novoId, @tenantId, @normCodigo, @normNome, @normTipo, @ativo, now())",
+                    new { novoId, tenantId, normCodigo, normNome, normTipo, ativo }, cancellationToken: ct));
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                // Backstop em banco (unique(tenant_id,codigo)) para a janela TOCTOU do pré-checagem.
+                throw new InvalidOperationException("Já existe um local de estoque com este código neste cliente.");
+            }
 
             return novoId;
         }
@@ -309,17 +370,25 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         if (codigoDuplicado)
             throw new InvalidOperationException("Já existe outro local de estoque com este código neste cliente.");
 
-        var affected = await cn.ExecuteAsync(new CommandDefinition(@"
-            UPDATE plantaopro.adm360_locais
-            SET codigo = @normCodigo,
-                nome = @normNome,
-                tipo = @normTipo,
-                ativo = @ativo
-            WHERE id = @targetId AND tenant_id = @tenantId",
-            new { targetId, tenantId, normCodigo, normNome, normTipo, ativo }, cancellationToken: ct));
+        try
+        {
+            var affected = await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_locais
+                SET codigo = @normCodigo,
+                    nome = @normNome,
+                    tipo = @normTipo,
+                    ativo = @ativo
+                WHERE id = @targetId AND tenant_id = @tenantId",
+                new { targetId, tenantId, normCodigo, normNome, normTipo, ativo }, cancellationToken: ct));
 
-        if (affected == 0)
-            throw new KeyNotFoundException("Local de estoque não encontrado ou não pertence a este cliente.");
+            if (affected == 0)
+                throw new KeyNotFoundException("Local de estoque não encontrado ou não pertence a este cliente.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            // Backstop em banco (unique(tenant_id,codigo)) para a janela TOCTOU do pré-checagem.
+            throw new InvalidOperationException("Já existe outro local de estoque com este código neste cliente.");
+        }
 
         return targetId;
     }
@@ -332,7 +401,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             FROM plantaopro.adm360_lotes l
             JOIN plantaopro.adm360_produtos p ON p.id = l.produto_id AND p.tenant_id = l.tenant_id
             WHERE l.tenant_id = @tenantId
-              AND (@produtoId IS NULL OR l.produto_id = @produtoId)
+              AND (@produtoId::uuid IS NULL OR l.produto_id = @produtoId::uuid)
             ORDER BY l.validade NULLS LAST, l.codigo",
             new { tenantId, produtoId }, cancellationToken: ct))).AsList();
     }
@@ -347,7 +416,8 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                    coalesce(eh_cliente, false) AS EhCliente
             FROM plantaopro.adm360_parceiros
             WHERE tenant_id = @tenantId AND ativo = true
-            ORDER BY nome",
+            ORDER BY nome
+            LIMIT 100",
             new { tenantId }, cancellationToken: ct))).AsList();
 
         var produtos = (await cn.QueryAsync<Produto360>(new CommandDefinition(@"
@@ -356,14 +426,16 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                    COALESCE(preco_custo, 0) AS PrecoCusto, ativo
             FROM plantaopro.adm360_produtos
             WHERE tenant_id = @tenantId AND ativo = true
-            ORDER BY nome",
+            ORDER BY nome
+            LIMIT 100",
             new { tenantId }, cancellationToken: ct))).AsList();
 
         var locais = (await cn.QueryAsync<Local360>(new CommandDefinition(@"
             SELECT id, codigo, nome, tipo, ativo
             FROM plantaopro.adm360_locais
             WHERE tenant_id = @tenantId AND ativo = true
-            ORDER BY nome",
+            ORDER BY nome
+            LIMIT 100",
             new { tenantId }, cancellationToken: ct))).AsList();
 
         var lotes = (await cn.QueryAsync<Lote360>(new CommandDefinition(@"
@@ -371,7 +443,8 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             FROM plantaopro.adm360_lotes l
             JOIN plantaopro.adm360_produtos p ON p.id = l.produto_id AND p.tenant_id = l.tenant_id
             WHERE l.tenant_id = @tenantId
-            ORDER BY l.validade NULLS LAST, l.codigo",
+            ORDER BY l.validade NULLS LAST, l.codigo
+            LIMIT 100",
             new { tenantId }, cancellationToken: ct))).AsList();
 
         // Carregar médicos canônicos de plantaopro.medicos vinculados explicitamente ao tenant ou com acesso concedido
@@ -397,12 +470,16 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             )
               AND coalesce(m.reg_status, 'A') = 'A'
               AND coalesce(m.status, 'ATIVO') = 'ATIVO'
-            ORDER BY Nome",
+            ORDER BY Nome
+            LIMIT 100",
             new { tenantId }, cancellationToken: ct))).AsList();
 
+        // Os vetores de papel derivam APENAS das flags explícitas gravadas no parceiro.
+        // Parceiro sem nenhum papel explícito (legado ambíguo) permanece apenas na lista
+        // geral (Parceiros) e NÃO é reclassificado por ausência de outras flags.
         var fornecedores = parceiros.Where(p => p.Fornecedor).ToList();
-        var hospitais = parceiros.Where(p => p.EhHospital || (!p.Fornecedor && !p.EhPagador)).ToList();
-        var pagadores = parceiros.Where(p => p.EhPagador || (!p.Fornecedor && !p.EhHospital)).ToList();
+        var hospitais = parceiros.Where(p => p.EhHospital).ToList();
+        var pagadores = parceiros.Where(p => p.EhPagador).ToList();
 
         return new Lookups360Bundle(
             Parceiros: parceiros,

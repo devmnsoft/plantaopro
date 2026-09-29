@@ -369,6 +369,17 @@
                                 {
                                     <div class="small text-info mt-1">@resp.MensagemRetorno</div>
                                 }
+                                @if (resp.ExportacaoId.HasValue)
+                                {
+                                    <div class="mt-2 d-flex align-items-center flex-wrap gap-2">
+                                        <span class="badge bg-success"><i class="bi bi-file-earmark-lock me-1"></i>ARQUIVO GERADO · IMUTÁVEL</span>
+                                        <a href="/Administrativo360/Cotacoes/@Model.Cotacao.Id/Exportacao/@resp.Id" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-download me-1"></i> Baixar Arquivo Exportado
+                                        </a>
+                                        <span class="small text-muted" title="@resp.ExportacaoSha256Hash">SHA256: @(string.IsNullOrEmpty(resp.ExportacaoSha256Hash) ? "-" : resp.ExportacaoSha256Hash[..8])…</span>
+                                        <div class="small text-muted w-100">@resp.ExportacaoNomeArquivo</div>
+                                    </div>
+                                }
                             </li>
                         }
                     </ul>

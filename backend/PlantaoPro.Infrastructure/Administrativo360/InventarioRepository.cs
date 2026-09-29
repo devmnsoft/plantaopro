@@ -22,18 +22,30 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
         public decimal Diferenca => (Contado ?? Esperado) - Esperado;
     }
 
+    // Mesma motivação do PedidoRow (ComprasRepository): classe intermediária absorve a conversão
+    // timestamptz→DateTimeOffset; mapeamento direto no record exigiria ctor com tipo exato.
+    private sealed class InventarioResumoRow
+    {
+        public Guid Id { get; set; }
+        public string Local { get; set; } = string.Empty;
+        public string Escopo { get; set; } = string.Empty;
+        public string Situacao { get; set; } = string.Empty;
+        public DateTimeOffset CriadoEm { get; set; }
+    }
+
     public InventarioRepository(string connectionString) : base(connectionString) { }
 
     public async Task<IReadOnlyList<InventarioResumo>> ListarAsync(Guid tenantId, CancellationToken ct)
     {
         await using var cn = Connection();
-        return (await cn.QueryAsync<InventarioResumo>(new CommandDefinition(@"
+        var rows = await cn.QueryAsync<InventarioResumoRow>(new CommandDefinition(@"
             SELECT i.id, l.nome AS Local, i.escopo, i.situacao, i.created_at AS CriadoEm
             FROM plantaopro.adm360_inventarios i
             JOIN plantaopro.adm360_locais l ON l.id = i.local_id AND l.tenant_id = i.tenant_id
             WHERE i.tenant_id = @tenantId
             ORDER BY i.created_at DESC",
-            new { tenantId }, cancellationToken: ct))).AsList();
+            new { tenantId }, cancellationToken: ct));
+        return rows.Select(i => new InventarioResumo(i.Id, i.Local, i.Escopo, i.Situacao, i.CriadoEm)).ToList();
     }
 
     public async Task<Guid> AbrirAsync(Guid tenantId, Guid usuarioId, AbrirInventarioCommand c, CancellationToken ct)

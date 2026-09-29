@@ -294,6 +294,8 @@ public partial class Administrativo360Controller
             LoteId = loteId,
             LocalId = localId,
             Quantidade = quantidade,
+            // O contrato da API exige Motivo nao-nulo em ReservarCommand; a tela de reserva nao possui campo de motivo, entao usamos um padrao descritivo.
+            Motivo = "Reserva de material para orçamento cirúrgico",
             Origem = "ORCAMENTO_CIRURGICO",
             OrigemId = id,
             IdempotencyKey = Guid.NewGuid().ToString("N")

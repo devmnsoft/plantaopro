@@ -80,6 +80,9 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
     public async Task<IReadOnlyList<ValeResumo>> ListarAsync(
         Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
     {
+        if (inicio.HasValue && fim.HasValue && inicio.Value > fim.Value)
+            throw new ArgumentException("Período inválido: a data inicial não pode ser posterior à data final.");
+
         await using var cn = Connection();
         var rows = await cn.QueryAsync<ValeHeaderRow>(new CommandDefinition(@"
             SELECT v.id AS Id, v.numero AS Numero,
@@ -104,8 +107,8 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             WHERE v.tenant_id = @tenantId
               AND (@busca IS NULL OR v.numero ILIKE '%' || @busca || '%' OR c.numero ILIKE '%' || @busca || '%' OR o.numero ILIKE '%' || @busca || '%' OR h.nome ILIKE '%' || @busca || '%' OR hosp.nome ILIKE '%' || @busca || '%')
               AND (@situacao IS NULL OR v.situacao = @situacao)
-              AND (@inicio IS NULL OR v.data_saida_prevista >= @inicio)
-              AND (@fim IS NULL OR v.data_saida_prevista <= @fim)
+              AND (@inicio::date IS NULL OR v.data_saida_prevista >= @inicio::date)
+              AND (@fim::date IS NULL OR v.data_saida_prevista <= @fim::date)
             ORDER BY v.data_saida_prevista DESC, v.created_at DESC",
             new { tenantId, busca, situacao, inicio, fim }, cancellationToken: ct));
 

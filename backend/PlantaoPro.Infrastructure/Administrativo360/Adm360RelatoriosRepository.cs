@@ -7,6 +7,11 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
 {
     public Adm360RelatoriosRepository(string connectionString) : base(connectionString) { }
 
+    // Colunas date chegam como DateOnly no Npgsql 10; converte para DateTimeOffset (meia-noite local),
+    // aceitando DateOnly/DateTime/valor nulo vindos de projeções dinâmicas.
+    private static DateTimeOffset? ToDateTimeOffsetOrNull(object? value) =>
+        value is null ? null : new DateTimeOffset(ToDateOnly(value).ToDateTime(TimeOnly.MinValue));
+
     public async Task<IReadOnlyList<RelatorioValesPendentesItem>> ValesPendentesAsync(Guid tenantId, CancellationToken ct)
     {
         await using var cn = Connection();
@@ -42,8 +47,8 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
             (string)r.numero,
             (string)r.hospital,
             (string?)r.cirurgianumero,
-            (DateTimeOffset?)r.datasaida,
-            r.dataretornoprevista is not null ? DateOnly.FromDateTime((DateTime)r.dataretornoprevista) : null,
+            ToDateTimeOffsetOrNull(r.datasaida),
+            r.dataretornoprevista is not null ? ToDateOnly(r.dataretornoprevista) : null,
             (decimal)r.quantidadependente,
             (string)r.responsavel,
             (int)r.diasatraso)).ToList();
@@ -86,7 +91,7 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
             (string)r.produto,
             (Guid)r.loteid,
             (string)r.lote,
-            r.validade is not null ? DateOnly.FromDateTime((DateTime)r.validade) : null,
+            r.validade is not null ? ToDateOnly(r.validade) : null,
             (string)r.hospital,
             (Guid)r.valeid,
             (string)r.valenumero,
@@ -138,8 +143,8 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
             SELECT p.nome AS Produto,
                    l.codigo AS Lote,
                    l.validade AS Validade,
-                   m.documento_tipo AS OrigemTipo,
-                   m.documento_id::text AS DocumentoOrigem,
+                   m.origem_tipo AS OrigemTipo,
+                   m.origem_id::text AS DocumentoOrigem,
                    v.numero AS ValeNumero,
                    COALESCE(h.nome, hosp.nome, '') AS Hospital,
                    loc.nome AS LocalAtual,
@@ -150,7 +155,7 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
             JOIN plantaopro.adm360_produtos p ON p.id = m.produto_id AND p.tenant_id = m.tenant_id
             JOIN plantaopro.adm360_lotes l ON l.id = m.lote_id AND l.tenant_id = m.tenant_id
             JOIN plantaopro.adm360_locais loc ON loc.id = m.local_id AND loc.tenant_id = m.tenant_id
-            LEFT JOIN plantaopro.adm360_vales v ON v.id = m.documento_id AND v.tenant_id = m.tenant_id
+            LEFT JOIN plantaopro.adm360_vales v ON v.id = m.origem_id AND v.tenant_id = m.tenant_id
             LEFT JOIN plantaopro.adm360_parceiros h ON h.id = v.hospital_id AND h.tenant_id = v.tenant_id
             LEFT JOIN plantaopro.hospitais hosp ON hosp.id = v.hospital_id AND hosp.tenant_id = v.tenant_id
             WHERE m.tenant_id = @tenantId
@@ -161,7 +166,7 @@ public sealed class Adm360RelatoriosRepository : Adm360Repository, IAdm360Relato
         return rows.Select(r => new RelatorioRastreabilidadeItem(
             (string)r.produto,
             (string)r.lote,
-            r.validade is not null ? DateOnly.FromDateTime((DateTime)r.validade) : null,
+            r.validade is not null ? ToDateOnly(r.validade) : null,
             (string)r.origemtipo,
             (string?)r.documentoorigem,
             (string?)r.valenumero,

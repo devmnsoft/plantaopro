@@ -29,10 +29,10 @@ public sealed class Adm360CadastrosController : ControllerBase
     }
 
     [HttpGet("parceiros")]
-    public async Task<IActionResult> ListarParceiros([FromQuery] string? busca, [FromQuery] bool? fornecedor, CancellationToken ct)
+    public async Task<IActionResult> ListarParceiros([FromQuery] string? busca, [FromQuery] bool? fornecedor, [FromQuery] int? pagina, [FromQuery] int? limite, [FromQuery] bool? ehHospital, [FromQuery] bool? ehPagador, [FromQuery] bool? ehCliente, [FromQuery] bool apenasAtivos = false, [FromQuery] bool apenasInativos = false, CancellationToken ct = default)
     {
         var (tenant, _) = Context();
-        var lista = await repository.ListarParceirosAsync(tenant, busca, fornecedor, ct);
+        var lista = await repository.ListarParceirosAsync(tenant, busca, fornecedor, ct, pagina ?? 1, limite ?? 100, ehHospital, ehPagador, ehCliente, apenasAtivos, apenasInativos);
         return Ok(lista);
     }
 
@@ -87,10 +87,10 @@ public sealed class Adm360CadastrosController : ControllerBase
     }
 
     [HttpGet("produtos")]
-    public async Task<IActionResult> ListarProdutos([FromQuery] string? busca, [FromQuery] bool apenasAtivos = false, CancellationToken ct = default)
+    public async Task<IActionResult> ListarProdutos([FromQuery] string? busca, [FromQuery] bool apenasAtivos = false, [FromQuery] bool apenasInativos = false, [FromQuery] int? pagina = null, [FromQuery] int? limite = null, CancellationToken ct = default)
     {
         var (tenant, _) = Context();
-        var lista = await repository.ListarProdutosAsync(tenant, busca, apenasAtivos, ct);
+        var lista = await repository.ListarProdutosAsync(tenant, busca, apenasAtivos, ct, pagina ?? 1, limite ?? 100, apenasInativos);
         return Ok(lista);
     }
 
@@ -135,10 +135,10 @@ public sealed class Adm360CadastrosController : ControllerBase
     }
 
     [HttpGet("locais")]
-    public async Task<IActionResult> ListarLocais([FromQuery] string? tipo, [FromQuery] bool apenasAtivos = false, CancellationToken ct = default)
+    public async Task<IActionResult> ListarLocais([FromQuery] string? tipo, [FromQuery] bool apenasAtivos = false, [FromQuery] bool apenasInativos = false, [FromQuery] int? pagina = null, [FromQuery] int? limite = null, [FromQuery] string? busca = null, CancellationToken ct = default)
     {
         var (tenant, _) = Context();
-        var lista = await repository.ListarLocaisAsync(tenant, tipo, apenasAtivos, ct);
+        var lista = await repository.ListarLocaisAsync(tenant, tipo, apenasAtivos, ct, pagina ?? 1, limite ?? 100, apenasInativos, busca);
         return Ok(lista);
     }
 

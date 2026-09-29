@@ -40,7 +40,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             FROM plantaopro.adm360_documentos_recebidos
             WHERE tenant_id = @tenantId
               AND (@status IS NULL OR status_conferencia = @status)
-              AND (@quarentena IS NULL OR quarentena = @quarentena)
+              AND (@quarentena::boolean IS NULL OR quarentena = @quarentena::boolean)
             ORDER BY data_emissao DESC, created_at DESC";
 
         var rows = await cn.QueryAsync<dynamic>(new CommandDefinition(sql, new { tenantId, status, quarentena }, cancellationToken: ct));

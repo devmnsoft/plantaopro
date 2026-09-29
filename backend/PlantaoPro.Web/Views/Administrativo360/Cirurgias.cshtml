@@ -45,6 +45,15 @@
 
 <partial name="_AlertasAcao" />
 
+    @{ var erroListaCirurgias = ViewBag.Erro as string; }
+    @if (!string.IsNullOrEmpty(erroListaCirurgias))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@erroListaCirurgias
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
     <!-- Filtros -->
     <div class="card bg-dark border-secondary mb-4 text-light">
         <div class="card-body">

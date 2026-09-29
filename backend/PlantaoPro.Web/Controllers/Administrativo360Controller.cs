@@ -37,9 +37,11 @@ public partial class Administrativo360Controller : BaseWebController
     private async Task PreencherLookupsOrcamentoAsync(HttpClient client, OrcamentoFormViewModel model)
     {
         var lookups = await CarregarLookupsAsync(client);
-        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        // Sem fallback por ausência: o seletor de hospitais usa apenas papéis explícitos.
+        model.Hospitais = lookups.Hospitais ?? Array.Empty<Parceiro360ViewModel>();
         model.Medicos = lookups.Medicos ?? Array.Empty<Medico360ViewModel>();
-        model.Pagadores = (lookups.Pagadores?.Count > 0 ? lookups.Pagadores : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        // Sem fallback por ausência: o seletor de pagadores usa apenas papéis explícitos.
+        model.Pagadores = lookups.Pagadores ?? Array.Empty<Parceiro360ViewModel>();
         model.ProdutosDisponiveis = lookups.Produtos;
     }
 
@@ -47,7 +49,8 @@ public partial class Administrativo360Controller : BaseWebController
     {
         var lookups = await CarregarLookupsAsync(client);
         var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
-        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        // Sem fallback por ausência: o seletor de hospitais usa apenas papéis explícitos.
+        model.Hospitais = lookups.Hospitais ?? Array.Empty<Parceiro360ViewModel>();
         model.Medicos = lookups.Medicos ?? Array.Empty<Medico360ViewModel>();
         model.Locais = lookups.Locais;
         model.Orcamentos = respOrc.Data ?? Array.Empty<OrcamentoResumoViewModel>();
@@ -58,7 +61,8 @@ public partial class Administrativo360Controller : BaseWebController
         var lookups = await CarregarLookupsAsync(client);
         var respCir = await ReadApiResponse<IReadOnlyList<CirurgiaResumoViewModel>>(client, "api/administrativo360/cirurgias");
         var respOrc = await ReadApiResponse<IReadOnlyList<OrcamentoResumoViewModel>>(client, "api/administrativo360/orcamentos");
-        model.Hospitais = (lookups.Hospitais?.Count > 0 ? lookups.Hospitais : lookups.Parceiros.Where(p => !p.Fornecedor).ToList()).ToArray();
+        // Sem fallback por ausência: o seletor de hospitais usa apenas papéis explícitos.
+        model.Hospitais = lookups.Hospitais ?? Array.Empty<Parceiro360ViewModel>();
         model.LocaisOrigem = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray();
         model.LocaisDestino = lookups.Locais.ToArray();
         model.Cirurgias = respCir.Data ?? Array.Empty<CirurgiaResumoViewModel>();

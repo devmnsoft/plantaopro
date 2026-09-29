@@ -50,6 +50,14 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @if (Model.Saldos.All(x => x.Condicao != "LIBERADO" || x.Disponivel <= 0))
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-secondary">
+                                <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum saldo liberado disponível para movimentação.
+                            </td>
+                        </tr>
+                    }
                     @foreach (var s in Model.Saldos.Where(x => x.Condicao == "LIBERADO" && x.Disponivel > 0))
                     {
                         <tr>

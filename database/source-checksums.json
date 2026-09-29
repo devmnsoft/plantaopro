@@ -23,7 +23,7 @@
   "database/schema/030_operacao_plantoes.sql": "1b8f162e309f6f7d618975610a30497ffed6314c2267669bf07af2d560523762",
   "database/schema/040_saude360.sql": "e5f8c671337109984b3533657fd6336d829bd52d4a77a19ff21dc39cbee5a3d2",
   "database/schema/050_financeiro.sql": "90357b7c1c8d3093091e3a8ec89b2a167f6281695a0e8568435b14c10ae0e255",
-  "database/schema/060_auditoria_observabilidade.sql": "3a13cd50422a3b966d2f714385c585ef9f56bb380274409e2aa4907dedd80665",
+  "database/schema/060_auditoria_observabilidade.sql": "d2cfd5bf74b43736a28f610c55a44ccb6bedf2bcfe763675c0ac44a7903df8d5",
   "database/schema/070_relatorios.sql": "bbaad4c4aa3eb5cb5befb0ac425c6addafc7ee4280dd3d025a1abe6c5a62cd9d",
   "database/schema/080_constraints.sql": "ba92ad304072b85e769d690d5d1189bf89f6b94759f05f0fa4b1c7fcf8c4eeb0",
   "database/schema/090_indexes.sql": "4c5a26dce844262569b5a5962f7bdd68b7fa763cccb0786583c441cc7c78e613",

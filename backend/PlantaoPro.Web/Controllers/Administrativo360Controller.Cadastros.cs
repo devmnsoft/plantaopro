@@ -6,94 +6,114 @@ namespace PlantaoPro.Web.Controllers;
 public partial class Administrativo360Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Parceiros(string? busca, string? papel, bool? status)
+    public async Task<IActionResult> Parceiros(string? busca, string? papel, bool? status, int? pagina)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var lookups = await CarregarLookupsAsync(client);
-        var itens = lookups.Parceiros.AsEnumerable();
-
+        // Listagem dedicada com filtros e paginação no servidor (teto de 100 itens por página);
+        // inativos continuam visíveis para preservar o histórico.
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var qs = new List<string> { "pagina=" + paginaAtual };
         if (!string.IsNullOrWhiteSpace(busca))
+            qs.Add("busca=" + Uri.EscapeDataString(busca.Trim()));
+
+        switch ((papel ?? "").Trim().ToUpperInvariant())
         {
-            var termo = busca.Trim().ToLowerInvariant();
-            itens = itens.Where(p => p.Nome.ToLowerInvariant().Contains(termo) || (p.Documento != null && p.Documento.Contains(termo)));
+            case "FORNECEDOR":
+                qs.Add("fornecedor=true");
+                break;
+            case "HOSPITAL":
+                qs.Add("ehHospital=true");
+                break;
+            case "PAGADOR":
+                qs.Add("ehPagador=true");
+                break;
+            case "CLIENTE":
+                qs.Add("ehCliente=true");
+                break;
         }
 
-        if (papel == "FORNECEDOR")
-            itens = itens.Where(p => p.Fornecedor);
-        else if (papel == "HOSPITAL")
-            itens = itens.Where(p => p.EhHospital);
-        else if (papel == "PAGADOR")
-            itens = itens.Where(p => p.EhPagador);
-        else if (papel == "CLIENTE")
-            itens = itens.Where(p => p.EhCliente);
+        if (status == true)
+            qs.Add("apenasAtivos=true");
+        else if (status == false)
+            qs.Add("apenasInativos=true");
 
-        if (status.HasValue)
-            itens = itens.Where(p => p.Ativo == status.Value);
+        var resp = await ReadApiListResponseAsync<Parceiro360ViewModel>(client, "api/administrativo360/cadastros/parceiros?" + string.Join("&", qs));
+        var itens = resp.Data.ToList();
 
         return View(new ParceirosIndexViewModel
         {
-            Parceiros = itens.ToList(),
+            Parceiros = itens,
             Busca = busca,
             Papel = papel,
-            Status = status
+            Status = status,
+            Pagina = paginaAtual,
+            TemProximaPagina = itens.Count >= 100,
+            Erro = resp.Error
         });
     }
 
     [HttpGet]
-    public async Task<IActionResult> Produtos(string? busca, bool? status)
+    public async Task<IActionResult> Produtos(string? busca, bool? status, int? pagina)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var lookups = await CarregarLookupsAsync(client);
-        var itens = lookups.Produtos.AsEnumerable();
-
+        // Listagem dedicada com filtros e paginação no servidor (teto de 100 itens por página).
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var qs = new List<string> { "pagina=" + paginaAtual };
         if (!string.IsNullOrWhiteSpace(busca))
-        {
-            var termo = busca.Trim().ToLowerInvariant();
-            itens = itens.Where(p => p.Nome.ToLowerInvariant().Contains(termo) || p.Sku.ToLowerInvariant().Contains(termo) || (p.CodigoBarras != null && p.CodigoBarras.Contains(termo)));
-        }
+            qs.Add("busca=" + Uri.EscapeDataString(busca.Trim()));
+        if (status == true)
+            qs.Add("apenasAtivos=true");
+        else if (status == false)
+            qs.Add("apenasInativos=true");
 
-        if (status.HasValue)
-            itens = itens.Where(p => p.Ativo == status.Value);
+        var resp = await ReadApiListResponseAsync<Produto360ViewModel>(client, "api/administrativo360/cadastros/produtos?" + string.Join("&", qs));
+        var itens = resp.Data.ToList();
 
         return View(new ProdutosIndexViewModel
         {
-            Produtos = itens.ToList(),
+            Produtos = itens,
             Busca = busca,
-            Status = status
+            Status = status,
+            Pagina = paginaAtual,
+            TemProximaPagina = itens.Count >= 100,
+            Erro = resp.Error
         });
     }
 
     [HttpGet]
-    public async Task<IActionResult> Locais(string? busca, string? tipo, bool? status)
+    public async Task<IActionResult> Locais(string? busca, string? tipo, bool? status, int? pagina)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var lookups = await CarregarLookupsAsync(client);
-        var itens = lookups.Locais.AsEnumerable();
-
+        // Listagem dedicada com filtros e paginação no servidor (teto de 100 itens por página).
+        var paginaAtual = Math.Max(1, pagina ?? 1);
+        var qs = new List<string> { "pagina=" + paginaAtual };
         if (!string.IsNullOrWhiteSpace(busca))
-        {
-            var termo = busca.Trim().ToLowerInvariant();
-            itens = itens.Where(l => l.Nome.ToLowerInvariant().Contains(termo) || l.Codigo.ToLowerInvariant().Contains(termo));
-        }
-
+            qs.Add("busca=" + Uri.EscapeDataString(busca.Trim()));
         if (!string.IsNullOrWhiteSpace(tipo))
-            itens = itens.Where(l => l.Tipo.Equals(tipo, StringComparison.OrdinalIgnoreCase));
+            qs.Add("tipo=" + Uri.EscapeDataString(tipo.Trim().ToUpperInvariant()));
+        if (status == true)
+            qs.Add("apenasAtivos=true");
+        else if (status == false)
+            qs.Add("apenasInativos=true");
 
-        if (status.HasValue)
-            itens = itens.Where(l => l.Ativo == status.Value);
+        var resp = await ReadApiListResponseAsync<Local360ViewModel>(client, "api/administrativo360/cadastros/locais?" + string.Join("&", qs));
+        var itens = resp.Data.ToList();
 
         return View(new LocaisIndexViewModel
         {
-            Locais = itens.ToList(),
+            Locais = itens,
             Busca = busca,
             Tipo = tipo,
-            Status = status
+            Status = status,
+            Pagina = paginaAtual,
+            TemProximaPagina = itens.Count >= 100,
+            Erro = resp.Error
         });
     }
 

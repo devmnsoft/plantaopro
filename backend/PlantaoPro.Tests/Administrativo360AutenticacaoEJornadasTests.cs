@@ -22,12 +22,7 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
         _factory = factory;
     }
 
-    private static string ObterConnectionString()
-    {
-        return Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
-            ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-            ?? "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Pooling=true;Maximum Pool Size=50;Minimum Pool Size=0;Timeout=30;Command Timeout=60;Search Path=PlantaoPro,public;Application Name=PlantaoPro.tests";
-    }
+    private static string ObterConnectionString() => TestDatabase.ConnectionString;
 
     private async Task<string> AutenticarEObterTokenAsync(string email, string senha)
     {
@@ -122,26 +117,39 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
         Assert.Equal(HttpStatusCode.OK, resLeitura.StatusCode);
 
         // Tentativa de escrita bloqueada pela política Adm360.MapearCadastros (403 Forbidden)
-        var docAleatorio = "99." + Random.Shared.Next(100, 999) + "." + Random.Shared.Next(100, 999) + "/0001-" + Random.Shared.Next(10, 99);
+        var docAleatorio = "99." + Random.Shared.Next(100, 999) + "." + Random.Shared.Next(100, 999) + "/0001-" + Guid.NewGuid().ToString("N")[..4];
+        var nomeInvasao = "Parceiro Invasao Consulta " + Guid.NewGuid().ToString("N")[..6];
         var novoParceiro = new Adm360CadastrosController.SalvarParceiroRequest(
             null,
-            "Parceiro Invasao Consulta " + Guid.NewGuid().ToString("N")[..6],
+            nomeInvasao,
             docAleatorio,
             false,
             true
         );
 
-        var resEscrita = await clientConsulta.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", novoParceiro);
-        Assert.Equal(HttpStatusCode.Forbidden, resEscrita.StatusCode);
+        try
+        {
+            var resEscrita = await clientConsulta.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", novoParceiro);
+            Assert.Equal(HttpStatusCode.Forbidden, resEscrita.StatusCode);
 
-        // 2. Autenticar Gestor (possui Adm360.MapearCadastros) e comprovar sucesso na gravação
-        var tokenGestor = await AutenticarEObterTokenAsync("gestor@santacasa-demo.example", "SantaCasa!Demo2026#Gestor");
+            // 2. Autenticar Gestor (possui Adm360.MapearCadastros) e comprovar sucesso na gravação
+            var tokenGestor = await AutenticarEObterTokenAsync("gestor@santacasa-demo.example", "SantaCasa!Demo2026#Gestor");
 
-        using var clientGestor = _factory.CreateClient();
-        clientGestor.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenGestor);
+            using var clientGestor = _factory.CreateClient();
+            clientGestor.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenGestor);
 
-        var resEscritaGestor = await clientGestor.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", novoParceiro);
-        Assert.True(resEscritaGestor.StatusCode is HttpStatusCode.OK or HttpStatusCode.Created);
+            var resEscritaGestor = await clientGestor.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", novoParceiro);
+            Assert.True(resEscritaGestor.StatusCode is HttpStatusCode.OK or HttpStatusCode.Created);
+        }
+        finally
+        {
+            // Remove o registro criado para não acumular resíduos no tenant demonstrativo
+            await using var cnLimpeza = new NpgsqlConnection(ObterConnectionString());
+            await cnLimpeza.OpenAsync();
+            await cnLimpeza.ExecuteAsync(
+                "DELETE FROM plantaopro.adm360_parceiros WHERE tenant_id = @TenantSantaCasa AND nome = @nomeInvasao",
+                new { TenantSantaCasa, nomeInvasao });
+        }
     }
 
     // =========================================================================
@@ -162,42 +170,54 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
         var nomeBOriginal = "Hospital B Confidencial " + Guid.NewGuid().ToString("N")[..6];
         var idB = await repo.SalvarParceiroAsync(tenantB, null, nomeBOriginal, docB, false, true, default);
 
-        // Cliente A tenta alterar registro pertencente a B passando ID de B sob tenant A
-        var tentativaAlteracao = new Adm360CadastrosController.SalvarParceiroRequest(
-            idB,
-            "HACKEADO PELO CLIENTE A",
-            "00000000000",
-            true,
-            false
-        );
-
-        // Operação DEVE ser recusada pelo repositório (KeyNotFoundException pois 0 linhas do Tenant A foram afetadas)
-        await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+        try
         {
-            await repo.SalvarParceiroAsync(tenantA, idB, "HACKEADO PELO CLIENTE A", "00000000000", true, false, default);
-        });
+            // Cliente A tenta alterar registro pertencente a B passando ID de B sob tenant A
+            var tentativaAlteracao = new Adm360CadastrosController.SalvarParceiroRequest(
+                idB,
+                "HACKEADO PELO CLIENTE A",
+                "00000000000",
+                true,
+                false
+            );
 
-        // Comprovar que os dados de B permanecem integralmente inalterados no banco
-        await using var cn = new NpgsqlConnection(cs);
-        await cn.OpenAsync();
-        var parceiroB = await cn.QuerySingleAsync<dynamic>(
-            "SELECT nome, documento, fornecedor, ativo, tenant_id FROM plantaopro.adm360_parceiros WHERE id = @idB",
-            new { idB }
-        );
+            // Operação DEVE ser recusada pelo repositório (KeyNotFoundException pois 0 linhas do Tenant A foram afetadas)
+            await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
+            {
+                await repo.SalvarParceiroAsync(tenantA, idB, "HACKEADO PELO CLIENTE A", "00000000000", true, false, default);
+            });
 
-        Assert.Equal(nomeBOriginal, (string)parceiroB.nome);
-        Assert.Equal(docB, (string)parceiroB.documento);
-        Assert.False((bool)parceiroB.fornecedor);
-        Assert.True((bool)parceiroB.ativo);
-        Assert.Equal(tenantB, (Guid)parceiroB.tenant_id);
+            // Comprovar que os dados de B permanecem integralmente inalterados no banco
+            await using var cn = new NpgsqlConnection(cs);
+            await cn.OpenAsync();
+            var parceiroB = await cn.QuerySingleAsync<dynamic>(
+                "SELECT nome, documento, fornecedor, ativo, tenant_id FROM plantaopro.adm360_parceiros WHERE id = @idB",
+                new { idB }
+            );
 
-        // Agora testar também pelo endpoint real HTTP da API
-        var tokenGestorA = await AutenticarEObterTokenAsync("gestor@santacasa-demo.example", "SantaCasa!Demo2026#Gestor");
-        using var clientA = _factory.CreateClient();
-        clientA.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenGestorA);
+            Assert.Equal(nomeBOriginal, (string)parceiroB.nome);
+            Assert.Equal(docB, (string)parceiroB.documento);
+            Assert.False((bool)parceiroB.fornecedor);
+            Assert.True((bool)parceiroB.ativo);
+            Assert.Equal(tenantB, (Guid)parceiroB.tenant_id);
 
-        var resHttpAcessoCruzado = await clientA.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", tentativaAlteracao);
-        Assert.Equal(HttpStatusCode.NotFound, resHttpAcessoCruzado.StatusCode);
+            // Agora testar também pelo endpoint real HTTP da API
+            var tokenGestorA = await AutenticarEObterTokenAsync("gestor@santacasa-demo.example", "SantaCasa!Demo2026#Gestor");
+            using var clientA = _factory.CreateClient();
+            clientA.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenGestorA);
+
+            var resHttpAcessoCruzado = await clientA.PostAsJsonAsync("api/administrativo360/cadastros/parceiros", tentativaAlteracao);
+            Assert.Equal(HttpStatusCode.NotFound, resHttpAcessoCruzado.StatusCode);
+        }
+        finally
+        {
+            // Remove o registro do tenant isolado para não acumular resíduos entre execuções
+            await using var cnLimpeza = new NpgsqlConnection(cs);
+            await cnLimpeza.OpenAsync();
+            await cnLimpeza.ExecuteAsync(
+                "DELETE FROM plantaopro.adm360_parceiros WHERE id = @idB AND tenant_id = @tenantB",
+                new { idB, tenantB });
+        }
     }
 
     [Fact]
@@ -206,42 +226,67 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
         var cs = ObterConnectionString();
         var repo = new CadastrosRepository(cs);
 
-        // 1. Chave de negócio duplicada no mesmo tenant (mesmo documento) deve ser rejeitada
-        var docUnico = "55.444.333/0001-" + Random.Shared.Next(10, 99);
-        await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Original", docUnico, false, true, default);
-
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
-        {
-            await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Duplicado", docUnico, false, true, default);
-        });
-
-        // 2. Tipo de local inválido deve ser rejeitado estritamente sem conversão silenciosa
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
-        {
-            await repo.SalvarLocalAsync(TenantSantaCasa, null, "LOC-INV", "Local Tipo Invalido", "TIPO_NAO_PERMITIDO", true, default);
-        });
-
-        // 3. Alteração estrutural de produto movimentado deve ser bloqueada
+        // Sufixo único amplo (Guid) impede colisão entre execuções; a limpeza no finally
+        // garante que o teste não acumule resíduos no tenant demonstrativo.
+        // (coluna documento é varchar(20): 16 caracteres de prefixo + 4 de sufixo)
+        var docUnico = "55.444.333/0001-" + Guid.NewGuid().ToString("N")[..4];
         var skuMov = "SKU-MOV-" + Guid.NewGuid().ToString("N")[..6];
-        var prodId = await repo.SalvarProdutoAsync(TenantSantaCasa, null, skuMov, "Produto Com Movimentacao", "UN", null, false, false, 100m, true, default);
+        Guid idParceiroOriginal = Guid.Empty;
+        var prodId = Guid.Empty;
 
-        // Simular movimento de estoque no banco para este produto
-        await using var cn = new NpgsqlConnection(cs);
-        await cn.OpenAsync();
-        var localId = await cn.QueryFirstOrDefaultAsync<Guid>("SELECT id FROM plantaopro.adm360_locais WHERE tenant_id = @TenantSantaCasa LIMIT 1", new { TenantSantaCasa });
-        var loteId = await cn.QueryFirstOrDefaultAsync<Guid>("SELECT id FROM plantaopro.adm360_lotes WHERE tenant_id = @TenantSantaCasa LIMIT 1", new { TenantSantaCasa });
-        if (localId != Guid.Empty && loteId != Guid.Empty)
+        try
         {
-            await cn.ExecuteAsync(@"
-                INSERT INTO plantaopro.adm360_movimentos (id, tenant_id, local_id, produto_id, lote_id, tipo, condicao, quantidade, origem_tipo, origem_id, idempotency_key, created_at)
-                VALUES (gen_random_uuid(), @TenantSantaCasa, @localId, @prodId, @loteId, 'ENTRADA', 'LIBERADO', 10, 'MANUAL', gen_random_uuid(), gen_random_uuid()::text, now());",
-                new { TenantSantaCasa, localId, prodId, loteId });
+            // 1. Chave de negócio duplicada no mesmo tenant (mesmo documento) deve ser rejeitada
+            idParceiroOriginal = await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Original", docUnico, false, true, default);
 
-            // Tentar alterar unidade em produto movimentado deve lançar InvalidOperationException
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
-                await repo.SalvarProdutoAsync(TenantSantaCasa, prodId, skuMov, "Produto Com Movimentacao Alterado", "CX", null, false, false, 100m, true, default);
+                await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Duplicado", docUnico, false, true, default);
             });
+
+            // 2. Tipo de local inválido deve ser rejeitado estritamente sem conversão silenciosa
+            await Assert.ThrowsAsync<ArgumentException>(async () =>
+            {
+                await repo.SalvarLocalAsync(TenantSantaCasa, null, "LOC-INV", "Local Tipo Invalido", "TIPO_NAO_PERMITIDO", true, default);
+            });
+
+            // 3. Alteração estrutural de produto movimentado deve ser bloqueada
+            prodId = await repo.SalvarProdutoAsync(TenantSantaCasa, null, skuMov, "Produto Com Movimentacao", "UN", null, false, false, 100m, true, default);
+
+            // Simular movimento de estoque no banco para este produto
+            await using var cn = new NpgsqlConnection(cs);
+            await cn.OpenAsync();
+            var localId = await cn.QueryFirstOrDefaultAsync<Guid>("SELECT id FROM plantaopro.adm360_locais WHERE tenant_id = @TenantSantaCasa LIMIT 1", new { TenantSantaCasa });
+            var loteId = await cn.QueryFirstOrDefaultAsync<Guid>("SELECT id FROM plantaopro.adm360_lotes WHERE tenant_id = @TenantSantaCasa LIMIT 1", new { TenantSantaCasa });
+            if (localId != Guid.Empty && loteId != Guid.Empty)
+            {
+                await cn.ExecuteAsync(@"
+                    INSERT INTO plantaopro.adm360_movimentos (id, tenant_id, local_id, produto_id, lote_id, tipo, condicao, quantidade, origem_tipo, origem_id, idempotency_key, created_at)
+                    VALUES (gen_random_uuid(), @TenantSantaCasa, @localId, @prodId, @loteId, 'ENTRADA', 'LIBERADO', 10, 'MANUAL', gen_random_uuid(), gen_random_uuid()::text, now());",
+                    new { TenantSantaCasa, localId, prodId, loteId });
+
+                // Tentar alterar unidade em produto movimentado deve lançar InvalidOperationException
+                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                {
+                    await repo.SalvarProdutoAsync(TenantSantaCasa, prodId, skuMov, "Produto Com Movimentacao Alterado", "CX", null, false, false, 100m, true, default);
+                });
+            }
+        }
+        finally
+        {
+            // Remove os registros criados nesta execução para manter o tenant demonstrativo limpo
+            await using var cnLimpeza = new NpgsqlConnection(cs);
+            await cnLimpeza.OpenAsync();
+            if (prodId != Guid.Empty)
+            {
+                await cnLimpeza.ExecuteAsync("DELETE FROM plantaopro.adm360_movimentos WHERE produto_id = @prodId", new { prodId });
+                await cnLimpeza.ExecuteAsync("DELETE FROM plantaopro.adm360_lotes WHERE produto_id = @prodId", new { prodId });
+                await cnLimpeza.ExecuteAsync("DELETE FROM plantaopro.adm360_produtos WHERE id = @prodId", new { prodId });
+            }
+            if (idParceiroOriginal != Guid.Empty)
+            {
+                await cnLimpeza.ExecuteAsync("DELETE FROM plantaopro.adm360_parceiros WHERE id = @idParceiro AND tenant_id = @TenantSantaCasa", new { idParceiro = idParceiroOriginal, TenantSantaCasa });
+            }
         }
     }
 

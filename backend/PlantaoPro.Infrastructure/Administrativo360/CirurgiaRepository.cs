@@ -34,6 +34,9 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
     public async Task<IReadOnlyList<CirurgiaResumo>> ListarAsync(
         Guid tenantId, string? busca, string? situacao, DateOnly? inicio, DateOnly? fim, CancellationToken ct)
     {
+        if (inicio.HasValue && fim.HasValue && inicio.Value > fim.Value)
+            throw new ArgumentException("Período inválido: a data inicial não pode ser posterior à data final.");
+
         await using var cn = Connection();
         var rows = await cn.QueryAsync<CirurgiaRow>(new CommandDefinition(@"
             SELECT c.id AS Id, c.numero AS Numero,
@@ -56,8 +59,8 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
             WHERE c.tenant_id = @tenantId
               AND (@busca IS NULL OR c.numero ILIKE '%' || @busca || '%' OR c.procedimento ILIKE '%' || @busca || '%' OR h.nome ILIKE '%' || @busca || '%' OR hosp.nome ILIKE '%' || @busca || '%')
               AND (@situacao IS NULL OR c.situacao = @situacao)
-              AND (@inicio IS NULL OR c.data_prevista >= @inicio)
-              AND (@fim IS NULL OR c.data_prevista <= @fim)
+              AND (@inicio::date IS NULL OR c.data_prevista >= @inicio::date)
+              AND (@fim::date IS NULL OR c.data_prevista <= @fim::date)
             ORDER BY c.data_prevista DESC, c.created_at DESC",
             new { tenantId, busca, situacao, inicio, fim }, cancellationToken: ct));
 

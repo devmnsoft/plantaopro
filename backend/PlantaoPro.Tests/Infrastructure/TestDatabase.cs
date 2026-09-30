@@ -15,9 +15,29 @@ namespace PlantaoPro.Tests.Infrastructure;
 /// </summary>
 public static class TestDatabase
 {
-    public static string ConnectionString =>
-        Environment.GetEnvironmentVariable("PLANTAOPRO_TEST_CONNECTION")
-        ?? Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING")
-        ?? Environment.GetEnvironmentVariable("ConnectionStrings__Default")
-        ?? "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Pooling=true;Maximum Pool Size=50;Minimum Pool Size=0;Timeout=30;Command Timeout=60;Search Path=PlantaoPro,public;Application Name=PlantaoPro.tests";
+    public static string ConnectionString => ResolverConnectionString().Value;
+
+    /// <summary>
+    /// Nome da fonte que definiu o <see cref="ConnectionString"/> atual
+    /// (auditoria: permite evidenciar em execuções de CI quais variáveis estiveram definidas).
+    /// </summary>
+    public static string Origem => ResolverConnectionString().Origem;
+
+    private static (string Value, string Origem) ResolverConnectionString()
+    {
+        var testConnection = Environment.GetEnvironmentVariable("PLANTAOPRO_TEST_CONNECTION");
+        if (!string.IsNullOrWhiteSpace(testConnection))
+            return (testConnection, "PLANTAOPRO_TEST_CONNECTION");
+
+        var connectionOverride = Environment.GetEnvironmentVariable("PLANTAOPRO_CONNECTION_STRING");
+        if (!string.IsNullOrWhiteSpace(connectionOverride))
+            return (connectionOverride, "PLANTAOPRO_CONNECTION_STRING");
+
+        var appDefault = Environment.GetEnvironmentVariable("ConnectionStrings__Default");
+        if (!string.IsNullOrWhiteSpace(appDefault))
+            return (appDefault, "ConnectionStrings__Default");
+
+        const string padraoLocal = "Host=127.0.0.1;Port=5432;Database=plantaopro_test;Username=postgres;Password=123456;Pooling=true;Maximum Pool Size=50;Minimum Pool Size=0;Timeout=30;Command Timeout=60;Search Path=PlantaoPro,public;Application Name=PlantaoPro.tests";
+        return (padraoLocal, "padrao local (nenhuma variavel de ambiente definida)");
+    }
 }

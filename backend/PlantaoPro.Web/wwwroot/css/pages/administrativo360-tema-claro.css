@@ -1,0 +1,203 @@
+/* ============================================================================
+   Administrativo 360 — Tema claro (padrão do módulo) · J11-WP7
+
+   Contexto
+   --------
+   O módulo historicamente impunha superfícies escuras via utilitários do
+   Bootstrap (.bg-dark/.bg-black/.table-dark/.text-light). O WP7 da J11
+   estabelece o tema claro como padrão: superfícies brancas com bordas
+   sutis, tinta escura com contraste AA e cor institucional reservada a
+   ações e status. Este arquivo remapeia esses utilitários para os tokens
+   canônicos (--pp-* do design system) e vale APENAS sob body.pp-a360 —
+   classe aplicada em _Layout.cshtml quando a ação pertence ao módulo
+   (Administrativo360Controller e sub-controllers Adm360*WebController).
+   Páginas fora do módulo não são afetadas.
+
+   Regras de construção
+   --------------------
+   1. Consome tokens do design system com fallback estável;
+   2. O bootstrap vendorizado (css/vendor/bootstrap.min.css) marca utilitários
+      de cor com !important. Onde é preciso inverter um desses utilitários,
+      usa-se CONTRA-ESCOPO local com !important — uso contido e documentado
+      (superfícies, chips e tintas listadas abaixo), não em massa;
+   3. Onde não há conflito de important (variáveis --bs-table-*, links,
+      foco), a vitória vem de especificidade escopada + ordem de carga;
+   4. Contraste mínimo AA: tinta primária #10213a sobre #ffffff ≈ 15,8:1;
+      secundária #405a80 ≈ 7,3:1.
+   ============================================================================ */
+
+/* ---- Tinta global do módulo ------------------------------------------------
+   ~350 pontos do módulo usam .text-light junto das superfícies escuras
+   (títulos, cabeçalhos de card, células, labels, links, blocos de ajuda).
+   Um único contra-escopo converte esse conjunto para a tinta primária;
+   o inverso não é necessário porque .text-dark segue sem alteração.     */
+
+body.pp-a360 main .text-light {
+    color: var(--pp-text-primary, #10213a) !important;
+}
+
+/* Elementos que mantêm fundo colorido próprio precisam de branco explícito */
+body.pp-a360 main .nav-link.active.bg-primary,
+body.pp-a360 main .nav-link.active.bg-info,
+body.pp-a360 main .nav-link.active.bg-success {
+    color: #ffffff !important;
+}
+
+/* ---- Superfícies (contra .bg-dark/.bg-black com !important no vendor) ------ */
+
+body.pp-a360 .card.bg-dark,
+body.pp-a360 .card.bg-black {
+    background-color: var(--pp-surface-default, #ffffff) !important;
+    border-color: var(--pp-border-subtle, #e5ebf3) !important;
+    color: var(--pp-text-primary, #10213a);
+}
+
+body.pp-a360 .card-header.bg-dark,
+body.pp-a360 .card-header.bg-black,
+body.pp-a360 .card.bg-dark > .card-header {
+    background-color: var(--pp-surface-subtle, #f8fafd) !important;
+    border-bottom-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+body.pp-a360 .modal-content.bg-dark,
+body.pp-a360 .modal-content.bg-black {
+    background-color: var(--pp-surface-default, #ffffff) !important;
+    border-color: var(--pp-border-subtle, #e5ebf3) !important;
+    color: var(--pp-text-primary, #10213a);
+}
+
+/* Borda secondary (gray-600) dos cards do módulo: suaviza no tema claro */
+body.pp-a360 .card.border-secondary {
+    border-color: var(--pp-border-default, #ccd7e5) !important;
+}
+
+body.pp-a360 .breadcrumb.bg-dark,
+body.pp-a360 .breadcrumb.bg-black {
+    background-color: var(--pp-surface-subtle, #f8fafd) !important;
+}
+
+/* ---- Formulários (inputs/selects escuros dos modais) ----------------------- */
+
+body.pp-a360 .form-control.bg-dark,
+body.pp-a360 .form-control.bg-black,
+body.pp-a360 .form-select.bg-dark,
+body.pp-a360 .form-select.bg-black {
+    background-color: var(--pp-surface-default, #ffffff) !important;
+    border-color: var(--pp-border-default, #ccd7e5) !important;
+    color: var(--pp-text-primary, #10213a);
+}
+
+body.pp-a360 .form-control::placeholder {
+    color: var(--pp-text-muted, #51698d);
+    opacity: 1;
+}
+
+body.pp-a360 .form-control:focus,
+body.pp-a360 .form-select:focus {
+    border-color: var(--pp-brand-primary, #1f73f1);
+    box-shadow: 0 0 0 .25rem rgb(31 115 241 / .18);
+}
+
+/* ---- Modais (detalhe) -------------------------------------------------------- */
+
+/* O X branco do botão fechar ficaria invisível sobre o fundo agora claro */
+body.pp-a360 .modal-content.bg-dark .btn-close-white,
+body.pp-a360 .modal-content.bg-black .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(25%);
+}
+
+/* ---- Chips --------------------------------------------------------------------- */
+
+/* Chips neutros (ex.: ambiente HOMOLOGACAO/PRODUCAO) que usavam .badge.bg-dark:
+   chip claro neutro legível, sem perder a leitura de status */
+body.pp-a360 .badge.bg-dark {
+    background-color: #eef3f9 !important;
+    color: var(--pp-text-secondary, #405a80) !important;
+    border-color: var(--pp-border-default, #ccd7e5);
+    font-weight: 600;
+}
+
+/* ---- Tabelas ----------------------------------------------------------------------
+   As variáveis --bs-table-* do vendor NÃO levam !important: basta reafirmá-las
+   escopado (vence o tema global que as zera) + células explícitas.         */
+
+body.pp-a360 .table-responsive {
+    background-color: var(--pp-surface-default, #ffffff);
+}
+
+body.pp-a360 .table-dark {
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--pp-text-primary, #10213a);
+    --bs-table-bg-alpha: 1;
+    --bs-table-striped-bg: var(--pp-surface-subtle, #f8fafd);
+    --bs-table-striped-color: var(--pp-text-primary, #10213a);
+    --bs-table-active-bg: var(--pp-hover-bg, #edf4fc);
+    --bs-table-active-color: var(--pp-text-primary, #10213a);
+    --bs-table-hover-bg: var(--pp-hover-bg, #edf4fc);
+    --bs-table-hover-color: var(--pp-text-primary, #10213a);
+    --bs-table-border-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+body.pp-a360 .table-dark > :not(caption) > tr > * {
+    background-color: transparent;
+    border-bottom-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+body.pp-a360 .table-dark > :not(caption) > tr > th {
+    background-color: var(--pp-surface-subtle, #f8fafd);
+    border-bottom-color: var(--pp-border-default, #ccd7e5);
+    color: var(--pp-text-secondary, #405a80);
+    font-weight: 600;
+    padding-block: .65rem;
+}
+
+body.pp-a360 .table-dark.table-hover > tbody > tr:hover > * {
+    background-color: var(--pp-hover-bg, #edf4fc);
+    color: var(--pp-text-primary, #10213a);
+}
+
+/* Estado inativo: mantém a atenuação com leitura preservada */
+body.pp-a360 .table-dark tbody tr.opacity-75 > * {
+    color: var(--pp-text-muted, #51698d);
+}
+
+/* ---- Links de conteúdo ------------------------------------------------------------ */
+
+body.pp-a360 main .card a:not(.btn),
+body.pp-a360 main .modal-content a:not(.btn) {
+    color: var(--pp-brand-primary, #1f73f1);
+}
+
+body.pp-a360 main .card a:not(.btn):hover,
+body.pp-a360 main .card a:not(.btn):focus-visible,
+body.pp-a360 main .modal-content a:not(.btn):hover,
+body.pp-a360 main .modal-content a:not(.btn):focus-visible {
+    color: var(--pp-brand-primary-hover, #185fc8);
+}
+
+/* ---- Contraste AA no módulo ----------------------------------------------------------
+   Tintas ciano/âmbar do Bootstrap (utilitários importantes) têm contraste
+   insuficiente sobre o claro: contra-escopo com tinta AA.                 */
+
+body.pp-a360 main .card-title.text-info {
+    color: var(--pp-info, #245ea8) !important;
+}
+
+body.pp-a360 main code.text-warning {
+    color: #8a5b00 !important;
+}
+
+/* ---- Acessibilidade: foco visível --------------------------------------------------------- */
+
+body.pp-a360 main a:focus-visible,
+body.pp-a360 main button:focus-visible,
+body.pp-a360 main [role="tab"]:focus-visible,
+body.pp-a360 main [role="menuitem"]:focus-visible,
+body.pp-a360 main .dropdown-item:focus-visible {
+    outline: 2px solid var(--pp-brand-primary, #1f73f1);
+    outline-offset: 2px;
+    border-radius: .375rem;
+}

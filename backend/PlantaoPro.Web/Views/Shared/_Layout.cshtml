@@ -1,5 +1,15 @@
 @{
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    // J11-WP7: escopo server-side do tema claro do módulo Administrativo 360
+    // (consome wwwroot/css/pages/administrativo360-tema-claro.css).
+    // O módulo é atendido por Administrativo360Controller (rotas convencionais)
+    // e pelos sub-controllers Adm360*WebController (rotas por atributo
+    // Administrativo360/Cotacoes, /DocumentosXml e /Gestao). O nome real vem
+    // do ActionDescriptor — RouteData carrega o segmento de rota, não o tipo.
+    var adm360Controller = ViewContext.ActionDescriptor.RouteValues["controller"] as string
+        ?? ViewContext.RouteData.Values["controller"]?.ToString();
+    var isAdm360 = string.Equals(adm360Controller, "Administrativo360", StringComparison.OrdinalIgnoreCase)
+        || (adm360Controller != null && adm360Controller.StartsWith("Adm360", StringComparison.OrdinalIgnoreCase));
 }
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -44,9 +54,10 @@
     <link rel="stylesheet" href="~/css/design-system/v2146-pending-notifications.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/kanban.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/design-system/v2148-operational-premium.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages/administrativo360-tema-claro.css" asp-append-version="true" />
     @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="pp-body app-body">
+<body class="pp-body app-body @(isAdm360 ? "pp-a360" : "")">
     <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
     @if (isAuthenticated)
     {

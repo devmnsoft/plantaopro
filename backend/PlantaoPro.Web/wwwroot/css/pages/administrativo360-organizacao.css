@@ -1,17 +1,41 @@
 /* ============================================================================
-   Administrativo 360 — Gestão Organizacional (Resumo, Departamentos, Cargos,
-   Colaboradores, Contratos e ContratoDetalhes)
+   Administrativo 360 — Gestão Organizacional · tema claro (J11-WP7)
 
-   As telas do módulo usam painéis escuros (cards/modais/table-dark) sobre o
-   canvas claro do app. O design system global (tema claro) sobrescreve as
-   variáveis de tabela, rótulos e títulos definidos pelo Bootstrap, o que
-   gerava texto ilegível (ex.: células white-on-white e labels escuras sobre
-   fundo escuro). Este arquivo reafirma o tema dark APENAS dentro do marcador
-   .pp-a360-org (raiz das 6 views do módulo) e é carregado por último via
-   @section Styles, vencendo os conflitos por ordem e especificidade.
+   Antecedente: este arquivo reafirmava o tema DARK dentro do marcador
+   .pp-a360-org (raiz das 6 views do módulo), vencendo por ordem de carga o
+   design system global que zerava as variáveis de tabela e pinta links.
+
+   Após o WP7 da J11 (tema claro como padrão do módulo, ver
+   administrativo360-tema-claro.css), a imposição inverteu: as superfícies
+   .bg-dark/.table-dark passaram a renderizar claras. Este arquivo continua
+   a ser carregado POR ÚLTIMO via @section Styles — agora para REAFIRMAR o
+   mapping claro sobre as regras do tema global, com a mesma técnica
+   (escopo + ordem), sem !important.
    ============================================================================ */
 
-/* ---- Títulos e rótulos em superfícies escuras ----------------------------- */
+/* ---- Superfícies ------------------------------------------------------------ */
+
+.pp-a360-org .card.bg-dark,
+.pp-a360-org .card.bg-black {
+    background-color: var(--pp-surface-default, #ffffff);
+    border-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+.pp-a360-org .card.bg-dark > .card-header,
+.pp-a360-org .card-header.bg-dark {
+    background-color: var(--pp-surface-subtle, #f8fafd);
+    border-bottom-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+.pp-a360-org .modal-content.bg-dark {
+    background-color: var(--pp-surface-default, #ffffff);
+    border-color: var(--pp-border-subtle, #e5ebf3);
+    color: var(--pp-text-primary, #10213a);
+}
+
+/* ---- Títulos e rótulos ------------------------------------------------------- */
 
 .pp-a360-org .card.bg-dark .card-title,
 .pp-a360-org .card.bg-dark .card-header h5,
@@ -19,48 +43,56 @@
 .pp-a360-org .modal-content.bg-dark .modal-title,
 .pp-a360-org .modal-content.bg-dark h5,
 .pp-a360-org .modal-content.bg-dark h6 {
-    color: #f8f9fa;
+    color: var(--pp-text-primary, #10213a);
 }
 
 .pp-a360-org .card.bg-dark .form-label,
 .pp-a360-org .modal-content.bg-dark .form-label {
-    color: rgba(248, 249, 250, .85);
-    font-weight: 700;
+    color: var(--pp-text-secondary, #405a80);
+    font-weight: 600;
 }
 
-/* Texto secundário/atenuado legível sobre fundo escuro (≥4.5:1) */
+/* Texto secundário/atenuado legível sobre o claro (AA) */
 .pp-a360-org .card.bg-dark .text-muted,
 .pp-a360-org .card.bg-dark .text-secondary,
 .pp-a360-org .modal-content.bg-dark .text-muted,
 .pp-a360-org .modal-content.bg-dark .text-secondary {
-    color: rgba(248, 249, 250, .72);
+    color: var(--pp-text-muted, #51698d);
 }
 
 .pp-a360-org .card.bg-dark .form-control::placeholder,
 .pp-a360-org .modal-content.bg-dark .form-control::placeholder {
-    color: rgba(248, 249, 250, .45);
+    color: var(--pp-text-muted, #51698d);
+    opacity: 1;
 }
 
-/* Links dentro dos cards escuros (o tema global pinta links com tinta clara) */
+/* Tinta herdada das classes .text-light residuais dentro das superfícies */
+.pp-a360-org .card.bg-dark .text-light,
+.pp-a360-org .modal-content.bg-dark .text-light {
+    color: var(--pp-text-primary, #10213a);
+}
+
+/* Links dentro dos cards: tinta institucional (o tema global pinta links) */
 .pp-a360-org .card.bg-dark a:not(.btn) {
-    color: #e9ecef;
+    color: var(--pp-brand-primary, #1f73f1);
 }
 
 .pp-a360-org .card.bg-dark a:not(.btn):hover,
 .pp-a360-org .card.bg-dark a:not(.btn):focus-visible {
-    color: #ffffff;
+    color: var(--pp-brand-primary-hover, #185fc8);
 }
 
-/* Ícone de fechar visível apenas quando não é o .btn-close-white já claro */
-.pp-a360-org .modal-content.bg-dark .btn-close:not(.btn-close-white) {
-    filter: invert(1) grayscale(100%) brightness(200%);
+/* O X branco do botão fechar fica visível sobre o fundo claro */
+.pp-a360-org .modal-content.bg-dark .btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(25%);
 }
 
-/* ---- Tabelas escuras ------------------------------------------------------- */
+/* ---- Tabelas ------------------------------------------------------------------ */
 
-/* O tema global força painel branco atrás da tabela (.table-responsive) */
+/* O tema global força painel branco atrás da tabela (.table-responsive) —
+   mantemos o branco do tema claro e removemos sombras de painel escuro */
 .pp-a360-org .table-responsive {
-    background-color: #212529;
+    background-color: var(--pp-surface-default, #ffffff);
     box-shadow: none;
     border-radius: .5rem;
 }
@@ -68,51 +100,49 @@
 /* Reafirma as variáveis de tabela que o tema global zera/altera
    (v2000-premium define --bs-table-bg: transparent em .table) */
 .pp-a360-org .table-dark {
-    --bs-table-bg: #212529;
-    --bs-table-color: #f8f9fa;
-    --bs-table-border-color: #3a424a;
-    --bs-table-hover-bg: #2b3138;
-    --bs-table-active-bg: #2b3138;
+    --bs-table-bg: transparent;
+    --bs-table-color: var(--pp-text-primary, #10213a);
+    --bs-table-bg-alpha: 1;
+    --bs-table-striped-bg: var(--pp-surface-subtle, #f8fafd);
+    --bs-table-striped-color: var(--pp-text-primary, #10213a);
+    --bs-table-active-bg: var(--pp-hover-bg, #edf4fc);
+    --bs-table-active-color: var(--pp-text-primary, #10213a);
+    --bs-table-hover-bg: var(--pp-hover-bg, #edf4fc);
+    --bs-table-hover-color: var(--pp-text-primary, #10213a);
+    --bs-table-border-color: var(--pp-border-subtle, #e5ebf3);
     min-width: 0;
+    color: var(--pp-text-primary, #10213a);
 }
 
 .pp-a360-org .table-dark > :not(caption) > * > * {
-    background-color: #212529;
-    color: #f8f9fa;
-    border-bottom-color: #3a424a;
+    background-color: transparent;
+    color: var(--pp-text-primary, #10213a);
+    border-bottom-color: var(--pp-border-subtle, #e5ebf3);
 }
 
-.pp-a360-org .table-dark tbody td {
-    background-color: #212529;
-}
-
-/* Cabeçalho: o tema global pinta thead th com fundo claro + tinta escura */
-.pp-a360-org .table-dark thead th {
-    background-color: #2a3037;
-    color: rgba(248, 249, 250, .75);
-    border-bottom-color: #4a525a;
+/* Cabeçalho: tinta secundária sobre superfície sutil (o tema global pinta thead) */
+.pp-a360-org .table-dark > :not(caption) > tr > th {
+    background-color: var(--pp-surface-subtle, #f8fafd);
+    border-bottom-color: var(--pp-border-default, #ccd7e5);
+    color: var(--pp-text-secondary, #405a80);
+    font-weight: 600;
     padding-block: .65rem;
 }
 
 .pp-a360-org .table-dark.table-hover > tbody > tr:hover > * {
-    background-color: #2b3138;
-    color: #ffffff;
+    background-color: var(--pp-hover-bg, #edf4fc);
+    color: var(--pp-text-primary, #10213a);
 }
 
 /* Estado inativo: mantém atenuação, mas preserva leitura */
 .pp-a360-org .table-dark tbody tr.opacity-75 > * {
-    background-color: rgba(42, 48, 55, .6);
+    color: var(--pp-text-muted, #51698d);
 }
 
-/* Botões contornado dentro de superfícies escuras (legibilidade do rótulo) */
-.pp-a360-org .table-dark .btn-outline-secondary,
-.pp-a360-org .card.bg-dark .btn-outline-secondary {
-    color: #ced4da;
-    border-color: #6c757d;
-}
-
-.pp-a360-org .table-dark .btn-outline-secondary:hover,
-.pp-a360-org .card.bg-dark .btn-outline-secondary:hover {
-    color: #212529;
-    background-color: #dee2e6;
+/* Chips neutros (.badge.bg-dark) legíveis sobre o claro */
+.pp-a360-org .badge.bg-dark {
+    background-color: #eef3f9;
+    color: var(--pp-text-secondary, #405a80);
+    border-color: var(--pp-border-default, #ccd7e5);
+    font-weight: 600;
 }

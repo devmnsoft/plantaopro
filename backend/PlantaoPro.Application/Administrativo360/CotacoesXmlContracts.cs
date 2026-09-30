@@ -453,7 +453,7 @@ public interface ICotacoesRepository
     Task<CotacaoRespostaDto?> ObterRespostaPorIdAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default);
     Task<IReadOnlyList<CotacaoRespostaDto>> ListarRespostasAsync(Guid tenantId, string? status = null, CancellationToken ct = default);
     Task TransmitirRespostaAsync(Guid tenantId, Guid usuarioId, TransmitirRespostaCommand command, CancellationToken ct = default);
-    Task<(byte[]? Bytes, string Nome, string ContentType)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default);
+    Task<(byte[]? Bytes, string Nome, string ContentType, string Sha256Hash)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default);
     Task<CotacaoExportacaoArquivoDto?> ObterExportacaoPorRespostaAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default);
 }
 

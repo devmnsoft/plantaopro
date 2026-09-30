@@ -225,7 +225,7 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
                         new { command.ValorizacaoId, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             // Verifica se a valorização já possui venda
@@ -247,7 +247,7 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
                 WHERE id = @ValorizacaoId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValorizacaoId, tenantId }, tx, cancellationToken: ct));
 
-            if (val is null) throw new InvalidOperationException("Valorização não encontrada.");
+            if (val is null) throw new Administrativo360BusinessException("Valorização não encontrada.");
 
             var valItens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
                 SELECT produto_id, lote_id, quantidade_consumida, preco_unitario,
@@ -256,7 +256,7 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
                 WHERE valorizacao_id = @ValorizacaoId AND tenant_id = @tenantId",
                 new { command.ValorizacaoId, tenantId }, tx, cancellationToken: ct))).ToList();
 
-            if (valItens.Count == 0) throw new InvalidOperationException("Valorização sem itens comerciais.");
+            if (valItens.Count == 0) throw new Administrativo360BusinessException("Valorização sem itens comerciais.");
 
             var seq = await cn.ExecuteScalarAsync<long>("SELECT nextval('plantaopro.adm360_venda_numero')", transaction: tx);
             var numeroVenda = $"VEN-{seq:D6}";
@@ -362,7 +362,7 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
                 WHERE id = @vendaId AND tenant_id = @tenantId FOR UPDATE",
                 new { vendaId, tenantId }, tx, cancellationToken: ct));
 
-            if (venda is null) throw new InvalidOperationException("Venda não encontrada.");
+            if (venda is null) throw new Administrativo360BusinessException("Venda não encontrada.");
             if (venda.situacao == "CANCELADA") return;
 
             // Verifica se algum título já foi recebido/baixado
@@ -373,7 +373,7 @@ public sealed class VendaRepository : Adm360Repository, IVendaRepository
                 new { vendaId, tenantId }, tx, cancellationToken: ct));
 
             if (totalBaixas > 0)
-                throw new InvalidOperationException("Não é possível cancelar uma venda com títulos já baixados/recebidos. Estorne os recebimentos antes de cancelar.");
+                throw new Administrativo360BusinessException("Não é possível cancelar uma venda com títulos já baixados/recebidos. Estorne os recebimentos antes de cancelar.");
 
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_titulos_receber

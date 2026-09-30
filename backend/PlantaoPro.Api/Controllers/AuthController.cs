@@ -31,10 +31,13 @@ namespace PlantaoPro.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest req, CancellationToken cancellationToken)
         {
-            var suppliedCorrelationId = Request.Headers["X-Correlation-ID"].FirstOrDefault();
+            // Reaproveita a ID fixada pelo middleware de correlação global (fonte única por requisição);
+            // o fallback abaixo só existe se o middleware não estiver ativo em um pipeline fora do padrão.
+            var suppliedCorrelationId = HttpContext.Items["CorrelationId"] as string
+                ?? Request.Headers["X-Correlation-ID"].FirstOrDefault();
             var correlationId = !string.IsNullOrWhiteSpace(suppliedCorrelationId) && suppliedCorrelationId.Length <= 128
                 ? suppliedCorrelationId
-                : HttpContext.TraceIdentifier;
+                : Guid.NewGuid().ToString("N");
             Response.Headers["X-Correlation-ID"] = correlationId;
             using var loginScope = _logger.BeginScope(new Dictionary<string, object> { ["CorrelationId"] = correlationId });
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";

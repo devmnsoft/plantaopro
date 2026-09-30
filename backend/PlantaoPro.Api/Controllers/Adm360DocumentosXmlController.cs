@@ -57,6 +57,13 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
         var doc = await repository.ObterDocumentoPorIdAsync(tenant, id, ct);
         if (doc is null) return NotFound("Documento XML não encontrado.");
         var bytes = Encoding.UTF8.GetBytes(doc.XmlConteudo);
+
+        // P4: download idempotente — ETag pelo SHA-256 dos bytes; If-None-Match → 304 sem reenviar o corpo.
+        var etag = EtagHttp.ParaBytes(bytes);
+        Response.Headers.ETag = etag;
+        if (EtagHttp.RevalidacaoSatisfeita(Request, etag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         return File(bytes, "application/xml", $"{doc.ChaveAcesso}.xml");
     }
 

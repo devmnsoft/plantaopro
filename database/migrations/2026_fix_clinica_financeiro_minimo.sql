@@ -69,6 +69,17 @@ alter table if exists plantaopro.clinica_caixa add column if not exists status t
 alter table if exists plantaopro.clinica_caixa add column if not exists reg_date timestamp without time zone not null default now();
 alter table if exists plantaopro.clinica_caixa add column if not exists reg_status char(1) not null default 'A';
 
+-- Convergência de shape: em instalações canônicas (v2.18.0+) a tabela nasce sem as colunas do
+-- modelo cheio; garante-as antes dos inserts demo abaixo (idempotente em qualquer cenário).
+alter table if exists plantaopro.clinica_caixa add column if not exists data_abertura timestamp without time zone not null default now();
+alter table if exists plantaopro.clinica_caixa add column if not exists data_fechamento timestamp without time zone null;
+alter table if exists plantaopro.clinica_caixa add column if not exists usuario_abertura_id uuid null;
+alter table if exists plantaopro.clinica_caixa add column if not exists usuario_fechamento_id uuid null;
+alter table if exists plantaopro.clinica_caixa add column if not exists total_entradas numeric(14,2) not null default 0;
+alter table if exists plantaopro.clinica_caixa add column if not exists total_saidas numeric(14,2) not null default 0;
+alter table if exists plantaopro.clinica_caixa add column if not exists saldo_final numeric(14,2) not null default 0;
+alter table if exists plantaopro.clinica_caixa add column if not exists observacoes text not null default '';
+
 create table if not exists plantaopro.clinica_fechamentos_caixa (id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, caixa_id uuid null, valor_informado numeric(14,2) not null default 0, diferenca numeric(14,2) not null default 0, status text not null default 'FECHADO', observacoes text not null default '', created_by uuid null, reg_date timestamp without time zone not null default now(), reg_status char(1) not null default 'A');
 create table if not exists plantaopro.clinica_financeiro_historico (id uuid primary key default gen_random_uuid(), tenant_id uuid null, cliente_id uuid null, entidade text not null default '', entidade_id uuid null, acao text not null default '', detalhes jsonb not null default '{}'::jsonb, usuario_id uuid null, reg_date timestamp without time zone not null default now(), reg_status char(1) not null default 'A');
 

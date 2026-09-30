@@ -59,7 +59,7 @@ public sealed class Administrativo360FinanceiroEVendasTests
             ConsignacaoCirurgicaRegras.CalcularPendenteCustodia(10m, 0m, 0m, -1m));
 
         // Rejeita soma atendida maior que expedida (não transforma em zero silenciosamente)
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ConsignacaoCirurgicaRegras.CalcularPendenteCustodia(10m, 8m, 4m, 0m));
 
         // Equação exata: expedido = consumido + devolvido + perda + pendente
@@ -70,10 +70,10 @@ public sealed class Administrativo360FinanceiroEVendasTests
     [Fact]
     public void BlocoB_ValorizacaoRegras_ExigeValeReconciliado()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ValorizacaoRegras.ValidarElegibilidadeVale("EXPEDIDO", "PENDENTE_VALORIZACAO"));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ValorizacaoRegras.ValidarElegibilidadeVale("RECONCILIADO", "VALORIZADO"));
 
         // Válido se reconciliado e pendente
@@ -454,7 +454,7 @@ public sealed class Administrativo360FinanceiroEVendasTests
             IdempotencyKey: "key-excesso"
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             repo.ReceberAsync(tenantId, usuarioId, cmdExcesso, CancellationToken.None));
     }
 
@@ -529,7 +529,7 @@ public sealed class Administrativo360FinanceiroEVendasTests
             IdempotencyKey: mesmaChave
         );
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             repo.ReceberAsync(tenantId, usuarioId, cmd2, CancellationToken.None));
         Assert.Contains("Conflito de idempotência", ex.Message);
     }
@@ -601,7 +601,7 @@ public sealed class Administrativo360FinanceiroEVendasTests
             IdempotencyKey: "key-cross"
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             repoT2.ReceberAsync(t2, u2, cmdCross, CancellationToken.None));
     }
 }

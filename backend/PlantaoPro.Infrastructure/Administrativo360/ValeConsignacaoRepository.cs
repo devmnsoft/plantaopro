@@ -250,7 +250,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 )", new { tenantId, reservaId = item.ReservaId!.Value }, tx, cancellationToken: ct));
 
             if (jaAlocada)
-                throw new InvalidOperationException("Uma ou mais reservas selecionadas já estão vinculadas a outro vale em andamento.");
+                throw new Administrativo360BusinessException("Uma ou mais reservas selecionadas já estão vinculadas a outro vale em andamento.");
         }
 
         var id = Guid.NewGuid();
@@ -323,19 +323,19 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             WHERE id = @valeId AND tenant_id = @tenantId FOR UPDATE",
             new { valeId, tenantId }, tx, cancellationToken: ct));
 
-        if (vale is null) throw new InvalidOperationException("Vale de consignação não encontrado.");
+        if (vale is null) throw new Administrativo360BusinessException("Vale de consignação não encontrado.");
         if (vale.situacao is not ("RASCUNHO" or "EM_SEPARACAO"))
-            throw new InvalidOperationException($"Não é permitido separar itens para vale na situação '{vale.situacao}'.");
+            throw new Administrativo360BusinessException($"Não é permitido separar itens para vale na situação '{vale.situacao}'.");
 
         var item = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
             SELECT produto_id, lote_id, quantidade_solicitada FROM plantaopro.adm360_vale_itens
             WHERE id = @ValeItemId AND vale_id = @valeId AND tenant_id = @tenantId FOR UPDATE",
             new { command.ValeItemId, valeId, tenantId }, tx, cancellationToken: ct));
 
-        if (item is null) throw new InvalidOperationException("Item do vale não encontrado.");
+        if (item is null) throw new Administrativo360BusinessException("Item do vale não encontrado.");
 
         if (command.QuantidadeSeparada > (decimal)item.quantidade_solicitada)
-            throw new InvalidOperationException("Quantidade separada não pode ser superior à quantidade solicitada.");
+            throw new Administrativo360BusinessException("Quantidade separada não pode ser superior à quantidade solicitada.");
 
         // Valida que o lote não está bloqueado, vencido ou em quarentena
         Guid loteId = item.lote_id;
@@ -349,7 +349,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             new { tenantId, prodId, loteId, origId }, tx, cancellationToken: ct));
 
         if (saldoLiberado < command.QuantidadeSeparada)
-            throw new InvalidOperationException("Lote sem saldo físico liberado suficiente no local de origem.");
+            throw new Administrativo360BusinessException("Lote sem saldo físico liberado suficiente no local de origem.");
 
         await cn.ExecuteAsync(new CommandDefinition(@"
             UPDATE plantaopro.adm360_vale_itens
@@ -377,9 +377,9 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             WHERE id = @valeId AND tenant_id = @tenantId FOR UPDATE",
             new { valeId, tenantId }, tx, cancellationToken: ct));
 
-        if (vale is null) throw new InvalidOperationException("Vale de consignação não encontrado.");
+        if (vale is null) throw new Administrativo360BusinessException("Vale de consignação não encontrado.");
         if (vale.situacao is not ("RASCUNHO" or "EM_SEPARACAO"))
-            throw new InvalidOperationException($"Separação não pode ser concluída para vale em situação '{vale.situacao}'.");
+            throw new Administrativo360BusinessException($"Separação não pode ser concluída para vale em situação '{vale.situacao}'.");
 
         var pendentes = await cn.ExecuteScalarAsync<int>(new CommandDefinition(@"
             SELECT COUNT(*) FROM plantaopro.adm360_vale_itens
@@ -387,7 +387,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             new { valeId, tenantId }, tx, cancellationToken: ct));
 
         if (pendentes > 0)
-            throw new InvalidOperationException("Existem itens com separação pendente ou incompleta. Todos os itens devem ser conferidos integralmente.");
+            throw new Administrativo360BusinessException("Existem itens com separação pendente ou incompleta. Todos os itens devem ser conferidos integralmente.");
 
         await cn.ExecuteAsync(new CommandDefinition(@"
             UPDATE plantaopro.adm360_vales
@@ -426,7 +426,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 {
                     return; // Reenvio idempotente com sucesso
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -435,10 +435,10 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale de consignação não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale de consignação não encontrado.");
 
             if (!ValeConsignacaoRegras.PodeExpedir(vale.situacao))
-                throw new InvalidOperationException($"Vale na situação '{vale.situacao}' não está pronto para expedição.");
+                throw new Administrativo360BusinessException($"Vale na situação '{vale.situacao}' não está pronto para expedição.");
 
             // Validar bloqueio de inventário nos locais de origem e destino
             Guid origId = vale.local_origem_id;
@@ -454,7 +454,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct))).ToList();
 
             if (itens.Count == 0)
-                throw new InvalidOperationException("Vale sem itens cadastrados.");
+                throw new Administrativo360BusinessException("Vale sem itens cadastrados.");
 
             // Bloqueio determinístico ordenado para evitar deadlocks
             var lockKeys = itens.Select(i => $"{tenantId}:{i.produto_id}:{i.lote_id}:{origId}")
@@ -476,7 +476,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 decimal qtdSeparada = (decimal)it.quantidade_separada;
                 decimal qtdSolicitada = (decimal)it.quantidade_solicitada;
                 if (qtdSeparada <= 0 || qtdSeparada != qtdSolicitada)
-                    throw new InvalidOperationException($"O item não foi conferido/separado integralmente para expedição (Solicitado: {qtdSolicitada}, Separado: {qtdSeparada}).");
+                    throw new Administrativo360BusinessException($"O item não foi conferido/separado integralmente para expedição (Solicitado: {qtdSolicitada}, Separado: {qtdSeparada}).");
             }
 
             foreach (var it in itens)
@@ -494,7 +494,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                     new { tenantId, prodId, loteId, origId }, tx, cancellationToken: ct));
 
                 if (saldoFisico < qtd)
-                    throw new InvalidOperationException("Saldo físico liberado insuficiente no local de origem para expedição.");
+                    throw new Administrativo360BusinessException("Saldo físico liberado insuficiente no local de origem para expedição.");
 
                 // Registra movimentação de saída do estoque interno
                 var movSaidaId = Guid.NewGuid();
@@ -588,7 +588,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             if (opExistente is not null)
             {
                 if (string.Equals(opExistente.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase)) return;
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -596,9 +596,9 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale não encontrado.");
             if (vale.situacao is not ("EXPEDIDO" or "RETORNO_PARCIAL"))
-                throw new InvalidOperationException($"Consumo não permitido para vale em situação '{vale.situacao}'.");
+                throw new Administrativo360BusinessException($"Consumo não permitido para vale em situação '{vale.situacao}'.");
 
             var item = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, produto_id, lote_id, quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda
@@ -606,14 +606,14 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeItemId AND vale_id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeItemId, command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (item is null) throw new InvalidOperationException("Item do vale não encontrado.");
+            if (item is null) throw new Administrativo360BusinessException("Item do vale não encontrado.");
 
             decimal pendente = ValeConsignacaoRegras.CalcularPendenteCustodia(
                 (decimal)item.quantidade_expedida, (decimal)item.quantidade_consumida,
                 (decimal)item.quantidade_devolvida, (decimal)item.quantidade_perda);
 
             if (command.Quantidade > pendente)
-                throw new InvalidOperationException($"Quantidade informada ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
+                throw new Administrativo360BusinessException($"Quantidade informada ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
 
             Guid destId = vale.local_destino_id;
             Guid prodId = item.produto_id;
@@ -673,7 +673,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             if (opExistente is not null)
             {
                 if (string.Equals(opExistente.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase)) return;
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -681,9 +681,9 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale não encontrado.");
             if (vale.situacao is not ("EXPEDIDO" or "RETORNO_PARCIAL"))
-                throw new InvalidOperationException($"Retorno não permitido para vale em situação '{vale.situacao}'.");
+                throw new Administrativo360BusinessException($"Retorno não permitido para vale em situação '{vale.situacao}'.");
 
             var item = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, produto_id, lote_id, quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda
@@ -691,14 +691,14 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeItemId AND vale_id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeItemId, command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (item is null) throw new InvalidOperationException("Item do vale não encontrado.");
+            if (item is null) throw new Administrativo360BusinessException("Item do vale não encontrado.");
 
             decimal pendente = ValeConsignacaoRegras.CalcularPendenteCustodia(
                 (decimal)item.quantidade_expedida, (decimal)item.quantidade_consumida,
                 (decimal)item.quantidade_devolvida, (decimal)item.quantidade_perda);
 
             if (command.Quantidade > pendente)
-                throw new InvalidOperationException($"Quantidade de devolução ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
+                throw new Administrativo360BusinessException($"Quantidade de devolução ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
 
             Guid destId = vale.local_destino_id;
             Guid origId = vale.local_origem_id;
@@ -781,7 +781,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             if (opExistente is not null)
             {
                 if (string.Equals(opExistente.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase)) return;
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -789,9 +789,9 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale não encontrado.");
             if (vale.situacao is not ("EXPEDIDO" or "RETORNO_PARCIAL"))
-                throw new InvalidOperationException($"Registro de perda não permitido para vale em situação '{vale.situacao}'.");
+                throw new Administrativo360BusinessException($"Registro de perda não permitido para vale em situação '{vale.situacao}'.");
 
             var item = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, produto_id, lote_id, quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda
@@ -799,14 +799,14 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeItemId AND vale_id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeItemId, command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (item is null) throw new InvalidOperationException("Item do vale não encontrado.");
+            if (item is null) throw new Administrativo360BusinessException("Item do vale não encontrado.");
 
             decimal pendente = ValeConsignacaoRegras.CalcularPendenteCustodia(
                 (decimal)item.quantidade_expedida, (decimal)item.quantidade_consumida,
                 (decimal)item.quantidade_devolvida, (decimal)item.quantidade_perda);
 
             if (command.Quantidade > pendente)
-                throw new InvalidOperationException($"Quantidade de perda ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
+                throw new Administrativo360BusinessException($"Quantidade de perda ({command.Quantidade}) excede o saldo pendente em custódia ({pendente}).");
 
             Guid destId = vale.local_destino_id;
             Guid prodId = item.produto_id;
@@ -863,7 +863,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             if (opExistente is not null)
             {
                 if (string.Equals(opExistente.PayloadHash, payloadHash, StringComparison.OrdinalIgnoreCase)) return;
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -871,10 +871,10 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 WHERE id = @ValeId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale não encontrado.");
             if (vale.situacao == "RECONCILIADO") return; // Idempotente
             if (vale.situacao is not ("EXPEDIDO" or "RETORNO_PARCIAL"))
-                throw new InvalidOperationException($"Vale na situação '{vale.situacao}' não pode ser reconciliado.");
+                throw new Administrativo360BusinessException($"Vale na situação '{vale.situacao}' não pode ser reconciliado.");
 
             // Verifica se todos os itens estão 100% conciliados (pendente == 0)
             var itens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
@@ -893,7 +893,7 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
                 var pendente = ValeConsignacaoRegras.CalcularPendenteCustodia(expedido, consumido, devolvido, perda);
                 if (pendente > 0)
                 {
-                    throw new InvalidOperationException(
+                    throw new Administrativo360BusinessException(
                         $"Não é possível reconciliar o vale com pendências em custódia ({pendente} un). Todo material expedido deve estar consumido, devolvido ou com perda autorizada.");
                 }
             }
@@ -931,12 +931,12 @@ public sealed class ValeConsignacaoRepository : Adm360Repository, IValeConsignac
             WHERE id = @valeId AND tenant_id = @tenantId FOR UPDATE",
             new { valeId, tenantId }, tx, cancellationToken: ct));
 
-        if (vale is null) throw new InvalidOperationException("Vale de consignação não encontrado.");
+        if (vale is null) throw new Administrativo360BusinessException("Vale de consignação não encontrado.");
         if (vale.situacao == "CANCELADO") return;
 
         if (vale.situacao is "EXPEDIDO" or "RETORNO_PARCIAL" or "RECONCILIADO")
         {
-            throw new InvalidOperationException("Vale com materiais já expedidos não pode ser cancelado diretamente. Utilize consumo, devolução e reconciliação.");
+            throw new Administrativo360BusinessException("Vale com materiais já expedidos não pode ser cancelado diretamente. Utilize consumo, devolução e reconciliação.");
         }
 
         await cn.ExecuteAsync(new CommandDefinition(@"

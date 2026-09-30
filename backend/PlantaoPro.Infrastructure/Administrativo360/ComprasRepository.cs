@@ -1,5 +1,6 @@
 using Dapper;
 using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
 
@@ -103,7 +104,7 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             "SELECT EXISTS(SELECT 1 FROM plantaopro.adm360_pedidos WHERE id = @pedidoId AND tenant_id = @tenantId AND idempotency_key = @key AND situacao <> 'RASCUNHO')",
             new { tenantId, pedidoId, key }, cancellationToken: ct)))
         {
-            throw new InvalidOperationException("Pedido não está disponível para aprovação.");
+            throw new Administrativo360BusinessException("Pedido não está disponível para aprovação.");
         }
     }
 
@@ -126,10 +127,10 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             "SELECT numero, fornecedor_id, previsao, situacao FROM plantaopro.adm360_pedidos WHERE id = @id AND tenant_id = @tenantId FOR UPDATE",
             new { id = c.PedidoId, tenantId }, tx, cancellationToken: ct));
 
-        if (pedido is null) throw new InvalidOperationException("Pedido de compra não encontrado.");
+        if (pedido is null) throw new Administrativo360BusinessException("Pedido de compra não encontrado.");
         string status = (string)pedido.situacao;
         if (status is not ("APROVADO" or "PARCIAL"))
-            throw new InvalidOperationException("Somente pedido aprovado ou parcial pode ser recebido.");
+            throw new Administrativo360BusinessException("Somente pedido aprovado ou parcial pode ser recebido.");
 
         var rid = Guid.NewGuid();
         await cn.ExecuteAsync(new CommandDefinition(
@@ -153,7 +154,7 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
                 new { id = item.PedidoItemId, c.PedidoId, tenantId }, tx, cancellationToken: ct));
 
             if (row is null || row.ProdutoId == Guid.Empty || item.Quantidade > row.Saldo)
-                throw new InvalidOperationException("Quantidade excede o saldo autorizado do pedido.");
+                throw new Administrativo360BusinessException("Quantidade excede o saldo autorizado do pedido.");
             if (row.ControlaLote && string.IsNullOrWhiteSpace(item.Lote))
                 throw new ArgumentException("Lote é obrigatório para produto controlado.");
 

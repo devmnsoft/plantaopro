@@ -80,13 +80,12 @@ public partial class Administrativo360Controller
         var cmd = new
         {
             TituloId = id,
-            ContaFinanceiraId = contaFinanceiraId,
+            ContaId = contaFinanceiraId,
             DataRecebimento = dataRecebimento,
-            ValorRecebido = valorRecebido,
+            Valor = valorRecebido,
             MeioPagamento = meioPagamento,
             Referencia = referencia,
-            IdempotencyKey = key,
-            Observacoes = observacoes
+            IdempotencyKey = key
         };
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(

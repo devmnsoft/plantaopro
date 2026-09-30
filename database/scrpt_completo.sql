@@ -1,7 +1,7 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.20.0
+-- Versão do schema: v2.21.1
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-27
+-- Data de geração: 2026-09-29
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -1222,7 +1222,7 @@ CREATE TABLE IF NOT EXISTS plantaopro.eventos_financeiros (
 );
 
 -- SOURCE: database/schema/060_auditoria_observabilidade.sql
--- SOURCE-SHA256: d2cfd5bf74b43736a28f610c55a44ccb6bedf2bcfe763675c0ac44a7903df8d5
+-- SOURCE-SHA256: 577d21a163e63faa52beb0553caeca09fdae0c59c808dfa464c6037637da7747
 -- Auditoria e observabilidade preservadas a partir das origens históricas normalizadas pelo gerador.
 SET search_path TO plantaopro, public;
 
@@ -1254,7 +1254,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.auditoria_acoes_criticas (
 );
 
 -- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
--- adiciona as colunas de auditoria usadas pelo código em execução.
+-- adiciona as colunas de auditoria usadas pelo código em execução e preserva as
+-- colunas genéricas legadas (MESMO shape final em nova instalação e em upgrade).
 ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
     ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
     ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
@@ -1267,7 +1268,14 @@ ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
     ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
     ADD COLUMN IF NOT EXISTS user_agent text NULL,
     ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
 
 ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
     ALTER COLUMN id SET DEFAULT gen_random_uuid();
@@ -1310,7 +1318,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.api_request_logs (
 );
 
 -- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
--- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers.
+-- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers
+-- e preserva as colunas genéricas legadas (MESMO shape final em nova instalação e em upgrade).
 ALTER TABLE IF EXISTS plantaopro.api_request_logs
     ADD COLUMN IF NOT EXISTS endpoint text NOT NULL DEFAULT '',
     ADD COLUMN IF NOT EXISTS metodo varchar(10) NOT NULL DEFAULT 'GET',
@@ -1330,7 +1339,14 @@ ALTER TABLE IF EXISTS plantaopro.api_request_logs
     ADD COLUMN IF NOT EXISTS erro text NULL,
     ADD COLUMN IF NOT EXISTS error_message text NULL,
     ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
 
 ALTER TABLE IF EXISTS plantaopro.api_request_logs
     ALTER COLUMN id SET DEFAULT gen_random_uuid();
@@ -1366,7 +1382,8 @@ CREATE TABLE IF NOT EXISTS plantaopro.api_error_logs (
 );
 
 -- Compatibilidade com instalações existentes que criaram a tabela com shape genérico:
--- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers.
+-- adiciona as colunas de observabilidade usadas pelo middleware e pelos controllers
+-- e preserva as colunas genéricas legadas (MESMO shape final em nova instalação e em upgrade).
 ALTER TABLE IF EXISTS plantaopro.api_error_logs
     ADD COLUMN IF NOT EXISTS endpoint text NULL,
     ADD COLUMN IF NOT EXISTS metodo varchar(10) NULL,
@@ -1387,7 +1404,14 @@ ALTER TABLE IF EXISTS plantaopro.api_error_logs
     ADD COLUMN IF NOT EXISTS exception_type varchar(255) NULL,
     ADD COLUMN IF NOT EXISTS stack_trace text NULL,
     ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
-    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
 
 ALTER TABLE IF EXISTS plantaopro.api_error_logs
     ALTER COLUMN id SET DEFAULT gen_random_uuid();
@@ -4078,7 +4102,7 @@ CREATE TRIGGER trg_adm_contratos_tenant BEFORE INSERT OR UPDATE ON plantaopro.ad
 -- ============================================================
 
 -- SOURCE: database/migrations/2026_09_v2191_administrativo360_suprimentos.sql
--- SOURCE-SHA256: b419232a70fb2b3ee39a786e737387684826e612e5b3cb98055c444d74360366
+-- SOURCE-SHA256: b68c28e1e0629ad7f1429e11ae58195049d62bd07f2b54ef038a5b820cd86057
 -- Administrativo 360 bloco 2: suprimentos, qualidade, estoque e coleta.
 CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_pedido_numero;
 CREATE TABLE IF NOT EXISTS plantaopro.adm360_parceiros(id uuid primary key default gen_random_uuid(),tenant_id uuid not null references plantaopro.tenants(id),nome varchar(160) not null,documento varchar(20),fornecedor boolean not null default false,ativo boolean not null default true,created_at timestamptz not null default now(),unique(tenant_id,id));
@@ -5609,10 +5633,13 @@ begin
         alter table plantaopro.tenant_modulos_historico add constraint fk_tenant_modulos_historico_modulo foreign key (modulo_id) references plantaopro.modulos_sistema(id);
     end if;
 end $$;
--- ============================================================================
--- v2200 (2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql)
--- Arquivo real da proposta aprovada para o canal IMPORTACAO_MANUAL (imutavel por trigger).
--- ============================================================================
+
+-- ============================================================
+-- Seção 66 — Administrativo360 Exportacao Proposta Imutavel v2.21.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql
+-- SOURCE-SHA256: 56aa38e963c82fded0e437e0f2ee1e2777a61feb7468e8cc6a2d31e5216ea727
 -- Migration 2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql
 -- Administrativo 360 — Bloco 7 (Exportação e Integrações):
 -- Arquivo real da proposta aprovada para o canal IMPORTACAO_MANUAL (EXPORTADA_MANUALMENTE).
@@ -5656,12 +5683,154 @@ CREATE TRIGGER trg_adm360_cotacao_exportacao_imutavel
     BEFORE UPDATE OR DELETE ON plantaopro.adm360_cotacao_exportacoes
     FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_cotacao_exportacao_imutavel();
 
+-- ============================================================
+-- Seção 67 — Reconciliação de Auditoria e Observabilidade v2.21.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql
+-- SOURCE-SHA256: 6a564a4d23efcbfcc05f84066ed55672163c1f3ae2ca6296f374480c22181d23
 -- ============================================================================
--- v2300 (2026_09_v2300_administrativo360_status_transmissao_exportacao.sql)
--- Estende o CHECK de status_transmissao com os estados do Bloco 7:
--- EXPORTADA_MANUALMENTE (canal manual, arquivo imutável) e CONFIGURACAO_PENDENTE
--- (provedor oficial ainda sem integração — sem protocolo, cotação segue
--- PRONTA_PARA_ENVIO). Mantém os estados existentes. Idempotente.
+-- PlantaPro — Administrativo 360 | Migration v2202
+-- Reconciliação de auditoria e observabilidade (delta do 060 em 8c183e2)
+-- Instalações existentes criaram auditoria_acoes_criticas, api_request_logs e
+-- api_error_logs com o shape genérico histórico (tenant_id/codigo/nome/status/
+-- dados/criado_em/atualizado_em). O commit 8c183e2 reformulou
+-- database/schema/060_auditoria_observabilidade.sql para o shape novo usado pelo
+-- RequestLoggingMiddleware e pelo auditor central, incluindo os índices de
+-- consulta. Esta migration aplica o MESMO delta às bases existentes, de forma
+-- idempotente, convergindo fresh-install e upgrade ao mesmo shape final:
+--   * ADD COLUMN IF NOT EXISTS das colunas novas e das colunas genéricas legadas
+--     (qualquer shape intermediário converge ao shape final canônico);
+--   * DEFAULT gen_random_uuid() preservado na coluna id;
+--   * CREATE INDEX IF NOT EXISTS dos índices de consulta.
+-- Nenhuma coluna existente é alterada nem removida; histórico preservado.
+-- ============================================================================
+
+-- auditoria_acoes_criticas
+ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS entidade varchar(100) NOT NULL DEFAULT 'SISTEMA',
+    ADD COLUMN IF NOT EXISTS entidade_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS acao varchar(100) NOT NULL DEFAULT 'ACAO',
+    ADD COLUMN IF NOT EXISTS detalhes jsonb NULL,
+    ADD COLUMN IF NOT EXISTS sucesso boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
+
+ALTER TABLE IF EXISTS plantaopro.auditoria_acoes_criticas
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_cliente_data ON plantaopro.auditoria_acoes_criticas(cliente_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_usuario_data ON plantaopro.auditoria_acoes_criticas(usuario_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_entidade ON plantaopro.auditoria_acoes_criticas(entidade, entidade_id);
+CREATE INDEX IF NOT EXISTS ix_auditoria_acoes_criticas_acao_data ON plantaopro.auditoria_acoes_criticas(acao, reg_date DESC);
+
+-- api_request_logs
+ALTER TABLE IF EXISTS plantaopro.api_request_logs
+    ADD COLUMN IF NOT EXISTS endpoint text NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS metodo varchar(10) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS method varchar(12) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS status_code integer NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS sucesso boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS duracao_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS duration_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS email varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS ip varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS query_string text NULL,
+    ADD COLUMN IF NOT EXISTS erro text NULL,
+    ADD COLUMN IF NOT EXISTS error_message text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
+
+ALTER TABLE IF EXISTS plantaopro.api_request_logs
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_reg_date ON plantaopro.api_request_logs(reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_endpoint_data ON plantaopro.api_request_logs(endpoint, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_status_data ON plantaopro.api_request_logs(status_code, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_usuario_data ON plantaopro.api_request_logs(usuario_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_cliente_data ON plantaopro.api_request_logs(cliente_id, reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_request_logs_perfil_data ON plantaopro.api_request_logs(perfil, reg_date DESC);
+
+-- api_error_logs
+ALTER TABLE IF EXISTS plantaopro.api_error_logs
+    ADD COLUMN IF NOT EXISTS endpoint text NULL,
+    ADD COLUMN IF NOT EXISTS metodo varchar(10) NULL,
+    ADD COLUMN IF NOT EXISTS method varchar(12) NOT NULL DEFAULT 'GET',
+    ADD COLUMN IF NOT EXISTS status_code integer NULL,
+    ADD COLUMN IF NOT EXISTS success boolean NOT NULL DEFAULT true,
+    ADD COLUMN IF NOT EXISTS usuario_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS cliente_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS email varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS perfil varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS ip_origem varchar(64) NULL,
+    ADD COLUMN IF NOT EXISTS ip varchar(80) NULL,
+    ADD COLUMN IF NOT EXISTS user_agent text NULL,
+    ADD COLUMN IF NOT EXISTS query_string text NULL,
+    ADD COLUMN IF NOT EXISTS duration_ms bigint NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS mensagem text NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS error_message text NULL,
+    ADD COLUMN IF NOT EXISTS exception_type varchar(255) NULL,
+    ADD COLUMN IF NOT EXISTS stack_trace text NULL,
+    ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A',
+    ADD COLUMN IF NOT EXISTS tenant_id uuid NULL,
+    ADD COLUMN IF NOT EXISTS codigo text NULL,
+    ADD COLUMN IF NOT EXISTS nome text NULL,
+    ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'ATIVO',
+    ADD COLUMN IF NOT EXISTS dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    ADD COLUMN IF NOT EXISTS criado_em timestamptz NOT NULL DEFAULT now(),
+    ADD COLUMN IF NOT EXISTS atualizado_em timestamptz NULL;
+
+ALTER TABLE IF EXISTS plantaopro.api_error_logs
+    ALTER COLUMN id SET DEFAULT gen_random_uuid();
+
+CREATE INDEX IF NOT EXISTS ix_api_error_logs_reg_date ON plantaopro.api_error_logs(reg_date DESC);
+CREATE INDEX IF NOT EXISTS ix_api_error_logs_status_data ON plantaopro.api_error_logs(status_code, reg_date DESC);
+
+-- ============================================================
+-- Seção 68 — Administrativo360 Estados de Transmissão da Exportação v2.21.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql
+-- SOURCE-SHA256: e220614f3a1161b38ccd84cad2d27211e5cf9e6f2c2dc4bf64887452296c4d41
+-- ============================================================================
+-- PlantaPro — Administrativo 360 | Migration v2300
+-- Bloco 7 — Exportação e Integrações
+-- Estende o constraint de verificação de status_transmissao nas respostas de
+-- cotação para incluir os estados introduzidos pelo canal de exportação manual
+-- (IMPORTACAO_MANUAL) e pelos provedores ainda não integrados:
+--   * EXPORTADA_MANUALMENTE  — proposta aprovada exportada como arquivo imutável
+--                              pelo operador (canal manual); sem protocolo externo.
+--   * CONFIGURACAO_PENDENTE  — tentativa de transmissão em provedor oficial com
+--                              integração pendente (OPMENEXO/INPART): sem protocolo,
+--                              a cotação segue PRONTA_PARA_ENVIO.
+-- Mantém os estados existentes: NA_FILA, ENVIANDO, ACEITA_PELO_PORTAL,
+-- REJEITADA_PELO_PORTAL, RESULTADO_DESCONHECIDO.
+-- Idempotente: DROP CONSTRAINT IF EXISTS + ADD CONSTRAINT.
 -- ============================================================================
 
 ALTER TABLE plantaopro.adm360_cotacao_respostas
@@ -5679,3 +5848,211 @@ ALTER TABLE plantaopro.adm360_cotacao_respostas
         'RESULTADO_DESCONHECIDO'
     ));
 
+-- ============================================================
+-- Seção 69 — Administrativo360 Eventos Imutáveis v2.21.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql
+-- SOURCE-SHA256: 288e216b08433bc9100314c7231ca567b6ca598198ba32e2dc2acbdcd8b037c3
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_09_v2301_administrativo360_eventos_imutabilidade
+-- Administrativo 360 - Eventos unificados imutaveis com hash (requisito P4)
+--
+-- Alteracoes oficiais:
+--   1. Cria plantaopro.adm360_eventos: log append-only de eventos de negocio que
+--      classifica APROVACAO, ARQUIVO, DECLARACAO_MANUAL e RETORNO_EXTERNO, com hash
+--      SHA-256 do conteudo canonico e chave de idempotencia opcional
+--      UNIQUE(tenant_id, idempotency_key).
+--   2. Protege adm360_eventos e adm360_documento_eventos (apos backfill de
+--      sha256_hash) contra UPDATE/DELETE: append-only com bypass GUC controlado.
+--   3. Protege adm360_vale_eventos: DELETE bloqueado; apenas o progresso da
+--      decisao (quantidade_decidida) pode ser atualizado.
+--   4. Conciliacao unica: respostas presas em ENVIANDO por queda do processo viram
+--      RESULTADO_DESCONHECIDO (estado honesto, sem protocolo externo confirmado).
+--   5. Trigger de preenchimento: todo novo evento de documento fiscal recebe
+--      sha256_hash calculado sobre as colunas armazenadas (mesma formula do backfill).
+--
+-- Idempotencia: CREATE ... IF NOT EXISTS / CREATE OR REPLACE / ADD COLUMN IF NOT EXISTS;
+-- o backfill atualiza apenas linhas sem hash; a conciliacao zera linhas no re-executar.
+-- O bypass SELECT set_config('plantao.bypass_imutabilidade_adm360', 'on', true) deve ser
+-- feito na MESMA transacao da escrita protegida e esta reservado a ferramentas oficiais
+-- de manutencao. TRUNCATE nao dispara row triggers (mesmo padrao de v2200).
+-- ============================================================================
+
+-- 1. Log unico de eventos do Administrativo 360 (append-only)
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_eventos (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL REFERENCES plantaopro.tenants(id),
+    tipo_evento varchar(30) NOT NULL CHECK(tipo_evento IN ('APROVACAO', 'ARQUIVO', 'DECLARACAO_MANUAL', 'RETORNO_EXTERNO')),
+    entidade varchar(40) NOT NULL,
+    entidade_id uuid NOT NULL,
+    usuario_id uuid,
+    descricao text NOT NULL,
+    dados jsonb NOT NULL DEFAULT '{}'::jsonb,
+    sha256_hash char(64) NOT NULL CHECK(sha256_hash ~ '^[0-9a-f]{64}$'),
+    idempotency_key varchar(160),
+    created_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE(tenant_id, id),
+    UNIQUE(tenant_id, idempotency_key)
+);
+
+CREATE INDEX IF NOT EXISTS ix_adm360_eventos_tenant_tipo
+    ON plantaopro.adm360_eventos(tenant_id, tipo_evento, created_at DESC);
+CREATE INDEX IF NOT EXISTS ix_adm360_eventos_entidade
+    ON plantaopro.adm360_eventos(tenant_id, entidade, entidade_id);
+
+COMMENT ON TABLE plantaopro.adm360_eventos IS 'Administrativo 360: log unificado de eventos imutaveis (APROVACAO/ARQUIVO/DECLARACAO_MANUAL/RETORNO_EXTERNO) com hash SHA-256 do conteudo.';
+
+-- 2. Imutabilidade append-only com bypass GUC controlado
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_evento_imutavel()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF current_setting('plantao.bypass_imutabilidade_adm360', true) = 'on' THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
+    RAISE EXCEPTION 'Evento do modulo Administrativo 360 e imutavel (append-only): UPDATE e DELETE nao permitidos (registro %).', COALESCE(NEW.id, OLD.id);
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_adm360_eventos_imutavel ON plantaopro.adm360_eventos;
+CREATE TRIGGER trg_adm360_eventos_imutavel
+    BEFORE UPDATE OR DELETE ON plantaopro.adm360_eventos
+    FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_evento_imutavel();
+
+-- 3. Eventos de documento fiscal (NF-e): hash SHA-256 + imutabilidade append-only
+ALTER TABLE plantaopro.adm360_documento_eventos ADD COLUMN IF NOT EXISTS sha256_hash char(64);
+
+UPDATE plantaopro.adm360_documento_eventos e
+SET sha256_hash = encode(digest(
+        coalesce(e.id::text, '') || '|' || coalesce(e.tenant_id::text, '') || '|' ||
+        coalesce(e.tipo_evento, '') || '|' || coalesce(e.sequencia_evento::text, '') || '|' ||
+        coalesce(e.descricao_evento, '') || '|' || coalesce(e.data_evento::text, '') || '|' ||
+        coalesce(e.protocolo, '') || '|' || coalesce(e.detalhes, ''),
+        'sha256'), 'hex')
+WHERE e.sha256_hash IS NULL;
+
+ALTER TABLE plantaopro.adm360_documento_eventos ALTER COLUMN sha256_hash SET NOT NULL;
+
+-- Fonte unica da formula: todo novo evento (qualquer tipo) recebe o hash calculado
+-- sobre as colunas que serão armazenadas (consistente com o backfill acima).
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_documento_evento_preencher_hash()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF NEW.sha256_hash IS NULL THEN
+        NEW.sha256_hash := encode(digest(
+            coalesce(NEW.id::text, '') || '|' || coalesce(NEW.tenant_id::text, '') || '|' ||
+            coalesce(NEW.tipo_evento, '') || '|' || coalesce(NEW.sequencia_evento::text, '') || '|' ||
+            coalesce(NEW.descricao_evento, '') || '|' || coalesce(NEW.data_evento::text, '') || '|' ||
+            coalesce(NEW.protocolo, '') || '|' || coalesce(NEW.detalhes, ''),
+            'sha256'), 'hex')::character(64);
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_adm360_documento_eventos_hash ON plantaopro.adm360_documento_eventos;
+CREATE TRIGGER trg_adm360_documento_eventos_hash
+    BEFORE INSERT ON plantaopro.adm360_documento_eventos
+    FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_documento_evento_preencher_hash();
+
+DROP TRIGGER IF EXISTS trg_adm360_documento_eventos_imutavel ON plantaopro.adm360_documento_eventos;
+CREATE TRIGGER trg_adm360_documento_eventos_imutavel
+    BEFORE UPDATE OR DELETE ON plantaopro.adm360_documento_eventos
+    FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_evento_imutavel();
+
+-- 4. Eventos de vale: identidade imutavel; so o progresso da decisao pode mudar
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_vale_evento_progresso()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF current_setting('plantao.bypass_imutabilidade_adm360', true) = 'on' THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'Evento de vale e imutavel: DELETE nao permitido (registro %).', OLD.id;
+    END IF;
+    IF NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+       OR NEW.vale_id IS DISTINCT FROM OLD.vale_id
+       OR NEW.vale_item_id IS DISTINCT FROM OLD.vale_item_id
+       OR NEW.tipo IS DISTINCT FROM OLD.tipo
+       OR NEW.quantidade IS DISTINCT FROM OLD.quantidade
+       OR NEW.data_evento IS DISTINCT FROM OLD.data_evento
+       OR NEW.motivo IS DISTINCT FROM OLD.motivo
+       OR NEW.movimento_id IS DISTINCT FROM OLD.movimento_id
+       OR NEW.idempotency_key IS DISTINCT FROM OLD.idempotency_key
+       OR NEW.registrado_por IS DISTINCT FROM OLD.registrado_por
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at
+    THEN
+        RAISE EXCEPTION 'Evento de vale e imutavel: apenas o progresso da decisao (quantidade_decidida) pode ser atualizado (registro %).', NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_adm360_vale_eventos_progresso ON plantaopro.adm360_vale_eventos;
+CREATE TRIGGER trg_adm360_vale_eventos_progresso
+    BEFORE UPDATE OR DELETE ON plantaopro.adm360_vale_eventos
+    FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_vale_evento_progresso();
+
+-- 5. Recuperacao unica: ENVIANDO ancorado por queda do processo (0 linhas no re-executar)
+UPDATE plantaopro.adm360_cotacao_respostas
+SET status_transmissao = 'RESULTADO_DESCONHECIDO',
+    mensagem_retorno = coalesce(mensagem_retorno, '') || ' | Recuperacao oficial: transmissao ficou em ENVIANDO sem resultado registrado (processo interrompido).',
+    updated_at = now()
+WHERE status_transmissao = 'ENVIANDO';
+-- ============================================================
+-- Seção 70 — Administrativo360 Reafirmação Trigger Validar Tenant v2.21.1
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql
+-- SOURCE-SHA256: bc6baaff554451db2b2b50d37c432460ddee9b01d00d10cf18ebe0105670172a
+-- ============================================================================
+-- Migration: 2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql
+-- Objetivo: Reafirmar a correcao da funcao plantaopro.adm360_validar_tenant()
+--           introduzida em v2199. O migrador oficial pode re-executar o v2190
+--           em um upgrade quando a linha de tracking do v2190 nao estava em
+--           schema_migrations enquanto a do v2199 ja existia: nesse cenario o
+--           CREATE OR REPLACE FUNCTION do v2190 (corpo com avaliacao dos tres
+--           ramos em expressoes separadas) foi aplicado APOS o v2199 e
+--           restabeleceu a falha de resolugao do rowtype NEW dentro das
+--           subconsultas:
+--             ERRO: registro "new" nao tem campo "cargo_id"
+--           quebrando INSERT/UPDATE em adm_cargos, adm_colaboradores e
+--           adm_contratos_trabalho. Este script reaplica, em ordem cronologica
+--           oficial e apos o v2190/v2199, o corpo corrigido em IF/ELSIF por
+--           tabela de v2199, de modo que instalacao limpa e upgrade convergem
+--           para a mesma funcao. Nomes, triggers, mensagens de erro e dados
+--           sao mantidos identicos; nenhuma alteracao de estrutura.
+-- Idempotencia: CREATE OR REPLACE FUNCTION. Os gatilhos existentes
+--               (trg_adm_cargos_tenant, trg_adm_colaboradores_tenant,
+--                trg_adm_contratos_tenant) continuam apontando para esta
+--               funcao, sem recriacao.
+-- ============================================================================
+
+create or replace function plantaopro.adm360_validar_tenant()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_table_name = 'adm_cargos' then
+    if new.departamento_id is not null
+       and not exists(select 1 from plantaopro.adm_departamentos d where d.id = new.departamento_id and d.tenant_id = new.tenant_id) then
+      raise exception 'Departamento pertence a outro tenant';
+    end if;
+  elsif tg_table_name = 'adm_colaboradores' then
+    if not exists(select 1 from plantaopro.adm_cargos c where c.id = new.cargo_id and c.tenant_id = new.tenant_id) then
+      raise exception 'Cargo pertence a outro tenant';
+    end if;
+  elsif tg_table_name = 'adm_contratos_trabalho' then
+    if not exists(select 1 from plantaopro.adm_colaboradores p where p.id = new.colaborador_id and p.tenant_id = new.tenant_id) then
+      raise exception 'Colaborador pertence a outro tenant';
+    end if;
+  end if;
+  return new;
+end;
+$$;

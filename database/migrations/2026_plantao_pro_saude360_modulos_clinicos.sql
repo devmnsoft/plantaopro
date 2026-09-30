@@ -478,6 +478,9 @@ create table if not exists plantaopro.triagem_historico (
     reg_date timestamptz not null default now(),
     reg_status char(1) not null default 'A'
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.triagem_historico add column if not exists paciente_id uuid null;
+
 create index if not exists ix_triagem_historico_cliente_id on plantaopro.triagem_historico (cliente_id);
 create index if not exists ix_triagem_historico_paciente_id on plantaopro.triagem_historico (paciente_id);
 create index if not exists ix_triagem_historico_status on plantaopro.triagem_historico (status);
@@ -502,8 +505,30 @@ create table if not exists plantaopro.consultas (
     reg_date timestamptz not null default now(),
     reg_status char(1) not null default 'A'
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.consultas add column if not exists medico_id uuid;
+alter table plantaopro.consultas add column if not exists agendamento_id uuid null;
+
 create index if not exists ix_consultas_cliente_id on plantaopro.consultas (cliente_id);
 create index if not exists ix_consultas_paciente_id on plantaopro.consultas (paciente_id);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.cid_tabela add column if not exists data_fim timestamptz null;
+alter table plantaopro.cid_tabela add column if not exists data_inicio timestamptz null;
+-- WP1 j11: consulta_* podem nao existir nesta ordem de execucao (o create proprio do arquivo vem depois);
+-- no upgrade legado a tabela ja existe e recebe a coluna.
+alter table if exists plantaopro.consulta_anamnese add column if not exists status text not null default 'REGISTRADO';
+alter table if exists plantaopro.consulta_condutas add column if not exists status text not null default 'REGISTRADO';
+alter table if exists plantaopro.consulta_diagnosticos add column if not exists status text not null default 'ATIVO';
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists status text not null default 'ABERTO';
+alter table if exists plantaopro.consulta_exame_fisico add column if not exists status text not null default 'REGISTRADO';
+alter table if exists plantaopro.consulta_historico add column if not exists status text not null default 'REGISTRADO';
+alter table plantaopro.convenios add column if not exists cliente_id uuid null;
+alter table plantaopro.convenios add column if not exists reg_date timestamptz not null default now();
+alter table plantaopro.convenios add column if not exists reg_status char(1) not null default 'A';
+alter table plantaopro.planos_saude add column if not exists cliente_id uuid null;
+alter table plantaopro.planos_saude add column if not exists reg_date timestamptz not null default now();
+alter table plantaopro.planos_saude add column if not exists reg_status char(1) not null default 'A';
+
 create index if not exists ix_consultas_medico_id on plantaopro.consultas (medico_id);
 create index if not exists ix_consultas_agendamento_id on plantaopro.consultas (agendamento_id);
 create index if not exists ix_consultas_status on plantaopro.consultas (status);
@@ -715,6 +740,14 @@ create table if not exists plantaopro.prescricoes (
     reg_date timestamptz not null default now(),
     reg_status char(1) not null default 'A'
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.prescricoes add column if not exists cliente_id uuid null;
+alter table plantaopro.prescricoes add column if not exists paciente_id uuid;
+alter table plantaopro.prescricoes add column if not exists medico_id uuid;
+alter table plantaopro.prescricoes add column if not exists consulta_id uuid null;
+alter table plantaopro.prescricoes add column if not exists reg_date timestamptz not null default now();
+alter table plantaopro.prescricoes add column if not exists reg_status char(1) not null default 'A';
+
 create index if not exists ix_prescricoes_cliente_id on plantaopro.prescricoes (cliente_id);
 create index if not exists ix_prescricoes_paciente_id on plantaopro.prescricoes (paciente_id);
 create index if not exists ix_prescricoes_medico_id on plantaopro.prescricoes (medico_id);

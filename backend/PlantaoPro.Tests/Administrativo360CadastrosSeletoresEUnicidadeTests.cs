@@ -4,6 +4,7 @@ using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Infrastructure.Administrativo360;
 using PlantaoPro.Tests.Infrastructure;
 using Xunit;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Tests;
 
@@ -181,7 +182,7 @@ public sealed class Administrativo360CadastrosSeletoresEUnicidadeTests
         try
         {
             // Documento já presente no MESMO tenant → pré-checa (ou índice 23505) traduz em mensagem de negócio.
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
                 _cadastros.SalvarParceiroAsync(TenantA, null, Prefixo + " DOCE NO TENANT A", doc, false, true, CancellationToken.None));
             Assert.Contains("Já existe um parceiro cadastrado com este documento neste cliente.", ex.Message);
         }
@@ -218,7 +219,7 @@ public sealed class Administrativo360CadastrosSeletoresEUnicidadeTests
             await Task.Delay(TimeSpan.FromSeconds(2)); // garante que o INSERT do repositório chegou ao lock
             await txA.CommitAsync();
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await tarefa);
+            var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(async () => await tarefa);
             Assert.Contains("Já existe um parceiro cadastrado com este documento neste cliente.", ex.Message);
         }
         finally
@@ -253,7 +254,7 @@ public sealed class Administrativo360CadastrosSeletoresEUnicidadeTests
             await Task.Delay(TimeSpan.FromSeconds(2));
             await txA.CommitAsync();
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await tarefa);
+            var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(async () => await tarefa);
             Assert.Contains("Já existe um produto com este SKU neste cliente.", ex.Message);
         }
         finally
@@ -287,7 +288,7 @@ public sealed class Administrativo360CadastrosSeletoresEUnicidadeTests
             await Task.Delay(TimeSpan.FromSeconds(2));
             await txA.CommitAsync();
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await tarefa);
+            var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(async () => await tarefa);
             Assert.Contains("Já existe um local de estoque com este código neste cliente.", ex.Message);
         }
         finally

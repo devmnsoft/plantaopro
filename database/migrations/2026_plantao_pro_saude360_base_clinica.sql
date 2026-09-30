@@ -85,6 +85,9 @@ begin
 end $$;
 
 -- Índices padronizados por tenant, vínculos, status e datas.
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.agendamento_status_historico add column if not exists status text not null default '';
+
 do $$
 declare t text;
 begin

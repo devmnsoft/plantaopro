@@ -198,7 +198,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                         new { key = command.IdempotencyKey, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var titulo = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -207,8 +207,8 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                 WHERE id = @TituloId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.TituloId, tenantId }, tx, cancellationToken: ct));
 
-            if (titulo is null) throw new InvalidOperationException("Título a receber não encontrado.");
-            if (titulo.situacao == "CANCELADO") throw new InvalidOperationException("Título cancelado não pode receber pagamentos.");
+            if (titulo is null) throw new Administrativo360BusinessException("Título a receber não encontrado.");
+            if (titulo.situacao == "CANCELADO") throw new Administrativo360BusinessException("Título cancelado não pode receber pagamentos.");
 
             TituloRegras.ValidarBaixa((decimal)titulo.saldo_aberto, command.Valor);
 
@@ -217,8 +217,8 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                 WHERE id = @ContaId AND tenant_id = @tenantId FOR UPDATE",
                 new { command.ContaId, tenantId }, tx, cancellationToken: ct));
 
-            if (conta is null) throw new InvalidOperationException("Conta financeira de destino não encontrada.");
-            if (!(bool)conta.ativo) throw new InvalidOperationException("Conta financeira inativa não pode receber lançamentos.");
+            if (conta is null) throw new Administrativo360BusinessException("Conta financeira de destino não encontrada.");
+            if (!(bool)conta.ativo) throw new Administrativo360BusinessException("Conta financeira inativa não pode receber lançamentos.");
 
             // Bloqueio de período fechado
             var fechamentoBloqueador = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -230,7 +230,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
             if (fechamentoBloqueador is not null)
             {
                 DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
-                throw new InvalidOperationException($"Não é permitido lançar recebimentos na data {command.DataRecebimento:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+                throw new Administrativo360BusinessException($"Não é permitido lançar recebimentos na data {command.DataRecebimento:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
             }
 
             baixaId = Guid.NewGuid();
@@ -359,7 +359,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                         new { command.BaixaId, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var baixa = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -369,7 +369,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
                 WHERE b.id = @BaixaId AND b.tenant_id = @tenantId FOR UPDATE",
                 new { command.BaixaId, tenantId }, tx, cancellationToken: ct));
 
-            if (baixa is null) throw new InvalidOperationException("Baixa não encontrada.");
+            if (baixa is null) throw new Administrativo360BusinessException("Baixa não encontrada.");
 
             TituloRegras.ValidarEstorno((bool)baixa.estornado, (decimal)baixa.valor_recebido, (decimal)baixa.valor_recebido);
 
@@ -385,7 +385,7 @@ public sealed class ContasReceberRepository : Adm360Repository, IContasReceberRe
             if (fechamentoBloqueador is not null)
             {
                 DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
-                throw new InvalidOperationException($"Não é permitido lançar estorno na data {hoje:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+                throw new Administrativo360BusinessException($"Não é permitido lançar estorno na data {hoje:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
             }
 
             estornoId = Guid.NewGuid();

@@ -9,9 +9,20 @@ create table if not exists plantaopro.convenios (
     created_at timestamp without time zone not null default now(), updated_at timestamp without time zone null,
     reg_date timestamp without time zone not null default now(), reg_update timestamp without time zone null, reg_status char(1) not null default 'A'
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.convenios add column if not exists reg_status char(1) not null default 'A';
+
 alter table plantaopro.convenios add column if not exists codigo text not null default '';
 alter table plantaopro.convenios add column if not exists codigo_ans text not null default '';
 update plantaopro.convenios set codigo = coalesce(nullif(codigo,''), codigo_ans, '') where codigo = '';
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.convenios add column if not exists cliente_id uuid null;
+alter table plantaopro.convenios add column if not exists cnpj text not null default '';
+alter table plantaopro.convenios add column if not exists reg_date timestamp without time zone not null default now();
+alter table plantaopro.planos_saude add column if not exists cliente_id uuid null;
+alter table plantaopro.planos_saude add column if not exists convenio_id uuid null;
+alter table plantaopro.planos_saude add column if not exists reg_date timestamp without time zone not null default now();
+
 create index if not exists ix_convenios_cliente_id on plantaopro.convenios(cliente_id);
 create index if not exists ix_convenios_nome on plantaopro.convenios(nome);
 create index if not exists ix_convenios_codigo on plantaopro.convenios(codigo);

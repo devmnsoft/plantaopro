@@ -53,7 +53,8 @@ public sealed class HomologacaoRuntimeRealContractTests
             .ToArray();
         Assert.Empty(controllerClasses);
 
-        foreach (var appsettings in Directory.EnumerateFiles(Path.Combine(Root, "backend"), "appsettings*.json", SearchOption.AllDirectories))
+        foreach (var appsettings in Directory.EnumerateFiles(Path.Combine(Root, "backend"), "appsettings*.json", SearchOption.AllDirectories)
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)))
         {
             var content = File.ReadAllText(appsettings);
             Assert.DoesNotContain("admin123", content, StringComparison.OrdinalIgnoreCase);

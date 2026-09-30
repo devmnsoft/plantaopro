@@ -14,7 +14,7 @@ public static class Estoque
     public static decimal Disponivel(decimal fisicoLiberado, decimal reservado, bool vencido, bool bloqueado)
     {
         if (fisicoLiberado < 0 || reservado < 0) throw new ArgumentOutOfRangeException(nameof(fisicoLiberado));
-        if (reservado > fisicoLiberado) throw new InvalidOperationException("Reservas não podem superar o saldo físico liberado.");
+        if (reservado > fisicoLiberado) throw new Administrativo360BusinessException("Reservas não podem superar o saldo físico liberado.");
         return vencido || bloqueado ? 0 : fisicoLiberado - reservado;
     }
 
@@ -39,9 +39,9 @@ public static class Inspecao
     public static void ValidarDecisao(decimal pendente, decimal aprovada, decimal reprovada, string? justificativa)
     {
         if (aprovada < 0 || reprovada < 0 || aprovada + reprovada <= 0 || aprovada + reprovada > pendente)
-            throw new InvalidOperationException("A decisão deve ser positiva e não pode exceder o saldo pendente da inspeção.");
+            throw new Administrativo360BusinessException("A decisão deve ser positiva e não pode exceder o saldo pendente da inspeção.");
         if (reprovada > 0 && string.IsNullOrWhiteSpace(justificativa))
-            throw new InvalidOperationException("A reprovação exige justificativa.");
+            throw new Administrativo360BusinessException("A reprovação exige justificativa.");
     }
 }
 

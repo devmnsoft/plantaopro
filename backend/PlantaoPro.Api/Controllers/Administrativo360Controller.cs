@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Api.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Api.Controllers;
 
@@ -41,8 +42,11 @@ public sealed class Administrativo360Controller : ControllerBase
     [HttpPost("contratos/{id:guid}/cancelar")] public async Task<IActionResult> CancelarContrato(Guid id,CancellationToken ct)=>await ExecutarAsync(() => service.CancelarContratoAsync(id,ct));
 
     // ============================================================
-    // Erro de negócio -> HTTP 400 com mensagem amigável ("message").
+    // Erro de negócio -> HTTP com mensagem amigável ("message"):
+    // 400 regra de negócio violada; 403 acesso negado no domínio.
     // A Web (BaseWebController) lê esse campo e exibe sem detalhes técnicos.
+    // Falhas técnicas não passam por aqui: o filter de exceção/handler global
+    // responde 404/500 com log estruturado e correlação.
     // ============================================================
     private static Task<IActionResult> LerAsync<T>(Func<Task<T>> acao,System.Net.HttpStatusCode ok=System.Net.HttpStatusCode.OK)=>ComNegocioAsync(async () =>
     {
@@ -58,6 +62,6 @@ public sealed class Administrativo360Controller : ControllerBase
     {
         try { return await acao(); }
         catch(Administrativo360BusinessException ex) { return new BadRequestObjectResult(new { message=ex.Message }); }
-        catch(UnauthorizedAccessException ex) { return new BadRequestObjectResult(new { message=ex.Message }); }
+        catch(UnauthorizedAccessException ex) { return new JsonResult(new { message=string.IsNullOrWhiteSpace(ex.Message)?"Acesso não autorizado.":ex.Message }) { StatusCode=StatusCodes.Status403Forbidden }; }
     }
 }

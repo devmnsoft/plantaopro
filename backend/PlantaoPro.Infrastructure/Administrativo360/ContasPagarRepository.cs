@@ -224,7 +224,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                         new { key = command.IdempotencyKey, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var parceiroAtivo = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"
@@ -232,7 +232,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                 new { id = command.FornecedorId, tenantId }, tx, cancellationToken: ct));
 
             if (!parceiroAtivo)
-                throw new InvalidOperationException("Fornecedor/Beneficiário inativo ou não encontrado.");
+                throw new Administrativo360BusinessException("Fornecedor/Beneficiário inativo ou não encontrado.");
 
             var seq = await cn.ExecuteScalarAsync<long>("SELECT nextval('plantaopro.adm360_titulo_pagar_numero')", transaction: tx);
             var numeroTitulo = $"PAG-{seq:D6}";
@@ -282,7 +282,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
             if (opExistente is not null)
             {
                 if (opExistente.payload_hash == payloadHash) return;
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var titulo = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -343,7 +343,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                         new { key = command.IdempotencyKey, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var titulo = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -366,7 +366,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                 new { command.ContaId, tenantId }, tx, cancellationToken: ct));
 
             if (conta is null) throw new KeyNotFoundException("Conta financeira não encontrada.");
-            if (!(bool)conta.ativo) throw new InvalidOperationException("Conta financeira inativa não pode realizar pagamentos.");
+            if (!(bool)conta.ativo) throw new Administrativo360BusinessException("Conta financeira inativa não pode realizar pagamentos.");
 
             // Política de bloqueio padrão para saldo insuficiente
             decimal saldoAtual = (decimal)conta.saldoatual;
@@ -382,7 +382,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
             if (fechamentoBloqueador is not null)
             {
                 DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
-                throw new InvalidOperationException($"Não é permitido lançar pagamentos na data {command.DataPagamento:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+                throw new Administrativo360BusinessException($"Não é permitido lançar pagamentos na data {command.DataPagamento:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
             }
 
             pagamentoId = Guid.NewGuid();
@@ -480,7 +480,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                         new { command.PagamentoId, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var pag = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -505,7 +505,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
             if (fechamentoBloqueador is not null)
             {
                 DateOnly dataFim = ToDateOnly(fechamentoBloqueador.data_fim);
-                throw new InvalidOperationException($"Não é permitido estornar pagamentos na data {hoje:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
+                throw new Administrativo360BusinessException($"Não é permitido estornar pagamentos na data {hoje:dd/MM/yyyy} devido a fechamento de caixa ativo até {dataFim:dd/MM/yyyy}.");
             }
 
             estornoId = Guid.NewGuid();
@@ -602,7 +602,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                         new { command.RecebimentoId, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var existId = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition(@"
@@ -623,7 +623,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                 WHERE r.id = @RecebimentoId AND r.tenant_id = @tenantId",
                 new { command.RecebimentoId, tenantId }, tx, cancellationToken: ct));
 
-            if (rec is null) throw new InvalidOperationException("Recebimento de compra não encontrado.");
+            if (rec is null) throw new Administrativo360BusinessException("Recebimento de compra não encontrado.");
 
             var itensRec = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
                 SELECT ri.quantidade, pi.preco_unitario, pi.desconto, pi.quantidade AS QtdPedida
@@ -633,7 +633,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                 new { command.RecebimentoId, tenantId }, tx, cancellationToken: ct))).ToList();
 
             if (itensRec.Count == 0)
-                throw new InvalidOperationException("Recebimento não possui itens válidos para gerar obrigação.");
+                throw new Administrativo360BusinessException("Recebimento não possui itens válidos para gerar obrigação.");
 
             decimal totalRecebimento = 0m;
             foreach (var ir in itensRec)
@@ -705,7 +705,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                         new { key = command.IdempotencyKey, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             // Seleciona comissões apropriadas do vendedor ainda não vinculadas a título
@@ -717,7 +717,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                 new { command.VendedorId, tenantId }, tx, cancellationToken: ct))).ToList();
 
             if (comissoes.Count == 0)
-                throw new InvalidOperationException("Nenhuma comissão apropriada pendente para este vendedor.");
+                throw new Administrativo360BusinessException("Nenhuma comissão apropriada pendente para este vendedor.");
 
             decimal totalComissao = comissoes.Sum(c => (decimal)c.valor_comissao);
 
@@ -735,7 +735,7 @@ public sealed class ContasPagarRepository : Adm360Repository, IContasPagarReposi
                     SELECT nome, email FROM plantaopro.usuarios WHERE id = @VendedorId AND tenant_id = @tenantId",
                     new { command.VendedorId, tenantId }, tx, cancellationToken: ct));
 
-                if (usuario is null) throw new InvalidOperationException("Vendedor não encontrado.");
+                if (usuario is null) throw new Administrativo360BusinessException("Vendedor não encontrado.");
 
                 parceiroId = Guid.NewGuid();
                 await cn.ExecuteAsync(new CommandDefinition(@"

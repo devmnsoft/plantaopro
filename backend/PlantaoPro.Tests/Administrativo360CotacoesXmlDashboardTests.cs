@@ -262,7 +262,7 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         Assert.NotNull(cotacaoPendente);
 
         // Tentativa de aprovar resposta deve falhar com InvalidOperationException
-        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(async () =>
         {
             await repo.AprovarRespostaAsync(TenantSantaCasa, UsuarioGestor, new AprovarRespostaCotacaoCommand(cotacaoPendente.Id));
         });
@@ -326,7 +326,7 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         var aceita = respostas.FirstOrDefault(r => r.StatusTransmissao == "ACEITA_PELO_PORTAL");
         Assert.NotNull(aceita);
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(async () =>
         {
             await repo.TransmitirRespostaAsync(TenantSantaCasa, UsuarioGestor, new TransmitirRespostaCommand(aceita.Id));
         });
@@ -343,7 +343,7 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         // Transição válida não lança exceção
         CotacaoRegras.ValidarTransicaoStatus("PRONTA_PARA_ENVIO", "RESPONDIDA");
         // Transição inválida deve lançar InvalidOperationException
-        Assert.Throws<InvalidOperationException>(() => CotacaoRegras.ValidarTransicaoStatus("RESPONDIDA", "RECEBIDA"));
+        Assert.Throws<Administrativo360BusinessException>(() => CotacaoRegras.ValidarTransicaoStatus("RESPONDIDA", "RECEBIDA"));
     }
 
     // =========================================================================
@@ -403,6 +403,11 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         var chaveAcessoTeste = "35260988888888888888550010000000031000000030";
         await using (var cn = new NpgsqlConnection(cs))
         {
+            // P4: adm360_documento_eventos é append-only — a limpeza deste teste usa o bypass
+            // GUC controlado em transação explícita (set_config ... ,true só vale nesta transação).
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            await cn.ExecuteAsync("SELECT set_config('plantao.bypass_imutabilidade_adm360', 'on', true);", transaction: tx);
             await cn.ExecuteAsync(@"
                 DELETE FROM plantaopro.adm360_documento_eventos 
                 WHERE documento_id IN (SELECT id FROM plantaopro.adm360_documentos_recebidos WHERE chave_acesso = @chaveAcessoTeste);
@@ -410,7 +415,8 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
                 WHERE documento_id IN (SELECT id FROM plantaopro.adm360_documentos_recebidos WHERE chave_acesso = @chaveAcessoTeste);
                 DELETE FROM plantaopro.adm360_documentos_recebidos 
                 WHERE chave_acesso = @chaveAcessoTeste;",
-                new { chaveAcessoTeste });
+                new { chaveAcessoTeste }, tx);
+            await tx.CommitAsync();
         }
 
         var repo = new DocumentosXmlRepository(cs);
@@ -517,10 +523,10 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
     public void Aceite18_RegrasDominio_ValidacoesDeChaveEAcesso()
     {
         Assert.Throws<ArgumentException>(() => XmlDocumentoRegras.ValidarChaveAcesso("123")); // Menos de 44 dígitos
-        Assert.Throws<InvalidOperationException>(() => XmlDocumentoRegras.ValidarChaveAcesso("35260900000000000000570010000000011000000010")); // Mod 57 (CT-e) fora de escopo
+        Assert.Throws<Administrativo360BusinessException>(() => XmlDocumentoRegras.ValidarChaveAcesso("35260900000000000000570010000000011000000010")); // Mod 57 (CT-e) fora de escopo
         XmlDocumentoRegras.ValidarChaveAcesso("35260900000000000000550010000000011000000010"); // Mod 55 NF-e válido não lança
 
         CapacidadeContratadaRegras.ValidarCapacidadeAtiva("PORTAIS_COTACAO", new[] { "PORTAIS_COTACAO", "XML_RECEBIDOS" }); // Ativo não lança
-        Assert.Throws<InvalidOperationException>(() => CapacidadeContratadaRegras.ValidarCapacidadeAtiva("XML_RECEBIDOS", new[] { "PORTAIS_COTACAO" }));
+        Assert.Throws<Administrativo360BusinessException>(() => CapacidadeContratadaRegras.ValidarCapacidadeAtiva("XML_RECEBIDOS", new[] { "PORTAIS_COTACAO" }));
     }
 }

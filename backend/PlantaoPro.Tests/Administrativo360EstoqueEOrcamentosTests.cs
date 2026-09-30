@@ -55,8 +55,8 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
     public void Inspecao_ValidarDecisao_ExigeSaldoEPositividade()
     {
         Inspecao.ValidarDecisao(10m, 5m, 5m, "Avaria identificada na embalagem secundária");
-        Assert.Throws<InvalidOperationException>(() => Inspecao.ValidarDecisao(10m, 5m, 5m, ""));
-        Assert.Throws<InvalidOperationException>(() => Inspecao.ValidarDecisao(10m, 6m, 5m, "Justificativa"));
+        Assert.Throws<Administrativo360BusinessException>(() => Inspecao.ValidarDecisao(10m, 5m, 5m, ""));
+        Assert.Throws<Administrativo360BusinessException>(() => Inspecao.ValidarDecisao(10m, 6m, 5m, "Justificativa"));
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
     {
         var total = OrcamentoCirurgicoRegras.CalcularTotalItem(2m, 100m, 30m);
         Assert.Equal(170m, total);
-        Assert.Throws<InvalidOperationException>(() => OrcamentoCirurgicoRegras.CalcularTotalItem(2m, 100m, 250m));
+        Assert.Throws<Administrativo360BusinessException>(() => OrcamentoCirurgicoRegras.CalcularTotalItem(2m, 100m, 250m));
         Assert.Throws<ArgumentOutOfRangeException>(() => OrcamentoCirurgicoRegras.CalcularTotalItem(0m, 100m, 0m));
     }
 
@@ -93,7 +93,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
         var loteInvalido = new DateOnly(2026, 10, 15);
 
         OrcamentoCirurgicoRegras.ValidarDataCirurgiaEValidadeLote(dataCirurgia, loteValido);
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<Administrativo360BusinessException>(() =>
             OrcamentoCirurgicoRegras.ValidarDataCirurgiaEValidadeLote(dataCirurgia, loteInvalido));
 
         Assert.Contains("vencerá antes do procedimento", ex.Message);
@@ -121,7 +121,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
         Assert.Equal(0m, pendente);
 
         // Se soma exceder o expedido, deve falhar
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ValeConsignacaoRegras.CalcularPendenteCustodia(6m, 4m, 3m, 0m));
     }
 
@@ -171,7 +171,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
 
         // Reexecuta com mesma chave e quantidade diferente (2m) -> DEVE RETORNAR CONFLITO
         var cmdConflito = new TransferirCommand(produtoId, loteId, origemId, destinoId, 2m, "Tentativa conflito", key);
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             estoqueRepo.TransferirAsync(tenantId, usuarioId, cmdConflito, CancellationToken.None));
         Assert.Contains("Conflito de idempotência", ex.Message);
     }
@@ -263,7 +263,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
 
         // Reserva em rascunho deve falhar
         var cmdReserva = new ReservarCommand(produtoId, loteId, localId, 1m, "ORCAMENTO_CIRURGICO", orcamentoId, "reserva:" + Guid.NewGuid().ToString("N"));
-        var exReserva = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exReserva = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             orcamentoRepo.ReservarItemAsync(tenantId, usuarioId, orcamentoId, cmdReserva, CancellationToken.None));
         Assert.Contains("Somente orçamento APROVADO", exReserva.Message);
 
@@ -276,7 +276,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
 
         // Lote que vence antes da cirurgia deve falhar
         var cmdLoteVenceAntes = new ReservarCommand(produtoId, loteVenceAntes, localId, 1m, "ORCAMENTO_CIRURGICO", orcamentoId, "reserva:vence:" + Guid.NewGuid().ToString("N"));
-        var exValidade = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var exValidade = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             orcamentoRepo.ReservarItemAsync(tenantId, usuarioId, orcamentoId, cmdLoteVenceAntes, CancellationToken.None));
         Assert.Contains("vencerá antes do procedimento", exValidade.Message);
 
@@ -514,7 +514,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
 
         // Tentar reservar 4 unidades (excede 3 do orçamento)
         var cmdReserva = new ReservarCommand(produtoId, loteId, localId, 4m, "ORCAMENTO_CIRURGICO", orcId, "res:neg:" + Guid.NewGuid().ToString("N"));
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             orcamentoRepo.ReservarItemAsync(tenantId, usuarioId, orcId, cmdReserva, CancellationToken.None));
 
         Assert.Contains("excede a necessidade ainda não atendida", ex.Message);
@@ -629,7 +629,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
             new DateOnly(2026, 12, 1), null, "Vale 2",
             new[] { new ValeItemCommand(produtoId, loteId, reservaId, 3m, 100m) });
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             valeRepo.CriarAsync(tenantId, usuarioId, cmdVale2, CancellationToken.None));
 
         Assert.Contains("já estão vinculadas a outro vale", ex.Message);
@@ -683,7 +683,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
 
         // Tentar consumir 3 quando apenas 2 foram expedidos
         var cmdConsumo = new RegistrarConsumoValeCommand(valeId, itemId, 3m, "Tentativa excessiva", "cons:excess:" + valeId);
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             valeRepo.RegistrarConsumoAsync(tenantId, usuarioId, cmdConsumo, CancellationToken.None));
 
         Assert.Contains("excede o saldo pendente em custódia", ex.Message);
@@ -736,7 +736,7 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
         await valeRepo.ExpedirAsync(tenantId, usuarioId, new ExpedirValeCommand(valeId, "exp:canc:" + valeId), CancellationToken.None);
 
         // Cancelamento após expedição não devolve material ficticiamente -> DEVE SER RECUSADO
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             valeRepo.CancelarAsync(tenantId, usuarioId, valeId, "Tentativa cancelamento pós-expedição", CancellationToken.None));
 
         Assert.Contains("não pode ser cancelado diretamente", ex.Message);

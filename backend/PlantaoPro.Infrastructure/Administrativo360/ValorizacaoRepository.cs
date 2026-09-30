@@ -218,7 +218,7 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
                         new { command.ValeId, tenantId }, tx, cancellationToken: ct));
                     return;
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com dados diferentes.");
             }
 
             var vale = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
@@ -228,7 +228,7 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
                 WHERE v.id = @ValeId AND v.tenant_id = @tenantId FOR UPDATE",
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct));
 
-            if (vale is null) throw new InvalidOperationException("Vale de consignação não encontrado.");
+            if (vale is null) throw new Administrativo360BusinessException("Vale de consignação não encontrado.");
 
             ValorizacaoRegras.ValidarElegibilidadeVale(vale.situacao, (string?)vale.situacao_financeira ?? "PENDENTE_VALORIZACAO");
 
@@ -243,7 +243,7 @@ public sealed class ValorizacaoRepository : Adm360Repository, IValorizacaoReposi
                 new { command.ValeId, tenantId }, tx, cancellationToken: ct))).ToList();
 
             if (itens.Count == 0)
-                throw new InvalidOperationException("Não existem itens consumidos para valorizar este vale.");
+                throw new Administrativo360BusinessException("Não existem itens consumidos para valorizar este vale.");
 
             decimal totalBruto = 0m;
             decimal totalCusto = 0m;

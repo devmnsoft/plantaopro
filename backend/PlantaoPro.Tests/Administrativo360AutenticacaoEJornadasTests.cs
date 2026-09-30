@@ -8,6 +8,7 @@ using PlantaoPro.Api.Controllers;
 using PlantaoPro.Infrastructure.Administrativo360;
 using PlantaoPro.Tests.Infrastructure;
 using Xunit;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Tests;
 
@@ -239,7 +240,7 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
             // 1. Chave de negócio duplicada no mesmo tenant (mesmo documento) deve ser rejeitada
             idParceiroOriginal = await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Original", docUnico, false, true, default);
 
-            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await Assert.ThrowsAsync<Administrativo360BusinessException>(async () =>
             {
                 await repo.SalvarParceiroAsync(TenantSantaCasa, null, "Parceiro Duplicado", docUnico, false, true, default);
             });
@@ -266,7 +267,7 @@ public sealed class Administrativo360AutenticacaoEJornadasTests : IClassFixture<
                     new { TenantSantaCasa, localId, prodId, loteId });
 
                 // Tentar alterar unidade em produto movimentado deve lançar InvalidOperationException
-                await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await Assert.ThrowsAsync<Administrativo360BusinessException>(async () =>
                 {
                     await repo.SalvarProdutoAsync(TenantSantaCasa, prodId, skuMov, "Produto Com Movimentacao Alterado", "CX", null, false, false, 100m, true, default);
                 });

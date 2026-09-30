@@ -61,6 +61,18 @@ ALTER TABLE plantaopro.planos ADD COLUMN IF NOT EXISTS permite_relatorios_avanca
 ALTER TABLE plantaopro.planos ADD COLUMN IF NOT EXISTS permite_mobile boolean NOT NULL DEFAULT false;
 ALTER TABLE plantaopro.planos ADD COLUMN IF NOT EXISTS permite_bi boolean NOT NULL DEFAULT false;
 
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.ajuda_topicos add column if not exists ordem int NOT NULL DEFAULT 0;
+alter table plantaopro.assinaturas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.assinaturas add column if not exists data_fim date NOT NULL DEFAULT (current_date + interval '1 month');
+alter table plantaopro.clientes add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.faturas_saas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists valor numeric(12,2) NOT NULL DEFAULT 0;
+alter table plantaopro.faturas_saas add column if not exists valor_pago numeric(12,2);
+alter table plantaopro.faturas_saas add column if not exists vencimento date NOT NULL;
+alter table plantaopro.jornada_cliente add column if not exists valor_mensal numeric(14,2) not null default 0;
+alter table plantaopro.jornada_cliente_tarefas add column if not exists tipo varchar(80);
+
 CREATE INDEX IF NOT EXISTS ix_saas_clientes_status_reg_date ON plantaopro.clientes(status, reg_date DESC);
 CREATE INDEX IF NOT EXISTS ix_saas_assinaturas_cliente_status ON plantaopro.assinaturas(cliente_id, status, data_fim);
 CREATE INDEX IF NOT EXISTS ix_saas_faturas_cliente_vencimento ON plantaopro.faturas_saas(cliente_id, vencimento, status);
@@ -110,6 +122,15 @@ FROM (VALUES
 ('HOSPITAL','Hospital','Acompanhamento de plantões e escalas.',5)
 ) AS x(perfil,titulo,descricao,ordem)
 WHERE NOT EXISTS (SELECT 1 FROM plantaopro.ajuda_topicos t WHERE t.perfil=x.perfil AND t.titulo=x.titulo);
+
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'plantaopro' and table_name = 'ajuda_artigos' and column_name = 'topico_id' and is_nullable = 'NO') then
+    alter table plantaopro.ajuda_artigos alter column topico_id drop not null;
+    alter table plantaopro.ajuda_artigos alter column topico_id set default null;
+  end if;
+end $$;
 
 INSERT INTO plantaopro.ajuda_artigos(perfil, titulo, conteudo, link_acao, ordem)
 SELECT perfil, titulo, conteudo, link_acao, ordem

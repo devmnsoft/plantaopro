@@ -7,13 +7,22 @@ CREATE TABLE IF NOT EXISTS plantaopro.clientes (id uuid PRIMARY KEY DEFAULT gen_
 CREATE TABLE IF NOT EXISTS plantaopro.planos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), nome varchar(120) NOT NULL, descricao text, valor_mensal numeric(12,2) NOT NULL DEFAULT 0, limite_medicos int NOT NULL DEFAULT 0, limite_hospitais int NOT NULL DEFAULT 0, limite_plantoes_mes int NOT NULL DEFAULT 0, possui_mobile boolean NOT NULL DEFAULT false, possui_bi boolean NOT NULL DEFAULT false, possui_relatorios_avancados boolean NOT NULL DEFAULT false, suporte_prioritario boolean NOT NULL DEFAULT false, operacao_assistida boolean NOT NULL DEFAULT false, status varchar(30) NOT NULL DEFAULT 'ATIVO', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);
 CREATE TABLE IF NOT EXISTS plantaopro.plano_recursos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), plano_id uuid NOT NULL, recurso varchar(120) NOT NULL, habilitado boolean NOT NULL DEFAULT true, limite int, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.assinaturas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, plano_id uuid NOT NULL, status varchar(40) NOT NULL DEFAULT 'ATIVA', data_inicio date NOT NULL DEFAULT current_date, data_fim date, valor_mensal numeric(12,2) NOT NULL DEFAULT 0, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.assinaturas add column if not exists reg_status char(1) not null default 'A';
+
 CREATE TABLE IF NOT EXISTS plantaopro.assinatura_historico (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), assinatura_id uuid, cliente_id uuid NOT NULL, plano_id uuid, tipo varchar(60) NOT NULL, resumo text NOT NULL, usuario_id uuid, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.assinatura_uso (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), assinatura_id uuid, cliente_id uuid NOT NULL, competencia varchar(7) NOT NULL, medicos_usados int NOT NULL DEFAULT 0, hospitais_usados int NOT NULL DEFAULT 0, plantoes_mes_usados int NOT NULL DEFAULT 0, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);
 CREATE TABLE IF NOT EXISTS plantaopro.faturas_saas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, assinatura_id uuid, competencia varchar(7) NOT NULL, vencimento date NOT NULL, valor_total numeric(12,2) NOT NULL DEFAULT 0, status varchar(40) NOT NULL DEFAULT 'ABERTA', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), reg_update timestamptz);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.faturas_saas add column if not exists reg_status char(1) not null default 'A';
+
 CREATE TABLE IF NOT EXISTS plantaopro.fatura_itens (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fatura_id uuid NOT NULL, descricao varchar(220) NOT NULL, quantidade numeric(12,2) NOT NULL DEFAULT 1, valor_unitario numeric(12,2) NOT NULL DEFAULT 0, valor_total numeric(12,2) NOT NULL DEFAULT 0, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.pagamentos_saas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), fatura_id uuid NOT NULL, cliente_id uuid NOT NULL, valor_pago numeric(12,2) NOT NULL DEFAULT 0, data_pagamento timestamptz, metodo varchar(40), status varchar(40) NOT NULL DEFAULT 'PENDENTE', reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.cobranca_eventos (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, fatura_id uuid, tipo varchar(80) NOT NULL, mensagem text NOT NULL, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.cliente_bloqueios (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, tipo varchar(80) NOT NULL, motivo text NOT NULL, origem varchar(80), ativo boolean NOT NULL DEFAULT true, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), resolvido_em timestamptz);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.cliente_bloqueios add column if not exists ativo boolean NOT NULL DEFAULT true;
+
 CREATE TABLE IF NOT EXISTS plantaopro.cliente_alertas (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, tipo varchar(80) NOT NULL, severidade varchar(30) NOT NULL DEFAULT 'MEDIA', titulo varchar(180) NOT NULL, mensagem text NOT NULL, resolvido boolean NOT NULL DEFAULT false, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now(), resolvido_em timestamptz);
 CREATE TABLE IF NOT EXISTS plantaopro.cliente_limites_uso (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, recurso varchar(80) NOT NULL, limite int NOT NULL DEFAULT 0, usado int NOT NULL DEFAULT 0, percentual numeric(8,2) NOT NULL DEFAULT 0, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
 CREATE TABLE IF NOT EXISTS plantaopro.cliente_saude_historico (id uuid PRIMARY KEY DEFAULT gen_random_uuid(), cliente_id uuid NOT NULL, score int NOT NULL, classificacao varchar(40) NOT NULL, riscos text, oportunidades text, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
@@ -63,6 +72,28 @@ ALTER TABLE plantaopro.planos ADD COLUMN IF NOT EXISTS possui_bi boolean NOT NUL
 ALTER TABLE plantaopro.planos ADD COLUMN IF NOT EXISTS possui_relatorios_avancados boolean NOT NULL DEFAULT false;
 ALTER TABLE plantaopro.assinaturas ADD COLUMN IF NOT EXISTS valor_mensal numeric(12,2) NOT NULL DEFAULT 0;
 ALTER TABLE plantaopro.jornada_cliente_tarefas ADD COLUMN IF NOT EXISTS tipo varchar(80);
+
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.ajuda_topicos add column if not exists ordem int NOT NULL DEFAULT 0;
+alter table plantaopro.assinaturas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.assinaturas add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.auditoria_eventos add column if not exists acao varchar(120) NOT NULL;
+alter table plantaopro.auditoria_eventos add column if not exists cliente_id uuid;
+alter table plantaopro.auditoria_eventos add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.clientes add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.eventos_sistema add column if not exists cliente_id uuid;
+alter table plantaopro.eventos_sistema add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.eventos_sistema add column if not exists tipo varchar(120) NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists competencia varchar(7) NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists valor_total numeric(12,2) NOT NULL DEFAULT 0;
+alter table plantaopro.faturas_saas add column if not exists vencimento date NOT NULL;
+alter table plantaopro.logs_operacionais add column if not exists acao varchar(120) NOT NULL;
+alter table plantaopro.logs_operacionais add column if not exists cliente_id uuid;
+alter table plantaopro.logs_operacionais add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.pagamentos_saas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.pagamentos_saas add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.planos add column if not exists valor_mensal numeric(12,2) NOT NULL DEFAULT 0;
 
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ck_planos_valor_mensal_nao_negativo' AND conrelid = 'plantaopro.planos'::regclass) THEN

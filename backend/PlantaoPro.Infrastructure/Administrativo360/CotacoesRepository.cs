@@ -11,11 +11,13 @@ namespace PlantaoPro.Infrastructure.Administrativo360;
 public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 {
     private readonly IEnumerable<IPortalCotacaoConnector> connectors;
+    private readonly Adm360EventService eventos;
 
-    public CotacoesRepository(string connectionString, IEnumerable<IPortalCotacaoConnector>? connectors = null)
+    public CotacoesRepository(string connectionString, IEnumerable<IPortalCotacaoConnector>? connectors = null, Adm360EventService? eventos = null)
         : base(connectionString)
     {
         this.connectors = connectors ?? new IPortalCotacaoConnector[] { new OpmenexoConnector(), new InpartConnector(), new ImportacaoManualConnector() };
+        this.eventos = eventos ?? new Adm360EventService(connectionString);
     }
 
     private static DateOnly ToDateOnly(object val) => val switch
@@ -519,6 +521,7 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             // Anexos
             if (command.Anexos is not null)
             {
+                var resumoAnexos = new List<object>();
                 foreach (var a in command.Anexos)
                 {
                     var anexoId = Guid.NewGuid();
@@ -534,6 +537,16 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                             tamanhoBytes = a.TamanhoBytes, contentType = a.ContentType,
                             sha256Hash = a.Sha256Hash, conteudo = a.Conteudo
                         }, tx, cancellationToken: ct));
+                    resumoAnexos.Add(new { nome_arquivo = a.NomeArquivo, tamanho_bytes = a.TamanhoBytes, sha256_hash = a.Sha256Hash });
+                }
+
+                // P4: evento ARQUIVO — arquivo(s) recebido(s) com a captura (registro imutável na mesma transação)
+                if (resumoAnexos.Count > 0)
+                {
+                    await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Arquivo, "COTACAO_ANEXO", cotacaoId, usuarioId,
+                        $"Anexo(s) recebido(s) com a captura da cotação ({resumoAnexos.Count} arquivo(s))",
+                        new { total_anexos = resumoAnexos.Count, anexos = resumoAnexos },
+                        $"arquivo:captura:{tenantId:N}:{cotacaoId:N}", ct);
                 }
             }
         }, ct);
@@ -627,11 +640,11 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
             var pendentes = itens.Where(i => (string)i.status_relacionamento == "PENDENTE").ToList();
             if (pendentes.Count > 0)
-                throw new InvalidOperationException($"Não é possível gerar orçamento: existem {pendentes.Count} item(ns) pendente(s) de relacionamento de produto.");
+                throw new Administrativo360BusinessException($"Não é possível gerar orçamento: existem {pendentes.Count} item(ns) pendente(s) de relacionamento de produto.");
 
             var itensAtendidos = itens.Where(i => (string)i.status_relacionamento == "RELACIONADO").ToList();
             if (itensAtendidos.Count == 0)
-                throw new InvalidOperationException("Não há itens com produtos relacionados para compor o orçamento cirúrgico.");
+                throw new Administrativo360BusinessException("Não há itens com produtos relacionados para compor o orçamento cirúrgico.");
 
             // Se hospital_id for nulo, busca primeiro parceiro cadastrado como hospital/cliente
             Guid hospitalId = cotacao.hospital_id is not null
@@ -783,6 +796,12 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                     revisao = (int)cotacao.revisao_externa, snapshotJson, usuarioId
                 }, tx, cancellationToken: ct));
 
+            // P4: evento APROVACAO — decisão de aprovação registrada imutavelmente na mesma transação
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Aprovacao, "COTACAO_RESPOSTA", respostaId, usuarioId,
+                "Proposta aprovada para envio ao portal",
+                new { cotacao_id = (Guid)cotacao.id, orcamento_id = (Guid)cotacao.orcamento_id, revisao = (int)cotacao.revisao_externa },
+                $"aprovacao:resposta:{respostaId:N}", ct);
+
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_cotacoes
                 SET status_interno = 'PRONTA_PARA_ENVIO', updated_at = now()
@@ -875,7 +894,7 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             throw new KeyNotFoundException("Registro de resposta na fila não encontrado.");
 
         if (resp.StatusTransmissao == "ACEITA_PELO_PORTAL")
-            throw new InvalidOperationException($"A transmissão desta proposta já foi concluída e aceita pelo portal com protocolo '{resp.ProtocoloExterno}'. Não é permitida retransmissão.");
+            throw new Administrativo360BusinessException($"A transmissão desta proposta já foi concluída e aceita pelo portal com protocolo '{resp.ProtocoloExterno}'. Não é permitida retransmissão.");
 
         var cotacao = await ObterCotacaoPorIdAsync(tenantId, resp.CotacaoId, ct);
         if (cotacao is null)
@@ -887,54 +906,84 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
         var conector = ObterConector(cotacao.Provedor);
 
-        // Marca tentativa na fila
+        // P4: transmissão atômica — marca ENVIANDO, chamada do conector, resultado final,
+        // exportação e status da cotação cometem em UMA transação. Se o processo cair no meio,
+        // tudo volta e nada fica preso em ENVIANDO; se o conector lançar exceção, o estado
+        // final honesto é RESULTADO_DESCONHECIDO (nunca um ENVIANDO órfão).
         await using var cn = Connection();
         await cn.OpenAsync(ct);
+        await using var tx = await cn.BeginTransactionAsync(ct);
 
-        await cn.ExecuteAsync(new CommandDefinition(@"
-            UPDATE plantaopro.adm360_cotacao_respostas
-            SET status_transmissao = 'ENVIANDO', tentativas = tentativas + 1, updated_at = now()
-            WHERE id = @id AND tenant_id = @tenantId",
-            new { id = command.RespostaId, tenantId }, cancellationToken: ct));
-
-        // Transmissão via conector
-        var resultado = await conector.TransmitirPropostaAsync(conta, resp, cotacao, ct);
-
-        await cn.ExecuteAsync(new CommandDefinition(@"
-            UPDATE plantaopro.adm360_cotacao_respostas
-            SET status_transmissao = @status,
-                protocolo_externo = @protocolo,
-                mensagem_retorno = @mensagem,
-                enviado_em = (CASE WHEN @sucesso THEN now() ELSE enviado_em END),
-                updated_at = now()
-            WHERE id = @id AND tenant_id = @tenantId",
-            new
-            {
-                id = command.RespostaId, tenantId,
-                status = resultado.StatusTransmissao,
-                protocolo = resultado.Protocolo,
-                mensagem = resultado.Mensagem,
-                sucesso = resultado.Sucesso
-            }, cancellationToken: ct));
-
-        if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
+        try
         {
-            // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
-            // a primeira geração vence — retransmissões preservam o arquivo original).
-            if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
+            // Marca tentativa na fila (dentro da transação)
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_cotacao_respostas
+                SET status_transmissao = 'ENVIANDO', tentativas = tentativas + 1, updated_at = now()
+                WHERE id = @id AND tenant_id = @tenantId",
+                new { id = command.RespostaId, tenantId }, tx, cancellationToken: ct));
+
+            // Transmissão via conector (falha técnica vira estado honesto, não exceção com ENVIANDO órfão)
+            EnvioRespostaPortalResult resultado;
+            try
             {
-                await RegistrarExportacaoManualAsync(cn, tenantId, command.RespostaId, ct);
+                resultado = await conector.TransmitirPropostaAsync(conta, resp, cotacao, ct);
+            }
+            catch (Exception ex)
+            {
+                resultado = new EnvioRespostaPortalResult(false, "RESULTADO_DESCONHECIDO", null,
+                    "Falha técnica na transmissão (exceção do conector): " + ex.Message);
             }
 
             await cn.ExecuteAsync(new CommandDefinition(@"
-                UPDATE plantaopro.adm360_cotacoes
-                SET status_interno = 'RESPONDIDA', updated_at = now()
-                WHERE id = @cotacaoId AND tenant_id = @tenantId",
-                new { cotacaoId = resp.CotacaoId, tenantId }, cancellationToken: ct));
+                UPDATE plantaopro.adm360_cotacao_respostas
+                SET status_transmissao = @status,
+                    protocolo_externo = @protocolo,
+                    mensagem_retorno = @mensagem,
+                    enviado_em = (CASE WHEN @sucesso THEN now() ELSE enviado_em END),
+                    updated_at = now()
+                WHERE id = @id AND tenant_id = @tenantId",
+                new
+                {
+                    id = command.RespostaId, tenantId,
+                    status = resultado.StatusTransmissao,
+                    protocolo = resultado.Protocolo,
+                    mensagem = resultado.Mensagem,
+                    sucesso = resultado.Sucesso
+                }, tx, cancellationToken: ct));
+
+            if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
+            {
+                // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
+                // a primeira geração vence — retransmissões preservam o arquivo original).
+                if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
+                {
+                    await RegistrarExportacaoManualAsync(cn, tx, tenantId, usuarioId, command.RespostaId, ct);
+                }
+
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacoes
+                    SET status_interno = 'RESPONDIDA', updated_at = now()
+                    WHERE id = @cotacaoId AND tenant_id = @tenantId",
+                    new { cotacaoId = resp.CotacaoId, tenantId }, tx, cancellationToken: ct));
+            }
+
+            // P4: evento RETORNO_EXTERNO — o retorno da transmissão é sempre registrado (um por tentativa)
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", command.RespostaId, usuarioId,
+                $"Retorno da transmissão da resposta: {resultado.StatusTransmissao}",
+                new { status_final = resultado.StatusTransmissao, protocolo_externo = resultado.Protocolo, mensagem_retorno = resultado.Mensagem },
+                null, ct);
+
+            await tx.CommitAsync(ct);
+        }
+        catch
+        {
+            try { await tx.RollbackAsync(ct); } catch { /* rollback best-effort */ }
+            throw;
         }
     }
 
-    private async Task RegistrarExportacaoManualAsync(NpgsqlConnection cn, Guid tenantId, Guid respostaId, CancellationToken ct)
+    private async Task RegistrarExportacaoManualAsync(NpgsqlConnection cn, NpgsqlTransaction? tx, Guid tenantId, Guid? usuarioId, Guid respostaId, CancellationToken ct)
     {
         var meta = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
             SELECT r.cotacao_id, r.snapshot_proposta::text AS snapshot_text,
@@ -943,7 +992,7 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             FROM plantaopro.adm360_cotacao_respostas r
             JOIN plantaopro.adm360_cotacoes c ON c.id = r.cotacao_id AND c.tenant_id = r.tenant_id
             WHERE r.id = @respostaId AND r.tenant_id = @tenantId",
-            new { respostaId, tenantId }, cancellationToken: ct));
+            new { respostaId, tenantId }, tx, cancellationToken: ct));
 
         if (meta is null) return;
 
@@ -974,6 +1023,8 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
         var sha256 = Convert.ToHexString(SHA256.HashData(bytes)).ToLowerInvariant();
         var nomeArquivo = $"COT_{meta.identificador_externo}_R{(int)meta.revisao_externa}_PROPOSTA_EXPORTADA.json";
 
+        var exportacaoId = Guid.NewGuid();
+
         // Imutabilidade de aplicação: UNIQUE(tenant_id, resposta_id) + DO NOTHING =>
         // retransmissões nunca substituem o arquivo da primeira geração.
         await cn.ExecuteAsync(new CommandDefinition(@"
@@ -985,23 +1036,29 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             ON CONFLICT (tenant_id, resposta_id) DO NOTHING",
             new
             {
-                id = Guid.NewGuid(), tenantId, cotacaoId = (Guid)meta.cotacao_id, respostaId,
+                id = exportacaoId, tenantId, cotacaoId = (Guid)meta.cotacao_id, respostaId,
                 nomeArquivo, tamanhoBytes = bytes.Length, sha256, conteudo = bytes
-            }, cancellationToken: ct));
+            }, tx, cancellationToken: ct));
+
+        // P4: evento ARQUIVO — arquivo real da exportação (idempotente por resposta: a primeira geração vence)
+        await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Arquivo, "EXPORTACAO", exportacaoId, usuarioId,
+            $"Arquivo de exportação gerado: {nomeArquivo}",
+            new { nome_arquivo = nomeArquivo, tamanho_bytes = bytes.Length, sha256_hash = sha256 },
+            $"arquivo:exportacao:{respostaId:N}", ct);
     }
 
-    public async Task<(byte[]? Bytes, string Nome, string ContentType)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default)
+    public async Task<(byte[]? Bytes, string Nome, string ContentType, string Sha256Hash)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default)
     {
         await using var cn = Connection();
         var a = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
-            SELECT nome_arquivo, content_type, conteudo
+            SELECT nome_arquivo, content_type, sha256_hash, conteudo
             FROM plantaopro.adm360_cotacao_anexos
             WHERE id = @anexoId AND tenant_id = @tenantId",
             new { anexoId, tenantId }, cancellationToken: ct));
 
         if (a is null) return null;
 
-        return ((byte[]?)a.conteudo, (string)a.nome_arquivo, (string)a.content_type);
+        return ((byte[]?)a.conteudo, (string)a.nome_arquivo, (string)a.content_type, (string)a.sha256_hash);
     }
 
     public async Task<CotacaoExportacaoArquivoDto?> ObterExportacaoPorRespostaAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default)

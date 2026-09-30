@@ -1,4 +1,5 @@
 using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
 
@@ -31,7 +32,7 @@ public sealed class OpmenexoConnector : IPortalCotacaoConnector
         var status = TestarConexaoAsync(conta, ct).Result;
         if (!status.Conectado)
         {
-            throw new InvalidOperationException($"Integração OPMENEXO indisponível: {status.Mensagem} Utilize a opção de Importação Manual.");
+            throw new Administrativo360BusinessException($"Integração OPMENEXO indisponível: {status.Mensagem} Utilize a opção de Importação Manual.");
         }
 
         return Task.FromResult<IReadOnlyList<CapturarCotacaoCommand>>(Array.Empty<CapturarCotacaoCommand>());
@@ -87,7 +88,7 @@ public sealed class InpartConnector : IPortalCotacaoConnector
         var status = TestarConexaoAsync(conta, ct).Result;
         if (!status.Conectado)
         {
-            throw new InvalidOperationException($"Integração INPART indisponível: {status.Mensagem} Utilize a opção de Importação Manual.");
+            throw new Administrativo360BusinessException($"Integração INPART indisponível: {status.Mensagem} Utilize a opção de Importação Manual.");
         }
 
         return Task.FromResult<IReadOnlyList<CapturarCotacaoCommand>>(Array.Empty<CapturarCotacaoCommand>());

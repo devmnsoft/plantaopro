@@ -16,16 +16,6 @@ public sealed record Administrativo360ResumoDto(long Departamentos, long Cargos,
 public sealed record Administrativo360PaginadoDto<T>(IReadOnlyList<T> Items, int Page, int PageSize, long Total, int TotalPages);
 public sealed record ContratoTrabalhoDetalheDto(Guid Id, Guid ColaboradorId, string Colaborador, string Matricula, string Tipo, DateOnly Inicio, DateOnly? Fim, decimal Salario, int CargaHorariaSemanal, string Status, DateTime CriadoEm);
 
-/// <summary>
-/// Violação de regra de negócio da gestão organizacional. A controller converte em
-/// HTTP 400 com a mensagem amigável — o usuário nunca vê erro técnico de materialização
-/// ou "Sequence contains no elements".
-/// </summary>
-public sealed class Administrativo360BusinessException : Exception
-{
-    public Administrativo360BusinessException(string message) : base(message) { }
-}
-
 public sealed class DepartamentoRequest
 {
     [Required, MaxLength(30)] public string Codigo { get; set; } = string.Empty;

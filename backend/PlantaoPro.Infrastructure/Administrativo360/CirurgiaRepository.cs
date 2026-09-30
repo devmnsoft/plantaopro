@@ -156,7 +156,7 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
                 new { id = command.OrcamentoId.Value, tenantId }, tx, cancellationToken: ct));
             if (orcRow is null) throw new ArgumentException("Orçamento informado não existe para esta organização.");
             if (orcRow.situacao != "APROVADO")
-                throw new InvalidOperationException($"Orçamento vinculado deve estar APROVADO. Situação atual: {orcRow.situacao}.");
+                throw new Administrativo360BusinessException($"Orçamento vinculado deve estar APROVADO. Situação atual: {orcRow.situacao}.");
         }
 
         var id = Guid.NewGuid();
@@ -199,9 +199,9 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
             WHERE id = @CirurgiaId AND tenant_id = @tenantId FOR UPDATE",
             new { command.CirurgiaId, tenantId }, tx, cancellationToken: ct));
 
-        if (atual is null) throw new InvalidOperationException("Cirurgia não encontrada.");
+        if (atual is null) throw new Administrativo360BusinessException("Cirurgia não encontrada.");
         if (atual.situacao is "CANCELADA" or "REALIZADA")
-            throw new InvalidOperationException($"Não é permitido alterar cirurgia na situação '{atual.situacao}'.");
+            throw new Administrativo360BusinessException($"Não é permitido alterar cirurgia na situação '{atual.situacao}'.");
 
         // Se data prevista foi alterada, valida se algum lote reservado para o orçamento vence antes
         if ((DateOnly)atual.data_prevista != command.DataPrevista)
@@ -216,7 +216,7 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
                 new { command.CirurgiaId, tenantId, NovaData = command.DataPrevista }, tx, cancellationToken: ct));
 
             if (lotesVencidos > 0)
-                throw new InvalidOperationException("A nova data da cirurgia ultrapassa a validade de lotes já reservados para este procedimento.");
+                throw new Administrativo360BusinessException("A nova data da cirurgia ultrapassa a validade de lotes já reservados para este procedimento.");
         }
 
         await cn.ExecuteAsync(new CommandDefinition(@"
@@ -251,9 +251,9 @@ public sealed class CirurgiaRepository : Adm360Repository, ICirurgiaRepository
             WHERE id = @cirurgiaId AND tenant_id = @tenantId FOR UPDATE",
             new { cirurgiaId, tenantId }, tx, cancellationToken: ct));
 
-        if (atual is null) throw new InvalidOperationException("Cirurgia não encontrada.");
+        if (atual is null) throw new Administrativo360BusinessException("Cirurgia não encontrada.");
         if (atual.situacao == "CANCELADA") return; // Idempotente
-        if (atual.situacao == "REALIZADA") throw new InvalidOperationException("Cirurgia já realizada não pode ser cancelada.");
+        if (atual.situacao == "REALIZADA") throw new Administrativo360BusinessException("Cirurgia já realizada não pode ser cancelada.");
 
         // Atualiza cirurgia
         await cn.ExecuteAsync(new CommandDefinition(@"

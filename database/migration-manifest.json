@@ -43,7 +43,7 @@
     {
       "version": "2026_fix_clinica_financeiro_minimo",
       "source": "database/migrations/2026_fix_clinica_financeiro_minimo.sql",
-      "checksum": "407017a905784b6fb1f4329f9e3d162f80cddf4c753bc571f1e398018598a609",
+      "checksum": "cd6316fae3f95616752694d095564011e14f71ab8367d0e5347c006d05861f94",
       "dependsOn": [
         "2026_fix_cid_tabela_schema"
       ],
@@ -53,7 +53,7 @@
     {
       "version": "2026_plantao_pro_automacao_operacional_fase4",
       "source": "database/migrations/2026_plantao_pro_automacao_operacional_fase4.sql",
-      "checksum": "c1e8d5f274459b29eb58abcdcf2b083f3d06a9933a481bc32e0e15651a0080ce",
+      "checksum": "8f9f0c01a26cc85dd1ecba10d7dd253adf967c8a4d153104ff9c2f77b54e2ddd",
       "dependsOn": [
         "2026_fix_clinica_financeiro_minimo"
       ],
@@ -73,7 +73,7 @@
     {
       "version": "2026_plantao_pro_saas_comercial_lgpd_jornada",
       "source": "database/migrations/2026_plantao_pro_saas_comercial_lgpd_jornada.sql",
-      "checksum": "405f529b260162bb3851af2b81c40d4222afc2b8c3758b585f7d551f6a6eaab9",
+      "checksum": "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
       "dependsOn": [
         "2026_plantao_pro_piloto_comercial_operacao_b2b"
       ],
@@ -83,7 +83,7 @@
     {
       "version": "2026_plantao_pro_saas_inteligente",
       "source": "database/migrations/2026_plantao_pro_saas_inteligente.sql",
-      "checksum": "3df8335352e6e703f1a547a76dce55b474e7aca5b515b26a88c7845288d5ff3d",
+      "checksum": "0a84413356137cf461bf59b37531f8de237c439671e49a2e5e6fd95019ece231",
       "dependsOn": [
         "2026_plantao_pro_saas_comercial_lgpd_jornada"
       ],
@@ -93,7 +93,7 @@
     {
       "version": "2026_plantao_pro_saas_inteligente_auditavel",
       "source": "database/migrations/2026_plantao_pro_saas_inteligente_auditavel.sql",
-      "checksum": "405f529b260162bb3851af2b81c40d4222afc2b8c3758b585f7d551f6a6eaab9",
+      "checksum": "a9c5b9c9631cfd2c724f4afa03cf25f1dd2a5ed821cc31c45d45e55576c91665",
       "dependsOn": [
         "2026_plantao_pro_saas_inteligente"
       ],
@@ -103,7 +103,7 @@
     {
       "version": "2026_plantao_pro_saas_inteligente_funcional",
       "source": "database/migrations/2026_plantao_pro_saas_inteligente_funcional.sql",
-      "checksum": "99a8346ce68d1428a71535163679af44d8ed20f8c082e54302baf3c2d7d003c0",
+      "checksum": "4b0e2f0774e1f8e1a4cb6cf38c6171bb3130c6fff666ce25199fa4ad8484c471",
       "dependsOn": [
         "2026_plantao_pro_saas_inteligente_auditavel"
       ],
@@ -113,7 +113,7 @@
     {
       "version": "2026_plantao_pro_saas_jornada_lgpd_inteligencia",
       "source": "database/migrations/2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql",
-      "checksum": "f174b0a29756d3900b129ea732592ee735d75749fc96d0e05e82b1b3368b6ffc",
+      "checksum": "e7c34907da664d81c6ffcced76776b2af708316d15c95435fa2f5d6e01a647ab",
       "dependsOn": [
         "2026_plantao_pro_saas_inteligente_funcional"
       ],
@@ -123,7 +123,7 @@
     {
       "version": "2026_plantao_pro_saas_lgpd_jornada_inteligente",
       "source": "database/migrations/2026_plantao_pro_saas_lgpd_jornada_inteligente.sql",
-      "checksum": "7f2e6c7754e33d6500191e2acab8d22280aae3a87af8e5e12e63d394febe20be",
+      "checksum": "9c22fc55fed0fc481f7db0c2f1b7a5390b68887f62ce178fb8a71de83413eb5d",
       "dependsOn": [
         "2026_plantao_pro_saas_jornada_lgpd_inteligencia"
       ],
@@ -133,7 +133,7 @@
     {
       "version": "2026_plantao_pro_saude360_base_clinica",
       "source": "database/migrations/2026_plantao_pro_saude360_base_clinica.sql",
-      "checksum": "751216e62b92ef4213deaca834470babef0263d419715fcd1a7b0601888cbe9f",
+      "checksum": "8e4456bae3d834c609d183ccfa3de3b75df7b5a2acc8b91d40ea44532d564984",
       "dependsOn": [
         "2026_plantao_pro_saas_lgpd_jornada_inteligente"
       ],
@@ -143,7 +143,7 @@
     {
       "version": "2026_plantao_pro_saude360_modulos_clinicos",
       "source": "database/migrations/2026_plantao_pro_saude360_modulos_clinicos.sql",
-      "checksum": "9e1b13a6420e0c0b975b7d81e7c4ab8092174af4623f4e9b399a6c22d3152cb0",
+      "checksum": "a6c3f3c923a5f2a340ba9ce5e3ec3b3c05deec84998969c8a0eb02eff9889a9b",
       "dependsOn": [
         "2026_plantao_pro_saude360_base_clinica"
       ],
@@ -153,7 +153,7 @@
     {
       "version": "2026_plantao_pro_self_service_white_label",
       "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
-      "checksum": "e32dd6a46f1f465adf2066377b433f7b488319158fb0cf924c04f228a82ba7d2",
+      "checksum": "bf5caefd0b2d92920074868daa8968ea7908b893a8dc2402bd430afafe9c31f1",
       "dependsOn": [
         "2026_plantao_pro_saude360_modulos_clinicos"
       ],
@@ -173,7 +173,7 @@
     {
       "version": "2026_plantao_pro_white_label_b2b_launch",
       "source": "database/migrations/2026_plantao_pro_white_label_b2b_launch.sql",
-      "checksum": "d79a649ab2ac9775068ac4819d9f0673cf23418e40cd973d9a0d8b1dea87038b",
+      "checksum": "86647d73b462b2209736509cf5ae3236401facf6417fc238de12fee13eeea4c3",
       "dependsOn": [
         "2026_plantao_pro_versao_comercial_demo"
       ],
@@ -183,7 +183,7 @@
     {
       "version": "2026_plantao_pro_white_label_self_service",
       "source": "database/migrations/2026_plantao_pro_white_label_self_service.sql",
-      "checksum": "5b2f7326b7f2f0ab426998fcaab85b9a58f6531319a687e7b43e67af317c3e7b",
+      "checksum": "db66645c110d72987fd990d24c64cc0698be4f5f9708931b2af3c43607990a17",
       "dependsOn": [
         "2026_plantao_pro_white_label_b2b_launch"
       ],
@@ -203,7 +203,7 @@
     {
       "version": "2026_saude360_base_clinica_minima",
       "source": "database/migrations/2026_saude360_base_clinica_minima.sql",
-      "checksum": "f3435d236b9a699e4ee584952ecd485766f7a74ecd165883541942513680e500",
+      "checksum": "eb838fa1f939d47a43d3c30af69c014419c88c40ad4f781a7a905d9a5d5cf9d0",
       "dependsOn": [
         "2026_saas_comercial_core"
       ],
@@ -253,7 +253,7 @@
     {
       "version": "2026_saude360_convenios_planos_saude",
       "source": "database/migrations/2026_saude360_convenios_planos_saude.sql",
-      "checksum": "e3f5a2aeab3492607d76772788eca8a77d424dd3aaad6752641c7d26c58f39e4",
+      "checksum": "91ceb6024f16972c22e95ec489d1db137b636ee01bec74877e1939ba0cc702c5",
       "dependsOn": [
         "2026_saude360_consultas_base"
       ],
@@ -273,7 +273,7 @@
     {
       "version": "2026_saude360_indices_performance",
       "source": "database/migrations/2026_saude360_indices_performance.sql",
-      "checksum": "4b84b24586e3d19da6bec6d05c3b5d841f89964c4776e18f104a5102c3949c69",
+      "checksum": "0c10e72d65f058c4c39803e95732894da0623dc45b8f6b450955a5b0fef26977",
       "dependsOn": [
         "2026_saude360_financeiro_clinica"
       ],
@@ -336,7 +336,7 @@
     {
       "version": "2026_v1186_schema_permissoes_compatibilidade",
       "source": "database/migrations/2026_v1186_schema_permissoes_compatibilidade.sql",
-      "checksum": "7e0300da69ae292b91574aef00a82190e487a64b55a1b908ca881baa0338e60e",
+      "checksum": "7a64ca1e899ba4d0aaf99dbc0e128a4f21c8128ec2526bda50a45cd3f4f4f7d7",
       "dependsOn": [
         "2026_v117_hardening_v116_runtime"
       ],
@@ -603,7 +603,7 @@
     {
       "version": "2026_09_v2191_administrativo360_suprimentos",
       "source": "database/migrations/2026_09_v2191_administrativo360_suprimentos.sql",
-      "checksum": "6716a5d00d63e6693eb3f2f654b5c60ec9b0861daa978939ce788ee6fc2aaf11",
+      "checksum": "60f41199b8720064c7c6f08bb4a1ebba851b063fa50d12d31a528f4e77babc1e",
       "dependsOn": [
         "2026_09_v2190_administrativo360_base"
       ],
@@ -716,6 +716,61 @@
       "checksum": "8a24bfa9b0b5209748b201f60080ad57bcc705b06cd395ed23439aec689fa4ff",
       "dependsOn": [
         "2026_09_v2200_reconciliar_colunas_medicos_compatibilidade"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2200_administrativo360_exportacao_proposta_imutavel",
+      "source": "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql",
+      "checksum": "56aa38e963c82fded0e437e0f2ee1e2777a61feb7468e8cc6a2d31e5216ea727",
+      "dependsOn": [
+        "2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2202_reconciliar_auditoria_observabilidade",
+      "source": "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql",
+      "checksum": "6a564a4d23efcbfcc05f84066ed55672163c1f3ae2ca6296f374480c22181d23",
+      "dependsOn": [
+        "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2300_administrativo360_status_transmissao_exportacao",
+      "source": "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
+      "checksum": "e220614f3a1161b38ccd84cad2d27211e5cf9e6f2c2dc4bf64887452296c4d41",
+      "dependsOn": [
+        "2026_09_v2200_administrativo360_exportacao_proposta_imutavel"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2301_administrativo360_eventos_imutabilidade",
+      "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
+      "checksum": "288e216b08433bc9100314c7231ca567b6ca598198ba32e2dc2acbdcd8b037c3",
+      "dependsOn": [
+        "2026_09_v2300_administrativo360_status_transmissao_exportacao"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant",
+      "source": "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
+      "checksum": "bc6baaff554451db2b2b50d37c432460ddee9b01d00d10cf18ebe0105670172a",
+      "dependsOn": [
+        "2026_09_v2301_administrativo360_eventos_imutabilidade"
       ],
       "status": "active",
       "transactional": true,

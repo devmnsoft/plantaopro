@@ -1,5 +1,7 @@
+using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -184,7 +186,19 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var response = await client.GetAsync($"api/administrativo360/xml/{id}/download");
+        // P4: download idempotente — repassa If-None-Match à API e respeita 304 (não re-baixa o corpo).
+        using var pedido = new HttpRequestMessage(HttpMethod.Get, $"api/administrativo360/xml/{id}/download");
+        var ifNoneMatchXml = Request.Headers.IfNoneMatch.ToString();
+        if (!string.IsNullOrEmpty(ifNoneMatchXml))
+            pedido.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatchXml);
+        var response = await client.SendAsync(pedido);
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+            if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
+            return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             TempData["Error"] = "Não foi possível baixar o XML.";
@@ -196,6 +210,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
                        ?? response.Content.Headers.ContentDisposition?.FileName
                        ?? $"nfe_{id}.xml";
 
+        if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
         return File(content, "application/xml", fileName.Trim('"'));
     }
 }

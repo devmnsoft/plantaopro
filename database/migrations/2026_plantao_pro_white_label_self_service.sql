@@ -15,11 +15,72 @@ CREATE TABLE IF NOT EXISTS plantaopro.tenants(
     reg_update timestamp NULL,
     reg_status char(1) NOT NULL DEFAULT 'A'
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.tenants add column if not exists slug text;
+
 ALTER TABLE plantaopro.tenants ADD COLUMN IF NOT EXISTS cliente_id uuid NULL;
 ALTER TABLE plantaopro.tenants ADD COLUMN IF NOT EXISTS plano_id uuid NULL;
 ALTER TABLE plantaopro.tenants ADD COLUMN IF NOT EXISTS subdominio text NULL;
 ALTER TABLE plantaopro.tenants ADD COLUMN IF NOT EXISTS dominio_customizado text NULL;
 ALTER TABLE plantaopro.tenants ADD COLUMN IF NOT EXISTS motivo_suspensao text NULL;
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.assinatura_bloqueios add column if not exists cliente_id uuid NULL;
+alter table plantaopro.assinatura_bloqueios add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.assinatura_bloqueios add column if not exists reg_status char(1) NOT NULL DEFAULT 'A';
+alter table plantaopro.assinatura_historico add column if not exists cliente_id uuid NULL;
+alter table plantaopro.assinatura_historico add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.assinatura_historico add column if not exists status_novo text NOT NULL;
+alter table plantaopro.assinatura_modulos add column if not exists cliente_id uuid NULL;
+alter table plantaopro.assinatura_modulos add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.assinatura_modulos add column if not exists reg_status char(1) NOT NULL DEFAULT 'A';
+alter table plantaopro.assinatura_uso add column if not exists cliente_id uuid NULL;
+alter table plantaopro.assinatura_uso add column if not exists competencia date NOT NULL;
+alter table plantaopro.assinatura_uso add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.assinaturas add column if not exists cliente_id uuid null;
+alter table plantaopro.assinaturas add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.downgrade_solicitacoes add column if not exists cliente_id uuid NULL;
+alter table plantaopro.downgrade_solicitacoes add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.lgpd_consentimentos add column if not exists cliente_id uuid NULL;
+alter table plantaopro.lgpd_consentimentos add column if not exists tenant_id uuid NULL;
+alter table plantaopro.lgpd_eventos_privacidade add column if not exists cliente_id uuid NULL;
+alter table plantaopro.lgpd_eventos_privacidade add column if not exists tenant_id uuid NULL;
+alter table plantaopro.lgpd_politicas add column if not exists status text NOT NULL DEFAULT 'RASCUNHO';
+alter table plantaopro.lgpd_politicas add column if not exists tenant_id uuid NULL;
+alter table plantaopro.lgpd_solicitacoes_titular add column if not exists tenant_id uuid NULL;
+alter table plantaopro.planos add column if not exists descricao text null;
+alter table plantaopro.planos add column if not exists destaque text null;
+alter table plantaopro.planos add column if not exists limite_convites_mes text null;
+alter table plantaopro.planos add column if not exists limite_hospitais text null;
+alter table plantaopro.planos add column if not exists limite_medicos numeric(14,2) not null default 0;
+alter table plantaopro.planos add column if not exists limite_plantoes_mes text null;
+alter table plantaopro.planos add column if not exists limite_usuarios numeric(14,2) not null default 0;
+alter table plantaopro.planos add column if not exists ordem text null;
+alter table plantaopro.planos add column if not exists permite_bi text null;
+alter table plantaopro.planos add column if not exists permite_integracoes text null;
+alter table plantaopro.planos add column if not exists permite_mobile text null;
+alter table plantaopro.planos add column if not exists permite_operacao_assistida text null;
+alter table plantaopro.planos add column if not exists permite_perfis_customizados text null;
+alter table plantaopro.planos add column if not exists permite_relatorios_avancados text null;
+alter table plantaopro.planos add column if not exists permite_suporte_prioritario text null;
+alter table plantaopro.planos add column if not exists permite_white_label text null;
+alter table plantaopro.planos add column if not exists publico text null;
+alter table plantaopro.planos add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.planos add column if not exists reg_status char(1) not null default 'A';
+alter table plantaopro.planos add column if not exists slug text null;
+alter table plantaopro.planos add column if not exists valor_mensal numeric(14,2) not null default 0;
+alter table plantaopro.tenant_configuracoes add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.tenant_onboarding add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.tenant_onboarding_checklist add column if not exists onboarding_id uuid NOT NULL;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.tenant_parametros add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.tenant_white_label add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.tenants add column if not exists cliente_id uuid NULL;
+alter table plantaopro.tenants add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.upgrade_solicitacoes add column if not exists cliente_id uuid NULL;
+alter table plantaopro.upgrade_solicitacoes add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.white_label_temas add column if not exists reg_date timestamp NOT NULL DEFAULT now();
+alter table plantaopro.white_label_temas add column if not exists status text NOT NULL DEFAULT 'ATIVO';
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenants_slug ON plantaopro.tenants(lower(slug)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_tenants_cliente_status_regdate ON plantaopro.tenants(cliente_id,status,reg_date);
 
@@ -39,15 +100,26 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_permissoes_codigo ON plantaopro.permissoes(
 CREATE INDEX IF NOT EXISTS ix_permissoes_modulo_status_regdate ON plantaopro.permissoes(modulo_id,status,reg_date);
 
 CREATE TABLE IF NOT EXISTS plantaopro.tenant_configuracoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, chave text NOT NULL, valor text NOT NULL DEFAULT '', categoria text NOT NULL DEFAULT 'GERAL', status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.tenant_configuracoes add column if not exists categoria text NOT NULL DEFAULT 'GERAL';
+alter table plantaopro.tenant_configuracoes add column if not exists chave text;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenant_configuracoes_chave ON plantaopro.tenant_configuracoes(tenant_id, lower(categoria), lower(chave)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_tenant_configuracoes_tenant_status_regdate ON plantaopro.tenant_configuracoes(tenant_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.tenant_modulos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, modulo_id uuid NULL, codigo_modulo text NOT NULL, habilitado boolean NOT NULL DEFAULT true, origem text NOT NULL DEFAULT 'PLANO', status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenant_modulos_codigo ON plantaopro.tenant_modulos(tenant_id, lower(codigo_modulo)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_tenant_modulos_tenant_status_regdate ON plantaopro.tenant_modulos(tenant_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.tenant_parametros(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, categoria text NOT NULL, chave text NOT NULL, valor text NOT NULL DEFAULT '', tipo text NOT NULL DEFAULT 'texto', status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.tenant_parametros add column if not exists categoria text;
+alter table plantaopro.tenant_parametros add column if not exists chave text;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenant_parametros_chave ON plantaopro.tenant_parametros(tenant_id, lower(categoria), lower(chave)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_tenant_parametros_tenant_status_regdate ON plantaopro.tenant_parametros(tenant_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.tenant_dominios(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, dominio text NOT NULL, tipo text NOT NULL DEFAULT 'SUBDOMINIO', verificado boolean NOT NULL DEFAULT false, status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.tenant_dominios add column if not exists dominio text;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_tenant_dominios_dominio ON plantaopro.tenant_dominios(lower(dominio)) WHERE reg_status='A';
 CREATE INDEX IF NOT EXISTS ix_tenant_dominios_tenant_status_regdate ON plantaopro.tenant_dominios(tenant_id,status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.tenant_white_label(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NOT NULL, nome_plataforma text NOT NULL DEFAULT 'PlantãoPro', cliente_nome text NOT NULL DEFAULT '', slogan text NOT NULL DEFAULT '', logo_url text NOT NULL DEFAULT '', logo_reduzida_url text NOT NULL DEFAULT '', favicon_url text NOT NULL DEFAULT '', cor_primaria text NOT NULL DEFAULT '#0d6efd', cor_secundaria text NOT NULL DEFAULT '#20c997', cor_fundo text NOT NULL DEFAULT '#f8fafc', cor_menu text NOT NULL DEFAULT '#0f172a', tema text NOT NULL DEFAULT 'claro', email_remetente text NOT NULL DEFAULT '', texto_boas_vindas text NOT NULL DEFAULT '', texto_rodape text NOT NULL DEFAULT '', login_banner_url text NOT NULL DEFAULT '', mobile_json jsonb NOT NULL DEFAULT '{}'::jsonb, status text NOT NULL DEFAULT 'ATIVO', reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
@@ -103,10 +175,19 @@ CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_solicitacoes(id uuid PRIM
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_solicitacoes_tenant_cliente_status_regdate ON plantaopro.cadastro_cliente_solicitacoes(tenant_id,cliente_id,status,reg_date);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_cadastro_cliente_solicitacoes_cnpj_ativo ON plantaopro.cadastro_cliente_solicitacoes(regexp_replace(cnpj,'\D','','g')) WHERE reg_status='A' AND status <> 'CANCELADO';
 CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_etapas(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), solicitacao_id uuid NOT NULL, etapa text NOT NULL, concluida boolean NOT NULL DEFAULT false, dados jsonb NOT NULL DEFAULT '{}'::jsonb, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.cadastro_cliente_etapas add column if not exists solicitacao_id uuid;
+
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_etapas_status_regdate ON plantaopro.cadastro_cliente_etapas(solicitacao_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_validacoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), solicitacao_id uuid NOT NULL, campo text NOT NULL, mensagem text NOT NULL, valido boolean NOT NULL DEFAULT false, reg_date timestamp NOT NULL DEFAULT now(), reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.cadastro_cliente_validacoes add column if not exists solicitacao_id uuid;
+
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_validacoes_status_regdate ON plantaopro.cadastro_cliente_validacoes(solicitacao_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_convites(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), solicitacao_id uuid NOT NULL, email text NOT NULL, perfil text NOT NULL DEFAULT 'ADMINISTRADOR_CLIENTE', token_hash text NOT NULL DEFAULT '', aceito boolean NOT NULL DEFAULT false, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.cadastro_cliente_convites add column if not exists solicitacao_id uuid;
+
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_convites_status_regdate ON plantaopro.cadastro_cliente_convites(solicitacao_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.cadastro_cliente_pagamentos_iniciais(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), solicitacao_id uuid NOT NULL, cliente_id uuid NULL, assinatura_id uuid NULL, valor numeric(12,2) NOT NULL DEFAULT 0, status text NOT NULL DEFAULT 'ABERTO', vencimento date NOT NULL DEFAULT (current_date + 7), reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_cadastro_cliente_pagamentos_status_regdate ON plantaopro.cadastro_cliente_pagamentos_iniciais(cliente_id,status,reg_date);
@@ -117,6 +198,9 @@ CREATE INDEX IF NOT EXISTS ix_perfis_tenant_cliente_status_regdate ON plantaopro
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_permissoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, bloqueado_por_plano boolean NOT NULL DEFAULT false, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_perfil_permissoes_status_regdate ON plantaopro.perfil_permissoes(perfil_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.perfil_modulos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, modulo_id uuid NOT NULL, habilitado boolean NOT NULL DEFAULT true, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.perfil_modulos add column if not exists perfil_id uuid;
+
 CREATE INDEX IF NOT EXISTS ix_perfil_modulos_status_regdate ON plantaopro.perfil_modulos(perfil_id,reg_status,reg_date);
 CREATE TABLE IF NOT EXISTS plantaopro.usuarios_perfis(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), tenant_id uuid NULL, cliente_id uuid NULL, usuario_id uuid NOT NULL, perfil_id uuid NOT NULL, reg_date timestamp NOT NULL DEFAULT now(), reg_update timestamp NULL, reg_status char(1) NOT NULL DEFAULT 'A');
 CREATE INDEX IF NOT EXISTS ix_usuarios_perfis_tenant_cliente_status_regdate ON plantaopro.usuarios_perfis(tenant_id,cliente_id,reg_status,reg_date);

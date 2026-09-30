@@ -1187,6 +1187,32 @@ alter table plantaopro.conversas add column if not exists reg_update timestamp;
 create index if not exists ix_conversas_tenant_id on plantaopro.conversas(tenant_id);
 create index if not exists ix_conversas_cliente_id on plantaopro.conversas(cliente_id);
 create index if not exists ix_conversas_status on plantaopro.conversas(status);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.conversas add column if not exists cliente_id uuid;
+alter table plantaopro.conversas add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.medico_disponibilidades add column if not exists cliente_id uuid;
+alter table plantaopro.medico_disponibilidades add column if not exists hospital_id uuid;
+alter table plantaopro.medico_disponibilidades add column if not exists medico_id uuid;
+alter table plantaopro.medico_disponibilidades add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.medico_indisponibilidades add column if not exists cliente_id uuid;
+alter table plantaopro.medico_indisponibilidades add column if not exists medico_id uuid;
+alter table plantaopro.medico_indisponibilidades add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.medico_preferencias_plantao add column if not exists cliente_id uuid;
+alter table plantaopro.medico_preferencias_plantao add column if not exists medico_id uuid;
+alter table plantaopro.medico_preferencias_plantao add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.mensagens add column if not exists conversa_id uuid;
+alter table plantaopro.mensagens add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.mensagens add column if not exists remetente_usuario_id uuid;
+alter table plantaopro.relatorios_exportacoes add column if not exists cliente_id uuid;
+alter table plantaopro.relatorios_exportacoes add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.relatorios_filtros_salvos add column if not exists cliente_id uuid;
+alter table plantaopro.relatorios_filtros_salvos add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.substituicao_aprovacoes add column if not exists cliente_id uuid;
+alter table plantaopro.substituicao_aprovacoes add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.substituicao_candidatos add column if not exists cliente_id uuid;
+alter table plantaopro.substituicao_historico add column if not exists cliente_id uuid;
+alter table plantaopro.substituicao_historico add column if not exists reg_date timestamp not null default now();
+
 create index if not exists ix_conversas_reg_date on plantaopro.conversas(reg_date);
 
 create table if not exists plantaopro.conversa_participantes (

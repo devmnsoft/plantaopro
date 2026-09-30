@@ -56,7 +56,8 @@ public sealed class HomologacaoCrudsAcoesJornadasContractTests
         foreach (var file in files)
             Assert.False(pattern.IsMatch(File.ReadAllText(file)), file);
 
-        foreach (var appsettings in Directory.EnumerateFiles(Path.Combine(Root, "backend"), "appsettings*.json", SearchOption.AllDirectories))
+        foreach (var appsettings in Directory.EnumerateFiles(Path.Combine(Root, "backend"), "appsettings*.json", SearchOption.AllDirectories)
+            .Where(f => !f.Contains(Path.DirectorySeparatorChar + "bin" + Path.DirectorySeparatorChar) && !f.Contains(Path.DirectorySeparatorChar + "obj" + Path.DirectorySeparatorChar)))
         {
             var content = File.ReadAllText(appsettings);
             Assert.DoesNotContain("admin123", content);

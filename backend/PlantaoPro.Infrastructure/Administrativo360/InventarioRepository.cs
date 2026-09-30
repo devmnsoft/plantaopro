@@ -69,7 +69,7 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
             new { id, tenantId, c.LocalId, c.Escopo, usuarioId }, tx, cancellationToken: ct));
 
         if (n == 0)
-            throw new InvalidOperationException("Local inválido ou já bloqueado por outro inventário ativo.");
+            throw new Administrativo360BusinessException("Local inválido ou já bloqueado por outro inventário ativo.");
 
         await tx.CommitAsync(ct);
         return id;
@@ -91,7 +91,7 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
             new { inventarioId, tenantId }, tx, cancellationToken: ct));
 
         if (!localId.HasValue)
-            throw new InvalidOperationException("Inventário não está em contagem ou revisão.");
+            throw new Administrativo360BusinessException("Inventário não está em contagem ou revisão.");
 
         // Consulta saldo físico esperado especificamente para aquela condição
         var expected = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
@@ -128,7 +128,7 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
                 new { inventarioId, tenantId }, tx, cancellationToken: ct));
 
             if (inv is null)
-                throw new InvalidOperationException("Inventário não encontrado.");
+                throw new Administrativo360BusinessException("Inventário não encontrado.");
 
             if (inv.Situacao == "APROVADO")
             {
@@ -140,11 +140,11 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
                     new { inventarioId, tenantId, key }, tx, cancellationToken: ct));
 
                 if (jaAprovadoComMesmaChave) return; // Idempotente
-                throw new InvalidOperationException("Inventário já aprovado com outra chave de idempotência.");
+                throw new Administrativo360BusinessException("Inventário já aprovado com outra chave de idempotência.");
             }
 
             if (inv.Situacao is not ("CONTAGEM" or "REVISAO"))
-                throw new InvalidOperationException($"Inventário na situação '{inv.Situacao}' não pode ser aprovado.");
+                throw new Administrativo360BusinessException($"Inventário na situação '{inv.Situacao}' não pode ser aprovado.");
 
             // Trava determinística do local
             var lockKey = $"INVENTARIO_LOCAL:{tenantId}:{inv.LocalId}";
@@ -159,7 +159,7 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
 
             // Não aprovar silenciosamente se há itens pendentes de contagem (contado IS NULL)
             if (itens.Any(i => !i.Contado.HasValue))
-                throw new InvalidOperationException("O inventário possui itens sem contagem finalizada.");
+                throw new Administrativo360BusinessException("O inventário possui itens sem contagem finalizada.");
 
             // Aplica os movimentos de ajuste preservando estritamente a condição de cada lote
             foreach (var item in itens.Where(i => i.Diferenca != 0))
@@ -212,6 +212,6 @@ public sealed class InventarioRepository : Adm360Repository, IInventarioReposito
             new { tenantId, inventarioId, motivo }, cancellationToken: ct));
 
         if (n == 0)
-            throw new InvalidOperationException("Inventário não encontrado ou já encerrado.");
+            throw new Administrativo360BusinessException("Inventário não encontrado ou já encerrado.");
     }
 }

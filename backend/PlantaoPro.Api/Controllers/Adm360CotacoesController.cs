@@ -65,6 +65,13 @@ public sealed class Adm360CotacoesController : ControllerBase
         var (tenant, _) = Context();
         var anexo = await repository.ObterAnexoAsync(tenant, anexoId, ct);
         if (anexo is null || anexo.Value.Bytes is null) return NotFound("Anexo não encontrado ou sem conteúdo.");
+
+        // P4: download idempotente — ETag pelo SHA-256 do arquivo; If-None-Match → 304 sem reenviar o corpo.
+        var etag = EtagHttp.Para(anexo.Value.Sha256Hash);
+        Response.Headers.ETag = etag;
+        if (EtagHttp.RevalidacaoSatisfeita(Request, etag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         return File(anexo.Value.Bytes, anexo.Value.ContentType, anexo.Value.Nome);
     }
 
@@ -77,6 +84,13 @@ public sealed class Adm360CotacoesController : ControllerBase
         if (arquivo is null) return NotFound("Nenhum arquivo de exportação registrado para esta resposta.");
 
         HttpContext.Response.Headers.Append("X-File-SHA256", arquivo.Sha256Hash);
+
+        // P4: download idempotente — ETag pelo SHA-256 do arquivo; If-None-Match → 304 sem reenviar o corpo.
+        var etag = EtagHttp.Para(arquivo.Sha256Hash);
+        HttpContext.Response.Headers.ETag = etag;
+        if (EtagHttp.RevalidacaoSatisfeita(Request, etag))
+            return StatusCode(StatusCodes.Status304NotModified);
+
         return File(arquivo.Conteudo, arquivo.ContentType, arquivo.NomeArquivo);
     }
 

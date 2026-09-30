@@ -35,7 +35,7 @@ values(@tenantId,@tenantId,@tenantCode,@clientName,'ATIVO',cast(@tenantData as j
 on conflict(id) do nothing;
 
 insert into plantaopro.assinaturas(id,tenant_id,codigo,nome,status,dados)
-values(@subscriptionId,@tenantId,@subscriptionCode,@subscriptionName,'ATIVO',cast(@subscriptionData as jsonb))
+values(@subscriptionId,@tenantId,@subscriptionCode,@subscriptionName,'ATIVA',cast(@subscriptionData as jsonb))
 on conflict(id) do nothing;
 
 insert into plantaopro.unidades(id,tenant_id,codigo,nome,status,dados)

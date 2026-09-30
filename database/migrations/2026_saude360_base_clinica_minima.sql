@@ -436,6 +436,15 @@ begin
     end if;
 end $$;
 
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'plantaopro' and table_name = 'triagem_classificacoes_risco' and column_name = 'cor_hex' and is_nullable = 'NO') then
+    alter table plantaopro.triagem_classificacoes_risco alter column cor_hex drop not null;
+    alter table plantaopro.triagem_classificacoes_risco alter column cor_hex set default '';
+  end if;
+end $$;
+
 insert into plantaopro.triagem_classificacoes_risco (codigo, nome, cor, prioridade, tempo_alvo_minutos)
 select 'EMERGENCIA', 'Emergência', 'VERMELHO', 1, 0
 where not exists (select 1 from plantaopro.triagem_classificacoes_risco where codigo = 'EMERGENCIA' and cliente_id is null);

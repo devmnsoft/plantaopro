@@ -68,7 +68,7 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
                 {
                     return; // Reenvio idempotente
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave de inspeção foi utilizada com decisão diferente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave de inspeção foi utilizada com decisão diferente.");
             }
 
             var r = await cn.QuerySingleOrDefaultAsync<InspectionRow>(new CommandDefinition(@"
@@ -95,7 +95,7 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
                     new { id = c.RecebimentoItemId, tenantId }, tx, cancellationToken: ct));
 
                 if (retRow is null)
-                    throw new InvalidOperationException("Item de recebimento ou retorno de consignação não encontrado.");
+                    throw new Administrativo360BusinessException("Item de recebimento ou retorno de consignação não encontrado.");
 
                 isRetornoConsignacao = true;
                 r = new InspectionRow
@@ -111,7 +111,7 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
             Inspecao.ValidarDecisao(r.Pendente, c.Aprovada, c.Reprovada, c.Justificativa);
 
             if (r.Condicao == "VENCIDO" && c.Aprovada > 0)
-                throw new InvalidOperationException("Material vencido não pode ser liberado.");
+                throw new Administrativo360BusinessException("Material vencido não pode ser liberado.");
 
             // Bloqueio de inventário no local do item
             await ValidarBloqueioInventarioAsync(cn, tx, tenantId, r.LocalId, ct);

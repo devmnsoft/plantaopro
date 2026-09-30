@@ -86,6 +86,9 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         "Lgpd"
     };
 
+    public static bool TryResolveModule(string controllerName, out string? module)
+        => ControllerModules.TryGetValue(controllerName, out module);
+
     private readonly IPermissionService permissions;
     private readonly IModuleAccessService modules;
     private readonly ICurrentUserService currentUser;

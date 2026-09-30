@@ -437,5 +437,34 @@
       "plantaopro.schema_canonico_base"
     ],
     "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql"
+  },
+  {
+    "object": "plantaopro.adm360_cotacao_exportacoes",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard"
+    ],
+    "source": "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql"
+  },
+  {
+    "object": "plantaopro.auditoria_observabilidade_reconciliacao",
+    "dependsOn": [
+      "plantaopro.auditoria_observabilidade"
+    ],
+    "source": "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql"
+  },
+  {
+    "object": "plantaopro.adm360_cotacao_respostas_transmissao",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard"
+    ],
+    "source": "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql"
+  },
+  {
+    "object": "plantaopro.adm360_eventos",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard",
+      "plantaopro.administrativo360_cirurgia_vales_reconciliacao"
+    ],
+    "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql"
   }
 ]

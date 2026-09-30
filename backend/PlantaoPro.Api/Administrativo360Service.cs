@@ -1,6 +1,7 @@
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Api;
 

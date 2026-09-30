@@ -66,7 +66,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
                 {
                     return; // Reenvio idempotente com mesmo conteúdo: sucesso garantido sem reaplicar efeitos
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var locais = await cn.ExecuteScalarAsync<int>(new CommandDefinition(
@@ -90,7 +90,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
                 new { tenantId, c.ProdutoId, c.LoteId, c.OrigemId }, tx, cancellationToken: ct));
 
             if (available < c.Quantidade)
-                throw new InvalidOperationException("Saldo disponível insuficiente para transferência.");
+                throw new Administrativo360BusinessException("Saldo disponível insuficiente para transferência.");
 
             var opId = Guid.NewGuid();
 
@@ -150,7 +150,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
                 {
                     return; // Reenvio idempotente
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave de reserva foi utilizada com parâmetros diferentes.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave de reserva foi utilizada com parâmetros diferentes.");
             }
 
             // Bloqueio determinístico do local/produto/lote
@@ -168,10 +168,10 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
             if (loteInfo.HasValue)
             {
                 if (loteInfo.Value < DateOnly.FromDateTime(DateTime.UtcNow))
-                    throw new InvalidOperationException("Lote vencido não está disponível para reserva.");
+                    throw new Administrativo360BusinessException("Lote vencido não está disponível para reserva.");
 
                 if (c.DataPrevistaUso.HasValue && loteInfo.Value < c.DataPrevistaUso.Value)
-                    throw new InvalidOperationException($"Lote vence em {loteInfo.Value:yyyy-MM-dd}, antes da data prevista de utilização ({c.DataPrevistaUso.Value:yyyy-MM-dd}).");
+                    throw new Administrativo360BusinessException($"Lote vence em {loteInfo.Value:yyyy-MM-dd}, antes da data prevista de utilização ({c.DataPrevistaUso.Value:yyyy-MM-dd}).");
             }
 
             var available = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
@@ -181,7 +181,7 @@ public sealed class EstoqueRepository : Adm360Repository, IEstoqueRepository
                 new { tenantId, c.ProdutoId, c.LoteId, c.LocalId }, tx, cancellationToken: ct));
 
             if (available < c.Quantidade)
-                throw new InvalidOperationException("Quantidade solicitada excede o estoque disponível.");
+                throw new Administrativo360BusinessException("Quantidade solicitada excede o estoque disponível.");
 
             await cn.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_reservas(

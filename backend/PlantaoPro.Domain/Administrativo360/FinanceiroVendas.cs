@@ -5,16 +5,16 @@ public static class ValorizacaoRegras
     public static void ValidarElegibilidadeVale(string situacaoVale, string situacaoFinanceira)
     {
         if (!string.Equals(situacaoVale, "RECONCILIADO", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException($"Apenas vales na situação 'RECONCILIADO' podem ser valorizados. Situação atual: '{situacaoVale}'.");
+            throw new Administrativo360BusinessException($"Apenas vales na situação 'RECONCILIADO' podem ser valorizados. Situação atual: '{situacaoVale}'.");
 
         if (string.Equals(situacaoFinanceira, "VALORIZADO", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException("Este vale já foi valorizado anteriormente.");
+            throw new Administrativo360BusinessException("Este vale já foi valorizado anteriormente.");
     }
 
     public static void ValidarConsumo(decimal quantidadeConsumida, decimal precoUnitario)
     {
         if (quantidadeConsumida <= 0)
-            throw new InvalidOperationException("O item não possui consumo registrado para valorização comercial.");
+            throw new Administrativo360BusinessException("O item não possui consumo registrado para valorização comercial.");
         if (precoUnitario < 0)
             throw new ArgumentOutOfRangeException(nameof(precoUnitario), "Preço unitário não pode ser negativo.");
     }
@@ -28,7 +28,7 @@ public static class ValorizacaoRegras
 
         var subtotalBruto = quantidadeConsumida * precoUnitario;
         if (descontoItem > subtotalBruto)
-            throw new InvalidOperationException($"Desconto do item ({descontoItem:C2}) não pode ser maior que o subtotal bruto ({subtotalBruto:C2}).");
+            throw new Administrativo360BusinessException($"Desconto do item ({descontoItem:C2}) não pode ser maior que o subtotal bruto ({subtotalBruto:C2}).");
 
         var subtotal = subtotalBruto - descontoItem;
         var totalCusto = quantidadeConsumida * custoUnitario;
@@ -38,7 +38,7 @@ public static class ValorizacaoRegras
     public static decimal CalcularDescontoProporcional(decimal subtotalItem, decimal totalOrcamento, decimal descontoOrcamento)
     {
         if (descontoOrcamento < 0) throw new ArgumentOutOfRangeException(nameof(descontoOrcamento), "Desconto não pode ser negativo.");
-        if (descontoOrcamento > totalOrcamento) throw new InvalidOperationException("Desconto do orçamento não pode ser superior ao total do orçamento.");
+        if (descontoOrcamento > totalOrcamento) throw new Administrativo360BusinessException("Desconto do orçamento não pode ser superior ao total do orçamento.");
         if (totalOrcamento <= 0) return 0m;
 
         decimal proporcao = subtotalItem / totalOrcamento;
@@ -50,7 +50,7 @@ public static class ValorizacaoRegras
         if (desconto < 0)
             throw new ArgumentOutOfRangeException(nameof(desconto), "Desconto não pode ser negativo.");
         if (desconto > totalBruto)
-            throw new InvalidOperationException($"Desconto ({desconto:C2}) não pode ser superior ao total bruto ({totalBruto:C2}).");
+            throw new Administrativo360BusinessException($"Desconto ({desconto:C2}) não pode ser superior ao total bruto ({totalBruto:C2}).");
     }
 }
 
@@ -66,7 +66,7 @@ public static class VendaRegras
 
         long totalCentavos = (long)Math.Round(totalLiquido * 100m, MidpointRounding.AwayFromZero);
         if (totalCentavos < quantidadeParcelas)
-            throw new InvalidOperationException($"Não é possível dividir R$ {totalLiquido:N2} em {quantidadeParcelas} parcelas pois o valor mínimo por parcela é R$ 0,01.");
+            throw new Administrativo360BusinessException($"Não é possível dividir R$ {totalLiquido:N2} em {quantidadeParcelas} parcelas pois o valor mínimo por parcela é R$ 0,01.");
 
         long centavosBase = totalCentavos / quantidadeParcelas;
         long restoCentavos = totalCentavos % quantidadeParcelas;
@@ -117,7 +117,7 @@ public static class TituloRegras
         if (valorRecebido <= 0)
             throw new ArgumentOutOfRangeException(nameof(valorRecebido), "Valor recebido deve ser positivo.");
         if (valorRecebido > saldoAberto)
-            throw new InvalidOperationException($"Valor recebido ({valorRecebido:C2}) excede o saldo em aberto do título ({saldoAberto:C2}).");
+            throw new Administrativo360BusinessException($"Valor recebido ({valorRecebido:C2}) excede o saldo em aberto do título ({saldoAberto:C2}).");
     }
 
     public static string DefinirNovaSituacao(decimal saldoRestante) =>
@@ -126,11 +126,11 @@ public static class TituloRegras
     public static void ValidarEstorno(bool baixaEstornada, decimal valorEstorno, decimal valorBaixa)
     {
         if (baixaEstornada)
-            throw new InvalidOperationException("Esta baixa já foi estornada anteriormente.");
+            throw new Administrativo360BusinessException("Esta baixa já foi estornada anteriormente.");
         if (valorEstorno <= 0)
             throw new ArgumentOutOfRangeException(nameof(valorEstorno), "Valor do estorno deve ser positivo.");
         if (valorEstorno > valorBaixa)
-            throw new InvalidOperationException("Valor de estorno não pode exceder o valor original da baixa.");
+            throw new Administrativo360BusinessException("Valor de estorno não pode exceder o valor original da baixa.");
     }
 }
 
@@ -139,7 +139,7 @@ public static class ContasPagarRegras
     public static void ValidarAprovacao(string situacaoAtual)
     {
         if (!string.Equals(situacaoAtual, "PENDENTE_APROVACAO", StringComparison.OrdinalIgnoreCase))
-            throw new InvalidOperationException($"Apenas títulos na situação 'PENDENTE_APROVACAO' podem ser aprovados. Situação atual: '{situacaoAtual}'.");
+            throw new Administrativo360BusinessException($"Apenas títulos na situação 'PENDENTE_APROVACAO' podem ser aprovados. Situação atual: '{situacaoAtual}'.");
     }
 
     public static void ValidarPagamento(string situacaoAtual, decimal saldoAberto, decimal valorPago)
@@ -148,14 +148,14 @@ public static class ContasPagarRegras
             string.Equals(situacaoAtual, "PAGO", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(situacaoAtual, "PENDENTE_APROVACAO", StringComparison.OrdinalIgnoreCase))
         {
-            throw new InvalidOperationException($"O título a pagar está na situação '{situacaoAtual}' e não pode receber pagamentos.");
+            throw new Administrativo360BusinessException($"O título a pagar está na situação '{situacaoAtual}' e não pode receber pagamentos.");
         }
 
         if (valorPago <= 0)
             throw new ArgumentOutOfRangeException(nameof(valorPago), "Valor pago deve ser positivo.");
 
         if (valorPago > saldoAberto)
-            throw new InvalidOperationException($"Valor pago ({valorPago:C2}) excede o saldo em aberto do título ({saldoAberto:C2}).");
+            throw new Administrativo360BusinessException($"Valor pago ({valorPago:C2}) excede o saldo em aberto do título ({saldoAberto:C2}).");
     }
 
     public static string DefinirNovaSituacao(decimal saldoRestante) =>
@@ -167,11 +167,11 @@ public static class ContasPagarRegras
     public static void ValidarEstorno(bool pagamentoEstornado, decimal valorEstorno, decimal valorPago)
     {
         if (pagamentoEstornado)
-            throw new InvalidOperationException("Este pagamento já foi estornado anteriormente.");
+            throw new Administrativo360BusinessException("Este pagamento já foi estornado anteriormente.");
         if (valorEstorno <= 0)
             throw new ArgumentOutOfRangeException(nameof(valorEstorno), "Valor do estorno deve ser positivo.");
         if (valorEstorno > valorPago)
-            throw new InvalidOperationException("Valor de estorno não pode exceder o valor original do pagamento.");
+            throw new Administrativo360BusinessException("Valor de estorno não pode exceder o valor original do pagamento.");
     }
 }
 
@@ -186,7 +186,7 @@ public static class CaixaRegras
     public static void ValidarSaldoSuficiente(decimal saldoAtual, decimal valorSaida, bool permitirSaldoNegativo = false)
     {
         if (!permitirSaldoNegativo && saldoAtual < valorSaida)
-            throw new InvalidOperationException($"Saldo insuficiente na conta financeira para realizar a saída de {valorSaida:C2}. Saldo atual disponível: {saldoAtual:C2}.");
+            throw new Administrativo360BusinessException($"Saldo insuficiente na conta financeira para realizar a saída de {valorSaida:C2}. Saldo atual disponível: {saldoAtual:C2}.");
     }
 
     public static void ValidarFechamento(decimal saldoCalculado, decimal saldoConferido, string? justificativa)
@@ -199,6 +199,6 @@ public static class CaixaRegras
     public static void ValidarDataBloqueioFechamento(DateOnly dataMovimento, DateOnly? dataUltimoFechamento)
     {
         if (dataUltimoFechamento.HasValue && dataMovimento <= dataUltimoFechamento.Value)
-            throw new InvalidOperationException($"Lançamento retroativo bloqueado: a conta financeira já está fechada até a data {dataUltimoFechamento.Value:dd/MM/yyyy}.");
+            throw new Administrativo360BusinessException($"Lançamento retroativo bloqueado: a conta financeira já está fechada até a data {dataUltimoFechamento.Value:dd/MM/yyyy}.");
     }
 }

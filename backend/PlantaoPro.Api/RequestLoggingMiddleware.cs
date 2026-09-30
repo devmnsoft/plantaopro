@@ -36,7 +36,7 @@ public sealed class RequestLoggingMiddleware
             catch (Exception ex)
             {
                 exception = ex;
-                _logger.LogError(ex, "Exceção não tratada na requisição {Method} {Endpoint}", context.Request.Method, context.Request.Path.Value ?? "/");
+                _logger.LogError(ex, "Exceção não tratada na requisição CorrelationId={CorrelationId} {Method} {Endpoint}", context.Items["CorrelationId"] as string ?? "-", context.Request.Method, context.Request.Path.Value ?? "/");
                 throw;
             }
             finally
@@ -141,7 +141,7 @@ values
 
             if (duration >= 2000)
             {
-                _logger.LogWarning("Endpoint lento Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", endpoint, metodo, statusCode, duration, usuarioId, clienteId, perfilSeguro, ipOrigem);
+                _logger.LogWarning("Endpoint lento CorrelationId:{CorrelationId} Endpoint:{Endpoint} Metodo:{Metodo} StatusCode:{StatusCode} DuracaoMs:{DuracaoMs} UsuarioId:{UsuarioId} ClienteId:{ClienteId} Perfil:{Perfil} IP:{Ip}", context.Items["CorrelationId"] as string ?? "-", endpoint, metodo, statusCode, duration, usuarioId, clienteId, perfilSeguro, ipOrigem);
             }
 
             if (success)

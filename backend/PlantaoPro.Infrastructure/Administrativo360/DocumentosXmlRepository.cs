@@ -12,11 +12,13 @@ namespace PlantaoPro.Infrastructure.Administrativo360;
 public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRepository
 {
     private readonly IComprasRepository comprasRepo;
+    private readonly Adm360EventService eventos;
 
-    public DocumentosXmlRepository(string connectionString, IComprasRepository? comprasRepo = null)
+    public DocumentosXmlRepository(string connectionString, IComprasRepository? comprasRepo = null, Adm360EventService? eventos = null)
         : base(connectionString)
     {
         this.comprasRepo = comprasRepo ?? new ComprasRepository(connectionString);
+        this.eventos = eventos ?? new Adm360EventService(connectionString);
     }
 
     private static string CalcularSha256(string conteudo)
@@ -331,7 +333,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 }
 
                 // Conteúdo divergente para mesma chave
-                throw new InvalidOperationException($"Chave de acesso {chaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
+                throw new Administrativo360BusinessException($"Chave de acesso {chaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
             }
 
             documentoId = Guid.NewGuid();
@@ -428,6 +430,12 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                     detalhes = quarentena ? $"Quarentena: {motivoQuarentena}" : "Arquivo XML validado e gravado com sucesso.",
                     usuarioId
                 }, tx, cancellationToken: ct));
+
+            // P4: evento DECLARACAO_MANUAL — declaração manual do documento fiscal registrada imutavelmente na mesma transação
+            await eventos.RegistrarAsync(c, tx, tenantId, Adm360TipoEvento.DeclaracaoManual, "DOCUMENTO_XML", documentoId, usuarioId,
+                "Declaração manual de documento fiscal (importação XML)",
+                new { chave_acesso = chaveAcesso, quarentena, motivo_quarentena = quarentena ? motivoQuarentena : null },
+                $"declaracao:documento:{documentoId:N}", ct);
         }, ct);
 
         return documentoId;
@@ -441,7 +449,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
 
         // Regra de aceite 15 e requisito de manifesto:
         // Ação oficial exige credencial real/certificado configurado. Sem certificado, permanece indisponível com motivo real.
-        throw new InvalidOperationException("Não é possível manifestar à SEFAZ: Certificado Digital A1 ICP-Brasil não configurado para o estabelecimento.");
+        throw new Administrativo360BusinessException("Não é possível manifestar à SEFAZ: Certificado Digital A1 ICP-Brasil não configurado para o estabelecimento.");
     }
 
     public async Task VincularRecebimentoAsync(Guid tenantId, Guid usuarioId, VincularDocumentoRecebimentoCommand command, CancellationToken ct = default)
@@ -460,10 +468,10 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 throw new KeyNotFoundException("Documento fiscal não encontrado.");
 
             if ((bool)doc.quarentena)
-                throw new InvalidOperationException("Documento em quarentena não pode ser vinculado a recebimento físico.");
+                throw new Administrativo360BusinessException("Documento em quarentena não pode ser vinculado a recebimento físico.");
 
             if (doc.recebimento_id is not null)
-                throw new InvalidOperationException("Este documento fiscal já está vinculado a um recebimento físico confirmado.");
+                throw new Administrativo360BusinessException("Este documento fiscal já está vinculado a um recebimento físico confirmado.");
 
             var pedido = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, numero, fornecedor_id, situacao
@@ -599,7 +607,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             if (DateTime.UtcNow < proxima)
             {
                 var restante = proxima - DateTime.UtcNow;
-                throw new InvalidOperationException($"Respeito aos limites da SEFAZ: próxima consulta permitida em {proxima:dd/MM/yyyy HH:mm:ss} UTC (aguarde {Math.Ceiling(restante.TotalMinutes)} min).");
+                throw new Administrativo360BusinessException($"Respeito aos limites da SEFAZ: próxima consulta permitida em {proxima:dd/MM/yyyy HH:mm:ss} UTC (aguarde {Math.Ceiling(restante.TotalMinutes)} min).");
             }
         }
 
@@ -620,6 +628,6 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 mensagem_erro = @erro",
             new { tenantId, estabId = command.EstabelecimentoId, cnpj = (string)estab.cnpj, ambiente = (string)estab.ambiente, erro }, cancellationToken: ct));
 
-        throw new InvalidOperationException(erro);
+        throw new Administrativo360BusinessException(erro);
     }
 }

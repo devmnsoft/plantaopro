@@ -164,7 +164,7 @@ BEGIN
             tenant_id = COALESCE(tenant_id, v_tenant_id),
             codigo = COALESCE(codigo, 'CONTRATO_DEMO'),
             nome = COALESCE(nome, 'Contrato demonstrativo'),
-            status = COALESCE(NULLIF(status,''), 'ATIVO')
+            status = COALESCE(NULLIF(status,''), 'ATIVA')
         WHERE id = v_subscription_id;
     END IF;
 

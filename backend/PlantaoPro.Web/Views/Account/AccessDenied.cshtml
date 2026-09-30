@@ -25,6 +25,10 @@
                     {
                         <span class="badge bg-light text-dark border mb-3">Escopo: @module</span>
                     }
+                    @if (!string.IsNullOrWhiteSpace(reason))
+                    {
+                        <span class="badge bg-light text-dark border mb-3">Causa: @reason</span>
+                    }
                     <div class="d-flex flex-wrap justify-content-center gap-2">
                         @if (reason == "CLIENTE_BLOQUEADO")
                         {

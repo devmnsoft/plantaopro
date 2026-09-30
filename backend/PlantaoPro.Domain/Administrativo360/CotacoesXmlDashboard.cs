@@ -24,7 +24,7 @@ public static class CotacaoRegras
         if (sAtual == sNovo) return;
 
         if (sAtual is "RESPONDIDA" or "CANCELADA" or "EXPIRADA")
-            throw new InvalidOperationException($"Cotação na situação '{sAtual}' não permite alteração de status.");
+            throw new Administrativo360BusinessException($"Cotação na situação '{sAtual}' não permite alteração de status.");
 
         if (sNovo is "CANCELADA" or "EXPIRADA") return;
 
@@ -42,13 +42,13 @@ public static class CotacaoRegras
         };
 
         if (!transicaoPermitida)
-            throw new InvalidOperationException($"Transição de status inválida para cotação: '{sAtual}' -> '{sNovo}'.");
+            throw new Administrativo360BusinessException($"Transição de status inválida para cotação: '{sAtual}' -> '{sNovo}'.");
     }
 
     public static void ValidarPrazoResposta(DateTime prazoUtc, DateTime agoraUtc)
     {
         if (agoraUtc > prazoUtc)
-            throw new InvalidOperationException($"O prazo de resposta da cotação expirou em {prazoUtc:dd/MM/yyyy HH:mm} UTC.");
+            throw new Administrativo360BusinessException($"O prazo de resposta da cotação expirou em {prazoUtc:dd/MM/yyyy HH:mm} UTC.");
     }
 
     public static decimal CalcularQuantidadeConvertida(decimal quantidadeSolicitada, decimal fatorConversao)
@@ -67,25 +67,25 @@ public static class CotacaoRegras
         Guid? orcamentoId)
     {
         if (itens is null || itens.Count == 0)
-            throw new InvalidOperationException("A cotação não possui itens para envio de resposta.");
+            throw new Administrativo360BusinessException("A cotação não possui itens para envio de resposta.");
 
         var pendentes = itens.Where(i => i.StatusRelacionamento == "PENDENTE").ToList();
         if (pendentes.Count > 0)
         {
             var nums = string.Join(", ", pendentes.Select(p => $"Item {p.NumeroItem}"));
-            throw new InvalidOperationException($"Não é possível aprovar ou enviar resposta: existem itens sem relacionamento de produto ({nums}).");
+            throw new Administrativo360BusinessException($"Não é possível aprovar ou enviar resposta: existem itens sem relacionamento de produto ({nums}).");
         }
 
         var naoAtendidosSemMotivo = itens.Where(i => i.StatusRelacionamento == "NAO_ATENDIDO" && string.IsNullOrWhiteSpace(i.MotivoNaoAtendimento)).ToList();
         if (naoAtendidosSemMotivo.Count > 0)
         {
             var nums = string.Join(", ", naoAtendidosSemMotivo.Select(p => $"Item {p.NumeroItem}"));
-            throw new InvalidOperationException($"Itens marcados como não atendidos exigem justificativa obrigatória ({nums}).");
+            throw new Administrativo360BusinessException($"Itens marcados como não atendidos exigem justificativa obrigatória ({nums}).");
         }
 
         var atendidos = itens.Where(i => i.StatusRelacionamento == "RELACIONADO").ToList();
         if (atendidos.Count > 0 && (!orcamentoId.HasValue || orcamentoId.Value == Guid.Empty))
-            throw new InvalidOperationException("Cotação com itens relacionados exige orçamento cirúrgico vinculado antes do envio.");
+            throw new Administrativo360BusinessException("Cotação com itens relacionados exige orçamento cirúrgico vinculado antes do envio.");
     }
 }
 
@@ -105,7 +105,7 @@ public static class XmlDocumentoRegras
         // Modelo 55 da NF-e está nas posições 21 e 22 (índice 20 e 21 em 0-based)
         var modelo = limpa.Substring(20, 2);
         if (modelo != "55")
-            throw new InvalidOperationException($"Modelo de documento fiscal '{modelo}' não suportado neste módulo. O escopo é estritamente NF-e Modelo 55.");
+            throw new Administrativo360BusinessException($"Modelo de documento fiscal '{modelo}' não suportado neste módulo. O escopo é estritamente NF-e Modelo 55.");
     }
 
     public static void ValidarDestinatarioAutorizado(string cnpjDestinatario, IEnumerable<string> cnpjsAutorizados)
@@ -117,7 +117,7 @@ public static class XmlDocumentoRegras
         var autorizadosLimpos = cnpjsAutorizados.Select(c => Regex.Replace(c, @"\D", "")).ToHashSet();
 
         if (!autorizadosLimpos.Contains(limpoDest))
-            throw new InvalidOperationException($"O CNPJ do destinatário '{limpoDest}' não pertence a nenhum estabelecimento autorizado deste tenant.");
+            throw new Administrativo360BusinessException($"O CNPJ do destinatário '{limpoDest}' não pertence a nenhum estabelecimento autorizado deste tenant.");
     }
 
     public static void ValidarIntervaloDfe(DateTime? ultimaConsultaUtc, DateTime agoraUtc, int intervaloMinutosMinimo = 60)
@@ -128,7 +128,7 @@ public static class XmlDocumentoRegras
         if (agoraUtc < proximaPermitida)
         {
             var restante = proximaPermitida - agoraUtc;
-            throw new InvalidOperationException($"Respeito ao intervalo da SEFAZ: próxima consulta DF-e permitida apenas após {proximaPermitida:dd/MM/yyyy HH:mm:ss} UTC (restam {Math.Ceiling(restante.TotalMinutes)} minutos).");
+            throw new Administrativo360BusinessException($"Respeito ao intervalo da SEFAZ: próxima consulta DF-e permitida apenas após {proximaPermitida:dd/MM/yyyy HH:mm:ss} UTC (restam {Math.Ceiling(restante.TotalMinutes)} minutos).");
         }
     }
 }
@@ -139,6 +139,6 @@ public static class CapacidadeContratadaRegras
     {
         var ativas = new HashSet<string>(capacidadesAtivas, StringComparer.OrdinalIgnoreCase);
         if (!ativas.Contains(capacidade))
-            throw new InvalidOperationException($"A capacidade '{capacidade}' não está contratada ou habilitada para este tenant no módulo Administrativo 360.");
+            throw new Administrativo360BusinessException($"A capacidade '{capacidade}' não está contratada ou habilitada para este tenant no módulo Administrativo 360.");
     }
 }

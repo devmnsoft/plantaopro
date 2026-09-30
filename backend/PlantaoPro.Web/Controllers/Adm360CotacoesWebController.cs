@@ -1,4 +1,7 @@
+using System.Net;
+using System.Net.Http;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -295,7 +298,19 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var response = await client.GetAsync($"api/administrativo360/cotacoes/{id}/anexos/{anexoId}");
+        // P4: download idempotente — repassa If-None-Match à API e respeita 304 (não re-baixa o corpo).
+        using var pedido = new HttpRequestMessage(HttpMethod.Get, $"api/administrativo360/cotacoes/{id}/anexos/{anexoId}");
+        var ifNoneMatchAnexo = Request.Headers.IfNoneMatch.ToString();
+        if (!string.IsNullOrEmpty(ifNoneMatchAnexo))
+            pedido.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatchAnexo);
+        var response = await client.SendAsync(pedido);
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+            if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
+            return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             TempData["Error"] = "Não foi possível baixar o anexo.";
@@ -308,6 +323,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
                        ?? response.Content.Headers.ContentDisposition?.FileName
                        ?? $"anexo_{anexoId}";
 
+        if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
         return File(content, contentType, fileName.Trim('"'));
     }
 
@@ -317,7 +333,19 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var response = await client.GetAsync($"api/administrativo360/cotacoes/respostas/{respostaId}/exportacao");
+        // P4: download idempotente — repassa If-None-Match à API e respeita 304 (não re-baixa o corpo).
+        using var pedido = new HttpRequestMessage(HttpMethod.Get, $"api/administrativo360/cotacoes/respostas/{respostaId}/exportacao");
+        var ifNoneMatchExportacao = Request.Headers.IfNoneMatch.ToString();
+        if (!string.IsNullOrEmpty(ifNoneMatchExportacao))
+            pedido.Headers.TryAddWithoutValidation("If-None-Match", ifNoneMatchExportacao);
+        var response = await client.SendAsync(pedido);
+
+        if (response.StatusCode == HttpStatusCode.NotModified)
+        {
+            if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
+            return StatusCode(StatusCodes.Status304NotModified);
+        }
+
         if (!response.IsSuccessStatusCode)
         {
             TempData["Error"] = "Não foi possível baixar o arquivo de exportação da proposta.";
@@ -330,6 +358,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
                        ?? response.Content.Headers.ContentDisposition?.FileName
                        ?? $"exportacao_{respostaId}";
 
+        if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
         return File(content, contentType, fileName.Trim('"'));
     }
 }

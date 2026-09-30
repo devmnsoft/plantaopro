@@ -67,3 +67,7 @@
 - `plantaopro.adm360_trigger_tenant_corrigido` depende de: nenhuma
 - `plantaopro.medicos_compatibilidade_v2200` depende de: plantaopro.operacao_plantoes
 - `plantaopro.modulos_sistema_comercial_v2201` depende de: plantaopro.schema_canonico_base
+- `plantaopro.adm360_cotacao_exportacoes` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.auditoria_observabilidade_reconciliacao` depende de: plantaopro.auditoria_observabilidade
+- `plantaopro.adm360_cotacao_respostas_transmissao` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.adm360_eventos` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.administrativo360_cirurgia_vales_reconciliacao

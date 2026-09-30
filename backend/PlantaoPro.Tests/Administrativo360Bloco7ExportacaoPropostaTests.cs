@@ -33,26 +33,58 @@ public sealed class Administrativo360Bloco7ExportacaoPropostaTests
         await using var cn = new NpgsqlConnection(cs);
         await cn.OpenAsync();
 
-        var temTabela = await cn.ExecuteScalarAsync<bool>(@"
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.tables
-                WHERE table_schema = 'plantaopro' AND table_name = 'adm360_cotacao_exportacoes'
-            );");
-
-        if (!temTabela)
+        // Lock de conselheiro: serializa a garantia de schema entre classes de teste paralelas.
+        // As migrations contêm DDL com lock exclusivo de catálogo; duas sessões executando os
+        // arquivos ao mesmo tempo podem gerar impasse (40P01).
+        await cn.ExecuteAsync("SELECT pg_advisory_lock(hashtext('adm360_eventos_tests_schema'));");
+        try
         {
-            var migrationPath = Path.Combine(RepositoryPathResolver.RepoRoot,
-                "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql");
-            Assert.True(File.Exists(migrationPath), "Migration v2200 (exportação de cotação) não encontrada.");
-            await cn.ExecuteAsync(await File.ReadAllTextAsync(migrationPath));
-        }
+            var temTabela = await cn.ExecuteScalarAsync<bool>(@"
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_schema = 'plantaopro' AND table_name = 'adm360_cotacao_exportacoes'
+                );");
 
-        // v2300 — estende o CHECK de status_transmissao com os estados do Bloco 7.
-        // Idempotente: pode rodar em qualquer ordem/replicação do banco de teste.
-        var migrationV2300 = Path.Combine(RepositoryPathResolver.RepoRoot,
-            "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql");
-        Assert.True(File.Exists(migrationV2300), "Migration v2300 (status_transmissao) não encontrada.");
-        await cn.ExecuteAsync(await File.ReadAllTextAsync(migrationV2300));
+            if (!temTabela)
+            {
+                var migrationPath = Path.Combine(RepositoryPathResolver.RepoRoot,
+                    "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql");
+                Assert.True(File.Exists(migrationPath), "Migration v2200 (exportação de cotação) não encontrada.");
+                await cn.ExecuteAsync(await File.ReadAllTextAsync(migrationPath));
+            }
+
+            // v2300 — estende o CHECK de status_transmissao com os estados do Bloco 7.
+            // Idempotente: pode rodar em qualquer ordem/replicação do banco de teste.
+            var migrationV2300 = Path.Combine(RepositoryPathResolver.RepoRoot,
+                "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql");
+            Assert.True(File.Exists(migrationV2300), "Migration v2300 (status_transmissao) não encontrada.");
+            await ExecutarMigrationComRetryAsync(cn, await File.ReadAllTextAsync(migrationV2300));
+        }
+        finally
+        {
+            await cn.ExecuteAsync("SELECT pg_advisory_unlock(hashtext('adm360_eventos_tests_schema'));");
+        }
+    }
+
+    /// <summary>
+    /// Executa um arquivo de migration tolerando impasse (40P01): DDL com lock exclusivo de
+    /// catálogo pode conflitar com sessões de teste que escrevem nas tabelas adm360 em
+    /// paralelo. Quando o Postgres escolhe esta sessão como vítima do impasse, basta repetir.
+    /// </summary>
+    private static async Task ExecutarMigrationComRetryAsync(NpgsqlConnection cn, string sql)
+    {
+        for (var tentativa = 1; ; tentativa++)
+        {
+            try
+            {
+                await cn.ExecuteAsync(sql);
+                return;
+            }
+            catch (PostgresException ex) when (ex.SqlState == "40P01" && tentativa < 5)
+            {
+                await Task.Delay(150 * tentativa);
+            }
+        }
     }
 
     [Fact]

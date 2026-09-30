@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Dapper;
 using System.Collections.Generic;
 using Npgsql;
@@ -124,16 +125,13 @@ public sealed class TenantGuardService
         try
         {
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync(@"insert into plantaopro.acessos_negados_log(id, usuario_id, cliente_id, entidade, entidade_id, motivo, ip, perfil, reg_date, reg_status)
-values (gen_random_uuid(), @usuarioId, @clienteId, @entidade, @entidadeId, @motivo, @ip, @perfil, now(), 'A')", new
+            await cn.ExecuteAsync(@"insert into plantaopro.acessos_negados_log(id, tenant_id, codigo, nome, status, dados, criado_em)
+values (gen_random_uuid(), @tenantId, 'ACESSO_NEGADO', @entidade, 'ATIVO', cast(@dados as jsonb), now())", new
             {
-                usuarioId,
-                clienteId,
+                tenantId = clienteId,
                 entidade,
-                entidadeId,
-                motivo = MascararMotivo(motivo),
-                ip,
-                perfil = perfilSeguro
+                // Schema oficial 060: formato genérico + payload em jsonb.
+                dados = JsonSerializer.Serialize(new { entidade, entidade_id = entidadeId, acao, usuario_id = usuarioId, motivo = MascararMotivo(motivo), ip, perfil = perfilSeguro })
             });
         }
         catch (Exception ex)
@@ -241,14 +239,13 @@ public sealed class PermissionGuardService
         try
         {
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-            await cn.ExecuteAsync(@"insert into plantaopro.permissao_logs(id, usuario_id, cliente_id, permissao, autorizado, motivo, reg_date, reg_status)
-values (gen_random_uuid(), @usuarioId, @clienteId, @permissao, @autorizado, @motivo, now(), 'A')", new
+            await cn.ExecuteAsync(@"insert into plantaopro.permissao_logs(id, tenant_id, codigo, nome, status, dados, criado_em)
+values (gen_random_uuid(), @tenantId, 'PERMISSAO', @permissao, 'ATIVO', cast(@dados as jsonb), now())", new
             {
-                usuarioId = usuarioContextService.GetUsuarioId(),
-                clienteId = usuarioContextService.GetClienteId(),
+                // Schema oficial 060: formato genérico + payload em jsonb.
+                tenantId = usuarioContextService.GetClienteId(),
                 permissao,
-                autorizado,
-                motivo
+                dados = JsonSerializer.Serialize(new { usuario_id = usuarioContextService.GetUsuarioId(), permissao, autorizado, motivo })
             });
         }
         catch (Exception ex)

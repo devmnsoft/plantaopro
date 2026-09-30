@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.20.0",
-  "generatedAt": "2026-09-27",
+  "schemaVersion": "v2.21.1",
+  "generatedAt": "2026-09-29",
   "sections": [
     {
       "order": 3,
@@ -833,6 +833,88 @@
           "source": "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
           "dependsOn": [
             "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 66,
+      "name": "Administrativo360 Exportacao Proposta Imutavel v2.21.0",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_cotacao_exportacoes",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 67,
+      "name": "Reconciliação de Auditoria e Observabilidade v2.21.0",
+      "objects": [
+        {
+          "name": "plantaopro.auditoria_observabilidade_reconciliacao",
+          "type": "migration",
+          "category": "CANONICAL_COMPATIBILITY",
+          "required": true,
+          "source": "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql",
+          "dependsOn": [
+            "plantaopro.auditoria_observabilidade"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 68,
+      "name": "Administrativo360 Estados de Transmissão da Exportação v2.21.0",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_cotacao_respostas_transmissao",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 69,
+      "name": "Administrativo360 Eventos Imutáveis v2.21.0",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_eventos",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard",
+            "plantaopro.administrativo360_cirurgia_vales_reconciliacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 70,
+      "name": "Administrativo360 Reafirmação Trigger Validar Tenant v2.21.1",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_validar_tenant",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
+          "dependsOn": [
+            "plantaopro.adm360_cotacoes_xml_dashboard",
+            "plantaopro.adm360_cirurgia_vales_reconciliacao"
           ]
         }
       ]

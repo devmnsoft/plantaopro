@@ -277,6 +277,21 @@ builder.Services.AddScoped<ISavedViewService, SavedViewService>();
 
 var app = builder.Build();
 
+// P4: concilia respostas presas em ENVIANDO por queda do processo no boot (estado honesto; nunca órfão).
+if (!app.Environment.IsEnvironment("Testing") && !string.IsNullOrWhiteSpace(connectionString))
+{
+    try
+    {
+        var recuperadas = await Adm360TransmissaoRecovery.ReconciliarEnviandoAncoradosAsync(connectionString);
+        if (recuperadas > 0)
+            app.Logger.LogWarning("Administrativo 360: {Quantidade} resposta(s) recuperada(s) de ENVIANDO para RESULTADO_DESCONHECIDO no boot.", recuperadas);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning("Administrativo 360: conciliação de ENVIANDO não executada no boot: {Motivo}", ex.Message);
+    }
+}
+
 var provisionDemo = args.Contains("--provision-demo", StringComparer.OrdinalIgnoreCase);
 var resetDemoPasswords = args.Contains("--reset-demo-passwords", StringComparer.OrdinalIgnoreCase);
 if (provisionDemo || resetDemoPasswords)
@@ -314,11 +329,44 @@ else
         "PlantaoPro.Api online")));
 }
 
+// Correlação global: uma única ID por requisição (reaproveita a enviada pelo cliente quando válida),
+// exposta na resposta e propagada como escopo estruturado para todos os logs do pipeline.
+app.Use(async (ctx, next) =>
+{
+    var supplied = ctx.Request.Headers["X-Correlation-ID"].FirstOrDefault();
+    var correlationId = !string.IsNullOrWhiteSpace(supplied) && supplied.Length <= 128
+        ? supplied!
+        : Guid.NewGuid().ToString("N");
+    ctx.Items["CorrelationId"] = correlationId;
+    ctx.Response.Headers["X-Correlation-ID"] = correlationId;
+    var correlationLogger = ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("PlantaoPro.Api");
+    using (correlationLogger.BeginScope(new Dictionary<string, object?> { ["CorrelationId"] = correlationId }))
+    {
+        await next(ctx);
+    }
+});
+
 app.UseExceptionHandler(a => a.Run(async ctx =>
 {
-    ctx.Response.StatusCode = 500;
-    ctx.Response.ContentType = "application/json";
-    await ctx.Response.WriteAsJsonAsync(ApiResponse<string>.Fail("Erro interno ao processar a solicitação.", 500));
+    var correlationId = ctx.Items.TryGetValue("CorrelationId", out var stored) && stored is string storedValue && !string.IsNullOrWhiteSpace(storedValue)
+        ? storedValue
+        : Guid.NewGuid().ToString("N");
+    var error = ctx.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+    if (!ctx.Response.Headers.ContainsKey("X-Correlation-ID"))
+    {
+        ctx.Response.Headers["X-Correlation-ID"] = correlationId;
+    }
+    var exceptionLogger = ctx.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("PlantaoPro.Api.GlobalExceptionHandler");
+    using (exceptionLogger.BeginScope(new Dictionary<string, object?> { ["CorrelationId"] = correlationId }))
+    {
+        exceptionLogger.LogError(error, "Falha técnica ao processar a solicitação CorrelationId={CorrelationId} Method={Method} Endpoint={Endpoint}", correlationId, ctx.Request.Method, ctx.Request.Path.Value ?? "/");
+    }
+    if (!ctx.Response.HasStarted)
+    {
+        ctx.Response.StatusCode = 500;
+        ctx.Response.ContentType = "application/json";
+        await ctx.Response.WriteAsJsonAsync(ApiResponse<string>.Fail("Erro interno ao processar a solicitação.", 500));
+    }
 }));
 
 app.UseAuthentication();

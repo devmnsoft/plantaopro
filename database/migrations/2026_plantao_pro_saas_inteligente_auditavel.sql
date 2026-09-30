@@ -639,6 +639,25 @@ create table if not exists plantaopro.auditoria_lgpd_eventos (
 create index if not exists ix_clientes_status on plantaopro.clientes(status);
 create index if not exists ix_clientes_reg_date on plantaopro.clientes(reg_date);
 create index if not exists ix_planos_status on plantaopro.planos(status);
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.assinatura_uso add column if not exists cliente_id uuid;
+alter table plantaopro.assinatura_uso add column if not exists competencia date;
+alter table plantaopro.assinaturas add column if not exists cliente_id uuid;
+alter table plantaopro.assinaturas add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.auditoria_eventos add column if not exists acao varchar(120);
+alter table plantaopro.auditoria_eventos add column if not exists cliente_id uuid null;
+alter table plantaopro.clientes add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.eventos_sistema add column if not exists cliente_id uuid null;
+alter table plantaopro.eventos_sistema add column if not exists tipo varchar(120);
+alter table plantaopro.faturas_saas add column if not exists cliente_id uuid;
+alter table plantaopro.faturas_saas add column if not exists valor_total numeric(12,2) not null default 0;
+alter table plantaopro.faturas_saas add column if not exists vencimento date;
+alter table plantaopro.logs_operacionais add column if not exists acao varchar(120);
+alter table plantaopro.logs_operacionais add column if not exists cliente_id uuid null;
+alter table plantaopro.pagamentos_saas add column if not exists cliente_id uuid;
+alter table plantaopro.pagamentos_saas add column if not exists valor_pago numeric(12,2) not null default 0;
+alter table plantaopro.planos add column if not exists valor_mensal numeric(12,2) not null default 0;
+
 create index if not exists ix_assinaturas_cliente_status on plantaopro.assinaturas(cliente_id, status);
 create index if not exists ix_assinaturas_reg_date on plantaopro.assinaturas(reg_date);
 create index if not exists ix_assinatura_uso_cliente_competencia on plantaopro.assinatura_uso(cliente_id, competencia);

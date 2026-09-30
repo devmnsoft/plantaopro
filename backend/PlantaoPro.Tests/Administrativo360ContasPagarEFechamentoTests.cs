@@ -58,7 +58,7 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
     [Fact]
     public void VendaRegras_R001_Em2Parcelas_RejeitaPorNaoGerarParcelasMinimasDeCentavo()
     {
-        var ex = Assert.Throws<InvalidOperationException>(() =>
+        var ex = Assert.Throws<Administrativo360BusinessException>(() =>
             VendaRegras.GerarParcelas(0.01m, 2, new DateOnly(2026, 1, 15)));
         Assert.Contains("não é possível dividir", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -96,7 +96,7 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             ValorizacaoRegras.ValidarDesconto(100m, -5m));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ValorizacaoRegras.ValidarDesconto(100m, 105m));
 
         // Desconto válido não lança exceção
@@ -110,10 +110,10 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
     [Fact]
     public void ContasPagarRegras_ValidarAprovacao_ExigeEstadoPendente()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ContasPagarRegras.ValidarAprovacao("APROVADO"));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ContasPagarRegras.ValidarAprovacao("PAGO"));
 
         // Válido se pendente
@@ -126,13 +126,13 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             ContasPagarRegras.ValidarPagamento("APROVADO", 100m, 0m));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ContasPagarRegras.ValidarPagamento("PENDENTE_APROVACAO", 100m, 50m));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ContasPagarRegras.ValidarPagamento("PAGO", 100m, 50m));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             ContasPagarRegras.ValidarPagamento("APROVADO", 100m, 150m));
 
         // Válido
@@ -142,7 +142,7 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
     [Fact]
     public void CaixaRegras_ValidarSaldoSuficiente_BloqueiaSeSaldoContaMenorQueSaida()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             CaixaRegras.ValidarSaldoSuficiente(100m, 150m));
 
         // Não lança se saldo for suficiente
@@ -154,10 +154,10 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
     {
         var dataFechamento = new DateOnly(2026, 9, 20);
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             CaixaRegras.ValidarDataBloqueioFechamento(new DateOnly(2026, 9, 15), dataFechamento));
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<Administrativo360BusinessException>(() =>
             CaixaRegras.ValidarDataBloqueioFechamento(new DateOnly(2026, 9, 20), dataFechamento));
 
         // Lançamento com data posterior é permitido
@@ -571,7 +571,7 @@ public sealed class Administrativo360ContasPagarEFechamentoTests
             CancellationToken.None);
 
         // Tentativa de pagamento com data 2026-09-10 (DENTRO do período fechado) DEVE falhar
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+        var ex = await Assert.ThrowsAsync<Administrativo360BusinessException>(async () =>
         {
             await contasPagarRepo.PagarAsync(tenantId, usuarioId, new PagarTituloCommand(
                 tituloPagarId,

@@ -313,7 +313,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             FOR UPDATE",
             new { c.OrcamentoId, tenantId }, tx, cancellationToken: ct));
 
-        if (atual is null) throw new InvalidOperationException("Orçamento não encontrado.");
+        if (atual is null) throw new Administrativo360BusinessException("Orçamento não encontrado.");
 
         if (OrcamentoCirurgicoRegras.PodeEditar(atual.Situacao))
         {
@@ -418,7 +418,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             FOR UPDATE",
             new { orcamentoId, tenantId }, tx, cancellationToken: ct));
 
-        if (atual is null) throw new InvalidOperationException("Orçamento não encontrado.");
+        if (atual is null) throw new Administrativo360BusinessException("Orçamento não encontrado.");
 
         if (atual.Situacao == "APROVADO")
         {
@@ -427,7 +427,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
         }
 
         if (!OrcamentoCirurgicoRegras.PodeAprovar(atual.Situacao))
-            throw new InvalidOperationException($"Orçamento em situação '{atual.Situacao}' não pode ser aprovado.");
+            throw new Administrativo360BusinessException($"Orçamento em situação '{atual.Situacao}' não pode ser aprovado.");
 
         // Congela versão comercial. Não movimenta estoque nem gera financeiro.
         await cn.ExecuteAsync(new CommandDefinition(@"
@@ -452,7 +452,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             WHERE id = @orcamentoId AND tenant_id = @tenantId AND situacao IN ('RASCUNHO', 'ENVIADO')",
             new { orcamentoId, tenantId, motivo }, cancellationToken: ct));
 
-        if (affected == 0) throw new InvalidOperationException("Orçamento não encontrado ou em situação incompatível.");
+        if (affected == 0) throw new Administrativo360BusinessException("Orçamento não encontrado ou em situação incompatível.");
     }
 
     public async Task CancelarAsync(Guid tenantId, Guid usuarioId, Guid orcamentoId, string motivo, CancellationToken ct)
@@ -470,7 +470,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             WHERE id = @orcamentoId AND tenant_id = @tenantId AND situacao <> 'CANCELADO'",
             new { orcamentoId, tenantId, motivo }, tx, cancellationToken: ct));
 
-        if (affected == 0) throw new InvalidOperationException("Orçamento não encontrado ou já cancelado.");
+        if (affected == 0) throw new Administrativo360BusinessException("Orçamento não encontrado ou já cancelado.");
 
         // Cancelamento do orçamento cancela apenas reservas ainda ATIVAS
         await cn.ExecuteAsync(new CommandDefinition(@"
@@ -567,7 +567,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                 {
                     return; // Retry com mesmo conteúdo: devolução do sucesso sem reexecutar
                 }
-                throw new InvalidOperationException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
+                throw new Administrativo360BusinessException("Conflito de idempotência: a mesma chave foi utilizada com conteúdo divergente.");
             }
 
             var orc = await cn.QuerySingleOrDefaultAsync<OrcamentoHeaderRow>(new CommandDefinition(@"
@@ -577,9 +577,9 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                 FOR UPDATE",
                 new { orcamentoId, tenantId }, tx, cancellationToken: ct));
 
-            if (orc is null) throw new InvalidOperationException("Orçamento não encontrado.");
+            if (orc is null) throw new Administrativo360BusinessException("Orçamento não encontrado.");
             if (!OrcamentoCirurgicoRegras.PodeReservar(orc.Situacao))
-                throw new InvalidOperationException($"Somente orçamento APROVADO pode receber reservas de materiais. Situação atual: {orc.Situacao}.");
+                throw new Administrativo360BusinessException($"Somente orçamento APROVADO pode receber reservas de materiais. Situação atual: {orc.Situacao}.");
 
             // Validação de local ativo do tenant
             var localAtivo = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(
@@ -651,7 +651,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             var saldoNecessidade = orcItem.Quantidade - totalJaReservadoItem;
             if (command.Quantidade > saldoNecessidade)
             {
-                throw new InvalidOperationException($"Quantidade solicitada ({command.Quantidade}) excede a necessidade ainda não atendida do item do orçamento ({saldoNecessidade}).");
+                throw new Administrativo360BusinessException($"Quantidade solicitada ({command.Quantidade}) excede a necessidade ainda não atendida do item do orçamento ({saldoNecessidade}).");
             }
 
             var lockKey = $"{tenantId}:{command.ProdutoId}:{command.LoteId}:{command.LocalId}";
@@ -671,7 +671,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
                 new { tenantId, command.ProdutoId, command.LoteId, command.LocalId }, tx, cancellationToken: ct));
 
             if (available < command.Quantidade)
-                throw new InvalidOperationException("Quantidade solicitada excede o estoque disponível do lote.");
+                throw new Administrativo360BusinessException("Quantidade solicitada excede o estoque disponível do lote.");
 
             var opId = Guid.NewGuid();
             await cn.ExecuteAsync(new CommandDefinition(@"
@@ -712,7 +712,7 @@ public sealed class OrcamentoCirurgicoRepository : Adm360Repository, IOrcamentoC
             new { reservaId, tenantId, orcamentoId }, cancellationToken: ct));
 
         if (affected == 0)
-            throw new InvalidOperationException("Reserva não encontrada ou já encerrada/cancelada.");
+            throw new Administrativo360BusinessException("Reserva não encontrada ou já encerrada/cancelada.");
     }
 
     // Mesma motivação dos demais resumos deste arquivo: classe intermediária absorve a conversão

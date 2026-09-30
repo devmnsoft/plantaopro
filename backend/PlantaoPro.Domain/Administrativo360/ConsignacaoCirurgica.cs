@@ -35,7 +35,7 @@ public static class ConsignacaoCirurgicaRegras
         if (separada < 0)
             throw new ArgumentOutOfRangeException(nameof(separada), "Quantidade separada não pode ser negativa.");
         if (separada > reservada)
-            throw new InvalidOperationException($"Quantidade separada ({separada}) não pode exceder a quantidade reservada ({reservada}).");
+            throw new Administrativo360BusinessException($"Quantidade separada ({separada}) não pode exceder a quantidade reservada ({reservada}).");
     }
 
     public static decimal CalcularPendenteCustodia(decimal expedida, decimal consumida, decimal devolvida, decimal perda)
@@ -47,7 +47,7 @@ public static class ConsignacaoCirurgicaRegras
 
         var totalAtendido = consumida + devolvida + perda;
         if (totalAtendido > expedida)
-            throw new InvalidOperationException($"Soma dos eventos ({totalAtendido}) excede a quantidade expedida ({expedida}).");
+            throw new Administrativo360BusinessException($"Soma dos eventos ({totalAtendido}) excede a quantidade expedida ({expedida}).");
 
         return expedida - totalAtendido;
     }
@@ -57,7 +57,7 @@ public static class ConsignacaoCirurgicaRegras
         if (quantidadeEvento <= 0)
             throw new ArgumentOutOfRangeException(nameof(quantidadeEvento), $"Quantidade do evento {tipoEvento} deve ser positiva.");
         if (quantidadeEvento > pendenteCustodia)
-            throw new InvalidOperationException($"Quantidade do evento {tipoEvento} ({quantidadeEvento}) excede o saldo pendente em custódia ({pendenteCustodia}).");
+            throw new Administrativo360BusinessException($"Quantidade do evento {tipoEvento} ({quantidadeEvento}) excede o saldo pendente em custódia ({pendenteCustodia}).");
     }
 
     public static bool ValidarReconciliacao(IEnumerable<(decimal Expedida, decimal Consumida, decimal Devolvida, decimal Perda)> itens)

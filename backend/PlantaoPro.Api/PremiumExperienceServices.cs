@@ -29,7 +29,7 @@ public sealed class ContextoRepository : IContextoRepository
         const string sql = @"select distinct t.id TenantId,t.cliente_id ClienteId,coalesce(c.nome_fantasia,c.razao_social,'') Cliente,coalesce(t.nome,'') Tenant,coalesce(s.nome,s.codigo,'') Plano,true Ativo
 from plantaopro.tenants t
 left join plantaopro.clientes c on c.id=t.cliente_id and c.reg_status='A'
-left join lateral(select nome,codigo from plantaopro.assinaturas s where s.tenant_id=t.id and s.status='ATIVO' and s.reg_status='A' order by s.criado_em desc limit 1)s on true
+left join lateral(select nome,codigo from plantaopro.assinaturas s where s.tenant_id=t.id and s.status='ATIVA' and s.reg_status='A' order by s.criado_em desc limit 1)s on true
 where t.reg_status='A' and t.status='ATIVO' and (c.id is null or c.status='ATIVO')
   and (@globalAccess or exists(
       select 1 from plantaopro.usuario_tenant_acessos a

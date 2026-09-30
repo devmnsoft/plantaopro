@@ -56,8 +56,31 @@ ALTER TABLE plantaopro.usuario_permissoes_especiais ADD COLUMN IF NOT EXISTS ten
 UPDATE plantaopro.permissoes SET codigo = upper(regexp_replace(plantaopro.normalizar_sem_acentos(coalesce(nullif(codigo,''), nullif(nome,''), id::text)::text), '[^A-Za-z0-9]+', '_', 'g')) WHERE codigo IS NULL OR btrim(codigo)='';
 UPDATE plantaopro.permissoes SET modulo = coalesce(nullif(modulo,''), split_part(codigo,'_',1), 'GERAL'), acao = coalesce(nullif(acao,''), nullif(array_to_string((regexp_split_to_array(codigo,'_'))[2:array_length(regexp_split_to_array(codigo,'_'),1)], '_'), ''), 'ACESSAR'), nome = coalesce(nullif(nome,''), codigo), descricao = coalesce(descricao,''), sensivel = coalesce(sensivel,false), status = coalesce(nullif(status,''),'ATIVO'), reg_status = coalesce(nullif(reg_status,''),'A'), reg_date = coalesce(reg_date, now());
 WITH dup AS (SELECT id, row_number() OVER (PARTITION BY lower(codigo), reg_status ORDER BY reg_date, id) rn FROM plantaopro.permissoes WHERE reg_status='A') UPDATE plantaopro.permissoes p SET codigo = p.codigo || '_' || left(p.id::text,8), reg_update=now() FROM dup WHERE dup.id=p.id AND dup.rn>1;
-INSERT INTO plantaopro.modulos_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(plantaopro.normalizar_sem_acentos(modulo::text), '[^A-Za-z0-9]+', '_', 'g')), modulo FROM plantaopro.permissoes p WHERE p.modulo IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A');
-INSERT INTO plantaopro.acoes_sistema(codigo,nome) SELECT DISTINCT upper(regexp_replace(plantaopro.normalizar_sem_acentos(acao::text), '[^A-Za-z0-9]+', '_', 'g')), acao FROM plantaopro.permissoes p WHERE p.acao IS NOT NULL AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A');
+-- WP1 j11: dedupe canonico por codigo derivado — as permissões mesclam convenções de separador nos codigos
+-- (ex.: 'ADM360.APROVAR' dos self-service x 'ADM360:APROVAR_DESPESA' da base demo); SELECT DISTINCT (der,nome)
+-- deixava duas linhas com o mesmo codigo derivado no proprio INSERT, violando o indice unico parcial.
+INSERT INTO plantaopro.modulos_sistema(codigo,nome)
+SELECT t.der, t.nome
+FROM (
+    SELECT s.der, s.nome, row_number() OVER (PARTITION BY s.der ORDER BY s.nome) AS rn
+    FROM (
+        SELECT upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g')) AS der, p.modulo AS nome
+        FROM plantaopro.permissoes p
+        WHERE p.modulo IS NOT NULL
+    ) s
+) t
+WHERE t.rn = 1 AND NOT EXISTS (SELECT 1 FROM plantaopro.modulos_sistema m WHERE lower(m.codigo)=lower(t.der) AND m.reg_status='A');
+INSERT INTO plantaopro.acoes_sistema(codigo,nome)
+SELECT t.der, t.nome
+FROM (
+    SELECT s.der, s.nome, row_number() OVER (PARTITION BY s.der ORDER BY s.nome) AS rn
+    FROM (
+        SELECT upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.acao::text), '[^A-Za-z0-9]+', '_', 'g')) AS der, p.acao AS nome
+        FROM plantaopro.permissoes p
+        WHERE p.acao IS NOT NULL
+    ) s
+) t
+WHERE t.rn = 1 AND NOT EXISTS (SELECT 1 FROM plantaopro.acoes_sistema a WHERE lower(a.codigo)=lower(t.der) AND a.reg_status='A');
 UPDATE plantaopro.permissoes p SET modulo_id=m.id FROM plantaopro.modulos_sistema m WHERE p.modulo_id IS NULL AND lower(m.codigo)=lower(upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.modulo::text), '[^A-Za-z0-9]+', '_', 'g'))) AND m.reg_status='A';
 UPDATE plantaopro.permissoes p SET acao_id=a.id FROM plantaopro.acoes_sistema a WHERE p.acao_id IS NULL AND lower(a.codigo)=lower(upper(regexp_replace(plantaopro.normalizar_sem_acentos(p.acao::text), '[^A-Za-z0-9]+', '_', 'g'))) AND a.reg_status='A';
 DO $$ BEGIN IF EXISTS (SELECT 1 FROM plantaopro.permissoes WHERE codigo IS NULL OR modulo_id IS NULL OR acao_id IS NULL) THEN RAISE EXCEPTION 'Permissões canônicas inválidas: codigo/modulo_id/acao_id nulos'; END IF; END $$;

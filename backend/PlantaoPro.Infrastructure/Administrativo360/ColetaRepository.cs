@@ -1,5 +1,6 @@
 using Dapper;
 using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
 
@@ -64,7 +65,7 @@ public sealed class ColetaRepository : Adm360Repository, IColetaRepository
                 return; // Reenvio idempotente com mesmo conteúdo
             }
 
-            throw new InvalidOperationException("Conflito: scan_id já registrado com conteúdo divergente.");
+            throw new Administrativo360BusinessException("Conflito: scan_id já registrado com conteúdo divergente.");
         }
 
         // Validação de autorização e situação da tarefa

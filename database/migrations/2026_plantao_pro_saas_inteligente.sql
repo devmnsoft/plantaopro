@@ -44,6 +44,9 @@ CREATE TABLE IF NOT EXISTS plantaopro.plano_recursos (
     reg_date timestamptz NOT NULL DEFAULT now(),
     reg_update timestamptz
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.plano_recursos add column if not exists codigo varchar(80);
+
 
 ALTER TABLE plantaopro.assinaturas ADD COLUMN IF NOT EXISTS data_trial_fim timestamptz;
 ALTER TABLE plantaopro.assinaturas ADD COLUMN IF NOT EXISTS periodicidade varchar(20) NOT NULL DEFAULT 'MENSAL';
@@ -150,6 +153,9 @@ CREATE TABLE IF NOT EXISTS plantaopro.customer_success_interacoes (
     reg_status char(1) NOT NULL DEFAULT 'A',
     reg_date timestamptz NOT NULL DEFAULT now()
 );
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.customer_success_interacoes add column if not exists data_interacao timestamptz NOT NULL DEFAULT now();
+
 
 CREATE TABLE IF NOT EXISTS plantaopro.customer_success_planos_acao (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -218,6 +224,35 @@ CREATE TABLE IF NOT EXISTS plantaopro.cliente_limites_uso (
 );
 
 -- Índices.
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.assinatura_historico add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.assinatura_historico add column if not exists reg_date timestamptz NOT NULL DEFAULT now();
+alter table plantaopro.assinatura_uso add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.assinatura_uso add column if not exists competencia date NOT NULL DEFAULT date_trunc('month', now())::date;
+alter table plantaopro.assinatura_uso add column if not exists recurso varchar(80) NOT NULL;
+alter table plantaopro.assinaturas add column if not exists cliente_id uuid null;
+alter table plantaopro.assinaturas add column if not exists periodicidade text null;
+alter table plantaopro.assinaturas add column if not exists plano_id uuid null;
+alter table plantaopro.assinaturas add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.assinaturas add column if not exists reg_status char(1) not null default 'A';
+alter table plantaopro.clientes add column if not exists cnpj text null;
+alter table plantaopro.clientes add column if not exists reg_date timestamp not null default now();
+alter table plantaopro.clientes add column if not exists reg_status char(1) not null default 'A';
+alter table plantaopro.clientes add column if not exists saude_status text null;
+alter table plantaopro.faturas_saas add column if not exists cliente_id uuid NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists competencia date NOT NULL;
+alter table plantaopro.faturas_saas add column if not exists reg_status char(1) NOT NULL DEFAULT 'A';
+alter table plantaopro.faturas_saas add column if not exists valor numeric(14,2) NOT NULL DEFAULT 0;
+alter table plantaopro.faturas_saas add column if not exists valor_pago numeric(14,2);
+alter table plantaopro.faturas_saas add column if not exists vencimento date NOT NULL;
+alter table plantaopro.pagamentos_saas add column if not exists fatura_id uuid NOT NULL;
+alter table plantaopro.pagamentos_saas add column if not exists reg_status char(1) NOT NULL DEFAULT 'A';
+alter table plantaopro.planos add column if not exists limite_medicos numeric(14,2) not null default 0;
+alter table plantaopro.planos add column if not exists ordem_exibicao text null;
+alter table plantaopro.planos add column if not exists reg_status char(1) not null default 'A';
+alter table plantaopro.planos add column if not exists valor_anual text null;
+alter table plantaopro.planos add column if not exists valor_mensal numeric(14,2) not null default 0;
+
 CREATE UNIQUE INDEX IF NOT EXISTS ux_clientes_cnpj_ativo ON plantaopro.clientes(cnpj) WHERE reg_status='A' AND cnpj IS NOT NULL AND cnpj <> '';
 CREATE INDEX IF NOT EXISTS ix_clientes_status_reg_date ON plantaopro.clientes(status, reg_date);
 CREATE INDEX IF NOT EXISTS ix_clientes_saude_status ON plantaopro.clientes(saude_status, reg_status);
@@ -287,6 +322,9 @@ END $$;
 
 DO $$
 BEGIN
+    -- WP1 j11: reconcilia status legado 'ATIVO' (convencao da plataforma escrita por seeds dev)
+    -- para o vocabulario SaaS antes de habilitar o check; sem isso o upgrade falha em bases com dados reais (23514).
+    UPDATE plantaopro.assinaturas SET status='ATIVA' WHERE upper(btrim(coalesce(status,''))) = 'ATIVO';
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='ck_assinaturas_status_saas' AND conrelid='plantaopro.assinaturas'::regclass) THEN
         ALTER TABLE plantaopro.assinaturas ADD CONSTRAINT ck_assinaturas_status_saas CHECK (status IN ('TRIAL','ATIVA','SUSPENSA','CANCELADA','VENCIDA'));
     END IF;
@@ -300,6 +338,9 @@ BEGIN
 END $$;
 
 CREATE UNIQUE INDEX IF NOT EXISTS ux_assinaturas_cliente_ativa_trial ON plantaopro.assinaturas(cliente_id) WHERE reg_status='A' AND status IN ('ATIVA','TRIAL');
+
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.assinatura_historico add column if not exists assinatura_id uuid null;
 
 DO $$
 BEGIN
@@ -321,6 +362,9 @@ BEGIN
         ALTER TABLE plantaopro.faturas_saas ADD CONSTRAINT fk_faturas_saas_cliente FOREIGN KEY (cliente_id) REFERENCES plantaopro.clientes(id);
     END IF;
 END $$;
+
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.faturas_saas add column if not exists assinatura_id uuid null;
 
 DO $$
 BEGIN
@@ -356,6 +400,9 @@ BEGIN
         ALTER TABLE plantaopro.fatura_itens ADD CONSTRAINT fk_fatura_itens_fatura FOREIGN KEY (fatura_id) REFERENCES plantaopro.faturas_saas(id);
     END IF;
 END $$;
+
+-- WP1 j11: reconciliacao de shape para upgrade sobre bases com colunas legadas ausentes.
+alter table plantaopro.pagamentos_saas add column if not exists fatura_id uuid null;
 
 DO $$
 BEGIN

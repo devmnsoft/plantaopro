@@ -1,6 +1,7 @@
 using Dapper;
 using Npgsql;
 using PlantaoPro.Application.Administrativo360;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
 
@@ -58,7 +59,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                     )", new { tenantId, normDoc }, cancellationToken: ct));
 
                 if (docExiste)
-                    throw new InvalidOperationException("Já existe um parceiro cadastrado com este documento neste cliente.");
+                    throw new Administrativo360BusinessException("Já existe um parceiro cadastrado com este documento neste cliente.");
             }
 
             try
@@ -71,7 +72,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
                 // Backstop em banco (ux_adm360_parceiro_documento) para a janela TOCTOU do pré-checagem.
-                throw new InvalidOperationException("Já existe um parceiro cadastrado com este documento neste cliente.");
+                throw new Administrativo360BusinessException("Já existe um parceiro cadastrado com este documento neste cliente.");
             }
 
             return novoId;
@@ -99,7 +100,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                 )", new { tenantId, normDoc, targetId }, cancellationToken: ct));
 
             if (docDuplicado)
-                throw new InvalidOperationException("Já existe outro parceiro cadastrado com este documento neste cliente.");
+                throw new Administrativo360BusinessException("Já existe outro parceiro cadastrado com este documento neste cliente.");
         }
 
         try
@@ -122,7 +123,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         catch (PostgresException ex) when (ex.SqlState == "23505")
         {
             // Backstop em banco (ux_adm360_parceiro_documento) para a janela TOCTOU do pré-checagem.
-            throw new InvalidOperationException("Já existe outro parceiro cadastrado com este documento neste cliente.");
+            throw new Administrativo360BusinessException("Já existe outro parceiro cadastrado com este documento neste cliente.");
         }
 
         return targetId;
@@ -187,7 +188,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                 )", new { tenantId, normSku }, cancellationToken: ct));
 
             if (skuExiste)
-                throw new InvalidOperationException("Já existe um produto com este SKU neste cliente.");
+                throw new Administrativo360BusinessException("Já existe um produto com este SKU neste cliente.");
 
             try
             {
@@ -199,7 +200,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
                 // Backstop em banco (unique(tenant_id,sku)) para a janela TOCTOU do pré-checagem.
-                throw new InvalidOperationException("Já existe um produto com este SKU neste cliente.");
+                throw new Administrativo360BusinessException("Já existe um produto com este SKU neste cliente.");
             }
 
             return novoId;
@@ -231,7 +232,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                 )", new { targetId, tenantId }, cancellationToken: ct));
 
             if (temMovimentacao)
-                throw new InvalidOperationException("Não é permitido alterar unidade de medida, controle de lote ou inspeção de produtos com movimentação de estoque já registrada.");
+                throw new Administrativo360BusinessException("Não é permitido alterar unidade de medida, controle de lote ou inspeção de produtos com movimentação de estoque já registrada.");
         }
 
         // Validação de duplicidade de SKU para outro ID
@@ -242,7 +243,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             )", new { tenantId, normSku, targetId }, cancellationToken: ct));
 
         if (skuDuplicado)
-            throw new InvalidOperationException("Já existe outro produto com este SKU neste cliente.");
+            throw new Administrativo360BusinessException("Já existe outro produto com este SKU neste cliente.");
 
         try
         {
@@ -265,7 +266,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         catch (PostgresException ex) when (ex.SqlState == "23505")
         {
             // Backstop em banco (unique(tenant_id,sku)) para a janela TOCTOU do pré-checagem.
-            throw new InvalidOperationException("Já existe outro produto com este SKU neste cliente.");
+            throw new Administrativo360BusinessException("Já existe outro produto com este SKU neste cliente.");
         }
 
         return targetId;
@@ -330,7 +331,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                 )", new { tenantId, normCodigo }, cancellationToken: ct));
 
             if (codigoExiste)
-                throw new InvalidOperationException("Já existe um local de estoque com este código neste cliente.");
+                throw new Administrativo360BusinessException("Já existe um local de estoque com este código neste cliente.");
 
             try
             {
@@ -342,7 +343,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
                 // Backstop em banco (unique(tenant_id,codigo)) para a janela TOCTOU do pré-checagem.
-                throw new InvalidOperationException("Já existe um local de estoque com este código neste cliente.");
+                throw new Administrativo360BusinessException("Já existe um local de estoque com este código neste cliente.");
             }
 
             return novoId;
@@ -368,7 +369,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             )", new { tenantId, normCodigo, targetId }, cancellationToken: ct));
 
         if (codigoDuplicado)
-            throw new InvalidOperationException("Já existe outro local de estoque com este código neste cliente.");
+            throw new Administrativo360BusinessException("Já existe outro local de estoque com este código neste cliente.");
 
         try
         {
@@ -387,7 +388,7 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         catch (PostgresException ex) when (ex.SqlState == "23505")
         {
             // Backstop em banco (unique(tenant_id,codigo)) para a janela TOCTOU do pré-checagem.
-            throw new InvalidOperationException("Já existe outro local de estoque com este código neste cliente.");
+            throw new Administrativo360BusinessException("Já existe outro local de estoque com este código neste cliente.");
         }
 
         return targetId;

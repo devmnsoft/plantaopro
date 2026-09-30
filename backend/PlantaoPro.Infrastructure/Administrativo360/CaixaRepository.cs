@@ -156,7 +156,7 @@ public sealed class CaixaRepository : Adm360Repository, ICaixaRepository
             throw new ArgumentException("Data inicial do extrato não pode ser maior que a data final.");
 
         var conta = await ObterContaPorIdAsync(tenantId, contaId, ct);
-        if (conta is null) throw new InvalidOperationException("Conta financeira não encontrada.");
+        if (conta is null) throw new Administrativo360BusinessException("Conta financeira não encontrada.");
 
         await using var cn = Connection();
 
@@ -556,7 +556,7 @@ public sealed class CaixaRepository : Adm360Repository, ICaixaRepository
             new { command.FechamentoId, tenantId, command.Motivo, usuarioId }, cancellationToken: ct));
 
         if (rows == 0)
-            throw new InvalidOperationException("Fechamento não encontrado ou não está fechado.");
+            throw new Administrativo360BusinessException("Fechamento não encontrado ou não está fechado.");
     }
 
     public async Task<DateOnly?> ObterUltimaDataFechamentoAsync(Guid tenantId, Guid contaId, CancellationToken ct)

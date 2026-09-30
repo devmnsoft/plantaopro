@@ -4,6 +4,7 @@ using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Infrastructure.Administrativo360;
 using PlantaoPro.Tests.Infrastructure;
 using Xunit;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Tests;
 
@@ -238,7 +239,7 @@ public sealed class Administrativo360FiltrosOpcionaisTests
             _caixa.ExtratoContaAsync(TenantA, ContaCaixa, new DateOnly(2026, 3, 1), new DateOnly(2026, 1, 1), CancellationToken.None));
         Assert.Contains("não pode ser maior", ex.Message);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             _caixa.ExtratoContaAsync(TenantA, Guid.NewGuid(), null, null, CancellationToken.None));
     }
 
@@ -404,7 +405,7 @@ public sealed class Administrativo360FiltrosOpcionaisTests
         Assert.Empty(await _documentos.ListarDocumentosAsync(TenantB));
 
         // A conta do tenant A não é visível ao tenant B.
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             _caixa.ExtratoContaAsync(TenantB, ContaCaixa, null, null, CancellationToken.None));
     }
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Security;
+using PlantaoPro.Web.Services.Security;
 using PlantaoPro.CrossCutting.Security;
 using System.Net;
 using System.Net.Http.Json;
@@ -21,13 +22,14 @@ public sealed class AccountController : Controller
     private readonly IPrimaryRoleResolver _primaryRoleResolver;
     private readonly IAccessScopeResolver _accessScopeResolver;
     private readonly ITenantContextResolver _tenantContextResolver;
+    private readonly IModuleAccessService _moduleAccess;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
         NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
-    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver)
+    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver, IModuleAccessService moduleAccess)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -35,9 +37,13 @@ public sealed class AccountController : Controller
         _primaryRoleResolver = primaryRoleResolver;
         _accessScopeResolver = accessScopeResolver;
         _tenantContextResolver = tenantContextResolver;
+        _moduleAccess = moduleAccess;
     }
 
-    [HttpGet]
+    // Template explícito nos dois overloads: sem ele, a geração de URLs para
+    // Url.Action("Login","Account") era resolvida como "/" (endpoint raiz da landing),
+    // quebrando todos os links "Entrar"/"Ir para login" do layout público.
+    [HttpGet("Account/Login")]
     [AllowAnonymous]
     public IActionResult Login(string? returnUrl = null)
     {
@@ -46,7 +52,7 @@ public sealed class AccountController : Controller
         return View(new LoginViewModel());
     }
 
-    [HttpPost]
+    [HttpPost("Account/Login")]
     [AllowAnonymous]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null, CancellationToken cancellationToken = default)
@@ -328,6 +334,20 @@ public sealed class AccountController : Controller
     [AllowAnonymous]
     public IActionResult AccessDenied(string? module = null, string? reason = null)
     {
+        // Quando a negação é disparada por [Authorize(Roles)], o middleware de cookie
+        // redireciona para o AccessDeniedPath levando apenas o ReturnUrl e perde os
+        // diagnósticos do guard de rota. Nesses casos, derivamos módulo e causa do
+        // controller de origem para exibir um diagnóstico por causa.
+        if (User.Identity?.IsAuthenticated == true && string.IsNullOrEmpty(module))
+        {
+            var returnUrl = Request.Query["ReturnUrl"].ToString();
+            var segment = returnUrl.TrimStart('/').Split('/', 2)[0];
+            if (!string.IsNullOrEmpty(segment) && SaasRouteGuardFilter.TryResolveModule(segment, out var derived))
+            {
+                module = derived;
+                reason = _moduleAccess.IsModuleEnabled(derived) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO";
+            }
+        }
         ViewBag.Module = module;
         ViewBag.Reason = reason;
         return View();

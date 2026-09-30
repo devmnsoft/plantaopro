@@ -190,7 +190,10 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
         END IF;
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='versao') THEN
             ALTER TABLE plantaopro.schema_migrations ALTER COLUMN versao DROP NOT NULL;
-            UPDATE plantaopro.schema_migrations SET version = COALESCE(version, versao) WHERE version IS NULL;
+            -- Legado: versao pode ser texto vazio (''); BTRIM/NULLIF evita duas linhas com version='' no indice unico.
+            UPDATE plantaopro.schema_migrations
+               SET version = COALESCE(NULLIF(BTRIM(version), ''), NULLIF(BTRIM(versao), ''))
+             WHERE version IS NULL OR BTRIM(COALESCE(version, '')) = '';
         END IF;
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='nome') THEN
             ALTER TABLE plantaopro.schema_migrations ALTER COLUMN nome DROP NOT NULL;
@@ -203,7 +206,10 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
             ALTER TABLE plantaopro.schema_migrations ALTER COLUMN status DROP NOT NULL;
         END IF;
         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='schema_migrations' AND column_name='id' AND data_type='text') THEN
-            UPDATE plantaopro.schema_migrations SET version = COALESCE(version, id) WHERE version IS NULL;
+            -- Legado: id text pode conter o nome da migration; vazio nao deve virar version duplicada.
+            UPDATE plantaopro.schema_migrations
+               SET version = COALESCE(NULLIF(BTRIM(version), ''), NULLIF(BTRIM(id), ''))
+             WHERE version IS NULL OR BTRIM(COALESCE(version, '')) = '';
         END IF;
     END $$;
     CREATE UNIQUE INDEX IF NOT EXISTS ux_schema_migrations_version ON plantaopro.schema_migrations(version);

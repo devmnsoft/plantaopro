@@ -1,6 +1,7 @@
 using System.Data;
 using Dapper;
 using Npgsql;
+using PlantaoPro.Domain.Administrativo360;
 
 namespace PlantaoPro.Infrastructure.Administrativo360;
 
@@ -49,7 +50,7 @@ public abstract class Adm360Repository
             tx,
             cancellationToken: ct));
         if (emInventario)
-            throw new InvalidOperationException("Movimentação bloqueada: o local está com inventário ativo em contagem ou revisão.");
+            throw new Administrativo360BusinessException("Movimentação bloqueada: o local está com inventário ativo em contagem ou revisão.");
     }
 
     protected static async Task BloquearChavesDeterministasAsync(NpgsqlConnection cn, NpgsqlTransaction tx, IEnumerable<string> lockKeys, CancellationToken ct)

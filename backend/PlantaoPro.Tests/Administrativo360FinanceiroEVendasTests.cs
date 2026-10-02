@@ -392,6 +392,303 @@ public sealed class Administrativo360FinanceiroEVendasTests
     }
 
     // =========================================================================
+    // SEÇÃO 22 — B4 (J12): CENÁRIO FINANCEIRO OFICIAL 1000 / 400 -> 600 -> 0
+    //             -> ESTORNO DA 2ª LIQUIDAÇÃO -> 600
+    // Origem (valorização de vale) -> título -> liquidação parcial/total ->
+    // caixa -> relatório -> estorno rastreável e idempotente.
+    // =========================================================================
+
+    [Fact]
+    public async Task Secao22_CenarioB4_Titulo1000_LiquidarParcial_Quitado_EstornarSegundaBaixa()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+
+        var tenantId = Guid.NewGuid();
+        var usuarioId = Guid.NewGuid();
+        var hospitalId = Guid.NewGuid();
+        var pagadorId = Guid.NewGuid();
+        var produtoId = Guid.NewGuid();
+        var loteId = Guid.NewGuid();
+        var localCdId = Guid.NewGuid();
+        var localHospId = Guid.NewGuid();
+        var orcamentoId = Guid.NewGuid();
+        var cirurgiaId = Guid.NewGuid();
+        var valeId = Guid.NewGuid();
+        var valeItemId = Guid.NewGuid();
+        var contaBancariaId = Guid.NewGuid();
+
+        await using var cn = new NpgsqlConnection(cs);
+        await cn.OpenAsync();
+
+        // 4 unidades consumidas x R$ 250,00 = venda R$ 1.000,00; custo 4 x R$ 100,00 = R$ 400,00
+        await cn.ExecuteAsync(@"
+            INSERT INTO plantaopro.tenants(id, tenant_id, codigo, nome, status)
+            VALUES(@tenantId, @tenantId, 'tenant-secao-22', 'Tenant Teste Seção 22', 'ATIVO')
+            ON CONFLICT (id) DO NOTHING;
+
+            INSERT INTO plantaopro.adm360_parceiros(id, tenant_id, nome, documento, fornecedor, ativo)
+            VALUES
+                (@hospitalId, @tenantId, 'Hospital Geral Seção 22', '11111111000221', false, true),
+                (@pagadorId, @tenantId, 'Convênio Pagador Seção 22', '22222222000222', false, true);
+
+            INSERT INTO plantaopro.adm360_locais(id, tenant_id, codigo, nome, tipo)
+            VALUES
+                (@localCdId, @tenantId, 'CD-S22', 'Centro Distribuicao S22', 'INTERNO'),
+                (@localHospId, @tenantId, 'HOSP-S22', 'Hospital Custodia S22', 'EXTERNO');
+
+            INSERT INTO plantaopro.adm360_produtos(id, tenant_id, sku, nome, unidade, preco_custo, controla_lote)
+            VALUES(@produtoId, @tenantId, 'SKU-S22', 'Material S22', 'UN', 100.00, true);
+
+            INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade, custo_unitario)
+            VALUES(@loteId, @tenantId, @produtoId, 'LOTE-S22', date '2028-12-31', 100.00);
+
+            INSERT INTO plantaopro.adm360_orcamentos(
+                id, tenant_id, numero, revisao, hospital_id, procedimento, responsavel_financeiro_id,
+                vendedor_id, data_prevista, validade, situacao, total_produtos, desconto_geral, total_geral, created_by
+            ) VALUES(
+                @orcamentoId, @tenantId, 'ORC-S22-001', 1, @hospitalId, 'Procedimento Seção 22', @pagadorId,
+                @usuarioId, date '2026-10-12', date '2026-10-22', 'APROVADO', 1000.00, 0, 1000.00, @usuarioId
+            );
+
+            INSERT INTO plantaopro.adm360_orcamento_itens(
+                id, tenant_id, orcamento_id, produto_id, quantidade, preco_unitario, desconto, total
+            ) VALUES(
+                gen_random_uuid(), @tenantId, @orcamentoId, @produtoId, 4, 250.00, 0, 1000.00
+            );
+
+            INSERT INTO plantaopro.adm360_cirurgias(
+                id, tenant_id, numero, hospital_id, procedimento, data_prevista, hora_prevista,
+                local_destino_id, orcamento_id, orcamento_revisao, responsavel_id, situacao, created_by
+            ) VALUES(
+                @cirurgiaId, @tenantId, 'CIR-S22-001', @hospitalId, 'Procedimento Seção 22', date '2026-10-12', time '08:00',
+                @localHospId, @orcamentoId, 1, @usuarioId, 'REALIZADA', @usuarioId
+            );
+
+            -- Vale: 4 expedidas e 4 consumidas (sem devolução) -> RECONCILIADO
+            INSERT INTO plantaopro.adm360_vales(
+                id, tenant_id, numero, cirurgia_id, orcamento_id, orcamento_revisao, hospital_id,
+                local_origem_id, local_destino_id, data_saida_prevista, data_saida_efetiva, data_reconciliacao,
+                situacao, situacao_financeira, created_by
+            ) VALUES(
+                @valeId, @tenantId, 'VAL-S22-001', @cirurgiaId, @orcamentoId, 1, @hospitalId,
+                @localCdId, @localHospId, date '2026-10-11', now() - interval '2 days', now() - interval '1 day',
+                'RECONCILIADO', 'PENDENTE_VALORIZACAO', @usuarioId
+            );
+
+            INSERT INTO plantaopro.adm360_vale_itens(
+                id, tenant_id, vale_id, produto_id, lote_id, quantidade_solicitada, quantidade_separada,
+                quantidade_expedida, quantidade_consumida, quantidade_devolvida, quantidade_perda, preco_unitario
+            ) VALUES(
+                @valeItemId, @tenantId, @valeId, @produtoId, @loteId, 4, 4, 4, 4, 0, 0, 250.00
+            );
+
+            INSERT INTO plantaopro.adm360_contas_financeiras(
+                id, tenant_id, nome, tipo, banco, agencia, conta, saldo_inicial, ativo, created_at
+            ) VALUES(
+                @contaBancariaId, @tenantId, 'Conta Movimento Seção 22', 'BANCO', '001', '123', '789', 0.00, true, now()
+            );
+        ", new
+        {
+            tenantId, usuarioId, hospitalId, pagadorId,
+            produtoId, loteId, localCdId, localHospId, orcamentoId, cirurgiaId, valeId, valeItemId, contaBancariaId
+        });
+
+        var valorizacaoRepo = new ValorizacaoRepository(cs);
+        var vendaRepo = new VendaRepository(cs);
+        var contasReceberRepo = new ContasReceberRepository(cs);
+        var caixaRepo = new CaixaRepository(cs);
+        var relatoriosRepo = new Adm360FinanceiroRelatoriosRepository(cs);
+
+        // ---------------------------------------------------------------------
+        // PASSO A. Valorizar o vale: venda prevista R$ 1.000; custo R$ 400.
+        // ---------------------------------------------------------------------
+        var previa = await valorizacaoRepo.ObterPreviaAsync(tenantId, valeId, CancellationToken.None);
+        Assert.NotNull(previa);
+        Assert.Empty(previa.Pendencias);
+        Assert.Equal(1000.00m, previa.TotalBruto);
+        Assert.Equal(1000.00m, previa.TotalLiquido);
+        Assert.Equal(400.00m, previa.TotalCusto);
+
+        var valorizacaoId = await valorizacaoRepo.ValorizarAsync(tenantId, usuarioId, new ValorizarValeCommand(
+            valeId, pagadorId, usuarioId,
+            ComissaoPercentual: 5.0m,
+            DescontoGeral: 0m,
+            IdempotencyKey: $"VAL-S22-{Guid.NewGuid():N}",
+            Observacoes: "Valorização teste Seção 22 (B4)"
+        ), CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, valorizacaoId);
+
+        var valSitFin = await cn.ExecuteScalarAsync<string>(
+            "SELECT situacao_financeira FROM plantaopro.adm360_vales WHERE id = @valeId", new { valeId });
+        Assert.Equal("VALORIZADO", valSitFin);
+
+        // ---------------------------------------------------------------------
+        // PASSO B. Confirmar a venda: título único R$ 1.000; caixa permanece 0.
+        // ---------------------------------------------------------------------
+        var vendaId = await vendaRepo.ConfirmarVendaAsync(tenantId, usuarioId, new ConfirmarVendaCommand(
+            valorizacaoId,
+            CondicaoPagamento: "A_VISTA",
+            QuantidadeParcelas: 1,
+            IdempotencyKey: $"VEN-S22-{Guid.NewGuid():N}",
+            Observacoes: "Venda teste Seção 22 (B4)"
+        ), CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, vendaId);
+
+        var venda = await vendaRepo.ObterPorIdAsync(tenantId, vendaId, CancellationToken.None);
+        Assert.NotNull(venda);
+        Assert.Equal(1000.00m, venda.TotalLiquido);
+        Assert.Equal(400.00m, venda.TotalCusto);
+        Assert.Equal(50.00m, venda.ComissaoPrevista);
+        Assert.Single(venda.Titulos);
+
+        var titulo = venda.Titulos[0];
+        Assert.Equal(1000.00m, titulo.ValorPrincipal);
+        Assert.Equal(0.00m, titulo.ValorRecebido);
+        Assert.Equal(1000.00m, titulo.SaldoAberto);
+        Assert.Equal("ABERTO", titulo.Situacao);
+
+        var contaZero = await caixaRepo.ObterContaPorIdAsync(tenantId, contaBancariaId, CancellationToken.None);
+        Assert.NotNull(contaZero);
+        Assert.Equal(0.00m, contaZero.SaldoAtual);
+
+        // ---------------------------------------------------------------------
+        // PASSO C. Liquidação parcial de R$ 400:
+        // Título PARCIAL saldo R$ 600; Caixa +R$ 400; idempotente na mesma chave.
+        // ---------------------------------------------------------------------
+        var rec1Cmd = new ReceberTituloCommand(
+            titulo.Id, contaBancariaId, DateOnly.FromDateTime(DateTime.UtcNow),
+            Valor: 400.00m,
+            MeioPagamento: "PIX",
+            Referencia: "COMP-B4-001",
+            IdempotencyKey: $"REC-B4-1-{Guid.NewGuid():N}"
+        );
+
+        var baixa1Id = await contasReceberRepo.ReceberAsync(tenantId, usuarioId, rec1Cmd, CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, baixa1Id);
+
+        var titApos1 = await contasReceberRepo.ObterPorIdAsync(tenantId, titulo.Id, CancellationToken.None);
+        Assert.NotNull(titApos1);
+        Assert.Equal(400.00m, titApos1.ValorRecebido);
+        Assert.Equal(600.00m, titApos1.SaldoAberto);
+        Assert.Equal("PARCIAL", titApos1.Situacao);
+
+        var contaApos1 = await caixaRepo.ObterContaPorIdAsync(tenantId, contaBancariaId, CancellationToken.None);
+        Assert.NotNull(contaApos1);
+        Assert.Equal(400.00m, contaApos1.SaldoAtual);
+
+        // Idempotência da 1ª liquidação: reenvio com a MESMA chave não duplica.
+        var baixa1RetryId = await contasReceberRepo.ReceberAsync(tenantId, usuarioId, rec1Cmd, CancellationToken.None);
+        Assert.Equal(baixa1Id, baixa1RetryId);
+
+        var titAposRetry = await contasReceberRepo.ObterPorIdAsync(tenantId, titulo.Id, CancellationToken.None);
+        Assert.Equal(400.00m, titAposRetry.ValorRecebido);
+        Assert.Equal(600.00m, titAposRetry.SaldoAberto);
+
+        // ---------------------------------------------------------------------
+        // PASSO D. Liquidação total dos R$ 600 restantes:
+        // Título QUITADO saldo 0; Caixa acumulado R$ 1.000; comissão integral R$ 50.
+        // ---------------------------------------------------------------------
+        var rec2Cmd = new ReceberTituloCommand(
+            titulo.Id, contaBancariaId, DateOnly.FromDateTime(DateTime.UtcNow),
+            Valor: 600.00m,
+            MeioPagamento: "TED",
+            Referencia: "COMP-B4-002",
+            IdempotencyKey: $"REC-B4-2-{Guid.NewGuid():N}"
+        );
+
+        var baixa2Id = await contasReceberRepo.ReceberAsync(tenantId, usuarioId, rec2Cmd, CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, baixa2Id);
+
+        var titQuitado = await contasReceberRepo.ObterPorIdAsync(tenantId, titulo.Id, CancellationToken.None);
+        Assert.NotNull(titQuitado);
+        Assert.Equal(1000.00m, titQuitado.ValorRecebido);
+        Assert.Equal(0.00m, titQuitado.SaldoAberto);
+        Assert.Equal("QUITADO", titQuitado.Situacao);
+
+        var contaQuitada = await caixaRepo.ObterContaPorIdAsync(tenantId, contaBancariaId, CancellationToken.None);
+        Assert.NotNull(contaQuitada);
+        Assert.Equal(1000.00m, contaQuitada.SaldoAtual);
+
+        var comissoesTotais = await relatoriosRepo.RelatorioComissoesAsync(tenantId, usuarioId, null, null, CancellationToken.None);
+        Assert.Equal(50.00m, comissoesTotais.Sum(c => c.ComissaoApropriada));
+
+        // ---------------------------------------------------------------------
+        // PASSO E. Estorno da 2ª liquidação (R$ 600):
+        // Título volta a PARCIAL com saldo R$ 600; Caixa volta a R$ 400;
+        // comissão líquida apropriação cai para R$ 20; estorno é idempotente.
+        // ---------------------------------------------------------------------
+        var estornoCmd = new EstornarBaixaCommand(
+            baixa2Id,
+            Motivo: "Estorno B4 da 2ª liquidação (devolução de valores)",
+            IdempotencyKey: $"EST-B4-2-{Guid.NewGuid():N}"
+        );
+
+        var estornoId = await contasReceberRepo.EstornarAsync(tenantId, usuarioId, estornoCmd, CancellationToken.None);
+        Assert.NotEqual(Guid.Empty, estornoId);
+
+        var titAposEstorno = await contasReceberRepo.ObterPorIdAsync(tenantId, titulo.Id, CancellationToken.None);
+        Assert.NotNull(titAposEstorno);
+        Assert.Equal(400.00m, titAposEstorno.ValorRecebido);
+        Assert.Equal(600.00m, titAposEstorno.SaldoAberto);
+        Assert.Equal("PARCIAL", titAposEstorno.Situacao);
+
+        var contaAposEstorno = await caixaRepo.ObterContaPorIdAsync(tenantId, contaBancariaId, CancellationToken.None);
+        Assert.NotNull(contaAposEstorno);
+        Assert.Equal(400.00m, contaAposEstorno.SaldoAtual);
+
+        // Idempotência do estorno: mesmo estornoId; saldo permanece R$ 600.
+        var estornoRetryId = await contasReceberRepo.EstornarAsync(tenantId, usuarioId, estornoCmd, CancellationToken.None);
+        Assert.Equal(estornoId, estornoRetryId);
+
+        var titAposEstornoRetry = await contasReceberRepo.ObterPorIdAsync(tenantId, titulo.Id, CancellationToken.None);
+        Assert.Equal(400.00m, titAposEstornoRetry.ValorRecebido);
+        Assert.Equal(600.00m, titAposEstornoRetry.SaldoAberto);
+
+        // ---------------------------------------------------------------------
+        // PASSO F. Rastreabilidade do estorno no banco (ground truth):
+        // baixa 2 marcada estornado=true; baixa 1 preservada; exatamente uma
+        // linha em adm360_titulo_estornos para a baixa 2 no valor de R$ 600.
+        // ---------------------------------------------------------------------
+        var rastreio = await cn.QuerySingleAsync<RastreioEstorno>(@"
+            select
+              (select estornado from plantaopro.adm360_titulo_baixas where id = @baixa2Id) as ""Baixa2Estornada"",
+              (select not estornado from plantaopro.adm360_titulo_baixas where id = @baixa1Id) as ""Baixa1Ativa"",
+              (select count(*)::int from plantaopro.adm360_titulo_estornos where baixa_id = @baixa2Id) as ""QtdEstornos"",
+              (select coalesce(sum(valor_estornado), 0) from plantaopro.adm360_titulo_estornos where baixa_id = @baixa2Id) as ""ValorEstorno""
+            from (select 1 as x) base", new { baixa1Id, baixa2Id });
+        Assert.True(rastreio.Baixa2Estornada);
+        Assert.True(rastreio.Baixa1Ativa);
+        Assert.Equal(1, rastreio.QtdEstornos);
+        Assert.Equal(600.00m, rastreio.ValorEstorno);
+
+        // ---------------------------------------------------------------------
+        // PASSO G. Relatórios após o estorno (indicadores declarados):
+        // Comissão líquida APROPRIADA = 5% x 400 = R$ 20 (estorno excluído).
+        // Margem mantém base da venda CONFIRMADA: 1000 - 400 - 50 = R$ 550.
+        // ---------------------------------------------------------------------
+        var comissoesFinais = await relatoriosRepo.RelatorioComissoesAsync(tenantId, usuarioId, null, null, CancellationToken.None);
+        var comissaoLiquida = comissoesFinais.Where(c => c.Situacao == "APROPRIADA").Sum(c => c.ComissaoApropriada);
+        Assert.Equal(20.00m, comissaoLiquida);
+
+        var relMargem = await relatoriosRepo.RelatorioMargemAsync(tenantId, null, null, CancellationToken.None);
+        Assert.Single(relMargem);
+        Assert.Equal(1000.00m, relMargem[0].ReceitaLiquida);
+        Assert.Equal(400.00m, relMargem[0].CustoConsumido);
+        Assert.Equal(50.00m, relMargem[0].ComissaoPrevista);
+        Assert.Equal(550.00m, relMargem[0].MargemContribuicao);
+    }
+
+    // Projeção ground-truth para o rastreamento de estorno (Seção 22).
+    private sealed class RastreioEstorno
+    {
+        public bool Baixa2Estornada { get; set; }
+        public bool Baixa1Ativa { get; set; }
+        public int QtdEstornos { get; set; }
+        public decimal ValorEstorno { get; set; }
+    }
+
+    // =========================================================================
     // SEÇÃO 21 — CONCORRÊNCIA, IDEMPOTÊNCIA E SEGURANÇA MULTI-TENANT
     // =========================================================================
 

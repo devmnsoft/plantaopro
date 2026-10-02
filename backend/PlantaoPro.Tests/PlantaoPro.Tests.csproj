@@ -25,6 +25,10 @@
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
+    <!-- B1: fixtures XML fiscais (NF-e 55 / NFC-e 65 / NFS-e 67 / CT 57) copiados p/ output dos testes -->
+    <None Include="Fixtures\Administrativo360Xml\**\*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../PlantaoPro.Api/PlantaoPro.Api.csproj" />
     <ProjectReference Include="../PlantaoPro.Domain/PlantaoPro.Domain.csproj" />
     <ProjectReference Include="../PlantaoPro.Web/PlantaoPro.Web.csproj" />

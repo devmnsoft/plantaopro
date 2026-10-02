@@ -1,6 +1,7 @@
 @model PlantaoPro.Web.Models.DocumentoXmlDetalhesPageViewModel
 @{
-    ViewData["Title"] = $"NF-e {Model.Documento.Numero} — Administrativo 360";
+    var rotuloTipo = Model.Documento.TipoDocumento switch { "NFC_E" => "NFC-e", "NFS_E" => "NFS-e", "RESUMO" => "Resumo", _ => "NF-e" };
+    ViewData["Title"] = $"{rotuloTipo} {Model.Documento.Numero} — Administrativo 360";
 }
 
 <div class="container-fluid py-3">
@@ -11,11 +12,11 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb mb-1">
                     <li class="breadcrumb-item"><a href="/Administrativo360/DocumentosXml" class="text-info">XML Recebidos</a></li>
-                    <li class="breadcrumb-item active text-light" aria-current="page">NF-e @Model.Documento.Numero</li>
+                    <li class="breadcrumb-item active text-light" aria-current="page">@rotuloTipo @Model.Documento.Numero</li>
                 </ol>
             </nav>
             <h2 class="h4 mb-0 text-light fw-bold">
-                NF-e @Model.Documento.Numero / Série @Model.Documento.Serie
+                @rotuloTipo @Model.Documento.Numero / Série @Model.Documento.Serie
                 @if (Model.Documento.Quarentena)
                 {
                     <span class="badge bg-danger ms-2">Em Quarentena: @Model.Documento.MotivoQuarentena</span>

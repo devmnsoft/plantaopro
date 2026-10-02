@@ -54,17 +54,18 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
     public async Task<IActionResult> Download(Guid id, CancellationToken ct)
     {
         var (tenant, _) = Context();
-        var doc = await repository.ObterDocumentoPorIdAsync(tenant, id, ct);
-        if (doc is null) return NotFound("Documento XML não encontrado.");
-        var bytes = Encoding.UTF8.GetBytes(doc.XmlConteudo);
 
-        // P4: download idempotente — ETag pelo SHA-256 dos bytes; If-None-Match → 304 sem reenviar o corpo.
-        var etag = EtagHttp.ParaBytes(bytes);
+        // B1: download dos bytes originais preservados (BOM/encoding exatos).
+        var doc = await repository.ObterXmlBytesAsync(tenant, id, ct);
+        if (doc is null) return NotFound("Documento XML não encontrado.");
+
+        // P4: download idempotente — ETag = SHA-256 dos bytes armazenados; If-None-Match → 304 sem reenviar o corpo.
+        var etag = EtagHttp.Para(doc.Value.Hash);
         Response.Headers.ETag = etag;
         if (EtagHttp.RevalidacaoSatisfeita(Request, etag))
             return StatusCode(StatusCodes.Status304NotModified);
 
-        return File(bytes, "application/xml", $"{doc.ChaveAcesso}.xml");
+        return File(doc.Value.Bytes, "application/xml", $"{doc.Value.ChaveAcesso}.xml");
     }
 
     [HttpPost("importar-manual")]

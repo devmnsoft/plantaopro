@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<procNFS>
+  <nfs>
+    <infNFS Id="NFS1001">
+      <ideNFS>
+        <numNFS>1001</numNFS>
+        <serieNFS>1</serieNFS>
+        <dIniNAT>2026-09-29</dIniNAT>
+        <dFat>2026-09-29</dFat>
+        <dVenc>2026-10-29</dVenc>
+        <dhEmi>2026-09-29T09:15:00-03:00</dhEmi>
+        <tpEmis>1</tpEmis>
+        <procEmi>0</procEmi>
+        <verProc>PlantaPro Fixtures 1.0</verProc>
+      </ideNFS>
+      <emit>
+        <CNPJ>11222333000181</CNPJ>
+        <xNome>HOSPOMED DISTRIBUIDORA DE MEDICAMENTOS LTDA</xNome>
+        <regApur>05</regApur>
+      </emit>
+      <prest>
+        <localPrestacao>
+          <municipio>3550308</municipio>
+          <UF>SP</UF>
+        </localPrestacao>
+      </prest>
+      <toma>
+        <CNPJ>46389044000130</CNPJ>
+        <xNome>HOSPITAL SANTA CASA DEMO LTDA</xNome>
+        <endToma>
+          <xLgr>AVENIDA DO HOSPITAL</xLgr>
+          <nro>450</nro>
+          <xBairro>JARDIM SAUDE</xBairro>
+          <municipio>4638901</municipio>
+          <UF>PE</UF>
+        </endToma>
+        <locToma>
+          <municipio>4638901</municipio>
+          <UF>PE</UF>
+        </locToma>
+      </toma>
+      <serv>
+        <cServ>031101</cServ>
+        <discrServico>FORNECIMENTO DE MEDICAMENTOS E HOSPITALARES COM LOGISTICA REFRIGERADA</discrServico>
+        <vServ>980.00</vServ>
+      </serv>
+      <valores>
+        <vServ>980.00</vServ>
+        <tribNFS>0.00</tribNFS>
+        <tribIss>34.30</tribIss>
+      </valores>
+      <infAd>
+        <infCpl>Servico prestado sob contrato de manutencao hospitalar 2026.04.</infCpl>
+      </infAd>
+    </infNFS>
+  </nfs>
+</procNFS>

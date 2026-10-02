@@ -466,5 +466,21 @@
       "plantaopro.administrativo360_cirurgia_vales_reconciliacao"
     ],
     "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql"
+  },
+  {
+    "object": "plantaopro.adm360_validar_tenant",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard",
+      "plantaopro.administrativo360_cirurgia_vales_reconciliacao"
+    ],
+    "source": "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql"
+  },
+  {
+    "object": "plantaopro.saude360_prontuario_v1270",
+    "dependsOn": [
+      "plantaopro.saude360",
+      "plantaopro.financeiro_clinico_convenios_v2180"
+    ],
+    "source": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql"
   }
 ]

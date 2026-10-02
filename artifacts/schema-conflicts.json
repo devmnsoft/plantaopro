@@ -55,5 +55,60 @@
     ],
     "canonical": true,
     "compatibility_alter": true
+  },
+  {
+    "table": "plantaopro.perfil_permissoes",
+    "first_origin": "database/schema/010_identity_access.sql",
+    "second_origin": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+    "first_columns": [
+      "bloqueado_por_plano",
+      "created_by",
+      "id",
+      "perfil_id",
+      "permissao_id",
+      "permitido",
+      "reg_date",
+      "reg_status",
+      "reg_update",
+      "updated_by"
+    ],
+    "second_columns": [
+      "id",
+      "perfil_id",
+      "permissao_id",
+      "permitido",
+      "reg_date",
+      "reg_status"
+    ],
+    "canonical": true,
+    "compatibility_alter": true
+  },
+  {
+    "table": "plantaopro.consulta_historico",
+    "first_origin": "database/schema/380_v2160_triagem_consulta_jornada.sql",
+    "second_origin": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+    "first_columns": [
+      "cliente_id",
+      "consulta_id",
+      "created_by",
+      "evento",
+      "id",
+      "paciente_id",
+      "reg_date",
+      "reg_status",
+      "versao"
+    ],
+    "second_columns": [
+      "cliente_id",
+      "consulta_id",
+      "created_by",
+      "evento",
+      "id",
+      "reg_date",
+      "reg_status",
+      "versao"
+    ],
+    "canonical": true,
+    "compatibility_alter": true
   }
 ]

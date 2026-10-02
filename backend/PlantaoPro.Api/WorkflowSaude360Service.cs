@@ -41,8 +41,14 @@ select
  count(*) filter(where upper(a.status)='AGUARDANDO_CONSULTA')::int as AguardandoConsulta,
  (select count(*)::int from plantaopro.consultas c where c.tenant_id=@tenantId and c.reg_status='A' and upper(c.status)='EM_ATENDIMENTO' and c.reg_date>=@inicio and c.reg_date<@fim) as EmAtendimento,
  (select count(*)::int from plantaopro.consultas c where c.tenant_id=@tenantId and c.reg_status='A' and upper(c.status) in ('FINALIZADA','ATENDIDO') and c.reg_date>=@inicio and c.reg_date<@fim) as Finalizados,
- (select count(*)::int from plantaopro.clinica_contas_receber c where c.tenant_id=@tenantId and c.reg_status='A' and upper(c.status) in ('ABERTO','VENCIDA')) as ContasPendentes,
- (select count(*)::int from plantaopro.clinica_recebimentos r where r.tenant_id=@tenantId and r.reg_status='A' and upper(r.status)='CONFIRMADO' and r.data_recebimento>=@inicio and r.data_recebimento<@fim) as PagamentosRecebidos,
+ -- B4 (J12) - investigacao ClienteId/TenantId: os escritores clinicos
+ -- (ConsultaApplicationService/Saude360ClinicalService) gravam em cliente_id
+ -- (o tenant da clinica) e NUNCA em tenant_id (100% NULL na tabela); o
+ -- vocabulario de status inclui ABERTO (default DDL/CRUD) e ABERTA
+ -- (faturamento de consulta). Escopo por coalesce e aceitação dos 4
+ -- sinonimos abertos/vencidos para não subcontar o indicador.
+ (select count(*)::int from plantaopro.clinica_contas_receber c where coalesce(c.tenant_id, c.cliente_id)=@tenantId and c.reg_status='A' and upper(c.status) in ('ABERTO','ABERTA','VENCIDA','VENCIDO')) as ContasPendentes,
+ (select count(*)::int from plantaopro.clinica_recebimentos r where coalesce(r.tenant_id, r.cliente_id)=@tenantId and r.reg_status='A' and upper(r.status)='CONFIRMADO' and r.data_recebimento>=@inicio and r.data_recebimento<@fim) as PagamentosRecebidos,
  (select count(*)::int from plantaopro.work_items w where w.tenant_id=@tenantId and w.reg_status='A' and upper(w.prioridade)='CRITICA' and w.status not in ('CONCLUIDO','CANCELADO')) as PendenciasCriticas
 from plantaopro.agendamentos a
 where a.tenant_id=@tenantId and a.reg_status='A' and a.data_inicio>=@inicio and a.data_inicio<@fim

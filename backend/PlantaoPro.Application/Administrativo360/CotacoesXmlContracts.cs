@@ -351,7 +351,11 @@ public sealed record DocumentoRecebidoDetalhesDto(
 public sealed record ImportarXmlManualCommand(
     string XmlConteudo,
     string? NomeArquivo = null
-);
+)
+{
+    /// <summary>B1: bytes originais do arquivo recebido (preservam BOM/encoding exato). Quando nulo/vazio, os bytes derivam de <see cref="XmlConteudo"/> em UTF-8.</summary>
+    public byte[]? XmlBytes { get; init; }
+};
 
 public sealed record ManifestarDocumentoCommand(
     Guid DocumentoId,
@@ -462,6 +466,9 @@ public interface IDocumentosXmlRepository
     Task<IReadOnlyList<DocumentoRecebidoResumoDto>> ListarDocumentosAsync(Guid tenantId, string? status = null, bool? quarentena = null, CancellationToken ct = default);
     Task<DocumentoRecebidoDetalhesDto?> ObterDocumentoPorIdAsync(Guid tenantId, Guid id, CancellationToken ct = default);
     Task<Guid> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default);
+
+    /// <summary>B1: bytes originais preservados (fonte da verdade para hash e download) com ETag=SHA-256.</summary>
+    Task<(byte[] Bytes, string Hash, string ChaveAcesso)?> ObterXmlBytesAsync(Guid tenantId, Guid id, CancellationToken ct = default);
     Task ManifestarDocumentoAsync(Guid tenantId, Guid usuarioId, ManifestarDocumentoCommand command, CancellationToken ct = default);
     Task VincularRecebimentoAsync(Guid tenantId, Guid usuarioId, VincularDocumentoRecebimentoCommand command, CancellationToken ct = default);
 

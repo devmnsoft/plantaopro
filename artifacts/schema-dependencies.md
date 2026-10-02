@@ -71,3 +71,5 @@
 - `plantaopro.auditoria_observabilidade_reconciliacao` depende de: plantaopro.auditoria_observabilidade
 - `plantaopro.adm360_cotacao_respostas_transmissao` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
 - `plantaopro.adm360_eventos` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.administrativo360_cirurgia_vales_reconciliacao
+- `plantaopro.adm360_validar_tenant` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.administrativo360_cirurgia_vales_reconciliacao
+- `plantaopro.saude360_prontuario_v1270` depende de: plantaopro.saude360, plantaopro.financeiro_clinico_convenios_v2180

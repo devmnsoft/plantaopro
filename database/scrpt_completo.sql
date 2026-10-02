@@ -4163,7 +4163,29 @@ BEGIN
     END IF;
 END $$;
 
-ALTER TABLE plantaopro.adm360_inventario_itens DROP CONSTRAINT IF EXISTS adm360_inventario_itens_tenant_id_inventario_id_produto_id_l_key;
+DO $$
+DECLARE
+    r record;
+BEGIN
+    FOR r IN
+        SELECT conname FROM pg_constraint con
+        JOIN pg_class rel ON rel.oid = con.conrelid
+        WHERE rel.relnamespace = 'plantaopro'::regnamespace
+          AND rel.relname = 'adm360_inventario_itens'
+          AND con.contype = 'u'
+          AND pg_get_constraintdef(con.oid) = 'UNIQUE (tenant_id, inventario_id, produto_id, lote_id)'
+    LOOP
+        EXECUTE format('ALTER TABLE plantaopro.adm360_inventario_itens DROP CONSTRAINT %I', r.conname);
+    END LOOP;
+    FOR r IN
+        SELECT indexname FROM pg_indexes
+        WHERE schemaname = 'plantaopro'
+          AND tablename = 'adm360_inventario_itens'
+          AND indexdef LIKE 'CREATE UNIQUE INDEX % USING btree (tenant_id, inventario_id, produto_id, lote_id)'
+    LOOP
+        EXECUTE format('DROP INDEX plantaopro.%I', r.indexname);
+    END LOOP;
+END $$;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_inv_itens_condicao ON plantaopro.adm360_inventario_itens(tenant_id, inventario_id, produto_id, lote_id, condicao);
 
 -- Orçamentos Cirúrgicos
@@ -6005,6 +6027,7 @@ SET status_transmissao = 'RESULTADO_DESCONHECIDO',
     mensagem_retorno = coalesce(mensagem_retorno, '') || ' | Recuperacao oficial: transmissao ficou em ENVIANDO sem resultado registrado (processo interrompido).',
     updated_at = now()
 WHERE status_transmissao = 'ENVIANDO';
+
 -- ============================================================
 -- Seção 70 — Administrativo360 Reafirmação Trigger Validar Tenant v2.21.1
 -- ============================================================
@@ -6056,3 +6079,162 @@ begin
   return new;
 end;
 $$;
+
+-- ============================================================
+-- Seção 71 — Saúde 360 Prontuário e Permissões v1.27.0
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql
+-- SOURCE-SHA256: 74819da1eb03011a10ec4ac7d2d3c5ff0fb70080fbf683e271e95807f9215b50
+BEGIN;
+CREATE SCHEMA IF NOT EXISTS plantaopro;
+
+CREATE TABLE IF NOT EXISTS plantaopro.perfil_permissoes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), perfil_id uuid NOT NULL, permissao_id uuid NOT NULL, permitido boolean NOT NULL DEFAULT true, reg_status char(1) NOT NULL DEFAULT 'A', reg_date timestamptz NOT NULL DEFAULT now());
+DO $migration$
+DECLARE cols_ok boolean;
+BEGIN
+  IF to_regclass('plantaopro.perfis_permissoes') IS NOT NULL THEN
+    SELECT count(*)=2 INTO cols_ok FROM information_schema.columns WHERE table_schema='plantaopro' AND table_name='perfis_permissoes' AND column_name IN ('perfil_id','permissao_id');
+    IF cols_ok THEN
+      EXECUTE 'insert into plantaopro.perfil_permissoes(perfil_id,permissao_id,permitido,reg_status,reg_date) select perfil_id,permissao_id,true,''A'',now() from plantaopro.perfis_permissoes l where perfil_id is not null and permissao_id is not null and not exists(select 1 from plantaopro.perfil_permissoes c where c.perfil_id=l.perfil_id and c.permissao_id=l.permissao_id and c.reg_status=''A'')';
+      IF NOT EXISTS(select 1 from pg_constraint where confrelid='plantaopro.perfis_permissoes'::regclass) THEN DROP TABLE plantaopro.perfis_permissoes; END IF;
+    END IF;
+  END IF;
+END $migration$;
+CREATE UNIQUE INDEX IF NOT EXISTS ux_perfil_permissoes_ativo ON plantaopro.perfil_permissoes(perfil_id,permissao_id) WHERE reg_status='A';
+
+ALTER TABLE plantaopro.consultas ADD COLUMN IF NOT EXISTS atendimento_id uuid, ADD COLUMN IF NOT EXISTS unidade_id uuid, ADD COLUMN IF NOT EXISTS triagem_id uuid, ADD COLUMN IF NOT EXISTS anamnese text, ADD COLUMN IF NOT EXISTS exame_fisico text, ADD COLUMN IF NOT EXISTS hipotese_diagnostica text, ADD COLUMN IF NOT EXISTS diagnostico text, ADD COLUMN IF NOT EXISTS conduta text, ADD COLUMN IF NOT EXISTS orientacoes text, ADD COLUMN IF NOT EXISTS observacoes text, ADD COLUMN IF NOT EXISTS inicio_em timestamptz, ADD COLUMN IF NOT EXISTS versao integer NOT NULL DEFAULT 1;
+CREATE INDEX IF NOT EXISTS ix_consultas_fila_medica ON plantaopro.consultas(cliente_id,unidade_id,status,reg_date) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.consulta_cids(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),cliente_id uuid NOT NULL,consulta_id uuid NOT NULL,cid_id uuid NOT NULL,tipo varchar(20) NOT NULL DEFAULT 'SECUNDARIO',principal boolean NOT NULL DEFAULT false,ordem integer NOT NULL DEFAULT 1,created_by uuid,removed_by uuid,removed_at timestamptz,reg_date timestamptz NOT NULL DEFAULT now(),reg_status char(1) NOT NULL DEFAULT 'A');
+CREATE UNIQUE INDEX IF NOT EXISTS ux_consulta_cid_ativo ON plantaopro.consulta_cids(cliente_id,consulta_id,cid_id) WHERE reg_status='A';
+CREATE UNIQUE INDEX IF NOT EXISTS ux_consulta_cid_principal ON plantaopro.consulta_cids(cliente_id,consulta_id) WHERE principal AND reg_status='A';
+CREATE INDEX IF NOT EXISTS ix_consulta_cids_consulta ON plantaopro.consulta_cids(cliente_id,consulta_id,ordem) WHERE reg_status='A';
+
+CREATE TABLE IF NOT EXISTS plantaopro.consulta_historico(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),cliente_id uuid NOT NULL,consulta_id uuid NOT NULL,evento varchar(50) NOT NULL,versao integer NOT NULL,created_by uuid,reg_date timestamptz NOT NULL DEFAULT now(),reg_status char(1) NOT NULL DEFAULT 'A');
+CREATE TABLE IF NOT EXISTS plantaopro.consulta_solicitacoes_exames(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),cliente_id uuid NOT NULL,consulta_id uuid NOT NULL,exame varchar(250) NOT NULL,indicacao_clinica text,prioridade varchar(20) NOT NULL DEFAULT 'ROTINA',created_by uuid,reg_date timestamptz NOT NULL DEFAULT now(),reg_status char(1) NOT NULL DEFAULT 'A');
+CREATE TABLE IF NOT EXISTS plantaopro.consulta_encaminhamentos(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),cliente_id uuid NOT NULL,consulta_id uuid NOT NULL,especialidade varchar(150) NOT NULL,motivo text NOT NULL,created_by uuid,reg_date timestamptz NOT NULL DEFAULT now(),reg_status char(1) NOT NULL DEFAULT 'A');
+
+ALTER TABLE plantaopro.clinica_contas_receber ADD COLUMN IF NOT EXISTS unidade_id uuid,ADD COLUMN IF NOT EXISTS paciente_id uuid,ADD COLUMN IF NOT EXISTS atendimento_id uuid,ADD COLUMN IF NOT EXISTS consulta_id uuid,ADD COLUMN IF NOT EXISTS medico_id uuid,ADD COLUMN IF NOT EXISTS procedimento_id uuid,ADD COLUMN IF NOT EXISTS valor_bruto numeric(14,2) NOT NULL DEFAULT 0,ADD COLUMN IF NOT EXISTS desconto numeric(14,2) NOT NULL DEFAULT 0,ADD COLUMN IF NOT EXISTS coparticipacao numeric(14,2) NOT NULL DEFAULT 0,ADD COLUMN IF NOT EXISTS valor_liquido numeric(14,2) NOT NULL DEFAULT 0,ADD COLUMN IF NOT EXISTS valor_pago numeric(14,2) NOT NULL DEFAULT 0,ADD COLUMN IF NOT EXISTS vencimento date,ADD COLUMN IF NOT EXISTS origem varchar(30),ADD COLUMN IF NOT EXISTS justificativa text,ADD COLUMN IF NOT EXISTS created_by uuid,ADD COLUMN IF NOT EXISTS reg_date timestamptz NOT NULL DEFAULT now();
+CREATE UNIQUE INDEX IF NOT EXISTS ux_conta_consulta_ativa ON plantaopro.clinica_contas_receber(cliente_id,consulta_id) WHERE consulta_id IS NOT NULL AND reg_status='A';
+
+INSERT INTO plantaopro.modulos_sistema(id,codigo,nome,descricao,reg_status,reg_date) SELECT gen_random_uuid(),'PRONTUARIO','Prontuário','Acesso clínico sensível','A',now() WHERE NOT EXISTS(SELECT 1 FROM plantaopro.modulos_sistema WHERE codigo='PRONTUARIO' AND reg_status='A');
+INSERT INTO plantaopro.acoes_sistema(id,codigo,nome,descricao,reg_status,reg_date) SELECT gen_random_uuid(),'OPERAR','Operar','Ação clínica granular','A',now() WHERE NOT EXISTS(SELECT 1 FROM plantaopro.acoes_sistema WHERE codigo='OPERAR' AND reg_status='A');
+INSERT INTO plantaopro.permissoes(id,codigo,nome,descricao,modulo,acao,modulo_id,acao_id,sensivel,status,reg_status,reg_date)
+SELECT gen_random_uuid(),p.codigo,p.nome,p.nome,'PRONTUARIO','OPERAR',m.id,a.id,true,'ATIVO','A',now() FROM (VALUES
+('CONSULTA_VISUALIZAR','Visualizar consulta'),('CONSULTA_INICIAR','Iniciar consulta'),('CONSULTA_EDITAR','Editar consulta'),('CONSULTA_FINALIZAR','Finalizar consulta'),('CONSULTA_CANCELAR','Cancelar consulta'),('CONSULTA_REABRIR','Reabrir consulta'),('CONSULTA_VER_HISTORICO','Ver histórico clínico'),('CID_VINCULAR','Vincular CID'),('CID_REMOVER','Remover CID'),('PRESCRICAO_CRIAR','Criar prescrição'),('PRESCRICAO_EDITAR','Editar prescrição'),('PRESCRICAO_FINALIZAR','Finalizar prescrição'),('PRESCRICAO_CANCELAR','Cancelar prescrição'),('PRESCRICAO_IMPRIMIR','Imprimir prescrição'),('PRESCRICAO_GERENCIAR_MODELOS','Gerenciar modelos'),('PRONTUARIO_VER_DADOS_SENSIVEIS','Ver dados clínicos sensíveis'),('PRONTUARIO_EXPORTAR','Exportar prontuário')) p(codigo,nome) CROSS JOIN plantaopro.modulos_sistema m CROSS JOIN plantaopro.acoes_sistema a
+WHERE m.codigo='PRONTUARIO' AND m.reg_status='A' AND a.codigo='OPERAR' AND a.reg_status='A' AND NOT EXISTS(SELECT 1 FROM plantaopro.permissoes x WHERE x.codigo=p.codigo);
+
+INSERT INTO plantaopro.schema_migrations(id,script_path,checksum,applied_at) SELECT 'v1.27.0','database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql','runtime-managed',now() WHERE NOT EXISTS(SELECT 1 FROM plantaopro.schema_migrations WHERE id='v1.27.0');
+COMMIT;
+-- ============================================================
+-- Seção 72 — Administrativo360 Documentos XML B1 v2.21.2
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql
+-- SOURCE-SHA256: 50f78ce6e574d3fc7bf3863dc1fbad702ec73e29e999ae6d710ccf4943e36e6c
+-- ============================================================================
+-- Migration: 2026_09_v2303_administrativo360_documentos_xml_b1.sql
+-- Objetivo: B1 do Administrativo 360 - Central de documentos XML.
+--   1. Coluna xml_bytes bytea NOT NULL com os bytes originais do arquivo
+--      recebido (fonte da verdade para hash SHA-256 e download identico ao
+--      enviado). Backfill: convert_to(xml_conteudo, 'UTF8') sobre o texto ja
+--      gravado.
+--   2. chave_acesso ampliada para varchar(60) para chaves sinteticas NFS-e
+--      (NFSE + 36 hex) e identificadores longos em quarentena.
+--   3. CHECK de tipo_documento estendido para os tipos fiscais suportados
+--      por conteudo: NFE_COMPLETA (mod 55), NFC_E (mod 65), NFS_E (mod 67)
+--      e RESUMO (legado). A DTD continua proibida no parse da aplicacao
+--      (DtdProcessing.Ignore + XmlResolver=null): aqui o banco apenas
+--      restringe o conjunto de tipos persistidos.
+-- Idempotencia: DO $$ em 3 etapas (ADD nullable -> backfill -> SET NOT NULL);
+--               DO $$ que remove o CHECK antigo localizando-o pela definicao
+--               (o nome do constraint varia entre instalacoes) e recria com
+--               nome fixo apenas quando falta; DO $$ com IF p/ varchar(60).
+-- ============================================================================
+
+-- 1. Bytes originais preservados (fonte da verdade para hash/download).
+--    Padrão em 3 etapas (ADD nullable -> backfill -> SET NOT NULL) porque o
+--    PostgreSQL desta instancia nao aceita referencia de coluna no DEFAULT.
+DO $migration$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'plantaopro'
+      AND table_name = 'adm360_documentos_recebidos'
+      AND column_name = 'xml_bytes'
+  ) THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos ADD COLUMN xml_bytes bytea;
+  END IF;
+
+  -- Backfill idempotente: bytes = UTF-8 do texto ja gravado (rows herdadas)
+  UPDATE plantaopro.adm360_documentos_recebidos
+     SET xml_bytes = convert_to(xml_conteudo, 'UTF8')
+   WHERE xml_bytes IS NULL;
+
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'plantaopro'
+      AND table_name = 'adm360_documentos_recebidos'
+      AND column_name = 'xml_bytes'
+      AND is_nullable = 'YES'
+  ) THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos ALTER COLUMN xml_bytes SET NOT NULL;
+  END IF;
+END $migration$;
+
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.xml_bytes IS
+  'B1: bytes originais do arquivo XML recebido; fonte da verdade para xml_hash (SHA-256) e download.';
+
+-- 2. chave_acesso: varchar(44) -> varchar(60)
+DO $migration$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'plantaopro'
+      AND table_name = 'adm360_documentos_recebidos'
+      AND column_name = 'chave_acesso'
+      AND character_maximum_length IS NOT NULL
+      AND character_maximum_length < 60
+  ) THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos
+      ALTER COLUMN chave_acesso TYPE varchar(60);
+  END IF;
+END $migration$;
+
+-- 3. CHECK tipo_documento estendido (NFE_COMPLETA | NFC_E | NFS_E | RESUMO)
+DO $migration$
+DECLARE
+  r record;
+  tem_novo boolean;
+BEGIN
+  -- Remove qualquer CHECK antigo da coluna (definicao contendo NFE_COMPLETA),
+  -- pois o nome do constraint varia entre instalacoes.
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute at ON at.attrelid = con.conrelid AND at.attname = 'tipo_documento'
+    WHERE rel.relnamespace = 'plantaopro'::regnamespace
+      AND rel.relname = 'adm360_documentos_recebidos'
+      AND con.contype = 'c'
+      AND con.conkey @> ARRAY[at.attnum]
+      AND pg_get_constraintdef(con.oid) LIKE '%NFE_COMPLETA%'
+  LOOP
+    EXECUTE format('ALTER TABLE plantaopro.adm360_documentos_recebidos DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+
+  SELECT count(*) > 0 INTO tem_novo
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  WHERE rel.relnamespace = 'plantaopro'::regnamespace
+    AND rel.relname = 'adm360_documentos_recebidos'
+    AND con.contype = 'c'
+    AND pg_get_constraintdef(con.oid) LIKE '%''NFS_E''%';
+
+  IF NOT tem_novo THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos
+      ADD CONSTRAINT ck_adm360_docrec_tipo_documento
+      CHECK (tipo_documento IN ('NFE_COMPLETA', 'NFC_E', 'NFS_E', 'RESUMO'));
+  END IF;
+END $migration$;

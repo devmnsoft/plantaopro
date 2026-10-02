@@ -913,8 +913,41 @@
           "required": true,
           "source": "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
           "dependsOn": [
-            "plantaopro.adm360_cotacoes_xml_dashboard",
-            "plantaopro.adm360_cirurgia_vales_reconciliacao"
+            "plantaopro.administrativo360_cotacoes_xml_dashboard",
+            "plantaopro.administrativo360_cirurgia_vales_reconciliacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 71,
+      "name": "Saúde 360 Prontuário e Permissões v1.27.0",
+      "objects": [
+        {
+          "name": "plantaopro.saude360_prontuario_v1270",
+          "type": "canonical",
+          "category": "CANONICAL",
+          "required": true,
+          "source": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+          "dependsOn": [
+            "plantaopro.saude360",
+            "plantaopro.financeiro_clinico_convenios_v2180"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 72,
+      "name": "Administrativo360 Documentos XML B1 v2.21.2",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_documentos_xml_b1",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
           ]
         }
       ]
@@ -925,6 +958,7 @@
     "acoes_sistema",
     "permissoes",
     "perfil_permissoes",
+    "consulta_historico",
     "usuarios_perfis",
     "usuario_permissoes_especiais",
     "login_tentativas",

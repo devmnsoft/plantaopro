@@ -13,6 +13,8 @@ public sealed class ProductivityPageViewModel
     public int Total { get; set; }
     public bool CanViewTeam { get; set; }
     public string? Error { get; set; }
+    /// <summary>Classificação técnica da falha (TIMEOUT, TRANSPORTE, NAO_AUTENTICADO, SEM_PERMISSAO, FALHA_SERVIDOR, RESPOSTA_INVALIDA, CANCELADO). Ausente sem erro.</summary>
+    public string? ErrorKind { get; set; }
 }
 
 public sealed class ProductivityItemViewModel

@@ -775,6 +775,28 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_v1270_normalizar_permissoes_e_prontuario",
+      "source": "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+      "checksum": "7cf9a32a19fefe763619fb5c949987151a534bfa107a15d454d364871a841e49",
+      "dependsOn": [
+        "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_09_v2303_administrativo360_documentos_xml_b1",
+      "source": "database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql",
+      "checksum": "50f78ce6e574d3fc7bf3863dc1fbad702ec73e29e999ae6d710ccf4943e36e6c",
+      "dependsOn": [
+        "2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

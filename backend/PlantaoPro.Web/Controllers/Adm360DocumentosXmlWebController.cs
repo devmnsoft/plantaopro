@@ -70,11 +70,15 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
 
         var xmlConteudo = form.XmlConteudo;
         var nomeArquivo = form.NomeArquivo;
+        byte[]? xmlBytes = null;
 
         if (arquivoXml is not null && arquivoXml.Length > 0)
         {
-            using var reader = new StreamReader(arquivoXml.OpenReadStream(), Encoding.UTF8);
-            xmlConteudo = await reader.ReadToEndAsync();
+            // B1: lê os bytes exatos do arquivo (preserva BOM/encoding) e os envia junto ao payload.
+            using var ms = new MemoryStream();
+            await arquivoXml.CopyToAsync(ms);
+            xmlBytes = ms.ToArray();
+            xmlConteudo = Encoding.UTF8.GetString(xmlBytes);
             nomeArquivo = arquivoXml.FileName;
         }
 
@@ -84,7 +88,8 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
             return View("~/Views/Administrativo360/DocumentosXml/Importar.cshtml", form);
         }
 
-        var payload = new { XmlConteudo = xmlConteudo, NomeArquivo = nomeArquivo };
+        // B1: envia os bytes originais do arquivo (base64) — a API os preserva como fonte da verdade.
+        var payload = new { XmlConteudo = xmlConteudo, NomeArquivo = nomeArquivo, XmlBytes = xmlBytes };
         var resp = await SendApiAsync<object, dynamic>(client, HttpMethod.Post, "api/administrativo360/xml/importar-manual", payload);
 
         if (resp.Data is null)

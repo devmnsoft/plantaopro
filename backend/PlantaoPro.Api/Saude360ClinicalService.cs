@@ -439,7 +439,7 @@ values(@id,@tenantId,@tenantId,@pacienteId,@consultaId,coalesce(@medicoId,@uid),
 (select count(1) from plantaopro.consultas where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status in ('EM_ATENDIMENTO','INICIADA')) as consultas_em_andamento,
 (select count(1) from plantaopro.consultas where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='FINALIZADA' and coalesce(finalizada_em, reg_date)::date=current_date) as consultas_finalizadas,
 (select count(1) from plantaopro.prescricoes where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status in ('RASCUNHO','PENDENTE')) as prescricoes_pendentes,
-(select count(1) from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='ABERTA') as financeiro_pendente,
+(select count(1) from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and upper(status) in ('ABERTO','ABERTA','VENCIDA','VENCIDO')) as financeiro_pendente,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='FALTOU' and data_inicio::date=current_date) as faltas_dia,
 (select count(1) from plantaopro.agendamentos where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and status='CANCELADO' and data_inicio::date=current_date) as cancelamentos_dia", new { tenantId = TenantId, isGlobal = IsGlobal });
             await AuditAsync("clinica_dashboard", Guid.Empty, "RESUMO", new { modulo = "DASHBOARD_CLINICO" });

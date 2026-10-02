@@ -151,17 +151,19 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
             }
 
             // Definição de pernas com identificação estável e distinta por perna para eliminar qualquer risco de colisão
+            // A perna de saída debita da condição real do item: VENCIDO permanece em VENCIDO; demais saem de QUARENTENA.
+            var saidaCond = r.Condicao == "VENCIDO" ? "VENCIDO" : "QUARENTENA";
             var pernas = new List<(string Condicao, decimal Qty, string PernaIdentificador)>();
 
             if (c.Aprovada > 0)
             {
-                pernas.Add(("QUARENTENA", -c.Aprovada, "SAIDA_QUARENTENA_APROVACAO"));
+                pernas.Add((saidaCond, -c.Aprovada, "SAIDA_QUARENTENA_APROVACAO"));
                 pernas.Add(("LIBERADO", c.Aprovada, "ENTRADA_LIBERADO"));
             }
 
             if (c.Reprovada > 0)
             {
-                pernas.Add(("QUARENTENA", -c.Reprovada, "SAIDA_QUARENTENA_REPROVACAO"));
+                pernas.Add((saidaCond, -c.Reprovada, "SAIDA_QUARENTENA_REPROVACAO"));
                 pernas.Add(("REPROVADO", c.Reprovada, "ENTRADA_REPROVADO"));
             }
 

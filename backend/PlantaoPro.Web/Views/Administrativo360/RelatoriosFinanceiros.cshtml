@@ -206,16 +206,16 @@
                                     <td class="text-end font-monospace">@c.BaseCalculo.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace">@c.Percentual.ToString("N1", ptBr)%</td>
                                     <td class="text-end font-monospace fw-bold text-success">@c.ComissaoApropriada.ToString("C2", ptBr)</td>
-                                    <td><span class="badge bg-success">@c.Situacao</span></td>
+                                    <td><span class="badge @(c.Situacao == "APROPRIADA" ? "bg-success" : "bg-warning text-dark")">@c.Situacao</span></td>
                                 </tr>
                             }
                         }
                     </tbody>
                     <tfoot class="table-dark border-secondary">
                         <tr class="fw-bold">
-                            <td colspan="5" class="text-end">Total Apropriado:</td>
+                            <td colspan="5" class="text-end">Total Apropriado (líquido de estornos — apenas APROPRIADA):</td>
                             <td class="text-end text-success fs-6 font-monospace">
-                                @Model.Comissoes.Sum(x => x.ComissaoApropriada).ToString("C2", ptBr)
+                                @Model.Comissoes.Where(x => x.Situacao == "APROPRIADA").Sum(x => x.ComissaoApropriada).ToString("C2", ptBr)
                             </td>
                             <td></td>
                         </tr>
@@ -280,4 +280,42 @@
             </div>
         </div>
     }
+
+    <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
+    <div class="card bg-dark border-secondary mt-4 text-light">
+        <div class="card-header bg-dark border-secondary">
+            <span class="fw-bold"><i class="bi bi-calculator me-2"></i>Indicadores Declarados — Fonte, Fórmula, Filtros/Período e Tratamento de Estorno</span>
+        </div>
+        <div class="card-body small text-secondary">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <strong class="text-light d-block mb-1">Vendas por Período</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> (linha por venda confirmada), com nome de hospital/pagador/vendedor resolvidos via <code>adm360_parceiros</code>, <code>hospitais</code> e <code>usuarios</code>.</li>
+                        <li><strong>Fórmula:</strong> Total Líquido = bruto − desconto; Custo = Σ custo dos lotes consumidos na valorização; Comissão prevista = líquido × % comissão da venda. Valores gravados na venda, sem recálculo retroativo.</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia &gt;= início AND competencia &lt;= fim</code> (inclusivo); opcional <code>hospitalId</code> e <code>vendedorId</code>; sempre isolado por tenant. Sem data: últimos 30 dias até hoje.</li>
+                        <li><strong>Estorno:</strong> não altera a linha da venda; o efeito aparece apenas em Comissões (situação ESTORNADA) e no Fluxo de Caixa (movimento compensatório).</li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <strong class="text-light d-block mb-1">Comissões Apropriadas</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_comissoes_apropriadas</code> — uma linha por recebimento efetivo (baixa de título), junta venda, usuário e baixa para auditoria.</li>
+                        <li><strong>Fórmula:</strong> por baixa: arred((recebido acumulado da venda) × % ÷ 100, 2) − já apropriada, mínimo 0 (resíduo corrigido na última baixa).</li>
+                        <li><strong>Filtros/período:</strong> <code>data_recebimento &gt;= início AND data_recebimento &lt;= fim</code> (inclusivo); opcional <code>vendedorId</code>.</li>
+                        <li><strong>Estorno:</strong> a linha vira ESTORNADA (preservada para auditoria; badge âmbar) e o total do rodapé conta apenas APROPRIADA. Re-estorno devolve a APROPRIADA. Estorno é bloqueado dentro de fechamento de caixa fechado.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-4">
+                    <strong class="text-light d-block mb-1">Margem por Cirurgia</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> somente com <code>situacao='CONFIRMADA'</code>, via valorização até o vale de origem.</li>
+                        <li><strong>Fórmula:</strong> Margem R$ = Receita Líquida − Custo Consumido − Comissão Prevista; Margen % = margem ÷ receita × 100 (2 casas; 0 quando receita = 0). Coluna "Comissão Aprop." = Σ comissões APROPRIADA (estornos já excluídos no banco).</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia</code> entre início e fim (inclusivo); sem filtro de hospital/vendedor nesta aba.</li>
+                        <li><strong>Estorno:</strong> não altera receita, custo nem comissão prevista; somente a coluna "Comissão Aprop." cai quando uma baixa da venda é estornada.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

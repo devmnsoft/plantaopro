@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE NFCE PUBLIC "http://www.portalfiscal.inf.br/nfe" "NFCE_v4.00.dtd">
+<NFCE versao="4.00">
+  <infNFe Id="NFCe43261011222333000181650010000002020000000202">
+    <ide>
+      <cUF>43</cUF>
+      <cNF>000000020</cNF>
+      <natOp>NOTA FISCAL DE CONSUMIDOR</natOp>
+      <mod>65</mod>
+      <serie>001</serie>
+      <nNF>202</nNF>
+      <dhEmi>2026-10-01T14:05:00-03:00</dhEmi>
+      <tpImp>1</tpImp>
+      <tpEmis>1</tpEmis>
+      <cDV>2</cDV>
+      <tpAmb>1</tpAmb>
+      <finNFe>1</finNFe>
+      <indFinal>1</indFinal>
+      <indPres>1</indPres>
+      <procEmi>0</procEmi>
+      <verProc>PlantaPro Fixtures 1.0</verProc>
+    </ide>
+    <emit>
+      <CNPJ>11222333000181</CNPJ>
+      <xNome>HOSPOMED DISTRIBUIDORA DE MEDICAMENTOS LTDA</xNome>
+      <enderEmit>
+        <xLgr>RUA DOS FARMACEUTICOS</xLgr>
+        <nro>1200</nro>
+        <xBairro>CENTRO</xBairro>
+        <cMunic>3550308</cMunic>
+        <xMunic>SAO PAULO</xMunic>
+        <UF>SP</UF>
+        <CEP>10110000</CEP>
+      </enderEmit>
+      <IE>111111111111</IE>
+      <CRT>1</CRT>
+    </emit>
+    <dest>
+      <CNPJ>46389044000130</CNPJ>
+      <xNome>HOSPITAL SANTA CASA DEMO LTDA</xNome>
+      <enderDest>
+        <xLgr>AVENIDA DO HOSPITAL</xLgr>
+        <nro>450</nro>
+        <xBairro>JARDIM SAUDE</xBairro>
+        <cMunic>4638901</cMunic>
+        <xMunic>SAO LUIZ</xMunic>
+        <UF>PE</UF>
+        <CEP>53010001</CEP>
+      </enderDest>
+      <IE>ISENTO</IE>
+    </dest>
+    <det nItem="1">
+      <prod>
+        <cProd>MED5ML-042</cProd>
+        <cEAN>SEM GTIN</cEAN>
+        <xProd>PARACETAMOL 500MG COMPRIMIDO CAIXA 20 UN</xProd>
+        <NCM>30039061</NCM>
+        <CFOP>5102</CFOP>
+        <uCom>CX</uCom>
+        <qCom>1.0000</qCom>
+        <vUnCom>38.90</vUnCom>
+        <uTrib>CX</uTrib>
+        <qTrib>1.0000</qTrib>
+        <vUnTrib>38.90</vUnTrib>
+        <vProd>38.90</vProd>
+        <indTot>1</indTot>
+      </prod>
+      <imposto>
+        <ICMS>
+          <ICMSSN102>
+            <orig>0</orig>
+            <CSOSN>102</CSOSN>
+          </ICMSSN102>
+        </ICMS>
+        <PIS>
+          <PISNT>
+            <CST>07</CST>
+          </PISNT>
+        </PIS>
+        <COFINS>
+          <COFINSNT>
+            <CST>07</CST>
+          </COFINSNT>
+        </COFINS>
+      </imposto>
+    </det>
+    <total>
+      <ICMSTot>
+        <vBC>0.00</vBC>
+        <vICMS>0.00</vICMS>
+        <vICMSDeson>0.00</vICMSDeson>
+        <vFCP>0.00</vFCP>
+        <vIPI>0.00</vIPI>
+        <vST>0.00</vST>
+        <vFCPST>0.00</vFCPST>
+        <vFCPSTRet>0.00</vFCPSTRet>
+        <vProd>38.90</vProd>
+        <vFrete>0.00</vFrete>
+        <vSeg>0.00</vSeg>
+        <vDesc>0.00</vDesc>
+        <vII>0.00</vII>
+        <vIPIDevol>0.00</vIPIDevol>
+        <vPIS>0.00</vPIS>
+        <vCOFINS>0.00</vCOFINS>
+        <vOutro>0.00</vOutro>
+        <vNF>38.90</vNF>
+      </ICMSTot>
+    </total>
+    <transp>
+      <modFrete>9</modFrete>
+    </transp>
+    <pag>
+      <detPag>
+        <tPag>01</tPag>
+        <vPag>38.90</vPag>
+      </detPag>
+    </pag>
+  </infNFe>
+</NFCE>

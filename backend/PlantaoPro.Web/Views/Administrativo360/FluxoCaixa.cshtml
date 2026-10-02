@@ -244,6 +244,24 @@
             </table>
         </div>
     </div>
+
+    <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
+    <div class="card bg-dark border-secondary mt-4 text-light">
+        <div class="card-header bg-dark border-secondary">
+            <span class="fw-bold"><i class="bi bi-calculator me-2"></i>Indicadores Declarados — Fonte, Fórmula, Filtros/Período e Tratamento de Estorno</span>
+        </div>
+        <div class="card-body small text-secondary">
+            <ul class="mb-0 ps-3">
+                <li><strong>Saldo Atual das Contas (hoje):</strong> derivado por conta = saldo inicial documentado + Σ(movimentos ENTRADA − SAIDA) de <code>adm360_movimentos_financeiros</code>; não existe campo de saldo gravado, logo não diverge dos movimentos.</li>
+                <li><strong>Saldo Abertura Período:</strong> Σ saldos iniciais (contas com DataSaldoInicial ≤ início) + Σ movimentos com <code>data_movimento &lt; início</code> (ENTRADA − SAIDA).</li>
+                <li><strong>Entradas/Saídas Realizadas:</strong> Σ movimentos de tipo ENTRADA/SAIDA dentro de [início, fim] (inclusivo). <strong>Saldo Fechamento Período</strong> = Abertura + Entradas − Saídas.</li>
+                <li><strong>Entradas Previstas (AR):</strong> Σ <code>saldo_aberto</code> de títulos a receber em ABERTO/PARCIAL com vencimento no período. <strong>Saídas Previstas (AP):</strong> idem para títulos a pagar em PENDENTE_APROVACAO/APROVADO/PARCIAL. Previsões não entram no Saldo Acumulado das linhas.</li>
+                <li><strong>Vencidos em Aberto:</strong> Σ <code>saldo_aberto</code> de títulos com vencimento &lt; data-base (hoje), independentemente do período filtrado.</li>
+                <li><strong>Saldo Acumulado por linha:</strong> saldo anterior + (realizado entrada − realizado saída); realizado tem precedência sobre previsão no mesmo dia.</li>
+                <li><strong>Estorno:</strong> gera movimento compensatório tipo SAIDA datado na data do estorno (origem ESTORNO_RECEBIMENTO), reduzindo o saldo derivado da conta onde o recebimento caiu; o título volta a ABERTO/PARCIAL e as comissões da baixa viram ESTORNADA. Estorno é bloqueado dentro de fechamento de caixa fechado.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <!-- Modal Nova Conta Financeira -->

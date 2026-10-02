@@ -212,6 +212,119 @@ public sealed class Administrativo360EstoqueEOrcamentosTests
     }
 
     [Fact]
+    public async Task Integracao_Inspecao_ReprovarMaterialVencido_DebitaSaldoVencidoSemQuarentenaNegativa()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+
+        var tenantId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647502");
+        var usuarioId = Guid.NewGuid();
+        var riId = Guid.NewGuid();
+        var produtoId = Guid.Parse("a3610000-0000-4000-8000-000000000002");
+        var loteVencidoId = Guid.NewGuid();
+        var localCd = Guid.Parse("a3610000-0000-4000-8000-000000000003");
+        var recebId = Guid.Parse("a3610000-0000-4000-8000-000000000010");
+        var itemId = Guid.Parse("a3610000-0000-4000-8000-000000000009");
+        var codigoLote = "INSPV-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+        await using (var cn = new NpgsqlConnection(cs))
+        {
+            await cn.OpenAsync();
+            await cn.ExecuteAsync(@"
+                INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade)
+                VALUES(@loteVencidoId, @tenantId, @produtoId, @codigoLote, @validade);
+
+                INSERT INTO plantaopro.adm360_recebimento_itens(id, tenant_id, recebimento_id, pedido_item_id, produto_id, lote_id, local_id, quantidade, condicao)
+                VALUES(@riId, @tenantId, @recebId, @itemId, @produtoId, @loteVencidoId, @localCd, 4, 'VENCIDO');
+
+                INSERT INTO plantaopro.adm360_movimentos(id, tenant_id, produto_id, lote_id, local_id, tipo, condicao, quantidade, origem_tipo, origem_id, idempotency_key, created_by)
+                VALUES(gen_random_uuid(), @tenantId, @produtoId, @loteVencidoId, @localCd, 'ENTRADA', 'VENCIDO', 4, 'RECEBIMENTO', @riId, @mKey, @usuarioId);",
+                new { riId, tenantId, recebId, itemId, produtoId, loteVencidoId, localCd, codigoLote, validade = DateTime.UtcNow.Date.AddDays(-1), mKey = "seed:inspecaovencido:" + riId, usuarioId });
+        }
+
+        var qualidadeRepo = new QualidadeRepository(cs);
+        var estoqueRepo = new EstoqueRepository(cs);
+
+        // Material vencido nao pode ser liberado (aprovada > 0 -> excecao de negocio, sem efeitos)
+        var keyAprov = "test:inspecaovencido:aprov:" + Guid.NewGuid().ToString("N");
+        var exVencido = await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
+            qualidadeRepo.DecidirAsync(tenantId, usuarioId, new DecidirInspecaoCommand(riId, 1m, 0m, "Tentativa de liberar vencido", "ALMOXARIFADO", keyAprov), CancellationToken.None));
+        Assert.Contains("Material vencido", exVencido.Message);
+
+        // Reprovar as 4 unidades: saida debita VENCIDO (nao QUARENTENA) e entrada credita REPROVADO
+        var key = "test:inspecaovencido:" + Guid.NewGuid().ToString("N");
+        var cmd = new DecidirInspecaoCommand(riId, 0m, 4m, "Reprovado por vencimento", "ALMOXARIFADO", key);
+        await qualidadeRepo.DecidirAsync(tenantId, usuarioId, cmd, CancellationToken.None);
+
+        // Reenvio com a mesma chave e mesmo conteudo -> idempotente (sem novas pernas)
+        await qualidadeRepo.DecidirAsync(tenantId, usuarioId, cmd, CancellationToken.None);
+
+        var saldos = await estoqueRepo.ConsultarAsync(tenantId, null, null, null, CancellationToken.None);
+        var vencido = saldos.FirstOrDefault(s => s.LoteId == loteVencidoId && s.LocalId == localCd && s.Condicao == "VENCIDO");
+        var quarentena = saldos.FirstOrDefault(s => s.LoteId == loteVencidoId && s.LocalId == localCd && s.Condicao == "QUARENTENA");
+        var reprovado = saldos.First(s => s.LoteId == loteVencidoId && s.LocalId == localCd && s.Condicao == "REPROVADO");
+
+        Assert.Equal(0m, vencido?.Fisico ?? 0m);
+        Assert.Null(quarentena);
+        Assert.Equal(4m, reprovado.Fisico);
+    }
+
+    [Fact]
+    public async Task Integracao_Inventario_MultiCondicaoMesmoLoteLocal_AceitaDuasLinhasSemConflito()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+
+        var tenantId = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647502");
+        var usuarioId = Guid.NewGuid();
+        var inventarioId = Guid.NewGuid();
+        var localId = Guid.NewGuid();
+        var produtoId = Guid.Parse("a3610000-0000-4000-8000-000000000002");
+        var loteId = Guid.NewGuid();
+        var codigoLote = "INVCC-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+        var codigoLocal = "INVCC-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+
+        await using (var cn = new NpgsqlConnection(cs))
+        {
+            await cn.OpenAsync();
+            // Local dedicado ao teste: um inventario ABERTO em local compartilhado bloquearia
+            // movimentacoes de outros testes (ValidarBloqueioInventarioAsync, situacao ABERTO/
+            // CONTAGEM/REVISAO). A unicidade do item de inventario e por condicao; com a
+            // constraint legada de 4 colunas o segundo INSERT abaixo falharia (causa raiz do
+            // count-0 em QUARENTENA esperado 0).
+            await cn.ExecuteAsync(@"
+                INSERT INTO plantaopro.adm360_locais(id, tenant_id, codigo, nome, tipo)
+                VALUES(@localId, @tenantId, @codigoLocal, 'Local isolado teste multicondicao', 'INTERNO');
+
+                INSERT INTO plantaopro.adm360_inventarios(id, tenant_id, local_id, situacao, escopo, created_by)
+                VALUES(@inventarioId, @tenantId, @localId, 'ABERTO', 'Teste multicondicao', @usuarioId);
+
+                INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade)
+                VALUES(@loteId, @tenantId, @produtoId, @codigoLote, '2028-01-01');
+
+                INSERT INTO plantaopro.adm360_inventario_itens(id, tenant_id, inventario_id, produto_id, lote_id, condicao, esperado)
+                VALUES(gen_random_uuid(), @tenantId, @inventarioId, @produtoId, @loteId, 'LIBERADO', 5);
+
+                INSERT INTO plantaopro.adm360_inventario_itens(id, tenant_id, inventario_id, produto_id, lote_id, condicao, esperado)
+                VALUES(gen_random_uuid(), @tenantId, @inventarioId, @produtoId, @loteId, 'QUARENTENA', 0);",
+                new { inventarioId, tenantId, localId, usuarioId, produtoId, loteId, codigoLote, codigoLocal });
+
+            var count = await cn.ExecuteScalarAsync<int>(
+                "SELECT COUNT(*) FROM plantaopro.adm360_inventario_itens WHERE inventario_id=@inventarioId",
+                new { inventarioId });
+            Assert.Equal(2, count);
+
+            // Isolacao total: remove tudo o que o teste criou (reexecucoes usam GUIDs novos).
+            await cn.ExecuteAsync(@"
+                DELETE FROM plantaopro.adm360_inventario_itens WHERE inventario_id=@inventarioId;
+                DELETE FROM plantaopro.adm360_inventarios WHERE id=@inventarioId;
+                DELETE FROM plantaopro.adm360_lotes WHERE id=@loteId;
+                DELETE FROM plantaopro.adm360_locais WHERE id=@localId;",
+                new { inventarioId, loteId, localId });
+        }
+    }
+
+    [Fact]
     public async Task Integracao_OrcamentoCirurgico_CicloCompleto()
     {
         var cs = ObterConnectionString();

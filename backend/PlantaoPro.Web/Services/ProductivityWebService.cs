@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -26,25 +28,73 @@ public sealed class ProductivityWebService
         return await client.PostAsJsonAsync($"api/produtividade/{Uri.EscapeDataString(key)}/adiar", new { snoozedUntil = until }, Json, ct);
     }
 
+    /// <summary>
+    /// Busca a visão da produtividade classificando a falha de forma honesta:
+    /// timeout (tempo limite do HttpClient), cancelamento legítimo do navegador/chamador,
+    /// falha de transporte, 401, 403, 5xx e resposta inválida. O identificador de
+    /// correlação é registrado nos logs para casar Web/API/banco; nenhum valor sensível
+    /// (token, cabeçalhos) entra na mensagem ou no log.
+    /// </summary>
     private async Task<ProductivityPageViewModel> GetAsync(string token, string uri, CancellationToken ct)
     {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        HttpResponseMessage? response = null;
         try
         {
-            using var response = await CreateClient(token).GetAsync(uri, ct);
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Productivity API returned {StatusCode} for {Uri}", response.StatusCode, uri);
-                return new() { Error = response.StatusCode == System.Net.HttpStatusCode.Forbidden
-                    ? "Seu perfil não possui acesso a esta visão ou o acesso foi revogado."
-                    : "Não foi possível carregar os dados reais agora. Tente novamente." };
-            }
-
-            return await response.Content.ReadFromJsonAsync<ProductivityPageViewModel>(Json, ct) ?? new();
+            response = await CreateClient(token).GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogDebug("Productivity: consulta cancelada pelo chamador para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "CANCELADO", Error = "A consulta foi cancelada antes da conclusão." };
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning("Productivity: tempo limite excedido para {Uri} após {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "TIMEOUT", Error = "A resposta da Central de Ações demorou mais do que o limite permitido. Tente novamente." };
         }
         catch (HttpRequestException exception)
         {
-            _logger.LogWarning(exception, "Productivity API unavailable for {Uri}", uri);
-            return new() { Error = "A Central de Ações está temporariamente indisponível." };
+            stopwatch.Stop();
+            _logger.LogWarning(exception, "Productivity: falha de transporte para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "TRANSPORTE", Error = "A Central de Ações está temporariamente indisponível. Tente novamente." };
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                stopwatch.Stop();
+                var status = response.StatusCode;
+                _logger.LogWarning("Productivity: API respondeu {StatusCode} para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", (int)status, uri, stopwatch.ElapsedMilliseconds, correlationId);
+                return status switch
+                {
+                    HttpStatusCode.Unauthorized => new ProductivityPageViewModel { ErrorKind = "NAO_AUTENTICADO", Error = "Sua sessão expirou. Entre novamente para continuar." },
+                    HttpStatusCode.Forbidden => new ProductivityPageViewModel { ErrorKind = "SEM_PERMISSAO", Error = "Seu perfil não possui acesso a esta visão ou o acesso foi revogado." },
+                    _ when (int)status >= 500 => new ProductivityPageViewModel { ErrorKind = "FALHA_SERVIDOR", Error = "O serviço que carrega o seu dia apresentou uma falha interna. Tente novamente." },
+                    _ => new ProductivityPageViewModel { ErrorKind = "ERRO_INESPERADO", Error = "Não foi possível carregar os dados reais agora. Tente novamente." }
+                };
+            }
+
+            stopwatch.Stop();
+            try
+            {
+                return await response.Content.ReadFromJsonAsync<ProductivityPageViewModel>(Json, ct)
+                       ?? new ProductivityPageViewModel { ErrorKind = "RESPOSTA_INVALIDA", Error = "A resposta da Central de Ações veio vazia. Tente novamente." };
+            }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                _logger.LogDebug("Productivity: leitura da resposta cancelada pelo chamador para {Uri} (correlacao={CorrelationId}).", uri, correlationId);
+                return new() { ErrorKind = "CANCELADO", Error = "A consulta foi cancelada antes da conclusão." };
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogWarning(exception, "Productivity: resposta inválida da API para {Uri} (correlacao={CorrelationId}).", uri, correlationId);
+                return new() { ErrorKind = "RESPOSTA_INVALIDA", Error = "A resposta da Central de Ações veio em um formato inesperado. Tente novamente." };
+            }
         }
     }
 

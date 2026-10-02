@@ -25,12 +25,23 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
 
     private NpgsqlConnection Open() => new(connectionString);
 
-    // Every row is derived from the current source entity. Only user presentation state is joined.
+    // Contrato de escopo por origem (coluna canônica de isolamento no schema):
+    //   cobertura_convites -> tenant_id (não possui cliente_id no schema; não criar coluna só para filtrar)
+    //   escalas, pagamentos, plantoes -> tenant_id ou cliente_id (ambas existem no schema)
+    //   demais origens (fechamento_plantao, pagamento_contestacoes, agendamentos, consultas,
+    //   medico_checkins, medico_presenca_correcoes, ocorrencias_operacionais) -> tenant_id
+    // Contrato de colunas consumidas pelo CTE/ProductivityRow: Key, Module, EntityType, EntityId,
+    // ActionCode, Title, Description, Priority, Status, DueAt (timestamptz ou null), CreatedAt (timestamptz),
+    // OwnerType ('USUARIO'|'EQUIPE'), OwnerId (uuid ou null), Icon, ContextLabel, PrimaryAction,
+    // CanSnooze, CanDismiss, SourceUpdatedAt (timestamptz).
+    // Cada ramo deve respeitar esse contrato; erro de consulta propaga exceção (nunca vira lista vazia).
     private const string DerivedSql = @"
-        select concat('OPERACAO:CONVITE:',c.id,':RESPONDER'),'OPERACAO','CONVITE',c.id,'RESPONDER','Convite aguardando resposta',
-          'Um convite de plantão aguarda sua resposta.','NORMAL','ATIVA',null,c.criado_em,'USUARIO',c.medico_id,
-          'bi-envelope-check','Plantão','/Convites',true,false,coalesce(c.respondido_em,c.reenviado_em,c.criado_em)
-        from plantaopro.cobertura_convites c where @operation and (c.tenant_id=@tenantId or c.cliente_id=@tenantId) and c.status='PENDENTE'
+        select concat('OPERACAO:CONVITE:',c.id,':RESPONDER') as Key,'OPERACAO' as Module,'CONVITE' as EntityType,c.id as EntityId,'RESPONDER' as ActionCode,
+          'Convite aguardando resposta' as Title,'Um convite de plantão aguarda sua resposta.' as Description,'NORMAL' as Priority,'ATIVA' as Status,
+          null as DueAt,c.criado_em as CreatedAt,'USUARIO' as OwnerType,c.medico_id as OwnerId,
+          'bi-envelope-check' as Icon,'Plantão' as ContextLabel,'/Convites' as PrimaryAction,true as CanSnooze,false as CanDismiss,
+          coalesce(c.respondido_em,c.reenviado_em,c.criado_em) as SourceUpdatedAt
+        from plantaopro.cobertura_convites c where @operation and c.tenant_id=@tenantId and c.status='PENDENTE'
           and (not @doctorOnly or c.medico_id=@userId or exists(select 1 from plantaopro.medicos m where m.id=c.medico_id and m.usuario_id=@userId))
         union all
         select concat('OPERACAO:ESCALA:',e.id,':CONFIRMAR'),'OPERACAO','ESCALA',e.id,'CONFIRMAR','Escala aguardando confirmação',
@@ -212,8 +223,8 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
                   and p.data_inicio <= (current_date + interval '3 days')
                 order by p.data_inicio;
             ";
-            var rows = await cn.QueryAsync<ProductivityAgendaItemDto>(new CommandDefinition(doctorAgendaSql, new { tenantId, userId }, cancellationToken: ct));
-            return rows.ToArray();
+            var rows = await cn.QueryAsync<ProductivityAgendaRow>(new CommandDefinition(doctorAgendaSql, new { tenantId, userId }, cancellationToken: ct));
+            return rows.Select(r => new ProductivityAgendaItemDto(r.Title, r.ContextLabel, r.StartsAt, r.EndsAt, r.Section)).ToArray();
         }
 
         const string adminAgendaSql = @"
@@ -246,8 +257,8 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
               and p.data_inicio <= (current_date + interval '4 days')
             order by p.data_inicio;
         ";
-        var adminRows = await cn.QueryAsync<ProductivityAgendaItemDto>(new CommandDefinition(adminAgendaSql, new { tenantId, userId }, cancellationToken: ct));
-        return adminRows.ToArray();
+        var adminRows = await cn.QueryAsync<ProductivityAgendaRow>(new CommandDefinition(adminAgendaSql, new { tenantId, userId }, cancellationToken: ct));
+        return adminRows.Select(r => new ProductivityAgendaItemDto(r.Title, r.ContextLabel, r.StartsAt, r.EndsAt, r.Section)).ToArray();
     }
 
     private static string? Normalize(string? value)=>string.IsNullOrWhiteSpace(value)?null:value.Trim().ToUpperInvariant();
@@ -261,6 +272,17 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         public string PrimaryAction {get;set;}=""; public bool CanSnooze {get;set;} public bool CanDismiss {get;set;}
         public DateTimeOffset SourceUpdatedAt {get;set;} public bool IsSnoozed {get;set;} public int TotalRows {get;set;}
         public ProductivityActionDto ToDto()=>new(Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed);
+    }
+
+    // Mesma motivação das demais consultas deste arquivo: o reader do Npgsql 10 expõe DateTime
+    // para colunas timestamptz e o mapeamento direto no ProductivityAgendaItemDto (record
+    // posicional com DateTimeOffset) falhava em runtime. A classe intermediária absorve a
+    // conversão; o registro público continua expondo DateTimeOffset.
+    private sealed class ProductivityAgendaRow
+    {
+        public string Title {get;set;}=""; public string ContextLabel {get;set;}="";
+        public DateTimeOffset StartsAt {get;set;} public DateTimeOffset? EndsAt {get;set;}
+        public string Section {get;set;}="";
     }
 }
 

@@ -357,8 +357,19 @@ public sealed class Administrativo360OrganizacaoTests : IClassFixture<PlantaoPro
             Assert.Equal(depId, okEl.GetProperty("departamentoId").GetGuid());
             Assert.NotNull(okEl.GetProperty("departamento").GetString());
 
-            // Código duplicado ativo (mesmo departamento) é recusado.
-            var rDup = await c.PostAsJsonAsync("api/administrativo360/cargos", new { codigo = $"cg{suffixo}b", nome = "Cargo Dup", departamentoId = depId });
+            // J12 WP-A3: atualização bem-sucedida precisa materializar no MESMO formato
+            // da criação (6 colunas incl. nome do departamento via join). Sem isso o
+            // Dapper lançava InvalidOperationException e o PUT respondia 500.
+            var rUpd = await c.PutAsJsonAsync($"api/administrativo360/cargos/{cargoOk}", new { codigo = $"CG{suffixo}B2", nome = "Cargo Válido Editado", departamentoId = depId.ToString() });
+            Assert.True(rUpd.IsSuccessStatusCode, $"PUT de cargo válido deve retornar sucesso: {(int)rUpd.StatusCode} {await MensagemErroAsync(rUpd)}");
+            var updEl = await LerCorpoAsync(rUpd);
+            // O serviço normaliza codigo com upper(trim(...)) — a comparação segue o mesmo contrato.
+            Assert.Equal($"CG{suffixo}B2", updEl.GetProperty("codigo").GetString(), ignoreCase: true);
+            Assert.Equal("Cargo Válido Editado", updEl.GetProperty("nome").GetString());
+            Assert.NotNull(updEl.GetProperty("departamento").GetString());
+
+            // Código duplicado ativo (mesmo departamento) é recusado — o código já é B2 após o PUT acima.
+            var rDup = await c.PostAsJsonAsync("api/administrativo360/cargos", new { codigo = $"cg{suffixo}b2", nome = "Cargo Dup", departamentoId = depId });
             await AssertMensagemNegocioAsync(rDup, "código duplicado: ");
             Assert.Contains("Já existe um cargo ativo com este código.", await MensagemErroAsync(rDup));
 

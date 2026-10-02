@@ -11,6 +11,7 @@
     "plantaopro.adm360_comissoes_apropriadas",
     "plantaopro.adm360_contas_financeiras",
     "plantaopro.adm360_cotacao_anexos",
+    "plantaopro.adm360_cotacao_exportacoes",
     "plantaopro.adm360_cotacao_itens",
     "plantaopro.adm360_cotacao_respostas",
     "plantaopro.adm360_cotacoes",
@@ -19,6 +20,7 @@
     "plantaopro.adm360_documento_itens",
     "plantaopro.adm360_documentos_recebidos",
     "plantaopro.adm360_estabelecimentos",
+    "plantaopro.adm360_eventos",
     "plantaopro.adm360_inspecoes",
     "plantaopro.adm360_inventario_itens",
     "plantaopro.adm360_inventarios",
@@ -249,6 +251,7 @@
     "plantaopro.prescricoes",
     "plantaopro.presencas",
     "plantaopro.productivity_item_user_state",
+    "plantaopro.productivity_item_user_state_nao_existe",
     "plantaopro.recent_items",
     "plantaopro.recuperacao_senha",
     "plantaopro.relatorio_exportacoes",
@@ -606,6 +609,12 @@
     "database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql",
     "database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql",
     "database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql",
-    "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql"
+    "database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql",
+    "database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql",
+    "database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql",
+    "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
+    "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
+    "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
+    "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql"
   ]
 }

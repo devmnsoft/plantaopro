@@ -102,10 +102,10 @@ public static class XmlDocumentoRegras
         if (!ChaveNfeRegex.IsMatch(limpa))
             throw new ArgumentException($"Chave de acesso inválida. Deve conter exatamente 44 dígitos numéricos. Recebido: '{limpa}'.", nameof(chaveAcesso));
 
-        // Modelo 55 da NF-e está nas posições 21 e 22 (índice 20 e 21 em 0-based)
+        // B1: modelos fiscais nas posições 21 e 22 (índice 20 e 21 em 0-based): NF-e (55) ou NFC-e (65)
         var modelo = limpa.Substring(20, 2);
-        if (modelo != "55")
-            throw new Administrativo360BusinessException($"Modelo de documento fiscal '{modelo}' não suportado neste módulo. O escopo é estritamente NF-e Modelo 55.");
+        if (modelo != "55" && modelo != "65")
+            throw new Administrativo360BusinessException($"Modelo de documento fiscal '{modelo}' não suportado neste módulo. Modelos suportados: NF-e (55) e NFC-e (65).");
     }
 
     public static void ValidarDestinatarioAutorizado(string cnpjDestinatario, IEnumerable<string> cnpjsAutorizados)

@@ -149,7 +149,7 @@ public sealed class Administrativo360Service
         await using var cn=Connection();
         try
         {
-            var row=await cn.QueryFirstOrDefaultAsync<CargoDto>(new CommandDefinition(@"update plantaopro.adm_cargos set codigo=upper(trim(@Codigo)),nome=trim(@Nome),departamento_id=@DepartamentoId,reg_update=now() where id=@id and tenant_id=@tenant and reg_status='A' returning id,codigo,nome,departamento_id as DepartamentoId,ativo",new{id,tenant=Tenant(),r.Codigo,r.Nome,r.DepartamentoId},cancellationToken:ct));
+            var row=await cn.QueryFirstOrDefaultAsync<CargoDto>(new CommandDefinition(@"with atualizado as (update plantaopro.adm_cargos set codigo=upper(trim(@Codigo)),nome=trim(@Nome),departamento_id=@DepartamentoId,reg_update=now() where id=@id and tenant_id=@tenant and reg_status='A' returning *) select n.id,n.codigo,n.nome,n.departamento_id as DepartamentoId,d.nome as Departamento,n.ativo from atualizado n left join plantaopro.adm_departamentos d on d.id=n.departamento_id",new{id,tenant=Tenant(),r.Codigo,r.Nome,r.DepartamentoId},cancellationToken:ct));
             return row ?? throw new Administrativo360BusinessException("Cargo não encontrado ou já inativo.");
         }
         catch(PostgresException ex) when(ex.SqlState=="23505") { throw new Administrativo360BusinessException("Já existe um cargo ativo com este código."); }

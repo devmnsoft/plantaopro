@@ -893,9 +893,6 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
         if (resp is null)
             throw new KeyNotFoundException("Registro de resposta na fila não encontrado.");
 
-        if (resp.StatusTransmissao == "ACEITA_PELO_PORTAL")
-            throw new Administrativo360BusinessException($"A transmissão desta proposta já foi concluída e aceita pelo portal com protocolo '{resp.ProtocoloExterno}'. Não é permitida retransmissão.");
-
         var cotacao = await ObterCotacaoPorIdAsync(tenantId, resp.CotacaoId, ct);
         if (cotacao is null)
             throw new KeyNotFoundException("Cotação vinculada não encontrada.");
@@ -906,80 +903,146 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
         var conector = ObterConector(cotacao.Provedor);
 
-        // P4: transmissão atômica — marca ENVIANDO, chamada do conector, resultado final,
-        // exportação e status da cotação cometem em UMA transação. Se o processo cair no meio,
-        // tudo volta e nada fica preso em ENVIANDO; se o conector lançar exceção, o estado
-        // final honesto é RESULTADO_DESCONHECIDO (nunca um ENVIANDO órfão).
-        await using var cn = Connection();
-        await cn.OpenAsync(ct);
-        await using var tx = await cn.BeginTransactionAsync(ct);
-
-        try
+        // B5: etapa 1 — transação CURTA de marcação com lock de linha (SELECT ... FOR UPDATE).
+        // Guardas de máquina de estados avaliam o estado REAL sob lock, então duas transmissões
+        // simultâneas nunca ambas avançam: a segunda lê ENVIANDO e é rejeitada com mensagem clara.
+        // A chamada externa do conector acontece FORA de qualquer transação de banco.
+        var attemptId = Guid.NewGuid();
+        var novaTentativa = resp.Tentativas + 1;
+        await using (var cnMarca = Connection())
         {
-            // Marca tentativa na fila (dentro da transação)
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                UPDATE plantaopro.adm360_cotacao_respostas
-                SET status_transmissao = 'ENVIANDO', tentativas = tentativas + 1, updated_at = now()
-                WHERE id = @id AND tenant_id = @tenantId",
-                new { id = command.RespostaId, tenantId }, tx, cancellationToken: ct));
-
-            // Transmissão via conector (falha técnica vira estado honesto, não exceção com ENVIANDO órfão)
-            EnvioRespostaPortalResult resultado;
+            await cnMarca.OpenAsync(ct);
+            await using var txMarca = await cnMarca.BeginTransactionAsync(ct);
             try
             {
-                resultado = await conector.TransmitirPropostaAsync(conta, resp, cotacao, ct);
-            }
-            catch (Exception ex)
-            {
-                resultado = new EnvioRespostaPortalResult(false, "RESULTADO_DESCONHECIDO", null,
-                    "Falha técnica na transmissão (exceção do conector): " + ex.Message);
-            }
+                var locked = await cnMarca.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                    SELECT r.status_transmissao, r.tentativas, r.protocolo_externo
+                      FROM plantaopro.adm360_cotacao_respostas r
+                     WHERE r.id = @respostaId AND r.tenant_id = @tenantId
+                     FOR UPDATE",
+                    new { respostaId = command.RespostaId, tenantId }, txMarca, cancellationToken: ct));
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                UPDATE plantaopro.adm360_cotacao_respostas
-                SET status_transmissao = @status,
-                    protocolo_externo = @protocolo,
-                    mensagem_retorno = @mensagem,
-                    enviado_em = (CASE WHEN @sucesso THEN now() ELSE enviado_em END),
-                    updated_at = now()
-                WHERE id = @id AND tenant_id = @tenantId",
-                new
-                {
-                    id = command.RespostaId, tenantId,
-                    status = resultado.StatusTransmissao,
-                    protocolo = resultado.Protocolo,
-                    mensagem = resultado.Mensagem,
-                    sucesso = resultado.Sucesso
-                }, tx, cancellationToken: ct));
+                if (locked is null)
+                    throw new KeyNotFoundException("Registro de resposta na fila não encontrado.");
 
-            if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
+                var statusAtual = (string)locked.status_transmissao;
+                if (statusAtual == "ACEITA_PELO_PORTAL")
+                    throw new Administrativo360BusinessException($"A transmissão desta proposta já foi concluída e aceita pelo portal com protocolo '{(string?)locked.protocolo_externo}'. Não é permitida retransmissão.");
+
+                CotacaoRegras.ValidarRetransmissaoPermitida(statusAtual, command.ConfirmarRetransmissaoDeDesconhecido);
+
+                novaTentativa = (int)locked.tentativas + 1;
+
+                // Tentativa PERSISTIDA: uma linha por envio (UNIQUE tenant+resposta+tentativa).
+                // É a evidência usada por reconciliação, auditoria e bloqueio de retransmissão cega.
+                await cnMarca.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_cotacao_envios(
+                        id, tenant_id, resposta_id, tentativa, canal, status_transmissao, iniciado_em, created_by
+                    ) VALUES (
+                        @attemptId, @tenantId, @respostaId, @tentativa, @canal, 'INICIADA', now(), @usuarioId
+                    )",
+                    new { attemptId, tenantId, respostaId = command.RespostaId, tentativa = novaTentativa, canal = cotacao.Provedor, usuarioId }, txMarca, cancellationToken: ct));
+
+                await cnMarca.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacao_respostas
+                    SET status_transmissao = 'ENVIANDO', tentativas = @novaTentativa, updated_at = now()
+                    WHERE id = @respostaId AND tenant_id = @tenantId",
+                    new { novaTentativa, respostaId = command.RespostaId, tenantId }, txMarca, cancellationToken: ct));
+
+                await txMarca.CommitAsync(ct);
+            }
+            catch
             {
-                // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
-                // a primeira geração vence — retransmissões preservam o arquivo original).
-                if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
+                try { await txMarca.RollbackAsync(ct); } catch { /* rollback best-effort */ }
+                throw;
+            }
+        }
+
+        // B5: etapa 2 — chamada EXTERNA fora de transação, com prazo próprio de comunicação.
+        // Timeout ou exceção do conector viram estado honesto RESULTADO_DESCONHECIDO (o portal
+        // pode ter recebido); cancelamento externo propaga (envio fica p/ conciliação).
+        EnvioRespostaPortalResult resultado;
+        try
+        {
+            using var ctsLigado = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            ctsLigado.CancelAfter(TimeSpan.FromSeconds(30));
+            resultado = await conector.TransmitirPropostaAsync(conta, resp, cotacao, ctsLigado.Token);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            resultado = new EnvioRespostaPortalResult(false, "RESULTADO_DESCONHECIDO", null,
+                "Tempo limite de comunicação com o portal excedido (30 s). O retorno do envio não pôde ser confirmado.");
+        }
+        catch (Exception ex)
+        {
+            resultado = new EnvioRespostaPortalResult(false, "RESULTADO_DESCONHECIDO", null,
+                "Falha técnica na transmissão (exceção do conector): " + ex.Message);
+        }
+
+        // B5: etapa 3 — transação CURTA de finalização: estado final + fechamento da tentativa
+        // persistida + arquivo imutável do canal manual + evento + status da cotação.
+        // O guard 'status_transmissao = ENVIANDO' impede sobrescrever estado conciliado.
+        await using (var cnFinal = Connection())
+        {
+            await cnFinal.OpenAsync(ct);
+            await using var txFinal = await cnFinal.BeginTransactionAsync(ct);
+            try
+            {
+                await cnFinal.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacao_envios
+                    SET status_transmissao = @status,
+                        protocolo_externo = @protocolo,
+                        mensagem = left(@mensagem, 2000),
+                        finalizado_em = now()
+                    WHERE id = @attemptId AND tenant_id = @tenantId",
+                    new { status = resultado.StatusTransmissao, protocolo = resultado.Protocolo, mensagem = resultado.Mensagem, attemptId, tenantId }, txFinal, cancellationToken: ct));
+
+                await cnFinal.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacao_respostas
+                    SET status_transmissao = @status,
+                        protocolo_externo = @protocolo,
+                        mensagem_retorno = @mensagem,
+                        enviado_em = (CASE WHEN @sucesso THEN now() ELSE enviado_em END),
+                        updated_at = now()
+                    WHERE id = @id AND tenant_id = @tenantId AND status_transmissao = 'ENVIANDO'",
+                    new
+                    {
+                        id = command.RespostaId, tenantId,
+                        status = resultado.StatusTransmissao,
+                        protocolo = resultado.Protocolo,
+                        mensagem = resultado.Mensagem,
+                        sucesso = resultado.Sucesso
+                    }, txFinal, cancellationToken: ct));
+
+                if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
                 {
-                    await RegistrarExportacaoManualAsync(cn, tx, tenantId, usuarioId, command.RespostaId, ct);
+                    // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
+                    // a primeira geração vence — retransmissões preservam o arquivo original).
+                    if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
+                    {
+                        await RegistrarExportacaoManualAsync(cnFinal, txFinal, tenantId, usuarioId, command.RespostaId, ct);
+                    }
+
+                    await cnFinal.ExecuteAsync(new CommandDefinition(@"
+                        UPDATE plantaopro.adm360_cotacoes
+                        SET status_interno = 'RESPONDIDA', updated_at = now()
+                        WHERE id = @cotacaoId AND tenant_id = @tenantId",
+                        new { cotacaoId = resp.CotacaoId, tenantId }, txFinal, cancellationToken: ct));
                 }
 
-                await cn.ExecuteAsync(new CommandDefinition(@"
-                    UPDATE plantaopro.adm360_cotacoes
-                    SET status_interno = 'RESPONDIDA', updated_at = now()
-                    WHERE id = @cotacaoId AND tenant_id = @tenantId",
-                    new { cotacaoId = resp.CotacaoId, tenantId }, tx, cancellationToken: ct));
+                // P4/B5: evento RETORNO_EXTERNO — o retorno da transmissão é sempre registrado (um por tentativa)
+                await eventos.RegistrarAsync(cnFinal, txFinal, tenantId, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", command.RespostaId, usuarioId,
+                    $"Retorno da transmissão da resposta: {resultado.StatusTransmissao}",
+                    new { status_final = resultado.StatusTransmissao, protocolo_externo = resultado.Protocolo, mensagem_retorno = resultado.Mensagem },
+                    null, ct);
+
+                await txFinal.CommitAsync(ct);
             }
-
-            // P4: evento RETORNO_EXTERNO — o retorno da transmissão é sempre registrado (um por tentativa)
-            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", command.RespostaId, usuarioId,
-                $"Retorno da transmissão da resposta: {resultado.StatusTransmissao}",
-                new { status_final = resultado.StatusTransmissao, protocolo_externo = resultado.Protocolo, mensagem_retorno = resultado.Mensagem },
-                null, ct);
-
-            await tx.CommitAsync(ct);
-        }
-        catch
-        {
-            try { await tx.RollbackAsync(ct); } catch { /* rollback best-effort */ }
-            throw;
+            catch
+            {
+                try { await txFinal.RollbackAsync(ct); } catch { /* rollback best-effort */ }
+                throw;
+            }
         }
     }
 

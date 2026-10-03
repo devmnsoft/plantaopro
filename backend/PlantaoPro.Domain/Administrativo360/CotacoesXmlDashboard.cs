@@ -51,6 +51,28 @@ public static class CotacaoRegras
             throw new Administrativo360BusinessException($"O prazo de resposta da cotação expirou em {prazoUtc:dd/MM/yyyy HH:mm} UTC.");
     }
 
+    /// <summary>
+    /// B5: regras de retransmissão de resposta de cotação (estado real do outbox).
+    /// - ENVIANDO: outra transmissão está em andamento (controle de concorrência);
+    ///   nunca duas transmissões simultâneas para a mesma resposta.
+    /// - RESULTADO_DESCONHECIDO: o portal pode já ter recebido a proposta; a
+    ///   retransmissão exige confirmação explícita (regra anti-duplicidade).
+    /// Os demais estados (NA_FILA, CONFIGURACAO_PENDENTE, REJEITADA_PELO_PORTAL,
+    /// EXPORTADA_MANUALMENTE) permitem nova tentativa — no canal manual o arquivo é
+    /// imutável e a primeira geração vence, então não há duplicidade de efeito.
+    /// </summary>
+    public static void ValidarRetransmissaoPermitida(string statusTransmissao, bool confirmarRetransmissaoDeDesconhecido)
+    {
+        if (string.Equals(statusTransmissao, "ENVIANDO", StringComparison.OrdinalIgnoreCase))
+            throw new Administrativo360BusinessException(
+                "Já existe transmissão em andamento para esta resposta. Aguarde o retorno do portal ou a conciliação de envios interrompidos antes de tentar novamente.");
+
+        if (string.Equals(statusTransmissao, "RESULTADO_DESCONHECIDO", StringComparison.OrdinalIgnoreCase)
+            && !confirmarRetransmissaoDeDesconhecido)
+            throw new Administrativo360BusinessException(
+                "O resultado da última transmissão é desconhecido: o portal pode já ter recebido a proposta. Confirme explicitamente a retransmissão para evitar envio duplicado.");
+    }
+
     public static decimal CalcularQuantidadeConvertida(decimal quantidadeSolicitada, decimal fatorConversao)
     {
         if (quantidadeSolicitada <= 0)

@@ -18,7 +18,7 @@ public class ClientesController : BaseWebController
         var (data, error, statusCode) = await ReadApiResponse<ClienteDto>(client, $"api/clientes/{id}");
         if (data is null)
         {
-            TempData["ErrorMessage"] = error ?? "Cliente não encontrado ou contexto não autorizado.";
+            TempData["Error"] = error ?? "Cliente não encontrado ou contexto não autorizado.";
             Logger.LogWarning("Central global não abriu cliente {ClienteId}. Status {Status}", id, (int)statusCode);
             return RedirectToAction(nameof(Index));
         }
@@ -43,7 +43,7 @@ public class ClientesController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro inesperado ao carregar tela de clientes");
-            TempData["ErrorMessage"] = "Não foi possível carregar os clientes no momento.";
+            TempData["Error"] = "Não foi possível carregar os clientes no momento.";
             return View(new ClienteCentralPageDto(Array.Empty<ClienteCentralDto>(), 1, 20, 0, new(0, 0, 0, 0, 0)));
         }
     }
@@ -102,7 +102,7 @@ public class ClientesController : BaseWebController
 
             if (string.IsNullOrWhiteSpace(acao) || string.IsNullOrWhiteSpace(motivo))
             {
-                TempData["ErrorMessage"] = "Ação inválida para alteração de status.";
+                TempData["Error"] = "Ação inválida para alteração de status.";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -110,19 +110,19 @@ public class ClientesController : BaseWebController
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync();
-                TempData["ErrorMessage"] = $"Não foi possível concluir a ação solicitada. {body}";
+                TempData["Error"] = $"Não foi possível concluir a ação solicitada. {body}";
                 Logger.LogWarning("Validação bloqueada ao alterar status do cliente {ClienteId}", id);
                 return RedirectToAction(nameof(Index), new { busca, status, pagina });
             }
 
-            TempData["SuccessMessage"] = "Status do cliente atualizado com sucesso.";
+            TempData["Success"] = "Status do cliente atualizado com sucesso.";
             Logger.LogInformation("Status do cliente {ClienteId} atualizado com sucesso", id);
             return RedirectToAction(nameof(Index), new { busca, status, pagina });
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro inesperado ao alterar status do cliente {ClienteId}", id);
-            TempData["ErrorMessage"] = "Erro inesperado ao alterar status do cliente.";
+            TempData["Error"] = "Erro inesperado ao alterar status do cliente.";
             return RedirectToAction(nameof(Index));
         }
     }

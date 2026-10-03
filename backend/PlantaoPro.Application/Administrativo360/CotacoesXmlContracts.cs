@@ -223,7 +223,8 @@ public sealed record AprovarRespostaCotacaoCommand(
 );
 
 public sealed record TransmitirRespostaCommand(
-    Guid RespostaId
+    Guid RespostaId,
+    bool ConfirmarRetransmissaoDeDesconhecido = false
 );
 
 // 5. Outbox de Respostas

@@ -81,7 +81,7 @@ public partial class Administrativo360Controller
 
         if (model.Itens.Count == 0)
         {
-            TempData["ErrorMessage"] = "Adicione ao menos um item ao vale de consignação.";
+            TempData["Error"] = "Adicione ao menos um item ao vale de consignação.";
             await PreencherLookupsValeAsync(client, model);
             return View(model);
         }
@@ -112,11 +112,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/vales", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Vale de consignação criado com sucesso.";
+            TempData["Success"] = "Vale de consignação criado com sucesso.";
             return RedirectToAction(nameof(Vales));
         }
 
-        TempData["ErrorMessage"] = resp.Error ?? "Falha ao criar vale de consignação.";
+        TempData["Error"] = resp.Error ?? "Falha ao criar vale de consignação.";
         await PreencherLookupsValeAsync(client, model);
         return View(model);
     }
@@ -143,9 +143,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/separar-item", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Conferência do item registrada.";
+            TempData["Success"] = "Conferência do item registrada.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar conferência do item.";
+            TempData["Error"] = resp.Error ?? "Falha ao registrar conferência do item.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -159,9 +159,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/concluir-separacao", new { });
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Separação de materiais concluída. Vale pronto para expedição.";
+            TempData["Success"] = "Separação de materiais concluída. Vale pronto para expedição.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao concluir separação de materiais.";
+            TempData["Error"] = resp.Error ?? "Falha ao concluir separação de materiais.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -176,9 +176,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/expedir", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Vale expedido com sucesso! Materiais transferidos para custódia externa no hospital.";
+            TempData["Success"] = "Vale expedido com sucesso! Materiais transferidos para custódia externa no hospital.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao expedir vale.";
+            TempData["Error"] = resp.Error ?? "Falha ao expedir vale.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -209,9 +209,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, endpoint, payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = $"Evento de {tipo} registrado com sucesso.";
+            TempData["Success"] = $"Evento de {tipo} registrado com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? $"Falha ao registrar evento de {tipo}.";
+            TempData["Error"] = resp.Error ?? $"Falha ao registrar evento de {tipo}.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -232,9 +232,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/reconciliar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Vale reconciliado com sucesso! Pronto para valorização no próximo incremento.";
+            TempData["Success"] = "Vale reconciliado com sucesso! Pronto para valorização no próximo incremento.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao reconciliar vale.";
+            TempData["Error"] = resp.Error ?? "Falha ao reconciliar vale.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -249,9 +249,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/cancelar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Vale cancelado com sucesso.";
+            TempData["Success"] = "Vale cancelado com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar vale.";
+            TempData["Error"] = resp.Error ?? "Falha ao cancelar vale.";
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }

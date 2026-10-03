@@ -14,26 +14,11 @@
             <p class="text-muted small mb-0">Monitoramento e execução de consultas de documentos fiscais emitidos contra o CNPJ da empresa.</p>
         </div>
         <div>
-            <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#modalSincronizar">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalSincronizar">
                 <i class="bi bi-arrow-repeat me-1"></i> Executar Consulta DF-e
             </button>
         </div>
     </div>
-
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>@TempData["Sucesso"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    }
 
     <!-- Regras Oficiais Sefaz -->
     <div class="card bg-dark border-secondary mb-4 text-light">

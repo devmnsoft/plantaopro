@@ -7,6 +7,7 @@ namespace PlantaoPro.Api.Controllers;
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Assistencial)]
+[Saude360Module]
 [Route("api/clinica-dashboard")]
 public sealed class ClinicaDashboardController : ControllerBase
 {
@@ -17,6 +18,7 @@ public sealed class ClinicaDashboardController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Recepcao)]
+[Saude360Module]
 [Route("api/painel-chamada")]
 public sealed class PainelChamadaController : ControllerBase
 {
@@ -53,6 +55,7 @@ public sealed class PainelChamadaController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Assistencial)]
+[Saude360Module]
 [Route("api/agendamentos")]
 public sealed class AgendamentosController : ControllerBase
 {
@@ -77,6 +80,7 @@ public sealed class AgendamentosController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Triagem)]
+[Saude360Module]
 [Route("api/triagens")]
 public sealed class TriagensController : ControllerBase
 {
@@ -131,6 +135,7 @@ public sealed class TriagensController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360ClinicoLeitura)]
+[Saude360Module]
 [Route("api/consultas")]
 public sealed class ConsultasController : ControllerBase
 {
@@ -152,6 +157,7 @@ public sealed class ConsultasController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360CidLeitura)]
+[Saude360Module]
 [Route("api/cid")]
 public sealed class CidController : ControllerBase
 {
@@ -176,6 +182,7 @@ public sealed class CidController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360ClinicoLeitura)]
+[Saude360Module]
 [Route("api/prescricoes")]
 public sealed class PrescricoesController : ControllerBase
 {
@@ -196,6 +203,7 @@ public sealed class PrescricoesController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Financeiro)]
+[Saude360Module]
 [Route("api/clinica-financeiro")]
 public sealed class ClinicaFinanceiroController : ControllerBase
 {
@@ -216,6 +224,7 @@ public sealed class ClinicaFinanceiroController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Repasses)]
+[Saude360Module]
 [Route("api/repasses-medicos")]
 public sealed class RepassesMedicosClinicosController : ControllerBase
 {
@@ -226,6 +235,7 @@ public sealed class RepassesMedicosClinicosController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Convenios)]
+[Saude360Module]
 [Route("api/convenios")]
 public sealed class ConveniosController : ControllerBase
 {
@@ -250,6 +260,7 @@ public sealed class ConveniosController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Convenios)]
+[Saude360Module]
 [Route("api/planos-saude")]
 public sealed class PlanosSaudeController : ControllerBase
 {
@@ -266,6 +277,7 @@ public sealed class PlanosSaudeController : ControllerBase
 
 [ApiController]
 [Authorize(Roles = RolesConstants.Saude360Assistencial)]
+[Saude360Module]
 [Route("api/pacientes")]
 public sealed class PacientesController : ControllerBase
 {

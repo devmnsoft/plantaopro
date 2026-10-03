@@ -38,7 +38,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, "api/administrativo360/departamentos", new { codigo = codigoLimpo, nome = nomeLimpo });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Departamento cadastrado.";
+            TempData["Success"] = "Departamento cadastrado.";
             return RedirectToAction(nameof(Departamentos), new { busca });
         }
         return ViewDepartamentoComErro(await CarregarDepartamentosAsync(client, busca, 1), codigoLimpo, nomeLimpo, erro);
@@ -56,7 +56,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/departamentos/{id}", new { codigo = codigoLimpo, nome = nomeLimpo });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Departamento atualizado.";
+            TempData["Success"] = "Departamento atualizado.";
             return RedirectToAction(nameof(Departamentos), new { busca, page });
         }
         return ViewDepartamentoComErro(await CarregarDepartamentosAsync(client, busca, page), codigoLimpo, nomeLimpo, erro, id, new DepartamentoEdicaoModel(id, codigoLimpo, nomeLimpo));
@@ -94,7 +94,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, "api/administrativo360/cargos", new { codigo = codigoLimpo, nome = nomeLimpo, departamentoId });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Cargo cadastrado.";
+            TempData["Success"] = "Cargo cadastrado.";
             return RedirectToAction(nameof(Cargos), new { busca });
         }
         return ViewCargoComErro(await CarregarCargosAsync(client, busca, 1), codigoLimpo, nomeLimpo, departamentoId, erro);
@@ -113,7 +113,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/cargos/{id}", new { codigo = codigoLimpo, nome = nomeLimpo, departamentoId });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Cargo atualizado.";
+            TempData["Success"] = "Cargo atualizado.";
             return RedirectToAction(nameof(Cargos), new { busca, page });
         }
         return ViewCargoComErro(await CarregarCargosAsync(client, busca, page), codigoLimpo, nomeLimpo, departamentoId, erro, id, edicao);
@@ -161,7 +161,7 @@ public partial class Administrativo360Controller
             new { matricula = matriculaLimpa, nome = nomeLimpo, cpf = cpfDigitos, email = emailLimpo, cargoId });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Colaborador cadastrado.";
+            TempData["Success"] = "Colaborador cadastrado.";
             return RedirectToAction(nameof(Colaboradores), new { busca, status });
         }
         return ViewColaboradorComErro(await CarregarColaboradoresAsync(client, busca, status, 1), matriculaLimpa, nomeLimpo, cpf, emailLimpo, cargoId, erro);
@@ -180,7 +180,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/colaboradores/{id}", new { nome = nomeLimpo, email = emailLimpo });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Dados do colaborador atualizados.";
+            TempData["Success"] = "Dados do colaborador atualizados.";
             return RedirectToAction(nameof(Colaboradores), new { busca, status, page });
         }
         return ViewColaboradorComErro(await CarregarColaboradoresAsync(client, busca, status, page), string.Empty, nomeLimpo, string.Empty, emailLimpo, Guid.Empty,
@@ -200,7 +200,7 @@ public partial class Administrativo360Controller
         };
         if (mensagem is null)
         {
-            TempData["ErrorMessage"] = "Status inválido para o colaborador.";
+            TempData["Error"] = "Status inválido para o colaborador.";
             return RedirectToAction(nameof(Colaboradores), new { busca, status, page });
         }
         return await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/colaboradores/{id}/status", new { status = alvo }, mensagem,
@@ -243,7 +243,7 @@ public partial class Administrativo360Controller
             new { colaboradorId, tipo, inicio = inicio.Value.ToString("yyyy-MM-dd"), fim = fim?.ToString("yyyy-MM-dd"), salario, cargaHorariaSemanal });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Contratação registrada.";
+            TempData["Success"] = "Contratação registrada.";
             return RedirectToAction(nameof(Contratos), new { busca, status });
         }
         var modeloRejeitado = await CarregarContratosAsync(client, busca, status, 1);
@@ -264,7 +264,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, $"api/administrativo360/contratos/{id}/encerrar", new { fim = fim?.ToString("yyyy-MM-dd") });
         if (ok)
         {
-            TempData["SuccessMessage"] = "Contrato encerrado. O histórico permanece disponível.";
+            TempData["Success"] = "Contrato encerrado. O histórico permanece disponível.";
             return RedirectToAction(nameof(ContratoDetalhes), new { id });
         }
         var baseDetalhe = await CarregarContratoDetalhesAsync(client, id);
@@ -406,15 +406,18 @@ public partial class Administrativo360Controller
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
         var (ok, erro) = await EnviarAsync(client, metodo, endpoint, payload);
+        // Chaves unificadas do toast global (bloco C): o helper da BaseWebController
+        // pode ter gravado "Error" bruto na falha da API; limpa antes de gravar a
+        // mensagem amigável para que o feedback apareça UMA única vez.
+        LimparAlertaGlobal();
         if (ok)
         {
-            TempData["SuccessMessage"] = sucesso;
+            TempData["Success"] = sucesso;
         }
         else
         {
-            TempData["ErrorMessage"] = erro;
+            TempData["Error"] = erro;
         }
-        LimparAlertaGlobal();
         return destino();
     }
 
@@ -423,6 +426,6 @@ public partial class Administrativo360Controller
     private void LimparAlertaGlobal()
     {
         TempData["Error"] = null;
-        TempData["Sucesso"] = null;
+        TempData["Success"] = null;
     }
 }

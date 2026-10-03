@@ -34,7 +34,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao carregar faturamento SaaS");
-            TempData["ErrorMessage"] = "Não foi possível carregar faturamento SaaS.";
+            TempData["Error"] = "Não foi possível carregar faturamento SaaS.";
             return View(new FaturamentoSaasIndexViewModel());
         }
     }
@@ -46,7 +46,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         var (data, error, _) = await ReadApiResponseAsync<FaturaSaasViewModel>(client, $"api/faturamento-saas/faturas/{id}");
         if (data is null)
         {
-            TempData["ErrorMessage"] = error ?? "Fatura não encontrada.";
+            TempData["Error"] = error ?? "Fatura não encontrada.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -71,7 +71,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao gerar mensalidade SaaS");
-            TempData["ErrorMessage"] = "Não foi possível gerar faturas mensais.";
+            TempData["Error"] = "Não foi possível gerar faturas mensais.";
             return RedirectToAction(nameof(Index));
         }
     }
@@ -94,7 +94,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         {
             if (valorPago <= 0 || string.IsNullOrWhiteSpace(formaPagamento))
             {
-                TempData["ErrorMessage"] = "Informe valor pago maior que zero e forma de pagamento.";
+                TempData["Error"] = "Informe valor pago maior que zero e forma de pagamento.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -106,7 +106,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao marcar fatura SaaS como paga {FaturaId}", id);
-            TempData["ErrorMessage"] = "Não foi possível marcar a fatura como paga.";
+            TempData["Error"] = "Não foi possível marcar a fatura como paga.";
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -120,7 +120,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         {
             if (string.IsNullOrWhiteSpace(justificativa))
             {
-                TempData["ErrorMessage"] = "Justificativa é obrigatória para cancelar fatura.";
+                TempData["Error"] = "Justificativa é obrigatória para cancelar fatura.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -132,7 +132,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao cancelar fatura SaaS {FaturaId}", id);
-            TempData["ErrorMessage"] = "Não foi possível cancelar a fatura.";
+            TempData["Error"] = "Não foi possível cancelar a fatura.";
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -146,7 +146,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         {
             if (string.IsNullOrWhiteSpace(motivo))
             {
-                TempData["ErrorMessage"] = "Motivo é obrigatório para contestar fatura.";
+                TempData["Error"] = "Motivo é obrigatório para contestar fatura.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -158,7 +158,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao contestar fatura SaaS {FaturaId}", id);
-            TempData["ErrorMessage"] = "Não foi possível contestar a fatura.";
+            TempData["Error"] = "Não foi possível contestar a fatura.";
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -172,7 +172,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         {
             if (string.IsNullOrWhiteSpace(resposta))
             {
-                TempData["ErrorMessage"] = "Resposta é obrigatória para resolver contestação.";
+                TempData["Error"] = "Resposta é obrigatória para resolver contestação.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
@@ -184,7 +184,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao resolver contestação de fatura SaaS {FaturaId}", id);
-            TempData["ErrorMessage"] = "Não foi possível resolver a contestação.";
+            TempData["Error"] = "Não foi possível resolver a contestação.";
         }
 
         return RedirectToAction(nameof(Details), new { id });
@@ -204,7 +204,7 @@ public sealed class FaturamentoSaasController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao notificar cobrança SaaS {FaturaId}", id);
-            TempData["ErrorMessage"] = "Não foi possível notificar a cobrança.";
+            TempData["Error"] = "Não foi possível notificar a cobrança.";
         }
 
         return RedirectToAction(nameof(Details), new { id });

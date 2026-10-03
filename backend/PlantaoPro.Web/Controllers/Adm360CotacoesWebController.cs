@@ -52,8 +52,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         {
             Cotacao = cotacaoResp.Data,
             Respostas = respostas,
-            Erro = cotacaoResp.Error,
-            Sucesso = TempData["Sucesso"]?.ToString()
+            Erro = cotacaoResp.Error
         });
     }
 
@@ -101,7 +100,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Mapeamento salvo com sucesso.";
+            TempData["Success"] = "Mapeamento salvo com sucesso.";
         }
 
         return RedirectToAction(nameof(Relacionamento));
@@ -134,7 +133,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Item relacionado com sucesso.";
+            TempData["Success"] = "Item relacionado com sucesso.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id = form.CotacaoId });
@@ -154,7 +153,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Orçamento cirúrgico gerado com sucesso.";
+            TempData["Success"] = "Orçamento cirúrgico gerado com sucesso.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id });
@@ -174,7 +173,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Resposta aprovada e colocada na fila de transmissão.";
+            TempData["Success"] = "Resposta aprovada e colocada na fila de transmissão.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id });
@@ -182,19 +181,20 @@ public sealed class Adm360CotacoesWebController : BaseWebController
 
     [HttpPost("TransmitirResposta/{respostaId:guid}")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> TransmitirResposta(Guid respostaId, [FromQuery] Guid cotacaoId)
+    public async Task<IActionResult> TransmitirResposta(Guid respostaId, [FromQuery] Guid cotacaoId, [FromQuery] bool confirmarRetransmissaoDesconhecido = false)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, $"api/administrativo360/cotacoes/respostas/{respostaId}/transmitir", new { });
+        var consulta = confirmarRetransmissaoDesconhecido ? "?confirmarRetransmissaoDesconhecido=true" : string.Empty;
+        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, $"api/administrativo360/cotacoes/respostas/{respostaId}/transmitir{consulta}", new { });
         if (!success)
         {
             TempData["Error"] = error ?? "Falha na transmissão da resposta.";
         }
         else
         {
-            TempData["Sucesso"] = "Tentativa de transmissão executada.";
+            TempData["Success"] = "Tentativa de transmissão executada.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id = cotacaoId });
@@ -242,7 +242,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Conta de portal configurada com sucesso.";
+            TempData["Success"] = "Conta de portal configurada com sucesso.";
         }
 
         return RedirectToAction(nameof(ContasPortal));
@@ -286,7 +286,7 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Estabelecimento cadastrado com sucesso.";
+            TempData["Success"] = "Estabelecimento cadastrado com sucesso.";
         }
 
         return RedirectToAction(nameof(Estabelecimentos));

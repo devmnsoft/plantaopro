@@ -86,11 +86,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cirurgias", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Cirurgia operacional agendada com sucesso.";
+            TempData["Success"] = "Cirurgia operacional agendada com sucesso.";
             return RedirectToAction(nameof(Cirurgias));
         }
 
-        TempData["ErrorMessage"] = resp.Error ?? "Falha ao agendar cirurgia.";
+        TempData["Error"] = resp.Error ?? "Falha ao agendar cirurgia.";
         await PreencherLookupsCirurgiaAsync(client, model);
         return View(model);
     }
@@ -117,9 +117,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/cirurgias/{id}/cancelar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Cirurgia cancelada com sucesso.";
+            TempData["Success"] = "Cirurgia cancelada com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar cirurgia.";
+            TempData["Error"] = resp.Error ?? "Falha ao cancelar cirurgia.";
 
         return RedirectToAction(nameof(CirurgiaDetalhes), new { id });
     }

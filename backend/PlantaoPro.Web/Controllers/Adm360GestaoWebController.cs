@@ -85,7 +85,7 @@ public sealed class Adm360GestaoWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = $"Capacidade {capacidade} atualizada com sucesso.";
+            TempData["Success"] = $"Capacidade {capacidade} atualizada com sucesso.";
         }
 
         return RedirectToAction(nameof(Dashboard));

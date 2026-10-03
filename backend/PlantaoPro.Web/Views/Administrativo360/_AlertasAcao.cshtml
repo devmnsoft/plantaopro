@@ -1,26 +1,3 @@
-    @{
-        var elevado = ViewData.ContainsKey("AlertaElevado") && Convert.ToBoolean(ViewData["AlertaElevado"]);
-        var clsSucesso = "alert alert-success alert-dismissible fade show" + (elevado ? " border-0 shadow-sm" : "");
-        var clsErro = "alert alert-danger alert-dismissible fade show" + (elevado ? " border-0 shadow-sm" : "");
-        var iconeSucesso = elevado ? "bi-check-circle-fill" : "bi-check-circle";
-        var iconeErro = elevado ? "bi-exclamation-triangle-fill" : "bi-exclamation-triangle";
-        var partes = new System.Collections.Generic.List<string>();
-        if (TempData["SuccessMessage"] != null)
-        {
-            partes.Add("        <div class=\"" + clsSucesso + "\" role=\"alert\">");
-            partes.Add("            <i class=\"bi " + iconeSucesso + " me-2\"></i>" + System.Text.Encodings.Web.HtmlEncoder.Default.Encode(TempData["SuccessMessage"].ToString()));
-            partes.Add("            <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Fechar\"></button>");
-            partes.Add("        </div>");
-        }
-        if (TempData["ErrorMessage"] != null)
-        {
-            partes.Add("        <div class=\"" + clsErro + "\" role=\"alert\">");
-            partes.Add("            <i class=\"bi " + iconeErro + " me-2\"></i>" + System.Text.Encodings.Web.HtmlEncoder.Default.Encode(TempData["ErrorMessage"].ToString()));
-            partes.Add("            <button type=\"button\" class=\"btn-close\" data-bs-dismiss=\"alert\" aria-label=\"Fechar\"></button>");
-            partes.Add("        </div>");
-        }
-    }
-    @if (partes.Count > 0)
-    {
-        @Html.Raw(string.Join("\n", partes))
-    }
+    <!-- Bloco C (identidade visual): feedback de ação unificado no toast global
+         (_ToastMessages.cshtml / #pp-toast-data). Este parcial é mantido como
+         no-op para as chamadas de partial existentes nas views. -->

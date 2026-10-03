@@ -9,7 +9,7 @@ internal static class Saude360ClinicalSchema
     private static readonly string[] RequiredTables =
     {
         "pacientes", "paciente_contatos", "paciente_enderecos", "paciente_documentos",
-        "paciente_historico", "agendamentos", "agendamento_checkins", "painel_chamada",
+        "paciente_historico", "agendamentos", "agendamento_checkins", "painel_chamada_historico",
         "painel_chamada_fila", "agendamento_historico", "triagens", "triagem_fila",
         "triagem_historico", "triagem_encaminhamentos",
         "cid_tabela", "cid_favoritos", "cid_uso_historico", "cid_capitulos",

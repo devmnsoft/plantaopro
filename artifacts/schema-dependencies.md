@@ -73,3 +73,5 @@
 - `plantaopro.adm360_eventos` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.administrativo360_cirurgia_vales_reconciliacao
 - `plantaopro.adm360_validar_tenant` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.administrativo360_cirurgia_vales_reconciliacao
 - `plantaopro.saude360_prontuario_v1270` depende de: plantaopro.saude360, plantaopro.financeiro_clinico_convenios_v2180
+- `plantaopro.adm360_documentos_xml_b1` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.adm360_cotacao_envios` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard

@@ -143,9 +143,12 @@ CREATE TRIGGER trg_adm360_vale_eventos_progresso
     BEFORE UPDATE OR DELETE ON plantaopro.adm360_vale_eventos
     FOR EACH ROW EXECUTE FUNCTION plantaopro.fn_adm360_vale_evento_progresso();
 
--- 5. Recuperacao unica: ENVIANDO ancorado por queda do processo (0 linhas no re-executar)
+-- 5. Recuperacao unica: ENVIANDO ancorado por queda do processo.
+-- Limiar de 10 min (mesmo criterio da recuperacao de boot): a re-execucao sob carga
+-- concorrente nunca toca uma transmissao em curso (ENVIANDO recente pertence ao conector ativo).
 UPDATE plantaopro.adm360_cotacao_respostas
 SET status_transmissao = 'RESULTADO_DESCONHECIDO',
     mensagem_retorno = coalesce(mensagem_retorno, '') || ' | Recuperacao oficial: transmissao ficou em ENVIANDO sem resultado registrado (processo interrompido).',
     updated_at = now()
-WHERE status_transmissao = 'ENVIANDO';
+WHERE status_transmissao = 'ENVIANDO'
+  AND updated_at <= now() - interval '10 minutes';

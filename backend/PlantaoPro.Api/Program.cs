@@ -24,6 +24,10 @@ using PlantaoPro.Infrastructure.Administrativo360;
 DapperTypeHandlerRegistrar.RegistrarTodos();
 
 var builder = WebApplication.CreateBuilder(args);
+// F5 (Jornada S): o JWT embute o catalogo de permissoes do perfil. Para administradores com
+// centenas de permissoes (ex.: admin.clinica ~41 KB) o header Authorization excede o limite
+// padrao do Kestrel (32 KB) e toda chamada autenticada BFF->API falha com HTTP 431.
+builder.WebHost.ConfigureKestrel(k => k.Limits.MaxRequestHeadersTotalSize = 128 * 1024);
 var connectionString = builder.Configuration.GetConnectionString("Default");
 DatabaseStartupReadinessValidator.Validate(connectionString, builder.Environment, builder.Configuration);
 if (builder.Environment.IsProduction() && !builder.Configuration.GetValue("Authentication:LoginLockoutEnabled", true))

@@ -14,26 +14,11 @@
             <p class="text-muted small mb-0">Cadastros persistidos de correspondência entre portais (OPMENEXO, INPART) e entidades do PlantãoPro.</p>
         </div>
         <div>
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalNovoMapeamento">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoMapeamento">
                 <i class="bi bi-plus-circle me-1"></i> Novo Mapeamento
             </button>
         </div>
     </div>
-
-    @if (TempData["Sucesso"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle me-2"></i>@TempData["Sucesso"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    }
 
     <!-- Filtros -->
     <div class="card bg-dark border-secondary mb-4">

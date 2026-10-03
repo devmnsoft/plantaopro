@@ -1,0 +1,195 @@
+/* ============================================================
+   v2.15.0 — Bloco C: linha canônica de identidade visual
+   ------------------------------------------------------------
+   Fonte única de verdade para:
+     1) Azul principal único  #1f73f1 (substitui o teal de v2122);
+     2) Fundo claro único     #f4f8fb (todos os tokens de canvas
+        apontam para o mesmo valor);
+     3) Superfícies brancas, tabelas, formulários e estados de
+        foco padronizados em toda a aplicação.
+
+   Carregado por último em _Layout.cshtml (após todas as camadas
+   v2xxx e o tema claro do A360): vence cascatas de mesma
+   especificidade por ordem. O sidebar navy permanece como
+   elemento de navegação (decisão documentada do bloco C).
+   ============================================================ */
+
+:root {
+    /* --- Azul principal único --- */
+    --pp-brand-primary: #1f73f1;
+    --pp-brand-primary-hover: #1a63d8;
+    --pp-brand-primary-active: #1549ab;
+    --pp-primary: var(--pp-brand-primary);
+    --bs-primary: var(--pp-brand-primary);
+    --bs-primary-rgb: 31, 115, 241;
+    --bs-link-color: var(--pp-brand-primary);
+    --bs-link-color-rgb: 31, 115, 241;
+    --bs-link-hover-color: var(--pp-brand-primary-hover);
+    --bs-link-hover-color-rgb: 26, 99, 216;
+    --pp-focus-ring: var(--pp-brand-primary);
+
+    /* --- Fundo claro único (alias de todos os canvas históricos) --- */
+    --pp-canvas-base: #f4f8fb;
+    --pp-bg: var(--pp-canvas-base);
+    --pp-page-background: var(--pp-canvas-base);
+    --pp-bg-app: var(--pp-canvas-base);
+    --pp-canvas: var(--pp-canvas-base);
+    --pp-v1970-canvas: var(--pp-canvas-base);
+    --pp-v2116-canvas: var(--pp-canvas-base);
+    --pp-v2120-canvas: var(--pp-canvas-base);
+    --pp-v2132-canvas: var(--pp-canvas-base);
+    --pp-v2137-surface: var(--pp-canvas-base);
+}
+
+/* ---------- Fundo: plano único, sem gradientes residuais ---------- */
+html { background-color: var(--pp-canvas-base); }
+body, body.pp-body { background-color: var(--pp-canvas-base); background-image: none; }
+.pp-app-shell { background-color: var(--pp-canvas-base); background-image: none; }
+.app-body { background-color: var(--pp-canvas-base); background-image: none; }
+.pp-content,
+.pp-app-shell .pp-content { background-image: none; background-color: var(--pp-canvas-base); }
+
+/* ---------- Botão primário: azul sólido único ---------- */
+.btn-primary {
+    --bs-btn-bg: var(--pp-brand-primary);
+    --bs-btn-border-color: var(--pp-brand-primary);
+    --bs-btn-color: #fff;
+    --bs-btn-hover-bg: var(--pp-brand-primary-hover);
+    --bs-btn-hover-border-color: var(--pp-brand-primary-hover);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-active-bg: var(--pp-brand-primary-active);
+    --bs-btn-active-border-color: var(--pp-brand-primary-active);
+    --bs-btn-active-color: #fff;
+    --bs-btn-disabled-bg: #a9c6f5;
+    --bs-btn-disabled-border-color: #a9c6f5;
+    --bs-btn-focus-shadow-rgb: 31, 115, 241;
+}
+
+/* Cobre o gradiente teal definido por .pp-content-container .btn-primary
+   em v2122-saas-commerce.css (mesma especificidade, ordem posterior). */
+.pp-content-container .btn-primary,
+.pp-content-container .button-primary {
+    color: #fff;
+    background-color: var(--pp-brand-primary);
+    background-image: none;
+    border-color: var(--pp-brand-primary);
+    box-shadow: 0 8px 18px rgb(31 115 241 / .22);
+}
+.pp-content-container .btn-primary:hover,
+.pp-content-container .button-primary:hover,
+.pp-content-container .btn-primary:focus,
+.pp-content-container .button-primary:focus {
+    color: #fff;
+    background-color: var(--pp-brand-primary-hover);
+    background-image: none;
+    border-color: var(--pp-brand-primary-hover);
+    filter: none;
+}
+.pp-content-container .btn-primary:active,
+.pp-content-container .button-primary:active {
+    color: #fff;
+    background-color: var(--pp-brand-primary-active);
+    background-image: none;
+    border-color: var(--pp-brand-primary-active);
+    filter: none;
+}
+.pp-content-container .btn-primary:disabled,
+.pp-content-container .btn-primary.disabled,
+.pp-content-container .button-primary:disabled,
+.pp-content-container .button-primary.disabled {
+    color: #fff;
+    background-color: #a9c6f5;
+    background-image: none;
+    border-color: #a9c6f5;
+    filter: none;
+}
+.btn-check:checked + .btn-primary,
+.btn-check:active + .btn-primary {
+    color: #fff;
+    background-color: var(--pp-brand-primary-active);
+    background-image: none;
+    border-color: var(--pp-brand-primary-active);
+}
+
+/* ---------- Links de conteúdo: azul canônico ---------- */
+.pp-content-container a:not(.btn):not(.nav-link-app):not(.nav-link):not(.page-link):not(.dropdown-item):not(.breadcrumb-item):not(.text-danger):not(.text-warning):not(.text-success):not(.text-info):not(.text-light):not(.text-white):not(.text-secondary):not(.text-muted) {
+    color: var(--pp-brand-primary);
+}
+.pp-content-container a:not(.btn):not(.nav-link-app):not(.nav-link):not(.page-link):not(.dropdown-item):not(.breadcrumb-item):not(.text-danger):not(.text-warning):not(.text-success):not(.text-info):not(.text-light):not(.text-white):not(.text-secondary):not(.text-muted):hover {
+    color: var(--pp-brand-primary-hover);
+    text-decoration: underline;
+}
+
+/* ---------- Foco visível: anel azul ---------- */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible { outline-color: var(--pp-brand-primary); }
+.form-control:focus,
+.form-select:focus,
+.form-check-input:focus {
+    border-color: var(--pp-brand-primary);
+    box-shadow: 0 0 0 .25rem rgb(31 115 241 / .15);
+}
+.form-control:focus-within, .input-group.has-focus { border-color: var(--pp-brand-primary); }
+
+/* ---------- Tabela padrão: cabeçalho claro, linhas com borda suave ---------- */
+.table { --bs-table-border-color: #e3ebf4; }
+.table > :not(caption) > th,
+.pp-content-container .table > :not(caption) > th {
+    background-color: #eef4f9;
+    color: #33506b;
+    font-weight: 700;
+    border-bottom: 1px solid #dbe5ef;
+}
+.pp-content-container .table > tbody > tr { transition: background-color .15s ease; }
+.pp-content-container .table > tbody > tr:hover { background: #f2f7fc; }
+.table-hover > tbody > tr:hover > td,
+.table-hover > tbody > tr:hover > th { box-shadow: none; background-color: #f2f7fc; }
+
+/* Linhas vazias de tabela (estado "sem registros") padronizadas */
+.table td[colspan]:not([colspan="1"]).text-center {
+    padding-top: 1.4rem;
+    padding-bottom: 1.4rem;
+    font-size: .875rem;
+    color: #64748b;
+    background-color: #fafcfe;
+}
+
+/* ---------- Formulários: campos brancos, foco azul ---------- */
+.form-control.bg-dark,
+.form-select.bg-dark {
+    background-color: #fff;
+    color: #0f172a;
+    border-color: #d7e2ee;
+}
+.form-control.bg-dark::placeholder { color: #94a3b8; }
+.form-control.bg-dark:focus,
+.form-select.bg-dark:focus {
+    background-color: #fff;
+    color: #0f172a;
+}
+
+/* ---------- Navegação lateral: destaque ativo em azul ---------- */
+.nav-link-app.active {
+    color: #fff;
+    background: linear-gradient(90deg, rgb(31 115 241 / .32), rgb(31 115 241 / .10));
+    box-shadow: inset 3px 0 0 var(--pp-brand-primary);
+}
+.nav-link-app.active::before { background: var(--pp-brand-primary); }
+
+/* ---------- Painel de estado (Meu Dia / listas vazias) ---------- */
+.state-panel {
+    width: 100%;
+    max-width: 38rem;
+    margin: 2rem auto;
+    padding: 2.75rem 2rem;
+    text-align: center;
+    background: #fff;
+    border: 1px solid var(--pp-border-subtle, #e5ebf3);
+    border-radius: 1rem;
+    box-shadow: 0 18px 45px rgb(15 23 42 / .06);
+    color: var(--pp-text-secondary, #405a80);
+}
+.state-panel h2 { font-size: 1.35rem; font-weight: 800; color: var(--pp-text-primary, #0e1d33); margin-bottom: .5rem; }
+.state-panel p { margin-bottom: 1.25rem; }
+.state-panel__hint { margin-top: .75rem; }

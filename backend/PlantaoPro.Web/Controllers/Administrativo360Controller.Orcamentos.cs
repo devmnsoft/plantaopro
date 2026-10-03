@@ -45,14 +45,14 @@ public partial class Administrativo360Controller
 
         if (form.HospitalId == Guid.Empty || form.ResponsavelFinanceiroId == Guid.Empty || string.IsNullOrWhiteSpace(form.Procedimento))
         {
-            TempData["ErrorMessage"] = "Hospital, Responsável Financeiro e Procedimento são obrigatórios.";
+            TempData["Error"] = "Hospital, Responsável Financeiro e Procedimento são obrigatórios.";
             await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
 
         if (form.Itens.Count == 0 || form.Itens.All(x => x.Quantidade <= 0))
         {
-            TempData["ErrorMessage"] = "Informe ao menos um produto com quantidade positiva.";
+            TempData["Error"] = "Informe ao menos um produto com quantidade positiva.";
             await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
@@ -79,11 +79,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/orcamentos", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Orçamento cirúrgico cadastrado em rascunho com sucesso.";
+            TempData["Success"] = "Orçamento cirúrgico cadastrado em rascunho com sucesso.";
             return RedirectToAction(nameof(Orcamentos));
         }
 
-        TempData["ErrorMessage"] = resp.Error ?? "Falha ao cadastrar orçamento.";
+        TempData["Error"] = resp.Error ?? "Falha ao cadastrar orçamento.";
         await PreencherLookupsOrcamentoAsync(client, form);
         return View(form);
     }
@@ -97,7 +97,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -158,11 +158,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Put, $"api/administrativo360/orcamentos/{id}", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Orçamento cirúrgico atualizado com sucesso.";
+            TempData["Success"] = "Orçamento cirúrgico atualizado com sucesso.";
             return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
         }
 
-        TempData["ErrorMessage"] = resp.Error ?? "Falha ao atualizar orçamento.";
+        TempData["Error"] = resp.Error ?? "Falha ao atualizar orçamento.";
         return RedirectToAction(nameof(OrcamentoEditar), new { id });
     }
 
@@ -175,7 +175,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -194,7 +194,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -210,11 +210,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/orcamentos/{id}/aprovar", new { });
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Orçamento aprovado com sucesso! A versão comercial está congelada e apta para reserva de materiais.";
+            TempData["Success"] = "Orçamento aprovado com sucesso! A versão comercial está congelada e apta para reserva de materiais.";
         }
         else
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao aprovar orçamento.";
+            TempData["Error"] = resp.Error ?? "Falha ao aprovar orçamento.";
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -233,11 +233,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Orçamento rejeitado.";
+            TempData["Success"] = "Orçamento rejeitado.";
         }
         else
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao rejeitar orçamento.";
+            TempData["Error"] = resp.Error ?? "Falha ao rejeitar orçamento.";
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -256,11 +256,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Orçamento cancelado e reservas ativas liberadas.";
+            TempData["Success"] = "Orçamento cancelado e reservas ativas liberadas.";
         }
         else
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar orçamento.";
+            TempData["Error"] = resp.Error ?? "Falha ao cancelar orçamento.";
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -275,7 +275,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<PlanejamentoReservaOrcamentoViewModel>(client, $"api/administrativo360/orcamentos/{id}/reserva-planejamento");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Orçamento não encontrado ou ainda não aprovado para reserva.";
+            TempData["Error"] = resp.Error ?? "Orçamento não encontrado ou ainda não aprovado para reserva.";
             return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
         }
 
@@ -304,11 +304,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/orcamentos/{id}/reservas", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Material reservado com sucesso para a cirurgia.";
+            TempData["Success"] = "Material reservado com sucesso para a cirurgia.";
         }
         else
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao realizar reserva de material.";
+            TempData["Error"] = resp.Error ?? "Falha ao realizar reserva de material.";
         }
 
         return RedirectToAction(nameof(OrcamentoReserva), new { id });
@@ -325,11 +325,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["SuccessMessage"] = "Reserva de material cancelada com sucesso.";
+            TempData["Success"] = "Reserva de material cancelada com sucesso.";
         }
         else
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao cancelar reserva.";
+            TempData["Error"] = resp.Error ?? "Falha ao cancelar reserva.";
         }
 
         return RedirectToAction(nameof(OrcamentoReserva), new { id });

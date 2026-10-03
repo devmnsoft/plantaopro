@@ -929,7 +929,6 @@ public sealed class ParceirosIndexViewModel
     public int Pagina { get; init; } = 1;
     public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class ProdutosIndexViewModel
@@ -941,7 +940,6 @@ public sealed class ProdutosIndexViewModel
     public int Pagina { get; init; } = 1;
     public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class LocaisIndexViewModel
@@ -954,7 +952,6 @@ public sealed class LocaisIndexViewModel
     public int Pagina { get; init; } = 1;
     public bool TemProximaPagina { get; init; }
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class LotesIndexViewModel
@@ -964,7 +961,6 @@ public sealed class LotesIndexViewModel
     public string? Busca { get; init; }
     public Guid? ProdutoId { get; init; }
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class Lookups360ViewModel

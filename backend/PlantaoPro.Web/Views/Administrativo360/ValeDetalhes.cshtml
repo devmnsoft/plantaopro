@@ -3,14 +3,14 @@
     ViewData["Title"] = $"{Model.Numero} — Vale de Consignação — Administrativo 360";
     var badgeClass = Model.Situacao switch
     {
-        "RASCUNHO" => "bg-secondary",
-        "EM_SEPARACAO" => "bg-info text-dark",
-        "PRONTO_PARA_EXPEDICAO" => "bg-primary",
-        "EXPEDIDO" => "bg-warning text-dark",
-        "RETORNO_PARCIAL" => "bg-warning",
-        "RECONCILIADO" => "bg-success",
-        "CANCELADO" => "bg-danger",
-        _ => "bg-secondary"
+        "RASCUNHO" => "pp-badge--neutral",
+        "EM_SEPARACAO" => "pp-badge--info",
+        "PRONTO_PARA_EXPEDICAO" => "pp-badge--primary",
+        "EXPEDIDO" => "pp-badge--warning",
+        "RETORNO_PARCIAL" => "pp-badge--warning",
+        "RECONCILIADO" => "pp-badge--success",
+        "CANCELADO" => "pp-badge--danger",
+        _ => "pp-badge--neutral"
     };
 
     var totalPendente = Model.Itens.Sum(i => i.PendenteCustodia);
@@ -24,8 +24,8 @@
         <div>
             <div class="d-flex align-items-center gap-2">
                 <h2 class="h4 mb-0 text-light fw-bold">Vale @Model.Numero</h2>
-                <span class="badge @badgeClass">@Model.Situacao</span>
-                <span class="badge bg-dark border border-secondary text-light">@Model.SituacaoFinanceira</span>
+                <span class="pp-badge @badgeClass">@Model.Situacao</span>
+                <span class="pp-badge pp-badge--neutral">@Model.SituacaoFinanceira</span>
             </div>
             <p class="text-muted small mb-0">Destinado a @Model.Hospital — Local de Custódia: @Model.LocalDestino</p>
         </div>
@@ -121,7 +121,7 @@
     <div class="card bg-dark border-secondary text-light mb-4">
         <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
             <h5 class="card-title h6 mb-0 text-light">Itens do Vale de Consignação</h5>
-            <span class="badge bg-secondary">Total: @Model.Itens.Count itens</span>
+            <span class="pp-badge pp-badge--neutral">Total: @Model.Itens.Count itens</span>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -165,7 +165,7 @@
                                             <i class="bi bi-box-seam me-1"></i> Separar
                                         </button>
                                     }
-                                    else if (Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL" && it.PendenteCustodia > 0)
+                                    else if ((Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL") && it.PendenteCustodia > 0)
                                     {
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalEvento_@it.Id" data-tipo="CONSUMO" title="Registrar Consumo">
@@ -226,16 +226,16 @@
                             {
                                 var badgeEvento = e.Tipo switch
                                 {
-                                    "CONSUMO" => "bg-info text-dark",
-                                    "RETORNO" => "bg-success",
-                                    "PERDA" => "bg-danger",
-                                    "AVARIA" => "bg-danger",
-                                    _ => "bg-secondary"
+                                    "CONSUMO" => "pp-badge--info",
+                                    "RETORNO" => "pp-badge--success",
+                                    "PERDA" => "pp-badge--danger",
+                                    "AVARIA" => "pp-badge--danger",
+                                    _ => "pp-badge--neutral"
                                 };
 
                                 <tr>
                                     <td>@e.DataEvento.ToString("dd/MM/yyyy HH:mm")</td>
-                                    <td><span class="badge @badgeEvento">@e.Tipo</span></td>
+                                    <td><span class="pp-badge @badgeEvento">@e.Tipo</span></td>
                                     <td>@e.Produto</td>
                                     <td class="font-monospace">@e.Lote</td>
                                     <td class="text-end fw-bold">@e.Quantidade.ToString("0.00")</td>
@@ -282,7 +282,7 @@
             </div>
         </div>
     }
-    else if (Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL" && it.PendenteCustodia > 0)
+    else if ((Model.Situacao is "EXPEDIDO" or "RETORNO_PARCIAL") && it.PendenteCustodia > 0)
     {
         <div class="modal fade" id="modalEvento_@it.Id" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog">

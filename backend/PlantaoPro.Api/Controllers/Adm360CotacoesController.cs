@@ -164,10 +164,10 @@ public sealed class Adm360CotacoesController : ControllerBase
 
     [HttpPost("respostas/{respostaId:guid}/transmitir")]
     [Authorize(Policy = "Adm360.TransmitirResposta")]
-    public async Task<IActionResult> TransmitirResposta(Guid respostaId, CancellationToken ct)
+    public async Task<IActionResult> TransmitirResposta(Guid respostaId, [FromQuery] bool confirmarRetransmissaoDesconhecido = false, CancellationToken ct = default)
     {
         var (tenant, user) = Context();
-        await repository.TransmitirRespostaAsync(tenant, user, new TransmitirRespostaCommand(respostaId), ct);
+        await repository.TransmitirRespostaAsync(tenant, user, new TransmitirRespostaCommand(respostaId, confirmarRetransmissaoDesconhecido), ct);
         return Ok(new { sucesso = true });
     }
 

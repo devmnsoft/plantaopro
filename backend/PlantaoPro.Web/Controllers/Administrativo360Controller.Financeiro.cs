@@ -42,7 +42,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<TituloReceberDetalhesViewModel>(client, $"api/administrativo360/titulos/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Título não encontrado.";
+            TempData["Error"] = resp.Error ?? "Título não encontrado.";
             return RedirectToAction(nameof(TitulosReceber));
         }
 
@@ -68,7 +68,7 @@ public partial class Administrativo360Controller
     {
         if (valorRecebido <= 0m)
         {
-            TempData["ErrorMessage"] = "O valor recebido deve ser positivo.";
+            TempData["Error"] = "O valor recebido deve ser positivo.";
             return RedirectToAction(nameof(TituloDetalhes), new { id });
         }
 
@@ -101,7 +101,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["ErrorMessage"] = "O motivo do estorno é obrigatório.";
+            TempData["Error"] = "O motivo do estorno é obrigatório.";
             return RedirectToAction(nameof(TituloDetalhes), new { id = tituloId });
         }
 
@@ -162,7 +162,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
-            TempData["ErrorMessage"] = "O nome da conta financeira é obrigatório.";
+            TempData["Error"] = "O nome da conta financeira é obrigatório.";
             return RedirectToAction(nameof(FluxoCaixa));
         }
 
@@ -230,7 +230,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<TituloPagarDetalhesViewModel>(client, $"api/administrativo360/titulos-pagar/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Título a pagar não encontrado.";
+            TempData["Error"] = resp.Error ?? "Título a pagar não encontrado.";
             return RedirectToAction(nameof(TitulosPagar));
         }
 
@@ -254,7 +254,7 @@ public partial class Administrativo360Controller
     {
         if (model.FornecedorId == Guid.Empty || model.ValorPrincipal <= 0)
         {
-            TempData["ErrorMessage"] = "Fornecedor e valor positivo são obrigatórios.";
+            TempData["Error"] = "Fornecedor e valor positivo são obrigatórios.";
             return View(model);
         }
 
@@ -317,7 +317,7 @@ public partial class Administrativo360Controller
     {
         if (valorPago <= 0m)
         {
-            TempData["ErrorMessage"] = "O valor do pagamento deve ser positivo.";
+            TempData["Error"] = "O valor do pagamento deve ser positivo.";
             return RedirectToAction(nameof(TituloPagarDetalhes), new { id });
         }
 
@@ -350,7 +350,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["ErrorMessage"] = "O motivo do estorno é obrigatório.";
+            TempData["Error"] = "O motivo do estorno é obrigatório.";
             return RedirectToAction(nameof(TituloPagarDetalhes), new { id = tituloId });
         }
 
@@ -443,7 +443,7 @@ public partial class Administrativo360Controller
     {
         if (!form.Id.HasValue || string.IsNullOrWhiteSpace(form.Nome))
         {
-            TempData["ErrorMessage"] = "Conta e nome são obrigatórios.";
+            TempData["Error"] = "Conta e nome são obrigatórios.";
             return RedirectToAction(nameof(ContasFinanceiras));
         }
 
@@ -543,7 +543,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["ErrorMessage"] = "O motivo da reabertura é obrigatório.";
+            TempData["Error"] = "O motivo da reabertura é obrigatório.";
             return RedirectToAction(nameof(FechamentoCaixa), new { contaId });
         }
 

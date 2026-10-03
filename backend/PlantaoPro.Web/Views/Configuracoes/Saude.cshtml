@@ -7,13 +7,6 @@
     <span class="badge @(Model?.Status == "SAUDÁVEL" ? "text-bg-success" : Model?.Status == "DEGRADADO" ? "text-bg-warning" : "text-bg-danger")">@(Model?.Status ?? "INDISPONÍVEL")</span>
 </header>
 
-@if (TempData["Error"] is string erro && !string.IsNullOrWhiteSpace(erro))
-{
-    <div class="alert alert-warning" role="alert">
-        <strong>Atenção:</strong> @erro
-    </div>
-}
-
 @if (Model is null)
 {
     <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("Sem dados de saúde", "Não foi possível obter dados de monitoramento.", "Voltar para Configurações", Url.Action("Index", "Configuracoes"))' />

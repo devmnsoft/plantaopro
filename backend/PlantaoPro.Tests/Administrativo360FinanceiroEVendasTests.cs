@@ -399,7 +399,7 @@ public sealed class Administrativo360FinanceiroEVendasTests
     // =========================================================================
 
     [Fact]
-    public async Task Secao22_CenarioB4_Titulo1000_LiquidarParcial_Quitado_EstornarSegundaBaixa()
+    public async Task B4_Titulo1000_LiquidarParcial_Quitado_EstornarSegundaBaixa()
     {
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);

@@ -40,7 +40,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<VendaDetalhesViewModel>(client, $"api/administrativo360/vendas/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Venda não encontrada.";
+            TempData["Error"] = resp.Error ?? "Venda não encontrada.";
             return RedirectToAction(nameof(Vendas));
         }
 
@@ -52,7 +52,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["ErrorMessage"] = "O motivo do cancelamento é obrigatório.";
+            TempData["Error"] = "O motivo do cancelamento é obrigatório.";
             return RedirectToAction(nameof(VendaDetalhes), new { id });
         }
 

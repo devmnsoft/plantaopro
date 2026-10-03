@@ -53,7 +53,7 @@ public class RelatoriosController : BaseWebController
         var response = await client.GetAsync("api/relatorios/saas/" + tipo + "/exportar");
         if (!response.IsSuccessStatusCode)
         {
-            TempData["ErrorMessage"] = "Não foi possível exportar o relatório SaaS.";
+            TempData["Error"] = "Não foi possível exportar o relatório SaaS.";
             return RedirectToAction(nameof(Saas));
         }
         var bytes = await response.Content.ReadAsByteArrayAsync();

@@ -16,8 +16,6 @@
   <a class="nav-link @(ViewBag.Status == "CORRECAO_PENDENTE" ? "active" : "")" asp-action="Index" asp-route-status="CORRECAO_PENDENTE">Correções</a>
   <a class="nav-link @(ViewBag.Status is "APROVADA" or "RECUSADA" or "AJUSTE_POS_APURACAO" ? "active" : "")" asp-action="Index" asp-route-status="APROVADA">Histórico</a>
  </nav>
- @if(TempData["Success"] is string success){<div class="alert alert-success" role="status">@success</div>}
- @if(TempData["Error"] is string error){<div class="alert alert-danger" role="alert">@error</div>}
  @if(!string.IsNullOrWhiteSpace(Model.ErrorMessage)){<div class="alert alert-danger" role="alert">@Model.ErrorMessage</div>}
  @if(data is not null){<section aria-label="Resumo" class="d-flex gap-3 flex-wrap mb-3"><strong>@data.Total execuções</strong><span>@data.Pendentes pendentes</span><span>@data.Aprovadas aprovadas</span><span>@data.Recusadas recusadas</span></section>
  @foreach(var item in data.Items){<article class="card mb-3"><div class="card-body"><header class="d-flex justify-content-between gap-3"><div><h2 class="h5">@item.Profissional</h2><p class="mb-1">@item.Unidade</p><small>Solicitação: @item.SolicitadoEm.ToString("dd/MM/yyyy HH:mm zzz")</small></div><span class="status-badge">@item.Status.Replace('_',' ')</span></header>

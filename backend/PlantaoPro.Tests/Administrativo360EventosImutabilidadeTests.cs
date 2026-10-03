@@ -41,6 +41,9 @@ namespace PlantaoPro.Tests;
 /// 11/12. HTTP real: download de anexo e de exportação com ETag derivado do SHA-256 +
 ///     304 idempotente e X-File-SHA256 na exportação.
 /// </summary>
+// Mesma coleção das demais classes que escrevem status_transmissao='ENVIANDO':
+// serializa entre si para que assert de estado global não enxergue janela de teste concorrente.
+[Collection("A360Transmissao")]
 public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<PlantaoProApiFactory>
 {
     private readonly PlantaoProApiFactory _factory;

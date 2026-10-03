@@ -8,6 +8,9 @@ using Xunit;
 
 namespace PlantaoPro.Tests;
 
+// Mesma coleção das demais classes que escrevem status_transmissao='ENVIANDO':
+// serializa entre si para que assert de estado global não enxergue janela de teste concorrente.
+[Collection("A360Transmissao")]
 public sealed class Administrativo360CotacoesXmlDashboardTests
 {
     private static string ObterConnectionString() => TestDatabase.ConnectionString;

@@ -39,7 +39,7 @@ public sealed class UsuariosController : BaseWebController
         var (user, error, status) = await ReadApiResponseAsync<UsuarioSaasViewModel>(client, "api/seguranca/usuarios/" + id);
         if (user is null)
         {
-            TempData["ErrorMessage"] = error ?? "Usuário não encontrado no tenant permitido.";
+            TempData["Error"] = error ?? "Usuário não encontrado no tenant permitido.";
             return (int)status == StatusCodes.Status401Unauthorized ? HandleUnauthorized() : RedirectToAction(nameof(Index));
         }
         var (selectedProfiles, _, _) = await ReadApiListResponseAsync<Guid>(client, $"api/seguranca/usuarios/{id}/perfis");
@@ -78,7 +78,7 @@ public sealed class UsuariosController : BaseWebController
             await PopulateEditorAsync(model);
             return View("Form", model);
         }
-        TempData["SuccessMessage"] = model.Id == Guid.Empty
+        TempData["Success"] = model.Id == Guid.Empty
             ? "Usuário criado. A troca da senha temporária será exigida no primeiro acesso."
             : "Usuário e perfis atualizados; as sessões anteriores foram revogadas.";
         return RedirectToAction(nameof(Edit), new { id = savedId == Guid.Empty ? model.Id : savedId });
@@ -91,7 +91,7 @@ public sealed class UsuariosController : BaseWebController
         var operation = normalized switch { "BLOQUEAR" => "bloquear", "DESBLOQUEAR" => "desbloquear", "INATIVAR" => "inativar", _ => string.Empty };
         if (string.IsNullOrWhiteSpace(operation))
         {
-            TempData["ErrorMessage"] = "Ação de usuário inválida.";
+            TempData["Error"] = "Ação de usuário inválida.";
             return RedirectToAction(nameof(Index));
         }
         using var client = CreateApiClient();

@@ -178,7 +178,7 @@
             <div class="card bg-dark border-secondary text-light h-100">
                 <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
                     <span class="fw-bold">Histórico de Baixas e Liquidações</span>
-                    <span class="badge bg-secondary">@t.Baixas.Count registros</span>
+                    <span class="pp-badge pp-badge--neutral">@t.Baixas.Count registros</span>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 600px;">
@@ -208,18 +208,18 @@
                                     <tr>
                                         <td>@b.DataRecebimento.ToString("dd/MM/yyyy")</td>
                                         <td>@b.ContaNome</td>
-                                        <td><span class="badge bg-secondary">@b.MeioPagamento</span></td>
+                                        <td><span class="pp-badge pp-badge--neutral">@b.MeioPagamento</span></td>
                                         <td class="text-end font-monospace fw-bold @(b.Estornado ? "text-decoration-line-through text-muted" : "text-success")">
                                             @b.ValorRecebido.ToString("C2", ptBr)
                                         </td>
                                         <td>
                                             @if (b.Estornado)
                                             {
-                                                <span class="badge bg-danger">Estornada</span>
+                                                <span class="pp-badge pp-badge--danger">Estornada</span>
                                             }
                                             else
                                             {
-                                                <span class="badge bg-success">Confirmada</span>
+                                                <span class="pp-badge pp-badge--success">Confirmada</span>
                                             }
                                         </td>
                                         <td class="text-end">

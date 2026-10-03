@@ -57,13 +57,13 @@ public partial class Administrativo360Controller
 
         if (origemId == destinoId)
         {
-            TempData["ErrorMessage"] = "Local de origem e destino devem ser diferentes.";
+            TempData["Error"] = "Local de origem e destino devem ser diferentes.";
             return RedirectToAction(nameof(Movimentacoes));
         }
 
         if (quantidade <= 0)
         {
-            TempData["ErrorMessage"] = "Quantidade a transferir deve ser positiva.";
+            TempData["Error"] = "Quantidade a transferir deve ser positiva.";
             return RedirectToAction(nameof(Movimentacoes));
         }
 
@@ -80,9 +80,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/estoque/transferencias", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Transferência de estoque concluída com sucesso.";
+            TempData["Success"] = "Transferência de estoque concluída com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao transferir estoque.";
+            TempData["Error"] = resp.Error ?? "Falha ao transferir estoque.";
 
         return RedirectToAction(nameof(Movimentacoes));
     }
@@ -120,9 +120,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/inventarios", payload);
 
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["SuccessMessage"] = "Inventário aberto com sucesso. O local está em contagem de estoque.";
+            TempData["Success"] = "Inventário aberto com sucesso. O local está em contagem de estoque.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao abrir inventário.";
+            TempData["Error"] = resp.Error ?? "Falha ao abrir inventário.";
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -143,9 +143,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Put, $"api/administrativo360/inventarios/{inventarioId}/contagens", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Contagem registrada no inventário.";
+            TempData["Success"] = "Contagem registrada no inventário.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar contagem.";
+            TempData["Error"] = resp.Error ?? "Falha ao registrar contagem.";
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -168,9 +168,9 @@ public partial class Administrativo360Controller
         var response = await client.SendAsync(message);
 
         if (response.IsSuccessStatusCode)
-            TempData["SuccessMessage"] = "Inventário aprovado e ajustes de saldo consolidados com sucesso.";
+            TempData["Success"] = "Inventário aprovado e ajustes de saldo consolidados com sucesso.";
         else
-            TempData["ErrorMessage"] = "Falha ao aprovar inventário.";
+            TempData["Error"] = "Falha ao aprovar inventário.";
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -190,9 +190,9 @@ public partial class Administrativo360Controller
         var response = await client.SendAsync(message);
 
         if (response.IsSuccessStatusCode)
-            TempData["SuccessMessage"] = "Inventário cancelado com sucesso.";
+            TempData["Success"] = "Inventário cancelado com sucesso.";
         else
-            TempData["ErrorMessage"] = "Falha ao cancelar inventário.";
+            TempData["Error"] = "Falha ao cancelar inventário.";
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -224,7 +224,7 @@ public partial class Administrativo360Controller
 
         if (string.IsNullOrWhiteSpace(codigo) || quantidade <= 0)
         {
-            TempData["ErrorMessage"] = "Código de barras e quantidade positiva são obrigatórios.";
+            TempData["Error"] = "Código de barras e quantidade positiva são obrigatórios.";
             return RedirectToAction(nameof(Coleta));
         }
 
@@ -239,9 +239,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/coleta/leituras", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = "Leitura de código de barras registrada com sucesso na tarefa.";
+            TempData["Success"] = "Leitura de código de barras registrada com sucesso na tarefa.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao registrar leitura.";
+            TempData["Error"] = resp.Error ?? "Falha ao registrar leitura.";
 
         return RedirectToAction(nameof(Coleta));
     }
@@ -288,7 +288,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<PreviaValorizacaoViewModel>(client, $"api/administrativo360/valorizacoes/previa/{id}");
         if (resp.Data is null)
         {
-            TempData["ErrorMessage"] = resp.Error ?? "Vale não encontrado para valorização prévia.";
+            TempData["Error"] = resp.Error ?? "Vale não encontrado para valorização prévia.";
             return RedirectToAction(nameof(Valorizacao));
         }
 
@@ -332,7 +332,7 @@ public partial class Administrativo360Controller
 
         if (respVal.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
         {
-            TempData["ErrorMessage"] = respVal.Error ?? "Erro ao valorizar o vale.";
+            TempData["Error"] = respVal.Error ?? "Erro ao valorizar o vale.";
             return RedirectToAction(nameof(ValorizacaoPrevia), new { id = valeId });
         }
 
@@ -357,7 +357,7 @@ public partial class Administrativo360Controller
 
         if (respVenda.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
         {
-            TempData["ErrorMessage"] = respVenda.Error ?? "Vale valorizado, mas houve erro ao gerar a venda e títulos.";
+            TempData["Error"] = respVenda.Error ?? "Vale valorizado, mas houve erro ao gerar a venda e títulos.";
             return RedirectToAction(nameof(Vendas));
         }
 
@@ -367,7 +367,7 @@ public partial class Administrativo360Controller
             vendaId = vId;
         }
 
-        TempData["SuccessMessage"] = "Vale valorizado com sucesso e venda interna gerada!";
+        TempData["Success"] = "Vale valorizado com sucesso e venda interna gerada!";
         return RedirectToAction(nameof(VendaDetalhes), new { id = vendaId != Guid.Empty ? vendaId : valorizacaoId });
     }
 }

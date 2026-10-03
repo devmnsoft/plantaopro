@@ -797,6 +797,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_09_v2304_administrativo360_transmissao_tentativas",
+      "source": "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
+      "checksum": "37dcd938230badfecbd29f865fb56939966596a6d2f8d9f029bdef5f7c91729d",
+      "dependsOn": [
+        "2026_09_v2303_administrativo360_documentos_xml_b1"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

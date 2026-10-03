@@ -237,7 +237,7 @@ public sealed class ModulosController : BaseWebController
             ModelState.AddModelError(string.Empty, error ?? "Não foi possível salvar o módulo.");
             return View("Form", model);
         }
-        TempData["SuccessMessage"] = model.Id == Guid.Empty ? "Módulo criado com sucesso." : "Módulo atualizado com sucesso.";
+        TempData["Success"] = model.Id == Guid.Empty ? "Módulo criado com sucesso." : "Módulo atualizado com sucesso.";
         return RedirectToAction(nameof(Details), new { id = savedId == Guid.Empty ? model.Id : savedId });
     }
 
@@ -258,7 +258,7 @@ public sealed class ModulosController : BaseWebController
     {
         if (!ModelState.IsValid)
         {
-            TempData["ErrorMessage"] = "Informe um motivo e valores válidos para alterar a contratação.";
+            TempData["Error"] = "Informe um motivo e valores válidos para alterar a contratação.";
             return RedirectToAction(nameof(Tenant), new { id = model.TenantId });
         }
         using var client = CreateApiClient();
@@ -274,7 +274,7 @@ public sealed class ModulosController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return null;
         var (module, error, _) = await ReadApiResponseAsync<SaasModuleViewModel>(client, "api/modulos/" + id);
-        if (module is null) TempData["ErrorMessage"] = error ?? "Módulo não encontrado.";
+        if (module is null) TempData["Error"] = error ?? "Módulo não encontrado.";
         return module;
     }
 }

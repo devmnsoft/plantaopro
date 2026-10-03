@@ -3,8 +3,6 @@
     ViewData["Title"] = Model.Title;
 }
 <section class="pp-page-head"><span class="pp-badge">Comercial</span><h1>@Model.Title</h1><p>@Model.Subtitle</p></section>
-@if (TempData["Success"] is not null) { <div class="alert alert-success">@TempData["Success"]</div> }
-@if (TempData["Error"] is not null) { <div class="alert alert-danger">@TempData["Error"]</div> }
 <form class="pp-form" asp-controller="CommercialDemoWeb" asp-action="EnviarContato" method="post">
     @Html.AntiForgeryToken()
     <input type="text" name="website" class="pp-hp" tabindex="-1" autocomplete="off" />

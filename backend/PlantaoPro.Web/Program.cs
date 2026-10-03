@@ -7,6 +7,8 @@ using PlantaoPro.CrossCutting.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestHeadersTotalSize = 128 * 1024);
+
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<SaasRouteGuardFilter>();

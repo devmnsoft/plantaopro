@@ -50,8 +50,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         return View("~/Views/Administrativo360/DocumentosXml/Detalhes.cshtml", new DocumentoXmlDetalhesPageViewModel
         {
             Documento = resp.Data,
-            Erro = resp.Error,
-            Sucesso = TempData["Sucesso"]?.ToString()
+            Erro = resp.Error
         });
     }
 
@@ -98,7 +97,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
             return View("~/Views/Administrativo360/DocumentosXml/Importar.cshtml", form);
         }
 
-        TempData["Sucesso"] = "XML importado e analisado com sucesso.";
+        TempData["Success"] = "XML importado e analisado com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -118,7 +117,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Documento vinculado ao recebimento de compra com sucesso.";
+            TempData["Success"] = "Documento vinculado ao recebimento de compra com sucesso.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id = form.DocumentoId });
@@ -140,7 +139,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Manifestação registrada com sucesso.";
+            TempData["Success"] = "Manifestação registrada com sucesso.";
         }
 
         return RedirectToAction(nameof(Detalhes), new { id });
@@ -179,7 +178,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         }
         else
         {
-            TempData["Sucesso"] = "Consulta DF-e executada com sucesso.";
+            TempData["Success"] = "Consulta DF-e executada com sucesso.";
         }
 
         return RedirectToAction(nameof(Sincronizacao));

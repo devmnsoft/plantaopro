@@ -42,7 +42,12 @@ public sealed class ProductivityWebService
         HttpResponseMessage? response = null;
         try
         {
-            response = await CreateClient(token).GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
+            var client = CreateClient(token);
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            // Correlação Web <-> API: o mesmo identificador chega ao header X-Correlation-ID,
+            // onde a API registra e ecoa de volta (sem expor token ou cabeçalhos nos logs).
+            request.Headers.TryAddWithoutValidation("X-Correlation-ID", correlationId);
+            response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -79,11 +84,13 @@ public sealed class ProductivityWebService
                 };
             }
 
-            stopwatch.Stop();
             try
             {
-                return await response.Content.ReadFromJsonAsync<ProductivityPageViewModel>(Json, ct)
-                       ?? new ProductivityPageViewModel { ErrorKind = "RESPOSTA_INVALIDA", Error = "A resposta da Central de Ações veio vazia. Tente novamente." };
+                var model = await response.Content.ReadFromJsonAsync<ProductivityPageViewModel>(Json, ct)
+                           ?? new ProductivityPageViewModel { ErrorKind = "RESPOSTA_INVALIDA", Error = "A resposta da Central de Ações veio vazia. Tente novamente." };
+                stopwatch.Stop();
+                _logger.LogInformation("BFF->API GET {Uri} Status={StatusCode} DuracaoTotalMs={DuracaoTotalMs} CorrelationId={CorrelationId}", uri, (int)response.StatusCode, stopwatch.ElapsedMilliseconds, correlationId);
+                return model;
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {

@@ -168,9 +168,9 @@ public partial class Administrativo360Controller
         var payload = new { Id = id, Nome = nome, Documento = documento, Fornecedor = fornecedor, Ativo = ativo, EhHospital = ehHospital, EhPagador = ehPagador, EhCliente = ehCliente };
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/parceiros", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["SuccessMessage"] = "Parceiro cadastrado/atualizado com sucesso.";
+            TempData["Success"] = "Parceiro cadastrado/atualizado com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar parceiro.";
+            TempData["Error"] = resp.Error ?? "Falha ao salvar parceiro.";
 
         var referer = Request.Headers["Referer"].ToString();
         if (referer.Contains("/Parceiros", StringComparison.OrdinalIgnoreCase))
@@ -187,9 +187,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Patch, $"api/administrativo360/cadastros/parceiros/{id}/status?ativo={ativo}", new { });
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = $"Parceiro {(ativo ? "ativado" : "inativado")} com sucesso.";
+            TempData["Success"] = $"Parceiro {(ativo ? "ativado" : "inativado")} com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do parceiro.";
+            TempData["Error"] = resp.Error ?? "Falha ao alterar status do parceiro.";
 
         var referer = Request.Headers["Referer"].ToString();
         if (referer.Contains("/Parceiros", StringComparison.OrdinalIgnoreCase))
@@ -207,9 +207,9 @@ public partial class Administrativo360Controller
         var payload = new { Id = id, Sku = sku, Nome = nome, Unidade = unidade, CodigoBarras = codigoBarras, ControlaLote = controlaLote, ExigeInspecao = exigeInspecao, PrecoCusto = precoCusto, Ativo = ativo };
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/produtos", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["SuccessMessage"] = "Produto cadastrado/atualizado com sucesso.";
+            TempData["Success"] = "Produto cadastrado/atualizado com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar produto.";
+            TempData["Error"] = resp.Error ?? "Falha ao salvar produto.";
 
         var referer = Request.Headers["Referer"].ToString();
         if (referer.Contains("/Produtos", StringComparison.OrdinalIgnoreCase))
@@ -226,9 +226,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Patch, $"api/administrativo360/cadastros/produtos/{id}/status?ativo={ativo}", new { });
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["SuccessMessage"] = $"Produto {(ativo ? "ativado" : "inativado")} com sucesso.";
+            TempData["Success"] = $"Produto {(ativo ? "ativado" : "inativado")} com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao alterar status do produto.";
+            TempData["Error"] = resp.Error ?? "Falha ao alterar status do produto.";
 
         var referer = Request.Headers["Referer"].ToString();
         if (referer.Contains("/Produtos", StringComparison.OrdinalIgnoreCase))
@@ -246,9 +246,9 @@ public partial class Administrativo360Controller
         var payload = new { Id = id, Codigo = codigo, Nome = nome, Tipo = tipo, Ativo = ativo };
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/locais", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["SuccessMessage"] = "Local de armazenamento cadastrado/atualizado com sucesso.";
+            TempData["Success"] = "Local de armazenamento cadastrado/atualizado com sucesso.";
         else
-            TempData["ErrorMessage"] = resp.Error ?? "Falha ao salvar local.";
+            TempData["Error"] = resp.Error ?? "Falha ao salvar local.";
 
         var referer = Request.Headers["Referer"].ToString();
         if (referer.Contains("/Locais", StringComparison.OrdinalIgnoreCase))

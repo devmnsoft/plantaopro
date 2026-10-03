@@ -3,8 +3,6 @@
 @section Styles { <link rel="stylesheet" href="~/css/pages/professional-portal.css" asp-append-version="true" /> }
 <main class="professional-portal" aria-labelledby="page-title">
  <header class="page-intro"><span class="eyebrow">Espaço do profissional</span><h1 id="page-title">Execução dos meus plantões</h1><p>Registre entrada e saída da sua alocação. Esses registros são operacionais e somente se tornam horas aprovadas após conferência.</p><p class="context-help"><strong>Como funciona:</strong> o servidor registra o recebimento. Correções preservam o original e dependem da decisão de um gestor autorizado.</p></header>
- @if(TempData["Success"] is string success){<div class="alert alert-success" role="status">@success</div>}
- @if(TempData["Error"] is string error){<div class="alert alert-danger" role="alert">@error</div>}
  @if(!string.IsNullOrWhiteSpace(Model.ErrorMessage)){<div class="portal-state portal-state--error" role="alert"><strong>Falha ao consultar execuções</strong><span>@Model.ErrorMessage</span><a class="btn btn-outline-primary" asp-action="Presencas">Tentar novamente</a></div>}
  else if(!Model.Items.Any()){<div class="portal-state"><strong>Nenhum plantão elegível</strong><span>Plantões confirmados aparecem aqui perto do horário de início.</span></div>}
  <section class="payment-list" aria-label="Plantões confirmados">

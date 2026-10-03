@@ -194,6 +194,8 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
     {
         var table = ResolveTable(tableKey);
         var status = StatusForAction(acao);
+        string? esperadoStatus = null;
+        var imprimir = string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase);
         if (string.Equals(tableKey, "painel", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADO";
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase)) status = "EM_ATENDIMENTO";
@@ -205,11 +207,13 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         if (!string.IsNullOrWhiteSpace(validation)) return ApiResponse<Saude360RegistroDto>.Fail(validation, 400);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
+        if (cn.State != ConnectionState.Open) await cn.OpenAsync();
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && AgendamentoStateMachine.TryGetTarget(acao, out var target))
         {
             var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.agendamentos where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
             if (string.IsNullOrWhiteSpace(currentStatus)) return ApiResponse<Saude360RegistroDto>.Fail("Agendamento não encontrado para ação.", 404);
             if (!AgendamentoStateMachine.PodeTransicionar(currentStatus, target)) return ApiResponse<Saude360RegistroDto>.Fail($"Transição de {currentStatus} para {target} não é permitida.", 409);
+            esperadoStatus = currentStatus;
         }
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
         {
@@ -218,8 +222,12 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         }
         if (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase))
         {
-            var finalizada = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.consultas where id=@id and reg_status='A' and status='FINALIZADA'", new { id });
-            if (finalizada > 0 && !string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase)) return ApiResponse<Saude360RegistroDto>.Fail("Consulta finalizada não pode ser alterada sem permissão especial.", 409);
+            var currentConsulta = await cn.ExecuteScalarAsync<string>("select status from plantaopro.consultas where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and (cliente_id=@tenantId or tenant_id=@tenantId)))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (string.Equals(currentConsulta, "FINALIZADA", StringComparison.OrdinalIgnoreCase) && !imprimir) return ApiResponse<Saude360RegistroDto>.Fail("Consulta finalizada não pode ser alterada sem permissão especial.", 409);
+            if (!string.IsNullOrWhiteSpace(currentConsulta)) esperadoStatus = currentConsulta;
+            // Iniciar é ação de uma única vez: somente a partir dos estados iniciais. Repetição
+            // (sequencial ou concorrente) cai no 409 de conflito abaixo/na predicate esperada.
+            if (!string.IsNullOrWhiteSpace(currentConsulta) && string.Equals(acao, "iniciar", StringComparison.OrdinalIgnoreCase) && !(string.Equals(currentConsulta, "AGUARDANDO", StringComparison.OrdinalIgnoreCase) || string.Equals(currentConsulta, "INICIADA", StringComparison.OrdinalIgnoreCase) || string.Equals(currentConsulta, "RASCUNHO", StringComparison.OrdinalIgnoreCase))) return ApiResponse<Saude360RegistroDto>.Fail("Conflito: o registro foi alterado por outra ação simultânea.", 409);
         }
         if (string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
         {
@@ -237,6 +245,11 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         {
             var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
             if (currentStatus == "FINALIZADA") return ApiResponse<Saude360RegistroDto>.Fail("Triagem finalizada não pode ser reiniciada sem permissão especial.", 409);
+            // Iniciar é ação de uma única vez: somente a partir dos estados iniciais
+            // (criação = AGUARDANDO; salvar triagem = EM_ANDAMENTO). Qualquer outro estado
+            // indica que o registro já foi iniciado por outra ação => 409 de conflito.
+            if (!string.IsNullOrWhiteSpace(currentStatus) && !(string.Equals(currentStatus, "AGUARDANDO", StringComparison.OrdinalIgnoreCase) || string.Equals(currentStatus, "EM_ANDAMENTO", StringComparison.OrdinalIgnoreCase))) return ApiResponse<Saude360RegistroDto>.Fail("Conflito: o registro foi alterado por outra ação simultânea.", 409);
+            if (!string.IsNullOrWhiteSpace(currentStatus)) esperadoStatus = currentStatus;
         }
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
         {
@@ -244,18 +257,35 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             if (string.IsNullOrWhiteSpace(currentStatus)) return ApiResponse<Saude360RegistroDto>.Fail("Triagem não encontrada para finalização.", 404);
             // Retry seguro: não repete histórico nem encaminhamento.
             if (currentStatus == "FINALIZADA") return await ObterAsync(tableKey, id);
+            esperadoStatus = currentStatus;
         }
         var actionUpdateSql = string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase)
-            ? $"update plantaopro.{table} set status=@status, data_inicio=case when @status='EM_ATENDIMENTO' then coalesce(data_inicio, now()) else data_inicio end, data_fim=case when @status='FINALIZADA' then coalesce(data_fim, now()) else data_fim end, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, motivo_cancelamento=case when @status='CANCELADA' then coalesce(nullif(@motivo,''), nullif(@justificativa,''), motivo_cancelamento) else motivo_cancelamento end, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
+            ? $"update plantaopro.{table} set status=@status, data_inicio=case when @status='EM_ATENDIMENTO' then coalesce(data_inicio, now()) else data_inicio end, data_fim=case when @status='FINALIZADA' then coalesce(data_fim, now()) else data_fim end, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, motivo_cancelamento=case when @status='CANCELADA' then coalesce(nullif(@motivo,''), nullif(@justificativa,''), motivo_cancelamento) else motivo_cancelamento end, updated_by=@uid, reg_update=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
             : string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase)
-                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then coalesce(finalizada_em,now()) else finalizada_em end, finalizada_por=case when @status='FINALIZADA' then coalesce(finalizada_por,@uid) else finalizada_por end, updated_by=@uid, reg_update=now(), versao=versao+1 where id=@id and reg_status='A' and status<>'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
+                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then coalesce(finalizada_em,now()) else finalizada_em end, finalizada_por=case when @status='FINALIZADA' then coalesce(finalizada_por,@uid) else finalizada_por end, updated_by=@uid, reg_update=now(), versao=versao+1 where id=@id and reg_status='A' and status<>'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
             : string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)
-                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))"
-                : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
-        var affected = await cn.ExecuteAsync(actionUpdateSql, new { id, status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal, motivo = request.Motivo, justificativa = request.Justificativa });
-        if (affected == 0) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para ação.", 404);
-        await InsertHistoricoAsync(cn, tableKey, id, acao, request);
-        await AplicarEfeitosClinicosAsync(cn, tableKey, id, acao, request);
+                ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
+                : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)";
+        await using var tx = cn.BeginTransaction();
+        try
+        {
+            var affected = await cn.ExecuteAsync(actionUpdateSql, new { id, status, uid = currentUser.UserId, tenantId = TenantId, isGlobal = IsGlobal, motivo = request.Motivo, justificativa = request.Justificativa, esperado = esperadoStatus }, tx);
+            if (affected == 0)
+            {
+                tx.Rollback();
+                return esperadoStatus != null
+                    ? ApiResponse<Saude360RegistroDto>.Fail("Conflito: o registro foi alterado por outra ação simultânea.", 409)
+                    : ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para ação.", 404);
+            }
+            await InsertHistoricoAsync(cn, tableKey, id, acao, request, tx);
+            await AplicarEfeitosClinicosAsync(cn, tableKey, id, acao, request, tx);
+            tx.Commit();
+        }
+        catch
+        {
+            tx.Rollback();
+            throw;
+        }
         object auditDetalhes = string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase)
             ? (object)new { table, acao }
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
@@ -457,8 +487,8 @@ values(@id,@tenantId,@tenantId,@pacienteId,@consultaId,coalesce(@medicoId,@uid),
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
         var resumo = await cn.QueryFirstAsync(@"select
-coalesce(sum(case when status='ABERTA' then valor else 0 end),0) as aberto,
-coalesce(sum(case when status='RECEBIDO' then valor else 0 end),0) as recebido,
+coalesce(sum(case when upper(status) in ('ABERTO','ABERTA','VENCIDA','VENCIDO') then valor_total else 0 end),0) as aberto,
+coalesce(sum(case when upper(status)='RECEBIDO' then valor_total else 0 end),0) as recebido,
 count(1) as total
 from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { tenantId = TenantId, isGlobal = IsGlobal });
         return ApiResponse<object>.Ok(resumo, "Resumo financeiro carregado.");
@@ -594,43 +624,43 @@ where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@t
         return "update plantaopro." + table + " set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
     }
 
-    private async Task AplicarEfeitosClinicosAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request)
+    private async Task AplicarEfeitosClinicosAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request, IDbTransaction? tx = null)
     {
         var tenantId = TenantId;
         var uid = currentUser.UserId;
         if (key == "agendamentos" && acao.Equals("checkin", StringComparison.OrdinalIgnoreCase))
         {
             await cn.ExecuteAsync(@"insert into plantaopro.agendamento_checkins(id,cliente_id,agendamento_id,paciente_id,usuario_id,observacoes)
-select gen_random_uuid(), cliente_id, id, paciente_id, @uid, @obs from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.agendamento_checkins c where c.agendamento_id=@id and c.reg_status='A') on conflict do nothing", new { id, uid, obs = request.Observacoes });
+select gen_random_uuid(), cliente_id, id, paciente_id, @uid, @obs from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.agendamento_checkins c where c.agendamento_id=@id and c.reg_status='A') on conflict do nothing", new { id, uid, obs = request.Observacoes }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.painel_chamada_fila(id,cliente_id,paciente_id,agendamento_id,senha,paciente_nome,status,created_by)
 select gen_random_uuid(), a.cliente_id, a.paciente_id, a.id, 'P' || lpad((nextval('plantaopro.seq_painel_senhas') % 10000)::text,4,'0'), coalesce(p.nome,'Paciente'), 'AGUARDANDO', @uid
-from plantaopro.agendamentos a left join plantaopro.pacientes p on p.id=a.paciente_id where a.id=@id and not exists (select 1 from plantaopro.painel_chamada_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid });
+from plantaopro.agendamentos a left join plantaopro.pacientes p on p.id=a.paciente_id where a.id=@id and not exists (select 1 from plantaopro.painel_chamada_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.triagem_fila(id,cliente_id,paciente_id,agendamento_id,status,created_by)
-select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.triagem_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid });
+select gen_random_uuid(), cliente_id, paciente_id, id, 'AGUARDANDO', @uid from plantaopro.agendamentos where id=@id and not exists (select 1 from plantaopro.triagem_fila f where f.agendamento_id=@id and f.reg_status='A') on conflict do nothing", new { id, uid }, tx);
         }
         if (key == "triagens" && acao.Equals("finalizar", StringComparison.OrdinalIgnoreCase))
         {
-            await cn.ExecuteAsync("update plantaopro.agendamentos set status='AGUARDANDO_CONSULTA', updated_by=@uid, updated_at=now() where id=(select agendamento_id from plantaopro.triagens where id=@id) and reg_status='A'", new { id, uid });
-            await cn.ExecuteAsync(@"insert into plantaopro.triagem_encaminhamentos(id,cliente_id,triagem_id,paciente_id,agendamento_id,destino,status,created_by)
-select gen_random_uuid(), cliente_id, id, paciente_id, agendamento_id, 'CONSULTA', 'ENCAMINHADA', @uid from plantaopro.triagens where id=@id
-on conflict (cliente_id,triagem_id,destino) where destino='CONSULTA' and reg_status='A' do nothing", new { id, uid });
+            await cn.ExecuteAsync("update plantaopro.agendamentos set status='AGUARDANDO_CONSULTA', updated_by=@uid, updated_at=now() where id=(select agendamento_id from plantaopro.triagens where id=@id) and reg_status='A'", new { id, uid }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.triagem_encaminhamentos(id,cliente_id,triagem_id,destino,status)
+select gen_random_uuid(), cliente_id, id, 'CONSULTA', 'ENCAMINHADA' from plantaopro.triagens where id=@id
+on conflict (cliente_id,triagem_id,destino) where destino='CONSULTA' and reg_status='A' do nothing", new { id }, tx);
         }
     }
 
-    private async Task InsertHistoricoAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request)
+    private async Task InsertHistoricoAsync(IDbConnection cn, string key, Guid id, string acao, Saude360ActionRequest request, IDbTransaction? tx = null)
     {
         var detalhes = JsonSerializer.Serialize(new { acao, request.Motivo, request.Justificativa, request.Valor, request.FormaPagamento });
         var tenantId = TenantId;
         var uid = currentUser.UserId;
-        if (key == "pacientes") await cn.ExecuteAsync("insert into plantaopro.paciente_historico(id,cliente_id,paciente_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
-        if (key == "painel") await cn.ExecuteAsync("insert into plantaopro.painel_chamada_historico(id,cliente_id,fila_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
-        if (key == "agendamentos") await cn.ExecuteAsync("insert into plantaopro.agendamento_historico(id,cliente_id,agendamento_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
-        if (key == "triagens") await cn.ExecuteAsync("insert into plantaopro.triagem_historico(id,cliente_id,triagem_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
-        if (key == "consultas") await cn.ExecuteAsync(@"insert into plantaopro.consulta_historico(id,cliente_id,consulta_id,paciente_id,acao,detalhe,usuario_id)
-select gen_random_uuid(), cliente_id, id, paciente_id, @acao, @detalhe, @uid
+        if (key == "pacientes") await cn.ExecuteAsync("insert into plantaopro.paciente_historico(id,cliente_id,paciente_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
+        if (key == "painel") await cn.ExecuteAsync("insert into plantaopro.painel_chamada_historico(id,cliente_id,fila_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
+        if (key == "agendamentos") await cn.ExecuteAsync("insert into plantaopro.agendamento_historico(id,cliente_id,agendamento_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
+        if (key == "triagens") await cn.ExecuteAsync("insert into plantaopro.triagem_historico(id,cliente_id,triagem_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
+        if (key == "consultas") await cn.ExecuteAsync(@"insert into plantaopro.consulta_historico(id,cliente_id,consulta_id,paciente_id,evento,acao,detalhe,usuario_id)
+select gen_random_uuid(), cliente_id, id, paciente_id, @evento, @acao, @detalhe, @uid
 from plantaopro.consultas
-where id=@id", new { id, acao, detalhe = detalhes, uid });
-        if (key == "prescricoes") await cn.ExecuteAsync("insert into plantaopro.prescricao_historico(id,cliente_id,prescricao_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid });
+where id=@id", new { id, acao, evento = acao, detalhe = detalhes, uid }, tx);
+        if (key == "prescricoes") await cn.ExecuteAsync("insert into plantaopro.prescricao_historico(id,cliente_id,prescricao_id,acao,detalhes,usuario_id) values(gen_random_uuid(),@tenantId,@id,@acao,cast(@detalhes as jsonb),@uid)", new { tenantId, id, acao, detalhes, uid }, tx);
     }
 
     private static string ResolveTable(string key)

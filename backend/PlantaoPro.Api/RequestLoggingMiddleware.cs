@@ -146,6 +146,9 @@ values
 
             if (success)
             {
+                // Log de sucesso com correlação: permite casar Web <-> API <-> banco por
+                // CorrelationId em toda requisição clínica (e não só nas lentas/erros).
+                _logger.LogInformation("Requisição concluída CorrelationId={CorrelationId} Endpoint={Endpoint} Metodo={Metodo} Status={StatusCode} DuracaoMs={DuracaoMs}", context.Items["CorrelationId"] as string ?? "-", endpoint, metodo, statusCode, duration);
                 return;
             }
 

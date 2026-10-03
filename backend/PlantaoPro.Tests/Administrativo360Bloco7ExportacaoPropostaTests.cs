@@ -19,6 +19,9 @@ namespace PlantaoPro.Tests;
 ///    sem arquivo exportado e sem marcar a cotação como RESPONDIDA.
 /// 4. Isolamento multi-tenant na leitura do arquivo.
 /// </summary>
+// Mesma coleção das demais classes que escrevem status_transmissao='ENVIANDO':
+// serializa entre si para que assert de estado global não enxergue janela de teste concorrente.
+[Collection("A360Transmissao")]
 public sealed class Administrativo360Bloco7ExportacaoPropostaTests
 {
     private static readonly Guid TenantSantaCasa = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647502");

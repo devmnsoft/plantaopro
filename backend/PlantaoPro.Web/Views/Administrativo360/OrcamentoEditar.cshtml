@@ -31,14 +31,6 @@
         </div>
     }
 
-    @if (TempData["ErrorMessage"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle me-2"></i>@TempData["ErrorMessage"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-        </div>
-    }
-
     <form asp-action="OrcamentoEditar" asp-route-id="@Model.Id" method="post" id="formOrcamento">
         @Html.AntiForgeryToken()
         <input type="hidden" name="Id" value="@Model.Id" />

@@ -3,6 +3,21 @@ using PlantaoPro.Api.Models;
 
 namespace PlantaoPro.Api;
 
+/// <summary>
+/// EmailAddress para campos opcionais: o atributo padrao rejeita string vazia no .NET
+/// moderno, o que impedia o cadastro quando o usuario deixava o e-mail em branco.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Parameter, AllowMultiple = false)]
+public sealed class EmailAddressOpcionalAttribute : ValidationAttribute
+{
+    private static readonly EmailAddressAttribute Email = new();
+
+    public EmailAddressOpcionalAttribute() { ErrorMessage = "O campo {0} deve conter um e-mail válido."; }
+
+    public override bool IsValid(object? value) =>
+        value is not string valor || string.IsNullOrWhiteSpace(valor) || Email.IsValid(valor);
+}
+
 public sealed class PacienteRequest
 {
     [Required, StringLength(200)] public string Nome { get; set; } = string.Empty;
@@ -13,7 +28,7 @@ public sealed class PacienteRequest
     [StringLength(15)] public string Cns { get; set; } = string.Empty;
     [StringLength(80)] public string DocumentoAlternativo { get; set; } = string.Empty;
     [StringLength(30)] public string Telefone { get; set; } = string.Empty;
-    [EmailAddress, StringLength(254)] public string Email { get; set; } = string.Empty;
+    [EmailAddressOpcional, StringLength(254)] public string Email { get; set; } = string.Empty;
     [StringLength(500)] public string Endereco { get; set; } = string.Empty;
     [StringLength(200)] public string ResponsavelNome { get; set; } = string.Empty;
     public bool ConsentimentoLgpd { get; set; }

@@ -86,7 +86,7 @@ public sealed class PlanosController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return null;
         var (data, error, _) = await ReadApiResponseAsync<PlanoSaasViewModel>(client, "api/planos/" + id);
-        if (data is null) TempData["ErrorMessage"] = error ?? "Plano não encontrado.";
+        if (data is null) TempData["Error"] = error ?? "Plano não encontrado.";
         return data;
     }
 
@@ -104,16 +104,16 @@ public sealed class PlanosController : BaseWebController
             var (_, error, status) = await SendApiAsync<PlanoSaasViewModel, object>(client, method, endpoint, model);
             if ((int)status < 200 || (int)status > 299)
             {
-                TempData["ErrorMessage"] = error ?? "Não foi possível salvar plano.";
+                TempData["Error"] = error ?? "Não foi possível salvar plano.";
                 return View(model);
             }
-            TempData["SuccessMessage"] = successMessage;
+            TempData["Success"] = successMessage;
             return RedirectToAction(successAction);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao salvar plano SaaS");
-            TempData["ErrorMessage"] = "Não foi possível salvar plano.";
+            TempData["Error"] = "Não foi possível salvar plano.";
             return View(model);
         }
     }

@@ -94,7 +94,7 @@ public sealed class AssinaturasController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return null;
         var (data, error, _) = await ReadApiResponseAsync<AssinaturaSaasViewModel>(client, "api/assinaturas/" + id);
-        if (data is null) TempData["ErrorMessage"] = error ?? "Assinatura não encontrada.";
+        if (data is null) TempData["Error"] = error ?? "Assinatura não encontrada.";
         return data;
     }
 
@@ -110,10 +110,10 @@ public sealed class AssinaturasController : BaseWebController
         var (_, error, status) = await SendApiAsync<AssinaturaSaasViewModel, object>(client, method, endpoint, model);
         if ((int)status < 200 || (int)status > 299)
         {
-            TempData["ErrorMessage"] = error ?? "Não foi possível salvar assinatura.";
+            TempData["Error"] = error ?? "Não foi possível salvar assinatura.";
             return View(model);
         }
-        TempData["SuccessMessage"] = successMessage;
+        TempData["Success"] = successMessage;
         return RedirectToAction(nameof(Index));
     }
 }

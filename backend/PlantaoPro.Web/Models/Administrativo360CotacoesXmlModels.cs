@@ -152,7 +152,6 @@ public sealed class CotacaoDetalhesPageViewModel
     public CotacaoDetalhesViewModel Cotacao { get; init; } = default!;
     public IReadOnlyList<CotacaoRespostaViewModel> Respostas { get; init; } = Array.Empty<CotacaoRespostaViewModel>();
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class RelacionamentoMapeamentoViewModel
@@ -325,7 +324,6 @@ public sealed class DocumentoXmlDetalhesPageViewModel
 {
     public DocumentoRecebidoDetalhesViewModel Documento { get; init; } = default!;
     public string? Erro { get; init; }
-    public string? Sucesso { get; init; }
 }
 
 public sealed class ImportarXmlManualFormModel

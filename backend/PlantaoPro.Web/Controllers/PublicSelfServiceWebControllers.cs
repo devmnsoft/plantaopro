@@ -69,10 +69,10 @@ public sealed class CadastroController : Controller
         if (!ModelState.IsValid)
         {
             model.Planos = PlanosPublicosController.Planos();
-            TempData["ErrorMessage"] = "Revise os campos obrigatórios.";
+            TempData["Error"] = "Revise os campos obrigatórios.";
             return View("Cadastro", model);
         }
-        TempData["SuccessMessage"] = "Cadastro recebido. A API self-service finalizará tenant, cliente, assinatura e usuário administrador.";
+        TempData["Success"] = "Cadastro recebido. A API self-service finalizará tenant, cliente, assinatura e usuário administrador.";
         return RedirectToAction(nameof(Sucesso));
     }
 
@@ -182,7 +182,7 @@ public sealed class PerfisController : BaseWebController
             ModelState.AddModelError(string.Empty, error ?? "Não foi possível salvar o perfil.");
             return View("Form", model);
         }
-        TempData["SuccessMessage"] = "Perfil salvo com sucesso.";
+        TempData["Success"] = "Perfil salvo com sucesso.";
         return RedirectToAction(nameof(Permissoes), new { id = id == Guid.Empty ? model.Id : id });
     }
 
@@ -194,7 +194,7 @@ public sealed class PerfisController : BaseWebController
         {
             if (!AddBearerToken(client)) return null;
             var (profile, error, _) = await ReadApiResponseAsync<PerfilWebViewModel>(client, "api/perfis/" + id);
-            if (profile is null) TempData["ErrorMessage"] = error ?? "Perfil não encontrado.";
+            if (profile is null) TempData["Error"] = error ?? "Perfil não encontrado.";
             return profile;
         }
         finally

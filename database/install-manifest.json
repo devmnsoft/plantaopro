@@ -951,6 +951,22 @@
           ]
         }
       ]
+    },
+    {
+      "order": 73,
+      "name": "Administrativo360 Transmissão Tentativas B5 v2.21.3",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_cotacao_envios",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
     }
   ],
   "canonicalTables": [

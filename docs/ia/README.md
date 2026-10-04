@@ -1,6 +1,6 @@
 # Assistente IA (camada canônica) — PlantãoPro
 
-- **Data**: 2026-10-03 (UTC) · **Baseline**: `35c4382` + WP-S1/S2/S3 · **Suíte**: 794/794 green
+- **Data**: 2026-10-03 (rodada 1) · atualizado 2026-10-04 (rodada 2 — em curso) · **Baseline**: commit `82b8c26` (`main` = `origin/main`, pushado; contém WP-S1/S2/S3 e migrações v2305/v2306/v2307) · **Suíte**: 794/794 green (reproduzida em 2026-10-04 sobre árvore limpa em `82b8c26`)
 - **Prontidão técnica**: implementada e validada por suíte de testes + smoke funcional com stack real no ar (3 perfis).
 - **Homologação com provedor real**: **NAO EXECUTADA** nesta rodada — sem chave de provedor, cada ponto de IA devolve o estado explícito `NAO_CONFIGURADO` (comprovado por probe). A integração com o provedor externo só fica comprovada em ambiente de homologação com chaves reais (mocks/unitários não contam como prova de integração, por regra da pauta).
 

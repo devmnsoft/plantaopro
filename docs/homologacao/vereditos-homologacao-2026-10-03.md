@@ -1,6 +1,6 @@
 # Vereditos de Homologação por Item — PlantãoPro (2026-10-03)
 
-**Entrega 7 de 8.** Baseline `35c4382` (branch `main` local, não pushada) + correções WP-S1/S2/S3/S4 (edits não commitados) + migrações v2305/v2306/v2307.
+**Entrega 7 de 8.** Baseline `82b8c26` (`main` = `origin/main`, pushado), que contém WP-S1/S2/S3/S4 e as migrações v2305/v2306/v2307.
 
 ## Legenda dos vereditos
 

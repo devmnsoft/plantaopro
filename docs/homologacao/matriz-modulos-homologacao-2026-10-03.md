@@ -1,6 +1,6 @@
 # Matriz de Módulos — Homologação PlantãoPro (2026-10-03)
 
-- **Baseline**: commit `35c4382` (branch `main` local, não pushada) + correções desta rodada (WP-S1/S2/S3, edits não commitados + migrações v2305/v2306/v2307).
+- **Baseline**: commit `82b8c26` ("ajustes novos", 2026-10-04) — `main` = `origin/main` (pushado). Contém integralmente o trabalho da rodada 1 (WP-S1/S2/S3/S4, migrações v2305/v2306/v2307, camada canônica de IA, manifests/artifacts). Suíte revalidada em 2026-10-04 sobre a árvore limpa desse commit: **794/794 green**. Esta matriz passará a ser mantida também pela rodada 2 (jornadas reais no navegador com persistência).
 - **Suíte de referência**: 794/794 green (`evidencias-a360/wps3b-suite.log` e `wps4-suite2.log` — rerun pós-edsits WP-S4 verde).
 - **Legenda**:
   - **Feito** = implementação presente e compilando (baseline + esta rodada).

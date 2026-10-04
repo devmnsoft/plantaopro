@@ -1,7 +1,7 @@
 # Relatório de Segurança P0 — Homologação PlantãoPro
 
 - **Data**: 2026-10-03 (UTC)
-- **Baseline**: commit `35c4382` (branch `main` local, não pushada) + correções desta rodada de homologação (edits não commitados + migrações v2305/v2306/v2307)
+- **Baseline**: commit `82b8c26` (2026-10-04, `main` = `origin/main`, pushado) — contém integralmente as correções da rodada de homologação (WP-S1/S2/S3/S4, edits e migrações v2305/v2306/v2307)
 - **Suíte de referência**: **794/794 green** (`evidencias-a360/wps3b-suite.log`, 8 s) — evolução da rodada: baseline 775/775 → pós-WP-S1 776/776 → pós-WP-S2 779/779 → pós-WP-S3 (camada IA, +15 fatos) 794/794, revalidado após o ajuste do catálogo do guard (Anexo B)
 
 ## 1. Método
@@ -162,11 +162,13 @@ Controles conferidos e confirmados com evidência (arquivo:linha):
 3. **Limitações funcionais declaradas** (não são de segurança mas afetam o veredito): fixtures ABRASF reais ausentes (S-04); mobile avaliado estaticamente (WP seguinte); IA sem chave real retorna estado explícito "não configurado" (WP-S3 — semântica validada por probe funcional real, Anexo B; integração com provedor real fica NAO EXECUTADA até haver chave).
 4. **Riscos residuais conhecidos**: JWT simétrico local; cookies sem `Secure` forçado em HTTP puro (mitigado por `SameAsRequest` + proxy em produção); API pública sem escopo/rate limit até ter dados reais (S-07).
 
-## 6. Regressões desta rodada (evidência executada)
+## 6. Regressões da rodada 1 (evidência executada — histórico)
+
+> As linhas abaixo referem-se à rodada 1 (outubro/2026). O commit efetivamente entregue é `82b8c26`, que já incorpora tudo o listado aqui — ver seção 6a para a revalidação sobre esse commit.
 
 | Evidência | Resultado |
 |---|---|
-| Baseline `35c4382` | 775/775 green (19 s) — `evidencias-a360/baseline-suite.log` |
+| Baseline `35c4382` (intermediário da rodada 1) | 775/775 green (19 s) — `evidencias-a360/baseline-suite.log` |
 | Pós-código (WP-S1) | 774/774 green (15 s) — `evidencias-a360/wps1-suite.log` (delta explicado: rewrite `TestDatabaseResolutionTests` 4→3 fatos) |
 | Pós-migrações ativas no banco + chave da API pública | **776/776 green (11 s)** — `evidencias-a360/wps1-suite-final2.log` |
 | Pós-WP-S2 (Meu Dia / Central de Ações) | **779/779 green (11 s)** — `evidencias-a360/wps2-suite.log` (delta: +1 out-of-range no scoping, +2 classificação de leitura do corpo) |
@@ -179,6 +181,14 @@ Controles conferidos e confirmados com evidência (arquivo:linha):
 | Pós-adjustment do catálogo do guard (S-15) | **794/794 green (8 s)** — `evidencias-a360/wps3b-suite.log` |
 | Smoke funcional camada IA (stack no ar, 18 passos, 3 perfis) | cadeia completa verde — `evidencias-a360/wps3-web-smoke.log` (Anexo B) |
 | Script consolidado (pós-v2307) | `scrpt_completo.sql` regenerado — sha256 `b925e687…deff1` |
+
+### 6a. Rodada 2 (2026-10-04) — revalidação sobre o commit efetivo `82b8c26`
+
+| Evidência | Resultado |
+|---|---|
+| Suíte completa em árvore limpa de `82b8c26` | **794/794 green (8 s), exit 0** — `docs/evidencias/2026-10-04-rodada2/r2-baseline-suite-clean.log` |
+| Mesma suíte com 3 `appsettings*.json` locais modificados (credencial + flags locais não versionadas) | 5 falhas contratuais **explicadas**: os contratos S-11 leem os arquivos versionados e reprovam segredos/flags inseguros localmente reinseridos (`Password=123456`, `AllowDevelopmentAutoCreate=true`) — `docs/evidencias/2026-10-04-rodada2/r2-baseline-suite.log`; resolução adotada: árvore limpa + credenciais locais exclusivamente por user-secrets (`scripts/local/setup-local-config.ps1`), que já apontam para o banco de desenvolvimento |
+| `scrpt_completo.sql` no commit | sha256 `b925e687…deff1` (idêntico ao fim da rodada 1) — sem migração nova ainda nesta data; a v2308 (governança IA) será registrada na sequência |
 
 ---
 

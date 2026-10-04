@@ -1,6 +1,6 @@
 # Roteiro de Homologação por Perfil — PlantãoPro (2026-10-03)
 
-**Entrega 6 de 8** da consolidação de homologação sobre o baseline `35c4382` + WP-S1/S2/S3/S4.
+**Entrega 6 de 8** da consolidação de homologação sobre o baseline `82b8c26` (que contém WP-S1/S2/S3/S4 e migrações v2305/v2306/v2307).
 
 - **Ambiente executado**: stack dev local — API `https://localhost:51977`, Web `https://localhost:52977`, PostgreSQL local (schema `plantaopro`), build com 0 erros (`artifacts/runtime-logs/dev/build-20261003-221535.log`).
 - **Credenciais**: ver `docs/usuarios-teste.md` (não repetir senhas neste documento).

@@ -32,8 +32,8 @@
 ## 9. XML ABRASF real em fixtures — **baixo**
 - Pipeline preserva bytes/hash/encoding comprovado, mas sobre fixture sintética. Se houver XML real de produção anonimizado, rodar o mesmo teste contra ele (não modificar o sintético).
 
-## 10. Flake transitória `IsolamentoCadastros_...` (Npgsql 23503 FK) — **baixo (qualidade de teste)**
-- Falhou 1× na suíte pós-WP-S4 (exclusão de `adm360_parceiros` × FK de `adm360_orcamentos`), passou isolada e em re-run completo (794/794). Ajustar limpeza/ordenação do fixture para eliminar a janela de corrida entre tests.
+## 10. Flake transitória `IsolamentoCadastros_...` (Npgsql 23503 FK) — **CORRIGIDO em 2026-10-04 (WP-A4, rodada 2)**
+- Causa raiz: `SementarAsync` do fixture de Cadastros apagava apenas 6 tabelas antes de recriar os tenants fixos → FK pendente em `adm360_orcamentos` (23503). Correção: helper `PlantaoPro.Tests/Infrastructure/Adm360TenantCleanup.cs` com deletes em ordem topológica (folhas primeiro, `parceiros` e `tenants` por último) adotado pelo fixture de Cadastros e pela semente dos Filtros. Verificado: combinação dos dois testes 28/28 + re-execução imediata 23/23; suíte completa 815/815.
 
 ## 11. Landing médico em `MODULO_NAO_CONTRATADO` (MEDICO_AREA) — **baixo (comercial/config)**
 - Estado de tenant pré-existente: módulo `MEDICO_AREA` não contratado no tenant Clínica Modelo → landing cai em AccessDenied com razão correta. Contratar/habilitar o módulo ou tratar a rota de landing para módulos não contratados.

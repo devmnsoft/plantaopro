@@ -1,0 +1,59 @@
+Evidencia WPA4 v2305 por papel | 2026-10-04 12:53:34 -03:00 | banco: plantaopro_test
+
+=== [postgres] psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 5432 -U postgres -d plantaopro_test -f wpa4-evidencia-2305-prep.sql ===
+DO
+CREATE ROLE
+CREATE ROLE
+GRANT ROLE
+GRANT
+GRANT
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-prep.sql:52: NOTA:  PREP OK: papeis criados (gate_usr comum; gate_maint membro de plantaopro_maintenance) e linha-base inserida
+DO
+
+=== [gate_usr] psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 5432 -U gate_usr -d plantaopro_test -f wpa4-evidencia-2305-cenario-usuario-comum.sql ===
+ conexao_real | current_user_efetivo | session_user 
+--------------+----------------------+--------------
+ gate_usr     | gate_usr             | gate_usr
+(1 linha)
+
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-usuario-comum.sql:24: NOTA:  B OK: usuario comum SETou o GUC livremente (gotcha PG18), mas fn_adm360_bypass_habilitado() = false
+DO
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-usuario-comum.sql:40: NOTA:  C OK: UPDATE bloqueado para usuario comum (GUC on): Evento do modulo Administrativo 360 e imutavel (append-only): UPDATE e DELETE nao permitidos (registro e0a1b2c3-d4e5-4f60-a1b2-c3d4e5f60789).
+DO
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-usuario-comum.sql:56: NOTA:  D OK: DELETE bloqueado para usuario comum (GUC on): Evento do modulo Administrativo 360 e imutavel (append-only): UPDATE e DELETE nao permitidos (registro e0a1b2c3-d4e5-4f60-a1b2-c3d4e5f60789).
+DO
+
+=== [gate_maint] psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 5432 -U gate_maint -d plantaopro_test -f wpa4-evidencia-2305-cenario-maintenance.sql ===
+ conexao_real | current_user_efetivo | session_user 
+--------------+----------------------+--------------
+ gate_maint   | gate_maint           | gate_maint
+(1 linha)
+
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-maintenance.sql:23: NOTA:  E OK: membro de plantaopro_maintenance com GUC on -> fn_adm360_bypass_habilitado() = true
+DO
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-maintenance.sql:33: NOTA:  F OK: membro de plantaopro_maintenance sem GUC on -> fn_adm360_bypass_habilitado() = false
+DO
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-maintenance.sql:45: NOTA:  G OK: membro de plantaopro_maintenance com GUC on atualizou o evento (1 linha)
+DO
+psql:C:/MNSOFT/plantaopro/docs/evidencias/2026-10-04-rodada2/wpa4-evidencia-2305-cenario-maintenance.sql:57: NOTA:  H OK: membro de plantaopro_maintenance com GUC on removeu o evento (1 linha)
+DO
+
+=== [postgres] psql -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 5432 -U postgres -d plantaopro_test -f wpa4-evidencia-2305-final.sql ===
+ linhas_residuais_da_evidencia 
+-------------------------------
+                             0
+(1 linha)
+
+        rolname         | rolsuper | rolcreaterole | rolcanlogin | rolinherit 
+------------------------+----------+---------------+-------------+------------
+ gate_maint             | f        | f             | t           | f
+ gate_usr               | f        | f             | t           | f
+ plantaopro_maintenance | f        | f             | f           | f
+(3 linhas)
+
+REVOKE
+REVOKE
+DROP ROLE
+DROP ROLE
+
+EVIDENCIA WPA4 V2305 COMPLETA SEM ERROS

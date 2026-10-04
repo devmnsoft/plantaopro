@@ -1,0 +1,117 @@
+﻿INICIO 2026-10-04T06:31:11
+  Determinando os projetos a serem restaurados...
+  Todos os projetos est├úo atualizados para restaura├º├úo.
+  PlantaoPro.CrossCutting -> C:\MNSOFT\plantaopro\backend\PlantaoPro.CrossCutting\bin\Debug\net10.0\PlantaoPro.CrossCutting.dll
+  PlantaoPro.Domain -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Domain\bin\Debug\net10.0\PlantaoPro.Domain.dll
+  PlantaoPro.Application -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Application\bin\Debug\net10.0\PlantaoPro.Application.dll
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Infrastructure\Administrativo360\CotacoesRepository.cs(23,29): warning CS0108: "CotacoesRepository.ToDateOnly(object)" oculta o membro herdado "Adm360Repository.ToDateOnly(object?)". Use a nova palavra-chave se foi pretendido ocultar. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Infrastructure\PlantaoPro.Infrastructure.csproj]
+  PlantaoPro.Infrastructure -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Infrastructure\bin\Debug\net10.0\PlantaoPro.Infrastructure.dll
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\Controllers\UnitPortalController.cs(13,38): warning CS0108: "UnitPortalController.Request(CreateShiftRequestDto, ShiftRequestService, CancellationToken)" oculta o membro herdado "ControllerBase.Request". Use a nova palavra-chave se foi pretendido ocultar. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\Controllers\V115FaturamentoController.cs(19,227): warning CS0618: "V115FaturamentoRegraService.GerarContaPlantaoAsync(Guid, V115GerarContaRequest?)" ├® obsoleto: "Pagamento de plantao pertence ao fechamento operacional e nao ao financeiro clinico." [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\CommercialDemoService.cs(264,52): warning CS8600: Convers├úo de literal nula ou poss├¡vel valor nulo em tipo n├úo anul├ível. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\Controllers\AuthController.cs(60,242): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\V116ConsolidacaoServices.cs(92,43): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'data' em 'ApiResponse<object> ApiResponse<object>.Ok(object data, string message = "Sucesso")'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\SavedViews\SavedViewRepository.cs(20,16): warning CS8619: A anulabilidade de tipos de refer├¬ncia no valor do tipo 'SavedViewDto?[]' n├úo corresponde ao tipo de destino 'IReadOnlyList<SavedViewDto>'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\Saude360ClinicalService.cs(608,41): warning CS8600: Convers├úo de literal nula ou poss├¡vel valor nulo em tipo n├úo anul├ível. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\Saude360ClinicalService.cs(696,42): warning CS8600: Convers├úo de literal nula ou poss├¡vel valor nulo em tipo n├úo anul├ível. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\PlantaoPro.Api.csproj]
+  PlantaoPro.Api -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\bin\Debug\net10.0\PlantaoPro.Api.dll
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\AccountController.cs(348,56): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'moduleCode' em 'bool IModuleAccessService.IsModuleEnabled(string moduleCode)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Services\AssistenteContextualService.cs(15,33): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'controller' em 'AssistenteContextualViewModel AssistenteContextualService.CriarPadrao(string controller, string action, string perfil)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Services\ProductivityWebService.cs(121,84): warning CS8620: O argumento do tipo 'Dictionary<string, string>' n├úo pode ser usado para o par├ómetro 'queryString' do tipo 'IDictionary<string, string?>' em 'string QueryHelpers.AddQueryString(string uri, IDictionary<string, string?> queryString)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Saude360WebControllers.cs(224,65): warning CS8629: O tipo de valor de nulidade pode ser nulo. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Views\Administrativo360\Colaboradores.cshtml(9,16): warning CS8603: Poss├¡vel retorno de refer├¬ncia nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\RelatoriosController.cs(29,219): warning CS8620: O argumento do tipo 'Dictionary<string, string>' n├úo pode ser usado para o par├ómetro 'queryString' do tipo 'IDictionary<string, string?>' em 'string QueryHelpers.AddQueryString(string uri, IDictionary<string, string?> queryString)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\RelatoriosController.cs(34,214): warning CS8620: O argumento do tipo 'Dictionary<string, string>' n├úo pode ser usado para o par├ómetro 'queryString' do tipo 'IDictionary<string, string?>' em 'string QueryHelpers.AddQueryString(string uri, IDictionary<string, string?> queryString)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\ConferenciaExecucaoController.cs(26,13): warning CS8620: O argumento do tipo 'Dictionary<string, string>' n├úo pode ser usado para o par├ómetro 'queryString' do tipo 'IDictionary<string, string?>' em 'string QueryHelpers.AddQueryString(string uri, IDictionary<string, string?> queryString)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Administrativo360Controller.Organizacao.cs(153,78): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'cpf' em 'IActionResult Administrativo360Controller.ViewColaboradorComErro(ColaboradoresIndexViewModel baseModelo, string matricula, string nome, string cpf, string email, Guid cargoId, string? erro, Guid? id = null, ColaboradorEdicaoModel? editar = null)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Administrativo360Controller.Organizacao.cs(155,78): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'cpf' em 'IActionResult Administrativo360Controller.ViewColaboradorComErro(ColaboradoresIndexViewModel baseModelo, string matricula, string nome, string cpf, string email, Guid cargoId, string? erro, Guid? id = null, ColaboradorEdicaoModel? editar = null)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Administrativo360Controller.Organizacao.cs(157,78): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'cpf' em 'IActionResult Administrativo360Controller.ViewColaboradorComErro(ColaboradoresIndexViewModel baseModelo, string matricula, string nome, string cpf, string email, Guid cargoId, string? erro, Guid? id = null, ColaboradorEdicaoModel? editar = null)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Administrativo360Controller.Organizacao.cs(159,78): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'cpf' em 'IActionResult Administrativo360Controller.ViewColaboradorComErro(ColaboradoresIndexViewModel baseModelo, string matricula, string nome, string cpf, string email, Guid cargoId, string? erro, Guid? id = null, ColaboradorEdicaoModel? editar = null)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Controllers\Administrativo360Controller.Organizacao.cs(167,126): warning CS8604: Poss├¡vel argumento de refer├¬ncia nula para o par├ómetro 'cpf' em 'IActionResult Administrativo360Controller.ViewColaboradorComErro(ColaboradoresIndexViewModel baseModelo, string matricula, string nome, string cpf, string email, Guid cargoId, string? erro, Guid? id = null, ColaboradorEdicaoModel? editar = null)'. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Views\MeuDia\Index.cshtml(7,133): warning CS8620: O argumento do tipo 'IReadOnlyDictionary<string, string>' n├úo pode ser usado para o par├ómetro 'values' do tipo 'IEnumerable<KeyValuePair<string, string?>>' em 'RouteValueDictionary.RouteValueDictionary(IEnumerable<KeyValuePair<string, string?>>? values)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\Views\Pendencias\Index.cshtml(7,153): warning CS8620: O argumento do tipo 'IReadOnlyDictionary<string, string>' n├úo pode ser usado para o par├ómetro 'values' do tipo 'IEnumerable<KeyValuePair<string, string?>>' em 'RouteValueDictionary.RouteValueDictionary(IEnumerable<KeyValuePair<string, string?>>? values)' devido a diferen├ºas na nulidade dos tipos de refer├¬ncia. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\PlantaoPro.Web.csproj]
+  PlantaoPro.Web -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\bin\Debug\net10.0\PlantaoPro.Web.dll
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360CotacoesXmlDashboardTests.cs(104,39): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360CotacoesXmlDashboardTests.cs(311,30): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360CotacoesTransmissaoB5Tests.cs(333,21): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360EventosImutabilidadeTests.cs(264,34): warning CS8600: Convers├úo de literal nula ou poss├¡vel valor nulo em tipo n├úo anul├ível. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360FinanceiroEVendasTests.cs(585,31): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360FinanceiroEVendasTests.cs(645,31): warning CS8602: Desrefer├¬ncia de uma refer├¬ncia possivelmente nula. [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360CadastrosSeletoresEUnicidadeTests.cs(91,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\MobileAndSecurityContractTests.cs(26,28): warning xUnit2031: Do not use a Where clause to filter before calling Assert.Single. Use the overload of Assert.Single that accepts a filtering function. (https://xunit.net/xunit.analyzers/rules/xUnit2031) [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\Administrativo360FiltrosOpcionaisTests.cs(228,9): warning xUnit2013: Do not use Assert.Equal() to check for collection size. Use Assert.Single instead. (https://xunit.net/xunit.analyzers/rules/xUnit2013) [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\SwaggerIntegrationTests.cs(21,9): warning xUnit2012: Do not use Assert.True() to check if a value exists in a collection. Use Assert.Contains instead. (https://xunit.net/xunit.analyzers/rules/xUnit2012) [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\SwaggerIntegrationTests.cs(22,9): warning xUnit2012: Do not use Assert.True() to check if a value exists in a collection. Use Assert.Contains instead. (https://xunit.net/xunit.analyzers/rules/xUnit2012) [C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj]
+  PlantaoPro.Tests -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\bin\Debug\net10.0\PlantaoPro.Tests.dll
+Execu├º├úo de teste para C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\bin\Debug\net10.0\PlantaoPro.Tests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padr├úo especificado.
+dotnet : [xUnit.net 00:00:02.18]     PlantaoPro.Tests.HomologacaoRuntimeRealContractTests.MenusControllersSegredosEMobi
+le_DevemRespeitarContratosDeHomologacao [FAIL]
+No linha:1 caractere:221
++ ... suite.log"; dotnet test backend\PlantaoPro.Tests -c Debug 2>&1 | Out- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...ologacao [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Com falha PlantaoPro.Tests.HomologacaoRuntimeRealContractTests.MenusControllersSegredosEMobile_DevemRespeitarContratosDeHomologacao [28 ms]
+  Mensagem de erro:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                Ôåô (pos 570)
+String: ┬À┬À┬À"e=postgres;Password=123456;Pooling=true;M"┬À┬À┬À
+Found:  "123456"
+  Rastreamento de pilha:
+     at PlantaoPro.Tests.HomologacaoRuntimeRealContractTests.MenusControllersSegredosEMobile_DevemRespeitarContratosDeHomologacao() in C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\HomologacaoRuntimeRealContractTests.cs:line 61
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.26]     
+PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsVersionadosNaoDevemConterSegredosOperacionaisConhecidos 
+[FAIL]
+[xUnit.net 00:00:02.27]     
+PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsDaApiVersionadoDevePermanecerSemSegredosEFlagsInseguras 
+[FAIL]
+  Com falha PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsVersionadosNaoDevemConterSegredosOperacionaisConhecidos [144 ms]
+  Mensagem de erro:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                Ôåô (pos 561)
+String: ┬À┬À┬À"t;Username=postgres;Password=123456;Pooli"┬À┬À┬À
+Found:  "Password=123456"
+  Rastreamento de pilha:
+     at PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsVersionadosNaoDevemConterSegredosOperacionaisConhecidos() in C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\JwtConfigurationContractTests.cs:line 85
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+  Com falha PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsDaApiVersionadoDevePermanecerSemSegredosEFlagsInseguras [1 ms]
+  Mensagem de erro:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                Ôåô (pos 113)
+String: ┬À┬À┬À"t;Username=postgres;Password=123456;Pooli"┬À┬À┬À
+Found:  "Password=123456"
+  Rastreamento de pilha:
+     at PlantaoPro.Tests.JwtConfigurationContractTests.AppsettingsDaApiVersionadoDevePermanecerSemSegredosEFlagsInseguras() in C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\JwtConfigurationContractTests.cs:line 66
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:02.36]     PlantaoPro.Tests.DevelopmentConfigurationSecurityTests.Development_settings_do_not_enable_u
+nsafe_database_or_demo_defaults [FAIL]
+  Com falha PlantaoPro.Tests.DevelopmentConfigurationSecurityTests.Development_settings_do_not_enable_unsafe_database_or_demo_defaults [21 ms]
+  Mensagem de erro:
+   Assert.False() Failure
+Expected: False
+Actual:   True
+  Rastreamento de pilha:
+     at PlantaoPro.Tests.DevelopmentConfigurationSecurityTests.Development_settings_do_not_enable_unsafe_database_or_demo_defaults() in C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\DevelopmentConfigurationSecurityTests.cs:line 16
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+[xUnit.net 00:00:07.27]     PlantaoPro.Tests.HomologacaoCrudsAcoesJornadasContractTests.Repositorio_NaoDeveConterPadroe
+sProibidosSegredosOuControllerDuplicado [FAIL]
+  Com falha PlantaoPro.Tests.HomologacaoCrudsAcoesJornadasContractTests.Repositorio_NaoDeveConterPadroesProibidosSegredosOuControllerDuplicado [2 s]
+  Mensagem de erro:
+   Assert.DoesNotContain() Failure: Sub-string found
+                                Ôåô (pos 570)
+String: ┬À┬À┬À"e=postgres;Password=123456;Pooling=true;M"┬À┬À┬À
+Found:  "123456"
+  Rastreamento de pilha:
+     at PlantaoPro.Tests.HomologacaoCrudsAcoesJornadasContractTests.Repositorio_NaoDeveConterPadroesProibidosSegredosOuControllerDuplicado() in C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\HomologacaoCrudsAcoesJornadasContractTests.cs:line 64
+   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Method(Object obj, IntPtr* args)
+   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)
+
+Com falha! ÔÇô Com falha:     5, Aprovado:   789, Ignorado:     0, Total:   794, Dura├º├úo: 10 s - PlantaoPro.Tests.dll (net10.0)
+FIM EXIT=1 2026-10-04T06:31:58

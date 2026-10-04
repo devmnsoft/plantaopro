@@ -116,7 +116,7 @@ Cotação real **B7X-a9f0542** (status interno `PRONTA_PARA_ENVIO`).
 | Mesmo teste isolado | **1/1 verde** (888 ms) | `wps4-test-repro.log` |
 | Suíte completa (re-run) | **794/794 verdes** (11 s) | `wps4-suite2.log` |
 
-A falha única é flake de estado/ordenação (não reproduz isolado; suíte inteira passa no re-run) — sem relação com os edits (CSS/views).
+A falha única é flake de estado/ordenação (não reproduz isolado; suíte inteira passa no re-run) — sem relação com os edits (CSS/views). **Atualização 2026-10-04 (WP-A4): causa raiz identificada e corrigida** — limpeza do fixture em ordem topológica (`Adm360TenantCleanup`); ver suíte completa 815/815 na rodada 2.
 
 ## 7. Pendências declaradas (não se declara concluído sem execução)
 

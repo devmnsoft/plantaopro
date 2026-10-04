@@ -1,0 +1,15 @@
+﻿INICIO 2026-10-04T06:32:51 HEAD=82b8c26
+  Determinando os projetos a serem restaurados...
+  Todos os projetos est├úo atualizados para restaura├º├úo.
+  PlantaoPro.CrossCutting -> C:\MNSOFT\plantaopro\backend\PlantaoPro.CrossCutting\bin\Debug\net10.0\PlantaoPro.CrossCutting.dll
+  PlantaoPro.Domain -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Domain\bin\Debug\net10.0\PlantaoPro.Domain.dll
+  PlantaoPro.Application -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Application\bin\Debug\net10.0\PlantaoPro.Application.dll
+  PlantaoPro.Infrastructure -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Infrastructure\bin\Debug\net10.0\PlantaoPro.Infrastructure.dll
+  PlantaoPro.Api -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Api\bin\Debug\net10.0\PlantaoPro.Api.dll
+  PlantaoPro.Web -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Web\bin\Debug\net10.0\PlantaoPro.Web.dll
+  PlantaoPro.Tests -> C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\bin\Debug\net10.0\PlantaoPro.Tests.dll
+Execu├º├úo de teste para C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\bin\Debug\net10.0\PlantaoPro.Tests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padr├úo especificado.
+
+Aprovado!  ÔÇô Com falha:     0, Aprovado:   794, Ignorado:     0, Total:   794, Dura├º├úo: 8 s - PlantaoPro.Tests.dll (net10.0)
+FIM EXIT=0 2026-10-04T06:33:06

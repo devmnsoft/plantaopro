@@ -113,6 +113,11 @@ public sealed class AccountController : Controller
                 IsPersistent = true,
                 ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
             });
+            // No .NET 10 o SignInAsync nao atualiza HttpContext.User dentro da mesma requisicao
+            // (comprovado pela sonda: principal com claims x User anonimo). Fixa o principal
+            // explicitamente para que checagens feitas a seguir (ex.: landing por modulo
+            // contratado) avaliem o usuario recem-autenticado e nao a sessao anonima.
+            HttpContext.User = principal;
             _logger.LogInformation("Cookie de autenticação criado. UsuarioId:{UsuarioId} TipoIdentificador:{TipoIdentificador}", login.UsuarioId, identifierKind);
 
             HttpContext.Session.SetString("jwt", login.Token);
@@ -274,6 +279,17 @@ public sealed class AccountController : Controller
             destination = ("USUARIO", "Home", "Dashboard");
         }
 
+        // Landing resiliente: se o módulo da página de destino do perfil não estiver habilitado
+        // no tenant (ex.: MEDICO_AREA não contratado), cai no Meu Dia — módulo core, sempre
+        // habilitado — em vez de deixar o usuário numa AccessDenied logo após autenticar.
+        if (SaasRouteGuardFilter.TryResolveModule(destination.Controller, out var moduloDestino)
+            && !string.IsNullOrWhiteSpace(moduloDestino)
+            && !_moduleAccess.IsModuleEnabled(moduloDestino))
+        {
+            _logger.LogInformation("Módulo do destino do perfil não habilitado ({Modulo}); usando Meu Dia como landing.", moduloDestino);
+            return RedirectToAction("Index", "MeuDia");
+        }
+
         _logger.LogInformation("Redirecionando usuário após login. Perfis:{Perfis} Destino:{Controller}/{Action}", string.Join(',', normalizedRoles), destination.Controller, destination.Action);
         return RedirectToAction(destination.Action, destination.Controller);
     }
@@ -345,7 +361,7 @@ public sealed class AccountController : Controller
             if (!string.IsNullOrEmpty(segment) && SaasRouteGuardFilter.TryResolveModule(segment, out var derived))
             {
                 module = derived;
-                reason = _moduleAccess.IsModuleEnabled(derived) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO";
+                reason = _moduleAccess.IsModuleEnabled(derived!) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO";
             }
         }
         ViewBag.Module = module;
@@ -435,6 +451,9 @@ public sealed class AccountController : Controller
                     IsPersistent = true,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
+                // Mesma correcao do Login: garante que HttpContext.User reflita o novo contexto
+                // ainda dentro desta requisicao (no .NET 10 o SignInAsync nao faz isso por si).
+                HttpContext.User = principal;
                 HttpContext.Session.SetString("jwt", login.Token);
                 HttpContext.Session.SetString("JwtToken", login.Token);
                 HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);

@@ -1,6 +1,9 @@
+using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Services.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -37,12 +40,18 @@ public sealed class AgendaBffController : ControllerBase
     private async Task<IActionResult> ForwardAsync(string endpoint, CancellationToken ct)
     {
         var token = HttpContext.Session.GetString("JwtToken");
-        if (string.IsNullOrWhiteSpace(token)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(token))
+            return StatusCode(StatusCodes.Status401Unauthorized, BffContracts.Envelope(StatusCodes.Status401Unauthorized, BffContracts.RazaoSessaoExpirada, BffContracts.MensagemSessaoExpirada));
 
         var query = Request.QueryString.HasValue ? Request.QueryString.Value : string.Empty;
         var client = _factory.CreateClient("PlantaoProApi");
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         using var response = await client.GetAsync(endpoint + query, ct);
+
+        var redirecionamento = BffContracts.MapUpstreamRedirect(response);
+        if (redirecionamento is { } mapeado)
+            return StatusCode(mapeado.Status, BffContracts.Envelope(mapeado.Status, mapeado.Reason, mapeado.Message));
+
         var payload = await response.Content.ReadAsByteArrayAsync(ct);
         Response.StatusCode = (int)response.StatusCode;
         return File(payload, response.Content.Headers.ContentType?.ToString() ?? "application/json");

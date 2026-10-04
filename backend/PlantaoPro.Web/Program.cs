@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using PlantaoPro.Web.Services;
 using PlantaoPro.Web.Services.Security;
 
@@ -46,6 +48,29 @@ builder.Services
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        // Contrato JSON do BFF: consumidores de /bff/* recebem 401/403 em envelope JSON,
+        // nunca redirect silencioso para as páginas HTML de login/negado.
+        options.Events = new CookieAuthenticationEvents
+        {
+            OnRedirectToLogin = async context =>
+            {
+                if (!BffContracts.IsBffPath(context.Request.Path))
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                    return;
+                }
+                await BffContracts.RespondAsync(context.HttpContext, StatusCodes.Status401Unauthorized, BffContracts.RazaoSessaoExpirada, BffContracts.MensagemSessaoExpirada);
+            },
+            OnRedirectToAccessDenied = async context =>
+            {
+                if (!BffContracts.IsBffPath(context.Request.Path))
+                {
+                    context.Response.Redirect(context.RedirectUri);
+                    return;
+                }
+                await BffContracts.RespondAsync(context.HttpContext, StatusCodes.Status403Forbidden, BffContracts.RazaoAcessoNegado, BffContracts.MensagemAcessoNegado);
+            }
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -70,6 +95,10 @@ builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
 
     logger.LogInformation("HttpClient PlantaoProApi configurado com BaseUrl: {BaseUrl}", client.BaseAddress);
 });
+// O BFF precisa ver redirects da API explicitamente para convertê-los em JSON (401/502),
+// sem seguir silenciosamente para páginas HTML.
+builder.Services.AddHttpClient("PlantaoProApi")
+    .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { AllowAutoRedirect = false });
 builder.Services.AddScoped<Saude360WebService>();
 builder.Services.AddScoped<MinhaCentralWebService>();
 builder.Services.AddScoped<ManagerCommandCenterWebService>();
@@ -82,7 +111,10 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-app.UseStatusCodePagesWithReExecute("/erro/{0}");
+// Páginas de erro HTML só para rotas de página: o BFF mantém o envelope JSON (status >= 400)
+// sem re-execução, para consumidores de API nunca receberem HTML no corpo da resposta.
+// (UseWhen porque UseStatusCodePagesWithReExecute não tem sobrecarga com predicate.)
+app.UseWhen(context => !BffContracts.IsBffPath(context.Request.Path), branch => branch.UseStatusCodePagesWithReExecute("/erro/{0}"));
 
 app.UseRouting();
 app.UseSession();

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -116,15 +117,13 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             return;
         }
 
-        // APIs JSON (proxies BFF) têm contrato próprio: autenticação por Bearer,
-        // permissões por endpoint e status do cliente são aplicados pela própria
-        // API operacional. O catálogo de módulos abaixo se aplica às páginas
-        // renderizadas pelo servidor; redirecionar chamadas JSON para HTML quebra
-        // os consumers JS (ex.: central de notificações).
-        if (descriptor.EndpointMetadata.OfType<ApiControllerAttribute>().Any())
-        {
-            return;
-        }
+        // APIs JSON (proxies BFF) têm contrato próprio: autenticação por sessão/Bearer,
+        // permissões por endpoint aplicadas pela própria API operacional e erros em envelope
+        // JSON (BffContracts). O catálogo de módulos abaixo se aplica às páginas renderizadas
+        // pelo servidor; redirecionar chamadas JSON para HTML quebra os consumers JS
+        // (ex.: central de notificações). Exceção: cliente bloqueado barra TUDO — inclusive
+        // o BFF — com 403 em JSON (sem chamada à API operacional).
+        var isJsonApi = descriptor.EndpointMetadata.OfType<ApiControllerAttribute>().Any();
 
         if (IsTenantBlocked() && !BlockedTenantAllowedControllers.Contains(descriptor.ControllerName))
         {
@@ -134,7 +133,21 @@ public sealed class SaasRouteGuardFilter : IActionFilter
                 descriptor.ActionName,
                 currentUser.TenantId,
                 currentUser.ClienteId);
+            if (isJsonApi)
+            {
+                context.Result = new JsonResult(BffContracts.Envelope(
+                    StatusCodes.Status403Forbidden, BffContracts.RazaoClienteBloqueado, BffContracts.MensagemClienteBloqueado))
+                {
+                    StatusCode = StatusCodes.Status403Forbidden
+                };
+                return;
+            }
             context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module = "CLIENTE", reason = "CLIENTE_BLOQUEADO" });
+            return;
+        }
+
+        if (isJsonApi)
+        {
             return;
         }
 

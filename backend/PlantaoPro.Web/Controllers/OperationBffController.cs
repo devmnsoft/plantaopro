@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Services.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -32,7 +34,7 @@ public sealed class OperationBffController : ControllerBase
     {
         var token = ResolveToken();
         if (string.IsNullOrWhiteSpace(token))
-            return Unauthorized(new { message = "Sessão expirada ou não autenticada. Entre novamente para continuar." });
+            return StatusCode(StatusCodes.Status401Unauthorized, BffContracts.Envelope(StatusCodes.Status401Unauthorized, BffContracts.RazaoSessaoExpirada, BffContracts.MensagemSessaoExpirada));
 
         if (string.IsNullOrWhiteSpace(path) || path.Contains("..", StringComparison.Ordinal))
             return BadRequest(new { message = "O recurso solicitado é inválido." });
@@ -52,6 +54,25 @@ public sealed class OperationBffController : ControllerBase
         {
             var client = _factory.CreateClient("PlantaoProApi");
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+
+            // A API não redireciona consumidores de API: 302 p/ login vira 401 JSON e
+            // qualquer outro redirect vira 502 JSON — nunca repassamos 3xx para o chamador.
+            var redirecionamento = BffContracts.MapUpstreamRedirect(response);
+            if (redirecionamento is { } mapeado)
+            {
+                _logger.LogWarning("API respondeu redirect {Status} -> {Location} em {Target}; convertido para JSON {StatusJson}.",
+                    (int)response.StatusCode, response.Headers.Location, target, mapeado.Status);
+                return StatusCode(mapeado.Status, BffContracts.Envelope(mapeado.Status, mapeado.Reason, mapeado.Message));
+            }
+
+            // Defensivo: em erro, nunca encaminhar página HTML (ex.: página de erro do servidor)
+            // para um consumidor que espera JSON.
+            var statusHttp = (int)response.StatusCode;
+            if (statusHttp >= 400 && BffContracts.IsHtmlBody(response))
+            {
+                return StatusCode(statusHttp, BffContracts.Envelope(statusHttp, BffContracts.RazaoErroServico, $"O serviço operacional respondeu o status {statusHttp}."));
+            }
+
             foreach (var header in response.Headers.Where(header => ForwardedResponseHeaders.Contains(header.Key)))
                 Response.Headers[header.Key] = header.Value.ToArray();
 

@@ -524,5 +524,19 @@
       "plantaopro.schema_canonico_base"
     ],
     "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql"
+  },
+  {
+    "object": "plantaopro.ai_precos_modelos",
+    "dependsOn": [
+      "plantaopro.ai_config"
+    ],
+    "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql"
+  },
+  {
+    "object": "plantaopro.ai_chamadas_ativas",
+    "dependsOn": [
+      "plantaopro.ai_config"
+    ],
+    "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql"
   }
 ]

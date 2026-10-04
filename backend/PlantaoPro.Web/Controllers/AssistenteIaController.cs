@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
@@ -26,7 +27,11 @@ public sealed class AssistenteIaController : BaseWebController
     public async Task<IActionResult> Index(CancellationToken ct)
     {
         ViewData["Title"] = "Assistente IA";
-        var model = await _ai.ObterConfiguracoesAsync(GetJwtToken() ?? string.Empty, ct);
+        var token = GetJwtToken() ?? string.Empty;
+        var model = await _ai.ObterConfiguracoesAsync(token, ct);
+        var (usos, erroUsos) = await _ai.ObterUsosIncertosAsync(token, ct);
+        model.UsosIncertos = usos;
+        model.ErroUsosIncertos = erroUsos;
         if (!string.IsNullOrWhiteSpace(model.Erro)) TempData["Error"] = model.Erro;
         return View(model);
     }
@@ -56,5 +61,31 @@ public sealed class AssistenteIaController : BaseWebController
         if (resultado.StatusKind == AiWebService.StatusNaoAutenticado)
             return Unauthorized(new { mensagem = resultado.Mensagem });
         return Json(resultado);
+    }
+
+    /// <summary>
+    /// Confirma o valor efetivamente cobrado em um uso de custo incerto
+    /// (timeout/resposta inválida). Valor em branco zera o custo creditado.
+    /// O crédito mensal ajustado é sempre o do tenant dono do uso (no servidor).
+    /// </summary>
+    [HttpPost("ReconciliarUso")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReconciliarUso([FromForm] Guid usoId, [FromForm] string? valorConfirmado, CancellationToken ct)
+    {
+        decimal? valor = decimal.TryParse(valorConfirmado, NumberStyles.Number, CultureInfo.InvariantCulture, out var v) && v > 0m ? v : null;
+        var (ok, mensagem) = await _ai.ReconciliarUsoAsync(GetJwtToken() ?? string.Empty, usoId, valor, ct);
+        if (ok)
+        {
+            TempData["Success"] = "Custo do uso reconciliado.";
+        }
+        else if (string.Equals(mensagem, AiWebService.MensagemSessaoExpirada, StringComparison.Ordinal))
+        {
+            return HandleUnauthorized();
+        }
+        else
+        {
+            TempData["Error"] = mensagem ?? "Não foi possível reconciliar o uso. Tente novamente.";
+        }
+        return RedirectToAction(nameof(Index));
     }
 }

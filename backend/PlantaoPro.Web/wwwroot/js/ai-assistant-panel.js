@@ -27,6 +27,7 @@
       const partes = ['Fonte: ' + (data.provedor || 'desconhecida')];
       if (data.modelo) partes.push('Modelo: ' + data.modelo);
       if (data.fallbackUsado) partes.push('alternativa usada');
+      if (data.escopo) partes.push('Escopo: ' + data.escopo);
       meta.replaceChildren(document.createTextNode(partes.join(' · ')));
     }
     const box = panel.querySelector('[data-ai-text]');

@@ -77,6 +77,36 @@ public sealed class AiController : ControllerBase
         => Ok(await _gateway.TestarConexaoAsync(req?.Provedor ?? string.Empty, ct));
 
     // ------------------------------------------------------------------
+    // Reconciliação de custos incertos (admin global / admin do tenant)
+    // ------------------------------------------------------------------
+
+    /// <summary>Usos com custo incerto pendentes de reconciliação (timeout/resposta inválida).</summary>
+    [HttpGet("usos-incertos")]
+    [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE")]
+    public async Task<IActionResult> UsosIncertos(CancellationToken ct)
+        => Ok(new { usos = await _gateway.ListarUsosIncertosAsync(ct) });
+
+    /// <summary>Confirma (ou zera) o custo de um uso incerto; ajusta o crédito mensal do tenant do uso.</summary>
+    [HttpPost("usos-incertos/reconciliar")]
+    [Authorize(Roles = "ADMINISTRADOR_GLOBAL,ADMINISTRADOR,ADMINISTRADOR_CLIENTE")]
+    public async Task<IActionResult> ReconciliarUso([FromBody] AiReconciliacaoRequest req, CancellationToken ct)
+    {
+        if (req is null)
+            return BadRequest(new { mensagem = "Corpo da requisição ausente." });
+        try
+        {
+            var ok = await _gateway.ReconciliarUsoAsync(req.UsoId, req.ValorConfirmado, ct);
+            return ok
+                ? Ok(new { reconciliado = true })
+                : BadRequest(new { mensagem = "Uso não encontrado neste escopo, já reconciliado ou fora do mês atual." });
+        }
+        catch (AiConfigException ex)
+        {
+            return BadRequest(new { mensagem = ex.Message });
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Tarefas (jornadas da entrega inicial)
     // ------------------------------------------------------------------
 

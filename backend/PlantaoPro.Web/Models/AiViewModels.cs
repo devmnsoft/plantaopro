@@ -17,6 +17,8 @@ public sealed class AiOutcomeViewModel
     public int? TokensOut { get; set; }
     public int? DuracaoMs { get; set; }
     public bool FallbackUsado { get; set; }
+    /// <summary>Escopo explícito da análise (período/fuso/quantidade), exibido junto do texto.</summary>
+    public string? Escopo { get; set; }
 }
 
 /// <summary>
@@ -41,6 +43,11 @@ public sealed class AiConfiguracaoViewModel
     public int CotaMensalUsos { get; set; }
     public decimal? OrcamentoMensal { get; set; }
     public int UsosNoMesAtual { get; set; }
+    public string? FallbackModelo { get; set; }
+    public string OrcamentoMensalMoeda { get; set; } = "USD";
+    public decimal OrcamentoUsadoMes { get; set; }
+    /// <summary>Aviso não bloqueante de compatibilidade de modelo (vazio = sem observação).</summary>
+    public string? AvisoModelo { get; set; }
 }
 
 /// <summary>P2 IA — página de configuração do assistente (admin do tenant).</summary>
@@ -49,6 +56,23 @@ public sealed class AiConfigPageViewModel
     public IReadOnlyList<AiConfiguracaoViewModel> Configuracoes { get; set; } = Array.Empty<AiConfiguracaoViewModel>();
     public bool ChaveMestraDoServidorConfigurada { get; set; }
     public string? Erro { get; set; }
+    public IReadOnlyList<AiUsoIncertoViewModel> UsosIncertos { get; set; } = Array.Empty<AiUsoIncertoViewModel>();
+    /// <summary>Erro isolado na consulta de custos incertos (não impede o restante da página).</summary>
+    public string? ErroUsosIncertos { get; set; }
+}
+
+/// <summary>P2 IA — uso com custo incerto pendente de reconciliação (timeout/resposta inválida).</summary>
+public sealed class AiUsoIncertoViewModel
+{
+    public Guid UsoId { get; set; }
+    public Guid TenantId { get; set; }
+    public string TaskCode { get; set; } = string.Empty;
+    public string? Provedor { get; set; }
+    public string? Modelo { get; set; }
+    public DateTime CriadoEmUtc { get; set; }
+    public decimal? CustoEstimado { get; set; }
+    public string Moeda { get; set; } = "USD";
+    public string? ErroClasse { get; set; }
 }
 
 /// <summary>
@@ -67,4 +91,6 @@ public sealed class AiConfigFormModel
     public int TimeoutS { get; set; }
     public int CotaMensalUsos { get; set; }
     public decimal? OrcamentoMensal { get; set; }
+    public string? FallbackModelo { get; set; }
+    public string OrcamentoMensalMoeda { get; set; } = "USD";
 }

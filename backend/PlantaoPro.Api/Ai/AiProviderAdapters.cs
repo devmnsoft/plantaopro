@@ -52,8 +52,10 @@ internal static class AiHttp
     internal static void ClassifyStatus(int status, string provider)
     {
         if (status == 429)
-            throw new AiProviderException(AiErrorKinds.CotaExcedida,
-                $"{provider}: o provedor reportou limite momentâneo (HTTP 429). Tente novamente em instantes.");
+            // HTTP 429 = limitação de requisições do lado do provedor (rate limit).
+            // Não é possível afirmar aqui que a chave foi aceita nem descartada.
+            throw new AiProviderException(AiErrorKinds.ProvedorLimitado,
+                $"{provider}: o provedor reportou limitação de requisições neste momento (HTTP 429).");
         if (status < 200 || status >= 300)
             throw new AiProviderException(AiErrorKinds.Transporte,
                 $"{provider}: o provedor respondeu HTTP {status}.");

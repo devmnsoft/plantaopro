@@ -41,12 +41,21 @@ public sealed class AiJornadaMeuDia
         }
         if (linhas.Count == 0) return null;
 
+        // Escopo explícito da análise: período, fuso e quantidade — exibido na UI
+        // junto do texto gerado (o usuário sabe exatamente o que foi analisado).
+        var sp = TimeSpan.FromHours(-3); // America/Sao_Paulo (sem horário de verão desde 2019)
+        var inicio = agora.ToOffset(sp).ToString("dd/MM/yyyy HH:mm");
+        var fim = agora.AddDays(JanelaDias).ToOffset(sp).ToString("dd/MM/yyyy HH:mm");
+        var escopo = $"Pendências com prazo entre {inicio} e {fim} (America/Sao_Paulo); "
+            + $"{linhas.Count} de {page.Total} item(ns) pendente(s) do período entraram no contexto";
+
         return new AiTaskExecution(
             tenant, _current.UserId ?? Guid.Empty, "PENDENCIAS_MEU_DIA", null,
             "Resuma estas pendências para o usuário: agrupe por urgência (atrasadas primeiro), "
                 + "aponte os prazos mais próximos e sugira uma ordem prática de trabalho. "
                 + "Responda em até 120 palavras, sem inventar itens que não estão listados.",
-            linhas);
+            linhas,
+            Escopo: escopo);
     }
 }
 
@@ -98,12 +107,17 @@ public sealed class AiJornadaCotacao
 
         linhas.Add($"Anexos: {cot.Anexos.Count} arquivo(s) registrados (conteúdo binário NÃO enviado à IA)");
 
+        // Escopo explícito: quantidade listada (com truncamento) e fuso da cotação.
+        var escopo = $"Cotação nº {cot.IdentificadorExterno}: {exibidos} de {itens.Count} itens listados "
+            + $"(máximo {MaxItens}); data prevista {cot.DataPrevista:dd/MM/yyyy}; fuso informado na cotação: {cot.FusoHorario}";
+
         return new AiTaskExecution(
             tenant, _current.UserId ?? Guid.Empty, "COTACAO", cot.Id,
             "Analise esta cotação recebida: aponte inconsistências entre descrição e proposta de preço, "
                 + "riscos de atendimento (prazo, itens sem oferta ou com justificativa de não atendimento) e "
                 + "sugira pontos práticos de negociação. Liste no máximo 5 achados, do mais importante para o menos. "
                 + "Termine informando que a análise é apoio e não substitui a aprovação humana.",
-            linhas);
+            linhas,
+            Escopo: escopo);
     }
 }

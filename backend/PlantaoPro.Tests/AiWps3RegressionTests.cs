@@ -23,7 +23,7 @@ namespace PlantaoPro.Tests;
 ///   - sem chave            -> NAO_CONFIGURADO claro, provedor NÃO chamado, uso FALHA auditado;
 ///   - chave do tenant      -> cifrada (AES-GCM) em banco, devolvida só mascarada, usada no header;
 ///   - timeout de transporte-> TIMEOUT (nunca hang/500 — padrão WP-S2);
-///   - HTTP 429             -> COTA_EXCEDIDA (falha não consome cota mensal);
+///   - HTTP 429             -> PROVEDOR_LIMITADO (limitação do provedor; falha não consome cota mensal);
 ///   - JSON inválido        -> RESPOSTA_INVALIDA;
 ///   - cota mensal esgotada -> bloqueio ANTES de chamar o provedor;
 ///   - fallback aprovado    -> usado quando o principal falha; sem chave global do destino -> falha propagada;
@@ -32,12 +32,13 @@ namespace PlantaoPro.Tests;
 ///   - saída                -> sanitizada (HTML-escape, sem control chars, teto de tamanho);
 ///   - jornada Meu Dia      -> sem pendências vazio; com pendências linhas formatadas;
 ///   - jornada cotação      -> outro tenant nulo (404 na rota); mesmo tenant contexto real;
-///   - teste de conexão     -> sem chave / ok / 429 avisado / provedor não suportado;
+///   - teste de conexão     -> sem chave / ok / 429 inconclusivo / provedor não suportado;
 ///   - salvar configuração  -> allowlist de provedores, tarefa conhecida, fallback distinto, chave mestra.
 ///
 /// Banco: usa plantaopro_test (TestDatabase) — os tenants criados são rastreados e limpos
 /// no DisposeAsync; a cotação criada na jornada é removida no fim do próprio fato.
 /// </summary>
+[Collection("ia-camada")] // slots globais em ai_chamadas_ativas: serializa com AiRodada2GovernancaTests
 public sealed class AiWps3RegressionTests : IAsyncLifetime
 {
     private static readonly string Cs = TestDatabase.ConnectionString;
@@ -172,11 +173,11 @@ public sealed class AiWps3RegressionTests : IAsyncLifetime
     }
 
     // ------------------------------------------------------------------
-    // Fato 4: HTTP 429 do provedor -> COTA_EXCEDIDA; falha não consome cota
+    // Fato 4: HTTP 429 do provedor -> PROVEDOR_LIMITADO; falha não consome cota
     // ------------------------------------------------------------------
 
     [Fact]
-    public async Task Http429DoProvedor_ClassificaCotaExcedida_ESemConsumirCotaMensal()
+    public async Task Http429DoProvedor_ClassificaProvedorLimitado_ESemConsumirCotaMensal()
     {
         var tenant = NovoTenant();
         var current = new FakeCurrent { TenantId = tenant };
@@ -187,7 +188,9 @@ public sealed class AiWps3RegressionTests : IAsyncLifetime
         var outcome = await amb.Gateway.ExecutarTarefaAsync(AiTaskCodes.MeuDiaResumo, ExecBase(tenant), CancellationToken.None);
 
         Assert.False(outcome.Success);
-        Assert.Equal(AiErrorKinds.CotaExcedida, outcome.StatusKind);
+        Assert.Equal(AiErrorKinds.ProvedorLimitado, outcome.StatusKind);
+        // 429 não afirma nada sobre autenticação/disponibilidade da chave.
+        Assert.Contains("limitação", outcome.Mensagem, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(0, await amb.Repo.ContarUsosMesAtualAsync(tenant, AiTaskCodes.MeuDiaResumo, CancellationToken.None));
     }
 
@@ -567,13 +570,14 @@ public sealed class AiWps3RegressionTests : IAsyncLifetime
             Assert.Contains("servidor", ok.Mensagem);
         }
 
-        // 429: a chave é aceita — aviso, não falha
+        // 429: limitação do lado do provedor — resultado inconclusivo (nem auth nem disponibilidade confirmadas)
         var amb3 = Montar(new FakeCurrent { TenantId = tenant }, groq: Status(429, "{}"), groqKey: "gk-teste-429");
         await using (amb3.Prov)
         {
             var e429 = await amb3.Gateway.TestarConexaoAsync("groq", CancellationToken.None);
-            Assert.True(e429.Success, "HTTP 429 no teste de conexão indica chave válida com limite momentâneo.");
-            Assert.Contains("429", e429.Mensagem);
+            Assert.False(e429.Success, "HTTP 429 no teste de conexão é inconclusivo: nada ficou confirmado.");
+            Assert.Equal(AiErrorKinds.ProvedorLimitado, e429.StatusKind);
+            Assert.Contains("inconclusiva", e429.Mensagem, StringComparison.OrdinalIgnoreCase);
         }
 
         // Provedor fora da allowlist

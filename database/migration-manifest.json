@@ -841,6 +841,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_10_v2308_ai_governanca_modelos_orcamento",
+      "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+      "checksum": "08c97f9e2d9957e0ead8055a4abcc5ce934fd76f5bf96d1c8d0570c818600554",
+      "dependsOn": [
+        "2026_10_v2307_ai_camada_canonica"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

@@ -60,7 +60,9 @@
             <p><strong>Habilitar.</strong> A tarefa só executa com o checkbox ligado e um provedor escolhido. Sem chave (do cliente ou global do servidor), o ponto de IA mostra “não configurado”.</p>
             <p><strong>Chave do provedor.</strong> Deixe em branco para manter a atual ou usar a chave global do servidor. A chave fica cifrada no banco e nunca volta inteira para esta tela.</p>
             <p><strong>Testar conexão.</strong> Valida a configuração junto ao provedor antes de considerar configurado. Falhas retornam um estado explicável — nunca “sucesso” fictício.</p>
-            <p><strong>Limites e cota.</strong> Tokens, timeout e cota mensal por tarefa são aplicados no servidor; apenas usos bem-sucedidos consomem a cota.</p>
+            <p><strong>Limites e cota.</strong> Tokens, timeout e cota mensal por tarefa são aplicados no servidor; apenas usos bem-sucedidos consomem a cota. O orçamento mensal é bloqueio adicional por valor (moeda USD ou BRL).</p>
+            <p><strong>Fallback de modelo.</strong> Deixe em branco para usar o modelo padrão do provedor escolhido como fallback. Avisos ao lado do campo não impedem o salvamento; apenas chamam atenção para modelos fora do catálogo documentado.</p>
+            <p><strong>Reconciliação de custos.</strong> Usos que terminam em timeout ou resposta inválida ficam com custo incerto. Confirme ali embaixo o valor efetivamente cobrado pelo provedor (ou deixe em branco para zerar); o crédito mensal do cliente dono do uso é ajustado na hora.</p>
         </div>
     </details>
 
@@ -92,7 +94,7 @@
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label" for="fallback_@cfg.TaskCode">Fallback (opcional)</label>
+                            <label class="form-label" for="fallback_@cfg.TaskCode">Fallback — provedor (opcional)</label>
                             <select class="form-select" id="fallback_@cfg.TaskCode" name="FallbackProvedor">
                                 <option value="">nenhum</option>
                                 @foreach (var p in provedores)
@@ -105,8 +107,17 @@
                         <div class="col-12 col-md-6">
                             <label class="form-label" for="modelo_@cfg.TaskCode">Modelo</label>
                             <input class="form-control" id="modelo_@cfg.TaskCode" name="Modelo" value="@cfg.Modelo" placeholder="@cfg.ModeloSugerido" required />
+                            @if (!string.IsNullOrWhiteSpace(cfg.AvisoModelo))
+                            {
+                                <div class="pp-field-warning"><i class="bi bi-info-circle me-1"></i>@cfg.AvisoModelo</div>
+                            }
                         </div>
                         <div class="col-12 col-md-6">
+                            <label class="form-label" for="fallbackmodelo_@cfg.TaskCode">Modelo do fallback (opcional)</label>
+                            <input class="form-control" id="fallbackmodelo_@cfg.TaskCode" name="FallbackModelo" value="@cfg.FallbackModelo" placeholder="padrão vigente do provedor de fallback" />
+                            <div class="form-text">Deixe em branco para usar o modelo padrão do provedor escolhido como fallback.</div>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label" for="chave_@cfg.TaskCode">Chave do provedor (cifrada no servidor)</label>
                             <input class="form-control" type="password" id="chave_@cfg.TaskCode" name="ApiKey" autocomplete="new-password" placeholder="@PlaceholderChave(cfg)" />
                             <div class="form-text">O valor nunca retorna inteiro à tela; apenas a máscara final aparece.</div>
@@ -127,13 +138,27 @@
                             <label class="form-label" for="cota_@cfg.TaskCode">Cota mensal (usos)</label>
                             <input class="form-control" type="number" min="1" max="100000" id="cota_@cfg.TaskCode" name="CotaMensalUsos" value="@cfg.CotaMensalUsos" />
                         </div>
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-8">
                             <label class="form-label" for="orcamento_@cfg.TaskCode">Orçamento mensal (opcional)</label>
                             <input class="form-control" type="number" step="0.01" min="0" id="orcamento_@cfg.TaskCode" name="OrcamentoMensal" value="@cfg.OrcamentoMensal" />
+                            <div class="form-text">Bloqueia novas chamadas ao atingir o valor. Vazio ou zero bloqueia apenas pela cota de usos.</div>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="moeda_@cfg.TaskCode">Moeda do orçamento</label>
+                            <select class="form-select" id="moeda_@cfg.TaskCode" name="OrcamentoMensalMoeda">
+                                <option value="USD" selected="@(cfg.OrcamentoMensalMoeda.Equals("USD", System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">USD — dólar</option>
+                                <option value="BRL" selected="@(cfg.OrcamentoMensalMoeda.Equals("BRL", System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">BRL — real</option>
+                            </select>
                         </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
-                        <span class="small text-muted">Usos neste mês: <strong>@cfg.UsosNoMesAtual</strong> de @cfg.CotaMensalUsos</span>
+                        <span class="small text-muted">
+                            Usos neste mês: <strong>@cfg.UsosNoMesAtual</strong> de @cfg.CotaMensalUsos
+                            @if (cfg.OrcamentoMensal is > 0)
+                            {
+                                <span class="ms-2">· Orçamento usado: <strong>@cfg.OrcamentoUsadoMes.ToString("N2")</strong> de @cfg.OrcamentoMensal.Value.ToString("N2") @cfg.OrcamentoMensalMoeda</span>
+                            }
+                        </span>
                         <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Salvar configuração</button>
                     </div>
                 </form>
@@ -164,6 +189,64 @@
                     </div>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h3 class="h6 mb-0"><i class="bi bi-cash-stack me-1"></i>Reconciliação de custos incertos</h3>
+            <span class="badge bg-secondary">@Model.UsosIncertos.Count</span>
+        </div>
+        <div class="card-body">
+            @if (Model.ErroUsosIncertos is { Length: > 0 })
+            {
+                <div class="alert alert-warning py-2"><i class="bi bi-exclamation-triangle me-2"></i>@Model.ErroUsosIncertos</div>
+            }
+            else if (Model.UsosIncertos.Count == 0)
+            {
+                <p class="text-muted small mb-0">Nenhum custo incerto pendente. Usos que terminam em timeout ou resposta inválida aparecem aqui para você confirmar o valor efetivamente cobrado pelo provedor (ou zerar, se a chamada não gerou custo).</p>
+            }
+            else
+            {
+                <p class="text-muted small mb-3">Confirme o valor cobrado pelo provedor em cada item (deixe em branco para zerar). O crédito mensal ajustado é sempre o do cliente dono do uso — itens de outro cliente fora do seu escopo retornam erro de permissão.</p>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data (UTC)</th>
+                                <th>Cliente</th>
+                                <th>Tarefa</th>
+                                <th>Provedor / modelo</th>
+                                <th class="text-end">Custo estimado</th>
+                                <th>Valor confirmado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var uso in Model.UsosIncertos)
+                            {
+                                <tr>
+                                    <td class="text-nowrap">@uso.CriadoEmUtc.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-nowrap text-muted" title="@uso.TenantId">@uso.TenantId.ToString().Substring(0, 8)…</td>
+                                    <td>@NomeTarefa(uso.TaskCode)</td>
+                                    <td class="text-nowrap">@uso.Provedor@(uso.Modelo is { Length: > 0 } ? $" / {uso.Modelo}" : string.Empty)</td>
+                                    <td class="text-end text-nowrap">@(uso.CustoEstimado is { } ce ? $"{ce:N4} {uso.Moeda}" : "—")</td>
+                                    <td>
+                                        <form method="post" action="/AssistenteIa/ReconciliarUso" class="d-flex align-items-center gap-1">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="usoId" value="@uso.UsoId" />
+                                            <div class="input-group input-group-sm" style="max-width:180px;">
+                                                <span class="input-group-text">@uso.Moeda</span>
+                                                <input class="form-control" type="number" step="0.0001" min="0" name="valorConfirmado" aria-label="Valor efetivamente cobrado pelo provedor para este uso (em branco zera o custo)" placeholder="zerar" />
+                                            </div>
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" title="Confirmar valor" aria-label="Confirmar valor deste uso"><i class="bi bi-check2"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
         </div>
     </div>
 </div>

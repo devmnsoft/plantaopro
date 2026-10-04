@@ -167,6 +167,128 @@ public sealed class AiWebService
         }
     }
 
+    /// <summary>Usos com custo incerto pendentes de reconciliação (admin).</summary>
+    public async Task<(IReadOnlyList<AiUsoIncertoViewModel> Usos, string? Erro)> ObterUsosIncertosAsync(string token, CancellationToken ct)
+    {
+        const string uri = "api/ai/usos-incertos";
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var client = CreateClient(token);
+            using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+            request.Headers.TryAddWithoutValidation("X-Correlation-ID", correlationId);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                stopwatch.Stop();
+                var status = response.StatusCode;
+                _logger.LogWarning("IA(usos-incertos): API respondeu {StatusCode} para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", (int)status, uri, stopwatch.ElapsedMilliseconds, correlationId);
+                return (Array.Empty<AiUsoIncertoViewModel>(), ErroPorStatus(status));
+            }
+
+            try
+            {
+                var dto = await response.Content.ReadFromJsonAsync<AiUsosIncertosDto>(Json, ct);
+                IReadOnlyList<AiUsoIncertoViewModel>? lista = dto?.Usos?.ToList();
+                stopwatch.Stop();
+                _logger.LogInformation("BFF->IA GET {Uri} Status={StatusCode} DuracaoTotalMs={DuracaoTotalMs} CorrelationId={CorrelationId}", uri, (int)response.StatusCode, stopwatch.ElapsedMilliseconds, correlationId);
+                return (lista ?? Array.Empty<AiUsoIncertoViewModel>(), null);
+            }
+            catch (JsonException exception)
+            {
+                _logger.LogWarning(exception, "IA(usos-incertos): resposta inválida da API para {Uri} (correlacao={CorrelationId}).", uri, correlationId);
+                return (Array.Empty<AiUsoIncertoViewModel>(), "A lista de custos incertos veio em um formato inesperado. Tente novamente.");
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            return (Array.Empty<AiUsoIncertoViewModel>(), "A consulta foi cancelada antes da conclusão.");
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning("IA(usos-incertos): tempo limite excedido (envio ou leitura do corpo) para {Uri} após {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return (Array.Empty<AiUsoIncertoViewModel>(), "A lista de custos incertos demorou mais do que o limite permitido. Tente novamente.");
+        }
+        catch (HttpRequestException exception)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(exception, "IA(usos-incertos): falha de transporte para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return (Array.Empty<AiUsoIncertoViewModel>(), "A lista de custos incertos está temporariamente indisponível. Tente novamente.");
+        }
+    }
+
+    /// <summary>Confirma (ou zera) o custo de um uso incerto; o crédito mensal do tenant do uso é ajustado no servidor.</summary>
+    public async Task<(bool Ok, string? Mensagem)> ReconciliarUsoAsync(string token, Guid usoId, decimal? valorConfirmado, CancellationToken ct)
+    {
+        const string uri = "api/ai/usos-incertos/reconciliar";
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
+        try
+        {
+            var client = CreateClient(token);
+            using var request = new HttpRequestMessage(HttpMethod.Post, uri)
+            { Content = JsonContent.Create(new { usoId, valorConfirmado }, options: Json) };
+            request.Headers.TryAddWithoutValidation("X-Correlation-ID", correlationId);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                stopwatch.Stop();
+                var status = response.StatusCode;
+                string? apiMessage = null;
+                if (status == HttpStatusCode.BadRequest)
+                {
+                    try
+                    {
+                        var raw = await response.Content.ReadAsStringAsync(ct);
+                        using var doc = JsonDocument.Parse(raw);
+                        if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                            doc.RootElement.TryGetProperty("mensagem", out var m) && m.ValueKind == JsonValueKind.String)
+                            apiMessage = m.GetString();
+                    }
+                    catch (JsonException)
+                    {
+                        // Corpo não-JSON: mantém a mensagem genérica abaixo.
+                    }
+                }
+                _logger.LogWarning("IA(reconciliar): API respondeu {StatusCode} para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", (int)status, uri, stopwatch.ElapsedMilliseconds, correlationId);
+                return status switch
+                {
+                    HttpStatusCode.Unauthorized => (false, MensagemSessaoExpirada),
+                    HttpStatusCode.Forbidden => (false, "Seu perfil não possui acesso à reconciliação de custos de IA ou o acesso foi revogado."),
+                    HttpStatusCode.BadRequest => (false, string.IsNullOrWhiteSpace(apiMessage) ? "Não foi possível reconciliar o uso." : apiMessage),
+                    _ when (int)status >= 500 => (false, "O serviço do assistente apresentou uma falha interna. Tente novamente."),
+                    _ => (false, "Não foi possível reconciliar agora. Tente novamente.")
+                };
+            }
+
+            stopwatch.Stop();
+            _logger.LogInformation("BFF->IA POST {Uri} Status={StatusCode} DuracaoTotalMs={DuracaoTotalMs} CorrelationId={CorrelationId}", uri, (int)response.StatusCode, stopwatch.ElapsedMilliseconds, correlationId);
+            return (true, null);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            return (false, "A operação foi cancelada antes da conclusão.");
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning("IA(reconciliar): tempo limite excedido (envio ou leitura do corpo) para {Uri} após {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return (false, "A operação demorou mais do que o limite permitido. Tente novamente.");
+        }
+        catch (HttpRequestException exception)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(exception, "IA(reconciliar): falha de transporte para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return (false, "O serviço está temporariamente indisponível. Tente novamente.");
+        }
+    }
+
     private static string ErroPorStatus(HttpStatusCode status) => status switch
     {
         HttpStatusCode.Unauthorized => MensagemSessaoExpirada,
@@ -247,4 +369,6 @@ public sealed class AiWebService
     }
 
     private sealed record AiConfigResponseDto(IReadOnlyList<AiConfiguracaoViewModel>? Configuracoes, bool ChaveMestraDoServidorConfigurada);
+
+    private sealed record AiUsosIncertosDto(IReadOnlyList<AiUsoIncertoViewModel>? Usos);
 }

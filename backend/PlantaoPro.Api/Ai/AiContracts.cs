@@ -12,6 +12,10 @@ public static class AiTaskCodes
     public const string MeuDiaResumo = "MEU_DIA_RESUMO";
     public const string CotacaoAnalise = "COTACAO_ANALISE";
 
+    /// <summary>Registro de auditoria apenas (sem configuração por tenant):
+    /// teste de conexão do admin. Não consome a cota mensal das tarefas.</summary>
+    public const string TestarConexao = "TESTAR_CONEXAO";
+
     public static bool TryParse(string? value, out string taskCode)
     {
         taskCode = string.Empty;
@@ -46,6 +50,16 @@ public static class AiErrorKinds
     public const string Timeout = "TIMEOUT";
     public const string RespostaInvalida = "RESPOSTA_INVALIDA";
     public const string Transporte = "TRANSPORTE";
+
+    /// <summary>O provedor respondeu HTTP 429 (limitação de requisições do lado
+    /// dele). Não afirma nada sobre autenticação nem disponibilidade da chave.</summary>
+    public const string ProvedorLimitado = "PROVEDOR_LIMITADO";
+    /// <summary>Muitas chamadas simultâneas no servidor (slots distribuídos esgotados).</summary>
+    public const string Concorrencia = "CONCORRENCIA";
+    /// <summary>Orçamento mensal da tarefa atingido antes de nova chamada.</summary>
+    public const string OrcamentoExcedido = "ORCAMENTO_EXCEDIDO";
+    /// <summary>Limite de testes de conexão por tenant/provedor em 24h atingido.</summary>
+    public const string TesteLimite = "TESTE_LIMITE";
 }
 
 /// <summary>Requisição de geração para um adaptador de provedor.</summary>
@@ -74,7 +88,8 @@ public sealed class AiProviderException : Exception
 /// </summary>
 public sealed record AiTaskExecution(
     Guid TenantId, Guid UserId, string ContextoTipo, Guid? ContextoId,
-    string InstrucaoTarefa, IReadOnlyList<string> ContextoLinhas);
+    string InstrucaoTarefa, IReadOnlyList<string> ContextoLinhas,
+    string? Escopo = null);
 
 /// <summary>
 /// Saída canônica para controllers/WEB: sucesso ou classe de erro + mensagem
@@ -90,7 +105,9 @@ public sealed record AiOutcome(
     int? TokensIn = null,
     int? TokensOut = null,
     int? DuracaoMs = null,
-    bool FallbackUsado = false);
+    bool FallbackUsado = false,
+    /// <summary>Escopo explícito da análise (período/fuso/quantidade), exibido junto do texto.</summary>
+    string? Escopo = null);
 
 /// <summary>Comando de atualização da configuração de uma tarefa (admin do tenant).</summary>
 public sealed record AiConfigUpdate(
@@ -103,7 +120,12 @@ public sealed record AiConfigUpdate(
     int LimiteTokensSaida,
     int TimeoutS,
     int CotaMensalUsos,
-    decimal? OrcamentoMensal);
+    decimal? OrcamentoMensal,
+    /// <summary>Modelo próprio do fallback (válido para o provedor de fallback);
+    /// nulo/vazio → o padrão vigente do próprio provedor de fallback.</summary>
+    string? FallbackModelo = null,
+    /// <summary>Código ISO-4217 de 3 letras (ex.: USD, BRL); nulo → USD.</summary>
+    string? OrcamentoMensalMoeda = null);
 
 /// <summary>
 /// Visão de configuração exposta ao admin: a chave do tenant aparece SOMENTE
@@ -124,7 +146,22 @@ public sealed record AiConfigView(
     int TimeoutS,
     int CotaMensalUsos,
     decimal? OrcamentoMensal,
-    int UsosNoMesAtual);
+    int UsosNoMesAtual,
+    string? FallbackModelo = null,
+    string OrcamentoMensalMoeda = "USD",
+    decimal OrcamentoUsadoMes = 0m,
+    /// <summary>Aviso não bloqueante de compatibilidade de modelo (vazio = tudo certo).</summary>
+    string? AvisoModelo = null);
+
+/// <summary>Registro de auditoria com custo incerto pendente de reconciliação
+/// (ex.: timeout — o provedor pode ter processado a chamada).</summary>
+public sealed record AiUsoIncerto(
+    Guid UsoId, Guid TenantId, string TaskCode, string? Provedor, string? Modelo,
+    DateTime CriadoEmUtc, decimal? CustoEstimado, string Moeda, string? ErroClasse);
+
+/// <summary>Comando de reconciliação de custo: valor confirmado em moeda do uso;
+/// nulo → zera o custo creditado (chamada confirmada sem custo).</summary>
+public sealed record AiReconciliacaoRequest(Guid UsoId, decimal? ValorConfirmado);
 
 /// <summary>Erro de validação/configuração mapeável para HTTP 400.</summary>
 public sealed class AiConfigException : Exception

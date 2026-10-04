@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.21.6",
-  "generatedAt": "2026-10-03",
+  "schemaVersion": "v2.21.7",
+  "generatedAt": "2026-10-04",
   "sections": [
     {
       "order": 3,
@@ -1022,6 +1022,32 @@
           "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
           "dependsOn": [
             "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 77,
+      "name": "IA Governança de Modelos e Orçamento P2 v2.21.7",
+      "objects": [
+        {
+          "name": "plantaopro.ai_precos_modelos",
+          "type": "canonical",
+          "category": "CANONICAL_IA",
+          "required": true,
+          "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+          "dependsOn": [
+            "plantaopro.ai_config"
+          ]
+        },
+        {
+          "name": "plantaopro.ai_chamadas_ativas",
+          "type": "canonical",
+          "category": "CANONICAL_IA",
+          "required": true,
+          "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+          "dependsOn": [
+            "plantaopro.ai_config"
           ]
         }
       ]

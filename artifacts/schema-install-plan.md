@@ -79,3 +79,5 @@
 - `plantaopro.ux_plano_saude_pacientes_principal` depende de: plantaopro.saude360
 - `plantaopro.ai_config` depende de: plantaopro.schema_canonico_base
 - `plantaopro.ai_usos` depende de: plantaopro.schema_canonico_base
+- `plantaopro.ai_precos_modelos` depende de: plantaopro.ai_config
+- `plantaopro.ai_chamadas_ativas` depende de: plantaopro.ai_config

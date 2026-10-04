@@ -73,6 +73,11 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
     public async Task<IActionResult> ImportarManual([FromBody] ImportarXmlManualCommand command, CancellationToken ct)
     {
         var (tenant, user) = Context();
+        // P0 (homologação): valida tamanho antes de ler/parsear integralmente o conteúdo
+        // (memória previsível; mesmo teto aplicado pelo front web antes do upload).
+        if (string.IsNullOrWhiteSpace(command.XmlConteudo)) return BadRequest("Forneça o conteúdo XML do documento fiscal.");
+        if (command.XmlConteudo.Length > 2_000_000) return BadRequest("O conteúdo XML excede o limite de 2.000.000 caracteres.");
+        if (command.XmlBytes is { Length: > (2 * 1024 * 1024) }) return BadRequest("O arquivo XML excede o limite de 2 MiB.");
         var id = await repository.ImportarXmlAsync(tenant, user, command, ct);
         logger.LogInformation("XML {DocId} importado manualmente pelo usuário {UsuarioId} no tenant {TenantId}.", id, user, tenant);
         return Ok(new { id });

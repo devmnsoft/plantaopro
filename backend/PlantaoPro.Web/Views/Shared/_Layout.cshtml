@@ -1,5 +1,11 @@
+@using Microsoft.AspNetCore.Antiforgery
+@inject IAntiforgery Antiforgery
 @{
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    // P0 CSRF: token antiforgery único por request — renderizado como meta no <head>, consumido
+    // pelo wrapper global de window.fetch (logo abaixo de <body>) e pelos formulários via
+    // input oculto (Html.AntiForgeryToken / __RequestVerificationToken).
+    var antiforgeryToken = Antiforgery.GetAndStoreTokens(Context).RequestToken;
     // J11-WP7: escopo server-side do tema claro do módulo Administrativo 360
     // (consome wwwroot/css/pages/administrativo360-tema-claro.css).
     // O módulo é atendido por Administrativo360Controller (rotas convencionais)
@@ -17,6 +23,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#09243c" />
+    <meta name="antiforgery-token" content="@antiforgeryToken" />
     <link rel="manifest" href="~/manifest.json" />
     <title>@(ViewData["Title"] ?? "PlantãoPro")</title>
     <link rel="icon" type="image/svg+xml" href="~/media/brand/favicon.svg" />
@@ -59,6 +66,36 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="pp-body app-body @(isAdm360 ? "pp-a360" : "")">
+<script>
+(function () {
+    // P0 CSRF: wrapper global de window.fetch — injeta o token antiforgery em requests
+    // same-origin com método inseguro (POST/PUT/PATCH/DELETE) via header canônico
+    // RequestVerificationToken. O cookie antiforgery já é enviado automaticamente pelo
+    // browser em requests same-origin. O wrapper nunca bloqueia a página em caso de erro.
+    var meta = document.querySelector('meta[name="antiforgery-token"]');
+    var token = meta ? meta.getAttribute('content') : '';
+    if (!token || !window.fetch) return;
+    var unsafe = { POST: 1, PUT: 1, PATCH: 1, DELETE: 1 };
+    var original = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        try {
+            var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+            if (!unsafe[method]) return original(input, init);
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var sameOrigin = !url || url.charAt(0) === '/' || url.indexOf(window.location.origin) === 0;
+            if (!sameOrigin) return original(input, init);
+            init = init || {};
+            if (!init.headers) { init.headers = new Headers({ RequestVerificationToken: token }); return original(input, init); }
+            if (init.headers instanceof Headers) { init.headers.set('RequestVerificationToken', token); }
+            else if (Array.isArray(init.headers)) { init.headers.push(['RequestVerificationToken', token]); }
+            else { init.headers['RequestVerificationToken'] = token; }
+            return original(input, init);
+        } catch (err) {
+            return original(input, init);
+        }
+    };
+})();
+</script>
     <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
     @if (isAuthenticated)
     {

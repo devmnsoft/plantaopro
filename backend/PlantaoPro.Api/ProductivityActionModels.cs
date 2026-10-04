@@ -17,7 +17,7 @@ public sealed record ProductivityActionDto(
 
 public sealed record ProductivityQuery(
     string? Tab = null, string? Priority = null, string? Module = null,
-    string? Status = null, Guid? OwnerId = null, Guid? UnitId = null,
+    string? Status = null, Guid? OwnerId = null,
     DateTimeOffset? DueFrom = null, DateTimeOffset? DueTo = null,
     bool Mine = false, int Page = 1, int PageSize = 25);
 

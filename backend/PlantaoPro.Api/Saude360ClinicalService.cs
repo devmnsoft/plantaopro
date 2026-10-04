@@ -113,8 +113,11 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         var table = ResolveTable(tableKey);
         await GarantirBaseClinicaAsync();
         await using var cn = Cn();
+        // P0 (homologação): acesso clínico SOMENTE por vínculo médico explícito (medicos.usuario_id).
+        // Autoria (created_by) e correspondência de e-mail NÃO são regras de autorização —
+        // um mesmo UUID não implica necessariamente no mesmo médico.
         var ownDoctorSql = currentUser.IsDoctor() && (string.Equals(tableKey, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase))
-            ? " and (t.medico_id=@uid or t.created_by=@uid or t.medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and (m.usuario_id=@uid or lower(m.email)=lower((select u.email from plantaopro.usuarios u where u.id=@uid))) and (@tenantId is null or m.cliente_id=@tenantId)))"
+            ? " and t.medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and m.usuario_id=@uid and (@tenantId is null or m.cliente_id=@tenantId))"
             : string.Empty;
         var row = await cn.QueryFirstOrDefaultAsync("select t.* from plantaopro." + table + " t where t.id=@id and t.reg_status='A' and (@isGlobal or (@tenantId is not null and t.cliente_id=@tenantId))" + ownDoctorSql, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId });
         if (row is null) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado.", 404);
@@ -150,17 +153,40 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             var exists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.cid_tabela where upper(codigo)=upper(@codigo) and reg_status='A'", new { codigo = request.Codigo });
             if (exists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CID já cadastrado para o código informado.", 409);
         }
-        if (string.Equals(tableKey, "planoSaudePacientes", StringComparison.OrdinalIgnoreCase) && request.Principal && request.PacienteId.HasValue)
-        {
-            await cn.ExecuteAsync("update plantaopro.plano_saude_pacientes set principal=false, updated_at=now(), updated_by=@uid where paciente_id=@pacienteId and cliente_id=@tenantId and reg_status='A'", new { uid = currentUser.UserId, pacienteId = request.PacienteId, tenantId = TenantId });
-        }
-
         var id = Guid.NewGuid();
         var data = BuildInsert(tableKey, request, id);
-        try { await cn.ExecuteAsync(data.Sql, data.Args); }
-        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ExclusionViolation || ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        var trocarPlanoPrincipal = string.Equals(tableKey, "planoSaudePacientes", StringComparison.OrdinalIgnoreCase) && request.Principal && request.PacienteId.HasValue;
+        if (trocarPlanoPrincipal)
         {
-            return ApiResponse<Saude360RegistroDto>.Fail("Conflito concorrente: o horário ou identificador acabou de ser reservado.", 409);
+            // P1 (homologação): troca do plano principal é ATÔMICA — o UPDATE (que adquire
+            // lock nas linhas do paciente), o un-principal e o INSERT ocorrem na MESMA transação.
+            // Trocas concorrentes são serializadas pelo lock; o índice parcial único (v2306)
+            // garante no máximo 1 principal ativo por paciente (violation → 409 abaixo).
+            await using var tx = cn.BeginTransaction();
+            try
+            {
+                await cn.ExecuteAsync("update plantaopro.plano_saude_pacientes set principal=false, updated_at=now(), updated_by=@uid where paciente_id=@pacienteId and cliente_id=@tenantId and reg_status='A'", new { uid = currentUser.UserId, pacienteId = request.PacienteId, tenantId = TenantId }, tx);
+                await cn.ExecuteAsync(data.Sql, data.Args, tx);
+                tx.Commit();
+            }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ExclusionViolation || ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                try { tx.Rollback(); } catch { /* rollback best-effort */ }
+                return ApiResponse<Saude360RegistroDto>.Fail("Conflito concorrente: o plano principal deste paciente acabou de ser alterado em outra operação.", 409);
+            }
+            catch
+            {
+                try { tx.Rollback(); } catch { /* rollback best-effort */ }
+                throw;
+            }
+        }
+        else
+        {
+            try { await cn.ExecuteAsync(data.Sql, data.Args); }
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ExclusionViolation || ex.SqlState == PostgresErrorCodes.UniqueViolation)
+            {
+                return ApiResponse<Saude360RegistroDto>.Fail("Conflito concorrente: o horário ou identificador acabou de ser reservado.", 409);
+            }
         }
         await AuditAsync(table, id, "CRIAR", new { table, request = SafeRequest(request) });
         return await ObterAsync(tableKey, id);
@@ -553,7 +579,8 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@
         if (HasColumn(key, "convenio_id")) where.Add("(@convenioId is null or convenio_id = @convenioId)");
         if (isDoctor && (string.Equals(key, "consultas", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "prescricoes", StringComparison.OrdinalIgnoreCase) || string.Equals(key, "repassesMedicos", StringComparison.OrdinalIgnoreCase)))
         {
-            where.Add("(medico_id = @uid or medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and (m.usuario_id=@uid or lower(m.email)=lower((select u.email from plantaopro.usuarios u where u.id=@uid))) and (@tenantId is null or m.cliente_id=@tenantId)))");
+            // P0 (homologação): mesma regra do ObterAsync — somente vínculo médico explícito (medicos.usuario_id).
+            where.Add("medico_id in (select m.id from plantaopro.medicos m where m.reg_status='A' and m.usuario_id=@uid and (@tenantId is null or m.cliente_id=@tenantId))");
         }
         if (string.Equals(key, "pacientes", StringComparison.OrdinalIgnoreCase)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(cpf,'') ilike @likeTermo or coalesce(telefone,'') ilike @likeTermo or coalesce(email,'') ilike @likeTermo)");
         else if (HasSearchColumns(key)) where.Add("(@termo is null or coalesce(nome,'') ilike @likeTermo or coalesce(descricao,'') ilike @likeTermo or coalesce(codigo,'') ilike @likeTermo)");

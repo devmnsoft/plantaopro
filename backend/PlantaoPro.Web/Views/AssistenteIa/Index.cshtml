@@ -1,0 +1,171 @@
+@model PlantaoPro.Web.Models.AiConfigPageViewModel
+@using PlantaoPro.Web.Models
+@{
+    ViewData["Title"] = "Assistente IA";
+    string[] provedores = new[] { "groq", "gemini", "deepseek" };
+    string NomeTarefa(string task) => task switch
+    {
+        "MEU_DIA_RESUMO" => "Resumo das pendências — Meu Dia",
+        "COTACAO_ANALISE" => "Análise de cotação — Administrativo 360",
+        _ => task
+    };
+    string PlaceholderChave(AiConfiguracaoViewModel cfg)
+    {
+        if (cfg.ChaveDoTenantConfigurada)
+            return "deixe em branco para manter a atual" + (cfg.ChaveMascara is { Length: > 0 } ? $" ({cfg.ChaveMascara})" : string.Empty);
+        return cfg.ChaveGlobalDisponivel ? "deixe em branco para usar a chave global do servidor" : "informe a chave do provedor";
+    }
+}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a href="/" class="text-primary">Início</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Assistente IA</li>
+                </ol>
+            </nav>
+            <h2 class="h4 mb-0 fw-bold">Assistente IA — configuração</h2>
+            <p class="text-muted small mb-0 mt-1">Provedor, modelo, limites e cota por tarefa. O assistente é auxiliar: nenhuma ação é concluída sem confirmação humana.</p>
+        </div>
+        <a href="/Pendencias" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Voltar</a>
+    </div>
+
+    @if (TempData["Success"] is string sucesso)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@sucesso
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+    @if (TempData["Error"] is string erro)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@erro
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    @if (!Model.ChaveMestraDoServidorConfigurada)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <i class="bi bi-key me-2"></i>O servidor ainda não tem a chave mestra de criptografia configurada (<code>Ai:EncryptionKey</code>). Sem ela, as chaves dos provedores deste cliente não podem ser salvas com segurança.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
+    }
+
+    <details class="screen-guide-card">
+        <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
+        <div>
+            <p><strong>Habilitar.</strong> A tarefa só executa com o checkbox ligado e um provedor escolhido. Sem chave (do cliente ou global do servidor), o ponto de IA mostra “não configurado”.</p>
+            <p><strong>Chave do provedor.</strong> Deixe em branco para manter a atual ou usar a chave global do servidor. A chave fica cifrada no banco e nunca volta inteira para esta tela.</p>
+            <p><strong>Testar conexão.</strong> Valida a configuração junto ao provedor antes de considerar configurado. Falhas retornam um estado explicável — nunca “sucesso” fictício.</p>
+            <p><strong>Limites e cota.</strong> Tokens, timeout e cota mensal por tarefa são aplicados no servidor; apenas usos bem-sucedidos consomem a cota.</p>
+        </div>
+    </details>
+
+    @foreach (var cfg in Model.Configuracoes)
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="pp-section-kicker">@cfg.TaskCode</span>
+                    <h3 class="h6 mb-0">@NomeTarefa(cfg.TaskCode)</h3>
+                </div>
+                <span class="badge bg-@(cfg.Habilitada ? "success" : "secondary")">@(cfg.Habilitada ? "Habilitada" : "Desabilitada")</span>
+            </div>
+            <div class="card-body">
+                <form method="post" action="/AssistenteIa/Salvar/@cfg.TaskCode">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4 d-flex align-items-center">
+                            <input class="form-check-input me-2" type="checkbox" id="habilitada_@cfg.TaskCode" name="Habilitada" @(cfg.Habilitada ? "checked" : "") />
+                            <label class="form-check-label" for="habilitada_@cfg.TaskCode">Habilitar tarefa para este cliente</label>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="provedor_@cfg.TaskCode">Provedor</label>
+                            <select class="form-select" id="provedor_@cfg.TaskCode" name="Provedor">
+                                @foreach (var p in provedores)
+                                {
+                                    <option value="@p" selected="@(cfg.Provedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@p</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="fallback_@cfg.TaskCode">Fallback (opcional)</label>
+                            <select class="form-select" id="fallback_@cfg.TaskCode" name="FallbackProvedor">
+                                <option value="">nenhum</option>
+                                @foreach (var p in provedores)
+                                {
+                                    <option value="@p" selected="@(cfg.FallbackProvedor is { Length: > 0 } && cfg.FallbackProvedor.Equals(p, System.StringComparison.OrdinalIgnoreCase) ? "selected" : null)">@p</option>
+                                }
+                            </select>
+                            <div class="form-text">Usado somente se a chave global do servidor estiver configurada.</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="modelo_@cfg.TaskCode">Modelo</label>
+                            <input class="form-control" id="modelo_@cfg.TaskCode" name="Modelo" value="@cfg.Modelo" placeholder="@cfg.ModeloSugerido" required />
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" for="chave_@cfg.TaskCode">Chave do provedor (cifrada no servidor)</label>
+                            <input class="form-control" type="password" id="chave_@cfg.TaskCode" name="ApiKey" autocomplete="new-password" placeholder="@PlaceholderChave(cfg)" />
+                            <div class="form-text">O valor nunca retorna inteiro à tela; apenas a máscara final aparece.</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="ltin_@cfg.TaskCode">Limite entrada (tokens)</label>
+                            <input class="form-control" type="number" min="1" max="16000" id="ltin_@cfg.TaskCode" name="LimiteTokensEntrada" value="@cfg.LimiteTokensEntrada" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="ltout_@cfg.TaskCode">Limite saída (tokens)</label>
+                            <input class="form-control" type="number" min="64" max="8000" id="ltout_@cfg.TaskCode" name="LimiteTokensSaida" value="@cfg.LimiteTokensSaida" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="timeout_@cfg.TaskCode">Timeout (segundos)</label>
+                            <input class="form-control" type="number" min="5" max="120" id="timeout_@cfg.TaskCode" name="TimeoutS" value="@cfg.TimeoutS" />
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" for="cota_@cfg.TaskCode">Cota mensal (usos)</label>
+                            <input class="form-control" type="number" min="1" max="100000" id="cota_@cfg.TaskCode" name="CotaMensalUsos" value="@cfg.CotaMensalUsos" />
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <label class="form-label" for="orcamento_@cfg.TaskCode">Orçamento mensal (opcional)</label>
+                            <input class="form-control" type="number" step="0.01" min="0" id="orcamento_@cfg.TaskCode" name="OrcamentoMensal" value="@cfg.OrcamentoMensal" />
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2">
+                        <span class="small text-muted">Usos neste mês: <strong>@cfg.UsosNoMesAtual</strong> de @cfg.CotaMensalUsos</span>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Salvar configuração</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-header"><h3 class="h6 mb-0"><i class="bi bi-plug me-1"></i>Teste de conexão</h3></div>
+        <div class="card-body">
+            <form method="post" action="/AssistenteIa/TestarConexao" data-ai-test-form>
+                @Html.AntiForgeryToken()
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-4">
+                        <label class="form-label" for="testeProvedor">Provedor</label>
+                        <select class="form-select" id="testeProvedor" name="provedor">
+                            @foreach (var p in provedores)
+                            {
+                                <option value="@p">@p</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-3 d-grid">
+                        <button type="submit" class="btn btn-outline-primary" data-ai-test-btn>Testar conexão</button>
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <span data-ai-test-output role="status" class="small text-muted">O teste usa a chave disponível (do cliente ou global) e não consome a cota da tarefa.</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@section Styles { <link rel="stylesheet" href="~/css/design-system/assistente-ia.css" asp-append-version="true" /> }
+@section Scripts { <script type="module" src="~/js/pages/assistente-ia-config.js" asp-append-version="true"></script> }

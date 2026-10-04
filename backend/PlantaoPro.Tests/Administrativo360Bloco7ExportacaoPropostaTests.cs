@@ -162,7 +162,9 @@ public sealed class Administrativo360Bloco7ExportacaoPropostaTests
                 Assert.NotNull(enviada.EnviadoEm);
                 Assert.Equal(1, enviada.Tentativas);
                 Assert.NotNull(enviada.ExportacaoId);
-                Assert.Equal("RESPONDIDA", (await repo.ObterCotacaoPorIdAsync(TenantSantaCasa, cotacaoId))!.StatusInterno);
+                // P1 (homologação): exportar ≠ respondida — o canal manual persiste o artefato, mas a
+                // cotação permanece PRONTA_PARA_ENVIO até o aceite real pelo destinatário.
+                Assert.Equal("PRONTA_PARA_ENVIO", (await repo.ObterCotacaoPorIdAsync(TenantSantaCasa, cotacaoId))!.StatusInterno);
 
                 // Arquivo real: bytes, tamanho, SHA-256 e conteúdo coerente
                 var arquivo = await repo.ObterExportacaoPorRespostaAsync(TenantSantaCasa, respostaId);

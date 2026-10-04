@@ -205,6 +205,27 @@ public sealed class ProductivityActionScopingTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task PaginaForaDoIntervalo_MostraListaVaziaMasMantemTotalRealDoFiltro()
+    {
+        // WP-S2: uma página sem registros deve reportar o total REAL dos filtros
+        // (o count da janela não retorna nenhuma linha), nunca zero quando existem itens.
+        var referencia = await _repo.ListAsync(_tA1, _uidA, new ProductivityQuery(Page: 1, PageSize: 2),
+            operation: true, clinical: false, financial: false, doctorOnly: false, CancellationToken.None);
+        var fora = await _repo.ListAsync(_tA1, _uidA, new ProductivityQuery(Page: 99, PageSize: 2),
+            operation: true, clinical: false, financial: false, doctorOnly: false, CancellationToken.None);
+        Assert.NotEmpty(referencia.Items);
+        Assert.Empty(fora.Items);
+        Assert.Equal(referencia.Total, fora.Total);
+        Assert.Equal(referencia.TotalPages, fora.TotalPages);
+
+        // Tenant realmente vazio: página fora do intervalo é legitimamente zero (sem falhar no fallback).
+        var vazio = await _repo.ListAsync(_tVazio, _uidA, new ProductivityQuery(Page: 99, PageSize: 2),
+            operation: true, clinical: true, financial: true, doctorOnly: false, CancellationToken.None);
+        Assert.Empty(vazio.Items);
+        Assert.Equal(0, vazio.Total);
+    }
+
+    [Fact]
     public async Task FiltroPorModulo_RestringeAoModuloPedido()
     {
         var page = await _repo.ListAsync(_tA1, _uidA, new ProductivityQuery(Module: "OPERACAO"),

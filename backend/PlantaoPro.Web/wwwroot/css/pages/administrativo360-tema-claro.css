@@ -190,6 +190,12 @@ body.pp-a360 main code.text-warning {
     color: #8a5b00 !important;
 }
 
+/* Tinta de alerta genérica (breadcrumb, valores, títulos) sobre o claro:
+   amarelo Bootstrap #ffc107 mede ~1,6:1 — contra-escopo com âmbar AA. */
+body.pp-a360 main .text-warning {
+    color: var(--pp-color-warning, #a15c00) !important;
+}
+
 /* ---- Acessibilidade: foco visível --------------------------------------------------------- */
 
 body.pp-a360 main a:focus-visible,

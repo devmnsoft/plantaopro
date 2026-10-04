@@ -102,6 +102,37 @@ select
         return ApiResponse<IEnumerable<ApiKeyDto>>.Ok(itens);
     }
 
+    /// <summary>
+    /// P1 (homologação): valida a chave enviada na API pública (header X-Api-Key) contra o
+    /// hash persistido em plantaopro.api_keys. Retorna o tenant dono da chave quando válida
+    /// (status ATIVA, não expirada) e registra o último uso. Não depende de sessão/usuário
+    /// (rota anônima) — o vínculo com o tenant vem da própria chave.
+    /// Escopo por recurso e rate limit ficam pendentes até a API pública expor dados reais.
+    /// </summary>
+    public async Task<Guid?> ValidarChavePublicaAsync(string? rawKey)
+    {
+        if (string.IsNullOrWhiteSpace(rawKey)) return null;
+        try
+        {
+            var hash = Sha256(rawKey);
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var row = await cn.QueryFirstOrDefaultAsync<ChavePublicaRow>(
+                "select id as Id, cliente_id as ClienteId, status as Status, expira_em as ExpiraEm from plantaopro.api_keys where reg_status='A' and chave_hash=@hash limit 1",
+                new { hash });
+            if (row is null) return null;
+            if (!string.Equals(row.Status, "ATIVA", StringComparison.OrdinalIgnoreCase)) return null;
+            if (row.ExpiraEm.HasValue && row.ExpiraEm.Value <= DateTime.UtcNow) return null;
+            try { await cn.ExecuteAsync("update plantaopro.api_keys set ultimo_uso_em=now() where id=@id", new { id = row.Id }); }
+            catch { /* best-effort: uso registrado, validação não falha por audit */ }
+            return row.ClienteId;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro validando chave da API pública");
+            return null;
+        }
+    }
+
     public async Task<ApiResponse<string>> RevogarApiKeyAsync(Guid id)
     {
         var clienteId = ClienteId();
@@ -148,3 +179,6 @@ select
 }
 
 public sealed class ApiKeyListRow { public Guid Id { get; set; } public string Nome { get; set; } = string.Empty; public string Prefixo { get; set; } = string.Empty; public string Status { get; set; } = string.Empty; public DateTime RegDate { get; set; } public DateTime? UltimoUsoEm { get; set; } }
+
+/// <summary>Linha da validação de chave da API pública (rota anônima).</summary>
+public sealed class ChavePublicaRow { public Guid Id { get; set; } public Guid ClienteId { get; set; } public string Status { get; set; } = string.Empty; public DateTime? ExpiraEm { get; set; } }

@@ -1014,15 +1014,20 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                         sucesso = resultado.Sucesso
                     }, txFinal, cancellationToken: ct));
 
-                if (resultado.Sucesso && (resultado.StatusTransmissao == "ACEITA_PELO_PORTAL" || resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE"))
+                // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
+                // a primeira geração vence — retransmissões preservam o arquivo original).
+                // P1 (homologação): exportar ≠ respondida — este passo apenas persiste o artefato;
+                // a cotação mantém o estado anterior até haver aceite real do destinatário.
+                if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
                 {
-                    // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
-                    // a primeira geração vence — retransmissões preservam o arquivo original).
-                    if (resultado.StatusTransmissao == "EXPORTADA_MANUALMENTE")
-                    {
-                        await RegistrarExportacaoManualAsync(cnFinal, txFinal, tenantId, usuarioId, command.RespostaId, ct);
-                    }
+                    await RegistrarExportacaoManualAsync(cnFinal, txFinal, tenantId, usuarioId, command.RespostaId, ct);
+                }
 
+                // P1 (homologação): apenas o ACEITE confirmado pelo portal externo avança a
+                // cotação para RESPONDIDA. A exportação manual não representa resposta do
+                // destinatário — separar preparado/baixado/manual de aceito/rejeitado/desconhecido.
+                if (resultado.Sucesso && resultado.StatusTransmissao == "ACEITA_PELO_PORTAL")
+                {
                     await cnFinal.ExecuteAsync(new CommandDefinition(@"
                         UPDATE plantaopro.adm360_cotacoes
                         SET status_interno = 'RESPONDIDA', updated_at = now()

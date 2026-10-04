@@ -3,7 +3,7 @@
 @{
     var q = ViewData["Query"] as PlantaoPro.Web.Models.ProductivityQueryViewModel ?? new();
     var totalPages = Math.Max(1, (int)Math.Ceiling(Model.Total / (double)Math.Max(1, Model.PageSize)));
-    string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.UnitId, q.PeriodFrom, q.PeriodTo, q.Mine, page = 1, q.PageSize })!;
+    string TabUrl(string tab) => Url.Action("Index", new { tab, q.Priority, q.Module, q.Status, q.Due, q.PeriodFrom, q.PeriodTo, q.Mine, page = 1, q.PageSize })!;
     string ActionUrl(PlantaoPro.Web.Models.ProductivityActionViewModel action) => Url.Action(action.Action, action.Controller, new RouteValueDictionary(action.RouteValues)) ?? Url.Action("Index", "Pendencias")!;
     var isGlobal = User.IsInRole("SuperAdmin") || User.IsInRole("SuperAdministrador") || User.IsInRole("AdminMNSOFT");
 }
@@ -45,7 +45,10 @@
     @if (!string.IsNullOrWhiteSpace(Model.Error))
     { <section class="state-panel" role="alert" aria-live="assertive"><i class="bi bi-cloud-slash"></i><h2>Não foi possível carregar as pendências</h2><p>@Model.Error</p><p class="state-panel__hint">Nenhuma ação foi executada. Verifique sua conexão e tente novamente.</p><a class="btn btn-primary" href="@Context.Request.Path@Context.Request.QueryString">Tentar novamente</a></section> }
     else if (Model.Items.Count == 0)
-    { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Nenhuma ação nesta visão", "Não há itens reais que correspondam aos filtros selecionados.")' /> }
+    { @if (Model.Total > 0)
+      { <section class="state-panel" role="status" aria-live="polite"><i class="bi bi-clipboard-data"></i><h2>Esta página não tem registros</h2><p>Os filtros atuais têm @Model.Total registro(s), em @totalPages página(s), mas a página @Model.Page está fora do intervalo.</p><a class="btn btn-primary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.PeriodFrom,q.PeriodTo,q.Mine,page=totalPages,q.PageSize })">Ir para a última página</a></section> }
+      else
+      { <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-check2-circle", "Nenhuma ação nesta visão", "Não há itens reais que correspondam aos filtros selecionados.")' /> } }
     else
     {
         <section class="action-list" aria-label="Ações encontradas">
@@ -61,12 +64,23 @@
             </article>
         }
         </section>
-        <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,q.PeriodFrom,q.PeriodTo,q.Mine,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @totalPages</span>@if(Model.Page < totalPages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.UnitId,q.PeriodFrom,q.PeriodTo,q.Mine,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
+        <nav class="action-pagination" aria-label="Paginação"><span>@Model.Total item(ns)</span><div>@if(Model.Page > 1){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.PeriodFrom,q.PeriodTo,q.Mine,page=Model.Page-1,q.PageSize })">Anterior</a>}<span>Página @Model.Page de @totalPages</span>@if(Model.Page < totalPages){<a class="btn btn-sm btn-outline-secondary" href="@Url.Action("Index", new { q.Tab,q.Priority,q.Module,q.Status,q.Due,q.PeriodFrom,q.PeriodTo,q.Mine,page=Model.Page+1,q.PageSize })">Próxima</a>}</div></nav>
     }
     <details class="screen-guide-card">
         <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
-        <div><p><strong>Origem.</strong> Cada item é consultado no módulo que mantém seu estado; ler uma notificação não o resolve.</p><p><strong>Filtros.</strong> O período considera a data relevante do item (prazo quando existe; criação caso contrário). “Atribuídas a mim” não inclui filas disponíveis ao grupo.</p><p><strong>Responsabilidade.</strong> Estar na fila não concede permissão: a origem revalida vínculo, perfil, contexto e estado.</p><p><strong>Prazos.</strong> O rótulo identifica prazo configurado na origem; quando ele não existe, a lista informa “Sem prazo definido”.</p><p><strong>Atualização.</strong> Resolva pelo botão específico e volte à Central; uma nova consulta atualiza o item e os totais. Adiar somente reorganiza sua visualização.</p></div>
+        <div><p><strong>Origem.</strong> Cada item é consultado no módulo que mantém seu estado; ler uma notificação não o resolve.</p><p><strong>Filtros.</strong> O período considera a data relevante do item (prazo quando existe; criação caso contrário). “Atribuídas a mim” não inclui filas disponíveis ao grupo.</p><p><strong>Responsabilidade.</strong> Estar na fila não concede permissão: a origem revalida vínculo, perfil, contexto e estado.</p><p><strong>Prazos.</strong> O rótulo identifica prazo configurado na origem; quando ele não existe, a lista informa “Sem prazo definido”.</p><p><strong>Atualização.</strong> Resolva pelo botão específico e volte à Central; uma nova consulta atualiza o item e os totais. Adiar somente reorganiza sua visualização.</p><p><strong>Assistente IA.</strong> O painel opcional no topo gera um resumo em texto das pendências desta tela. Ele não resolve nada sozinho: cada pendência continua sendo tratada na origem, pelos botões da lista.</p></div>
     </details>
+    <section class="pp-ai-panel" data-ai-panel data-ai-url="/Pendencias/ResumoIa" data-ai-method="GET" aria-labelledby="ppAiPendenciasTitulo">
+        <div class="pp-ai-panel__head">
+            <div><span class="pp-ai-panel__kicker">Assistente · opcional</span><h2 id="ppAiPendenciasTitulo" class="pp-ai-panel__title"><i class="bi bi-stars me-1" aria-hidden="true"></i>Resumo das suas pendências</h2></div>
+            <button type="button" class="btn btn-sm btn-primary" data-ai-run><i class="bi bi-lightning me-1" aria-hidden="true"></i>Gerar resumo</button>
+        </div>
+        <p class="small text-muted">Texto gerado a partir da lista real desta tela. O assistente não resolve nada sozinho: cada pendência continua sendo tratada na origem.</p>
+        <p class="pp-ai-panel__meta" data-ai-meta aria-live="polite"></p>
+        <p class="pp-ai-panel__output" data-ai-output role="status">Nenhuma geração nesta sessão.</p>
+        <pre class="pp-ai-panel__text" data-ai-text hidden></pre>
+        <p class="pp-ai-panel__note">Precisa de ajuste? <a href="/AssistenteIa">Configurar assistente</a> (administradores).</p>
+    </section>
 </div>
 <dialog class="pp-snooze-dialog" data-snooze-dialog aria-labelledby="snoozeTitle">
     <form method="dialog" data-snooze-form>
@@ -78,5 +92,11 @@
         <div class="pp-form-actions"><button class="btn btn-outline-secondary" type="submit" value="cancel">Cancelar</button><button class="btn btn-primary" type="submit" value="confirm" data-snooze-confirm>Confirmar adiamento</button></div>
     </form>
 </dialog>
-@section Styles { <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" /> }
-@section Scripts { <script type="module" src="~/js/pages/central-acoes.js" asp-append-version="true"></script> }
+@section Styles {
+    <link rel="stylesheet" href="~/css/design-system/operations.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/design-system/assistente-ia.css" asp-append-version="true" />
+}
+@section Scripts {
+    <script type="module" src="~/js/pages/central-acoes.js" asp-append-version="true"></script>
+    <script type="module" src="~/js/ai-assistant-panel.js" asp-append-version="true"></script>
+}

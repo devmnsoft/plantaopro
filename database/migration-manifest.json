@@ -808,6 +808,39 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_10_v2305_administrativo360_imutabilidade_por_papel",
+      "source": "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
+      "checksum": "4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4",
+      "dependsOn": [
+        "2026_09_v2304_administrativo360_transmissao_tentativas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_10_v2306_saude360_plano_principal_unico",
+      "source": "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql",
+      "checksum": "8efd39faf5a9b2eb8e7f2322e6eddf8010d909903ff7f190ee5e608acf783b73",
+      "dependsOn": [
+        "2026_10_v2305_administrativo360_imutabilidade_por_papel"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_10_v2307_ai_camada_canonica",
+      "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+      "checksum": "47d5f9faaa95fa023673a5fe4484b8f874d44914ca9aed0bb12780f6e935eed0",
+      "dependsOn": [
+        "2026_10_v2306_saude360_plano_principal_unico"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

@@ -259,7 +259,9 @@ public sealed class Administrativo360CotacoesTransmissaoB5Tests
                 Assert.NotNull(resp.EnviadoEm);
                 Assert.Equal(1, resp.Tentativas);
                 Assert.NotNull(resp.ExportacaoId);
-                Assert.Equal("RESPONDIDA", (await repo.ObterCotacaoPorIdAsync(TenantSantaCasa, cotacaoId))!.StatusInterno);
+                // P1 (homologação): exportar ≠ respondida — a cotação permanece PRONTA_PARA_ENVIO
+                // após a exportação manual; apenas ACEITA_PELO_PORTAL avança para RESPONDIDA.
+                Assert.Equal("PRONTA_PARA_ENVIO", (await repo.ObterCotacaoPorIdAsync(TenantSantaCasa, cotacaoId))!.StatusInterno);
 
                 // Evidência persistida: exatamente 1 linha de envio, estado final e canal corretos
                 await using var cn = new NpgsqlConnection(cs);

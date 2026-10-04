@@ -7,6 +7,8 @@ namespace PlantaoPro.Web.Controllers;
 
 [Authorize]
 [ApiController]
+// P0 CSRF: valida token antiforgery em todas as ações inseguras (o BFF nunca era protegido antes).
+[AutoValidateAntiforgeryToken]
 [Route("bff/operacao")]
 public sealed class OperationBffController : ControllerBase
 {

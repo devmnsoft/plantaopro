@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -11,8 +12,10 @@ namespace PlantaoPro.Web.Controllers;
 [Route("Administrativo360/Cotacoes")]
 public sealed class Adm360CotacoesWebController : BaseWebController
 {
-    public Adm360CotacoesWebController(IHttpClientFactory factory, ILogger<Adm360CotacoesWebController> logger)
-        : base(factory, logger) { }
+    private readonly AiWebService _ai;
+
+    public Adm360CotacoesWebController(IHttpClientFactory factory, ILogger<Adm360CotacoesWebController> logger, AiWebService ai)
+        : base(factory, logger) => _ai = ai;
 
     [HttpGet("")]
     public async Task<IActionResult> Index([FromQuery] string? status, [FromQuery] string? provedor)
@@ -360,5 +363,16 @@ public sealed class Adm360CotacoesWebController : BaseWebController
 
         if (response.Headers.ETag != null) HttpContext.Response.Headers.ETag = response.Headers.ETag.Tag;
         return File(content, contentType, fileName.Trim('"'));
+    }
+
+    /// <summary>P2 IA — análise opcional da cotação (mesma política do módulo, revalidada na API).</summary>
+    [HttpPost("{id:guid}/AnaliseIa")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AnaliseIa(Guid id, CancellationToken ct)
+    {
+        var resultado = await _ai.AnaliseCotacaoAsync(GetJwtToken() ?? string.Empty, id, ct);
+        if (resultado.StatusKind == AiWebService.StatusNaoAutenticado)
+            return Unauthorized(new { mensagem = resultado.Mensagem });
+        return Json(resultado);
     }
 }

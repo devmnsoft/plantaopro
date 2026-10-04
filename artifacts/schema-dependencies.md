@@ -75,3 +75,7 @@
 - `plantaopro.saude360_prontuario_v1270` depende de: plantaopro.saude360, plantaopro.financeiro_clinico_convenios_v2180
 - `plantaopro.adm360_documentos_xml_b1` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
 - `plantaopro.adm360_cotacao_envios` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.fn_adm360_bypass_habilitado` depende de: plantaopro.adm360_eventos
+- `plantaopro.ux_plano_saude_pacientes_principal` depende de: plantaopro.saude360
+- `plantaopro.ai_config` depende de: plantaopro.schema_canonico_base
+- `plantaopro.ai_usos` depende de: plantaopro.schema_canonico_base

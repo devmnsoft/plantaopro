@@ -52,16 +52,37 @@ public sealed class Fase6BiIntegracoesController : ControllerBase
     [HttpGet("api/integracoes/webhooks/{id:guid}/entregas")] public IActionResult Entregas(Guid id) => Ok(ApiResponse<object>.Ok(new { id, entregas = Array.Empty<object>() }));
     [HttpPost("api/integracoes/webhooks/entregas/{id:guid}/reenviar")] public IActionResult Reenviar(Guid id) => Indisponivel("Reenvio de webhook");
 
+    // P1 (homologação): toda a API pública exige credencial própria (header X-Api-Key validada
+    // contra plantaopro.api_keys — ATIVA e não expirada). Os endpoints seguem AllowAnonymous
+    // no sentido de não exigirem a sessão do aplicativo; sem chave válida => 401. Escopo por
+    // recurso e rate limit entram quando a API expuser dados reais.
+    private async Task<bool> ChavePublicaValida()
+    {
+        var raw = Request.Headers["X-Api-Key"].ToString();
+        var tenant = await service.ValidarChavePublicaAsync(raw);
+        if (tenant.HasValue) return true;
+        Response.StatusCode = StatusCodes.Status401Unauthorized;
+        Response.ContentType = "application/json";
+        await Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(
+            ApiResponse<object>.Fail("API key ausente ou inválida (header X-Api-Key).", StatusCodes.Status401Unauthorized)));
+        return false;
+    }
+
     [AllowAnonymous]
-    [HttpGet("api/public/v1/webhooks/eventos")] public IActionResult EventosPublicos() => Ok(ApiResponse<object>.Ok(new { eventos = new [] { "paciente.criado", "agendamento.criado", "consulta.finalizada", "financeiro.recebimento_confirmado" } }));
+    [HttpGet("api/public/v1/webhooks/eventos")] public async Task<IActionResult> EventosPublicos()
+    { if (!await ChavePublicaValida()) return NoContent(); return Ok(ApiResponse<object>.Ok(new { eventos = new [] { "paciente.criado", "agendamento.criado", "consulta.finalizada", "financeiro.recebimento_confirmado" } })); }
     [AllowAnonymous]
-    [HttpGet("api/public/v1/{recurso}")] public IActionResult PublicGet(string recurso) => Ok(ApiResponse<object>.Ok(new { recurso, pageSize = 50, tenant = "api-key", itens = Array.Empty<object>() }));
+    [HttpGet("api/public/v1/{recurso}")] public async Task<IActionResult> PublicGet(string recurso)
+    { if (!await ChavePublicaValida()) return NoContent(); return Ok(ApiResponse<object>.Ok(new { recurso, pageSize = 50, tenant = "api-key", itens = Array.Empty<object>() })); }
     [AllowAnonymous]
-    [HttpGet("api/public/v1/{recurso}/{id:guid}")] public IActionResult PublicGetById(string recurso, Guid id) => Ok(ApiResponse<object>.Ok(new { recurso, id }));
+    [HttpGet("api/public/v1/{recurso}/{id:guid}")] public async Task<IActionResult> PublicGetById(string recurso, Guid id)
+    { if (!await ChavePublicaValida()) return NoContent(); return Ok(ApiResponse<object>.Ok(new { recurso, id })); }
     [AllowAnonymous]
-    [HttpPost("api/public/v1/agendamentos")] public IActionResult PublicPostAgendamento([FromBody] object request) => Indisponivel("Agendamento pela API pública");
+    [HttpPost("api/public/v1/agendamentos")] public async Task<IActionResult> PublicPostAgendamento([FromBody] object request) { if (!await ChavePublicaValida()) return NoContent(); return Indisponivel("Agendamento pela API pública"); }
     [AllowAnonymous]
-    [HttpGet("api/public/v1/financeiro/contas-receber")] public IActionResult PublicFinanceiro() => Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() }));
+    [HttpGet("api/public/v1/financeiro/contas-receber")] public async Task<IActionResult> PublicFinanceiro()
+    { if (!await ChavePublicaValida()) return NoContent(); return Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() })); }
     [AllowAnonymous]
-    [HttpGet("api/public/v1/convenios/autorizacoes")] public IActionResult PublicConvenios() => Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() }));
+    [HttpGet("api/public/v1/convenios/autorizacoes")] public async Task<IActionResult> PublicConvenios()
+    { if (!await ChavePublicaValida()) return NoContent(); return Ok(ApiResponse<object>.Ok(new { itens = Array.Empty<object>() })); }
 }

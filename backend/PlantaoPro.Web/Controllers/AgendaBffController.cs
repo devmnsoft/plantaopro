@@ -10,6 +10,8 @@ namespace PlantaoPro.Web.Controllers;
 /// </summary>
 [Authorize]
 [ApiController]
+// P0 CSRF: valida token antiforgery em todas as ações inseguras (hoje só GET; protege futuras ações de escrita).
+[AutoValidateAntiforgeryToken]
 [Route("bff/agenda")]
 public sealed class AgendaBffController : ControllerBase
 {

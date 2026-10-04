@@ -47,6 +47,16 @@
         </div>
     </div>
 
+    <details class="screen-guide-card">
+        <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
+        <div>
+            <p><strong>Ciclo da cotação.</strong> Cada botão corresponde a uma transição do fluxo (gerar orçamento, aprovar resposta, transmitir, estornar). A cotação avança de fase apenas quando os itens estão completos e a resposta aprovada.</p>
+            <p><strong>Status interno.</strong> O selo indica a fase real do registro; movimentos financeiros geram lançamentos compensatórios rastreáveis quando a fase exige.</p>
+            <p><strong>Assistente IA.</strong> O painel opcional gera uma análise em texto da cotação e dos documentos anexados. É leitura de apoio: aceitar, rejeitar ou transmitir continua sendo decisão humana, pelo botão correspondente.</p>
+            <p><strong>Documentos (XML).</strong> Anexos fiscais (NF-e/NFC-e/NFS-e) são validados na carga; erro de formato é exibido sem alterar o restante do documento.</p>
+        </div>
+    </details>
+
     @if (!string.IsNullOrWhiteSpace(Model.Erro))
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -434,5 +444,18 @@
                 </div>
             </div>
         </div>
+        <section class="pp-ai-panel" data-ai-panel data-ai-url="/Administrativo360/Cotacoes/@Model.Cotacao.Id/AnaliseIa" data-ai-method="POST" aria-labelledby="ppAiCotacaoTitulo">
+            <div class="pp-ai-panel__head">
+                <div><span class="pp-ai-panel__kicker">Assistente · opcional</span><h2 id="ppAiCotacaoTitulo" class="pp-ai-panel__title"><i class="bi bi-stars me-1" aria-hidden="true"></i>Análise da cotação @Model.Cotacao.IdentificadorExterno</h2></div>
+                <button type="button" class="btn btn-sm btn-primary" data-ai-run><i class="bi bi-lightning me-1" aria-hidden="true"></i>Gerar análise</button>
+            </div>
+            <p class="small text-muted">Leitura auxiliar sobre itens, prazos e estado da cotação. Não substitui aprovação, transmissão nem qualquer ação do módulo.</p>
+            <p class="pp-ai-panel__meta" data-ai-meta aria-live="polite"></p>
+            <p class="pp-ai-panel__output" data-ai-output role="status">Nenhuma geração nesta sessão.</p>
+            <pre class="pp-ai-panel__text" data-ai-text hidden></pre>
+            <p class="pp-ai-panel__note">Precisa de ajuste? <a href="/AssistenteIa">Configurar assistente</a> (administradores).</p>
+        </section>
     </div>
 </div>
+@section Styles { <link rel="stylesheet" href="~/css/design-system/assistente-ia.css" asp-append-version="true" /> }
+@section Scripts { <script type="module" src="~/js/ai-assistant-panel.js" asp-append-version="true"></script> }

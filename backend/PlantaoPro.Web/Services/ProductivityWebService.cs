@@ -39,7 +39,6 @@ public sealed class ProductivityWebService
     {
         var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString("N");
         var stopwatch = Stopwatch.StartNew();
-        HttpResponseMessage? response = null;
         try
         {
             var client = CreateClient(token);
@@ -47,29 +46,10 @@ public sealed class ProductivityWebService
             // Correlação Web <-> API: o mesmo identificador chega ao header X-Correlation-ID,
             // onde a API registra e ecoa de volta (sem expor token ou cabeçalhos nos logs).
             request.Headers.TryAddWithoutValidation("X-Correlation-ID", correlationId);
-            response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            stopwatch.Stop();
-            _logger.LogDebug("Productivity: consulta cancelada pelo chamador para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
-            return new() { ErrorKind = "CANCELADO", Error = "A consulta foi cancelada antes da conclusão." };
-        }
-        catch (OperationCanceledException)
-        {
-            stopwatch.Stop();
-            _logger.LogWarning("Productivity: tempo limite excedido para {Uri} após {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
-            return new() { ErrorKind = "TIMEOUT", Error = "A resposta da Central de Ações demorou mais do que o limite permitido. Tente novamente." };
-        }
-        catch (HttpRequestException exception)
-        {
-            stopwatch.Stop();
-            _logger.LogWarning(exception, "Productivity: falha de transporte para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
-            return new() { ErrorKind = "TRANSPORTE", Error = "A Central de Ações está temporariamente indisponível. Tente novamente." };
-        }
+            // Prazo total HTTP (WP-S2): o Timeout do cliente cobre envio E leitura integral do corpo;
+            // um timeout durante a leitura cai no mesmo catch abaixo e vira TIMEOUT, nunca 500.
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, ct);
 
-        using (response)
-        {
             if (!response.IsSuccessStatusCode)
             {
                 stopwatch.Stop();
@@ -92,16 +72,29 @@ public sealed class ProductivityWebService
                 _logger.LogInformation("BFF->API GET {Uri} Status={StatusCode} DuracaoTotalMs={DuracaoTotalMs} CorrelationId={CorrelationId}", uri, (int)response.StatusCode, stopwatch.ElapsedMilliseconds, correlationId);
                 return model;
             }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                _logger.LogDebug("Productivity: leitura da resposta cancelada pelo chamador para {Uri} (correlacao={CorrelationId}).", uri, correlationId);
-                return new() { ErrorKind = "CANCELADO", Error = "A consulta foi cancelada antes da conclusão." };
-            }
             catch (JsonException exception)
             {
                 _logger.LogWarning(exception, "Productivity: resposta inválida da API para {Uri} (correlacao={CorrelationId}).", uri, correlationId);
                 return new() { ErrorKind = "RESPOSTA_INVALIDA", Error = "A resposta da Central de Ações veio em um formato inesperado. Tente novamente." };
             }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            stopwatch.Stop();
+            _logger.LogDebug("Productivity: consulta cancelada pelo chamador para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "CANCELADO", Error = "A consulta foi cancelada antes da conclusão." };
+        }
+        catch (OperationCanceledException)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning("Productivity: tempo limite excedido (envio ou leitura do corpo) para {Uri} após {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "TIMEOUT", Error = "A resposta da Central de Ações demorou mais do que o limite permitido. Tente novamente." };
+        }
+        catch (HttpRequestException exception)
+        {
+            stopwatch.Stop();
+            _logger.LogWarning(exception, "Productivity: falha de transporte para {Uri} em {ElapsedMs} ms (correlacao={CorrelationId}).", uri, stopwatch.ElapsedMilliseconds, correlationId);
+            return new() { ErrorKind = "TRANSPORTE", Error = "A Central de Ações está temporariamente indisponível. Tente novamente." };
         }
     }
 
@@ -117,7 +110,7 @@ public sealed class ProductivityWebService
         var values = new Dictionary<string, string?>
         {
             ["tab"] = query.Tab, ["priority"] = query.Priority, ["module"] = query.Module,
-            ["status"] = query.Status, ["unitId"] = query.UnitId, ["mine"] = query.Mine ? "true" : null,
+            ["status"] = query.Status, ["mine"] = query.Mine ? "true" : null,
             ["page"] = Math.Max(1, query.Page).ToString(), ["pageSize"] = Math.Clamp(query.PageSize, 1, 100).ToString()
         };
         var now = DateTimeOffset.UtcNow;

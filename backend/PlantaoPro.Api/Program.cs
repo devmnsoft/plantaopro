@@ -13,6 +13,7 @@ using PlantaoPro.Api.Operation360.Realtime;
 using PlantaoPro.Api.Operation360.Notifications;
 using PlantaoPro.Api.Operation360.Productivity;
 using PlantaoPro.Api.Productivity;
+using PlantaoPro.Api.Ai;
 using PlantaoPro.Api.SavedViews;
 using System.Text;
 
@@ -278,6 +279,36 @@ builder.Services.AddScoped<IProductivityActionRepository, ProductivityActionRepo
 builder.Services.AddScoped<IProductivityActionService, ProductivityActionService>();
 builder.Services.AddScoped<ISavedViewRepository, SavedViewRepository>();
 builder.Services.AddScoped<ISavedViewService, SavedViewService>();
+
+// P2 IA — camada canônica de assistentes (adaptadores Groq/Gemini/DeepSeek).
+// BaseAddress com barra final: os adapters usam URIs relativas. O timeout aqui é o teto
+// bruto do HttpClient; o tempo real por tarefa vem da linha ai_config (CTS encadeado no gateway).
+var aiTimeout = TimeSpan.FromSeconds(builder.Configuration.GetValue("Ai:TimeoutSeconds", 30));
+Uri AiBaseUrl(string provider, string fallback) =>
+    new Uri(builder.Configuration[$"Ai:Providers:{provider}:BaseUrl"] ?? fallback);
+builder.Services.AddHttpClient("AiGroq", c =>
+{
+    c.BaseAddress = AiBaseUrl("Groq", "https://api.groq.com/openai/v1/");
+    c.Timeout = aiTimeout;
+});
+builder.Services.AddHttpClient("AiGemini", c =>
+{
+    c.BaseAddress = AiBaseUrl("Gemini", "https://generativelanguage.googleapis.com/");
+    c.Timeout = aiTimeout;
+});
+builder.Services.AddHttpClient("AiDeepSeek", c =>
+{
+    c.BaseAddress = AiBaseUrl("DeepSeek", "https://api.deepseek.com/");
+    c.Timeout = aiTimeout;
+});
+builder.Services.AddSingleton<AiSecretProtector>();
+builder.Services.AddSingleton<IAiProviderAdapter, GroqAdapter>();
+builder.Services.AddSingleton<IAiProviderAdapter, GeminiAdapter>();
+builder.Services.AddSingleton<IAiProviderAdapter, DeepSeekAdapter>();
+builder.Services.AddScoped<IAiConfigRepository, AiConfigRepository>();
+builder.Services.AddScoped<IAiGateway, AiGateway>();
+builder.Services.AddScoped<AiJornadaMeuDia>();
+builder.Services.AddScoped<AiJornadaCotacao>();
 
 var app = builder.Build();
 

@@ -67,6 +67,16 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
+        // P0 (homologação): limites validados ANTES de ler integralmente o upload (memória previsível).
+        const long maxArquivoXmlBytes = 2 * 1024 * 1024;   // 2 MiB por arquivo
+        const int maxConteudoXmlChars = 2_000_000;         // limite espelhado na API
+
+        if (arquivoXml is not null && arquivoXml.Length > maxArquivoXmlBytes)
+        {
+            ModelState.AddModelError("", "O arquivo XML excede o limite de 2 MiB.");
+            return View("~/Views/Administrativo360/DocumentosXml/Importar.cshtml", form);
+        }
+
         var xmlConteudo = form.XmlConteudo;
         var nomeArquivo = form.NomeArquivo;
         byte[]? xmlBytes = null;
@@ -79,6 +89,12 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
             xmlBytes = ms.ToArray();
             xmlConteudo = Encoding.UTF8.GetString(xmlBytes);
             nomeArquivo = arquivoXml.FileName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(xmlConteudo) && xmlConteudo.Length > maxConteudoXmlChars)
+        {
+            ModelState.AddModelError("", "O conteúdo XML excede o limite permitido (2.000.000 caracteres).");
+            return View("~/Views/Administrativo360/DocumentosXml/Importar.cshtml", form);
         }
 
         if (string.IsNullOrWhiteSpace(xmlConteudo))

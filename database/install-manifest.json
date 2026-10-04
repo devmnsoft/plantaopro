@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.21.1",
-  "generatedAt": "2026-09-29",
+  "schemaVersion": "v2.21.6",
+  "generatedAt": "2026-10-03",
   "sections": [
     {
       "order": 3,
@@ -964,6 +964,64 @@
           "source": "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
           "dependsOn": [
             "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 74,
+      "name": "Administrativo360 Imutabilidade por Papel P0 v2.21.4",
+      "objects": [
+        {
+          "name": "plantaopro.fn_adm360_bypass_habilitado",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
+          "dependsOn": [
+            "plantaopro.adm360_eventos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 75,
+      "name": "Saúde 360 Plano Principal Único P1 v2.21.5",
+      "objects": [
+        {
+          "name": "plantaopro.ux_plano_saude_pacientes_principal",
+          "type": "canonical",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql",
+          "dependsOn": [
+            "plantaopro.saude360"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 76,
+      "name": "IA Camada Canônica P2 v2.21.6",
+      "objects": [
+        {
+          "name": "plantaopro.ai_config",
+          "type": "canonical",
+          "category": "CANONICAL_IA",
+          "required": true,
+          "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
+        },
+        {
+          "name": "plantaopro.ai_usos",
+          "type": "canonical",
+          "category": "CANONICAL_IA",
+          "required": true,
+          "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
           ]
         }
       ]

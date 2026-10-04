@@ -5,9 +5,9 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.21.1
+-- Versão do schema: v2.21.6
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-09-29
+-- Data de geração: 2026-10-03
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -6296,3 +6296,209 @@ COMMENT ON COLUMN plantaopro.adm360_cotacao_envios.canal IS
   'Provedor/canal utilizado na tentativa (IMPORTACAO_MANUAL, OPMENEXO, INPART ou conta não encontrada = IMPORTACAO_MANUAL).';
 COMMENT ON COLUMN plantaopro.adm360_cotacao_envios.status_transmissao IS
   'INICIADA durante a chamada externa; estado final espelha o da resposta ou INTERRUPTA quando a conciliação fecha envio interrompido.';
+
+-- ============================================================
+-- Seção 74 — Administrativo360 Imutabilidade por Papel P0 v2.21.4
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql
+-- SOURCE-SHA256: 4b4e31a9a37edd2670d2cb566b39a49cb278ff721efc5b1d47616693cc017ee4
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2305_administrativo360_imutabilidade_por_papel
+-- P0 Segurança: papel restrito para o bypass da imutabilidade do Administrativo 360.
+--
+-- Contexto (evidência empírica em PostgreSQL 18, testado em 2026-10-03 no banco
+-- plantaopro_test com papel guc_probe NOLOGIN):
+--   * O GUC plantao.bypass_imutabilidade_adm360 é parâmetro placeholder de 2
+--     segmentos: qualquer não-superuser consegue SETá-lo livremente (SET_OK).
+--   * GRANT/REVOKE ... SET ON PARAMETER plantao.bypass_imutabilidade_adm360 é
+--     ACEITO na sintaxe PG18, mas REVOKE FROM PUBLIC não bloqueia o SET de um
+--     não-superuser => o privilégio de parâmetro não protege o GUC.
+--   * GRANT plantao ON DATABASE ... não existe ("tipo de privilégio desconhecido").
+-- Solução (restrição dentro dos triggers, como manda o requisito P0):
+--   1. Papel restrito plantaopro_maintenance (NOLOGIN NOINHERIT — marcador, não
+--      concede privilégios em tabelas).
+--   2. Função plantaopro.fn_adm360_bypass_habilitado(): bypass vale APENAS quando
+--      GUC = 'on' E o session_user é superuser OU membro de plantaopro_maintenance.
+--   3. As funções trigger v2301 (fn_adm360_evento_imutavel e
+--      fn_adm360_vale_evento_progresso) passam a consultar a função restrita em
+--      vez de ler o GUC diretamente — os triggers existentes permanecem os mesmos.
+-- Uso: ferramentas oficiais de manutenção/migração continuam fazendo
+-- SELECT set_config('plantao.bypass_imutabilidade_adm360','on',true) na MESMA
+-- transação da escrita protegida; o usuário dessas ferramentas deve ser superuser
+-- (dev/CI) ou membro de plantaopro_maintenance (produção).
+-- Idempotência: DO bloqueando a criação do papel + CREATE OR REPLACE das funções.
+-- ============================================================================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'plantaopro_maintenance') THEN
+        CREATE ROLE plantaopro_maintenance NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS;
+    ELSE
+        ALTER ROLE plantaopro_maintenance WITH NOLOGIN NOINHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE;
+    END IF;
+END $$;
+
+COMMENT ON ROLE plantaopro_maintenance IS 'PlantaoPro: papel restrito do bypass de imutabilidade do Administrativo 360 (GUC plantao.bypass_imutabilidade_adm360). Marcador: não concede privilégios em tabelas.';
+
+-- Bypass habilitado = GUC 'on' E session_user privilegiado (superuser ou membro do papel restrito).
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_bypass_habilitado()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT coalesce(nullif(btrim(current_setting('plantao.bypass_imutabilidade_adm360', true)), ''), 'off') = 'on'
+        AND (
+            coalesce((SELECT rolsuper FROM pg_roles WHERE rolname = session_user), false)
+            OR pg_has_role(session_user, 'plantaopro_maintenance', 'MEMBER')
+        );
+$$;
+
+COMMENT ON FUNCTION plantaopro.fn_adm360_bypass_habilitado() IS 'P0: true somente quando GUC plantao.bypass_imutabilidade_adm360=''on'' E o session_user é superuser ou membro de plantaopro_maintenance (PG18 testado: privilégio de parâmetro não restringe GUCs placeholder de 2 segmentos).';
+
+-- Recria a trigger de v2301 consultando a função restrita em vez do GUC bruto.
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_evento_imutavel()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF plantaopro.fn_adm360_bypass_habilitado() THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
+    RAISE EXCEPTION 'Evento do modulo Administrativo 360 e imutavel (append-only): UPDATE e DELETE nao permitidos (registro %).', COALESCE(NEW.id, OLD.id);
+END;
+$$;
+
+-- Recria a trigger de v2301 consultando a função restrita em vez do GUC bruto.
+CREATE OR REPLACE FUNCTION plantaopro.fn_adm360_vale_evento_progresso()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF plantaopro.fn_adm360_bypass_habilitado() THEN
+        RETURN COALESCE(NEW, OLD);
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'Evento de vale e imutavel: DELETE nao permitido (registro %).', OLD.id;
+    END IF;
+    IF NEW.tenant_id IS DISTINCT FROM OLD.tenant_id
+       OR NEW.vale_id IS DISTINCT FROM OLD.vale_id
+       OR NEW.vale_item_id IS DISTINCT FROM OLD.vale_item_id
+       OR NEW.tipo IS DISTINCT FROM OLD.tipo
+       OR NEW.quantidade IS DISTINCT FROM OLD.quantidade
+       OR NEW.data_evento IS DISTINCT FROM OLD.data_evento
+       OR NEW.motivo IS DISTINCT FROM OLD.motivo
+       OR NEW.movimento_id IS DISTINCT FROM OLD.movimento_id
+       OR NEW.idempotency_key IS DISTINCT FROM OLD.idempotency_key
+       OR NEW.registrado_por IS DISTINCT FROM OLD.registrado_por
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at
+    THEN
+        RAISE EXCEPTION 'Evento de vale e imutavel: apenas o progresso da decisao (quantidade_decidida) pode ser atualizado (registro %).', NEW.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+-- ============================================================
+-- Seção 75 — Saúde 360 Plano Principal Único P1 v2.21.5
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql
+-- SOURCE-SHA256: 8efd39faf5a9b2eb8e7f2322e6eddf8010d909903ff7f190ee5e608acf783b73
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2306_saude360_plano_principal_unico
+-- P1 Saúde 360: garantia de banco para a troca ATÔMICA do plano principal.
+--
+--   1. Deduplicação: pacientes com mais de uma linha ativa marcada principal=true
+--      mantêm apenas a mais recentemente atualizada (empate resolvido por id desc)
+--      e as demais são despromovidas.
+--   2. Índice parcial único garante no máximo 1 plano principal ativo por
+--      paciente em nível de banco — a corrida de escrita residual (ex.: paciente
+--      sem linhas anteriores) vira violação de constraint que o serviço converte
+--      em 409.
+-- Idempotência: o UPDATE só afeta linhas duplicadas (reaplicação sem dados novos
+--      não altera nada); CREATE UNIQUE INDEX IF NOT EXISTS.
+-- ============================================================================
+
+WITH ranking AS (
+    SELECT id,
+           row_number() OVER (
+               PARTITION BY cliente_id, paciente_id
+               ORDER BY coalesce(updated_at, reg_date) DESC, id DESC
+           ) AS rn
+    FROM plantaopro.plano_saude_pacientes
+    WHERE reg_status = 'A' AND principal = TRUE
+)
+UPDATE plantaopro.plano_saude_pacientes p
+SET principal = FALSE, updated_at = now()
+FROM ranking r
+WHERE p.id = r.id AND r.rn > 1;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_plano_saude_pacientes_principal
+    ON plantaopro.plano_saude_pacientes (paciente_id)
+    WHERE principal = TRUE AND reg_status = 'A' AND paciente_id IS NOT NULL;
+
+-- ============================================================
+-- Seção 76 — IA Camada Canônica P2 v2.21.6
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2307_ai_camada_canonica.sql
+-- SOURCE-SHA256: 47d5f9faaa95fa023673a5fe4484b8f874d44914ca9aed0bb12780f6e935eed0
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2307_ai_camada_canonica
+-- P2 IA: camada canônica de assistentes — configuração por tenant/tarefa
+--        e auditoria de usos.
+--
+--   1. ai_config  : 1 linha por (tenant, tarefa). Habilitação por tenant,
+--      provedor/modelo por tarefa, fallback explícito (destino aprovado),
+--      chave do tenant cifrada no servidor (AES-GCM; o texto puro nunca é
+--      gravado), limites de tokens/timeout/cota mensal e orçamento mensal.
+--   2. ai_usos    : auditoria imutável de cada geração (sucesso ou falha):
+--      quem, qual tarefa, qual provedor/modelo, tokens, duração, classe de
+--      erro. Não guarda o texto do prompt nem da resposta (minimização:
+--      apenas o identificador do contexto, nunca o conteúdo).
+--
+-- Idempotência: CREATE TABLE/INDEX IF NOT EXISTS; sem alteração de dados.
+-- Sem FK de tenant: segue a convenção das demais tabelas operacionais
+-- (ex.: tenant_modulos) que referenciam o tenant por uuid sem constraint.
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS plantaopro.ai_config (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL,
+    task_code text NOT NULL CHECK (task_code IN ('MEU_DIA_RESUMO', 'COTACAO_ANALISE')),
+    habilitada boolean NOT NULL DEFAULT FALSE,
+    provedor text NOT NULL CHECK (provedor IN ('groq', 'gemini', 'deepseek')),
+    modelo text NOT NULL CHECK (char_length(modelo) BETWEEN 1 AND 64),
+    fallback_provedor text CHECK (fallback_provedor IN ('groq', 'gemini', 'deepseek')),
+    api_key_cifrada bytea,
+    chave_mascara text,
+    limite_tokens_entrada integer NOT NULL DEFAULT 4000 CHECK (limite_tokens_entrada BETWEEN 256 AND 16000),
+    limite_tokens_saida integer NOT NULL DEFAULT 1200 CHECK (limite_tokens_saida BETWEEN 64 AND 8000),
+    timeout_s integer NOT NULL DEFAULT 30 CHECK (timeout_s BETWEEN 5 AND 120),
+    cota_mensal_usos integer NOT NULL DEFAULT 100 CHECK (cota_mensal_usos BETWEEN 1 AND 100000),
+    orcamento_mensal numeric(14, 2) CHECK (orcamento_mensal IS NULL OR orcamento_mensal >= 0),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (tenant_id, task_code)
+);
+
+CREATE TABLE IF NOT EXISTS plantaopro.ai_usos (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id uuid NOT NULL,
+    user_id uuid,
+    task_code text NOT NULL CHECK (task_code IN ('MEU_DIA_RESUMO', 'COTACAO_ANALISE')),
+    contexto_tipo text,
+    contexto_id uuid,
+    provedor text,
+    modelo text,
+    status text NOT NULL CHECK (status IN ('SUCESSO', 'FALHA')),
+    erro_classe text,
+    tokens_entrada integer,
+    tokens_saida integer,
+    duracao_ms integer,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ix_ai_config_tenant ON plantaopro.ai_config (tenant_id);
+CREATE INDEX IF NOT EXISTS ix_ai_usos_tenant_task_date ON plantaopro.ai_usos (tenant_id, task_code, created_at);
+CREATE INDEX IF NOT EXISTS ix_ai_usos_tenant_date ON plantaopro.ai_usos (tenant_id, created_at);

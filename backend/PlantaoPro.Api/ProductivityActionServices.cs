@@ -119,23 +119,31 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
     {
         var page = Math.Max(1, query.Page); var size = Math.Clamp(query.PageSize, 1, 100);
         var tab = (query.Tab ?? "PARA_MIM").Trim().ToUpperInvariant();
-        var sql = @"
+        // WP-S2 (homologação): o CTE filtrado é compartilhado entre a consulta paginada e a
+        // contagem de fallback — as duas precisam enxergar exatamente o mesmo conjunto, para
+        // que uma página sem registros ainda reporte o total real dos filtros.
+        const string ItemColumns = "Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed";
+        const string FilteredCte = @"
             with derived as (" + DerivedSql + @"), visible as (
               select d.*,s.snoozed_until is not null and s.snoozed_until>now() as IsSnoozed
               from derived d left join plantaopro.productivity_item_user_state s
                 on s.tenant_id=@tenantId and s.user_id=@userId and s.item_key=d.Key
               where s.dismissed_at is null
             ), filtered as (
-              select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed from visible where (@priority is null or Priority=@priority) and (@module is null or Module=@module)
+              select " + ItemColumns + @" from visible where (@priority is null or Priority=@priority) and (@module is null or Module=@module)
                 and (@status is null or Status=@status) and (@ownerId is null or OwnerId=@ownerId)
                 and (not @mine or OwnerId=@userId)
                 and (@dueFrom is null or coalesce(DueAt,CreatedAt)>=@dueFrom) and (@dueTo is null or coalesce(DueAt,CreatedAt)<@dueTo)
                 and (case @tab when 'CRITICAS' then Priority='CRITICA' when 'HOJE' then DueAt>=date_trunc('day',now()) and DueAt<date_trunc('day',now())+interval '1 day'
                      when 'ATRASADAS' then DueAt<now() when 'ADIADAS' then IsSnoozed else not IsSnoozed end)
-            )
-            select Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed,count(*) over()::int as TotalRows from filtered
+            )";
+        string sql = FilteredCte + @"
+            select " + ItemColumns + @",count(*) over()::int as TotalRows from filtered
             order by case Priority when 'CRITICA' then 1 when 'ALTA' then 2 when 'NORMAL' then 3 else 4 end,DueAt nulls last,CreatedAt,Key
             offset @offset limit @size
+            ";
+        const string countSql = FilteredCte + @"
+            select count(*)::int from filtered
             ";
         await using var cn = Open();
         var args = new { tenantId,userId,operation,clinical,financial,doctorOnly,
@@ -143,6 +151,13 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
             query.Mine,tab,offset=(page-1)*size,size };
         var rows = (await cn.QueryAsync<ProductivityRow>(new CommandDefinition(sql,args,cancellationToken:ct))).AsList();
         var total = rows.FirstOrDefault()?.TotalRows ?? 0;
+        if (rows.Count == 0)
+        {
+            // Página fora do intervalo (ou filtro sem resultados): o count da janela não retorna
+            // nenhuma linha, então o total real do filtro vem de uma contagem dedicada sobre o
+            // mesmo CTE. Uma página sem registros nunca deve declarar total zero quando existem itens.
+            total = await cn.ExecuteScalarAsync<int>(new CommandDefinition(countSql,args,cancellationToken:ct));
+        }
         return new(rows.Select(x => x.ToDto()).ToList(),page,size,total,(int)Math.Ceiling(total/(double)size));
     }
 

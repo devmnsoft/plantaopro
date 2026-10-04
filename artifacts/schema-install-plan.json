@@ -496,5 +496,33 @@
       "plantaopro.administrativo360_cotacoes_xml_dashboard"
     ],
     "source": "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql"
+  },
+  {
+    "object": "plantaopro.fn_adm360_bypass_habilitado",
+    "dependsOn": [
+      "plantaopro.adm360_eventos"
+    ],
+    "source": "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql"
+  },
+  {
+    "object": "plantaopro.ux_plano_saude_pacientes_principal",
+    "dependsOn": [
+      "plantaopro.saude360"
+    ],
+    "source": "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql"
+  },
+  {
+    "object": "plantaopro.ai_config",
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql"
+  },
+  {
+    "object": "plantaopro.ai_usos",
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/migrations/2026_10_v2307_ai_camada_canonica.sql"
   }
 ]

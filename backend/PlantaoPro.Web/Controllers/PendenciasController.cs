@@ -10,7 +10,8 @@ namespace PlantaoPro.Web.Controllers;
 public sealed class PendenciasController : Controller
 {
     private readonly ProductivityWebService _productivity;
-    public PendenciasController(ProductivityWebService productivity) => _productivity = productivity;
+    private readonly AiWebService _ai;
+    public PendenciasController(ProductivityWebService productivity, AiWebService ai) => (_productivity, _ai) = (productivity, ai);
 
     [HttpGet("")]
     [HttpGet("MinhasPendencias")]
@@ -46,6 +47,16 @@ public sealed class PendenciasController : Controller
             _ => "Não foi possível adiar a ação."
         };
         return StatusCode((int)response.StatusCode, new { message });
+    }
+
+    /// <summary>P2 IA — resumo opcional das pendências (BFF GET; contexto e tenant ficam no servidor).</summary>
+    [HttpGet("ResumoIa")]
+    public async Task<IActionResult> ResumoIa(CancellationToken ct)
+    {
+        var resultado = await _ai.ResumoMeuDiaAsync(Token(), ct);
+        if (resultado.StatusKind == AiWebService.StatusNaoAutenticado)
+            return Unauthorized(new { mensagem = resultado.Mensagem });
+        return Json(resultado);
     }
 
     private string Token() => HttpContext.Session.GetString("JwtToken") ?? string.Empty;

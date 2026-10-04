@@ -1,0 +1,32 @@
+Reconciliacao schema_migrations | 2026-10-04 12:51:14 -03:00 | banco: plantaopro_test | exit=0
+                            version                             | success |   checksum_16    |                                         source                                         
+----------------------------------------------------------------+---------+------------------+----------------------------------------------------------------------------------------
+ 2026_09_v2300_administrativo360_status_transmissao_exportacao  | t       | e220614f3a1161b3 | database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql
+ 2026_09_v2301_administrativo360_eventos_imutabilidade          | t       | 288e216b08433bc9 | database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql
+ 2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant | t       | bc6baaff554451db | database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql
+ 2026_09_v2303_administrativo360_documentos_xml_b1              | t       | 50f78ce6e574d3fc | database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql
+ 2026_09_v2304_administrativo360_transmissao_tentativas         | t       | 37dcd938230badfe | database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql
+ 2026_10_v2306_saude360_plano_principal_unico                   | t       | 8efd39faf5a9b2eb | database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql
+ 2026_10_v2307_ai_camada_canonica                               | t       | 47d5f9faaa95fa02 | database/migrations/2026_10_v2307_ai_camada_canonica.sql
+ 2026_10_v2308_ai_governanca_modelos_orcamento                  | t       | 08c97f9e2d9957e0 | database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql
+(8 linhas)
+
+CREATE INDEX
+psql:docs/evidencias/2026-10-04-rodada2/wpa4-reconciliacao-schema-migrations.sql:44: NOTA:  relação "ux_schema_migrations_version" já existe, ignorando
+DELETE 0
+INSERT 0 0
+UPDATE 1
+                            version                             | success |   checksum_16    
+----------------------------------------------------------------+---------+------------------
+ 2026_09_v2300_administrativo360_status_transmissao_exportacao  | t       | e220614f3a1161b3
+ 2026_09_v2301_administrativo360_eventos_imutabilidade          | t       | 77e3d861188b1984
+ 2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant | t       | bc6baaff554451db
+ 2026_09_v2303_administrativo360_documentos_xml_b1              | t       | 50f78ce6e574d3fc
+ 2026_09_v2304_administrativo360_transmissao_tentativas         | t       | 37dcd938230badfe
+ 2026_10_v2306_saude360_plano_principal_unico                   | t       | 8efd39faf5a9b2eb
+ 2026_10_v2307_ai_camada_canonica                               | t       | 47d5f9faaa95fa02
+ 2026_10_v2308_ai_governanca_modelos_orcamento                  | t       | 08c97f9e2d9957e0
+(8 linhas)
+
+psql:docs/evidencias/2026-10-04-rodada2/wpa4-reconciliacao-schema-migrations.sql:116: NOTA:  RECONCILIACAO OK: v2301 realinhado; v2303/v2304/v2306/v2307/v2308 registrados; v2305 pendente para o tool `upgrade`
+DO

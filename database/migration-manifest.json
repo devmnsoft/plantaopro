@@ -757,7 +757,7 @@
     {
       "version": "2026_09_v2301_administrativo360_eventos_imutabilidade",
       "source": "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
-      "checksum": "288e216b08433bc9100314c7231ca567b6ca598198ba32e2dc2acbdcd8b037c3",
+      "checksum": "77e3d861188b1984a8637940af7b73e8b00cea7ae86b189a9cd1c62e1d673f4d",
       "dependsOn": [
         "2026_09_v2300_administrativo360_status_transmissao_exportacao"
       ],

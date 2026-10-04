@@ -1,0 +1,3 @@
+Comando: dotnet run --project backend/PlantaoPro.Tools.Database -- upgrade | 2026-10-04 12:51:32 -03:00 | banco: plantaopro_test | exit=0
+upgrade: 2026_10_v2305_administrativo360_imutabilidade_por_papel aplicada.
+IDENTITY_SCHEMA_READY

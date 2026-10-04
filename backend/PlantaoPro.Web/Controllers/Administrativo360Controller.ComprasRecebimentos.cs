@@ -115,6 +115,9 @@ public partial class Administrativo360Controller
         var respParc = await ReadApiResponse<IReadOnlyList<PedidoCompraResumoViewModel>>(client, "api/administrativo360/compras?situacao=PARCIAL");
         var lookups = await CarregarLookupsAsync(client);
 
+        // A3: documentos XML fora de quarentena — vinculação opcional ao recebimento.
+        var respXml = await ReadApiResponse<IReadOnlyList<DocumentoRecebidoResumoViewModel>>(client, "api/administrativo360/xml?quarentena=false");
+
         var list = new List<PedidoCompraResumoViewModel>();
         if (respAprov.Data != null) list.AddRange(respAprov.Data);
         if (respParc.Data != null) list.AddRange(respParc.Data);
@@ -123,12 +126,13 @@ public partial class Administrativo360Controller
         {
             PedidosPendentes = list,
             Locais = lookups.Locais.Where(l => l.Tipo == "INTERNO").ToArray(),
+            DocumentosXml = respXml.Data ?? Array.Empty<DocumentoRecebidoResumoViewModel>(),
             Erro = respAprov.Error ?? respParc.Error
         });
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> ConfirmarRecebimento(Guid pedidoId, string documento, Guid pedidoItemId, decimal quantidade, string? lote, DateOnly? validade, Guid localId)
+    public async Task<IActionResult> ConfirmarRecebimento(Guid pedidoId, string documento, Guid pedidoItemId, decimal quantidade, string? lote, DateOnly? validade, Guid localId, Guid? documentoXmlId)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
@@ -145,6 +149,7 @@ public partial class Administrativo360Controller
             PedidoId = pedidoId,
             Documento = documento.Trim(),
             IdempotencyKey = key,
+            DocumentoXmlId = documentoXmlId,
             Itens = new[]
             {
                 new

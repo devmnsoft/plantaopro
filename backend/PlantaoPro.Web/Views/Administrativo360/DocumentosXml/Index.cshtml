@@ -9,7 +9,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h2 class="h4 mb-1 text-light fw-bold">
-                <i class="bi bi-file-earmark-code text-info me-2"></i>Central de Documentos XML (NF-e 55 · NFC-e 65 · NFS-e 67)
+                <i class="bi bi-file-earmark-code text-info me-2"></i>Central de Documentos XML (NF-e 55 · NFC-e 65 · NFS-e 67 · ABRASF)
             </h2>
             <p class="text-muted small mb-0">Recepção de documentos fiscais emitidos contra o CNPJ, conferência com compras e recebimentos, e controle de quarentena.</p>
         </div>
@@ -30,7 +30,7 @@
             <div class="row g-3 small text-secondary">
                 <div class="col-md-3">
                     <strong class="text-light d-block mb-1">1. Validação Estrita</strong>
-                    A importação identifica por conteúdo os documentos NF-e (55), NFC-e (65) e NFS-e (67) emitidos contra CNPJ autorizado do tenant. O DOCTYPE/DTD presente em arquivos reais é aceito sem busca externa (DTD proibida no parse) e entidades externas são desabilitadas (XXE). Os bytes originais do arquivo são preservados para download idêntico ao enviado.
+                    A importação identifica por conteúdo os documentos NF-e (55), NFC-e (65), NFS-e (67) e prescrições eletrônicas ABRASF emitidos contra CNPJ autorizado do tenant. Um único arquivo pode conter múltiplos documentos, cada um processado individualmente. O DOCTYPE/DTD presente em arquivos reais é aceito sem busca externa (DTD proibida no parse) e entidades externas são desabilitadas (XXE). Os bytes originais do arquivo são preservados para download idêntico ao enviado.
                 </div>
                 <div class="col-md-3">
                     <strong class="text-light d-block mb-1">2. Quarentena Automática</strong>
@@ -119,7 +119,7 @@
                                     <code class="text-info font-monospace small">@d.ChaveAcesso</code>
                                     @if (d.Quarentena)
                                     {
-                                        <div><span class="badge bg-danger small">Quarentena: @d.MotivoQuarentena</span></div>
+                                        <div><span class="badge bg-danger small" title="@d.MotivoQuarentena">Quarentena: @RotuloQuarentena(d.MotivoQuarentena)</span></div>
                                     }
                                 </td>
                                 <td>
@@ -139,7 +139,7 @@
                                     <strong class="text-light">R$ @d.ValorTotal.ToString("N2")</strong>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">@d.TipoDocumento switch { "NFC_E" => "NFC-e 65", "NFS_E" => "NFS-e 67", "RESUMO" => "Resumo", _ => "NF-e 55" }</span>
+                                    <span class="badge bg-secondary">@d.TipoDocumento switch { "NFC_E" => "NFC-e 65", "NFS_E" => "NFS-e 67", "ABRASF" => "ABRASF", "RESUMO" => "Resumo", _ => "NF-e 55" }</span>
                                     <div class="small text-muted">@d.Origem</div>
                                 </td>
                                 <td>
@@ -172,3 +172,16 @@
         </div>
     </div>
 </div>
+
+@functions {
+    // A3: rotulagem PT-BR dos motivos técnicos de quarentena (o código segue no tooltip).
+    private static string RotuloQuarentena(string? motivo) => motivo switch
+    {
+        "XML_MALFORMADO" => "XML malformado",
+        "MODELO_NAO_SUPORTADO" => "Modelo não suportado",
+        "DOCUMENTO_INCOMPLETO" => "Documento incompleto",
+        "DESTINATARIO_NAO_AUTORIZADO" => "Destinatário não autorizado",
+        null => "Sem motivo registrado",
+        _ => motivo
+    };
+}

@@ -111,13 +111,17 @@ public sealed class Administrativo360DocumentosXmlB1Tests
             var texto = File.ReadAllText(CaminhoFixture("b1-a-nfe55.xml")); // ReadAllText consome o BOM
 
             var repo = new DocumentosXmlRepository(cs);
-            var id = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var res = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-a-nfe55.xml", XmlBytes = bytesArquivo });
+            Assert.Equal(1, res.TotalUnidades);
+            Assert.Equal(1, res.Importados);
+            var id = res.Documentos[0].DocumentoId!.Value;
 
             var d = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, id);
             Assert.NotNull(d);
             Assert.False(d!.Quarentena);
             Assert.Equal("NFE_COMPLETA", d.TipoDocumento);
+            Assert.Equal("b1-a-nfe55.xml", d.NomeArquivo); // A3/G6: nome do arquivo original persistido
             Assert.Equal("55", d.Modelo);
             Assert.Equal(ChaveA, d.ChaveAcesso);
             Assert.Equal("101", d.Numero);
@@ -165,8 +169,11 @@ public sealed class Administrativo360DocumentosXmlB1Tests
 
             // Importação sem bytes originais: bytes derivam de UTF-8 do texto (API clássica).
             var repo = new DocumentosXmlRepository(cs);
-            var id = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var res = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-b-nfce65.xml" });
+            Assert.Equal(1, res.TotalUnidades);
+            Assert.Equal(1, res.Importados);
+            var id = res.Documentos[0].DocumentoId!.Value;
 
             var d = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, id);
             Assert.NotNull(d);
@@ -205,8 +212,11 @@ public sealed class Administrativo360DocumentosXmlB1Tests
             var texto = File.ReadAllText(CaminhoFixture("b1-c-nfse.xml"));
 
             var repo = new DocumentosXmlRepository(cs);
-            var id = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var res = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-c-nfse.xml" });
+            Assert.Equal(1, res.TotalUnidades);
+            Assert.Equal(1, res.Importados);
+            var id = res.Documentos[0].DocumentoId!.Value;
 
             var d = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, id);
             Assert.NotNull(d);
@@ -233,10 +243,10 @@ public sealed class Administrativo360DocumentosXmlB1Tests
     }
 
     // =========================================================================
-    // FIXTURE D — estrutura NF-e com modelo 57 (CT-e): quarentena CHAVE_OU_MODELO_INVALIDO
+    // FIXTURE D — estrutura NF-e com modelo 57 (CT-e): quarentena MODELO_NAO_SUPORTADO (taxonomia A3)
     // =========================================================================
     [Fact]
-    public async Task FixtureD_Modelo57_FicaEmQuarentena_ChaveOuModeloInvalido()
+    public async Task FixtureD_Modelo57_FicaEmQuarentena_ModeloNaoSuportado()
     {
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);
@@ -246,19 +256,21 @@ public sealed class Administrativo360DocumentosXmlB1Tests
             var texto = File.ReadAllText(CaminhoFixture("b1-d-ct57.xml"));
 
             var repo = new DocumentosXmlRepository(cs);
-            var id = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var res = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-d-ct57.xml" });
+            Assert.Equal(1, res.EmQuarentena);
+            var id = res.Documentos[0].DocumentoId!.Value;
 
             var resumo = (await repo.ListarDocumentosAsync(TenantSantaCasa)).FirstOrDefault(r => r.Id == id);
             Assert.NotNull(resumo);
             Assert.True(resumo!.Quarentena);
-            Assert.Equal("CHAVE_OU_MODELO_INVALIDO", resumo.MotivoQuarentena);
+            Assert.Equal("MODELO_NAO_SUPORTADO", resumo.MotivoQuarentena);
             Assert.Equal(ChaveD, resumo.ChaveAcesso);
 
             var d = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, id);
             Assert.NotNull(d);
             Assert.True(d!.Quarentena);
-            Assert.Equal("CHAVE_OU_MODELO_INVALIDO", d.MotivoQuarentena);
+            Assert.Equal("MODELO_NAO_SUPORTADO", d.MotivoQuarentena);
             Assert.Empty(d.Itens);
         }
         finally
@@ -282,16 +294,21 @@ public sealed class Administrativo360DocumentosXmlB1Tests
             var texto = File.ReadAllText(CaminhoFixture("b1-a-nfe55.xml")); // sem BOM
 
             var repo = new DocumentosXmlRepository(cs);
-            var id1 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var r1 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-a-nfe55.xml", XmlBytes = bytesArquivo });
+            var id1 = r1.Documentos[0].DocumentoId!.Value;
 
-            // Reimportação com os MESMOS bytes originais.
-            var id2 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            // Reimportação com os MESMOS bytes originais -> duplicado idempotente reportado no retorno.
+            var r2 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-a-nfe55.xml", XmlBytes = bytesArquivo });
+            Assert.True(r2.Documentos[0].DuplicadoIdempotente);
+            Assert.Equal(1, r2.DuplicadosIgnorados);
+            var id2 = r2.Documentos[0].DocumentoId!.Value;
 
             // Reimportação como texto (API JSON clássica, sem BOM): mesmo conteúdo lógico.
-            var id3 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+            var r3 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
                 new ImportarXmlManualCommand(texto) { NomeArquivo = "b1-a-nfe55.xml" });
+            var id3 = r3.Documentos[0].DocumentoId!.Value;
 
             Assert.Equal(id1, id2);
             Assert.Equal(id1, id3);
@@ -311,10 +328,10 @@ public sealed class Administrativo360DocumentosXmlB1Tests
     }
 
     // =========================================================================
-    // Conteúdo divergente com mesma chave de acesso -> exceção de negócio
+    // Conteúdo divergente com mesma chave de acesso -> falha da unidade com mensagem de erro
     // =========================================================================
     [Fact]
-    public async Task Divergente_MesmaChave_OutroConteudo_LancaExcecaoNegocio()
+    public async Task Divergente_MesmaChave_OutroConteudo_FalhaComMensagemDeErro()
     {
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);
@@ -332,23 +349,15 @@ public sealed class Administrativo360DocumentosXmlB1Tests
             var divergente = texto.Replace("<nNF>101</nNF>", "<nNF>199</nNF>");
             Assert.NotEqual(texto, divergente);
 
-            Exception? capturada = null;
-            try
-            {
-                await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
-                    new ImportarXmlManualCommand(divergente) { NomeArquivo = "b1-a-divergente.xml", XmlBytes = System.Text.Encoding.UTF8.GetBytes(divergente) });
-            }
-            catch (Exception e)
-            {
-                capturada = e;
-            }
+            // A3: falha é POR UNIDADE — o loop não quebra; a unidade divergente vira falha com mensagem.
+            var r2 = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+                new ImportarXmlManualCommand(divergente) { NomeArquivo = "b1-a-divergente.xml", XmlBytes = System.Text.Encoding.UTF8.GetBytes(divergente) });
 
-            Assert.NotNull(capturada);
-            var alvo = capturada;
-            while (alvo is not null && alvo is not Administrativo360BusinessException)
-                alvo = alvo.InnerException;
-            Assert.NotNull(alvo);
-            Assert.Contains("divergente", alvo!.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(1, r2.Falhas);
+            Assert.Equal(0, r2.Importados);
+            Assert.Equal(0, r2.DuplicadosIgnorados);
+            Assert.NotNull(r2.Documentos[0].MensagemErro);
+            Assert.Contains("divergente", r2.Documentos[0].MensagemErro!, StringComparison.OrdinalIgnoreCase);
         }
         finally
         {

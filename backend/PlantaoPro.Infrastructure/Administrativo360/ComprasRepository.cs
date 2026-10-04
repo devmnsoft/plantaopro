@@ -123,6 +123,23 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             return existing.Value;
         }
 
+        // A3/G5: gate de conferência autorizada — se o recebimento referencia um documento XML,
+        // ele precisa existir no tenant, não estar em quarentena e estar CONFERIDO/VINCULADO.
+        // Sem referência (nulo) = recebimento legado sem documento fiscal (comportamento anterior).
+        if (c.DocumentoXmlId is { } docId && docId != Guid.Empty)
+        {
+            var docGate = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
+                "SELECT id, quarentena, status_conferencia FROM plantaopro.adm360_documentos_recebidos WHERE id = @docId AND tenant_id = @tenantId",
+                new { docId, tenantId }, tx, cancellationToken: ct));
+            if (docGate is null)
+                throw new Administrativo360BusinessException("Documento fiscal não encontrado nesta organização para o recebimento.");
+            if ((bool)docGate.quarentena)
+                throw new Administrativo360BusinessException("Estoque não pode ser registrado antes da conferência autorizada: o documento fiscal está em quarentena.");
+            var stDoc = (string)docGate.status_conferencia;
+            if (stDoc is not ("CONFERIDO" or "VINCULADO"))
+                throw new Administrativo360BusinessException("Estoque não pode ser registrado antes da conferência autorizada: confirme a conferência do documento fiscal antes de receber o pedido.");
+        }
+
         var pedido = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
             "SELECT numero, fornecedor_id, previsao, situacao FROM plantaopro.adm360_pedidos WHERE id = @id AND tenant_id = @tenantId FOR UPDATE",
             new { id = c.PedidoId, tenantId }, tx, cancellationToken: ct));

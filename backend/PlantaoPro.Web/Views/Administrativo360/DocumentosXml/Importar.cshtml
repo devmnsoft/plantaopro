@@ -15,7 +15,7 @@
                 </ol>
             </nav>
             <h2 class="h4 mb-0 text-light fw-bold">
-                <i class="bi bi-upload text-info me-2"></i>Importação Manual de XML (NF-e 55 · NFC-e 65 · NFS-e 67)
+                <i class="bi bi-upload text-info me-2"></i>Importação Manual de XML (NF-e 55 · NFC-e 65 · NFS-e 67 · ABRASF)
             </h2>
         </div>
         <div>
@@ -30,11 +30,11 @@
         <div class="card-body">
             <h5 class="card-title text-warning h6 mb-2"><i class="bi bi-shield-exclamation me-2"></i>Critérios Obrigatórios de Validação</h5>
             <ul class="small text-secondary mb-0">
-                <li>O XML deve ser um documento fiscal eletrônico <strong>NF-e (modelo 55)</strong>, <strong>NFC-e (modelo 65)</strong> ou <strong>NFS-e (modelo 67)</strong> válido e bem formado.</li>
-                <li>O CNPJ do destinatário deve coincidir com um dos <strong>estabelecimentos cadastrados e autorizados</strong> da empresa.</li>
-                <li>Processamento com proteção contra ataques XML: o DOCTYPE/DTD é <strong>aceito sem busca ou validação externa</strong> (DTD proibida no parse) e as entidades externas são desabilitadas (XXE).</li>
-                <li>Os <strong>bytes originais do arquivo</strong> (incluindo BOM) são preservados: download idêntico ao enviado, com hash SHA-256 verificado.</li>
-                <li>Documentos inválidos, malformados ou com destinatário não autorizado serão direcionados para a <strong>quarentena</strong> para auditoria.</li>
+                <li>O XML deve ser um documento fiscal eletrônico <strong>NF-e (modelo 55)</strong>, <strong>NFC-e (modelo 65)</strong>, <strong>NFS-e (modelo 67)</strong> ou prescrição eletrônica <strong>ABRASF</strong>. Um único arquivo pode conter <strong>múltiplos documentos</strong>: cada um é processado e reportado individualmente.</li>
+                <li>O CNPJ do destinatário deve coincidir com um dos <strong>estabelecimentos cadastrados e autorizados</strong> da empresa (prescrições ABRASF são documentos clínicos, sem verificação de destinatário).</li>
+                <li>Processamento com proteção contra ataques XML: o DOCTYPE/DTD é <strong>aceito sem busca ou validação externa</strong> (DTD proibida no parse) e as entidades externas são desabilitadas (XXE). O encoding declarado no XML (UTF-8/Latin-1) é respeitado na leitura.</li>
+                <li>Os <strong>bytes originais do arquivo</strong> (incluindo BOM) são preservados: download idêntico ao enviado, com hash SHA-256 verificado. O nome do arquivo original fica registrado no documento.</li>
+                <li>Documentos malformados, com modelo não suportado, incompletos ou com destinatário não autorizado são direcionados para a <strong>quarentena</strong> para auditoria — nenhum deles registra estoque antes da conferência autorizada.</li>
             </ul>
         </div>
     </div>
@@ -58,7 +58,7 @@
                 <div class="mb-4">
                     <label class="form-label text-light fw-bold">Opção 1: Selecionar Arquivo .xml</label>
                     <input type="file" name="arquivoXml" class="form-control bg-dark text-light border-secondary" accept=".xml,text/xml,application/xml" />
-                    <div class="form-text text-muted">Tamanho máximo permitido: 10 MB.</div>
+                    <div class="form-text text-muted">Tamanho máximo permitido: 2 MiB por arquivo.</div>
                 </div>
 
                 <div class="text-center text-muted my-3 fw-bold">— OU —</div>

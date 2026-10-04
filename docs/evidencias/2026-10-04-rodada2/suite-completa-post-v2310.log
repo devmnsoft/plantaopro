@@ -1,0 +1,28 @@
+﻿Execu├º├úo de teste para C:\MNSOFT\plantaopro\backend\PlantaoPro.Tests\bin\Debug\net10.0\PlantaoPro.Tests.dll (.NETCoreApp,Version=v10.0)
+1 arquivos de teste no total corresponderam ao padr├úo especificado.
+dotnet : [xUnit.net 00:00:02.44]     Compras: in├¡cio > fim gera mensagem de neg├│cio (n├úo 42P08 nem HTTP 500) [FAIL]
+No linha:1 caractere:1
++ dotnet test backend\PlantaoPro.Tests\PlantaoPro.Tests.csproj --no-bui ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ([xUnit.net 00:0...TTP 500) [FAIL]:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[xUnit.net 00:00:02.45]     Documentos XML: filtro quarentena (bool?) e status opcionais [FAIL]
+[xUnit.net 00:00:02.45]     Or├ºamentos/cota├º├Áes/relat├│rios: par├ómetros nulos n├úo lan├ºam 42P08 [FAIL]
+[xUnit.net 00:00:02.45]     Compras: filtro s├│-fim, janela completa, in├¡cio=fim e per├¡odo vazio [FAIL]
+[xUnit.net 00:00:02.45]     Caixa: extrato sem filtro, s├│-in├¡cio e s├│-fim com saldos confer├¡veis [FAIL]
+[xUnit.net 00:00:02.46]     Cadastros: filtros booleanos e de identificador funcionam nulos e preenchidos [FAIL]
+[xUnit.net 00:00:02.46]     Invent├írios: listagem com linhas materializa corretamente (mesma causa do bug dos 
+pedidos) [FAIL]
+[xUnit.net 00:00:02.47]     Isolamento: o tenant B n├úo enxerga nenhum dado do tenant A [FAIL]
+[xUnit.net 00:00:02.47]     Cirurgias: matriz completa de filtros opcionais [FAIL]
+[xUnit.net 00:00:02.47]     Vales: matriz de filtros opcionais [FAIL]
+[xUnit.net 00:00:02.47]     Estoque: par├ómetros opcionais localId/condicao/busca [FAIL]
+[xUnit.net 00:00:02.48]     Caixa: extrato com per├¡odo inv├ílido e conta inexistente [FAIL]
+[xUnit.net 00:00:02.50]     Compras: busca textual e situa├º├úo se combinam com per├¡odo [FAIL]
+[xUnit.net 00:00:02.50]     Compras: filtro s├│-in├¡cio ├® inclusivo na data-limite [FAIL]
+[xUnit.net 00:00:02.50]     Compras: sem nenhum filtro retorna todos os pedidos (reprodu├º├úo original do 42P08) [FAIL]
+[xUnit.net 00:00:05.69]     
+PlantaoPro.Tests.Administrativo360CotacoesXmlDashboardTests.Aceite14_XmlMalformado_RejeitadoEQuarentenado [FAIL]
+
+Com falha! ÔÇô Com falha:    16, Aprovado:   823, Ignorado:     0, Total:   839, Dura├º├úo: 7 s - PlantaoPro.Tests.dll (net10.0)

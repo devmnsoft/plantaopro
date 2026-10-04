@@ -78,9 +78,22 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
         if (string.IsNullOrWhiteSpace(command.XmlConteudo)) return BadRequest("Forneça o conteúdo XML do documento fiscal.");
         if (command.XmlConteudo.Length > 2_000_000) return BadRequest("O conteúdo XML excede o limite de 2.000.000 caracteres.");
         if (command.XmlBytes is { Length: > (2 * 1024 * 1024) }) return BadRequest("O arquivo XML excede o limite de 2 MiB.");
-        var id = await repository.ImportarXmlAsync(tenant, user, command, ct);
-        logger.LogInformation("XML {DocId} importado manualmente pelo usuário {UsuarioId} no tenant {TenantId}.", id, user, tenant);
-        return Ok(new { id });
+        // A3: um arquivo pode conter vários documentos — o retorno é por unidade + resumo agregado.
+        var resultado = await repository.ImportarXmlAsync(tenant, user, command, ct);
+        logger.LogInformation(
+            "XML importado manualmente pelo usuário {UsuarioId} no tenant {TenantId}: {Total} unidade(s), {Importados} importada(s), {Quarentena} em quarentena, {Duplicados} duplicada(s), {Falhas} falha(s).",
+            user, tenant, resultado.TotalUnidades, resultado.Importados, resultado.EmQuarentena, resultado.DuplicadosIgnorados, resultado.Falhas);
+        return Ok(resultado);
+    }
+
+    [HttpPost("conferir")]
+    [Authorize(Policy = "Adm360.VincularDocumentos")]
+    public async Task<IActionResult> Conferir([FromBody] ConferirDocumentoCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.ConferirDocumentoAsync(tenant, user, command, ct);
+        logger.LogInformation("Documento {DocId} conferido (conferência autorizada) pelo usuário {UsuarioId}.", command.DocumentoId, user);
+        return Ok(new { sucesso = true });
     }
 
     [HttpPost("manifestar")]

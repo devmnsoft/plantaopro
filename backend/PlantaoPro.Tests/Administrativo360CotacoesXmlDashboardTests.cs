@@ -1,4 +1,6 @@
 using Dapper;
+using System.Security.Cryptography;
+using System.Text;
 using Npgsql;
 using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Domain.Administrativo360;
@@ -390,8 +392,9 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         Assert.NotNull(detalhes);
 
         // Reimportar o mesmo XML
-        var idReimportado = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(detalhes.XmlConteudo));
-        Assert.Equal(docValido.Id, idReimportado);
+        var resReimportado = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(detalhes.XmlConteudo));
+        Assert.True(resReimportado.Documentos[0].DuplicadoIdempotente); // mesmo conteúdo lógico -> idempotente
+        Assert.Equal(docValido.Id, resReimportado.Documentos[0].DocumentoId!.Value);
     }
 
     // =========================================================================
@@ -403,7 +406,7 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         var cs = ObterConnectionString();
         await GarantirConexaoBancoAsync(cs);
 
-        var chaveAcessoTeste = "35260988888888888888550010000000031000000030";
+        var chaveAcessoTeste = "35260988888888888888550010000000031000000030"; // 44 dígitos, mod 55 (índices 20-21)
         await using (var cn = new NpgsqlConnection(cs))
         {
             // P4: adm360_documento_eventos é append-only — a limpeza deste teste usa o bypass
@@ -435,7 +438,9 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
   </NFe>
 </nfeProc>";
 
-        var docId = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(xmlCnpjEstranho));
+        var resQuarentena = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(xmlCnpjEstranho));
+        Assert.Equal(1, resQuarentena.EmQuarentena);
+        var docId = resQuarentena.Documentos[0].DocumentoId!.Value;
         var doc = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, docId);
 
         Assert.NotNull(doc);
@@ -455,7 +460,29 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         var repo = new DocumentosXmlRepository(cs);
         var xmlInvalido = "ESTE_NAO_E_UM_XML_VALIDO_<<>>>";
 
-        var docId = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(xmlInvalido));
+        // A3/G3: XML malformado usa chave sintética determinística (MALF + 33 hex do sha256
+        // dos bytes UTF-8). Como o conteúdo é fixo, o teste limpa a própria chave antes —
+        // sem isso a reimportação é idempotente e EmQuarentena ficaria 0 em bancos reutilizados.
+        var chaveMalformado = "MALF" + Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(xmlInvalido))).ToLowerInvariant().Substring(0, 33);
+        await using (var cn = new NpgsqlConnection(cs))
+        {
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            await cn.ExecuteAsync("SELECT set_config('plantao.bypass_imutabilidade_adm360', 'on', true);", transaction: tx);
+            await cn.ExecuteAsync(@"
+                DELETE FROM plantaopro.adm360_documento_eventos 
+                WHERE documento_id IN (SELECT id FROM plantaopro.adm360_documentos_recebidos WHERE chave_acesso = @chaveMalformado);
+                DELETE FROM plantaopro.adm360_documento_itens 
+                WHERE documento_id IN (SELECT id FROM plantaopro.adm360_documentos_recebidos WHERE chave_acesso = @chaveMalformado);
+                DELETE FROM plantaopro.adm360_documentos_recebidos 
+                WHERE chave_acesso = @chaveMalformado;",
+                new { chaveMalformado }, tx);
+            await tx.CommitAsync();
+        }
+
+        var resMalformado = await repo.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor, new ImportarXmlManualCommand(xmlInvalido));
+        Assert.Equal(1, resMalformado.EmQuarentena);
+        var docId = resMalformado.Documentos[0].DocumentoId!.Value;
         var doc = await repo.ObterDocumentoPorIdAsync(TenantSantaCasa, docId);
 
         Assert.NotNull(doc);

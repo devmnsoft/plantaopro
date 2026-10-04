@@ -1,5 +1,5 @@
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.21.7
+-- Versão do schema: v2.21.8
 -- PostgreSQL suportado: 16
 -- Data de geração: 2026-10-04
 -- Execução oficial:
@@ -6643,3 +6643,147 @@ CREATE TABLE IF NOT EXISTS plantaopro.ai_chamadas_ativas (
 
 CREATE INDEX IF NOT EXISTS ix_ai_chamadas_ativas_criado
     ON plantaopro.ai_chamadas_ativas (criado_em);
+
+-- ============================================================
+-- Seção 78 — Administrativo360 Documentos XML A3 v2.21.8
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql
+-- SOURCE-SHA256: 9516a4d9446a930284d7284781a649cfbf6691b038aef4191f5d6f99b9e4d957
+-- ============================================================================
+-- Migration: 2026_10_v2309_administrativo360_documentos_xml_a3.sql
+-- Objetivo: WP-A3 — Centro de XML de documentos fiscais (Administrativo 360)
+--
+--   1. nome_arquivo varchar(255): persistir o nome do arquivo original no
+--      import. O arquivo passa a ser conceito explícito, separado do
+--      documento fiscal (chave de acesso) e do id interno (id). O conteúdo
+--      segue guardado em xml_bytes/xml_hash (canônico p/ dedup e download);
+--      esta coluna apenas identifica o arquivo recebido (linhas legadas
+--      permanecem NULL).
+--   2. CHECK tipo_documento estendido com 'ABRASF' (prescrição eletrônica):
+--      a família ABRASF é reconhecida como família não-fiscal aceita por
+--      este módulo (o destinatário NÃO é validado para essa família).
+--
+-- Idempotência: DO $$ com checagem em information_schema/pg_constraint.
+-- ============================================================================
+
+-- 1. Nome do arquivo original.
+DO $migration$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'plantaopro'
+      AND table_name = 'adm360_documentos_recebidos'
+      AND column_name = 'nome_arquivo'
+  ) THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos
+      ADD COLUMN nome_arquivo varchar(255);
+  END IF;
+END $migration$;
+
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.nome_arquivo IS
+  'WP-A3: nome do arquivo XML original no import (opcional; linhas legadas NULL). O arquivo e o documento fiscal (chave_acesso) são conceitos distintos: o hash/dedup/download usam os bytes exatos, esta coluna só identifica o arquivo recebido.';
+
+-- 2. CHECK tipo_documento estendido com ABRASF.
+DO $migration$
+DECLARE
+  r record;
+  tem_novo boolean;
+BEGIN
+  -- Remove qualquer CHECK antigo da coluna (definicao contendo NFE_COMPLETA),
+  -- pois o nome do constraint varia entre instalacoes.
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute at ON at.attrelid = con.conrelid AND at.attname = 'tipo_documento'
+    WHERE rel.relnamespace = 'plantaopro'::regnamespace
+      AND rel.relname = 'adm360_documentos_recebidos'
+      AND con.contype = 'c'
+      AND con.conkey @> ARRAY[at.attnum]
+      AND pg_get_constraintdef(con.oid) LIKE '%NFE_COMPLETA%'
+  LOOP
+    EXECUTE format('ALTER TABLE plantaopro.adm360_documentos_recebidos DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+
+  -- Só recria se nenhuma versao ja contiver ABRASF (upgrade em 2 passadas).
+  SELECT count(*) > 0 INTO tem_novo
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  WHERE rel.relnamespace = 'plantaopro'::regnamespace
+    AND rel.relname = 'adm360_documentos_recebidos'
+    AND con.contype = 'c'
+    AND pg_get_constraintdef(con.oid) LIKE '%''ABRASF''%';
+
+  IF NOT tem_novo THEN
+    ALTER TABLE plantaopro.adm360_documentos_recebidos
+      ADD CONSTRAINT ck_adm360_docrec_tipo_documento
+      CHECK (tipo_documento IN ('NFE_COMPLETA', 'NFC_E', 'NFS_E', 'ABRASF', 'RESUMO'));
+  END IF;
+END $migration$;
+
+-- ============================================================
+-- Seção 79 — Administrativo360 Eventos Conferencia A3 v2.21.8
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql
+-- SOURCE-SHA256: 9177b33b502201c3f54c5d2483a354da5ce27f76c8da1a61407bfb8debd795f1
+-- ============================================================================
+-- Migration: 2026_10_v2310_adm360_eventos_tipo_conferencia.sql
+-- Objetivo: WP-A3/G5 — habilitar o evento de conferencia autorizada de
+--      documentos fiscais importados pelo Centro de XML (Administrativo 360).
+--
+--   O repositorio de documentos registra o evento 'CONFIRMACAO_CONFERENCIA'
+--      em plantaopro.adm360_eventos quando um documento e confirmado pela
+--      operacao (ConferirDocumentoAsync), habilitando o uso do documento no
+--      gate de recebimento de estoque (ComprasRepository.ReceberAsync). O
+--      CHECK atual da coluna tipo_evento apenas aceita os quatro tipos
+--      operacionais legados; sem este ajuste a conferencia falha com a
+--      violacao 23514 e o documento nunca chega ao estado CONFERIDO.
+--
+--   Nao altera a natureza append-only da tabela nem os demais tipos: o novo
+--      valor so amplia o conjunto aceito.
+--
+-- Idempotencia: DO $migration$ — remove o CHECK legado da coluna (definicao
+--      contendo 'APROVACAO', exceto a nova constraint nomeada) e so recria
+--      se nenhuma versao ja contiver CONFIRMACAO_CONFERENCIA.
+-- ============================================================================
+
+DO $migration$
+DECLARE
+  r record;
+  tem_novo boolean;
+BEGIN
+  -- Remove qualquer CHECK antigo da coluna (a definicao varia entre
+  -- instalacoes por ter sido criada sem nome explicito).
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute at ON at.attrelid = con.conrelid AND at.attname = 'tipo_evento'
+    WHERE rel.relnamespace = 'plantaopro'::regnamespace
+      AND rel.relname = 'adm360_eventos'
+      AND con.contype = 'c'
+      AND con.conkey @> ARRAY[at.attnum]
+      AND pg_get_constraintdef(con.oid) LIKE '%''APROVACAO''%'
+      AND pg_get_constraintdef(con.oid) NOT LIKE '%''CONFIRMACAO_CONFERENCIA''%'
+      AND con.conname <> 'ck_adm360_eventos_tipo_evento'
+  LOOP
+    EXECUTE format('ALTER TABLE plantaopro.adm360_eventos DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+
+  -- So recria se nenhuma versao ja contiver o novo valor (upgrade em 2 passadas).
+  SELECT count(*) > 0 INTO tem_novo
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  WHERE rel.relnamespace = 'plantaopro'::regnamespace
+    AND rel.relname = 'adm360_eventos'
+    AND con.contype = 'c'
+    AND pg_get_constraintdef(con.oid) LIKE '%''CONFIRMACAO_CONFERENCIA''%';
+
+  IF NOT tem_novo THEN
+    ALTER TABLE plantaopro.adm360_eventos
+      ADD CONSTRAINT ck_adm360_eventos_tipo_evento
+      CHECK (tipo_evento IN ('APROVACAO', 'ARQUIVO', 'DECLARACAO_MANUAL', 'RETORNO_EXTERNO', 'CONFIRMACAO_CONFERENCIA'));
+  END IF;
+END $migration$;

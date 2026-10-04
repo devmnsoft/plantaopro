@@ -105,7 +105,7 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
 
         // B1: envia os bytes originais do arquivo (base64) — a API os preserva como fonte da verdade.
         var payload = new { XmlConteudo = xmlConteudo, NomeArquivo = nomeArquivo, XmlBytes = xmlBytes };
-        var resp = await SendApiAsync<object, dynamic>(client, HttpMethod.Post, "api/administrativo360/xml/importar-manual", payload);
+        var resp = await SendApiAsync<object, ImportarXmlResultadoViewModel>(client, HttpMethod.Post, "api/administrativo360/xml/importar-manual", payload);
 
         if (resp.Data is null)
         {
@@ -113,8 +113,40 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
             return View("~/Views/Administrativo360/DocumentosXml/Importar.cshtml", form);
         }
 
-        TempData["Success"] = "XML importado e analisado com sucesso.";
+        // A3: mensagem derivada do resultado tipado por unidade (um arquivo pode conter múltiplos documentos).
+        var r = resp.Data;
+        var partes = new List<string> { $"{r.Importados} importado(s)" };
+        if (r.EmQuarentena > 0) partes.Add($"{r.EmQuarentena} em quarentena");
+        if (r.DuplicadosIgnorados > 0) partes.Add($"{r.DuplicadosIgnorados} duplicado(s) ignorado(s)");
+        if (r.Falhas > 0) partes.Add($"{r.Falhas} falha(s)");
+        TempData["Success"] = $"XML processado: {r.TotalUnidades} documento(s) encontrado(s) — {string.Join(", ", partes)}.";
+        var primeiraFalha = r.Documentos.FirstOrDefault(d => !string.IsNullOrWhiteSpace(d.MensagemErro));
+        if (primeiraFalha is not null)
+            TempData["Error"] = $"Erro de importação: {primeiraFalha.MensagemErro}";
+
         return RedirectToAction(nameof(Index));
+    }
+
+    // A3: conferência autorizada do documento (gátes do registro de estoque em recebimentos).
+    [HttpPost("Conferir/{id:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Conferir(Guid id)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, "api/administrativo360/xml/conferir", new { DocumentoId = id });
+
+        if (!success)
+        {
+            TempData["Error"] = error ?? "Falha ao confirmar a conferência do documento.";
+        }
+        else
+        {
+            TempData["Success"] = "Conferência do documento autorizada com sucesso.";
+        }
+
+        return RedirectToAction(nameof(Detalhes), new { id });
     }
 
     [HttpPost("VincularRecebimento")]

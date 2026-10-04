@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v2.21.7",
+  "schemaVersion": "v2.21.8",
   "generatedAt": "2026-10-04",
   "sections": [
     {
@@ -1048,6 +1048,39 @@
           "source": "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
           "dependsOn": [
             "plantaopro.ai_config"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 78,
+      "name": "Administrativo360 Documentos XML A3 v2.21.8",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_documentos_xml_a3",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql",
+          "dependsOn": [
+            "plantaopro.adm360_documentos_xml_b1",
+            "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 79,
+      "name": "Administrativo360 Eventos Conferencia A3 v2.21.8",
+      "objects": [
+        {
+          "name": "plantaopro.adm360_eventos_conferencia_a3",
+          "type": "canonical",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql",
+          "dependsOn": [
+            "plantaopro.adm360_eventos"
           ]
         }
       ]

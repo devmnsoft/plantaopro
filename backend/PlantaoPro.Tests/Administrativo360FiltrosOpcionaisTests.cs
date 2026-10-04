@@ -429,14 +429,21 @@ public sealed class Administrativo360FiltrosOpcionaisTests
 
     private static async Task SementarAsync()
     {
+        // O SQL completo e montado AQUI, em tempo de chamada: este metodo ja esta em execucao
+        // quando o tipo se inicializa (SementePronta, declarada acima). Se a conexao voltasse
+        // da pool ja aberta (OpenAsync sincrono), o ExecuteAsync chegaria antes do campo de
+        // semente ser atribuido -> CommandText nula ("CommandText property has not been
+        // initialized"), que derrubou os 15 fatos desta classe simultaneamente na suite
+        // completa (2026-10-04, WP-A3).
+        var sql = Adm360TenantCleanup.SqlDelete(TenantA, TenantB) + SeedInsertsSql;
         await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
         await cn.OpenAsync();
-        await cn.ExecuteAsync(SqlSemente);
+        await cn.ExecuteAsync(sql);
     }
 
     // WP-A4: limpeza inicial = fechamento descendente completo do módulo (ordem topológica
     // sobre o grafo FK, ver Adm360TenantCleanup) em vez da lista parcial de 20 deletes.
-    private static readonly string SqlSemente = Adm360TenantCleanup.SqlDelete(TenantA, TenantB) + @"
+    private const string SeedInsertsSql = @"
 insert into plantaopro.tenants (id, nome) values
  ('d42a0f10-0042-4000-8000-000000000f10', 'A360 Filtros Tenanted A'),
  ('d42a0f11-0042-4000-8000-000000000f11', 'A360 Filtros Tenanted B');

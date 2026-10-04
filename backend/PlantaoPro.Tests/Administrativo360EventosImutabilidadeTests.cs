@@ -270,8 +270,8 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
 
             // A) Destinatário autorizado: sem quarentena + DECLARACAO_MANUAL + hash do trigger
             var chaveOk = ChaveNfeUnica();
-            docAutorizado = await docs.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
-                new ImportarXmlManualCommand(NfeXml(chaveOk, cnpjAutorizado), "wp4_autorizado.xml"));
+            docAutorizado = (await docs.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+                new ImportarXmlManualCommand(NfeXml(chaveOk, cnpjAutorizado), "wp4_autorizado.xml"))).Documentos[0].DocumentoId!.Value;
 
             await using (var cn = new NpgsqlConnection(cs))
             {
@@ -318,8 +318,8 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
 
             // B) Destinatário NÃO autorizado: quarentena DESTINATARIO_NAO_AUTORIZADO + evento coerente
             var chaveRestrita = ChaveNfeUnica();
-            docRestrito = await docs.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
-                new ImportarXmlManualCommand(NfeXml(chaveRestrita, "99999999000199"), "wp4_restrito.xml"));
+            docRestrito = (await docs.ImportarXmlAsync(TenantSantaCasa, UsuarioGestor,
+                new ImportarXmlManualCommand(NfeXml(chaveRestrita, "99999999000199"), "wp4_restrito.xml"))).Documentos[0].DocumentoId!.Value;
 
             await using (var cn = new NpgsqlConnection(cs))
             {

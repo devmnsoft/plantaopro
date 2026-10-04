@@ -43,7 +43,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                    emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome,
                    valor_total, tipo_documento, status_manifestacao, status_conferencia,
                    quarentena, motivo_quarentena, origem, created_at,
-                   pedido_id, recebimento_id, titulo_pagar_id
+                   pedido_id, recebimento_id, titulo_pagar_id, nome_arquivo
             FROM plantaopro.adm360_documentos_recebidos
             WHERE tenant_id = @tenantId
               AND (@status IS NULL OR status_conferencia = @status)
@@ -73,7 +73,8 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             (DateTime)r.created_at,
             r.pedido_id is not null ? (Guid?)r.pedido_id : null,
             r.recebimento_id is not null ? (Guid?)r.recebimento_id : null,
-            r.titulo_pagar_id is not null ? (Guid?)r.titulo_pagar_id : null
+            r.titulo_pagar_id is not null ? (Guid?)r.titulo_pagar_id : null,
+            (string?)r.nome_arquivo
         )).ToList();
     }
 
@@ -87,7 +88,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                    d.valor_total, d.valor_produtos, d.tipo_documento, d.status_manifestacao,
                    d.status_conferencia, d.pedido_id, p.numero AS pedido_numero,
                    d.recebimento_id, d.titulo_pagar_id, d.xml_conteudo, d.xml_hash,
-                   d.nsu, d.quarentena, d.motivo_quarentena, d.origem, d.created_at
+                   d.nsu, d.quarentena, d.motivo_quarentena, d.origem, d.created_at, d.nome_arquivo
             FROM plantaopro.adm360_documentos_recebidos d
             JOIN plantaopro.adm360_estabelecimentos e ON e.id = d.estabelecimento_id AND e.tenant_id = d.tenant_id
             LEFT JOIN plantaopro.adm360_pedidos p ON p.id = d.pedido_id AND p.tenant_id = d.tenant_id
@@ -176,7 +177,8 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             (string)d.origem,
             (DateTime)d.created_at,
             itens,
-            eventos
+            eventos,
+            (string?)d.nome_arquivo
         );
     }
 
@@ -195,7 +197,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
         return (((byte[])d.xml_bytes), (string)d.xml_hash, (string)d.chave_acesso);
     }
 
-    public async Task<Guid> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default)
+    public async Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default)
     {
         // B1: os bytes originais do arquivo são a fonte da verdade (hash, duplicidade e download).
         // Quando o chamador não envia bytes (API JSON clássica), deriva-se UTF-8 do texto.
@@ -212,183 +214,57 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
         }
 
         var xmlHash = CalcularSha256(xmlBytes);
-        // Decode UTF-8 preserva U+FEFF se houver BOM; Trim() sozinho NAO remove U+FEFF (nao e IsWhiteSpace).
-        // Sem o TrimStart o XmlReader falha ("Dados no nivel raiz invalidos") -> quarentena falsa XML_MALFORMADO.
-        var textoXml = Encoding.UTF8.GetString(xmlBytes).TrimStart('\uFEFF').Trim();
+        // A3/G6: nome do arquivo original — conceito explícito separado do documento fiscal (chave de acesso).
+        var nomeArquivo = string.IsNullOrWhiteSpace(command.NomeArquivo) ? null : command.NomeArquivo.Trim();
 
-        string chaveAcesso = string.Empty;
-        string numero = "0";
-        string serie = "1";
-        string modelo = "55";
-        DateTime dataEmissao = DateTime.UtcNow;
-        string emitCnpj = "00000000000000";
-        string emitNome = "Emitente Não Identificado";
-        string destCnpj = "00000000000000";
-        string destNome = "Destinatário Não Identificado";
-        decimal valorTotal = 0;
-        decimal valorProdutos = 0;
-        bool quarentena = false;
-        string? motivoQuarentena = null;
-        string tipoDocumento = "NFE_COMPLETA";
-        XNamespace ns = XNamespace.None;
-        XElement? infNFe = null;
-        XElement? nfseScope = null;
+        // A3/G1: o XmlReader lê os BYTES diretamente (BOM e a declaração <?xml encoding="..."?> são
+        // respeitados nativamente); o encoding detectado é usado só para o texto de exibição (xml_conteudo).
+        // Hash/duplicidade/download continuam sobre os bytes exatos.
+        var textoXml = DecodificarTextoXml(xmlBytes, DetectarEncodingXml(xmlBytes));
 
-        void AtribuirChaveMalFormada() =>
-            chaveAcesso = $"MALF{DateTime.UtcNow:yyyyMMddHHmmss}{Random.Shared.Next(1000, 9999)}".PadRight(44, '0').Substring(0, 44);
-
-        // 1. Parsing seguro de XML — B1: DtdProcessing.Ignore aceita o DOCTYPE presente em arquivos
-        //    reais da SEFAZ sem buscá-lo/validá-lo (DTD proibida no parse); entidades externas desabilitadas (XXE).
+        XDocument? doc = null;
+        // B1: DtdProcessing.Ignore aceita o DOCTYPE presente em arquivos reais da SEFAZ sem buscá-lo/validá-lo
+        // (DTD proibida no parse); entidades externas desabilitadas (XXE).
+        var settings = new XmlReaderSettings
+        {
+            DtdProcessing = DtdProcessing.Ignore,
+            XmlResolver = null,
+            IgnoreComments = true,
+            IgnoreProcessingInstructions = true,
+            MaxCharactersInDocument = 10_000_000 // limite seguro de 10 MB
+        };
         try
         {
-            var settings = new XmlReaderSettings
-            {
-                DtdProcessing = DtdProcessing.Ignore,
-                XmlResolver = null,
-                IgnoreComments = true,
-                IgnoreProcessingInstructions = true,
-                MaxCharactersInDocument = 10_000_000 // limite seguro de 10 MB
-            };
-
-            XDocument doc;
-            using (var stringReader = new StringReader(textoXml))
-            using (var reader = XmlReader.Create(stringReader, settings))
-            {
-                doc = XDocument.Load(reader);
-            }
-
-            ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
-            infNFe = doc.Descendants(ns + "infNFe").FirstOrDefault()
-                ?? doc.Descendants().FirstOrDefault(e => e.Name.LocalName == "infNFe");
-            nfseScope = infNFe is null
-                ? doc.Descendants().FirstOrDefault(e => NfseRaizLocalNames.Contains(e.Name.LocalName))
-                : null;
-
-            if (infNFe is null && nfseScope is null)
-            {
-                quarentena = true;
-                motivoQuarentena = "XML_MALFORMADO";
-                AtribuirChaveMalFormada();
-            }
-            else if (infNFe is not null)
-            {
-                // Família NF-e/NFC-e (modelos 55/65): identificada pelo elemento <infNFe>.
-                chaveAcesso = (string?)infNFe.Attribute("Id") ?? string.Empty;
-                if (chaveAcesso.StartsWith("NFCe", StringComparison.OrdinalIgnoreCase))
-                    chaveAcesso = chaveAcesso.Substring(4);
-                else if (chaveAcesso.StartsWith("NFe", StringComparison.OrdinalIgnoreCase))
-                    chaveAcesso = chaveAcesso.Substring(3);
-
-                var ide = infNFe.Element(ns + "ide") ?? infNFe.Elements().FirstOrDefault(e => e.Name.LocalName == "ide");
-                var emit = infNFe.Element(ns + "emit") ?? infNFe.Elements().FirstOrDefault(e => e.Name.LocalName == "emit");
-                var dest = infNFe.Element(ns + "dest") ?? infNFe.Elements().FirstOrDefault(e => e.Name.LocalName == "dest");
-                var total = infNFe.Element(ns + "total") ?? infNFe.Elements().FirstOrDefault(e => e.Name.LocalName == "total");
-                var icmsTot = total?.Element(ns + "ICMSTot") ?? total?.Elements().FirstOrDefault(e => e.Name.LocalName == "ICMSTot");
-
-                numero = (string?)ide?.Element(ns + "nNF") ?? "0";
-                serie = (string?)ide?.Element(ns + "serie") ?? "1";
-                var modeloXml = (string?)ide?.Element(ns + "mod") ?? string.Empty;
-                modelo = string.IsNullOrEmpty(modeloXml) ? "55" : modeloXml;
-                var dhEmiStr = (string?)ide?.Element(ns + "dhEmi") ?? (string?)ide?.Element(ns + "dEmi");
-                dataEmissao = DateTimeOffset.TryParse(dhEmiStr, out var dOff) ? dOff.UtcDateTime
-                    : DateTime.TryParse(dhEmiStr, out var dEmi) ? dEmi.ToUniversalTime()
-                    : DateTime.UtcNow;
-
-                emitCnpj = LimparCnpj((string?)emit?.Element(ns + "CNPJ") ?? (string?)emit?.Element(ns + "CPF"));
-                emitNome = (string?)emit?.Element(ns + "xNome") ?? "Emitente Não Identificado";
-
-                destCnpj = LimparCnpj((string?)dest?.Element(ns + "CNPJ") ?? (string?)dest?.Element(ns + "CPF"));
-                destNome = (string?)dest?.Element(ns + "xNome") ?? "Destinatário Não Identificado";
-
-                var vNFStr = (string?)icmsTot?.Element(ns + "vNF") ?? "0";
-                var vProdStr = (string?)icmsTot?.Element(ns + "vProd") ?? "0";
-                decimal.TryParse(vNFStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out valorTotal);
-                decimal.TryParse(vProdStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out valorProdutos);
-
-                try
-                {
-                    XmlDocumentoRegras.ValidarChaveAcesso(chaveAcesso);
-                }
-                catch (Exception)
-                {
-                    quarentena = true;
-                    motivoQuarentena = "CHAVE_OU_MODELO_INVALIDO";
-                    if (chaveAcesso.Length < 44)
-                        chaveAcesso = (chaveAcesso + new string('0', 44)).Substring(0, 44);
-                }
-
-                if (!quarentena && chaveAcesso.Length >= 22)
-                {
-                    var modChave = chaveAcesso.Substring(20, 2);
-                    if (modeloXml.Length > 0 && modeloXml != modChave)
-                    {
-                        // Modelo da chave não bate com o modelo declarado em <ide>
-                        quarentena = true;
-                        motivoQuarentena = "CHAVE_OU_MODELO_INVALIDO";
-                    }
-                    else
-                    {
-                        tipoDocumento = modChave == "65" ? "NFC_E" : "NFE_COMPLETA";
-                        modelo = modChave;
-                    }
-                }
-
-                if (chaveAcesso.Length > 60)
-                    chaveAcesso = chaveAcesso.Substring(0, 60);
-            }
-            else
-            {
-                // Família NFS-e (modelo 67): identificação por elementos característicos
-                // (layout varia por prefeitura). Documentado: NFS-e não tem quebra de itens,
-                // portanto valor_produtos = valor_total (total dos serviços).
-                tipoDocumento = "NFS_E";
-                modelo = "67";
-
-                var idAttrEl = nfseScope!.Descendants().FirstOrDefault(e => e.Attribute("Id") != null);
-                var idDigits = Regex.Replace((string?)idAttrEl?.Attribute("Id") ?? string.Empty, @"\D", "");
-                var numeroBruto = (string?)DescByLocalName(nfseScope, "numNFS", "nNumero", "nNumeroNFS", "nServico") ?? string.Empty;
-                var numeroDigits = Regex.Replace(numeroBruto, @"\D", "");
-
-                if (idDigits.Length > 0)
-                    chaveAcesso = idDigits;
-                else if (numeroDigits.Length > 0)
-                    chaveAcesso = numeroDigits;
-                else
-                    chaveAcesso = "NFSE" + xmlHash.Substring(0, 36); // sintética determinística por conteúdo
-
-                numero = numeroDigits.Length > 0 ? numeroDigits : (idDigits.Length > 0 ? idDigits : "0");
-                serie = "1";
-                if (chaveAcesso.Length > 60)
-                    chaveAcesso = chaveAcesso.Substring(0, 60);
-
-                var ideNfse = DescByLocalName(nfseScope, "ideNFS", "ide");
-                var dhEmiNfseStr = (string?)DescByLocalName(ideNfse ?? nfseScope, "dhEmi", "dataHoraEmissao", "dData", "dIni");
-                dataEmissao = DateTimeOffset.TryParse(dhEmiNfseStr, out var dOffNfse) ? dOffNfse.UtcDateTime
-                    : DateTime.TryParse(dhEmiNfseStr, out var dEmiNfse) ? dEmiNfse.ToUniversalTime()
-                    : DateTime.UtcNow;
-
-                var emitNfse = DescByLocalName(nfseScope, "emit");
-                // Destinatário varia por prefeitura: dest/toma/tomador/dst
-                var destNfse = DescByLocalName(nfseScope, "dest", "toma", "tomador", "dst");
-                emitCnpj = LimparCnpj((string?)DescByLocalName(emitNfse, "CNPJ", "CPF"));
-                emitNome = (string?)DescByLocalName(emitNfse, "xNome") ?? "Emitente Não Identificado";
-                destCnpj = LimparCnpj((string?)DescByLocalName(destNfse, "CNPJ", "CPF"));
-                destNome = (string?)DescByLocalName(destNfse, "xNome") ?? "Destinatário Não Identificado";
-
-                var valoresEl = DescByLocalName(nfseScope, "valores");
-                var valorStr = (string?)DescByLocalName(valoresEl, "vServ", "vTotal", "vNF") ?? "0";
-                decimal.TryParse(valorStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out valorTotal);
-                valorProdutos = valorTotal;
-            }
+            using var ms = new MemoryStream(xmlBytes);
+            using var reader = XmlReader.Create(ms, settings);
+            doc = XDocument.Load(reader);
         }
         catch (Exception)
         {
-            quarentena = true;
-            motivoQuarentena = "XML_MALFORMADO";
-            AtribuirChaveMalFormada();
+            doc = null; // arquivo ilegível -> unidade única em quarentena XML_MALFORMADO
         }
 
-        // 3. Verifica estabelecimentos autorizados do Tenant
+        // A3/G2: um arquivo pode conter VÁRIOS documentos — todas as unidades <infNFe> (NF-e/NFC-e),
+        // senão as raízes ABRASF (prescrição eletrônica), senão as raízes EXTERNAS NFS-e.
+        // Prioridade: infNFe > ABRASF > NFS-e.
+        var unidades = new List<UnidadeXml>();
+        if (doc?.Root is null)
+        {
+            unidades.Add(UnidadeMalFormada(xmlHash));
+        }
+        else
+        {
+            foreach (var el in DescobrirUnidades(doc))
+                unidades.Add(el.Name.LocalName == "infNFe"
+                    ? ExtrairUnidadeNfe(el, xmlHash)
+                    : AbrsfLocalNames.Contains(el.Name.LocalName)
+                        ? ExtrairUnidadeAbrsf(el, xmlHash)
+                        : ExtrairUnidadeNfse(el, xmlHash));
+            if (unidades.Count == 0)
+                unidades.Add(UnidadeMalFormada(xmlHash)); // raiz não reconhecida por nenhuma família
+        }
+
+        // Verifica estabelecimentos autorizados do Tenant (uma vez para o arquivo inteiro)
         await using var cn = Connection();
         await cn.OpenAsync(ct);
 
@@ -398,38 +274,315 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             new { tenantId }, cancellationToken: ct))).ToList();
 
         var cnpjsAutorizados = estabelecimentos.Select(e => LimparCnpj((string)e.cnpj)).ToHashSet();
+        var primeiroEstab = estabelecimentos.FirstOrDefault();
 
-        Guid estabelecimentoId = Guid.Empty;
+        var resultados = new List<ImportarXmlDocumentoResultado>(unidades.Count);
+        int importados = 0, emQuarentena = 0, duplicadosIgnorados = 0, falhas = 0;
+        // G2: duplicidade DENTRO do mesmo arquivo — a 2ª ocorrência da mesma chave de acesso não volta
+        // ao banco (torna-se duplicado idempotente referenciando a primeira ocorrência).
+        var vistosNoArquivo = new Dictionary<string, Guid?>(StringComparer.Ordinal);
 
-        if (!quarentena)
+        foreach (var u in unidades)
         {
-            if (!cnpjsAutorizados.Contains(destCnpj))
+            var un = u;
+            // G4: ABRASF é documento CLÍNICO (não fiscal) -> destinatário NÃO é validado contra o tenant.
+            if (!un.Quarentena && un.VerificarDestinatario && !cnpjsAutorizados.Contains(un.DestCnpj))
+                un = un with { Quarentena = true, MotivoQuarentena = "DESTINATARIO_NAO_AUTORIZADO" };
+
+            var estabMatch = (!un.Quarentena && un.VerificarDestinatario)
+                ? estabelecimentos.FirstOrDefault(e => LimparCnpj((string)e.cnpj) == un.DestCnpj)
+                : null;
+            var estabelecimentoId = estabMatch?.id != null ? (Guid)estabMatch.id : ((Guid?)primeiroEstab?.id ?? Guid.Empty);
+
+            if (vistosNoArquivo.TryGetValue(un.ChaveAcesso, out var idDaPrimeira))
             {
-                quarentena = true;
-                motivoQuarentena = "DESTINATARIO_NAO_AUTORIZADO";
-                estabelecimentoId = estabelecimentos.FirstOrDefault()?.id != null ? (Guid)estabelecimentos.First().id : Guid.Empty;
+                resultados.Add(new ImportarXmlDocumentoResultado(idDaPrimeira, un.ChaveAcesso, true, un.Quarentena, un.MotivoQuarentena, null));
+                duplicadosIgnorados++;
+                continue;
             }
-            else
+
+            ImportarXmlDocumentoResultado r;
+            try
             {
-                var estabMatch = estabelecimentos.FirstOrDefault(e => LimparCnpj((string)e.cnpj) == destCnpj);
-                estabelecimentoId = estabMatch?.id != null ? (Guid)estabMatch.id : (Guid)estabelecimentos.First().id;
+                r = await ImportarUnidadeAsync(tenantId, usuarioId, un, xmlBytes, textoXml, xmlHash, nomeArquivo, estabelecimentoId, ct);
             }
+            catch (Exception ex)
+            {
+                r = new ImportarXmlDocumentoResultado(null, un.ChaveAcesso, false, un.Quarentena, un.MotivoQuarentena, ex.Message);
+                falhas++;
+            }
+
+            vistosNoArquivo[un.ChaveAcesso] = r.DocumentoId;
+            resultados.Add(r);
+            if (r.DuplicadoIdempotente) duplicadosIgnorados++;
+            else if (r.DocumentoId.HasValue)
+            {
+                if (un.Quarentena) emQuarentena++; else importados++;
+            }
+        }
+
+        return new ImportarXmlResultadoDto(unidades.Count, importados, emQuarentena, duplicadosIgnorados, falhas, resultados);
+    }
+
+    // A3: uma unidade = um documento fiscal dentro do arquivo (infNFe, raiz ABRASF ou raiz externa NFS-e).
+    private sealed record UnidadeXml(
+        string TipoDocumento,
+        string ChaveAcesso,
+        string Numero,
+        string Serie,
+        string Modelo,
+        DateTime DataEmissao,
+        string EmitCnpj,
+        string EmitNome,
+        string DestCnpj,
+        string DestNome,
+        decimal ValorTotal,
+        decimal ValorProdutos,
+        bool VerificarDestinatario,
+        XElement? InfNFe,
+        bool Quarentena = false,
+        string? MotivoQuarentena = null);
+
+    // A3/G1: encoding do XML detectado por BOM e, na ausência, pela declaração <?xml ... encoding="..."?>.
+    private static Encoding DetectarEncodingXml(byte[] bytes)
+    {
+        if (bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) return Encoding.UTF8;
+        if (bytes.Length >= 2 && ((bytes[0] == 0xFF && bytes[1] == 0xFE) || (bytes[0] == 0xFE && bytes[1] == 0xFF))) return Encoding.Unicode;
+        if (bytes.Length >= 4 && bytes[0] == 0x00 && bytes[1] == 0x00 && bytes[2] == 0x00 && bytes[3] == 0xFF) return Encoding.UTF32;
+
+        var lim = Math.Min(bytes.Length, 2048);
+        var cabeca = Encoding.Latin1.GetString(bytes, 0, lim);
+        var m = Regex.Match(cabeca, @"encoding\s*=\s*[\""']([A-Za-z0-9._\-]+)[\""']", RegexOptions.IgnoreCase);
+        if (m.Success)
+        {
+            try { return Encoding.GetEncoding(m.Groups[1].Value); }
+            catch (ArgumentException) { /* codepage não registrada no runtime -> padrão */ }
+        }
+        return Encoding.UTF8;
+    }
+
+    // Texto de exibição (xml_conteudo): encoding detectado com fallback UTF-8 -> Latin-1 (nunca falha).
+    // TrimStart(U+FEFF): Trim() sozinho NÃO remove o BOM (não é IsWhiteSpace).
+    private static string DecodificarTextoXml(byte[] bytes, Encoding preferido)
+    {
+        foreach (var enc in new[] { preferido, Encoding.UTF8, Encoding.Latin1 })
+        {
+            try { return enc.GetString(bytes).TrimStart('\uFEFF').Trim(); }
+            catch (ArgumentException) { /* bytes inválidos para este encoding -> próximo fallback */ }
+        }
+        return Encoding.Latin1.GetString(bytes).TrimStart('\uFEFF').Trim();
+    }
+
+    // A3/G4: famílias reconhecidas de prescrição eletrônica ABRASF.
+    private static readonly HashSet<string> AbrsfLocalNames = new(StringComparer.Ordinal) { "ABRASF", "pRes" };
+
+    // A3/G2: identifica as unidades de documento do arquivo (prioridade infNFe > ABRASF > NFS-e externa).
+    private static IReadOnlyList<XElement> DescobrirUnidades(XDocument doc)
+    {
+        var infNfes = doc.Descendants().Where(e => e.Name.LocalName == "infNFe").ToList();
+        if (infNfes.Count > 0) return infNfes;
+
+        // A família é procurada na raiz e nos descendentes (XDocument.Descendants() JÁ inclui a raiz uma única vez).
+        var todos = doc.Descendants().ToList();
+        var abrExternos = todos.Where(e => AbrsfLocalNames.Contains(e.Name.LocalName))
+                               .Where(e => !e.Ancestors().Any(a => AbrsfLocalNames.Contains(a.Name.LocalName))).ToList();
+        if (abrExternos.Count > 0) return abrExternos;
+
+        var nfseExternos = todos.Where(e => NfseRaizLocalNames.Contains(e.Name.LocalName))
+                                .Where(e => !e.Ancestors().Any(a => NfseRaizLocalNames.Contains(a.Name.LocalName))).ToList();
+        return nfseExternos;
+    }
+
+    // Arquivo ilegível ou raiz não reconhecida: unidade única em quarentena XML_MALFORMADO com chave
+    // sintética DETERMINÍSTICA por conteúdo (reimportar o mesmo arquivo corrompido é idempotente).
+    private static UnidadeXml UnidadeMalFormada(string xmlHash) => new(
+        "NFE_COMPLETA",
+        "MALF" + xmlHash.Substring(0, 33),
+        "0", "1", "55", DateTime.UtcNow,
+        "00000000000000", "Emitente Não Identificado", "00000000000000", "Destinatário Não Identificado",
+        0m, 0m, true, null,
+        true, "XML_MALFORMADO");
+
+    // A3/G3: NF-e/NFC-e (<infNFe>). Taxonomia de quarentena:
+    //   DOCUMENTO_INCOMPLETO  -> seção obrigatória ausente (ide/emit/dest/total) OU chave ausente/<44 dígitos;
+    //   MODELO_NAO_SUPORTADO  -> mod da chave fora de 55/65 OU <ide mod> divergente da chave.
+    private static UnidadeXml ExtrairUnidadeNfe(XElement infNFe, string xmlHash)
+    {
+        var ns = infNFe.GetDefaultNamespace();
+        XElement? Elem(string nome) =>
+            infNFe.Element(ns + nome) ?? infNFe.Elements().FirstOrDefault(e => e.Name.LocalName == nome);
+        string? Val(XElement? escopo, string nome) =>
+            escopo is null ? null
+            : (escopo.Element(ns + nome) ?? escopo.Elements().FirstOrDefault(e => e.Name.LocalName == nome))?.Value;
+
+        // O atributo Id pode vir prefixado com NFe/NFCe (convenção comum em exportadores/portais).
+        var chaveBruta = (string?)infNFe.Attribute("Id") ?? string.Empty;
+        if (chaveBruta.StartsWith("NFCe", StringComparison.OrdinalIgnoreCase)) chaveBruta = chaveBruta.Substring(4);
+        else if (chaveBruta.StartsWith("NFe", StringComparison.OrdinalIgnoreCase)) chaveBruta = chaveBruta.Substring(3);
+        var chaveAcesso = Regex.Replace(chaveBruta, @"\D", "");
+
+        var ide = Elem("ide");
+        var emit = Elem("emit");
+        var dest = Elem("dest");
+        var total = Elem("total");
+        var icmsTot = total is null ? null
+            : (total.Element(ns + "ICMSTot") ?? total.Elements().FirstOrDefault(e => e.Name.LocalName == "ICMSTot"));
+
+        var numero = (string?)Val(ide, "nNF") ?? "0";
+        var serie = (string?)Val(ide, "serie") ?? "1";
+        var modeloXml = (string?)Val(ide, "mod") ?? string.Empty;
+        var dhEmiStr = (string?)Val(ide, "dhEmi") ?? (string?)Val(ide, "dEmi");
+        var dataEmissao = DateTimeOffset.TryParse(dhEmiStr, out var dOff) ? dOff.UtcDateTime
+            : DateTime.TryParse(dhEmiStr, out var dEmi) ? dEmi.ToUniversalTime()
+            : DateTime.UtcNow;
+
+        var emitCnpj = LimparCnpj((string?)Val(emit, "CNPJ") ?? (string?)Val(emit, "CPF"));
+        var emitNome = (string?)Val(emit, "xNome") ?? "Emitente Não Identificado";
+        if (string.IsNullOrEmpty(emitCnpj)) emitCnpj = "00000000000000";
+        var destCnpj = LimparCnpj((string?)Val(dest, "CNPJ") ?? (string?)Val(dest, "CPF"));
+        var destNome = (string?)Val(dest, "xNome") ?? "Destinatário Não Identificado";
+        if (string.IsNullOrEmpty(destCnpj)) destCnpj = "00000000000000";
+
+        decimal.TryParse((string?)Val(icmsTot, "vNF") ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var valorTotal);
+        decimal.TryParse((string?)Val(icmsTot, "vProd") ?? "0", System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var valorProdutos);
+
+        // G3: classificação da quarentena (reaproveita a regra canônica do Domain).
+        string? motivo = null;
+        if (ide is null || emit is null || dest is null || total is null)
+        {
+            motivo = "DOCUMENTO_INCOMPLETO";
         }
         else
         {
-            estabelecimentoId = estabelecimentos.FirstOrDefault()?.id != null ? (Guid)estabelecimentos.First().id : Guid.Empty;
+            try
+            {
+                XmlDocumentoRegras.ValidarChaveAcesso(chaveAcesso);
+            }
+            catch (Administrativo360BusinessException)
+            {
+                motivo = "MODELO_NAO_SUPORTADO"; // formato ok, mas mod da chave fora de 55/65
+            }
+            catch (ArgumentException)
+            {
+                motivo = "DOCUMENTO_INCOMPLETO"; // chave ausente/curta/com caracteres não numéricos
+            }
+
+            if (motivo is null && modeloXml.Length > 0 && modeloXml != chaveAcesso.Substring(20, 2))
+                motivo = "MODELO_NAO_SUPORTADO"; // <ide mod> divergente do mod da chave
         }
 
-        Guid documentoId = Guid.Empty;
+        string chaveFinal, tipoFinal, modeloFinal;
+        if (motivo is null)
+        {
+            var modChave = chaveAcesso.Substring(20, 2);
+            tipoFinal = modChave == "65" ? "NFC_E" : "NFE_COMPLETA";
+            modeloFinal = modChave;
+            chaveFinal = chaveAcesso;
+        }
+        else
+        {
+            tipoFinal = "NFE_COMPLETA";
+            modeloFinal = "55";
+            // Preserva a chave quando couber na coluna (valor diagnóstico); sintética determinística só sem chave utilizável.
+            chaveFinal = chaveAcesso.Length is > 0 and <= 60 ? chaveAcesso : "INC" + xmlHash.Substring(0, 33);
+        }
+
+        return new UnidadeXml(tipoFinal, chaveFinal, numero, serie, modeloFinal, dataEmissao,
+            emitCnpj, emitNome, destCnpj, destNome, valorTotal, valorProdutos, true, infNFe,
+            motivo is not null, motivo);
+    }
+
+    // A3/G4: prescrição eletrônica ABRASF — documento CLÍNICO, não fiscal:
+    // sem valor monetário (totais zero), sem itens padronizados e o DESTINATÁRIO NÃO É VALIDADO contra o tenant.
+    // Extração tolerante por nomes locais conforme layout oficial de prescrição eletrônica ABRASF.
+    private static UnidadeXml ExtrairUnidadeAbrsf(XElement raiz, string xmlHash)
+    {
+        // Chave = dígitos do atributo Id (ABRASF/pRes); sem ele, chave sintética determinística por conteúdo.
+        var idBruto = (string?)raiz.Attribute("Id")
+            ?? (string?)DescByLocalName(raiz, "pRes")?.Attribute("Id");
+        var idDigits = Regex.Replace(idBruto ?? string.Empty, @"\D", "");
+        var chaveAcesso = idDigits.Length > 0 ? idDigits : "ABR" + xmlHash.Substring(0, 33);
+        if (chaveAcesso.Length > 60) chaveAcesso = chaveAcesso.Substring(0, 60);
+
+        var nNumeroBruto = (string?)DescByLocalName(raiz, "nNumero", "numPrescricao", "numero") ?? string.Empty;
+        var numero = Regex.Replace(nNumeroBruto, @"\D", "");
+
+        var dhEmiStr = (string?)DescByLocalName(raiz, "dhEmi", "dataHoraEmissao", "dataEmissao");
+        var dataEmissao = DateTimeOffset.TryParse(dhEmiStr, out var dOff) ? dOff.UtcDateTime
+            : DateTime.TryParse(dhEmiStr, out var dEmi) ? dEmi.ToUniversalTime()
+            : DateTime.UtcNow;
+
+        var emit = DescByLocalName(raiz, "emit");
+        var dest = DescByLocalName(raiz, "dest", "tomador", "paciente", "pessoa");
+        var emitCnpj = LimparCnpj((string?)DescByLocalName(emit, "CNPJ", "CPF"));
+        if (string.IsNullOrEmpty(emitCnpj)) emitCnpj = "00000000000000";
+        var emitNome = (string?)DescByLocalName(emit, "xNome") ?? "Emitente Não Identificado";
+        var destCnpj = LimparCnpj((string?)DescByLocalName(dest, "CNPJ", "CPF"));
+        if (string.IsNullOrEmpty(destCnpj)) destCnpj = "00000000000000";
+        var destNome = (string?)DescByLocalName(dest, "xNome") ?? "Destinatário Não Identificado";
+
+        return new UnidadeXml("ABRASF", chaveAcesso, numero.Length > 0 ? numero : "0", "1", "ABR",
+            dataEmissao, emitCnpj, emitNome, destCnpj, destNome, 0m, 0m, false, null);
+    }
+
+    // A3: NFS-e (modelo 67) — identificação por elementos característicos (layout varia por prefeitura).
+    // Documentado: NFS-e não tem quebra de itens, portanto valor_produtos = valor_total (total dos serviços).
+    private static UnidadeXml ExtrairUnidadeNfse(XElement nfseScope, string xmlHash)
+    {
+        var idAttrEl = nfseScope.Descendants().FirstOrDefault(e => e.Attribute("Id") != null);
+        var idDigits = Regex.Replace((string?)idAttrEl?.Attribute("Id") ?? string.Empty, @"\D", "");
+        var numeroBruto = (string?)DescByLocalName(nfseScope, "numNFS", "nNumero", "nNumeroNFS", "nServico") ?? string.Empty;
+        var numeroDigits = Regex.Replace(numeroBruto, @"\D", "");
+
+        string chaveAcesso;
+        if (idDigits.Length > 0) chaveAcesso = idDigits;
+        else if (numeroDigits.Length > 0) chaveAcesso = numeroDigits;
+        else chaveAcesso = "NFSE" + xmlHash.Substring(0, 36); // sintética determinística por conteúdo
+        if (chaveAcesso.Length > 60) chaveAcesso = chaveAcesso.Substring(0, 60);
+
+        var ideNfse = DescByLocalName(nfseScope, "ideNFS", "ide");
+        var dhEmiNfseStr = (string?)DescByLocalName(ideNfse ?? nfseScope, "dhEmi", "dataHoraEmissao", "dData", "dIni");
+        var dataEmissao = DateTimeOffset.TryParse(dhEmiNfseStr, out var dOffNfse) ? dOffNfse.UtcDateTime
+            : DateTime.TryParse(dhEmiNfseStr, out var dEmiNfse) ? dEmiNfse.ToUniversalTime()
+            : DateTime.UtcNow;
+
+        var emitNfse = DescByLocalName(nfseScope, "emit");
+        // Destinatário varia por prefeitura: dest/toma/tomador/dst
+        var destNfse = DescByLocalName(nfseScope, "dest", "toma", "tomador", "dst");
+        var emitCnpj = LimparCnpj((string?)DescByLocalName(emitNfse, "CNPJ", "CPF"));
+        if (string.IsNullOrEmpty(emitCnpj)) emitCnpj = "00000000000000";
+        var emitNome = (string?)DescByLocalName(emitNfse, "xNome") ?? "Emitente Não Identificado";
+        var destCnpj = LimparCnpj((string?)DescByLocalName(destNfse, "CNPJ", "CPF"));
+        if (string.IsNullOrEmpty(destCnpj)) destCnpj = "00000000000000";
+        var destNome = (string?)DescByLocalName(destNfse, "xNome") ?? "Destinatário Não Identificado";
+
+        var valoresEl = DescByLocalName(nfseScope, "valores");
+        var valorStr = (string?)DescByLocalName(valoresEl, "vServ", "vTotal", "vNF") ?? "0";
+        decimal.TryParse(valorStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var valorTotal);
+
+        return new UnidadeXml("NFS_E", chaveAcesso,
+            numeroDigits.Length > 0 ? numeroDigits : (idDigits.Length > 0 ? idDigits : "0"),
+            "1", "67", dataEmissao, emitCnpj, emitNome, destCnpj, destNome, valorTotal, valorTotal, true, null);
+    }
+
+    // A3/G2: grava UMA unidade de documento (transação por unidade; dedup por chave com FOR UPDATE —
+    // mesmo arquivo é idempotente por hash/bytes/texto; conteúdo divergente levanta erro de negócio).
+    private async Task<ImportarXmlDocumentoResultado> ImportarUnidadeAsync(
+        Guid tenantId, Guid usuarioId, UnidadeXml u,
+        byte[] xmlBytes, string textoXml, string xmlHash, string? nomeArquivo,
+        Guid estabelecimentoId, CancellationToken ct)
+    {
+        Guid? documentoId = null;
+        bool duplicadoIdempotente = false;
 
         await ExecutarComRetrySerializableAsync(async (c, tx) =>
         {
-            // Checa duplicidade por chave de acesso
+            // Checagem de duplicidade pela chave de acesso
             var existente = await c.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, xml_hash, xml_bytes, xml_conteudo FROM plantaopro.adm360_documentos_recebidos
                 WHERE tenant_id = @tenantId AND chave_acesso = @chaveAcesso
                 FOR UPDATE",
-                new { tenantId, chaveAcesso }, tx, cancellationToken: ct));
+                new { tenantId, chaveAcesso = u.ChaveAcesso }, tx, cancellationToken: ct));
 
             if (existente is not null)
             {
@@ -437,19 +590,18 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 var existenteBytes = existente.xml_bytes is byte[] b ? b : Array.Empty<byte>();
                 var existenteConteudo = ((string?)existente.xml_conteudo)?.Trim();
 
-                // B1: mesmo arquivo é idempotente — compara hash dos bytes, bytes exatos ou texto
-                // normalizado (equivale quando a nova entrada não tem BOM/bytes originais).
+                // B1: idempotência do MESMO ARQUIVO — compara hash dos bytes, bytes exatos ou texto
+                // normalizado (equivalente quando a entrada nova deriva de UTF-8 sem BOM original).
                 if (existenteHash == xmlHash
                     || existenteBytes.AsSpan().SequenceEqual(xmlBytes.AsSpan())
                     || existenteConteudo == textoXml)
                 {
-                    // Mesmo arquivo: idempotente
                     documentoId = (Guid)existente.id;
+                    duplicadoIdempotente = true;
                     return;
                 }
 
-                // Conteúdo divergente para mesma chave
-                throw new Administrativo360BusinessException($"Chave de acesso {chaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
+                throw new Administrativo360BusinessException($"Chave de acesso {u.ChaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
             }
 
             documentoId = Guid.NewGuid();
@@ -459,27 +611,34 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                     id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo,
                     data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome,
                     valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia,
-                    xml_conteudo, xml_bytes, xml_hash, quarentena, motivo_quarentena, origem
+                    xml_conteudo, xml_bytes, xml_hash, quarentena, motivo_quarentena, origem, nome_arquivo
                 ) VALUES (
                     @documentoId, @tenantId, @estabelecimentoId, @chaveAcesso, @numero, @serie, @modelo,
                     @dataEmissao, @emitCnpj, @emitNome, @destCnpj, @destNome,
                     @valorTotal, @valorProdutos, @tipoDocumento, 'SEM_MANIFESTACAO',
                     (CASE WHEN @quarentena THEN 'DIVERGENTE' ELSE 'PENDENTE' END),
-                    @xmlConteudo, @xmlBytes, @xmlHash, @quarentena, @motivoQuarentena, 'IMPORTACAO_MANUAL'
+                    @xmlConteudo, @xmlBytes, @xmlHash, @quarentena, @motivoQuarentena, 'IMPORTACAO_MANUAL', @nomeArquivo
                 )",
                 new
                 {
-                    documentoId, tenantId, estabelecimentoId, chaveAcesso, numero, serie, modelo,
-                    dataEmissao, emitCnpj, emitNome, destCnpj, destNome,
-                    valorTotal, valorProdutos, tipoDocumento,
+                    documentoId, tenantId, estabelecimentoId, chaveAcesso = u.ChaveAcesso,
+                    numero = u.Numero, serie = u.Serie, modelo = u.Modelo,
+                    dataEmissao = u.DataEmissao, emitCnpj = u.EmitCnpj, emitNome = u.EmitNome,
+                    destCnpj = u.DestCnpj, destNome = u.DestNome,
+                    valorTotal = u.ValorTotal, valorProdutos = u.ValorProdutos, tipoDocumento = u.TipoDocumento,
                     xmlConteudo = textoXml, xmlBytes, xmlHash,
-                    quarentena, motivoQuarentena
+                    quarentena = u.Quarentena, motivoQuarentena = u.Quarentena ? u.MotivoQuarentena : null,
+                    nomeArquivo
                 }, tx, cancellationToken: ct));
 
-            // Extrai itens <det> se documento válido
-            if (!quarentena && infNFe != null)
+            // Itens <det> se documento NF-e/NFC-e válido (A3: ABRASF/NFS-e não trazem itens padronizados)
+            if (!u.Quarentena && u.InfNFe is not null)
             {
-                var dets = infNFe.Elements(ns + "det").Concat(infNFe.Elements().Where(e => e.Name.LocalName == "det")).Distinct().ToList();
+                var infNFe = u.InfNFe;
+                var ns = infNFe.GetDefaultNamespace();
+                var dets = infNFe.Elements(ns + "det")
+                    .Concat(infNFe.Elements().Where(e => e.Name.LocalName == "det"))
+                    .Distinct().ToList();
                 int nItem = 1;
                 foreach (var det in dets)
                 {
@@ -497,7 +656,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                     decimal.TryParse(vUnComStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var vUnCom);
                     decimal.TryParse(vProdItemStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var vProdItem);
 
-                    // Busca De/Para de produto
+                    // Mapeamento De/Para do produto
                     var dePara = await c.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                         SELECT entidade_interna_id, fator_conversao
                         FROM plantaopro.adm360_mapeamentos_de_para
@@ -527,11 +686,10 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                             xProd, ncm, cfop, uCom, qCom,
                             vUnCom, vProdItem, prodInternoId, fator, qConvertida
                         }, tx, cancellationToken: ct));
-
                 }
             }
 
-            // Evento de recepção
+            // Evento de entrada
             var evId = Guid.NewGuid();
             await c.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_documento_eventos(
@@ -539,25 +697,74 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                     descricao_evento, data_evento, detalhes, registrado_por
                 ) VALUES (
                     @evId, @tenantId, @documentoId, 'IMPORTACAO_MANUAL', 1,
-                    'Documento importado manualmente no módulo Administrativo 360', now(),
+                    'Documento fiscal importado manualmente para o módulo Administrativo 360', now(),
                     @detalhes, @usuarioId
                 )",
                 new
                 {
                     evId, tenantId, documentoId,
-                    detalhes = quarentena ? $"Quarentena: {motivoQuarentena}" : "Arquivo XML validado e gravado com sucesso.",
+                    detalhes = u.Quarentena ? $"Quarentena: {u.MotivoQuarentena}" : "Arquivo XML validado e persistido com sucesso.",
                     usuarioId
                 }, tx, cancellationToken: ct));
 
-            // P4: evento DECLARACAO_MANUAL — declaração manual do documento fiscal registrada imutavelmente na mesma transação
-            await eventos.RegistrarAsync(c, tx, tenantId, Adm360TipoEvento.DeclaracaoManual, "DOCUMENTO_XML", documentoId, usuarioId,
+            // P4: evento DECLARACAO_MANUAL — registro imutável da declaração do documento, na mesma transação
+            await eventos.RegistrarAsync(c, tx, tenantId, Adm360TipoEvento.DeclaracaoManual, "DOCUMENTO_XML", documentoId.Value, usuarioId,
                 "Declaração manual de documento fiscal (importação XML)",
-                new { chave_acesso = chaveAcesso, quarentena, motivo_quarentena = quarentena ? motivoQuarentena : null },
+                new { chave_acesso = u.ChaveAcesso, quarentena = u.Quarentena, motivo_quarentena = u.Quarentena ? u.MotivoQuarentena : null },
                 $"declaracao:documento:{documentoId:N}", ct);
         }, ct);
 
-        return documentoId;
+        return new ImportarXmlDocumentoResultado(documentoId, u.ChaveAcesso, duplicadoIdempotente, u.Quarentena, u.Quarentena ? u.MotivoQuarentena : null, null);
     }
+
+    // A3/G5: conferência autorizada — habilita o uso do documento no gate de recebimento de estoque
+    // (ComprasRepository.ReceberAsync). Idempotente: CONFERIDO/VINCULADO são aceitos em silêncio.
+    public async Task ConferirDocumentoAsync(Guid tenantId, Guid usuarioId, ConferirDocumentoCommand command, CancellationToken ct = default)
+    {
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            var doc = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT id, chave_acesso, quarentena, status_conferencia
+                FROM plantaopro.adm360_documentos_recebidos
+                WHERE id = @DocumentoId AND tenant_id = @tenantId
+                FOR UPDATE",
+                new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            if (doc is null)
+                throw new KeyNotFoundException("Documento fiscal não encontrado.");
+
+            if ((bool)doc.quarentena)
+                throw new Administrativo360BusinessException("Documento em quarentena não pode ser conferido.");
+
+            var statusAnterior = (string)doc.status_conferencia;
+            if (statusAnterior == "CONFERIDO" || statusAnterior == "VINCULADO")
+                return; // já aprovado anteriormente (idempotente)
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_documentos_recebidos
+                SET status_conferencia = 'CONFERIDO', updated_at = now()
+                WHERE id = @DocumentoId AND tenant_id = @tenantId",
+                new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            var evId = Guid.NewGuid();
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                INSERT INTO plantaopro.adm360_documento_eventos(
+                    id, tenant_id, documento_id, tipo_evento, sequencia_evento,
+                    descricao_evento, data_evento, detalhes, registrado_por
+                ) VALUES (
+                    @evId, @tenantId, @DocumentoId, 'CONFIRMACAO_CONFERENCIA', 2,
+                    'Documento conferido manualmente pelo gestor (conferência autorizada)', now(),
+                    'Conferência autorizada habilita o uso deste documento no fluxo de recebimento físico/estoque.', @usuarioId
+                )",
+                new { evId, tenantId, command.DocumentoId, usuarioId }, tx, cancellationToken: ct));
+
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.ConfirmacaoConferencia, "DOCUMENTO_XML", command.DocumentoId, usuarioId,
+                "Confirmação de conferência autorizada de documento fiscal recebido",
+                new { chave_acesso = (string)doc.chave_acesso, status_anterior = statusAnterior, status_novo = "CONFERIDO" },
+                $"conferencia:documento:{command.DocumentoId:N}", ct);
+        }, ct);
+    }
+
 
     public async Task ManifestarDocumentoAsync(Guid tenantId, Guid usuarioId, ManifestarDocumentoCommand command, CancellationToken ct = default)
     {

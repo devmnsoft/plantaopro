@@ -81,3 +81,5 @@
 - `plantaopro.ai_usos` depende de: plantaopro.schema_canonico_base
 - `plantaopro.ai_precos_modelos` depende de: plantaopro.ai_config
 - `plantaopro.ai_chamadas_ativas` depende de: plantaopro.ai_config
+- `plantaopro.adm360_documentos_xml_a3` depende de: plantaopro.adm360_documentos_xml_b1, plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.adm360_eventos_conferencia_a3` depende de: plantaopro.adm360_eventos

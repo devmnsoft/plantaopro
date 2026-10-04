@@ -123,6 +123,28 @@
                     </div>
                 </div>
 
+                <div class="row g-3 mb-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Documento Fiscal XML da Central de XML (opcional)</label>
+                        <select name="documentoXmlId" class="form-select form-select-sm bg-black text-light border-secondary">
+                            <option value="">Sem documento XML vinculado (registro manual)</option>
+                            @foreach (var doc in Model.DocumentosXml)
+                            {
+                                var rotuloDoc = doc.TipoDocumento switch { "NFC_E" => "NFC-e", "NFS_E" => "NFS-e", "ABRASF" => "ABRASF", _ => "NF-e" };
+                                <option value="@doc.Id" title="@doc.ChaveAcesso">@rotuloDoc @doc.Numero / Série @doc.Serie — @doc.EmitenteNome [Conferência: @doc.StatusConferencia]</option>
+                            }
+                        </select>
+                        @if (Model.DocumentosXml.Count == 0)
+                        {
+                            <small class="text-secondary">Nenhum documento XML disponível fora de quarentena. Documentos em quarentena devem ser conferidos na Central de XML antes de poderem vincular recebimento.</small>
+                        }
+                        else
+                        {
+                            <small class="text-secondary">Somente documentos com conferência autorizada (CONFERIDO/VINCULADO) podem ser usados para registrar estoque — o restante é bloqueado com mensagem orientando a conferência.</small>
+                        }
+                    </div>
+                </div>
+
                 <div class="card bg-black border-secondary p-3 mb-3">
                     <h6 class="text-info small fw-bold mb-3"><i class="bi bi-upc-scan me-1"></i>Identificação do Material e Rastreabilidade</h6>
                     <div class="row g-2 mb-2">

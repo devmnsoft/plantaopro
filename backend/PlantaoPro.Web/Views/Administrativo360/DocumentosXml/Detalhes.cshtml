@@ -1,6 +1,6 @@
 @model PlantaoPro.Web.Models.DocumentoXmlDetalhesPageViewModel
 @{
-    var rotuloTipo = Model.Documento.TipoDocumento switch { "NFC_E" => "NFC-e", "NFS_E" => "NFS-e", "RESUMO" => "Resumo", _ => "NF-e" };
+    var rotuloTipo = Model.Documento.TipoDocumento switch { "NFC_E" => "NFC-e", "NFS_E" => "NFS-e", "ABRASF" => "ABRASF", "RESUMO" => "Resumo", _ => "NF-e" };
     ViewData["Title"] = $"{rotuloTipo} {Model.Documento.Numero} — Administrativo 360";
 }
 
@@ -19,7 +19,11 @@
                 @rotuloTipo @Model.Documento.Numero / Série @Model.Documento.Serie
                 @if (Model.Documento.Quarentena)
                 {
-                    <span class="badge bg-danger ms-2">Em Quarentena: @Model.Documento.MotivoQuarentena</span>
+                    <span class="badge bg-danger ms-2" title="@Model.Documento.MotivoQuarentena">Em Quarentena: @RotuloQuarentena(Model.Documento.MotivoQuarentena)</span>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.Documento.NomeArquivo))
+                {
+                    <span class="badge bg-dark border-secondary ms-2" title="Nome do arquivo original recebido"><i class="bi bi-file-earmark-text me-1"></i>@Model.Documento.NomeArquivo</span>
                 }
             </h2>
         </div>
@@ -30,6 +34,12 @@
             <a href="/Administrativo360/DocumentosXml/Download/@Model.Documento.Id" class="btn btn-outline-light">
                 <i class="bi bi-download me-1"></i> Baixar XML Original
             </a>
+            @if (!Model.Documento.Quarentena && Model.Documento.StatusConferencia == "PENDENTE")
+            {
+                <button type="button" class="btn btn-info text-dark" data-bs-toggle="modal" data-bs-target="#modalConferirDocumento">
+                    <i class="bi bi-check2-circle me-1"></i> Conferir Documento
+                </button>
+            }
             @if (!Model.Documento.Quarentena && Model.Documento.StatusConferencia != "VINCULADO")
             {
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalVincularRecebimento">
@@ -271,3 +281,46 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Conferência Autorizada do Documento -->
+<div class="modal fade" id="modalConferirDocumento" tabindex="-1" aria-labelledby="modalConferirLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <form method="post" action="/Administrativo360/DocumentosXml/Conferir/@Model.Documento.Id">
+                @Html.AntiForgeryToken()
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="modalConferirLabel">Conferir Documento</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info small mb-3">
+                        Ao conferir, você declara que o documento fiscal foi conferido e autorizado. Somente documentos
+                        <strong>conferidos ou vinculados</strong> podem ser usados para registrar recebimento de estoque.
+                        A operação é auditada e registrada como evento do documento.
+                    </div>
+                    <div class="small text-secondary">
+                        Chave de acesso: <code class="text-info d-block text-break">@Model.Documento.ChaveAcesso</code>
+                        Valor total: <strong class="text-light">R$ @Model.Documento.ValorTotal.ToString("N2")</strong>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm btn-primary">Confirmar Conferência</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    // A3: rotulagem PT-BR dos motivos técnicos de quarentena (o código segue no tooltip).
+    private static string RotuloQuarentena(string? motivo) => motivo switch
+    {
+        "XML_MALFORMADO" => "XML malformado",
+        "MODELO_NAO_SUPORTADO" => "Modelo não suportado",
+        "DOCUMENTO_INCOMPLETO" => "Documento incompleto",
+        "DESTINATARIO_NAO_AUTORIZADO" => "Destinatário não autorizado",
+        null => "Sem motivo registrado",
+        _ => motivo
+    };
+}

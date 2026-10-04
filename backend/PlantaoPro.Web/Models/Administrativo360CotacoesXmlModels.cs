@@ -231,7 +231,8 @@ public sealed record DocumentoRecebidoResumoViewModel(
     DateTime CriadoEm,
     Guid? PedidoId,
     Guid? RecebimentoId,
-    Guid? TituloPagarId
+    Guid? TituloPagarId,
+    string? NomeArquivo = null
 );
 
 public sealed record DocumentoItemDetalheViewModel(
@@ -294,7 +295,27 @@ public sealed record DocumentoRecebidoDetalhesViewModel(
     string Origem,
     DateTime CriadoEm,
     IReadOnlyList<DocumentoItemDetalheViewModel> Itens,
-    IReadOnlyList<DocumentoEventoViewModel> Eventos
+    IReadOnlyList<DocumentoEventoViewModel> Eventos,
+    string? NomeArquivo = null
+);
+
+// A3: resultado tipado da importação manual — um arquivo pode conter múltiplos documentos.
+public sealed record ImportarXmlDocumentoResultadoViewModel(
+    Guid? DocumentoId,
+    string ChaveAcesso,
+    bool DuplicadoIdempotente,
+    bool Quarentena,
+    string? MotivoQuarentena,
+    string? MensagemErro
+);
+
+public sealed record ImportarXmlResultadoViewModel(
+    int TotalUnidades,
+    int Importados,
+    int EmQuarentena,
+    int DuplicadosIgnorados,
+    int Falhas,
+    IReadOnlyList<ImportarXmlDocumentoResultadoViewModel> Documentos
 );
 
 public sealed record DfeSincronizacaoViewModel(

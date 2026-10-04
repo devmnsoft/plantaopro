@@ -13,6 +13,9 @@ public static class Adm360TipoEvento
     public const string Arquivo = "ARQUIVO";
     public const string DeclaracaoManual = "DECLARACAO_MANUAL";
     public const string RetornoExterno = "RETORNO_EXTERNO";
+
+    // A3: conferência autorizada de documento fiscal recebido (gátes do estoque).
+    public const string ConfirmacaoConferencia = "CONFIRMACAO_CONFERENCIA";
 }
 
 /// <summary>

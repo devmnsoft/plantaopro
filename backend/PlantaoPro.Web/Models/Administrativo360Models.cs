@@ -994,6 +994,8 @@ public sealed class RecebimentosIndexViewModel
 {
     public IReadOnlyList<PedidoCompraResumoViewModel> PedidosPendentes { get; init; } = Array.Empty<PedidoCompraResumoViewModel>();
     public IReadOnlyList<Local360ViewModel> Locais { get; init; } = Array.Empty<Local360ViewModel>();
+    // A3: documentos XML autorizados (não em quarentena) disponíveis para vinculação opcional ao recebimento.
+    public IReadOnlyList<DocumentoRecebidoResumoViewModel> DocumentosXml { get; init; } = Array.Empty<DocumentoRecebidoResumoViewModel>();
     public string? Erro { get; init; }
 }
 

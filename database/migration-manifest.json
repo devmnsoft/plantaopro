@@ -852,6 +852,28 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_10_v2309_administrativo360_documentos_xml_a3",
+      "source": "database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql",
+      "checksum": "9516a4d9446a930284d7284781a649cfbf6691b038aef4191f5d6f99b9e4d957",
+      "dependsOn": [
+        "2026_09_v2303_administrativo360_documentos_xml_b1"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
+    },
+    {
+      "version": "2026_10_v2310_adm360_eventos_tipo_conferencia",
+      "source": "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql",
+      "checksum": "9177b33b502201c3f54c5d2483a354da5ce27f76c8da1a61407bfb8debd795f1",
+      "dependsOn": [
+        "2026_10_v2309_administrativo360_documentos_xml_a3"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

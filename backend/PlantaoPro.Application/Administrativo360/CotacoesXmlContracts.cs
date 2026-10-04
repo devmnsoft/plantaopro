@@ -283,7 +283,8 @@ public sealed record DocumentoRecebidoResumoDto(
     DateTime CriadoEm,
     Guid? PedidoId,
     Guid? RecebimentoId,
-    Guid? TituloPagarId
+    Guid? TituloPagarId,
+    string? NomeArquivo = null
 );
 
 public sealed record DocumentoItemDetalheDto(
@@ -346,7 +347,8 @@ public sealed record DocumentoRecebidoDetalhesDto(
     string Origem,
     DateTime CriadoEm,
     IReadOnlyList<DocumentoItemDetalheDto> Itens,
-    IReadOnlyList<DocumentoEventoDto> Eventos
+    IReadOnlyList<DocumentoEventoDto> Eventos,
+    string? NomeArquivo = null
 );
 
 public sealed record ImportarXmlManualCommand(
@@ -358,10 +360,35 @@ public sealed record ImportarXmlManualCommand(
     public byte[]? XmlBytes { get; init; }
 };
 
+// A3: um arquivo pode conter MULTIPLOS documentos (nfeProc xN / ABRASF); o
+// import retorna o resultado por unidade + resumo agregado.
+public sealed record ImportarXmlDocumentoResultado(
+    Guid? DocumentoId,
+    string ChaveAcesso,
+    bool DuplicadoIdempotente,
+    bool Quarentena,
+    string? MotivoQuarentena,
+    string? MensagemErro
+);
+
+public sealed record ImportarXmlResultadoDto(
+    int TotalUnidades,
+    int Importados,
+    int EmQuarentena,
+    int DuplicadosIgnorados,
+    int Falhas,
+    IReadOnlyList<ImportarXmlDocumentoResultado> Documentos
+);
+
 public sealed record ManifestarDocumentoCommand(
     Guid DocumentoId,
     string TipoManifestacao,
     string? Justificativa = null
+);
+
+// A3: conferência autorizada de documento recebido (gátes do estoque).
+public sealed record ConferirDocumentoCommand(
+    Guid DocumentoId
 );
 
 public sealed record VincularDocumentoRecebimentoCommand(
@@ -466,11 +493,14 @@ public interface IDocumentosXmlRepository
 {
     Task<IReadOnlyList<DocumentoRecebidoResumoDto>> ListarDocumentosAsync(Guid tenantId, string? status = null, bool? quarentena = null, CancellationToken ct = default);
     Task<DocumentoRecebidoDetalhesDto?> ObterDocumentoPorIdAsync(Guid tenantId, Guid id, CancellationToken ct = default);
-    Task<Guid> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default);
+
+    /// <summary>A3: retorna resultado por unidade (um arquivo pode conter múltiplos documentos).</summary>
+    Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default);
 
     /// <summary>B1: bytes originais preservados (fonte da verdade para hash e download) com ETag=SHA-256.</summary>
     Task<(byte[] Bytes, string Hash, string ChaveAcesso)?> ObterXmlBytesAsync(Guid tenantId, Guid id, CancellationToken ct = default);
     Task ManifestarDocumentoAsync(Guid tenantId, Guid usuarioId, ManifestarDocumentoCommand command, CancellationToken ct = default);
+    Task ConferirDocumentoAsync(Guid tenantId, Guid usuarioId, ConferirDocumentoCommand command, CancellationToken ct = default);
     Task VincularRecebimentoAsync(Guid tenantId, Guid usuarioId, VincularDocumentoRecebimentoCommand command, CancellationToken ct = default);
 
     Task<IReadOnlyList<DfeSincronizacaoDto>> ListarSincronizacoesAsync(Guid tenantId, CancellationToken ct = default);

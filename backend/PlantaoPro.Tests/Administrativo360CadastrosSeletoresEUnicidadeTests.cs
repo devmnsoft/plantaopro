@@ -310,14 +310,11 @@ public sealed class Administrativo360CadastrosSeletoresEUnicidadeTests
     private static async Task SementarAsync()
     {
         var sb = new System.Text.StringBuilder();
+        // WP-A4: limpeza completa e ordenada (segura para FK) de TODAS as tabelas adm360 do
+        // escopo dos tenants — elimina o flake 23503 causado por estado residual de execuções
+        // anteriores (ex.: orcamentos referenciando parceiros). Ver Adm360TenantCleanup.
+        sb.Append(Adm360TenantCleanup.SqlDelete(TenantA, TenantB));
         sb.Append(@"
-            delete from plantaopro.adm360_lotes where tenant_id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-            delete from plantaopro.adm360_movimentos where tenant_id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-            delete from plantaopro.adm360_produtos where tenant_id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-            delete from plantaopro.adm360_locais where tenant_id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-            delete from plantaopro.adm360_parceiros where tenant_id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-            delete from plantaopro.tenants where id in ('d42a0f30-0042-4000-8000-000000000f30','d42a0f31-0042-4000-8000-000000000f31');
-
             insert into plantaopro.tenants (id, nome) values
              ('d42a0f30-0042-4000-8000-000000000f30', 'A360 Seletores Tenanted A'),
              ('d42a0f31-0042-4000-8000-000000000f31', 'A360 Seletores Tenanted B');

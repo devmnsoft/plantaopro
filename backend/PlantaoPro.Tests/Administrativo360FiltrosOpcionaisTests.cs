@@ -434,28 +434,9 @@ public sealed class Administrativo360FiltrosOpcionaisTests
         await cn.ExecuteAsync(SqlSemente);
     }
 
-    private const string SqlSemente = @"
-delete from plantaopro.adm360_vale_itens where vale_id in (select id from plantaopro.adm360_vales where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11'));
-delete from plantaopro.adm360_vales where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_documentos_recebidos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_movimentos_financeiros where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_movimentos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_reservas where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_pedido_itens where pedido_id in (select id from plantaopro.adm360_pedidos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11'));
-delete from plantaopro.adm360_pedidos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_cirurgias where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_inventario_itens where inventario_id in (select id from plantaopro.adm360_inventarios where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11'));
-delete from plantaopro.adm360_orcamento_revisoes where orcamento_id in (select id from plantaopro.adm360_orcamentos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11'));
-delete from plantaopro.adm360_orcamentos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_inventarios where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_contas_financeiras where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_lotes where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_produtos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_locais where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_parceiros where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.adm360_estabelecimentos where tenant_id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-delete from plantaopro.tenants where id in ('d42a0f10-0042-4000-8000-000000000f10','d42a0f11-0042-4000-8000-000000000f11');
-
+    // WP-A4: limpeza inicial = fechamento descendente completo do módulo (ordem topológica
+    // sobre o grafo FK, ver Adm360TenantCleanup) em vez da lista parcial de 20 deletes.
+    private static readonly string SqlSemente = Adm360TenantCleanup.SqlDelete(TenantA, TenantB) + @"
 insert into plantaopro.tenants (id, nome) values
  ('d42a0f10-0042-4000-8000-000000000f10', 'A360 Filtros Tenanted A'),
  ('d42a0f11-0042-4000-8000-000000000f11', 'A360 Filtros Tenanted B');

@@ -1,0 +1,191 @@
+Ciclo de vida do banco (canônico) | 2026-10-05 03:22:18 -03:00 | banco descartável: plantaopro_gate_r2
+
+=== [passo 1: criação do banco descartável] dotnet run --project backend/PlantaoPro.Tools.Database -- create-database ===
+Banco 'plantaopro_gate_r2' criado com UTF-8.
+
+=== [passo 2: instalação limpa (install-manifest, transação única)] dotnet run --project backend/PlantaoPro.Tools.Database -- install ===
+install: [3] plantaopro.extensions (database/schema/000_extensions_schema.sql)
+install: [3] plantaopro.schema_canonico_base (database/schema/000_schema_canonico_base.sql)
+install: [3] plantaopro.identity_access (database/schema/010_identity_access.sql)
+install: [3] plantaopro.saas_tenants (database/schema/020_saas_tenants.sql)
+install: [3] plantaopro.operacao_plantoes (database/schema/030_operacao_plantoes.sql)
+install: [3] plantaopro.saude360 (database/schema/040_saude360.sql)
+install: [3] plantaopro.financeiro (database/schema/050_financeiro.sql)
+install: [3] plantaopro.auditoria_observabilidade (database/schema/060_auditoria_observabilidade.sql)
+install: [3] plantaopro.relatorios (database/schema/070_relatorios.sql)
+install: [3] plantaopro.constraints (database/schema/080_constraints.sql)
+install: [3] plantaopro.indexes (database/schema/090_indexes.sql)
+install: [3] plantaopro.reference_data (database/schema/100_reference_data.sql)
+install: [3] plantaopro.implantacao_go_live (database/schema/110_implantacao_go_live.sql)
+install: [3] plantaopro.operacoes_continuidade (database/schema/120_operacoes_continuidade.sql)
+install: [3] plantaopro.contexto_multiempresa (database/schema/130_contexto_multiempresa.sql)
+install: [3] plantaopro.experiencia_premium_meu_dia (database/schema/140_experiencia_premium_meu_dia.sql)
+install: [12] plantaopro.operacional_real_v113 (database/migrations/2026_v113_operacional_real.sql)
+install: [13] plantaopro.consolidacao_produto_v114 (database/migrations/2026_v114_consolidacao_produto.sql)
+install: [14] plantaopro.regras_faturamento_repasses_v115 (database/migrations/2026_v115_regras_faturamento_repasses.sql)
+install: [15] plantaopro.paineis_publicos (database/schema/150_v1243_painel_publico_seguro.sql)
+install: [15] v1440_produto_vendavel (database/schema/300_v1440_produto_vendavel_design_mobile_operacao.sql)
+install: [16] plantaopro.operacao_assistida_v1310 (database/schema/210_v1310_consolidacao_operacao_assistida.sql)
+install: [17] plantaopro.bootstrap_catalog (database/schema/250_v1370_bootstrap_superadmin.sql)
+install: [18] plantaopro.seed_010_modulos (database/seeds/system/010_modulos.sql)
+install: [18] plantaopro.seed_020_acoes (database/seeds/system/020_acoes.sql)
+install: [18] plantaopro.seed_030_permissoes (database/seeds/system/030_permissoes.sql)
+install: [18] plantaopro.seed_040_perfis (database/seeds/system/040_perfis.sql)
+install: [18] plantaopro.seed_050_perfil_permissoes (database/seeds/system/050_perfil_permissoes.sql)
+install: [18] plantaopro.seed_060_politica_senha (database/seeds/system/060_politica_senha.sql)
+install: [18] plantaopro.seed_070_planos_recursos (database/seeds/system/070_planos_recursos.sql)
+install: [18] plantaopro.seed_080_parametros_globais (database/seeds/system/080_parametros_globais.sql)
+install: [18] plantaopro.seed_090_notificacoes (database/seeds/system/090_notificacoes.sql)
+install: [18] plantaopro.seed_100_status_operacionais (database/seeds/system/100_status_operacionais.sql)
+install: [18] plantaopro.seed_110_configuracoes_runtime (database/seeds/system/110_configuracoes_runtime.sql)
+install: [19] plantaopro.operational_premium_v1400 (database/schema/260_v1400_produto_operacional_premium.sql)
+install: [20] plantaopro.operational_cycle_v1410 (database/schema/270_v1410_cobertura_escalas_fechamento_financeiro.sql)
+install: [21] plantaopro.executive_commercial_v1450 (database/schema/310_v1450_design_system_executivo_operacao_comercial.sql)
+install: [38] plantaopro.pagamentos (database/schema/305_v1951_pagamentos_plantoes.sql)
+install: [39] plantaopro.fechamento_operacional_v187 (database/schema/320_v187_fechamento_operacional_financeiro.sql)
+install: [40] plantaopro.prontuario_longitudinal_v188 (database/schema/330_v188_prontuario_longitudinal.sql)
+install: [41] plantaopro.clinical_hardening_v189 (database/schema/340_v189_clinical_operational_hardening.sql)
+install: [42] plantaopro.saved_views_v192 (database/migrations/2026_v192_saved_views.sql)
+install: [43] plantaopro.revenue_cycle_v195 (database/migrations/2026_08_v195_financeiro_revenue_cycle.sql)
+install: [44] plantaopro.base_notificacoes_v2069 (database/schema/345_v2069_reparar_base_notificacoes.sql)
+install: [44] plantaopro.notificacoes_v2070 (database/schema/350_v2070_notificacoes_alertas_operacionais.sql)
+install: [45] plantaopro.central_operacional_escalas_v2157 (database/schema/360_v2157_central_operacional_escalas.sql)
+install: [46] plantaopro.financeiro_medico_v2158 (database/schema/360_v2158_financeiro_medico_conferencia.sql)
+install: [47] plantaopro.saude360_v2159 (database/schema/370_v2159_saude360_agenda_recepcao.sql)
+install: [48] plantaopro.jornada_clinica_v2160 (database/schema/380_v2160_triagem_consulta_jornada.sql)
+install: [49] plantaopro.portal_cliente_modulos_v2163 (database/schema/390_v2163_portal_cliente_modulos.sql)
+install: [50] plantaopro.execucao_conferencia_v2167 (database/schema/400_v2167_execucao_conferencia.sql)
+install: [50] plantaopro.execucao_conferencia_integridade_v2168 (database/schema/410_v2168_conferencia_integridade.sql)
+install: [51] plantaopro.cobertura_substituicoes_v2170 (database/schema/420_v2170_cobertura_substituicoes.sql)
+install: [52] plantaopro.ocorrencias_operacionais_v2171 (database/schema/430_ocorrencias_operacionais.sql)
+install: [53] plantaopro.financeiro_clinico_convenios_v2180 (database/schema/440_v2180_financeiro_clinico_convenios.sql)
+install: [54] plantaopro.administrativo360_base (database/migrations/2026_09_v2190_administrativo360_base.sql)
+install: [55] plantaopro.administrativo360_suprimentos (database/migrations/2026_09_v2191_administrativo360_suprimentos.sql)
+install: [56] plantaopro.administrativo360_regras_estoque_orcamentos (database/migrations/2026_09_v2192_administrativo360_regras_estoque_orcamentos.sql)
+install: [57] plantaopro.administrativo360_cirurgia_vales_reconciliacao (database/migrations/2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao.sql)
+install: [58] plantaopro.administrativo360_valorizacao_vendas_financeiro (database/migrations/2026_09_v2194_administrativo360_valorizacao_vendas_financeiro.sql)
+install: [59] plantaopro.administrativo360_contas_pagar_fechamento (database/migrations/2026_09_v2195_administrativo360_contas_pagar_fechamento.sql)
+install: [60] plantaopro.administrativo360_cotacoes_xml_dashboard (database/migrations/2026_09_v2196_administrativo360_cotacoes_xml_dashboard.sql)
+install: [61] plantaopro.tenant_modulos_canonico (database/migrations/2026_09_v2197_reconciliar_contratos_modulos.sql)
+install: [62] plantaopro.tenant_modulos_duplicidades_reconciliadas (database/migrations/2026_09_v2198_reconciliar_duplicidades_contratos_modulos.sql)
+install: [63] plantaopro.adm360_trigger_tenant_corrigido (database/migrations/2026_09_v2199_corrigir_trigger_adm360_validar_tenant.sql)
+install: [64] plantaopro.medicos_compatibilidade_v2200 (database/migrations/2026_09_v2200_reconciliar_colunas_medicos_compatibilidade.sql)
+install: [65] plantaopro.modulos_sistema_comercial_v2201 (database/migrations/2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial.sql)
+install: [66] plantaopro.adm360_cotacao_exportacoes (database/migrations/2026_09_v2200_administrativo360_exportacao_proposta_imutavel.sql)
+install: [67] plantaopro.auditoria_observabilidade_reconciliacao (database/migrations/2026_09_v2202_reconciliar_auditoria_observabilidade.sql)
+install: [68] plantaopro.adm360_cotacao_respostas_transmissao (database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql)
+install: [69] plantaopro.adm360_eventos (database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql)
+install: [70] plantaopro.adm360_validar_tenant (database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql)
+install: [71] plantaopro.saude360_prontuario_v1270 (database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql)
+install: [72] plantaopro.adm360_documentos_xml_b1 (database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql)
+install: [73] plantaopro.adm360_cotacao_envios (database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql)
+install: [74] plantaopro.fn_adm360_bypass_habilitado (database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql)
+install: [75] plantaopro.ux_plano_saude_pacientes_principal (database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql)
+install: [76] plantaopro.ai_config (database/migrations/2026_10_v2307_ai_camada_canonica.sql)
+install: [76] plantaopro.ai_usos (database/migrations/2026_10_v2307_ai_camada_canonica.sql)
+install: [77] plantaopro.ai_precos_modelos (database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql)
+install: [77] plantaopro.ai_chamadas_ativas (database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql)
+install: [78] plantaopro.adm360_documentos_xml_a3 (database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql)
+install: [79] plantaopro.adm360_eventos_conferencia_a3 (database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql)
+install concluído com 83 fontes canônicas do manifesto v2.21.8.
+IDENTITY_SCHEMA_READY
+
+=== [passo 3: upgrade (migration-manifest, aplica pendentes)] dotnet run --project backend/PlantaoPro.Tools.Database -- upgrade ===
+upgrade: 20260607_saas_lgpd_jornada_comercial_ajuda aplicada.
+upgrade: 2026_fix_api_error_logs_defaults aplicada.
+upgrade: 2026_fix_api_error_logs_not_null aplicada.
+upgrade: 2026_fix_cid_tabela_schema aplicada.
+upgrade: 2026_fix_clinica_financeiro_minimo aplicada.
+upgrade: 2026_plantao_pro_automacao_operacional_fase4 aplicada.
+upgrade: 2026_plantao_pro_piloto_comercial_operacao_b2b aplicada.
+upgrade: 2026_plantao_pro_saas_comercial_lgpd_jornada aplicada.
+upgrade: 2026_plantao_pro_saas_inteligente aplicada.
+upgrade: 2026_plantao_pro_saas_inteligente_auditavel aplicada.
+upgrade: 2026_plantao_pro_saas_inteligente_funcional aplicada.
+upgrade: 2026_plantao_pro_saas_jornada_lgpd_inteligencia aplicada.
+upgrade: 2026_plantao_pro_saas_lgpd_jornada_inteligente aplicada.
+upgrade: 2026_plantao_pro_saude360_base_clinica aplicada.
+upgrade: 2026_plantao_pro_saude360_modulos_clinicos aplicada.
+upgrade: 2026_plantao_pro_self_service_white_label aplicada.
+upgrade: 2026_plantao_pro_versao_comercial_demo aplicada.
+upgrade: 2026_plantao_pro_white_label_b2b_launch aplicada.
+upgrade: 2026_plantao_pro_white_label_self_service aplicada.
+upgrade: 2026_saas_comercial_core aplicada.
+upgrade: 2026_saude360_base_clinica_minima aplicada.
+upgrade: 2026_saude360_bi_integracoes_mobile aplicada.
+upgrade: 2026_saude360_cid_oficial aplicada.
+upgrade: 2026_saude360_cid_prescricao aplicada.
+upgrade: 2026_saude360_consultas_base aplicada.
+upgrade: 2026_saude360_convenios_planos_saude aplicada.
+upgrade: 2026_saude360_financeiro_clinica aplicada.
+upgrade: 2026_saude360_indices_performance aplicada.
+upgrade: 2026_v113_operacional_real aplicada.
+upgrade: 2026_v114_consolidacao_produto aplicada.
+upgrade: 2026_v115_regras_faturamento_repasses aplicada.
+upgrade: 2026_v116_consolidacao_operacional_final aplicada.
+upgrade: 2026_v117_hardening_v116_runtime aplicada.
+upgrade: 2026_v1186_schema_permissoes_compatibilidade aplicada.
+upgrade: 2026_v1187_central_seguranca_acessos aplicada.
+upgrade: 2026_v1188_implantacao_go_live aplicada.
+upgrade: 2026_v1189_operacoes_continuidade aplicada.
+upgrade: 2026_v1189_identity_schema_login aplicada.
+upgrade: 2026_v1201_experiencia_premium_meu_dia aplicada.
+upgrade: 2026_v1250_jornada_clinica_operacional aplicada.
+upgrade: 2026_v1410_cobertura_escalas_fechamento_financeiro aplicada.
+upgrade: 2026_v1951_pagamentos_plantoes aplicada.
+upgrade: 2026_v187_fechamento_operacional_financeiro aplicada.
+upgrade: 2026_v188_prontuario_longitudinal aplicada.
+upgrade: 2026_v189_clinical_operational_hardening aplicada.
+upgrade: 2026_v192_saved_views aplicada.
+upgrade: 2026_08_v195_financeiro_revenue_cycle aplicada.
+upgrade: 2026_v2069_reparar_base_notificacoes aplicada.
+upgrade: 2026_v2070_notificacoes_alertas_operacionais aplicada.
+upgrade: 2026_v2158_financeiro_medico_conferencia aplicada.
+upgrade: 2026_v2159_saude360_agenda_recepcao aplicada.
+upgrade: 2026_v2160_triagem_consulta_jornada aplicada.
+upgrade: 2026_v2163_portal_cliente_modulos aplicada.
+upgrade: 2026_v2167_execucao_conferencia aplicada.
+upgrade: 2026_v2168_conferencia_integridade aplicada.
+upgrade: 2026_v2170_cobertura_substituicoes aplicada.
+upgrade: 2026_v2171_ocorrencias_operacionais aplicada.
+upgrade: 2026_09_v2190_administrativo360_base aplicada.
+upgrade: 2026_09_v2191_administrativo360_suprimentos aplicada.
+upgrade: 2026_09_v2192_administrativo360_regras_estoque_orcamentos aplicada.
+upgrade: 2026_09_v2193_administrativo360_cirurgia_vales_reconciliacao aplicada.
+upgrade: 2026_09_v2194_administrativo360_valorizacao_vendas_financeiro aplicada.
+upgrade: 2026_09_v2195_administrativo360_contas_pagar_fechamento aplicada.
+upgrade: 2026_09_v2196_administrativo360_cotacoes_xml_dashboard aplicada.
+upgrade: 2026_09_v2197_reconciliar_contratos_modulos aplicada.
+upgrade: 2026_09_v2198_reconciliar_duplicidades_contratos_modulos aplicada.
+upgrade: 2026_09_v2199_corrigir_trigger_adm360_validar_tenant aplicada.
+upgrade: 2026_09_v2200_reconciliar_colunas_medicos_compatibilidade aplicada.
+upgrade: 2026_09_v2201_reconciliar_colunas_modulos_sistema_comercial aplicada.
+upgrade: 2026_09_v2200_administrativo360_exportacao_proposta_imutavel aplicada.
+upgrade: 2026_09_v2202_reconciliar_auditoria_observabilidade aplicada.
+upgrade: 2026_09_v2300_administrativo360_status_transmissao_exportacao aplicada.
+upgrade: 2026_09_v2301_administrativo360_eventos_imutabilidade aplicada.
+upgrade: 2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant aplicada.
+upgrade: 2026_v1270_normalizar_permissoes_e_prontuario aplicada.
+upgrade: 2026_09_v2303_administrativo360_documentos_xml_b1 aplicada.
+upgrade: 2026_09_v2304_administrativo360_transmissao_tentativas aplicada.
+upgrade: 2026_10_v2305_administrativo360_imutabilidade_por_papel aplicada.
+upgrade: 2026_10_v2306_saude360_plano_principal_unico aplicada.
+upgrade: 2026_10_v2307_ai_camada_canonica aplicada.
+upgrade: 2026_10_v2308_ai_governanca_modelos_orcamento aplicada.
+upgrade: 2026_10_v2309_administrativo360_documentos_xml_a3 aplicada.
+upgrade: 2026_10_v2310_adm360_eventos_tipo_conferencia aplicada.
+IDENTITY_SCHEMA_READY
+
+=== [passo 4: re-aplicação do upgrade (idempotência esperada)] dotnet run --project backend/PlantaoPro.Tools.Database -- upgrade ===
+IDENTITY_SCHEMA_READY
+
+=== [passo 5: status (pendências)] dotnet run --project backend/PlantaoPro.Tools.Database -- status ===
+Migrations: aplicadas=86 esperadas=83 falhas=0 pendentes=0.
+
+=== [passo 6: verificação do schema identitário] dotnet run --project backend/PlantaoPro.Tools.Database -- verify ===
+IDENTITY_SCHEMA_READY
+
+=== [limpeza] DROP DATABASE plantaopro_gate_r2 (banco descartável) ===
+DROP DATABASE
+
+CICLO DE VIDA DO BANCO GATE R2 COMPLETO SEM ERROS

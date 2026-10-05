@@ -1,0 +1,13 @@
+EVIDENCIA M2.2 — POST /Administrativo360/SalvarParceiro com Nome = 3 espacos (campo obrigatorio invalido)
+Sessao: gestor@santacasa-demo.example (tenant Santa Casa, ADM360)
+Metodo: POST via fetch (mesma sessao/cookies do navegador, antiforgery token da pagina), contornando validacao cliente.
+
+Resposta HTTP:
+  Status: 200 (redirecionamento processado para /Administrativo360/Parceiros)
+  URL final: https://localhost:52977/Administrativo360/Parceiros
+  Body: HTML da listagem de parceiros (83679 bytes)
+
+Prova de rejeicao server-side (presente no HTML da resposta, renderizado como toast por JS):
+  <script type="application/json" id="pp-toast-data" data-visual-tone="calm">[{"Type":"error","Message":"One or more validation errors occurred."}]</script>
+
+Conclusao: o servidor rejeitou a criacao do parceiro com Nome em branco (validacao de campo obrigatorio na camada server-side); nenhum registro foi criado (confirmado por psql: somente a linha d2ec5f24-6052-42bc-9947-0fa2f3365d66 do M2.1 existe para 'Jornada WPB').

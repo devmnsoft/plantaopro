@@ -826,7 +826,7 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 recebimentoId = Guid.NewGuid();
                 await cn.ExecuteAsync(new CommandDefinition(@"
                     INSERT INTO plantaopro.adm360_recebimentos(
-                        id, tenant_id, pedido_id, documento, idempotency_key, criado_em, confirmado_em, created_by
+                        id, tenant_id, pedido_id, documento, idempotency_key, created_at, confirmado_em, created_by
                     ) VALUES (
                         @recebimentoId, @tenantId, @pedidoId, @documento, @idemp, now(), now(), @usuarioId
                     )",

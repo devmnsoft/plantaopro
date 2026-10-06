@@ -47,6 +47,18 @@
         </div>
     </div>
 
+    @if (Model.Cotacao.CanceladoEm.HasValue)
+    {
+        <div class="alert alert-warning d-flex align-items-start" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>
+            <div>
+                <strong>Cotação cancelada em @Model.Cotacao.CanceladoEm.Value.ToString("dd/MM/yyyy HH:mm") UTC.</strong>
+                <div class="small mt-1">Motivo: @(Model.Cotacao.MotivoCancelamento ?? "não informado")</div>
+                <div class="small text-muted mt-1">Estado terminal auditável: esta cotação não pode mais ser transmitida, aprovada ou estornada (ver histórico de eventos).</div>
+            </div>
+        </div>
+    }
+
     <details class="screen-guide-card">
         <summary><i class="bi bi-compass" aria-hidden="true"></i>Como usar esta tela</summary>
         <div>

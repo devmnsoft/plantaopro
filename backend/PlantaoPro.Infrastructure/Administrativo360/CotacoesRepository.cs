@@ -256,9 +256,26 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
         return id;
     }
 
+    // B7: expiração lazy por prazo excedido. Marca EXPIRADA em leitura (autocommit) ou
+    // dentro da transação do fluxo de escrita (escopo de linha quando o id é conhecido),
+    // preservando os estados terminais existentes. Depois do UPDATE a mesma conexão vê o
+    // estado novo e as regras de negócio agem sobre ele de forma idempotente.
+    private static async Task MarcarExpiradasPrazoExcedidoAsync(NpgsqlConnection cn, NpgsqlTransaction? tx, Guid tenantId, Guid? cotacaoId, CancellationToken ct)
+    {
+        await cn.ExecuteAsync(new CommandDefinition(@"
+            UPDATE plantaopro.adm360_cotacoes
+               SET status_interno = 'EXPIRADA', updated_at = now()
+             WHERE tenant_id = @tenantId
+               AND (@cotacaoId IS NULL OR id = @cotacaoId)
+               AND prazo_resposta < now()
+               AND status_interno NOT IN ('RESPONDIDA', 'CANCELADA', 'EXPIRADA')",
+            new { tenantId, cotacaoId }, tx, cancellationToken: ct));
+    }
+
     public async Task<IReadOnlyList<CotacaoResumoDto>> ListarCotacoesAsync(Guid tenantId, string? status = null, string? provedor = null, CancellationToken ct = default)
     {
         await using var cn = Connection();
+        await MarcarExpiradasPrazoExcedidoAsync(cn, null, tenantId, null, ct);
         var sql = @"
             SELECT c.id, c.provedor, c.identificador_externo, c.revisao_externa,
                    COALESCE(p.nome, c.hospital_solicitante_externo, 'Hospital não informado') AS hospital_nome,
@@ -296,13 +313,15 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
     public async Task<CotacaoDetalhesDto?> ObterCotacaoPorIdAsync(Guid tenantId, Guid id, CancellationToken ct = default)
     {
         await using var cn = Connection();
+        await MarcarExpiradasPrazoExcedidoAsync(cn, null, tenantId, id, ct);
         var c = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
             SELECT c.id, c.estabelecimento_id, e.razao_social AS estabelecimento_nome,
                    c.portal_conta_id, c.provedor, c.identificador_externo, c.revisao_externa,
                    c.hospital_id, p.nome AS hospital_nome, c.hospital_solicitante_externo,
                    c.paciente_iniciais, c.procedimento, c.data_prevista, c.prazo_resposta,
                    c.fuso_horario, c.status_interno, c.status_externo, c.origem,
-                   c.orcamento_id, o.numero AS orcamento_numero, c.capturada_em
+                   c.orcamento_id, o.numero AS orcamento_numero, c.capturada_em,
+                   c.cancelado_em, c.motivo_cancelamento
             FROM plantaopro.adm360_cotacoes c
             JOIN plantaopro.adm360_estabelecimentos e ON e.id = c.estabelecimento_id AND e.tenant_id = c.tenant_id
             LEFT JOIN plantaopro.adm360_parceiros p ON p.id = c.hospital_id AND p.tenant_id = c.tenant_id
@@ -386,7 +405,9 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             (string?)c.orcamento_numero,
             (DateTime)c.capturada_em,
             itens,
-            anexos
+            anexos,
+            c.cancelado_em is not null ? (DateTime?)c.cancelado_em : null,
+            (string?)c.motivo_cancelamento
         );
     }
 
@@ -613,6 +634,8 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
         {
+            await MarcarExpiradasPrazoExcedidoAsync(cn, tx, tenantId, command.CotacaoId, ct);
+
             var cotacao = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT c.id, c.orcamento_id, c.hospital_id, c.procedimento, c.data_prevista,
                        c.status_interno, c.identificador_externo, c.revisao_externa
@@ -626,9 +649,18 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
             if (cotacao.orcamento_id is not null && (Guid)cotacao.orcamento_id != Guid.Empty)
             {
-                // Idempotente: orçamento já vinculado
-                orcamentoId = (Guid)cotacao.orcamento_id;
-                return;
+                if (!command.Revisar)
+                {
+                    // Idempotente: orçamento já vinculado
+                    orcamentoId = (Guid)cotacao.orcamento_id;
+                    return;
+                }
+                // B7: revisão de orçamento existente — só a partir de fases que ainda permitem ajuste.
+                // O orçamento antigo permanece como snapshot histórico (itens não são apagados).
+                var faseAtual = (string)cotacao.status_interno;
+                if (faseAtual is not ("AGUARDANDO_APROVACAO" or "EM_ORCAMENTO"))
+                    throw new Administrativo360BusinessException(
+                        $"Revisão de orçamento somente é permitida nas fases AGUARDANDO_APROVACAO ou EM_ORCAMENTO (fase atual: {faseAtual}).");
             }
 
             var itens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
@@ -663,7 +695,22 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             }
 
             orcamentoId = Guid.NewGuid();
-            var numeroOrcamento = $"ORC-COT-{(string)cotacao.identificador_externo}-R{(int)cotacao.revisao_externa}";
+            int novaRevisao = 1;
+            string numeroOrcamento;
+            if (command.Revisar)
+            {
+                // B7: nova revisão — sufixo -V{n} evita colisão com o número do orçamento anterior
+                var revisaoAnterior = await cn.ExecuteScalarAsync<int>(new CommandDefinition(@"
+                    SELECT COALESCE(MAX(revisao), 0) FROM plantaopro.adm360_orcamentos
+                    WHERE id = @orcId AND tenant_id = @tenantId",
+                    new { orcId = (Guid)cotacao.orcamento_id, tenantId }, tx, cancellationToken: ct));
+                novaRevisao = revisaoAnterior + 1;
+                numeroOrcamento = $"ORC-COT-{(string)cotacao.identificador_externo}-R{(int)cotacao.revisao_externa}-V{novaRevisao}";
+            }
+            else
+            {
+                numeroOrcamento = $"ORC-COT-{(string)cotacao.identificador_externo}-R{(int)cotacao.revisao_externa}";
+            }
             var dataPrev = cotacao.data_prevista is not null ? ToDateOnly(cotacao.data_prevista) : DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
             var validade = dataPrev.AddDays(30);
 
@@ -675,13 +722,13 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                     responsavel_financeiro_id, data_prevista, validade, situacao,
                     total_produtos, desconto_geral, total_geral, observacoes, created_by
                 ) VALUES (
-                    @orcamentoId, @tenantId, @numeroOrcamento, 1, @hospitalId, @procedimento,
+                    @orcamentoId, @tenantId, @numeroOrcamento, @novaRevisao, @hospitalId, @procedimento,
                     @hospitalId, @dataPrev, @validade, 'RASCUNHO',
                     @totalProdutos, 0, @totalProdutos, 'Gerado automaticamente a partir de Cotação Externa', @usuarioId
                 ) ON CONFLICT (tenant_id, id) DO NOTHING",
                 new
                 {
-                    orcamentoId, tenantId, numeroOrcamento, hospitalId,
+                    orcamentoId, tenantId, numeroOrcamento, novaRevisao, hospitalId,
                     procedimento = (string)(cotacao.procedimento ?? "Procedimento Cirúrgico"),
                     dataPrev, validade, totalProdutos, usuarioId
                 }, tx, cancellationToken: ct));
@@ -707,14 +754,16 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                     }, tx, cancellationToken: ct));
             }
 
-            // Vincula o orçamento à cotação e avança status
+            // Vincula o orçamento à cotação e avança status.
+            // B7: com revisão, a cotação volta a EM_ORCAMENTO para ajuste; a aprovação só então
+            // prossegue pela transição EM_ORCAMENTO -> PRONTA_PARA_ENVIO do domínio.
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_cotacoes
                 SET orcamento_id = @orcamentoId,
-                    status_interno = 'AGUARDANDO_APROVACAO',
+                    status_interno = @statusNovo,
                     updated_at = now()
                 WHERE id = @CotacaoId AND tenant_id = @tenantId",
-                new { orcamentoId, command.CotacaoId, tenantId }, tx, cancellationToken: ct));
+                new { orcamentoId, command.CotacaoId, tenantId, statusNovo = command.Revisar ? "EM_ORCAMENTO" : "AGUARDANDO_APROVACAO" }, tx, cancellationToken: ct));
         }, ct);
 
         return orcamentoId;
@@ -726,6 +775,8 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
 
         await ExecutarComRetrySerializableAsync(async (cn, tx) =>
         {
+            await MarcarExpiradasPrazoExcedidoAsync(cn, tx, tenantId, command.CotacaoId, ct);
+
             var cotacao = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT c.id, c.orcamento_id, c.prazo_resposta, c.status_interno,
                        c.identificador_externo, c.revisao_externa
@@ -738,6 +789,10 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                 throw new KeyNotFoundException("Cotação não encontrada.");
 
             CotacaoRegras.ValidarPrazoResposta((DateTime)cotacao.prazo_resposta, DateTime.UtcNow);
+
+            // B7: guarda de transição de status (furo antigo: o fluxo só validava prazo e pendências).
+            // Cancelada/expirada são terminais e bloqueiam; PRONTA_PARA_ENVIO atual é idempotente.
+            CotacaoRegras.ValidarTransicaoStatus((string)cotacao.status_interno, "PRONTA_PARA_ENVIO");
 
             var itens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
                 SELECT numero_item, status_relacionamento, motivo_nao_atendimento, produto_id,
@@ -755,6 +810,31 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             )).ToList();
 
             CotacaoRegras.ValidarPendenciasParaEnvio(itensValidacao, cotacao.orcamento_id is not null ? (Guid?)cotacao.orcamento_id : null);
+
+            // B7 anti-duplicidade: no máximo UMA resposta não resolvida por cotação. Se a linha já
+            // existe (ex.: após estorno), ela é reutilizada com novo snapshot em vez de inserir
+            // duplicada. ENVIANDO indica transmissão em voo; ACEITA_PELO_PORTAL exige estorno antes.
+            // Ordem de lock preservada: cotação (acima) -> resposta (aqui). Backstop no banco:
+            // índice único parcial ux_adm360_resposta_cotacao_nao_resolvida (v2314).
+            var existente = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT r.id, r.status_transmissao
+                  FROM plantaopro.adm360_cotacao_respostas r
+                 WHERE r.cotacao_id = @CotacaoId AND r.tenant_id = @tenantId
+                 ORDER BY r.created_at ASC
+                 LIMIT 1
+                 FOR UPDATE",
+                new { command.CotacaoId, tenantId }, tx, cancellationToken: ct));
+
+            if (existente is not null)
+            {
+                var statusTransmissaoExistente = (string)existente.status_transmissao;
+                if (statusTransmissaoExistente == "ENVIANDO")
+                    throw new Administrativo360BusinessException(
+                        "Já existe transmissão em andamento para esta resposta. Aguarde o retorno do portal ou a conciliação de envios interrompidos antes de tentar novamente.");
+                if (statusTransmissaoExistente == "ACEITA_PELO_PORTAL")
+                    throw new Administrativo360BusinessException(
+                        "A proposta desta cotação já foi aceita pelo portal. Estorne a resposta antes de gerar uma nova aprovação.");
+            }
 
             // Snapshot imutável da resposta
             var snapshotObj = new
@@ -778,29 +858,59 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             };
 
             var snapshotJson = JsonSerializer.Serialize(snapshotObj);
-            respostaId = Guid.NewGuid();
+            bool novaResposta = existente is null;
+            if (!novaResposta) respostaId = (Guid)existente.id; else respostaId = Guid.NewGuid();
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_cotacao_respostas(
-                    id, tenant_id, cotacao_id, orcamento_id, revisao,
-                    snapshot_proposta, status_transmissao, status_comercial_externo,
-                    tentativas, proxima_tentativa, aprovado_por, aprovado_em
-                ) VALUES (
-                    @respostaId, @tenantId, @CotacaoId, @orcamentoId, @revisao,
-                    @snapshotJson::jsonb, 'NA_FILA', 'AGUARDANDO_DECISAO',
-                    0, now(), @usuarioId, now()
-                )",
-                new
-                {
-                    respostaId, tenantId, command.CotacaoId, orcamentoId = (Guid)cotacao.orcamento_id,
-                    revisao = (int)cotacao.revisao_externa, snapshotJson, usuarioId
-                }, tx, cancellationToken: ct));
+            if (novaResposta)
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_cotacao_respostas(
+                        id, tenant_id, cotacao_id, orcamento_id, revisao,
+                        snapshot_proposta, status_transmissao, status_comercial_externo,
+                        tentativas, proxima_tentativa, aprovado_por, aprovado_em
+                    ) VALUES (
+                        @respostaId, @tenantId, @CotacaoId, @orcamentoId, @revisao,
+                        @snapshotJson::jsonb, 'NA_FILA', 'AGUARDANDO_DECISAO',
+                        0, now(), @usuarioId, now()
+                    )",
+                    new
+                    {
+                        respostaId, tenantId, command.CotacaoId, orcamentoId = (Guid)cotacao.orcamento_id,
+                        revisao = (int)cotacao.revisao_externa, snapshotJson, usuarioId
+                    }, tx, cancellationToken: ct));
+            }
+            else
+            {
+                // B7 reuso da fila: reconstrói o snapshot com os itens atuais (inclui orçamento de
+                // revisão, quando houve) e devolve a resposta à fila. Histórico preservado:
+                // protocolo_externo, mensagem_retorno e tentativas não são tocados.
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacao_respostas
+                    SET orcamento_id = @orcamentoId,
+                        snapshot_proposta = @snapshotJson::jsonb,
+                        status_transmissao = 'NA_FILA',
+                        status_comercial_externo = 'AGUARDANDO_DECISAO',
+                        revisao = @revisao,
+                        proxima_tentativa = now(),
+                        aprovado_por = @usuarioId,
+                        aprovado_em = now(),
+                        updated_at = now()
+                    WHERE id = @respostaId AND tenant_id = @tenantId",
+                    new
+                    {
+                        orcamentoId = (Guid)cotacao.orcamento_id,
+                        revisao = (int)cotacao.revisao_externa, snapshotJson, usuarioId,
+                        respostaId, tenantId
+                    }, tx, cancellationToken: ct));
+            }
 
-            // P4: evento APROVACAO — decisão de aprovação registrada imutavelmente na mesma transação
+            // P4: evento APROVACAO — decisão de aprovação registrada imutavelmente na mesma transação.
+            // B7: chave de idempotência apenas na primeira criação da resposta; o reuso registra
+            // o próprio fato sem chave para não ser descartado pelo ON CONFLICT DO NOTHING.
             await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Aprovacao, "COTACAO_RESPOSTA", respostaId, usuarioId,
-                "Proposta aprovada para envio ao portal",
-                new { cotacao_id = (Guid)cotacao.id, orcamento_id = (Guid)cotacao.orcamento_id, revisao = (int)cotacao.revisao_externa },
-                $"aprovacao:resposta:{respostaId:N}", ct);
+                novaResposta ? "Proposta aprovada para envio ao portal" : "Proposta re-aprovada apos estorno (reuso da resposta existente)",
+                new { cotacao_id = (Guid)cotacao.id, orcamento_id = (Guid)cotacao.orcamento_id, revisao = (int)cotacao.revisao_externa, reuso = !novaResposta },
+                novaResposta ? $"aprovacao:resposta:{respostaId:N}" : null, ct);
 
             await cn.ExecuteAsync(new CommandDefinition(@"
                 UPDATE plantaopro.adm360_cotacoes
@@ -915,6 +1025,27 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             await using var txMarca = await cnMarca.BeginTransactionAsync(ct);
             try
             {
+                // B7: ordem de lock — cotação ANTES da resposta. Todos os fluxos de escrita
+                // (aprovar, cancelar, estornar e transmitir) seguem a mesma ordem para evitar
+                // deadlock. A expiração lazy do prazo entra no mesmo escopo de linha.
+                await MarcarExpiradasPrazoExcedidoAsync(cnMarca, txMarca, tenantId, resp.CotacaoId, ct);
+
+                var statusCotacao = await cnMarca.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                    SELECT c.status_interno, c.prazo_resposta::timestamp AS prazo_resposta
+                      FROM plantaopro.adm360_cotacoes c
+                     WHERE c.id = @cotacaoId AND c.tenant_id = @tenantId
+                     FOR UPDATE",
+                    new { cotacaoId = resp.CotacaoId, tenantId }, txMarca, cancellationToken: ct));
+
+                if (statusCotacao is null)
+                    throw new KeyNotFoundException("Cotação vinculada não encontrada.");
+
+                if ((string)statusCotacao.status_interno == "CANCELADA")
+                    throw new Administrativo360BusinessException("A cotação vinculada foi cancelada internamente e não pode ser transmitida.");
+
+                // Prazo excedido (estado EXPIRADA ou ainda não marcado): mensagem ancorada do domínio.
+                CotacaoRegras.ValidarPrazoResposta((DateTime)statusCotacao.prazo_resposta, DateTime.UtcNow);
+
                 var locked = await cnMarca.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                     SELECT r.status_transmissao, r.tentativas, r.protocolo_externo
                       FROM plantaopro.adm360_cotacao_respostas r
@@ -988,16 +1119,11 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             await using var txFinal = await cnFinal.BeginTransactionAsync(ct);
             try
             {
-                await cnFinal.ExecuteAsync(new CommandDefinition(@"
-                    UPDATE plantaopro.adm360_cotacao_envios
-                    SET status_transmissao = @status,
-                        protocolo_externo = @protocolo,
-                        mensagem = left(@mensagem, 2000),
-                        finalizado_em = now()
-                    WHERE id = @attemptId AND tenant_id = @tenantId",
-                    new { status = resultado.StatusTransmissao, protocolo = resultado.Protocolo, mensagem = resultado.Mensagem, attemptId, tenantId }, txFinal, cancellationToken: ct));
-
-                await cnFinal.ExecuteAsync(new CommandDefinition(@"
+                // B7 finalização honesta: a resposta só é atualizada quando ainda está ENVIANDO
+                // (guard na WHERE). Se outro escritor (estorno, recovery de boot/cíclico ou
+                // cancelamento) mudou o estado durante a chamada externa, as linhas afetadas
+                // são 0 e NENHUM campo da resposta é sobrescrito.
+                var linhasResposta = await cnFinal.ExecuteAsync(new CommandDefinition(@"
                     UPDATE plantaopro.adm360_cotacao_respostas
                     SET status_transmissao = @status,
                         protocolo_externo = @protocolo,
@@ -1014,6 +1140,33 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                         sucesso = resultado.Sucesso
                     }, txFinal, cancellationToken: ct));
 
+                string? estadoConciliado = null;
+                if (linhasResposta == 0)
+                {
+                    estadoConciliado = await cnFinal.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(@"
+                        SELECT status_transmissao FROM plantaopro.adm360_cotacao_respostas
+                        WHERE id = @id AND tenant_id = @tenantId",
+                        new { id = command.RespostaId, tenantId }, txFinal, cancellationToken: ct));
+                }
+
+                var mensagemEnvio = resultado.Mensagem ?? "(sem mensagem do portal)";
+                if (linhasResposta == 0)
+                {
+                    // Registro da tentativa conciliado com o estado real: o status do envio
+                    // permanece o resultado devolvido pelo conector (CHECK da tabela), e a
+                    // divergência fica documentada na própria linha de auditoria.
+                    mensagemEnvio = $"{mensagemEnvio} | Finalizacao honesta (B7): o estado da resposta foi conciliado para '{estadoConciliado}' durante a transmissao; nenhum campo da resposta foi sobrescrito.";
+                }
+
+                await cnFinal.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_cotacao_envios
+                    SET status_transmissao = @status,
+                        protocolo_externo = @protocolo,
+                        mensagem = left(@mensagem, 2000),
+                        finalizado_em = now()
+                    WHERE id = @attemptId AND tenant_id = @tenantId",
+                    new { status = resultado.StatusTransmissao, protocolo = resultado.Protocolo, mensagem = mensagemEnvio, attemptId, tenantId }, txFinal, cancellationToken: ct));
+
                 // Canal manual: gera e registra o arquivo REAL da proposta aprovada (imutável;
                 // a primeira geração vence — retransmissões preservam o arquivo original).
                 // P1 (homologação): exportar ≠ respondida — este passo apenas persiste o artefato;
@@ -1026,7 +1179,10 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                 // P1 (homologação): apenas o ACEITE confirmado pelo portal externo avança a
                 // cotação para RESPONDIDA. A exportação manual não representa resposta do
                 // destinatário — separar preparado/baixado/manual de aceito/rejeitado/desconhecido.
-                if (resultado.Sucesso && resultado.StatusTransmissao == "ACEITA_PELO_PORTAL")
+                // B7: o flip só ocorre quando a resposta efetivamente estava ENVIANDO e foi
+                // finalizada por este envio (linhasResposta > 0); se conciliada por outro
+                // escritor, a cotação não é tocada.
+                if (linhasResposta > 0 && resultado.Sucesso && resultado.StatusTransmissao == "ACEITA_PELO_PORTAL")
                 {
                     await cnFinal.ExecuteAsync(new CommandDefinition(@"
                         UPDATE plantaopro.adm360_cotacoes
@@ -1038,7 +1194,7 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                 // P4/B5: evento RETORNO_EXTERNO — o retorno da transmissão é sempre registrado (um por tentativa)
                 await eventos.RegistrarAsync(cnFinal, txFinal, tenantId, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", command.RespostaId, usuarioId,
                     $"Retorno da transmissão da resposta: {resultado.StatusTransmissao}",
-                    new { status_final = resultado.StatusTransmissao, protocolo_externo = resultado.Protocolo, mensagem_retorno = resultado.Mensagem },
+                    new { status_final = resultado.StatusTransmissao, protocolo_externo = resultado.Protocolo, mensagem_retorno = resultado.Mensagem, estado_resposta_conciliado = estadoConciliado },
                     null, ct);
 
                 await txFinal.CommitAsync(ct);
@@ -1153,5 +1309,135 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             (string)row.sha256_hash,
             (DateTime)row.gerado_em,
             (byte[])row.conteudo);
+    }
+
+    // B7: cancelamento auditável da cotação — estado terminal com momento e motivo registrados.
+    // Idempotente: cotação já CANCELADA não altera nada nem duplica evento (chave estável).
+    // Bloqueia quando existe resposta ENVIANDO (transmissão em voo: a finalização honesta
+    // ou a reconciliação precisam fechar a tentativa antes).
+    public async Task CancelarCotacaoAsync(Guid tenantId, Guid usuarioId, CancelarCotacaoCommand command, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(command.Motivo))
+            throw new Administrativo360BusinessException("O motivo do cancelamento da cotação é obrigatório.");
+
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            await MarcarExpiradasPrazoExcedidoAsync(cn, tx, tenantId, command.CotacaoId, ct);
+
+            var cotacao = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT c.id, c.status_interno
+                  FROM plantaopro.adm360_cotacoes c
+                 WHERE c.id = @CotacaoId AND c.tenant_id = @tenantId
+                 FOR UPDATE",
+                new { command.CotacaoId, tenantId }, tx, cancellationToken: ct));
+
+            if (cotacao is null)
+                throw new KeyNotFoundException("Cotação não encontrada.");
+
+            var statusAtual = (string)cotacao.status_interno;
+
+            // Idempotência: cancelamento já registrado
+            if (statusAtual == "CANCELADA") return;
+
+            var enviando = await cn.ExecuteScalarAsync<int>(new CommandDefinition(@"
+                SELECT count(*) FROM plantaopro.adm360_cotacao_respostas r
+                WHERE r.cotacao_id = @CotacaoId AND r.tenant_id = @tenantId AND r.status_transmissao = 'ENVIANDO'",
+                new { command.CotacaoId, tenantId }, tx, cancellationToken: ct));
+
+            if (enviando > 0)
+                throw new Administrativo360BusinessException(
+                    "Não é possível cancelar a cotação com transmissão em andamento (resposta ENVIANDO). Aguarde o retorno do portal ou a conciliação de envios interrompidos antes de tentar novamente.");
+
+            CotacaoRegras.ValidarTransicaoStatus(statusAtual, "CANCELADA");
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_cotacoes
+                SET status_interno = 'CANCELADA',
+                    cancelado_em = now(),
+                    motivo_cancelamento = @motivo,
+                    updated_at = now()
+                WHERE id = @CotacaoId AND tenant_id = @tenantId",
+                new { command.CotacaoId, tenantId, motivo = command.Motivo }, tx, cancellationToken: ct));
+
+            // P4/B7: evento CANCELAMENTO — chave estável por cotação: re-cancelamentos
+            // (idempotência) não duplicam o fato no log imutável.
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Cancelamento, "COTACAO", (Guid)cotacao.id, usuarioId,
+                "Cotação cancelada",
+                new { status_anterior = statusAtual, motivo = command.Motivo },
+                $"cancelamento:cotacao:{cotacao.id:N}", ct);
+        }, ct);
+    }
+
+    // B7: estorno de resposta de cotação — devolve a fila para reprocessamento sem apagar
+    // histórico: protocolo anterior e mensagens persistidas são preservados e a justificativa
+    // é anexada ao fim de mensagem_retorno. Se o aceite já tinha avançado a cotação para
+    // RESPONDIDA, o estorno a devolve a PRONTA_PARA_ENVIO (novo ciclo de transmissão).
+    // ENVIANDO é bloqueado: a I/O externa em voo deve ser finalizada/reconciliada primeiro.
+    public async Task EstornarRespostaAsync(Guid tenantId, Guid usuarioId, EstornarRespostaCommand command, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(command.Justificativa))
+            throw new Administrativo360BusinessException("A justificativa do estorno é obrigatória.");
+
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            // Ordem de lock: cotação ANTES da resposta (mesma ordem de todos os fluxos de escrita)
+            var cotacao = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT c.id
+                  FROM plantaopro.adm360_cotacoes c
+                 WHERE c.id = (SELECT cotacao_id FROM plantaopro.adm360_cotacao_respostas
+                                WHERE id = @respostaId AND tenant_id = @tenantId)
+                   AND c.tenant_id = @tenantId
+                 FOR UPDATE",
+                new { respostaId = command.RespostaId, tenantId }, tx, cancellationToken: ct));
+
+            if (cotacao is null)
+                throw new KeyNotFoundException("Registro de resposta ou sua cotação vinculada não encontrados.");
+
+            var cotacaoId = (Guid)cotacao.id;
+
+            var resposta = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT r.id, r.status_transmissao, r.mensagem_retorno
+                  FROM plantaopro.adm360_cotacao_respostas r
+                 WHERE r.id = @respostaId AND r.tenant_id = @tenantId
+                 FOR UPDATE",
+                new { respostaId = command.RespostaId, tenantId }, tx, cancellationToken: ct));
+
+            if (resposta is null)
+                throw new KeyNotFoundException("Registro de resposta na fila não encontrado.");
+
+            var statusAtual = (string)resposta.status_transmissao;
+
+            if (statusAtual == "ENVIANDO")
+                throw new Administrativo360BusinessException(
+                    "Esta resposta está com transmissão em andamento e não pode ser estornada. Aguarde o retorno do portal ou a conciliação de envios interrompidos antes de tentar novamente.");
+
+            var mensagemNov = ((string?)resposta.mensagem_retorno ?? "") + " | Estorno (B7): " + command.Justificativa;
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_cotacao_respostas
+                SET status_transmissao = 'NA_FILA',
+                    status_comercial_externo = 'AGUARDANDO_DECISAO',
+                    proxima_tentativa = now(),
+                    mensagem_retorno = left(@mensagemNov, 2000),
+                    updated_at = now()
+                WHERE id = @respostaId AND tenant_id = @tenantId",
+                new { mensagemNov, respostaId = command.RespostaId, tenantId }, tx, cancellationToken: ct));
+
+            // Aceite já aplicado à cotação é anulado: volta à espera de novo envio.
+            // Cotas em CANCELADA/EXPIRADA/PRONTA_PARA_ENVIO não são tocadas.
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_cotacoes
+                SET status_interno = 'PRONTA_PARA_ENVIO', updated_at = now()
+                WHERE id = @cotacaoId AND tenant_id = @tenantId
+                  AND status_interno = 'RESPONDIDA'",
+                new { cotacaoId, tenantId }, tx, cancellationToken: ct));
+
+            // P4/B7: evento ESTORNO — sem chave de idempotência: cada estorno é um fato
+            // distinto (registrado_em diferenciando conteúdo idêntico).
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Estorno, "COTACAO_RESPOSTA", (Guid)resposta.id, usuarioId,
+                "Resposta estornada e devolvida à fila",
+                new { cotacao_id = cotacaoId, status_anterior = statusAtual, justificativa = command.Justificativa, registrado_em = DateTime.UtcNow.ToString("O") },
+                null, ct);
+        }, ct);
     }
 }

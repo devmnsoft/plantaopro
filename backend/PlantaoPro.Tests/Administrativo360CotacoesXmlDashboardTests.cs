@@ -67,6 +67,24 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
     private static readonly Guid TenantOutro = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647599");
     private static readonly Guid UsuarioGestor = Guid.Parse("d3f6584c-2c64-4e5a-9ea9-4e1428647511");
 
+    // B7: o seed demonstrativo usa prazos relativos ao momento em que o script foi aplicado;
+    // com a expiração lazy (B7), prazos envelhecidos passam a mudar o estado lido da cotação.
+    // Os testes que dependem de uma cotação operável declaram esse pré-requisito renovando a
+    // linha específica antes de afirmar (hermeticidade contra o envelhecimento do seed).
+    // A Cotação 3 (EXPIRADA por construção do seed) não é tocada.
+    private static async Task RenovarSeedOperavelAsync(string cs, string identificador, string statusInterno)
+    {
+        await using var cn = new NpgsqlConnection(cs);
+        await cn.OpenAsync();
+        await cn.ExecuteAsync(@"
+            UPDATE plantaopro.adm360_cotacoes
+               SET prazo_resposta = now() + interval '72 hours',
+                   status_interno = @statusInterno,
+                   updated_at = now()
+             WHERE tenant_id = @t AND identificador_externo = @ident",
+            new { t = TenantSantaCasa, ident = identificador, statusInterno });
+    }
+
     // =========================================================================
     // ACEITE 1: Script executa em base preparada e reaplica sem duplicar
     // =========================================================================
@@ -261,6 +279,9 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
 
         var repo = new CotacoesRepository(cs);
 
+        // B7: renova prazo+status da cotação 2 do seed antes de listar (envelhecimento x expiração lazy).
+        await RenovarSeedOperavelAsync(cs, "COT-2026-INPART-002", "EM_RELACIONAMENTO");
+
         // Buscar a cotação 2 do seed demonstrativo que possui item com status PENDENTE
         var cotacoes = await repo.ListarCotacoesAsync(TenantSantaCasa, status: "EM_RELACIONAMENTO");
         var cotacaoPendente = cotacoes.FirstOrDefault(c => c.ItensPendentes > 0);
@@ -324,6 +345,11 @@ public sealed class Administrativo360CotacoesXmlDashboardTests
         await GarantirConexaoBancoAsync(cs);
 
         var repo = new CotacoesRepository(cs);
+
+        // B7: renova o prazo da cotação 1 do seed para que o guard avaliado seja o de resposta
+        // concluída (intenção original deste teste), e não o de prazo expirado.
+        await RenovarSeedOperavelAsync(cs, "COT-2026-OPME-001", "PRONTA_PARA_ENVIO");
+
         var respostas = await repo.ListarRespostasAsync(TenantSantaCasa);
         Assert.NotEmpty(respostas);
 

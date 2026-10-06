@@ -137,8 +137,9 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
             Assert.Equal($"aprovacao:resposta:{respostaId:N}", linhaAprovacao.IdempotencyKey);
             AssertHex64(linhaAprovacao.Sha256Hash);
             Assert.Equal(
+                // B7: o evento de aprovação passou a carregar a flag 'reuso' (false na criação original).
                 Adm360EventService.ComputarHash(TenantSantaCasa, Adm360TipoEvento.Aprovacao, "COTACAO_RESPOSTA", respostaId, linhaAprovacao.Descricao,
-                    new { cotacao_id = cotacaoId, orcamento_id = orcamentoId, revisao = 1 }),
+                    new { cotacao_id = cotacaoId, orcamento_id = orcamentoId, revisao = 1, reuso = false }),
                 linhaAprovacao.Sha256Hash);
 
             // 3) Transmissão manual: RETORNO_EXTERNO + ARQUIVO da exportação
@@ -160,10 +161,15 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
                 ? null
                 : jRetorno.GetProperty("protocolo_externo").GetString();
             var msgRetorno = jRetorno.GetProperty("mensagem_retorno").GetString();
+            // B7: finalização honesta — o evento passou a carregar o estado conciliado da resposta
+            // (null no caminho normal; preenchido quando outro escritor conciliou durante a chamada).
+            var estadoConciliado = jRetorno.TryGetProperty("estado_resposta_conciliado", out var pEstado) && pEstado.ValueKind != JsonValueKind.Null
+                ? pEstado.GetString()
+                : null;
             AssertHex64(linhaRetorno.Sha256Hash);
             Assert.Equal(
                 Adm360EventService.ComputarHash(TenantSantaCasa, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", respostaId, linhaRetorno.Descricao,
-                    new { status_final = statusFinal, protocolo_externo = protocolo, mensagem_retorno = msgRetorno }),
+                    new { status_final = statusFinal, protocolo_externo = protocolo, mensagem_retorno = msgRetorno, estado_resposta_conciliado = estadoConciliado }),
                 linhaRetorno.Sha256Hash);
 
             var arquivo = await repo.ObterExportacaoPorRespostaAsync(TenantSantaCasa, respostaId);
@@ -667,8 +673,10 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
             Assert.Contains("Timeout simulado", msgEv!, StringComparison.Ordinal);
             AssertHex64(ev.Sha256Hash);
             Assert.Equal(
+                // B7: campo 'estado_resposta_conciliado' adicionado ao payload (null aqui — este
+                // envio finalizou a resposta normalmente, linhas afetadas > 0).
                 Adm360EventService.ComputarHash(TenantSantaCasa, Adm360TipoEvento.RetornoExterno, "COTACAO_RESPOSTA", respostaId, ev.Descricao,
-                    new { status_final = "RESULTADO_DESCONHECIDO", protocolo_externo = (string?)null, mensagem_retorno = msgEv }),
+                    new { status_final = "RESULTADO_DESCONHECIDO", protocolo_externo = (string?)null, mensagem_retorno = msgEv, estado_resposta_conciliado = (string?)null }),
                 ev.Sha256Hash);
 
             // Nenhum ENVIANDO órfão no tenant

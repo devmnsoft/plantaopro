@@ -310,6 +310,10 @@ builder.Services.AddScoped<IAiGateway, AiGateway>();
 builder.Services.AddScoped<AiJornadaMeuDia>();
 builder.Services.AddScoped<AiJornadaCotacao>();
 
+// B7: reconciliação periódica de respostas presas em ENVIANDO (complemento à recovery de boot;
+// pulada no Testing e desligada quando Adm360:TransmissaoRecovery:IntervaloSegundos <= 0).
+builder.Services.AddHostedService<Adm360TransmissaoRecoveryHostedService>();
+
 var app = builder.Build();
 
 // P4: concilia respostas presas em ENVIANDO por queda do processo no boot (estado honesto; nunca órfão).

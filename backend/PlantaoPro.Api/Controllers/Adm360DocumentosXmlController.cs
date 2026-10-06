@@ -133,4 +133,36 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
         await repository.ExecutarSincronizacaoDfeAsync(tenant, user, command, ct);
         return Ok(new { sucesso = true });
     }
+
+    // B7: fila de triagens abertas (documentos em quarentena, vencidas primeiro).
+    [HttpGet("triagens")]
+    [Authorize(Policy = "Adm360.ImportarXml")]
+    public async Task<IActionResult> ListarTriagens(CancellationToken ct)
+    {
+        var (tenant, _) = Context();
+        var lista = await repository.ListarTriagensAbertasAsync(tenant, ct);
+        return Ok(lista);
+    }
+
+    // B7: abrir (ou reabrir) a triagem de um documento em quarentena.
+    [HttpPost("triagens/abrir")]
+    [Authorize(Policy = "Adm360.VincularDocumentos")]
+    public async Task<IActionResult> AbrirTriagem([FromBody] AbrirTriagemDocumentoCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.AbrirTriagemDocumentoAsync(tenant, user, command, ct);
+        logger.LogInformation("Triagem do documento {DocId} aberta (responsável {ResponsavelId}, prazo {PrazoUtc:O}) pelo usuário {UsuarioId}.", command.DocumentoId, command.ResponsavelId, command.PrazoUtc, user);
+        return Ok(new { sucesso = true });
+    }
+
+    // B7: resolver a triagem — o documento sai da quarentena (conferência segue decisão separada).
+    [HttpPost("triagens/resolver")]
+    [Authorize(Policy = "Adm360.VincularDocumentos")]
+    public async Task<IActionResult> ResolverTriagem([FromBody] ResolverTriagemDocumentoCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.ResolverTriagemDocumentoAsync(tenant, user, command, ct);
+        logger.LogInformation("Triagem do documento {DocId} resolvida pelo usuário {UsuarioId}.", command.DocumentoId, user);
+        return Ok(new { sucesso = true });
+    }
 }

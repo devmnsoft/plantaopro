@@ -16,6 +16,12 @@ public static class Adm360TipoEvento
 
     // A3: conferência autorizada de documento fiscal recebido (gátes do estoque).
     public const string ConfirmacaoConferencia = "CONFIRMACAO_CONFERENCIA";
+
+    // B7: cancelamento de cotação, estorno de resposta e triagem de quarentena
+    // (ampliação do CHECK de tipo_evento aplicada na migração v2314).
+    public const string Cancelamento = "CANCELAMENTO";
+    public const string Estorno = "ESTORNO";
+    public const string Triagem = "TRIAGEM";
 }
 
 /// <summary>

@@ -37,6 +37,7 @@ public static class CotacaoRegras
             ("EM_ORCAMENTO", "AGUARDANDO_APROVACAO") => true,
             ("AGUARDANDO_APROVACAO", "PRONTA_PARA_ENVIO") => true,
             ("AGUARDANDO_APROVACAO", "EM_ORCAMENTO") => true, // devolução para ajuste
+            ("EM_ORCAMENTO", "PRONTA_PARA_ENVIO") => true, // B7: aprovação após estorno (revisão mantida em EM_ORCAMENTO)
             ("PRONTA_PARA_ENVIO", "RESPONDIDA") => true,
             _ => false
         };

@@ -161,7 +161,10 @@ public sealed record CotacaoDetalhesDto(
     string? OrcamentoNumero,
     DateTime CapturadaEm,
     IReadOnlyList<CotacaoItemDetalheDto> Itens,
-    IReadOnlyList<CotacaoAnexoDto> Anexos
+    IReadOnlyList<CotacaoAnexoDto> Anexos,
+    // B7: preenchidas apenas quando a cotação foi cancelada internamente
+    DateTime? CanceladoEm = null,
+    string? MotivoCancelamento = null
 );
 
 public sealed record CapturarCotacaoCommand(
@@ -214,7 +217,10 @@ public sealed record RelacionarItemCotacaoCommand(
 
 public sealed record GerarOrcamentoDaCotacaoCommand(
     Guid CotacaoId,
-    string? IdempotencyKey = null
+    string? IdempotencyKey = null,
+    // B7: true = gerar nova revisão do orçamento existente (a cotação volta a EM_ORCAMENTO para ajuste).
+    // Sem revisao (default), a geração segue idempotente e retorna o orçamento já vinculado.
+    bool Revisar = false
 );
 
 public sealed record AprovarRespostaCotacaoCommand(
@@ -225,6 +231,47 @@ public sealed record AprovarRespostaCotacaoCommand(
 public sealed record TransmitirRespostaCommand(
     Guid RespostaId,
     bool ConfirmarRetransmissaoDeDesconhecido = false
+);
+
+// 5.1 B7: cancelamento auditável da cotação (estado terminal com motivo e momento)
+public sealed record CancelarCotacaoCommand(
+    Guid CotacaoId,
+    string Motivo
+);
+
+// 5.2 B7: estorno de resposta de cotação — devolve a fila para reprocessamento
+// sem apagar histórico (protocolo anterior preservado em mensagem_retorno).
+public sealed record EstornarRespostaCommand(
+    Guid RespostaId,
+    string Justificativa
+);
+
+// 5.3 B7: triagem responsável por documento fiscal em quarentena
+public sealed record AbrirTriagemDocumentoCommand(
+    Guid DocumentoId,
+    Guid ResponsavelId,
+    DateTime PrazoUtc,
+    string? Observacao = null
+);
+
+public sealed record ResolverTriagemDocumentoCommand(
+    Guid DocumentoId,
+    string Justificativa
+);
+
+public sealed record TriagemDocumentoDto(
+    Guid DocumentoId,
+    string ChaveAcesso,
+    string? NomeArquivo,
+    string TipoDocumento,
+    string? MotivoQuarentena,
+    string Origem,
+    DateTime CriadoEm,
+    DateTime? TriagemAbertaEm,
+    DateTime? TriagemPrazo,
+    bool Vencida,
+    string? ResponsavelNome,
+    string? TriagemObservacao
 );
 
 // 5. Outbox de Respostas
@@ -247,7 +294,7 @@ public sealed record CotacaoRespostaDto(
     string? ExportacaoSha256Hash = null
 );
 
-// 5.1 Arquivo real da proposta aprovada exportada via canal manual (imutável)
+// 5.4 Arquivo real da proposta aprovada exportada via canal manual (imutável)
 public sealed record CotacaoExportacaoArquivoDto(
     Guid Id,
     Guid TenantId,
@@ -485,6 +532,9 @@ public interface ICotacoesRepository
     Task<CotacaoRespostaDto?> ObterRespostaPorIdAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default);
     Task<IReadOnlyList<CotacaoRespostaDto>> ListarRespostasAsync(Guid tenantId, string? status = null, CancellationToken ct = default);
     Task TransmitirRespostaAsync(Guid tenantId, Guid usuarioId, TransmitirRespostaCommand command, CancellationToken ct = default);
+    // B7: cancelamento e estorno da cadeia cotação -> resposta
+    Task CancelarCotacaoAsync(Guid tenantId, Guid usuarioId, CancelarCotacaoCommand command, CancellationToken ct = default);
+    Task EstornarRespostaAsync(Guid tenantId, Guid usuarioId, EstornarRespostaCommand command, CancellationToken ct = default);
     Task<(byte[]? Bytes, string Nome, string ContentType, string Sha256Hash)?> ObterAnexoAsync(Guid tenantId, Guid anexoId, CancellationToken ct = default);
     Task<CotacaoExportacaoArquivoDto?> ObterExportacaoPorRespostaAsync(Guid tenantId, Guid respostaId, CancellationToken ct = default);
 }
@@ -505,6 +555,12 @@ public interface IDocumentosXmlRepository
 
     Task<IReadOnlyList<DfeSincronizacaoDto>> ListarSincronizacoesAsync(Guid tenantId, CancellationToken ct = default);
     Task ExecutarSincronizacaoDfeAsync(Guid tenantId, Guid usuarioId, ExecutarSincronizacaoDfeCommand command, CancellationToken ct = default);
+
+    // B7: triagem responsável por documento em quarentena (abrir com responsável+prazo;
+    // resolver sai da quarentena sem substituir a conferencia, que segue decisão separada)
+    Task<IReadOnlyList<TriagemDocumentoDto>> ListarTriagensAbertasAsync(Guid tenantId, CancellationToken ct = default);
+    Task AbrirTriagemDocumentoAsync(Guid tenantId, Guid usuarioId, AbrirTriagemDocumentoCommand command, CancellationToken ct = default);
+    Task ResolverTriagemDocumentoAsync(Guid tenantId, Guid usuarioId, ResolverTriagemDocumentoCommand command, CancellationToken ct = default);
 }
 
 public interface IGestaoDashboardRepository

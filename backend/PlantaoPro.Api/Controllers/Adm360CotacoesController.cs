@@ -224,4 +224,28 @@ public sealed class Adm360CotacoesController : ControllerBase
         await repository.HabilitarCapacidadeAsync(tenant, user, command, ct);
         return Ok(new { sucesso = true });
     }
+
+    // B7: cancelamento auditável da cotação (estado terminal com momento e motivo).
+    // O motivo vem no corpo; o id da rota prevalece sobre qualquer valor do payload.
+    [HttpPost("{id:guid}/cancelar")]
+    [Authorize(Policy = "Adm360.AprovarResposta")]
+    public async Task<IActionResult> Cancelar(Guid id, [FromBody] CancelarCotacaoCommand body, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.CancelarCotacaoAsync(tenant, user, new CancelarCotacaoCommand(id, body.Motivo), ct);
+        logger.LogInformation("Cotação {CotacaoId} cancelada pelo usuário {UsuarioId} no tenant {TenantId}.", id, user, tenant);
+        return Ok(new { sucesso = true });
+    }
+
+    // B7: estorno de resposta — devolve a fila (NA_FILA) sem apagar histórico.
+    // A justificativa vem no corpo; o id da rota prevalece sobre qualquer valor do payload.
+    [HttpPost("respostas/{respostaId:guid}/estornar")]
+    [Authorize(Policy = "Adm360.AprovarResposta")]
+    public async Task<IActionResult> EstornarResposta(Guid respostaId, [FromBody] EstornarRespostaCommand body, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        await repository.EstornarRespostaAsync(tenant, user, new EstornarRespostaCommand(respostaId, body.Justificativa), ct);
+        logger.LogInformation("Resposta {RespostaId} estornada pelo usuário {UsuarioId} no tenant {TenantId}.", respostaId, user, tenant);
+        return Ok(new { sucesso = true });
+    }
 }

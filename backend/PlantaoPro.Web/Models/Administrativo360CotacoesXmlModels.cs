@@ -76,7 +76,10 @@ public sealed record CotacaoDetalhesViewModel(
     string? OrcamentoNumero,
     DateTime CapturadaEm,
     IReadOnlyList<CotacaoItemDetalheViewModel> Itens,
-    IReadOnlyList<CotacaoAnexoViewModel> Anexos
+    IReadOnlyList<CotacaoAnexoViewModel> Anexos,
+    // B7: cancelamento auditável (estado terminal CANCELADA com momento e motivo).
+    DateTime? CanceladoEm = null,
+    string? MotivoCancelamento = null
 );
 
 public sealed record CotacaoRespostaViewModel(

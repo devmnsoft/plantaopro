@@ -907,6 +907,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem",
+      "source": "database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql",
+      "checksum": "4b56d6d862e403482d9473d75f1502abe730d613ac00f4635ec3158252210409",
+      "dependsOn": [
+        "2026_10_v2313_saas_planos_permite_relatorios_b6"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

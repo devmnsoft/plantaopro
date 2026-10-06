@@ -1024,4 +1024,128 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
 
         throw new Administrativo360BusinessException(erro);
     }
+
+    // B7: triagem de documentos em quarentena — fila aberta ordenada por prazo
+    // (vencidas primeiro). O join traz o nome do responsável quando já atribuído.
+    public async Task<IReadOnlyList<TriagemDocumentoDto>> ListarTriagensAbertasAsync(Guid tenantId, CancellationToken ct = default)
+    {
+        await using var cn = Connection();
+        var rows = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
+            SELECT d.id, d.chave_acesso, NULL::text AS nome_arquivo, d.tipo_documento,
+                   d.motivo_quarentena, d.origem, d.created_at,
+                   d.triagem_aberta_em, d.triagem_prazo, d.triagem_observacao,
+                   u.nome AS responsavel_nome
+              FROM plantaopro.adm360_documentos_recebidos d
+              LEFT JOIN plantaopro.usuarios u ON u.id = d.triagem_responsavel_id
+             WHERE d.tenant_id = @tenantId AND d.quarentena = TRUE
+             ORDER BY d.triagem_prazo NULLS LAST, d.created_at ASC",
+            new { tenantId }, cancellationToken: ct))).ToList();
+
+        var agora = DateTime.UtcNow;
+        return rows.Select(r => new TriagemDocumentoDto(
+            (Guid)r.id,
+            (string)r.chave_acesso,
+            (string?)r.nome_arquivo,
+            (string)r.tipo_documento,
+            (string?)r.motivo_quarentena,
+            (string)r.origem,
+            (DateTime)r.created_at,
+            r.triagem_aberta_em is null ? null : (DateTime?)r.triagem_aberta_em,
+            r.triagem_prazo is null ? null : (DateTime?)r.triagem_prazo,
+            r.triagem_prazo is not null && (DateTime)r.triagem_prazo < agora,
+            (string?)r.responsavel_nome,
+            (string?)r.triagem_observacao
+        )).ToList();
+    }
+
+    // B7: abre (ou reabre) a triagem de um documento em quarentena: atribui responsável,
+    // prazo UTC e observação. Se a triagem já estava aberta, os campos são atualizados
+    // (cada abertura é um fato distinto e é registrado como evento TRIAGEM sem chave).
+    public async Task AbrirTriagemDocumentoAsync(Guid tenantId, Guid usuarioId, AbrirTriagemDocumentoCommand command, CancellationToken ct = default)
+    {
+        if (command.PrazoUtc <= DateTime.UtcNow)
+            throw new Administrativo360BusinessException("O prazo da triagem deve ser um momento futuro em UTC.");
+
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            var doc = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT d.id, d.chave_acesso, d.quarentena
+                  FROM plantaopro.adm360_documentos_recebidos d
+                 WHERE d.id = @DocumentoId AND d.tenant_id = @tenantId
+                 FOR UPDATE",
+                new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            if (doc is null)
+                throw new KeyNotFoundException("Documento fiscal não encontrado.");
+
+            if (!(bool)doc.quarentena)
+                throw new Administrativo360BusinessException("A triagem só pode ser aberta para documentos em quarentena.");
+
+            // O responsável deve existir e pertencer ao tenant (usuários globais sem tenant ficam habilitados)
+            var responsavelNome = await cn.QuerySingleOrDefaultAsync<string?>(new CommandDefinition(@"
+                SELECT u.nome FROM plantaopro.usuarios u
+                 WHERE u.id = @ResponsavelId AND (u.tenant_id = @tenantId OR u.tenant_id IS NULL)",
+                new { command.ResponsavelId, tenantId }, tx, cancellationToken: ct));
+
+            if (responsavelNome is null)
+                throw new Administrativo360BusinessException("O responsável informado não existe ou não pertence ao tenant atual.");
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_documentos_recebidos
+                SET triagem_responsavel_id = @ResponsavelId,
+                    triagem_aberta_em = now(),
+                    triagem_prazo = @PrazoUtc,
+                    triagem_observacao = @Observacao,
+                    triagem_resolvida_em = NULL,
+                    updated_at = now()
+                WHERE id = @DocumentoId AND tenant_id = @tenantId",
+                new { command.ResponsavelId, command.PrazoUtc, Observacao = (object?)command.Observacao, command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            // P4/B7: evento TRIAGEM — cada abertura/reabertura é um fato distinto (sem chave de idempotência)
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Triagem, "DOCUMENTO_XML", command.DocumentoId, usuarioId,
+                "Triagem de quarentena aberta",
+                new { chave_acesso = (string)doc.chave_acesso, responsavel_id = command.ResponsavelId, responsavel_nome = responsavelNome, prazo_utc = command.PrazoUtc.ToString("O"), observacao = command.Observacao, registrado_em = DateTime.UtcNow.ToString("O") },
+                null, ct);
+        }, ct);
+    }
+
+    // B7: resolve a triagem — o documento sai da quarentena (quarentena=false e motivo limpo).
+    // Resolver NÃO é conferir: status_conferencia permanece inalterado; a conferência
+    // autorizada segue sendo a decisão separada que libera o gate de recebimento.
+    public async Task ResolverTriagemDocumentoAsync(Guid tenantId, Guid usuarioId, ResolverTriagemDocumentoCommand command, CancellationToken ct = default)
+    {
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            var doc = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT d.id, d.chave_acesso, d.quarentena, d.triagem_responsavel_id, d.status_conferencia
+                  FROM plantaopro.adm360_documentos_recebidos d
+                 WHERE d.id = @DocumentoId AND d.tenant_id = @tenantId
+                 FOR UPDATE",
+                new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            if (doc is null)
+                throw new KeyNotFoundException("Documento fiscal não encontrado.");
+
+            if (!(bool)doc.quarentena)
+                throw new Administrativo360BusinessException("O documento não está em quarentena; não há triagem para resolver.");
+
+            if (doc.triagem_responsavel_id is null)
+                throw new Administrativo360BusinessException("Apenas triagem com responsável atribuído pode ser resolvida (abra a triagem antes).");
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_documentos_recebidos
+                SET quarentena = FALSE,
+                    motivo_quarentena = NULL,
+                    triagem_resolvida_em = now(),
+                    updated_at = now()
+                WHERE id = @DocumentoId AND tenant_id = @tenantId",
+                new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
+
+            // P4/B7: evento TRIAGEM — a resolução é um fato independente da conferência
+            await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.Triagem, "DOCUMENTO_XML", command.DocumentoId, usuarioId,
+                "Triagem de quarentena resolvida",
+                new { chave_acesso = (string)doc.chave_acesso, status_conferencia = (string)doc.status_conferencia, justificativa = command.Justificativa, registrado_em = DateTime.UtcNow.ToString("O") },
+                null, ct);
+        }, ct);
+    }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -12,6 +13,34 @@ using PlantaoPro.Tests.Infrastructure;
 using Xunit;
 
 namespace PlantaoPro.Tests;
+
+/// <summary>
+/// R4-A5: guarda de fim de coleção — se alguma limpeza de jornada/evento/documento
+/// falhou durante a coleção A360Transmissao (antes engolidas em silêncio), a rodada falha
+/// aqui explicitamente em vez de virar flake na rodada seguinte.
+/// </summary>
+internal sealed class GuardaFalhasDeLimpezaColecao : IDisposable
+{
+    public void Dispose()
+    {
+        var falhas = Administrativo360EventosImutabilidadeTests.FalhasDeLimpeza.ToList();
+        if (falhas.Count > 0)
+        {
+            throw new AggregateException(
+                $"{falhas.Count} falha(s) de limpeza silenciosa(s) detectada(s) na coleção A360Transmissao:",
+                falhas);
+        }
+    }
+}
+
+/// <summary>
+/// R4-A5: registra a guarda de fim de coleção no A360Transmissao (a definição anterior
+/// não existia; a coleção era implícita). Dispose com falha = rodada falha explicitamente.
+/// </summary>
+[CollectionDefinition("A360Transmissao")]
+public sealed class A360TransmissaoCollectionDefinition : ICollectionFixture<GuardaFalhasDeLimpezaColecao>
+{
+}
 
 /// <summary>
 /// WP4 (requisito P4) — eventos de negócio imutáveis com hash, downloads idempotentes e
@@ -56,6 +85,13 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
 
     private const string GestorEmail = "gestor@santacasa-demo.example";
     private const string GestorSenha = "SantaCasa!Demo2026#Gestor";
+
+    // R4-A5: falhas de limpeza deixam de ser engolidas em silêncio. Não lançamos na hora —
+    // a limpeza roda em finally e não pode mascarar a asserção do próprio teste — mas
+    // registramos: a GuardaFalhasDeLimpezaColecao falha a rodada no fim da coleção se algo
+    // escapou. Foi exatamente este catch mudo que escondeu o orfao ENVIANDO que quebrou a
+    // rodada seguinte após execução interrompida.
+    internal static readonly ConcurrentBag<Exception> FalhasDeLimpeza = new();
 
     public Administrativo360EventosImutabilidadeTests(PlantaoProApiFactory factory) => _factory = factory;
 
@@ -797,6 +833,12 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
         return (orcamentoId, respostaId);
     }
 
+    private static void RegistrarFalhaDeLimpeza(string origem, Exception ex)
+    {
+        FalhasDeLimpeza.Add(ex);
+        Console.Error.WriteLine($"[{origem}] limpeza ADM360 falhou: {ex.Message}");
+    }
+
     private static async Task LimparJornadaAsync(string cs, Guid respostaId, Guid orcamentoId, Guid cotacaoId, Guid? contaCriadaAgora)
     {
         try
@@ -878,9 +920,11 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
                 await cn.ExecuteAsync("RESET SESSION_REPLICATION_ROLE");
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // Limpeza nunca deve ocultar as asserções do teste
+            // Limpeza nunca deve ocultar as asserções do teste — mas também não pode ser
+            // silenciosa (R4-A5): registra para a guarda de fim de coleção e para o log.
+            RegistrarFalhaDeLimpeza("LimparJornadaAsync", ex);
         }
     }
 
@@ -903,9 +947,10 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
                 await cn.ExecuteAsync("RESET SESSION_REPLICATION_ROLE");
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // best-effort
+            // best-effort visível (R4-A5): falha silenciosa aqui vira flake na rodada seguinte
+            RegistrarFalhaDeLimpeza("LimparEventosAsync", ex);
         }
     }
 
@@ -945,9 +990,10 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
                 await cn.ExecuteAsync("RESET SESSION_REPLICATION_ROLE");
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // best-effort
+            // best-effort visível (R4-A5): falha silenciosa aqui vira flake na rodada seguinte
+            RegistrarFalhaDeLimpeza("LimparDocumentosAsync", ex);
         }
     }
 

@@ -10,7 +10,8 @@ namespace PlantaoPro.Tests.Infrastructure;
 /// <summary>
 /// Fábrica de integração para a aplicação Web (Razor/BFF): ambiente Testing, API operacional
 /// substituída por <see cref="StubApiHandler"/> (determinística) e endpoint /__test/signin
-/// disponível para emitir sessões com claims controlados.
+/// disponível para emitir sessões com claims controlados (R4-A5: com a flag TestAuth:Enabled
+/// fixada em "true" — a ponta fica desabilitada por padrão fora da fábrica de testes).
 /// </summary>
 public sealed class PlantaoProWebFactory : WebApplicationFactory<PlantaoPro.Web.WebAssemblyMarker>
 {
@@ -24,6 +25,9 @@ public sealed class PlantaoProWebFactory : WebApplicationFactory<PlantaoPro.Web.
     {
         builder.UseEnvironment("Testing");
         builder.UseSetting("ApiSettings:BaseUrl", "http://api.test.local");
+        // R4-A5: a suíte depende do /__test/signin; fora desta fábrica a ponta exige a
+        // flag TestAuth:Enabled explicitamente (e só vale em Testing).
+        builder.UseSetting("TestAuth:Enabled", "true");
         builder.ConfigureTestServices(services => services.AddHttpClient("PlantaoProApi")
             .ConfigurePrimaryHttpMessageHandler(() => _apiStub));
     }

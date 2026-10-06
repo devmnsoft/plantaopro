@@ -66,6 +66,17 @@ public abstract class Adm360Repository
         }
     }
 
+    // WS-A3: próxima sequência de evento de documento (MAX+1), calculada dentro do contexto
+    // serial corrente (documento com FOR UPDATE ou advisory lock da importação) — nunca fixa.
+    protected static async Task<int> ProximaSequenciaEventoDocumentoAsync(NpgsqlConnection cn, NpgsqlTransaction tx, Guid tenantId, Guid documentoId, CancellationToken ct)
+    {
+        return await cn.ExecuteScalarAsync<int>(new CommandDefinition(
+            "SELECT COALESCE(MAX(sequencia_evento), 0) + 1 FROM plantaopro.adm360_documento_eventos WHERE tenant_id = @tenantId AND documento_id = @documentoId",
+            new { tenantId, documentoId },
+            tx,
+            cancellationToken: ct));
+    }
+
     protected async Task ExecutarComRetrySerializableAsync(Func<NpgsqlConnection, NpgsqlTransaction, Task> acao, CancellationToken ct, int maxTentativas = 4)
     {
         for (var tentativa = 1; ; tentativa++)

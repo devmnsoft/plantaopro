@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using Dapper;
+using Npgsql;
 using PlantaoPro.Application.Administrativo360;
 using PlantaoPro.Domain.Administrativo360;
 
@@ -577,6 +578,10 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
 
         await ExecutarComRetrySerializableAsync(async (c, tx) =>
         {
+            // WS-A3: advisory lock determinístico serializa importações concorrentes da MESMA
+            // chave de acesso (vencedor único + contrato de idempotência explícito).
+            await BloquearChavesDeterministasAsync(c, tx, new[] { $"adm360:docxml:{tenantId:N}:{u.ChaveAcesso}" }, ct);
+
             // Checagem de duplicidade pela chave de acesso
             var existente = await c.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
                 SELECT id, xml_hash, xml_bytes, xml_conteudo FROM plantaopro.adm360_documentos_recebidos
@@ -604,32 +609,89 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 throw new Administrativo360BusinessException($"Chave de acesso {u.ChaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
             }
 
+            // WS-A3: pré-validação da identidade fiscal (tenant+emitente+modelo+numero+serie)
+            // fora de quarentena (espelha o índice partial; documentos em quarentena trazem
+            // identificadores extraídos sem fiabilidade e não bloqueiam importação).
+            if (!u.Quarentena)
+            {
+                var chaveConflito = await c.ExecuteScalarAsync<string>(new CommandDefinition(@"
+                    SELECT chave_acesso FROM plantaopro.adm360_documentos_recebidos
+                    WHERE tenant_id = @tenantId AND emitente_cnpj = @emitCnpj
+                      AND modelo = @modelo AND numero = @numero AND serie = @serie
+                      AND quarentena = false
+                    LIMIT 1",
+                    new { tenantId, emitCnpj = u.EmitCnpj, modelo = u.Modelo, numero = u.Numero, serie = u.Serie },
+                    tx, cancellationToken: ct));
+                if (chaveConflito is not null)
+                    throw new Administrativo360BusinessException(
+                        $"Identidade fiscal (emitente {u.EmitCnpj}, modelo {u.Modelo}, número {u.Numero}, série {u.Serie}) já registrada nesta organização pelo documento {chaveConflito}. Revise as duplicidades antes de importar este arquivo.");
+            }
+
             documentoId = Guid.NewGuid();
 
-            await c.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_documentos_recebidos(
-                    id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo,
-                    data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome,
-                    valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia,
-                    xml_conteudo, xml_bytes, xml_hash, quarentena, motivo_quarentena, origem, nome_arquivo
-                ) VALUES (
-                    @documentoId, @tenantId, @estabelecimentoId, @chaveAcesso, @numero, @serie, @modelo,
-                    @dataEmissao, @emitCnpj, @emitNome, @destCnpj, @destNome,
-                    @valorTotal, @valorProdutos, @tipoDocumento, 'SEM_MANIFESTACAO',
-                    (CASE WHEN @quarentena THEN 'DIVERGENTE' ELSE 'PENDENTE' END),
-                    @xmlConteudo, @xmlBytes, @xmlHash, @quarentena, @motivoQuarentena, 'IMPORTACAO_MANUAL', @nomeArquivo
-                )",
-                new
+            try
+            {
+                var inseriu = await c.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_documentos_recebidos(
+                        id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo,
+                        data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome,
+                        valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia,
+                        xml_conteudo, xml_bytes, xml_hash, quarentena, motivo_quarentena, origem, nome_arquivo
+                    ) VALUES (
+                        @documentoId, @tenantId, @estabelecimentoId, @chaveAcesso, @numero, @serie, @modelo,
+                        @dataEmissao, @emitCnpj, @emitNome, @destCnpj, @destNome,
+                        @valorTotal, @valorProdutos, @tipoDocumento, 'SEM_MANIFESTACAO',
+                        (CASE WHEN @quarentena THEN 'DIVERGENTE' ELSE 'PENDENTE' END),
+                        @xmlConteudo, @xmlBytes, @xmlHash, @quarentena, @motivoQuarentena, 'IMPORTACAO_MANUAL', @nomeArquivo
+                    )
+                    ON CONFLICT (tenant_id, chave_acesso) DO NOTHING",
+                    new
+                    {
+                        documentoId, tenantId, estabelecimentoId, chaveAcesso = u.ChaveAcesso,
+                        numero = u.Numero, serie = u.Serie, modelo = u.Modelo,
+                        dataEmissao = u.DataEmissao, emitCnpj = u.EmitCnpj, emitNome = u.EmitNome,
+                        destCnpj = u.DestCnpj, destNome = u.DestNome,
+                        valorTotal = u.ValorTotal, valorProdutos = u.ValorProdutos, tipoDocumento = u.TipoDocumento,
+                        xmlConteudo = textoXml, xmlBytes, xmlHash,
+                        quarentena = u.Quarentena, motivoQuarentena = u.Quarentena ? u.MotivoQuarentena : null,
+                        nomeArquivo
+                    }, tx, cancellationToken: ct));
+
+                if (inseriu == 0)
                 {
-                    documentoId, tenantId, estabelecimentoId, chaveAcesso = u.ChaveAcesso,
-                    numero = u.Numero, serie = u.Serie, modelo = u.Modelo,
-                    dataEmissao = u.DataEmissao, emitCnpj = u.EmitCnpj, emitNome = u.EmitNome,
-                    destCnpj = u.DestCnpj, destNome = u.DestNome,
-                    valorTotal = u.ValorTotal, valorProdutos = u.ValorProdutos, tipoDocumento = u.TipoDocumento,
-                    xmlConteudo = textoXml, xmlBytes, xmlHash,
-                    quarentena = u.Quarentena, motivoQuarentena = u.Quarentena ? u.MotivoQuarentena : null,
-                    nomeArquivo
-                }, tx, cancellationToken: ct));
+                    // Corrida residual: outra transação commitou esta chave entre a pré-checagem
+                    // e o INSERT. Relê o estado visível e segue a MESMA regra de deduplicação.
+                    var vencedor = await c.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                        SELECT id, xml_hash, xml_bytes, xml_conteudo
+                        FROM plantaopro.adm360_documentos_recebidos
+                        WHERE tenant_id = @tenantId AND chave_acesso = @chaveAcesso",
+                        new { tenantId, chaveAcesso = u.ChaveAcesso }, tx, cancellationToken: ct));
+                    if (vencedor is null)
+                        throw new InvalidOperationException($"Chave de acesso {u.ChaveAcesso} foi registrada por outra transação mas não é visível nesta leitura.");
+
+                    var vencedorHash = (string)vencedor.xml_hash;
+                    var vencedorBytes = vencedor.xml_bytes is byte[] vb ? vb : Array.Empty<byte>();
+                    var vencedorConteudo = ((string?)vencedor.xml_conteudo)?.Trim();
+                    if (vencedorHash == xmlHash
+                        || vencedorBytes.AsSpan().SequenceEqual(xmlBytes.AsSpan())
+                        || vencedorConteudo == textoXml)
+                    {
+                        documentoId = (Guid)vencedor.id;
+                        duplicadoIdempotente = true;
+                        return;
+                    }
+
+                    throw new Administrativo360BusinessException($"Chave de acesso {u.ChaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
+                }
+            }
+            catch (NpgsqlException ex) when (ex.SqlState == "23505")
+            {
+                // Importação concorrente de outra chave com a MESMA identidade fiscal (índice único):
+                // o conflito de chave_acesso é absorvido pelo ON CONFLICT DO NOTHING acima, então
+                // o 23505 que chega até aqui só pode vir de ux_adm360_docrec_tenant_fiscal.
+                throw new Administrativo360BusinessException(
+                    $"Identidade fiscal (emitente {u.EmitCnpj}, modelo {u.Modelo}, número {u.Numero}, série {u.Serie}) registrada concorrentemente por outro documento nesta organização. Chave do arquivo importado: {u.ChaveAcesso}. Revise as duplicidades e reimporte. Detalhe do banco: {ex.Message}");
+            }
 
             // Itens <det> se documento NF-e/NFC-e válido (A3: ABRASF/NFS-e não trazem itens padronizados)
             if (!u.Quarentena && u.InfNFe is not null)
@@ -689,20 +751,21 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 }
             }
 
-            // Evento de entrada
+            // Evento de entrada (WS-A3: sequência calculada MAX+1, nunca fixa).
             var evId = Guid.NewGuid();
+            var seqEvento = await ProximaSequenciaEventoDocumentoAsync(c, tx, tenantId, documentoId.Value, ct);
             await c.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_documento_eventos(
                     id, tenant_id, documento_id, tipo_evento, sequencia_evento,
                     descricao_evento, data_evento, detalhes, registrado_por
                 ) VALUES (
-                    @evId, @tenantId, @documentoId, 'IMPORTACAO_MANUAL', 1,
+                    @evId, @tenantId, @documentoId, 'IMPORTACAO_MANUAL', @seqEvento,
                     'Documento fiscal importado manualmente para o módulo Administrativo 360', now(),
                     @detalhes, @usuarioId
                 )",
                 new
                 {
-                    evId, tenantId, documentoId,
+                    evId, tenantId, documentoId, seqEvento,
                     detalhes = u.Quarentena ? $"Quarentena: {u.MotivoQuarentena}" : "Arquivo XML validado e persistido com sucesso.",
                     usuarioId
                 }, tx, cancellationToken: ct));
@@ -746,17 +809,19 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 WHERE id = @DocumentoId AND tenant_id = @tenantId",
                 new { command.DocumentoId, tenantId }, tx, cancellationToken: ct));
 
+            // WS-A3: sequência calculada MAX+1 (documento já está com FOR UPDATE acima).
             var evId = Guid.NewGuid();
+            var seqEvento = await ProximaSequenciaEventoDocumentoAsync(cn, tx, tenantId, command.DocumentoId, ct);
             await cn.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_documento_eventos(
                     id, tenant_id, documento_id, tipo_evento, sequencia_evento,
                     descricao_evento, data_evento, detalhes, registrado_por
                 ) VALUES (
-                    @evId, @tenantId, @DocumentoId, 'CONFIRMACAO_CONFERENCIA', 2,
+                    @evId, @tenantId, @DocumentoId, 'CONFIRMACAO_CONFERENCIA', @seqEvento,
                     'Documento conferido manualmente pelo gestor (conferência autorizada)', now(),
                     'Conferência autorizada habilita o uso deste documento no fluxo de recebimento físico/estoque.', @usuarioId
                 )",
-                new { evId, tenantId, command.DocumentoId, usuarioId }, tx, cancellationToken: ct));
+                new { evId, tenantId, command.DocumentoId, seqEvento, usuarioId }, tx, cancellationToken: ct));
 
             await eventos.RegistrarAsync(cn, tx, tenantId, Adm360TipoEvento.ConfirmacaoConferencia, "DOCUMENTO_XML", command.DocumentoId, usuarioId,
                 "Confirmação de conferência autorizada de documento fiscal recebido",
@@ -865,18 +930,19 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
                 WHERE id = @DocumentoId AND tenant_id = @tenantId",
                 new { command.DocumentoId, tenantId, command.PedidoId, recebimentoId, tituloPagarId }, tx, cancellationToken: ct));
 
-            // Registra evento de vinculação
+            // Registra evento de vinculação (WS-A3: sequência calculada MAX+1).
             var evId = Guid.NewGuid();
+            var seqVinculo = await ProximaSequenciaEventoDocumentoAsync(cn, tx, tenantId, command.DocumentoId, ct);
             await cn.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_documento_eventos(
                     id, tenant_id, documento_id, tipo_evento, sequencia_evento,
                     descricao_evento, data_evento, detalhes, registrado_por
                 ) VALUES (
-                    @evId, @tenantId, @DocumentoId, 'VINCULACAO_RECEBIMENTO', 2,
+                    @evId, @tenantId, @DocumentoId, 'VINCULACAO_RECEBIMENTO', @seqVinculo,
                     'Documento conferido e vinculado com sucesso ao Pedido e Recebimento Físico', now(),
                     'Vínculo aprovado sem duplicar contas a pagar nem criar estoque fantasma.', @usuarioId
                 )",
-                new { evId, tenantId, command.DocumentoId, usuarioId }, tx, cancellationToken: ct));
+                new { evId, tenantId, command.DocumentoId, seqVinculo, usuarioId }, tx, cancellationToken: ct));
         }, ct);
     }
 

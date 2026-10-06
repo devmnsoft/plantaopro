@@ -11,6 +11,7 @@
     "plantaopro.adm360_comissoes_apropriadas",
     "plantaopro.adm360_contas_financeiras",
     "plantaopro.adm360_cotacao_anexos",
+    "plantaopro.adm360_cotacao_envios",
     "plantaopro.adm360_cotacao_exportacoes",
     "plantaopro.adm360_cotacao_itens",
     "plantaopro.adm360_cotacao_respostas",
@@ -70,6 +71,10 @@
     "plantaopro.agendamento_checkins",
     "plantaopro.agendamento_historico",
     "plantaopro.agendamentos",
+    "plantaopro.ai_chamadas_ativas",
+    "plantaopro.ai_config",
+    "plantaopro.ai_precos_modelos",
+    "plantaopro.ai_usos",
     "plantaopro.ajuda_artigos",
     "plantaopro.ajuda_checklists",
     "plantaopro.ajuda_feedbacks",
@@ -615,6 +620,17 @@
     "database/migrations/2026_09_v2300_administrativo360_status_transmissao_exportacao.sql",
     "database/migrations/2026_09_v2301_administrativo360_eventos_imutabilidade.sql",
     "database/migrations/2026_09_v2302_reafirmar_correcao_trigger_adm360_validar_tenant.sql",
-    "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql"
+    "database/migrations/2026_v1270_normalizar_permissoes_e_prontuario.sql",
+    "database/migrations/2026_09_v2303_administrativo360_documentos_xml_b1.sql",
+    "database/migrations/2026_09_v2304_administrativo360_transmissao_tentativas.sql",
+    "database/migrations/2026_10_v2305_administrativo360_imutabilidade_por_papel.sql",
+    "database/migrations/2026_10_v2306_saude360_plano_principal_unico.sql",
+    "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+    "database/migrations/2026_10_v2307_ai_camada_canonica.sql",
+    "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+    "database/migrations/2026_10_v2308_ai_governanca_modelos_orcamento.sql",
+    "database/migrations/2026_10_v2309_administrativo360_documentos_xml_a3.sql",
+    "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql",
+    "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql"
   ]
 }

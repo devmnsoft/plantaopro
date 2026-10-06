@@ -166,6 +166,11 @@ public sealed class Administrativo360DocumentosXmlA3Tests
         await using var tx = await cn.BeginTransactionAsync();
         await cn.ExecuteAsync("SELECT set_config('plantao.bypass_imutabilidade_adm360', 'on', true);", transaction: tx);
         await cn.ExecuteAsync(@"
+            -- WS-A3: o gate de recebimento faz write-back do vinculo no documento fiscal
+            -- (FK recebimento_id/titulo_pagar_id) -> zerar antes de excluir as origens.
+            UPDATE plantaopro.adm360_documentos_recebidos d
+            SET recebimento_id = NULL, pedido_id = NULL, titulo_pagar_id = NULL
+            WHERE d.recebimento_id IN (SELECT id FROM plantaopro.adm360_recebimentos WHERE pedido_id=@pedidoId);
             DELETE FROM plantaopro.adm360_movimentos
             WHERE tenant_id=@tenantId AND origem_tipo='RECEBIMENTO'
               AND origem_id IN (SELECT ri.id FROM plantaopro.adm360_recebimento_itens ri

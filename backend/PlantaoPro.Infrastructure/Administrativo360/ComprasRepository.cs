@@ -110,26 +110,37 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
 
     public async Task<Guid> ReceberAsync(Guid tenantId, Guid usuarioId, ConfirmarRecebimentoCommand c, CancellationToken ct)
     {
-        await using var cn = Connection();
-        await cn.OpenAsync(ct);
-        await using var tx = await cn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+        // WS-A3: toda a transação passa pelo helper de retry 40001/40P01 (SERIALIZABLE),
+        // igual aos demais repositórios ADM360. O write-back na tabela de eventos conflita
+        // com escritores paralelos de outros fluxos; sem o retry, o abort vazava como erro
+        // técnico (causa raiz dos flakes de G5/T5/T6 sob paralelismo de testes).
+        Guid ridResultado = Guid.Empty;
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+            ridResultado = await ReceberInternoAsync(cn, tx, tenantId, usuarioId, c, ct), ct);
+        return ridResultado;
+    }
 
+    private async Task<Guid> ReceberInternoAsync(Npgsql.NpgsqlConnection cn, Npgsql.NpgsqlTransaction tx, Guid tenantId, Guid usuarioId, ConfirmarRecebimentoCommand c, CancellationToken ct)
+    {
         var existing = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition(
             "SELECT id FROM plantaopro.adm360_recebimentos WHERE tenant_id = @tenantId AND idempotency_key = @key",
             new { tenantId, key = c.IdempotencyKey }, tx, cancellationToken: ct));
         if (existing.HasValue)
-        {
-            await tx.CommitAsync(ct);
             return existing.Value;
-        }
 
         // A3/G5: gate de conferência autorizada — se o recebimento referencia um documento XML,
         // ele precisa existir no tenant, não estar em quarentena e estar CONFERIDO/VINCULADO.
         // Sem referência (nulo) = recebimento legado sem documento fiscal (comportamento anterior).
-        if (c.DocumentoXmlId is { } docId && docId != Guid.Empty)
+        // WS-A3: resolução explícita do conflito placeholder-vs-físico — se o documento já tem
+        // recebimento vinculado, esse recebimento é o canônico e é REUTILIZADO aqui (um único
+        // recebimento por documento); o status do documento permanece inalterado.
+        var docIdGate = c.DocumentoXmlId.HasValue && c.DocumentoXmlId.Value != Guid.Empty ? c.DocumentoXmlId.Value : (Guid?)null;
+        var docRecebimentoPrevio = Guid.Empty;
+        if (docIdGate is not null)
         {
+            var docId = docIdGate.Value;
             var docGate = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
-                "SELECT id, quarentena, status_conferencia FROM plantaopro.adm360_documentos_recebidos WHERE id = @docId AND tenant_id = @tenantId",
+                "SELECT id, quarentena, status_conferencia, recebimento_id, pedido_id, titulo_pagar_id FROM plantaopro.adm360_documentos_recebidos WHERE id = @docId AND tenant_id = @tenantId FOR UPDATE",
                 new { docId, tenantId }, tx, cancellationToken: ct));
             if (docGate is null)
                 throw new Administrativo360BusinessException("Documento fiscal não encontrado nesta organização para o recebimento.");
@@ -138,6 +149,22 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             var stDoc = (string)docGate.status_conferencia;
             if (stDoc is not ("CONFERIDO" or "VINCULADO"))
                 throw new Administrativo360BusinessException("Estoque não pode ser registrado antes da conferência autorizada: confirme a conferência do documento fiscal antes de receber o pedido.");
+
+            if (docGate.recebimento_id is not null)
+            {
+                var recPrevio = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
+                    "SELECT id, pedido_id FROM plantaopro.adm360_recebimentos WHERE id = @rid AND tenant_id = @tenantId",
+                    new { rid = (Guid)docGate.recebimento_id, tenantId }, tx, cancellationToken: ct));
+                if (recPrevio is null)
+                    throw new Administrativo360BusinessException("O documento fiscal referencia um recebimento que não existe mais; revise o vínculo antes de receber o pedido.");
+                if ((Guid)recPrevio.pedido_id != c.PedidoId)
+                    throw new Administrativo360BusinessException("Este documento fiscal já está vinculado a um recebimento de outro pedido; use o pedido do vínculo original.");
+                docRecebimentoPrevio = (Guid)recPrevio.id;
+            }
+            else if (docGate.pedido_id is not null && (Guid)docGate.pedido_id != c.PedidoId)
+            {
+                throw new Administrativo360BusinessException("Este documento fiscal já está referenciado a outro pedido; use o pedido do vínculo original.");
+            }
         }
 
         var pedido = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(
@@ -149,10 +176,20 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
         if (status is not ("APROVADO" or "PARCIAL"))
             throw new Administrativo360BusinessException("Somente pedido aprovado ou parcial pode ser recebido.");
 
-        var rid = Guid.NewGuid();
-        await cn.ExecuteAsync(new CommandDefinition(
-            "INSERT INTO plantaopro.adm360_recebimentos(id, tenant_id, pedido_id, documento, idempotency_key, confirmado_em, created_by) VALUES(@rid, @tenantId, @PedidoId, @Documento, @key, now(), @usuarioId)",
-            new { rid, tenantId, c.PedidoId, c.Documento, key = c.IdempotencyKey, usuarioId }, tx, cancellationToken: ct));
+        Guid rid;
+        if (docRecebimentoPrevio != Guid.Empty)
+        {
+            // WS-A3: reuso do recebimento canônico do documento (placeholder-vs-físico resolvido):
+            // sem novo INSERT de recebimento; itens/estoque/títulos somam sobre o mesmo recebimento.
+            rid = docRecebimentoPrevio;
+        }
+        else
+        {
+            rid = Guid.NewGuid();
+            await cn.ExecuteAsync(new CommandDefinition(
+                "INSERT INTO plantaopro.adm360_recebimentos(id, tenant_id, pedido_id, documento, idempotency_key, confirmado_em, created_by) VALUES(@rid, @tenantId, @PedidoId, @Documento, @key, now(), @usuarioId)",
+                new { rid, tenantId, c.PedidoId, c.Documento, key = c.IdempotencyKey, usuarioId }, tx, cancellationToken: ct));
+        }
 
         decimal totalRecebimento = 0m;
 
@@ -222,35 +259,89 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
 
         // Gera obrigação em Contas a Pagar para este recebimento
         totalRecebimento = Math.Round(totalRecebimento, 2);
+        Guid? tituloGerado = null;
         if (totalRecebimento > 0)
         {
-            var seq = await cn.ExecuteScalarAsync<long>("SELECT nextval('plantaopro.adm360_titulo_pagar_numero')", transaction: tx);
-            var numeroTitulo = $"PAG-{seq:D6}";
-            var tituloId = Guid.NewGuid();
-            var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
-            DateOnly vencimento = pedido.previsao != null ? ToDateOnly(pedido.previsao) : hoje.AddDays(30);
+            // WS-A3: um único título por origem canônica de recebimento
+            // (restrição ux_adm360_titulos_pagar_origem). No reuso do recebimento físico
+            // (2ª/3ª parcial da mesma origem), ACUMULA no título existente em vez de
+            // inserir um segundo registro conflitante com a mesma origem_id.
+            var tituloExistente = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition(@"
+                SELECT id FROM plantaopro.adm360_titulos_pagar
+                WHERE tenant_id=@tenantId AND origem_tipo='RECEBIMENTO_COMPRA' AND origem_id=@rid
+                LIMIT 1",
+                new { tenantId, rid }, tx, cancellationToken: ct));
 
-            await cn.ExecuteAsync(new CommandDefinition(@"
-                INSERT INTO plantaopro.adm360_titulos_pagar(
-                    id, tenant_id, numero, fornecedor_id, origem_tipo, origem_id,
-                    documento, competencia, data_emissao, data_vencimento, parcela, total_parcelas,
-                    valor_principal, valor_pago, saldo_aberto, situacao, centro_custo,
-                    idempotency_key, created_by
-                ) VALUES(
-                    @tituloId, @tenantId, @numeroTitulo, @fornecedorId, 'RECEBIMENTO_COMPRA', @rid,
-                    @documento, @hoje, @hoje, @vencimento, 1, 1,
-                    @totalRecebimento, 0, @totalRecebimento, 'APROVADO', 'SUPRIMENTOS',
-                    @keyTitulo, @usuarioId
-                )",
-                new
-                {
-                    tituloId, tenantId, numeroTitulo, fornecedorId = (Guid)pedido.fornecedor_id,
-                    rid, documento = c.Documento ?? (string)pedido.numero, hoje, vencimento,
-                    totalRecebimento, keyTitulo = $"{c.IdempotencyKey}:AP", usuarioId
-                }, tx, cancellationToken: ct));
+            if (tituloExistente.HasValue && tituloExistente.Value != Guid.Empty)
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    UPDATE plantaopro.adm360_titulos_pagar
+                    SET valor_principal = valor_principal + @delta, saldo_aberto = saldo_aberto + @delta
+                    WHERE id = @tituloId AND tenant_id = @tenantId",
+                    new { delta = totalRecebimento, tituloId = tituloExistente.Value, tenantId }, tx, cancellationToken: ct));
+                tituloGerado = tituloExistente.Value;
+            }
+            else
+            {
+                var seq = await cn.ExecuteScalarAsync<long>("SELECT nextval('plantaopro.adm360_titulo_pagar_numero')", transaction: tx);
+                var numeroTitulo = $"PAG-{seq:D6}";
+                var tituloId = Guid.NewGuid();
+                var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+                DateOnly vencimento = pedido.previsao != null ? ToDateOnly(pedido.previsao) : hoje.AddDays(30);
+
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_titulos_pagar(
+                        id, tenant_id, numero, fornecedor_id, origem_tipo, origem_id,
+                        documento, competencia, data_emissao, data_vencimento, parcela, total_parcelas,
+                        valor_principal, valor_pago, saldo_aberto, situacao, centro_custo,
+                        idempotency_key, created_by
+                    ) VALUES(
+                        @tituloId, @tenantId, @numeroTitulo, @fornecedorId, 'RECEBIMENTO_COMPRA', @rid,
+                        @documento, @hoje, @hoje, @vencimento, 1, 1,
+                        @totalRecebimento, 0, @totalRecebimento, 'APROVADO', 'SUPRIMENTOS',
+                        @keyTitulo, @usuarioId
+                    )",
+                    new
+                    {
+                        tituloId, tenantId, numeroTitulo, fornecedorId = (Guid)pedido.fornecedor_id,
+                        rid, documento = c.Documento ?? (string)pedido.numero, hoje, vencimento,
+                        totalRecebimento, keyTitulo = $"{c.IdempotencyKey}:AP", usuarioId
+                    }, tx, cancellationToken: ct));
+                tituloGerado = tituloId;
+            }
         }
 
-        await tx.CommitAsync(ct);
+        // WS-A3: write-back do vínculo do recebimento físico no documento fiscal (trilha
+        // auditável documento -> recebimento -> título). Só quando o documento AINDA sem
+        // recebimento (no reuso o vínculo já existe); status_conferencia permanece inalterado
+        // (VINCULADO segue exclusivo do vínculo explícito — teste G5).
+        if (docIdGate is not null && docRecebimentoPrevio == Guid.Empty)
+        {
+            var docId = docIdGate.Value;
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_documentos_recebidos
+                SET recebimento_id = @rid,
+                    pedido_id = COALESCE(pedido_id, @PedidoId),
+                    titulo_pagar_id = COALESCE(@novoTitulo, titulo_pagar_id),
+                    updated_at = now()
+                WHERE id = @docId AND tenant_id = @tenantId AND recebimento_id IS NULL",
+                new { rid, PedidoId = c.PedidoId, novoTitulo = tituloGerado, docId, tenantId }, tx, cancellationToken: ct));
+
+            var evDocId = Guid.NewGuid();
+            var seqDoc = await ProximaSequenciaEventoDocumentoAsync(cn, tx, tenantId, docId, ct);
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                INSERT INTO plantaopro.adm360_documento_eventos(
+                    id, tenant_id, documento_id, tipo_evento, sequencia_evento,
+                    descricao_evento, data_evento, detalhes, registrado_por
+                ) VALUES (
+                    @evDocId, @tenantId, @docId, 'VINCULACAO_RECEBIMENTO', @seqDoc,
+                    'Recebimento físico de estoque registrado e vinculado ao documento fiscal', now(),
+                    'Vínculo criado pelo próprio recebimento físico (gate de conferência autorizada).', @usuarioId
+                )",
+                new { evDocId, tenantId, docId, seqDoc, usuarioId }, tx, cancellationToken: ct));
+        }
+
+        // O COMMIT é feito pelo ExecutarComRetrySerializableAsync.
         return rid;
     }
 }

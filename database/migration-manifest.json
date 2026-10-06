@@ -874,6 +874,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_10_v2311_adm360_documentos_identidade_eventos",
+      "source": "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql",
+      "checksum": "5075bfe673fcf1d093b36eda354eb5f93287e2675af402da23599c2c4b85b477",
+      "dependsOn": [
+        "2026_10_v2310_adm360_eventos_tipo_conferencia"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": true
     }
   ]
 }

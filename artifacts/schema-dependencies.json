@@ -553,5 +553,12 @@
       "plantaopro.adm360_eventos"
     ],
     "source": "database/migrations/2026_10_v2310_adm360_eventos_tipo_conferencia.sql"
+  },
+  {
+    "object": "plantaopro.adm360_documentos_identidade_ws_a3",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard"
+    ],
+    "source": "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql"
   }
 ]

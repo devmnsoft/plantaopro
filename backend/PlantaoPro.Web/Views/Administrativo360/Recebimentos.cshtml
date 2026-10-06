@@ -99,7 +99,11 @@
 <!-- Modal Novo Recebimento -->
 <div class="modal fade" id="modalNovoRecebimento" tabindex="-1" aria-labelledby="tituloModalRecebimento" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form asp-action="ConfirmarRecebimento" method="post" class="modal-content bg-dark text-light border-secondary">
+        <form asp-action="ConfirmarRecebimento" method="post" class="modal-content bg-dark text-light border-secondary"
+              data-confirm="true" data-confirm-type="warning"
+              data-confirm-title="Confirmar recebimento físico"
+              data-confirm-message="Esta ação registra o item em quarentena, o lote e o título a pagar correspondente ao documento informado. Confirma a entrada?"
+              data-confirm-text="Confirmar recebimento">
             @Html.AntiForgeryToken()
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="tituloModalRecebimento"><i class="bi bi-box-arrow-in-down me-2 text-info"></i>Conferência e Entrada de Mercadoria</h5>

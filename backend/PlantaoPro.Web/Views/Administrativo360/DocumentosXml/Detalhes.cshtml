@@ -219,7 +219,11 @@
 <div class="modal fade" id="modalVincularRecebimento" tabindex="-1" aria-labelledby="modalVincularLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
-            <form method="post" action="/Administrativo360/DocumentosXml/VincularRecebimento">
+            <form method="post" action="/Administrativo360/DocumentosXml/VincularRecebimento"
+                  data-confirm="true" data-confirm-type="success"
+                  data-confirm-title="Confirmar vínculo de recebimento"
+                  data-confirm-message="Será criada a rastreabilidade fiscal entre o XML importado e a recepção física do pedido de compra. Confirma?"
+                  data-confirm-text="Confirmar vínculo">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="DocumentoId" value="@Model.Documento.Id" />
                 <div class="modal-header border-secondary">
@@ -252,7 +256,11 @@
 <div class="modal fade" id="modalManifestacao" tabindex="-1" aria-labelledby="modalManifestarLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
-            <form method="post" action="/Administrativo360/DocumentosXml/Manifestar/@Model.Documento.Id">
+            <form method="post" action="/Administrativo360/DocumentosXml/Manifestar/@Model.Documento.Id"
+                  data-confirm="true" data-confirm-type="warning"
+                  data-confirm-title="Enviar manifestação DF-e"
+                  data-confirm-message="A manifestação será registrada como evento fiscal do documento. Confirma o envio?"
+                  data-confirm-text="Enviar manifestação">
                 @Html.AntiForgeryToken()
                 <div class="modal-header border-secondary">
                     <h5 class="modal-title h6" id="modalManifestarLabel">Manifestação do Destinatário (DF-e)</h5>
@@ -286,7 +294,11 @@
 <div class="modal fade" id="modalConferirDocumento" tabindex="-1" aria-labelledby="modalConferirLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark text-light border-secondary">
-            <form method="post" action="/Administrativo360/DocumentosXml/Conferir/@Model.Documento.Id">
+            <form method="post" action="/Administrativo360/DocumentosXml/Conferir/@Model.Documento.Id"
+                  data-confirm="true" data-confirm-type="success"
+                  data-confirm-title="Confirmar conferência"
+                  data-confirm-message="Ao confirmar, você declara que o documento fiscal foi conferido e autorizado. A ação é auditada. Confirma?"
+                  data-confirm-text="Confirmar conferência">
                 @Html.AntiForgeryToken()
                 <div class="modal-header border-secondary">
                     <h5 class="modal-title h6" id="modalConferirLabel">Conferir Documento</h5>

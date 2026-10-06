@@ -130,7 +130,11 @@
                             <td class="text-end">
                                 @if (ped.Situacao == "RASCUNHO")
                                 {
-                                    <form asp-action="AprovarPedidoCompra" method="post" class="d-inline">
+                                    <form asp-action="AprovarPedidoCompra" method="post" class="d-inline"
+                                          data-confirm="true" data-confirm-type="success"
+                                          data-confirm-title="Aprovar pedido de compra"
+                                          data-confirm-message="A aprovação congela os preços e as quantidades do pedido e cria o compromisso de compra. Deseja continuar?"
+                                          data-confirm-text="Aprovar pedido">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="id" value="@ped.Id" />
                                         <button type="submit" class="btn btn-sm btn-outline-success" title="Aprovar Pedido e Congelar Preços">

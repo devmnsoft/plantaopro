@@ -1,0 +1,210 @@
+/* ============================================================
+   v2.15.1 — WP-C homologação: ajuste fino da linha canônica
+   ------------------------------------------------------------
+   Complementa o v2150-bloco-c-canonical.css com os itens
+   restantes do checklist de design da homologação:
+
+     1) Azul consistente com contraste AA. O azul canônico
+        #1f73f1 mede 4,39:1 sobre branco, abaixo de AA para
+        texto normal. Este arquivo define uma variante AA do
+        azul para superfícies com tinta branca (#1d6fe9,
+        ~4,7:1, matiz idêntico ao canônico) e um azul de texto
+        para links e tinta pequena (#1a5fd0, ~5,9:1);
+     2) Blocos globais desvinculados do teal herdado de camadas
+        anteriores (jornada guiada v2140 e context bar v2148):
+        cores semânticas ficam reservadas para estados;
+     3) Dobra inicial em viewports estreitos (finding #9 do
+        WP-B): contexto, guia e jornada compactam em ≤991px e
+        a jornada é ocultada em ≤575px, liberando o conteúdo;
+     4) Foco visível nos módulos fora do ADM360 (espelho do
+        escopo do tema claro administrativo360); 5) tintas com AA e breadcrumb da topbar sem teal (seções 5–7).
+
+   Carregado por último em _Layout.cshtml, após o v2150: vence
+   cascatas de mesma especificidade por ordem de carga.
+   ============================================================ */
+
+/* --- 1) Azul institucional com contraste AA ------------------------- */
+
+:root {
+    /* Variante AA do azul canônico: tintas brancas sobre ele
+       medem ~4,7:1. Mantém matiz/saturação do #1f73f1 original. */
+    --pp-brand-primary: #1d6fe9;
+    --pp-brand-primary-hover: #1a63d8;
+    --pp-brand-primary-active: #1549ab;
+    --bs-primary-rgb: 29, 111, 233;
+
+    /* Azul de texto: links e tinta pequena exigem >= 4,5:1
+       sobre branco; este tom atende AA para qualquer tamanho. */
+    --pp-brand-primary-text: #1a5fd0;
+
+    --bs-link-color: var(--pp-brand-primary-text);
+    --bs-link-color-rgb: 26, 95, 208;
+    --bs-link-hover-color: var(--pp-brand-primary-active);
+    --bs-link-hover-color-rgb: 21, 73, 171;
+}
+
+/* Links de conteúdo do módulo fixados em #1f73f1 pelo tema claro */
+body.pp-a360 main .card a:not(.btn),
+body.pp-a360 main .modal-content a:not(.btn) {
+    color: var(--pp-brand-primary-text);
+}
+
+body.pp-a360 main .card a:not(.btn):hover,
+body.pp-a360 main .card a:not(.btn):focus-visible,
+body.pp-a360 main .modal-content a:not(.btn):hover,
+body.pp-a360 main .modal-content a:not(.btn):focus-visible {
+    color: var(--pp-brand-primary-active);
+}
+
+/* Links em contexto de texto pequeno fora do módulo ADM360 */
+.pp-content-container small a,
+.pp-content-container .small a,
+.pp-content-container .form-text a,
+.pp-content-container .caption a,
+.pp-content-container a.badge,
+.pp-content-container .badge a,
+.pp-content-container .pp-screen-guide__body p a {
+    color: var(--pp-brand-primary-text);
+}
+
+.pp-content-container small a:hover,
+.pp-content-container small a:focus-visible,
+.pp-content-container .small a:hover,
+.pp-content-container .small a:focus-visible,
+.pp-content-container .form-text a:hover,
+.pp-content-container .form-text a:focus-visible,
+.pp-content-container .caption a:hover,
+.pp-content-container .caption a:focus-visible,
+.pp-content-container a.badge:hover,
+.pp-content-container a.badge:focus-visible,
+.pp-content-container .badge a:hover,
+.pp-content-container .badge a:focus-visible,
+.pp-content-container .pp-screen-guide__body p a:hover,
+.pp-content-container .pp-screen-guide__body p a:focus-visible {
+    color: var(--pp-brand-primary-active);
+}
+
+/* --- 2) Blocos globais: teal herdados -> azul institucional -------- */
+
+.pp-guided-journey__eyebrow { color: var(--pp-brand-primary-text); }
+
+.pp-guided-journey__steps a > span { background: #edf3fb; color: #48617f; }
+
+/* Tinta base dos links de passo: o azul de marca em texto normal
+   mede 4,37:1 sobre a superfície-base clara — usa-se a variante AA
+   de texto. O !important é necessário para vencer a regra genérica
+   de links do v2150 (12 :not(), especificidade 0-13-1). */
+.pp-guided-journey__steps a { color: var(--pp-brand-primary-text) !important; }
+
+.pp-guided-journey__steps a:hover,
+.pp-guided-journey__steps a:focus-visible {
+    border-color: #bcd6f8;
+    background: #fff;
+    color: var(--pp-brand-primary-active) !important;
+}
+
+.pp-guided-journey__steps .is-current a {
+    border-color: #bcd6f8;
+    background: var(--pp-brand-primary-soft, #eaf4ff);
+    color: var(--pp-brand-primary-active) !important;
+}
+
+.pp-guided-journey__steps .is-current a > span {
+    background: var(--pp-brand-primary);
+    color: #fff;
+}
+
+.pp-context-bar { border-left-color: var(--pp-brand-primary); }
+.pp-context-bar__icon { color: var(--pp-brand-primary-text); background: var(--pp-brand-primary-soft, #eaf4ff); }
+.pp-context-bar__eyebrow { color: var(--pp-brand-primary-text); }
+
+/* Variante global (superfície navy inversa): o teal de acento vira azul */
+.pp-context-bar.is-global { border-left-color: #6ea8ff; }
+.pp-context-bar.is-global .pp-context-bar__icon { color: #9cc3fb; background: rgb(255 255 255 / 12%); }
+.pp-context-bar.is-global .pp-context-bar__eyebrow { color: #9cc3fb; }
+
+/* --- 3) Dobra inicial em viewports estreitos (finding #9 WP-B) ----- */
+
+@media (max-width: 991.98px) {
+    .page-header { margin-bottom: .75rem !important; }
+    .page-header .h2 { font-size: 1.4rem; }
+    .pp-context-bar { margin-bottom: .75rem; padding: .6rem .75rem; }
+    .pp-context-bar__identity { display: none; }
+    .pp-screen-guide { margin: .5rem 0; }
+    .pp-guided-journey { grid-template-columns: 1fr; gap: .4rem; margin-bottom: .75rem; padding: .55rem .8rem; }
+    .pp-guided-journey__intro { display: none; }
+}
+
+@media (max-width: 575.98px) {
+    .pp-guided-journey { display: none; }
+    .pp-context-bar { padding: .55rem .7rem; }
+    .page-header .h2 { font-size: 1.25rem; }
+}
+
+/* --- 4) Modal de confirmação: ícone do tipo sucesso ------------------ */
+
+/* O padrão do feedback.css é âmbar (warning) e há estilo explícito
+   apenas para danger; o tipo sucesso fica consistente com o botão. */
+.pp-confirm-modal-success .pp-confirm-icon { color: #166534; background: #dcfce7; }
+
+/* --- 5) Foco visível fora do módulo ADM360 --------------------------- */
+
+.pp-content-container a:focus-visible,
+.pp-content-container [role="tab"]:focus-visible,
+.pp-content-container [role="menuitem"]:focus-visible,
+.pp-content-container .dropdown-item:focus-visible {
+    outline: 2px solid var(--pp-brand-primary);
+    outline-offset: 2px;
+    border-radius: .375rem;
+}
+
+/* --- 6) Tintas institucionais com AA no módulo (extensão do tema claro) */
+
+/* O ciano #0dcaf0 do utilitário .text-info mede ~1,9:1 sobre as
+   superfícies claras do módulo (links de breadcrumb/tabelas, code,
+   valores e ícones). O tema claro já remapeava apenas
+   .card-title.text-info; estende-se o contra-escopo para todo texto
+   do conteúdo do módulo, usando o tom institucional definido em
+   --pp-info (~6,5:1 sobre branco). */
+body.pp-a360 main .text-info {
+    color: var(--pp-info, #245ea8) !important;
+}
+
+/* Botão outline-info: tinta/borda cianas falham AA em texto pequeno;
+   o hover sólido passa a usar o tom institucional com branco. */
+body.pp-a360 main .btn-outline-info {
+    color: var(--pp-info, #245ea8);
+    border-color: var(--pp-info, #245ea8);
+    --bs-btn-hover-bg: var(--pp-info, #245ea8);
+    --bs-btn-hover-border-color: var(--pp-info, #245ea8);
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-active-bg: #1d4d85;
+    --bs-btn-active-border-color: #1d4d85;
+    --bs-btn-active-color: #ffffff;
+}
+
+/* Botão outline-light sobre superfície clara: tinta/borda quase
+   invisíveis (contraste ~1,0:1 no download de XML). Tinta neutra do
+   módulo com AA e hover sólido legível. */
+body.pp-a360 main .btn-outline-light {
+    color: var(--pp-text-secondary, #405a80);
+    border-color: var(--pp-border-default, #ccd7e5);
+    --bs-btn-hover-bg: var(--pp-text-secondary, #405a80);
+    --bs-btn-hover-border-color: var(--pp-text-secondary, #405a80);
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-active-bg: var(--pp-text-primary, #10213a);
+    --bs-btn-active-border-color: var(--pp-text-primary, #10213a);
+    --bs-btn-active-color: #ffffff;
+}
+
+/* --- 7) Topbar: breadcrumb sem teal herdado --------------------------- */
+
+/* O v2132 pinta o link do breadcrumb da topbar com
+   --pp-v2132-brand-strong (#076773, teal). Teal passa AA, mas quebra a
+   consistência de azul institucional exigida pelo WP-C; o mesmo
+   seletor carregado mais tarde vence a cascateira. Detectado por
+   captura visual em 2026-10-05 (fora do escopo do rescan em main). */
+.pp-breadcrumb a { color: var(--pp-brand-primary-text); }
+
+.pp-breadcrumb a:hover,
+.pp-breadcrumb a:focus-visible { color: var(--pp-brand-primary-active); }

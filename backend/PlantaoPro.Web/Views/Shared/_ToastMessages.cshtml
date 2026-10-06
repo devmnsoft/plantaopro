@@ -3,14 +3,36 @@
 @{
     var toasts = new List<object>();
 
-    if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
+    // Chave canônica primeiro; "SuccessMessage"/"ErrorMessage" são aliases
+    // herdados de 15 ações financeiras/comerciais (Financeiro.cs, Vendas.cs,
+    // AssinaturasController, CommercialDemoWebController) que escreveram com
+    // esse nome antes da consolidação do contrato de toast. A unificação
+    // dos pontos de escrita fica no backlog pós-MVP.
+    static string? Pick(Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataDictionary tempData, params string[] keys)
     {
-        toasts.Add(new { Type = "success", Message = success });
+        foreach (var key in keys)
+        {
+            if (tempData[key] is string value && !string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
     }
 
-    if (TempData["Error"] is string error && !string.IsNullOrWhiteSpace(error))
+    var successMessage = Pick(TempData, "Success", "SuccessMessage");
+
+    if (successMessage != null)
     {
-        toasts.Add(new { Type = "error", Message = error });
+        toasts.Add(new { Type = "success", Message = successMessage });
+    }
+
+    var errorMessage = Pick(TempData, "Error", "ErrorMessage");
+
+    if (errorMessage != null)
+    {
+        toasts.Add(new { Type = "error", Message = errorMessage });
     }
 
     if (TempData["Warning"] is string warning && !string.IsNullOrWhiteSpace(warning))

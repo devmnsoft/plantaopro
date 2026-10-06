@@ -45,7 +45,11 @@
         <div class="d-flex gap-2">
             @if (t.Situacao == "PENDENTE_APROVACAO")
             {
-                <form asp-action="AprovarTituloPagar" method="post" class="d-inline">
+                <form asp-action="AprovarTituloPagar" method="post" class="d-inline"
+                      data-confirm="true" data-confirm-type="warning"
+                      data-confirm-title="Aprovar obrigação a pagar"
+                      data-confirm-message="O título aprovado passa a ser tratado como compromisso financeiro vigente da instituição. Deseja continuar?"
+                      data-confirm-text="Aprovar título">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@t.Id" />
                     <button type="submit" class="btn btn-success btn-sm">

@@ -85,7 +85,11 @@
 <!-- Modal Laudo de Inspeção -->
 <div class="modal fade" id="modalInspecao" tabindex="-1" aria-labelledby="tituloModalInspecao" aria-hidden="true">
     <div class="modal-dialog">
-        <form asp-action="DecidirInspecao" method="post" class="modal-content bg-dark text-light border-secondary">
+        <form asp-action="DecidirInspecao" method="post" class="modal-content bg-dark text-light border-secondary"
+              data-confirm="true" data-confirm-type="warning"
+              data-confirm-title="Decidir laudo de inspeção"
+              data-confirm-message="A decisão move o material entre a quarentena e o destino selecionado e fica registrada na rastreabilidade. Confirma?"
+              data-confirm-text="Decidir laudo">
             @Html.AntiForgeryToken()
             <input type="hidden" name="recebimentoItemId" id="inspRecebimentoItemId" />
             <div class="modal-header border-secondary">

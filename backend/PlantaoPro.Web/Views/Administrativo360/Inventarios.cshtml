@@ -95,7 +95,11 @@
                                     <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#modalContagem" onclick="document.getElementById('contagemInventarioId').value='@inv.Id'; document.getElementById('contagemLocalNome').innerText='@inv.Local';">
                                         <i class="bi bi-plus-circle me-1"></i>Contar
                                     </button>
-                                    <form asp-action="AprovarInventario" method="post" class="d-inline me-1">
+                                    <form asp-action="AprovarInventario" method="post" class="d-inline me-1"
+                                          data-confirm="true" data-confirm-type="success"
+                                          data-confirm-title="Aprovar inventário"
+                                          data-confirm-message="Os ajustes contados serão consolidados no estoque com trilha de auditoria. Deseja continuar?"
+                                          data-confirm-text="Aprovar">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="inventarioId" value="@inv.Id" />
                                         <input type="hidden" name="justificativa" value="Ajuste auditado e conferido pelo responsável técnico de estoque" />
@@ -103,7 +107,11 @@
                                             <i class="bi bi-check-lg me-1"></i>Aprovar
                                         </button>
                                     </form>
-                                    <form asp-action="CancelarInventario" method="post" class="d-inline">
+                                    <form asp-action="CancelarInventario" method="post" class="d-inline"
+                                          data-confirm="true" data-confirm-type="danger"
+                                          data-confirm-title="Cancelar inventário"
+                                          data-confirm-message="O processo de contagem será encerrado sem consolidar os ajustes. Deseja continuar?"
+                                          data-confirm-text="Cancelar inventário">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="inventarioId" value="@inv.Id" />
                                         <input type="hidden" name="motivo" value="Cancelamento de rotina de contagem" />

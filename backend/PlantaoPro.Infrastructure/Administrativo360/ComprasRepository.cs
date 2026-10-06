@@ -204,7 +204,7 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             await cn.ExecuteAsync(new CommandDefinition(@"
                 INSERT INTO plantaopro.adm360_recebimento_itens(id, tenant_id, recebimento_id, pedido_item_id, produto_id, lote_id, local_id, quantidade, condicao)
                 VALUES(@ri, @tenantId, @rid, @PedidoItemId, @produto, @loteId, @LocalId, @Quantidade, @condicao);
-                UPDATE plantaopro.adm360_pedido_itens SET quantidade_recebida = quantidade_recebida + @Quantidade WHERE id = @PedidoItemId",
+                UPDATE plantaopro.adm360_pedido_itens SET quantidade_recebida = quantidade_recebida + @Quantidade WHERE id = @PedidoItemId AND tenant_id = @tenantId",
                 new { ri, tenantId, rid, item.PedidoItemId, produto = row.ProdutoId, loteId, item.LocalId, item.Quantidade, condicao }, tx, cancellationToken: ct));
 
             await cn.ExecuteAsync(new CommandDefinition(@"
@@ -217,8 +217,8 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
             UPDATE plantaopro.adm360_pedidos p
             SET situacao = CASE WHEN EXISTS(SELECT 1 FROM plantaopro.adm360_pedido_itens i WHERE i.pedido_id = p.id AND i.quantidade_recebida < i.quantidade) THEN 'PARCIAL' ELSE 'RECEBIDO' END,
                 versao = versao + 1
-            WHERE id = @PedidoId",
-            new { c.PedidoId }, tx, cancellationToken: ct));
+            WHERE id = @PedidoId AND p.tenant_id = @tenantId",
+            new { c.PedidoId, tenantId }, tx, cancellationToken: ct));
 
         // Gera obrigação em Contas a Pagar para este recebimento
         totalRecebimento = Math.Round(totalRecebimento, 2);

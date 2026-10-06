@@ -133,7 +133,7 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
                     );
                     UPDATE plantaopro.adm360_vale_eventos
                     SET quantidade_decidida = COALESCE(quantidade_decidida, 0) + @total
-                    WHERE id = @RecebimentoItemId",
+                    WHERE id = @RecebimentoItemId AND tenant_id = @tenantId",
                     new { iid, tenantId, c.RecebimentoItemId, c.Aprovada, c.Reprovada, c.Justificativa, c.Destino, key = c.IdempotencyKey, usuarioId, total }, tx, cancellationToken: ct));
             }
             else
@@ -146,7 +146,7 @@ public sealed class QualidadeRepository : Adm360Repository, IQualidadeRepository
                     );
                     UPDATE plantaopro.adm360_recebimento_itens
                     SET quantidade_decidida = quantidade_decidida + @total
-                    WHERE id = @RecebimentoItemId",
+                    WHERE id = @RecebimentoItemId AND tenant_id = @tenantId",
                     new { iid, tenantId, c.RecebimentoItemId, c.Aprovada, c.Reprovada, c.Justificativa, c.Destino, key = c.IdempotencyKey, usuarioId, total }, tx, cancellationToken: ct));
             }
 

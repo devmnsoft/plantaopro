@@ -426,6 +426,7 @@ public sealed class AccountController : Controller
     [Authorize]
     [HttpGet("Account/RefreshContext")]
     [HttpPost("Account/RefreshContext")]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> RefreshContext(string? returnUrl = null, CancellationToken ct = default)
     {
         var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;

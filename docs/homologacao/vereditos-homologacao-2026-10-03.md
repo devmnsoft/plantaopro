@@ -1,6 +1,6 @@
 # Vereditos de Homologação por Item — PlantãoPro (2026-10-03)
 
-**Entrega 7 de 8.** Baseline `82b8c26` (`main` = `origin/main`, pushado), que contém WP-S1/S2/S3/S4 e as migrações v2305/v2306/v2307.
+**Entrega 7 de 8.** Baseline `82b8c26` (pushado na época), que contém WP-S1/S2/S3/S4 e as migrações v2305/v2306/v2307. *(Atualização 2026-10-06: `origin/main` = `7f43af2` — toda a rodada 2 publicada.)*
 
 ## Legenda dos vereditos
 

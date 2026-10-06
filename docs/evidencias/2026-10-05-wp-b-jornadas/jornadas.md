@@ -4,7 +4,7 @@
 
 | Item | Valor |
 |---|---|
-| Baseline | `c15456d` (local `main`; `origin/main` ainda `82b8c26`, sem push nesta rodada) |
+| Baseline | `c15456d` (local `main` na época; `origin/main` ainda `82b8c26`). Atualização 2026-10-06: cadeia inteira publicada — `origin/main` = `7f43af2` |
 | Stack dev | API `https://localhost:51977` · Web `https://localhost:52977` (`scripts/local/run-dev-start.ps1`) |
 | Banco | `plantaopro_test` (PostgreSQL) · Tenant Santa Casa `d3f6584c-2c64-4e5a-9ea9-4e1428647502` · Tenant Clínica Modelo (outro tenant) |
 | Usuários | Gestor `gestor@santacasa-demo.example` · Auditor (perfil somente leitura) · Clínica `admin.clinica@plantaopro.local` (ver `docs/usuarios-teste.md`) |

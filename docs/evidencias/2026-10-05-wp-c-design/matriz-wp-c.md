@@ -4,7 +4,7 @@
 
 | Item | Valor |
 |---|---|
-| Baseline | `2eaf57b` (local `main`; `origin/main` ainda `82b8c26`, sem push nesta rodada) |
+| Baseline | `2eaf57b` (local `main` na época; `origin/main` ainda `82b8c26`). Atualização 2026-10-06: cadeia inteira publicada — `origin/main` = `7f43af2` |
 | Pacote | `v2151-wp-c-homologacao.css` (novo) + `data-confirm` em 6 views ADM360 + caso ADM360 no `_ScreenGuide.cshtml` + alias de toast no `_ToastMessages.cshtml` |
 | Stack dev | API `https://localhost:51977` · Web `https://localhost:52977` · ciclo canônico parar→`run-dev-build.ps1`→`run-dev-start.ps1` |
 | Suíte canônica | 839/839 testes aprovados após rebuild do pacote (17s) |

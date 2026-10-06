@@ -2,7 +2,7 @@
 
 **Consolidação das 8 entregas da rodada.** Este documento é o índice executivo: aponta para a evidência primária de cada item e não a substitui.
 
-- **Baseline**: `82b8c26` · **HEAD entregue**: `6cd815b` (`main` local) · `origin/main` = `2eaf57b` (pushado até WP-B); **3 commits locais aguardando push** (`67b4f91` WP-C, `619b069` segurança, `6cd815b` entrega final) — decisão de push pendente com o cliente.
+- **Baseline**: `82b8c26` · **HEAD entregue**: `7f43af2` — `main` = `origin/main`; **toda a rodada publicada em 2026-10-06** (decisão de push executada). Nota: `6cd815b`, citado em versões anteriores deste documento, é o commit original de "entrega final" antes do amend final que originou `7f43af2`.
 - **Contratos preservados**: MVC/Razor, API REST `api/*`, Dapper, PostgreSQL schema `plantaopro`, envelope de resposta. Nenhuma versão alterada por orientação antiga.
 - **Documentos de apoio** (todos nesta árvore): `docs/homologacao/vereditos-homologacao-2026-10-03.md` (vereditos por item, FALHOU = 0) · `docs/homologacao/roteiro-homologacao-perfis-2026-10-03.md` · `docs/homologacao/matriz-modulos-homologacao-2026-10-03.md` · `docs/homologacao/checklist-homologacao-final.md` · `docs/ia/README.md` · `docs/seguranca/p0-seguranca-homologacao-2026-10-03.md` · `docs/usuarios-teste.md`.
 
@@ -99,7 +99,7 @@ Todas geradas por navegação real do navegador desktop contra a stack no ar; da
 | 7 | Estado real dos provedores IA sem chave (NAO_CONFIGURADO) | Médio (credencial comercial) | Declarado — destrava com chave real (§5) |
 | 8 | Riscos residuais de segurança R-1..R-9 (idempotency, GUC/deploy, chaves mortas, segredo em claro, TOCTOU caixa, SecurePolicy…) | Baixo-média | Nenhum crítico; cada item com recomendação na auditoria |
 | 9 | Instabilidade de testes sob paralelismo (`Aceite12`, `A3/G5` 1×) | Informativo | Monitorar; reprovar se reaparecer em sequência |
-| 10 | 3 commits locais sem push para `origin/main` (WP-C, segurança, entrega final) | Decisão | Pendente de aprovação para push |
+| 10 | Publicação dos commits da rodada em `origin/main` (WP-C, segurança, entrega final) | Decisão | **Fechado** — em 2026-10-06 `origin/main` = `7f43af2`; toda a rodada publicada |
 | 11 | Cookie de sessão expira no restart do servidor (sliding expiration) | Informativo | Documentado no roteiro — requer re-login após ciclo de dev |
 
 Nenhuma pendência **bloqueante** aberta: o item 1 (decimal) é o mais relevante para aceite financeiro e já possui reprodutor exato (M2.5).

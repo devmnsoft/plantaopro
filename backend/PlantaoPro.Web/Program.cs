@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.IO;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,11 @@ using PlantaoPro.Web.Services.Security;
 using PlantaoPro.CrossCutting.Security;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// A2 (rodada 4): validação de configuração na inicialização (fail-fast com mensagem clara
+// e sem segredos): BaseUrl da API interna obrigatória, sem porta de dev fora de Development,
+// e DataProtection:KeysDirectory obrigatório em Production (persistência de cookies/sessões).
+PlantaoProApiStartupValidator.Validate(builder.Configuration, builder.Environment);
 
 builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestHeadersTotalSize = 128 * 1024);
 
@@ -55,6 +62,17 @@ builder.Services.AddScoped<IMenuBuilderService, MenuBuilderService>();
 builder.Services.AddScoped<SaasRouteGuardFilter>();
 builder.Services.AddScoped<ModelStateInvalidoFiltro>();
 builder.Services.AddSession();
+// A2 (rodada 4): persistir as chaves de Data Protection fora da memória quando o diretório
+// for configurado. Em Production o diretório é obrigatório (validado no startup) e deve ser
+// compartilhado por todas as instâncias do Web; sem isso cookies e sessões morrem a cada
+// reciclagem do pool. Sessões continuam em memória: em múltiplas instâncias usar sticky
+// sessions ou externalizar o store (ver guia de implantação IIS).
+var dataProtectionKeysDirectory = builder.Configuration["DataProtection:KeysDirectory"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysDirectory))
+{
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysDirectory));
+}
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -104,12 +122,12 @@ builder.Services.AddHttpClient("PlantaoProApi", (sp, client) =>
     var cfg = sp.GetRequiredService<IConfiguration>();
     var logger = sp.GetRequiredService<ILoggerFactory>().CreateLogger("PlantaoProApiHttpClient");
 
-    var baseUrl = cfg["ApiSettings:BaseUrl"] ?? cfg["PlantaoProApi:BaseUrl"];
-
+    // Precedência oficial: ApiSettings:BaseUrl > PlantaoProApi:BaseUrl (validada no startup).
+    var baseUrl = PlantaoProApiStartupValidator.ResolveBaseUrl(cfg);
     if (string.IsNullOrWhiteSpace(baseUrl))
         throw new InvalidOperationException("Configuração PlantaoProApi:BaseUrl não encontrada.");
 
-    client.BaseAddress = new Uri(baseUrl);
+    client.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
     client.Timeout = TimeSpan.FromSeconds(cfg.GetValue("PlantaoProApi:LoginTimeoutSeconds", 15));
     client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 

@@ -18,6 +18,7 @@ public interface IConsultaRepository
     Task<bool> RemoverCidAsync(Guid consultaId, Guid consultaCidId, Guid clienteId, Guid? usuarioId, CancellationToken ct);
     Task<IReadOnlyList<ConsultaAdendo>> ListarAdendosAsync(Guid consultaId, Guid clienteId, CancellationToken ct);
     Task<ConsultaAdendo> CriarAdendoAsync(Guid consultaId, Guid clienteId, Guid autorId, CriarConsultaAdendoRequest request, string hash, CancellationToken ct);
+    Task<string?> SituacaoPreAutorizacaoAsync(Guid consultaId, Guid clienteId, Guid pacienteId, Guid? agendamentoId, CancellationToken ct);
     NpgsqlConnection AbrirConexao();
 }
 
@@ -110,6 +111,24 @@ public sealed class ConsultaRepository : IConsultaRepository
         const string sql = @"insert into plantaopro.consulta_adendos(id,cliente_id,consulta_id,autor_id,medico_id,motivo,conteudo,created_at,hash) values(@id,@clienteId,@consultaId,@autorId,@MedicoId,@Motivo,@Conteudo,now(),@hash) returning id,cliente_id ClienteId,consulta_id ConsultaId,autor_id AutorId,medico_id MedicoId,motivo,conteudo,created_at CreatedAt,hash";
         return await cn.QuerySingleAsync<ConsultaAdendo>(new CommandDefinition(sql, new { id, clienteId, consultaId, autorId, request.MedicoId, Motivo = request.Motivo.Trim(), Conteudo = request.Conteudo.Trim(), hash }, cancellationToken: ct));
     }
+
+    public async Task<string?> SituacaoPreAutorizacaoAsync(Guid consultaId, Guid clienteId, Guid pacienteId, Guid? agendamentoId, CancellationToken ct)
+    {
+        // B8: situação da pré-autorização relevante para a consulta — vínculo direto por consulta,
+        // depois por agendamento, depois flutuante apenas pelo paciente. Prioridade: PENDENTE > NEGADA.
+        await using var cn = AbrirConexao();
+        const string sql = @"
+            select case when bool_or(upper(coalesce(status,''))='PENDENTE') then 'PENDENTE'
+                        when bool_or(upper(coalesce(status,'')) in ('NEGADA','REJEITADA')) then 'NEGADA'
+                        else null end
+            from plantaopro.convenio_autorizacoes
+            where reg_status='A' and cliente_id=@clienteId
+              and (consulta_id=@consultaId
+                   or (consulta_id is null and agendamento_id=@agendamentoId)
+                   or (consulta_id is null and agendamento_id is null and paciente_id=@pacienteId))
+        ";
+        return await cn.ExecuteScalarAsync<string?>(new CommandDefinition(sql, new { consultaId, clienteId, pacienteId, agendamentoId }, cancellationToken: ct));
+    }
 }
 
 public interface IConsultaApplicationService
@@ -145,7 +164,7 @@ public sealed class ConsultaApplicationService : IConsultaApplicationService
     public async Task<ApiResponse<ConsultaWorkspaceResponse>> WorkspaceAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaWorkspaceResponse>(); var value = await repository.WorkspaceAsync(id, tenant, ct); if (value is null) return ApiResponse<ConsultaWorkspaceResponse>.Fail("Consulta não encontrada.", 404); await Auditar(id, "PRONTUARIO_VISUALIZAR", new { consultaId = id }); return ApiResponse<ConsultaWorkspaceResponse>.Ok(value); }
     public async Task<ApiResponse<Consulta>> IniciarAsync(Guid id, IniciarConsultaRequest request, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<Consulta>(); var atual = await repository.ObterAsync(id, tenant, ct); if (atual is null) return ApiResponse<Consulta>.Fail("Consulta não encontrada.", 404); ConsultaStateMachine.Validar(atual.Status, ConsultaStatus.EM_ATENDIMENTO); if (!await repository.AlterarStatusAsync(id, tenant, atual.Status, ConsultaStatus.EM_ATENDIMENTO, request.Versao, user.UserId, ct)) return ApiResponse<Consulta>.Fail(Conflito, 409); await Auditar(id, "CONSULTA_INICIAR", new { request.Versao }); return ApiResponse<Consulta>.Ok((await repository.ObterAsync(id, tenant, ct))!); }
     public async Task<ApiResponse<Consulta>> SalvarRascunhoAsync(Guid id, SalvarConsultaRascunhoRequest request, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<Consulta>(); if (!await repository.SalvarRascunhoAsync(id, tenant, request, user.UserId, ct)) return ApiResponse<Consulta>.Fail(Conflito, 409); await Auditar(id, "CONSULTA_SALVAR", new { request.Versao }); return ApiResponse<Consulta>.Ok((await repository.ObterAsync(id, tenant, ct))!, "Rascunho salvo."); }
-    public async Task<ApiResponse<ConsultaPendenciasFinalizacaoResponse>> PendenciasAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaPendenciasFinalizacaoResponse>(); var c = await repository.ObterAsync(id, tenant, ct); if (c is null) return ApiResponse<ConsultaPendenciasFinalizacaoResponse>.Fail("Consulta não encontrada.", 404); var p = new List<string>(); if (c.PacienteId == Guid.Empty) p.Add("Paciente não vinculado."); if (c.MedicoId == Guid.Empty) p.Add("Médico não vinculado."); if (c.AtendimentoId == Guid.Empty) p.Add("Atendimento não vinculado."); if (string.IsNullOrWhiteSpace(c.Anamnese)) p.Add("Preencha a anamnese."); if (string.IsNullOrWhiteSpace(c.Conduta)) p.Add("Preencha a conduta."); var alertas = new List<string>(); if (string.IsNullOrWhiteSpace(c.ExameFisico)) alertas.Add("Exame físico não preenchido."); if (string.IsNullOrWhiteSpace(c.Diagnostico)) alertas.Add("Diagnóstico não informado; confirme se ele não é exigido neste atendimento."); if ((await repository.ListarCidsAsync(id, tenant, ct)).All(x => !x.Principal)) alertas.Add("CID principal não informado; confirme se ele não é exigido neste atendimento."); return ApiResponse<ConsultaPendenciasFinalizacaoResponse>.Ok(new(p, alertas, 0)); }
+    public async Task<ApiResponse<ConsultaPendenciasFinalizacaoResponse>> PendenciasAsync(Guid id, CancellationToken ct) { if (Tenant is not Guid tenant) return SemTenant<ConsultaPendenciasFinalizacaoResponse>(); var c = await repository.ObterAsync(id, tenant, ct); if (c is null) return ApiResponse<ConsultaPendenciasFinalizacaoResponse>.Fail("Consulta não encontrada.", 404); var p = new List<string>(); if (c.PacienteId == Guid.Empty) p.Add("Paciente não vinculado."); if (c.MedicoId == Guid.Empty) p.Add("Médico não vinculado."); if (c.AtendimentoId == Guid.Empty) p.Add("Atendimento não vinculado."); if (string.IsNullOrWhiteSpace(c.Anamnese)) p.Add("Preencha a anamnese."); if (string.IsNullOrWhiteSpace(c.Conduta)) p.Add("Preencha a conduta."); var alertas = new List<string>(); if (string.IsNullOrWhiteSpace(c.ExameFisico)) alertas.Add("Exame físico não preenchido."); if (string.IsNullOrWhiteSpace(c.Diagnostico)) alertas.Add("Diagnóstico não informado; confirme se ele não é exigido neste atendimento."); if ((await repository.ListarCidsAsync(id, tenant, ct)).All(x => !x.Principal)) alertas.Add("CID principal não informado; confirme se ele não é exigido neste atendimento."); var situacaoAut = await repository.SituacaoPreAutorizacaoAsync(id, tenant, c.PacienteId, c.AgendamentoId, ct); if (situacaoAut == "PENDENTE") alertas.Add("Pré-autorização pendente para este atendimento: decisão (aprovar/negar) necessária antes do faturamento por convênio ou plano."); else if (situacaoAut == "NEGADA") alertas.Add("Pré-autorização negada para este atendimento: revise antes de finalizar com faturamento por convênio ou plano."); return ApiResponse<ConsultaPendenciasFinalizacaoResponse>.Ok(new(p, alertas, 0)); }
     public async Task<ApiResponse<FinalizarConsultaResponse>> FinalizarAsync(Guid id, FinalizarConsultaRequest request, CancellationToken ct)
     {
         if (Tenant is not Guid tenant) return SemTenant<FinalizarConsultaResponse>();
@@ -161,6 +180,23 @@ public sealed class ConsultaApplicationService : IConsultaApplicationService
         var atual = await repository.ObterAsync(id, tenant, ct, tx);
         if (atual is null) return ApiResponse<FinalizarConsultaResponse>.Fail("Consulta não encontrada.", 404);
         if (!ConsultaStateMachine.PodeTransicionar(atual.Status, ConsultaStatus.FINALIZADA)) return ApiResponse<FinalizarConsultaResponse>.Fail($"O status {atual.Status} não permite finalizar a consulta.", 409);
+        // B8: gate de pré-autorização — somente quando a finalização gera faturamento por convênio/plano.
+        // O sistema nunca decide sozinho: PENDENTE aguarda aprovação/negação manual; NEGADA bloqueia.
+        if (geraFinanceiro && request.TipoFaturamento is TipoFaturamentoAssistencial.CONVENIO or TipoFaturamentoAssistencial.PLANO_SAUDE)
+        {
+            var situacaoAut = await cn.ExecuteScalarAsync<string?>(new CommandDefinition(@"
+                select case when bool_or(upper(coalesce(status,''))='PENDENTE') then 'PENDENTE'
+                            when bool_or(upper(coalesce(status,'')) in ('NEGADA','REJEITADA')) then 'NEGADA'
+                            else null end
+                from plantaopro.convenio_autorizacoes
+                where reg_status='A' and cliente_id=@tenant
+                  and (consulta_id=@id
+                       or (consulta_id is null and agendamento_id=@agendamentoId)
+                       or (consulta_id is null and agendamento_id is null and paciente_id=@pacienteId))",
+                new { tenant, id, agendamentoId = atual.AgendamentoId, pacienteId = atual.PacienteId }, tx, cancellationToken: ct));
+            if (situacaoAut == "PENDENTE") return ApiResponse<FinalizarConsultaResponse>.Fail("Pré-autorização pendente para este atendimento: aguarde a decisão (aprovar/negar) antes de finalizar com faturamento por convênio ou plano.", 409);
+            if (situacaoAut == "NEGADA") return ApiResponse<FinalizarConsultaResponse>.Fail("Pré-autorização negada para este atendimento: revise a necessidade ou registre nova autorização antes de finalizar com faturamento por convênio ou plano.", 409);
+        }
         if (!await repository.AlterarStatusAsync(id, tenant, atual.Status, ConsultaStatus.FINALIZADA, request.Versao, user.UserId, ct, tx)) { await tx.RollbackAsync(ct); return ApiResponse<FinalizarConsultaResponse>.Fail(Conflito, 409); }
         var atendimentoAtualizado = await cn.ExecuteAsync(new CommandDefinition(
             "update plantaopro.atendimentos_fila set status='FINALIZADO',finalizado_em=coalesce(finalizado_em,now()),reg_update=now() where id=@atendimentoId and cliente_id=@tenant and paciente_id=@pacienteId and unidade_id=@unidadeId and status not in ('FINALIZADO','CANCELADO')",
@@ -185,7 +221,7 @@ public sealed class ConsultaApplicationService : IConsultaApplicationService
         Guid? financeiroId = null;
         if (geraFinanceiro)
         {
-            financeiroId = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition(@"insert into plantaopro.clinica_contas_receber(id,cliente_id,unidade_id,paciente_id,atendimento_id,consulta_id,medico_id,valor_bruto,desconto,coparticipacao,valor_liquido,valor_pago,vencimento,status,origem,justificativa,created_by,reg_date,reg_status) values(gen_random_uuid(),@tenant,@UnidadeId,@PacienteId,@AtendimentoId,@id,@MedicoId,@ValorBruto,@Desconto,@Coparticipacao,@liquido,0,current_date,case when @tipo in ('CONVENIO','PLANO_SAUDE') then 'EM_ANALISE' else 'ABERTA' end,'CONSULTA',@Justificativa,@uid,now(),'A') on conflict (cliente_id,consulta_id) where consulta_id is not null and reg_status='A' do update set reg_update=now() returning id", new { tenant, atual.UnidadeId, atual.PacienteId, atual.AtendimentoId, id, atual.MedicoId, request.ValorBruto, request.Desconto, request.Coparticipacao, liquido, tipo = request.TipoFaturamento.ToString(), request.Justificativa, uid = user.UserId }, tx, cancellationToken: ct));
+            financeiroId = await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition(@"insert into plantaopro.clinica_contas_receber(id,cliente_id,unidade_id,paciente_id,atendimento_id,consulta_id,medico_id,valor_bruto,desconto,coparticipacao,valor_liquido,valor_total,valor_pendente,valor_pago,vencimento,status,origem,justificativa,created_by,reg_date,reg_status) values(gen_random_uuid(),@tenant,@UnidadeId,@PacienteId,@AtendimentoId,@id,@MedicoId,@ValorBruto,@Desconto,@Coparticipacao,@liquido,@liquido,@liquido,0,current_date,case when @tipo in ('CONVENIO','PLANO_SAUDE') then 'EM_ANALISE' else 'ABERTA' end,'CONSULTA',@Justificativa,@uid,now(),'A') on conflict (cliente_id,consulta_id) where consulta_id is not null and reg_status='A' do update set reg_update=now() returning id", new { tenant, atual.UnidadeId, atual.PacienteId, atual.AtendimentoId, id, atual.MedicoId, request.ValorBruto, request.Desconto, request.Coparticipacao, liquido, tipo = request.TipoFaturamento.ToString(), request.Justificativa, uid = user.UserId }, tx, cancellationToken: ct));
         }
         await cn.ExecuteAsync(new CommandDefinition("insert into plantaopro.consulta_historico(id,cliente_id,consulta_id,evento,versao,created_by,reg_date,reg_status) values(gen_random_uuid(),@tenant,@id,'FINALIZADA',@versao,@uid,now(),'A')", new { tenant, id, versao = request.Versao + 1, uid = user.UserId }, tx, cancellationToken: ct));
         await tx.CommitAsync(ct);

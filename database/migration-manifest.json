@@ -918,6 +918,28 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2315_saude360_b8_financeiro_canonico",
+      "source": "database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql",
+      "checksum": "dd5a5e4d32b8ab1d9b23b9b4845dfbfd1e0772f2e6634db433f118c0f1f155d2",
+      "dependsOn": [
+        "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2316_saude360_b8_fila_atendimento_legado",
+      "source": "database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql",
+      "checksum": "cc22f08306c85a294395a021f31f1e26b9eae600b501b9eb7c8fe569a01d51e8",
+      "dependsOn": [
+        "2026_10_v2315_saude360_b8_financeiro_canonico"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

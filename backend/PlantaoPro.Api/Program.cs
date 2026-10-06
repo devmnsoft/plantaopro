@@ -224,6 +224,7 @@ builder.Services.AddScoped<IDocumentosXmlRepository>(sp => new DocumentosXmlRepo
 builder.Services.AddScoped<IGestaoDashboardRepository>(sp => new GestaoDashboardRepository(GetConn(sp)));
 builder.Services.AddScoped<OperationalAutomationService>();
 builder.Services.AddScoped<Saude360ClinicalService>();
+builder.Services.AddScoped<Saude360FinanceiroService>();
 builder.Services.AddScoped<IWorkflowSaude360Service, WorkflowSaude360Service>();
 builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
 builder.Services.AddScoped<IConsultaApplicationService, ConsultaApplicationService>();

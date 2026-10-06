@@ -208,15 +208,16 @@ public sealed class PrescricoesController : ControllerBase
 public sealed class ClinicaFinanceiroController : ControllerBase
 {
     private readonly Saude360ClinicalService service;
-    public ClinicaFinanceiroController(Saude360ClinicalService service) { this.service = service; }
+    private readonly Saude360FinanceiroService financeiro;
+    public ClinicaFinanceiroController(Saude360ClinicalService service, Saude360FinanceiroService financeiro) { this.service = service; this.financeiro = financeiro; }
     [HttpGet("resumo")] public async Task<IActionResult> Resumo() { var r = await service.ResumoFinanceiroAsync(); return StatusCode(r.StatusCode, r); }
     [HttpGet("contas-receber")] public async Task<IActionResult> ContasReceber() { var r = await service.ListarAsync("contasReceber"); return StatusCode(r.StatusCode, r); }
     [HttpPost("contas-receber")] public async Task<IActionResult> CriarContaReceber([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("contasReceber", request); return StatusCode(r.StatusCode, r); }
-    [HttpPost("receber")] public async Task<IActionResult> Receber([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("recebimentos", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("receber")] public async Task<IActionResult> Receber([FromBody] Saude360CreateRequest request) { var r = await financeiro.BaixarRecebimentoAsync(request, HttpContext.RequestAborted); if (!r.Success) return StatusCode(r.StatusCode, r); var atual = await service.ObterAsync("contasReceber", r.Data!.ContaReceberId); if (!atual.Success) return StatusCode(200, r); return StatusCode(200, ApiResponse<Saude360RegistroDto>.Ok(atual.Data, r.Message)); }
     [HttpPost("cancelar")] public async Task<IActionResult> Cancelar([FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("contasReceber", request.Id ?? Guid.Empty, "cancelar", request); return StatusCode(r.StatusCode, r); }
-    [HttpPost("estornar")] public async Task<IActionResult> Estornar([FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("recebimentos", request.Id ?? Guid.Empty, "estornar", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("estornar")] public async Task<IActionResult> Estornar([FromBody] Saude360ActionRequest request) { var r = await financeiro.EstornarRecebimentoAsync(request, HttpContext.RequestAborted); if (!r.Success) return StatusCode(r.StatusCode, r); var atual = await service.ObterAsync("recebimentos", r.Data!.ReceivingId); if (!atual.Success) return StatusCode(200, r); return StatusCode(200, ApiResponse<Saude360RegistroDto>.Ok(atual.Data, r.Message)); }
     [HttpGet("caixa")] public async Task<IActionResult> Caixa() { var r = await service.ListarAsync("caixa"); return StatusCode(r.StatusCode, r); }
-    [HttpPost("fechar-caixa")] public async Task<IActionResult> FecharCaixa([FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("caixa", request.CaixaId ?? request.Id ?? Guid.Empty, "fechar-caixa", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("fechar-caixa")] public async Task<IActionResult> FecharCaixa([FromBody] Saude360ActionRequest request) { var r = await financeiro.FecharCaixaAsync(request, HttpContext.RequestAborted); if (!r.Success) return StatusCode(r.StatusCode, r); var atual = await service.ObterAsync("caixa", r.Data!.CaixaId); if (!atual.Success) return StatusCode(200, r); return StatusCode(200, ApiResponse<Saude360RegistroDto>.Ok(atual.Data, r.Message)); }
     [HttpGet("relatorios")] public async Task<IActionResult> Relatorios() { var r = await service.ResumoFinanceiroAsync(); return StatusCode(r.StatusCode, r); }
     [HttpGet("repasses")] public async Task<IActionResult> Repasses() { var r = await service.ListarAsync("repassesMedicos"); return StatusCode(r.StatusCode, r); }
     [HttpGet("glosas")] public async Task<IActionResult> Glosas() { var r = await service.ListarAsync("convenioGlosas"); return StatusCode(r.StatusCode, r); }

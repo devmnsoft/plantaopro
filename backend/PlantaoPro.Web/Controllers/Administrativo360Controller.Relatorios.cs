@@ -1,3 +1,4 @@
+using PlantaoPro.CrossCutting.Localization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -60,7 +61,7 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.CirurgiaNumero ?? ""),
                 it.DataSaida?.ToString("yyyy-MM-dd HH:mm") ?? "",
                 it.DataRetornoPrevista?.ToString("yyyy-MM-dd") ?? "",
-                it.QuantidadePendente.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.QuantidadePendente),
                 SanitizarCsv(it.Responsavel),
                 it.DiasAtraso.ToString()));
         }
@@ -91,7 +92,7 @@ public partial class Administrativo360Controller
                 it.Validade?.ToString("yyyy-MM-dd") ?? "",
                 SanitizarCsv(it.Hospital),
                 SanitizarCsv(it.ValeNumero),
-                it.Quantidade.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)));
+                ValorHumano.Format(it.Quantidade)));
         }
 
         var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
@@ -116,11 +117,11 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.Numero),
                 SanitizarCsv(it.Hospital),
                 SanitizarCsv(it.Cirurgia ?? ""),
-                it.TotalExpedido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.TotalConsumido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.TotalDevolvido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.TotalPerda.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.PendenteCustodia.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.TotalExpedido),
+                ValorHumano.Format(it.TotalConsumido),
+                ValorHumano.Format(it.TotalDevolvido),
+                ValorHumano.Format(it.TotalPerda),
+                ValorHumano.Format(it.PendenteCustodia),
                 SanitizarCsv(it.Situacao)));
         }
 
@@ -153,7 +154,7 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.Hospital ?? ""),
                 SanitizarCsv(it.LocalAtual),
                 SanitizarCsv(it.Condicao),
-                it.Quantidade.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.Quantidade),
                 it.DataMovimento.ToString("yyyy-MM-dd HH:mm")));
         }
 

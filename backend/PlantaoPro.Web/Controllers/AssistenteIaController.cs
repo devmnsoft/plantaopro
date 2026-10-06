@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
+using PlantaoPro.CrossCutting.Localization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Services;
@@ -72,7 +73,9 @@ public sealed class AssistenteIaController : BaseWebController
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ReconciliarUso([FromForm] Guid usoId, [FromForm] string? valorConfirmado, CancellationToken ct)
     {
-        decimal? valor = decimal.TryParse(valorConfirmado, NumberStyles.Number, CultureInfo.InvariantCulture, out var v) && v > 0m ? v : null;
+        // Gate financeiro: leitura do valor digitado pelo contrato central (pt-BR + invariante),
+        // nao por TryParse invariante, que interpretava "12,50" como 1250.
+        decimal? valor = ValorHumano.TentarConverter(valorConfirmado ?? string.Empty, out decimal v, out _) && v > 0m ? v : null;
         var (ok, mensagem) = await _ai.ReconciliarUsoAsync(GetJwtToken() ?? string.Empty, usoId, valor, ct);
         if (ok)
         {

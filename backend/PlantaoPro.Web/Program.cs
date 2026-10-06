@@ -1,8 +1,11 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using PlantaoPro.Web.Services;
+using PlantaoPro.Web.Services.Mvc;
 using PlantaoPro.Web.Services.Security;
 
 using PlantaoPro.CrossCutting.Security;
@@ -14,6 +17,22 @@ builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestHeadersTota
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.AddService<SaasRouteGuardFilter>();
+    // Gate financeiro (item 2): todo decimal de formulario/route/query passa pelo contrato
+    // central ValorHumano (pt-BR + invariante, ambiguidades rejeitadas), nunca pelo binder
+    // padrao em cultura invariante que lia "12,50" como 1250 (bug M2.5).
+    options.ModelBinderProviders.Insert(0, new PlantaoPro.Web.Models.ValorHumanoModelBinderProvider());
+    // Metade 2 do gate: sem o filtro, um decimal que nao ligou chegaria a acao como 0
+    // e o fluxo financeiro prosseguiria em silencio. Invalido -> PRG com mensagem humana.
+    options.Filters.AddService<ModelStateInvalidoFiltro>();
+});
+// Gate financeiro (item 2): a lingua visual da aplicacao e o portugues do Brasil —
+// formatacoes de moeda/data nas views ("C", "N2", "0.00") seguem a cultura pt-BR.
+// O binding de decimal NAO depende dessa cultura: e tratado pelo binder acima.
+builder.Services.AddRequestLocalization(localization =>
+{
+    localization.DefaultRequestCulture = new RequestCulture("pt-BR");
+    localization.SupportedCultures.Add(new CultureInfo("pt-BR"));
+    localization.SupportedUICultures.Add(new CultureInfo("pt-BR"));
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IRoleCatalog, RoleCatalog>();
@@ -34,6 +53,7 @@ builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
 builder.Services.AddScoped<ITenantAccessService, TenantAccessService>();
 builder.Services.AddScoped<IMenuBuilderService, MenuBuilderService>();
 builder.Services.AddScoped<SaasRouteGuardFilter>();
+builder.Services.AddScoped<ModelStateInvalidoFiltro>();
 builder.Services.AddSession();
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

@@ -1,3 +1,4 @@
+using PlantaoPro.CrossCutting.Localization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -597,9 +598,9 @@ public partial class Administrativo360Controller
                 it.DataEmissao.ToString("yyyy-MM-dd"),
                 it.DataVencimento.ToString("yyyy-MM-dd"),
                 $"{it.Parcela}/{it.TotalParcelas}",
-                it.ValorPrincipal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ValorPago.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.SaldoAberto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.ValorPrincipal),
+                ValorHumano.Format(it.ValorPago),
+                ValorHumano.Format(it.SaldoAberto),
                 SanitizarCsv(it.Situacao),
                 SanitizarCsv(it.CentroCusto ?? "")));
         }
@@ -638,9 +639,9 @@ public partial class Administrativo360Controller
                 $"{it.Parcela}/{it.TotalParcelas}",
                 it.DataEmissao.ToString("yyyy-MM-dd"),
                 it.DataVencimento.ToString("yyyy-MM-dd"),
-                it.ValorPrincipal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ValorRecebido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.SaldoAberto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.ValorPrincipal),
+                ValorHumano.Format(it.ValorRecebido),
+                ValorHumano.Format(it.SaldoAberto),
                 SanitizarCsv(it.Situacao)));
         }
 

@@ -1,3 +1,4 @@
+using PlantaoPro.CrossCutting.Localization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
@@ -57,11 +58,11 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.Hospital),
                 SanitizarCsv(it.Pagador),
                 SanitizarCsv(it.Vendedor ?? ""),
-                it.TotalBruto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.Desconto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.TotalLiquido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.TotalCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ComissaoPrevista.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.TotalBruto),
+                ValorHumano.Format(it.Desconto),
+                ValorHumano.Format(it.TotalLiquido),
+                ValorHumano.Format(it.TotalCusto),
+                ValorHumano.Format(it.ComissaoPrevista),
                 SanitizarCsv(it.Situacao)));
         }
 
@@ -90,9 +91,9 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.Vendedor),
                 SanitizarCsv(it.VendaNumero),
                 it.DataBaixa.ToString("yyyy-MM-dd"),
-                it.BaseCalculo.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.Percentual.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ComissaoApropriada.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
+                ValorHumano.Format(it.BaseCalculo),
+                ValorHumano.Format(it.Percentual),
+                ValorHumano.Format(it.ComissaoApropriada),
                 SanitizarCsv(it.Situacao)));
         }
 
@@ -119,12 +120,12 @@ public partial class Administrativo360Controller
                 SanitizarCsv(it.VendaNumero),
                 SanitizarCsv(it.ValeNumero),
                 SanitizarCsv(it.Hospital),
-                it.ReceitaLiquida.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.CustoConsumido.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ComissaoPrevista.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.ComissaoApropriada.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.MargemContribuicao.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture),
-                it.MargemPercentual.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)));
+                ValorHumano.Format(it.ReceitaLiquida),
+                ValorHumano.Format(it.CustoConsumido),
+                ValorHumano.Format(it.ComissaoPrevista),
+                ValorHumano.Format(it.ComissaoApropriada),
+                ValorHumano.Format(it.MargemContribuicao),
+                ValorHumano.Format(it.MargemPercentual)));
         }
 
         var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();

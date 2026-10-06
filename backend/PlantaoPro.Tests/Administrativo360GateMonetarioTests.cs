@@ -41,7 +41,10 @@ public sealed class Administrativo360GateMonetarioTests
         todos["__RequestVerificationToken"] = antiforgery;
         using var form = new FormUrlEncodedContent(todos);
         using var req = new HttpRequestMessage(HttpMethod.Post, "Administrativo360/SalvarProduto") { Content = form };
-        req.Headers.TryAddWithoutValidation("Referer", "https://web.test.local/Administrativo360/Produtos");
+        // R4-A3: o filtro valida o destino contra a origem da requisicao (host localhost;
+        // esquema http no transporte do TestServer); Referer externo/cai em origem diferente
+        // resulta em 400.
+        req.Headers.TryAddWithoutValidation("Referer", "http://localhost/Administrativo360/Produtos");
         return await client.SendAsync(req);
     }
 

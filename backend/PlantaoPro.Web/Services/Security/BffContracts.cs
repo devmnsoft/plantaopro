@@ -15,6 +15,7 @@ public static class BffContracts
     public const string RazaoClienteBloqueado = "CLIENTE_BLOQUEADO";
     public const string RazaoServicoIndisponivel = "SERVICO_INDISPONIVEL";
     public const string RazaoErroServico = "ERRO_SERVICO";
+    public const string RazaoDadosInvalidos = "DADOS_INVALIDOS";
 
     public const string MensagemSessaoExpirada = "Sessão expirada ou não autenticada. Entre novamente para continuar.";
     public const string MensagemAcessoNegado = "Você não tem permissão para acessar este recurso.";

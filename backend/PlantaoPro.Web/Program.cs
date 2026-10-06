@@ -32,6 +32,11 @@ builder.Services.AddControllersWithViews(options =>
     // e o fluxo financeiro prosseguiria em silencio. Invalido -> PRG com mensagem humana.
     options.Filters.AddService<ModelStateInvalidoFiltro>();
 });
+// O [ApiController] instala um filtro proprio de ModelState invalido (400 problem+json) que
+// atende antes do filtro unico acima e quebra o envelope canonico do BFF (BffContracts).
+// Desligado de proposito: quem decide o contrato para ModelState invalido e apenas o
+// ModelStateInvalidoFiltro — /bff recebe JSON canonico; formularios MVC recebem PRG/400.
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(o => o.SuppressModelStateInvalidFilter = true);
 // Gate financeiro (item 2): a lingua visual da aplicacao e o portugues do Brasil —
 // formatacoes de moeda/data nas views ("C", "N2", "0.00") seguem a cultura pt-BR.
 // O binding de decimal NAO depende dessa cultura: e tratado pelo binder acima.

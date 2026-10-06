@@ -68,7 +68,10 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Administrativo360"] = "ADM360",
         ["Adm360GestaoWeb"] = "ADM360",
         ["Adm360DocumentosXmlWeb"] = "ADM360",
-        ["Adm360CotacoesWeb"] = "ADM360"
+        ["Adm360CotacoesWeb"] = "ADM360",
+        // Somente ambiente Testing (a acao responde 404 fora dele); modulo ADM360 porque
+        // a suita assina com claims modules=ADM360/permissions=ADM360.*.
+        ["MvcSeguroTest"] = "ADM360"
     };
 
     private static readonly ISet<string> PublicControllers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)

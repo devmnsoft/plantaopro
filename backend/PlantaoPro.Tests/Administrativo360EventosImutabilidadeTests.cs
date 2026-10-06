@@ -809,6 +809,12 @@ public sealed class Administrativo360EventosImutabilidadeTests : IClassFixture<P
                 // Ordem respeita dependências (FKs continuam válidas mesmo sob REPLICA)
                 if (respostaId != Guid.Empty)
                 {
+                    // adm360_cotacao_envios referencia a resposta; sem remover antes, uma
+                    // execucao interrompida em estado ENVIANDO vira orfao que quebra o teste
+                    // de "nenhum ENVIANDO no tenant" na rodada seguinte.
+                    await cn.ExecuteAsync(
+                        "DELETE FROM plantaopro.adm360_cotacao_envios WHERE resposta_id = @r AND tenant_id = @t",
+                        new { r = respostaId, t = TenantSantaCasa });
                     await cn.ExecuteAsync(
                         "DELETE FROM plantaopro.adm360_cotacao_exportacoes WHERE resposta_id = @r AND tenant_id = @t",
                         new { r = respostaId, t = TenantSantaCasa });

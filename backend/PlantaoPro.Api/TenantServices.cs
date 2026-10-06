@@ -303,7 +303,7 @@ public sealed class AssinaturaGuardService
         {
             using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             var assinatura = await cn.QueryFirstOrDefaultAsync<AssinaturaAtualDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"",
-       coalesce(a.status,'') as ""Status"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"", a.data_trial_fim as ""DataTrialFim"",
+       coalesce(a.status,'') as ""Status"", a.data_inicio::timestamp as ""DataInicio"", a.data_fim::timestamp as ""DataFim"", a.data_trial_fim::timestamp as ""DataTrialFim"",
        a.valor_contratado as ""ValorContratado"", a.dia_vencimento as ""DiaVencimento"", coalesce(a.periodicidade,'MENSAL') as ""Periodicidade""
 from plantaopro.assinaturas a
 join plantaopro.planos p on p.id=a.plano_id
@@ -336,7 +336,7 @@ limit 1", new { clienteId });
                 return ApiResponse<UsoPlanoDto>.Fail("Cliente cancelado não pode operar.", 403);
             }
 
-            var uso = await cn.QueryFirstOrDefaultAsync<UsoPlanoDto>(@"select a.cliente_id as ""ClienteId"", a.id as ""AssinaturaId"", p.id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""AssinaturaStatus"", a.data_fim as ""DataFim"",
+            var uso = await cn.QueryFirstOrDefaultAsync<UsoPlanoDto>(@"select a.cliente_id as ""ClienteId"", a.id as ""AssinaturaId"", p.id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""AssinaturaStatus"", a.data_fim::timestamp as ""DataFim"", a.data_trial_fim::timestamp as ""DataTrialFim"",
        (select count(1)::int from plantaopro.medicos m where m.cliente_id=a.cliente_id and m.reg_status='A') as ""MedicosUsados"",
        coalesce(p.limite_medicos,0) as ""MedicosLimite"",
        (select count(1)::int from plantaopro.hospitais h where h.cliente_id=a.cliente_id and h.reg_status='A') as ""HospitaisUsados"",
@@ -377,6 +377,14 @@ limit 1", new { clienteId });
                 return ApiResponse<UsoPlanoDto>.Fail("Assinatura vencida. Regularize para continuar operando.", 403);
             }
 
+            if (string.Equals(uso.AssinaturaStatus, "TRIAL", StringComparison.OrdinalIgnoreCase)
+                && uso.DataTrialFim.HasValue
+                && uso.DataTrialFim.Value.Date < DateTime.UtcNow.Date)
+            {
+                await RegistrarBloqueioAsync(clienteId, "ASSINATURA_TRIAL_VENCIDA", "Período experimental encerrado. Contrate um plano para continuar operando.");
+                return ApiResponse<UsoPlanoDto>.Fail("Período experimental encerrado. Contrate um plano para continuar operando.", 403);
+            }
+
             return ApiResponse<UsoPlanoDto>.Ok(uso, "Uso do plano carregado.");
         }
         catch (Exception ex)
@@ -391,7 +399,10 @@ limit 1", new { clienteId });
         var usoResponse = await ObterUsoPlano(clienteId);
         if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
         var uso = usoResponse.Data;
-        var statusOk = string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase);
+        // B6: TRIAL vale para limites/funcionalidades enquanto o período experimental
+        // não venceu (o vencimento é barrado em ObterUsoPlano com ASSINATURA_TRIAL_VENCIDA).
+        var statusOk = string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(uso.AssinaturaStatus, "TRIAL", StringComparison.OrdinalIgnoreCase);
         if (!statusOk)
         {
             await RegistrarBloqueioAsync(clienteId, "ASSINATURA_INATIVA", "Assinatura sem permissão de operação no momento.");
@@ -420,7 +431,10 @@ limit 1", new { clienteId });
         var usoResponse = await ObterUsoPlano(clienteId);
         if (!usoResponse.Success || usoResponse.Data is null) return ApiResponse<bool>.Fail(usoResponse.Message, usoResponse.StatusCode);
         var uso = usoResponse.Data;
-        if (!string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase))
+        // B6: TRIAL vale para limites/funcionalidades enquanto o período experimental
+        // não venceu (o vencimento é barrado em ObterUsoPlano com ASSINATURA_TRIAL_VENCIDA).
+        if (!string.Equals(uso.AssinaturaStatus, "ATIVA", StringComparison.OrdinalIgnoreCase)
+            && !string.Equals(uso.AssinaturaStatus, "TRIAL", StringComparison.OrdinalIgnoreCase))
         {
             await RegistrarBloqueioAsync(clienteId, "ASSINATURA_INATIVA", "Cliente sem assinatura ativa para operar.");
             return ApiResponse<bool>.Fail("Cliente sem assinatura ativa para operar.", 403);

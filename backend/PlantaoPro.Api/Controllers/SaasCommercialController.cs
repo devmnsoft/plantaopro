@@ -273,7 +273,7 @@ public sealed class AssinaturasController : ControllerBase
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var total = await cn.ExecuteScalarAsync<long>("select count(1) from plantaopro.assinaturas a where " + where, new { clienteId, status });
             var items = await cn.QueryAsync<AssinaturaComercialDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
-       a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"",
+       a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", a.data_inicio::timestamp as ""DataInicio"", a.data_fim::timestamp as ""DataFim"",
        coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.dia_vencimento as ""DiaVencimento"",
        coalesce(a.observacoes,'') as ""Observacoes""
 from plantaopro.assinaturas a
@@ -299,7 +299,7 @@ limit @s offset @offset", new { clienteId, status, s, offset = (p - 1) * s });
         {
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             var item = await cn.QueryFirstOrDefaultAsync<AssinaturaComercialDto>(@"select a.id as ""Id"", a.cliente_id as ""ClienteId"", coalesce(c.nome_fantasia,c.razao_social,'') as ""ClienteNome"",
-       a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"",
+       a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", a.data_inicio::timestamp as ""DataInicio"", a.data_fim::timestamp as ""DataFim"",
        coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.dia_vencimento as ""DiaVencimento"", coalesce(a.observacoes,'') as ""Observacoes""
 from plantaopro.assinaturas a
 join plantaopro.clientes c on c.id=a.cliente_id
@@ -368,8 +368,24 @@ where id=@id and cliente_id=@ClienteId and reg_status='A'", new { id, request.Cl
             if (jaAtiva) return BadRequest(ApiResponse<string>.Fail("Cliente já possui uma assinatura ativa ou trial.", 400));
 
             var id = Guid.NewGuid();
-            await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,reg_status,reg_date)
-values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@DiaVencimento,@Observacoes,'A',now())", new { id, request.ClienteId, request.PlanoId, request.DataInicio, request.DataFim, request.ValorContratado, request.DiaVencimento, request.Observacoes });
+            // B6: serializa a criação por cliente (mesmo lock que a reativação usa),
+            // para o índice único de ATIVA/TRIAL ser o árbitro final da corrida.
+            // A pré-checagem acima permanece apenas para a mensagem honesta (400).
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended('assinaturas:' || @ClienteId::text, 0))", request, tx);
+            try
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,reg_status,reg_date)
+values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@DiaVencimento,@Observacoes,'A',now())", new { id, request.ClienteId, request.PlanoId, request.DataInicio, request.DataFim, request.ValorContratado, request.DiaVencimento, request.Observacoes }, tx);
+                await tx.CommitAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                await tx.RollbackAsync();
+                _logger.LogWarning(ex, "Corrida na criação de assinatura SaaS: índice único ativo/trial violado para o cliente {ClienteId}", request.ClienteId);
+                return Conflict(ApiResponse<string>.Fail("Conflito: outra assinatura ativa ou trial foi criada simultaneamente para este cliente.", 409));
+            }
             await AuditarAsync(request.ClienteId, id, AuditoriaConstants.Acoes.Criar, new { request.PlanoId, request.ValorContratado });
             return Ok(ApiResponse<Guid>.Ok(id, "Assinatura criada com sucesso."));
         }
@@ -439,10 +455,35 @@ values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_
         {
             if ((status == "SUSPENSA" || status == "CANCELADA") && string.IsNullOrWhiteSpace(justificativa)) return BadRequest(ApiResponse<string>.Fail("Justificativa obrigatória.", 400));
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var clienteId = await cn.ExecuteScalarAsync<Guid?>(@"update plantaopro.assinaturas set status=@status, motivo_cancelamento=case when @status='CANCELADA' then @justificativa else motivo_cancelamento end, data_cancelamento=case when @status='CANCELADA' then now() else data_cancelamento end, reg_update=now()
-where id=@id and reg_status='A'
-returning cliente_id", new { id, status, justificativa });
-            if (!clienteId.HasValue) return NotFound(ApiResponse<string>.Fail("Assinatura não encontrada.", 404));
+            await cn.OpenAsync();
+            await using var tx = await cn.BeginTransactionAsync();
+            var clienteId = await cn.ExecuteScalarAsync<Guid?>("select cliente_id from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
+            if (!clienteId.HasValue)
+            {
+                await tx.RollbackAsync();
+                return NotFound(ApiResponse<string>.Fail("Assinatura não encontrada.", 404));
+            }
+            // B6: voltar a ATIVA/TRIAL participa do mesmo lock por cliente da criação,
+            // para duas assinaturas nunca ficarem ativas ao mesmo tempo (23505 -> 409).
+            if (status == "ATIVA" || status == "TRIAL")
+                await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended('assinaturas:' || @clienteId::text, 0))", new { clienteId = clienteId.Value }, tx);
+            try
+            {
+                var linhas = await cn.ExecuteAsync(@"update plantaopro.assinaturas set status=@status, motivo_cancelamento=case when @status='CANCELADA' then @justificativa else motivo_cancelamento end, data_cancelamento=case when @status='CANCELADA' then now() else data_cancelamento end, reg_update=now()
+where id=@id and reg_status='A'", new { id, status, justificativa }, tx);
+                if (linhas == 0)
+                {
+                    await tx.RollbackAsync();
+                    return NotFound(ApiResponse<string>.Fail("Assinatura não encontrada.", 404));
+                }
+                await tx.CommitAsync();
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                await tx.RollbackAsync();
+                _logger.LogWarning(ex, "Corrida na reativação da assinatura SaaS {AssinaturaId}: cliente {ClienteId} já possui ativa/trial", id, clienteId.Value);
+                return Conflict(ApiResponse<string>.Fail("Conflito: o cliente já possui outra assinatura ativa ou trial.", 409));
+            }
             await AuditarAsync(clienteId.Value, id, AuditoriaConstants.Acoes.AlterarStatus, new { status, justificativa });
             return Ok(ApiResponse<string>.Ok("ok", mensagem));
         }

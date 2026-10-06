@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Dapper;
 using Npgsql;
+using PlantaoPro.CrossCutting.Security;
 
 namespace PlantaoPro.Api;
 
@@ -80,7 +81,7 @@ values
         if (!TryGuid(principal, "uid", out var userId) && !TryGuid(principal, ClaimTypes.NameIdentifier, out userId)) return false;
         if (!TryGuid(principal, "session_id", out var sessionId)) return false;
 
-        const string sql = @"select s.id as ""Id"", s.usuario_id as ""UsuarioId"", s.tenant_id as ""TenantId"", s.cliente_id as ""ClienteId"", s.expira_em as ""ExpiraEm"", s.revogada_em as ""RevogadaEm"",
+        string sql = $@"select s.id as ""Id"", s.usuario_id as ""UsuarioId"", s.tenant_id as ""TenantId"", s.cliente_id as ""ClienteId"", s.expira_em as ""ExpiraEm"", s.revogada_em as ""RevogadaEm"",
        coalesce(s.reg_status,'') as ""RegStatus"", coalesce(u.reg_status,'') as ""UsuarioRegStatus"",
        coalesce(u.status,'ATIVO') as ""UsuarioStatus"",
        case
@@ -88,7 +89,7 @@ values
            select 1 from plantaopro.usuarios_perfis up
            join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A' and coalesce(p.status,'ATIVO')='ATIVO'
            where up.usuario_id=u.id and up.reg_status='A'
-             and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')) then 'ATIVO'
+             and upper(coalesce(p.codigo,p.nome)) in {GlobalAdminProfiles.SqlInList}) then 'ATIVO'
          when coalesce(s.tenant_id,s.cliente_id,u.tenant_id,u.cliente_id) is null then 'ATIVO'
          else coalesce(t.status, c.status, 'INATIVO')
        end as ""TenantStatus""

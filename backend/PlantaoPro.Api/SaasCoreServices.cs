@@ -190,6 +190,13 @@ values(@contractId,@tenantId,@moduleId,@action,cast(@before as jsonb),cast(@afte
             userId = currentUser.UserId,
             ip
         }, transaction, cancellationToken: ct));
+        // B6: downgrade imediato. Desativar o módulo revoga as sessões abertas do
+        // tenant dentro da MESMA transação do upsert: os claims congelados deixam de
+        // valer na próxima requisição (401) e o próximo login recalcula sem o módulo.
+        if (!enabled)
+            await connection.ExecuteAsync(new CommandDefinition(@"update plantaopro.auth_sessoes
+set revogada_em=now(),motivo_revogacao='MODULO_DESATIVADO',reg_update=now()
+where coalesce(tenant_id,cliente_id)=@tenantId and revogada_em is null", new { tenantId = request.TenantId }, transaction, cancellationToken: ct));
         await transaction.CommitAsync(ct);
         await audit.RegistrarAsync(currentUser.UserId, request.TenantId, "TENANT_MODULO", contractId, enabled ? "HABILITAR" : "DESABILITAR", new { moduleId, module.Codigo, antes = before, depois = after }, true, ip, "ADMINISTRADOR_GLOBAL", ct);
         return ApiResponse<Guid>.Ok(contractId, enabled ? "Módulo habilitado para o cliente." : "Módulo bloqueado para o cliente.");

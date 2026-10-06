@@ -514,10 +514,10 @@ select distinct g.codigo from granted g where not exists(select 1 from denied d 
 
         private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId, CancellationToken cancellationToken)
         {
-            const string sql = @"select distinct upper(ms.codigo)
+            string sql = $@"select distinct upper(ms.codigo)
 from plantaopro.tenant_modulos tm
 join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A' and upper(ms.status)='ATIVO'
-where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true and upper(tm.status)='ATIVO'
+where tm.tenant_id=@tenantId and ({ModuleContractVigencia.EffectivePredicate})
 order by 1";
             return await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, cancellationToken: cancellationToken));
         }

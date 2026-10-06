@@ -7,13 +7,22 @@ public sealed class V2197ModuleContractReconciliationTests
     [Fact]
     public void Login_requires_canonical_active_contract_and_never_falls_back_to_legacy_code()
     {
+        // B6: o predicado de vigencia efetiva saiu do SQL inline e virou fonte unica
+        // (ModuleContractVigencia.EffectivePredicate, CrossCutting). O login, que gera
+        // os claims de modulo em Data.LoadModulesAsync, consome essa constante e nao
+        // carrega copia local de vigencia nem o codigo legado com fallback de codigo_modulo.
         var auth = Read("backend/PlantaoPro.Api/Data.cs");
+        var vigencia = Read("backend/PlantaoPro.CrossCutting/ModuleContractVigencia.cs");
         Assert.Contains("join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id", auth, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("tm.habilitado=true", auth, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("upper(tm.status)='ATIVO'", auth, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("ModuleContractVigencia.EffectivePredicate", auth);
+        Assert.DoesNotContain("tm.habilitado=true", auth, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("upper(tm.status)='ATIVO'", auth, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("upper(coalesce(nullif(tm.codigo_modulo", auth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("up.tenant_id is null or up.tenant_id=@tenantId", auth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("isGlobal ? new[] { \"*\" }", auth);
+        Assert.Contains("tm.habilitado=true", vigencia);
+        Assert.Contains("upper(coalesce(tm.status,'ATIVO'))='ATIVO'", vigencia, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("tm.desativado_em is null", vigencia);
     }
 
     [Fact]

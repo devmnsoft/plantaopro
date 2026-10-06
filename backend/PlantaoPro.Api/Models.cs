@@ -393,6 +393,7 @@ public sealed class UsoPlanoDto
     public string PlanoNome { get; set; } = string.Empty;
     public string AssinaturaStatus { get; set; } = string.Empty;
     public DateTime DataFim { get; set; }
+    public DateTime? DataTrialFim { get; set; }
     public int MedicosUsados { get; set; }
     public int MedicosLimite { get; set; }
     public int HospitaisUsados { get; set; }

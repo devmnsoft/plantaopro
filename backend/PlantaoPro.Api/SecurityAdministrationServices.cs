@@ -1,6 +1,7 @@
 using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
+using PlantaoPro.CrossCutting.Security;
 using System.ComponentModel.DataAnnotations;
 
 namespace PlantaoPro.Api;
@@ -90,10 +91,7 @@ from plantaopro.usuarios u
 where u.id=@usuarioId", new { usuarioId }, cancellationToken: ct));
         if (string.IsNullOrWhiteSpace(usuario.RegStatus)) return new(false, "USER_NOT_FOUND", "Usuário não encontrado.", "USUARIO");
         if (!string.Equals(usuario.RegStatus, "A", StringComparison.OrdinalIgnoreCase) || !string.Equals(usuario.Status, "ATIVO", StringComparison.OrdinalIgnoreCase)) return new(false, "USER_INACTIVE", "Usuário inativo ou bloqueado.", "USUARIO");
-        var globalAdmin = await cn.QuerySingleAsync<bool>(new CommandDefinition(@"select exists(
-select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id
-where up.usuario_id=@usuarioId and up.reg_status='A' and p.reg_status='A'
-and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR'))", new { usuarioId }, cancellationToken: ct));
+        var globalAdmin = await cn.QuerySingleAsync<bool>(new CommandDefinition($"select exists(\nselect 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id\nwhere up.usuario_id=@usuarioId and up.reg_status='A' and p.reg_status='A'\nand upper(coalesce(p.codigo,p.nome)) in {GlobalAdminProfiles.SqlInList})", new { usuarioId }, cancellationToken: ct));
         if (globalAdmin) return new(true, "GLOBAL_ADMIN", "Permitido pelo escopo global MNSOFT.", "PERFIL_GLOBAL");
         if (!tenantId.HasValue)
             return new(false, "TENANT_CONTEXT_REQUIRED", "Selecione o tenant correto para continuar.", "TENANT");
@@ -122,11 +120,10 @@ where u.id=@usuarioId", new { usuarioId, tenantId }, cancellationToken: ct));
         var moduleCode = Normalize(modulo);
         if (!CoreModules.Contains(moduleCode))
         {
-            var contracted = await cn.QuerySingleAsync<bool>(new CommandDefinition(@"select exists(
+            var contracted = await cn.QuerySingleAsync<bool>(new CommandDefinition($@"select exists(
 select 1 from plantaopro.tenant_modulos tm
 left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
-where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true
-and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
+where tm.tenant_id=@tenantId and ({ModuleContractVigencia.EffectivePredicate})
 and upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))=@moduleCode)", new { tenantId, moduleCode }, cancellationToken: ct));
             if (!contracted) return new(false, "MODULE_NOT_CONTRACTED", "Este módulo não faz parte da contratação ativa do cliente.", "CONTRATO");
         }
@@ -279,10 +276,10 @@ from plantaopro.permissoes p left join plantaopro.perfil_permissoes pp on pp.per
         var tenantId = TenantScope(requestedTenantId);
         if (!currentUser.IsGlobalAdmin() && !tenantId.HasValue) return Array.Empty<SaasAssignableProfileDto>();
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        return await cn.QueryAsync<SaasAssignableProfileDto>(new CommandDefinition(@"select id as ""Id"", tenant_id as ""TenantId"", coalesce(codigo,'') as ""Codigo"", nome as ""Nome"", coalesce(descricao,'') as ""Descricao"", coalesce(base_sistema,false) as ""BaseSistema""
+        return await cn.QueryAsync<SaasAssignableProfileDto>(new CommandDefinition($@"select id as ""Id"", tenant_id as ""TenantId"", coalesce(codigo,'') as ""Codigo"", nome as ""Nome"", coalesce(descricao,'') as ""Descricao"", coalesce(base_sistema,false) as ""BaseSistema""
 from plantaopro.perfis
 where reg_status='A' and coalesce(status,'ATIVO')='ATIVO'
-  and upper(coalesce(codigo,nome)) not in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')
+  and upper(coalesce(codigo,nome)) not in {GlobalAdminProfiles.SqlInList}
   and (@tenantId is null or tenant_id is null or tenant_id=@tenantId)
 order by base_sistema desc,nome", new { tenantId }, cancellationToken: ct));
     }
@@ -328,10 +325,10 @@ coalesce((select p.limite_usuarios from plantaopro.assinaturas a join plantaopro
                 return ApiResponse<Guid>.Fail($"Limite contratual de {capacity.Limit} usuários ativos atingido. Regularize a contratação antes de criar outro acesso.", 409);
         }
 
-        var validProfiles = (await cn.QueryAsync<Guid>(new CommandDefinition(@"select id from plantaopro.perfis
+        var validProfiles = (await cn.QueryAsync<Guid>(new CommandDefinition($@"select id from plantaopro.perfis
 where id=any(@profileIds) and reg_status='A' and coalesce(status,'ATIVO')='ATIVO'
   and (tenant_id is null or tenant_id=@tenantId)
-  and upper(coalesce(codigo,nome)) not in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')", new { profileIds, tenantId }, tx, cancellationToken: ct))).ToArray();
+  and upper(coalesce(codigo,nome)) not in {GlobalAdminProfiles.SqlInList}", new { profileIds, tenantId }, tx, cancellationToken: ct))).ToArray();
         if (validProfiles.Length != profileIds.Length) return ApiResponse<Guid>.Fail("Um ou mais perfis não pertencem ao cliente ou não podem ser atribuídos.", 400);
 
         if (id.HasValue)
@@ -410,11 +407,11 @@ reg_update=now(),updated_by=@actorId where id=@userId", new
             await cn.ExecuteScalarAsync<Guid?>(new CommandDefinition("select id from plantaopro.clientes where id=@tenantId for update", new { tenantId }, tx, cancellationToken: ct));
         var before = await cn.QuerySingleOrDefaultAsync<(Guid Id, Guid? TenantId, string Status)>(new CommandDefinition("select id,coalesce(tenant_id,cliente_id) tenant_id,coalesce(status,'ATIVO') status from plantaopro.usuarios where id=@id and (@tenantId is null or coalesce(tenant_id,cliente_id)=@tenantId) for update", new { id, tenantId }, tx, cancellationToken: ct));
         if (before.Id == Guid.Empty) return ApiResponse<Guid>.Fail("Usuário não encontrado no tenant permitido.", 404);
-        var isGlobalTarget = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A' and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR'))", new { id }, tx, cancellationToken: ct));
+        var isGlobalTarget = await cn.ExecuteScalarAsync<bool>(new CommandDefinition($@"select exists(select 1 from plantaopro.usuarios_perfis up join plantaopro.perfis p on p.id=up.perfil_id where up.usuario_id=@id and up.reg_status='A' and p.reg_status='A' and upper(coalesce(p.codigo,p.nome)) in {GlobalAdminProfiles.SqlInList})", new { id }, tx, cancellationToken: ct));
         if (isGlobalTarget && !currentUser.IsGlobalAdmin()) return ApiResponse<Guid>.Fail("Perfis globais só podem ser administrados pela MNSOFT.", 403);
         if (isGlobalTarget && normalized != "ATIVO")
         {
-            var activeGlobalAdmins = await cn.ExecuteScalarAsync<int>(new CommandDefinition(@"select count(distinct u.id) from plantaopro.usuarios u join plantaopro.usuarios_perfis up on up.usuario_id=u.id and up.reg_status='A' join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A' where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and upper(coalesce(p.codigo,p.nome)) in ('ADMIN_GLOBAL','ADMINISTRADOR_GLOBAL','SUPER_ADMIN','SUPER_ADMINISTRADOR')", transaction: tx, cancellationToken: ct));
+            var activeGlobalAdmins = await cn.ExecuteScalarAsync<int>(new CommandDefinition($@"select count(distinct u.id) from plantaopro.usuarios u join plantaopro.usuarios_perfis up on up.usuario_id=u.id and up.reg_status='A' join plantaopro.perfis p on p.id=up.perfil_id and p.reg_status='A' where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and upper(coalesce(p.codigo,p.nome)) in {GlobalAdminProfiles.SqlInList}", transaction: tx, cancellationToken: ct));
             if (activeGlobalAdmins <= 1) return ApiResponse<Guid>.Fail("O Super Administrador MNSOFT principal não pode ser bloqueado ou inativado.", 409);
         }
         if (tenantId.HasValue && normalized != "ATIVO")

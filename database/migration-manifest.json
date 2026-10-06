@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v2.16.7",
-  "generatedAt": "2026-09-23",
+  "generatedAt": "2026-10-06",
   "migrations": [
     {
       "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
@@ -885,6 +885,28 @@
       "status": "active",
       "transactional": true,
       "installRequired": true
+    },
+    {
+      "version": "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6",
+      "source": "database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql",
+      "checksum": "67149e1d4e2c6c3585da34c4cdef92a246c83354a6e258456b2d7db2f903ad11",
+      "dependsOn": [
+        "2026_10_v2311_adm360_documentos_identidade_eventos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2313_saas_planos_permite_relatorios_b6",
+      "source": "database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql",
+      "checksum": "fd2b80cd31711c5d727da1b76cb805de59c5deaa7baf9947f041608ff38478ea",
+      "dependsOn": [
+        "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

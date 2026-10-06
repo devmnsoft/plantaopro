@@ -1,7 +1,7 @@
 @model PlantaoPro.Web.Models.AjudaInterativaIndexViewModel
 @{
     ViewData["Title"] = "Central de Ajuda";
-    var global = Model.Perfil is "ADMINISTRADOR_GLOBAL" or "SUPER_ADMIN";
+    var global = PlantaoPro.CrossCutting.Security.GlobalAdminProfiles.IsGlobalProfile(Model.Perfil);
 }
 <partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel("Central de Ajuda", "Orientação contextual, primeiros passos e manuais curtos para operar com segurança.", "bi-life-preserver")' />
 

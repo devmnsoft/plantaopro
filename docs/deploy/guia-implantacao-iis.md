@@ -1,6 +1,8 @@
 # Guia de implantação IIS (Windows) — PlantãoPro
 
-Aplicável a: rodadas de homologação e produção sobre a base `c84afc5`+ (net10.0, ASP.NET Core Module V2 **inprocess** via `web.config` publicado).
+Aplicável a: rodadas de homologação e produção sobre a base `c84afc5`+ (net10.0, ASP.NET Core Module V2 **inprocess** via `web.config` gerado pelo SDK no publish — o arquivo **não existe no repositório**, procure-o na saída publicada).
+
+> **Atualização 2026-10-07 (entrega da Rodada 4, HEAD `aff37c5`):** a partir do R4-F2 (fiscal pré-emissão do ADM360) o site **Web conecta direto no banco** nas telas fiscais — novas variáveis obrigatórias/opcionais no pool Web (§5). A linhagem de migrations termina em **v2321** (próxima livre: v2322). Novo passo opcional P7 para as telas fiscais (§9).
 
 ## 1. Arquitetura definida (2 sites, 2 pools)
 
@@ -82,7 +84,7 @@ GUI: IIS → Aplicação → Configuração → Variáveis de ambiente. Ou:
 | `Jwt__Key` | 32+ caracteres | Validado no startup (`JwtConfigurationValidator`); não usar o placeholder de dev |
 | `Jwt__Issuer` | ex.: `PlantaoPro` | Validado no startup |
 | `Jwt__Audience` | ex.: `PlantaoPro` | Validado no startup |
-| `Ai__EncryptionKey` | opcional, 32+ chars | Proteção de segredos de IA persistidos; sem ele a IA usa o modo sem criptografia (decidir se bloquear) |
+| `Ai__EncryptionKey` | opcional; **exatamente 64 caracteres hex** (32 bytes; validado em `AiSecretProtector` — hex malformado/curto é tratado como ausente) | Cifra (AES-GCM) as chaves de provider salvas por tenant. Sem ele a IA funciona com providers configurados no servidor, mas **salvar chave por cliente** falha com mensagem clara; não quebra o startup |
 | `Ai__Providers__Groq__ApiKey`, `Ai__Providers__Gemini__ApiKey`, `Ai__Providers__DeepSeek__ApiKey` | opcionais | Sem chave de um provider, aquele provider fica indisponível; a homologação de inferência real externa só é declarada com chave real |
 
 **Site `plantao-web` (pool Web):**
@@ -92,8 +94,10 @@ GUI: IIS → Aplicação → Configuração → Variáveis de ambiente. Ou:
 | `ASPNETCORE_ENVIRONMENT` | `Production` | Idem |
 | `PlantaoProApi__BaseUrl` | `http://127.0.0.1:8197/` | URL interna da API no loopback (HTTP local entre apps do próprio servidor). Porta de dev → startup falha |
 | `DataProtection__KeysDirectory` | `C:\ProgramData\PlantaoPro\DataProtection` | Obrigatório em Production: sem persistir as chaves, cookies/sessões morrem a cada reciclagem e não funcionam entre instâncias |
+| `ConnectionStrings__Default` | string real do PostgreSQL | **Obrigatório a partir do R4-F2 (2026-10-07):** as telas fiscais do ADM360 no Web usam Application+Infrastructure (Dapper) direto — sem ela essas telas falham com mensagem de configuração. As demais telas continuam sem banco no Web |
+| `Fiscal__Credenciais__{referencia}` | valor segredo (ex.: `Fiscal__Credenciais__nfe-santacasa-demo`) | Opcional; exigido só para **exercer a emissão** com credencial real (homologação externa fiscal, pendência P2). Regra A33: o banco guarda apenas o **nome** da referência do segredo, nunca o valor. Sem a chave, a emissão segue bloqueada com motivo real (nunca "sucesso") |
 
-O **Web não conecta direto no banco** (nenhum uso de Npgsql no projeto) — a connection string é necessária apenas no site da API.
+Antes do R4-F2 o Web não tinha nenhum uso de banco; hoje essa afirmação vale para **todas as telas exceto as fiscais do ADM360** (exceção declarada no `r4i-fiscal.md`).
 
 ## 6. Sessões e Data Protection
 - **Chaves de Data Protection**: persistidas em `DataProtection__KeysDirectory` quando configurado; em Production o diretório é obrigatório e o validador exige que exista e seja gravável pela identidade do pool (mensagem clara caso contrário). O mesmo diretório deve ser usado por **todas as instâncias** do Web.
@@ -134,7 +138,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 
 **P0 — Pré-condições (no servidor)**
 1. `netstat -ano | findstr :8197` e `:443` → nenhuma surpresa de processo dev (PIDs de `dotnet.exe` em execução manual devem estar ausentes).
-2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma último migration aplicado.
+2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma o último migration aplicado — na linhagem atual (Rodada 4) o upgrade deve terminar em **v2321** (`2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql`; próxima versão livre: v2322).
 3. `powershell -File scripts\local\publish-iis.ps1 -OutDir C:\inetpub\plantao` → saída termina com "Etapas seguintes" e sem erro.
 
 **P1 — API sobe**
@@ -169,8 +173,14 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
     - Esperado: a sessão continua válida após a reciclagem (cookie `PlantaoPro.Auth` permanece íntegro porque as chaves estão em `C:\ProgramData\PlantaoPro\DataProtection`).
 16. Repita com o pool da API: sessão do usuário não é afetada (JWT é revalidado no próximo BFF call; o login não cai).
 
-**P7 — Limpeza pós-validação**
-17. Desligar stdout log; conferir permissões e que nenhum arquivo `*.log` cresça sem limite; registrar resultados (passo → esperado → obtido) em `docs\evidencias\<data>\<ambiente>-iis.md`.
+**P7 — Telas fiscais do ADM360 (opcional; só com o tenant de teste com módulo ADM360 contratado)**
+17. Login no navegador com credencial de gestão do tenant (ex.: `gestor@santacasa-demo.example` em homologação local) → dentro do ADM360 as telas de fiscal **aparecem** (gate `ADM360`).
+18. "Configurar" e "Notas" abrem sem erro 5xx; parâmetros do tenant demonstram estado real (ex.: CONFIGURADO em homologação).
+19. "Nova pré-emissão": criar um pré-documento interno → conferência de referências roda e persiste; a lista mostra o registro novo.
+20. Tentar **emissão**: resposta com motivo real (`PENDENTE_DE_CONFIGURACAO` enquanto faltar operação/UF/provedor; ou credencial ausente se `Fiscal__Credenciais__{referencia}` não estiver no pool Web). Nunca "sucesso" falso (A29/L33/H19) — emissão autorizada é escopo P1 pós-credenciais reais.
+
+**P8 — Limpeza pós-validação**
+21. Desligar stdout log; conferir permissões e que nenhum arquivo `*.log` cresça sem limite; registrar resultados (passo → esperado → obtido) em `docs\evidencias\<data>\<ambiente>-iis.md`.
 
 ## 10. Rollback
 - Antes de sobrescrever: `xcopy C:\inetpub\plantao Web previous-<timestamp>\Web /E /I` (idem API).
@@ -185,10 +195,12 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 | "port 5000 already in use" no binding | Processo dev ocupando porta ou binding mal definido | `netstat -ano`; encerrar `dotnet.exe` residual; revisar bindings do site |
 | Login sempre diz "conectar ao serviço" e API responde direto | Binding da API não está em 127.0.0.1:8197 ou pool parado | Testar `curl http://127.0.0.1:8197/api/health` no próprio servidor |
 | Sessão cai a cada reciclagem | `DataProtection__KeysDirectory` ausente/sem escrita | Corrigir variável + permissão (seção 7) |
+| Telas fiscais do ADM360 dão 500/"ConnectionStrings:Default..." | Pool Web sem `ConnectionStrings__Default` (obrigatório desde o R4-F2) | Definir a variável no pool Web (seção 5); se a falha for de credencial, checar `Fiscal__Credenciais__{referencia}` |
 | "Identificador ou senha inválidos" com senha correta | API está de fato recusando (não é rede) | Ver `api_error_logs`/logs da API; validar conta/perfil ativo no banco |
 
 ## 12. Relações
 - JWT local/CI/IIS: `docs/configuracao-jwt-local-ci-iis.md`
 - Banco local: `docs/deploy/execucao-local-postgresql.md`
 - Roteiros de homologação/produção existentes: `docs/deploy/deploy-homologacao.md`, `docs/deploy/deploy-producao-controlada.md`
+- IA pronta para chaves reais (providers, fallbacks, probe): `docs/ia/pronto-para-chaves.md`; doc fiscal F1+F2: `docs/evidencias/2026-10-06-rodada-4/r4i-fiscal.md`
 - Validação de configuração implementada nesta rodada: `backend/PlantaoPro.Web/Services/Security/PlantaoProApiStartupValidator.cs` + `DatabaseStartupReadinessValidator`/`ConnectionStringStartupValidator`/`JwtConfigurationValidator` (API)

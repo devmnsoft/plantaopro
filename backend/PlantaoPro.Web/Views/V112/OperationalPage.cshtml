@@ -5,7 +5,6 @@
     var action = (string)(ViewData["PrimaryAction"] ?? "Executar");
 }
 <section class="container py-4" data-v112-page="true" data-endpoint="@endpoint">
-    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/dashboard">Dashboard</a></li><li class="breadcrumb-item active">@title</li></ol></nav>
     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
         <div><h1>@title</h1><p class="text-muted">@description</p></div>
         <button class="btn btn-primary" id="v112PrimaryAction" type="button">@action</button>

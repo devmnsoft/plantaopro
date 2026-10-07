@@ -1,6 +1,8 @@
 @model PlantaoPro.Web.Models.CotacaoDetalhesPageViewModel
 @{
     ViewData["Title"] = $"Cotação {Model.Cotacao.IdentificadorExterno} — Administrativo 360";
+    ViewData["BreadcrumbLabel"] = "Cotações";
+    ViewData["BreadcrumbLeaf"] = Model.Cotacao.IdentificadorExterno;
     var expirado = Model.Cotacao.PrazoResposta < DateTime.UtcNow && Model.Cotacao.StatusInterno != "RESPONDIDA";
     var itensPendentes = Model.Cotacao.Itens.Count(i => i.StatusRelacionamento == "PENDENTE");
 }
@@ -10,12 +12,6 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="/Administrativo360/Cotacoes" class="text-warning">Cotações</a></li>
-                    <li class="breadcrumb-item active text-light" aria-current="page">@Model.Cotacao.IdentificadorExterno</li>
-                </ol>
-            </nav>
             <h2 class="h4 mb-0 text-light fw-bold">
                 Cotação @Model.Cotacao.IdentificadorExterno <span class="pp-badge pp-badge--neutral ms-1">v@(Model.Cotacao.RevisaoExterna)</span>
             </h2>

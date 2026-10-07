@@ -1,17 +1,10 @@
 @model PlantaoPro.Web.Models.OcorrenciasIndexViewModel
 @{
     ViewData["Title"] = "Ocorrências da Qualidade — Administrativo 360";
+    ViewData["BreadcrumbLabel"] = "Ocorrências da Qualidade";
 }
 
 <div class="container-fluid py-3">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb bg-dark p-2 rounded border border-secondary mb-0 small">
-            <li class="breadcrumb-item"><a asp-action="Index" class="text-info text-decoration-none">Administrativo 360</a></li>
-            <li class="breadcrumb-item text-secondary">Estoque e Qualidade</li>
-            <li class="breadcrumb-item active text-light" aria-current="page">Ocorrências da Qualidade</li>
-        </ol>
-    </nav>
 
     <partial name="_SuprimentosNav" />
 

@@ -1,7 +1,6 @@
 @model PlantaoPro.Web.Models.ManagerRequestQueueViewModel
-@{ ViewData["Title"] = "Solicitações da unidade"; var current = Context.Request.Path + Context.Request.QueryString; }
+@{ ViewData["Title"] = "Solicitações da unidade"; ViewData["BreadcrumbLabel"] = "Solicitações"; var current = Context.Request.Path + Context.Request.QueryString; }
 <main class="manager-journey" aria-labelledby="queue-title">
-  <nav aria-label="Navegação estrutural"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Central operacional</a></li><li class="breadcrumb-item active" aria-current="page">Solicitações</li></ol></nav>
   <header class="manager-header"><div><span class="pp-section-kicker">Gestão por unidade</span><h1 id="queue-title">Fila de solicitações</h1><p>O período filtra a <strong>data de envio</strong>. Cada decisão é individual e revalidada no servidor.</p></div><a asp-controller="ConferenciaExecucao" asp-action="Index" class="btn btn-outline-primary">Conferir execuções</a></header>
   @if (!string.IsNullOrWhiteSpace(Model.Error)) { <div class="alert alert-warning" role="alert">@Model.Error</div> }
   <details class="manager-filters" open><summary>Filtros</summary><form method="get" class="row g-3 align-items-end">

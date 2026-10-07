@@ -2,6 +2,8 @@
 @{
     var rotuloTipo = Model.Documento.TipoDocumento switch { "NFC_E" => "NFC-e", "NFS_E" => "NFS-e", "ABRASF" => "ABRASF", "RESUMO" => "Resumo", _ => "NF-e" };
     ViewData["Title"] = $"{rotuloTipo} {Model.Documento.Numero} — Administrativo 360";
+    ViewData["BreadcrumbLabel"] = "XML Recebidos";
+    ViewData["BreadcrumbLeaf"] = $"{rotuloTipo} {Model.Documento.Numero}";
 }
 
 <div class="container-fluid py-3">
@@ -9,12 +11,6 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-1">
-                    <li class="breadcrumb-item"><a href="/Administrativo360/DocumentosXml" class="text-info">XML Recebidos</a></li>
-                    <li class="breadcrumb-item active text-light" aria-current="page">@rotuloTipo @Model.Documento.Numero</li>
-                </ol>
-            </nav>
             <h2 class="h4 mb-0 text-light fw-bold">
                 @rotuloTipo @Model.Documento.Numero / Série @Model.Documento.Serie
                 @if (Model.Documento.Quarentena)

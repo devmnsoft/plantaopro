@@ -1,7 +1,6 @@
 @model PlantaoPro.Web.Models.ManagerSubstitutionDto?
-@{ ViewData["Title"] = "Analisar substituição"; var back = ViewBag.ReturnUrl as string ?? Url.Action("Substituicoes"); var savedReason = TempData["DecisionReason"] as string; }
+@{ ViewData["Title"] = "Analisar substituição"; ViewData["BreadcrumbLabel"] = "Solicitações"; ViewData["BreadcrumbLeaf"] = Model?.Id.ToString() ?? "Detalhe"; var back = ViewBag.ReturnUrl as string ?? Url.Action("Substituicoes"); var savedReason = TempData["DecisionReason"] as string; }
 <main class="manager-journey" aria-labelledby="detail-title">
- <nav aria-label="Navegação estrutural"><ol class="breadcrumb"><li class="breadcrumb-item"><a asp-action="Index">Central operacional</a></li><li class="breadcrumb-item"><a href="@back">Solicitações</a></li><li class="breadcrumb-item active" aria-current="page">Detalhe</li></ol></nav>
  @if(Model is null){<div class="alert alert-warning" role="alert">@(ViewBag.ErrorMessage ?? "Solicitação indisponível.")</div>}
  else {
  <header class="manager-header"><div><span class="pp-section-kicker">Pedido original</span><h1 id="detail-title">Substituição de @Model.MedicoSolicitanteNome</h1><p>@Model.HospitalNome · @Model.EspecialidadeNome · @Model.DataInicio.ToString("dd/MM/yyyy HH:mm")</p></div><span class="badge text-bg-@(Model.Status == "SOLICITADA" ? "warning" : "secondary")">@Model.Status.Replace('_',' ')</span></header>

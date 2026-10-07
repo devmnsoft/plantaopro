@@ -1,6 +1,7 @@
 @model PlantaoPro.Web.Models.B2BLaunchPageViewModel
 @{
     ViewData["Title"] = Model.Titulo;
+    ViewData["BreadcrumbLabel"] = "API Keys";
     var escopos = new List<(string Codigo, string Texto)>
     {
         ("plantoes:read", "Ler plantões"),
@@ -15,12 +16,6 @@
     };
 }
 <div class="container py-4">
-    <nav aria-label="breadcrumb" class="mb-3">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Dashboard">Início</a></li>
-            <li class="breadcrumb-item active" aria-current="page">API Keys</li>
-        </ol>
-    </nav>
     <div class="row g-4">
         <div class="col-lg-5">
             <p class="text-uppercase text-primary fw-semibold mb-1">Developer Portal</p>

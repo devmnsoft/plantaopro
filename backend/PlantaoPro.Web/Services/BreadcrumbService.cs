@@ -28,7 +28,7 @@ public sealed class BreadcrumbService : IBreadcrumbService
         {
             ["Administrativo360"] = new[] { "Administrativo 360" },
             ["CentralEscala"] = new[] { "Central de Cobertura" },
-            ["V112"] = new[] { "Homologação" },
+            ["V112Web"] = new[] { "Homologação" },
         };
 
     private readonly IFeatureCatalogService catalog;

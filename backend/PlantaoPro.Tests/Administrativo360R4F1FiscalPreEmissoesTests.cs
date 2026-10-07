@@ -374,8 +374,11 @@ public sealed class Administrativo360R4F1FiscalPreEmissoesTests
 
             await using var cn = new NpgsqlConnection(cs);
             await cn.OpenAsync();
+            // Contagem escopada aos tenants sob teste: a contagem global quebraria
+            // assim que outro tenant ganhasse parâmetros (ex.: uso dev pela Web).
             var total = await cn.ExecuteScalarAsync<int>(
-                "select count(*) from plantaopro.adm360_parametros_fiscais");
+                "select count(*) from plantaopro.adm360_parametros_fiscais where tenant_id in (@a, @b)",
+                new { a = TenantA, b = TenantB });
             Assert.Equal(1, total);
         }
         finally

@@ -1,0 +1,135 @@
+@model PlantaoPro.Web.Models.NotasPreEmissoesIndexViewModel
+@{
+    ViewData["Title"] = "Pré-Emissão de NF-e — Administrativo 360";
+
+    static string RotuloSituacao(string s) => s.ToUpperInvariant() switch
+    {
+        "RASCUNHO" => "Rascunho",
+        "PRONTA_PARA_EMISSAO" => "Pronta p/ emissão",
+        "ENVIANDO" => "Enviando",
+        "AUTORIZADA" => "Autorizada*",
+        "REJEITADA" => "Rejeitada (externa)",
+        "PENDENTE_CONFIRMACAO" => "Pendente de confirmação",
+        "CANCELADA" => "Cancelada",
+        _ => s
+    };
+
+    static string BadgeSituacao(string s) => s.ToUpperInvariant() switch
+    {
+        "RASCUNHO" => "bg-secondary",
+        "PRONTA_PARA_EMISSAO" => "bg-info text-dark",
+        "ENVIANDO" => "bg-warning text-dark",
+        "AUTORIZADA" => "bg-success",
+        "REJEITADA" => "bg-danger",
+        "PENDENTE_CONFIRMACAO" => "bg-warning text-dark",
+        "CANCELADA" => "bg-dark text-danger border border-danger",
+        _ => "bg-secondary"
+    };
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-receipt-cutoff text-warning me-2"></i>Pré-Emissão de NF-e
+            </h2>
+            <p class="text-muted small mb-0">
+                Pré-documentos internos com conferência de referências (A29). Autorização real via conector externo (P1) —
+                <em>*autorizada</em> só aparece com chave de acesso registrada.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Administrativo360/Fiscal/Configurar" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-gear me-1"></i>Configuração Fiscal
+            </a>
+            <a href="/Administrativo360/Fiscal/Nova" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nova Pré-Nota
+            </a>
+        </div>
+    </div>
+
+    @if (Model.Erro is not null)
+    {
+        <div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>@Model.Erro</div>
+    }
+
+    <div class="card bg-dark border-secondary mb-3">
+        <div class="card-body p-2">
+            <form method="get" action="/Administrativo360/Fiscal/Notas" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label text-light small mb-0">Situação</label>
+                    <select name="situacao" class="form-select form-select-sm bg-black text-light border-secondary" onchange="this.form.submit()">
+                        <option value="">Todas</option>
+                        @foreach (var situacao in new[] { "RASCUNHO", "PRONTA_PARA_EMISSAO", "ENVIANDO", "AUTORIZADA", "REJEITADA", "PENDENTE_CONFIRMACAO", "CANCELADA" })
+                        {
+                            var selecionada = string.Equals(Model.SituacaoFiltro, situacao, StringComparison.OrdinalIgnoreCase);
+                            <option value="@situacao" selected="@(selecionada ? "selected" : null)">@RotuloSituacao(situacao)</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card bg-dark border-secondary">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0 text-light">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="small">Número</th>
+                        <th class="small">Origem</th>
+                        <th class="small">Destinatário</th>
+                        <th class="small text-end">Valor Total</th>
+                        <th class="small">Chave de Acesso (externa)</th>
+                        <th class="small">Situação</th>
+                        <th class="small">Criada em</th>
+                        <th class="small text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Notas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center text-secondary py-4">
+                                <i class="bi bi-inbox me-2"></i>Nenhuma pré-nota para este cliente@(Model.SituacaoFiltro is null ? "" : $" na situação {RotuloSituacao(Model.SituacaoFiltro)}").
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var nota in Model.Notas)
+                        {
+                            <tr>
+                                <td class="font-monospace small">@nota.Numero</td>
+                                <td class="small">
+                                    <span class="badge bg-secondary">@nota.OrigemTipo</span>
+                                    @if (nota.OrigemId is { } origemId)
+                                    {
+                                        <span class="text-secondary font-monospace" title="@origemId">@origemId.ToString()[..8]…</span>
+                                    }
+                                </td>
+                                <td class="small">@nota.DestinatarioNome</td>
+                                <td class="small text-end font-monospace">R$ @nota.ValorTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                <td class="small font-monospace text-secondary">
+                                    @(string.IsNullOrWhiteSpace(nota.ChaveAcessoExterna) ? "—" : nota.ChaveAcessoExterna)
+                                </td>
+                                <td><span class="badge @BadgeSituacao(nota.Situacao) small">@RotuloSituacao(nota.Situacao)</span></td>
+                                <td class="small text-secondary">@nota.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td class="text-end">
+                                    <a href="/Administrativo360/Fiscal/Detalhes/@nota.Id" class="btn btn-sm btn-outline-info btn-sm">
+                                        <i class="bi bi-eye me-1"></i>Detalhes
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

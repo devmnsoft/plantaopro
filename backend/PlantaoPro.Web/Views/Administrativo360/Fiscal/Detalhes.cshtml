@@ -1,0 +1,277 @@
+@model PlantaoPro.Web.Models.NotaPreEmissoesDetalhesViewModel
+@{
+    ViewData["Title"] = "Detalhes da Pré-Nota — Administrativo 360";
+
+    static string RotuloSituacao(string s) => s.ToUpperInvariant() switch
+    {
+        "RASCUNHO" => "Rascunho",
+        "PRONTA_PARA_EMISSAO" => "Pronta p/ emissão",
+        "ENVIANDO" => "Enviando",
+        "AUTORIZADA" => "Autorizada (externa)",
+        "REJEITADA" => "Rejeitada (externa)",
+        "PENDENTE_CONFIRMACAO" => "Pendente de confirmação",
+        "CANCELADA" => "Cancelada",
+        _ => s
+    };
+
+    static string BadgeSituacao(string s) => s.ToUpperInvariant() switch
+    {
+        "RASCUNHO" => "bg-secondary",
+        "PRONTA_PARA_EMISSAO" => "bg-info text-dark",
+        "ENVIANDO" => "bg-warning text-dark",
+        "AUTORIZADA" => "bg-success",
+        "REJEITADA" => "bg-danger",
+        "PENDENTE_CONFIRMACAO" => "bg-warning text-dark",
+        "CANCELADA" => "bg-dark text-danger border border-danger",
+        _ => "bg-secondary"
+    };
+
+    var situacao = Model.Nota?.Resumo.Situacao?.ToUpperInvariant();
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-receipt-cutoff text-warning me-2"></i>Pré-Nota
+                @if (Model.Nota is not null)
+                {
+                    <span class="font-monospace">@Model.Nota.Resumo.Numero</span>
+                }
+            </h2>
+            @if (Model.Nota is not null)
+            {
+                <p class="text-muted small mb-0">
+                    Criada em @Model.Nota.Resumo.CriadoEm.ToString("dd/MM/yyyy HH:mm") · Origem:
+                    <span class="badge bg-secondary">@Model.Nota.Resumo.OrigemTipo</span>
+                    @if (Model.Nota.Resumo.OrigemId is { } origemId)
+                    {
+                        <span class="font-monospace text-secondary">@origemId</span>
+                    }
+                </p>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">Detalhe da pré-nota de emissão (MVP A29).</p>
+            }
+        </div>
+        <a href="/Administrativo360/Fiscal/Notas" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Voltar para a Lista
+        </a>
+    </div>
+
+    @if (Model.Erro is not null)
+    {
+        <div class="alert alert-danger py-2 small"><i class="bi bi-exclamation-triangle me-1"></i>@Model.Erro</div>
+    }
+
+    @if (Model.Nota is not null)
+    {
+        var resumo = Model.Nota.Resumo;
+
+        <div class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge @BadgeSituacao(resumo.Situacao) fs-6 px-3 py-2">@RotuloSituacao(resumo.Situacao)</span>
+            @if (string.IsNullOrWhiteSpace(resumo.ChaveAcessoExterna))
+            {
+                <span class="text-secondary small"><i class="bi bi-info-circle me-1"></i>Sem evidência externa registrada até agora — nenhuma autorização declarada (H19).</span>
+            }
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="card bg-dark border-secondary h-100">
+                    <div class="card-header bg-dark p-2 text-light small fw-bold text-uppercase"><i class="bi bi-person me-1"></i>Destinatário e Valores</div>
+                    <div class="card-body p-3 small">
+                        <dl class="row mb-0 g-2">
+                            <dt class="col-sm-5 text-secondary">Destinatário</dt>
+                            <dd class="col-sm-7 text-light">@resumo.DestinatarioNome</dd>
+                            <dt class="col-sm-5 text-secondary">CPF/CNPJ</dt>
+                            <dd class="col-sm-7 text-light font-monospace">@(string.IsNullOrWhiteSpace(resumo.DestinatarioDocumento) ? "—" : resumo.DestinatarioDocumento)</dd>
+                            <dt class="col-sm-5 text-secondary">Valor total</dt>
+                            <dd class="col-sm-7 text-light font-monospace">R$ @resumo.ValorTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card bg-dark border-secondary h-100">
+                    <div class="card-header bg-dark p-2 text-light small fw-bold text-uppercase"><i class="bi bi-hdd-network me-1"></i>Evidência Externa (H19)</div>
+                    <div class="card-body p-3 small">
+                        <dl class="row mb-0 g-2">
+                            <dt class="col-sm-4 text-secondary">Chave de acesso</dt>
+                            <dd class="col-sm-8 text-light font-monospace">@(string.IsNullOrWhiteSpace(resumo.ChaveAcessoExterna) ? "—" : resumo.ChaveAcessoExterna)</dd>
+                            <dt class="col-sm-4 text-secondary">Emitida em (externo)</dt>
+                            <dd class="col-sm-8 text-light font-monospace">@(resumo.EmitidaEm?.ToString("dd/MM/yyyy HH:mm:ss") ?? "—")</dd>
+                            <dt class="col-sm-4 text-secondary">Rejeição</dt>
+                            <dd class="col-sm-8 text-danger">@(string.IsNullOrWhiteSpace(Model.Nota.RejeicaoMensagem) ? "—" : Model.Nota.RejeicaoMensagem)</dd>
+                            <dt class="col-sm-4 text-secondary">Cancelada em</dt>
+                            <dd class="col-sm-8 text-light font-monospace">@(Model.Nota.CanceladaEm?.ToString("dd/MM/yyyy HH:mm") ?? "—")</dd>
+                            <dt class="col-sm-4 text-secondary">Motivo do cancelamento</dt>
+                            <dd class="col-sm-8 text-light">@(string.IsNullOrWhiteSpace(Model.Nota.MotivoCancelamento) ? "—" : Model.Nota.MotivoCancelamento)</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark border-secondary mb-4">
+            <div class="card-header bg-dark p-2 text-light small fw-bold text-uppercase"><i class="bi bi-send me-1"></i>Preparação para Emissão Externa</div>
+            <div class="card-body p-3 small">
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                    @if (string.IsNullOrWhiteSpace(Model.StatusParametros))
+                    {
+                        <span class="badge bg-warning text-dark">Parâmetros fiscais ainda não cadastrados</span>
+                    }
+                    else if (Model.StatusParametros == "CONFIGURADO")
+                    {
+                        <span class="badge bg-success">Parâmetros CONFIGURADO</span>
+                    }
+                    else if (Model.StatusParametros == "BLOQUEADO")
+                    {
+                        <span class="badge bg-danger">Parâmetros BLOQUEADO</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Parâmetros PENDENTE_DE_CONFIGURACAO</span>
+                    }
+                </div>
+
+                @if (Model.BloqueioEmissao is not null)
+                {
+                    <div class="alert border-warning bg-black py-2 small mb-2" style="border-color:#ffc107 !important; color:#f5e9c8;">
+                        <strong><i class="bi bi-lock me-1"></i>Emissão bloqueada:</strong> @Model.BloqueioEmissao
+                        <div class="text-secondary mt-1">
+                            O botão "Emitir" devolve este motivo real — nenhum sucesso fictício (L33/H19).
+                            <a class="link-warning" href="/Administrativo360/Fiscal/Configurar">Resolver na Configuração Fiscal</a>.
+                        </div>
+                    </div>
+                }
+                else if (situacao == "PRONTA_PARA_EMISSAO")
+                {
+                    <div class="alert alert-success py-2 small mb-2">
+                        <strong><i class="bi bi-check-circle me-1"></i>Nenhum bloqueio real:</strong> parâmetros completos e credencial disponível no ambiente.
+                        A transmissão registra <code>ENVIANDO</code>; autorização/rejeição dependem do retorno externo (conector = P1).
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-secondary py-2 small mb-2">
+                        A ação "Emitir" só fica disponível na situação <code>PRONTA_PARA_EMISSAO</code> (atual: @RotuloSituacao(resumo.Situacao)).
+                    </div>
+                }
+
+                <div class="d-flex gap-2 flex-wrap">
+                    @if (Model.Transicoes?.PodeMarcarPronta == true)
+                    {
+                        <form method="post" action="/Administrativo360/Fiscal/MarcarPronta" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@resumo.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check-circle me-1"></i>Marcar como Pronta</button>
+                        </form>
+                    }
+                    @if (Model.Transicoes?.PodeEmitir == true)
+                    {
+                        <form method="post" action="/Administrativo360/Fiscal/Emitir" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@resumo.Id" />
+                            <button type="submit" class="btn btn-sm btn-primary"
+                                    title="Avança para ENVIANDO apenas quando não existe motivo real de bloqueio nos parâmetros">
+                                <i class="bi bi-send me-1"></i>Emitir (transmitir)
+                            </button>
+                        </form>
+                    }
+                    @if (Model.Transicoes?.PodeReabrir == true)
+                    {
+                        string rotuloReabrir = situacao switch
+                        {
+                            "PRONTA_PARA_EMISSAO" => "Reabrir em Rascunho",
+                            "ENVIANDO" => "Retornar para Pronta",
+                            _ => "Corrigir e Tornar Pronta"
+                        };
+                        <form method="post" action="/Administrativo360/Fiscal/Reabrir" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@resumo.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning text-dark"><i class="bi bi-arrow-counterclockwise me-1"></i>@rotuloReabrir</button>
+                        </form>
+                    }
+                    @if (Model.Transicoes?.PodeCancelar == true)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalCancelarNota">
+                            <i class="bi bi-x-octagon me-1"></i>Cancelar Pré-Nota
+                        </button>
+                    }
+                    @if (situacao == "AUTORIZADA" || situacao == "CANCELADA")
+                    {
+                        <span class="text-secondary small align-self-center"><i class="bi bi-flag me-1"></i>Situação terminal no MVP — alterações posteriores exigem o conector externo (P1).</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-dark border-secondary">
+            <div class="card-header bg-dark p-2 text-light small fw-bold text-uppercase"><i class="bi bi-list-ul me-1"></i>Itens da Pré-Nota</div>
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0 text-light">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="small">#</th>
+                            <th class="small">Descrição</th>
+                            <th class="small text-end">Quantidade</th>
+                            <th class="small text-end">Preço Unitário</th>
+                            <th class="small text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (var i = 0; i < Model.Nota.Itens.Count; i++)
+                        {
+                            var item = Model.Nota.Itens[i];
+                            <tr>
+                                <td class="text-secondary small">@(i + 1)</td>
+                                <td class="small">@item.Descricao</td>
+                                <td class="small text-end font-monospace">@item.Quantidade.ToString("0.###", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                <td class="small text-end font-monospace">@item.PrecoUnitario.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                <td class="small text-end font-monospace">@item.Total.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-dark">
+                        <tr>
+                            <td colspan="4" class="text-end small fw-bold">Total da pré-nota</td>
+                            <td class="text-end small fw-bold font-monospace">@resumo.ValorTotal.ToString("N2", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+
+    @* Modal de cancelamento — fora da tabela; foco no primeiro campo via [autofocus] (plantaopro-ui.js). *@
+    <div class="modal fade" id="modalCancelarNota" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <form method="post" action="/Administrativo360/Fiscal/CancelarNota" id="formCancelarNota">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Nota?.Resumo.Id" />
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-light small fw-bold"><i class="bi bi-x-octagon me-2"></i>Cancelar Pré-Nota</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label text-light small">Motivo do cancelamento *</label>
+                        <textarea name="motivoCancelamento" rows="3" required autofocus maxlength="500"
+                                  class="form-control form-control-sm bg-black text-light border-secondary"
+                                  placeholder="Descreva o motivo do cancelamento interno"></textarea>
+                        <div class="form-text text-secondary">Cancelamento interno desta pré-nota. O cancelamento OFICIAL de NF-e autorizada depende da consulta externa (P1).</div>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-x-octagon me-1"></i>Confirmar Cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

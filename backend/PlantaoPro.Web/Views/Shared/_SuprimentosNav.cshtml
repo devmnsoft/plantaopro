@@ -30,8 +30,11 @@
     var podeConfigIntegracao = PermissionService.HasPermission("ADM360", "CONFIGURAR_INTEGRACAO");
     var podeRelatorios = PermissionService.HasPermission("ADM360", "AUDITAR")
         || PermissionService.HasPermission("ADM360", "EXPORTAR");
+    // Fiscal (R4-F2): Pré-Emissão de NF-e + Configuração Fiscal — as ações do
+    // Adm360FiscalWeb resolvem para ADM360.VER no guard de rota.
+    var podeFiscal = PermissionService.HasPermission("ADM360", "VER");
     var temAcessoAdm360 = podeHub || podeOrganizacional || podeCadastros || podeComercial
-        || podeCompras || podeEstoque || podeCirurgias || podeFinanceiro || podeIntegracoes || podeRelatorios;
+        || podeCompras || podeEstoque || podeCirurgias || podeFinanceiro || podeFiscal || podeIntegracoes || podeRelatorios;
 }
 @if (temAcessoAdm360)
 {
@@ -173,6 +176,20 @@
                             <li><a class="dropdown-item @(IsActive("ContasFinanceiras") ? "active" : "")" asp-action="ContasFinanceiras" asp-controller="Administrativo360"><i class="bi bi-bank me-2"></i>Contas Financeiras</a></li>
                             <li><a class="dropdown-item @(IsActive("FluxoCaixa") ? "active" : "")" asp-action="FluxoCaixa" asp-controller="Administrativo360"><i class="bi bi-graph-down me-2"></i>Fluxo de Caixa</a></li>
                             <li><a class="dropdown-item @(IsActive("FechamentoCaixa") ? "active" : "")" asp-action="FechamentoCaixa" asp-controller="Administrativo360"><i class="bi bi-lock me-2"></i>Fechamento de Caixa</a></li>
+                        </ul>
+                    </div>
+                }
+
+                @if (podeFiscal)
+                {
+                    <!-- 7b. Fiscal (R4-F2) -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm @(IsPathActive("/Administrativo360/Fiscal") ? "btn-warning text-dark fw-bold" : "btn-outline-secondary") dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-receipt-cutoff me-1"></i>Fiscal
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item @(IsPathActive("/Administrativo360/Fiscal/Notas") || IsPathActive("/Administrativo360/Fiscal/Nova") || IsPathActive("/Administrativo360/Fiscal/Detalhes") ? "active" : "")" href="/Administrativo360/Fiscal/Notas"><i class="bi bi-receipt me-2"></i>Pré-Emissão de NF-e</a></li>
+                            <li><a class="dropdown-item @(IsPathActive("/Administrativo360/Fiscal/Configurar") ? "active" : "")" href="/Administrativo360/Fiscal/Configurar"><i class="bi bi-gear me-2"></i>Configuração Fiscal</a></li>
                         </ul>
                     </div>
                 }

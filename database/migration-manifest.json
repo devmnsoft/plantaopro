@@ -984,6 +984,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas",
+      "source": "database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql",
+      "checksum": "724de9952b3aff65d429d94b09673a318657970e76d3d66602a535fec13c3411",
+      "dependsOn": [
+        "2026_10_v2320_saude360_b9_plantoes_auditoria"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

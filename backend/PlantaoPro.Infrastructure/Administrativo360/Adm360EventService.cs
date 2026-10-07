@@ -22,6 +22,10 @@ public static class Adm360TipoEvento
     public const string Cancelamento = "CANCELAMENTO";
     public const string Estorno = "ESTORNO";
     public const string Triagem = "TRIAGEM";
+
+    // Fiscal (R4-F1): trilha de criação/transições da pré-nota de emissão
+    // (ampliação do CHECK de tipo_evento aplicada na migração v2321).
+    public const string EmissaoFiscal = "EMISSAO_FISCAL";
 }
 
 /// <summary>

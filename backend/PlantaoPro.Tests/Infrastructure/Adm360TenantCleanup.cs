@@ -40,6 +40,7 @@ public static class Adm360TenantCleanup
         "adm360_inventario_itens",
         "adm360_leituras",
         "adm360_mapeamentos_de_para",
+        "adm360_nota_pre_emitida_itens",
         "adm360_ocorrencias",
         "adm360_operacoes",
         "adm360_orcamento_itens",
@@ -53,6 +54,7 @@ public static class Adm360TenantCleanup
         "adm360_cotacao_respostas",
         "adm360_documentos_recebidos",
         "adm360_inventarios",
+        "adm360_notas_pre_emitidas",
         "adm360_recebimento_itens",
         "adm360_tarefas_coleta",
         "adm360_titulo_baixas",
@@ -85,6 +87,7 @@ public static class Adm360TenantCleanup
         "adm360_locais",
         "adm360_orcamentos",
         // L8 — raízes do módulo (apenas referência tenants): excluem por último.
+        "adm360_parametros_fiscais",
         "adm360_parceiros",
     };
 

@@ -52,7 +52,7 @@ body.pp-body { color: var(--pp-v2132-ink); background: var(--pp-v2132-canvas); }
 .empty-state { padding: clamp(2rem, 5vw, 4rem); border: 1px dashed #b8cbd5; background: #fbfdfd; }
 .pp-screen-guide { border-color: #c8dce3; background: #f7fbfc; }
 
-.alert-warning:has(+ .pp-app-shell), body > .alert-warning:first-child { position: relative; z-index: 1050; border-width: 0 0 1px; border-radius: 0; background: #fff4d4; color: #674300; }
+.alert-warning:has(+ .pp-app-shell), body > .alert-warning:first-child { position: relative; z-index: var(--pp-z-topbar); border-width: 0 0 1px; border-radius: 0; background: #fff4d4; color: #674300; }
 
 @media (max-width: 61.99rem) {
   .pp-content { padding: 1rem; }

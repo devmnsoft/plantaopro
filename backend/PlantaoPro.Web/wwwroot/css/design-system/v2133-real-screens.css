@@ -6,7 +6,7 @@
 .pp-screen-guide__label { color: var(--pp-v2132-ink, #102a3d); font-weight: 700; }
 .pp-screen-guide__scope { padding: .55rem .7rem; border-radius: .6rem; background: #edf8f9; }
 
-.pp-assisted-context { position: sticky; top: 0; z-index: 1100; display: flex; align-items: center; gap: .75rem; padding: .7rem clamp(1rem, 3vw, 2rem); border-bottom: 1px solid #dfbd62; background: #fff4cf; color: #513b00; box-shadow: 0 5px 18px rgb(72 52 0 / 12%); }
+.pp-assisted-context { position: sticky; top: 0; z-index: var(--pp-z-skip); display: flex; align-items: center; gap: .75rem; padding: .7rem clamp(1rem, 3vw, 2rem); border-bottom: 1px solid #dfbd62; background: #fff4cf; color: #513b00; box-shadow: 0 5px 18px rgb(72 52 0 / 12%); }
 .pp-assisted-context__message { display: flex; flex: 1; flex-wrap: wrap; gap: .2rem .55rem; min-width: 0; }
 .pp-assisted-context__message span { overflow-wrap: anywhere; }
 

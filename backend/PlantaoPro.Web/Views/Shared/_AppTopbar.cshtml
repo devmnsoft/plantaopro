@@ -1,7 +1,17 @@
+@inject PlantaoPro.Web.Services.IBreadcrumbService BreadcrumbService
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
     var subtitle = ViewData["Subtitle"]?.ToString() ?? "Acompanhe prioridades e continue sua jornada.";
     var canUpgrade = User.IsInRole("ADMINISTRADOR_GLOBAL") || User.IsInRole("ADMINISTRADOR") || User.IsInRole("ADMINISTRADOR_CLIENTE") || User.IsInRole("DIRETOR");
+    // Trilho unico e canonico: derivado de rota/catalogo, sem hardcode de controller/acao na view.
+    // A view pode aportar dados opcionais: rotulo curto (BreadcrumbLabel) e folha dinamica (BreadcrumbLeaf).
+    var breadcrumbTrail = BreadcrumbService.ResolveTrail(
+        controller,
+        action,
+        pageTitle: ViewData["Title"]?.ToString(),
+        breadcrumbLabel: ViewData["BreadcrumbLabel"]?.ToString(),
+        dynamicLeaf: ViewData["BreadcrumbLeaf"]?.ToString());
 }
 <header class="pp-topbar app-topbar">
     <div class="pp-topbar__identity topbar-left">
@@ -11,11 +21,25 @@
         <div>
             <nav class="pp-breadcrumb" aria-label="Você está em">
                 <ol class="app-breadcrumb">
-                    <li><a asp-controller="Home" asp-action="Dashboard">Minha Central</a></li>
-                    <li aria-current="page">@controller</li>
+                    @for (var i = 0; i < breadcrumbTrail.Count; i++)
+                    {
+                        var segment = breadcrumbTrail[i];
+                        @if (i == breadcrumbTrail.Count - 1)
+                        {
+                            <li aria-current="page">@segment.Label</li>
+                        }
+                        else if (!string.IsNullOrEmpty(segment.Url))
+                        {
+                            <li><a href="@segment.Url">@segment.Label</a></li>
+                        }
+                        else
+                        {
+                            <li>@segment.Label</li>
+                        }
+                    }
                 </ol>
             </nav>
-            <h1 class="pp-topbar__title page-title">@(ViewData["Title"] ?? controller)</h1>
+            <h1 class="pp-topbar__title page-title">@(ViewData["Title"] ?? breadcrumbTrail[breadcrumbTrail.Count - 1].Label)</h1>
             <p class="pp-topbar__subtitle pp-caption d-none d-md-block">@subtitle</p>
         </div>
     </div>

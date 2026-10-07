@@ -2,7 +2,7 @@
 
 - **Data**: 2026-10-07 · **Bloco**: B10 IA (Groq / Gemini / DeepSeek) · **Suíte**: camada IA revalidada verde (194 testes `*Ai*`); suíte completa reexecutada nesta árvore.
 - **Prontidão técnica**: implementada, testada e **pronta para receber chaves reais**. Com chave, o sistema já infere de verdade; sem chave, cada ponto devolve o estado explicável `NAO_CONFIGURADO` (sem gastar chamada de LLM).
-- **Homologação com provedor real**: **executada em 2026-10-07** com as chaves reais → **Groq APROVADO** · **Gemini APROVADO (c/ ressalva de cota/tier free)** · **DeepSeek BLOQUEADO p/ saldo (402)**. Mocks/unitários não declaram homologação externa (regra da pauta); aqui a prova foi por chamada real. Detalhe e evidências: `docs/evidencias/2026-10-06-rodada-4/r4f-ia-b10-prontidao-chaves.md` (§9).
+- **Homologação com provedor real**: **executada em 2026-10-07** com as chaves reais → **Groq APROVADO** · **Gemini APROVADO (c/ ressalva de cota/tier free)** · **DeepSeek APROVADO** (crédito adicionado; 200 com texto real). Mocks/unitários não declaram homologação externa (regra da pauta); aqui a prova foi por chamada real. Detalhe e evidências: `docs/evidencias/2026-10-06-rodada-4/r4f-ia-b10-prontidao-chaves.md` (§9).
 
 ## 1. Onde colocar as chaves
 

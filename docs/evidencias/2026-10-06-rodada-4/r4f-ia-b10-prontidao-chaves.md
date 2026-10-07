@@ -7,7 +7,7 @@
   - **Homologação externa (provedor real)** — executada em 2026-10-07 com as três chaves reais (detalhe no §9):
     - **Groq: APROVADO** — `[OK]` reprodutível (HTTP 200 + texto gerado) com `openai/gpt-oss-20b`.
     - **Gemini: APROVADO c/ ressalva operacional** — chave válida; 200 com candidatos reais; default `gemini-flash-latest` existe e suporta `generateContent`. Ressalva: tier gratuita em throttle/cota baixa (503/timeout em picos); tier paga recomendada p/ produção.
-    - **DeepSeek: BLOQUEADO p/ saldo** — chave válida, mas 402 `Insufficient Balance`; precisa de crédito. Modelo não confirmável por geração até haver saldo.
+    - **DeepSeek: APROVADO** — crédito adicionado e re-verificado; `deepseek-flash` responde **200** com texto real (`"funcionando"`). Modelo de raciocínio: com teto pequeno o texto vai para `reasoning_content`; com orçamento suficiente `content` se preenche (ver 9.1b).
   - Mocks/unitários **não** declaram homologação externa (regra da pauta) — aqui a prova foi por **chamada real** aos provedores.
 
 ---
@@ -108,9 +108,19 @@ A varredura com chave revelou que os nomes padrão versionados estavam desatuali
 |---|---|---|---|
 | Groq | `gpt-oss-20b` | **`openai/gpt-oss-20b`** | id real hoje leva o prefixo do vendor (`openai/`); sem ele = 404 `model_not_found`. `llama-*` aposentados. |
 | Gemini | `gemini-2.5-flash` | **`gemini-flash-latest`** | `gemini-2.5-flash` → 404 “no longer available to new users”; o alias estável `flash-latest` responde via `generateContent`. |
-| DeepSeek | `deepseek-flash` | `deepseek-flash` (mantido) | conta sem saldo (402); modelo mantido como vigente do catálogo. |
+| DeepSeek | `deepseek-flash` | `deepseek-flash` (confirmado — 200 c/ texto real) | conta estava sem saldo (402); crédito adicionado e geração OK. Reasoning model (ver 9.1b). |
 
 Arquivos tocados (só valores/catalogos, sem mudança de contrato): `AiGateway.ModelosPadrao`, `appsettings.json` (`DefaultModel`), `AiModeloCompatibilidade` (catalogos p/ evitar aviso do novo default; regra bloqueante por prefixo inalterada), `ai-external-probe.ps1` (defaults + transporte). Revalidação: build **0 erros**; IA **194/194**; completa **1043/1043**.
+
+### 9.1b Reconfirmação (modelos corrigidos + DeepSeek creditado)
+
+Após corrigir os 3 modelos padrão e adicionar crédito à conta DeepSeek, a probe canônica foi re-executada:
+
+- **GROQ `openai/gpt-oss-20b`** — `[OK]` HTTP 200, reproduzível.
+- **DEEPSEEK `deepseek-flash`** — `[OK]` HTTP 200 com texto real (`"funcionando"`, `finish_reason: stop` em `max_tokens=200`). Saldo resolvido; homologação fechada.
+- **GEMINI `gemini-flash-latest`** — nesta janela, 503 “high demand” + timeout (throttle do tier gratuito); o 200 com conteúdo capturado em 9.1 permanece como evidência de homologação, e a listagem confirma `generateContent`.
+
+**Observação de produção (modelos de raciocínio):** `gpt-oss` e `deepseek-flash` são reasoning models. Com teto de saída pequeno, o raciocínio consome os tokens e `content` pode ficar vazio; com orçamento suficiente `content` se preenche. A API clampia `LimiteTokensSaida` em **[64, 8000]**; recomenda-se **≥ ~256** p/ respostas úteis nesses provedores. `content` vazio vira erro `RespostaInvalida` (tratado, não quebra o app; pode acionar fallback).
 
 ### 9.2 Veredito por provedor
 
@@ -118,11 +128,11 @@ Arquivos tocados (só valores/catalogos, sem mudança de contrato): `AiGateway.M
 |---|---|---|---|
 | Groq | válida | **`[OK]` HTTP 200** (reprodutível) — `openai/gpt-oss-20b` devolveu `content` com texto real (“funcionando”) | **APROVADO** |
 | Gemini | válida | **200 com candidatos reais** (capturado); listagem `/v1beta/models` 200 <1s (modelo existe + suporta `generateContent`); rede p/ Google ok | **APROVADO** (ressalva: cota/tier free — 503/timeout em picos) |
-| DeepSeek | válida | **`FALHA_402`** `{"error":{"message":"Insufficient Balance ..."}}` — erro de conta, não de rede/auth | **BLOQUEADO p/ saldo** |
+| DeepSeek | válida | **`[OK]` HTTP 200** com texto real (`"funcionando"`, `finish_reason: stop`) após crédito adicionado (antes 402 sem saldo) | **APROVADO** |
 
 > Nota de integridade (Gemini): o `generateContent` do `gemini-flash-latest` respondeu **HTTP 200 com candidatos reais** nesta sessão. A instabilidade posterior (503 “high demand”/timeout) é **capacidade da tier gratuita sob carga repetida**, não falha de contrato — o endpoint de listagem segue 200 em <1s. Para latência/estabilidade previsíveis em produção, usar tier paga/cota maior.
 
 ### 9.3 Efeitos e próximos passos
 - **Groq**: pronto para geração real pelo app já agora (chave global + tarefa habilitada).
 - **Gemini**: pronto; recomendar plano paga/cota maior p/ produção.
-- **DeepSeek**: ao fundear a conta, rerodar `ai-external-probe.ps1` (deve virar `[OK]`) e registrar aqui.
+- **DeepSeek**: **homologação fechada** (crédito adicionado → `[OK]` 200 com texto real). Em produção, dar folga no limite de saída por ser reasoning model (≥ ~256, ver 9.1b).

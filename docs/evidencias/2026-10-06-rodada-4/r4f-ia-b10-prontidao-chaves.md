@@ -4,7 +4,11 @@
 - **Base da árvore**: `5cf6732` (R4-B9), tree limpa antes do bloco.
 - **Classificação final do item**:
   - **Prontidão técnica / implementação: APROVADO** (camada completa, testada, pronta p/ chave).
-  - **Homologação externa (provedor real): BLOQUEADO p/ chave** — sem credencial nesta máquina. Mocks/unitários **não** declaram homologação externa (regra da pauta). Quando houver chave real, o item vira APROVADO p/ homologação externa por provedor que passar na prova.
+  - **Homologação externa (provedor real)** — executada em 2026-10-07 com as três chaves reais (detalhe no §9):
+    - **Groq: APROVADO** — `[OK]` reprodutível (HTTP 200 + texto gerado) com `openai/gpt-oss-20b`.
+    - **Gemini: APROVADO c/ ressalva operacional** — chave válida; 200 com candidatos reais; default `gemini-flash-latest` existe e suporta `generateContent`. Ressalva: tier gratuita em throttle/cota baixa (503/timeout em picos); tier paga recomendada p/ produção.
+    - **DeepSeek: BLOQUEADO p/ saldo** — chave válida, mas 402 `Insufficient Balance`; precisa de crédito. Modelo não confirmável por geração até haver saldo.
+  - Mocks/unitários **não** declaram homologação externa (regra da pauta) — aqui a prova foi por **chamada real** aos provedores.
 
 ---
 
@@ -83,8 +87,42 @@ Confirma: sem credencial tudo fica em `SEM_CHAVE`/`NAO_CONFIGURADO` (explicável
 
 ## 8. Artefatos criados / alterados
 
-- `scripts/ai-external-probe.ps1` (novo)
-- `docs/ia/pronto-para-chaves.md` (novo)
+- `scripts/ai-external-probe.ps1` (novo; endurecido p/ homologação: `HttpClient` + retry transitório)
+- `docs/ia/pronto-para-chaves.md` (novo; atualizado c/ resultado da homologação)
 - `docs/ia/README.md` (ponteiro + data rodada 4)
-- `backend/PlantaoPro.Api/appsettings.json` (models sugeridos → vigentes)
+- `backend/PlantaoPro.Api/appsettings.json` (models sugeridos → vigentes; 2026-10-07: Groq `openai/gpt-oss-20b`, Gemini `gemini-flash-latest`)
+- `backend/PlantaoPro.Api/Ai/AiGateway.cs` (`ModelosPadrao` alinhado aos modelos confirmados)
+- `backend/PlantaoPro.Api/Ai/AiModeloCompatibilidade.cs` (catalogos atualizados: prefixo `openai/` da Groq e aliases Gemini)
+- `.env` na raiz (git-ignorado; chaves reais — **não** commitado)
 - `docs/evidencias/2026-10-06-rodada-4/r4f-ia-b10-prontidao-chaves.md` (este arquivo)
+
+## 9. Homologação externa com chaves reais (executada em 2026-10-07)
+
+As três chaves reais foram gravadas em `.env` na raiz (git-ignorado; nunca commitado). O `scripts/ai-external-probe.ps1` foi endurecido neste passo: transporte **`HttpClient`** (em vez de `Invoke-WebRequest`, que engasgava em alguns endpoints) e **retry em falha transitória** (5xx/429/timeout); falha determinística (401/404/402) não repete.
+
+### 9.1 Correção dos modelos padrão (evidência de chamada real)
+
+A varredura com chave revelou que os nomes padrão versionados estavam desatualizados para as contas atuais:
+
+| Provedor | Antes (versionado) | Após (confirmado) | Motivo |
+|---|---|---|---|
+| Groq | `gpt-oss-20b` | **`openai/gpt-oss-20b`** | id real hoje leva o prefixo do vendor (`openai/`); sem ele = 404 `model_not_found`. `llama-*` aposentados. |
+| Gemini | `gemini-2.5-flash` | **`gemini-flash-latest`** | `gemini-2.5-flash` → 404 “no longer available to new users”; o alias estável `flash-latest` responde via `generateContent`. |
+| DeepSeek | `deepseek-flash` | `deepseek-flash` (mantido) | conta sem saldo (402); modelo mantido como vigente do catálogo. |
+
+Arquivos tocados (só valores/catalogos, sem mudança de contrato): `AiGateway.ModelosPadrao`, `appsettings.json` (`DefaultModel`), `AiModeloCompatibilidade` (catalogos p/ evitar aviso do novo default; regra bloqueante por prefixo inalterada), `ai-external-probe.ps1` (defaults + transporte). Revalidação: build **0 erros**; IA **194/194**; completa **1043/1043**.
+
+### 9.2 Veredito por provedor
+
+| Provedor | Chave | Prova | Classificação |
+|---|---|---|---|
+| Groq | válida | **`[OK]` HTTP 200** (reprodutível) — `openai/gpt-oss-20b` devolveu `content` com texto real (“funcionando”) | **APROVADO** |
+| Gemini | válida | **200 com candidatos reais** (capturado); listagem `/v1beta/models` 200 <1s (modelo existe + suporta `generateContent`); rede p/ Google ok | **APROVADO** (ressalva: cota/tier free — 503/timeout em picos) |
+| DeepSeek | válida | **`FALHA_402`** `{"error":{"message":"Insufficient Balance ..."}}` — erro de conta, não de rede/auth | **BLOQUEADO p/ saldo** |
+
+> Nota de integridade (Gemini): o `generateContent` do `gemini-flash-latest` respondeu **HTTP 200 com candidatos reais** nesta sessão. A instabilidade posterior (503 “high demand”/timeout) é **capacidade da tier gratuita sob carga repetida**, não falha de contrato — o endpoint de listagem segue 200 em <1s. Para latência/estabilidade previsíveis em produção, usar tier paga/cota maior.
+
+### 9.3 Efeitos e próximos passos
+- **Groq**: pronto para geração real pelo app já agora (chave global + tarefa habilitada).
+- **Gemini**: pronto; recomendar plano paga/cota maior p/ produção.
+- **DeepSeek**: ao fundear a conta, rerodar `ai-external-probe.ps1` (deve virar `[OK]`) e registrar aqui.

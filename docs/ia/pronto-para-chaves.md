@@ -2,7 +2,7 @@
 
 - **Data**: 2026-10-07 · **Bloco**: B10 IA (Groq / Gemini / DeepSeek) · **Suíte**: camada IA revalidada verde (194 testes `*Ai*`); suíte completa reexecutada nesta árvore.
 - **Prontidão técnica**: implementada, testada e **pronta para receber chaves reais**. Com chave, o sistema já infere de verdade; sem chave, cada ponto devolve o estado explicável `NAO_CONFIGURADO` (sem gastar chamada de LLM).
-- **Homologação com provedor real**: **BLOQUEADO p/ chave**. Mocks/unitários não declaram homologação externa (regra da pauta). O que falta é somente a credencial + uma execução real.
+- **Homologação com provedor real**: **executada em 2026-10-07** com as chaves reais → **Groq APROVADO** · **Gemini APROVADO (c/ ressalva de cota/tier free)** · **DeepSeek BLOQUEADO p/ saldo (402)**. Mocks/unitários não declaram homologação externa (regra da pauta); aqui a prova foi por chamada real. Detalhe e evidências: `docs/evidencias/2026-10-06-rodada-4/r4f-ia-b10-prontidao-chaves.md` (§9).
 
 ## 1. Onde colocar as chaves
 
@@ -64,7 +64,7 @@ powershell -File scripts\ai-external-probe.ps1
 Saída por provedor: `[OK]` (chave válida + resposta real), `[FALHA <http>]` (com trecho do erro) ou `[SEM_CHAVE]`.
 Exit codes: `0` = pelo menos um `[OK]`; `2` = nenhum homologado; `1` = erro de execução.
 
-Modelos usados pelo probe (sobrescreva com `AI_GROQ_MODEL` / `AI_GEMINI_MODEL` / `AI_DEEPSEEK_MODEL`): `gpt-oss-20b` / `gemini-2.5-flash` / `deepseek-flash` (vigentes, conforme `AiGateway.cs`).
+Modelos usados pelo probe (sobrescreva com `AI_GROQ_MODEL` / `AI_GEMINI_MODEL` / `AI_DEEPSEEK_MODEL`): `openai/gpt-oss-20b` / `gemini-flash-latest` / `deepseek-flash` (confirmados por chamada real em 2026-10-07, conforme `AiGateway.cs`). O probe usa `HttpClient` com retry em falha transitória (5xx/429/timeout); falha determinística (401/404/402) não repete.
 
 ## 4. Fluxo completo no app, depois que as chaves estiverem no ar
 

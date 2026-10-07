@@ -17,10 +17,11 @@ namespace PlantaoPro.Api.Ai;
 /// </summary>
 public static class AiModeloCompatibilidade
 {
-    /// <summary>Prefixos reconhecidos como catálogo self-service vigente da Groq.</summary>
-    private static readonly string[] GroqCatalogo = { "gpt-oss-", "llama-" };
-    /// <summary>Famílias vigentes do Gemini documentadas no momento da pesquisa.</summary>
-    private static readonly string[] GeminiFamílias = { "gemini-1.5-", "gemini-2.0-", "gemini-2.5-" };
+    /// <summary>Prefixos reconhecidos como catálogo self-service vigente da Groq.
+    /// A partir de 2026-10 os ids expostos levam o prefixo do vendor (ex.: openai/gpt-oss-20b).</summary>
+    private static readonly string[] GroqCatalogo = { "gpt-oss-", "llama-", "openai/gpt-oss-" };
+    /// <summary>Famílias vigentes do Gemini (versões + aliases estáveis flash/pro).</summary>
+    private static readonly string[] GeminiFamílias = { "gemini-1.5-", "gemini-2.0-", "gemini-2.5-", "gemini-3.", "gemini-flash-", "gemini-pro-" };
     /// <summary>Modelos vigentes do DeepSeek (deepseek-chat/-reasoner foram aposentados em 2026-07-24).</summary>
     private static readonly string[] DeepSeekCatalogo = { "deepseek-flash", "deepseek-v4-pro" };
     private static readonly string[] DeepSeekAposentados = { "deepseek-chat", "deepseek-reasoner" };

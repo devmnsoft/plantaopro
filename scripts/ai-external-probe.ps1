@@ -56,46 +56,61 @@ function Mask-Key([string]$k) {
     return ("..." + $k.Substring($k.Length - 4))
 }
 
-function Read-ErrorBody([object]$resp) {
-    if ($null -eq $resp) { return "" }
+function New-ProbeClient {
+    Add-Type -AssemblyName System.Net.Http 2>$null | Out-Null
+    $c = New-Object System.Net.Http.HttpClient
+    $c.Timeout = [TimeSpan]::FromSeconds(30)
+    return $c
+}
+
+# Cliente compartilhado. O probe usa HttpClient (nao Invoke-WebRequest) por
+# confiabilidade de TLS/timeout: contra alguns endpoints o cliente legado engasga
+# e o HttpClient responde (confirmado na homologacao externa de 2026-10-07).
+$script:httpClient = New-ProbeClient
+
+# POST JSON -> @{ Code = <int>; Body = <string> }. Code = -1 em erro de transporte/timeout.
+function Invoke-JsonPost([string]$Url, [string]$AuthHeader, [string]$AuthValue, [string]$Json) {
+    $req = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Post, $Url)
+    $req.Content = New-Object System.Net.Http.StringContent($Json, [System.Text.Encoding]::Utf8, "application/json")
+    $req.Headers.Add($AuthHeader, $AuthValue)
     try {
-        $stream = $resp.GetResponseStream()
-        $reader = New-Object System.IO.StreamReader($stream)
-        $s = $reader.ReadToEnd()
-        $reader.Dispose()
-        return $s
-    } catch { return "" }
+        $resp = $script:httpClient.SendAsync($req).GetAwaiter().GetResult()
+        $body = $resp.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+        if ($null -eq $body) { $body = "" }
+        return @{ Code = [int]$resp.StatusCode; Body = $body }
+    } catch {
+        return @{ Code = -1; Body = $_.Exception.Message }
+    }
 }
 
 # --- Provedores OpenAI-compatible (Groq, DeepSeek) -------------------------
+# Retry em falha transitoria (5xx, 429 cota, ou timeout sem resposta); falha
+# deterministica (401/404/400/402 ...) nao repete.
 function Probe-OpenAiCompat([string]$Name, [string]$Base, [string]$Model, [string]$Key) {
     Write-Host ("==> " + $Name + "  [openai-compat]  model=" + $Model + "  key=" + (Mask-Key $Key))
     $url = $Base.TrimEnd('/') + "/chat/completions"
-    $headers = @{ "Authorization" = "Bearer " + $Key; "Content-Type" = "application/json" }
     $payload = [ordered]@{
         model       = $Model
         max_tokens  = 16
         temperature = 0.2
         messages    = @(@{ role = "user"; content = "Responda apenas: ok." })
     } | ConvertTo-Json -Depth 6
-    try {
-        $r = Invoke-WebRequest -UseBasicParsing -Uri $url -Method Post -Headers $headers -Body $payload -TimeoutSec 45
-        $text = $r.Content
-        if ($r.StatusCode -eq 200 -and $text -match '"content"\s*:') {
+    for ($a = 1; $a -le 3; $a++) {
+        $res = Invoke-JsonPost $url "Authorization" ("Bearer " + $Key) $payload
+        $code = $res.Code
+        if ($code -eq 200 -and $res.Body -match '"content"\s*:') {
             Write-Host ("[OK] " + $Name + " respondeu HTTP 200 com texto gerado.")
-            $script:results += ,@($Name, "OK")
-        } else {
-            Write-Host ("[FALHA] " + $Name + " status=" + $r.StatusCode + " (sem 'content' no corpo)")
-            Write-Host $text.Substring(0, [Math]::Min(300, $text.Length))
-            $script:results += ,@($Name, ("FALHA_" + $r.StatusCode))
+            $script:results += ,@($Name, "OK"); return
         }
-    } catch {
-        $code = "?"
-        $snippet = Read-ErrorBody $_.Exception.Response
-        if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
-        Write-Host ("[FALHA] " + $Name + " http=" + $code + "  " + $_.Exception.Message)
-        if ($snippet) { Write-Host $snippet.Substring(0, [Math]::Min(300, $snippet.Length)) }
-        $script:results += ,@($Name, ("FALHA_" + $code))
+        $transient = ($code -ge 500) -or ($code -eq 429) -or ($code -eq -1)
+        if ($transient -and $a -lt 3) {
+            Write-Host ("  [tentativa $a/3] " + $Name + " http=" + $code + " (transitoria); aguardando e repetindo...")
+            Start-Sleep -Seconds 3; continue
+        }
+        $label = if ($code -eq -1) { "TIMEOUT" } else { [string]$code }
+        Write-Host ("[FALHA] " + $Name + " http=" + $label)
+        if ($res.Body) { $s = $res.Body; Write-Host $s.Substring(0, [Math]::Min(300, $s.Length)) }
+        $script:results += ,@($Name, ("FALHA_" + $label)); return
     }
 }
 
@@ -103,29 +118,26 @@ function Probe-OpenAiCompat([string]$Name, [string]$Base, [string]$Model, [strin
 function Probe-Gemini([string]$Name, [string]$Base, [string]$Model, [string]$Key) {
     Write-Host ("==> " + $Name + "  [google v1beta]  model=" + $Model + "  key=" + (Mask-Key $Key))
     $url = $Base.TrimEnd('/') + "/v1beta/models/" + $Model + ":generateContent"
-    $headers = @{ "x-goog-api-key" = $Key; "Content-Type" = "application/json" }
     $payload = [ordered]@{
         contents         = @(@{ parts = @(@{ text = "Responda apenas: ok." }) })
-        generationConfig = @{ maxOutputTokens = 16; temperature = 0.2 }
+        generationConfig = @{ maxOutputTokens = 32; temperature = 0.2 }
     } | ConvertTo-Json -Depth 8
-    try {
-        $r = Invoke-WebRequest -UseBasicParsing -Uri $url -Method Post -Headers $headers -Body $payload -TimeoutSec 45
-        $text = $r.Content
-        if ($r.StatusCode -eq 200 -and $text -match '"candidates"\s*:') {
+    for ($a = 1; $a -le 3; $a++) {
+        $res = Invoke-JsonPost $url "x-goog-api-key" $Key $payload
+        $code = $res.Code
+        if ($code -eq 200 -and $res.Body -match '"candidates"\s*:') {
             Write-Host ("[OK] " + $Name + " respondeu HTTP 200 com candidato gerado.")
-            $script:results += ,@($Name, "OK")
-        } else {
-            Write-Host ("[FALHA] " + $Name + " status=" + $r.StatusCode + " (sem 'candidates' no corpo)")
-            Write-Host $text.Substring(0, [Math]::Min(300, $text.Length))
-            $script:results += ,@($Name, ("FALHA_" + $r.StatusCode))
+            $script:results += ,@($Name, "OK"); return
         }
-    } catch {
-        $code = "?"
-        $snippet = Read-ErrorBody $_.Exception.Response
-        if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
-        Write-Host ("[FALHA] " + $Name + " http=" + $code + "  " + $_.Exception.Message)
-        if ($snippet) { Write-Host $snippet.Substring(0, [Math]::Min(300, $snippet.Length)) }
-        $script:results += ,@($Name, ("FALHA_" + $code))
+        $transient = ($code -ge 500) -or ($code -eq 429) -or ($code -eq -1)
+        if ($transient -and $a -lt 3) {
+            Write-Host ("  [tentativa $a/3] " + $Name + " http=" + $code + " (transitoria); aguardando e repetindo...")
+            Start-Sleep -Seconds 3; continue
+        }
+        $label = if ($code -eq -1) { "TIMEOUT" } else { [string]$code }
+        Write-Host ("[FALHA] " + $Name + " http=" + $label)
+        if ($res.Body) { $s = $res.Body; Write-Host $s.Substring(0, [Math]::Min(300, $s.Length)) }
+        $script:results += ,@($Name, ("FALHA_" + $label)); return
     }
 }
 
@@ -142,9 +154,10 @@ if (-not $groqKey)   { $groqKey   = $env:AI_GROQ_KEY }
 if (-not $geminiKey) { $geminiKey = $env:AI_GEMINI_KEY }
 if (-not $dsKey)     { $dsKey     = $env:AI_DEEPSEEK_KEY }
 
-# Modelos vigentes (fonte: AiGateway.cs - "documentacao oficial consultada em 2026-10-04").
-$groqModel   = if ($env:AI_GROQ_MODEL)     { $env:AI_GROQ_MODEL }     else { "gpt-oss-20b" }
-$geminiModel = if ($env:AI_GEMINI_MODEL)   { $env:AI_GEMINI_MODEL }   else { "gemini-2.5-flash" }
+# Modelos vigentes (fonte: AiGateway.cs; confirmados por chamada real em 2026-10-07).
+# Groq expoe o id com prefixo openai/; Gemini usa o alias estavel flash-latest.
+$groqModel   = if ($env:AI_GROQ_MODEL)     { $env:AI_GROQ_MODEL }     else { "openai/gpt-oss-20b" }
+$geminiModel = if ($env:AI_GEMINI_MODEL)   { $env:AI_GEMINI_MODEL }   else { "gemini-flash-latest" }
 $dsModel     = if ($env:AI_DEEPSEEK_MODEL) { $env:AI_DEEPSEEK_MODEL } else { "deepseek-flash" }
 
 Write-Host "=============================================================="

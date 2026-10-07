@@ -2,6 +2,12 @@
     ViewData["Title"] = "BI Executivo";
 }
 <div class="page-header mb-4"><h1>BI Executivo</h1><p class="text-muted">Indicadores estratégicos do SaaS.</p></div>
+<div class="row g-3 mb-2" id="bi-periodo-fuso">
+    <div class="col-md-3"><div class="card border-info"><div class="card-body py-2"><h6 class="mb-0 text-muted">Competência exibida</h6><h5 class="mb-0" id="kpi-periodo">-</h5></div></div></div>
+    <div class="col-md-3"><div class="card border-info"><div class="card-body py-2"><h6 class="mb-0 text-muted">Fuso horário aplicado</h6><h5 class="mb-0" id="kpi-fuso">-</h5></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><h6 class="mb-0 text-muted">Escalas confirmadas no período</h6><h5 class="mb-0" id="kpi-escalas-periodo">-</h5><p class="small text-muted mb-0">Acumulado (histórico): <span id="kpi-escalas-acumulado">-</span></p></div></div></div>
+    <div class="col-md-3"><div class="card"><div class="card-body py-2"><h6 class="mb-0 text-muted">Valor pago no período</h6><h5 class="mb-0" id="kpi-pago-periodo">-</h5></div></div></div>
+</div>
 <div class="row g-3">
     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Clientes Ativos</h6><h3 id="kpi-clientes">-</h3></div></div></div>
     <div class="col-md-3"><div class="card"><div class="card-body"><h6>Receita Estimada</h6><h3 id="kpi-receita">-</h3></div></div></div>
@@ -10,6 +16,6 @@
 </div>
 @section Scripts {
 <script>
-fetch('/api/bi/resumo-executivo').then(r=>r.json()).then(x=>{const d=x.data||{};document.getElementById('kpi-clientes').innerText=d.totalClientesAtivos??0;document.getElementById('kpi-receita').innerText=(d.receitaMensalEstimada??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});document.getElementById('kpi-vencida').innerText=(d.receitaVencida??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});document.getElementById('kpi-cobertura').innerText=((d.percentualCobertura??0).toFixed(1))+'%';});
+fetch('/api/bi/resumo-executivo').then(r=>r.json()).then(x=>{const d=x.data||{};document.getElementById('kpi-clientes').innerText=d.totalClientesAtivos??0;document.getElementById('kpi-receita').innerText=(d.receitaMensalEstimada??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});document.getElementById('kpi-vencida').innerText=(d.receitaVencida??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});document.getElementById('kpi-cobertura').innerText=((d.percentualCobertura??0).toFixed(1))+'%';document.getElementById('kpi-periodo').innerText=d.periodo??'atual';document.getElementById('kpi-fuso').innerText=d.fuso??'servidor';document.getElementById('kpi-escalas-acumulado').innerText=d.escalasConfirmadas??0;document.getElementById('kpi-escalas-periodo').innerText=d.escalasConfirmadasPeriodo??0;document.getElementById('kpi-pago-periodo').innerText=(d.valorPagoPeriodo??0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});});
 </script>
 }

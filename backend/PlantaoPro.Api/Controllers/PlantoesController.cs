@@ -148,10 +148,16 @@ namespace PlantaoPro.Api.Controllers
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]
         [HttpPost("{id:guid}/realizar")]
-        [HttpPost("{id:guid}/encerrar")]
         public Task<IActionResult> Realizar(Guid id, [FromBody] StatusRequest req)
         {
             return ExecuteStatusAction(id, () => service.RealizarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "realizar plantão");
+        }
+
+        [Authorize(Roles = RolesConstants.PlantoesGestao)]
+        [HttpPost("{id:guid}/encerrar")]
+        public Task<IActionResult> Encerrar(Guid id, [FromBody] StatusRequest req)
+        {
+            return ExecuteStatusAction(id, () => service.EncerrarAsync(id, req.Justificativa, GetUserId(), ClientIp, UserAgent), "encerrar plantão");
         }
 
         [Authorize(Roles = RolesConstants.PlantoesGestao)]

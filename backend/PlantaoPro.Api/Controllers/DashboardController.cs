@@ -11,10 +11,12 @@ namespace PlantaoPro.Api.Controllers
     public class DashboardController : ControllerBase
     {
         private readonly DashboardService service;
+        private readonly ICurrentUserService currentUser;
         private readonly ILogger<DashboardController> logger;
-        public DashboardController(DashboardService service, ILogger<DashboardController> logger)
+        public DashboardController(DashboardService service, ICurrentUserService currentUser, ILogger<DashboardController> logger)
         {
             this.service = service;
+            this.currentUser = currentUser;
             this.logger = logger;
         }
         [Authorize(Roles = RolesConstants.Dashboard)]
@@ -29,7 +31,7 @@ namespace PlantaoPro.Api.Controllers
                 {
                     return Unauthorized(ApiResponse<string>.Fail("Sessão inválida ou expirada.", 401));
                 }
-                var r = await service.GetAsync(uid);
+                var r = await service.GetAsync(uid, currentUser.TenantId ?? currentUser.ClienteId);
                 return StatusCode(r.StatusCode, r);
             }
             catch (Exception ex)
@@ -48,7 +50,7 @@ namespace PlantaoPro.Api.Controllers
             {
                 return Unauthorized(ApiResponse<string>.Fail("Sessão inválida ou expirada.", 401));
             }
-            var r = await service.GetAsync(uid);
+            var r = await service.GetAsync(uid, currentUser.TenantId ?? currentUser.ClienteId);
             return StatusCode(r.StatusCode, r);
         }
     }

@@ -25,12 +25,12 @@ public class BiController : ControllerBase
 
     [HttpGet("resumo-executivo")]
     [ProducesResponseType(typeof(ApiResponse<BiResumoExecutivoDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ResumoExecutivo()
+    public async Task<IActionResult> ResumoExecutivo([FromQuery] string? mes, [FromQuery] string? fuso)
     {
         var bloqueio = await ValidarPlanoBiAsync();
         if (bloqueio is not null) return StatusCode(bloqueio.StatusCode, bloqueio);
 
-        var response = await biService.GetResumoExecutivoAsync();
+        var response = await biService.GetResumoExecutivoAsync(usuarioContext.GetClienteId(), mes, fuso);
         return StatusCode(response.StatusCode, response);
     }
 

@@ -22,7 +22,9 @@ public sealed class V2158FinanceiroMedicoContractTests
         Assert.Contains("Somente obrigação aprovada", service);
         Assert.Contains("req.ValorPago != pg.ValorAprovado", service);
         Assert.Contains("CONTESTACAO_ABERTA", service);
-        Assert.DoesNotContain("set status='contestado'", service, StringComparison.OrdinalIgnoreCase);
+        // B9 opcao B: pendente/aprovado passam a 'contestado' (somente esses; pago permanece pago) com incremento de versao.
+        Assert.Contains("set status='contestado',versao=versao+1", service);
+        Assert.Contains("status in ('pendente','aprovado')", service);
     }
 
     [Fact]

@@ -34,6 +34,11 @@ public sealed class PagamentosController : ControllerBase
     public Task<IActionResult> ResolverContestacao(Guid id, [FromBody] ResolverContestacaoPagamentoRequest request) =>
         ExecuteAsync(id, "resolver contestação", uid => service.ResolverContestacaoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
 
+    [HttpPost("{id:guid}/estornar")]
+    [Authorize(Roles = RolesConstants.FinanceiroGestao)]
+    public Task<IActionResult> Estornar(Guid id, [FromBody] EstornarPagamentoRequest request) =>
+        ExecuteAsync(id, "estornar", uid => service.EstornarPagamentoAsync(id, request, uid, Ip(), Request.Headers.UserAgent.ToString()));
+
     private string? Ip() => HttpContext.Connection.RemoteIpAddress?.ToString();
 
     private async Task<IActionResult> ExecuteAsync(Guid id, string action, Func<Guid, Task<ApiResponse<PagamentoActionResponse>>> operation)

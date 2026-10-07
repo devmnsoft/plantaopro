@@ -37,6 +37,8 @@ public sealed class ProductivityItemViewModel
     public ProductivityActionViewModel? PrimaryAction { get; set; }
     public bool CanSnooze { get; set; }
     public bool CanDismiss { get; set; }
+    /// <summary>Motivo explicável da prioridade (B9 Meu Dia real). Vazio quando o módulo de origem não expõe motivo.</summary>
+    public string PriorityReason { get; set; } = string.Empty;
 }
 
 public sealed class ProductivityActionViewModel

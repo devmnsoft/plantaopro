@@ -147,6 +147,10 @@
                                     <small>@item.Priority · @(item.DueAt?.ToLocalTime().ToString("dd/MM HH:mm") ?? "sem prazo")</small>
                                     <strong>@item.Title</strong>
                                     <p>@item.Description</p>
+                                    @if (!string.IsNullOrWhiteSpace(item.PriorityReason))
+                                    {
+                                        <p class="day-item-reason">@item.PriorityReason · @(item.OwnerType == "USUARIO" ? "ação individual" : "ação da equipe")</p>
+                                    }
                                 </div>
                                 @if (item.PrimaryAction is not null)
                                 {

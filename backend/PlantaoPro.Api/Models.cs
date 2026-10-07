@@ -73,6 +73,7 @@ public record ConfirmarPagamentoRequest(decimal ValorPago,DateOnly DataPagamento
 public record MarcarPagamentoPagoRequest(string FormaPagamento,string? Observacoes);
 public record ContestarPagamentoRequest(string Motivo,long? VersaoEsperada=null);
 public record ResolverContestacaoPagamentoRequest(string Decisao,string Justificativa,decimal? NovoValor);
+public record EstornarPagamentoRequest(string Motivo);
 public record PagamentoActionResponse(Guid PagamentoId,string Status,decimal Valor,DateOnly? DataPagamento,string ProximaAcao);
 public sealed class PagamentoDetailsDto
 {
@@ -533,6 +534,14 @@ public sealed class BiResumoExecutivoDto
     public long PagamentosPendentes { get; set; }
     public long PagamentosConfirmados { get; set; }
     public decimal TempoMedioPreenchimentoHoras { get; set; }
+    /// <summary>Escalas confirmadas cujo plantão inicia dentro do período consultado (B9).</summary>
+    public long EscalasConfirmadasPeriodo { get; set; }
+    /// <summary>Soma de valor_pago de pagamentos pagos com data_pagamento dentro do período no fuso consultado (B9).</summary>
+    public decimal ValorPagoPeriodo { get; set; }
+    /// <summary>Rótulo do período consultado no formato YYYY-MM (mês corrente do fuso quando não informado).</summary>
+    public string Periodo { get; set; } = "";
+    /// <summary>Fuso horário efetivamente usado na consulta (parâmetro ou fuso do servidor quando omitido).</summary>
+    public string Fuso { get; set; } = "";
 }
 
 }

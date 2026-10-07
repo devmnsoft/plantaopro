@@ -37,7 +37,7 @@ public sealed class DashboardPremiumService
     {
         try
         {
-            var total = await cn.ExecuteScalarAsync<long>("select count(1)::bigint from " + tabela + " where reg_status='A' and (@clienteId is null or cliente_id=@clienteId)", new { clienteId });
+            var total = await cn.ExecuteScalarAsync<long>("select count(1)::bigint from " + tabela + " where reg_status='A' and (@clienteId is null or cliente_id=@clienteId or tenant_id=@clienteId)", new { clienteId });
             kpis.Add(new DashboardKpiDto(titulo, total, "real"));
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01" || ex.SqlState == "42703") { }

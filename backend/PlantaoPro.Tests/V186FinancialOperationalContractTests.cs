@@ -26,7 +26,8 @@ public sealed class V186FinancialOperationalContractTests
     {
         var service = Read("backend/PlantaoPro.Api/Data.cs");
         var view = Read("backend/PlantaoPro.Web/Views/Financeiro/Details.cshtml");
-        Assert.Contains("pg.ValorPrevisto <= 0", service);
+        // B9: a base de valor da contestacao passou a ser o valor efetivo (apurado > 0 ? apurado : previsto).
+        Assert.Contains("valorBase <= 0", service);
         Assert.Contains("string.IsNullOrWhiteSpace(req.Motivo)", service);
         Assert.Contains("Somente pagamento pendente pode ser contestado", service);
         Assert.Contains("name=\"motivo\"", view);

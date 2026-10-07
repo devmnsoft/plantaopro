@@ -940,6 +940,50 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2317_saude360_b9_contestacao_situacao_anterior",
+      "source": "database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql",
+      "checksum": "be46976f4bc70a02bc84b16cfeb4b457235cb36cade2d27403bdb16c21fd76aa",
+      "dependsOn": [
+        "2026_10_v2316_saude360_b8_fila_atendimento_legado"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2318_saude360_b9_plantao_historico_contrato",
+      "source": "database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql",
+      "checksum": "8a0f882bf14e8c6684805c1eaaac1840633a780a214729500e631c780ddd1074",
+      "dependsOn": [
+        "2026_10_v2317_saude360_b9_contestacao_situacao_anterior"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2319_saude360_b9_notificacoes_contrato",
+      "source": "database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql",
+      "checksum": "baca5925613bcd26ac0568892c7e159492d542f4cd2000c8abc537f76db9706a",
+      "dependsOn": [
+        "2026_10_v2318_saude360_b9_plantao_historico_contrato"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2320_saude360_b9_plantoes_auditoria",
+      "source": "database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql",
+      "checksum": "d9eec352ba21c23e6d76ded2718c70f52cf089ffa59405436d580692045503f7",
+      "dependsOn": [
+        "2026_10_v2319_saude360_b9_notificacoes_contrato"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

@@ -33,27 +33,30 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
     // Contrato de colunas consumidas pelo CTE/ProductivityRow: Key, Module, EntityType, EntityId,
     // ActionCode, Title, Description, Priority, Status, DueAt (timestamptz ou null), CreatedAt (timestamptz),
     // OwnerType ('USUARIO'|'EQUIPE'), OwnerId (uuid ou null), Icon, ContextLabel, PrimaryAction,
-    // CanSnooze, CanDismiss, SourceUpdatedAt (timestamptz).
+    // CanSnooze, CanDismiss, SourceUpdatedAt (timestamptz), PriorityReason (text explicável).
     // Cada ramo deve respeitar esse contrato; erro de consulta propaga exceção (nunca vira lista vazia).
     private const string DerivedSql = @"
         select concat('OPERACAO:CONVITE:',c.id,':RESPONDER') as Key,'OPERACAO' as Module,'CONVITE' as EntityType,c.id as EntityId,'RESPONDER' as ActionCode,
           'Convite aguardando resposta' as Title,'Um convite de plantão aguarda sua resposta.' as Description,'NORMAL' as Priority,'ATIVA' as Status,
           null as DueAt,c.criado_em as CreatedAt,'USUARIO' as OwnerType,c.medico_id as OwnerId,
           'bi-envelope-check' as Icon,'Plantão' as ContextLabel,'/Convites' as PrimaryAction,true as CanSnooze,false as CanDismiss,
-          coalesce(c.respondido_em,c.reenviado_em,c.criado_em) as SourceUpdatedAt
+          coalesce(c.respondido_em,c.reenviado_em,c.criado_em) as SourceUpdatedAt,
+          'Convite aguardando resposta; responda para liberar a cobertura.' as PriorityReason
         from plantaopro.cobertura_convites c where @operation and c.tenant_id=@tenantId and c.status='PENDENTE'
           and (not @doctorOnly or c.medico_id=@userId or exists(select 1 from plantaopro.medicos m where m.id=c.medico_id and m.usuario_id=@userId))
         union all
         select concat('OPERACAO:ESCALA:',e.id,':CONFIRMAR'),'OPERACAO','ESCALA',e.id,'CONFIRMAR','Escala aguardando confirmação',
           'Confirme ou recuse a escala na tela de origem.','NORMAL','ATIVA',
           case when coalesce(e.dados->>'dataInicio',e.dados->>'data_inicio','') ~ '^\d{4}-\d{2}-\d{2}' then coalesce(e.dados->>'dataInicio',e.dados->>'data_inicio')::timestamptz end,
-          e.criado_em,'EQUIPE',null::uuid,'bi-calendar2-check',coalesce(nullif(e.nome,''),'Escala'),'/Escalas/Details/'||e.id,true,false,coalesce(e.atualizado_em,e.criado_em)
+          e.criado_em,'EQUIPE',null::uuid,'bi-calendar2-check',coalesce(nullif(e.nome,''),'Escala'),'/Escalas/Details/'||e.id,true,false,coalesce(e.atualizado_em,e.criado_em),
+          case when upper(e.status)='SOLICITADA' then 'Escala solicitada; o médico ainda não respondeu.' else 'Escala pendente de confirmação; confirme ou recuse na origem.' end as PriorityReason
         from plantaopro.escalas e where @operation and (e.tenant_id=@tenantId or e.cliente_id=@tenantId) and upper(e.status) in ('SOLICITADA','PENDENTE','AGUARDANDO_CONFIRMACAO')
           and (not @doctorOnly or e.medico_id=@userId or exists(select 1 from plantaopro.medicos m where m.id=e.medico_id and m.usuario_id=@userId) or coalesce(e.dados->>'medicoId',e.dados->>'medico_id')=@userId::text)
         union all
         select concat('FINANCEIRO:PAGAMENTO:',pg.id,':CONFERIR'),'FINANCEIRO','PAGAMENTO',pg.id,'CONFERIR','Pagamento aguardando conferência',
           'Confira valores e dados de pagamento antes de confirmar.','NORMAL','ATIVA',coalesce(pg.data_vencimento,pg.data_prevista)::timestamptz,
-          pg.reg_date,'USUARIO',pg.medico_id,'bi-cash-stack','Pagamento','/Financeiro/Detalhes/'||pg.id,true,false,coalesce(pg.reg_update,pg.reg_date)
+          pg.reg_date,'USUARIO',pg.medico_id,'bi-cash-stack','Pagamento','/Financeiro/Detalhes/'||pg.id,true,false,coalesce(pg.reg_update,pg.reg_date),
+          case when pg.data_vencimento<current_date then 'Pagamento vencido; regularize a cobrança.' when lower(pg.status)='em_conferencia' then 'Pagamento em conferência; valide os valores antes de aprovar.' else 'Pagamento pendente; confira valores e horas antes de liberar.' end as PriorityReason
         from plantaopro.pagamentos pg where @financial and (pg.tenant_id=@tenantId or pg.cliente_id=@tenantId) and pg.reg_status='A' and lower(pg.status) in ('pendente','em_conferencia','atrasado')
           and (not @doctorOnly or pg.medico_id=@userId or exists(select 1 from plantaopro.medicos m where m.id=pg.medico_id and m.usuario_id=@userId))
         union all
@@ -61,19 +64,22 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           'FINANCEIRO','FECHAMENTO',f.id,case when f.status='COM_DIVERGENCIA' then 'DIVERGENCIA_ABERTA' else f.status end,
           case when f.status='COM_DIVERGENCIA' then 'Fechamento com divergência' when f.status='AGUARDANDO_APROVACAO' then 'Fechamento aguardando aprovação' else 'Fechamento aguardando conferência' end,
           'Revise o fechamento na origem antes de prosseguir.',case when f.status='COM_DIVERGENCIA' then 'ALTA' else 'NORMAL' end,'ATIVA',null,
-          f.iniciado_em,'EQUIPE',null,'bi-clipboard2-check','Fechamento','/Fechamentos/Detalhes/'||f.id,true,false,coalesce(f.atualizado_em,f.iniciado_em)
+          f.iniciado_em,'EQUIPE',null,'bi-clipboard2-check','Fechamento','/Fechamentos/Detalhes/'||f.id,true,false,coalesce(f.atualizado_em,f.iniciado_em),
+          case when f.status='COM_DIVERGENCIA' then 'Fechamento com divergência aberta; resolva antes de prosseguir.' when f.status='AGUARDANDO_APROVACAO' then 'Fechamento conferido; falta a aprovação final.' else 'Fechamento em conferência; revise os itens antes de aprovar.' end as PriorityReason
         from plantaopro.fechamento_plantao f where (@operation or @financial) and f.tenant_id=@tenantId
           and f.status in ('EM_CONFERENCIA','COM_DIVERGENCIA','AGUARDANDO_APROVACAO')
         union all
         select concat('FINANCEIRO:CONTESTACAO:',c.id,':RESOLVER'),'FINANCEIRO','CONTESTACAO',c.id,'RESOLVER',
           'Contestação financeira aberta','Uma contestação aguarda análise financeira.','ALTA','ATIVA',null,c.aberto_em,
-          'EQUIPE',null,'bi-exclamation-diamond','Pagamento','/Financeiro/Contestacoes',true,false,coalesce(c.updated_at,c.aberto_em)
+          'EQUIPE',null,'bi-exclamation-diamond','Pagamento','/Financeiro/Contestacoes',true,false,coalesce(c.updated_at,c.aberto_em),
+          'Contestação aberta; analise o motivo e decida (manter valor, ajustar ou cancelar).' as PriorityReason
         from plantaopro.pagamento_contestacoes c where @financial and c.tenant_id=@tenantId and c.status='ABERTA'
         union all
         select concat('CLINICO:AGENDAMENTO:',a.id,':CHECKIN'),'CLINICO','AGENDAMENTO',a.id,'CHECKIN',
           'Check-in pendente','Paciente agendado aguardando fluxo de recepção.',
           case when ax.starts_at<now() then 'ALTA' else 'NORMAL' end,'ATIVA',ax.starts_at,a.criado_em,
-          'EQUIPE',null,'bi-person-check','Agenda','/Agenda/Index',true,false,coalesce(a.atualizado_em,a.criado_em)
+          'EQUIPE',null,'bi-person-check','Agenda','/Agenda/Index',true,false,coalesce(a.atualizado_em,a.criado_em),
+          case when ax.starts_at<now() then 'Check-in atrasado; o paciente já deveria ter chegado.' else 'Check-in pendente para agendamento de hoje.' end as PriorityReason
         from plantaopro.agendamentos a
         cross join lateral(select coalesce(nullif(a.dados->>'dataInicio','')::timestamptz,nullif(a.dados->>'data_inicio','')::timestamptz) starts_at) ax
         where @clinical and a.tenant_id=@tenantId and a.status in ('AGENDADO','CONFIRMADO')
@@ -83,14 +89,16 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         union all
         select concat('CLINICO:CONSULTA:',c.id,':CONTINUAR'),'CLINICO','CONSULTA',c.id,'CONTINUAR','Atendimento em rascunho',
           'Há informações salvas que ainda precisam ser revisadas e finalizadas.','NORMAL','ATIVA',null,c.criado_em,
-          'USUARIO',c.assumida_por,'bi-journal-medical',coalesce(nullif(c.nome,''),'Atendimento'),'/Consultas/Atendimento/'||c.id,true,false,coalesce(c.atualizado_em,c.criado_em)
+          'USUARIO',c.assumida_por,'bi-journal-medical',coalesce(nullif(c.nome,''),'Atendimento'),'/Consultas/Atendimento/'||c.id,true,false,coalesce(c.atualizado_em,c.criado_em),
+          case when upper(c.status)='EM_ATENDIMENTO' then 'Atendimento em andamento; finalize antes de liberar o paciente.' else 'Atendimento salvo como rascunho; revise e finalize as informações.' end as PriorityReason
         from plantaopro.consultas c where @clinical and c.tenant_id=@tenantId and upper(c.status) in ('RASCUNHO','EM_ATENDIMENTO')
           and (not @doctorOnly or c.assumida_por=@userId)
         union all
         select concat('PRESENCA:EXECUCAO:',mc.id,':CONFERIR'),'PRESENCA','PRESENCA',mc.id,'CONFERIR_EXECUCAO',
-          'Execução aguardando conferência','Confira os horários registrados antes de aprovar a execução.','NORMAL',mc.status_conferencia,
+          'Execução aguardando conferência','Confira os horários registrados antes de aprovar a execução.',case when mc.status_conferencia='REGISTRO_INCOMPLETO' then 'ALTA' else 'NORMAL' end,mc.status_conferencia,
           null,coalesce(mc.checkout_recebido_em,mc.checkin_recebido_em,mc.checkin_em),'EQUIPE',null::uuid,
-          'bi-clipboard2-check',coalesce(nullif(h.nome_fantasia,''),'Unidade'),'/ConferenciaExecucao/Index',false,false,coalesce(mc.atualizado_em,mc.checkin_em)
+          'bi-clipboard2-check',coalesce(nullif(h.nome_fantasia,''),'Unidade'),'/ConferenciaExecucao/Index',false,false,coalesce(mc.atualizado_em,mc.checkin_em),
+          case when mc.status_conferencia='REGISTRO_INCOMPLETO' then 'Registro incompleto de presença; complete os dados antes de aprovar.' else 'Execução registrada; confira os horários e aprove.' end as PriorityReason
         from plantaopro.medico_checkins mc
         join plantaopro.escalas e on e.id=mc.escala_id and (e.tenant_id=@tenantId or e.cliente_id=@tenantId)
         join plantaopro.plantoes p on p.id=e.plantao_id and (p.cliente_id=@tenantId or p.tenant_id=@tenantId)
@@ -99,7 +107,8 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         union all
         select concat('PRESENCA:CORRECAO:',x.id,':REVISAR'),'PRESENCA','CORRECAO_PRESENCA',x.id,'REVISAR_CORRECAO',
           'Correção de presença aguardando decisão','Revise a justificativa e os horários propostos na conferência.','ALTA','CORRECAO_PENDENTE',
-          null,x.solicitado_em,'EQUIPE',null::uuid,'bi-clock-history','Conferência de execução','/ConferenciaExecucao/Index',false,false,x.solicitado_em
+          null,x.solicitado_em,'EQUIPE',null::uuid,'bi-clock-history','Conferência de execução','/ConferenciaExecucao/Index',false,false,x.solicitado_em,
+          'Correção de presença proposta; decida na conferência de execução.' as PriorityReason
         from plantaopro.medico_presenca_correcoes x
         where @operation and not @doctorOnly and x.tenant_id=@tenantId and x.status='PENDENTE'
         union all
@@ -108,7 +117,8 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
           case when o.responsavel_id is null then 'Ocorrência aberta sem responsável' else 'Ocorrência operacional em acompanhamento' end,
           concat('A ocorrência “',o.titulo,'” exige tratamento na origem.'),case o.prioridade when 'CRITICA' then 'CRITICA' when 'ALTA' then 'ALTA' else 'NORMAL' end,
           o.situacao,o.prazo_resolucao,o.criado_em,case when o.responsavel_id is null then 'EQUIPE' else 'USUARIO' end,o.responsavel_id,
-          'bi-exclamation-octagon','Ocorrências','/Ocorrencias/Index/'||o.id,false,false,o.atualizado_em
+          'bi-exclamation-octagon','Ocorrências','/Ocorrencias/Index/'||o.id,false,false,o.atualizado_em,
+          case when o.responsavel_id is null then 'Ocorrência aberta sem responsável; atribua alguém para acompanhar.' when o.prioridade='CRITICA' then 'Ocorrência crítica em andamento; acompanhe até resolver.' when o.prioridade='ALTA' then 'Ocorrência de alta prioridade; acompanhe até resolver.' else 'Ocorrência em acompanhamento; acompanhe até resolver.' end as PriorityReason
         from plantaopro.ocorrencias_operacionais o
         where @operation and o.tenant_id=@tenantId and o.reg_status='A' and o.situacao not in ('RESOLVIDA','CANCELADA')
           and (not @doctorOnly or o.solicitante_id=@userId or o.responsavel_id=@userId)
@@ -122,7 +132,7 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         // WP-S2 (homologação): o CTE filtrado é compartilhado entre a consulta paginada e a
         // contagem de fallback — as duas precisam enxergar exatamente o mesmo conjunto, para
         // que uma página sem registros ainda reporte o total real dos filtros.
-        const string ItemColumns = "Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed";
+        const string ItemColumns = "Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed,PriorityReason";
         const string FilteredCte = @"
             with derived as (" + DerivedSql + @"), visible as (
               select d.*,s.snoozed_until is not null and s.snoozed_until>now() as IsSnoozed
@@ -215,24 +225,32 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
                         else 'Plantão — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
                     end as ""Title"",
                     case
-                        when p.data_inicio::date < current_date then 'Plantão realizado · Aguardando conferência final'
-                        when p.data_inicio::date = current_date then 'Check-in realizado · Turno em execução'
-                        when p.data_inicio::date = current_date + 1 then 'Plantão atribuído · Turno confirmado'
-                        else coalesce(e.status, p.status)
+                        when lower(p.status) in ('realizado','encerrado') then 'Turno finalizado · aguardando conferência e fechamento'
+                        when st.tem_checkout then 'Turno concluído · check-in e check-out registrados'
+                        when st.tem_checkin and p.data_inicio<=now() then 'Turno em execução · check-in registrado'
+                        when st.tem_checkin then 'Check-in registrado · aguardando início do turno'
+                        when p.data_inicio::date = current_date then 'Turno confirmado · check-in pendente'
+                        else 'Plantão confirmado · aguardando início do turno'
                     end as ""ContextLabel"",
                     p.data_inicio as ""StartsAt"",
                     p.data_fim as ""EndsAt"",
                     case
-                        when p.data_inicio::date < current_date then 'CONFERÊNCIA'
-                        when p.data_inicio::date = current_date then 'EM ANDAMENTO'
-                        when p.data_inicio::date = current_date + 1 then 'PRÓXIMO'
-                        else 'ESCALAS'
+                        when lower(p.status) in ('realizado','encerrado') then 'CONFERÊNCIA'
+                        when st.tem_checkout then 'CONFERÊNCIA'
+                        when p.data_inicio<=now() then 'EM ANDAMENTO'
+                        else 'PRÓXIMO'
                     end as ""Section""
                 from plantaopro.plantoes p
                 join plantaopro.hospitais h on h.id = p.hospital_id
                 join plantaopro.escalas e on e.plantao_id = p.id and e.reg_status = 'A'
+                  and lower(e.status) in ('confirmado','confirmada','realizado','realizada')
+                left join lateral (
+                    select exists(select 1 from plantaopro.medico_checkins mc where mc.escala_id=e.id and mc.checkin_em is not null) as tem_checkin,
+                           exists(select 1 from plantaopro.medico_checkins mc where mc.escala_id=e.id and mc.checkout_em is not null) as tem_checkout
+                ) st on true
                 where (p.tenant_id = @tenantId or p.cliente_id = @tenantId)
                   and p.reg_status = 'A'
+                  and lower(p.status) not in ('rascunho','cancelado')
                   and (e.medico_id = @userId or exists (select 1 from plantaopro.medicos m where m.id = e.medico_id and m.usuario_id = @userId))
                   and p.data_inicio >= (current_date - interval '1 day')
                   and p.data_inicio <= (current_date + interval '3 days')
@@ -245,29 +263,30 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         const string adminAgendaSql = @"
             select
                 case
-                    when p.data_inicio::date < current_date then 'Plantão Fechamento — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
-                    when p.data_inicio::date = current_date then 'Plantão em Execução — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
-                    when p.data_inicio::date = current_date + 1 then 'Plantão Noturno — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
-                    else 'Plantão Descoberto — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    when p.data_inicio::date < current_date then 'Plantão Ontem — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    when p.data_inicio::date = current_date then 'Plantão Hoje — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    when p.data_inicio::date = current_date + 1 then 'Plantão Amanhã — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
+                    else 'Plantão — ' || coalesce(h.nome_fantasia, 'Sua Unidade')
                 end as ""Title"",
                 case
-                    when p.data_inicio::date < current_date then '1 plantão concluído ontem · Fechamento em conferência'
-                    when p.data_inicio::date = current_date then 'Turno em andamento · Check-in ativo'
-                    when p.data_inicio::date = current_date + 1 then 'Vaga atribuída · 1 vaga com convite pendente'
-                    else '1 vaga descoberta sem médico escalado · Ação necessária'
+                    when lower(p.status) in ('realizado','encerrado') then 'Turno finalizado · acompanhar conferência e fechamento'
+                    when lower(p.status) = 'em_andamento' then 'Em execução · acompanhe presenças e check-ins'
+                    when p.vagas_disponiveis>0 then p.vagas_disponiveis::text || ' vaga(s) ainda sem médico'
+                    else ((coalesce(p.vagas,0)-coalesce(p.vagas_disponiveis,0))::int)::text || ' de ' || coalesce(p.vagas,0)::text || ' vagas preenchidas'
                 end as ""ContextLabel"",
                 p.data_inicio as ""StartsAt"",
                 p.data_fim as ""EndsAt"",
                 case
-                    when p.data_inicio::date < current_date then 'CONFERÊNCIA'
-                    when p.data_inicio::date = current_date then 'EXECUÇÃO'
-                    when p.data_inicio::date = current_date + 1 then 'ESCALAS'
-                    else 'COBERTURA'
+                    when lower(p.status) in ('realizado','encerrado') then 'CONFERÊNCIA'
+                    when lower(p.status) = 'em_andamento' then 'EXECUÇÃO'
+                    when p.vagas_disponiveis>0 then 'COBERTURA'
+                    else 'ESCALAS'
                 end as ""Section""
             from plantaopro.plantoes p
             join plantaopro.hospitais h on h.id = p.hospital_id
             where (p.tenant_id = @tenantId or p.cliente_id = @tenantId)
               and p.reg_status = 'A'
+              and lower(p.status) not in ('rascunho','cancelado')
               and p.data_inicio >= (current_date - interval '1 day')
               and p.data_inicio <= (current_date + interval '4 days')
             order by p.data_inicio;
@@ -285,8 +304,8 @@ public sealed class ProductivityActionRepository : IProductivityActionRepository
         public DateTimeOffset? DueAt {get;set;} public DateTimeOffset CreatedAt {get;set;} public string OwnerType {get;set;}="";
         public Guid? OwnerId {get;set;} public string Icon {get;set;}=""; public string ContextLabel {get;set;}="";
         public string PrimaryAction {get;set;}=""; public bool CanSnooze {get;set;} public bool CanDismiss {get;set;}
-        public DateTimeOffset SourceUpdatedAt {get;set;} public bool IsSnoozed {get;set;} public int TotalRows {get;set;}
-        public ProductivityActionDto ToDto()=>new(Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed);
+        public DateTimeOffset SourceUpdatedAt {get;set;} public bool IsSnoozed {get;set;} public int TotalRows {get;set;} public string PriorityReason {get;set;}="";
+        public ProductivityActionDto ToDto()=>new(Key,Module,EntityType,EntityId,ActionCode,Title,Description,Priority,Status,DueAt,CreatedAt,OwnerType,OwnerId,Icon,ContextLabel,PrimaryAction,CanSnooze,CanDismiss,SourceUpdatedAt,IsSnoozed,PriorityReason);
     }
 
     // Mesma motivação das demais consultas deste arquivo: o reader do Npgsql 10 expõe DateTime

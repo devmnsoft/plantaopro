@@ -120,7 +120,10 @@ public sealed class ReportQueryService : IReportQueryService
         var tamanho = Math.Min(Math.Max(1, filtros.TamanhoPagina), 200);
         var sql = Sql(report.Code);
         await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
-        var rows = await cn.QueryAsync(sql, new { tenantId, inicio, fim = fim.Date.AddDays(1), filtros.UnidadeId, filtros.HospitalId, filtros.MedicoId, filtros.EspecialidadeId, filtros.ConvenioId, filtros.Status, filtros.FormaPagamento, limit = tamanho, offset = (pagina - 1) * tamanho });
+        var status = string.IsNullOrWhiteSpace(filtros.Status) ? null : filtros.Status.Trim();
+        var formaPagamento = string.IsNullOrWhiteSpace(filtros.FormaPagamento) ? null : filtros.FormaPagamento.Trim();
+        // B9: competencia por data_negocio (data do negocio) com fronteiras em dia (DateOnly), sem interpretacao de fuso nas bordas do periodo.
+        var rows = await cn.QueryAsync(sql, new { code = report.Code, tenantId, inicioDia = DateOnly.FromDateTime(inicio), fimDia = DateOnly.FromDateTime(fim.Date.AddDays(1)), filtros.UnidadeId, filtros.HospitalId, filtros.MedicoId, filtros.EspecialidadeId, filtros.ConvenioId, status, formaPagamento, limit = tamanho, offset = (pagina - 1) * tamanho });
         return rows.Select(r => (IDictionary<string, object?>)new Dictionary<string, object?>((IDictionary<string, object?>)r, StringComparer.OrdinalIgnoreCase)).ToArray();
     }
     private static string Sql(string code)
@@ -132,15 +135,27 @@ public sealed class ReportQueryService : IReportQueryService
             "AUTORIZACOES_OPERACIONAL" => "v116_convenio_autorizacoes", "GLOSAS_CONSOLIDADO" => "v116_faturamento_lote_itens", "CAIXA_MOVIMENTACOES" => "v116_caixa_movimentos", "REPASSES_MEDICOS" => "pagamentos",
             "AUDITORIA_OPERACIONAL" => "auditoria_eventos", "EXECUTIVO_GERAL" => "plantoes", _ => "plantoes"
         };
-        return @"select @code::text as indicador, count(1)::bigint as valor, to_char(date_trunc('day', coalesce(t.reg_date, now())), 'YYYY-MM-DD') as periodo
+        // B9: data_negocio = primeira data real do registro (data_inicio > data_prevista > data_pagamento > aberto_em > reg_date),
+        // extraida via jsonb com guarda de formato (colunas variam por tabela). Filtro pedido sem a dimensao na tabela => resultado vazio.
+        // B9: @code e parametro Dapper real (indicador). Antes era substituido por String.Replace
+        // aplicado apenas ao ultimo fragmento da concatenacao, deixando "@code" no SQL enviado ao
+        // banco (PostgreSQL interpreta o "@" como operador de prefixo -> 42703 coluna "code").
+        var dataNegocio = "coalesce(case when to_jsonb(t)->>'data_inicio' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' then (substr(to_jsonb(t)->>'data_inicio',1,10)||' 00:00:00')::timestamp end,case when to_jsonb(t)->>'data_prevista' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' then (substr(to_jsonb(t)->>'data_prevista',1,10)||' 00:00:00')::timestamp end,case when to_jsonb(t)->>'data_pagamento' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' then (substr(to_jsonb(t)->>'data_pagamento',1,10)||' 00:00:00')::timestamp end,case when to_jsonb(t)->>'aberto_em' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' then (substr(to_jsonb(t)->>'aberto_em',1,10)||' 00:00:00')::timestamp end,coalesce(t.reg_date, now()))";
+        return @"select @code::text as indicador, count(1)::bigint as valor, to_char(" + dataNegocio + @"::date,'YYYY-MM-DD') as periodo
 from plantaopro." + table + @" t
 where coalesce(t.reg_status,'A')='A'
   and (coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id') is null or coalesce(to_jsonb(t)->>'tenant_id', to_jsonb(t)->>'cliente_id')=@tenantId::text)
-  and coalesce(t.reg_date, now()) >= @inicio and coalesce(t.reg_date, now()) < @fim
+  and (" + dataNegocio + @"::date)>=@inicioDia::date and (" + dataNegocio + @"::date)<@fimDia::date
   and (@status is null or upper(coalesce(to_jsonb(t)->>'status',''))=upper(@status))
+  and (@formaPagamento is null or upper(coalesce(to_jsonb(t)->>'forma_pagamento',''))=upper(@formaPagamento))
+  and (@hospitalId is null or to_jsonb(t)->>'hospital_id'=@hospitalId::text)
+  and (@unidadeId is null or coalesce(to_jsonb(t)->>'unidade_id', to_jsonb(t)->>'hospital_id')=@unidadeId::text)
+  and (@medicoId is null or to_jsonb(t)->>'medico_id'=@medicoId::text)
+  and (@especialidadeId is null or to_jsonb(t)->>'especialidade_id'=@especialidadeId::text)
+  and (@convenioId is null or to_jsonb(t)->>'convenio_id'=@convenioId::text)
 group by periodo
 order by periodo
-limit @limit offset @offset".Replace("@code", "'" + code.Replace("'", "") + "'");
+limit @limit offset @offset";
     }
 }
 

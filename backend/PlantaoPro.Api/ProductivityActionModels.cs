@@ -13,7 +13,7 @@ public sealed record ProductivityActionDto(
     string Title, string Description, string Priority, string Status,
     DateTimeOffset? DueAt, DateTimeOffset CreatedAt, string OwnerType, Guid? OwnerId,
     string Icon, string ContextLabel, string PrimaryAction, bool CanSnooze,
-    bool CanDismiss, DateTimeOffset SourceUpdatedAt, bool IsSnoozed);
+    bool CanDismiss, DateTimeOffset SourceUpdatedAt, bool IsSnoozed, string PriorityReason = "");
 
 public sealed record ProductivityQuery(
     string? Tab = null, string? Priority = null, string? Module = null,

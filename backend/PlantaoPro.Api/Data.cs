@@ -1171,6 +1171,23 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
             return await ChangeStatusAsync(id, "realizado", justificativa ?? "Operação reconciliada", userId, ip, userAgent);
         }
 
+        public async Task<ApiResponse<string>> EncerrarAsync(Guid id, string? justificativa, Guid userId, string? ip, string? userAgent)
+        {
+            await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
+            var old = await cn.ExecuteScalarAsync<string>("select status from plantaopro.plantoes where id=@id and reg_status='A'", new { id });
+            if (old is null) return ApiResponse<string>.Fail("Plantão não encontrado", 404);
+            if (string.Equals(old, "encerrado", StringComparison.OrdinalIgnoreCase))
+                return ApiResponse<string>.Ok("ok", "O plantão já estava encerrado.");
+            if (!string.Equals(old, "realizado", StringComparison.OrdinalIgnoreCase))
+                return ApiResponse<string>.Fail("Somente plantão realizado pode ser encerrado.", 409);
+            // Sem reg_status de propósito: o indice unico do fechamento (ux_fechamento_plantao_ativo)
+            // ja ignora REABERTO; aqui usamos o ultimo iniciado como estado vigente da jornada financeira.
+            var ultimoFechamento = await cn.ExecuteScalarAsync<string>("select status from plantaopro.fechamento_plantao where plantao_id=@id order by iniciado_em desc nulls last limit 1", new { id });
+            if (ultimoFechamento is not ("FINANCEIRO_GERADO" or "CONCLUIDO"))
+                return ApiResponse<string>.Fail("Conclua o fechamento financeiro antes de encerrar o plantão.", 409);
+            return await ChangeStatusAsync(id, "encerrado", justificativa ?? "Plantão encerrado após fechamento financeiro concluído", userId, ip, userAgent);
+        }
+
         private async Task<ApiResponse<string>> ChangeStatusAsync(Guid id, string novo, string just, Guid u, string? ip, string? ua)
         {
             if (novo == "cancelado" && string.IsNullOrWhiteSpace(just))
@@ -1905,17 +1922,21 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
             {
                 var tenantId=currentUser.TenantId; var clienteId=currentUser.ClienteId;
                 if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
-                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, Guid UsuarioId)>("select pg.status,pg.valor_previsto,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or (@podeGerirTenant and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId)) for update", new { id,userId,tenantId,clienteId,podeGerirTenant }, tx);
+                var pg = await cn.QueryFirstOrDefaultAsync<(string Status, decimal ValorPrevisto, decimal ValorApurado, Guid UsuarioId)>("select pg.status,pg.valor_previsto,coalesce(pg.valor_apurado,0),m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.reg_status='A' and (m.usuario_id=@userId or (@podeGerirTenant and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId)) for update", new { id,userId,tenantId,clienteId,podeGerirTenant }, tx);
                 if (pg.Status is null) return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.", 404);
-                if (pg.ValorPrevisto <= 0) return ApiResponse<PagamentoActionResponse>.Fail("Valor previsto inválido para contestação.", 400);
+                var valorBase = pg.ValorApurado > 0m ? pg.ValorApurado : pg.ValorPrevisto;
+                if (valorBase <= 0) return ApiResponse<PagamentoActionResponse>.Fail("Valor previsto inválido para contestação.", 400);
                 if (pg.Status is not ("aprovado" or "pago" or "pendente")) return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento pendente pode ser contestado ou obrigação aprovada.", 409);
-                // status='contestado'
-                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@userId)",new{tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=pg.ValorPrevisto,userId},tx);
-                await AddHistoricoAsync(cn, tx, id, pg.Status, pg.Status, "CONTESTACAO_ABERTA: " + req.Motivo.Trim(), userId);
+                // Opção B: apenas pendente/aprovado passam a 'contestado'; 'pago' permanece pago (ajuste/cancelar exigem estorno).
+                var statusAposContestacao = pg.Status == "pago" ? "pago" : "contestado";
+                if (statusAposContestacao != pg.Status)
+                    await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',versao=versao+1,reg_update=now(),updated_by=@userId where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status in ('pendente','aprovado')", new { id,tenantId,clienteId,userId }, tx);
+                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,situacao_anterior,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@anterior,@userId)", new { tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=valorBase,anterior=pg.Status,userId },tx);
+                await AddHistoricoAsync(cn, tx, id, pg.Status, statusAposContestacao, "CONTESTACAO_ABERTA: " + req.Motivo.Trim(), userId);
                 await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);
                 await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "CONTESTACAO_ABERTA", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
-                return ApiResponse<PagamentoActionResponse>.Ok(new(id, pg.Status, pg.ValorPrevisto, null, "aguardar-resolucao"), "Contestação registrada.");
+                return ApiResponse<PagamentoActionResponse>.Ok(new(id, statusAposContestacao, valorBase, null, "aguardar-resolucao"), "Contestação registrada.");
             }
             catch (PostgresException ex) when(ex.SqlState==PostgresErrorCodes.UniqueViolation) { await tx.RollbackAsync(); return ApiResponse<PagamentoActionResponse>.Fail("Já existe contestação aberta para este pagamento.",409); }
             catch (Exception ex) { await tx.RollbackAsync(); logger.LogError(ex, "Erro ao contestar pagamento {PagamentoId}", id); return ApiResponse<PagamentoActionResponse>.Fail("Erro ao contestar pagamento.", 500); }
@@ -1930,17 +1951,40 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
             await using var cn=Cn();await cn.OpenAsync();await using var tx=await cn.BeginTransactionAsync();
             try
             {
-                var contestacao=await cn.QueryFirstOrDefaultAsync<(Guid Id,decimal ValorOriginal)>("select id as \"Id\",valor_original as \"ValorOriginal\" from plantaopro.pagamento_contestacoes where tenant_id=@tenantId and cliente_id=@clienteId and pagamento_id=@id and status='ABERTA' for update",new{tenantId,clienteId,id},tx);
+                var contestacao=await cn.QueryFirstOrDefaultAsync<(Guid Id,decimal ValorOriginal,string? SituacaoAnterior)>("select id as \"Id\",valor_original as \"ValorOriginal\",situacao_anterior as \"SituacaoAnterior\" from plantaopro.pagamento_contestacoes where tenant_id=@tenantId and cliente_id=@clienteId and pagamento_id=@id and status='ABERTA' for update",new{tenantId,clienteId,id},tx);
                 if(contestacao.Id==Guid.Empty)return ApiResponse<PagamentoActionResponse>.Fail("Contestação aberta não encontrada.",404);
                 var pg=await cn.QueryFirstOrDefaultAsync<(string Status,decimal ValorPrevisto,Guid UsuarioId)>("select pg.status as \"Status\",pg.valor_previsto as \"ValorPrevisto\",m.usuario_id as \"UsuarioId\" from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update",new{id,tenantId,clienteId},tx);
-                if(pg.Status is not ("aprovado" or "pago"))return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não possui situação compatível com a contestação.",409);
+                if(pg.Status is not ("aprovado" or "pago" or "contestado"))return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não possui situação compatível com a contestação.",409);
                 if(pg.Status=="pago"&&decisao!="MANTER_VALOR")return ApiResponse<PagamentoActionResponse>.Fail("Pagamento registrado exige estorno antes de ajuste ou cancelamento.",409);
-                var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":pg.Status;var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
+                if(contestacao.SituacaoAnterior is null&&pg.Status=="contestado")return ApiResponse<PagamentoActionResponse>.Fail("Contestação sem situação anterior registrada; resolva por manutenção de dados.",409);
+                var situacaoAnterior=contestacao.SituacaoAnterior??pg.Status;
+                var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":situacaoAnterior;var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
                 var changed=await cn.ExecuteAsync("update plantaopro.pagamento_contestacoes set status='RESOLVIDA',decisao=@decisao,justificativa_resolucao=@justificativa,valor_resolvido=@valor,resolvido_por=@userId,resolvido_em=now(),updated_at=now() where id=@contestacaoId and status='ABERTA'",new{decisao,justificativa,valor,userId,contestacaoId=contestacao.Id},tx);if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("Contestação já foi resolvida.",409);
-                await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_aprovado=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now() where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status=@status",new{id,novoStatus,valor,justificativa,userId,tenantId,clienteId,status=pg.Status},tx);
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_aprovado=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status=@status",new{id,novoStatus,valor,justificativa,userId,tenantId,clienteId,status=pg.Status},tx);
                 await AddHistoricoAsync(cn,tx,id,pg.Status,novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx);await tx.CommitAsync();
                 await audit.LogAsync(userId,"CONTESTACAO_RESOLVIDA","pagamentos",id,$"{pg.ValorPrevisto}->{valor}; {decisao}",ip:ip,userAgent:ua);return ApiResponse<PagamentoActionResponse>.Ok(new(id,novoStatus,valor,null,"nenhuma"),"Contestação resolvida.");
             }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao resolver contestação do pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao resolver contestação.",500);}
+        }
+        public async Task<ApiResponse<PagamentoActionResponse>> EstornarPagamentoAsync(Guid id, EstornarPagamentoRequest req, Guid userId, string? ip, string? ua)
+        {
+            var motivo=(req.Motivo??string.Empty).Trim();
+            if(motivo.Length<10)return ApiResponse<PagamentoActionResponse>.Fail("Motivo obrigatório (mínimo 10 caracteres).",400);
+            var tenantId=currentUser.TenantId;var clienteId=currentUser.ClienteId;if(!tenantId.HasValue||!clienteId.HasValue)return ApiResponse<PagamentoActionResponse>.Fail("Contexto de tenant inválido.",401);
+            await using var cn=Cn();await cn.OpenAsync();await using var tx=await cn.BeginTransactionAsync();
+            try
+            {
+                var pg=await cn.QueryFirstOrDefaultAsync<(string Status,Guid UsuarioId)>("select pg.status,m.usuario_id from plantaopro.pagamentos pg join plantaopro.medicos m on m.id=pg.medico_id where pg.id=@id and pg.tenant_id=@tenantId and pg.cliente_id=@clienteId and pg.reg_status='A' for update",new{id,tenantId,clienteId},tx);
+                if(pg.Status is null)return ApiResponse<PagamentoActionResponse>.Fail("Pagamento não encontrado.",404);
+                if(pg.Status!="pago")return ApiResponse<PagamentoActionResponse>.Fail("Somente pagamento registrado pode ser estornado.",409);
+                var temContestacaoAberta=await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.pagamento_contestacoes where pagamento_id=@id and status='ABERTA')",new{id},tx);
+                if(temContestacaoAberta)return ApiResponse<PagamentoActionResponse>.Fail("Resolva a contestação aberta antes de estornar o pagamento.",409);
+                // CHECK ck_v2158_pagamento_valores exige valor_pago=valor_aprovado quando pago; estorno zera os dois lados na mesma statement.
+                await cn.ExecuteAsync("update plantaopro.pagamentos set status='aprovado',valor_pago=null,forma_pagamento=null,data_pagamento=null,referencia_pagamento=null,origem_pagamento=null,observacoes=coalesce(observacoes||' | ','')||@motivo,updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status='pago'",new{id,tenantId,clienteId,motivo,userId},tx);
+                await AddHistoricoAsync(cn,tx,id,"pago","aprovado","ESTORNO: "+motivo,userId);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento estornado",motivo,"financeiro",tx);
+                await tx.CommitAsync();await audit.LogAsync(userId,"PAGAMENTO_ESTORNADO","pagamentos",id,motivo,ip:ip,userAgent:ua);
+                return ApiResponse<PagamentoActionResponse>.Ok(new(id,"aprovado",0m,null,"estorno"),"Pagamento estornado.");
+            }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao estornar pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao estornar pagamento.",500);}
         }
         public async Task<ApiResponse<string>> CancelarAsync(Guid id, string justificativa, Guid userId, string? ip, string? ua)
         {
@@ -2271,23 +2315,24 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
         {
             this.cfg = cfg;
         }
-        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default")); public async Task<ApiResponse<DashboardOverviewDto>> GetAsync(Guid uid)
+        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default")); public async Task<ApiResponse<DashboardOverviewDto>> GetAsync(Guid uid, Guid? tenantId)
         {
             await using var cn = Cn();
-            var ind = await cn.QueryFirstAsync<DashboardDto>("select (select count(1) from plantaopro.medicos where reg_status='A') as TotalMedicos,(select count(1) from plantaopro.hospitais where reg_status='A') as TotalHospitais,(select count(1) from plantaopro.especialidades where reg_status='A') as TotalEspecialidades,(select count(1) from plantaopro.plantoes where reg_status='A') as TotalPlantoes,(select count(1) from plantaopro.plantoes where status='aberto') as PlantoesAbertos,(select count(1) from plantaopro.plantoes where status='confirmado') as PlantoesConfirmados,(select count(1) from plantaopro.plantoes where status='realizado') as PlantoesRealizados,(select count(1) from plantaopro.plantoes where status='cancelado') as PlantoesCancelados,(select count(1) from plantaopro.pagamentos where status='pendente' and reg_status='A') as PagamentosPendentes,(select count(1) from plantaopro.pagamentos where status='pago' and reg_status='A') as PagamentosPagos,(select coalesce(sum(valor_previsto),0) from plantaopro.pagamentos where status='pendente' and reg_status='A') as ValorPendente,(select coalesce(sum(valor_pago),0) from plantaopro.pagamentos where status='pago' and reg_status='A' and date_trunc('month',coalesce(data_pagamento,now()))=date_trunc('month',now())) as ValorPagoMes,(select count(1) from plantaopro.notificacoes where usuario_id=@uid and lida=false and reg_status='A') as NotificacoesNaoLidas", new
+            var ind = await cn.QueryFirstAsync<DashboardDto>("select (select count(1) from plantaopro.medicos where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as TotalMedicos,(select count(1) from plantaopro.hospitais where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as TotalHospitais,(select count(1) from plantaopro.especialidades where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as TotalEspecialidades,(select count(1) from plantaopro.plantoes where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as TotalPlantoes,(select count(1) from plantaopro.plantoes where status='aberto' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PlantoesAbertos,(select count(1) from plantaopro.plantoes where status='confirmado' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PlantoesConfirmados,(select count(1) from plantaopro.plantoes where status='realizado' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PlantoesRealizados,(select count(1) from plantaopro.plantoes where status='cancelado' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PlantoesCancelados,(select count(1) from plantaopro.pagamentos where status='pendente' and reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PagamentosPendentes,(select count(1) from plantaopro.pagamentos where status='pago' and reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as PagamentosPagos,(select coalesce(sum(valor_previsto),0) from plantaopro.pagamentos where status='pendente' and reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as ValorPendente,(select coalesce(sum(valor_pago),0) from plantaopro.pagamentos where status='pago' and reg_status='A' and date_trunc('month',coalesce(data_pagamento,now()))=date_trunc('month',now()) and (@tid is null or tenant_id=@tid or cliente_id=@tid)) as ValorPagoMes,(select count(1) from plantaopro.notificacoes where usuario_id=@uid and lida=false and reg_status='A') as NotificacoesNaoLidas", new
             {
-                uid
+                uid,
+                tid = tenantId
             });
-            var prox = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(e.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.data_inicio>=now() and p.reg_status='A' order by p.data_inicio asc limit 5");
-            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",pg.valor_pago as \"ValorPago\",pg.valor_previsto as \"ValorBruto\",pg.valor_previsto as \"ValorLiquido\",0::numeric as \"Descontos\",0::numeric as \"Acrescimos\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\",pg.reg_date as \"RegDate\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' order by pg.reg_date desc limit 5");
+            var prox = await cn.QueryAsync<PlantaoResumoDto>("select p.id as \"Id\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(h.cidade,'') as \"HospitalCidade\",coalesce(h.estado,'') as \"HospitalEstado\",coalesce(e.nome,'') as \"EspecialidadeNome\",p.data_inicio as \"DataInicio\",p.data_fim as \"DataFim\",coalesce(p.valor,0) as \"Valor\",coalesce(p.vagas,0) as \"Vagas\",coalesce(p.vagas_disponiveis,0) as \"VagasDisponiveis\",coalesce(p.tipo,'') as \"Tipo\",coalesce(p.status,'') as \"Status\",coalesce(p.observacoes,'') as \"Observacoes\" from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id join plantaopro.especialidades e on e.id=p.especialidade_id where p.data_inicio>=now() and p.reg_status='A' and (@tid is null or p.tenant_id=@tid or p.cliente_id=@tid) order by p.data_inicio asc limit 5", new { tid = tenantId });
+            var pag = await cn.QueryAsync<PagamentoResumoDto>("select pg.id as \"Id\",pg.escala_id as \"EscalaId\",pg.medico_id as \"MedicoId\",pg.plantao_id as \"PlantaoId\",pl.hospital_id as \"HospitalId\",pl.especialidade_id as \"EspecialidadeId\",coalesce(m.nome,'') as \"MedicoNome\",coalesce(m.crm,'') as \"MedicoCrm\",coalesce(h.nome_fantasia,'') as \"HospitalNome\",coalesce(esp.nome,'') as \"EspecialidadeNome\",pl.data_inicio as \"DataPlantao\",coalesce(pg.valor_previsto,0) as \"ValorPrevisto\",pg.valor_pago as \"ValorPago\",pg.valor_previsto as \"ValorBruto\",pg.valor_previsto as \"ValorLiquido\",0::numeric as \"Descontos\",0::numeric as \"Acrescimos\",coalesce(pg.status,'') as \"Status\",pg.data_prevista as \"DataPrevista\",pg.data_pagamento as \"DataPagamento\",coalesce(pg.forma_pagamento,'') as \"FormaPagamento\",coalesce(pg.chave_pix,'') as \"ChavePix\",coalesce(pg.observacoes,'') as \"Observacoes\",pg.reg_date as \"RegDate\" from plantaopro.pagamentos pg join plantaopro.plantoes pl on pl.id=pg.plantao_id join plantaopro.medicos m on m.id=pg.medico_id join plantaopro.hospitais h on h.id=pl.hospital_id join plantaopro.especialidades esp on esp.id=pl.especialidade_id where pg.reg_status='A' and (@tid is null or pg.tenant_id=@tid or pg.cliente_id=@tid) order by pg.reg_date desc limit 5", new { tid = tenantId });
             var nots = await cn.QueryAsync<NotificacaoDto>("select id,titulo,mensagem,tipo,lida,reg_date as RegDate from plantaopro.notificacoes where usuario_id=@uid and reg_status='A' order by reg_date desc limit 5", new
             {
                 uid
             });
-            var plMes = await cn.QueryAsync<DashboardChartItem>("select to_char(date_trunc('month',data_inicio),'YYYY-MM') as Label,count(1)::decimal as Valor from plantaopro.plantoes where reg_status='A' group by 1 order by 1");
-            var pgMes = await cn.QueryAsync<DashboardChartItem>("select to_char(date_trunc('month',coalesce(data_pagamento::timestamp,reg_date)),'YYYY-MM') as Label,coalesce(sum(coalesce(valor_pago,valor_previsto)),0) as Valor from plantaopro.pagamentos where reg_status='A' group by 1 order by 1");
-            var plEsp = await cn.QueryAsync<DashboardChartItem>("select e.nome as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.especialidades e on e.id=p.especialidade_id where p.reg_status='A' group by e.nome order by Valor desc");
-            var plHosp = await cn.QueryAsync<DashboardChartItem>("select h.nome_fantasia as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id where p.reg_status='A' group by h.nome_fantasia order by Valor desc");
+            var plMes = await cn.QueryAsync<DashboardChartItem>("select to_char(date_trunc('month',data_inicio),'YYYY-MM') as Label,count(1)::decimal as Valor from plantaopro.plantoes where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid) group by 1 order by 1", new { tid = tenantId });
+            var pgMes = await cn.QueryAsync<DashboardChartItem>("select to_char(date_trunc('month',coalesce(data_pagamento::timestamp,reg_date)),'YYYY-MM') as Label,coalesce(sum(coalesce(valor_pago,valor_previsto)),0) as Valor from plantaopro.pagamentos where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid) group by 1 order by 1", new { tid = tenantId });
+            var plEsp = await cn.QueryAsync<DashboardChartItem>("select e.nome as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.especialidades e on e.id=p.especialidade_id where p.reg_status='A' and (@tid is null or p.tenant_id=@tid or p.cliente_id=@tid) group by e.nome order by Valor desc", new { tid = tenantId });
+            var plHosp = await cn.QueryAsync<DashboardChartItem>("select h.nome_fantasia as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id where p.reg_status='A' and (@tid is null or p.tenant_id=@tid or p.cliente_id=@tid) group by h.nome_fantasia order by Valor desc", new { tid = tenantId });
             return ApiResponse<DashboardOverviewDto>.Ok(new(ind, prox, pag, nots, plMes, pgMes, plEsp, plHosp));
         }
     }

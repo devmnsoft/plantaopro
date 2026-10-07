@@ -53,6 +53,7 @@ builder.Services.AddSingleton<IAccessScopeResolver, AccessScopeResolver>();
 builder.Services.AddSingleton<ITenantContextResolver, TenantContextResolver>();
 builder.Services.AddSingleton<IFeatureCatalogService, FeatureCatalogService>();
 builder.Services.AddScoped<IPageContextService, PageContextService>();
+builder.Services.AddScoped<IBreadcrumbService, BreadcrumbService>();
 
 builder.Services.AddScoped<IInteligenciaNegocioService, InteligenciaNegocioService>();
 builder.Services.AddScoped<IAssistenteContextualService, AssistenteContextualService>();

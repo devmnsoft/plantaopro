@@ -93,7 +93,10 @@
     --pp-border-subtle: #e5ebf3;
     --pp-border-default: #ccd7e5;
     --pp-border-strong: #91a5bf;
-    --pp-focus-ring: #75aaf8;
+    /* Indicador canonico de foco: outline solido na cor da marca (>=4,5:1 via v2151 #1d6fe9). */
+    --pp-focus-ring: var(--pp-brand-primary);
+    /* Halo decorativo de foco (reforco do outline; nao e o indicador unico). */
+    --pp-focus-shadow: 0 0 0 .2rem color-mix(in srgb, var(--pp-brand-primary) 30%, transparent);
 
     /* Semântica funcional, com contraste AA */
     --pp-success: #087a4d;

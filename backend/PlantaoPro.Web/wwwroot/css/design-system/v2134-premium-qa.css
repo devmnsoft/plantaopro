@@ -1,5 +1,5 @@
 /* v2.13.4 — acabamento responsivo, estados e microinterações discretas. */
-:root { --pp-motion-fast: 160ms; --pp-focus-ring: 0 0 0 .2rem rgb(12 126 164 / 22%); }
+:root { --pp-motion-fast: 160ms; }
 
 .pp-card,
 .card,
@@ -19,9 +19,9 @@
 }
 
 :is(.btn, .nav-link-app, .form-control, .form-select, .pp-form-control, summary, a):focus-visible {
-  outline: 3px solid #16849f;
+  outline: 3px solid var(--pp-focus-ring);
   outline-offset: 3px;
-  box-shadow: var(--pp-focus-ring);
+  box-shadow: var(--pp-focus-shadow);
 }
 
 :is(.btn, button):disabled,

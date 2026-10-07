@@ -5,4 +5,5 @@
 .pp-badge--danger { color: var(--pp-danger); background: var(--pp-danger-soft); }
 .pp-badge--info { color: var(--pp-info); background: var(--pp-info-soft); }
 .pp-badge--neutral { color: #475569; background: #e8eef5; }
-.pp-badge--primary { color: var(--pp-brand-primary, #1f73f1); background: var(--pp-info-soft, #e8f2ff); }
+/* AA: prefire o azul de texto (>=4,5:1 sobre o soft) quando definido pela camada v2151. */
+.pp-badge--primary { color: var(--pp-brand-primary-text, var(--pp-brand-primary, #1a5fd0)); background: var(--pp-info-soft, #e8f2ff); }

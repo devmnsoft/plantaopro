@@ -36,9 +36,10 @@ body.pp-a360 main .text-light {
     color: var(--pp-text-primary, #10213a) !important;
 }
 
-/* Elementos que mantêm fundo colorido próprio precisam de branco explícito */
+/* Elementos que mantêm fundo colorido próprio precisam de branco explícito.
+   Exceção: .bg-info fica fora porque o ciano #0dcaf0 exige tinta escura
+   para AA (branco daria ~1,96:1); segue a convenção text-dark do próprio Bootstrap. */
 body.pp-a360 main .nav-link.active.bg-primary,
-body.pp-a360 main .nav-link.active.bg-info,
 body.pp-a360 main .nav-link.active.bg-success {
     color: #ffffff !important;
 }

@@ -10,7 +10,6 @@
   --pp-v2132-surface: #fff;
   --pp-v2132-radius: 1rem;
   --pp-v2132-shadow: 0 12px 36px rgb(15 54 74 / 8%);
-  --pp-focus-ring: #64c8d1;
 }
 
 body.pp-body { color: var(--pp-v2132-ink); background: var(--pp-v2132-canvas); }

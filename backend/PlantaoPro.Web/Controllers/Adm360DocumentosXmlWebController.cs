@@ -193,6 +193,71 @@ public sealed class Adm360DocumentosXmlWebController : BaseWebController
         return RedirectToAction(nameof(Detalhes), new { id });
     }
 
+    // C11.4: fila de triagens abertas (documentos em quarentena, vencidas primeiro).
+    [HttpGet("Triagens")]
+    public async Task<IActionResult> Triagens()
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var triagensResp = await ReadApiResponse<IReadOnlyList<TriagemDocumentoViewModel>>(client, "api/administrativo360/xml/triagens");
+        var usuariosResp = await ReadApiResponse<IReadOnlyList<UsuarioResponsavelViewModel>>(client, "api/usuarios");
+
+        return View("~/Views/Administrativo360/DocumentosXml/Triagens.cshtml", new TriagensFilaViewModel
+        {
+            Triagens = triagensResp.Data ?? Array.Empty<TriagemDocumentoViewModel>(),
+            Usuarios = usuariosResp.Data ?? Array.Empty<UsuarioResponsavelViewModel>(),
+            Erro = triagensResp.Error ?? usuariosResp.Error
+        });
+    }
+
+    // C11.4: abre (ou reabre) a triagem — atribui responsável, prazo e observação.
+    // O formulário envia prazo em horário local (datetime-local); convertemos para UTC aqui,
+    // pois a API valida e grava PrazoUtc (validação de tenant do responsável fica na API).
+    [HttpPost("Triagens/Abrir")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AbrirTriagem([FromForm] Guid documentoId, [FromForm] Guid responsavelId, [FromForm] DateTimeOffset prazoLocal, [FromForm] string? observacao)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { DocumentoId = documentoId, ResponsavelId = responsavelId, PrazoUtc = prazoLocal.UtcDateTime, Observacao = observacao };
+        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, "api/administrativo360/xml/triagens/abrir", payload);
+
+        if (!success)
+        {
+            TempData["Error"] = error ?? "Falha ao abrir a triagem.";
+        }
+        else
+        {
+            TempData["Success"] = "Triagem aberta: responsável e prazo atribuídos ao documento.";
+        }
+
+        return RedirectToAction(nameof(Triagens));
+    }
+
+    // C11.4: resolve a triagem — o documento sai da quarentena (exige responsável já atribuído).
+    [HttpPost("Triagens/Resolver")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResolverTriagem([FromForm] Guid documentoId, [FromForm] string justificativa)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, "api/administrativo360/xml/triagens/resolver", new { DocumentoId = documentoId, Justificativa = justificativa });
+
+        if (!success)
+        {
+            TempData["Error"] = error ?? "Falha ao resolver a triagem.";
+        }
+        else
+        {
+            TempData["Success"] = "Triagem resolvida: documento liberado da quarentena (a conferência segue decisão separada).";
+        }
+
+        return RedirectToAction(nameof(Triagens));
+    }
+
     [HttpGet("Sincronizacao")]
     public async Task<IActionResult> Sincronizacao()
     {

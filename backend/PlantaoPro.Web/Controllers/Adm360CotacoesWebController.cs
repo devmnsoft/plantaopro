@@ -203,6 +203,28 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         return RedirectToAction(nameof(Detalhes), new { id = cotacaoId });
     }
 
+    // C11.4: estorno da transmissão da resposta — devolve à fila (NA_FILA) sem apagar histórico.
+    // A justificativa é obrigatória na API; o id da rota prevalece sobre qualquer payload.
+    [HttpPost("EstornarResposta/{respostaId:guid}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EstornarResposta(Guid respostaId, [FromQuery] Guid cotacaoId, [FromForm] string justificativa)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var (success, error, _) = await SendApiWithoutResponseAsync(client, HttpMethod.Post, $"api/administrativo360/cotacoes/respostas/{respostaId}/estornar", new { justificativa });
+        if (!success)
+        {
+            TempData["Error"] = error ?? "Falha ao estornar a resposta.";
+        }
+        else
+        {
+            TempData["Success"] = "Resposta estornada: devolvida à fila de transmissão com histórico preservado.";
+        }
+
+        return RedirectToAction(nameof(Detalhes), new { id = cotacaoId });
+    }
+
     [HttpGet("ContasPortal")]
     public async Task<IActionResult> ContasPortal()
     {

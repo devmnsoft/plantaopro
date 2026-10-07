@@ -422,6 +422,13 @@
                                                 </button>
                                             </form>
                                         }
+                                        @if (Model.Cotacao.CanceladoEm is null
+                                            && resp.StatusTransmissao is "ACEITA_PELO_PORTAL" or "REJEITADA_PELO_PORTAL" or "RESULTADO_DESCONHECIDO" or "EXPORTADA_MANUALMENTE")
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-1" data-bs-toggle="modal" data-bs-target="#modalEstorno-@resp.Id">
+                                                <i class="bi bi-arrow-counterclockwise me-1"></i> Estornar
+                                            </button>
+                                        }
                                     </div>
                                 </div>
                                 <div class="small text-muted">
@@ -444,6 +451,37 @@
                                         </a>
                                         <span class="small text-muted" title="@resp.ExportacaoSha256Hash">SHA256: @(string.IsNullOrEmpty(resp.ExportacaoSha256Hash) ? "-" : resp.ExportacaoSha256Hash[..8])…</span>
                                         <div class="small text-muted w-100">@resp.ExportacaoNomeArquivo</div>
+                                    </div>
+                                }
+
+                                <!-- C11.4: estorno da transmissão (somente resposta com resultado do portal e cotação ativa) -->
+                                @if (Model.Cotacao.CanceladoEm is null
+                                    && resp.StatusTransmissao is "ACEITA_PELO_PORTAL" or "REJEITADA_PELO_PORTAL" or "RESULTADO_DESCONHECIDO" or "EXPORTADA_MANUALMENTE")
+                                {
+                                    <div class="modal fade" id="modalEstorno-@resp.Id" tabindex="-1" aria-labelledby="modalEstornoLabel-@resp.Id" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content bg-dark text-light border-secondary">
+                                                <form method="post" action="/Administrativo360/Cotacoes/EstornarResposta/@resp.Id?cotacaoId=@Model.Cotacao.Id">
+                                                    @Html.AntiForgeryToken()
+                                                    <div class="modal-header border-secondary">
+                                                        <h5 class="modal-title h6" id="modalEstornoLabel-@resp.Id">Estornar transmissão v@(resp.Revisao)</h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p class="small text-muted mb-3">A resposta volta para a fila (NA_FILA) sem apagar o histórico: o protocolo e a mensagem de retorno atuais são preservados, e uma nova revisão poderá ser gerada.</p>
+                                                        <label for="estornoJustificativa-@resp.Id" class="form-label small fw-bold">Justificativa do estorno *</label>
+                                                        <textarea id="estornoJustificativa-@resp.Id" name="justificativa" rows="3" required minlength="10" maxlength="500" autofocus
+                                                            class="form-control bg-dark text-light border-secondary"
+                                                            placeholder="Ex.: rejeição incorreta pelo portal — enviar nova revisão com item corrigido"></textarea>
+                                                        <div class="form-text text-muted small">Mínimo de 10 caracteres. Registrada na trilha de auditoria junto ao usuário que executou o estorno.</div>
+                                                    </div>
+                                                    <div class="modal-footer border-secondary">
+                                                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Voltar</button>
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-arrow-counterclockwise me-1"></i> Confirmar estorno</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
                                     </div>
                                 }
                             </li>

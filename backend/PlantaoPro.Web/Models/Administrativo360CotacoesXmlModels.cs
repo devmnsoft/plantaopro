@@ -344,6 +344,43 @@ public sealed class DocumentosXmlIndexViewModel
     public string? Erro { get; init; }
 }
 
+// C11.4: fila de triagens de documentos fiscais em quarentena (contrato B7 da API).
+// Espelha os parâmetros posicionais de TriagemDocumentoDto (binding caso-insensível).
+public sealed record TriagemDocumentoViewModel(
+    Guid DocumentoId,
+    string ChaveAcesso,
+    string? NomeArquivo,
+    string TipoDocumento,
+    string? MotivoQuarentena,
+    string Origem,
+    DateTime CriadoEm,
+    DateTime? TriagemAbertaEm,
+    DateTime? TriagemPrazo,
+    bool Vencida,
+    string? ResponsavelNome,
+    string? TriagemObservacao)
+{
+    public bool TriagemAberta => TriagemAbertaEm.HasValue;
+}
+
+// Candidatos à atribuição de responsável (espelha UserListVM da API /api/usuarios).
+public sealed record UsuarioResponsavelViewModel(
+    Guid Id,
+    string Username,
+    string Email,
+    string Role,
+    bool Locked)
+{
+    public string Rotulo => string.IsNullOrWhiteSpace(Email) ? Username : Email;
+}
+
+public sealed class TriagensFilaViewModel
+{
+    public IReadOnlyList<TriagemDocumentoViewModel> Triagens { get; init; } = Array.Empty<TriagemDocumentoViewModel>();
+    public IReadOnlyList<UsuarioResponsavelViewModel> Usuarios { get; init; } = Array.Empty<UsuarioResponsavelViewModel>();
+    public string? Erro { get; init; }
+}
+
 public sealed class DocumentoXmlDetalhesPageViewModel
 {
     public DocumentoRecebidoDetalhesViewModel Documento { get; init; } = default!;

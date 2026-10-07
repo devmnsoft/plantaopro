@@ -1,0 +1,248 @@
+@model PlantaoPro.Web.Models.TriagensFilaViewModel
+@{
+    ViewData["Title"] = "Fila de Triagem de Quarentena — Administrativo 360";
+    var prazoMinimoLocal = DateTime.Now.AddMinutes(5).ToString("yyyy-MM-ddTHH:mm");
+}
+
+<div class="container-fluid py-3">
+    <partial name="_SuprimentosNav" />
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">
+                <i class="bi bi-funnel text-warning me-2"></i>Fila de Triagem de Quarentena (@Model.Triagens.Count)
+            </h2>
+            <p class="text-muted small mb-0">Documentos fiscais retidos em quarentena, em ordem de prazo (vencidas primeiro). Atribua responsável e prazo para abrir a triagem e resolva-a quando a divergência for sanada.</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/Administrativo360/DocumentosXml" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Central XML
+            </a>
+            <a href="/Administrativo360/DocumentosXml?quarentena=true" class="btn btn-outline-info">
+                <i class="bi bi-file-earmark-code me-1"></i> Documentos em Quarentena
+            </a>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <details class="screen-guide-card mb-4">
+        <summary><i class="bi bi-compass me-1" aria-hidden="true"></i>Como usar esta tela</summary>
+        <div>
+            <p><strong>Abrir triagem.</strong> Atribui um responsável do tenant, um prazo futuro e uma observação opcional. Cada abertura é registrada como evento TRIAGEM na trilha de auditoria; reabrir atualiza os campos.</p>
+            <p><strong>Resolver triagem.</strong> Libera o documento da quarentena e exige justificativa. Resolver não é conferir: a conferência autorizada que libera o recebimento continua sendo decisão separada na Central XML.</p>
+            <p><strong>Prazo.</strong> Você informa o horário local; o sistema converte para UTC antes do registro. Itens vencidos aparecem primeiro, com selo destacado.</p>
+        </div>
+    </details>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Erro))
+    {
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
+        </div>
+    }
+
+    <!-- Tabela da Fila -->
+    <div class="card bg-dark border-secondary">
+        <div class="card-header bg-dark border-secondary">
+            <h5 class="card-title text-light mb-0 h6">
+                <i class="bi bi-funnel me-2"></i>Documentos aguardando triagem (@Model.Triagens.Count)
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th>Chave de Acesso</th>
+                            <th>Tipo / Origem</th>
+                            <th>Motivo da Quarentena</th>
+                            <th>Entrada</th>
+                            <th>Responsável</th>
+                            <th>Prazo</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!Model.Triagens.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center py-4 text-muted">
+                                    Nenhum documento aguardando triagem. Esta fila concentra apenas itens retidos em quarentena.
+                                </td>
+                            </tr>
+                        }
+                        @foreach (var t in Model.Triagens)
+                        {
+                            <tr class="@(t.Vencida ? "table-danger" : null)">
+                                <td>
+                                    <code class="text-info small" title="@t.ChaveAcesso">@((t.ChaveAcesso.Length > 20) ? (t.ChaveAcesso[..10] + "…" + t.ChaveAcesso[^6..]) : t.ChaveAcesso)</code>
+                                    @if (!string.IsNullOrWhiteSpace(t.NomeArquivo))
+                                    {
+                                        <div class="small text-muted">@t.NomeArquivo</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@(t.TipoDocumento switch { "NFC_E" => "NFC-e 65", "NFS_E" => "NFS-e 67", "ABRASF" => "ABRASF", "RESUMO" => "Resumo", _ => "NF-e 55" })</span>
+                                    <div class="small text-muted">@t.Origem</div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning text-dark" title="@t.MotivoQuarentena">@RotuloQuarentena(t.MotivoQuarentena)</span>
+                                </td>
+                                <td class="text-light small">@t.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(t.ResponsavelNome))
+                                    {
+                                        <span class="text-light">@t.ResponsavelNome</span>
+                                        @if (!string.IsNullOrWhiteSpace(t.TriagemObservacao))
+                                        {
+                                            <div class="small text-muted" title="@t.TriagemObservacao">Obs: @(t.TriagemObservacao.Length > 40 ? t.TriagemObservacao[..40] + "…" : t.TriagemObservacao)</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Sem responsável</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (t.TriagemPrazo.HasValue)
+                                    {
+                                        <span class="@(t.Vencida ? "text-danger fw-bold" : "text-light") small">@t.TriagemPrazo.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                        @if (t.Vencida)
+                                        {
+                                            <div><span class="badge bg-danger">Vencida</span></div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">—</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a href="/Administrativo360/DocumentosXml/Detalhes/@t.DocumentoId" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye me-1"></i> Abrir
+                                    </a>
+                                    @if (t.TriagemAberta)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalResolver-@t.DocumentoId">
+                                            <i class="bi bi-check-circle me-1"></i> Resolver
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" title="Reabrir: reatribui responsável, prazo e observação" data-bs-toggle="modal" data-bs-target="#modalAbrir-@t.DocumentoId">
+                                            <i class="bi bi-arrow-repeat me-1"></i> Reabrir
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAbrir-@t.DocumentoId">
+                                            <i class="bi bi-person-plus me-1"></i> Abrir triagem
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @* Modais fora da tabela: dentro do contexto de parsing de <table>, o parser
+       HTML corta o <form> do modal (controles ficam fora do form); aqui o form e inteiro. *@
+    @foreach (var t in Model.Triagens)
+    {
+        <!-- Modal Abrir/Reabrir triagem (um por documento; sem JS além do Bootstrap) -->
+        <div class="modal fade" id="modalAbrir-@t.DocumentoId" tabindex="-1" aria-labelledby="modalAbrirLabel-@t.DocumentoId" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark text-light border-secondary">
+                    <form method="post" action="/Administrativo360/DocumentosXml/Triagens/Abrir">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="documentoId" value="@t.DocumentoId" />
+                        <div class="modal-header border-secondary">
+                            <div>
+                                <h5 class="modal-title h6" id="modalAbrirLabel-@t.DocumentoId">@(t.TriagemAberta ? "Reabrir" : "Abrir") triagem do documento</h5>
+                                <div class="small text-muted">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
+                            </div>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="small text-muted mb-3">O documento segue em quarentena até a resolução. Cada abertura é registrada como evento de auditoria com responsável, prazo e observação.</p>
+                            <div class="mb-3">
+                                <label for="responsavel-@t.DocumentoId" class="form-label small fw-bold">Responsável *</label>
+                                <select id="responsavel-@t.DocumentoId" name="responsavelId" class="form-select bg-dark text-light border-secondary" required autofocus>
+                                    <option value="" selected disabled>Selecione um usuário do tenant…</option>
+                                    @foreach (var u in Model.Usuarios.Where(x => !x.Locked).OrderBy(x => x.Rotulo))
+                                    {
+                                        <option value="@u.Id" title="@u.Role">@u.Rotulo</option>
+                                    }
+                                </select>
+                                @if (!Model.Usuarios.Any())
+                                {
+                                    <div class="form-text text-danger small">Nenhum usuário disponível para atribuição neste tenant.</div>
+                                }
+                            </div>
+                            <div class="mb-3">
+                                <label for="prazo-@t.DocumentoId" class="form-label small fw-bold">Prazo (horário local) *</label>
+                                <input type="datetime-local" id="prazo-@t.DocumentoId" name="prazoLocal" class="form-control bg-dark text-light border-secondary" min="@prazoMinimoLocal" required />
+                                <div class="form-text text-muted small">Deve ser um momento futuro; convertido para UTC antes do registro.</div>
+                            </div>
+                            <div class="mb-2">
+                                <label for="observacao-@t.DocumentoId" class="form-label small fw-bold">Observação (opcional)</label>
+                                <textarea id="observacao-@t.DocumentoId" name="observacao" rows="2" maxlength="500" class="form-control bg-dark text-light border-secondary" placeholder="Ex.: verificar CNPJ destinatário com o emitente antes de liberar"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-secondary">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-person-plus me-1"></i> Confirmar abertura</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Resolver triagem (exige responsável já atribuído) -->
+        @if (t.TriagemAberta)
+        {
+            <div class="modal fade" id="modalResolver-@t.DocumentoId" tabindex="-1" aria-labelledby="modalResolverLabel-@t.DocumentoId" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content bg-dark text-light border-secondary">
+                        <form method="post" action="/Administrativo360/DocumentosXml/Triagens/Resolver">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="documentoId" value="@t.DocumentoId" />
+                            <div class="modal-header border-secondary">
+                                <div>
+                                    <h5 class="modal-title h6" id="modalResolverLabel-@t.DocumentoId">Resolver triagem do documento</h5>
+                                    <div class="small text-muted">Chave: <code class="text-info">@t.ChaveAcesso</code></div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="small text-muted mb-3">Resolver remove o documento da quarentena com justificativa auditável. A conferência (gate do recebimento em estoque) permanece decisão separada na Central XML.</p>
+                                <label for="justificativa-@t.DocumentoId" class="form-label small fw-bold">Justificativa da resolução *</label>
+                                <textarea id="justificativa-@t.DocumentoId" name="justificativa" rows="3" required minlength="10" maxlength="500" autofocus
+                                    class="form-control bg-dark text-light border-secondary"
+                                    placeholder="Ex.: destinatário regularizado junto ao emitente; valores conferidos sem divergência"></textarea>
+                                <div class="form-text text-muted small">Mínimo de 10 caracteres. Registrada na trilha de auditoria junto ao usuário que resolveu.</div>
+                            </div>
+                            <div class="modal-footer border-secondary">
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check-circle me-1"></i> Confirmar resolução</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@functions {
+    // Rotulagem PT-BR dos motivos técnicos de quarentena (o código segue no tooltip) — mesma tabela da Central XML.
+    private static string RotuloQuarentena(string? motivo) => motivo switch
+    {
+        "XML_MALFORMADO" => "XML malformado",
+        "MODELO_NAO_SUPORTADO" => "Modelo não suportado",
+        "DOCUMENTO_INCOMPLETO" => "Documento incompleto",
+        "DESTINATARIO_NAO_AUTORIZADO" => "Destinatário não autorizado",
+        null => "Sem motivo registrado",
+        _ => motivo
+    };
+}

@@ -28,6 +28,10 @@ DECLARE
     v_orcamento1_id uuid := 'a3600000-0000-4000-8000-000000000040';
     v_doc1_id uuid := 'a3600000-0000-4000-8000-000000000050';
     v_doc_quarentena_id uuid := 'a3600000-0000-4000-8000-000000000051';
+    -- Literais XML definidos uma vez e reutilizados em xml_conteudo e xml_bytes
+    -- (coluna bytea NOT NULL; backfill canônico: convert_to(xml_conteudo, 'UTF8')).
+    v_xml_doc1 text := '<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><NFe><infNFe Id="NFe35260900000000000000550010000000011000000010" versao="4.00"><ide><cUF>35</cUF><cNF>00000001</cNF><natOp>VENDA</natOp><mod>55</mod><serie>1</serie><nNF>1</nNF><dhEmi>2026-09-23T10:00:00-03:00</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>3550308</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>0</cDV><tpAmb>2</tpAmb><finNFe>1</finNFe><indFinal>0</indFinal><indPres>9</indPres><procEmi>0</procEmi><verProc>1.0</verProc></ide><emit><CNPJ>11222333000144</CNPJ><xNome>Ortopedia e Cirurgia Distribuidora Ltda</xNome></emit><dest><CNPJ>46389044000130</CNPJ><xNome>Santa Casa Matriz</xNome></dest><total><ICMSTot><vProd>5350.00</vProd><vNF>5350.00</vNF></ICMSTot></total></infNFe></NFe></nfeProc>';
+    v_xml_quarentena text := '<nfeProc><NFe><infNFe Id="NFe35260999999999999999550010000000021000000020"><ide><mod>55</mod><nNF>2</nNF></ide><emit><CNPJ>99888777000100</CNPJ></emit><dest><CNPJ>00000000000000</CNPJ></dest><total><ICMSTot><vNF>1200.00</vNF></ICMSTot></total></infNFe></NFe></nfeProc>';
     v_modulo_adm360_id uuid := 'a3600000-0000-4000-8000-000000000099';
     v_acao_acessar_id uuid;
     v_perfil_adm_id uuid;
@@ -368,14 +372,14 @@ BEGIN
     -- 12. CENTRAL DE XML RECEBIDOS (NF-e MODELO 55)
     -- Documento 1: NF-e 55 válida e conferida
     INSERT INTO plantaopro.adm360_documentos_recebidos (
-        id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo, data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome, valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia, xml_conteudo, xml_hash, nsu, quarentena, origem, created_at
+        id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo, data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome, valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia, xml_conteudo, xml_bytes, xml_hash, nsu, quarentena, origem, created_at
     ) VALUES (
         v_doc1_id, v_tenant_id, v_estab_matriz_id,
         '35260900000000000000550010000000011000000010', '1', '1', '55',
         v_now - interval '2 days', '11222333000144', 'Ortopedia & Cirurgia Distribuidora Ltda',
         '46389044000130', 'Santa Casa Matriz', 5350.00, 5350.00,
         'NFE_COMPLETA', 'CONFIRMACAO_DA_OPERACAO', 'CONFERIDO',
-        '<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00"><NFe><infNFe Id="NFe35260900000000000000550010000000011000000010" versao="4.00"><ide><cUF>35</cUF><cNF>00000001</cNF><natOp>VENDA</natOp><mod>55</mod><serie>1</serie><nNF>1</nNF><dhEmi>2026-09-23T10:00:00-03:00</dhEmi><tpNF>1</tpNF><idDest>1</idDest><cMunFG>3550308</cMunFG><tpImp>1</tpImp><tpEmis>1</tpEmis><cDV>0</cDV><tpAmb>2</tpAmb><finNFe>1</finNFe><indFinal>0</indFinal><indPres>9</indPres><procEmi>0</procEmi><verProc>1.0</verProc></ide><emit><CNPJ>11222333000144</CNPJ><xNome>Ortopedia e Cirurgia Distribuidora Ltda</xNome></emit><dest><CNPJ>46389044000130</CNPJ><xNome>Santa Casa Matriz</xNome></dest><total><ICMSTot><vProd>5350.00</vProd><vNF>5350.00</vNF></ICMSTot></total></infNFe></NFe></nfeProc>',
+        v_xml_doc1, convert_to(v_xml_doc1, 'UTF8'),
         'hash-sha256-nfe-001', '000000000001201', false, 'DADOS_DE_TESTE', v_now
     ) ON CONFLICT (tenant_id, chave_acesso) DO NOTHING;
 
@@ -393,14 +397,14 @@ BEGIN
 
     -- Documento 2: XML sintético rejeitado/em quarentena por CNPJ de destinatário não autorizado no tenant
     INSERT INTO plantaopro.adm360_documentos_recebidos (
-        id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo, data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome, valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia, xml_conteudo, xml_hash, quarentena, motivo_quarentena, origem, created_at
+        id, tenant_id, estabelecimento_id, chave_acesso, numero, serie, modelo, data_emissao, emitente_cnpj, emitente_nome, destinatario_cnpj, destinatario_nome, valor_total, valor_produtos, tipo_documento, status_manifestacao, status_conferencia, xml_conteudo, xml_bytes, xml_hash, quarentena, motivo_quarentena, origem, created_at
     ) VALUES (
         v_doc_quarentena_id, v_tenant_id, v_estab_matriz_id,
         '35260999999999999999550010000000021000000020', '2', '1', '55',
         v_now, '99888777000100', 'Fornecedor Terceiro Desconhecido',
         '00000000000000', 'Empresa Não Pertencente ao Tenant', 1200.00, 1200.00,
         'NFE_COMPLETA', 'SEM_MANIFESTACAO', 'PENDENTE',
-        '<nfeProc><NFe><infNFe Id="NFe35260999999999999999550010000000021000000020"><ide><mod>55</mod><nNF>2</nNF></ide><emit><CNPJ>99888777000100</CNPJ></emit><dest><CNPJ>00000000000000</CNPJ></dest><total><ICMSTot><vNF>1200.00</vNF></ICMSTot></total></infNFe></NFe></nfeProc>',
+        v_xml_quarentena, convert_to(v_xml_quarentena, 'UTF8'),
         'hash-sha256-nfe-quarentena', true, 'DESTINATARIO_NAO_AUTORIZADO', 'DADOS_DE_TESTE', v_now
     ) ON CONFLICT (tenant_id, chave_acesso) DO NOTHING;
 

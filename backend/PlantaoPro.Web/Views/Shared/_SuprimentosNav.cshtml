@@ -185,7 +185,8 @@
                             <i class="bi bi-file-earmark-code me-1"></i>Documentos & Integrações
                         </button>
                         <ul class="dropdown-menu shadow">
-                            <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml") && !IsPathActive("/Administrativo360/DocumentosXml/Sincronizacao") ? "active" : "")" href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-2"></i>Central XML (NF-e 55)</a></li>
+                            <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml") && !IsPathActive("/Administrativo360/DocumentosXml/Sincronizacao") && !IsPathActive("/Administrativo360/DocumentosXml/Triagens") ? "active" : "")" href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-2"></i>Central XML (NF-e 55)</a></li>
+                            <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml/Triagens") ? "active" : "")" href="/Administrativo360/DocumentosXml/Triagens"><i class="bi bi-funnel me-2"></i>Fila de Triagem (Quarentena)</a></li>
                             <li><a class="dropdown-item @(IsPathActive("/Administrativo360/DocumentosXml/Sincronizacao") ? "active" : "")" href="/Administrativo360/DocumentosXml/Sincronizacao"><i class="bi bi-cloud-arrow-down me-2"></i>DF-e Sefaz</a></li>
                             @if (podeConfigIntegracao)
                             {

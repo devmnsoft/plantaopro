@@ -261,11 +261,25 @@
     });
   }
 
+  function wireBootstrapModalFocus(){
+    // C11.4: o autofocus nativo nao dispara em elementos ocultos no parse;
+    // move o foco para o primeiro campo ao abrir qualquer modal Bootstrap,
+    // seguindo a convencao [autofocus] do overlay-manager interno.
+    const modalFocusable='button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    document.addEventListener('shown.bs.modal',event=>{
+      const modal=event.target;
+      if(!modal||!modal.classList.contains('modal')){return;}
+      const alvo=modal.querySelector('[autofocus]')||modal.querySelector(modalFocusable);
+      if(alvo){alvo.focus();}
+    });
+  }
+
+
   function onlyDigits(value){return String(value||'').replace(/\D/g,'');}
   function applyMasks(){
     document.querySelectorAll('[data-mask]').forEach(input=>{if(input.dataset.ppMaskBound==='1'){return;}input.dataset.ppMaskBound='1';input.addEventListener('input',()=>{let v=onlyDigits(input.value);if(input.dataset.mask==='cpf'){v=v.slice(0,11);input.value=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}else if(input.dataset.mask==='cnpj'){v=v.slice(0,14);input.value=v.replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');}else if(input.dataset.mask==='phone'){v=v.slice(0,11);input.value=v.length>10?v.replace(/(\d{2})(\d{5})(\d{1,4})/,'($1) $2-$3'):v.replace(/(\d{2})(\d{4})(\d{1,4})/,'($1) $2-$3');}else if(input.dataset.mask==='crmuf'){input.value=String(input.value||'').replace(/[^a-z0-9/ -]/gi,'').toUpperCase().slice(0,20);}});});
   }
 
   window.PlantaoProUi={copyText,refresh:()=>{initTooltips();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();}};
-  document.addEventListener('DOMContentLoaded',()=>{wireNavigation();initTooltips();autoCloseAlerts();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();markActiveMenu();});
+  document.addEventListener('DOMContentLoaded',()=>{wireNavigation();initTooltips();autoCloseAlerts();wireConfirmActions();wireAjaxForms();wireSubmitLoading();applyMasks();markActiveMenu();wireBootstrapModalFocus();});
 })();

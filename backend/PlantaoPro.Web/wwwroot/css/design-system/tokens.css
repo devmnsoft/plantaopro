@@ -144,8 +144,22 @@
     /* Movimento e camadas */
     --pp-transition-fast: 140ms ease;
     --pp-transition: 220ms cubic-bezier(.2,.8,.2,1);
-    --pp-z-topbar: 1020; --pp-z-sidebar: 1040; --pp-z-overlay: 1060;
-    --pp-z-dropdown: 1030; --pp-z-drawer: 1070; --pp-z-modal: 1080; --pp-z-toast: 1090;
+    /* Escala de camadas (stacking context) - fonte unica de z-index do produto.
+       Ordem crescente por intencao: fluxo da pagina -> elementos flutuantes ->
+       sobreposicoes -> dialogos -> feedback global -> foco/ajuda. Componentes nao
+       devem usar numero magico; sempre referenciar var(--pp-z-*). Unica definicao:
+       aqui (nula em v2000-premium.css, que antes colapsava sidebar/overlay/toast). */
+    --pp-z-base: 0;
+    --pp-z-sticky: 1010;
+    --pp-z-topbar: 1020;
+    --pp-z-dropdown: 1030;
+    --pp-z-sidebar: 1040;
+    --pp-z-overlay: 1060;
+    --pp-z-drawer: 1070;
+    --pp-z-modal: 1080;
+    --pp-z-toast: 1090;
+    --pp-z-skip: 1100;
+    --pp-z-tour: 1110;
     --pp-font-size-base: 1rem;
     --pp-font-size-sm: .875rem;
     --pp-line-height: 1.55;

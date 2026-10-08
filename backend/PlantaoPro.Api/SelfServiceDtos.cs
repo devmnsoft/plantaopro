@@ -243,3 +243,19 @@ public sealed class SolicitacaoCancelamentoAssinaturaRequest
 {
     public string Motivo { get; set; } = string.Empty;
 }
+
+/// <summary>
+/// B5: provisionamento manual B2B sobre o mesmo núcleo do self-service.
+/// TRIAL exige DiasTrial explícito (1..90); ATIVA entra em vigor imediato.
+/// </summary>
+public sealed record ProvisionarClienteRequest
+{
+    public CadastroEmpresaRequest Empresa { get; init; } = new CadastroEmpresaRequest();
+    public Guid PlanoId { get; init; }
+    public string Periodicidade { get; init; } = "MENSAL";
+    public string StatusInicial { get; init; } = "TRIAL";
+    public int DiasTrial { get; init; } = 30;
+    public bool AceiteTermos { get; init; }
+    public bool AceitePrivacidade { get; init; }
+    public CadastroUsuarioAdminRequest UsuarioAdmin { get; init; } = new CadastroUsuarioAdminRequest();
+}

@@ -1061,6 +1061,50 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2328_b5_provisionamento_convites",
+      "source": "database/migrations/2026_10_v2328_b5_provisionamento_convites.sql",
+      "checksum": "32a46221d4139203cb0f2ab23a59b2983c08c1dce1ec8d047d0ee9ae939a5683",
+      "dependsOn": [
+        "2026_10_v2327_b4_historico_reg_status"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2329_b5_grants_usuarios_adm_cliente",
+      "source": "database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql",
+      "checksum": "85707ffaa4437bfc95c79be0bd1d2a1fe5522ab39c575943253e523fb561f042",
+      "dependsOn": [
+        "2026_10_v2328_b5_provisionamento_convites"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2330_b5_onboarding_whitelabel_colunas",
+      "source": "database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql",
+      "checksum": "ae4f30d745c0c74fa34689c75669ed52512bd799957f1fbc0d156c5762c20410",
+      "dependsOn": [
+        "2026_10_v2329_b5_grants_usuarios_adm_cliente"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2331_b5_lgpd_consentimentos_colunas",
+      "source": "database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql",
+      "checksum": "92afe1faaa7a8a035e5b9b93e625b546541518c6f94ef62d35cf300dc11a232d",
+      "dependsOn": [
+        "2026_10_v2330_b5_onboarding_whitelabel_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

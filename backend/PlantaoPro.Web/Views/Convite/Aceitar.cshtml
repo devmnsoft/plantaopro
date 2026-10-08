@@ -1,0 +1,34 @@
+@model PlantaoPro.Web.Models.ConviteAceiteWebViewModel
+@{
+    ViewData["Title"] = "Aceitar convite";
+    Layout = "_AuthLayout";
+}
+<section class="container py-5">
+    <div class="card mx-auto" style="max-width: 560px;">
+        <div class="card-body">
+            <h1 class="h4">Aceitar convite de equipe</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+            {
+                <div class="alert alert-danger">@Model.ErrorMessage</div>
+            }
+            @if (!Model.Valido)
+            {
+                <div class="alert alert-warning">@(string.IsNullOrWhiteSpace(Model.Motivo) ? "Este convite não está mais válido." : Model.Motivo)</div>
+            }
+            else
+            {
+                <p class="text-muted">@Model.Email — @Model.TenantNome · expira em @Model.ExpiraEm.ToString("dd/MM/yyyy HH:mm")</p>
+                <form asp-action="ConfirmarAceite" asp-route-token="@Model.Token" method="post">
+                    @Html.AntiForgeryToken()
+                    <label class="form-label" for="nome">Nome completo</label>
+                    <input class="form-control mb-2" id="nome" name="nome" required minlength="3" maxlength="160" />
+                    <label class="form-label" for="senha">Senha (mínimo 8 caracteres)</label>
+                    <input class="form-control mb-2" id="senha" name="senha" type="password" required minlength="8" maxlength="128" autocomplete="new-password" />
+                    <label class="form-label" for="telefone">Telefone (opcional)</label>
+                    <input class="form-control mb-3" id="telefone" name="telefone" maxlength="30" />
+                    <button class="btn btn-primary" type="submit">Criar minha conta</button>
+                </form>
+            }
+        </div>
+    </div>
+</section>

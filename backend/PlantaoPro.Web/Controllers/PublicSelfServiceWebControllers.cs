@@ -130,12 +130,84 @@ public sealed class CadastroController : Controller
             TempData["Error"] = "Revise os campos obrigatórios.";
             return View("Cadastro", model);
         }
-        TempData["Success"] = "Cadastro recebido. A API self-service finalizará tenant, cliente, assinatura e usuário administrador.";
-        return RedirectToAction(nameof(Sucesso));
+
+        // B5: o POST antes terminava aqui com TempData de sucesso sem persistir
+        // nada. Agora chama o finalizar real (self-service provisiona de verdade).
+        try
+        {
+            var client = _factory.CreateClient("PlantaoProApi");
+            var payload = new
+            {
+                empresa = new
+                {
+                    nomeFantasia = model.NomeFantasia,
+                    razaoSocial = model.RazaoSocial,
+                    cnpj = model.Cnpj,
+                    segmento = model.Segmento,
+                    quantidadeMedicos = model.QuantidadeMedicos,
+                    quantidadeHospitais = model.QuantidadeHospitais,
+                    volumePlantoesMes = model.VolumePlantoesMes,
+                    cidade = model.Cidade,
+                    uf = model.Uf,
+                    telefone = model.Telefone,
+                    emailCorporativo = model.EmailCorporativo
+                },
+                plano = new
+                {
+                    planoId = model.PlanoId,
+                    periodicidade = string.IsNullOrWhiteSpace(model.Periodicidade) ? "MENSAL" : model.Periodicidade,
+                    aceiteTermos = model.AceiteTermos,
+                    aceitePrivacidade = model.AceitePrivacidade,
+                    consentimentoLgpd = model.ConsentimentoLgpd
+                },
+                usuarioAdmin = new
+                {
+                    nome = model.ResponsavelNome,
+                    email = model.ResponsavelEmail,
+                    telefone = model.ResponsavelTelefone,
+                    cargo = model.ResponsavelCargo,
+                    senha = model.Senha
+                }
+            };
+            using var response = await client.PostAsJsonAsync("api/public/cadastro/finalizar", payload);
+            var body = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                model.Planos = await PlanosPublicosController.CatalogoAsync(_factory, _logger);
+                TempData["Error"] = ExtrairMensagemApi(body) ?? "Não foi possível concluir o cadastro. Revise os dados.";
+                return View("Cadastro", model);
+            }
+            TempData["Success"] = "Cadastro finalizado com sucesso. Faça login para começar.";
+            return RedirectToAction(nameof(Sucesso));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Falha de comunicação no finalizar self-service.");
+            model.Planos = await PlanosPublicosController.CatalogoAsync(_factory, _logger);
+            TempData["Error"] = "Não foi possível concluir o cadastro agora. Tente novamente.";
+            return View("Cadastro", model);
+        }
     }
 
     [HttpGet("sucesso")]
     public IActionResult Sucesso() => View();
+
+    private static string? ExtrairMensagemApi(string body)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("message", out var message)
+                && message.ValueKind == JsonValueKind.String)
+                return message.GetString();
+        }
+        catch (JsonException)
+        {
+        }
+        return null;
+    }
 
     private async Task<CadastroSelfServiceWebViewModel> CriarModeloAsync()
     {

@@ -440,6 +440,47 @@ public sealed class MinhaSolicitacaoPlanoDto
     public string MensagemEstado { get; set; } = string.Empty;
 }
 
+// ============================================================================
+// B5 - CONVITES DE EQUIPE (expiração + uso único; banco guarda só o hash).
+// ============================================================================
+
+/// <summary>Convite de equipe (Token sai SÓ na criação; depois nunca).</summary>
+public sealed class ConviteEquipeDto
+{
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public Guid[] PerfilIds { get; set; } = Array.Empty<Guid>();
+    public string[] PerfilNomes { get; set; } = Array.Empty<string>();
+    public DateTime ExpiraEm { get; set; }
+    public DateTime? UsadoEm { get; set; }
+    public string Estado { get; set; } = string.Empty;
+    public DateTime CriadoEm { get; set; }
+    public string? Token { get; set; }
+}
+
+public sealed class CriarConviteEquipeRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public Guid[] PerfilIds { get; set; } = Array.Empty<Guid>();
+    public int? DiasValidade { get; set; }
+}
+
+public sealed class AceitarConviteRequest
+{
+    public string Nome { get; set; } = string.Empty;
+    public string Senha { get; set; } = string.Empty;
+    public string? Telefone { get; set; }
+}
+
+public sealed class ConvitePublicoDto
+{
+    public string Email { get; set; } = string.Empty;
+    public string TenantNome { get; set; } = string.Empty;
+    public DateTime ExpiraEm { get; set; }
+    public bool Valido { get; set; }
+    public string Motivo { get; set; } = string.Empty;
+}
+
 public sealed class RelatorioSaasLinhaDto
 {
     public Guid? ClienteId { get; set; }

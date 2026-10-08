@@ -205,6 +205,7 @@ builder.Services.AddScoped<ModuleContractingService>();
 builder.Services.AddScoped<Administrativo360Service>();
 builder.Services.AddScoped<Administrativo360FiscalService>();
 builder.Services.AddScoped<SolicitacoesPlanosService>();
+builder.Services.AddScoped<ConvitesEquipeService>();
 string GetConn(IServiceProvider sp) => sp.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? connectionString!;
 builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(GetConn(sp)));
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));

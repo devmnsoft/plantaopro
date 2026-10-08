@@ -10,6 +10,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
 {
     private static readonly IReadOnlyDictionary<string, string> ControllerModules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
+        ["ConvitesEquipe"] = "USUARIOS",
         ["AdminSaas"] = "ADMIN_SAAS",
         ["Clientes"] = "CLIENTES",
         ["Planos"] = "PLANOS",
@@ -214,6 +215,9 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["MinhaAssinatura/SolicitarUpgrade"] = "CRIAR",
         ["MinhaAssinatura/SolicitarDowngrade"] = "CRIAR",
         ["MinhaAssinatura/SolicitarCancelamento"] = "CANCELAR",
+        ["ConvitesEquipe/Index"] = "VER",
+        ["ConvitesEquipe/Criar"] = "CONVIDAR",
+        ["ConvitesEquipe/Revogar"] = "CONVIDAR",
         ["Adm360DocumentosXmlWeb/Importar"] = "IMPORTAR_XML",
         ["Adm360DocumentosXmlWeb/Conferir"] = "CONFERIR",
         ["Adm360DocumentosXmlWeb/Manifestar"] = "MANIFESTAR_DFE",

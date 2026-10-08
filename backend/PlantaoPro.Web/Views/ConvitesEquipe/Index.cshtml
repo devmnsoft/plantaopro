@@ -1,0 +1,80 @@
+@model PlantaoPro.Web.Models.ConvitesEquipeIndexViewModel
+@{
+    ViewData["Title"] = "Convites de equipe";
+}
+<section class="container py-4">
+    <h1>Convites de equipe</h1>
+    <p class="text-muted">Convide por e-mail: o link expira em até 30 dias (padrão 7) e vale uma única vez. O acesso só existe após o aceite.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (!string.IsNullOrWhiteSpace(Model.TokenCriado))
+    {
+        <div class="alert alert-success">
+            <strong>Convite criado para @Model.EmailConvidado.</strong><br />
+            Compartilhe este link uma única vez (o token não será exibido de novo):<br />
+            <code>/convite/aceitar/@Model.TokenCriado</code>
+        </div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Novo convite</h2>
+            <form asp-action="Criar" method="post" class="row g-2">
+                @Html.AntiForgeryToken()
+                <div class="col-md-4">
+                    <label class="form-label" for="email">E-mail</label>
+                    <input class="form-control" type="email" id="email" name="email" required maxlength="254" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="perfis">Perfis</label>
+                    <select class="form-select" id="perfis" name="perfilIds" multiple required>
+                        @foreach (var perfil in Model.Perfis)
+                        {
+                            <option value="@perfil.Id">@perfil.Nome</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="dias">Validade (dias)</label>
+                    <input class="form-control" type="number" id="dias" name="diasValidade" min="1" max="30" value="7" />
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary" type="submit">Convidar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <h2 class="h5">Convites</h2>
+    @if (Model.Convites.Count == 0)
+    {
+        <div class="alert alert-secondary">Nenhum convite registrado.</div>
+    }
+    else
+    {
+        <div class="card"><table class="table mb-0"><thead><tr><th>E-mail</th><th>Perfis</th><th>Expira em</th><th>Estado</th><th></th></tr></thead><tbody>
+        @foreach (var c in Model.Convites)
+        {
+            <tr>
+                <td>@c.Email</td>
+                <td>@string.Join(", ", c.PerfilNomes)</td>
+                <td>@c.ExpiraEm.ToString("dd/MM/yyyy HH:mm")</td>
+                <td><span class="badge @(c.Estado == "PENDENTE" ? "bg-warning text-dark" : c.Estado == "USADO" ? "bg-success" : "bg-secondary")">@c.Estado</span></td>
+                <td class="text-end">
+                    @if (c.Estado == "PENDENTE")
+                    {
+                        <form asp-action="Revogar" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@c.Id" />
+                            <button class="btn btn-sm btn-outline-danger" type="submit">Revogar</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody></table></div>
+    }
+</section>

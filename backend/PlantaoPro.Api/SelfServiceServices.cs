@@ -215,10 +215,74 @@ limit 50")).ToList();
 
     public async Task<ApiResponse<CadastroSelfServiceResultadoDto>> FinalizarCadastroAsync(CadastroSelfServiceRequest request, string? ip, string? userAgent)
     {
+        var erros = ValidarCadastro(request);
+        if (erros.Count > 0) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Verifique os dados do cadastro.", 400, erros);
+        // B5: slug único global (ux_tenants_slug) com retry limitado: dois cadastros
+        // simultâneos com o mesmo nome fantasia não viram 500 — o segundo tenta
+        // com sufixo; duplicata real (CNPJ/e-mail) vira 409 honesto.
+        for (var tentativa = 0; tentativa < 3; tentativa++)
+        {
+            var resultado = await TentarProvisionarAsync(request, null, "ATIVA", null,
+                "Criada via self-service", true, "SELF_SERVICE", "ADMINISTRADOR_CLIENTE", ip, userAgent,
+                tentativa > 0);
+            if (resultado is not null) return resultado;
+        }
+        return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Nome fantasia em disputa simultânea; ajuste e tente novamente.", 409);
+    }
+
+    /// <summary>
+    /// B5: provisionamento manual B2B (MNSOFT) sobre o MESMO núcleo do
+    /// self-service. TRIAL exige DiasTrial explícito (1..90, sem padrão
+    /// silencioso); data_fim = trial + 30 dias de janela de conversão
+    /// (documentado: o gate de trial dispara antes do de vigência).
+    /// Trial não gera cobrança inicial (billing do trial = pendência B6).
+    /// </summary>
+    public async Task<ApiResponse<CadastroSelfServiceResultadoDto>> ProvisionarManualAsync(ProvisionarClienteRequest request, string? ip)
+    {
+        var mapped = new CadastroSelfServiceRequest
+        {
+            Empresa = request.Empresa,
+            Plano = new CadastroPlanoRequest
+            {
+                PlanoId = request.PlanoId,
+                Periodicidade = string.IsNullOrWhiteSpace(request.Periodicidade) ? "MENSAL" : request.Periodicidade.Trim().ToUpperInvariant(),
+                AceiteTermos = request.AceiteTermos,
+                AceitePrivacidade = request.AceitePrivacidade,
+                ConsentimentoLgpd = false
+            },
+            UsuarioAdmin = request.UsuarioAdmin
+        };
+        var erros = ValidarCadastro(mapped);
+        if (erros.Count > 0) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Verifique os dados do provisionamento.", 400, erros);
+        var status = (request.StatusInicial ?? "TRIAL").Trim().ToUpperInvariant();
+        if (status is not ("TRIAL" or "ATIVA")) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Status inicial deve ser TRIAL ou ATIVA.", 400);
+        if (status == "TRIAL" && (request.DiasTrial is < 1 or > 90)) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("DiasTrial deve estar entre 1 e 90 para TRIAL.", 400);
+        var trialFim = status == "TRIAL" ? DateTime.UtcNow.Date.AddDays(request.DiasTrial) : (DateTime?)null;
+        for (var tentativa = 0; tentativa < 3; tentativa++)
+        {
+            var resultado = await TentarProvisionarAsync(mapped, _tenantContext.ObterUsuarioId(), status, trialFim,
+                "Criada via provisionamento manual B2B", status == "ATIVA", "ADMIN_MANUAL", "ADMINISTRADOR_GLOBAL", ip, null,
+                tentativa > 0);
+            if (resultado is not null) return resultado;
+        }
+        return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Nome fantasia em disputa simultânea; ajuste e tente novamente.", 409);
+    }
+
+    /// <summary>
+    /// Núcleo único de provisionamento (self-service + admin): valida
+    /// duplicatas em-tx, insere o mundo do cliente em UMA transação
+    /// (tudo-ou-nada) e retorna null só quando o slug colidiu (pedido de
+    /// retry com sufixo). Corrida real de CNPJ/e-mail vira 409 via índice
+    /// único (ux_clientes_cnpj_ativo / ux_usuarios_email_normalizado).
+    /// </summary>
+    private async Task<ApiResponse<CadastroSelfServiceResultadoDto>?> TentarProvisionarAsync(
+        CadastroSelfServiceRequest request, Guid? atorId, string statusAssinatura,
+        DateTime? dataTrialFim, string observacaoAssinatura,
+        bool pagamentoInicial, string origem, string perfilAuditoria,
+        string? ip, string? userAgent, bool comSufixo)
+    {
         try
         {
-            var erros = ValidarCadastro(request);
-            if (erros.Count > 0) return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Verifique os dados do cadastro.", 400, erros);
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
@@ -236,8 +300,11 @@ limit 50")).ToList();
             var clienteId = Guid.NewGuid();
             var assinaturaId = Guid.NewGuid();
             var usuarioId = Guid.NewGuid();
-            var slug = TenantContextService.Slug(request.Empresa.NomeFantasia);
+            var slugBase = TenantContextService.Slug(request.Empresa.NomeFantasia);
+            var slug = comSufixo ? $"{slugBase}-{solicitacaoId.ToString("N")[..4]}" : slugBase;
             var senhaHash = Security.PasswordHashService.Hash(request.UsuarioAdmin.Senha);
+            var fim = DateTime.UtcNow.Date.AddMonths(1);
+            if (statusAssinatura == "TRIAL" && dataTrialFim.HasValue) fim = dataTrialFim.Value.AddDays(30);
 
             await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_solicitacoes(id,plano_id,nome_fantasia,razao_social,cnpj,segmento,qtd_medicos,qtd_hospitais,volume_plantoes_mes,cidade,uf,telefone,email_corporativo,responsavel_nome,responsavel_email,responsavel_telefone,responsavel_cargo,periodicidade,aceite_termos,aceite_privacidade,consentimento_lgpd,status,reg_date,reg_status)
 values(@solicitacaoId,@PlanoId,@NomeFantasia,@RazaoSocial,@Cnpj,@Segmento,@QuantidadeMedicos,@QuantidadeHospitais,@VolumePlantoesMes,@Cidade,@Uf,@Telefone,@EmailCorporativo,@AdminNome,@AdminEmail,@AdminTelefone,@Cargo,@Periodicidade,@AceiteTermos,@AceitePrivacidade,@ConsentimentoLgpd,'FINALIZADO',now(),'A')", new { solicitacaoId, request.Plano.PlanoId, request.Empresa.NomeFantasia, request.Empresa.RazaoSocial, Cnpj = cnpjLimpo, request.Empresa.Segmento, request.Empresa.QuantidadeMedicos, request.Empresa.QuantidadeHospitais, request.Empresa.VolumePlantoesMes, request.Empresa.Cidade, request.Empresa.Uf, request.Empresa.Telefone, request.Empresa.EmailCorporativo, AdminNome = request.UsuarioAdmin.Nome, AdminEmail = request.UsuarioAdmin.Email, AdminTelefone = request.UsuarioAdmin.Telefone, request.UsuarioAdmin.Cargo, request.Plano.Periodicidade, request.Plano.AceiteTermos, request.Plano.AceitePrivacidade, request.Plano.ConsentimentoLgpd }, tx);
@@ -245,23 +312,43 @@ values(@solicitacaoId,@PlanoId,@NomeFantasia,@RazaoSocial,@Cnpj,@Segmento,@Quant
             await cn.ExecuteAsync("insert into plantaopro.tenants(id,cliente_id,nome,slug,status,plano_id,subdominio,reg_date,reg_status) values(@tenantId,@clienteId,@nome,@slug,'ATIVO',@planoId,@slug,now(),'A')", new { tenantId, clienteId, nome = request.Empresa.NomeFantasia, slug, planoId = request.Plano.PlanoId }, tx);
             await cn.ExecuteAsync(@"insert into plantaopro.clientes(id,razao_social,nome_fantasia,cnpj,email,telefone,cidade,estado,plano_id,status,reg_status,reg_date)
 values(@clienteId,@RazaoSocial,@NomeFantasia,@Cnpj,@Email,@Telefone,@Cidade,@Uf,@PlanoId,'ATIVO','A',now())", new { clienteId, request.Empresa.RazaoSocial, request.Empresa.NomeFantasia, Cnpj = cnpjLimpo, Email = request.Empresa.EmailCorporativo, request.Empresa.Telefone, request.Empresa.Cidade, request.Empresa.Uf, request.Plano.PlanoId }, tx);
-            await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,periodicidade,reg_status,reg_date)
-values(@assinaturaId,@tenantId,@clienteId,@PlanoId,now(),now()+interval '1 month','ATIVA',@Valor,@Dia,'Criada via self-service',@Periodicidade,'A',now())", new { assinaturaId, tenantId, clienteId, request.Plano.PlanoId, Valor = plano.ValorMensal, Dia = DateTime.UtcNow.Day, request.Plano.Periodicidade }, tx);
-            await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,nome,email,telefone,senha_hash,cliente_id,status,reg_status,reg_date)
-values(@usuarioId,@Nome,@Email,@Telefone,@SenhaHash,@clienteId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,data_inicio,data_fim,data_trial_fim,status,valor_contratado,dia_vencimento,observacoes,periodicidade,reg_status,reg_date)
+values(@assinaturaId,@tenantId,@clienteId,@PlanoId,current_date,@Fim,@TrialFim,@Status,@Valor,@Dia,@Observacoes,@Periodicidade,'A',now())", new { assinaturaId, tenantId, clienteId, request.Plano.PlanoId, Fim = fim, TrialFim = (DateTime?)dataTrialFim, Status = statusAssinatura, Valor = plano.ValorMensal, Dia = DateTime.UtcNow.Day, Observacoes = observacaoAssinatura, request.Plano.Periodicidade }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.usuarios(id,nome,email,email_normalizado,telefone,senha_hash,senha_alteracao_obrigatoria,preferencias_notificacao,cliente_id,status,reg_status,reg_date)
+values(@usuarioId,@Nome,@Email,upper(@Email),@Telefone,@SenhaHash,false,'{}',@clienteId,'ATIVO','A',now())", new { usuarioId, request.UsuarioAdmin.Nome, request.UsuarioAdmin.Email, request.UsuarioAdmin.Telefone, SenhaHash = senhaHash, clienteId }, tx);
 
             var perfilId = await GarantirPerfilAdminClienteAsync(cn, tx, tenantId, clienteId);
             await cn.ExecuteAsync("insert into plantaopro.usuarios_perfis(id,tenant_id,cliente_id,usuario_id,perfil_id,reg_date,reg_status) values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@perfilId,now(),'A')", new { tenantId, clienteId, usuarioId, perfilId }, tx);
             await CriarWhiteLabelPadraoAsync(cn, tx, tenantId, request.Empresa.NomeFantasia);
             await CriarOnboardingAsync(cn, tx, tenantId, clienteId);
-            await cn.ExecuteAsync(@"insert into plantaopro.lgpd_consentimentos(id,tenant_id,cliente_id,usuario_id,titular_email,finalidade,versao_politica,aceito,origem,ip_origem,user_agent,reg_date,reg_status)
-values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@Email,'cadastro_self_service','1.0',true,'SELF_SERVICE',@ip,@ua,now(),'A')", new { tenantId, clienteId, usuarioId, request.UsuarioAdmin.Email, ip = ip ?? string.Empty, ua = userAgent ?? string.Empty }, tx);
-            await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_pagamentos_iniciais(id,solicitacao_id,cliente_id,assinatura_id,valor,status,vencimento,reg_date,reg_status)
+            var lgpdAceito = string.Equals(origem, "SELF_SERVICE", StringComparison.OrdinalIgnoreCase) && request.Plano.ConsentimentoLgpd;
+            // B5: base_legal NOT NULL — self-service com aceite = 'consentimento';
+            // manual B2B (aceito=false, a coletar no primeiro acesso) = 'contrato'.
+            // consentido/ip atendem ao shape vigente da tabela (v2331 completa o resto).
+            var baseLegal = lgpdAceito ? "consentimento" : "contrato";
+            await cn.ExecuteAsync(@"insert into plantaopro.lgpd_consentimentos(id,tenant_id,cliente_id,usuario_id,titular_email,finalidade,base_legal,versao_politica,aceito,consentido,origem,ip,ip_origem,user_agent,reg_date,reg_status)
+values(gen_random_uuid(),@tenantId,@clienteId,@usuarioId,@Email,'cadastro_self_service',@baseLegal,'1.0',@aceito,@aceito,@origem,@ip,@ip,@ua,now(),'A')", new { tenantId, clienteId, usuarioId, request.UsuarioAdmin.Email, baseLegal, aceito = lgpdAceito, origem, ip = ip ?? string.Empty, ua = userAgent ?? string.Empty }, tx);
+            if (pagamentoInicial)
+            {
+                await cn.ExecuteAsync(@"insert into plantaopro.cadastro_cliente_pagamentos_iniciais(id,solicitacao_id,cliente_id,assinatura_id,valor,status,vencimento,reg_date,reg_status)
 values(gen_random_uuid(),@solicitacaoId,@clienteId,@assinaturaId,@Valor,'ABERTO',current_date+7,now(),'A')", new { solicitacaoId, clienteId, assinaturaId, Valor = plano.ValorMensal }, tx);
+            }
 
             await tx.CommitAsync();
-            await _audit.RegistrarAsync(usuarioId, clienteId, "SELF_SERVICE", solicitacaoId, "CADASTRO_FINALIZADO", new { tenantId, plano = plano.Nome }, true, ip, "ADMINISTRADOR_CLIENTE");
+            await _audit.RegistrarAsync(atorId ?? usuarioId, clienteId, "SELF_SERVICE", solicitacaoId, "CADASTRO_FINALIZADO", new { tenantId, plano = plano.Nome, origem }, true, ip, perfilAuditoria);
             return ApiResponse<CadastroSelfServiceResultadoDto>.Ok(new CadastroSelfServiceResultadoDto { SolicitacaoId = solicitacaoId, TenantId = tenantId, ClienteId = clienteId, AssinaturaId = assinaturaId, UsuarioAdminId = usuarioId, LoginUrl = "/Account/Login", OnboardingUrl = "/Onboarding" }, "Cadastro finalizado com sucesso.");
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            // Corrida real de duplicata: índice único arbitra; slug tenta de novo,
+            // CNPJ/e-mail viram 409 honesto (nunca 500, nunca duplicata).
+            if (string.Equals(ex.ConstraintName, "ux_tenants_slug", StringComparison.OrdinalIgnoreCase)) return null;
+            if (string.Equals(ex.ConstraintName, "ux_clientes_cnpj_ativo", StringComparison.OrdinalIgnoreCase))
+                return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("CNPJ já cadastrado.", 409);
+            if (string.Equals(ex.ConstraintName, "ux_usuarios_email_normalizado", StringComparison.OrdinalIgnoreCase))
+                return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("E-mail do administrador já cadastrado.", 409);
+            _logger.LogWarning(ex, "Conflito de unicidade no provisionamento");
+            return ApiResponse<CadastroSelfServiceResultadoDto>.Fail("Registro duplicado simultâneo; tente novamente.", 409);
         }
         catch (Exception ex)
         {

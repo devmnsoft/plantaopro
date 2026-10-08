@@ -22,6 +22,7 @@ namespace PlantaoPro.Tests;
 /// Os dados usam GUIDs únicos por execução, portanto a suíte é idempotente e não interfere
 /// em outros tenants/bancos. A limpeza ao final remove as linhas desta execução.
 /// </summary>
+[Collection("saas-operacao-serial")] // deltas globais de BI/escalas/agendamentos nao toleram churn concorrente
 public sealed class ProductivityActionScopingTests : IAsyncLifetime
 {
     private readonly string _cs;

@@ -32,6 +32,7 @@ namespace PlantaoPro.Tests;
 /// B5  Ativar-agendados: só AGENDADO vencido vira ATIVO (+habilitado, +trilha);
 ///     segunda chamada não reativa nada.
 /// </summary>
+[Collection("saas-operacao-serial")]
 public sealed class SaasComercialB4MatrizTests : IDisposable
 {
     private static readonly Guid B4PlanoA = Guid.Parse("b4000001-0000-4000-9000-000000000001");

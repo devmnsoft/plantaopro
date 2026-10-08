@@ -2,7 +2,9 @@
 
 Aplicável a: rodadas de homologação e produção sobre a base `c84afc5`+ (net10.0, ASP.NET Core Module V2 **inprocess** via `web.config` gerado pelo SDK no publish — o arquivo **não existe no repositório**, procure-o na saída publicada).
 
-> **Atualização 2026-10-08 (R5-A2):** as telas fiscais do ADM360 no Web viraram BFF fino — o site **Web não conecta mais no banco** em tela alguma; a API fiscal (`api/administrativo360/fiscal`, autorização por ação) é o único caminho de escrita fiscal. `ConnectionStrings__Default` sai do pool Web e `Fiscal__Credenciais__{referencia}` passa para o pool da API (§5). A linhagem de migrations termina em **v2322** (grants ADM360 → `ADMINISTRADOR_CLIENTE`; próxima livre: v2323).
+> **Atualização 2026-10-08 (R5-A2):** as telas fiscais do ADM360 no Web viraram BFF fino — o site **Web não conecta mais no banco** em tela alguma; a API fiscal (`api/administrativo360/fiscal`, autorização por ação) é o único caminho de escrita fiscal. `ConnectionStrings__Default` sai do pool Web e `Fiscal__Credenciais__{referencia}` passa para o pool da API (§5). A linhagem de migrations termina em **v2322** (grants ADM360 → `ADMINISTRADOR_CLIENTE`; próxima livre: v2323) — **superada pelas rodadas B4–B6 abaixo**.
+
+> **Atualização 2026-10-08 (R5-B4–B6):** a linhagem termina agora em **v2332** (matriz comercial: v2323–v2327; provisionamento/convites: v2328–v2331; cobrança SaaS em sandbox: **v2332**; próxima livre: v2333). `Cobranca__Credenciais__{PROVEDOR}` (ex.: `Cobranca__Credenciais__SANDBOX`) vive **só no pool da API** — o BFF Web nunca vê o segredo; a assinatura do webhook é validada na API por HMAC-SHA256 do corpo bruto (`X-Cobranca-Signature: sha256=<hex>`, tempo constante). O provider `SANDBOX` vem semeado (modo SANDBOX, ATIVO) e os purges de implantação **não devem removê-lo**; sem a credencial configurada, cobrar devolve 503 honesto (nunca "sucesso"). Para produção: linha nova em `cobranca_providers` (`modo='PRODUCAO'`, `status='ATIVO'`), a credencial homônima no pool da API e o conector do provedor externo implementado (pendência conhecida — o sandbox é o estado atual).
 
 ## 1. Arquitetura definida (2 sites, 2 pools)
 
@@ -87,6 +89,7 @@ GUI: IIS → Aplicação → Configuração → Variáveis de ambiente. Ou:
 | `Ai__EncryptionKey` | opcional; **exatamente 64 caracteres hex** (32 bytes; validado em `AiSecretProtector` — hex malformado/curto é tratado como ausente) | Cifra (AES-GCM) as chaves de provider salvas por tenant. Sem ele a IA funciona com providers configurados no servidor, mas **salvar chave por cliente** falha com mensagem clara; não quebra o startup |
 | `Ai__Providers__Groq__ApiKey`, `Ai__Providers__Gemini__ApiKey`, `Ai__Providers__DeepSeek__ApiKey` | opcionais | Sem chave de um provider, aquele provider fica indisponível; a homologação de inferência real externa só é declarada com chave real |
 | `Fiscal__Credenciais__{referencia}` | valor segredo (ex.: `Fiscal__Credenciais__nfe-santacasa-demo`) | **R5-A2:** o segredo fiscal agora é lido **pela API** (único caminho de escrita fiscal; regra A33: o banco guarda apenas o **nome** da referência, nunca o valor). Sem a chave, a emissão segue bloqueada com motivo real (nunca "sucesso") |
+| `Cobranca__Credenciais__{PROVEDOR}` | valor segredo (ex.: `Cobranca__Credenciais__SANDBOX`) | **R5-B6:** chave HMAC do webhook do provedor de cobrança, lida **só pela API** (mesma regra A33: o banco guarda só o código do provider). Sem ela, gerar cobrança/webhook responde **503** honesto ("credencial não configurada"); em produção trocar para o provedor real mantendo segredo por código |
 
 **Site `plantao-web` (pool Web):**
 
@@ -132,6 +135,7 @@ foreach ($p in @("C:\inetpub\plantao","C:\ProgramData\PlantaoPro\DataProtection"
 - [ ] Sem `dotnet run`/DLL manual ocupando porta em paralelo (confirme com `netstat`).
 - [ ] stdout log ligado durante a implantação, desligado depois.
 - [ ] Fiscal (R5-A2): upgrade terminou em **v2322**; `Fiscal__Credenciais__{referencia}` só no pool da API; sem `ConnectionStrings__Default` no pool Web.
+- [ ] Cobrança SaaS (R5-B6): upgrade terminou em **v2332**; `Cobranca__Credenciais__SANDBOX` (e do provedor futuro) só no pool da API; provider `SANDBOX` ATIVO presente em `cobranca_providers` (seed v2332 — não remover); expor o webhook `POST /api/cobranca/webhooks/{provedor}` ao provedor externo com a assinatura `X-Cobranca-Signature` (sem cartão/segredo em log).
 
 ## 9. Roteiro de publicação e validação (execução ponta a ponta)
 
@@ -139,7 +143,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 
 **P0 — Pré-condições (no servidor)**
 1. `netstat -ano | findstr :8197` e `:443` → nenhuma surpresa de processo dev (PIDs de `dotnet.exe` em execução manual devem estar ausentes).
-2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma o último migration aplicado — na linhagem atual (R5-A2) o upgrade deve terminar em **v2322** (`2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql`; próxima versão livre: v2323).
+2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma o último migration aplicado — na linhagem atual (R5-B6) o upgrade deve terminar em **v2332** (`2026_10_v2332_b6_cobranca_saas.sql`; próxima versão livre: v2333).
 3. `powershell -File scripts\local\publish-iis.ps1 -OutDir C:\inetpub\plantao` → saída termina com "Etapas seguintes" e sem erro.
 
 **P1 — API sobe**
@@ -197,6 +201,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 | Login sempre diz "conectar ao serviço" e API responde direto | Binding da API não está em 127.0.0.1:8197 ou pool parado | Testar `curl http://127.0.0.1:8197/api/health` no próprio servidor |
 | Sessão cai a cada reciclagem | `DataProtection__KeysDirectory` ausente/sem escrita | Corrigir variável + permissão (seção 7) |
 | Telas fiscais do ADM360 dão 500/"ConnectionStrings:Default..." | Deploy anterior ao R5-A2 no Web (a exceção fiscal com banco no Web foi removida) ou API sem banco/grants | Republicar o Web no R5-A2+ (sem `ConnectionStrings__Default` no pool Web); na API, conferir `ConnectionStrings__Default`, upgrade até **v2322** e `Fiscal__Credenciais__{referencia}` no pool da API se a falha for de credencial |
+| Cobrar fatura SaaS dá **503** ("credencial não configurada") | Falta `Cobranca__Credenciais__{PROVEDOR}` no pool da **API**, ou o provider está ausente/INATIVO em `cobranca_providers` (instalação nova semeia `SANDBOX` ATIVO na v2332) | Configurar o segredo por código no pool da API; conferir `select codigo, modo, status from plantaopro.cobranca_providers`. Obs.: repostar o mesmo evento de webhook responde `DUPLICADO` 200 por design (índice único é o árbitro do dedupe) — não é falha |
 | "Identificador ou senha inválidos" com senha correta | API está de fato recusando (não é rede) | Ver `api_error_logs`/logs da API; validar conta/perfil ativo no banco |
 
 ## 12. Relações

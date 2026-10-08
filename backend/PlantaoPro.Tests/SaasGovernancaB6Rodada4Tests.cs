@@ -33,6 +33,7 @@ namespace PlantaoPro.Tests;
 /// G5  Revogacao administrativa de sessao aberta: valida antes, invalida depois, motivo auditavel.
 /// G6  Downgrade imediato (S5): desativacao de contrato revoga sessoes abertas na mesma transacao.
 /// </summary>
+[Collection("saas-operacao-serial")]
 public sealed class SaasGovernancaB6Rodada4Tests : IDisposable
 {
     // Chave/módulo da cadeia de autorização (G2 e G6 compartilham o módulo).

@@ -1,10 +1,17 @@
 @model PlantaoPro.Web.Models.FaturaSaasViewModel
+@using PlantaoPro.Web.Controllers
 @{
     ViewData["Title"] = "Detalhe da fatura SaaS";
     var podePagar = Model.Status == "ABERTA" || Model.Status == "VENCIDA";
     var podeCancelar = Model.Status != "CANCELADA" && Model.Status != "PAGA";
     var podeContestar = Model.Status == "ABERTA" || Model.Status == "VENCIDA";
     var podeResolver = Model.Status == "EM_CONTESTACAO";
+    var podeOperarCobranca = (bool)(ViewBag.PodeOperarCobranca ?? false);
+    var podeCobrar = podeOperarCobranca && podePagar;
+    var apiBaseUrl = (string)(ViewBag.ApiBaseUrl ?? string.Empty);
+    var cobrancas = ViewBag.Cobrancas as List<CobrancaResumoWebDto> ?? new List<CobrancaResumoWebDto>();
+    var eventosCobranca = ViewBag.EventosCobranca as List<CobrancaEventoWebDto> ?? new List<CobrancaEventoWebDto>();
+    var cobrancaError = ViewBag.CobrancaError as string;
 }
 <div class="container py-3">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
@@ -17,6 +24,17 @@
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-outline-primary">Notificar cobrança</button>
             </form>
+            @if (podeOperarCobranca)
+            {
+                if (podeCobrar)
+                {
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCobrar">Gerar cobrança</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-primary" disabled title="Disponível apenas para faturas abertas ou vencidas">Gerar cobrança</button>
+                }
+            }
             @if (podePagar)
             {
                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalPagar">Marcar paga</button>
@@ -53,6 +71,64 @@
             <div class="col-md-3"><span class="text-muted">Pagamento</span><div class="fw-bold">@(Model.DataPagamento?.ToString("dd/MM/yyyy") ?? "Pendente")</div></div>
         </div>
     </div>
+
+    @if (podeOperarCobranca)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h2 class="h5">Cobrança online</h2>
+                @if (!string.IsNullOrWhiteSpace(cobrancaError))
+                {
+                    <div class="alert alert-danger mb-3">@cobrancaError</div>
+                }
+                @if (cobrancas.Count == 0)
+                {
+                    <p class="text-muted mb-0">Nenhuma cobrança online gerada para esta fatura.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-3">
+                            <thead><tr><th scope="col">Provider</th><th scope="col">Referência</th><th scope="col">Status</th><th scope="col">Valor</th><th scope="col">Gerada em</th><th scope="col">Checkout</th></tr></thead>
+                            <tbody>
+                            @foreach (var c in cobrancas)
+                            {
+                                <tr>
+                                    <td>@c.Provider</td>
+                                    <td><code>@c.Referencia</code></td>
+                                    <td>@c.Status</td>
+                                    <td>@c.Valor.ToString("C")</td>
+                                    <td>@c.CriadoEm.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td>
+                                        @if (c.Status == "PENDENTE" || c.Status == "INICIADA")
+                                        {
+                                            <a class="btn btn-sm btn-outline-primary" href="@($"{apiBaseUrl}{c.CheckoutPath}")" target="_blank" rel="noopener">Abrir checkout</a>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Encerrada</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (eventosCobranca.Count > 0)
+                {
+                    <h3 class="h6 mt-2">Eventos de cobrança</h3>
+                    <ol class="mb-2">
+                        @foreach (var e in eventosCobranca)
+                        {
+                            <li>@e.Em.ToString("dd/MM/yyyy HH:mm") · @e.Fonte / @e.Tipo@(string.IsNullOrWhiteSpace(e.Resultado) ? "" : $" · resultado {e.Resultado}")@(string.IsNullOrWhiteSpace(e.Mensagem) ? "" : $" — {e.Mensagem}")</li>
+                        }
+                    </ol>
+                }
+                <p class="text-muted small mb-0">O link de checkout apenas abre a página do sandbox; abrir ou recarregar nunca altera a fatura. O pagamento é confirmado pelo webhook assinado do provedor e registrado aqui com auditoria.</p>
+            </div>
+        </div>
+    }
 
     @if (podeResolver)
     {
@@ -132,3 +208,20 @@
         </form>
     </div>
 </div>
+
+@if (podeOperarCobranca)
+{
+    <div class="modal fade" id="modalCobrar" tabindex="-1" aria-labelledby="modalCobrarLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <form class="modal-content" asp-action="Cobrar" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header"><h2 class="modal-title h5" id="modalCobrarLabel">Gerar cobrança online</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button></div>
+                <div class="modal-body">
+                    <p class="mb-2">Será criada uma cobrança de <strong>@Model.Valor.ToString("C")</strong> no provedor ativo, com link de checkout para o cliente pagar sem informar dados de cartão nesta tela.</p>
+                    <div class="form-text">Se já existir uma cobrança ativa para esta fatura, o sistema reaproveita a existente em vez de duplicar a cobrança.</div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button><button type="submit" class="btn btn-primary">Gerar cobrança</button></div>
+            </form>
+        </div>
+    </div>
+}

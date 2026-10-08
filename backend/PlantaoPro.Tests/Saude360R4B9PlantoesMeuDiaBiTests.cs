@@ -16,6 +16,7 @@ namespace PlantaoPro.Tests;
 /// acoes derivadas (fechamento divergente, pagamento pendente, contestacao aberta),
 /// BI por competencia/fuso/escopo, dashboards e relatorios com competencia correta.
 /// </summary>
+[Collection("saas-operacao-serial")] // KPIs premium comparam delta GLOBAL (g0..g1): churn concorrente em escalas/agendamentos invalida a contagem
 public sealed class Saude360R4B9PlantoesMeuDiaBiTests
 {
     static Saude360R4B9PlantoesMeuDiaBiTests() => DapperTypeHandlerRegistrar.RegistrarTodos();

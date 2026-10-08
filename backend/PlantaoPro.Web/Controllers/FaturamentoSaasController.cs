@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -50,7 +51,45 @@ public sealed class FaturamentoSaasController : BaseWebController
             return RedirectToAction(nameof(Index));
         }
 
+        // R5-B6: cobranca online so e operavel por GLOBAL/ADMIN (mesmo gate da API).
+        var podeOperarCobranca = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador);
+        ViewBag.PodeOperarCobranca = podeOperarCobranca;
+        ViewBag.ApiBaseUrl = client.BaseAddress?.ToString().TrimEnd('/') ?? string.Empty;
+        if (podeOperarCobranca)
+        {
+            var (cob, cobError, _) = await ReadApiResponseAsync<CobrancaFaturaEventosWebDto>(client, $"api/cobranca/faturas/{id}/eventos");
+            ViewBag.Cobrancas = cob?.Cobrancas ?? new List<CobrancaResumoWebDto>();
+            ViewBag.EventosCobranca = cob?.Eventos ?? new List<CobrancaEventoWebDto>();
+            ViewBag.CobrancaError = cobError;
+        }
+
         return View(data);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cobrar(Guid id)
+    {
+        try
+        {
+            using var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+            var (data, error, statusCode) = await SendApiAsync<object, CobrancaCriadaWebDto>(client, HttpMethod.Post, $"api/cobranca/faturas/{id}/cobrar", new { providerCodigo = (string?)null });
+            var sucesso = (int)statusCode >= 200 && (int)statusCode <= 299;
+            if (sucesso && data is not null)
+                TempData["SuccessMessage"] = data.JaExistia
+                    ? "Já existia uma cobrança ativa para esta fatura; use o link de checkout na seção de cobrança."
+                    : "Cobrança gerada no provedor ativo. Abra o link de checkout para concluir o pagamento.";
+            else
+                TempData["ErrorMessage"] = error ?? "Não foi possível gerar a cobrança.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao gerar cobrança SaaS {FaturaId}", id);
+            TempData["Error"] = "Não foi possível gerar a cobrança.";
+        }
+
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     public IActionResult GerarMensal() => View(DateOnly.FromDateTime(DateTime.Today));
@@ -216,3 +255,9 @@ public sealed class FaturamentoSaasController : BaseWebController
         TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? sucesso : error ?? "A ação não pôde ser concluída.";
     }
 }
+
+// R5-B6: contratos de leitura da superficie api/cobranca consumidos pelo BFF.
+public sealed record CobrancaResumoWebDto(Guid CobrancaId, string Provider, string Referencia, string Status, decimal Valor, DateTime CriadoEm, string CheckoutPath);
+public sealed record CobrancaEventoWebDto(string Fonte, string Tipo, string? Resultado, string? Mensagem, DateTime Em);
+public sealed record CobrancaFaturaEventosWebDto(List<CobrancaResumoWebDto>? Cobrancas, List<CobrancaEventoWebDto>? Eventos);
+public sealed record CobrancaCriadaWebDto(Guid CobrancaId, string Referencia, string CheckoutPath, decimal Valor, string Status, bool JaExistia);

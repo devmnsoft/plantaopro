@@ -1105,6 +1105,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2332_b6_cobranca_saas",
+      "source": "database/migrations/2026_10_v2332_b6_cobranca_saas.sql",
+      "checksum": "b6aee89b3a44863c0a4399aac0f971065e46d6fd555d5baf16415b13120b74ab",
+      "dependsOn": [
+        "2026_10_v2331_b5_lgpd_consentimentos_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

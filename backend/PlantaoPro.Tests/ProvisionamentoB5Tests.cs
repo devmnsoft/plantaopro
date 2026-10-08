@@ -34,6 +34,7 @@ namespace PlantaoPro.Tests;
 ///     usuário com os perfis; reuso/corrida/expirado/revogado recusados;
 ///     perfil global rejeitado; revogar fora do tenant = 404.
 /// </summary>
+[Collection("saas-operacao-serial")]
 public sealed class ProvisionamentoB5Tests : IDisposable
 {
     private static readonly Guid B5Plano = Guid.Parse("b5000001-0000-4000-9000-000000000001");

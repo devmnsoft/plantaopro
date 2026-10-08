@@ -24,6 +24,7 @@ namespace PlantaoPro.Tests;
 ///   T8: dois XMLs MALFORMADO distintos coexistem em quarentena (identidade fora do índice parcial).
 /// Padrão A3: tenant fixo compartilhado, chaves geradas por execução, purge escopado em try/finally.
 /// </summary>
+[Collection("A360Transmissao")]
 public sealed class Administrativo360DocumentosWsA3Tests
 {
     private static string ObterConnectionString() => TestDatabase.ConnectionString;

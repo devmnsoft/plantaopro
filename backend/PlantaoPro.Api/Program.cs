@@ -206,6 +206,8 @@ builder.Services.AddScoped<Administrativo360Service>();
 builder.Services.AddScoped<Administrativo360FiscalService>();
 builder.Services.AddScoped<SolicitacoesPlanosService>();
 builder.Services.AddScoped<ConvitesEquipeService>();
+builder.Services.AddSingleton<ICobrancaProvider, SandboxCobrancaProvider>();
+builder.Services.AddScoped<CobrancaService>();
 string GetConn(IServiceProvider sp) => sp.GetRequiredService<IConfiguration>().GetConnectionString("Default") ?? connectionString!;
 builder.Services.AddScoped<ICadastrosRepository>(sp => new CadastrosRepository(GetConn(sp)));
 builder.Services.AddScoped<IComprasRepository>(sp => new ComprasRepository(GetConn(sp)));

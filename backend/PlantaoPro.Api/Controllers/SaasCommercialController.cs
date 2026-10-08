@@ -173,6 +173,50 @@ order by codigo", new { id });
         }
     }
 
+    /// <summary>
+    /// B4: matriz comercial canônica do plano (capacidades + limites + módulos +
+    /// recursos adicionais) em um único payload, lido das tabelas (sem preço
+    /// inventado). Fonte de acesso efetivo: EffectiveAccess (contrato
+    /// tenant_modulos ATIVO + grants).
+    /// </summary>
+    [HttpGet("{id:guid}/matriz")]
+    public async Task<IActionResult> Matriz(Guid id)
+    {
+        try
+        {
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var plano = await cn.QueryFirstOrDefaultAsync<PlanoComercialDto>(@"select id as ""Id"", coalesce(nome,'') as ""Nome"", coalesce(descricao,'') as ""Descricao"", valor_mensal as ""ValorMensal"",
+       limite_medicos as ""LimiteMedicos"", limite_hospitais as ""LimiteHospitais"", limite_plantoes_mes as ""LimitePlantoesMes"",
+       coalesce(limite_usuarios,0) as ""LimiteUsuarios"", coalesce(limite_convites_mes,0) as ""LimiteConvitesMes"",
+       coalesce(permite_mobile, permite_api, false) as ""PermiteMobile"",
+       coalesce(permite_bi, permite_relatorios, false) as ""PermiteBi"",
+       coalesce(permite_relatorios_avancados, permite_relatorios, false) as ""PermiteRelatoriosAvancados"",
+       coalesce(permite_integracoes, permite_api, false) as ""PermiteIntegracoes"",
+       coalesce(permite_operacao_assistida,false) as ""PermiteOperacaoAssistida"",
+       coalesce(permite_suporte_prioritario,false) as ""PermiteSuportePrioritario"",
+       coalesce(status,'') as ""Status""
+from plantaopro.planos where id=@id and reg_status='A'", new { id });
+            if (plano is null) return NotFound(ApiResponse<string>.Fail("Plano não encontrado.", 404));
+            var modulos = await cn.QueryAsync<PlanoMatrizModuloDto>(@"select pm.modulo_id as ""ModuloId"", coalesce(m.codigo, pm.codigo_modulo, pm.modulo_id::text) as ""Codigo"", coalesce(m.nome, pm.codigo_modulo, pm.modulo_id::text) as ""Nome"",
+       coalesce(pm.incluido, true) as ""Incluido"", pm.limite as ""Limite"", pm.preco_adicional as ""PrecoAdicional""
+from plantaopro.plano_modulos pm
+left join plantaopro.modulos_sistema m on m.id = pm.modulo_id
+where pm.plano_id = @id and pm.reg_status = 'A'
+order by coalesce(m.nome, pm.modulo_id::text)", new { id });
+            var recursos = await cn.QueryAsync<PlanoRecursoDto>(@"select id as ""Id"", plano_id as ""PlanoId"", coalesce(codigo,'') as ""Codigo"", coalesce(nome,'') as ""Nome"",
+       coalesce(descricao,'') as ""Descricao"", habilitado as ""Habilitado"", limite as ""Limite""
+from plantaopro.plano_recursos
+where plano_id=@id and reg_status='A'
+order by codigo", new { id });
+            return Ok(ApiResponse<PlanoMatrizDto>.Ok(new PlanoMatrizDto { Plano = plano, Modulos = modulos, Recursos = recursos }));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao carregar matriz do plano {PlanoId}", id);
+            return StatusCode(500, ApiResponse<string>.Fail("Não foi possível carregar a matriz do plano.", 500));
+        }
+    }
+
     [HttpPut("{id:guid}/recursos")]
     [Authorize(Roles = RolesConstants.AdministradorGlobal)]
     public async Task<IActionResult> AtualizarRecursos(Guid id, [FromBody] IEnumerable<PlanoRecursoRequest> request)
@@ -416,7 +460,7 @@ values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@Di
             await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             await using var tx = await cn.BeginTransactionAsync();
-            var atual = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, Guid PlanoId)>("select cliente_id as ClienteId, plano_id as PlanoId from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
+            var atual = await cn.QueryFirstOrDefaultAsync<(Guid ClienteId, Guid PlanoId, string Status)>("select cliente_id as ClienteId, plano_id as PlanoId, coalesce(status,'') as Status from plantaopro.assinaturas where id=@id and reg_status='A'", new { id }, tx);
             if (atual == default)
             {
                 await tx.RollbackAsync();
@@ -429,8 +473,8 @@ values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@Di
                 return BadRequest(ApiResponse<string>.Fail("Plano inativo não pode ser usado na assinatura.", 400));
             }
             await cn.ExecuteAsync("update plantaopro.assinaturas set plano_id=@PlanoId, reg_update=now() where id=@id", new { id, request.PlanoId }, tx);
-            await cn.ExecuteAsync(@"insert into plantaopro.assinatura_historico(id, assinatura_id, cliente_id, plano_id_anterior, plano_id_novo, acao, justificativa, reg_status, reg_date)
-values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_PLANO', @Justificativa, 'A', now())", new { id, atual.ClienteId, PlanoAnterior = atual.PlanoId, PlanoNovo = request.PlanoId, request.Justificativa }, tx);
+            await cn.ExecuteAsync(@"insert into plantaopro.assinatura_historico(id, assinatura_id, cliente_id, plano_id_anterior, plano_id_novo, acao, justificativa, status_novo, reg_status, reg_date)
+values(gen_random_uuid(), @id, @ClienteId, @PlanoAnterior, @PlanoNovo, 'ALTERAR_PLANO', @Justificativa, @Status, 'A', now())", new { id, atual.ClienteId, PlanoAnterior = atual.PlanoId, PlanoNovo = request.PlanoId, request.Justificativa, atual.Status }, tx);
             await tx.CommitAsync();
             await AuditarAsync(atual.ClienteId, id, AuditoriaConstants.Acoes.Editar, new { request.PlanoId, request.Justificativa });
             return Ok(ApiResponse<string>.Ok("ok", "Plano da assinatura alterado com sucesso."));

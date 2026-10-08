@@ -1006,6 +1006,61 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2323_b4_matriz_comercial_solicitacoes",
+      "source": "database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql",
+      "checksum": "f2f7346e2766eb244075bea44b57876b916e3d85d33ddee067b969822ed7a96f",
+      "dependsOn": [
+        "2026_10_v2322_adm360_grants_adm_cliente_r5_a2"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2324_b4_plano_modulos_canonicos",
+      "source": "database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql",
+      "checksum": "73bfb9aa1bda0239e70b316ddefd863671f554650291abd26edd09bfe1c527d3",
+      "dependsOn": [
+        "2026_10_v2323_b4_matriz_comercial_solicitacoes"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2325_b4_plano_recursos_colunas",
+      "source": "database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql",
+      "checksum": "42e81c6e6e7ea89f78b8352562c1edc1c2f4942e6ecc08e135c0895723b9dcb9",
+      "dependsOn": [
+        "2026_10_v2324_b4_plano_modulos_canonicos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2326_b4_assinatura_historico_colunas",
+      "source": "database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql",
+      "checksum": "18a8637b0ca7e0e67f308964a7240862e60ab282cc35940eb430b562a8e2ebcc",
+      "dependsOn": [
+        "2026_10_v2325_b4_plano_recursos_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2327_b4_historico_reg_status",
+      "source": "database/migrations/2026_10_v2327_b4_historico_reg_status.sql",
+      "checksum": "0e3bd84fc28080996cf3af631e812991a9039a04ee1b19e0943638c2ea184ef4",
+      "dependsOn": [
+        "2026_10_v2326_b4_assinatura_historico_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

@@ -98,6 +98,37 @@ order by m.essencial desc, m.ordem, m.nome";
         return item is null ? ApiResponse<SaasModuleDto>.Fail("Módulo não encontrado.", 404) : ApiResponse<SaasModuleDto>.Ok(item);
     }
 
+    /// <summary>
+    /// B4: ativa contratos AGENDADO cuja data de início chegou (inicio_previsto &lt;=
+    /// now). Idempotente: só AGENDADO vencido transiciona; cada ativação grava
+    /// trilha no tenant_modulos_historico. Chamado por rotina operacional (E13);
+    /// sem ativação automática implícita em leitura.
+    /// </summary>
+    public async Task<ApiResponse<int>> AtivarAgendadosAsync(string? ip, CancellationToken ct)
+    {
+        if (!currentUser.IsGlobalAdmin()) return ApiResponse<int>.Fail("Somente o Super Administrador MNSOFT pode ativar agendamentos.", 403);
+        await using var connection = Connection();
+        await connection.OpenAsync(ct);
+        await using var transaction = await connection.BeginTransactionAsync(ct);
+        var due = (await connection.QueryAsync<(Guid Id, Guid TenantId, Guid? ModuloId)>(new CommandDefinition(
+            "select id, tenant_id as \"TenantId\", modulo_id as \"ModuloId\" from plantaopro.tenant_modulos where reg_status='A' and upper(coalesce(status,''))='AGENDADO' and ativado_em is not null and ativado_em<=now() for update",
+            transaction, cancellationToken: ct))).AsList();
+        foreach (var row in due)
+        {
+            await connection.ExecuteAsync(new CommandDefinition(
+                "update plantaopro.tenant_modulos set status='ATIVO', habilitado=true, reg_update=now() where id=@id",
+                new { id = row.Id }, transaction, cancellationToken: ct));
+            await connection.ExecuteAsync(new CommandDefinition(
+                @"insert into plantaopro.tenant_modulos_historico(tenant_modulo_id,tenant_id,modulo_id,acao,antes,depois,usuario_id,ip_origem)
+values(@contractId,@tenantId,@moduleId,'ATIVACAO_AGENDADA','{""status"":""AGENDADO""}','{""status"":""ATIVO""}',@userId,@ip)",
+                new { contractId = row.Id, tenantId = row.TenantId, moduleId = row.ModuloId, userId = currentUser.UserId, ip }, transaction, cancellationToken: ct));
+        }
+        await transaction.CommitAsync(ct);
+        if (due.Count > 0)
+            await audit.RegistrarAsync(currentUser.UserId, null, "TENANT_MODULO", Guid.Empty, "ATIVACAO_AGENDADA", new { ativados = due.Count }, true, ip, "ADMINISTRADOR_GLOBAL", ct);
+        return ApiResponse<int>.Ok(due.Count, due.Count == 0 ? "Nenhum agendamento vencido." : $"{due.Count} contrato(s) ativado(s).");
+    }
+
     public async Task<ApiResponse<Guid>> SaveAsync(Guid? id, SaasModuleUpsertRequest request, string? ip, CancellationToken ct)
     {
         if (!currentUser.IsGlobalAdmin()) return ApiResponse<Guid>.Fail("Somente o Super Administrador MNSOFT pode alterar o catálogo e os preços.", 403);

@@ -1,1 +1,23 @@
-<section class="container py-4"><h1>Uso do plano</h1><p class="text-muted">Acompanhe consumo contra limites contratados.</p>@foreach (var item in new[] { "Médicos 35/100", "Hospitais 4/10", "Plantões 180/500", "Usuários 8/20" }){<div class="mb-3"><label class="form-label">@item</label><div class="progress"><div class="progress-bar" data-progress="45">45%</div></div></div>}<a class="btn btn-primary" asp-action="Upgrade">Solicitar upgrade</a></section>
+@model PlantaoPro.Web.Models.UsoPlanoWebViewModel
+@{
+    ViewData["Title"] = "Uso do plano";
+    string Limite(int usado, int limite) => limite <= 0 ? $"{usado} (ilimitado)" : $"{usado}/{limite}";
+    string Barra(int usado, int limite) => limite <= 0 ? "100" : Math.Min(100, (int)Math.Round(usado * 100.0 / limite)).ToString();
+}
+<section class="container py-4">
+    <h1>Uso do plano</h1>
+    <p class="text-muted">Acompanhe consumo contra limites contratados. Limite zero significa ilimitado.</p>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    else
+    {
+        <p><strong>@Model.PlanoNome</strong> <span class="badge bg-secondary">@Model.AssinaturaStatus</span></p>
+        @foreach (var item in new[] { ("Médicos", Model.MedicosUsados, Model.MedicosLimite), ("Hospitais", Model.HospitaisUsados, Model.HospitaisLimite), ("Plantões no mês", Model.PlantoesMesUsados, Model.PlantoesMesLimite), ("Usuários", Model.UsuariosUsados, Model.UsuariosLimite), ("Convites no mês", Model.ConvitesMesUsados, Model.ConvitesMesLimite) })
+        {
+            <div class="mb-3"><label class="form-label">@item.Item1 — @Limite(item.Item2, item.Item3)</label><div class="progress"><div class="progress-bar" style="width:@Barra(item.Item2, item.Item3)%">@Barra(item.Item2, item.Item3)%</div></div></div>
+        }
+    }
+    <a class="btn btn-primary" asp-action="Upgrade">Solicitar upgrade</a>
+</section>

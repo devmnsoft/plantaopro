@@ -1,41 +1,90 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
 
+/// <summary>
+/// B4: catálogo público lido da API (api/public/planos + faq) — preços, limites
+/// e recursos sempre do banco, nunca inventados. Em falha, lista vazia honesta
+/// (as views mostram "indisponível") em vez de tabela estática com valores.
+/// </summary>
 [AllowAnonymous]
 [Route("planos")]
 public sealed class PlanosPublicosController : Controller
 {
-    [HttpGet("")]
-    public IActionResult Index() => View(Planos());
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly IHttpClientFactory _factory;
+    private readonly ILogger<PlanosPublicosController> _logger;
 
-    [HttpGet("comparar")]
-    public IActionResult Comparar() => View(Planos());
-
-    [HttpGet("duvidas")]
-    public IActionResult Duvidas() => View(Faq());
-
-    internal static IEnumerable<PlanoFaqWebViewModel> Faq()
+    public PlanosPublicosController(IHttpClientFactory factory, ILogger<PlanosPublicosController> logger)
     {
-        return new List<PlanoFaqWebViewModel>
-        {
-            new PlanoFaqWebViewModel { Pergunta = "Posso começar sem implantação manual?", Resposta = "Sim. O cadastro self-service provisiona tenant, cliente, assinatura, administrador, LGPD, white label padrão e onboarding." },
-            new PlanoFaqWebViewModel { Pergunta = "White label está disponível em todos os planos?", Resposta = "White label depende do plano contratado e tem fallback visual seguro." },
-            new PlanoFaqWebViewModel { Pergunta = "Como funcionam upgrade e downgrade?", Resposta = "Upgrade registra solicitação comercial; downgrade valida limites atuais antes de prosseguir." }
-        };
+        _factory = factory;
+        _logger = logger;
     }
 
-    internal static IEnumerable<PlanoPublicoWebViewModel> Planos()
+    [HttpGet("")]
+    public async Task<IActionResult> Index() => View(await PlanosAsync());
+
+    [HttpGet("comparar")]
+    public async Task<IActionResult> Comparar() => View(await PlanosAsync());
+
+    [HttpGet("duvidas")]
+    public async Task<IActionResult> Duvidas() => View(await FaqAsync());
+
+    internal async Task<IEnumerable<PlanoPublicoWebViewModel>> PlanosAsync() =>
+        await GetAsync<List<PlanoPublicoWebViewModel>>("api/public/planos") ?? new List<PlanoPublicoWebViewModel>();
+
+    internal async Task<IEnumerable<PlanoFaqWebViewModel>> FaqAsync() =>
+        await GetAsync<List<PlanoFaqWebViewModel>>("api/public/planos/faq") ?? new List<PlanoFaqWebViewModel>();
+
+    internal static IEnumerable<PlanoPublicoWebViewModel> Planos() => Enumerable.Empty<PlanoPublicoWebViewModel>();
+
+    internal static IEnumerable<PlanoFaqWebViewModel> Faq() => Enumerable.Empty<PlanoFaqWebViewModel>();
+
+    internal static async Task<List<PlanoPublicoWebViewModel>> CatalogoAsync(IHttpClientFactory factory, ILogger logger)
     {
-        return new List<PlanoPublicoWebViewModel>
+        try
         {
-            new PlanoPublicoWebViewModel { Nome = "Essencial", Slug = "essencial", Descricao = "Para equipes iniciando a gestão digital de plantões.", ValorMensal = 399, LimiteMedicos = 20, LimiteHospitais = 2, LimitePlantoesMes = 100, LimiteUsuarios = 5, Recursos = new [] { "Área do médico Web", "Notificações internas", "Relatórios básicos", "Suporte padrão" } },
-            new PlanoPublicoWebViewModel { Nome = "Profissional", Slug = "profissional", Descricao = "Para operações em crescimento com mobile e relatórios avançados.", ValorMensal = 899, LimiteMedicos = 100, LimiteHospitais = 10, LimitePlantoesMes = 500, LimiteUsuarios = 20, PermiteMobile = true, Destaque = true, Recursos = new [] { "API Mobile", "Relatórios avançados", "Operação Assistida", "Suporte prioritário" } },
-            new PlanoPublicoWebViewModel { Nome = "Enterprise", Slug = "enterprise", Descricao = "Para redes com white label, BI, integrações e SLA customizado.", ValorMensal = 1999, LimiteMedicos = 0, LimiteHospitais = 0, LimitePlantoesMes = 0, LimiteUsuarios = 0, PermiteMobile = true, PermiteBi = true, PermiteWhiteLabel = true, Recursos = new [] { "White label", "BI", "Integrações/API", "Customer Success avançado" } },
-            new PlanoPublicoWebViewModel { Nome = "Custom", Slug = "custom", Descricao = "Projeto sob medida com implantação assistida completa.", ValorMensal = 0, LimiteMedicos = 0, LimiteHospitais = 0, LimitePlantoesMes = 0, LimiteUsuarios = 0, PermiteMobile = true, PermiteBi = true, PermiteWhiteLabel = true, Recursos = new [] { "Precificação sob proposta", "Integrações específicas", "Contrato personalizado" } }
-        };
+            var client = factory.CreateClient("PlantaoProApi");
+            using var response = await client.GetAsync("api/public/planos");
+            if (!response.IsSuccessStatusCode) return new List<PlanoPublicoWebViewModel>();
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("data", out var data)
+                && data.ValueKind != JsonValueKind.Null)
+                return JsonSerializer.Deserialize<List<PlanoPublicoWebViewModel>>(data.GetRawText(), JsonOptions) ?? new List<PlanoPublicoWebViewModel>();
+            return JsonSerializer.Deserialize<List<PlanoPublicoWebViewModel>>(root.GetRawText(), JsonOptions) ?? new List<PlanoPublicoWebViewModel>();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Catálogo público de planos indisponível.");
+            return new List<PlanoPublicoWebViewModel>();
+        }
+    }
+
+    private async Task<T?> GetAsync<T>(string endpoint) where T : class
+    {
+        try
+        {
+            var client = _factory.CreateClient("PlantaoProApi");
+            using var response = await client.GetAsync(endpoint);
+            if (!response.IsSuccessStatusCode) return null;
+            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+            var root = doc.RootElement;
+            if (root.ValueKind == JsonValueKind.Object
+                && root.TryGetProperty("data", out var data)
+                && data.ValueKind != JsonValueKind.Null)
+                return JsonSerializer.Deserialize<T>(data.GetRawText(), JsonOptions);
+            return JsonSerializer.Deserialize<T>(root.GetRawText(), JsonOptions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Catálogo público indisponível. Endpoint:{Endpoint}", endpoint);
+            return null;
+        }
     }
 }
 
@@ -43,24 +92,33 @@ public sealed class PlanosPublicosController : Controller
 [Route("cadastro")]
 public sealed class CadastroController : Controller
 {
+    private readonly IHttpClientFactory _factory;
+    private readonly ILogger<CadastroController> _logger;
+
+    public CadastroController(IHttpClientFactory factory, ILogger<CadastroController> logger)
+    {
+        _factory = factory;
+        _logger = logger;
+    }
+
     [HttpGet("")]
     public IActionResult Index() => RedirectToAction(nameof(Empresa));
 
     [HttpGet("empresa")]
-    public IActionResult Empresa() => View("Cadastro", CriarModelo());
+    public async Task<IActionResult> Empresa() => View("Cadastro", await CriarModeloAsync());
 
     [HttpGet("plano")]
-    public IActionResult Plano() => View("Cadastro", CriarModelo());
+    public async Task<IActionResult> Plano() => View("Cadastro", await CriarModeloAsync());
 
     [HttpGet("usuario")]
-    public IActionResult Usuario() => View("Cadastro", CriarModelo());
+    public async Task<IActionResult> Usuario() => View("Cadastro", await CriarModeloAsync());
 
     [HttpGet("confirmacao")]
-    public IActionResult Confirmacao() => View("Cadastro", CriarModelo());
+    public async Task<IActionResult> Confirmacao() => View("Cadastro", await CriarModeloAsync());
 
     [HttpPost("confirmacao")]
     [ValidateAntiForgeryToken]
-    public IActionResult Confirmar(CadastroSelfServiceWebViewModel model)
+    public async Task<IActionResult> Confirmar(CadastroSelfServiceWebViewModel model)
     {
         if (!model.AceiteTermos || !model.AceitePrivacidade)
         {
@@ -68,7 +126,7 @@ public sealed class CadastroController : Controller
         }
         if (!ModelState.IsValid)
         {
-            model.Planos = PlanosPublicosController.Planos();
+            model.Planos = await PlanosPublicosController.CatalogoAsync(_factory, _logger);
             TempData["Error"] = "Revise os campos obrigatórios.";
             return View("Cadastro", model);
         }
@@ -79,9 +137,9 @@ public sealed class CadastroController : Controller
     [HttpGet("sucesso")]
     public IActionResult Sucesso() => View();
 
-    private static CadastroSelfServiceWebViewModel CriarModelo()
+    private async Task<CadastroSelfServiceWebViewModel> CriarModeloAsync()
     {
-        return new CadastroSelfServiceWebViewModel { Planos = PlanosPublicosController.Planos(), Periodicidade = "MENSAL", ConsentimentoLgpd = true };
+        return new CadastroSelfServiceWebViewModel { Planos = await PlanosPublicosController.CatalogoAsync(_factory, _logger), Periodicidade = "MENSAL", ConsentimentoLgpd = true };
     }
 }
 

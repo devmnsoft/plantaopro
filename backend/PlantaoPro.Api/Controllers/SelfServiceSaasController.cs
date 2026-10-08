@@ -407,6 +407,13 @@ public sealed class MinhaAssinaturaController : ControllerBase
         return StatusCode(result.StatusCode, result);
     }
 
+    [HttpGet("solicitacoes")]
+    public async Task<IActionResult> Solicitacoes()
+    {
+        var result = await _service.MinhasSolicitacoesAsync();
+        return StatusCode(result.StatusCode, result);
+    }
+
     [HttpGet("faturas")]
     public async Task<IActionResult> Faturas()
     {

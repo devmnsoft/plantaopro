@@ -1,1 +1,21 @@
-<section class="container py-4"><h1>Faturas</h1><div class="card"><table class="table mb-0"><thead><tr><th>Competência</th><th>Status</th><th>Valor</th></tr></thead><tbody><tr><td>Atual</td><td><span class="badge bg-warning text-dark">Aberta</span></td><td>R$ 899,00</td></tr></tbody></table></div></section>
+@model PlantaoPro.Web.Models.FaturasAssinaturaWebViewModel
+<section class="container py-4">
+    <h1>Faturas</h1>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    else if (Model.Faturas.Count == 0)
+    {
+        <div class="alert alert-secondary">Nenhuma fatura lançada para esta assinatura até o momento.</div>
+    }
+    else
+    {
+        <div class="card"><table class="table mb-0"><thead><tr><th>Vencimento</th><th>Status</th><th>Valor</th></tr></thead><tbody>
+        @foreach (var f in Model.Faturas)
+        {
+            <tr><td>@(f.Data?.ToString("dd/MM/yyyy") ?? "—")</td><td>@f.Status</td><td>@f.Valor</td></tr>
+        }
+        </tbody></table></div>
+    }
+</section>

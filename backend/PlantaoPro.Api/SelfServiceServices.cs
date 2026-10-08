@@ -459,7 +459,11 @@ and exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenant
     public async Task<ApiResponse<MinhaAssinaturaDto>> MinhaAssinaturaAsync()
     {
         var ctx = await _tenantContext.ObterAtualAsync();
-        if (!ctx.Success || ctx.Data?.ClienteId is null) return ApiResponse<MinhaAssinaturaDto>.Fail(ctx.Message, ctx.StatusCode);
+        if (!ctx.Success) return ApiResponse<MinhaAssinaturaDto>.Fail(ctx.Message, ctx.StatusCode);
+        // B4: tenant resolvido mas sem cliente vinculado (ex.: demo sem assinatura)
+        // devolvia Fail(ctx.Message=200/"Sucesso") — envelope 200-falso. Estado
+        // explícito: 404 honesto, propagado por uso/faturas/solicitações.
+        if (ctx.Data?.ClienteId is null) return ApiResponse<MinhaAssinaturaDto>.Fail("Organização sem cliente vinculado para a assinatura.", 404);
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
         var dto = await cn.QueryFirstOrDefaultAsync<MinhaAssinaturaDto>(@"select a.id as ""AssinaturaId"", a.cliente_id as ""ClienteId"", a.plano_id as ""PlanoId"", coalesce(p.nome,'') as ""PlanoNome"", coalesce(a.status,'') as ""Status"", a.valor_contratado as ""ValorContratado"", a.data_inicio as ""DataInicio"", a.data_fim as ""DataFim"" from plantaopro.assinaturas a join plantaopro.planos p on p.id=a.plano_id where a.cliente_id=@clienteId and a.reg_status='A' order by a.reg_date desc limit 1", new { clienteId = ctx.Data.ClienteId.Value });
         return dto is null ? ApiResponse<MinhaAssinaturaDto>.Fail("Assinatura não encontrada.", 404) : ApiResponse<MinhaAssinaturaDto>.Ok(dto);
@@ -501,8 +505,50 @@ and exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenant
     public async Task<ApiResponse<UsoPlanoDto>> ObterUsoPlanoAsync()
     {
         var ctx = await _tenantContext.ObterAtualAsync();
-        if (!ctx.Success || ctx.Data?.ClienteId is null) return ApiResponse<UsoPlanoDto>.Fail(ctx.Message, ctx.StatusCode);
+        if (!ctx.Success) return ApiResponse<UsoPlanoDto>.Fail(ctx.Message, ctx.StatusCode);
+        if (ctx.Data?.ClienteId is null) return ApiResponse<UsoPlanoDto>.Fail("Organização sem cliente vinculado para a assinatura.", 404);
         return await _assinaturaGuard.ObterUsoPlanoAsync(ctx.Data.ClienteId.Value);
+    }
+
+    /// <summary>
+    /// B4: solicitações de plano do próprio tenant (upgrade/downgrade/
+    /// cancelamento) com mensagem de estado honesta — "aguardando avaliação",
+    /// nunca "concluído".
+    /// </summary>
+    public async Task<ApiResponse<IEnumerable<MinhaSolicitacaoPlanoDto>>> MinhasSolicitacoesAsync()
+    {
+        try
+        {
+            var ctx = await _tenantContext.ObterAtualAsync();
+            if (!ctx.Success) return ApiResponse<IEnumerable<MinhaSolicitacaoPlanoDto>>.Fail(ctx.Message, ctx.StatusCode);
+            if (ctx.Data?.TenantId is null) return ApiResponse<IEnumerable<MinhaSolicitacaoPlanoDto>>.Fail("Organização sem tenant identificado.", 404);
+            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+            var rows = new List<MinhaSolicitacaoPlanoDto>();
+            foreach (var tabela in new[] { "plantaopro.upgrade_solicitacoes", "plantaopro.downgrade_solicitacoes" })
+            {
+                var kind = tabela.Contains("upgrade") ? "UPGRADE" : "DOWNGRADE";
+                rows.AddRange(await cn.QueryAsync<MinhaSolicitacaoPlanoDto>($@"select s.id as ""Id"",
+       case when upper(coalesce(s.status,''))='CANCELAMENTO_SOLICITADO' then 'CANCELAMENTO' else '{kind}' end as ""Tipo"",
+       coalesce(pd.nome,'') as ""PlanoDestinoNome"", coalesce(s.status,'') as ""Status"", s.reg_date as ""SolicitadoEm"",
+       case upper(coalesce(s.status,''))
+         when 'SOLICITADO' then 'Aguardando avaliacao comercial. Nada mudou no seu plano.'
+         when 'CANCELAMENTO_SOLICITADO' then 'Aguardando avaliacao comercial. Seu acesso continua ativo.'
+         when 'APROVADA' then 'Aprovada e aplicada. Confira os dados atuais da assinatura.'
+         when 'RECUSADA' then 'Recusada pela avaliacao comercial. Nada mudou no seu plano.'
+         else 'Verifique a situacao com o atendimento comercial.'
+       end as ""MensagemEstado""
+  from {tabela} s
+  left join plantaopro.planos pd on pd.id=s.plano_destino_id
+ where s.reg_status='A' and s.tenant_id=@tenantId
+ order by s.reg_date desc limit 50", new { tenantId = ctx.Data.TenantId.Value }));
+            }
+            return ApiResponse<IEnumerable<MinhaSolicitacaoPlanoDto>>.Ok(rows.OrderByDescending(r => r.SolicitadoEm));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Erro ao listar minhas solicitacoes de plano");
+            return ApiResponse<IEnumerable<MinhaSolicitacaoPlanoDto>>.Fail("Não foi possível listar as solicitações.", 500);
+        }
     }
 
     public async Task<ApiResponse<IEnumerable<MinhaAssinaturaFaturaDto>>> FaturasMinhaAssinaturaAsync()

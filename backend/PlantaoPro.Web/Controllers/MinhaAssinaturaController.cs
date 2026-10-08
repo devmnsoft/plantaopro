@@ -17,22 +17,40 @@ public sealed class MinhaAssinaturaController : BaseWebController
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
-        var result = await ReadApiResponseAsync<MinhaAssinaturaViewModel>(client, "api/minha-assinatura");
+        var result = await ReadApiResponseAsync<AssinaturaDto>(client, "api/minha-assinatura");
         if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
 
-        var model = result.Data ?? new MinhaAssinaturaViewModel();
+        var model = new MinhaAssinaturaViewModel();
         if (result.StatusCode == HttpStatusCode.Forbidden)
             model.ErrorMessage = "Você não tem permissão para consultar os dados da assinatura.";
         else if (result.StatusCode == HttpStatusCode.NotFound)
             model.ErrorMessage = null;
-        else if (!string.IsNullOrWhiteSpace(result.Error) && result.Data is null)
+        else if (result.Data is not null)
+        {
+            model.Plano = result.Data.PlanoNome;
+            model.Status = result.Data.Status;
+            model.Vencimento = result.Data.DataFim.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(result.Data.DataFim.Value, DateTimeKind.Utc)) : null;
+        }
+        else if (!string.IsNullOrWhiteSpace(result.Error))
             model.ErrorMessage = result.Error;
+
+        var solicitacoes = await ReadApiListResponseAsync<MinhaSolicitacaoPlanoWebViewModel>(client, "api/minha-assinatura/solicitacoes");
+        model.Solicitacoes = solicitacoes.Data.ToArray();
 
         return View(model);
     }
 
     [HttpGet("Uso")]
-    public IActionResult Uso() => View("Uso");
+    public async Task<IActionResult> Uso()
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var result = await ReadApiResponseAsync<UsoPlanoWebViewModel>(client, "api/minha-assinatura/uso");
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+
+        return View("Uso", result.Data ?? new UsoPlanoWebViewModel { ErrorMessage = result.Error ?? "Não foi possível carregar o uso do plano." });
+    }
 
     [HttpGet("Modulos")]
     public async Task<IActionResult> Modulos()
@@ -108,17 +126,147 @@ public sealed class MinhaAssinaturaController : BaseWebController
     }
 
     [HttpGet("Limites")]
-    public IActionResult Limites() => View("Limites");
+    public async Task<IActionResult> Limites()
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var result = await ReadApiResponseAsync<UsoPlanoWebViewModel>(client, "api/minha-assinatura/uso");
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+
+        return View("Limites", result.Data ?? new UsoPlanoWebViewModel { ErrorMessage = result.Error ?? "Não foi possível carregar os limites do plano." });
+    }
 
     [HttpGet("Upgrade")]
-    public IActionResult Upgrade() => View("Upgrade", PlanosPublicosController.Planos());
+    public async Task<IActionResult> Upgrade() => View("Upgrade", await UpgradeDowngradeAsync("UPGRADE"));
 
     [HttpGet("Downgrade")]
-    public IActionResult Downgrade() => View("Downgrade", PlanosPublicosController.Planos());
+    public async Task<IActionResult> Downgrade() => View("Downgrade", await UpgradeDowngradeAsync("DOWNGRADE"));
+
+    [HttpPost("SolicitarUpgrade")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarUpgrade(Guid planoDestinoId, [FromForm] string? motivo) =>
+        await SolicitarMudancaAsync("upgrade", planoDestinoId, motivo);
+
+    [HttpPost("SolicitarDowngrade")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarDowngrade(Guid planoDestinoId, [FromForm] string? motivo) =>
+        await SolicitarMudancaAsync("downgrade", planoDestinoId, motivo);
 
     [HttpGet("Faturas")]
-    public IActionResult Faturas() => View("Faturas");
+    public async Task<IActionResult> Faturas()
+    {
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var result = await ReadApiListResponseAsync<FaturaDto>(client, "api/minha-assinatura/faturas");
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+
+        var model = new FaturasAssinaturaWebViewModel
+        {
+            Faturas = result.Data.Select(f => new AssinaturaCobrancaViewModel
+            {
+                Data = new DateTimeOffset(DateTime.SpecifyKind(f.Vencimento, DateTimeKind.Utc)),
+                Status = f.Status,
+                Valor = f.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+            }).ToArray(),
+            ErrorMessage = result.Error
+        };
+        return View("Faturas", model);
+    }
 
     [HttpGet("Cancelamento")]
     public IActionResult Cancelamento() => View("Cancelamento");
+
+    [HttpPost("SolicitarCancelamento")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SolicitarCancelamento([FromForm] string? motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo) || motivo.Trim().Length < 10)
+        {
+            TempData["Error"] = "Informe um motivo com pelo menos 10 caracteres.";
+            return RedirectToAction(nameof(Cancelamento));
+        }
+
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var result = await SendApiAsync<SolicitarCancelamentoRequest, string>(
+            client, HttpMethod.Post, "api/minha-assinatura/solicitar-cancelamento",
+            new SolicitarCancelamentoRequest(motivo.Trim()));
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+        if (result.Data is null)
+        {
+            TempData["Error"] = result.Error ?? "Não foi possível registrar a solicitação.";
+            return RedirectToAction(nameof(Cancelamento));
+        }
+
+        TempData["Success"] = "Solicitação registrada para avaliação comercial. Seu acesso continua ativo — nada foi encerrado automaticamente.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<UpgradeDowngradeWebViewModel> UpgradeDowngradeAsync(string acao)
+    {
+        var model = new UpgradeDowngradeWebViewModel { Acao = acao };
+        var client = CreateApiClient();
+        if (!AddBearerToken(client))
+        {
+            model.ErrorMessage = "Sessão expirada. Faça login novamente.";
+            return model;
+        }
+
+        var assinatura = await ReadApiResponseAsync<AssinaturaDto>(client, "api/minha-assinatura");
+        if (assinatura.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            model.ErrorMessage = "Sessão expirada. Faça login novamente.";
+            return model;
+        }
+        if (assinatura.Data is not null)
+        {
+            model.AssinaturaPlanoId = assinatura.Data.PlanoId;
+            model.AssinaturaPlanoNome = assinatura.Data.PlanoNome;
+        }
+
+        var planos = await ReadApiListResponseAsync<PlanoPublicoWebViewModel>(client, "api/planos/publicos");
+        model.Planos = planos.Data.ToArray();
+        var solicitacoes = await ReadApiListResponseAsync<MinhaSolicitacaoPlanoWebViewModel>(client, "api/minha-assinatura/solicitacoes");
+        model.Solicitacoes = solicitacoes.Data
+            .Where(s => string.Equals(s.Status, "SOLICITADO", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(s.Status, "CANCELAMENTO_SOLICITADO", StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        model.ErrorMessage = planos.Error ?? solicitacoes.Error
+            ?? (model.Planos.Count == 0 ? "Catálogo de planos indisponível no momento." : null);
+        return model;
+    }
+
+    private async Task<IActionResult> SolicitarMudancaAsync(string tipo, Guid planoDestinoId, string? motivo)
+    {
+        var destino = string.Equals(tipo, "downgrade", StringComparison.OrdinalIgnoreCase) ? nameof(Downgrade) : nameof(Upgrade);
+        if (planoDestinoId == Guid.Empty)
+        {
+            TempData["Error"] = "Selecione o plano destino.";
+            return RedirectToAction(destino);
+        }
+
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var result = await SendApiAsync<SolicitarMudancaPlanoRequest, string>(
+            client, HttpMethod.Post, $"api/minha-assinatura/solicitar-{tipo}",
+            new SolicitarMudancaPlanoRequest(planoDestinoId, motivo?.Trim() ?? string.Empty));
+        if (result.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();
+        if (result.Data is null)
+        {
+            TempData["Error"] = result.Error ?? "Não foi possível registrar a solicitação.";
+            return RedirectToAction(destino);
+        }
+
+        TempData["Success"] = "Solicitação registrada para avaliação comercial. Nada mudou no seu plano.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    private sealed record AssinaturaDto(Guid AssinaturaId, Guid ClienteId, Guid PlanoId, string PlanoNome, string Status, decimal ValorContratado, DateTime DataInicio, DateTime? DataFim);
+    private sealed record FaturaDto(Guid Id, Guid ClienteId, Guid AssinaturaId, DateTime Vencimento, decimal Valor, string Status, string Descricao);
+    private sealed record SolicitarMudancaPlanoRequest(Guid PlanoDestinoId, string Motivo);
+    private sealed record SolicitarCancelamentoRequest(string Motivo);
 }

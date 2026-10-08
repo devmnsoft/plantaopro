@@ -375,6 +375,71 @@ public record PlanoRecursoRequest(string Codigo, string Nome, string? Descricao,
 public record AlterarPlanoAssinaturaRequest(Guid PlanoId, string Justificativa);
 public record ResolverContestacaoFaturaRequest(string Resposta);
 
+// ============================================================================
+// B4 - MATRIZ COMERCIAL CANONICA (plano -> modulos -> capacidades -> limites ->
+// recursos adicionais) + estados explicitos das solicitacoes de plano.
+// Fonte unica de acesso: EffectiveAccess (tenant_modulos ATIVO com vigencia +
+// grants do perfil). Sem precos inventados: tudo vem das tabelas.
+// ============================================================================
+
+/// <summary>Módulo vinculado ao plano (plano_modulos): incluído ou adicional.</summary>
+public sealed class PlanoMatrizModuloDto
+{
+    public Guid? ModuloId { get; set; }
+    public string Codigo { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public bool Incluido { get; set; }
+    public int? Limite { get; set; }
+    public decimal? PrecoAdicional { get; set; }
+}
+
+/// <summary>Matriz canônica de um plano: capacidades, limites, módulos e recursos.</summary>
+public sealed class PlanoMatrizDto
+{
+    public PlanoComercialDto Plano { get; set; } = new();
+    public IEnumerable<PlanoMatrizModuloDto> Modulos { get; set; } = Array.Empty<PlanoMatrizModuloDto>();
+    public IEnumerable<PlanoRecursoDto> Recursos { get; set; } = Array.Empty<PlanoRecursoDto>();
+    public string FonteAcesso { get; set; } = "EffectiveAccess: tenant_modulos ATIVO com vigencia + grants do perfil.";
+    public IEnumerable<string> Regras { get; set; } = new[]
+    {
+        "Limite zero significa ilimitado (guard: limite <= 0 libera).",
+        "Assinatura: TRIAL/ATIVA operam; vigencia (data_fim) e trial (data_trial_fim) barrados na leitura com 403.",
+        "Modulo AGENDADO so opera apos ativacao (POST api/admin-saas/modulos/ativar-agendados).",
+        "Upgrade/downgrade self-service viram solicitacao (SOLICITADO); a troca efetiva so ocorre na aprovacao B2B, com historico ALTERAR_PLANO.",
+        "Carencia: sem modelo de dados — decisao pendente, nao assumida."
+    };
+}
+
+/// <summary>Solicitação de plano (upgrade/downgrade/cancelamento) com estado explícito.</summary>
+public sealed class SolicitacaoPlanoDto
+{
+    public Guid Id { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public Guid? TenantId { get; set; }
+    public Guid? ClienteId { get; set; }
+    public Guid? AssinaturaId { get; set; }
+    public Guid? PlanoAtualId { get; set; }
+    public string PlanoAtualNome { get; set; } = string.Empty;
+    public Guid? PlanoDestinoId { get; set; }
+    public string PlanoDestinoNome { get; set; } = string.Empty;
+    public string Motivo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime SolicitadoEm { get; set; }
+    public DateTime? DecididoEm { get; set; }
+    public string JustificativaDecisao { get; set; } = string.Empty;
+}
+
+/// <summary>Visão do cliente: solicitação + mensagem de estado honesta (nunca "concluído").</summary>
+public sealed class MinhaSolicitacaoPlanoDto
+{
+    public Guid Id { get; set; }
+    public string Tipo { get; set; } = string.Empty;
+    public string PlanoDestinoNome { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime SolicitadoEm { get; set; }
+    public string MensagemEstado { get; set; } = string.Empty;
+}
+
 public sealed class RelatorioSaasLinhaDto
 {
     public Guid? ClienteId { get; set; }

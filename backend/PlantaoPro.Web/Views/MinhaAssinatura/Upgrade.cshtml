@@ -1,2 +1,35 @@
-@model IEnumerable<PlantaoPro.Web.Models.PlanoPublicoWebViewModel>
-<section class="container py-4"><h1>Solicitar upgrade</h1><p class="text-muted">Solicitação gera evento comercial, notificação global e auditoria.</p>@foreach (var plano in Model){<div class="card card-body mb-2"><div class="d-flex justify-content-between"><strong>@plano.Nome</strong><button type="button" class="btn btn-primary btn-sm">Solicitar</button></div></div>}</section>
+@model PlantaoPro.Web.Models.UpgradeDowngradeWebViewModel
+<section class="container py-4">
+    <h1>Solicitar upgrade</h1>
+    <p class="text-muted">A solicitação gera avaliação comercial com auditoria. <strong>Nada muda no seu plano até a aprovação.</strong></p>
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+    @if (Model.Solicitacoes.Count > 0)
+    {
+        <div class="alert alert-warning"><strong>Solicitações em avaliação:</strong><ul class="mb-0">@foreach (var s in Model.Solicitacoes){<li>@s.Tipo → @s.PlanoDestinoNome — @s.MensagemEstado</li>}</ul></div>
+    }
+    @if (Model.Planos.Count == 0 && string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-secondary">Catálogo de planos indisponível no momento. Tente novamente em instantes.</div>
+    }
+    @foreach (var plano in Model.Planos)
+    {
+        <div class="card card-body mb-2">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div><strong>@plano.Nome</strong> <span class="text-muted">— @(plano.ValorMensal <= 0 ? "Sob proposta" : plano.ValorMensal.ToString("C"))</span>
+                @if (plano.Id == Model.AssinaturaPlanoId){<span class="badge bg-secondary ms-1">Plano atual</span>}</div>
+                @if (plano.Id != Model.AssinaturaPlanoId)
+                {
+                    <form asp-action="SolicitarUpgrade" method="post" class="d-flex gap-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="planoDestinoId" value="@plano.Id" />
+                        <input type="text" name="motivo" maxlength="500" placeholder="Motivo (opcional)" class="form-control form-control-sm" />
+                        <button type="submit" class="btn btn-primary btn-sm">Solicitar</button>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</section>

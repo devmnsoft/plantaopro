@@ -163,7 +163,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             return;
         }
 
-        var action = ResolvePermissionAction(descriptor.ActionName);
+        var action = ResolvePermissionAction(descriptor.ControllerName, descriptor.ActionName);
         if (permissions.HasPermission(module, action) && modules.IsModuleEnabled(module))
         {
             return;
@@ -193,7 +193,37 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             || descriptor.ControllerTypeInfo.GetCustomAttributes(typeof(AllowAnonymousAttribute), true).Length > 0;
     }
 
-    private static string ResolvePermissionAction(string actionName)
+    // R5-A2: overrides por "Controller/Action" (antes do switch generico, que manda
+    // "Cancelar" -> EXCLUIR). Autorizacao POR ACAO nas telas fiscais: leitura (VER)
+    // para todos os GETs; escrita mapeada 1:1 para as politicas da API fiscal.
+    private static readonly IReadOnlyDictionary<string, string> PermissionActionOverrides = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        ["Adm360FiscalWeb/Configurar"] = "VER",
+        ["Adm360FiscalWeb/Notas"] = "VER",
+        ["Adm360FiscalWeb/Nova"] = "VER",
+        ["Adm360FiscalWeb/Detalhes"] = "VER",
+        ["Adm360FiscalWeb/SalvarConfiguracao"] = "CONFIGURAR",
+        ["Adm360FiscalWeb/SalvarNota"] = "CRIAR",
+        ["Adm360FiscalWeb/MarcarPronta"] = "EDITAR",
+        ["Adm360FiscalWeb/Emitir"] = "CONFIRMAR",
+        ["Adm360FiscalWeb/Reabrir"] = "REABRIR",
+        ["Adm360FiscalWeb/CancelarNota"] = "CANCELAR",
+        ["Adm360DocumentosXmlWeb/Importar"] = "IMPORTAR_XML",
+        ["Adm360DocumentosXmlWeb/Conferir"] = "CONFERIR",
+        ["Adm360DocumentosXmlWeb/Manifestar"] = "MANIFESTAR_DFE",
+        ["Adm360DocumentosXmlWeb/VincularRecebimento"] = "VINCULAR_DOCUMENTOS",
+        ["Adm360DocumentosXmlWeb/AbrirTriagem"] = "CRIAR",
+        ["Adm360DocumentosXmlWeb/ResolverTriagem"] = "CONFIRMAR"
+    };
+
+    private static string ResolvePermissionAction(string controllerName, string actionName)
+    {
+        if (PermissionActionOverrides.TryGetValue(controllerName + "/" + actionName, out var overrideAction))
+            return overrideAction;
+        return ResolvePermissionActionGeneric(actionName);
+    }
+
+    private static string ResolvePermissionActionGeneric(string actionName)
     {
         if (string.Equals(actionName, "Create", StringComparison.OrdinalIgnoreCase) || string.Equals(actionName, "Criar", StringComparison.OrdinalIgnoreCase)) return "CRIAR";
         if (string.Equals(actionName, "Edit", StringComparison.OrdinalIgnoreCase) || string.Equals(actionName, "Editar", StringComparison.OrdinalIgnoreCase)) return "EDITAR";

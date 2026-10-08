@@ -32,6 +32,12 @@ public sealed class ParametrosFiscaisConfiguracaoViewModel
     /// <summary>Decisões comerciais ausentes (pendência P2) — lista explícita, nunca omissão.</summary>
     public IReadOnlyList<string> PendenciasP2 { get; init; } = Array.Empty<string>();
 
+    /// <summary>Disponibilidade do segredo NO AMBIENTE da API (A33) — null quando desconhecido.</summary>
+    public bool? CredencialDisponivelNoAmbiente { get; init; }
+
+    /// <summary>Existe conector registrado para o provedor no ambiente (P1) — null quando desconhecido.</summary>
+    public bool? TransmissorRegistradoNoAmbiente { get; init; }
+
     public string? Erro { get; init; }
 }
 
@@ -85,6 +91,12 @@ public sealed class NotaPreEmissoesDetalhesViewModel
 
     /// <summary>Motivo real (ou nulo) impedindo a emissão externa — nunca sucesso fictício (L33/H19).</summary>
     public string? BloqueioEmissao { get; init; }
+
+    /// <summary>Parametros ok mas sem conector no ambiente: Emissao autorizada INDISPONIVEL (P1).</summary>
+    public bool? TransmissaoIndisponivelNoAmbiente { get; init; }
+
+    /// <summary>Provedor configurado nos parametros (para nomear o conector ausente).</summary>
+    public string? ProvedorConfigurado { get; init; }
 
     public string? Erro { get; init; }
 }

@@ -37,6 +37,22 @@
             <span class="badge @(Model.StatusAtual == "CONFIGURADO" ? "bg-success" : Model.StatusAtual == "BLOQUEADO" ? "bg-danger" : "bg-warning text-dark") fs-6 px-2 py-1">
                 STATUS ATUAL: @Model.StatusAtual
             </span>
+            @if (Model.CredencialDisponivelNoAmbiente == true)
+            {
+                <span class="badge bg-success ms-1">Credencial disponível no ambiente</span>
+            }
+            else if (Model.CredencialDisponivelNoAmbiente == false && !string.IsNullOrWhiteSpace(Model.CertificadoReferencia))
+            {
+                <span class="badge bg-danger ms-1">Credencial '@Model.CertificadoReferencia' indisponível neste ambiente</span>
+            }
+            @if (Model.TransmissorRegistradoNoAmbiente == true)
+            {
+                <span class="badge bg-success ms-1">Conector do provedor integrado</span>
+            }
+            else if (Model.JaCadastrado && !string.IsNullOrWhiteSpace(Model.Provedor))
+            {
+                <span class="badge bg-warning text-dark ms-1">Conector '@Model.Provedor' não integrado (P1)</span>
+            }
         </div>
     }
 
@@ -114,7 +130,7 @@
                     <label class="form-label text-light small">Credencial de emissão (nome do segredo)</label>
                     <input type="text" name="certificadoReferencia" maxlength="120" value="@Model.CertificadoReferencia"
                            placeholder="nfe-santacasa-homologacao" class="form-control form-control-sm bg-black text-light border-secondary font-monospace" />
-                    <div class="form-text text-secondary">Só o NOME da referência (A33). O valor fica em appsettings/user-secrets sob <code>Fiscal:Credenciais:&lt;nome&gt;</code>.</div>
+                    <div class="form-text text-secondary">Só o NOME da referência (A33). O valor fica no ambiente da API (<code>Fiscal:Credenciais:&lt;nome&gt;</code> no pool da API) — nunca no banco, nunca no Web.</div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <div class="form-check form-switch mb-1">

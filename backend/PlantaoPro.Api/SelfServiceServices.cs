@@ -555,6 +555,12 @@ values(gen_random_uuid(),@tenantId,@clienteId,@assinaturaId,@planoAtualId,@plano
         await cn.ExecuteAsync("insert into plantaopro.perfis(id,tenant_id,cliente_id,codigo,nome,descricao,base_sistema,customizado,status,reg_date,reg_status) values(@id,@tenantId,@clienteId,'ADMINISTRADOR_CLIENTE','Administrador cliente','Administrador do tenant',false,true,'ATIVO',now(),'A')", new { id, tenantId, clienteId }, tx);
         await cn.ExecuteAsync(@"insert into plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,reg_date,reg_status)
 select gen_random_uuid(),@id,p.id,true,now(),'A' from plantaopro.permissoes p where p.codigo in ('DASHBOARD.VISUALIZAR','CONFIGURACOES.CONFIGURAR','WHITE_LABEL.CONFIGURAR','PLANOS.VISUALIZAR','ASSINATURAS.VISUALIZAR','USUARIOS.ADMINISTRAR') or p.codigo like 'MEDICOS.%' or p.codigo like 'HOSPITAIS.%' or p.codigo like 'ESPECIALIDADES.%'", new { id }, tx);
+        // R5-A2: fiscal ADM360 (API autoriza POR ACAO). Dedupe deterministico ponto/dois-pontos
+        // + not-exists por codigo normalizado: seed reaplicado nao duplica grants.
+        await cn.ExecuteAsync(@"insert into plantaopro.perfil_permissoes(id,perfil_id,permissao_id,permitido,reg_date,reg_status)
+select gen_random_uuid(),@id,esc.id,true,now(),'A' from (values ('ADM360.VER'),('ADM360.EXPORTAR'),('ADM360.IMPORTAR_XML'),('ADM360.CRIAR'),('ADM360.EDITAR'),('ADM360.CONFIGURAR'),('ADM360.REABRIR'),('ADM360.CONFIRMAR'),('ADM360.CANCELAR'),('ADM360.CONFERIR'),('ADM360.MANIFESTAR_DFE'),('ADM360.VINCULAR_DOCUMENTOS'),('ADM360.TRANSMITIR_RESPOSTA')) as alvo(codigo)
+join lateral (select pe.id from plantaopro.permissoes pe where replace(pe.codigo,':','.')=alvo.codigo order by pe.id limit 1) as esc on true
+where not exists (select 1 from plantaopro.perfil_permissoes pp join plantaopro.permissoes pe2 on pe2.id=pp.permissao_id where pp.perfil_id=@id and pp.reg_status='A' and replace(pe2.codigo,':','.')=alvo.codigo)", new { id }, tx);
         return id;
     }
 

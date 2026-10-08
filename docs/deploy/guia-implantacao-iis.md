@@ -2,7 +2,7 @@
 
 Aplicável a: rodadas de homologação e produção sobre a base `c84afc5`+ (net10.0, ASP.NET Core Module V2 **inprocess** via `web.config` gerado pelo SDK no publish — o arquivo **não existe no repositório**, procure-o na saída publicada).
 
-> **Atualização 2026-10-07 (entrega da Rodada 4, HEAD `aff37c5`):** a partir do R4-F2 (fiscal pré-emissão do ADM360) o site **Web conecta direto no banco** nas telas fiscais — novas variáveis obrigatórias/opcionais no pool Web (§5). A linhagem de migrations termina em **v2321** (próxima livre: v2322). Novo passo opcional P7 para as telas fiscais (§9).
+> **Atualização 2026-10-08 (R5-A2):** as telas fiscais do ADM360 no Web viraram BFF fino — o site **Web não conecta mais no banco** em tela alguma; a API fiscal (`api/administrativo360/fiscal`, autorização por ação) é o único caminho de escrita fiscal. `ConnectionStrings__Default` sai do pool Web e `Fiscal__Credenciais__{referencia}` passa para o pool da API (§5). A linhagem de migrations termina em **v2322** (grants ADM360 → `ADMINISTRADOR_CLIENTE`; próxima livre: v2323).
 
 ## 1. Arquitetura definida (2 sites, 2 pools)
 
@@ -86,6 +86,7 @@ GUI: IIS → Aplicação → Configuração → Variáveis de ambiente. Ou:
 | `Jwt__Audience` | ex.: `PlantaoPro` | Validado no startup |
 | `Ai__EncryptionKey` | opcional; **exatamente 64 caracteres hex** (32 bytes; validado em `AiSecretProtector` — hex malformado/curto é tratado como ausente) | Cifra (AES-GCM) as chaves de provider salvas por tenant. Sem ele a IA funciona com providers configurados no servidor, mas **salvar chave por cliente** falha com mensagem clara; não quebra o startup |
 | `Ai__Providers__Groq__ApiKey`, `Ai__Providers__Gemini__ApiKey`, `Ai__Providers__DeepSeek__ApiKey` | opcionais | Sem chave de um provider, aquele provider fica indisponível; a homologação de inferência real externa só é declarada com chave real |
+| `Fiscal__Credenciais__{referencia}` | valor segredo (ex.: `Fiscal__Credenciais__nfe-santacasa-demo`) | **R5-A2:** o segredo fiscal agora é lido **pela API** (único caminho de escrita fiscal; regra A33: o banco guarda apenas o **nome** da referência, nunca o valor). Sem a chave, a emissão segue bloqueada com motivo real (nunca "sucesso") |
 
 **Site `plantao-web` (pool Web):**
 
@@ -94,10 +95,9 @@ GUI: IIS → Aplicação → Configuração → Variáveis de ambiente. Ou:
 | `ASPNETCORE_ENVIRONMENT` | `Production` | Idem |
 | `PlantaoProApi__BaseUrl` | `http://127.0.0.1:8197/` | URL interna da API no loopback (HTTP local entre apps do próprio servidor). Porta de dev → startup falha |
 | `DataProtection__KeysDirectory` | `C:\ProgramData\PlantaoPro\DataProtection` | Obrigatório em Production: sem persistir as chaves, cookies/sessões morrem a cada reciclagem e não funcionam entre instâncias |
-| `ConnectionStrings__Default` | string real do PostgreSQL | **Obrigatório a partir do R4-F2 (2026-10-07):** as telas fiscais do ADM360 no Web usam Application+Infrastructure (Dapper) direto — sem ela essas telas falham com mensagem de configuração. As demais telas continuam sem banco no Web |
-| `Fiscal__Credenciais__{referencia}` | valor segredo (ex.: `Fiscal__Credenciais__nfe-santacasa-demo`) | Opcional; exigido só para **exercer a emissão** com credencial real (homologação externa fiscal, pendência P2). Regra A33: o banco guarda apenas o **nome** da referência do segredo, nunca o valor. Sem a chave, a emissão segue bloqueada com motivo real (nunca "sucesso") |
+| `ConnectionStrings__Default` | (remover) | **R5-A2:** o Web voltou a não acessar banco em tela alguma (BFF fino — a exceção fiscal do R4-F2 foi removida); a variável deve ser **removida** do pool Web. Sem ela, telas fiscais com 500/"ConnectionStrings" indicam deploy anterior ao R5-A2 |
 
-Antes do R4-F2 o Web não tinha nenhum uso de banco; hoje essa afirmação vale para **todas as telas exceto as fiscais do ADM360** (exceção declarada no `r4i-fiscal.md`).
+A partir do R5-A2 o Web voltou a não usar banco em tela alguma (BFF fino); a exceção fiscal do R4-F2 foi removida e o segredo fiscal passou para o pool da API (linhas acima).
 
 ## 6. Sessões e Data Protection
 - **Chaves de Data Protection**: persistidas em `DataProtection__KeysDirectory` quando configurado; em Production o diretório é obrigatório e o validador exige que exista e seja gravável pela identidade do pool (mensagem clara caso contrário). O mesmo diretório deve ser usado por **todas as instâncias** do Web.
@@ -131,6 +131,7 @@ foreach ($p in @("C:\inetpub\plantao","C:\ProgramData\PlantaoPro\DataProtection"
 - [ ] Data Protection persistido em diretório compartilhado com escrita.
 - [ ] Sem `dotnet run`/DLL manual ocupando porta em paralelo (confirme com `netstat`).
 - [ ] stdout log ligado durante a implantação, desligado depois.
+- [ ] Fiscal (R5-A2): upgrade terminou em **v2322**; `Fiscal__Credenciais__{referencia}` só no pool da API; sem `ConnectionStrings__Default` no pool Web.
 
 ## 9. Roteiro de publicação e validação (execução ponta a ponta)
 
@@ -138,7 +139,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 
 **P0 — Pré-condições (no servidor)**
 1. `netstat -ano | findstr :8197` e `:443` → nenhuma surpresa de processo dev (PIDs de `dotnet.exe` em execução manual devem estar ausentes).
-2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma o último migration aplicado — na linhagem atual (Rodada 4) o upgrade deve terminar em **v2321** (`2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql`; próxima versão livre: v2322).
+2. Banco atualizado: `Tools.Database` install/upgrade executado contra o banco de destino; `psql` confirma o último migration aplicado — na linhagem atual (R5-A2) o upgrade deve terminar em **v2322** (`2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql`; próxima versão livre: v2323).
 3. `powershell -File scripts\local\publish-iis.ps1 -OutDir C:\inetpub\plantao` → saída termina com "Etapas seguintes" e sem erro.
 
 **P1 — API sobe**
@@ -177,7 +178,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 17. Login no navegador com credencial de gestão do tenant (ex.: `gestor@santacasa-demo.example` em homologação local) → dentro do ADM360 as telas de fiscal **aparecem** (gate `ADM360`).
 18. "Configurar" e "Notas" abrem sem erro 5xx; parâmetros do tenant demonstram estado real (ex.: CONFIGURADO em homologação).
 19. "Nova pré-emissão": criar um pré-documento interno → conferência de referências roda e persiste; a lista mostra o registro novo.
-20. Tentar **emissão**: resposta com motivo real (`PENDENTE_DE_CONFIGURACAO` enquanto faltar operação/UF/provedor; ou credencial ausente se `Fiscal__Credenciais__{referencia}` não estiver no pool Web). Nunca "sucesso" falso (A29/L33/H19) — emissão autorizada é escopo P1 pós-credenciais reais.
+20. Tentar **emissão**: resposta com motivo real (`PENDENTE_DE_CONFIGURACAO` enquanto faltar operação/UF/provedor; ou credencial ausente se `Fiscal__Credenciais__{referencia}` não estiver no pool da **API**; ou 400 honesto "conector não integrado (P1)" quando parâmetros/credencial estão ok mas não há transmissor — sem mudar a situação). Nunca "sucesso" falso (A29/L33/H19) — emissão autorizada é escopo P1 pós-credenciais reais.
 
 **P8 — Limpeza pós-validação**
 21. Desligar stdout log; conferir permissões e que nenhum arquivo `*.log` cresça sem limite; registrar resultados (passo → esperado → obtido) em `docs\evidencias\<data>\<ambiente>-iis.md`.
@@ -195,7 +196,7 @@ Execute em ordem; cada passo tem o resultado esperado. Qualquer passo que falhe 
 | "port 5000 already in use" no binding | Processo dev ocupando porta ou binding mal definido | `netstat -ano`; encerrar `dotnet.exe` residual; revisar bindings do site |
 | Login sempre diz "conectar ao serviço" e API responde direto | Binding da API não está em 127.0.0.1:8197 ou pool parado | Testar `curl http://127.0.0.1:8197/api/health` no próprio servidor |
 | Sessão cai a cada reciclagem | `DataProtection__KeysDirectory` ausente/sem escrita | Corrigir variável + permissão (seção 7) |
-| Telas fiscais do ADM360 dão 500/"ConnectionStrings:Default..." | Pool Web sem `ConnectionStrings__Default` (obrigatório desde o R4-F2) | Definir a variável no pool Web (seção 5); se a falha for de credencial, checar `Fiscal__Credenciais__{referencia}` |
+| Telas fiscais do ADM360 dão 500/"ConnectionStrings:Default..." | Deploy anterior ao R5-A2 no Web (a exceção fiscal com banco no Web foi removida) ou API sem banco/grants | Republicar o Web no R5-A2+ (sem `ConnectionStrings__Default` no pool Web); na API, conferir `ConnectionStrings__Default`, upgrade até **v2322** e `Fiscal__Credenciais__{referencia}` no pool da API se a falha for de credencial |
 | "Identificador ou senha inválidos" com senha correta | API está de fato recusando (não é rede) | Ver `api_error_logs`/logs da API; validar conta/perfil ativo no banco |
 
 ## 12. Relações

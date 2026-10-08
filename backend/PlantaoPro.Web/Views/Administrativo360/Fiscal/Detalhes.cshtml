@@ -151,10 +151,23 @@
                 }
                 else if (situacao == "PRONTA_PARA_EMISSAO")
                 {
-                    <div class="alert alert-success py-2 small mb-2">
-                        <strong><i class="bi bi-check-circle me-1"></i>Nenhum bloqueio real:</strong> parâmetros completos e credencial disponível no ambiente.
-                        A transmissão registra <code>ENVIANDO</code>; autorização/rejeição dependem do retorno externo (conector = P1).
-                    </div>
+                    if (Model.TransmissaoIndisponivelNoAmbiente == true)
+                    {
+                        <div class="alert border-warning bg-black py-2 small mb-2" style="border-color:#ffc107 !important; color:#f5e9c8;">
+                            <strong><i class="bi bi-plug me-1"></i>Pré-nota preparada — emissão autorizada INDISPONÍVEL:</strong>
+                            o conector do provedor '@(Model.ProvedorConfigurado ?? "não definido")' ainda não está integrado neste ambiente (escopo P1).
+                            <div class="text-secondary mt-1">
+                                O botão "Emitir" devolve este motivo real — nenhum ENVIANDO sem transmissão de verdade (L33/H19).
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success py-2 small mb-2">
+                            <strong><i class="bi bi-check-circle me-1"></i>Nenhum bloqueio real:</strong> parâmetros completos e credencial disponível no ambiente.
+                            A transmissão registra <code>ENVIANDO</code>; autorização/rejeição dependem do retorno externo (conector = P1).
+                        </div>
+                    }
                 }
                 else
                 {

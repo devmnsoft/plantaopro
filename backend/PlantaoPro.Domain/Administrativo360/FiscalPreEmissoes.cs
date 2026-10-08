@@ -143,6 +143,19 @@ public static class NotaPreEmitidaRegras
             throw new Administrativo360BusinessException("O motivo do cancelamento da pré-nota é obrigatório.");
     }
 
+    /// <summary>
+    /// R5-A2: ENVIANDO reservado ao conector real. Sem transmissor registrado no
+    /// ambiente (catalogo vazio ate o P1), a emissao e recusada com erro honesto —
+    /// nunca transicao silenciosa para ENVIANDO sem transmissao de verdade.
+    /// </summary>
+    public static void ValidarTransmissorDisponivel(string? provedor, bool transmissorRegistrado)
+    {
+        if (transmissorRegistrado) return;
+        var nome = string.IsNullOrWhiteSpace(provedor) ? "não definido" : provedor.Trim().ToUpperInvariant();
+        throw new Administrativo360BusinessException(
+            $"Emissão indisponível neste ambiente: o conector do provedor '{nome}' ainda não está integrado (escopo P1).");
+    }
+
     /// <summary>Bloqueio explícito de "Emitir" derivado dos parâmetros (P2 formal). Nunca sucesso fictício.</summary>
     public static string? MotivoBloqueioEmissao(ParametrosFiscaisSnapshot parametros)
     {

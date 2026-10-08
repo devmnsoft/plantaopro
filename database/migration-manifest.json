@@ -995,6 +995,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
+      "source": "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql",
+      "checksum": "24bd46a22bfb711f96284c54c338ca6671fef24a01547f7ee7eebdba5f1bb132",
+      "dependsOn": [
+        "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

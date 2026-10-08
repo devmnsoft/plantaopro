@@ -135,3 +135,69 @@ public interface INotasPreEmitidasRepository
 
     Task TransicionarAsync(Guid tenantId, Guid usuarioId, TransicionarNotaPreEmitidaCommand comando, CancellationToken ct = default);
 }
+
+// 3. Emissao externa honesta (R5-A2): ENVIANDO somente com conector real --------
+
+/// <summary>
+/// Resultado de uma tentativa de emissao: Avancou=false NUNCA muda situacao e
+/// carrega o motivo real (bloqueio de parametros ou conector ausente); Avancou=true
+/// so existe quando um transmissor real executou (conector = P1).
+/// </summary>
+public sealed record ResultadoEmissaoFiscal(
+    bool Avancou,
+    string SituacaoAtual,
+    string Mensagem,
+    string? ChaveAcessoExterna = null,
+    DateTime? EmitidaEm = null
+);
+
+/// <summary>
+/// Parametros + disponibilidade NO AMBIENTE: o banco guarda so a referencia do
+/// segredo (A33); a presenca do valor e a existencia do transmissor sao fatos do
+/// ambiente de execucao (API), nunca do cadastro.
+/// </summary>
+public sealed record ParametrosFiscaisAmbienteDto(
+    ParametrosFiscaisDto? Parametros,
+    bool CredencialDisponivelNoAmbiente,
+    bool TransmissorRegistradoNoAmbiente
+);
+
+/// <summary>Corpo do POST de cancelamento: motivo obrigatorio (evidencia interna).</summary>
+public sealed record CancelarNotaPreEmitidaCommand(string? Motivo);
+
+/// <summary>
+/// Conector real de transmissao fiscal (P1). Implementacoes futuras transmitem de
+/// verdade e devolvem o resultado com evidencia; sem implementacao registrada o
+/// catalogo fica vazio e a emissao e recusada com honestidade (sem ENVIANDO falso).
+/// </summary>
+public interface IFiscalTransmissor
+{
+    string Provedor { get; }
+
+    Task<ResultadoEmissaoFiscal> TransmitirAsync(NotaPreEmitidaDetalhesDto nota, ParametrosFiscaisDto parametros, CancellationToken ct = default);
+}
+
+/// <summary>Catalogo de conectores registrados no ambiente (vazio ate o P1).</summary>
+public sealed class FiscalTransmissorCatalogo
+{
+    private readonly IReadOnlyDictionary<string, IFiscalTransmissor> _porProvedor;
+
+    public FiscalTransmissorCatalogo(IEnumerable<IFiscalTransmissor>? transmissores = null)
+    {
+        _porProvedor = (transmissores ?? Enumerable.Empty<IFiscalTransmissor>())
+            .GroupBy(t => (t.Provedor ?? string.Empty).Trim().ToUpperInvariant())
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+    }
+
+    public bool TemPara(string? provedor) =>
+        !string.IsNullOrWhiteSpace(provedor) && _porProvedor.ContainsKey(provedor.Trim().ToUpperInvariant());
+
+    public IFiscalTransmissor Obter(string? provedor)
+    {
+        var chave = (provedor ?? string.Empty).Trim().ToUpperInvariant();
+        if (_porProvedor.TryGetValue(chave, out var transmissor)) return transmissor;
+        throw new KeyNotFoundException($"Nenhum transmissor fiscal registrado para o provedor '{provedor}'.");
+    }
+
+    public IReadOnlyList<string> Provedores => _porProvedor.Keys.ToList();
+}

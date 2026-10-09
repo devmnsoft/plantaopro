@@ -1195,6 +1195,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade",
+      "source": "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql",
+      "checksum": "e8715962ccc1376740f6db90021a49c55725253c9ede0acc6d6c26cf3c5337b3",
+      "dependsOn": [
+        "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

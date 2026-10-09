@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace PlantaoPro.Web.Services.Security;
 
-public sealed class SaasRouteGuardFilter : IActionFilter
+public sealed class SaasRouteGuardFilter : IAsyncActionFilter
 {
     private static readonly IReadOnlyDictionary<string, string> ControllerModules = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -62,6 +62,9 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Cid"] = "CID",
         ["Prescricoes"] = "PRESCRICOES",
         ["ClinicaFinanceiro"] = "CLINICA_FINANCEIRO",
+        // R6-BlocoA item 1: Caixa era linkado no sidebar sem entrada no catalogo do guard
+        // (usuario autenticado caia em CATALOGO_NAO_CONFIGURADO); mesmo dominio de ClinicaFinanceiro.
+        ["Caixa"] = "CLINICA_FINANCEIRO",
         ["Convenios"] = "CONVENIOS",
         ["PlanosSaude"] = "PLANOS_SAUDE",
         ["ClinicaDashboard"] = "CLINICA_DASHBOARD",
@@ -104,26 +107,34 @@ public sealed class SaasRouteGuardFilter : IActionFilter
     private readonly IPermissionService permissions;
     private readonly IModuleAccessService modules;
     private readonly ICurrentUserService currentUser;
+    private readonly IEffectiveModuleResolver effectiveModules;
     private readonly ILogger<SaasRouteGuardFilter> logger;
 
-    public SaasRouteGuardFilter(IPermissionService permissions, IModuleAccessService modules, ICurrentUserService currentUser, ILogger<SaasRouteGuardFilter> logger)
+    public SaasRouteGuardFilter(IPermissionService permissions, IModuleAccessService modules, ICurrentUserService currentUser, IEffectiveModuleResolver effectiveModules, ILogger<SaasRouteGuardFilter> logger)
     {
         this.permissions = permissions;
         this.modules = modules;
         this.currentUser = currentUser;
+        this.effectiveModules = effectiveModules;
         this.logger = logger;
     }
 
-    public void OnActionExecuting(ActionExecutingContext context)
+    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    {
+        var proceed = await GateAsync(context);
+        if (proceed) _ = await next();
+    }
+
+    private async Task<bool> GateAsync(ActionExecutingContext context)
     {
         if (context.ActionDescriptor is not ControllerActionDescriptor descriptor)
         {
-            return;
+            return true;
         }
 
         if (IsAnonymousAllowed(descriptor) || PublicControllers.Contains(descriptor.ControllerName))
         {
-            return;
+            return true;
         }
 
         // APIs JSON (proxies BFF) têm contrato próprio: autenticação por sessão/Bearer,
@@ -149,15 +160,15 @@ public sealed class SaasRouteGuardFilter : IActionFilter
                 {
                     StatusCode = StatusCodes.Status403Forbidden
                 };
-                return;
+                return false;
             }
             context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module = "CLIENTE", reason = "CLIENTE_BLOQUEADO" });
-            return;
+            return false;
         }
 
         if (isJsonApi)
         {
-            return;
+            return true;
         }
 
         if (!ControllerModules.TryGetValue(descriptor.ControllerName, out var module))
@@ -165,13 +176,26 @@ public sealed class SaasRouteGuardFilter : IActionFilter
             logger.LogError("Controller autenticado sem módulo no catálogo SaaS. Controller:{Controller} Action:{Action}", descriptor.ControllerName, descriptor.ActionName);
             context.HttpContext.Items["SaasAccessDeniedModule"] = "CATALOGO_NAO_CONFIGURADO";
             context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module = "CATALOGO_NAO_CONFIGURADO", reason = "CATALOGO_NAO_CONFIGURADO" });
-            return;
+            return false;
+        }
+
+        // R6-BlocoA item 1: verificação LIVE da contratação efetiva (função canônica). Só
+        // dispara quando a sessão é v2149, o módulo é não-core e JÁ estava nas claims do login
+        // (contratado no login — pode ter sido revogado/suspento/expirado desde então). Popula o
+        // cache por request consumido por IModuleAccessService.IsModuleEnabled; se indisponível,
+        // degradamos aos claims (janela documentada). Módulo nunca contratado nem consulta a rede.
+        if (!currentUser.IsGlobalAdmin()
+            && !ModuleAccessService.IsCoreOrCommonModule(module)
+            && currentUser.User.HasClaim("access_catalog_version", "v2149")
+            && ModuleAccessService.HasModuleClaim(currentUser.User, module))
+        {
+            await effectiveModules.GetModulesAsync();
         }
 
         var action = ResolvePermissionAction(descriptor.ControllerName, descriptor.ActionName);
         if (permissions.HasPermission(module, action) && modules.IsModuleEnabled(module))
         {
-            return;
+            return true;
         }
 
         logger.LogWarning("Acesso negado pelo guard SaaS. Usuario:{UsuarioId} Roles:{Roles} Controller:{Controller} Action:{Action} Modulo:{Modulo} Acao:{Acao} Tenant:{TenantId} Cliente:{ClienteId}",
@@ -186,10 +210,7 @@ public sealed class SaasRouteGuardFilter : IActionFilter
 
         context.HttpContext.Items["SaasAccessDeniedModule"] = module;
         context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module, reason = modules.IsModuleEnabled(module) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO" });
-    }
-
-    public void OnActionExecuted(ActionExecutedContext context)
-    {
+        return false;
     }
 
     private static bool IsAnonymousAllowed(ControllerActionDescriptor descriptor)

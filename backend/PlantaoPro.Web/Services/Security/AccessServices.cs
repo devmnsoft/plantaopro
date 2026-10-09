@@ -253,11 +253,13 @@ public sealed class ModuleAccessService : IModuleAccessService
 {
     private readonly IPermissionService permissions;
     private readonly ICurrentUserService currentUser;
+    private readonly Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor;
 
-    public ModuleAccessService(IPermissionService permissions, ICurrentUserService currentUser)
+    public ModuleAccessService(IPermissionService permissions, ICurrentUserService currentUser, Microsoft.AspNetCore.Http.IHttpContextAccessor httpContextAccessor)
     {
         this.permissions = permissions;
         this.currentUser = currentUser;
+        this.httpContextAccessor = httpContextAccessor;
     }
 
     public bool CanAccessModule(string moduleCode) => IsModuleEnabled(moduleCode) && permissions.HasPermission(moduleCode, "VER");
@@ -269,12 +271,41 @@ public sealed class ModuleAccessService : IModuleAccessService
         if (CoreModules.Contains(normalized)) return true;
         if (!currentUser.User.HasClaim("access_catalog_version", "v2149"))
             return !string.Equals(normalized, "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
+
+        // R6-BlocoA item 1: verificação LIVE via função canônica. O guard (IAsyncActionFilter)
+        // popula HttpContext.Items[CacheKey] com o conjunto efetivo por request (authoritative
+        // quando disponível). Assim suspensão/expiração/revogação e restrição per-capacidade
+        // refletem na hora, sem depender apenas de claims emitidos no login. Se a verificação
+        // já ocorreu e FALHOU (valor null), degradamos aos claims do login (mesma fonte canônica
+        // emitida no login) com janela documentada; sem estado de resolução (chamada fora do
+        // guard) também cai nos claims.
+        var items = httpContextAccessor.HttpContext?.Items;
+        if (items != null && items.TryGetValue(EffectiveModuleResolver.CacheKey, out var resolved)
+            && resolved is IReadOnlySet<string> set)
+        {
+            return set.Contains("*") || set.Contains(normalized);
+        }
+
         return currentUser.User.FindAll("module")
             .Select(claim => Normalize(claim.Value))
             .Any(value => value == "*" || string.Equals(value, normalized, StringComparison.OrdinalIgnoreCase));
     }
 
     public bool IsFeatureEnabled(string featureCode) => IsModuleEnabled(featureCode);
+
+    /// <summary>Módulos que dispensam verificação de contratação (core/comum do tenant). Usado
+    /// pelo guard para pular a resolução live sem custo nesses acessos.</summary>
+    public static bool IsCoreOrCommonModule(string moduleCode) => CoreModules.Contains(Normalize(moduleCode));
+
+    /// <summary>O usuário tem um claim de módulo para <paramref name="moduleCode"/> (ou "*")?
+    /// O guard usa isto para só disparar a verificação LIVE quando o módulo foi contratado no
+    /// login (e pode ter sido revogado/suspento desde então). Módulo nunca contratado nem
+    /// precisa de consulta de rede: segue negado pelos claims.</summary>
+    public static bool HasModuleClaim(System.Security.Claims.ClaimsPrincipal user, string moduleCode)
+    {
+        var normalized = Normalize(moduleCode);
+        return user.FindAll("module").Select(c => Normalize(c.Value)).Any(v => v == "*" || v == normalized);
+    }
 
     private static readonly HashSet<string> CoreModules = new(StringComparer.OrdinalIgnoreCase)
     {

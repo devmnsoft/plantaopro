@@ -18,12 +18,18 @@ public sealed class FeatureCatalogService : IFeatureCatalogService
         Feature("MEU_DIA", "Meu Dia", "Prioridades e próximos passos da operação.", "Operação", "MeuDia", "Index", "bi-house-heart", "Administrador Global,Administrador Cliente,Administrador Clínica,Coordenação,Operador,Recepção,Triagem,Enfermagem,Médico,Financeiro,Financeiro Clínica,Faturamento Convênio,Hospital,Parceiro,Suporte,Auditor,Auditor Clínico,Comercial,Customer Success", "MEU_DIA", "MEU_DIA.VER", "Operação diária", "Hoje"),
         Feature("PLANTOES", "Plantões", "Planeje, publique e acompanhe a cobertura.", "Plantões", "Plantoes", "Index", "bi-calendar-event", "Coordenação,Médico", "PLANTOES", "PLANTOES.VER", "Plantão e cobertura", "Plantões"),
         Feature("COBERTURA", "Central de Cobertura", "Encontre profissionais e acompanhe convites.", "Plantões", "CentralEscala", "Index", "bi-people", "Coordenação", "CENTRAL_ESCALA", "COBERTURA.VER", "Plantão e cobertura", "Cobertura"),
-        Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "bi-people", "Recepção", "SAUDE360_PACIENTES", "PACIENTES.VER", "Atendimento", "Paciente"),
-        Feature("AGENDA", "Agenda", "Organize agendamentos e a chegada dos pacientes.", "Atendimento", "Agendamentos", "Index", "bi-calendar2", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.VER", "Atendimento", "Agendamento"),
-        Feature("CHECK_IN", "Check-in", "Registre a chegada e encaminhe o paciente.", "Atendimento", "Agendamentos", "CheckIn", "bi-person-check", "Recepção", "SAUDE360_AGENDAMENTO", "AGENDAMENTO.CHECKIN", "Atendimento", "Check-in"),
-        Feature("PAINEL_CHAMADA", "Painel de chamada", "Chame e encaminhe pacientes sem expor dados sensíveis.", "Atendimento", "PainelChamada", "Index", "bi-megaphone", "Recepção", "SAUDE360_PAINEL", "PAINEL_CHAMADA.OPERAR", "Atendimento", "Painel de chamada"),
-        Feature("FILA_ATENDIMENTO", "Fila de Atendimento", "Acompanhe pacientes aguardando chamada e encaminhamento.", "Atendimento", "PainelChamada", "Fila", "bi-list", "Recepção", "SAUDE360_PAINEL", "PAINEL_CHAMADA.OPERAR", "Atendimento", "Fila de Atendimento"),
-        Feature("TRIAGEM", "Triagem", "Priorize e encaminhe atendimentos com segurança.", "Atendimento", "Triagem", "Index", "bi-clipboard2-pulse", "Triagem", "SAUDE360_TRIAGEM", "TRIAGEM.VER", "Atendimento", "Triagem"),
+        // R6-BlocoA item 1: módulo e permissão com os MESMOS códigos que o guard cobra por
+        // controller (SaasRouteGuardFilter.ControllerModules + ResolvePermissionAction) —
+        // os códigos SAUDE360_* da família legada não existem como módulos após a v2339 e
+        // ocultavam itens cujo guard liberava (contrato de menu desalinhado). Os grants de
+        // perfil correspondentes foram criados pela própria v2339 (ex.: RECEPCAO ->
+        // PACIENTES/AGENDAMENTOS/PAINEL_CHAMADA com VER).
+        Feature("PACIENTES", "Pacientes", "Cadastros e histórico operacional do paciente.", "Atendimento", "Pacientes", "Index", "bi-people", "Recepção", "PACIENTES", "PACIENTES.VER", "Atendimento", "Paciente"),
+        Feature("AGENDA", "Agenda", "Organize agendamentos e a chegada dos pacientes.", "Atendimento", "Agendamentos", "Index", "bi-calendar2", "Recepção", "AGENDAMENTOS", "AGENDAMENTOS.VER", "Atendimento", "Agendamento"),
+        Feature("CHECK_IN", "Check-in", "Registre a chegada e encaminhe o paciente.", "Atendimento", "Agendamentos", "CheckIn", "bi-person-check", "Recepção", "AGENDAMENTOS", "AGENDAMENTOS.VER", "Atendimento", "Check-in"),
+        Feature("PAINEL_CHAMADA", "Painel de chamada", "Chame e encaminhe pacientes sem expor dados sensíveis.", "Atendimento", "PainelChamada", "Index", "bi-megaphone", "Recepção", "PAINEL_CHAMADA", "PAINEL_CHAMADA.VER", "Atendimento", "Painel de chamada"),
+        Feature("FILA_ATENDIMENTO", "Fila de Atendimento", "Acompanhe pacientes aguardando chamada e encaminhamento.", "Atendimento", "PainelChamada", "Fila", "bi-list", "Recepção", "PAINEL_CHAMADA", "PAINEL_CHAMADA.VER", "Atendimento", "Fila de Atendimento"),
+        Feature("TRIAGEM", "Triagem", "Priorize e encaminhe atendimentos com segurança.", "Atendimento", "Triagem", "Index", "bi-clipboard2-pulse", "Triagem", "TRIAGEM", "TRIAGEM.VER", "Atendimento", "Triagem"),
         Feature("MINHA_AGENDA", "Minhas Escalas", "Acompanhe plantões, convites e compromissos.", "Área médica", "MinhaAgenda", "Index", "bi-calendar-heart", "Médico", "MINHA_AGENDA", "AGENDA_PROPRIA.VER", "Área médica", "Escalas"),
         Feature("PAGAMENTOS", "Meus Pagamentos", "Consulte valores previstos e realizados.", "Área médica", "Pagamentos", "Index", "bi-cash-coin", "Médico,Financeiro", "PAGAMENTOS", "PAGAMENTOS.VER", "Área médica", "Pagamento")
     };

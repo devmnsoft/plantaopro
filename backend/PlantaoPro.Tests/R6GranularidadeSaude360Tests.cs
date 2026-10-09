@@ -20,6 +20,12 @@ public sealed class R6GranularidadeSaude360Tests
     private const string Version = "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades";
     private const string MigrationFile = "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql";
 
+    // v2340 redefine plantaopro.modulos_efetivos() com a regra de override per-capacidade
+    // (conflito pacote x capacidade do BlocoA item 1). É a função CANÔNICA VIGENTE.
+    private const string MigrationV2340Rel = "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql";
+    private const string VersionV2340 = "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade";
+    private const string MigrationFileV2340 = "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql";
+
     private static readonly string[] FamilyCapabilities =
     {
         "AGENDAMENTOS", "TRIAGEM", "UNIDADES", "CLINICA_DASHBOARD", "PAINEL_CHAMADA", "CID",
@@ -57,19 +63,21 @@ public sealed class R6GranularidadeSaude360Tests
     [Fact]
     public void Canonical_b6_predicate_in_csharp_and_in_sql_function_do_not_diverge()
     {
-        var mig = Read(MigrationRel);
-        var fnSql = FunctionBody(mig, "create or replace function plantaopro.modulos_efetivos");
-
         var predicate = Norm(ModuleContractVigencia.EffectivePredicate);
-        var normalizedFn = Norm(fnSql);
 
         // O predicado B6 do C# tem que estar presente, byte-a-byte (ignorando espaço),
-        // nas QUATRO ramificações do corpo (contrato direto por modulo_id, herança de
-        // pacote por modulo_id, contrato direto por codigo_modulo, herança de pacote
-        // por codigo_modulo). Editar uma ramificação sem editar o C# derruba a contagem;
-        // editar o C# sem o SQL derruba o Contains. É o teste de sincronia prometido.
-        Assert.Contains(predicate, normalizedFn);
-        Assert.Equal(4, CountOccurrences(normalizedFn, predicate));
+        // nas QUATRO ramificações do corpo, TANTO na v2339 original quanto na v2340
+        // vigente (que só acrescenta o override per-capacidade). Editar uma ramificação
+        // sem editar o C# derruba a contagem; editar o C# sem o SQL derruba o Contains.
+        foreach (var rel in new[] { MigrationRel, MigrationV2340Rel })
+        {
+            var mig = Read(rel);
+            var fnSql = FunctionBody(mig, "create or replace function plantaopro.modulos_efetivos");
+            var normalizedFn = Norm(fnSql);
+
+            Assert.True(normalizedFn.Contains(predicate, StringComparison.Ordinal), $"predicado B6 ausente em {rel}.");
+            Assert.True(CountOccurrences(normalizedFn, predicate) == 4, $"predicado B6 deve ocorrer 4x em {rel}.");
+        }
     }
 
     [Fact]
@@ -183,5 +191,48 @@ public sealed class R6GranularidadeSaude360Tests
         var deps = entry.GetProperty("dependsOn").EnumerateArray().Select(x => x.GetString()).ToArray();
         Assert.Contains("2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico", deps);
         Assert.Contains("2026_10_v2338_p0_adm360_garantia_codigos_fiscais", deps);
+    }
+
+    [Fact]
+    public void V2340_treats_per_capability_override_with_precedence_over_package_inheritance()
+    {
+        // BlocoA item 1: conflito pacote x capacidade. Uma linha propria de contrato para
+        // uma capacidade (tenant_modulos) prevalece sobre a herança do pacote contratado.
+        // Na função, as duas ramificações de herança ganham um anti-join que exclui a
+        // capacidade quando o tenant tem linha própria (reg_status='A') por modulo_id ou
+        // codigo_modulo — assim uma capacidade desabilitada individualmente dentro de um
+        // pacote ativo deixa de ser efetiva.
+        var mig = Read(MigrationV2340Rel);
+        var fn = FunctionBody(mig, "create or replace function plantaopro.modulos_efetivos");
+        var normalizedFn = Norm(fn);
+
+        // Contrato da função preservado (mesma assinatura de retorno da v2339).
+        Assert.Contains("returns table (codigo text, modulo_id uuid, pacote_codigo text)", mig, StringComparison.OrdinalIgnoreCase);
+
+        // Anti-join de override presente nas DUAS ramificações de herança (b1 e b2).
+        Assert.True(CountOccurrences(normalizedFn, "notexists(") == 2, "o override per-capacidade deve aplicar às duas ramificações de herança.");
+        Assert.Contains("ovr.modulo_id=ch.id", normalizedFn);
+        Assert.Contains("lower(nullif(ovr.codigo_modulo,''))=lower(ch.codigo)", normalizedFn);
+    }
+
+    [Fact]
+    public void Manifest_wires_v2340_after_v2339_as_active_transactional()
+    {
+        using var doc = JsonDocument.Parse(Read("database/migration-manifest.json"));
+        var root = doc.RootElement.GetProperty("migrations");
+        JsonElement entry = default;
+        bool found = false;
+        foreach (var m in root.EnumerateArray())
+        {
+            if (string.Equals(m.GetProperty("version").GetString(), VersionV2340, StringComparison.Ordinal)) { entry = m; found = true; break; }
+        }
+        Assert.True(found, $"manifest sem a versão {VersionV2340}.");
+        Assert.Equal("active", entry.GetProperty("status").GetString());
+        Assert.True(entry.GetProperty("transactional").GetBoolean());
+        Assert.EndsWith(MigrationFileV2340, entry.GetProperty("source").GetString(), StringComparison.Ordinal);
+
+        // Depende do kernel da v2339 para não correr antes dele.
+        var deps = entry.GetProperty("dependsOn").EnumerateArray().Select(x => x.GetString()).ToArray();
+        Assert.Contains(Version, deps);
     }
 }

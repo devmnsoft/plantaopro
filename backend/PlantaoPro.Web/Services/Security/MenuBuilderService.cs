@@ -63,8 +63,13 @@ public sealed class MenuBuilderService : IMenuBuilderService
     {
         var permission = feature.Permission.Split('.', 2);
         var action = permission.Length == 2 ? permission[1] : "VER";
+        // O menu espelha exatamente o contrato do guard (permissão na ação + módulo efetivo).
+        // Não se acrescenta IsFeatureEnabled(feature.Code) aqui: feature.Code é um slug de
+        // exibição (ex.: CHECK_IN, FILA_ATENDIMENTO) e nem sempre coincide com um módulo, o
+        // que ocultava itens cujo guard liberava. O guard permanece a autoridade de acesso —
+        // o menu apenas deixa de esconder/advertir desalinhado.
         return permissions.HasPermission(feature.Module, action) &&
-               modules.IsModuleEnabled(feature.Module) && modules.IsFeatureEnabled(feature.Code);
+               modules.IsModuleEnabled(feature.Module);
     }
 
     /// <summary>

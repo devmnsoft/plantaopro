@@ -10,8 +10,8 @@
     var clinicalRoles = RolesConstants.Saude360Assistencial.Split(',');
     var financeRoles = RolesConstants.FinanceiroArea.Split(',').Concat(RolesConstants.Saude360Financeiro.Split(','));
     var canOperate = operationRoles.Any(User.IsInRole) || new[] { "PLANTOES", "AGENDA", "CENTRAL_ESCALA", "CONVITES", "ESCALAS", "FECHAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
-    var canUseClinical = clinicalRoles.Any(User.IsInRole) || new[] { "SAUDE360_DASHBOARD", "SAUDE360_PACIENTES", "SAUDE360_AGENDAMENTO", "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS" }.Any(ModuleAccessService.CanAccessModule);
-    var canUseFinance = financeRoles.Any(User.IsInRole) || new[] { "FINANCEIRO", "SAUDE360_FINANCEIRO", "PAGAMENTOS" }.Any(ModuleAccessService.CanAccessModule);
+    var canUseClinical = clinicalRoles.Any(User.IsInRole) || new[] { "SAUDE360_DASHBOARD", "SAUDE360_PACIENTES", "SAUDE360_AGENDAMENTO", "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS", "CLINICA_DASHBOARD", "PACIENTES", "AGENDAMENTOS", "TRIAGEM", "CONSULTAS" }.Any(ModuleAccessService.CanAccessModule);
+    var canUseFinance = financeRoles.Any(User.IsInRole) || new[] { "FINANCEIRO", "SAUDE360_FINANCEIRO", "PAGAMENTOS", "CLINICA_FINANCEIRO" }.Any(ModuleAccessService.CanAccessModule);
     var canManage = User.IsInRole(RolesConstants.AdministradorGlobal) || User.IsInRole(RolesConstants.Administrador) || User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Diretor);
     var isGlobalAdmin = User.IsInRole(RolesConstants.AdministradorGlobal);
     bool Can(string module, string action = "VER") => PermissionService.HasPermission(module, action);
@@ -47,11 +47,14 @@
         @if (canUseClinical)
         {
             <div class="nav-section-title"><span>Saúde 360</span></div>
-            @if (Can("SAUDE360_DASHBOARD")) { <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a> }
-            @if (Can("SAUDE360_PACIENTES")) { <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a> }
-            @if (Can("SAUDE360_AGENDAMENTO")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a> }
-            @if (Can("SAUDE360_TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a> }
-            @if (Can("SAUDE360_CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a> }
+            @* R6-BlocoA item 1: os codigos FINOS sao os que o guard cobra por controller apos a
+               v2339 (PACIENTES/AGENDAMENTOS/TRIAGEM/CONSULTAS/CLINICA_DASHBOARD); os codigos
+               grossos SAUDE360_* ficam apenas como caminho de sessoes legado (pre-v2149). *@
+            @if (Can("SAUDE360_DASHBOARD") || Can("CLINICA_DASHBOARD")) { <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a> }
+            @if (Can("SAUDE360_PACIENTES") || Can("PACIENTES")) { <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a> }
+            @if (Can("SAUDE360_AGENDAMENTO") || Can("AGENDAMENTOS")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a> }
+            @if (Can("SAUDE360_TRIAGEM") || Can("TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a> }
+            @if (Can("SAUDE360_CONSULTAS") || Can("CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a> }
             @* R5-E13: mesmas codigos do guard de rota (SAUDE360 grosso ate decisao UNIDADES fina). *@
             @if (Can("SAUDE360")) { <a class="nav-link-app @Active("ClinicaUnidades")" asp-controller="ClinicaUnidades" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades clínica</span></a> }
         }
@@ -60,7 +63,7 @@
             <div class="nav-section-title"><span>Financeiro</span></div>
             @if (Can("FINANCEIRO") || Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>Visão financeira</span></a> }
             @if (Can("PAGAMENTOS")) { <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>Pagamentos</span></a> }
-            @if (Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a> }
+            @if (Can("SAUDE360_FINANCEIRO") || Can("CLINICA_FINANCEIRO")) { <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a> }
         }
         @if (canManage)
         {

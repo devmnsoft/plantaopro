@@ -13,7 +13,7 @@ namespace PlantaoPro.Tests.Infrastructure;
 /// disponível para emitir sessões com claims controlados (R4-A5: com a flag TestAuth:Enabled
 /// fixada em "true" — a ponta fica desabilitada por padrão fora da fábrica de testes).
 /// </summary>
-public sealed class PlantaoProWebFactory : WebApplicationFactory<PlantaoPro.Web.WebAssemblyMarker>
+public class PlantaoProWebFactory : WebApplicationFactory<PlantaoPro.Web.WebAssemblyMarker>
 {
     private readonly StubApiHandler _apiStub;
 
@@ -28,6 +28,11 @@ public sealed class PlantaoProWebFactory : WebApplicationFactory<PlantaoPro.Web.
         // R4-A5: a suíte depende do /__test/signin; fora desta fábrica a ponta exige a
         // flag TestAuth:Enabled explicitamente (e só vale em Testing).
         builder.UseSetting("TestAuth:Enabled", "true");
+        // R6-BlocoA item 1: os contratos determinísticos de guarda/monetário/fiscal não
+        // modelam o endpoint api/auth/effective-modules; o check live é exercitado em
+        // teste dedicado (coleção web-bff-live). Desligado por padrão aqui para preservar
+        // "sem chamada de API" e evitar estado compartilhado no stub entre testes.
+        builder.UseSetting("Access:LiveEffectiveModuleCheck", "false");
         builder.ConfigureTestServices(services => services.AddHttpClient("PlantaoProApi")
             .ConfigurePrimaryHttpMessageHandler(() => _apiStub));
     }

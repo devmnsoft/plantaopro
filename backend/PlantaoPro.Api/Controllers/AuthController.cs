@@ -7,6 +7,7 @@ using PlantaoPro.Api;
 using PlantaoPro.Api.Data;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
+using PlantaoPro.CrossCutting.Security;
 using PlantaoPro.Domain.Identity;
 
 namespace PlantaoPro.Api.Controllers
@@ -155,6 +156,27 @@ namespace PlantaoPro.Api.Controllers
 
             var r = await _service.RefreshContextAsync(uid, ct);
             return StatusCode(r.StatusCode, r);
+        }
+
+        [Microsoft.AspNetCore.Authorization.Authorize]
+        [HttpGet("effective-modules")]
+        public async Task<IActionResult> EffectiveModules(CancellationToken ct)
+        {
+            // R6-BlocoA item 1: catálogo efetivo CANÔNICO recalculado sob demanda
+            // direto na função plantaopro.modulos_efetivos() (predicado B6 + herança
+            // do pacote + override per-capacidade da v2340), SEM efeito colateral de
+            // sessão. O guard Web consome este endpoint para refletir suspensão,
+            // expiração, revogação e restrição per-capacidade sem depender de claims.
+            if (bool.TryParse(User.FindFirst("is_global_admin")?.Value, out var isGlobal) && isGlobal)
+                return Ok(ApiResponse<string[]>.Ok(new[] { "*" }));
+
+            var tenantClaim = User.FindFirst("tenant_id")?.Value ?? User.FindFirst("cliente_id")?.Value;
+            if (!Guid.TryParse(tenantClaim, out var tenantId))
+                return Ok(ApiResponse<string[]>.Ok(Array.Empty<string>()));
+
+            await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
+            var list = await cn.QueryAsync<string>(new CommandDefinition(ModuleContractVigencia.ModulosEfetivosSql, new { tenantId }, cancellationToken: ct));
+            return Ok(ApiResponse<string[]>.Ok(list.ToArray()));
         }
     }
 

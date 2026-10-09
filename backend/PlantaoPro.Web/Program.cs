@@ -63,6 +63,7 @@ builder.Services.AddScoped<AiWebService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
+builder.Services.AddScoped<IEffectiveModuleResolver, EffectiveModuleResolver>();
 builder.Services.AddScoped<ITenantAccessService, TenantAccessService>();
 builder.Services.AddScoped<IMenuBuilderService, MenuBuilderService>();
 builder.Services.AddScoped<SaasRouteGuardFilter>();

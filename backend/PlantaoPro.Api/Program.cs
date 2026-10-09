@@ -173,6 +173,7 @@ builder.Services.AddScoped<OperacaoService>();
 builder.Services.AddScoped<OcorrenciaService>();
 builder.Services.AddScoped<ClienteService>();
 builder.Services.AddScoped<OnboardingService>();
+builder.Services.AddScoped<OnboardingJornadaService>();
 builder.Services.AddScoped<BiService>();
 builder.Services.AddScoped<RequestLogContextFilter>();
 builder.Services.AddScoped<UsuarioContextService>();

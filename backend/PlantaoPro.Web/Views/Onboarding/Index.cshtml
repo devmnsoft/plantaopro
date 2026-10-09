@@ -1,12 +1,69 @@
+@model OnboardingJornadaWebViewModel
 @{ ViewData["Title"] = "Onboarding SaaS"; }
 <div class="pp-page">
-<header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Implantação orientada</span><h2>Onboarding de clientes</h2><p>Prepare a operação do tenant com uma sequência clara, segura e auditável.</p></div><div class="pp-hero-actions"><button type="button" class="btn btn-outline-primary" data-tour-start="implementation">Conhecer fluxo</button><a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Iniciar onboarding</a></div></header>
-<nav class="pp-stepper" aria-label="Jornada de onboarding"><ol><li class="is-active" aria-current="step">Cliente</li><li>Operação</li><li>Acessos</li><li>Financeiro</li><li>Revisão</li></ol></nav>
-<details class="pp-screen-guide mb-3"><summary><span><i class="bi bi-compass" aria-hidden="true"></i><strong>Como usar esta tela</strong></span><span class="pp-screen-guide__hint">Implantação do cliente</span></summary><div class="pp-screen-guide__body"><p>Use o checklist na ordem sugerida; dados do cliente, unidade, plano e administrador são obrigatórios para ativar a operação.</p><ol><li>Cadastre o cliente e confirme o tenant.</li><li>Configure equipe, operação e financeiro.</li><li>Revise permissões, notificações e pendências antes da liberação.</li></ol><div class="pp-screen-guide__note"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Status “atenção” exige revisão; “bloqueado” depende de uma etapa anterior ou autorização MNSOFT.</div></div></details>
-<section class="pp-section pp-implementation-summary" aria-labelledby="implementationTitle" data-tour-step="Visão da implantação|Acompanhe o que está concluído, o que exige atenção e qual é o próximo passo."><div><span class="pp-eyebrow">Checklist do cliente</span><h2 id="implementationTitle">Pronto para iniciar</h2><p>O progresso será vinculado ao cliente selecionado no fluxo, sem digitação manual de ID.</p></div><div class="pp-progress-ring" aria-label="0 por cento concluído"><strong>0%</strong><span>concluído</span></div></section>
-<div class="pp-checklist-legend" aria-label="Legenda de status"><span><i class="bi bi-check-circle-fill text-success"></i> Concluído</span><span><i class="bi bi-circle text-secondary"></i> Pendente</span><span><i class="bi bi-exclamation-triangle-fill text-warning"></i> Atenção</span><span><i class="bi bi-lock-fill text-secondary"></i> Bloqueado</span></div>
-<ol class="pp-implementation-list" aria-label="Etapas de implantação">
-@foreach (var etapa in new[] { ("Dados do cliente", "Razão social, CNPJ, contatos e contrato.", "Disponível"), ("Unidades e hospitais", "Locais da operação e responsáveis.", "Bloqueado"), ("Especialidades", "Áreas atendidas em cada unidade.", "Bloqueado"), ("Usuários", "Contas individuais da equipe.", "Bloqueado"), ("Perfis e permissões", "Acesso mínimo necessário por função.", "Bloqueado"), ("Médicos e profissionais", "Documentação e disponibilidade.", "Bloqueado"), ("Escalas", "Períodos, equipes e regras.", "Bloqueado"), ("Plantões", "Vagas, valores e publicação.", "Bloqueado"), ("Financeiro", "Regras de pagamento e conferência.", "Bloqueado"), ("Notificações", "Canais e eventos importantes.", "Bloqueado"), ("Revisão final", "Validação de segurança e operação.", "Bloqueado") }) { <li class="pp-implementation-item @(etapa.Item3 == "Disponível" ? "is-next" : "is-locked")"><span class="pp-implementation-item__icon"><i class="bi @(etapa.Item3 == "Disponível" ? "bi-arrow-right" : "bi-lock")" aria-hidden="true"></i></span><span><strong>@etapa.Item1</strong><small>@etapa.Item2</small></span><span class="pp-status-pill">@etapa.Item3</span></li> }
-</ol>
-<aside class="pp-next-step" data-tour-step="Próximo passo recomendado|Inicie pelos dados oficiais do cliente; as etapas dependentes serão liberadas progressivamente."><i class="bi bi-stars" aria-hidden="true"></i><div><strong>Próximo passo recomendado</strong><p>Selecione “Iniciar onboarding” para cadastrar os dados oficiais do cliente e liberar as próximas configurações.</p></div><a asp-action="NovoCliente" class="btn btn-primary">Cadastrar cliente</a></aside>
+<header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Implantação orientada ao contrato</span><h2>Onboarding de clientes</h2><p>O checklist abaixo é gerado dos módulos efetivamente contratados e só é concluído quando os dados correspondentes existem no ambiente — nada de etapa marcada por clique vazio.</p></div><div class="pp-hero-actions">@if (!Model.SemContextoCliente && !Model.SemOnboarding){<form asp-action="Reavaliar" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Reavaliar agora</button></form>}<a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Novo cliente com plano</a></div></header>
+
+@if (Model.SuccessMessage is not null){<div class="alert alert-success" role="status">@Model.SuccessMessage</div>}
+@if (Model.ErrorMessage is not null){<div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>}
+@if (Model.InfoMessage is not null){<div class="alert alert-info" role="note">@Model.InfoMessage</div>}
+
+@if (Model.SemContextoCliente)
+{
+    <aside class="pp-next-step"><i class="bi bi-building" aria-hidden="true"></i><div><strong>Sem cliente selecionado</strong><p>O onboarding pertence a um cliente (tenant). Crie um novo cliente com plano para gerar a jornada adaptada ao contrato, ou selecione um cliente existente em AdminSaaS.</p></div><a asp-action="NovoCliente" class="btn btn-primary">Cadastrar cliente</a></aside>
+}
+else if (Model.SemOnboarding)
+{
+    <section class="pp-section"><div><span class="pp-eyebrow">Ponto de partida</span><h2>Onboarding ainda não iniciado</h2><p>Ao iniciar, o sistema monta o checklist a partir do catálogo canônico: etapas gerais da implantação mais as etapas dos módulos que este cliente realmente contratou. A conclusão de cada etapa é verificada em dados persistidos.</p></div>
+        <form asp-action="Iniciar" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-primary"><i class="bi bi-play-circle" aria-hidden="true"></i> Iniciar onboarding</button></form>
+    </section>
+}
+else
+{
+    var finalizado = Model.Status == "FINALIZADO";
+    <section class="pp-section pp-implementation-summary">
+        <div><span class="pp-eyebrow">Checklist do cliente</span><h2>@(finalizado ? "Onboarding finalizado" : "Jornada em andamento")</h2><p>@if (!finalizado && !string.IsNullOrEmpty(Model.ProximaAcao)){<text>Próximo passo: <strong>@Model.ProximaAcao</strong>.</text>}else{<text>Todas as etapas obrigatórias foram verificadas em dados reais.</text>}</p></div>
+        <div class="pp-progress-ring" aria-label="@Model.Progresso por cento concluído"><strong>@Model.Progresso%</strong><span>concluído</span></div>
+    </section>
+    <div class="pp-checklist-legend" aria-label="Legenda de status"><span><i class="bi bi-check-circle-fill text-success"></i> Concluída (verificada em dados)</span><span><i class="bi bi-circle text-warning"></i> Pendente</span><span><i class="bi bi-lock-fill text-secondary"></i> Bloqueada por pré-requisito</span><span><i class="bi bi-skip-end-circle-fill text-info"></i> Pulada (opcional)</span></div>
+
+    @foreach (var grupo in Model.Grupos)
+    {
+        <h3 class="mt-4"><i class="bi @(grupo.Geral ? "bi-clipboard-check" : "bi-boxes")" aria-hidden="true"></i> @grupo.ModuloNome</h3>
+        <ol class="pp-implementation-list" aria-label="Etapas de @grupo.ModuloNome">
+            @foreach (var e in grupo.Itens)
+            {
+                <li class="pp-implementation-item @(e.Status == "PENDENTE" ? "is-next" : e.Status == "BLOQUEADO" ? "is-locked" : "")">
+                    <span class="pp-implementation-item__icon">
+                        @if (e.Status == "CONCLUIDO"){<i class="bi bi-check-circle-fill text-success" aria-hidden="true"></i>}
+                        else if (e.Status == "PULADA"){<i class="bi bi-skip-end-circle-fill text-info" aria-hidden="true"></i>}
+                        else if (e.Status == "BLOQUEADO"){<i class="bi bi-lock-fill text-secondary" aria-hidden="true"></i>}
+                        else {<i class="bi bi-circle text-warning" aria-hidden="true"></i>}
+                    </span>
+                    <span>
+                        <strong>@e.Titulo</strong>
+                        <small class="d-block">@e.Objetivo</small>
+                        @if (!string.IsNullOrWhiteSpace(e.Descricao) && e.Descricao != e.Objetivo){<small class="d-block">@e.Descricao</small>}
+                        <small class="d-block text-muted"><i class="bi bi-person-badge" aria-hidden="true"></i> Responsável: @(e.Responsavel == "MNSOFT" ? "MNSOFT (implantação)" : "cliente")@(e.Obrigatorio ? "" : " · opcional")</small>
+                        @if (!e.PreRequisitoAtendido){<small class="d-block text-secondary"><i class="bi bi-lock" aria-hidden="true"></i> Depende da etapa anterior deste módulo.</small>}
+                        @if (!string.IsNullOrWhiteSpace(e.CriterioDescricao)){<small class="d-block text-muted"><i class="bi bi-clipboard2-check" aria-hidden="true"></i> Critério: @e.CriterioDescricao</small>}
+                        @if (!string.IsNullOrWhiteSpace(e.Evidencia)){<small class="d-block"><em>@e.Evidencia</em></small>}
+                    </span>
+                    <span class="d-flex flex-column gap-1 align-items-end">
+                        <span class="pp-status-pill">@(e.Status == "CONCLUIDO" ? "Concluída" : e.Status == "PULADA" ? "Pulada" : e.Status == "BLOQUEADO" ? "Bloqueada" : "Pendente")</span>
+                        @if (!string.IsNullOrEmpty(e.LinkAcao) && (e.Status == "PENDENTE" || e.Status == "BLOQUEADO")){<a class="btn btn-sm btn-outline-primary" href="@e.LinkAcao">Abrir tela</a>}
+                        @if (e.Status == "PENDENTE"){
+                            <form asp-action="ConcluirEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-success">Concluir</button></form>
+                        }
+                        @if (!e.Obrigatorio && (e.Status == "PENDENTE" || e.Status == "BLOQUEADO")){
+                            <form asp-action="PularEtapa" method="post" class="d-flex gap-1">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><input type="text" name="justificativa" class="form-control form-control-sm" style="max-width:180px" placeholder="Justificativa" aria-label="Justificativa para pular"/><button type="submit" class="btn btn-sm btn-outline-secondary">Pular</button></form>
+                        }
+                        @if (e.Pulada){
+                            <form asp-action="RestaurarEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-outline-secondary">Restaurar</button></form>
+                        }
+                    </span>
+                </li>
+            }
+        </ol>
+    }
+}
 </div>

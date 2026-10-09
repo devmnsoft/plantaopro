@@ -207,6 +207,19 @@ public sealed class OnboardingChecklistItemDto
     public bool Concluido { get; set; }
     public string LinkAcao { get; set; } = string.Empty;
     public string Status { get; set; } = string.Empty;
+
+    // R5-C7/C8: jornada adaptada ao contrato + conclusao derivada de dados.
+    public string Objetivo { get; set; } = string.Empty;
+    public string Responsavel { get; set; } = "CLIENTE";
+    public string? PreRequisitoCodigo { get; set; }
+    public bool PreRequisitoAtendido { get; set; } = true;
+    public string ModuloCodigo { get; set; } = string.Empty;
+    public string ModuloNome { get; set; } = string.Empty;
+    public string CriterioCodigo { get; set; } = string.Empty;
+    public string CriterioDescricao { get; set; } = string.Empty;
+    public string Evidencia { get; set; } = string.Empty;
+    public bool Atendida { get; set; }
+    public bool Pulada { get; set; }
 }
 
 public sealed class MinhaAssinaturaDto

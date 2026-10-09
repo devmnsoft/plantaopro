@@ -704,28 +704,13 @@ where not exists (select 1 from plantaopro.perfil_permissoes pp join plantaopro.
 
     private static async Task CriarOnboardingAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction tx, Guid tenantId, Guid clienteId)
     {
+        // R5-C7: as etapas do checklist (plantaopro.tenant_onboarding_checklist) nao sao mais as
+        // 11 genericas fixas: vao materializadas do catalogo canonicos onboarding_etapas_catalogo
+        // (nucleo geral + etapas de modulo com contrato efetivo), com objetivo, responsavel,
+        // pre-requisito e criterio verificavel em dados persistidos (avaliador C8).
         var onboardingId = Guid.NewGuid();
         await cn.ExecuteAsync("insert into plantaopro.tenant_onboarding(id,tenant_id,cliente_id,status,progresso,proxima_acao,reg_date,reg_status) values(@onboardingId,@tenantId,@clienteId,'EM_ANDAMENTO',0,'Completar dados da empresa',now(),'A')", new { onboardingId, tenantId, clienteId }, tx);
-        var etapas = new[] { "Completar dados da empresa", "Configurar identidade visual", "Cadastrar primeiro hospital/unidade", "Cadastrar especialidades", "Convidar usuários", "Cadastrar ou importar médicos", "Criar primeiro plantão", "Publicar primeiro plantão", "Validar fluxo médico", "Configurar financeiro", "Finalizar implantação" };
-        for (var i = 0; i < etapas.Length; i++)
-        {
-            await cn.ExecuteAsync("insert into plantaopro.tenant_onboarding_checklist(id,onboarding_id,tenant_id,cliente_id,codigo,titulo,descricao,ordem,obrigatorio,link_acao,status,reg_date,reg_status) values(gen_random_uuid(),@onboardingId,@tenantId,@clienteId,@codigo,@titulo,@descricao,@ordem,true,@link,'PENDENTE',now(),'A')", new { onboardingId, tenantId, clienteId, codigo = "ETAPA_" + (i + 1).ToString("00"), titulo = etapas[i], descricao = "Etapa de implantação self-service", ordem = i + 1, link = LinkEtapa(i + 1) }, tx);
-        }
-    }
-
-    private static string LinkEtapa(int etapa)
-    {
-        switch (etapa)
-        {
-            case 2: return "/WhiteLabel";
-            case 3: return "/Hospitais/Create";
-            case 4: return "/Especialidades/Create";
-            case 5: return "/Usuario";
-            case 6: return "/Medicos/Create";
-            case 7: return "/Plantoes/Create";
-            case 10: return "/Parametrizacoes/Financeiro";
-            default: return "/Onboarding";
-        }
+        await OnboardingJornadaService.MaterializarAsync(cn, tx, tenantId, clienteId, onboardingId);
     }
 
     private static List<string> ValidarCadastro(CadastroSelfServiceRequest request)

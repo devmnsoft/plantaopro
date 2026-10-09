@@ -1,5 +1,8 @@
 # A1 — Inventário real de funcionalidades visíveis ao cliente (Rodada 5)
 
+> **⚠️ Este corpo é o retrato de `HEAD = 0ad2617`. A seção D (final do arquivo) é o adendo de
+> reconfirmação sobre `HEAD = 4f0151b` (R6) e prevalece sobre qualquer linha abaixo quando divergir.**
+
 Fonte: auditoria read-only do app Web (MVC/Razor, BFF) + API operacional em `C:\MNSOFT\plantaopro`,
 executada sobre `HEAD = 0ad2617` (fim da Rodada 4). Nenhuma linha de código foi alterada; nada foi
 compilado/executado nesta auditoria. Inventário: **~825 ações** em ~125 controladores web. Módulos
@@ -154,3 +157,85 @@ ação, não por rota duplicada).
    já existentes em `SelfServiceSaasController`; chamar `FinalizarCadastroAsync` em `Cadastro.Confirmar`;
    corrigir o `asp-action` de `Views/B2BLaunch/Form.cshtml` ou remover o form; adicionar proxy/token para
    os `fetch('/api/…')` de BI e Operações (ou trocar por BFF server-side como no resto do app).
+
+
+## D) R6 — Reconfirmação da base sobre `HEAD = 4f0151b` (2026-10-09)
+
+Método: as 22 falsas-promessas da seção B e as linhas comerciais/onboarding da seção A foram
+**reverificadas uma a uma no código atual** (auditoria read-only segunda passagem) e confrontadas com
+as evidências executadas da própria Rodada 5 (`r5b4`, `r5b5`, `r5b6`, `r5c7`, `r5d9`–`r5d12`,
+`r5-e13-*`, `r5-p0-ensaio-upgrade-clone.md`) e com a suíte em banco real (1183/1183).
+Classificação na legenda exigida pela diretriz R6:
+
+| Legenda R6 | Equivalente antigo | Critério |
+|---|---|---|
+| **FV** funcional e verificada | FV | pipeline Web→API→SQL + teste em banco real **ou** probe ao vivo registrado em evidência |
+| **PAR** parcial | PAR/BI | funciona em parte / persistência volátil / integração externa pendente |
+| **BLOQ** bloqueada | BI/SA com dependência externa | depende de credencial/provedor/decisão que não existe no ambiente |
+| **FAKE** falhou (fachada) | SA+FAKE | UI apresenta resultado que o sistema não produz — corrigível internamente, sem bloqueio externo |
+| **NE** não executada | ISH/FV-partial | pipeline real existe, mas a jornada nunca foi executada/homologada ponta a ponta neste ambiente |
+
+### D.1 — O que a Rodada 5 mudou no inventário (verificado no código atual)
+
+| Linha original | Estado em `4f0151b` | Evidência atual |
+|---|---|---|
+| Seção B #3 Cadastro público → Confirmar "sucesso sem provisionar" | **FV** — POST chama `api/public/cadastro/finalizar` → provisionamento transacional pelo núcleo B5 `TentarProvisionarAsync` | `PublicSelfServiceWebControllers.cs:172` → `SelfServiceServices.cs:216-299`; ao vivo em `r5b5-provisionamento-convites.md` |
+| Seção A.1 "Onboarding: Pular Etapa PAR+FAKE (só audit log)" | **FV** — skip persistido (`status='PULADA'`, `motivo_pular`, 409 se obrigatória); concluir-no-clique só com critério atendido; reavaliar derivado de dados | `OnboardingJornadaService.cs:453-479`; rotas `OnboardingController.cs(API):115-168`; loop completo ao vivo `r5d10-onboarding-loop-ao-vivo.md` |
+| Seção B #9–#13 MinhaAssinatura Faturas/Uso/Limites/Upgrade/Downgrade/Cancelamento hardcoded/mortos | **FV** — views model-bound; POSTs reais com antiforgery gravando `upgrade_solicitacoes`/`downgrade_solicitacoes`; leitura real (`uso`, faturas por SQL) | `MinhaAssinaturaController.cs:146-266`; `SelfServiceServices.cs:580-652`; matriz B4 `r5b4-matriz-comercial.md` |
+| Seção B #16 TransmitirResposta mascarando sucesso | **PAR/BLOQ honesto** — toast neutro ("Tentativa de transmissão executada"), status real `CONFIGURACAO_PENDENTE` persistido; conectores OPMENEXO/INPART continuam sem credenciais (bloqueio externo legítimo) | `Adm360CotacoesWebController.cs:185-204`; `PortalConnectors.cs:41-49,97-105` |
+| Seção B #18 Emissão fiscal "nota emitida" | **FV-interna / BLOQ-externa** — `ENVIANDO` só com `IFiscalTransmissor` real; catálogo DI vazio → recusa honesta 400; falha reverte `ENVIANDO→PRONTA` | `Administrativo360FiscalService.cs:167-224`; `Program.cs:53`; `r5a2-fiscal-honesto.md` |
+| Billing (7 ações SA) | **substituído por redirect** para páginas canônicas Assinaturas/FaturamentoSaas | `BillingController.cs` (R5-B6) |
+| Eixo comercial admin | API decisória real e testada (`SolicitacoesPlanosController` aprovar/recusar idempotente); **UI Web de decisão ainda inexistente** (zero referências a `solicitacoes-planos` no Web) | `API\Controllers\SolicitacoesPlanosController.cs`; testes `SaasComercialB4MatrizTests` |
+| Unidades de atendimento (Saúde 360) | **FV** — rota de escrita + página BFF provadas ao vivo; checklist demo 12/12 AUTOMATICO | `r5-e13-unidades-atendimento.md` |
+| Cobrança SaaS | **FV (sandbox)** — máquina de estados + webhook HMAC + dedupe; fatura PAGA ao vivo via PIX_SANDBOX. Provedor externo: **BLOQ** (não existe contrato comercial) | `r5b6-cobranca-sandbox.md` (v2332) |
+| Scheduler `ativar-agendados` | **FV** — kernel B4 único, BackgroundService, ator do sistema | `r5-e13-scheduler-agendados.md` |
+| Upgrade do banco principal | **ENSAIO FV em clone** (upgrade oficial verde fim-a-fim); banco principal ainda **não atualizado** → Pendência P0 do usuário | `r5-p0-ensaio-upgrade-clone.md` |
+
+### D.2 — Persistem como FAKE (falhou: fachada sobre nada) em `4f0151b`
+
+| # | Item | Prova atual |
+|---|---|---|
+| 1 | Contato comercial da landing — "Solicitação registrada" sem salvar | `CommercialDemoWebController.cs:45-61` (TempData only) |
+| 2 | PropostasComerciais POST "salva para demonstração" | `CommercialDemoWebController.cs:177-179` |
+| 14 | Piloto checklist/ocorrências — escrita em `ConcurrentDictionary`, perde no restart | `PilotoController.cs:17-18` |
+| 19 | BI `/Bi` e `/Operacoes`: `fetch('/api/…')` sem proxy `/api` no Web → KPIs eternamente "-" | `Views/Bi/Index.cshtml:19`, `Views/Operacoes/Index.cshtml:4`, `Web\Program.cs:168-170` |
+| 20 | `/Inteligencia` dashboard com GUIDs/"Hospital A" hardcoded como dados de operação | `InteligenciaController.cs:27-40` |
+| 21 | BFF `V1420` (cobertura/fechamentos) retorna zeros estáticos em 7 GETs | `V1420OperationalControllers.cs:33-49` |
+| 15/22 | 11 subpáginas AdminSaas + shells `SaasComercialPage` estáticos apesar do caminho canônico em banco existir (`comercial_leads`/`comercial_propostas`; AdminSaas.Index já é real) | `CommercialDemoWebController.cs:112-122`, `Views/Shared/SaasComercialPage.cshtml:9`, `CommercialPageFactory` interno L298-312 |
+| (inertes honestos) | Developer.CreateApiKey, MedicoArea.AceitarConvite, feedback da Ajuda, exportação manual de documentos | mensagens honestas mas função não faz o que a UI sugere: `B2BLaunchWebControllers.cs:18-28` (+ `Form.cshtml:38` posts tudo para lá), `B2BCommercialOpsWebControllers.cs:66-69`, `AjudaController.cs:119-130`, `PortalConnectors.cs:127-135` |
+
+### D.3 — Fontes de verdade concorrentes para "módulo contratado/permitido" (raiz do item 2 R6)
+
+Uma única pergunta — "este tenant tem este módulo e este usuário esta ação?" — é respondida hoje por
+**11 resoluções paralelas**, apenas uma das quais canônica:
+
+1. **Canônica**: `ModuleContractVigencia`/`ModuleContractingService.ContratadoAsync` (habilitado+status+vigência) — usada em login (`Data.cs:519`), política por request da API (`SecurityAdministrationServices.cs:126`), catálogo do portal (`ModuleContractingService.cs:26`) e onboarding (`OnboardingJornadaService.cs:95`).
+2. `Saude360ModuleFilter.cs:47-50` — SQL próprio **ignorando vigência/agendamento e fail-open** em erro de banco.
+3. `SelfServiceServices.cs:58` — somente `habilitado=true` (sem status/vigência).
+4. `CobrancaSaasServices.cs:54-58` — somente vigência (escopo de faturamento, sem habilitado/status).
+5. Web `SaasRouteGuardFilter.ControllerModules` (~70 entradas) + `PermissionActionOverrides` — dicionário de código, sem vínculo com `modulos_sistema`.
+6. `_AppSidebar.cshtml:12-14,50-56` e `_SuprimentosNav.cshtml:18-35` — listas hardcoded de módulos/permissões duplicando o catálogo.
+7. `FeatureCatalogService.cs:16-52` — terceira cópia dos códigos exigidos (usa família `SAUDE360_*`, divergindo dos códigos finos do guard: `PACIENTES` vs `SAUDE360_PACIENTES`).
+8. Strings de papel composto `RolesConstants.Saude360*` — Web e API são **quase-duplicados divergentes** (Web não tem Triagem/Clínico/Cid/Repasses).
+9. `AccessServices.cs:128-190` — fallbacks de papel pré-v2149 hardcoded.
+10. Guard do módulo no onboarding — 5ª variante SQL + filtro C#.
+11. `[RequireModule]` da API lê claims JWT (minted no login) — correto, mas congela mudanças até refresh (JWT 8 h; cookie sliding).
+
+Consequência medida (motivo do item 2): controllers clínicos mapeados no guard a códigos finos
+(`PACIENTES`, `AGENDAMENTOS`, `TRIAGEM`, `CONSULTAS`, `CLINICA_DASHBOARD`) nunca recebem claim desses
+módulos porque `tenant_modulos` só registra o pacote `SAUDE360` → páginas legítimas caem em
+`MODULO_NAO_CONTRATADO` com contrato ativo. O pacote vendido e suas capacidades não têm relação
+explícita no catálogo canônico.
+
+### D.4 — Classificação global reconfirmada (por nível R6)
+
+| Nível R6 | Situação em `4f0151b` |
+|---|---|
+| **Funcional e verificada** | Núcleo Administrativo360 (~155 ações, testes em banco), Saúde 360 clínico (~92), Ocorrências, onboarding-contrato completo (materialização/skip/conclusão/reavaliação ao vivo), provisionamento self-service+admin, convites com hash/expiração, cobrança sandbox, matriz comercial (API + decisão idempotente), MinhaAssinatura real, scheduler AGENDADO, rota de unidades, fiscal interno honesto, escopo tenant_id canonizado (v2336), upgrade DB ensaiado em clone |
+| **Parcial** | Fiscal externa (sem credenciais — BLOQ abaixo na transmissão), conectores cotação, Piloto-checklist (volátil), Parametrizacoes (leitura inicial inventada), AdminSaas.Index (misto), white-label via self-service (rota real, homologação visual parcial) |
+| **Bloqueada (externa)** | Transmissão NF-e/NFS-e (credenciais P1), provedores OPMENEXO/INPART, provedor de cobrança externo (inexistente — sandbox é a entrega), deploy IIS + upgrade do banco principal (decisão de agenda do usuário) |
+| **Falhou (fachada)** | Lista D.2 integral (contato landing, propostas demo, Piloto, BI/Operações fetch morto, Inteligência hardcoded, V1420 zeros, shells estáticos, forms B2B→CreateApiKey) |
+| **Não executada** | ~211 ações ISH operacionais core (plantões/escalas/financeiro/agenda/relatórios — pipeline real sem homologação viva), portais ClientePortal/ParceiroPortal (empty-state honesto, jornada não andada), B2B Launch/Ops inteiras, ajuda/manual, LGPD GETs, jornadas completas-desktop/mobile no navegador, smoke pós-IIS |
+
+Contagens por ação permanecem as da seção C como fotografia de superfície; o que muda em R6 é o
+**nível de prova** de cada bloco, registrado acima com arquivo/linha e evidência executada.

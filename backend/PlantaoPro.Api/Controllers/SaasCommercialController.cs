@@ -412,6 +412,11 @@ where id=@id and cliente_id=@ClienteId and reg_status='A'", new { id, request.Cl
             if (jaAtiva) return BadRequest(ApiResponse<string>.Fail("Cliente já possui uma assinatura ativa ou trial.", 400));
 
             var id = Guid.NewGuid();
+            // R5-D9: o kernel grava assinaturas com tenant_id; a rota administrativa deve
+            // espelhar essa forma (senão o tenant fica órfão da própria assinatura canônica).
+            // Sem tenant vinculado ao cliente o valor permanece honestamente nulo.
+            var tenantDaAssinatura = await cn.QueryFirstOrDefaultAsync<Guid?>(
+                "select id from plantaopro.tenants where cliente_id=@ClienteId and coalesce(reg_status,'A')='A' order by reg_date limit 1", request);
             // B6: serializa a criação por cliente (mesmo lock que a reativação usa),
             // para o índice único de ATIVA/TRIAL ser o árbitro final da corrida.
             // A pré-checagem acima permanece apenas para a mensagem honesta (400).
@@ -420,8 +425,8 @@ where id=@id and cliente_id=@ClienteId and reg_status='A'", new { id, request.Cl
             await cn.ExecuteAsync("select pg_advisory_xact_lock(hashtextextended('assinaturas:' || @ClienteId::text, 0))", request, tx);
             try
             {
-                await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,reg_status,reg_date)
-values(@id,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@DiaVencimento,@Observacoes,'A',now())", new { id, request.ClienteId, request.PlanoId, request.DataInicio, request.DataFim, request.ValorContratado, request.DiaVencimento, request.Observacoes }, tx);
+                await cn.ExecuteAsync(@"insert into plantaopro.assinaturas(id,tenant_id,cliente_id,plano_id,data_inicio,data_fim,status,valor_contratado,dia_vencimento,observacoes,reg_status,reg_date)
+values(@id,@tenantDaAssinatura,@ClienteId,@PlanoId,@DataInicio,@DataFim,'ATIVA',@ValorContratado,@DiaVencimento,@Observacoes,'A',now())", new { id, tenantDaAssinatura, request.ClienteId, request.PlanoId, request.DataInicio, request.DataFim, request.ValorContratado, request.DiaVencimento, request.Observacoes }, tx);
                 await tx.CommitAsync();
             }
             catch (PostgresException ex) when (ex.SqlState == "23505")

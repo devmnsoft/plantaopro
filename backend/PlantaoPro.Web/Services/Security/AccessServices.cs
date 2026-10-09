@@ -239,7 +239,10 @@ public sealed class PermissionService : IPermissionService
 
     private static readonly HashSet<string> TenantAdministrationModules = new(StringComparer.OrdinalIgnoreCase)
     {
-        "USUARIOS", "PERFIS", "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL"
+        // R5-D9: ONBOARDING e fluxo core do SaaS (a jornada so materializa etapas de
+        // modulo com assinatura canonica vigente); sem entrada propria em modulos_sistema,
+        // o gestor de um tenant correto ficaria preso em MODULO_NAO_CONTRATADO.
+        "USUARIOS", "PERFIS", "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING"
     };
 
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();
@@ -275,8 +278,9 @@ public sealed class ModuleAccessService : IModuleAccessService
 
     private static readonly HashSet<string> CoreModules = new(StringComparer.OrdinalIgnoreCase)
     {
+        // R5-D9: ver TenantAdministrationModules - jornada de onboarding e core do tenant.
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING"
     };
 
     private static string Normalize(string? value) => (value ?? string.Empty).Trim().ToUpperInvariant();

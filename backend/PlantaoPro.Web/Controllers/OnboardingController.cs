@@ -12,7 +12,11 @@ namespace PlantaoPro.Web.Controllers;
 /// e reavaliado contra dados persistidos; acoes comerciais viram operacoes reais na API.
 /// NovoCliente/Sucesso continuam sendo o wizard MNSOFT (admin cria cliente + plano + admin).
 /// </summary>
+// R5-D9: [HttpPost("Iniciar")] etc. sem rota de controller mapeava para /Iniciar na raiz da
+// aplicação (poluía o namespace global e fugia do segmento do módulo no guard/log). Com o
+// prefixo, as ações atributadas passam a /Onboarding/{ação}; GETs convencionais seguem iguais.
 [Authorize]
+[Route("Onboarding")]
 public sealed class OnboardingController : BaseWebController
 {
     private readonly ICurrentUserService _currentUser;
@@ -23,7 +27,8 @@ public sealed class OnboardingController : BaseWebController
         _currentUser = currentUser;
     }
 
-    [HttpGet]
+    [HttpGet("")]
+    [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
         var client = CreateApiClient();
@@ -134,15 +139,18 @@ public sealed class OnboardingController : BaseWebController
     {
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return (false, null);
-        var (_, erro, status) = await SendApiAsync<object, string>(client, HttpMethod.Post, rota, body ?? new { });
+        // R5-D9: a jornada devolve data como lista (iniciar/reavaliar) ou objeto (concluir/pular);
+        // tipar como string quebrava a leitura de um POST 200 legitimo ("formato inesperado" falso).
+        // JsonElement aceita qualquer forma do envelope sem inventar contrato.
+        var (_, erro, status) = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, rota, body ?? new { });
         if (status == HttpStatusCode.Unauthorized) return (false, null);
         return (status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous, erro);
     }
 
-    [HttpGet]
+    [HttpGet("NovoCliente")]
     public IActionResult NovoCliente() => View(new OnboardingClienteViewModel());
 
-    [HttpPost]
+    [HttpPost("NovoCliente")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> NovoCliente(OnboardingClienteViewModel model)
     {
@@ -172,7 +180,7 @@ public sealed class OnboardingController : BaseWebController
         }
     }
 
-    [HttpGet]
+    [HttpGet("Sucesso")]
     public async Task<IActionResult> Sucesso(Guid clienteId)
     {
         try

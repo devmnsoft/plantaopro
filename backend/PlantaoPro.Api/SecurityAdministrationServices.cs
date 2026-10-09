@@ -49,8 +49,11 @@ public sealed class EffectivePermissionService : IEffectivePermissionService
     private readonly IConfiguration cfg;
     private static readonly HashSet<string> CoreModules = new(StringComparer.OrdinalIgnoreCase)
     {
+        // R5-D9: ONBOARDING e fluxo core do SaaS - nao existe linha propria em
+        // modulos_sistema para ele; exige apenas o contexto de tenant (assinatura
+        // canonica vigente ja e cobrada pelo materializador da jornada).
         "MEU_DIA", "AJUDA", "LGPD", "CONTA", "TREINAMENTO", "USUARIOS", "PERFIS",
-        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL"
+        "PERMISSOES", "CONFIGURACOES", "SEGURANCA", "ASSINATURAS", "CLIENTE_PORTAL", "ONBOARDING"
     };
     public EffectivePermissionService(IConfiguration cfg) { this.cfg = cfg; }
     public async Task<IEnumerable<string>> ObterPermissoesAsync(Guid usuarioId, Guid? tenantId, CancellationToken ct = default)

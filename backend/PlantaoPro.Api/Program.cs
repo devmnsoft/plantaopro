@@ -322,6 +322,10 @@ builder.Services.AddScoped<AiJornadaCotacao>();
 // pulada no Testing e desligada quando Adm360:TransmissaoRecovery:IntervaloSegundos <= 0).
 builder.Services.AddHostedService<Adm360TransmissaoRecoveryHostedService>();
 
+// R5-E13/P2: ativa contratos AGENDADO vencidos sem chamadas manuais (pulada no Testing;
+// desligada quando Saas:AtivarAgendados:IntervaloSegundos <= 0).
+builder.Services.AddHostedService<SaasModulosAgendadosHostedService>();
+
 var app = builder.Build();
 
 // P4: concilia respostas presas em ENVIANDO por queda do processo no boot (estado honesto; nunca órfão).

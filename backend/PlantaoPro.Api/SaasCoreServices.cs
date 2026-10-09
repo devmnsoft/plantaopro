@@ -101,12 +101,24 @@ order by m.essencial desc, m.ordem, m.nome";
     /// <summary>
     /// B4: ativa contratos AGENDADO cuja data de início chegou (inicio_previsto &lt;=
     /// now). Idempotente: só AGENDADO vencido transiciona; cada ativação grava
-    /// trilha no tenant_modulos_historico. Chamado por rotina operacional (E13);
-    /// sem ativação automática implícita em leitura.
+    /// trilha no tenant_modulos_historico. Agora chamado também pelo scheduler R5-E13
+    /// (AtivarAgendadosProgramadoAsync); sem ativação automática implícita em leitura.
     /// </summary>
     public async Task<ApiResponse<int>> AtivarAgendadosAsync(string? ip, CancellationToken ct)
     {
         if (!currentUser.IsGlobalAdmin()) return ApiResponse<int>.Fail("Somente o Super Administrador MNSOFT pode ativar agendamentos.", 403);
+        return await AtivarVencidosAsync(currentUser.UserId, ip, ct);
+    }
+
+    /// <summary>
+    /// R5-E13/P2: entrada do scheduler (sem contexto HTTP). O ator e o sistema (usuario_id NULL,
+    /// ip_origem SCHEDULER na trilha) — jamais finge ser superadmin. Mesmo kernel transacional de B4,
+    /// portanto a rota manual e o scheduler compartilham exatamente a mesma semantica de estados.
+    /// </summary>
+    public Task<ApiResponse<int>> AtivarAgendadosProgramadoAsync(CancellationToken ct) => AtivarVencidosAsync(null, "SCHEDULER", ct);
+
+    private async Task<ApiResponse<int>> AtivarVencidosAsync(Guid? usuarioId, string? ip, CancellationToken ct)
+    {
         await using var connection = Connection();
         await connection.OpenAsync(ct);
         await using var transaction = await connection.BeginTransactionAsync(ct);
@@ -121,11 +133,13 @@ order by m.essencial desc, m.ordem, m.nome";
             await connection.ExecuteAsync(new CommandDefinition(
                 @"insert into plantaopro.tenant_modulos_historico(tenant_modulo_id,tenant_id,modulo_id,acao,antes,depois,usuario_id,ip_origem)
 values(@contractId,@tenantId,@moduleId,'ATIVACAO_AGENDADA','{""status"":""AGENDADO""}','{""status"":""ATIVO""}',@userId,@ip)",
-                new { contractId = row.Id, tenantId = row.TenantId, moduleId = row.ModuloId, userId = currentUser.UserId, ip }, transaction, cancellationToken: ct));
+                new { contractId = row.Id, tenantId = row.TenantId, moduleId = row.ModuloId, userId = usuarioId, ip }, transaction, cancellationToken: ct));
         }
         await transaction.CommitAsync(ct);
-        if (due.Count > 0)
-            await audit.RegistrarAsync(currentUser.UserId, null, "TENANT_MODULO", Guid.Empty, "ATIVACAO_AGENDADA", new { ativados = due.Count }, true, ip, "ADMINISTRADOR_GLOBAL", ct);
+        // A auditoria exige usuario logado; no tick do scheduler a trilha canonica e o historico
+        // (usuario_id NULL + ip_origem SCHEDULER), sem estado inventado.
+        if (due.Count > 0 && usuarioId.HasValue)
+            await audit.RegistrarAsync(usuarioId.Value, null, "TENANT_MODULO", Guid.Empty, "ATIVACAO_AGENDADA", new { ativados = due.Count }, true, ip, "ADMINISTRADOR_GLOBAL", ct);
         return ApiResponse<int>.Ok(due.Count, due.Count == 0 ? "Nenhum agendamento vencido." : $"{due.Count} contrato(s) ativado(s).");
     }
 

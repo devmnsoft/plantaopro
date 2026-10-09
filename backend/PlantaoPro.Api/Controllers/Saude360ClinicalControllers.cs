@@ -295,5 +295,24 @@ public sealed class PacientesController : ControllerBase
     [HttpGet("{id:guid}/resumo-clinico")] public async Task<IActionResult> ResumoClinico(Guid id) { var r = await service.ObterAsync("pacientes", id); return StatusCode(r.StatusCode, r); }
 }
 
+// R5-E13: rota de escrita real de unidades de atendimento (clinica_unidades_atendimento).
+// Antes so existia leitura via lookups legados; sem POST a etapa ONB_SD_UNIDADE da jornada
+// nunca podia ser concluida por dado persistido. Gate pelo contrato SAUDE360 ([Saude360Module]).
+[ApiController]
+[Authorize(Roles = RolesConstants.Saude360Assistencial)]
+[Saude360Module]
+[Route("api/unidades-atendimento")]
+public sealed class ClinicaUnidadesController : ControllerBase
+{
+    private readonly Saude360ClinicalService service;
+    public ClinicaUnidadesController(Saude360ClinicalService service) { this.service = service; }
+    [HttpGet] public async Task<IActionResult> Get([FromQuery] string? status) { var r = await service.ListarAsync("unidadesAtendimento", status); return StatusCode(r.StatusCode, r); }
+    [HttpGet("{id:guid}")] public async Task<IActionResult> GetById(Guid id) { var r = await service.ObterAsync("unidadesAtendimento", id); return StatusCode(r.StatusCode, r); }
+    [HttpPost] public async Task<IActionResult> Post([FromBody] Saude360CreateRequest request) { var r = await service.CriarAsync("unidadesAtendimento", request); return StatusCode(r.StatusCode, r); }
+    [HttpPut("{id:guid}")] public async Task<IActionResult> Put(Guid id, [FromBody] Saude360CreateRequest request) { var r = await service.AtualizarAsync("unidadesAtendimento", id, request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/inativar")] public async Task<IActionResult> Inativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("unidadesAtendimento", id, "inativar", request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("{id:guid}/reativar")] public async Task<IActionResult> Reativar(Guid id, [FromBody] Saude360ActionRequest request) { var r = await service.AcaoAsync("unidadesAtendimento", id, "reativar", request); return StatusCode(r.StatusCode, r); }
+}
+
 public sealed class CidImportacaoRequest { public string Csv { get; set; } = string.Empty; public string ArquivoNome { get; set; } = string.Empty; public string Fonte { get; set; } = string.Empty; public string FonteUrl { get; set; } = string.Empty; public string Versao { get; set; } = "CID-10"; }
 public sealed class CidImportacaoUrlRequest { public string Url { get; set; } = string.Empty; public string Fonte { get; set; } = string.Empty; public string Versao { get; set; } = "CID-10"; }

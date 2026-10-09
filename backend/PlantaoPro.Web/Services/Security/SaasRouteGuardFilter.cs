@@ -65,6 +65,10 @@ public sealed class SaasRouteGuardFilter : IActionFilter
         ["Convenios"] = "CONVENIOS",
         ["PlanosSaude"] = "PLANOS_SAUDE",
         ["ClinicaDashboard"] = "CLINICA_DASHBOARD",
+        // R5-E13: unidades de atendimento usam o modulo grosso SAUDE360 (ja no contrato e nos grants
+        // canonicos v2334). O codigo fino UNIDADES so entra no guard quando existir linha propria em
+        // modulos_sistema + decisao de expansao de contrato (backlog E13 de granularidade).
+        ["ClinicaUnidades"] = "SAUDE360",
         ["PendenciasClinicas"] = "PENDENCIAS_CLINICAS",
         ["Administrativo360"] = "ADM360",
         ["Adm360GestaoWeb"] = "ADM360",

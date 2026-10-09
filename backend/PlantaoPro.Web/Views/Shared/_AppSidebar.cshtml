@@ -52,6 +52,8 @@
             @if (Can("SAUDE360_AGENDAMENTO")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a> }
             @if (Can("SAUDE360_TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a> }
             @if (Can("SAUDE360_CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a> }
+            @* R5-E13: mesmas codigos do guard de rota (SAUDE360 grosso ate decisao UNIDADES fina). *@
+            @if (Can("SAUDE360")) { <a class="nav-link-app @Active("ClinicaUnidades")" asp-controller="ClinicaUnidades" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades clínica</span></a> }
         }
         @if (canUseFinance)
         {

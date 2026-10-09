@@ -41,7 +41,8 @@ public sealed class Saude360ClinicalService
         { "planosSaude", "planos_saude" },
         { "planoSaudePacientes", "plano_saude_pacientes" },
         { "convenioGlosas", "convenio_glosas" },
-        { "repassesMedicos", "repasses_medicos_clinicos" }
+        { "repassesMedicos", "repasses_medicos_clinicos" },
+        { "unidadesAtendimento", "clinica_unidades_atendimento" }
     };
 
     public Saude360ClinicalService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<Saude360ClinicalService> logger)
@@ -630,6 +631,10 @@ from plantaopro.clinica_contas_receber where reg_status='A' and (@isGlobal or (@
         if (key == "convenioAutorizacoes") return ("insert into plantaopro.convenio_autorizacoes(id,cliente_id,convenio_id,paciente_id,agendamento_id,consulta_id,procedimento_id,motivo,procedimento,status,created_by) values(@id,@tenantId,@convenioId,@pacienteId,@agendamentoId,@consultaId,@procedimentoId,@motivo,@motivo,'PENDENTE',@uid)", new { id, tenantId, r.ConvenioId, r.PacienteId, r.AgendamentoId, r.ConsultaId, r.ProcedimentoId, motivo = r.Motivo, uid });
         if (key == "planosSaude") return ("insert into plantaopro.planos_saude(id,cliente_id,nome,operadora,codigo,status,created_by) values(@id,@tenantId,@nome,@operadora,@codigo,'ATIVO',@uid)", new { id, tenantId, nome = r.Nome, operadora = r.Descricao, codigo = r.Codigo, uid });
         if (key == "convenioGlosas") return ("insert into plantaopro.convenio_glosas(id,cliente_id,convenio_id,conta_receber_id,motivo,valor_glosado,status,created_by) values(@id,@tenantId,@convenioId,@contaId,@motivo,@valor,'ABERTA',@uid)", new { id, tenantId, r.ConvenioId, contaId = r.ContaReceberId, motivo = r.Motivo, valor = r.Valor ?? 0, uid });
+        // R5-E13: unidade de atendimento e a entidade que destrava ONB_SD_UNIDADE na jornada.
+        // Grava as duas chaves de escopo (cliente_id segue a convencao do kernel; tenant_id da
+        // origem SaaS) para o avaliador da jornada enxergar a persistencia real sem clique falso.
+        if (key == "unidadesAtendimento") return ("insert into plantaopro.clinica_unidades_atendimento(id,cliente_id,tenant_id,nome,status,created_by) values(@id,@tenantId,@tenantOrigem,@nome,'ATIVO',@uid)", new { id, tenantId, tenantOrigem = currentUser.TenantId, nome = r.Nome, uid });
         return ("insert into plantaopro.plano_saude_pacientes(id,cliente_id,plano_saude_id,paciente_id,numero_carteirinha,principal,validade,status,created_by) values(@id,@tenantId,@planoSaudeId,@pacienteId,@carteira,@principal,@validade,'ATIVO',@uid)", new { id, tenantId, r.PlanoSaudeId, r.PacienteId, carteira = r.NumeroCarteirinha, r.Principal, r.Validade, uid });
     }
 
@@ -648,6 +653,7 @@ where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@t
         if (key == "cid") return "update plantaopro." + table + " set codigo=coalesce(nullif(@Codigo,''),codigo), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
         if (key == "prescricoes") return "update plantaopro." + table + " set orientacoes=coalesce(nullif(@Observacoes,''),orientacoes), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and status <> 'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
         if (key == "prescricaoModelos") return "update plantaopro." + table + " set nome=coalesce(nullif(@Nome,''),nome), descricao=coalesce(nullif(@Descricao,''),descricao), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
+        if (key == "unidadesAtendimento") return "update plantaopro." + table + " set nome=coalesce(nullif(@Nome,''),nome), status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
         return "update plantaopro." + table + " set status=coalesce(nullif(@Status,''),status), updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))";
     }
 
@@ -707,7 +713,7 @@ where id=@id", new { id, acao, evento = acao, detalhe = detalhes, uid }, tx);
         if (key == "prescricoes" && (!r.PacienteId.HasValue || !r.MedicoId.HasValue || !r.ConsultaId.HasValue)) return "Prescrição exige consulta, paciente e médico.";
         if (key == "contasReceber" && (r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.Descricao))) return "Conta a receber exige valor e descrição.";
         if (key == "recebimentos" && (!r.ContaReceberId.HasValue || r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.FormaPagamento) || !r.DataPagamento.HasValue)) return "Recebimento exige conta, valor positivo, data e forma de pagamento.";
-        if ((key == "convenios" || key == "planosSaude" || key == "prescricaoModelos") && string.IsNullOrWhiteSpace(r.Nome)) return "Nome é obrigatório.";
+        if ((key == "convenios" || key == "planosSaude" || key == "prescricaoModelos" || key == "unidadesAtendimento") && string.IsNullOrWhiteSpace(r.Nome)) return "Nome é obrigatório.";
         if (key == "planoSaudePacientes" && (!r.PacienteId.HasValue || !r.PlanoSaudeId.HasValue)) return "Vínculo de plano exige paciente e plano.";
         if (key == "convenioGlosas" && (!r.ConvenioId.HasValue || !r.ContaReceberId.HasValue || r.Valor.GetValueOrDefault() <= 0 || string.IsNullOrWhiteSpace(r.Motivo))) return "Glosa exige convênio, conta, valor positivo e motivo.";
         return null;

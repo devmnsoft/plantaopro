@@ -187,7 +187,9 @@ and (coalesce(w.logo_url,'')<>'' or coalesce(translate(lower(trim(w.nome_platafo
                 return esc ? (true, "Escala confirmada/realizada em plantao do tenant (fluxo medico completo).") : (false, "Nenhuma escala confirmada em plantao deste tenant ainda.");
 
             case "PRIMEIRA_UNIDADE_SAUDE":
-                var un = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.clinica_unidades_atendimento ua where ua.tenant_id=@tenantId and ua.reg_status='A')", new { tenantId });
+                // R5-E13: a rota de escrita (api/unidades-atendimento) grava cliente_id + tenant_id;
+                // o avaliador aceita as duas chaves pela mesma razao de PRIMEIRO_PACIENTE (homologacao D11).
+                var un = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.clinica_unidades_atendimento ua where (ua.tenant_id=@tenantId or ua.cliente_id=@clienteId) and ua.reg_status='A')", new { tenantId, clienteId });
                 return un ? (true, "Unidade de atendimento cadastrada.") : (false, "Nenhuma unidade de atendimento cadastrada no Saude 360.");
 
             case "PRIMEIRO_PACIENTE_CADASTRADO":

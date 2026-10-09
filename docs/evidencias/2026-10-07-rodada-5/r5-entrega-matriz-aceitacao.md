@@ -24,9 +24,11 @@ dados persistidos; estados terminais nunca regridem; áreas sem tenant dão leit
 | D11 | Jornada Saúde 360 real: habilitar PACIENTES, paciente via BFF (validação real de CPF provada), triagem via API; defeito do avaliador (tenant_id×cliente_id) corrigido na causa; v2335 | Entregue | `2160dd8` | `r5d11-d12-jornadas-saude-identidade.md` |
 | D12 | Identidade (white-label) via rota self-service com validador WCAG/HEX e tenancy provada (403 cross-tenant); matriz final 10/12 com as 2 pendências honestas documentadas | Entregue | `2160dd8` | idem, seção 3 |
 
-Estado medido do checklist demo: **10/12 CONCLUIDO, todos os concluídos com origem AUTOMATICO**;
-`ONB_SD_UNIDADE` pendente por falta de rota de escrita no produto (não por falha de execução) e
-`ONB_REVISAO` pendente como gate honesto derivado exatamente dessa pendência.
+Estado medido do checklist demo: **12/12 CONCLUIDO, todos os concluídos com origem AUTOMATICO**
+(atualizado na sequência E13 — rota de escrita de unidades de atendimento entregue e provada ao
+vivo em `r5-e13-unidades-atendimento.md`). Na abertura da rodada o estado era 10/12: `ONB_SD_UNIDADE`
+pendia por falta de rota de escrita no produto (não por falha de execução) e `ONB_REVISAO` era o
+gate honesto derivado exatamente dessa pendência; ambas fecharam por dado real, sem clique falso.
 
 ## 2. Roteiro de aceite (usuário final, ~30 min)
 
@@ -58,7 +60,7 @@ Aceite = todos os passos acima reproduzíveis sem banner de erro falso e sem est
 |---|---|---|
 | P0 | **Upgrade formal do banco principal `plantaopro`** pela sequência completa v2323→v2335 e registro em `schema_migrations` (aplicações manuais em `plantaopro_test` não registradas) | sem isso o ambiente de produção não tem os módulos da rodada |
 | P0 | **Deploy live IIS** da build homologada (hosts locais provam o código; IIS é o alvo) | entrega real ao usuário |
-| P1 | **Rota de escrita para `clinica_unidades_atendimento`** (ou remoção do passo do catálogo) — hoje `ONB_SD_UNIDADE` é injogável em self-service e trava `ONB_REVISAO` | defeito de produto medido em D11 |
+| ~~P1~~ ✅ | **Rota de escrita para `clinica_unidades_atendimento`** — ENTREGUE na sequência E13 (`api/unidades-atendimento` + página BFF `ClinicaUnidades`; matriz 12/12 ao vivo): ver `r5-e13-unidades-atendimento.md` | defeito de produto medido em D11 |
 | P1 | **Granularidade do catálogo Saúde 360**: linhas `TRIAGEM`, `AGENDAMENTOS`, `CLINICA_DASHBOARD` em `modulos_sistema` + expansão por contrato, OU mapeamento desses controllers para `SAUDE360` no guard | páginas legítimas caem em MODULO_NAO_CONTRATADO com contrato ativo (decisão de produto) |
 | P1 | Conector fiscal real P1/P2 (credenciais produção) — `ENVIANDO` continua reservado | único caminho honesto para fiscal de verdade |
 | P2 | Scheduler de `POST api/modulos/ativar-agendados` (hoje é rota manual) | AGENDADO só opera se alguém chamar |

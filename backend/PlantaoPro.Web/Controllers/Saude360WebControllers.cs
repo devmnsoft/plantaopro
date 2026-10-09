@@ -315,6 +315,16 @@ public sealed class PlanosSaudeController : Saude360WebControllerBase
     public Task<IActionResult> Autorizacoes() { return ModuloAsync("Autorizações por plano", "Planos de saúde", "Solicitações e retornos de autorização vinculados ao plano de saúde.", "api/planos-saude/autorizacoes", Links(Link("Coberturas", "Coberturas", "bi-shield-plus"))); }
 }
 
+// R5-E13: página BFF de unidades de atendimento (destrava ONB_SD_UNIDADE com dado real).
+// Salvar/Index seguem o pipeline genérico de Saude360WebControllerBase (antiforgery + API real).
+public sealed class ClinicaUnidadesController : Saude360WebControllerBase
+{
+    public ClinicaUnidadesController(IHttpClientFactory f, ILogger<ClinicaUnidadesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }
+    public Task<IActionResult> Index() { return ModuloAsync("Unidades de atendimento", "Saúde 360", "Unidades físicas do tenant usadas por agendamentos e atendimento clínico.", "api/unidades-atendimento", Links(Link("Nova unidade", "Create", "bi-plus-circle"))); }
+    public IActionResult Create() { return Formulario("Nova unidade de atendimento", "api/unidades-atendimento"); }
+    public IActionResult Edit(Guid id) { return Formulario("Editar unidade de atendimento", "api/unidades-atendimento/" + id, id); }
+}
+
 public sealed class PacientesController : Saude360WebControllerBase
 {
     public PacientesController(IHttpClientFactory f, ILogger<PacientesController> l, Saude360WebService s, IAssistenteContextualService a) : base(f, l, s, a) { }

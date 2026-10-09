@@ -191,11 +191,14 @@ and (coalesce(w.logo_url,'')<>'' or coalesce(translate(lower(trim(w.nome_platafo
                 return un ? (true, "Unidade de atendimento cadastrada.") : (false, "Nenhuma unidade de atendimento cadastrada no Saude 360.");
 
             case "PRIMEIRO_PACIENTE_CADASTRADO":
-                var pa = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.pacientes pt where pt.tenant_id=@tenantId and pt.reg_status='A')", new { tenantId });
+                // O kernel Saude360ClinicalService escopa por clientes.id legado (coluna cliente_id);
+                // tenant_id e preenchido so em parte das tabelas. Avaliar as duas chaves evita negar
+                // uma etapa concluida por rota real (homologacao D11).
+                var pa = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.pacientes pt where (pt.tenant_id=@tenantId or pt.cliente_id=@clienteId) and pt.reg_status='A')", new { tenantId, clienteId });
                 return pa ? (true, "Paciente cadastrado no tenant.") : (false, "Nenhum paciente cadastrado por este tenant.");
 
             case "PRIMEIRA_TRIAGEM_REALIZADA":
-                var tr = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.triagens t where t.tenant_id=@tenantId and t.reg_status='A')", new { tenantId });
+                var tr = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.triagens t where (t.tenant_id=@tenantId or t.cliente_id=@clienteId) and t.reg_status='A')", new { tenantId, clienteId });
                 return tr ? (true, "Triagem registrada no fluxo assistido.") : (false, "Nenhuma triagem registrada por este tenant.");
 
             case "PRIMEIRA_OPERACAO_ADM360":

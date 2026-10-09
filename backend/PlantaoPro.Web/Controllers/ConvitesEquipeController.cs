@@ -4,6 +4,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Services.Security;
 
 namespace PlantaoPro.Web.Controllers;
 
@@ -14,8 +15,14 @@ namespace PlantaoPro.Web.Controllers;
 [Route("ConvitesEquipe")]
 public sealed class ConvitesEquipeController : BaseWebController
 {
-    public ConvitesEquipeController(IHttpClientFactory factory, ILogger<ConvitesEquipeController> logger)
-        : base(factory, logger) { }
+    private readonly ICurrentUserService _currentUser;
+
+    public ConvitesEquipeController(IHttpClientFactory factory, ILogger<ConvitesEquipeController> logger,
+        ICurrentUserService currentUser)
+        : base(factory, logger)
+    {
+        _currentUser = currentUser;
+    }
 
     [HttpGet("")]
     [HttpGet("Index")]
@@ -23,6 +30,20 @@ public sealed class ConvitesEquipeController : BaseWebController
     {
         var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        // R5-A3: convites pertencem ao cliente (tenant). A área global sem cliente ativo
+        // não tem equipe própria; consultar a API escopada só gerava 403 confuso misturado
+        // com "Nenhum convite registrado". Entrega leitura honesta: explica e não chama.
+        if (_currentUser.IsGlobalAdmin() && !_currentUser.TenantId.HasValue)
+        {
+            return View("~/Views/ConvitesEquipe/Index.cshtml", new ConvitesEquipeIndexViewModel
+            {
+                SemContextoCliente = true,
+                InfoMessage = "Convites de equipe pertencem a um cliente. Selecione um cliente em AdminSaaS para criar ou revisar convites da equipe.",
+                TokenCriado = TempData["ConviteToken"] as string,
+                EmailConvidado = TempData["ConviteEmail"] as string,
+            });
+        }
 
         var convites = await ReadApiListResponseAsync<ConviteEquipeWebViewModel>(client, "api/equipe/convites");
         if (convites.StatusCode == HttpStatusCode.Unauthorized) return HandleUnauthorized();

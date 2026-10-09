@@ -25,6 +25,10 @@ public sealed class ConvitesEquipeIndexViewModel
     public string? TokenCriado { get; set; }
     public string? EmailConvidado { get; set; }
     public string? ErrorMessage { get; set; }
+
+    /// <summary>R5-A3: área global sem cliente ativo não tem equipe; aviso honesto no lugar de erro 403.</summary>
+    public bool SemContextoCliente { get; set; }
+    public string? InfoMessage { get; set; }
 }
 
 public sealed class ConviteAceiteWebViewModel

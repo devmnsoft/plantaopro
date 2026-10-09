@@ -10,6 +10,10 @@
     {
         <div class="alert alert-danger">@Model.ErrorMessage</div>
     }
+    @if (!string.IsNullOrWhiteSpace(Model.InfoMessage))
+    {
+        <div class="alert alert-info">@Model.InfoMessage</div>
+    }
     @if (!string.IsNullOrWhiteSpace(Model.TokenCriado))
     {
         <div class="alert alert-success">
@@ -19,6 +23,8 @@
         </div>
     }
 
+    @if (!Model.SemContextoCliente)
+    {
     <div class="card mb-4">
         <div class="card-body">
             <h2 class="h5">Novo convite</h2>
@@ -76,5 +82,6 @@
             </tr>
         }
         </tbody></table></div>
+    }
     }
 </section>

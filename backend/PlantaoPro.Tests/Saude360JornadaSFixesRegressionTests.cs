@@ -28,10 +28,12 @@ namespace PlantaoPro.Tests;
 ///          retry-safe (sem duplicar histórico); finalizar duplicado de
 ///          consulta é 409; ações em ID inexistente dão 404 (rollback, sem
 ///          histórico); tenant B não enxerga o registro do tenant A (404).
-/// F4      — Saude360ModuleFilter: tenant sem contrato SAUDE360 ativo recebe
-///          403 com a mensagem exata de contrato; contratado passa; global
-///          admin faz bypass sem consultar banco; anônimo delega para a
-///          camada de autenticação; falha de banco é fail-open.
+/// F4      — Saude360ModuleFilter: gate pela função canônica modulo_efetivo()
+///          (v2339, B6 + herança das capacidades do pacote): tenant sem contrato
+///          SAUDE360 efetivo recebe 403 com a mensagem exata de contrato;
+///          contratado passa; global admin faz bypass sem consultar banco;
+///          anônimo delega para a camada de autenticação; falha de banco é
+///          fail-closed (propaga erro honesto em vez de autorizar em silêncio).
 /// F3      — Correlação Web&lt;-&gt;API: o BFF envia X-Correlation-ID e loga
 ///          DuracaoTotalMs sem expor token; a API loga CorrelationId em toda
 ///          requisição concluída (contract tests de leitura de source).
@@ -497,17 +499,18 @@ values(@id, @tenant, @tenant, @moduloId, @codigoModulo, 'SAUDE360', 'Saúde 360'
     }
 
     [Fact]
-    public async Task F4_FalhaDoBanco_FailOpen_NaoBloqueiaTenant()
+    public async Task F4_FalhaDoBanco_FailClosed_PropagaErroSemAutorizarEmSilencio()
     {
+        // R6-BlocoA item 2: o gate agora é a função canônica modulo_efetivo(); sem
+        // try/catch, indisponibilidade de banco deixa de ser autorização silenciosa
+        // (fail-open) e passa a subir como indisponibilidade real (500 honesto).
         var unreachable = "Host=127.0.0.1;Port=59999;Database=plantaopro_test;Username=nobody;Password=nobody;Timeout=3;Command Timeout=3";
         var user = new FakeCurrentUser(Guid.NewGuid());
         var cfg = BuildCfg(unreachable);
         var filter = new Saude360ModuleFilter(user, cfg);
         var ctx = BuildFilterCtx(cfg, user);
 
-        await filter.OnAuthorizationAsync(ctx);
-
-        Assert.Null(ctx.Result); // verificação indisponível não derruba o módulo
+        await Assert.ThrowsAnyAsync<Exception>(() => filter.OnAuthorizationAsync(ctx));
     }
 
     #endregion

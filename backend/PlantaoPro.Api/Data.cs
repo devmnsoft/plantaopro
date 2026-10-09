@@ -514,11 +514,11 @@ select distinct g.codigo from granted g where not exists(select 1 from denied d 
 
         private static async Task<IEnumerable<string>> LoadModulesAsync(NpgsqlConnection cn, Guid tenantId, CancellationToken cancellationToken)
         {
-            string sql = $@"select distinct upper(ms.codigo)
-from plantaopro.tenant_modulos tm
-join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A' and upper(ms.status)='ATIVO'
-where tm.tenant_id=@tenantId and ({ModuleContractVigencia.EffectivePredicate})
-order by 1";
+            // R6-BlocoA item 2: claims de módulo pela função canônica (v2339) —
+            // predicado B6 + capacidades-filhas herdadas do pacote contratado.
+            // Sem isso, um contrato SAUDE360 não gerava claims PACIENTES/
+            // AGENDAMENTOS/... e o guard Web caía em MODULO_NAO_CONTRATADO.
+            const string sql = ModuleContractVigencia.ModulosEfetivosSql;
             return await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, cancellationToken: cancellationToken));
         }
 

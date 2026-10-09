@@ -7,19 +7,25 @@ public sealed class V2197ModuleContractReconciliationTests
     [Fact]
     public void Login_requires_canonical_active_contract_and_never_falls_back_to_legacy_code()
     {
-        // B6: o predicado de vigencia efetiva saiu do SQL inline e virou fonte unica
-        // (ModuleContractVigencia.EffectivePredicate, CrossCutting). O login, que gera
-        // os claims de modulo em Data.LoadModulesAsync, consome essa constante e nao
-        // carrega copia local de vigencia nem o codigo legado com fallback de codigo_modulo.
+        // B6 + R6-BlocoA item 2: o predicado de vigencia efetiva e fonte unica. Desde
+        // a v2339 os claims de modulo do login vao buscados na funcao canonica
+        // plantaopro.modulos_efetivos() (consumida via ModuleContractVigencia.ModulosEfetivosSql),
+        // que expande alem do contrato direto as capacidades herdadas do pacote. O
+        // Data.cs nao carrega mais copia local do predicado (B6) nem o fallback legado
+        // de codigo_modulo; EffectivePredicate permanece no CrossCutting apenas para os
+        // pontos administrativos que avaliam a linha tm isolada (e o teste de sincronia).
         var auth = Read("backend/PlantaoPro.Api/Data.cs");
         var vigencia = Read("backend/PlantaoPro.CrossCutting/ModuleContractVigencia.cs");
-        Assert.Contains("join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id", auth, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("ModuleContractVigencia.EffectivePredicate", auth);
+        Assert.Contains("ModuleContractVigencia.ModulosEfetivosSql", auth);
+        Assert.DoesNotContain("join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id", auth, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("tm.habilitado=true", auth, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("upper(tm.status)='ATIVO'", auth, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("upper(coalesce(nullif(tm.codigo_modulo", auth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("up.tenant_id is null or up.tenant_id=@tenantId", auth, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("isGlobal ? new[] { \"*\" }", auth);
+        // Fonte canonica exposta no CrossCutting: lista efetiva + consulta pontual.
+        Assert.Contains("plantaopro.modulos_efetivos(@tenantId)", vigencia);
+        Assert.Contains("plantaopro.modulo_efetivo(@tenantId,@moduleCode)", vigencia);
         Assert.Contains("tm.habilitado=true", vigencia);
         Assert.Contains("upper(coalesce(tm.status,'ATIVO'))='ATIVO'", vigencia, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("tm.desativado_em is null", vigencia);

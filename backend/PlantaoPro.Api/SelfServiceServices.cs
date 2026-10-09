@@ -3,6 +3,7 @@ using Dapper;
 using Npgsql;
 using PlantaoPro.Api.Models;
 using PlantaoPro.Api.Security;
+using PlantaoPro.CrossCutting.Security;
 
 namespace PlantaoPro.Api.Data;
 
@@ -55,7 +56,7 @@ limit 1", new { tenantId, clienteId, headerTenant = headerTenant ?? string.Empty
 
             if (tenant.TenantId.HasValue)
             {
-                tenant.Modulos = (await cn.QueryAsync<string>("select coalesce(codigo_modulo,'') from plantaopro.tenant_modulos where tenant_id=@tenantId and habilitado=true and reg_status='A' order by codigo_modulo", new { tenantId = tenant.TenantId.Value })).ToArray();
+                tenant.Modulos = (await cn.QueryAsync<string>(ModuleContractVigencia.ModulosEfetivosSql, new { tenantId = tenant.TenantId.Value })).ToArray();
                 tenant.Permissoes = await ObterPermissoesUsuarioAsync(cn, tenant.TenantId.Value);
             }
 
@@ -474,7 +475,7 @@ where tenant_id=@tenantId and reg_status='A' and (upper(nome)=upper(@nome) or up
             var validPermissionCount = await cn.ExecuteScalarAsync<int>(@"select count(*) from plantaopro.permissoes p
 join plantaopro.modulos_sistema m on m.id=p.modulo_id and m.reg_status='A'
 where p.id=any(@permissionIds) and p.reg_status='A'
-and exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenantId and tm.modulo_id=m.id and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO')", new { permissionIds, tenantId = ctx.Data.TenantId.Value }, tx);
+and plantaopro.modulo_efetivo(@tenantId,m.codigo)", new { permissionIds, tenantId = ctx.Data.TenantId.Value }, tx);
             if (validPermissionCount != permissionIds.Length)
             {
                 await tx.RollbackAsync();

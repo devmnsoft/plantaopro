@@ -39,25 +39,15 @@ public sealed class Saude360ModuleFilter : IAsyncAuthorizationFilter
             return;
         }
 
-        try
-        {
-            await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
-            var contratado = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"select exists(
-select 1 from plantaopro.tenant_modulos tm
-left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
-where tm.tenant_id=@tenantId and tm.reg_status='A' and tm.habilitado=true
-and upper(coalesce(tm.status,'ATIVO'))='ATIVO'
-and upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))='SAUDE360')", new { tenantId = tenantId.Value }, cancellationToken: context.HttpContext.RequestAborted));
-            if (contratado) return;
-        }
-        catch
-        {
-            // fail-open: indisponibilidade de verificação não derruba o módulo inteiro
-            // (uma falha de banco já apareceria em qualquer operação clínica).
-            return;
-        }
-
-        context.Result = ModuloIndisponivel();
+        // R6-BlocoA item 2: verificação pela função canônica (v2339) — mesmo
+        // predicado B6 dos claims, agora também para o gate por request e com
+        // herança das capacidades do pacote. Fail-open removido: falha de banco
+        // é indisponibilidade real (500 honesto), não autorização silenciosa
+        // de módulo não contratado.
+        await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
+        var contratado = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(
+            "select plantaopro.modulo_efetivo(@tenantId,'SAUDE360')", new { tenantId = tenantId.Value }, cancellationToken: context.HttpContext.RequestAborted));
+        if (!contratado) context.Result = ModuloIndisponivel();
     }
 
     private static ObjectResult ModuloIndisponivel() => new(new { success = false, message = "Módulo Saúde 360 não contratado para este cliente." }) { StatusCode = StatusCodes.Status403Forbidden };

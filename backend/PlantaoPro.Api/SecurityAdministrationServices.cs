@@ -123,11 +123,10 @@ where u.id=@usuarioId", new { usuarioId, tenantId }, cancellationToken: ct));
         var moduleCode = Normalize(modulo);
         if (!CoreModules.Contains(moduleCode))
         {
-            var contracted = await cn.QuerySingleAsync<bool>(new CommandDefinition($@"select exists(
-select 1 from plantaopro.tenant_modulos tm
-left join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A'
-where tm.tenant_id=@tenantId and ({ModuleContractVigencia.EffectivePredicate})
-and upper(coalesce(nullif(tm.codigo_modulo,''),ms.codigo))=@moduleCode)", new { tenantId, moduleCode }, cancellationToken: ct));
+            // R6-BlocoA item 2: contratação efetiva pela função canônica (v2339):
+            // predicado B6 + herança de capacidades do pacote contratado.
+            var contracted = await cn.QuerySingleAsync<bool>(new CommandDefinition(
+                ModuleContractVigencia.ModuloEfetivoSql, new { tenantId, moduleCode }, cancellationToken: ct));
             if (!contracted) return new(false, "MODULE_NOT_CONTRACTED", "Este módulo não faz parte da contratação ativa do cliente.", "CONTRATO");
         }
         var permissoes = (await ObterPermissoesAsync(usuarioId, tenantId, ct)).ToArray();

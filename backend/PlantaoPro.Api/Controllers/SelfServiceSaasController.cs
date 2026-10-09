@@ -327,7 +327,7 @@ public sealed class PermissoesSistemaController : ControllerBase
         await using var cn = new NpgsqlConnection(_cfg.GetConnectionString("Default"));
         var rows = await cn.QueryAsync<PermissaoDto>(@"select p.id as ""Id"", coalesce(m.nome,'') as ""Modulo"", coalesce(a.nome,'') as ""Acao"", coalesce(p.codigo,'') as ""Codigo"", coalesce(p.nome,'') as ""Nome"", p.sensivel as ""Sensivel""
 from plantaopro.permissoes p join plantaopro.modulos_sistema m on m.id=p.modulo_id join plantaopro.acoes_sistema a on a.id=p.acao_id
-where p.reg_status='A' and (@global or exists(select 1 from plantaopro.tenant_modulos tm where tm.tenant_id=@tenantId and tm.modulo_id=m.id and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO'))
+where p.reg_status='A' and (@global or plantaopro.modulo_efetivo(@tenantId,m.codigo))
 order by m.ordem,a.ordem limit 500", new { global = _currentUser.IsGlobalAdmin(), tenantId = _currentUser.TenantId });
         return Ok(ApiResponse<IEnumerable<PermissaoDto>>.Ok(rows));
     }

@@ -89,11 +89,7 @@ order by coalesce(x.ordem,0), coalesce(x.codigo,'')";
     // ------------------------------------------------------------------
     public static async Task<List<string>> ModulosEfetivosAsync(NpgsqlConnection cn, System.Data.Common.DbTransaction? tx, Guid tenantId)
     {
-        var sql = $@"select distinct upper(ms.codigo)
-from plantaopro.tenant_modulos tm
-join plantaopro.modulos_sistema ms on ms.id=tm.modulo_id and ms.reg_status='A' and upper(ms.status)='ATIVO'
-where tm.tenant_id=@tenantId and ({ModuleContractVigencia.EffectivePredicate})
-order by 1";
+        var sql = @"select codigo from plantaopro.modulos_efetivos(@tenantId) order by 1";
         return (await cn.QueryAsync<string>(new CommandDefinition(sql, new { tenantId }, tx))).ToList();
     }
 

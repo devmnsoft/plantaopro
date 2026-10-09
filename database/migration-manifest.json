@@ -151,11 +151,23 @@
       "transactional": true
     },
     {
+      "version": "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status",
+      "source": "database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql",
+      "checksum": "464e02c21b47f3e8fc129c0ad6db3e76b3deef4326beab6023f96a6a74c1bc2a",
+      "dependsOn": [
+        "2026_plantao_pro_saude360_modulos_clinicos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
       "version": "2026_plantao_pro_self_service_white_label",
       "source": "database/migrations/2026_plantao_pro_self_service_white_label.sql",
       "checksum": "bf5caefd0b2d92920074868daa8968ea7908b893a8dc2402bd430afafe9c31f1",
       "dependsOn": [
-        "2026_plantao_pro_saude360_modulos_clinicos"
+        "2026_plantao_pro_saude360_modulos_clinicos",
+        "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status"
       ],
       "status": "active",
       "transactional": true
@@ -997,11 +1009,22 @@
       "installRequired": false
     },
     {
+      "version": "2026_10_v2338_p0_adm360_garantia_codigos_fiscais",
+      "source": "database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql",
+      "checksum": "1ef1dda3e29ba1e9bca510ac239de65055cd8389d10b61134a9e1ca5fef24427",
+      "dependsOn": [
+        "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
       "version": "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
       "source": "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql",
       "checksum": "24bd46a22bfb711f96284c54c338ca6671fef24a01547f7ee7eebdba5f1bb132",
       "dependsOn": [
-        "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas"
+        "2026_10_v2338_p0_adm360_garantia_codigos_fiscais"
       ],
       "status": "active",
       "transactional": true,
@@ -1112,6 +1135,50 @@
       "checksum": "b6aee89b3a44863c0a4399aac0f971065e46d6fd555d5baf16415b13120b74ab",
       "dependsOn": [
         "2026_10_v2331_b5_lgpd_consentimentos_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2333_c7_onboarding_contrato",
+      "source": "database/migrations/2026_10_v2333_c7_onboarding_contrato.sql",
+      "checksum": "8057680ca36bcba306753c6f89c58a4ab1d27761e0fa3dd9bb7fb146a4c2f5d7",
+      "dependsOn": [
+        "2026_10_v2332_b6_cobranca_saas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2334_d9_perfil_admin_modulos_jornada",
+      "source": "database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql",
+      "checksum": "69f87da1d81ffb94de63f153b2952c21c958fc22f65acc2f103b3e0ae112c87f",
+      "dependsOn": [
+        "2026_10_v2333_c7_onboarding_contrato"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2335_d11_perfil_admin_modulos_finos_saude",
+      "source": "database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql",
+      "checksum": "2a551c70881105e5f7527b33c2f61e2126e8d722eeb19c307af47b89de1fcc0d",
+      "dependsOn": [
+        "2026_10_v2334_d9_perfil_admin_modulos_jornada"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
+      "source": "database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql",
+      "checksum": "72651255f8ebe56ae8b2f5037d313055ea7ae38c6c09c7b2d24509cfb8af621f",
+      "dependsOn": [
+        "2026_10_v2335_d11_perfil_admin_modulos_finos_saude"
       ],
       "status": "active",
       "transactional": true,

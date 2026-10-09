@@ -245,12 +245,23 @@ static async Task ExecuteManifest(string cs, string manifest, string label)
                     await ReconcileIntermediateV2197Async(cn, migration.Version, previous, migration.Checksum);
                     applied[migration.Version] = migration.Checksum;
                 }
+                // Recuperação excepcional controlada (ensaio P0 da rodada 5): o arquivo recebeu edição
+                // aditiva e idempotente (convergência de shape de clinica_caixa, commit c938e46b) depois de
+                // aplicado em bancos legados com o checksum antigo abaixo. A linha antiga é removida para
+                // que o conteúdo atual seja reaplicado e re-registrado com o checksum do que foi executado.
+                else if (migration.Version == "2026_fix_clinica_financeiro_minimo" &&
+                    string.Equals(previous, "407017a905784b6fb1f4329f9e3d162f80cddf4c753bc571f1e398018598a609", StringComparison.OrdinalIgnoreCase))
+                {
+                    await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE COALESCE(version, id::text)=@Version AND success=true", new { migration.Version });
+                    applied.Remove(migration.Version);
+                    Console.WriteLine($"{label}: recuperação controlada de checksum em {migration.Version}; reaplicando conteúdo atual.");
+                }
                 else
                 {
                     throw new InvalidOperationException($"Checksum aplicado diverge em {migration.Version}.");
                 }
             }
-            continue;
+            if (applied.ContainsKey(migration.Version)) continue;
         }
         await cn.ExecuteAsync("DELETE FROM plantaopro.schema_migrations WHERE version=@Version AND success=false", new { migration.Version });
         foreach (var dep in migration.DependsOn) if (!applied.ContainsKey(dep)) throw new InvalidOperationException($"Dependência pendente: {dep} antes de {migration.Version}.");

@@ -12,13 +12,20 @@ namespace PlantaoPro.Api.Controllers;
 public sealed class NotificacoesController : ControllerBase
 {
     private readonly IOperationNotificationService service;
+    private readonly ICurrentUserService currentUser;
     private readonly ILogger<NotificacoesController> logger;
 
-    public NotificacoesController(IOperationNotificationService service, ILogger<NotificacoesController> logger)
+    public NotificacoesController(IOperationNotificationService service, ICurrentUserService currentUser, ILogger<NotificacoesController> logger)
     {
         this.service = service;
+        this.currentUser = currentUser;
         this.logger = logger;
     }
+
+    // R5-A3: sessões da área global (ADMINISTRADOR_GLOBAL sem tenant ativo) não possuem caixa
+    // de notificações operacionais — o serviço é escopado por tenant e lançava
+    // UnauthorizedAccessException (500) no badge do cabeçalho. Leitura honesta: lista vazia.
+    private bool SemCaixaOperacional => !currentUser.TenantId.HasValue && currentUser.IsGlobalAdmin();
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationDto>>>> List(
@@ -26,12 +33,18 @@ public sealed class NotificacoesController : ControllerBase
         [FromQuery] string? status, [FromQuery] DateTimeOffset? de, [FromQuery] DateTimeOffset? ate,
         [FromQuery] int limite = 100, CancellationToken ct = default)
     {
+        if (SemCaixaOperacional)
+            return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(Array.Empty<NotificationDto>()));
+
         return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(new(tipo, modulo, prioridade, status, de, ate, limite), ct)));
     }
 
     [HttpGet("nao-lidas")]
     public async Task<ActionResult<ApiResponse<IReadOnlyList<NotificationDto>>>> Unread(CancellationToken ct)
     {
+        if (SemCaixaOperacional)
+            return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(Array.Empty<NotificationDto>()));
+
         return Ok(ApiResponse<IReadOnlyList<NotificationDto>>.Ok(await service.ListAsync(new(null, null, null, "NAO_LIDA", null, null, 10), ct)));
     }
 

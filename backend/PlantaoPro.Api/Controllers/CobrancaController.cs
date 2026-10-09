@@ -89,7 +89,6 @@ public sealed class CobrancaSandboxController : ControllerBase
 
     private static string PaginaHtml(string referencia, CobrancaPublicaDto? dados, string? erro)
     {
-        static string Enc(string? s) => System.Net.WebUtility.HtmlEncode(s ?? string.Empty);
         string corpo;
         string scriptTag;
         if (dados is null)
@@ -110,10 +109,7 @@ public sealed class CobrancaSandboxController : ControllerBase
                 "<tr><th>Expira em</th><td>" + dados.ExpiraEm.ToString("dd/MM/yyyy HH:mm") + " UTC</td></tr>" +
                 "</table>" +
                 "<div id=\"resultado\" role=\"status\"></div>" +
-                "<div class=\"acoes\">" +
-                "<button id=\"btn-pagar\" type=\"button\">Pagar (sandbox)</button> " +
-                "<button id=\"btn-falhar\" type=\"button\" class=\"recusar\">Recusar pagamento</button>" +
-                "</div>";
+                PaginaAcacoes(dados.Status);
             // Referencia e gerada por RNG e so contem hex; mesmo assim escapa para o contexto HTML/JS.
             scriptTag = "<script>" +
                 "async function simular(aprovado){" +
@@ -128,8 +124,8 @@ public sealed class CobrancaSandboxController : ControllerBase
                 "alvo.disabled=false;" +
                 "document.getElementById('resultado').textContent='Falha de comunicacao; nenhuma alteracao foi garantida.';" +
                 "}}" +
-                "document.getElementById('btn-pagar').addEventListener('click',function(){simular(true);});" +
-                "document.getElementById('btn-falhar').addEventListener('click',function(){simular(false);});" +
+                "var bp=document.getElementById('btn-pagar');if(bp)bp.addEventListener('click',function(){simular(true);});" +
+                "var bf=document.getElementById('btn-falhar');if(bf)bf.addEventListener('click',function(){simular(false);});" +
                 "</script>";
         }
         return "<!doctype html>" +
@@ -143,7 +139,7 @@ public sealed class CobrancaSandboxController : ControllerBase
             "th{color:#5b6675;font-weight:600;width:40%}" +
             "button{background:#0b6e4f;color:#fff;border:0;border-radius:8px;padding:.6rem 1rem;font-size:1rem;cursor:pointer}" +
             "button.recusar{background:#8a3b3b}button:disabled{opacity:.5;cursor:default}" +
-            "#resultado{margin:.8rem 0;color:#33415a}.erro{color:#8a3b3b}" +
+            "#resultado{margin:.8rem 0;color:#33415a}.erro{color:#8a3b3b}.finalizada{color:#33415a;font-weight:600}" +
             ".nota{color:#5b6675;font-size:.85rem}" +
             "</style></head><body>" +
             "<h1>Checkout sandbox <span class=\"badge\">PLANTÃOPro</span></h1>" +
@@ -151,6 +147,21 @@ public sealed class CobrancaSandboxController : ControllerBase
             corpo + scriptTag +
             "</body></html>";
     }
+
+    // R5-A3: estados terminais nao oferecem mais acoes — o simulador ja recusa com 409 e a
+    // pagina nao deve sugerir um pagamento que nunca seria aplicado (sem sucesso ficticio visual).
+    private static string PaginaAcacoes(string status)
+    {
+        var st = (status ?? string.Empty).ToUpperInvariant();
+        if (st is "PAGA" or "FALHA" or "CANCELADA" or "ESTORNADA")
+            return "<p class=\"finalizada\">Cobranca finalizada (" + Enc(st) + "). Nenhuma acao de pagamento sera aceita por este link.</p>";
+        return "<div class=\"acoes\">" +
+            "<button id=\"btn-pagar\" type=\"button\">Pagar (sandbox)</button> " +
+            "<button id=\"btn-falhar\" type=\"button\" class=\"recusar\">Recusar pagamento</button>" +
+            "</div>";
+    }
+
+    private static string Enc(string? s) => System.Net.WebUtility.HtmlEncode(s ?? string.Empty);
 }
 
 /// <summary>

@@ -79,7 +79,7 @@ public sealed class Saude360JornadaSFixesRegressionTests
         .Build();
 
     private static Saude360ClinicalService BuildService(Guid? tenantId, bool globalAdmin = false) =>
-        new(BuildCfg(TestDatabase.ConnectionString), new FakeCurrentUser(tenantId, globalAdmin), new FakeAuditService(), NullLogger<Saude360ClinicalService>.Instance);
+        new(BuildCfg(TestDatabase.ConnectionString), new FakeCurrentUser(tenantId, globalAdmin), new FakeAuditService(), NullLogger<Saude360ClinicalService>.Instance, new ConflitoHorarioService(BuildCfg(TestDatabase.ConnectionString)));
 
     #region F1b — corrida/repetição de iniciar no motor canônico
 

@@ -1206,6 +1206,39 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2341_r7a1_conflitos_unificados_profissional",
+      "source": "database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql",
+      "checksum": "b2c44ea9be12e49029afbabf1bae25182e0b00ce5e1dee9306a957551d5c819f",
+      "dependsOn": [
+        "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2342_r7a1_historico_escala_colunas",
+      "source": "database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql",
+      "checksum": "2c5800b64701f8a27feaf6878720419de0582543c92f8445858b313f769a5f47",
+      "dependsOn": [
+        "2026_10_v2341_r7a1_conflitos_unificados_profissional"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2343_r7a1_convite_ciclo_vida",
+      "source": "database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql",
+      "checksum": "d3c57ceda6a8fafc585f77c101b77b5e78c98911dff3311254eb1486d879eb8e",
+      "dependsOn": [
+        "2026_10_v2342_r7a1_historico_escala_colunas"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

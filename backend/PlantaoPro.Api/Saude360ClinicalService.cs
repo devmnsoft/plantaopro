@@ -15,6 +15,7 @@ public sealed class Saude360ClinicalService
     private readonly ICurrentUserService currentUser;
     private readonly IAuditService audit;
     private readonly ILogger<Saude360ClinicalService> logger;
+    private readonly ConflitoHorarioService conflito;
 
     private static readonly Dictionary<string, string> Tables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
     {
@@ -45,12 +46,13 @@ public sealed class Saude360ClinicalService
         { "unidadesAtendimento", "clinica_unidades_atendimento" }
     };
 
-    public Saude360ClinicalService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<Saude360ClinicalService> logger)
+    public Saude360ClinicalService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<Saude360ClinicalService> logger, ConflitoHorarioService conflito)
     {
         this.cfg = cfg;
         this.currentUser = currentUser;
         this.audit = audit;
         this.logger = logger;
+        this.conflito = conflito;
     }
 
     private NpgsqlConnection Cn() => new NpgsqlConnection(cfg.GetConnectionString("Default"));
@@ -141,8 +143,10 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         await using var cn = Cn();
         if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase))
         {
-            var conflict = await cn.ExecuteScalarAsync<int>(@"select count(1) from plantaopro.agendamentos where reg_status='A' and status not in ('CANCELADO','FINALIZADO') and medico_id=@medicoId and cliente_id=@tenantId and data_inicio < @fim and data_fim > @inicio", new { medicoId = request.MedicoId, tenantId = TenantId, inicio = request.DataInicio, fim = request.DataFim });
-            if (conflict > 0) return ApiResponse<Saude360RegistroDto>.Fail("Já existe agendamento para o médico no horário informado.", 409);
+            // R7-A1: conflito unificado — escala confirmada/solicitada, outro agendamento ativo ou
+            // indisponibilidade registrada do mesmo profissional no período (fim exclusivo).
+            var conflitoMsg = await VerificarConflitoAgendamentoAsync(request.MedicoId.Value, request.DataInicio.Value, request.DataFim.Value);
+            if (!string.IsNullOrWhiteSpace(conflitoMsg)) return ApiResponse<Saude360RegistroDto>.Fail(conflitoMsg, 409);
         }
         if (string.Equals(tableKey, "pacientes", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(request.Cpf))
         {
@@ -210,6 +214,21 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         {
             var cpfExists = await cn.ExecuteScalarAsync<int>("select count(1) from plantaopro.pacientes where id<>@id and reg_status='A' and cliente_id=@tenantId and regexp_replace(coalesce(cpf,''), '[^0-9]', '', 'g')=regexp_replace(@cpf, '[^0-9]', '', 'g')", new { id, tenantId = TenantId, cpf = request.Cpf });
             if (cpfExists > 0) return ApiResponse<Saude360RegistroDto>.Fail("CPF já cadastrado para este tenant.", 409);
+        }
+        if (string.Equals(tableKey, "agendamentos", StringComparison.OrdinalIgnoreCase) && (request.DataInicio.HasValue || request.DataFim.HasValue || request.MedicoId.HasValue))
+        {
+            // R7-A1: reagendamento/mudança de profissional reaproveita a mesma política unificada de
+            // conflito (ignora o próprio registro). Sem mudança efetiva de período/profissional não
+            // há novo compromisso a revalidar.
+            var atualAgend = await cn.QueryFirstOrDefaultAsync<(DateTime? Di, DateTime? Df, Guid? Medico)>("select data_inicio, data_fim, medico_id from plantaopro.agendamentos where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            var novoMedico = request.MedicoId ?? atualAgend.Medico;
+            var novaDi = request.DataInicio ?? atualAgend.Di;
+            var novaDf = request.DataFim ?? atualAgend.Df;
+            if (novoMedico.HasValue && novaDi.HasValue && novaDf.HasValue && (novaDi.Value != atualAgend.Di || novaDf.Value != atualAgend.Df || novoMedico.Value != (atualAgend.Medico ?? Guid.Empty)))
+            {
+                var conflitoMsg = await VerificarConflitoAgendamentoAsync(novoMedico.Value, novaDi.Value, novaDf.Value, agendamentoIgnoradoId: id);
+                if (!string.IsNullOrWhiteSpace(conflitoMsg)) return ApiResponse<Saude360RegistroDto>.Fail(conflitoMsg, 409);
+            }
         }
         var update = BuildUpdate(tableKey, table);
         var affected = await cn.ExecuteAsync(update, new { id, tenantId = TenantId, isGlobal = IsGlobal, uid = currentUser.UserId, request.Nome, request.Descricao, request.Codigo, request.Status, request.Tipo, request.Observacoes, request.Cpf, request.Cns, request.DocumentoAlternativo, request.NomeSocial, request.SexoGenero, request.Telefone, request.Email, request.Endereco, request.ResponsavelNome, request.DataNascimento, request.PacienteId, request.MedicoId, request.UnidadeId, request.SalaId, request.DataInicio, request.DataFim, request.Especialidade, request.Valor, request.ClassificacaoRisco, request.QueixaPrincipal, request.Alergias, request.MedicamentosUso, request.CodigoCid, request.Justificativa });
@@ -279,6 +298,14 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             if (!string.IsNullOrWhiteSpace(currentStatus) && !(string.Equals(currentStatus, "AGUARDANDO", StringComparison.OrdinalIgnoreCase) || string.Equals(currentStatus, "EM_ANDAMENTO", StringComparison.OrdinalIgnoreCase))) return ApiResponse<Saude360RegistroDto>.Fail("Conflito: o registro foi alterado por outra ação simultânea.", 409);
             if (!string.IsNullOrWhiteSpace(currentStatus)) esperadoStatus = currentStatus;
         }
+        if (string.Equals(tableKey, "painel", StringComparison.OrdinalIgnoreCase) && (string.Equals(acao, "chamar", StringComparison.OrdinalIgnoreCase) || string.Equals(acao, "rechamar", StringComparison.OrdinalIgnoreCase) || string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)))
+        {
+            var currentPainel = await cn.ExecuteScalarAsync<string>("select status from plantaopro.painel_chamada_fila where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
+            if (string.IsNullOrWhiteSpace(currentPainel)) return ApiResponse<Saude360RegistroDto>.Fail("Registro não encontrado para ação.", 404);
+            // R7-A1: reserva concorrente segura — dois operadores não assumem o mesmo item da fila.
+            // A atualização é condicional ao estado lido; o perdedor da corrida recebe 409 de conflito.
+            esperadoStatus = currentPainel;
+        }
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
         {
             var currentStatus = await cn.ExecuteScalarAsync<string>("select status from plantaopro.triagens where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId))", new { id, tenantId = TenantId, isGlobal = IsGlobal });
@@ -319,6 +346,25 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
         await AuditAsync(table, id, acao.ToUpperInvariant(), auditDetalhes);
         return await ObterAsync(tableKey, id);
+    }
+
+    /// <summary>
+    /// R7-A1: verificação unificada de conflito para compromissos clínicos do profissional.
+    /// Reusa a função canônica de conflitos (escalas + agendamentos + indisponibilidades) e aplica
+    /// a mesma regra de bloqueio administrativo usada pela elegibilidade de plantões (medicos.bloqueado).
+    /// </summary>
+    private async Task<string?> VerificarConflitoAgendamentoAsync(Guid medicoId, DateTime inicio, DateTime fim, Guid? agendamentoIgnoradoId = null)
+    {
+        await using var cn = Cn();
+        var medicoLivre = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.medicos where id=@medicoId and reg_status='A' and coalesce(bloqueado,false)=false)", new { medicoId });
+        if (!medicoLivre) return "O médico está bloqueado ou inativo para novos compromissos.";
+        var fontes = await conflito.ListarFontesConflitoAsync(medicoId, inicio, fim, agendamentoIgnoradoId: agendamentoIgnoradoId);
+        if (fontes.Count == 0) return null;
+        var mensagem = fontes.Any(f => f.Tipo == "AGENDAMENTO") ? "Já existe agendamento para o médico no horário informado."
+            : fontes[0].Tipo == "ESCALA" ? "O médico já possui escala nesse horário."
+            : "O médico está com indisponibilidade registrada nesse horário.";
+        if (fontes.Count > 1) mensagem += $" Há {fontes.Count} comprometimentos conflitantes nesse período.";
+        return mensagem;
     }
 
     private sealed class AgendamentoCheckInState

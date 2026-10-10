@@ -15,7 +15,9 @@ public sealed class V2166CoverageJourneyContractTests
         Assert.Contains("p.cliente_id=@clienteId", service);
         Assert.Contains("Convite já aceito; escala confirmada anteriormente", service);
         Assert.Contains("vagas_disponiveis=vagas_disponiveis-1", service);
-        Assert.Contains("@inicio < p.data_fim and @fim > p.data_inicio", service);
+        // R7-A1: o conflito de horário do aceite deixou de ter implementação inline própria e passa
+        // a usar a política canônica unificada (escalas + agenda clínica + indisponibilidades).
+        Assert.Contains("conflitoService.ExisteConflitoAsync(medicoId, plantao.Inicio", service);
     }
 
     [Fact]

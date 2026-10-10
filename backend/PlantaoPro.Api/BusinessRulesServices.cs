@@ -23,6 +23,16 @@ public sealed class MedicoElegibilidadeDto
     public List<MotivoElegibilidadeDto> Motivos { get; set; } = new List<MotivoElegibilidadeDto>();
 }
 
+/// <summary>Fonte de compromisso do profissional detectada na verificação unificada de conflito.</summary>
+public sealed class ConflitoFonteDto
+{
+    /// <summary>ESCALA | AGENDAMENTO | INDISPONIBILIDADE.</summary>
+    public string Tipo { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public DateTime DataInicio { get; set; }
+    public DateTime DataFim { get; set; }
+}
+
 public sealed class ConflitoHorarioDetalheDto
 {
     public Guid EscalaId { get; set; }
@@ -41,20 +51,46 @@ public sealed class ConflitoHorarioService
     public ConflitoHorarioService(IConfiguration cfg) => _cfg = cfg;
     private NpgsqlConnection Cn() => new(_cfg.GetConnectionString("Default"));
 
-    public async Task<bool> ExisteConflitoAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim, Guid? escalaIgnoradaId = null)
+    /// <summary>
+    /// R7-A1: política de conflito unificada do profissional no intervalo [dataInicio, dataFim) (fim exclusivo).
+    /// FONTES CANÔNICAS ÚNICAS para todos os pontos de decisão (aceite/confirmação/substituição de escala,
+    /// criação/reagendamento de agenda clínica e recomendações):
+    /// 1) escalas ativas (solicitadas/confirmadas/em andamento), 2) agendamentos clínicos ativos e
+    /// 3) indisponibilidades registradas. Adjacência (fim == início) NÃO é conflito.
+    /// </summary>
+    public async Task<List<ConflitoFonteDto>> ListarFontesConflitoAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim, Guid? escalaIgnoradaId = null, Guid? agendamentoIgnoradoId = null)
     {
         await using var cn = Cn();
-        var conflito = await cn.ExecuteScalarAsync<int>(@"select count(1)
+        return (await cn.QueryAsync<ConflitoFonteDto>(@"
+select 'ESCALA' as Tipo, coalesce(e.status,'') as Status, p.data_inicio as DataInicio, p.data_fim as DataFim
 from plantaopro.escalas e
 join plantaopro.plantoes p on p.id=e.plantao_id
 where e.medico_id=@medicoId and e.reg_status='A'
   and lower(coalesce(e.status,'')) in ('solicitada','solicitado','confirmada','confirmado','em_andamento')
   and (@escalaIgnoradaId is null or e.id <> @escalaIgnoradaId)
   and @dataInicio < p.data_fim
-  and @dataFim > p.data_inicio",
-            new { medicoId, dataInicio, dataFim, escalaIgnoradaId });
-        return conflito > 0;
+  and @dataFim > p.data_inicio
+union all
+select 'AGENDAMENTO' as Tipo, coalesce(a.status,'') as Status, a.data_inicio as DataInicio, a.data_fim as DataFim
+from plantaopro.agendamentos a
+where a.medico_id=@medicoId and a.reg_status='A'
+  and upper(coalesce(a.status,'')) not in ('CANCELADO','FINALIZADO')
+  and a.data_inicio is not null and a.data_fim is not null
+  and (@agendamentoIgnoradoId is null or a.id <> @agendamentoIgnoradoId)
+  and @dataInicio < a.data_fim
+  and @dataFim > a.data_inicio
+union all
+select 'INDISPONIBILIDADE' as Tipo, coalesce(i.status,'') as Status, i.data_inicio as DataInicio, i.data_fim as DataFim
+from plantaopro.medico_indisponibilidades i
+where i.medico_id=@medicoId and coalesce(i.reg_status,'A')='A'
+  and upper(coalesce(i.status,''))='ATIVA'
+  and @dataInicio < i.data_fim
+  and @dataFim > i.data_inicio",
+            new { medicoId, dataInicio, dataFim, escalaIgnoradaId, agendamentoIgnoradoId })).ToList();
     }
+
+    public async Task<bool> ExisteConflitoAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim, Guid? escalaIgnoradaId = null)
+        => (await ListarFontesConflitoAsync(medicoId, dataInicio, dataFim, escalaIgnoradaId)).Count > 0;
 
     public async Task<IEnumerable<ConflitoHorarioDetalheDto>> ListarConflitosAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim)
     {

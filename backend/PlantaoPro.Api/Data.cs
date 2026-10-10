@@ -1471,12 +1471,9 @@ from plantaopro.plantoes where id=@plantaoId and cliente_id=@clienteId and reg_s
                 if (plantao.Id == Guid.Empty || plantao.Vagas <= 0 || plantao.Status.ToLowerInvariant() is not ("aberto" or "em_escala"))
                     return ApiResponse<string>.Fail("A vaga não está mais disponível.", 409);
 
-                var conflito = await cn.ExecuteScalarAsync<bool>(@"select exists(select 1 from plantaopro.escalas e
-join plantaopro.plantoes p on p.id=e.plantao_id
-where e.medico_id=@medicoId and e.reg_status='A'
-  and lower(e.status) in ('solicitado','solicitada','confirmado','confirmada','em_andamento')
-  and @inicio < p.data_fim and @fim > p.data_inicio)", new { medicoId, plantao.Inicio, plantao.Fim }, tx);
-                if (conflito) return ApiResponse<string>.Fail("Você ficou indisponível nesse horário.", 409);
+                // R7-A1: política de conflito unificada pela função canônica (escalas + agenda clínica + indisponibilidades).
+                var conflito = await conflitoService.ExisteConflitoAsync(medicoId, plantao.Inicio, plantao.Fim);
+                if (conflito) return ApiResponse<string>.Fail("O profissional já tem compromisso nesse horário (escala, agenda clínica ou indisponibilidade).", 409);
 
                 var motivos = (await elegibilidade.ObterMotivosInelegibilidadeAsync(medicoId, convite.PlantaoId)).Where(x => x.Bloqueante).Select(x => x.Mensagem).ToArray();
                 if (motivos.Length > 0) return ApiResponse<string>.Fail("As condições do convite mudaram: " + string.Join("; ", motivos), 409);

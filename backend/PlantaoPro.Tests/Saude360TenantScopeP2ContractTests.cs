@@ -59,7 +59,7 @@ public sealed class Saude360TenantScopeP2ContractTests
         .Build();
 
     private static Saude360ClinicalService BuildService(Guid? escopo) =>
-        new(BuildCfg(TestDatabase.ConnectionString), new FakeCurrentUser(escopo), new FakeAuditService(), NullLogger<Saude360ClinicalService>.Instance);
+        new(BuildCfg(TestDatabase.ConnectionString), new FakeCurrentUser(escopo), new FakeAuditService(), NullLogger<Saude360ClinicalService>.Instance, new ConflitoHorarioService(BuildCfg(TestDatabase.ConnectionString)));
 
     [Fact]
     public void BuildInsert_GravaTenantIdEmTodoNucleoClinico_SemContaminacaoPelaChaveDeEscopo()

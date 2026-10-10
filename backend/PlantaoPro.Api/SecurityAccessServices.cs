@@ -106,39 +106,15 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         var code = Normalize(module);
         var actionCode = Normalize(action);
 
-        if (HasClaim("access_catalog_version", "v2149"))
-        {
-            if (CommonModules.Contains(code)) return true;
-            var tenantAdministration = TenantAdministrationModules.Contains(code) && currentUser.IsTenantAdmin();
-            if (!tenantAdministration && !HasClaim("module", code)) return false;
-            return tenantAdministration || HasClaim("permission", $"{code}.{actionCode}") || HasClaim("permission", $"{code}.*");
-        }
-
-        if (code == "AJUDA" || code == "LGPD" || code == "CONTA") return true;
-
-        var saude360Recepcao = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES" };
-        var saude360Triagem = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_TRIAGEM" };
-        var saude360Medico = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID" };
-        var saude360Financeiro = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_FINANCEIRO" };
-        var saude360Convenios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE" };
-        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return code.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || code != "ADMIN_SAAS";
-        if (currentUser.HasRole(RolesConstants.Recepcao) && saude360Recepcao.Contains(code)) return true;
-        if (currentUser.HasRole(RolesConstants.Triagem) && saude360Triagem.Contains(code)) return true;
-        if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(code)) return true;
-        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(code)) return true;
-
-        if (code == "SEGURANCA") return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Suporte) || currentUser.HasRole(RolesConstants.Auditor);
-        if (currentUser.IsTenantAdmin()) return code != "ADMIN_SAAS" && code != "BILLING_GLOBAL" && code != "OBSERVABILIDADE_GLOBAL" && code != "PARCEIRO";
-        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador)) return code == "DASHBOARD" || code == "PLANTOES" || code == "ESCALAS" || code == "CONVITES" || code == "CENTRAL_ESCALA" || code == "MEDICOS" || code == "HOSPITAIS" || code == "ESPECIALIDADES" || code == "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Financeiro)) return saude360Financeiro.Contains(code) || code == "FINANCEIRO" || code == "PAGAMENTOS" || code == "RELATORIOS" || code == "FATURAS" || code == "BILLING";
-        if (currentUser.HasRole(RolesConstants.Medico)) return saude360Medico.Contains(code) || code == "MEDICO_AREA" || code == "MINHA_AGENDA" || code == "CONVITES" || code == "PAGAMENTOS" || code == "PAGAMENTOS_PROPRIOS" || code == "DISPONIBILIDADE" || code == "SUBSTITUICOES";
-        if (currentUser.HasRole(RolesConstants.Hospital)) return code == "HOSPITAL_AREA" || code == "PLANTOES" || code == "ESCALAS" || code == "AGENDA";
-        if (currentUser.HasRole(RolesConstants.Parceiro)) return code == "PARCEIRO" || code == "LEADS" || code == "PROPOSTAS" || code == "COMISSOES" || code == "REPASSES" || code == "MATERIAIS";
-        if (currentUser.HasRole(RolesConstants.Suporte)) return code == "SUPORTE" || code == "AJUDA" || code == "AUDITORIA" || code == "OBSERVABILIDADE";
-        if (currentUser.HasRole(RolesConstants.Auditor)) return actionCode == "VER" || code == "AUDITORIA" || code == "RELATORIOS" || code == "LGPD";
-        if (currentUser.HasRole(RolesConstants.Comercial)) return code == "COMERCIAL" || code == "PROPOSTAS" || code == "PLANOS" || code == "MARKETPLACE";
-        if (currentUser.HasRole(RolesConstants.CustomerSuccess)) return code == "CUSTOMER_SUCCESS" || code == "ONBOARDING" || code == "CLIENTES" || code == "JORNADA" || code == "SUPORTE";
-        return false;
+        // R6-BlocoA item 1 (complemento): ÚNICO caminho de decisão — claim de módulo
+        // efetivo (função canônica) + permissão por ação do usuário. Os fallbacks por
+        // papel pré-v2149 foram removidos: todo JWT emitido pela API (Data.cs) carrega
+        // access_catalog_version=v2149, e os conjuntos papel->módulo não distinguem
+        // contratação de permissão (adendo D.3 do inventário).
+        if (CommonModules.Contains(code)) return true;
+        var tenantAdministration = TenantAdministrationModules.Contains(code) && currentUser.IsTenantAdmin();
+        if (!tenantAdministration && !HasClaim("module", code)) return false;
+        return tenantAdministration || HasClaim("permission", $"{code}.{actionCode}") || HasClaim("permission", $"{code}.*");
     }
 
     public bool CanManageSaas() => currentUser.IsGlobalAdmin();
@@ -149,7 +125,8 @@ public sealed class ModulePermissionService : IPermissionService, IModuleAccessS
         if (currentUser.IsGlobalAdmin()) return true;
         var code = Normalize(moduleCode);
         if (CommonModules.Contains(code) || TenantAdministrationModules.Contains(code)) return true;
-        if (!HasClaim("access_catalog_version", "v2149")) return code != "BI_AVANCADO";
+        // R6-BlocoA item 1 (complemento): ramo pré-v2149 removido — todos os JWTs atuais
+        // carregam access_catalog_version=v2149 (Data.cs emite o claim sempre).
         return HasClaim("module", code);
     }
     public bool IsFeatureEnabled(string featureCode) => IsModuleEnabled(featureCode);

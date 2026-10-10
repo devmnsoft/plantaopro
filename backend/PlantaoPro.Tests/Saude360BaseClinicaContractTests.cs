@@ -46,7 +46,8 @@ public sealed class Saude360BaseClinicaContractTests
     [Fact]
     public void WebExposesClinicalMenusAndProfiles()
     {
-        var roles = Read("backend/PlantaoPro.Web/Security/RolesConstants.cs");
+        // R6-A1b: os códigos clínicos BASE moram no AppRoles (CrossCutting); RolesConstants delega.
+        var roles = Read("backend/PlantaoPro.Web/Security/RolesConstants.cs") + Read("backend/PlantaoPro.CrossCutting/Security/AppRoles.cs");
         var menu = Read("backend/PlantaoPro.Web/Services/Security/MenuBuilderService.cs") + Read("backend/PlantaoPro.Web/Services/FeatureCatalogService.cs");
         var web = Read("backend/PlantaoPro.Web/Controllers/Saude360WebControllers.cs");
 

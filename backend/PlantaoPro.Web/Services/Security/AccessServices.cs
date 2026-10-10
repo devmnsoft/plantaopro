@@ -108,95 +108,21 @@ public sealed class PermissionService : IPermissionService
         var moduleCode = Normalize(module);
         var actionCode = Normalize(action);
 
-        // Sessões v2.14.9 carregam o catálogo efetivo calculado pela API. Isso torna
-        // menu e autorização coerentes com perfil, overrides e módulos contratados.
-        if (currentUser.User.HasClaim("access_catalog_version", "v2149"))
-        {
-            if (CommonModules.Contains(moduleCode)) return true;
-            var isCoreAdministration = TenantAdministrationModules.Contains(moduleCode) && currentUser.IsTenantAdmin();
-            var moduleEnabled = isCoreAdministration || HasAccessClaim("module", moduleCode);
-            if (!moduleEnabled) return false;
+        // R6-BlocoA item 1 (complemento): ÚNICO caminho de decisão — módulo efetivo
+        // (claim emitido no login pela função canônica; o guard Web reconfirma por request
+        // com a verificação live) + permissão por ação do usuário (grants de perfil).
+        // Os fallbacks por papel pré-v2149 foram removidos: todo emissor atual de sessão
+        // (login Data.cs, SessionClaimsBuilder, TestSigninController) carrega sempre
+        // access_catalog_version=v2149, e os conjuntos papel->módulo antigos não
+        // distinguem contratação de permissão — a raiz das 11 resoluções paralelas
+        // documentadas no adendo D.3 do inventário.
+        if (CommonModules.Contains(moduleCode)) return true;
+        var isCoreAdministration = TenantAdministrationModules.Contains(moduleCode) && currentUser.IsTenantAdmin();
+        var moduleEnabled = isCoreAdministration || HasAccessClaim("module", moduleCode);
+        if (!moduleEnabled) return false;
 
-            var requested = $"{moduleCode}.{actionCode}";
-            return isCoreAdministration || HasAccessClaim("permission", requested) || HasAccessClaim("permission", $"{moduleCode}.*");
-        }
-
-        if (moduleCode == "MEU_DIA") return true;
-
-        if (moduleCode == "AJUDA" || moduleCode == "LGPD" || moduleCode == "CONTA" || moduleCode == "TREINAMENTO") return true;
-
-        var saude360Recepcao = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_DASHBOARD", "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES" };
-        var saude360Triagem = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_TRIAGEM" };
-        var saude360Medico = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID" };
-        var saude360Financeiro = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_FINANCEIRO" };
-        var saude360Convenios = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE" };
-        var administradorClinica = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "SAUDE360_DASHBOARD", "SAUDE360_PAINEL", "SAUDE360_AGENDAMENTO", "SAUDE360_PACIENTES",
-            "SAUDE360_TRIAGEM", "SAUDE360_CONSULTAS", "SAUDE360_PRESCRICAO", "SAUDE360_CID",
-            "SAUDE360_FINANCEIRO", "SAUDE360_CONVENIOS", "SAUDE360_PLANOS_SAUDE", "SEGURANCA",
-            "USUARIOS", "PERFIS", "AUDITORIA", "LGPD", "RELATORIOS", "CONFIGURACOES"
-        };
-        if (currentUser.HasRole(RolesConstants.AdministradorClinica)) return administradorClinica.Contains(moduleCode);
-        if (currentUser.HasRole(RolesConstants.Recepcao) && saude360Recepcao.Contains(moduleCode)) return true;
-        if ((currentUser.HasRole(RolesConstants.Triagem) || currentUser.HasRole(RolesConstants.Enfermagem) || currentUser.HasRole(RolesConstants.CoordenadorClinico)) && (saude360Triagem.Contains(moduleCode) || moduleCode == "SAUDE360_DASHBOARD")) return true;
-        if (currentUser.HasRole(RolesConstants.AuditorClinico) && (moduleCode.StartsWith("SAUDE360_", StringComparison.OrdinalIgnoreCase) || moduleCode == "AUDITORIA" || moduleCode == "LGPD")) return true;
-        if (currentUser.HasRole(RolesConstants.FinanceiroClinica) && saude360Financeiro.Contains(moduleCode)) return true;
-        if (currentUser.HasRole(RolesConstants.FaturamentoConvenio) && saude360Convenios.Contains(moduleCode)) return true;
-
-        if (moduleCode == "SEGURANCA") return currentUser.IsTenantAdmin() || currentUser.HasRole(RolesConstants.Suporte) || currentUser.HasRole(RolesConstants.Auditor);
-
-        if (currentUser.IsTenantAdmin())
-        {
-            return moduleCode != "ADMIN_SAAS" && moduleCode != "BILLING_GLOBAL" && moduleCode != "OBSERVABILIDADE_GLOBAL" && moduleCode != "PARCEIRO" && moduleCode != "MARKETPLACE";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Coordenacao) || currentUser.HasRole(RolesConstants.Coordenador) || currentUser.HasRole(RolesConstants.Operador))
-        {
-            return moduleCode == "DASHBOARD" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "CONVITES" || moduleCode == "CENTRAL_ESCALA" || moduleCode == "MEDICOS" || moduleCode == "HOSPITAIS" || moduleCode == "ESPECIALIDADES" || moduleCode == "AGENDA" || moduleCode == "COMUNICACAO";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Financeiro))
-        {
-            return saude360Financeiro.Contains(moduleCode) || moduleCode == "FINANCEIRO" || moduleCode == "PAGAMENTOS" || moduleCode == "RELATORIOS" || moduleCode == "FATURAS" || moduleCode == "BILLING";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Medico))
-        {
-            return saude360Medico.Contains(moduleCode) || moduleCode == "SAUDE360_DASHBOARD" || moduleCode == "SAUDE360_AGENDAMENTO" || moduleCode == "SAUDE360_TRIAGEM" || moduleCode == "MEDICO_AREA" || moduleCode == "MINHA_AGENDA" || moduleCode == "CONVITES" || moduleCode == "PAGAMENTOS" || moduleCode == "PAGAMENTOS_PROPRIOS" || moduleCode == "DISPONIBILIDADE" || moduleCode == "SUBSTITUICOES";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Hospital))
-        {
-            return moduleCode == "HOSPITAL_AREA" || moduleCode == "PLANTOES" || moduleCode == "ESCALAS" || moduleCode == "AGENDA";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Parceiro))
-        {
-            return moduleCode == "PARCEIRO" || moduleCode == "LEADS" || moduleCode == "PROPOSTAS" || moduleCode == "COMISSOES" || moduleCode == "REPASSES" || moduleCode == "MATERIAIS";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Suporte))
-        {
-            return moduleCode == "SEGURANCA" || moduleCode == "SUPORTE" || moduleCode == "AJUDA" || moduleCode == "AUDITORIA" || moduleCode == "OBSERVABILIDADE" || moduleCode == "OBSERVABILIDADE_GLOBAL" || moduleCode == "ADMIN_SAAS";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Auditor))
-        {
-            return actionCode == "VER" || moduleCode == "SEGURANCA" || moduleCode == "AUDITORIA" || moduleCode == "RELATORIOS" || moduleCode == "LGPD" || moduleCode == "OBSERVABILIDADE_GLOBAL";
-        }
-
-        if (currentUser.HasRole(RolesConstants.Comercial))
-        {
-            return moduleCode == "COMERCIAL" || moduleCode == "PROPOSTAS" || moduleCode == "PLANOS" || moduleCode == "MARKETPLACE";
-        }
-
-        if (currentUser.HasRole(RolesConstants.CustomerSuccess))
-        {
-            return moduleCode == "CUSTOMER_SUCCESS" || moduleCode == "ONBOARDING" || moduleCode == "CLIENTES" || moduleCode == "JORNADA" || moduleCode == "SUPORTE";
-        }
-
-        return false;
+        var requested = $"{moduleCode}.{actionCode}";
+        return isCoreAdministration || HasAccessClaim("permission", requested) || HasAccessClaim("permission", $"{moduleCode}.*");
     }
 
     public bool CanManageSaas() => currentUser.IsGlobalAdmin();
@@ -269,8 +195,11 @@ public sealed class ModuleAccessService : IModuleAccessService
         if (currentUser.IsGlobalAdmin()) return true;
         var normalized = Normalize(moduleCode);
         if (CoreModules.Contains(normalized)) return true;
-        if (!currentUser.User.HasClaim("access_catalog_version", "v2149"))
-            return !string.Equals(normalized, "BI_AVANCADO", StringComparison.OrdinalIgnoreCase);
+
+        // R6-BlocoA item 1 (complemento): o ramo pré-v2149 ("tudo liberado menos
+        // BI_AVANCADO") foi removido — não existe emissor atual de sessão sem o claim
+        // access_catalog_version=v2149, e o bypass por ausência de catálogo conflitava
+        // com a regra de não autorizar sem decisão de contratação válida.
 
         // R6-BlocoA item 1: verificação LIVE via função canônica. O guard (IAsyncActionFilter)
         // popula HttpContext.Items[CacheKey] com o conjunto efetivo por request (authoritative

@@ -386,13 +386,13 @@ values(@id, @tenant, @tenant, @moduloId, @codigoModulo, 'SAUDE360', 'Saúde 360'
         return (moduloId, assinaturaId);
     }
 
-    private static void AssertEnvelope403Objeto(ObjectResult obj)
+    private static void AssertEnvelope403Objeto(ObjectResult obj, string? mensagem = null)
     {
         Assert.Equal(403, obj.StatusCode);
         // Tipos anônimos não implementam IDictionary desde o .NET Core 3 — serializa e valida.
         var json = System.Text.Json.JsonSerializer.SerializeToElement(obj.Value!);
         Assert.False(json.GetProperty("success").GetBoolean());
-        Assert.Equal(MsgModulo, json.GetProperty("message").GetString());
+        Assert.Equal(mensagem ?? MsgModulo, json.GetProperty("message").GetString());
     }
 
     private static async Task CleanupModuloS360Async(string cs, Guid moduloId, Guid assinaturaId)
@@ -487,15 +487,17 @@ values(@id, @tenant, @tenant, @moduloId, @codigoModulo, 'SAUDE360', 'Saúde 360'
     }
 
     [Fact]
-    public async Task F4_AutenticadoSemTenantNoEscopo_BloqueadoCom403()
+    public async Task F4_AutenticadoSemTenantNoEscopo_BloqueadoCom403EMensagemDeContexto()
     {
+        // R6-A1b: separação dos motivos — sem contexto de organização NÃO é "módulo não
+        // contratado" (não há com quem comparar contrato); o motivo diz para agir.
         var cs = TestDatabase.ConnectionString;
         var filter = new Saude360ModuleFilter(new FakeCurrentUser(tenantId: null), BuildCfg(cs));
         var ctx = BuildFilterCtx(BuildCfg(cs), new FakeCurrentUser(tenantId: null));
 
         await filter.OnAuthorizationAsync(ctx);
 
-        AssertEnvelope403Objeto(Assert.IsType<ObjectResult>(ctx.Result));
+        AssertEnvelope403Objeto(Assert.IsType<ObjectResult>(ctx.Result), "Sem contexto de organização nesta sessão. Entre novamente para reavaliar o acesso.");
     }
 
     [Fact]

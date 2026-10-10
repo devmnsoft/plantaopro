@@ -348,7 +348,7 @@ public sealed class AccountController : Controller
 
     [HttpGet]
     [AllowAnonymous]
-    public IActionResult AccessDenied(string? module = null, string? reason = null)
+    public IActionResult AccessDenied(string? module = null, string? reason = null, string? retorno = null)
     {
         // Quando a negação é disparada por [Authorize(Roles)], o middleware de cookie
         // redireciona para o AccessDeniedPath levando apenas o ReturnUrl e perde os
@@ -366,6 +366,7 @@ public sealed class AccountController : Controller
         }
         ViewBag.Module = module;
         ViewBag.Reason = reason;
+        ViewBag.Retorno = retorno; // R6-A1b: alvo honesto do "tentar novamente" (VERIFICACAO_INDISPONIVEL)
         return View();
     }
 

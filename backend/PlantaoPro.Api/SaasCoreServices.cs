@@ -79,8 +79,8 @@ coalesce(m.descricao,'') as ""Descricao"", coalesce(m.categoria,'OPERACAO') as "
 coalesce(m.preco_base,0) as ""PrecoBase"", coalesce(m.essencial,false) as ""Essencial"",
 coalesce(m.status,'ATIVO') as ""Status"", coalesce(m.funcionalidades,'[]'::jsonb)::text as ""FuncionalidadesJson"",
 m.limite_padrao as ""LimitePadrao"",
-(select count(distinct tm.tenant_id) from plantaopro.tenant_modulos tm where tm.modulo_id=m.id and tm.reg_status='A' and tm.habilitado=true and upper(coalesce(tm.status,'ATIVO'))='ATIVO') as ""ClientesAtivos"",
-coalesce(tm.id is not null,false) as ""Contratado"", coalesce(tm.habilitado,false) as ""Habilitado"",
+(select count(distinct t2.id) from plantaopro.tenants t2 where t2.reg_status='A' and m.codigo = any(plantaopro.modulos_efetivos(t2.id))) as ""ClientesAtivos"",
+case when @tenantId is null then false else plantaopro.modulo_efetivo(@tenantId, m.codigo) end as ""Contratado"", coalesce(tm.habilitado,false) as ""Habilitado"",
 tm.preco_contratado as ""PrecoContratado"", tm.limite_contratado as ""LimiteContratado""
 from plantaopro.modulos_sistema m
 left join plantaopro.tenant_modulos tm on tm.modulo_id=m.id and tm.tenant_id=@tenantId and tm.reg_status='A'

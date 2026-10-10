@@ -68,8 +68,8 @@ Ordem respeita: primeiro o que destrava prova viva; depois canonicidade residual
 |---|---|---|---|
 | 1 | **Homologação viva do item A1** (roteiro §6 de `r6a1`) contra hosts reais no banco homologado | hosts up + `v2340` aplicada | converte TESTADO → HOMOLOGADO; única etapa que falta para liberar o kernel |
 | 2 | **Upgrade formal do banco principal `plantaopro`** (sequência completa até v2340) + registro em `schema_migrations` + deploy IIS | janela do usuário | o `plantaopro_test` provou as migrations; produção precisa da sequência oficial (carrega desde R5, ainda P0) |
-| 3 | **Unificação das fontes residuais de acesso** (adendo D.3 #2 `Saude360ModuleFilter` fail-open, #3 `SelfServiceServices` parcial, #4 `CobrancaSaasServices` só vigência, #8 `RolesConstants.Saude360*` quase-duplicadas, #9 fallbacks pré-v2149, #10 variante SQL do onboarding) | item 1 homologado (para trocar sem regressão) | elimina as 11→N resoluções paralelas; sem isso o "canônico" ainda tem sombras |
-| 4 | **i18n** (glossário canônico first; precedência user→org→browser→pt-BR; pt-BR/en/es) | decisões abaixo (escopo en/es: data) | exige catálogo de strings antes de layout novo |
+| 3 | ~~**Unificação das fontes residuais de acesso**~~ — **CONCLUÍDO em R6-A1b** (`r6a1b-completamento-autorizacao-canonica.md`): #2/#3/#10 já eram canônicos (reclassificados); #8 base única `AppRoles`; #9 fallbacks pré-v2149 removidos; `CobrancaSaasServices` reclassificado (já canônico); motivos de denegação separados incl. `VERIFICACAO_INDISPONIVEL` | — | restam apenas DEC/P3 registrados no r6a1b §8 |
+| 4 | **i18n** (glossário canônico first; precedência user→org→browser→pt-BR; **pt-BR/en/es/fr** conforme a spec atualizada do ciclo) | decisões abaixo (escopo: data da entrega) | exige catálogo de strings antes de layout novo; **próximo corte de código** |
 | 5 | **Design global** (tokens, contraste, viewports+zoom, "Como usar", antes/depois) | i18n (textos definitivos afetam medidas de contraste/overflow) | auditoria de layouts usa o inventário R5 A3 como base |
 | 6 | Código fino `UNIDADES` no guard (`ClinicaUnidades` hoje grossa em SAUDE360 — decisão E13) | decisão de expansão de contrato | granularidade clínica residual |
 | 7 | Conector fiscal P1/P2 (credenciais reais) — `ENVIANDO` continua reservado até lá | credenciais externas (DEC) | único caminho honesto para transmissão |
@@ -85,5 +85,5 @@ Ordem respeita: primeiro o que destrava prova viva; depois canonicidade residual
    e quem revisa o glossário canônico (dicionário clínico×fiscal).
 5. **Design**: prioridade dos layouts na auditoria (cofre de evidência antes/depois por viewport já previsto
    na spec; nada medido até aqui — sem número, sem promessa).
-6. **Motivo de AccessDenied**: separar "não contratado" de "verificação indisponível" (parâmetro no redirect) —
-   decisão de UX registrada em `r6a1` §5.
+6. ~~**Motivo de AccessDenied**: separar "não contratado" de "verificação indisponível"~~ — **implementado em R6-A1B** (motivo `VERIFICACAO_INDISPONIVEL` + `retorno` p/ retry); permanece DEC a decisão de relatórios p/ linhas sem tenant (r6a1b §6/§8).
+7. **Relatórios × linhas sem tenant**: filtro estrito vs compatibilidade legada (`is null or`) — r6a1b §6 opões a/b/c.

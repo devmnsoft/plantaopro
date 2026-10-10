@@ -35,7 +35,9 @@ public sealed class Saude360ModuleFilter : IAsyncAuthorizationFilter
         var tenantId = _currentUser.TenantId;
         if (tenantId is null)
         {
-            context.Result = ModuloIndisponivel();
+            // R6-A1b: separação dos motivos — sem contexto de organização NÃO é o mesmo
+            // que "módulo não contratado" (aí não há com quem comparar contrato).
+            context.Result = new ObjectResult(new { success = false, message = "Sem contexto de organização nesta sessão. Entre novamente para reavaliar o acesso." }) { StatusCode = StatusCodes.Status403Forbidden };
             return;
         }
 

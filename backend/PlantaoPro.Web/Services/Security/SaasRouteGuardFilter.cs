@@ -179,15 +179,17 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
             return false;
         }
 
-        // R6-BlocoA item 1: verificação LIVE da contratação efetiva (função canônica). Só
-        // dispara quando a sessão é v2149, o módulo é não-core e JÁ estava nas claims do login
-        // (contratado no login — pode ter sido revogado/suspento/expirado desde então). Popula o
-        // cache por request consumido por IModuleAccessService.IsModuleEnabled; se indisponível,
-        // degradamos aos claims (janela documentada). Módulo nunca contratado nem consulta a rede.
+        // R6-BlocoA item 1: verificação LIVE da contratação efetiva (função canônica). Dispara
+        // para QUALQUER página de módulo não-core em sessão v2149 não-global: o conjunto
+        // efetivo é authoritative quando disponível (reflete suspensão/expiração/revogação E
+        // contratação iniciada após o login, sem depender apenas dos claims emitidos no
+        // login). Popula o cache por request consumido por IModuleAccessService.IsModuleEnabled.
+        // Se a resolução falhar, degradamos aos claims do login com janela documentada; sem
+        // prova em nenhum dos dois lados o motivo de denegação é VERIFICACAO_INDISPONIVEL
+        // (nunca "não contratado" quando não foi possível consultar o contrato).
         if (!currentUser.IsGlobalAdmin()
             && !ModuleAccessService.IsCoreOrCommonModule(module)
-            && currentUser.User.HasClaim("access_catalog_version", "v2149")
-            && ModuleAccessService.HasModuleClaim(currentUser.User, module))
+            && currentUser.User.HasClaim("access_catalog_version", "v2149"))
         {
             await effectiveModules.GetModulesAsync();
         }
@@ -209,7 +211,18 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
             currentUser.ClienteId);
 
         context.HttpContext.Items["SaasAccessDeniedModule"] = module;
-        context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module, reason = modules.IsModuleEnabled(module) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO" });
+        // R6-BlocoA item 1 (complemento): separação dos motivos exigida pela spec.
+        // "MODULO_NAO_CONTRATADO" só quando há prova do contrato (live OK sem o módulo, ou
+        // claims sem o módulo quando a verificação não foi tentada). Quando a live-check
+        // foi TENTADA E FALHOU e as claims também não provam o módulo, a causa honesta é
+        // "verificação temporariamente indisponível" — não afirmar ausência de contrato
+        // sem poder consultá-la.
+        var motivo = modules.IsModuleEnabled(module) ? "PERMISSAO_NEGADA" : "MODULO_NAO_CONTRATADO";
+        if (motivo == "MODULO_NAO_CONTRATADO" && effectiveModules.GetStatus() == EffectiveModulesStatus.Falhou)
+            motivo = "VERIFICACAO_INDISPONIVEL";
+        // Roteiro de "tentar novamente" honesto no motivo VERIFICACAO_INDISPONIVEL:
+        // devolve o usuário à página que ele tentou abrir (a mesma decisão será refeita).
+        context.Result = new RedirectToActionResult("AccessDenied", "Account", new { area = string.Empty, module, reason = motivo, retorno = $"/{descriptor.ControllerName}/{descriptor.ActionName}" });
         return false;
     }
 

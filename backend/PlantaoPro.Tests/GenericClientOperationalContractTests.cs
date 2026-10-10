@@ -120,6 +120,9 @@ public class GenericClientOperationalContractTests
     [Fact]
     public void CanonicalRoles_MustMatchProductSpecification()
     {
+        // R6-A1b: códigos base consolidados no AppRoles (CrossCutting) como fonte única;
+        // os RolesConstants de cada ponta delegam a ele — o contrato verifica a fonte e a delegação.
+        var appRoles = File.ReadAllText(Path.Combine(RepositoryPathResolver.BackendRoot, "PlantaoPro.CrossCutting", "Security", "AppRoles.cs"));
         var apiRoles = File.ReadAllText(Path.Combine(RepositoryPathResolver.ApiRoot, "RolesConstants.cs"));
         var webRoles = File.ReadAllText(Path.Combine(RepositoryPathResolver.WebRoot, "Security", "RolesConstants.cs"));
 
@@ -140,8 +143,14 @@ public class GenericClientOperationalContractTests
 
         foreach (var role in requiredRoles)
         {
-            Assert.Contains($"\"{role}\"", apiRoles);
-            Assert.Contains($"\"{role}\"", webRoles);
+            Assert.Contains($"\"{role}\"", appRoles);
+        }
+
+        // Cada ponta delega os códigos BASE ao AppRoles (sem duplicação local divergente).
+        foreach (var delegacao in new[] { "AppRoles.AdministradorGlobal", "AppRoles.Recepcao", "AppRoles.AdministradorClinica" })
+        {
+            Assert.Contains(delegacao, apiRoles);
+            Assert.Contains(delegacao, webRoles);
         }
     }
 }

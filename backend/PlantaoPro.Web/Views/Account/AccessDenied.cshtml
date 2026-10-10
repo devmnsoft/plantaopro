@@ -6,12 +6,16 @@
         ? "Operação bloqueada para este cliente"
         : reason == "MODULO_NAO_CONTRATADO"
             ? "Módulo não contratado"
-            : "Acesso negado";
+            : reason == "VERIFICACAO_INDISPONIVEL"
+                ? "Verificação de contrato temporariamente indisponível"
+                : "Acesso negado";
     var description = reason == "CLIENTE_BLOQUEADO"
         ? "O login foi permitido, mas as operações normais ficam indisponíveis enquanto o status do cliente não for regularizado. Consulte as faturas pendentes ou acione o suporte."
         : reason == "MODULO_NAO_CONTRATADO"
             ? "Esta rota exige um módulo contratado e habilitado para o tenant atual. O menu já oculta módulos indisponíveis; esta validação protege o acesso direto."
-            : "Você não possui permissão para acessar este recurso. Se acredita que isso é um erro, procure o administrador do cliente.";
+            : reason == "VERIFICACAO_INDISPONIVEL"
+                ? "Não foi possível confirmar a contratação deste módulo agora. Nada mudou na sua assinatura: tente novamente em instantes."
+                : "Você não possui permissão para acessar este recurso. Se acredita que isso é um erro, procure o administrador do cliente.";
 }
 <div class="container py-5">
     <div class="row justify-content-center">
@@ -33,6 +37,11 @@
                         @if (reason == "CLIENTE_BLOQUEADO")
                         {
                             <a class="btn btn-primary" asp-controller="MinhaAssinatura" asp-action="Faturas">Ver minhas faturas</a>
+                            <a class="btn btn-outline-primary" asp-controller="Ajuda" asp-action="Index">Acionar suporte</a>
+                        }
+                        else if (reason == "VERIFICACAO_INDISPONIVEL")
+                        {
+                            <a class="btn btn-primary" href="@((ViewBag.Retorno as string) ?? "/")">Tentar novamente</a>
                             <a class="btn btn-outline-primary" asp-controller="Ajuda" asp-action="Index">Acionar suporte</a>
                         }
                         else if (reason == "MODULO_NAO_CONTRATADO")

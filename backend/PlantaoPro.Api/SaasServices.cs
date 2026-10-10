@@ -51,7 +51,13 @@ where c.reg_status='A'
 coalesce(c.cnpj,'') as ""Cnpj"",coalesce(c.cidade,'') as ""Cidade"",coalesce(c.estado,'') as ""Estado"",coalesce(c.status,'') as ""Status"",
 (select count(distinct u.id) from plantaopro.usuarios u left join plantaopro.tenants tu on tu.id=u.tenant_id where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and coalesce(u.cliente_id,tu.cliente_id,u.tenant_id)=c.id) as ""UsuariosAtivos"",
 (select count(*) from plantaopro.tenant_onboarding_checklist oc left join plantaopro.tenants ot on ot.id=oc.tenant_id where oc.reg_status='A' and oc.status='PENDENTE' and coalesce(oc.cliente_id,ot.cliente_id)=c.id) as ""Pendencias"",
-coalesce((select string_agg(distinct coalesce(m.nome,tm.codigo_modulo,tm.codigo),' · ' order by coalesce(m.nome,tm.codigo_modulo,tm.codigo)) from plantaopro.tenants t join plantaopro.tenant_modulos tm on tm.tenant_id=t.id and tm.reg_status='A' and tm.habilitado=true and tm.status='ATIVO' left join plantaopro.modulos_sistema m on m.id=tm.modulo_id where t.cliente_id=c.id and tm.ativado_em is not null and tm.ativado_em<=now() and tm.desativado_em is null),'') as ""ModulosVigentes""
+-- R6-A1b: rótulo pelos módulos EFETIVOS (função canônica v2340: habilitado+status+vigência
+-- + herança do pacote + override per-capacidade) — o predicado parcial antigo escondia
+-- capacidades herdadas do pacote e ignorava desativação/agendamento inconsistentes.
+coalesce((select string_agg(distinct coalesce(m.nome, ef.codigo),' · ' order by coalesce(m.nome, ef.codigo))
+  from (select unnest(plantaopro.modulos_efetivos(t.id)) as codigo
+        from plantaopro.tenants t where t.cliente_id=c.id and t.reg_status='A') ef
+  left join plantaopro.modulos_sistema m on upper(m.codigo)=upper(ef.codigo) and m.reg_status='A'),'') as ""ModulosVigentes""
 " + filtered + @" order by coalesce(c.nome_fantasia,c.razao_social),c.id limit @take offset @skip;
 select count(*) as ""Clientes"",count(*) filter(where upper(c.status)='ATIVO') as ""Ativos"",count(*) filter(where upper(c.status)='SUSPENSO') as ""Suspensos"",
 coalesce(sum((select count(distinct u.id) from plantaopro.usuarios u left join plantaopro.tenants tu on tu.id=u.tenant_id where u.reg_status='A' and coalesce(u.status,'ATIVO')='ATIVO' and coalesce(u.cliente_id,tu.cliente_id,u.tenant_id)=c.id)),0) as ""UsuariosAtivos"",

@@ -19,11 +19,27 @@ namespace PlantaoPro.Web.Services.Security;
 /// — a fábrica de testes Web o desliga para manter os contratos determinísticos de guarda,
 /// que não modelam o endpoint effective-modules; em produção o padrão é ATIVADO.
 /// </summary>
+public enum EffectiveModulesStatus
+{
+    /// <summary>Check não tentado nesta requisição (desabilitado por config ou o guard não
+    /// disparou a resolução) — decisões seguem os claims do login sem ressalva.</summary>
+    NaoTentada = 0,
+    /// <summary>Tentado e concluído — o conjunto efetivo é authoritative.</summary>
+    Ok = 1,
+    /// <summary>Tentado e NÃO concluído (API fora/erro) — permite ao guard separar o motivo
+    /// honesto "verificação temporariamente indisponível" de "módulo não contratado".</summary>
+    Falhou = 2,
+}
+
 public interface IEffectiveModuleResolver
 {
     /// <summary>Devolve o conjunto efetivo (contém "*" p/ global admin), ou <c>null</c> se a
     /// verificação foi desabilitada ou não pôde ser concluída (degrada aos claims).</summary>
     Task<IReadOnlySet<string>?> GetModulesAsync();
+
+    /// <summary>Status da resolução na requisição atual (R6-BlocoA item 1, complemento —
+    /// separação dos motivos de denegação exigida pela spec).</summary>
+    EffectiveModulesStatus GetStatus();
 }
 
 public sealed class EffectiveModuleResolver : IEffectiveModuleResolver
@@ -60,7 +76,6 @@ public sealed class EffectiveModuleResolver : IEffectiveModuleResolver
 
         if (ctx.Items.TryGetValue(CacheKey, out var cached))
             return cached as IReadOnlySet<string>; // null => já tentou e falhou; set => ok
-
         if (_currentUser.IsGlobalAdmin())
         {
             var all = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "*" };
@@ -104,5 +119,19 @@ public sealed class EffectiveModuleResolver : IEffectiveModuleResolver
             ctx.Items[CacheKey] = null;
             return null;
         }
+    }
+
+    /// <summary>
+    /// Lê o estado do cache por request sem disparar chamada: chave ausente = NaoTentada;
+    /// valor null = a resolução foi tentada e falhou; conjunto = Ok. (Semântica da chave:
+    /// o caminho de falha grava explicitamente <c>null</c>; o caminho desabilitado não
+    /// escreve nada.)
+    /// </summary>
+    public EffectiveModulesStatus GetStatus()
+    {
+        var items = _httpContextAccessor.HttpContext?.Items;
+        if (items is null || !items.TryGetValue(CacheKey, out var cached))
+            return EffectiveModulesStatus.NaoTentada;
+        return cached is null ? EffectiveModulesStatus.Falhou : EffectiveModulesStatus.Ok;
     }
 }

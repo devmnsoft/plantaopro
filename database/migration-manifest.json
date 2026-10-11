@@ -1239,6 +1239,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2344_r7e1_usuario_idioma_preferido",
+      "source": "database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql",
+      "checksum": "623f6f52c4f1ee4ad0ba1e850094b5cdd4100c03023698da12671ae170302226",
+      "dependsOn": [
+        "2026_10_v2343_r7a1_convite_ciclo_vida"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

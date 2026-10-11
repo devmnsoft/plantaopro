@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- R7-E1: arquivo-mestre (cultura neutra) com os textos pt-BR — fallback canônico de todos os idiomas. -->
+  <data name="Common.SkipLink" xml:space="preserve">
+    <value>Pular para o conteúdo</value>
+  </data>
+  <data name="Common.CloseMenuAria" xml:space="preserve">
+    <value>Fechar menu</value>
+  </data>
+  <data name="Auth.DemoNotice" xml:space="preserve">
+    <value>Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</value>
+  </data>
+  <data name="Auth.LoginTitle" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="Login.StoryTitle" xml:space="preserve">
+    <value>Acesse sua central PlantãoPro</value>
+  </data>
+  <data name="Login.StorySubtitle" xml:space="preserve">
+    <value>Escalas, execução e conferência com acesso seguro por instituição.</value>
+  </data>
+  <data name="Login.TrustAcessoProtegido" xml:space="preserve">
+    <value>Acesso protegido</value>
+  </data>
+  <data name="Login.TrustContextoIsolado" xml:space="preserve">
+    <value>Contexto isolado</value>
+  </data>
+  <data name="Login.TrustAuditoriaAtiva" xml:space="preserve">
+    <value>Auditoria ativa</value>
+  </data>
+  <data name="Login.Eyebrow" xml:space="preserve">
+    <value>Acesso seguro</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>Acesse sua conta</value>
+  </data>
+  <data name="Login.Subtitle" xml:space="preserve">
+    <value>Use seu identificador cadastrado para abrir somente a organização e os módulos autorizados.</value>
+  </data>
+  <data name="Login.SessionAttention" xml:space="preserve">
+    <value>Atenção ao seu acesso</value>
+  </data>
+  <data name="Login.ReasonExpired" xml:space="preserve">
+    <value>Sua sessão expirou por segurança. Entre novamente para continuar.</value>
+  </data>
+  <data name="Login.ReasonTenantRequired" xml:space="preserve">
+    <value>Não foi possível identificar sua instituição. Procure a administração do seu cliente.</value>
+  </data>
+  <data name="Login.ReasonUserBlocked" xml:space="preserve">
+    <value>Seu acesso está temporariamente bloqueado. Procure a administração da sua instituição.</value>
+  </data>
+  <data name="Login.ReasonTenantBlocked" xml:space="preserve">
+    <value>O acesso da instituição está temporariamente indisponível. Procure a administração responsável.</value>
+  </data>
+  <data name="Login.ReasonFeatureBlocked" xml:space="preserve">
+    <value>Esta funcionalidade não está liberada para o seu perfil ou instituição.</value>
+  </data>
+  <data name="Login.ReasonAccessDenied" xml:space="preserve">
+    <value>Você não tem permissão para acessar o destino solicitado.</value>
+  </data>
+  <data name="Login.DelayTitle" xml:space="preserve">
+    <value>A resposta está demorando.</value>
+  </data>
+  <data name="Login.DelayDetail" xml:space="preserve">
+    <value>Seus dados foram preservados; confira sua conexão e tente novamente.</value>
+  </data>
+  <data name="Login.ConnectionLost" xml:space="preserve">
+    <value>Sem conexão. Reconecte-se para entrar com segurança.</value>
+  </data>
+  <data name="Login.ProgressTitle" xml:space="preserve">
+    <value>Acesso pronto</value>
+  </data>
+  <data name="Login.ProgressDetail" xml:space="preserve">
+    <value>Preencha suas credenciais para validar conta, instituição e permissões.</value>
+  </data>
+  <data name="Login.EmailLabel" xml:space="preserve">
+    <value>E-mail, CPF ou CNPJ</value>
+  </data>
+  <data name="Login.EmailHelp" xml:space="preserve">
+    <value>Informe o identificador habilitado pela sua instituição, sem compartilhar suas credenciais.</value>
+  </data>
+  <data name="Login.PasswordLabel" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="Login.ShowPasswordAria" xml:space="preserve">
+    <value>Mostrar senha</value>
+  </data>
+  <data name="Login.PasswordHelp" xml:space="preserve">
+    <value>A senha diferencia letras maiúsculas e minúsculas.</value>
+  </data>
+  <data name="Login.CapsLock" xml:space="preserve">
+    <value>Caps Lock está ativado.</value>
+  </data>
+  <data name="Login.Button" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="Login.ForgotPassword" xml:space="preserve">
+    <value>Esqueci minha senha</value>
+  </data>
+  <data name="Login.HelpSummary" xml:space="preserve">
+    <value>Como usar esta tela</value>
+  </data>
+  <data name="Login.HelpBody" xml:space="preserve">
+    <value>Preencha os dois campos obrigatórios e selecione &lt;strong&gt;Entrar&lt;/strong&gt;. O sistema abrirá somente os módulos do seu perfil e da sua instituição. Em caso de bloqueio ou contexto incorreto, procure a administração; nunca envie sua senha ao suporte.</value>
+  </data>
+  <data name="Login.SecurityNote" xml:space="preserve">
+    <value>Acesso individual: não compartilhe sua senha. Eventos de autenticação podem ser registrados para segurança e auditoria.</value>
+  </data>
+  <data name="Login.PrivacyLink" xml:space="preserve">
+    <value>Privacidade</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Configurações do Usuário</value>
+  </data>
+  <data name="Profile.Header" xml:space="preserve">
+    <value>Meu Perfil</value>
+  </data>
+  <data name="Profile.AccountActive" xml:space="preserve">
+    <value>Conta ativa</value>
+  </data>
+  <data name="Profile.Nome" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Profile.Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Profile.Telefone" xml:space="preserve">
+    <value>Telefone</value>
+  </data>
+  <data name="Profile.Notificacoes" xml:space="preserve">
+    <value>Notificações</value>
+  </data>
+  <data name="Profile.NotInformado" xml:space="preserve">
+    <value>Não informado</value>
+  </data>
+  <data name="Profile.EditarDados" xml:space="preserve">
+    <value>Editar dados</value>
+  </data>
+  <data name="Profile.AlterarSenha" xml:space="preserve">
+    <value>Alterar senha</value>
+  </data>
+  <data name="Profile.LanguageSection" xml:space="preserve">
+    <value>Idioma da interface</value>
+  </data>
+  <data name="Profile.LanguageHint" xml:space="preserve">
+    <value>Escolha o idioma das telas. O idioma não altera moeda, fuso horário nem documentos fiscais.</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Profile.LanguageSaved" xml:space="preserve">
+    <value>Idioma da interface atualizado.</value>
+  </data>
+  <data name="Profile.LanguageInvalid" xml:space="preserve">
+    <value>Idioma inválido. Selecione uma opção da lista.</value>
+  </data>
+  <data name="Profile.LanguageSaveFailed" xml:space="preserve">
+    <value>Não foi possível salvar o idioma. Tente novamente.</value>
+  </data>
+  <data name="Lang.pt-BR" xml:space="preserve">
+    <value>Português (Brasil)</value>
+  </data>
+  <data name="Lang.en" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Lang.es" xml:space="preserve">
+    <value>Español</value>
+  </data>
+  <data name="Lang.fr" xml:space="preserve">
+    <value>Français</value>
+  </data>
+  <data name="Profile.SessionExpiredFallback" xml:space="preserve">
+    <value>Sua sessão expirou ou foi revogada. Entre novamente para continuar.</value>
+  </data>
+  <data name="Profile.LanguageApplyFailedFallback" xml:space="preserve">
+    <value>Não foi possível aplicar o idioma agora. Entre novamente para continuar com segurança.</value>
+  </data>
+  <data name="Profile.UnexpectedSaveError" xml:space="preserve">
+    <value>Ocorreu um erro inesperado ao salvar o idioma.</value>
+  </data>
+</root>

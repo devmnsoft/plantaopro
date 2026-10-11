@@ -7,9 +7,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using PlantaoPro.Web.Services;
+using PlantaoPro.Web.Services.Localization;
+using PlantaoPro.Web.Security;
 using PlantaoPro.Web.Services.Mvc;
 using PlantaoPro.Web.Services.Security;
 
+using PlantaoPro.CrossCutting.Localization;
 using PlantaoPro.CrossCutting.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,14 +40,21 @@ builder.Services.AddControllersWithViews(options =>
 // Desligado de proposito: quem decide o contrato para ModelState invalido e apenas o
 // ModelStateInvalidoFiltro — /bff recebe JSON canonico; formularios MVC recebem PRG/400.
 builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(o => o.SuppressModelStateInvalidFilter = true);
-// Gate financeiro (item 2): a lingua visual da aplicacao e o portugues do Brasil —
-// formatacoes de moeda/data nas views ("C", "N2", "0.00") seguem a cultura pt-BR.
-// O binding de decimal NAO depende dessa cultura: e tratado pelo binder acima.
+// R7-E1: idiomas da INTERFACE — pt-BR (padrão), en, es, fr (catálogo canônico compartilhado).
+// A FORMATAÇÃO (moeda/data nas views "C"/"N2" e binding de decimal) permanece fixa em pt-BR:
+// o provedor devolve CurrentCulture=pt-BR para todo request e só a UICulture varia com o
+// idioma escolhido (usuário > organização > navegador > pt-BR). Conteúdo clínico/dados do
+// usuário/XMLs fiscais nunca são traduzidos automaticamente — apenas rótulos da interface.
 builder.Services.AddRequestLocalization(localization =>
 {
-    localization.DefaultRequestCulture = new RequestCulture("pt-BR");
-    localization.SupportedCultures.Add(new CultureInfo("pt-BR"));
-    localization.SupportedUICultures.Add(new CultureInfo("pt-BR"));
+    localization.DefaultRequestCulture = new RequestCulture(UiLanguageCatalog.FormatCultureName, UiLanguageCatalog.Default);
+    localization.SupportedCultures.Clear();
+    localization.SupportedCultures.Add(new CultureInfo(UiLanguageCatalog.FormatCultureName));
+    localization.SupportedUICultures.Clear();
+    foreach (var idioma in UiLanguageCatalog.Supported)
+        localization.SupportedUICultures.Add(new CultureInfo(idioma));
+    localization.RequestCultureProviders.Clear();
+    localization.RequestCultureProviders.Add(new UiLanguageCultureProvider());
 });
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IRoleCatalog, RoleCatalog>();
@@ -61,6 +71,7 @@ builder.Services.AddScoped<IFase2OperationalFlowService, Fase2OperationalFlowSer
 builder.Services.AddScoped<ProductivityWebService>();
 builder.Services.AddScoped<AiWebService>();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ISessionReissueService, SessionReissueService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IModuleAccessService, ModuleAccessService>();
 builder.Services.AddScoped<IEffectiveModuleResolver, EffectiveModuleResolver>();
@@ -164,6 +175,10 @@ app.UseWhen(context => !BffContracts.IsBffPath(context.Request.Path), branch => 
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
+// R7-E1: DEPOIS da autenticação (o provedor lê as claims "idioma"/"org_idioma" da sessão) e
+// antes das rotas controladas. Fixa CurrentCulture=pt-BR (formatação fiscal) e aplica a
+// UICulture resolvida por request (recursos localizados + <html lang>).
+app.UseRequestLocalization();
 app.UseAuthorization();
 
 app.MapControllerRoute(

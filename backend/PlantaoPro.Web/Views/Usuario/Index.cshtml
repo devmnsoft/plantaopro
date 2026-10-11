@@ -1,23 +1,49 @@
 @using PlantaoPro.Web.Models.ViewModels
 @model UserSettingsViewModel
-@{ ViewData["Title"] = "Configurações do Usuário"; }
+@{
+    ViewData["Title"] = UiText.L("Profile.Title");
+    // R7-E1: idioma atualmente ativo da sessão (claim emitida no login/refresh).
+    var idiomaAtivo = User.FindFirst("idioma")?.Value ?? "pt-BR";
+}
 
 <div class="data-card p-4">
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-        <h4 class="mb-0">Meu Perfil</h4>
-        <span class="badge bg-light text-dark border">Conta ativa</span>
+        <h4 class="mb-0">@UiText.L("Profile.Header")</h4>
+        <span class="badge bg-light text-dark border">@UiText.L("Profile.AccountActive")</span>
     </div>
 
     <dl class="row mb-4">
-        <dt class="col-sm-3">Nome</dt><dd class="col-sm-9">@Model.Nome</dd>
-        <dt class="col-sm-3">E-mail</dt><dd class="col-sm-9">@Model.Email</dd>
-        <dt class="col-sm-3">Telefone</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Telefone) ? "Não informado" : Model.Telefone)</dd>
-        <dt class="col-sm-3">Notificações</dt><dd class="col-sm-9">@Model.PreferenciasNotificacao</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Nome")</dt><dd class="col-sm-9">@Model.Nome</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Email")</dt><dd class="col-sm-9">@Model.Email</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Telefone")</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Telefone) ? UiText.L("Profile.NotInformado") : Model.Telefone)</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Notificacoes")</dt><dd class="col-sm-9">@Model.PreferenciasNotificacao</dd>
     </dl>
 
     <div class="d-flex gap-2 flex-wrap">
-        <a class="btn btn-primary" asp-action="Edit"><i class="bi bi-pencil"></i> Editar dados</a>
-        <a class="btn btn-outline-primary" asp-action="AlterarSenha"><i class="bi bi-key"></i> Alterar senha</a>
+        <a class="btn btn-primary" asp-action="Edit"><i class="bi bi-pencil"></i> @UiText.L("Profile.EditarDados")</a>
+        <a class="btn btn-outline-primary" asp-action="AlterarSenha"><i class="bi bi-key"></i> @UiText.L("Profile.AlterarSenha")</a>
         <button class="btn btn-outline-secondary" disabled title="Ação indisponível">2FA</button>
     </div>
+</div>
+
+<div class="data-card p-4 mt-4">
+    <h4 class="mb-1">@UiText.L("Profile.LanguageSection")</h4>
+    <p class="text-muted small mb-3">@UiText.L("Profile.LanguageHint")</p>
+    <!-- R7-E1: preferência persistida (usuarios.idioma_preferido, v2344); o efeito vale no
+         próximo request após a reemissão canônica de sessão (sem re-login). -->
+    <form asp-controller="Usuario" asp-action="SalvarIdioma" method="post" class="row g-2 align-items-end">
+        @Html.AntiForgeryToken()
+        <div class="col-auto">
+            <label class="form-label" for="idiomaSelecionado">@UiText.L("Profile.LanguageSection")</label>
+            <select id="idiomaSelecionado" name="idioma" class="form-select">
+                @foreach (var opcao in PlantaoPro.CrossCutting.Localization.UiLanguageCatalog.Supported)
+                {
+                    <option value="@opcao" selected="@(string.Equals(opcao, idiomaAtivo, StringComparison.OrdinalIgnoreCase))">@UiText.L($"Lang.{opcao}")</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary">@UiText.L("Profile.Save")</button>
+        </div>
+    </form>
 </div>

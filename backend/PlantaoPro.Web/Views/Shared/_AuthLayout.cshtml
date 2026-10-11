@@ -1,11 +1,11 @@
 @inject IConfiguration Configuration
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="@UiText.HtmlLang(Context)">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#09243c" />
-    <title>@(ViewData["Title"] ?? "Entrar") - PlantãoPro</title>
+    <title>@(ViewData["Title"] ?? UiText.L("Auth.LoginTitle")) - PlantãoPro</title>
     <link rel="icon" type="image/svg+xml" href="~/media/brand/favicon.svg" />
     <link rel="stylesheet" href="~/css/plantaopro.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/app-icons.css" asp-append-version="true" />
@@ -28,10 +28,10 @@
     <link rel="stylesheet" href="~/css/design-system/v2148-operational-premium.css" asp-append-version="true" />
 </head>
 <body class="pp-body pp-auth-body app-body">
-    <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
+    <a class="skip-link" href="#mainContent">@UiText.L("Common.SkipLink")</a>
     @if (Configuration.GetValue<bool>("Demo:Enabled") || Configuration.GetValue<bool>("DemoSeed:Enabled"))
     {
-        <div class="auth-environment-notice" role="status"><span aria-hidden="true">●</span> Ambiente de demonstração ativo. Credenciais não são exibidas por segurança.</div>
+        <div class="auth-environment-notice" role="status"><span aria-hidden="true">●</span> @UiText.L("Auth.DemoNotice")</div>
     }
     <main id="mainContent" class="auth-main" tabindex="-1">
         <partial name="_ToastMessages" />

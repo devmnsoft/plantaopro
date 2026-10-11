@@ -268,6 +268,7 @@ values
         public string ClienteNome { get; set; } = string.Empty;
         public string ClienteStatus { get; set; } = string.Empty;
         public bool SenhaAlteracaoObrigatoria { get; set; }
+        public string? IdiomaPreferido { get; set; }
     }
 
     public sealed class AuthService
@@ -306,7 +307,8 @@ values
     coalesce(u.status,'ATIVO') as ""Status"", u.cliente_id as ""ClienteId"", u.tenant_id as ""TenantId"",
     coalesce(c.nome_fantasia,c.razao_social,t.nome,'') as ""ClienteNome"",
     case when upper(coalesce(t.status,'ATIVO')) <> 'ATIVO' then t.status else coalesce(c.status,'ATIVO') end as ""ClienteStatus"",
-    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria""
+    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria"",
+    u.idioma_preferido as ""IdiomaPreferido""
 from plantaopro.usuarios u
 left join plantaopro.medicos m on m.usuario_id=u.id and m.reg_status='A'
 left join plantaopro.clientes c on c.id=coalesce(u.cliente_id,u.tenant_id) and c.reg_status='A'
@@ -426,13 +428,16 @@ where up.usuario_id=@id
                 var permissions = isGlobal ? new[] { "*" } : (await LoadPermissionsAsync(cn, usuarioId, tenantId, cancellationToken)).ToArray();
                 var modules = isGlobal ? new[] { "*" } : tenantId.HasValue ? (await LoadModulesAsync(cn, tenantId.Value, cancellationToken)).ToArray() : Array.Empty<string>();
                 var token = GenerateToken(usuarioId, user.Nome, user.Email, user.ClienteNome, isGlobal, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, tenantId, permissions, modules, clienteStatus);
+                // R7-E1: idioma da interface — preferencias em claims de sessao na Web. A do
+                // USUARIO vem da coluna (v2344); a da ORGANIZACAO de tenants.metadata.
+                var idiomaOrganizacao = await IdiomaOrganizacaoAsync(cn, tenantId, cancellationToken);
                 await cn.ExecuteAsync(new CommandDefinition("update plantaopro.usuarios set ultimo_login=now(), bloqueado_ate=null, reg_update=now() where id=@usuarioId", new { usuarioId }, cancellationToken: cancellationToken));
                 await RegistrarTentativaAsync(cn, usuarioId, auditIdentifier, ip, ua, true, "SUCCESS", cancellationToken: cancellationToken);
                 // Auditoria LOGIN_SUCESSO: fonte unica no controller (AuthController/MobileController).
                 // A escrita anterior aqui somava 2 linhas por login (duplicidade controller+servico).
                 await sessions.CreateAsync(sessionGuid, usuarioId, tenantId, clienteId, expiresAtUtc, ip, ua, cancellationToken);
                 logger.LogInformation("Login bem-sucedido UsuarioId:{UsuarioId} Tipo:{Tipo} Perfis:{Perfis} Escopo:{Escopo} Modulos:{Modulos} IP:{Ip}", usuarioId, identifierKind, string.Join(',', roles), accessScope, modules.Length, ip);
-                return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules, isGlobal ? null : clienteStatus), "Login realizado com sucesso.");
+                return ApiResponse<LoginResponse>.Ok(new(token, expiresAtUtc, usuarioId, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, tenantId, isGlobal ? null : user.ClienteNome, mustChangePassword, primaryRole, accessScope, tenantContextRequired, tenantContextSelected, null, contextMode, sessionId, permissions, modules, isGlobal ? null : clienteStatus, user.IdiomaPreferido, idiomaOrganizacao), "Login realizado com sucesso.");
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (NpgsqlException ex) { logger.LogError(ex, "Falha de conexão/operação com banco no login Identificador:{Identificador} IP:{Ip}", auditIdentifier, ip); return ApiResponse<LoginResponse>.Fail("Erro interno ao autenticar.", 500); }
@@ -449,7 +454,8 @@ where up.usuario_id=@id
     coalesce(u.status,'ATIVO') as ""Status"", u.cliente_id as ""ClienteId"", u.tenant_id as ""TenantId"",
     coalesce(c.nome_fantasia,c.razao_social,t.nome,'') as ""ClienteNome"",
     case when upper(coalesce(t.status,'ATIVO')) <> 'ATIVO' then t.status else coalesce(c.status,'ATIVO') end as ""ClienteStatus"",
-    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria""
+    coalesce(u.senha_alteracao_obrigatoria,false) as ""SenhaAlteracaoObrigatoria"",
+    u.idioma_preferido as ""IdiomaPreferido""
 from plantaopro.usuarios u
 left join plantaopro.clientes c on c.id=coalesce(u.cliente_id,u.tenant_id) and c.reg_status='A'
 left join plantaopro.tenants t on t.id=u.tenant_id
@@ -482,9 +488,27 @@ where up.usuario_id=@userId and up.reg_status='A'
             var sessionId = sessionGuid.ToString("N");
             var expiresAtUtc = DateTime.UtcNow.AddHours(8);
             var token = GenerateToken(user.Id, user.Nome, user.Email, user.ClienteNome, isGlobal, roles, primaryRole, accessScope, contextMode, sessionId, clienteId, effectiveTenant, permissions, modules, user.ClienteStatus);
+            // R7-E1: mesmo par de idiomas do login (usuario + organizacao) para o refresh
+            // reemitir a sessao com a preferencia mais recente apos mudancas.
+            var idiomaOrganizacao = await IdiomaOrganizacaoAsync(cn, effectiveTenant, cancellationToken);
             await sessions.CreateAsync(sessionGuid, user.Id, effectiveTenant, clienteId, expiresAtUtc, null, null, cancellationToken);
-            var res = new LoginResponse(token, expiresAtUtc, user.Id, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, effectiveTenant, isGlobal ? null : user.ClienteNome, user.SenhaAlteracaoObrigatoria, primaryRole, accessScope, false, true, effectiveTenant, contextMode, sessionId, permissions, modules, isGlobal ? null : user.ClienteStatus);
+            var res = new LoginResponse(token, expiresAtUtc, user.Id, user.Nome, user.Email, roles, clienteId, isGlobal ? null : user.ClienteNome, effectiveTenant, isGlobal ? null : user.ClienteNome, user.SenhaAlteracaoObrigatoria, primaryRole, accessScope, false, true, effectiveTenant, contextMode, sessionId, permissions, modules, isGlobal ? null : user.ClienteStatus, user.IdiomaPreferido, idiomaOrganizacao);
             return ApiResponse<LoginResponse>.Ok(res, "Contexto atualizado com sucesso.");
+        }
+
+        /// <summary>
+        /// R7-E1: padrao de idioma da ORGANIZACAO em tenants.metadata->>'idiomaPadrao' (jsonb).
+        /// Normalizado pelo catalogo canônico: ausente ou inválido equivale a "não definido"
+        /// (a resolução segue para navegador → pt-BR). Sem tenant não há padrão organizacional.
+        /// </summary>
+        private static async Task<string?> IdiomaOrganizacaoAsync(NpgsqlConnection cn, Guid? tenantId, CancellationToken ct)
+        {
+            if (!tenantId.HasValue) return null;
+            var valor = await cn.QueryFirstOrDefaultAsync<string?>(new CommandDefinition(
+                @"select coalesce(metadata->>'idiomaPadrao','') from plantaopro.tenants
+                  where id=@tenantId and reg_status='A'",
+                new { tenantId }, cancellationToken: ct));
+            return PlantaoPro.CrossCutting.Localization.UiLanguageCatalog.Normalize(valor) ?? null;
         }
         private static async Task<IEnumerable<string>> LoadPermissionsAsync(NpgsqlConnection cn, Guid usuarioId, Guid? tenantId, CancellationToken cancellationToken)
         {

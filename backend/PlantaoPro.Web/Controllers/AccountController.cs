@@ -23,13 +23,14 @@ public sealed class AccountController : Controller
     private readonly IAccessScopeResolver _accessScopeResolver;
     private readonly ITenantContextResolver _tenantContextResolver;
     private readonly IModuleAccessService _moduleAccess;
+    private readonly ISessionReissueService _sessionReissue;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         PropertyNameCaseInsensitive = true,
         NumberHandling = JsonNumberHandling.AllowReadingFromString
     };
 
-    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver, IModuleAccessService moduleAccess)
+    public AccountController(IHttpClientFactory httpClientFactory, ILogger<AccountController> logger, IRoleCatalog roleCatalog, IPrimaryRoleResolver primaryRoleResolver, IAccessScopeResolver accessScopeResolver, ITenantContextResolver tenantContextResolver, IModuleAccessService moduleAccess, ISessionReissueService sessionReissue)
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
@@ -38,6 +39,7 @@ public sealed class AccountController : Controller
         _accessScopeResolver = accessScopeResolver;
         _tenantContextResolver = tenantContextResolver;
         _moduleAccess = moduleAccess;
+        _sessionReissue = sessionReissue;
     }
 
     // Template explícito nos dois overloads: sem ele, a geração de URLs para
@@ -104,7 +106,7 @@ public sealed class AccountController : Controller
 
             var login = apiResult.Data;
             var (principal, primaryRole, accessScope, contextMode, normalizedRoles) = SessionClaimsBuilder.Build(
-                ToSessionLoginContext(login), _roleCatalog, _primaryRoleResolver, _accessScopeResolver, HttpContext.Session.Id);
+                AccountContextMapper.ToSessionLoginContext(login), _roleCatalog, _primaryRoleResolver, _accessScopeResolver, HttpContext.Session.Id);
             var hasGlobalAccess = normalizedRoles.Any(role => _roleCatalog.IsGlobal(role));
             var requiresTenant = !hasGlobalAccess && normalizedRoles.Any(role => _roleCatalog.RequiresTenant(role));
 
@@ -221,26 +223,8 @@ public sealed class AccountController : Controller
         return digits.Length switch { 11 => "CPF", 14 => "CNPJ", _ => "INVALIDO" };
     }
 
-    // Mapeia a resposta da API para o contexto imutável consumido pelo SessionClaimsBuilder,
-    // usado pelos dois caminhos (Login e RefreshContext) para produzir o mesmo conjunto de claims.
-    private static SessionLoginContext ToSessionLoginContext(LoginResponse login) => new(
-        login.UsuarioId,
-        login.Nome,
-        login.Email,
-        login.Roles,
-        login.Permissions,
-        login.Modules,
-        login.PrimaryRole,
-        login.AccessScope,
-        login.TenantContextSelected,
-        login.ContextMode,
-        login.ClienteId,
-        login.ClienteNome,
-        login.ClienteStatus,
-        login.TenantId,
-        login.TenantNome,
-        login.SessionId,
-        login.Token);
+    // Mapeamento no AccountContextMapper (Web.Security): fonte única compartilhada com o
+    // RefreshContext/reemissão para os dois caminhos produzirem o MESMO conjunto de claims.
 
     private IActionResult RedirectToActionByPerfil(IEnumerable<string> roles)
     {
@@ -430,50 +414,22 @@ public sealed class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> RefreshContext(string? returnUrl = null, CancellationToken ct = default)
     {
-        var token = HttpContext.Session.GetString("JwtToken") ?? string.Empty;
-        using var client = _httpClientFactory.CreateClient("PlantaoProApi");
-        if (!string.IsNullOrWhiteSpace(token)) client.DefaultRequestHeaders.Authorization = new("Bearer", token);
-        var response = await client.PostAsync("api/auth/refresh-context", null, ct);
-        if (response.IsSuccessStatusCode)
+        // Caminho canônico de reemissão (R7-E1): MESMA implementação consumida pelos
+        // comandos que mudam dados de sessão — a resposta da API passa pelo mesmo
+        // SessionClaimsBuilder do login, sem duplicar a montagem de claims em cada call site.
+        var (login, statusCode) = await _sessionReissue.RefreshFromApiAsync(HttpContext, ct);
+        if (login != null)
         {
-            var body = await response.Content.ReadAsStringAsync(ct);
-            var apiResult = DeserializeApiResponse<LoginResponse>(body);
-            if (apiResult?.Data != null)
-            {
-                var login = apiResult.Data;
-                // Mesmo construtor de claims do Login: a atualização de contexto produz o
-                // conjunto completo e normalizado (inclui access_catalog_version, permissões/
-                // módulos normalizados e status do cliente), eliminando o desvio entre
-                // login e refresh que quebrava o gate por módulo contratado.
-                var (principal, primaryRole, accessScope, contextMode, _) = SessionClaimsBuilder.Build(
-                    ToSessionLoginContext(login), _roleCatalog, _primaryRoleResolver, _accessScopeResolver, HttpContext.Session.Id);
-
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, new AuthenticationProperties
-                {
-                    IsPersistent = true,
-                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
-                });
-                // Mesma correcao do Login: garante que HttpContext.User reflita o novo contexto
-                // ainda dentro desta requisicao (no .NET 10 o SignInAsync nao faz isso por si).
-                HttpContext.User = principal;
-                HttpContext.Session.SetString("jwt", login.Token);
-                HttpContext.Session.SetString("JwtToken", login.Token);
-                HttpContext.Session.SetString("UsuarioNome", login.Nome ?? string.Empty);
-                HttpContext.Session.SetString("UsuarioEmail", login.Email ?? string.Empty);
-                HttpContext.Session.SetString("UsuarioPerfil", primaryRole);
-                HttpContext.Session.SetString("AccessScope", accessScope);
-                HttpContext.Session.SetString("ContextMode", contextMode);
-                TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
-                return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
-            }
+            TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
+            return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         HttpContext.Session.Clear();
-        TempData["Error"] = response.StatusCode == HttpStatusCode.Unauthorized
+        TempData["Error"] = statusCode == (int)HttpStatusCode.Unauthorized
             ? "Sua sessão expirou ou foi revogada. Entre novamente para continuar."
             : "Não foi possível atualizar seu acesso. Entre novamente para continuar com segurança.";
-        _logger.LogWarning("Atualização de contexto recusada. Status:{Status}", (int)response.StatusCode);
+        _logger.LogWarning("Atualização de contexto recusada. Status:{Status}", statusCode ?? -1);
         return RedirectToAction(nameof(Login));
     }
 }

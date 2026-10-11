@@ -104,9 +104,16 @@ public sealed class V2164CompilationAndJourneyContractTests
     public void Login_UsesTheRequestedConciseHeadingAndPublicConnectionErrors()
     {
         var view = Read("backend/PlantaoPro.Web/Views/Account/Login.cshtml");
+        var resx = Read("backend/PlantaoPro.Web/Localization/UiTexts.resx");
         var controller = Read("backend/PlantaoPro.Web/Controllers/AccountController.cs");
 
-        Assert.Contains(">Acesse sua conta</h2>", view);
+        // R7-E1: o título da tela de login virou rótulo de interface — o contrato se
+        // preserva como: a view renderiza a chave canônica no <h2> e o pt-BR (master
+        // neutro) continua com exatamente o texto conciso pedido originalmente.
+        Assert.Contains("<h2 id=\"loginTitle\">@UiText.L(\"Login.Title\")</h2>", view);
+        var titulo = resx[resx.IndexOf("<data name=\"Login.Title\"", StringComparison.Ordinal)
+            ..resx.IndexOf("</data>", resx.IndexOf("<data name=\"Login.Title\"", StringComparison.Ordinal), StringComparison.Ordinal)];
+        Assert.Contains("<value>Acesse sua conta</value>", titulo);
         Assert.Contains("Não foi possível conectar ao serviço de autenticação", controller);
         Assert.DoesNotContain("Verifique se o backend está em execução", controller);
     }

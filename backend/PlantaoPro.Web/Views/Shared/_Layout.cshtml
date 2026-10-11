@@ -18,7 +18,7 @@
         || (adm360Controller != null && adm360Controller.StartsWith("Adm360", StringComparison.OrdinalIgnoreCase));
 }
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="@UiText.HtmlLang(Context)">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -97,7 +97,7 @@
     };
 })();
 </script>
-    <a class="skip-link" href="#mainContent">Pular para o conteúdo</a>
+    <a class="skip-link" href="#mainContent">@UiText.L("Common.SkipLink")</a>
     @if (isAuthenticated)
     {
         <partial name="_ImpersonationBanner" />
@@ -118,7 +118,7 @@
                 <partial name="_AppFooter" />
             </div>
         </div>
-        <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="Fechar menu" tabindex="-1"></button>
+        <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="@UiText.L("Common.CloseMenuAria")" tabindex="-1"></button>
         <partial name="_MobileNavigation" />
         <partial name="_CommandPalette" />
         <partial name="_OverlayPortal" />

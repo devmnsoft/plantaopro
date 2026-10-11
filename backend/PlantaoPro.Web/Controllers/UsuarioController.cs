@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
@@ -9,7 +10,12 @@ namespace PlantaoPro.Web.Controllers;
 [Authorize]
 public class UsuarioController : BaseWebController
 {
-    public UsuarioController(IHttpClientFactory httpClientFactory, ILogger<UsuarioController> logger) : base(httpClientFactory, logger) { }
+    private readonly PlantaoPro.Web.Security.ISessionReissueService _sessionReissue;
+
+    public UsuarioController(IHttpClientFactory httpClientFactory, ILogger<UsuarioController> logger, PlantaoPro.Web.Security.ISessionReissueService sessionReissue) : base(httpClientFactory, logger)
+    {
+        _sessionReissue = sessionReissue;
+    }
 
     public async Task<IActionResult> Index()
     {
@@ -116,6 +122,57 @@ public class UsuarioController : BaseWebController
             Logger.LogError(ex, "Erro ao atualizar configurações do usuário. Email:{Email}", model.Email);
             TempData["Error"] = "Ocorreu um erro inesperado ao salvar os dados.";
             return View(model);
+        }
+    }
+
+    // R7-E1: salvar o idioma da interface (v2344). Valida contra o catálogo canônico
+    // (pt-BR/en/es/fr), persiste via API e REEMITE a sessão no caminho canônico de refresh:
+    // o novo idioma entra nas claims imediatamente (sem re-login) e vale no próximo request.
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarIdioma(string idioma, string? returnUrl = null)
+    {
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        try
+        {
+            Logger.LogInformation("Iniciando salvamento de idioma da interface. Email:{Email} Idioma:{Idioma}", email, idioma);
+            if (!PlantaoPro.CrossCutting.Localization.UiLanguageCatalog.IsSupported(idioma))
+            {
+                TempData["Error"] = PlantaoPro.Web.Localization.UiText.L("Profile.LanguageInvalid");
+                return RedirectToAction(nameof(Index));
+            }
+
+            var client = CreateApiClient();
+            if (!AddBearerToken(client)) return HandleUnauthorized();
+
+            var (_, error, statusCode) = await SendApiAsync<object, object>(client, HttpMethod.Post, "api/usuarios/me/idioma", new { idioma });
+            if (statusCode is not (>= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous))
+            {
+                TempData["Error"] = error ?? PlantaoPro.Web.Localization.UiText.L("Profile.LanguageSaveFailed");
+                return RedirectToAction(nameof(Index));
+            }
+
+            var (login, apiStatus) = await _sessionReissue.RefreshFromApiAsync(HttpContext);
+            if (login is null)
+            {
+                await HttpContext.SignOutAsync(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme);
+                HttpContext.Session.Clear();
+                TempData["Error"] = apiStatus == 401
+                    ? PlantaoPro.Web.Localization.UiText.L("Profile.SessionExpiredFallback")
+                    : PlantaoPro.Web.Localization.UiText.L("Profile.LanguageApplyFailedFallback");
+                Logger.LogWarning("SalvarIdioma: reemissão de sessão recusada. Status:{Status} Email:{Email}", apiStatus, email);
+                return RedirectToAction("Login", "Account");
+            }
+
+            TempData["Success"] = PlantaoPro.Web.Localization.UiText.L("Profile.LanguageSaved");
+            Logger.LogInformation("Idioma da interface salvo e sessão reemitida. Email:{Email} Idioma:{Idioma}", email, idioma);
+            return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Erro ao salvar idioma da interface. Email:{Email}", email);
+            TempData["Error"] = PlantaoPro.Web.Localization.UiText.L("Profile.UnexpectedSaveError");
+            return RedirectToAction(nameof(Index));
         }
     }
 

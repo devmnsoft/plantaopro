@@ -65,6 +65,11 @@ public sealed class SaasRouteGuardFilter : IAsyncActionFilter
         // R6-BlocoA item 1: Caixa era linkado no sidebar sem entrada no catalogo do guard
         // (usuario autenticado caia em CATALOGO_NAO_CONFIGURADO); mesmo dominio de ClinicaFinanceiro.
         ["Caixa"] = "CLINICA_FINANCEIRO",
+        // R7-E1: o perfil proprio (Usuario, singular — diferente de Usuarios, gestao) era
+        // linkado (Configuracoes "Editar meu perfil") sem entrada no catalogo: qualquer
+        // usuario autenticado caia em CATALOGO_NAO_CONFIGURADO. CONTA e modulo comum
+        // (CommonModules/CoreModules): liberado para todo autenticado, sem live-check.
+        ["Usuario"] = "CONTA",
         ["Convenios"] = "CONVENIOS",
         ["PlanosSaude"] = "PLANOS_SAUDE",
         ["ClinicaDashboard"] = "CLINICA_DASHBOARD",

@@ -111,6 +111,28 @@ public class UsuariosController : ControllerBase
         return Ok(ApiResponse<object>.Ok(new { }, "Senha alterada com sucesso."));
     }
 
+    // R7-E1: preferência de idioma da interface do usuário (v2344). Validada pelo catálogo
+    // canônico (pt-BR/en/es/fr); o efeito entra na sessão via claims no próximo login/refresh
+    // (LoginResponse.IdiomaPreferido) — nunca por leitura direta do banco fora desta ponta.
+    [HttpPost("me/idioma")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SalvarIdioma([FromBody] SalvarIdiomaRequest req)
+    {
+        var uid = GetUserId();
+        if (uid == Guid.Empty) return Unauthorized(ApiResponse<object>.Fail("Usuário não autenticado.", 401));
+        var idioma = PlantaoPro.CrossCutting.Localization.UiLanguageCatalog.Normalize(req?.Idioma);
+        if (idioma is null) return BadRequest(ApiResponse<object>.Fail("Idioma inválido. Opções: pt-BR, en, es, fr."));
+
+        await using var cn = new NpgsqlConnection(_configuration.GetConnectionString("Default"));
+        var affected = await cn.ExecuteAsync("update plantaopro.usuarios set idioma_preferido=@Idioma, reg_update=now() where id=@id and reg_status='A'", new { Idioma = idioma, id = uid });
+        if (affected == 0) return NotFound(ApiResponse<object>.Fail("Usuário não encontrado.", 404));
+        await _auditService.LogAsync(uid, "USUARIO_IDIOMA", "usuarios", uid, $"Idioma da interface alterado para {idioma}", ip: HttpContext.Connection.RemoteIpAddress?.ToString(), userAgent: Request.Headers.UserAgent.ToString());
+        _logger.LogInformation("POST /api/usuarios/me/idioma sucesso UsuarioId:{UsuarioId} Idioma:{Idioma} IP:{Ip} DataHoraUtc:{DataHoraUtc}", uid, idioma, HttpContext.Connection.RemoteIpAddress?.ToString(), DateTime.UtcNow);
+        return Ok(ApiResponse<object>.Ok(new { idioma }, "Idioma atualizado com sucesso."));
+    }
+
     [HttpPost("unlock/{id:guid}")]
     [Authorize(Roles = RolesConstants.AdministradorGlobal + "," + RolesConstants.Administrador + "," + RolesConstants.AdministradorCliente)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
@@ -146,3 +168,4 @@ public class UsuariosController : ControllerBase
 public record UsuarioDto(Guid Id, string Email, string Nome, string? Telefone, string Perfil = "SEM_PERFIL", string PreferenciasNotificacao = "{}");
 public record UpdateUserSettingsRequest(string Nome, string Email, string? Telefone, string PreferenciasNotificacao);
 public record AlterarSenhaRequest(string SenhaAtual, string NovaSenha);
+public record SalvarIdiomaRequest(string Idioma);

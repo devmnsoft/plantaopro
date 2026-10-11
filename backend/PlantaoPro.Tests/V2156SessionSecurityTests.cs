@@ -62,11 +62,17 @@ public sealed class V2156SessionSecurityTests
     {
         var web = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Controllers/AccountController.cs"));
         var refresh = web[web.IndexOf("public async Task<IActionResult> RefreshContext", StringComparison.Ordinal)..];
+        // R7-E1: a reemissão foi consolidada no SessionReissueService (MESMO caminho
+        // canônico consumido pelos comandos que mudam dados de sessão) — o contrato
+        // cobre controller + serviço.
+        var service = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Security/SessionReissueService.cs"));
+        var fluxo = refresh + "\n" + service;
         // session_id e jwt seguem o construtor único de claims: preservados quando a API
         // devolve, com fallback para a sessão local quando não devolve.
         var builder = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Security/SessionClaimsBuilder.cs"));
 
-        Assert.Contains("SessionClaimsBuilder.Build", refresh);
+        Assert.Contains("_sessionReissue.RefreshFromApiAsync", refresh);
+        Assert.Contains("SessionClaimsBuilder.Build", fluxo);
         Assert.Contains("string.IsNullOrWhiteSpace(ctx.SessionId) ? fallbackSessionId : ctx.SessionId", builder);
         // P8: o JWT deixou de ser embutido como claim do cookie (copia canônica na sessão
         // local); antes disso o cookie saía em 3 chunks (> 4 KB) via ChunkingCookieManager.

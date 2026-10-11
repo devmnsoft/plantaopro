@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- R7-E1: traduction FR. Toute clef du fichier-maitre pt-BR existe ici (contrat testé). -->
+  <data name="Common.SkipLink" xml:space="preserve">
+    <value>Aller au contenu</value>
+  </data>
+  <data name="Common.CloseMenuAria" xml:space="preserve">
+    <value>Fermer le menu</value>
+  </data>
+  <data name="Auth.DemoNotice" xml:space="preserve">
+    <value>Environnement de démonstration actif. Les identifiants ne sont pas affichés pour des raisons de sécurité.</value>
+  </data>
+  <data name="Auth.LoginTitle" xml:space="preserve">
+    <value>Connexion</value>
+  </data>
+  <data name="Login.StoryTitle" xml:space="preserve">
+    <value>Accédez à votre centre PlantãoPro</value>
+  </data>
+  <data name="Login.StorySubtitle" xml:space="preserve">
+    <value>Gardes, exécution et vérification avec un accès sécurisé par établissement.</value>
+  </data>
+  <data name="Login.TrustAcessoProtegido" xml:space="preserve">
+    <value>Accès protégé</value>
+  </data>
+  <data name="Login.TrustContextoIsolado" xml:space="preserve">
+    <value>Contexte isolé</value>
+  </data>
+  <data name="Login.TrustAuditoriaAtiva" xml:space="preserve">
+    <value>Audit actif</value>
+  </data>
+  <data name="Login.Eyebrow" xml:space="preserve">
+    <value>Accès sécurisé</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>Accédez à votre compte</value>
+  </data>
+  <data name="Login.Subtitle" xml:space="preserve">
+    <value>Utilisez votre identifiant enregistré pour ouvrir uniquement votre organisation et les modules autorisés.</value>
+  </data>
+  <data name="Login.SessionAttention" xml:space="preserve">
+    <value>Attention à votre accès</value>
+  </data>
+  <data name="Login.ReasonExpired" xml:space="preserve">
+    <value>Votre session a expiré pour des raisons de sécurité. Connectez-vous à nouveau pour continuer.</value>
+  </data>
+  <data name="Login.ReasonTenantRequired" xml:space="preserve">
+    <value>Impossible d'identifier votre établissement. Contactez l'administration de votre client.</value>
+  </data>
+  <data name="Login.ReasonUserBlocked" xml:space="preserve">
+    <value>Votre accès est temporairement bloqué. Contactez l'administration de votre établissement.</value>
+  </data>
+  <data name="Login.ReasonTenantBlocked" xml:space="preserve">
+    <value>L'accès de l'établissement est temporairement indisponible. Contactez l'administration responsable.</value>
+  </data>
+  <data name="Login.ReasonFeatureBlocked" xml:space="preserve">
+    <value>Cette fonctionnalité n'est pas activée pour votre profil ou votre établissement.</value>
+  </data>
+  <data name="Login.ReasonAccessDenied" xml:space="preserve">
+    <value>Vous n'avez pas la permission d'accéder à la destination demandée.</value>
+  </data>
+  <data name="Login.DelayTitle" xml:space="preserve">
+    <value>La réponse prend du temps.</value>
+  </data>
+  <data name="Login.DelayDetail" xml:space="preserve">
+    <value>Vos données ont été conservées ; vérifiez votre connexion et réessayez.</value>
+  </data>
+  <data name="Login.ConnectionLost" xml:space="preserve">
+    <value>Pas de connexion. Reconnectez-vous pour vous connecter en toute sécurité.</value>
+  </data>
+  <data name="Login.ProgressTitle" xml:space="preserve">
+    <value>Accès prêt</value>
+  </data>
+  <data name="Login.ProgressDetail" xml:space="preserve">
+    <value>Remplissez vos identifiants pour valider le compte, l'établissement et les permissions.</value>
+  </data>
+  <data name="Login.EmailLabel" xml:space="preserve">
+    <value>E-mail, CPF ou CNPJ</value>
+  </data>
+  <data name="Login.EmailHelp" xml:space="preserve">
+    <value>Indiquez l'identifiant activé par votre établissement, sans partager vos identifiants.</value>
+  </data>
+  <data name="Login.PasswordLabel" xml:space="preserve">
+    <value>Mot de passe</value>
+  </data>
+  <data name="Login.ShowPasswordAria" xml:space="preserve">
+    <value>Afficher le mot de passe</value>
+  </data>
+  <data name="Login.PasswordHelp" xml:space="preserve">
+    <value>Le mot de passe distingue les majuscules et les minuscules.</value>
+  </data>
+  <data name="Login.CapsLock" xml:space="preserve">
+    <value>Verr. Maj est activé.</value>
+  </data>
+  <data name="Login.Button" xml:space="preserve">
+    <value>Se connecter</value>
+  </data>
+  <data name="Login.ForgotPassword" xml:space="preserve">
+    <value>J'ai oublié mon mot de passe</value>
+  </data>
+  <data name="Login.HelpSummary" xml:space="preserve">
+    <value>Comment utiliser cet écran</value>
+  </data>
+  <data name="Login.HelpBody" xml:space="preserve">
+    <value>Remplissez les deux champs obligatoires et sélectionnez &lt;strong&gt;Se connecter&lt;/strong&gt;. Le système n'ouvrira que les modules de votre profil et de votre établissement. En cas de blocage ou de contexte incorrect, contactez l'administration ; n'envoyez jamais votre mot de passe au support.</value>
+  </data>
+  <data name="Login.SecurityNote" xml:space="preserve">
+    <value>Accès individuel : ne partagez pas votre mot de passe. Les événements d'authentification peuvent être journalisés pour la sécurité et l'audit.</value>
+  </data>
+  <data name="Login.PrivacyLink" xml:space="preserve">
+    <value>Confidentialité</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Paramètres de l'utilisateur</value>
+  </data>
+  <data name="Profile.Header" xml:space="preserve">
+    <value>Mon Profil</value>
+  </data>
+  <data name="Profile.AccountActive" xml:space="preserve">
+    <value>Compte actif</value>
+  </data>
+  <data name="Profile.Nome" xml:space="preserve">
+    <value>Nom</value>
+  </data>
+  <data name="Profile.Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Profile.Telefone" xml:space="preserve">
+    <value>Téléphone</value>
+  </data>
+  <data name="Profile.Notificacoes" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Profile.NotInformado" xml:space="preserve">
+    <value>Non renseigné</value>
+  </data>
+  <data name="Profile.EditarDados" xml:space="preserve">
+    <value>Modifier les données</value>
+  </data>
+  <data name="Profile.AlterarSenha" xml:space="preserve">
+    <value>Changer le mot de passe</value>
+  </data>
+  <data name="Profile.LanguageSection" xml:space="preserve">
+    <value>Langue de l'interface</value>
+  </data>
+  <data name="Profile.LanguageHint" xml:space="preserve">
+    <value>Choisissez la langue des écrans. La langue ne modifie ni la devise, ni le fuseau horaire, ni les documents fiscaux.</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Enregistrer</value>
+  </data>
+  <data name="Profile.LanguageSaved" xml:space="preserve">
+    <value>Langue de l'interface mise à jour.</value>
+  </data>
+  <data name="Profile.LanguageInvalid" xml:space="preserve">
+    <value>Langue invalide. Sélectionnez une option de la liste.</value>
+  </data>
+  <data name="Profile.LanguageSaveFailed" xml:space="preserve">
+    <value>Impossible d'enregistrer la langue. Réessayez.</value>
+  </data>
+  <data name="Lang.pt-BR" xml:space="preserve">
+    <value>Português (Brasil)</value>
+  </data>
+  <data name="Lang.en" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Lang.es" xml:space="preserve">
+    <value>Español</value>
+  </data>
+  <data name="Lang.fr" xml:space="preserve">
+    <value>Français</value>
+  </data>
+  <data name="Profile.SessionExpiredFallback" xml:space="preserve">
+    <value>Votre session a expiré ou a été révoquée. Connectez-vous à nouveau pour continuer.</value>
+  </data>
+  <data name="Profile.LanguageApplyFailedFallback" xml:space="preserve">
+    <value>Impossible d'appliquer la langue pour l'instant. Connectez-vous à nouveau pour continuer en toute sécurité.</value>
+  </data>
+  <data name="Profile.UnexpectedSaveError" xml:space="preserve">
+    <value>Une erreur inattendue s'est produite lors de l'enregistrement de la langue.</value>
+  </data>
+</root>

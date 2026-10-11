@@ -141,13 +141,19 @@ public sealed class V2150SaasAccessFoundationTests
     public void LoginPremium_DeveTerEstadosCriticosSubmitRealEGuia()
     {
         var view = Web(Path.Combine("Views", "Account", "Login.cshtml"));
+        var resx = Web(Path.Combine("Localization", "UiTexts.resx"));
 
         Assert.Contains("method=\"post\"", view);
         Assert.Contains("type=\"submit\"", view);
         Assert.Contains("session-expired", view);
         Assert.Contains("user-blocked", view);
         Assert.Contains("tenant-blocked", view);
-        Assert.Contains("Como usar esta tela", view);
+        // R7-E1: o sumário do guia é rótulo de interface — contrato preservado como
+        // uso da chave canônica na view + o texto exato em pt-BR no master neutro.
+        Assert.Contains("@UiText.L(\"Login.HelpSummary\")", view);
+        var guia = resx[resx.IndexOf("<data name=\"Login.HelpSummary\"", StringComparison.Ordinal)
+            ..resx.IndexOf("</data>", resx.IndexOf("<data name=\"Login.HelpSummary\"", StringComparison.Ordinal), StringComparison.Ordinal)];
+        Assert.Contains("<value>Como usar esta tela</value>", guia);
     }
 
     private static AuthenticationSessionRow Session(Guid userId, DateTime expiresAt) => new()

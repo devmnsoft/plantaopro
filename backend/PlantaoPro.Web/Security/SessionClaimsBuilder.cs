@@ -25,7 +25,11 @@ public sealed record SessionLoginContext(
     Guid? TenantId,
     string? TenantNome,
     string? SessionId,
-    string Token);
+    string Token,
+    // R7-E1: idioma da interface (precedência canônica usuário > organização > navegador > pt-BR).
+    // Nulas quando a fonte não definiu nada — a resolução por request decide o resto.
+    string? IdiomaPreferido = null,
+    string? IdiomaOrganizacao = null);
 
 public static class SessionClaimsBuilder
 {
@@ -122,6 +126,14 @@ public static class SessionClaimsBuilder
             claims.Add(new Claim("tenant_id", ctx.TenantId.Value.ToString()));
             claims.Add(new Claim("tenant", ctx.TenantNome ?? ctx.ClienteNome ?? "Tenant PlantãoPro"));
         }
+
+        // R7-E1: idioma da interface em claims da sessão — a fonte de USUÁRIO (coluna v2344)
+        // e a de ORGANIZAÇÃO (tenants.metadata) são emitidas separadas para o provider de cultura
+        // aplicar a precedência canônica em cada request (usuário > organização > navegador > pt-BR).
+        if (!string.IsNullOrWhiteSpace(ctx.IdiomaPreferido))
+            claims.Add(new Claim("idioma", ctx.IdiomaPreferido.Trim()));
+        if (!string.IsNullOrWhiteSpace(ctx.IdiomaOrganizacao))
+            claims.Add(new Claim("org_idioma", ctx.IdiomaOrganizacao.Trim()));
 
         foreach (var role in normalizedRoles)
         {

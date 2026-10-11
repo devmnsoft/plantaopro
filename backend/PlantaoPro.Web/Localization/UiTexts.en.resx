@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <!-- R7-E1: tradução EN. Toda chave do arquivo-mestre pt-BR existe aqui (contrato testado). -->
+  <data name="Common.SkipLink" xml:space="preserve">
+    <value>Skip to content</value>
+  </data>
+  <data name="Common.CloseMenuAria" xml:space="preserve">
+    <value>Close menu</value>
+  </data>
+  <data name="Auth.DemoNotice" xml:space="preserve">
+    <value>Demo environment active. Credentials are not displayed for security.</value>
+  </data>
+  <data name="Auth.LoginTitle" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Login.StoryTitle" xml:space="preserve">
+    <value>Access your PlantãoPro hub</value>
+  </data>
+  <data name="Login.StorySubtitle" xml:space="preserve">
+    <value>Shifts, execution and review with secure access per organization.</value>
+  </data>
+  <data name="Login.TrustAcessoProtegido" xml:space="preserve">
+    <value>Protected access</value>
+  </data>
+  <data name="Login.TrustContextoIsolado" xml:space="preserve">
+    <value>Isolated context</value>
+  </data>
+  <data name="Login.TrustAuditoriaAtiva" xml:space="preserve">
+    <value>Active audit</value>
+  </data>
+  <data name="Login.Eyebrow" xml:space="preserve">
+    <value>Secure access</value>
+  </data>
+  <data name="Login.Title" xml:space="preserve">
+    <value>Sign in to your account</value>
+  </data>
+  <data name="Login.Subtitle" xml:space="preserve">
+    <value>Use your registered identifier to open only your organization and the authorized modules.</value>
+  </data>
+  <data name="Login.SessionAttention" xml:space="preserve">
+    <value>Attention to your access</value>
+  </data>
+  <data name="Login.ReasonExpired" xml:space="preserve">
+    <value>Your session expired for security. Sign in again to continue.</value>
+  </data>
+  <data name="Login.ReasonTenantRequired" xml:space="preserve">
+    <value>We could not identify your organization. Contact your client administration.</value>
+  </data>
+  <data name="Login.ReasonUserBlocked" xml:space="preserve">
+    <value>Your access is temporarily blocked. Contact your organization's administration.</value>
+  </data>
+  <data name="Login.ReasonTenantBlocked" xml:space="preserve">
+    <value>Organization access is temporarily unavailable. Contact the responsible administration.</value>
+  </data>
+  <data name="Login.ReasonFeatureBlocked" xml:space="preserve">
+    <value>This feature is not enabled for your profile or organization.</value>
+  </data>
+  <data name="Login.ReasonAccessDenied" xml:space="preserve">
+    <value>You do not have permission to access the requested destination.</value>
+  </data>
+  <data name="Login.DelayTitle" xml:space="preserve">
+    <value>The response is taking a while.</value>
+  </data>
+  <data name="Login.DelayDetail" xml:space="preserve">
+    <value>Your data was preserved; check your connection and try again.</value>
+  </data>
+  <data name="Login.ConnectionLost" xml:space="preserve">
+    <value>No connection. Reconnect to sign in securely.</value>
+  </data>
+  <data name="Login.ProgressTitle" xml:space="preserve">
+    <value>Access ready</value>
+  </data>
+  <data name="Login.ProgressDetail" xml:space="preserve">
+    <value>Fill in your credentials to validate account, organization and permissions.</value>
+  </data>
+  <data name="Login.EmailLabel" xml:space="preserve">
+    <value>Email, CPF or CNPJ</value>
+  </data>
+  <data name="Login.EmailHelp" xml:space="preserve">
+    <value>Enter the identifier enabled by your organization, without sharing your credentials.</value>
+  </data>
+  <data name="Login.PasswordLabel" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="Login.ShowPasswordAria" xml:space="preserve">
+    <value>Show password</value>
+  </data>
+  <data name="Login.PasswordHelp" xml:space="preserve">
+    <value>The password distinguishes uppercase and lowercase letters.</value>
+  </data>
+  <data name="Login.CapsLock" xml:space="preserve">
+    <value>Caps Lock is on.</value>
+  </data>
+  <data name="Login.Button" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Login.ForgotPassword" xml:space="preserve">
+    <value>I forgot my password</value>
+  </data>
+  <data name="Login.HelpSummary" xml:space="preserve">
+    <value>How to use this screen</value>
+  </data>
+  <data name="Login.HelpBody" xml:space="preserve">
+    <value>Fill in the two required fields and select &lt;strong&gt;Sign in&lt;/strong&gt;. The system will open only the modules of your profile and organization. If blocked or in the wrong context, contact the administration; never send your password to support.</value>
+  </data>
+  <data name="Login.SecurityNote" xml:space="preserve">
+    <value>Individual access: do not share your password. Authentication events may be logged for security and audit.</value>
+  </data>
+  <data name="Login.PrivacyLink" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>User Settings</value>
+  </data>
+  <data name="Profile.Header" xml:space="preserve">
+    <value>My Profile</value>
+  </data>
+  <data name="Profile.AccountActive" xml:space="preserve">
+    <value>Active account</value>
+  </data>
+  <data name="Profile.Nome" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Profile.Email" xml:space="preserve">
+    <value>Email</value>
+  </data>
+  <data name="Profile.Telefone" xml:space="preserve">
+    <value>Phone</value>
+  </data>
+  <data name="Profile.Notificacoes" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Profile.NotInformado" xml:space="preserve">
+    <value>Not provided</value>
+  </data>
+  <data name="Profile.EditarDados" xml:space="preserve">
+    <value>Edit data</value>
+  </data>
+  <data name="Profile.AlterarSenha" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="Profile.LanguageSection" xml:space="preserve">
+    <value>Interface language</value>
+  </data>
+  <data name="Profile.LanguageHint" xml:space="preserve">
+    <value>Choose the language of the screens. Language does not change currency, timezone or tax documents.</value>
+  </data>
+  <data name="Profile.Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Profile.LanguageSaved" xml:space="preserve">
+    <value>Interface language updated.</value>
+  </data>
+  <data name="Profile.LanguageInvalid" xml:space="preserve">
+    <value>Invalid language. Select one of the options.</value>
+  </data>
+  <data name="Profile.LanguageSaveFailed" xml:space="preserve">
+    <value>Could not save the language. Try again.</value>
+  </data>
+  <data name="Lang.pt-BR" xml:space="preserve">
+    <value>Português (Brasil)</value>
+  </data>
+  <data name="Lang.en" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Lang.es" xml:space="preserve">
+    <value>Español</value>
+  </data>
+  <data name="Lang.fr" xml:space="preserve">
+    <value>Français</value>
+  </data>
+  <data name="Profile.SessionExpiredFallback" xml:space="preserve">
+    <value>Your session expired or was revoked. Sign in again to continue.</value>
+  </data>
+  <data name="Profile.LanguageApplyFailedFallback" xml:space="preserve">
+    <value>We couldn't apply the language right now. Sign in again to continue securely.</value>
+  </data>
+  <data name="Profile.UnexpectedSaveError" xml:space="preserve">
+    <value>An unexpected error occurred while saving the language.</value>
+  </data>
+</root>

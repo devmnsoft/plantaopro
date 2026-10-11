@@ -48,14 +48,14 @@ public sealed class Fase6BiIntegracoesService
             {
                 if (!clienteId.HasValue)
                     return ApiResponse<Fase6DashboardDto>.Fail("Selecione uma organização autorizada para consultar este painel.", 403);
-                var row = await cn.QueryFirstOrDefaultAsync(@"
+                var row = await cn.QueryFirstOrDefaultAsync<(long Plantoes, long Agendamentos, decimal Receber)>(@"
 select
- (select count(1) from plantaopro.plantoes where reg_status='A' and cliente_id=@clienteId) as Plantoes,
+ (select count(1) from plantaopro.plantoes where reg_status='A' and cliente_id=@clienteId and data_inicio >= date_trunc('month', now()) and data_inicio < date_trunc('month', now()) + interval '1 month') as Plantoes,
  (select count(1) from plantaopro.agendamentos where reg_status='A' and cliente_id=@clienteId) as Agendamentos,
- (select coalesce(sum(valor),0) from plantaopro.financeiro_contas_receber where reg_status='A' and cliente_id=@clienteId) as Receber", new { clienteId = clienteId.Value });
-                kpis.Add(new Fase6KpiDto("plantoes_mes", "Plantões do mês", (decimal)(row?.Plantoes ?? 0), "plantões", perfil, "Volume operacional filtrado por tenant."));
-                kpis.Add(new Fase6KpiDto("agendamentos", "Agendamentos", (decimal)(row?.Agendamentos ?? 0), "agenda", perfil, "Agenda clínica sem dados sensíveis."));
-                kpis.Add(new Fase6KpiDto("total_receber", "Total a receber", (decimal)(row?.Receber ?? 0), "R$", perfil, "Financeiro consolidado do tenant."));
+ (select coalesce(sum(valor_pendente),0) from plantaopro.clinica_contas_receber where reg_status='A' and cliente_id=@clienteId) as Receber", new { clienteId = clienteId.Value });
+                kpis.Add(new Fase6KpiDto("plantoes_mes", "Plantões do mês", (decimal)row.Plantoes, "plantões", perfil, "Plantões com início no mês corrente, filtrados por tenant."));
+                kpis.Add(new Fase6KpiDto("agendamentos", "Agendamentos", (decimal)row.Agendamentos, "agenda", perfil, "Agenda clínica sem dados sensíveis."));
+                kpis.Add(new Fase6KpiDto("total_receber", "Total a receber", row.Receber, "R$", perfil, "Financeiro consolidado do tenant."));
             }
             return ApiResponse<Fase6DashboardDto>.Ok(new Fase6DashboardDto(perfil, kpis, new List<object>(), kpis.Count == 0 ? new [] { "Sem dados para o período." } : Array.Empty<string>(), kpis.Count == 0));
         }

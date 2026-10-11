@@ -207,7 +207,7 @@ Varredura completa: `r8a0-varredura-indicadores-design-redundancias.md`.
 | Denominador vazio tratado | guards `nullif`/`case when` em todas as taxas localizadas (5+) | pronto | pattern ad-hoc, sem helper | aceitável (nota) | — |
 | Abrir registros que compõem o total | Operacional ("Ver registros"/"Abrir origem"), CommandCenter ("Ver detalhe"), MeuDia (ação primária); cards Bi/Premium sem link | parcial | KPIs sem drill-down | estender padrão | contrato |
 | Export c/ mesmos filtros + permissões | `CsvAsync` delega a `GetAsync` (mesmo SQL/filtros/guards, `OperationalReportService.cs:33-50`); SaaS export c/ guard + auditoria | pronto | export CSV ausente em relatórios financeiros Adm360 (Web exporta à parte) | alinhar se necessário | suíte |
-| **Bug**: label "Plantões do mês" sem filtro de mês | `Fase6BiIntegracoesServices.cs:53,56` conta todos os plantões | **quebrado** | indicador mentiroso | corrigir filtro ou label (corte R8) | novo teste |
+| **Bug**: label "Plantões do mês" sem filtro de mês | `Fase6BiIntegracoesServices.cs:53,56` | **corrigido** (R8-B1) | indicador mentiroso + 2 bloqueadores na mesma statement (tabela inexistente no `total_receber` → 500; leitura dinâmica zerando KPIs) | filtro de mês corrente + tabela canônica + tupla tipada; doc `r8b1-fase6bi-plantoes-do-mes.md` | teste `R8B1…` 1/1 + suíte 1277 |
 
 #### §28 Design de ações complexas
 | Recurso | Evidência (HEAD) | Estado | Problema | Ação | Validação |

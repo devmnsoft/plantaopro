@@ -1250,6 +1250,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2345_r7ob_onboarding_preferencias_idioma",
+      "source": "database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql",
+      "checksum": "15d6bdb179322525d976bc5a039cd6b707d288cc6aacf59fcd5b601628314029",
+      "dependsOn": [
+        "2026_10_v2344_r7e1_usuario_idioma_preferido"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

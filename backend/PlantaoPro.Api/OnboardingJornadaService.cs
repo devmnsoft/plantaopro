@@ -82,6 +82,7 @@ order by coalesce(x.ordem,0), coalesce(x.codigo,'')";
         ["PRIMEIRA_TRIAGEM_REALIZADA"] = "Triagem registrada no fluxo assistido do tenant",
         ["PRIMEIRA_OPERACAO_ADM360"] = "Operacao administrativa lancada no Administrativo 360",
         ["REVISAO_GERAL"] = "Todas as etapas obrigatorias contratadas verificadas em dados reais",
+        ["IDIOMA_PREFERENCIA_DEFINIDA"] = "Padrão de idioma da organização registrado ou ao menos um usuário ativo com preferência de idioma salva",
     };
 
     // ------------------------------------------------------------------
@@ -202,6 +203,22 @@ and (coalesce(w.logo_url,'')<>'' or coalesce(translate(lower(trim(w.nome_platafo
             case "PRIMEIRA_OPERACAO_ADM360":
                 var ad = await cn.QuerySingleAsync<bool>(@"select exists(select 1 from plantaopro.adm360_operacoes o where o.tenant_id=@tenantId)", new { tenantId });
                 return ad ? (true, "Operacao administrativa lancada no Administrativo 360.") : (false, "Nenhuma operacao lancada no Administrativo 360 deste tenant.");
+
+            case "IDIOMA_PREFERENCIA_DEFINIDA":
+                // R7-OB: mesmo predicado do login (R7-E1): padrao da organizacao em
+                // tenants.metadata->>'idiomaPadrao' OU preferencia individual persistida
+                // (v2344). Nada definido = pt-BR por omissao (a etapa e opcional por isso).
+                var orgIdioma = await cn.QueryFirstOrDefaultAsync<string?>(
+                    @"select coalesce(metadata->>'idiomaPadrao','') from plantaopro.tenants where id=@tenantId and reg_status='A'",
+                    new { tenantId });
+                var temPreferencia = await cn.QuerySingleAsync<bool>(
+                    @"select exists(select 1 from plantaopro.usuarios u where u.reg_status='A' and u.idioma_preferido is not null and (u.tenant_id=@tenantId or u.cliente_id=@clienteId))",
+                    new { tenantId, clienteId });
+                if (temPreferencia)
+                    return (true, "Ao menos um usuário ativo tem preferência de idioma salva (perfil de acesso).");
+                if (!string.IsNullOrWhiteSpace(orgIdioma))
+                    return (true, "Padrão de idioma da organização definido (" + orgIdioma + ").");
+                return (false, "Nenhum idioma definido (a interface segue em pt-BR por omissão); defina no perfil ou na organização.");
 
             default:
                 return (false, "Criterio '" + criterio + "' desconhecido pelo avaliador - configure o catalogo ou trate a etapa como conclusao humana.");

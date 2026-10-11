@@ -39,7 +39,7 @@ Estados: **pronto** (com evidência) · **parcial** · **quebrado** · **ausente
 | Home por perfil (página inicial específica) | tabela de prioridade `RedirectToActionByPerfil` (13 perfis) com fallback resiliente | pronto | — | revisão visual | e2e |
 | Menus por jornada/plano/perfil | sidebar em seções derivada do catálogo/guard | pronto | ajuste fino visual pendente | R7-D | contrato menu×guard |
 | Configuração consolidada p/ admin do cliente (finalidade/efeito/quém muda; histórico; desativação com vínculos) | telas de Configurações existentes por domínio; sem inventário sistêmico dos metadados "finalidade/efeito/responsável" nem histórico de mudanças de configuração | parcial (varredura em curso) | §4 não atende integralmente: efeito/histórico/desativação-com-vínculos não padronizados | varredura §4 (agente) → fatia R8-config | suíte + walkthrough |
-| Onboarding retomável por etapas validadas no banco | `OnboardingJornadaService` (ONB_*, conclusão derivada de dados, 409 etapa obrigatória, escopo por módulos) | pronto | passo 6 "Preferências" (idioma) pendente → agora habilitado por R7-E1 | **R7-OB** (próxima fatia) | `OnboardingC7Tests` + teste do passo |
+| Onboarding retomável por etapas validadas no banco | `OnboardingJornadaService` (ONB_*, conclusão derivada de dados, 409 etapa obrigatória, escopo por módulos) | **pronto com evidência (R7-OB desta rodada)** | etapa "Definir o idioma da interface" (v2345) entregue: opcional de núcleo, critério derivado de dados (padrão da organização ou preferência do usuário) | **entregue** — `r7ob-onboarding-preferencias-idioma.md` | `OnboardingC7Tests` + `R7OBOnboardingPreferenciasIdiomaTests` (5 fatos; gate 52/52) |
 
 ### Frente 2 — Plantões: planejamento/cobertura e execução/remuneração (§6, §7)
 
@@ -252,7 +252,7 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 
 ## 4. Ordem de cortes proposta (atualizada após esta auditoria)
 
-1. **R7-OB** — passo "Preferências" (idioma) no onboarding (habilitado por R7-E1; fecha §12.6 e a linha "troca de idioma persistida" com UI).
+1. ~~**R7-OB** — passo "Preferências" (idioma) no onboarding~~ — ✅ **entregue nesta rodada** (v2345 + avaliador + 5 testes; doc `r7ob-onboarding-preferencias-idioma.md`; fecha a linha da matriz e o uso na jornada de §12.6). Wizard MNSOFT `NovoCliente` segue fora do escopo desta fatia.
 2. **R7-D** — varredura design/textos/i18n por jornada (restante das views, terminologia plano sistema×saúde, estados vazios, "Como usar", relatórios com período/filtros).
 3. Cortes novos derivados dos achados §17–§30 (definidos após consolidação desta matriz; prioridade: itens classificados quebrado, depois ausente-alto-impacto).
 4. Externos/DECs: upgrade formal `plantaopro` v2339→v2344 + IIS; homologação viva; credenciais fiscais; semântica de `solicitado`; DECs de R6-A1b.
@@ -261,7 +261,7 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 
 - Ambiente de execução: máquina instável (thrash de RAM; reiniciões de servidor durante builds/testes). Assinatura de falha ambiental (lenta ≥1 min, variável) × falha determinística de contrato (ms, repetida) documentada na rodada 7. Execução v2 da suíte com timeouts ampliados (`VSTEST_CONNECTION_TIMEOUT=600000`, host factory 900 s).
 - Commit `2f4533d3` ("novos") criado/empurrado externamente; conteúdo auditado e confirmado (31 arquivos = pacote R7-E1 + docs + 3 contratos atualizados).
-- Suíte: 1248 testes; leitura da validação v2 será anexada a esta documentação ao terminar.
+- Suíte: 1253 testes após R7-OB (1248 + 5 novos). Leitura final da validação v2 da rodada em §7.
 
 ## 6. Correções pontuais aplicadas durante esta auditoria (R8-A1 — commit `cedd209`)
 
@@ -287,3 +287,21 @@ Observações de escopo:
 
 - Falha única do ×3: `SaasGovernancaB6Rodada4Tests.G3_Trial_ValidoOpera_E_VencidoBloqueiaComRegistro` — `Npgsql 40P01` (impasse) em `PurgarAsync` dentro de `Dispose` (`SaasGovernancaB6Rodada4Tests.cs:481`, invocado em :78); assertions do teste passaram. Assinatura = flake de cleanup sob concorrência de coleções no banco compartilhado, não regressão de produto. **Reexecução isolada da classe: 8/8 em 1 s** (`rerun-b6.log`).
 - Com isso, o status **TESTADO** do R7-E1 fica selado com evidência executada (incluindo persistência real da coluna v2344 no PostgreSQL e o teste de corrida do painel agora no gate permanente).
+
+## 7. Fechamento da rodada até aqui — corte R7-OB entregue
+
+A primeira fatia da ordem de cortes (§4.1) foi implementada e validada nesta rodada:
+
+| Peça | Estado | Evidência |
+|---|---|---|
+| Migração `v2345` (etapa de catálogo `ONB_PREFERENCIAS`, opcional, ordem 50) | aplicada em `plantaopro_test` via `PlantaoPro.Tools.Database upgrade` (checksum conferido pelo tool) | `build12.log` / `upg14.log`: "upgrade: 2026_10_v2345… aplicada." |
+| Avaliador `IDIOMA_PREFERENCIA_DEFINIDA` em `OnboardingJornadaService` | mesmо predicado do login (R7-E1): `tenants.metadata->>'idiomaPadrao'` OU usuário ativo com `idioma_preferido` | casos O2/O3 dos testes |
+| `R7OBOnboardingPreferenciasIdiomaTests` (5 fatos) | **5/5 isolados**; inclusos no gate permanente | `run-r7ob.log`, `build13.log` |
+| Validação v2 pós-R7-OB (09:17 UTC-3) | gate **52/52** · full1 **1252/1253** · full2 **1253/1253** · full3 **1253/1253** — falha única do full1 = 40P01 em cleanup (`PurgarAsync`/`Dispose` do `SaasComercialB4MatrizTests`, segunda ocorrência da assinatura já catalogada; classe 12/12 isolada em 1 s) | `suite-final2-summary.txt`, `v2-full*.log`, `rerun-b4.log` |
+| Web | zero mudança (checklist genérico renderiza a etapa após sincronizar) | mesmo contrato das C7 |
+
+Observações:
+- `IDENTITY_SCHEMA_INCOMPLETE MISSING_ADMIN_ROLE_LINK count=1` no upgrade é condição
+  pré-existente do banco de teste (o upgrade termina 0); não foi introduzida por v2345.
+- Lição registrada no doc da fatia: o tool `PlantaoPro.Tools.Database` não aceita conexão
+  em formato URL; usar chaves (`Host=...;Database=...`).

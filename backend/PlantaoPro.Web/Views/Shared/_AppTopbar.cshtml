@@ -2,7 +2,8 @@
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "Home";
     var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
-    var subtitle = ViewData["Subtitle"]?.ToString() ?? "Acompanhe prioridades e continue sua jornada.";
+    // R7-D-F1: fallback de subtitulo em recurso localizado (UiTexts.resx x4).
+    var subtitle = ViewData["Subtitle"]?.ToString() ?? UiText.L("Nav.TopbarDefaultSubtitle");
     var canUpgrade = User.IsInRole("ADMINISTRADOR_GLOBAL") || User.IsInRole("ADMINISTRADOR") || User.IsInRole("ADMINISTRADOR_CLIENTE") || User.IsInRole("DIRETOR");
     // Trilho unico e canonico: derivado de rota/catalogo, sem hardcode de controller/acao na view.
     // A view pode aportar dados opcionais: rotulo curto (BreadcrumbLabel) e folha dinamica (BreadcrumbLeaf).
@@ -15,11 +16,11 @@
 }
 <header class="pp-topbar app-topbar">
     <div class="pp-topbar__identity topbar-left">
-        <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu">
+        <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="@UiText.L("Nav.TopbarOpenMenu")">
             <app-icon name="Menu" size="20" />
         </button>
         <div>
-            <nav class="pp-breadcrumb" aria-label="Você está em">
+            <nav class="pp-breadcrumb" aria-label="@UiText.L("Nav.TopbarBreadcrumbAria")">
                 <ol class="app-breadcrumb">
                     @for (var i = 0; i < breadcrumbTrail.Count; i++)
                     {
@@ -44,19 +45,23 @@
         </div>
     </div>
     <div class="pp-topbar__actions topbar-actions">
-        <span class="pp-live-context d-none d-xxl-inline-flex" role="status"><span aria-hidden="true"></span> Ambiente operacional</span>
-        <div class="pp-session-health d-none d-xl-flex" role="status" aria-live="polite" data-session-health data-online="true">
+        <span class="pp-live-context d-none d-xxl-inline-flex" role="status"><span aria-hidden="true"></span> @UiText.L("Nav.TopbarLiveContext")</span>
+        @* R7-D-F1: os textos de estado de conexao partem localizados da view via data-attrs;
+           o session-health.js apenas alterna (sem pt-BR no JavaScript). *@
+        <div class="pp-session-health d-none d-xl-flex" role="status" aria-live="polite" data-session-health data-online="true"
+             data-online-text="@UiText.L("Nav.TopbarConnectionSecure")" data-offline-text="@UiText.L("Nav.TopbarConnectionLost")"
+             data-aria-online="@UiText.L("Nav.TopbarConnectionAriaOnline")" data-aria-offline="@UiText.L("Nav.TopbarConnectionAriaOffline")">
             <span class="pp-session-health__dot" aria-hidden="true"></span>
-            <span><small>Conexão</small><strong data-session-health-label>Protegida</strong></span>
+            <span><small>@UiText.L("Nav.TopbarConnection")</small><strong data-session-health-label>@UiText.L("Nav.TopbarConnectionSecure")</strong></span>
         </div>
-        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Buscar no PlantãoPro">
+        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="@UiText.L("Nav.TopbarSearchAria")">
             <app-icon name="Search" size="18" />
-            <span>Buscar no PlantãoPro</span>
+            <span>@UiText.L("Nav.TopbarSearchLabel")</span>
             <kbd>Ctrl K</kbd>
         </button>
         <partial name="_TenantContextBadge" />
         <partial name="_PlanUsageMiniCard" />
-        <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="Ajuda contextual" aria-label="Ajuda contextual">
+        <a class="btn btn-light btn-icon" asp-controller="Ajuda" asp-action="Index" title="@UiText.L("Nav.TopbarHelp")" aria-label="@UiText.L("Nav.TopbarHelp")">
             <app-icon name="Help" size="20" />
         </a>
         <partial name="_NotificationMenu" />

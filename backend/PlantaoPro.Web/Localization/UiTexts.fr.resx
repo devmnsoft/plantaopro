@@ -190,4 +190,202 @@
   <data name="Profile.UnexpectedSaveError" xml:space="preserve">
     <value>Une erreur inattendue s'est produite lors de l'enregistrement de la langue.</value>
   </data>
+  <data name="Nav.FallbackTenant" xml:space="preserve">
+    <value>Organisation</value>
+  </data>
+  <data name="Nav.FallbackProfile" xml:space="preserve">
+    <value>Professionnel</value>
+  </data>
+  <data name="Nav.HeaderAria" xml:space="preserve">
+    <value>Navigation principale</value>
+  </data>
+  <data name="Nav.Collapse" xml:space="preserve">
+    <value>Réduire le menu latéral</value>
+  </data>
+  <data name="Nav.OpenSearch" xml:space="preserve">
+    <value>Ouvrir la recherche rapide</value>
+  </data>
+  <data name="Nav.SearchLabel" xml:space="preserve">
+    <value>Recherche rapide</value>
+  </data>
+  <data name="Nav.SectionOverview" xml:space="preserve">
+    <value>Vue d'ensemble</value>
+  </data>
+  <data name="Nav.MyCentral" xml:space="preserve">
+    <value>Mon Central</value>
+  </data>
+  <data name="Nav.MyDay" xml:space="preserve">
+    <value>Ma journée</value>
+  </data>
+  <data name="Nav.Dashboard" xml:space="preserve">
+    <value>Tableau de bord</value>
+  </data>
+  <data name="Nav.Pendencias" xml:space="preserve">
+    <value>Centre des Pendants</value>
+  </data>
+  <data name="Nav.SectionOperation" xml:space="preserve">
+    <value>Opérations</value>
+  </data>
+  <data name="Nav.Plantoes" xml:space="preserve">
+    <value>Gardes</value>
+  </data>
+  <data name="Nav.Agenda" xml:space="preserve">
+    <value>Agenda</value>
+  </data>
+  <data name="Nav.Cobertura" xml:space="preserve">
+    <value>Couverture</value>
+  </data>
+  <data name="Nav.Convites" xml:space="preserve">
+    <value>Invitations</value>
+  </data>
+  <data name="Nav.Escalas" xml:space="preserve">
+    <value>Planning</value>
+  </data>
+  <data name="Nav.Fechamentos" xml:space="preserve">
+    <value>Clôtures</value>
+  </data>
+  <data name="Nav.SectionClinical" xml:space="preserve">
+    <value>Santé 360</value>
+  </data>
+  <data name="Nav.JornadaClinica" xml:space="preserve">
+    <value>Parcours clinique</value>
+  </data>
+  <data name="Nav.Pacientes" xml:space="preserve">
+    <value>Patients</value>
+  </data>
+  <data name="Nav.Agendamentos" xml:space="preserve">
+    <value>Rendez-vous</value>
+  </data>
+  <data name="Nav.Triagem" xml:space="preserve">
+    <value>Triage</value>
+  </data>
+  <data name="Nav.Consultas" xml:space="preserve">
+    <value>Consultations</value>
+  </data>
+  <data name="Nav.UnidadesClinica" xml:space="preserve">
+    <value>Unités cliniques</value>
+  </data>
+  <data name="Nav.SectionFinance" xml:space="preserve">
+    <value>Finances</value>
+  </data>
+  <data name="Nav.VisaoFinanceira" xml:space="preserve">
+    <value>Vue financière</value>
+  </data>
+  <data name="Nav.Pagamentos" xml:space="preserve">
+    <value>Paiements</value>
+  </data>
+  <data name="Nav.Caixa" xml:space="preserve">
+    <value>Caisse</value>
+  </data>
+  <data name="Nav.SectionClientAdmin" xml:space="preserve">
+    <value>Administration du Client</value>
+  </data>
+  <data name="Nav.Administrativo360" xml:space="preserve">
+    <value>Administratif 360</value>
+  </data>
+  <data name="Nav.Relatorios" xml:space="preserve">
+    <value>Rapports</value>
+  </data>
+  <data name="Nav.Profissionais" xml:space="preserve">
+    <value>Professionnels</value>
+  </data>
+  <data name="Nav.Unidades" xml:space="preserve">
+    <value>Unités</value>
+  </data>
+  <data name="Nav.Usuarios" xml:space="preserve">
+    <value>Utilisateurs</value>
+  </data>
+  <data name="Nav.Perfis" xml:space="preserve">
+    <value>Profils</value>
+  </data>
+  <data name="Nav.Permissoes" xml:space="preserve">
+    <value>Permissions</value>
+  </data>
+  <data name="Nav.Configuracoes" xml:space="preserve">
+    <value>Paramètres</value>
+  </data>
+  <data name="Nav.SectionMnsOfAdmin" xml:space="preserve">
+    <value>Administration MNSOFT</value>
+  </data>
+  <data name="Nav.CentralGlobal" xml:space="preserve">
+    <value>Centre Global</value>
+  </data>
+  <data name="Nav.Clientes" xml:space="preserve">
+    <value>Clients</value>
+  </data>
+  <data name="Nav.PlanosComerciais" xml:space="preserve">
+    <value>Plans commerciaux</value>
+  </data>
+  <data name="Nav.Assinaturas" xml:space="preserve">
+    <value>Abonnements</value>
+  </data>
+  <data name="Nav.CobrancasSaas" xml:space="preserve">
+    <value>Facturation SaaS</value>
+  </data>
+  <data name="Nav.CatalogoModulos" xml:space="preserve">
+    <value>Catalogue des modules</value>
+  </data>
+  <data name="Nav.UsuariosEAcessos" xml:space="preserve">
+    <value>Utilisateurs et accès</value>
+  </data>
+  <data name="Nav.PerfisGlobais" xml:space="preserve">
+    <value>Profils globaux</value>
+  </data>
+  <data name="Nav.LogsESaude" xml:space="preserve">
+    <value>Journaux et santé</value>
+  </data>
+  <data name="Nav.Auditoria" xml:space="preserve">
+    <value>Audit</value>
+  </data>
+  <data name="Nav.SectionMonitoring" xml:space="preserve">
+    <value>Suivi</value>
+  </data>
+  <data name="Nav.Notificacoes" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="Nav.SectionSupport" xml:space="preserve">
+    <value>Assistance</value>
+  </data>
+  <data name="Nav.CentralAjuda" xml:space="preserve">
+    <value>Centre d'aide</value>
+  </data>
+  <data name="Nav.PrivacidadeLgpd" xml:space="preserve">
+    <value>Confidentialité et LGPD</value>
+  </data>
+  <data name="Nav.TopbarOpenMenu" xml:space="preserve">
+    <value>Ouvrir le menu</value>
+  </data>
+  <data name="Nav.TopbarBreadcrumbAria" xml:space="preserve">
+    <value>Vous êtes dans</value>
+  </data>
+  <data name="Nav.TopbarSearchAria" xml:space="preserve">
+    <value>Rechercher dans PlantãoPro</value>
+  </data>
+  <data name="Nav.TopbarSearchLabel" xml:space="preserve">
+    <value>Rechercher dans PlantãoPro</value>
+  </data>
+  <data name="Nav.TopbarHelp" xml:space="preserve">
+    <value>Aide contextuelle</value>
+  </data>
+  <data name="Nav.TopbarLiveContext" xml:space="preserve">
+    <value>Environnement opérationnel</value>
+  </data>
+  <data name="Nav.TopbarConnection" xml:space="preserve">
+    <value>Connexion</value>
+  </data>
+  <data name="Nav.TopbarConnectionSecure" xml:space="preserve">
+    <value>Sécurisée</value>
+  </data>
+  <data name="Nav.TopbarConnectionLost" xml:space="preserve">
+    <value>Sans connexion</value>
+  </data>
+  <data name="Nav.TopbarConnectionAriaOnline" xml:space="preserve">
+    <value>Connexion sécurisée avec la plateforme</value>
+  </data>
+  <data name="Nav.TopbarConnectionAriaOffline" xml:space="preserve">
+    <value>Sans connexion. Évitez de finaliser des modifications avant de vous reconnecter.</value>
+  </data>
+  <data name="Nav.TopbarDefaultSubtitle" xml:space="preserve">
+    <value>Suivez vos priorités et continuez votre parcours.</value>
+  </data>
 </root>

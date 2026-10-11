@@ -3,8 +3,9 @@
 @inject IPermissionService PermissionService
 @inject IModuleAccessService ModuleAccessService
 @{
-    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? "Organização";
-    var profile = User.Claims.FirstOrDefault(x => x.Type.EndsWith("role"))?.Value ?? "Profissional";
+    // R7-D-F1: labels da navegação via recursos localizados (UiTexts.resx ×4).
+    var tenantName = User.FindFirst("cliente")?.Value ?? User.FindFirst("tenant")?.Value ?? UiText.L("Nav.FallbackTenant");
+    var profile = User.Claims.FirstOrDefault(x => x.Type.EndsWith("role"))?.Value ?? UiText.L("Nav.FallbackProfile");
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     var operationRoles = RolesConstants.Operacao.Split(',');
     var clinicalRoles = RolesConstants.Saude360Assistencial.Split(',');
@@ -17,82 +18,82 @@
     bool Can(string module, string action = "VER") => PermissionService.HasPermission(module, action);
     string Active(string target) => controller.Equals(target, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 }
-<aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navegação principal">
+<aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="@UiText.L("Nav.HeaderAria")">
     <header class="sidebar-brand">
         <a asp-controller="MinhaCentral" asp-action="Index" class="sidebar-logo" aria-label="PlantãoPro — início"><img class="brand-logo" src="~/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
-        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><app-icon name="Menu" size="18" /></button>
+        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="@UiText.L("Nav.Collapse")" aria-expanded="true"><app-icon name="Menu" size="18" /></button>
         <div class="sidebar-tenant"><span class="tenant-status" aria-hidden="true"></span><div><strong>@tenantName</strong><span>@profile.Replace('_', ' ')</span></div></div>
-        <button class="sidebar-search" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Abrir busca rápida"><app-icon name="Search" size="18" /><span>Busca rápida</span><kbd>Ctrl K</kbd></button>
+        <button class="sidebar-search" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="@UiText.L("Nav.OpenSearch")"><app-icon name="Search" size="18" /><span>@UiText.L("Nav.SearchLabel")</span><kbd>Ctrl K</kbd></button>
     </header>
     <nav class="sidebar-nav">
-        <div class="nav-section-title"><span>Visão geral</span></div>
-        <a class="nav-link-app @Active("MinhaCentral")" asp-controller="MinhaCentral" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Minha Central</span></a>
-        <a class="nav-link-app @Active("MeuDia")" asp-controller="MeuDia" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Meu dia</span></a>
-        <a class="nav-link-app @Active("Home")" asp-controller="Home" asp-action="Dashboard"><app-icon name="Report" size="19" /><span>Dashboard</span></a>
-        <a class="nav-link-app @Active("Pendencias")" asp-controller="Pendencias" asp-action="Index"><app-icon name="Warning" size="19" /><span>Central de Pendências</span></a>
+        <div class="nav-section-title"><span>@UiText.L("Nav.SectionOverview")</span></div>
+        <a class="nav-link-app @Active("MinhaCentral")" asp-controller="MinhaCentral" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>@UiText.L("Nav.MyCentral")</span></a>
+        <a class="nav-link-app @Active("MeuDia")" asp-controller="MeuDia" asp-action="Index"><app-icon name="Calendar" size="19" /><span>@UiText.L("Nav.MyDay")</span></a>
+        <a class="nav-link-app @Active("Home")" asp-controller="Home" asp-action="Dashboard"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.Dashboard")</span></a>
+        <a class="nav-link-app @Active("Pendencias")" asp-controller="Pendencias" asp-action="Index"><app-icon name="Warning" size="19" /><span>@UiText.L("Nav.Pendencias")</span></a>
         @if (canOperate)
         {
-            <div class="nav-section-title"><span>Operação</span></div>
+            <div class="nav-section-title"><span>@UiText.L("Nav.SectionOperation")</span></div>
             @if (canManage || User.IsInRole(RolesConstants.Coordenacao) || User.IsInRole(RolesConstants.Coordenador))
             {
                 <a class="nav-link-app @Active("CommandCenter")" asp-controller="CommandCenter" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Command Center</span></a>
             }
-            @if (Can("PLANTOES")) { <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>Plantões</span></a> }
-            @if (Can("AGENDA")) { <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agenda</span></a> }
-            @if (Can("CENTRAL_ESCALA")) { <a class="nav-link-app @Active("CentralEscala")" asp-controller="CentralEscala" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Cobertura</span></a> }
-            @if (Can("CONVITES")) { <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>Convites</span></a> }
-            @if (Can("ESCALAS")) { <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>Escalas</span></a> }
-            @if (Can("FECHAMENTOS")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>Fechamentos</span></a> }
+            @if (Can("PLANTOES")) { <a class="nav-link-app @Active("Plantoes")" asp-controller="Plantoes" asp-action="Index"><app-icon name="Shift" size="19" /><span>@UiText.L("Nav.Plantoes")</span></a> }
+            @if (Can("AGENDA")) { <a class="nav-link-app @Active("Agenda")" asp-controller="Agenda" asp-action="Index"><app-icon name="Calendar" size="19" /><span>@UiText.L("Nav.Agenda")</span></a> }
+            @if (Can("CENTRAL_ESCALA")) { <a class="nav-link-app @Active("CentralEscala")" asp-controller="CentralEscala" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Cobertura")</span></a> }
+            @if (Can("CONVITES")) { <a class="nav-link-app @Active("Convites")" asp-controller="Convites" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Convites")</span></a> }
+            @if (Can("ESCALAS")) { <a class="nav-link-app @Active("Escalas")" asp-controller="Escalas" asp-action="Index"><app-icon name="Schedule" size="19" /><span>@UiText.L("Nav.Escalas")</span></a> }
+            @if (Can("FECHAMENTOS")) { <a class="nav-link-app @Active("Fechamentos")" asp-controller="Fechamentos" asp-action="Index"><app-icon name="Check" size="19" /><span>@UiText.L("Nav.Fechamentos")</span></a> }
         }
         @if (canUseClinical)
         {
-            <div class="nav-section-title"><span>Saúde 360</span></div>
+            <div class="nav-section-title"><span>@UiText.L("Nav.SectionClinical")</span></div>
             @* R6-BlocoA item 1: os codigos FINOS sao os que o guard cobra por controller apos a
                v2339 (PACIENTES/AGENDAMENTOS/TRIAGEM/CONSULTAS/CLINICA_DASHBOARD); os codigos
                grossos SAUDE360_* ficam apenas como caminho de sessoes legado (pre-v2149). *@
-            @if (Can("SAUDE360_DASHBOARD") || Can("CLINICA_DASHBOARD")) { <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>Jornada clínica</span></a> }
-            @if (Can("SAUDE360_PACIENTES") || Can("PACIENTES")) { <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>Pacientes</span></a> }
-            @if (Can("SAUDE360_AGENDAMENTO") || Can("AGENDAMENTOS")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>Agendamentos</span></a> }
-            @if (Can("SAUDE360_TRIAGEM") || Can("TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>Triagem</span></a> }
-            @if (Can("SAUDE360_CONSULTAS") || Can("CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>Consultas</span></a> }
+            @if (Can("SAUDE360_DASHBOARD") || Can("CLINICA_DASHBOARD")) { <a class="nav-link-app @Active("ClinicaDashboard")" asp-controller="ClinicaDashboard" asp-action="Index"><app-icon name="Triage" size="19" /><span>@UiText.L("Nav.JornadaClinica")</span></a> }
+            @if (Can("SAUDE360_PACIENTES") || Can("PACIENTES")) { <a class="nav-link-app @Active("Pacientes")" asp-controller="Pacientes" asp-action="Index"><app-icon name="Patient" size="19" /><span>@UiText.L("Nav.Pacientes")</span></a> }
+            @if (Can("SAUDE360_AGENDAMENTO") || Can("AGENDAMENTOS")) { <a class="nav-link-app @Active("Agendamentos")" asp-controller="Agendamentos" asp-action="Index"><app-icon name="Calendar" size="19" /><span>@UiText.L("Nav.Agendamentos")</span></a> }
+            @if (Can("SAUDE360_TRIAGEM") || Can("TRIAGEM")) { <a class="nav-link-app @Active("Triagem")" asp-controller="Triagem" asp-action="Index"><app-icon name="Triage" size="19" /><span>@UiText.L("Nav.Triagem")</span></a> }
+            @if (Can("SAUDE360_CONSULTAS") || Can("CONSULTAS")) { <a class="nav-link-app @Active("Consultas")" asp-controller="Consultas" asp-action="Index"><app-icon name="Consultation" size="19" /><span>@UiText.L("Nav.Consultas")</span></a> }
             @* R5-E13: mesmas codigos do guard de rota (SAUDE360 grosso ate decisao UNIDADES fina). *@
-            @if (Can("SAUDE360")) { <a class="nav-link-app @Active("ClinicaUnidades")" asp-controller="ClinicaUnidades" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades clínica</span></a> }
+            @if (Can("SAUDE360")) { <a class="nav-link-app @Active("ClinicaUnidades")" asp-controller="ClinicaUnidades" asp-action="Index"><app-icon name="Unit" size="19" /><span>@UiText.L("Nav.UnidadesClinica")</span></a> }
         }
         @if (canUseFinance)
         {
-            <div class="nav-section-title"><span>Financeiro</span></div>
-            @if (Can("FINANCEIRO") || Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>Visão financeira</span></a> }
-            @if (Can("PAGAMENTOS")) { <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>Pagamentos</span></a> }
-            @if (Can("SAUDE360_FINANCEIRO") || Can("CLINICA_FINANCEIRO")) { <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>Caixa</span></a> }
+            <div class="nav-section-title"><span>@UiText.L("Nav.SectionFinance")</span></div>
+            @if (Can("FINANCEIRO") || Can("SAUDE360_FINANCEIRO")) { <a class="nav-link-app @Active("Financeiro")" asp-controller="Financeiro" asp-action="Index"><app-icon name="Finance" size="19" /><span>@UiText.L("Nav.VisaoFinanceira")</span></a> }
+            @if (Can("PAGAMENTOS")) { <a class="nav-link-app @Active("Pagamentos")" asp-controller="Pagamentos" asp-action="Index"><app-icon name="Payment" size="19" /><span>@UiText.L("Nav.Pagamentos")</span></a> }
+            @if (Can("SAUDE360_FINANCEIRO") || Can("CLINICA_FINANCEIRO")) { <a class="nav-link-app @Active("Caixa")" asp-controller="Caixa" asp-action="Index"><app-icon name="Finance" size="19" /><span>@UiText.L("Nav.Caixa")</span></a> }
         }
         @if (canManage)
         {
-            <div class="nav-section-title"><span>Administração do Cliente</span></div>
-            @if (Can("ADM360")) { <a class="nav-link-app @Active("Administrativo360")" asp-controller="Administrativo360" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Administrativo 360</span></a> }
-            @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>Relatórios</span></a> }
-            @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>Profissionais</span></a> }
-            @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>Unidades</span></a> }
-            @if (Can("USUARIOS")) { <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários</span></a> }
-            @if (Can("PERFIS")) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis</span></a> }
-            @if (Can("SEGURANCA")) { <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>Permissões</span></a> }
-            @if (Can("CONFIGURACOES")) { <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>Configurações</span></a> }
+            <div class="nav-section-title"><span>@UiText.L("Nav.SectionClientAdmin")</span></div>
+            @if (Can("ADM360")) { <a class="nav-link-app @Active("Administrativo360")" asp-controller="Administrativo360" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Administrativo360")</span></a> }
+            @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.Relatorios")</span></a> }
+            @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Profissionais")</span></a> }
+            @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>@UiText.L("Nav.Unidades")</span></a> }
+            @if (Can("USUARIOS")) { <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Usuarios")</span></a> }
+            @if (Can("PERFIS")) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Perfis")</span></a> }
+            @if (Can("SEGURANCA")) { <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>@UiText.L("Nav.Permissoes")</span></a> }
+            @if (Can("CONFIGURACOES")) { <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>@UiText.L("Nav.Configuracoes")</span></a> }
         }
         @if (isGlobalAdmin)
         {
-            <div class="nav-section-title"><span>Administração MNSOFT</span></div>
-            <a class="nav-link-app @Active("SaasDashboard")" asp-controller="SaasDashboard" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>Central Global</span></a>
-            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>Clientes</span></a>
-            <a class="nav-link-app @Active("Planos")" asp-controller="Planos" asp-action="Index"><app-icon name="Report" size="19" /><span>Planos comerciais</span></a>
-            <a class="nav-link-app @Active("Assinaturas")" asp-controller="Assinaturas" asp-action="Index"><app-icon name="Check" size="19" /><span>Assinaturas</span></a>
-            <a class="nav-link-app @Active("FaturamentoSaas")" asp-controller="FaturamentoSaas" asp-action="Index"><app-icon name="Finance" size="19" /><span>Cobranças SaaS</span></a>
-            <a class="nav-link-app @Active("Modulos")" asp-controller="Modulos" asp-action="Index"><app-icon name="Settings" size="19" /><span>Catálogo de módulos</span></a>
-            <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>Usuários e acessos</span></a>
-            <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>Perfis globais</span></a>
-            <a class="nav-link-app @Active("Observabilidade")" asp-controller="Observabilidade" asp-action="Index"><app-icon name="Report" size="19" /><span>Logs e saúde</span></a>
-            <a class="nav-link-app @Active("Auditoria")" asp-controller="Auditoria" asp-action="Index"><app-icon name="Security" size="19" /><span>Auditoria</span></a>
+            <div class="nav-section-title"><span>@UiText.L("Nav.SectionMnsOfAdmin")</span></div>
+            <a class="nav-link-app @Active("SaasDashboard")" asp-controller="SaasDashboard" asp-action="Index"><app-icon name="Dashboard" size="19" /><span>@UiText.L("Nav.CentralGlobal")</span></a>
+            <a class="nav-link-app @Active("Clientes")" asp-controller="Clientes" asp-action="Index"><app-icon name="Hospital" size="19" /><span>@UiText.L("Nav.Clientes")</span></a>
+            <a class="nav-link-app @Active("Planos")" asp-controller="Planos" asp-action="Index"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.PlanosComerciais")</span></a>
+            <a class="nav-link-app @Active("Assinaturas")" asp-controller="Assinaturas" asp-action="Index"><app-icon name="Check" size="19" /><span>@UiText.L("Nav.Assinaturas")</span></a>
+            <a class="nav-link-app @Active("FaturamentoSaas")" asp-controller="FaturamentoSaas" asp-action="Index"><app-icon name="Finance" size="19" /><span>@UiText.L("Nav.CobrancasSaas")</span></a>
+            <a class="nav-link-app @Active("Modulos")" asp-controller="Modulos" asp-action="Index"><app-icon name="Settings" size="19" /><span>@UiText.L("Nav.CatalogoModulos")</span></a>
+            <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.UsuariosEAcessos")</span></a>
+            <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.PerfisGlobais")</span></a>
+            <a class="nav-link-app @Active("Observabilidade")" asp-controller="Observabilidade" asp-action="Index"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.LogsESaude")</span></a>
+            <a class="nav-link-app @Active("Auditoria")" asp-controller="Auditoria" asp-action="Index"><app-icon name="Security" size="19" /><span>@UiText.L("Nav.Auditoria")</span></a>
         }
-        <div class="nav-section-title"><span>Acompanhamento</span></div>
-        <a class="nav-link-app @Active("Notificacoes")" asp-controller="Notificacoes" asp-action="Index"><app-icon name="Notification" size="19" /><span>Notificações</span></a>
+        <div class="nav-section-title"><span>@UiText.L("Nav.SectionMonitoring")</span></div>
+        <a class="nav-link-app @Active("Notificacoes")" asp-controller="Notificacoes" asp-action="Index"><app-icon name="Notification" size="19" /><span>@UiText.L("Nav.Notificacoes")</span></a>
     </nav>
-    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>Central de ajuda</span></a><a class="nav-link-app" asp-controller="Lgpd" asp-action="Index"><app-icon name="Lock" size="19" /><span>Privacidade e LGPD</span></a><partial name="_ProductVersion" /></footer>
+    <footer class="sidebar-footer"><span class="nav-section-title">@UiText.L("Nav.SectionSupport")</span><a class="nav-link-app" asp-controller="Ajuda" asp-action="Index"><app-icon name="Help" size="19" /><span>@UiText.L("Nav.CentralAjuda")</span></a><a class="nav-link-app" asp-controller="Lgpd" asp-action="Index"><app-icon name="Lock" size="19" /><span>@UiText.L("Nav.PrivacidadeLgpd")</span></a><partial name="_ProductVersion" /></footer>
 </aside>

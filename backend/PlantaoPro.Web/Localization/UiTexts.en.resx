@@ -490,4 +490,583 @@
   <data name="Auth.ResetTokenInvalid" xml:space="preserve">
     <value>Invalid or expired token.</value>
   </data>
+  <data name="Coverage.LoadFailed" xml:space="preserve">
+    <value>The coverage center could not be loaded.</value>
+  </data>
+  <data name="Coverage.LoadUnexpected" xml:space="preserve">
+    <value>Unexpected failure while loading the coverage center.</value>
+  </data>
+  <data name="Coverage.FiltersInvalid" xml:space="preserve">
+    <value>Review the filters provided.</value>
+  </data>
+  <data name="Coverage.DecisionValidation" xml:space="preserve">
+    <value>Select an explicit decision and provide a justification between 3 and 1,000 characters.</value>
+  </data>
+  <data name="Coverage.DecisionRecorded" xml:space="preserve">
+    <value>Decision recorded. The professional can now follow the status in the portal.</value>
+  </data>
+  <data name="Coverage.DecisionConflict" xml:space="preserve">
+    <value>The request changed or was already decided. Review the current state before trying again.</value>
+  </data>
+  <data name="Coverage.DecisionForbidden" xml:space="preserve">
+    <value>Your permissions or link to the unit do not allow this decision.</value>
+  </data>
+  <data name="Coverage.DecisionNotFound" xml:space="preserve">
+    <value>Request not available in the current context.</value>
+  </data>
+  <data name="Coverage.DecisionUnknown" xml:space="preserve">
+    <value>The outcome could not be confirmed. Check the state before retrying.</value>
+  </data>
+  <data name="Coverage.InviteValidation" xml:space="preserve">
+    <value>Select a valid shift and a valid doctor to send the invite.</value>
+  </data>
+  <data name="Coverage.InviteMessage" xml:space="preserve">
+    <value>Invite sent from the Coverage Center.</value>
+  </data>
+  <data name="Coverage.InviteFailed" xml:space="preserve">
+    <value>The invite was not sent. Check availability and whether a pending invite already exists.</value>
+  </data>
+  <data name="Coverage.InviteSent" xml:space="preserve">
+    <value>Invite sent and recorded successfully.</value>
+  </data>
+  <data name="Coverage.InviteUnexpected" xml:space="preserve">
+    <value>The invite could not be sent right now. Try again.</value>
+  </data>
+  <data name="Shift.NotFound" xml:space="preserve">
+    <value>Shift not found.</value>
+  </data>
+  <data name="Shift.LoadUnexpected" xml:space="preserve">
+    <value>Unexpected failure while loading the shift.</value>
+  </data>
+  <data name="Coverage.Title" xml:space="preserve">
+    <value>Operation Center</value>
+  </data>
+  <data name="Coverage.HeatmapCovered" xml:space="preserve">
+    <value>Coverage confirmed</value>
+  </data>
+  <data name="Coverage.HeatmapCoveredHint" xml:space="preserve">
+    <value>confirmations today</value>
+  </data>
+  <data name="Coverage.HeatmapWaiting" xml:space="preserve">
+    <value>Awaiting response</value>
+  </data>
+  <data name="Coverage.HeatmapWaitingHint" xml:space="preserve">
+    <value>requests under review</value>
+  </data>
+  <data name="Coverage.HeatmapOpen" xml:space="preserve">
+    <value>Open shifts</value>
+  </data>
+  <data name="Coverage.HeatmapOpenHint" xml:space="preserve">
+    <value>need coverage</value>
+  </data>
+  <data name="Coverage.HeatmapConflicts" xml:space="preserve">
+    <value>Conflicts</value>
+  </data>
+  <data name="Coverage.HeatmapConflictsHint" xml:space="preserve">
+    <value>need a decision</value>
+  </data>
+  <data name="Shift.VacanciesShort" xml:space="preserve">
+    <value>{0} · {1} slot(s)</value>
+  </data>
+  <data name="Coverage.HeroKicker" xml:space="preserve">
+    <value>Live operation</value>
+  </data>
+  <data name="Coverage.HeroTitle" xml:space="preserve">
+    <value>Coverage center</value>
+  </data>
+  <data name="Coverage.HeroIntro" xml:space="preserve">
+    <value>Prioritize risks, track confirmations, and drive scheduling from real operational signals.</value>
+  </data>
+  <data name="Coverage.LiveView" xml:space="preserve">
+    <value>Current operational view</value>
+  </data>
+  <data name="Shift.New" xml:space="preserve">
+    <value>New shift</value>
+  </data>
+  <data name="Coverage.OpenCalendar" xml:space="preserve">
+    <value>Open calendar</value>
+  </data>
+  <data name="Coverage.HowToTitle" xml:space="preserve">
+    <value>How to use this page</value>
+  </data>
+  <data name="Coverage.HowToIntro" xml:space="preserve">
+    <value>Use the center to find unfilled slots, assignments still without confirmation, substitution requests, and invites. Select candidates using the displayed criteria and follow each state separately.</value>
+  </data>
+  <data name="Coverage.HowToSolicited" xml:space="preserve">
+    <value>Open request:</value>
+  </data>
+  <data name="Coverage.HowToSolicitedBody" xml:space="preserve">
+    <value>the original professional remains responsible.</value>
+  </data>
+  <data name="Coverage.HowToAwaitingResponse" xml:space="preserve">
+    <value>Awaiting response:</value>
+  </data>
+  <data name="Coverage.HowToAwaitingResponseBody" xml:space="preserve">
+    <value>the invite exists, but delivering the notification and accepting it are separate events.</value>
+  </data>
+  <data name="Coverage.HowToAwaitingApproval" xml:space="preserve">
+    <value>Awaiting approval:</value>
+  </data>
+  <data name="Coverage.HowToAwaitingApprovalBody" xml:space="preserve">
+    <value>the acceptance has not yet changed the schedule.</value>
+  </data>
+  <data name="Coverage.HowToConfirmed" xml:space="preserve">
+    <value>Coverage completed:</value>
+  </data>
+  <data name="Coverage.HowToConfirmedBody" xml:space="preserve">
+    <value>only finalization creates the new assignment and closes the previous one; attendance and financials are not transferred.</value>
+  </data>
+  <data name="Coverage.FilterFormAria" xml:space="preserve">
+    <value>Coverage filters</value>
+  </data>
+  <data name="Coverage.From" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Coverage.Until" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Coverage.Situation" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Coverage.AllOptions" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Coverage.SituationDiscovered" xml:space="preserve">
+    <value>Discovered vacancy</value>
+  </data>
+  <data name="Coverage.SituationUnconfirmed" xml:space="preserve">
+    <value>Assigned without confirmation</value>
+  </data>
+  <data name="Coverage.SituationSolicited" xml:space="preserve">
+    <value>Open request</value>
+  </data>
+  <data name="Coverage.SituationAwaitingResponse" xml:space="preserve">
+    <value>Awaiting response</value>
+  </data>
+  <data name="Coverage.SituationAwaitingApproval" xml:space="preserve">
+    <value>Awaiting approval</value>
+  </data>
+  <data name="Coverage.SituationConfirmed" xml:space="preserve">
+    <value>Coverage completed</value>
+  </data>
+  <data name="Coverage.SituationCancelled" xml:space="preserve">
+    <value>Cancelled or expired</value>
+  </data>
+  <data name="Coverage.SearchLabel" xml:space="preserve">
+    <value>Unit, specialty, or responsible party</value>
+  </data>
+  <data name="Coverage.ApplyFilters" xml:space="preserve">
+    <value>Apply filters</value>
+  </data>
+  <data name="Coverage.IndicatorsAria" xml:space="preserve">
+    <value>Coverage indicators</value>
+  </data>
+  <data name="Coverage.ShiftsToday" xml:space="preserve">
+    <value>Shifts today</value>
+  </data>
+  <data name="Coverage.ShiftsTodayHint" xml:space="preserve">
+    <value>scheduled in the period</value>
+  </data>
+  <data name="Coverage.ConfirmedCard" xml:space="preserve">
+    <value>Confirmed</value>
+  </data>
+  <data name="Coverage.ConfirmedCardHint" xml:space="preserve">
+    <value>confirmations completed today</value>
+  </data>
+  <data name="Coverage.WaitingCard" xml:space="preserve">
+    <value>Awaiting</value>
+  </data>
+  <data name="Coverage.WaitingCardHint" xml:space="preserve">
+    <value>responses pending</value>
+  </data>
+  <data name="Coverage.AtRiskCard" xml:space="preserve">
+    <value>At risk</value>
+  </data>
+  <data name="Coverage.AtRiskCardHint" xml:space="preserve">
+    <value>shifts still open</value>
+  </data>
+  <data name="Coverage.ConflictsCard" xml:space="preserve">
+    <value>Conflicts</value>
+  </data>
+  <data name="Coverage.ConflictsCardHint" xml:space="preserve">
+    <value>decisions needed</value>
+  </data>
+  <data name="Coverage.ViewModesAria" xml:space="preserve">
+    <value>View modes</value>
+  </data>
+  <data name="Coverage.ExploreBy" xml:space="preserve">
+    <value>Explore by</value>
+  </data>
+  <data name="Coverage.ModeCalendar" xml:space="preserve">
+    <value>Calendar</value>
+  </data>
+  <data name="Coverage.ModeList" xml:space="preserve">
+    <value>List</value>
+  </data>
+  <data name="Coverage.ModeUnit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Coverage.ModeProfessional" xml:space="preserve">
+    <value>Professional</value>
+  </data>
+  <data name="Coverage.ModeRisk" xml:space="preserve">
+    <value>Risk</value>
+  </data>
+  <data name="Coverage.MapKicker" xml:space="preserve">
+    <value>Coverage map</value>
+  </data>
+  <data name="Coverage.MapTitle" xml:space="preserve">
+    <value>Quick read of the operation</value>
+  </data>
+  <data name="Coverage.ViewFullGrid" xml:space="preserve">
+    <value>View full grid</value>
+  </data>
+  <data name="Coverage.MapNote" xml:space="preserve">
+    <value>The signals reflect the data available right now; no projection or demo data is added.</value>
+  </data>
+  <data name="Coverage.QueueKicker" xml:space="preserve">
+    <value>Priority queue</value>
+  </data>
+  <data name="Coverage.QueueTitle" xml:space="preserve">
+    <value>Needs attention</value>
+  </data>
+  <data name="Coverage.OpenShiftsCount" xml:space="preserve">
+    <value>{0} open shift(s)</value>
+  </data>
+  <data name="Coverage.OpenShiftsHint" xml:space="preserve">
+    <value>Start the coverage search</value>
+  </data>
+  <data name="Coverage.PendingConfirmationsCount" xml:space="preserve">
+    <value>{0} confirmation(s)</value>
+  </data>
+  <data name="Coverage.PendingConfirmationsHint" xml:space="preserve">
+    <value>Track pending responses</value>
+  </data>
+  <data name="Coverage.ConflictsCount" xml:space="preserve">
+    <value>{0} conflict(s)</value>
+  </data>
+  <data name="Coverage.ConflictsHint" xml:space="preserve">
+    <value>Review schedule overlaps</value>
+  </data>
+  <data name="Coverage.TimelineKicker" xml:space="preserve">
+    <value>Upcoming events</value>
+  </data>
+  <data name="Coverage.TimelineTitle" xml:space="preserve">
+    <value>Operational timeline</value>
+  </data>
+  <data name="Coverage.TimelineEmptyTitle" xml:space="preserve">
+    <value>Quiet operational agenda</value>
+  </data>
+  <data name="Coverage.TimelineEmptyBody" xml:space="preserve">
+    <value>Upcoming critical shifts and confirmations will appear here as soon as they exist.</value>
+  </data>
+  <data name="Coverage.QuickKicker" xml:space="preserve">
+    <value>Shortcuts</value>
+  </data>
+  <data name="Coverage.QuickTitle" xml:space="preserve">
+    <value>Quick actions</value>
+  </data>
+  <data name="Coverage.QuickAvailableProfessionals" xml:space="preserve">
+    <value>Available professionals</value>
+  </data>
+  <data name="Coverage.QuickAvailableProfessionalsHint" xml:space="preserve">
+    <value>Find coverage options</value>
+  </data>
+  <data name="Coverage.QuickSubstitutions" xml:space="preserve">
+    <value>Substitutions</value>
+  </data>
+  <data name="Coverage.QuickSubstitutionsHint" xml:space="preserve">
+    <value>Follow requests</value>
+  </data>
+  <data name="Coverage.QuickRecentAlerts" xml:space="preserve">
+    <value>Recent alerts</value>
+  </data>
+  <data name="Coverage.UnreadCount" xml:space="preserve">
+    <value>{0} unread</value>
+  </data>
+  <data name="Coverage.QuickFinancialPending" xml:space="preserve">
+    <value>Financial pending items</value>
+  </data>
+  <data name="Coverage.PendingRecordsCount" xml:space="preserve">
+    <value>{0} record(s)</value>
+  </data>
+  <data name="Shift.DetailsTitle" xml:space="preserve">
+    <value>Shift - Coverage Center</value>
+  </data>
+  <data name="Shift.Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Shift.Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Shift.End" xml:space="preserve">
+    <value>End</value>
+  </data>
+  <data name="Shift.Vacancies" xml:space="preserve">
+    <value>Slots</value>
+  </data>
+  <data name="Shift.Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Shift.FullDetails" xml:space="preserve">
+    <value>Full details</value>
+  </data>
+  <data name="Shift.ShiftsLink" xml:space="preserve">
+    <value>Schedules</value>
+  </data>
+  <data name="Shift.AgendaLink" xml:space="preserve">
+    <value>Agenda</value>
+  </data>
+  <data name="Shift.ThHospital" xml:space="preserve">
+    <value>Hospital and city</value>
+  </data>
+  <data name="Shift.ThSpecialty" xml:space="preserve">
+    <value>Specialty</value>
+  </data>
+  <data name="Shift.ThPeriod" xml:space="preserve">
+    <value>Period</value>
+  </data>
+  <data name="Shift.ThCoverage" xml:space="preserve">
+    <value>Coverage</value>
+  </data>
+  <data name="Shift.ThActions" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Shift.Hours" xml:space="preserve">
+    <value>{0} hours</value>
+  </data>
+  <data name="Shift.FilledSlots" xml:space="preserve">
+    <value>{0}/{1} filled</value>
+  </data>
+  <data name="Shift.CoverageComplete" xml:space="preserve">
+    <value>Full coverage</value>
+  </data>
+  <data name="Shift.CoveragePending" xml:space="preserve">
+    <value>Coverage pending</value>
+  </data>
+  <data name="Shift.NoCoverageRisk" xml:space="preserve">
+    <value>Risk derived from all slots still available</value>
+  </data>
+  <data name="Shift.NoCoverage" xml:space="preserve">
+    <value>No coverage</value>
+  </data>
+  <data name="Shift.NextAction" xml:space="preserve">
+    <value>Next action</value>
+  </data>
+  <data name="Shift.SeekCoverage" xml:space="preserve">
+    <value>Seek coverage</value>
+  </data>
+  <data name="Shift.ReviewOperation" xml:space="preserve">
+    <value>Review operation</value>
+  </data>
+  <data name="Shift.ReviewDetails" xml:space="preserve">
+    <value>Review details</value>
+  </data>
+  <data name="Shift.NoDerivableRisk" xml:space="preserve">
+    <value>No derivable risk</value>
+  </data>
+  <data name="Shift.ViewInvitesAria" xml:space="preserve">
+    <value>View shift invites</value>
+  </data>
+  <data name="Shift.NoObservations" xml:space="preserve">
+    <value>No observations recorded.</value>
+  </data>
+  <data name="Shift.ViewDetails" xml:space="preserve">
+    <value>View details</value>
+  </data>
+  <data name="Shift.ViewInvites" xml:space="preserve">
+    <value>View invites</value>
+  </data>
+  <data name="Shift.OpenOperation" xml:space="preserve">
+    <value>Open operation</value>
+  </data>
+  <data name="Shift.KanbanAria" xml:space="preserve">
+    <value>Shifts by coverage status</value>
+  </data>
+  <data name="Shift.LaneCritical" xml:space="preserve">
+    <value>Critical coverage</value>
+  </data>
+  <data name="Shift.LaneOpen" xml:space="preserve">
+    <value>In progress</value>
+  </data>
+  <data name="Shift.LaneCovered" xml:space="preserve">
+    <value>Covered</value>
+  </data>
+  <data name="Shift.LaneEmpty" xml:space="preserve">
+    <value>No shifts in this stage.</value>
+  </data>
+  <data name="Shift.CoverageProgressAria" xml:space="preserve">
+    <value>Shift coverage</value>
+  </data>
+  <data name="Shift.EmptyTitle" xml:space="preserve">
+    <value>No shifts in this selection</value>
+  </data>
+  <data name="Shift.EmptyBody" xml:space="preserve">
+    <value>Adjust the filters or create a shift to start coverage.</value>
+  </data>
+  <data name="Shift.ListTitle" xml:space="preserve">
+    <value>Shift Center</value>
+  </data>
+  <data name="Shift.ListIntroSubtitle" xml:space="preserve">
+    <value>Plan, publish, and recover coverage in a single operational workspace.</value>
+  </data>
+  <data name="Shift.ListIntroNote" xml:space="preserve">
+    <value>The indicators below use only the real results of the current page.</value>
+  </data>
+  <data name="Shift.TipFilter" xml:space="preserve">
+    <value>Filter the operation on the server.</value>
+  </data>
+  <data name="Shift.TipRisk" xml:space="preserve">
+    <value>Prioritize coverage risks.</value>
+  </data>
+  <data name="Shift.TipDetail" xml:space="preserve">
+    <value>Open the details to publish, cancel, and follow the history.</value>
+  </data>
+  <data name="Shift.RefreshFailedTitle" xml:space="preserve">
+    <value>The operation could not be refreshed</value>
+  </data>
+  <data name="Shift.TryAgain" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="Shift.JourneyAria" xml:space="preserve">
+    <value>MVP operational journey</value>
+  </data>
+  <data name="Shift.JourneyStepShift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="Shift.JourneyStepInvite" xml:space="preserve">
+    <value>Invite</value>
+  </data>
+  <data name="Shift.JourneyStepSchedule" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="Shift.JourneyStepConfirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="Shift.JourneyStepPresence" xml:space="preserve">
+    <value>Presence or substitution</value>
+  </data>
+  <data name="Shift.JourneyStepClose" xml:space="preserve">
+    <value>Closing</value>
+  </data>
+  <data name="Shift.JourneyStepFinancial" xml:space="preserve">
+    <value>Financial</value>
+  </data>
+  <data name="Shift.KpiStripAria" xml:space="preserve">
+    <value>Summary of displayed results</value>
+  </data>
+  <data name="Shift.KpiResults" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="Shift.KpiResultsHint" xml:space="preserve">
+    <value>across all filtered results</value>
+  </data>
+  <data name="Shift.KpiNext24h" xml:space="preserve">
+    <value>Next 24h</value>
+  </data>
+  <data name="Shift.KpiEstimatedValue" xml:space="preserve">
+    <value>Estimated value</value>
+  </data>
+  <data name="Shift.ThisPage" xml:space="preserve">
+    <value>on this page</value>
+  </data>
+  <data name="Shift.FilterFormAria" xml:space="preserve">
+    <value>Operational shift filters</value>
+  </data>
+  <data name="Shift.FilterKicker" xml:space="preserve">
+    <value>Real filters</value>
+  </data>
+  <data name="Shift.FilterHeading" xml:space="preserve">
+    <value>Operational slice</value>
+  </data>
+  <data name="Shift.ClearAll" xml:space="preserve">
+    <value>Clear all</value>
+  </data>
+  <data name="Shift.City" xml:space="preserve">
+    <value>City</value>
+  </data>
+  <data name="Shift.CityPlaceholder" xml:space="preserve">
+    <value>E.g.: Recife</value>
+  </data>
+  <data name="Shift.StatusFilter" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Shift.AllOptions" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Shift.StatusDraft" xml:space="preserve">
+    <value>Draft</value>
+  </data>
+  <data name="Shift.StatusPublished" xml:space="preserve">
+    <value>Published</value>
+  </data>
+  <data name="Shift.StatusDone" xml:space="preserve">
+    <value>Completed</value>
+  </data>
+  <data name="Shift.StatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="Shift.FromLabel" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="Shift.UntilLabel" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="Shift.AllCoverage" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Shift.WithVacancies" xml:space="preserve">
+    <value>With vacancies</value>
+  </data>
+  <data name="Shift.MinValue" xml:space="preserve">
+    <value>Minimum value</value>
+  </data>
+  <data name="Shift.MaxValue" xml:space="preserve">
+    <value>Maximum value</value>
+  </data>
+  <data name="Shift.SortBy" xml:space="preserve">
+    <value>Sort by</value>
+  </data>
+  <data name="Shift.SortDate" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Shift.SortValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Shift.SortHospital" xml:space="preserve">
+    <value>Hospital</value>
+  </data>
+  <data name="Shift.SortSpecialty" xml:space="preserve">
+    <value>Specialty</value>
+  </data>
+  <data name="Shift.SortVacancies" xml:space="preserve">
+    <value>Vacancies</value>
+  </data>
+  <data name="Shift.SortDirectionAria" xml:space="preserve">
+    <value>Sort direction</value>
+  </data>
+  <data name="Shift.SortDesc" xml:space="preserve">
+    <value>Descending</value>
+  </data>
+  <data name="Shift.SortAsc" xml:space="preserve">
+    <value>Ascending</value>
+  </data>
+  <data name="Shift.WorkspaceKicker" xml:space="preserve">
+    <value>Operational workspace</value>
+  </data>
+  <data name="Shift.ViewbarTitle" xml:space="preserve">
+    <value>Choose how to follow coverage</value>
+  </data>
+  <data name="Shift.ViewbarAria" xml:space="preserve">
+    <value>Shift visualization</value>
+  </data>
+  <data name="Shift.ViewKanban" xml:space="preserve">
+    <value>Kanban</value>
+  </data>
+  <data name="Shift.MobileCardsAria" xml:space="preserve">
+    <value>Shifts as cards</value>
+  </data>
+  <data name="Shift.Risk" xml:space="preserve">
+    <value>Risk</value>
+  </data>
 </root>

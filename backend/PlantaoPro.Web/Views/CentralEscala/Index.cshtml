@@ -1,17 +1,18 @@
 @model PlantaoPro.Web.Models.OperacaoResumoDto
+@* R7-D-F3: Central de Escala (jornada operacional) em recursos localizados (UiTexts.resx x4). *@
 @{
-    ViewData["Title"] = "Central de Operação";
+    ViewData["Title"] = UiText.L("Coverage.Title");
     var critical = Model.PlantoesCriticos?.ToList() ?? new List<OperacaoPlantaoCriticoDto>();
     var pending = Model.EscalasPendentes?.ToList() ?? new List<OperacaoEscalaPendenteDto>();
     var heatmap = new[]
     {
-        new CoverageHeatmapItemViewModel("Cobertura confirmada", Model.TotalEscalasConfirmadasHoje, "confirmações hoje", "covered"),
-        new CoverageHeatmapItemViewModel("Aguardando resposta", Model.TotalEscalasSolicitadas, "solicitações em análise", "waiting"),
-        new CoverageHeatmapItemViewModel("Turnos em aberto", Model.TotalPlantoesAbertos, "exigem cobertura", "risk"),
-        new CoverageHeatmapItemViewModel("Conflitos", Model.TotalConflitos, "exigem decisão", "critical")
+        new CoverageHeatmapItemViewModel(UiText.L("Coverage.HeatmapCovered"), Model.TotalEscalasConfirmadasHoje, UiText.L("Coverage.HeatmapCoveredHint"), "covered"),
+        new CoverageHeatmapItemViewModel(UiText.L("Coverage.HeatmapWaiting"), Model.TotalEscalasSolicitadas, UiText.L("Coverage.HeatmapWaitingHint"), "waiting"),
+        new CoverageHeatmapItemViewModel(UiText.L("Coverage.HeatmapOpen"), Model.TotalPlantoesAbertos, UiText.L("Coverage.HeatmapOpenHint"), "risk"),
+        new CoverageHeatmapItemViewModel(UiText.L("Coverage.HeatmapConflicts"), Model.TotalConflitos, UiText.L("Coverage.HeatmapConflictsHint"), "critical")
     };
     var timeline = critical.Select(item => new OperationalTimelineItemViewModel(
-            item.HospitalNome, $"{item.EspecialidadeNome} · {item.VagasDisponiveis} vaga(s)", item.DataInicio,
+            item.HospitalNome, string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Shift.VacanciesShort"), item.EspecialidadeNome, item.VagasDisponiveis), item.DataInicio,
             item.Status, "CentralEscala", "Plantao", item.Id))
         .Concat(pending.Select(item => new OperationalTimelineItemViewModel(
             item.MedicoNome, item.HospitalNome, item.DataInicio, item.Status, "Escalas", "Details", item.Id)))
@@ -21,14 +22,14 @@
 <section class="operation-command" aria-labelledby="operation-title">
     <header class="operation-command__hero">
         <div>
-            <span class="pp-section-kicker">Operação em tempo real</span>
-            <h1 id="operation-title">Central de cobertura</h1>
-            <p>Priorize riscos, acompanhe confirmações e conduza a escala a partir de sinais operacionais reais.</p>
+            <span class="pp-section-kicker">@UiText.L("Coverage.HeroKicker")</span>
+            <h1 id="operation-title">@UiText.L("Coverage.HeroTitle")</h1>
+            <p>@UiText.L("Coverage.HeroIntro")</p>
         </div>
-        <div class="operation-command__live" role="status"><span aria-hidden="true"></span> Visão operacional atual</div>
+        <div class="operation-command__live" role="status"><span aria-hidden="true"></span> @UiText.L("Coverage.LiveView")</div>
         <div class="operation-command__actions">
-            <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Novo plantão</a>
-            <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> Abrir calendário</a>
+            <a asp-controller="Plantoes" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> @UiText.L("Shift.New")</a>
+            <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-primary"><i class="bi bi-calendar3" aria-hidden="true"></i> @UiText.L("Coverage.OpenCalendar")</a>
         </div>
     </header>
 
@@ -38,72 +39,72 @@
     }
 
     <details class="card border-0 shadow-sm mb-4">
-        <summary class="card-header bg-white fw-semibold">Como usar esta página</summary>
+        <summary class="card-header bg-white fw-semibold">@UiText.L("Coverage.HowToTitle")</summary>
         <div class="card-body text-muted">
-            <p>Use a Central para localizar vagas sem profissional, atribuições ainda sem confirmação, pedidos de substituição e convites. Selecione candidatos pelos critérios exibidos e acompanhe cada estado separadamente.</p>
+            <p>@UiText.L("Coverage.HowToIntro")</p>
             <ul class="mb-0">
-                <li><strong>Solicitação aberta:</strong> o profissional original continua responsável.</li>
-                <li><strong>Aguardando resposta:</strong> o convite existe, mas a entrega da notificação e o aceite são eventos distintos.</li>
-                <li><strong>Aguardando aprovação:</strong> o aceite ainda não alterou a escala.</li>
-                <li><strong>Cobertura concluída:</strong> somente a efetivação cria a nova atribuição e encerra a anterior; presença e financeiro não são transferidos.</li>
+                <li><strong>@UiText.L("Coverage.HowToSolicited")</strong> @UiText.L("Coverage.HowToSolicitedBody")</li>
+                <li><strong>@UiText.L("Coverage.HowToAwaitingResponse")</strong> @UiText.L("Coverage.HowToAwaitingResponseBody")</li>
+                <li><strong>@UiText.L("Coverage.HowToAwaitingApproval")</strong> @UiText.L("Coverage.HowToAwaitingApprovalBody")</li>
+                <li><strong>@UiText.L("Coverage.HowToConfirmed")</strong> @UiText.L("Coverage.HowToConfirmedBody")</li>
             </ul>
         </div>
     </details>
 
-    <form method="get" class="card border-0 shadow-sm mb-4" aria-label="Filtros da cobertura">
+    <form method="get" class="card border-0 shadow-sm mb-4" aria-label="@UiText.L("Coverage.FilterFormAria")">
         <div class="card-body row g-3 align-items-end">
-            <div class="col-6 col-lg-2"><label class="form-label" for="inicio">De</label><input class="form-control" type="date" id="inicio" name="inicio" value="@Context.Request.Query["inicio"]" /></div>
-            <div class="col-6 col-lg-2"><label class="form-label" for="fim">Até</label><input class="form-control" type="date" id="fim" name="fim" value="@Context.Request.Query["fim"]" /></div>
-            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="situacao">Situação</label><select class="form-select" id="situacao" name="situacao"><option value="">Todas</option><option value="DESCOBERTA">Vaga descoberta</option><option value="SEM_CONFIRMACAO">Atribuída sem confirmação</option><option value="SOLICITADA">Solicitação aberta</option><option value="AGUARDANDO_RESPOSTA">Aguardando resposta</option><option value="AGUARDANDO_APROVACAO">Aguardando aprovação</option><option value="CONFIRMADA">Cobertura concluída</option><option value="CANCELADA">Cancelada ou expirada</option></select></div>
-            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="busca">Unidade, especialidade ou responsável</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" /></div>
-            <div class="col-12 col-md-4 col-lg-2 d-grid"><button class="btn btn-primary" type="submit">Aplicar filtros</button></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="inicio">@UiText.L("Coverage.From")</label><input class="form-control" type="date" id="inicio" name="inicio" value="@Context.Request.Query["inicio"]" /></div>
+            <div class="col-6 col-lg-2"><label class="form-label" for="fim">@UiText.L("Coverage.Until")</label><input class="form-control" type="date" id="fim" name="fim" value="@Context.Request.Query["fim"]" /></div>
+            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="situacao">@UiText.L("Coverage.Situation")</label><select class="form-select" id="situacao" name="situacao"><option value="">@UiText.L("Coverage.AllOptions")</option><option value="DESCOBERTA">@UiText.L("Coverage.SituationDiscovered")</option><option value="SEM_CONFIRMACAO">@UiText.L("Coverage.SituationUnconfirmed")</option><option value="SOLICITADA">@UiText.L("Coverage.SituationSolicited")</option><option value="AGUARDANDO_RESPOSTA">@UiText.L("Coverage.SituationAwaitingResponse")</option><option value="AGUARDANDO_APROVACAO">@UiText.L("Coverage.SituationAwaitingApproval")</option><option value="CONFIRMADA">@UiText.L("Coverage.SituationConfirmed")</option><option value="CANCELADA">@UiText.L("Coverage.SituationCancelled")</option></select></div>
+            <div class="col-12 col-md-4 col-lg-3"><label class="form-label" for="busca">@UiText.L("Coverage.SearchLabel")</label><input class="form-control" id="busca" name="busca" value="@Context.Request.Query["busca"]" /></div>
+            <div class="col-12 col-md-4 col-lg-2 d-grid"><button class="btn btn-primary" type="submit">@UiText.L("Coverage.ApplyFilters")</button></div>
         </div>
     </form>
 
-    <div class="coverage-overview" aria-label="Indicadores de cobertura">
-        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Plantões hoje", Model.TotalPlantoesHoje, "programados no período", "neutral", "Plantoes", "Index"))" />
-        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Confirmados", Model.TotalEscalasConfirmadasHoje, "confirmações concluídas hoje", "positive", "Escalas", "Index"))" />
-        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Aguardando", Model.TotalEscalasSolicitadas, "respostas pendentes", "attention", "Escalas", "Index"))" />
-        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Em risco", Model.TotalPlantoesAbertos, "plantões ainda abertos", "risk", "Plantoes", "Index"))" />
-        <partial name="_CoverageCard" model="@(new CoverageCardViewModel("Conflitos", Model.TotalConflitos, "decisões necessárias", "critical", "Escalas", "Index"))" />
+    <div class="coverage-overview" aria-label="@UiText.L("Coverage.IndicatorsAria")">
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel(UiText.L("Coverage.ShiftsToday"), Model.TotalPlantoesHoje, UiText.L("Coverage.ShiftsTodayHint"), "neutral", "Plantoes", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel(UiText.L("Coverage.ConfirmedCard"), Model.TotalEscalasConfirmadasHoje, UiText.L("Coverage.ConfirmedCardHint"), "positive", "Escalas", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel(UiText.L("Coverage.WaitingCard"), Model.TotalEscalasSolicitadas, UiText.L("Coverage.WaitingCardHint"), "attention", "Escalas", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel(UiText.L("Coverage.AtRiskCard"), Model.TotalPlantoesAbertos, UiText.L("Coverage.AtRiskCardHint"), "risk", "Plantoes", "Index"))" />
+        <partial name="_CoverageCard" model="@(new CoverageCardViewModel(UiText.L("Coverage.ConflictsCard"), Model.TotalConflitos, UiText.L("Coverage.ConflictsCardHint"), "critical", "Escalas", "Index"))" />
     </div>
 
-    <nav class="operation-view-switcher" aria-label="Modos de visualização">
-        <span class="operation-view-switcher__label">Explorar por</span>
-        <a asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i> Calendário</a>
-        <a asp-controller="Plantoes" asp-action="Index"><i class="bi bi-list-task"></i> Lista</a>
-        <a asp-controller="Hospitais" asp-action="Index"><i class="bi bi-building"></i> Unidade</a>
-        <a asp-controller="Medicos" asp-action="Index"><i class="bi bi-person-badge"></i> Profissional</a>
-        <a asp-controller="CentralEscala" asp-action="Risco" class="is-active" aria-current="page"><i class="bi bi-shield-exclamation"></i> Risco</a>
+    <nav class="operation-view-switcher" aria-label="@UiText.L("Coverage.ViewModesAria")">
+        <span class="operation-view-switcher__label">@UiText.L("Coverage.ExploreBy")</span>
+        <a asp-controller="Agenda" asp-action="Index"><i class="bi bi-calendar3"></i> @UiText.L("Coverage.ModeCalendar")</a>
+        <a asp-controller="Plantoes" asp-action="Index"><i class="bi bi-list-task"></i> @UiText.L("Coverage.ModeList")</a>
+        <a asp-controller="Hospitais" asp-action="Index"><i class="bi bi-building"></i> @UiText.L("Coverage.ModeUnit")</a>
+        <a asp-controller="Medicos" asp-action="Index"><i class="bi bi-person-badge"></i> @UiText.L("Coverage.ModeProfessional")</a>
+        <a asp-controller="CentralEscala" asp-action="Risco" class="is-active" aria-current="page"><i class="bi bi-shield-exclamation"></i> @UiText.L("Coverage.ModeRisk")</a>
     </nav>
 
     <div class="operation-command__grid">
         <section class="operation-panel operation-panel--wide" aria-labelledby="coverage-map-title">
-            <header class="operation-panel__header"><div><span class="pp-section-kicker">Mapa de cobertura</span><h2 id="coverage-map-title">Leitura rápida da operação</h2></div><a asp-controller="CentralEscala" asp-action="Calendario">Ver grade completa <i class="bi bi-arrow-right"></i></a></header>
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">@UiText.L("Coverage.MapKicker")</span><h2 id="coverage-map-title">@UiText.L("Coverage.MapTitle")</h2></div><a asp-controller="CentralEscala" asp-action="Calendario">@UiText.L("Coverage.ViewFullGrid") <i class="bi bi-arrow-right"></i></a></header>
             <partial name="_CoverageHeatmap" model="heatmap" />
-            <p class="operation-panel__note"><i class="bi bi-info-circle"></i> Os sinais refletem os dados disponíveis agora; nenhuma projeção ou dado de demonstração é adicionado.</p>
+            <p class="operation-panel__note"><i class="bi bi-info-circle"></i> @UiText.L("Coverage.MapNote")</p>
         </section>
 
         <aside class="operation-panel risk-panel" aria-labelledby="risk-title">
-            <header class="operation-panel__header"><div><span class="pp-section-kicker">Fila prioritária</span><h2 id="risk-title">Atenção necessária</h2></div></header>
-            <a asp-controller="CentralEscala" asp-action="PlantaoDescoberto" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--critical"><i class="bi bi-person-x"></i></span><span><strong>@Model.TotalPlantoesAbertos plantão(ões) em aberto</strong><small>Inicie a busca por cobertura</small></span><i class="bi bi-chevron-right"></i></a>
-            <a asp-controller="CentralEscala" asp-action="ConvitesPendentes" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--waiting"><i class="bi bi-hourglass-split"></i></span><span><strong>@Model.TotalEscalasSolicitadas confirmação(ões)</strong><small>Acompanhe respostas pendentes</small></span><i class="bi bi-chevron-right"></i></a>
-            <a asp-controller="CentralEscala" asp-action="Risco" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--risk"><i class="bi bi-intersect"></i></span><span><strong>@Model.TotalConflitos conflito(s)</strong><small>Revise sobreposições de escala</small></span><i class="bi bi-chevron-right"></i></a>
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">@UiText.L("Coverage.QueueKicker")</span><h2 id="risk-title">@UiText.L("Coverage.QueueTitle")</h2></div></header>
+            <a asp-controller="CentralEscala" asp-action="PlantaoDescoberto" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--critical"><i class="bi bi-person-x"></i></span><span><strong>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Coverage.OpenShiftsCount"), Model.TotalPlantoesAbertos)</strong><small>@UiText.L("Coverage.OpenShiftsHint")</small></span><i class="bi bi-chevron-right"></i></a>
+            <a asp-controller="CentralEscala" asp-action="ConvitesPendentes" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--waiting"><i class="bi bi-hourglass-split"></i></span><span><strong>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Coverage.PendingConfirmationsCount"), Model.TotalEscalasSolicitadas)</strong><small>@UiText.L("Coverage.PendingConfirmationsHint")</small></span><i class="bi bi-chevron-right"></i></a>
+            <a asp-controller="CentralEscala" asp-action="Risco" class="risk-panel__item"><span class="risk-panel__icon risk-panel__icon--risk"><i class="bi bi-intersect"></i></span><span><strong>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Coverage.ConflictsCount"), Model.TotalConflitos)</strong><small>@UiText.L("Coverage.ConflictsHint")</small></span><i class="bi bi-chevron-right"></i></a>
         </aside>
 
         <section class="operation-panel operation-panel--wide" aria-labelledby="timeline-title">
-            <header class="operation-panel__header"><div><span class="pp-section-kicker">Próximos eventos</span><h2 id="timeline-title">Linha do tempo operacional</h2></div></header>
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">@UiText.L("Coverage.TimelineKicker")</span><h2 id="timeline-title">@UiText.L("Coverage.TimelineTitle")</h2></div></header>
             @if (timeline.Any()) { <partial name="_OperationalTimeline" model="timeline" /> }
-            else { <partial name="_DemoEmptyState" model="@(new EmptyStateViewModel("bi-calendar-check", "Agenda operacional tranquila", "Os próximos plantões críticos e confirmações aparecerão aqui assim que existirem."))" /> }
+            else { <partial name="_DemoEmptyState" model="@(new EmptyStateViewModel("bi-calendar-check", UiText.L("Coverage.TimelineEmptyTitle"), UiText.L("Coverage.TimelineEmptyBody")))" /> }
         </section>
 
         <aside class="operation-panel" aria-labelledby="quick-title">
-            <header class="operation-panel__header"><div><span class="pp-section-kicker">Atalhos</span><h2 id="quick-title">Ações rápidas</h2></div></header>
+            <header class="operation-panel__header"><div><span class="pp-section-kicker">@UiText.L("Coverage.QuickKicker")</span><h2 id="quick-title">@UiText.L("Coverage.QuickTitle")</h2></div></header>
             <div class="operation-quick-actions">
-                <a asp-controller="CentralEscala" asp-action="MedicosDisponiveis"><i class="bi bi-person-check"></i><span><strong>Profissionais disponíveis</strong><small>Localizar opções de cobertura</small></span></a>
-                <a asp-controller="CentralEscala" asp-action="Substituicoes"><i class="bi bi-arrow-left-right"></i><span><strong>Substituições</strong><small>Acompanhar solicitações</small></span></a>
-                <a asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span><strong>Alertas recentes</strong><small>@Model.NotificacoesNaoLidas não lido(s)</small></span></a>
-                <a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-stack"></i><span><strong>Pendências financeiras</strong><small>@Model.TotalPagamentosPendentes registro(s)</small></span></a>
+                <a asp-controller="CentralEscala" asp-action="MedicosDisponiveis"><i class="bi bi-person-check"></i><span><strong>@UiText.L("Coverage.QuickAvailableProfessionals")</strong><small>@UiText.L("Coverage.QuickAvailableProfessionalsHint")</small></span></a>
+                <a asp-controller="CentralEscala" asp-action="Substituicoes"><i class="bi bi-arrow-left-right"></i><span><strong>@UiText.L("Coverage.QuickSubstitutions")</strong><small>@UiText.L("Coverage.QuickSubstitutionsHint")</small></span></a>
+                <a asp-controller="Notificacoes" asp-action="Index"><i class="bi bi-bell"></i><span><strong>@UiText.L("Coverage.QuickRecentAlerts")</strong><small>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Coverage.UnreadCount"), Model.NotificacoesNaoLidas)</small></span></a>
+                <a asp-controller="Financeiro" asp-action="Index"><i class="bi bi-cash-stack"></i><span><strong>@UiText.L("Coverage.QuickFinancialPending")</strong><small>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Coverage.PendingRecordsCount"), Model.TotalPagamentosPendentes)</small></span></a>
             </div>
         </aside>
     </div>

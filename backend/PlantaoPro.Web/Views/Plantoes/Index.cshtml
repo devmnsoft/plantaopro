@@ -1,15 +1,15 @@
 @model PlantaoPro.Web.Models.ListPageViewModel<PlantaoPro.Web.Models.PlantaoResumoDto>
 @{
-    ViewData["Title"] = "Central de Plantões";
+    ViewData["Title"] = UiText.L("Shift.ListTitle");
     var items = (Model?.Items ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>()).ToArray();
     var descobertos = items.Count(p => p.VagasDisponiveis == p.Vagas && p.Vagas > 0);
     var proximos = items.Count(p => p.DataInicio >= DateTime.Now && p.DataInicio <= DateTime.Now.AddHours(24));
     var valorPagina = items.Sum(p => p.Valor);
 }
 <partial name="_PageIntroduction" model='new PlantaoPro.Web.Models.PageIntroductionViewModel(
-    "Central de Plantões", "Planeje, publique e recupere coberturas em um único workspace operacional.",
-    "Os indicadores abaixo usam somente os resultados reais da página atual.", "Novo plantão", "Create", "Plantoes",
-    new[] { "Filtre a operação no servidor.", "Priorize riscos de cobertura.", "Abra o detalhe para publicar, cancelar e acompanhar o histórico." })' />
+    UiText.L("Shift.ListTitle"), UiText.L("Shift.ListIntroSubtitle"),
+    UiText.L("Shift.ListIntroNote"), UiText.L("Shift.New"), "Create", "Plantoes",
+    new[] { UiText.L("Shift.TipFilter"), UiText.L("Shift.TipRisk"), UiText.L("Shift.TipDetail") })' />
 
 @section Styles { <link rel="stylesheet" href="~/css/pages/v2119-shift-operations.css" asp-append-version="true" /> }
 
@@ -17,74 +17,74 @@
 {
     <section class="pp-shift-feedback pp-shift-feedback--error" role="alert">
         <i class="bi bi-cloud-slash" aria-hidden="true"></i>
-        <div><strong>Não foi possível atualizar a operação</strong><p>@Model.ErrorMessage</p></div>
-        <a class="btn btn-outline-danger" asp-action="Index">Tentar novamente</a>
+        <div><strong>@UiText.L("Shift.RefreshFailedTitle")</strong><p>@Model.ErrorMessage</p></div>
+        <a class="btn btn-outline-danger" asp-action="Index">@UiText.L("Shift.TryAgain")</a>
     </section>
 }
 
-<nav class="pp-operational-journey" aria-label="Jornada operacional MVP" data-operational-mvp-journey>
-    <span class="is-current">Plantão</span><span>Convite</span><span>Escala</span><span>Confirmação</span><span>Presença ou substituição</span><span>Fechamento</span><span>Financeiro</span>
+<nav class="pp-operational-journey" aria-label="@UiText.L("Shift.JourneyAria")" data-operational-mvp-journey>
+    <span class="is-current">@UiText.L("Shift.JourneyStepShift")</span><span>@UiText.L("Shift.JourneyStepInvite")</span><span>@UiText.L("Shift.JourneyStepSchedule")</span><span>@UiText.L("Shift.JourneyStepConfirmation")</span><span>@UiText.L("Shift.JourneyStepPresence")</span><span>@UiText.L("Shift.JourneyStepClose")</span><span>@UiText.L("Shift.JourneyStepFinancial")</span>
 </nav>
 
 @if (items.Any())
 {
-<section class="pp-kpi-strip" aria-label="Resumo dos resultados exibidos">
-    <article class="pp-kpi-card"><span>Resultados</span><strong>@(Model?.Total ?? 0)</strong><small>em todos os resultados filtrados</small></article>
-    <article class="pp-kpi-card pp-kpi-card--danger"><span>Sem cobertura</span><strong>@descobertos</strong><small>nesta página</small></article>
-    <article class="pp-kpi-card pp-kpi-card--warning"><span>Próximas 24h</span><strong>@proximos</strong><small>nesta página</small></article>
-    <article class="pp-kpi-card"><span>Valor previsto</span><strong>@valorPagina.ToString("C")</strong><small>nesta página</small></article>
+<section class="pp-kpi-strip" aria-label="@UiText.L("Shift.KpiStripAria")">
+    <article class="pp-kpi-card"><span>@UiText.L("Shift.KpiResults")</span><strong>@(Model?.Total ?? 0)</strong><small>@UiText.L("Shift.KpiResultsHint")</small></article>
+    <article class="pp-kpi-card pp-kpi-card--danger"><span>@UiText.L("Shift.NoCoverage")</span><strong>@descobertos</strong><small>@UiText.L("Shift.ThisPage")</small></article>
+    <article class="pp-kpi-card pp-kpi-card--warning"><span>@UiText.L("Shift.KpiNext24h")</span><strong>@proximos</strong><small>@UiText.L("Shift.ThisPage")</small></article>
+    <article class="pp-kpi-card"><span>@UiText.L("Shift.KpiEstimatedValue")</span><strong>@valorPagina.ToString("C")</strong><small>@UiText.L("Shift.ThisPage")</small></article>
 </section>
 }
 
-<form method="get" class="pp-filter-bar" role="search" aria-label="Filtros operacionais de plantões">
-    <div class="pp-filter-bar__heading"><div><span class="pp-section-kicker">Filtros reais</span><h2 class="h6 mb-0">Recorte operacional</h2></div><a asp-action="Index" class="btn btn-sm btn-link">Limpar tudo</a></div>
+<form method="get" class="pp-filter-bar" role="search" aria-label="@UiText.L("Shift.FilterFormAria")">
+    <div class="pp-filter-bar__heading"><div><span class="pp-section-kicker">@UiText.L("Shift.FilterKicker")</span><h2 class="h6 mb-0">@UiText.L("Shift.FilterHeading")</h2></div><a asp-action="Index" class="btn btn-sm btn-link">@UiText.L("Shift.ClearAll")</a></div>
     <div class="pp-filter-grid">
-        <div><label for="cidade" class="form-label">Cidade</label><input id="cidade" name="cidade" class="form-control" value="@Context.Request.Query["cidade"]" placeholder="Ex.: Recife" /></div>
-        <div><label for="status" class="form-label">Status</label><select id="status" name="status" class="form-select"><option value="">Todos</option><option value="rascunho">Rascunho</option><option value="aberto">Publicado</option><option value="realizado">Realizado</option><option value="cancelado">Cancelado</option></select></div>
-        <div><label for="dataInicio" class="form-label">A partir de</label><input id="dataInicio" name="dataInicio" type="date" class="form-control" value="@Context.Request.Query["dataInicio"]" /></div>
-        <div><label for="dataFim" class="form-label">Até</label><input id="dataFim" name="dataFim" type="date" class="form-control" value="@Context.Request.Query["dataFim"]" /></div>
-        <div><label for="comVagas" class="form-label">Cobertura</label><select id="comVagas" name="comVagas" class="form-select"><option value="">Todas</option><option value="true">Com vagas</option><option value="false">Cobertura completa</option></select></div>
-        <div><label for="valorMinimo" class="form-label">Valor mínimo</label><input id="valorMinimo" name="valorMinimo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMinimo"]" /></div>
-        <div><label for="valorMaximo" class="form-label">Valor máximo</label><input id="valorMaximo" name="valorMaximo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMaximo"]" /></div>
-        <div><label for="ordenarPor" class="form-label">Ordenar</label><select id="ordenarPor" name="ordenarPor" class="form-select"><option value="data">Data</option><option value="valor">Valor</option><option value="hospital">Hospital</option><option value="especialidade">Especialidade</option><option value="vagas">Vagas</option></select></div>
+        <div><label for="cidade" class="form-label">@UiText.L("Shift.City")</label><input id="cidade" name="cidade" class="form-control" value="@Context.Request.Query["cidade"]" placeholder="@UiText.L("Shift.CityPlaceholder")" /></div>
+        <div><label for="status" class="form-label">@UiText.L("Shift.StatusFilter")</label><select id="status" name="status" class="form-select"><option value="">@UiText.L("Shift.AllOptions")</option><option value="rascunho">@UiText.L("Shift.StatusDraft")</option><option value="aberto">@UiText.L("Shift.StatusPublished")</option><option value="realizado">@UiText.L("Shift.StatusDone")</option><option value="cancelado">@UiText.L("Shift.StatusCancelled")</option></select></div>
+        <div><label for="dataInicio" class="form-label">@UiText.L("Shift.FromLabel")</label><input id="dataInicio" name="dataInicio" type="date" class="form-control" value="@Context.Request.Query["dataInicio"]" /></div>
+        <div><label for="dataFim" class="form-label">@UiText.L("Shift.UntilLabel")</label><input id="dataFim" name="dataFim" type="date" class="form-control" value="@Context.Request.Query["dataFim"]" /></div>
+        <div><label for="comVagas" class="form-label">@UiText.L("Shift.ThCoverage")</label><select id="comVagas" name="comVagas" class="form-select"><option value="">@UiText.L("Shift.AllCoverage")</option><option value="true">@UiText.L("Shift.WithVacancies")</option><option value="false">@UiText.L("Shift.CoverageComplete")</option></select></div>
+        <div><label for="valorMinimo" class="form-label">@UiText.L("Shift.MinValue")</label><input id="valorMinimo" name="valorMinimo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMinimo"]" /></div>
+        <div><label for="valorMaximo" class="form-label">@UiText.L("Shift.MaxValue")</label><input id="valorMaximo" name="valorMaximo" type="number" min="0" step="0.01" class="form-control" value="@Context.Request.Query["valorMaximo"]" /></div>
+        <div><label for="ordenarPor" class="form-label">@UiText.L("Shift.SortBy")</label><select id="ordenarPor" name="ordenarPor" class="form-select"><option value="data">@UiText.L("Shift.SortDate")</option><option value="valor">@UiText.L("Shift.SortValue")</option><option value="hospital">@UiText.L("Shift.SortHospital")</option><option value="especialidade">@UiText.L("Shift.SortSpecialty")</option><option value="vagas">@UiText.L("Shift.SortVacancies")</option></select></div>
     </div>
-    <div class="pp-filter-bar__actions"><select name="direcao" class="form-select form-select-sm" aria-label="Direção da ordenação"><option value="desc">Decrescente</option><option value="asc">Crescente</option></select><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> Aplicar filtros</button></div>
+    <div class="pp-filter-bar__actions"><select name="direcao" class="form-select form-select-sm" aria-label="@UiText.L("Shift.SortDirectionAria")"><option value="desc">@UiText.L("Shift.SortDesc")</option><option value="asc">@UiText.L("Shift.SortAsc")</option></select><button class="btn btn-primary" type="submit"><i class="bi bi-funnel"></i> @UiText.L("Coverage.ApplyFilters")</button></div>
 </form>
 
 @if (items.Any())
 {
     <div class="pp-shift-viewbar" data-shift-viewbar>
-        <div><span class="pp-section-kicker">Workspace operacional</span><strong>Escolha como acompanhar a cobertura</strong></div>
-        <div class="pp-shift-viewbar__controls" role="group" aria-label="Visualização dos plantões">
-            <button class="is-active" type="button" data-shift-view="list" aria-pressed="true"><i class="bi bi-list-task"></i> Lista</button>
-            <button type="button" data-shift-view="kanban" aria-pressed="false"><i class="bi bi-columns-gap"></i> Kanban</button>
-            <a asp-action="Calendario"><i class="bi bi-calendar3"></i> Calendário</a>
+        <div><span class="pp-section-kicker">@UiText.L("Shift.WorkspaceKicker")</span><strong>@UiText.L("Shift.ViewbarTitle")</strong></div>
+        <div class="pp-shift-viewbar__controls" role="group" aria-label="@UiText.L("Shift.ViewbarAria")">
+            <button class="is-active" type="button" data-shift-view="list" aria-pressed="true"><i class="bi bi-list-task"></i> @UiText.L("Coverage.ModeList")</button>
+            <button type="button" data-shift-view="kanban" aria-pressed="false"><i class="bi bi-columns-gap"></i> @UiText.L("Shift.ViewKanban")</button>
+            <a asp-action="Calendario"><i class="bi bi-calendar3"></i> @UiText.L("Coverage.ModeCalendar")</a>
         </div>
     </div>
     <div data-shift-panel="list">
-    <div class="pp-data-table d-none d-lg-block"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Hospital e cidade</th><th>Especialidade</th><th>Período</th><th>Cobertura</th><th>Valor</th><th>Status</th><th><span class="visually-hidden">Ações</span></th></tr></thead><tbody>
-    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; var coberto = p.VagasDisponiveis == 0; <tr><td><strong>@p.HospitalNome</strong><small>@p.HospitalCidade/@p.HospitalEstado</small></td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM, HH:mm")<small>@((p.DataFim-p.DataInicio).TotalHours.ToString("0.#")) horas</small></td><td><span class="pp-coverage-badge @(coberto ? "is-covered" : "is-open")">@(p.Vagas-p.VagasDisponiveis)/@p.Vagas preenchidas</span><small>@(coberto ? "Cobertura completa" : "Cobertura pendente")</small></td><td>@p.Valor.ToString("C")</td><td><partial name="_StatusBadge" model="p.Status" /> @if (risco) { <span class="pp-risk-badge" title="Risco derivado de todas as vagas ainda disponíveis">Sem cobertura</span> }</td><td class="text-end"><div class="pp-next-action" data-next-action><small>Próxima ação</small><strong>@(risco ? "Buscar cobertura" : "Revisar operação")</strong></div><button class="btn btn-sm btn-outline-primary" type="button" data-detail-open data-detail-kind="Plantão" data-detail-title="@p.HospitalNome · @p.EspecialidadeNome" data-detail-status="@p.Status" data-detail-summary="@(p.Observacoes ?? "Sem observações registradas.")" data-detail-origin="@p.HospitalNome" data-detail-period="@p.DataInicio.ToString("dd/MM/yyyy HH:mm") – @p.DataFim.ToString("dd/MM/yyyy HH:mm")" data-detail-reference="@p.Id" data-detail-primary-url="@Url.Action("Details", "Plantoes", new { id = p.Id })">Ver detalhes</button><a class="btn btn-sm btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id">Ver convites</a></td></tr> }
+    <div class="pp-data-table d-none d-lg-block"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>@UiText.L("Shift.ThHospital")</th><th>@UiText.L("Shift.ThSpecialty")</th><th>@UiText.L("Shift.ThPeriod")</th><th>@UiText.L("Shift.ThCoverage")</th><th>@UiText.L("Shift.Value")</th><th>@UiText.L("Shift.StatusFilter")</th><th><span class="visually-hidden">@UiText.L("Shift.ThActions")</span></th></tr></thead><tbody>
+    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; var coberto = p.VagasDisponiveis == 0; <tr><td><strong>@p.HospitalNome</strong><small>@p.HospitalCidade/@p.HospitalEstado</small></td><td>@p.EspecialidadeNome</td><td>@p.DataInicio.ToString("dd/MM, HH:mm")<small>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Shift.Hours"), (p.DataFim-p.DataInicio).TotalHours.ToString("0.#"))</small></td><td><span class="pp-coverage-badge @(coberto ? "is-covered" : "is-open")">@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Shift.FilledSlots"), p.Vagas-p.VagasDisponiveis, p.Vagas)</span><small>@(coberto ? UiText.L("Shift.CoverageComplete") : UiText.L("Shift.CoveragePending"))</small></td><td>@p.Valor.ToString("C")</td><td><partial name="_StatusBadge" model="p.Status" /> @if (risco) { <span class="pp-risk-badge" title="@UiText.L("Shift.NoCoverageRisk")">@UiText.L("Shift.NoCoverage")</span> }</td><td class="text-end"><div class="pp-next-action" data-next-action><small>@UiText.L("Shift.NextAction")</small><strong>@(risco ? UiText.L("Shift.SeekCoverage") : UiText.L("Shift.ReviewOperation"))</strong></div><button class="btn btn-sm btn-outline-primary" type="button" data-detail-open data-detail-kind="Plantão" data-detail-title="@p.HospitalNome · @p.EspecialidadeNome" data-detail-status="@p.Status" data-detail-summary="@(p.Observacoes ?? UiText.L("Shift.NoObservations"))" data-detail-origin="@p.HospitalNome" data-detail-period="@p.DataInicio.ToString("dd/MM/yyyy HH:mm") – @p.DataFim.ToString("dd/MM/yyyy HH:mm")" data-detail-reference="@p.Id" data-detail-primary-url="@Url.Action("Details", "Plantoes", new { id = p.Id })">@(UiText.L("Shift.ViewDetails"))</button><a class="btn btn-sm btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id">@(UiText.L("Shift.ViewInvites"))</a></td></tr> }
     </tbody></table></div></div>
-    <div class="pp-mobile-card-list d-lg-none" aria-label="Plantões em cartões">
-    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; <article class="pp-operational-card @(risco ? "pp-operational-card--risk" : "")"><header><div><span class="pp-section-kicker">@p.EspecialidadeNome</span><h2>@p.HospitalNome</h2><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p></div><partial name="_StatusBadge" model="p.Status" /></header><dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div><div><dt>Risco</dt><dd>@(risco ? "Sem cobertura" : "Sem risco derivável")</dd></div></dl><div class="pp-next-action" data-next-action><small>Próxima ação</small><strong>@(risco ? "Buscar cobertura" : "Revisar detalhes")</strong></div><footer><a class="btn btn-primary flex-grow-1" asp-action="Details" asp-route-id="@p.Id">Abrir operação</a><a class="btn btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id" aria-label="Ver convites do plantão"><i class="bi bi-person-plus"></i></a></footer></article> }
+    <div class="pp-mobile-card-list d-lg-none" aria-label="@UiText.L("Shift.MobileCardsAria")">
+    @foreach (var p in items) { var risco = p.Vagas > 0 && p.VagasDisponiveis == p.Vagas; <article class="pp-operational-card @(risco ? "pp-operational-card--risk" : "")"><header><div><span class="pp-section-kicker">@p.EspecialidadeNome</span><h2>@p.HospitalNome</h2><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p></div><partial name="_StatusBadge" model="p.Status" /></header><dl><div><dt>@UiText.L("Shift.Start")</dt><dd>@p.DataInicio.ToString("dd/MM HH:mm")</dd></div><div><dt>@UiText.L("Shift.ThCoverage")</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div><div><dt>@UiText.L("Shift.Risk")</dt><dd>@(risco ? UiText.L("Shift.NoCoverage") : UiText.L("Shift.NoDerivableRisk"))</dd></div></dl><div class="pp-next-action" data-next-action><small>@UiText.L("Shift.NextAction")</small><strong>@(risco ? UiText.L("Shift.SeekCoverage") : UiText.L("Shift.ReviewDetails"))</strong></div><footer><a class="btn btn-primary flex-grow-1" asp-action="Details" asp-route-id="@p.Id">@(UiText.L("Shift.OpenOperation"))</a><a class="btn btn-outline-secondary" asp-controller="Convites" asp-action="Index" asp-route-plantaoId="@p.Id" aria-label="@UiText.L("Shift.ViewInvitesAria")"><i class="bi bi-person-plus"></i></a></footer></article> }
     </div>
     </div>
-    <section class="pp-shift-kanban" data-shift-panel="kanban" hidden aria-label="Plantões por situação de cobertura">
-        @foreach (var lane in new[] { (Key: "risk", Title: "Cobertura crítica", Icon: "bi-shield-exclamation"), (Key: "open", Title: "Em cobertura", Icon: "bi-radar"), (Key: "covered", Title: "Cobertos", Icon: "bi-shield-check") })
+    <section class="pp-shift-kanban" data-shift-panel="kanban" hidden aria-label="@UiText.L("Shift.KanbanAria")">
+        @foreach (var lane in new[] { (Key: "risk", Title: UiText.L("Shift.LaneCritical"), Icon: "bi-shield-exclamation"), (Key: "open", Title: UiText.L("Shift.LaneOpen"), Icon: "bi-radar"), (Key: "covered", Title: UiText.L("Shift.LaneCovered"), Icon: "bi-shield-check") })
         {
             var laneItems = items.Where(p => lane.Key == "risk" ? p.Vagas > 0 && p.VagasDisponiveis == p.Vagas : lane.Key == "covered" ? p.VagasDisponiveis == 0 : p.VagasDisponiveis > 0 && p.VagasDisponiveis < p.Vagas).ToArray();
             <div class="pp-shift-lane pp-shift-lane--@lane.Key">
                 <header><span><i class="bi @lane.Icon" aria-hidden="true"></i> @lane.Title</span><strong>@laneItems.Length</strong></header>
                 <div class="pp-shift-lane__body">
-                    @if (!laneItems.Any()) { <p class="pp-shift-lane__empty">Nenhum plantão nesta etapa.</p> }
+                    @if (!laneItems.Any()) { <p class="pp-shift-lane__empty">@UiText.L("Shift.LaneEmpty")</p> }
                     @foreach (var p in laneItems)
                     {
                         <article class="pp-shift-ticket">
                             <div class="pp-shift-ticket__top"><span>@p.EspecialidadeNome</span><partial name="_StatusBadge" model="p.Status" /></div>
                             <h3>@p.HospitalNome</h3><p><i class="bi bi-geo-alt"></i> @p.HospitalCidade/@p.HospitalEstado</p>
-                            <dl><div><dt>Início</dt><dd>@p.DataInicio.ToString("dd/MM · HH:mm")</dd></div><div><dt>Cobertura</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div></dl>
-                            <div class="pp-shift-progress" role="progressbar" aria-label="Cobertura do plantão" aria-valuemin="0" aria-valuemax="@p.Vagas" aria-valuenow="@(p.Vagas-p.VagasDisponiveis)"><span data-progress="@(p.Vagas == 0 ? 0 : (p.Vagas-p.VagasDisponiveis)*100/p.Vagas)"></span></div>
-                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">Abrir operação <i class="bi bi-arrow-right"></i></a>
+                            <dl><div><dt>@UiText.L("Shift.Start")</dt><dd>@p.DataInicio.ToString("dd/MM · HH:mm")</dd></div><div><dt>@UiText.L("Shift.ThCoverage")</dt><dd>@(p.Vagas-p.VagasDisponiveis)/@p.Vagas</dd></div></dl>
+                            <div class="pp-shift-progress" role="progressbar" aria-label="@UiText.L("Shift.CoverageProgressAria")" aria-valuemin="0" aria-valuemax="@p.Vagas" aria-valuenow="@(p.Vagas-p.VagasDisponiveis)"><span data-progress="@(p.Vagas == 0 ? 0 : (p.Vagas-p.VagasDisponiveis)*100/p.Vagas)"></span></div>
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@p.Id">@UiText.L("Shift.OpenOperation") <i class="bi bi-arrow-right"></i></a>
                         </article>
                     }
                 </div>
@@ -96,7 +96,7 @@
 
 else
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", "Nenhum plantão neste recorte", "Ajuste os filtros ou crie um plantão para iniciar a cobertura.", "Novo plantão", "Create", "Plantoes")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-calendar2-x", UiText.L("Shift.EmptyTitle"), UiText.L("Shift.EmptyBody"), UiText.L("Shift.New"), "Create", "Plantoes")' />
 }
 
 @section Scripts { <script src="~/js/v2119-shift-operations.js" asp-append-version="true"></script> }

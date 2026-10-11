@@ -1,10 +1,11 @@
 @model PlantaoPro.Web.Models.PlantaoDetailsDto?
+@* R7-D-F3: detalhe de plantão da Central de Escala em recursos localizados (UiTexts.resx x4). *@
 @{
-    ViewData["Title"] = "Plantão - Central de Escala";
+    ViewData["Title"] = UiText.L("Shift.DetailsTitle");
 }
 
 <div class="mb-3">
-    <a asp-controller="CentralEscala" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    <a asp-controller="CentralEscala" asp-action="Index" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> @UiText.L("Shift.Back")</a>
 </div>
 
 @if (ViewBag.ErrorMessage != null)
@@ -23,16 +24,16 @@
             <h4>@Model.EspecialidadeNome</h4>
             <p class="text-muted mb-2">@Model.HospitalCidade/@Model.HospitalEstado</p>
             <div class="row g-3">
-                <div class="col-md-3"><small>Início</small><div>@Model.DataInicio.ToString("dd/MM/yyyy HH:mm")</div></div>
-                <div class="col-md-3"><small>Fim</small><div>@Model.DataFim.ToString("dd/MM/yyyy HH:mm")</div></div>
-                <div class="col-md-3"><small>Vagas</small><div>@Model.VagasDisponiveis / @Model.Vagas</div></div>
-                <div class="col-md-3"><small>Valor</small><div>@Model.Valor.ToString("C")</div></div>
+                <div class="col-md-3"><small>@UiText.L("Shift.Start")</small><div>@Model.DataInicio.ToString("dd/MM/yyyy HH:mm")</div></div>
+                <div class="col-md-3"><small>@UiText.L("Shift.End")</small><div>@Model.DataFim.ToString("dd/MM/yyyy HH:mm")</div></div>
+                <div class="col-md-3"><small>@UiText.L("Shift.Vacancies")</small><div>@Model.VagasDisponiveis / @Model.Vagas</div></div>
+                <div class="col-md-3"><small>@UiText.L("Shift.Value")</small><div>@Model.Valor.ToString("C")</div></div>
             </div>
             <hr />
             <div class="d-flex flex-wrap gap-2">
-                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">Detalhes completos</a>
-                <a asp-controller="Escalas" asp-action="Index" asp-route-plantaoId="@Model.Id" class="btn btn-outline-success">Escalas</a>
-                <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-secondary">Agenda</a>
+                <a asp-controller="Plantoes" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-primary">@UiText.L("Shift.FullDetails")</a>
+                <a asp-controller="Escalas" asp-action="Index" asp-route-plantaoId="@Model.Id" class="btn btn-outline-success">@UiText.L("Shift.ShiftsLink")</a>
+                <a asp-controller="Agenda" asp-action="Index" class="btn btn-outline-secondary">@UiText.L("Shift.AgendaLink")</a>
             </div>
         </div>
     </div>

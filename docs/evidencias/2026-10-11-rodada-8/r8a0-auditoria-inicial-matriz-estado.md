@@ -253,7 +253,7 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 ## 4. Ordem de cortes proposta (atualizada após esta auditoria)
 
 1. ~~**R7-OB** — passo "Preferências" (idioma) no onboarding~~ — ✅ **entregue nesta rodada** (v2345 + avaliador + 5 testes; doc `r7ob-onboarding-preferencias-idioma.md`; fecha a linha da matriz e o uso na jornada de §12.6). Wizard MNSOFT `NovoCliente` segue fora do escopo desta fatia.
-2. **R7-D** — varredura design/textos/i18n por jornada: escopo consolidado em `r7d0-varredura-design-textos-i18n.md` (6 fatias). **F1 e F2 entregues nesta rodada** (sidebar/topbar + login/perfil em recursos localizados; docs `r7df1-navegacao-i18n.md` e `r7df2-login-perfil-i18n.md`; suite agora 1260 testes com gate 52); segue F3 (Central de Escala).
+2. **R7-D** — varredura design/textos/i18n por jornada: escopo consolidado em `r7d0-varredura-design-textos-i18n.md` (6 fatias). **F1, F2 e F3 entregues nesta rodada** (sidebar/topbar, login/perfil e central de escala em recursos localizados; docs `r7df1-navegacao-i18n.md`, `r7df2-login-perfil-i18n.md`, `r7df3-central-escala-i18n.md`; suíte agora 1264 testes com gate 52); segue F4 (estados vazios Saúde360/Consultas).
 3. Cortes novos derivados dos achados §17–§30 (definidos após consolidação desta matriz; prioridade: itens classificados quebrado, depois ausente-alto-impacto).
 4. Externos/DECs: upgrade formal `plantaopro` v2339→v2344 + IIS; homologação viva; credenciais fiscais; semântica de `solicitado`; DECs de R6-A1b.
 
@@ -287,6 +287,7 @@ Observações de escopo:
 
 - Falha única do ×3: `SaasGovernancaB6Rodada4Tests.G3_Trial_ValidoOpera_E_VencidoBloqueiaComRegistro` — `Npgsql 40P01` (impasse) em `PurgarAsync` dentro de `Dispose` (`SaasGovernancaB6Rodada4Tests.cs:481`, invocado em :78); assertions do teste passaram. Assinatura = flake de cleanup sob concorrência de coleções no banco compartilhado, não regressão de produto. **Reexecução isolada da classe: 8/8 em 1 s** (`rerun-b6.log`).
 - Com isso, o status **TESTADO** do R7-E1 fica selado com evidência executada (incluindo persistência real da coluna v2344 no PostgreSQL e o teste de corrida do painel agora no gate permanente).
+- [R7-D-F3] Falha única do full2 do ciclo 10:42 UTC-3: `Administrativo360DocumentosXmlB1Tests.Divergente_MesmaChave_OutroConteudo_FalhaComMensagemDeErro` (`:356`, `r2.Falhas` esperado 1 / obtido 0) — full1 e full3 passaram com o mesmo binário; **classe isolada 6/6 em 1 s** (`rerun-b1.log`). Terceira assinatura distinta de flake sob concorrência de coleções no banco compartilhado (as duas anteriores: 40P01 em `PurgarAsync` cleanup); não é regressão do corte i18n (zero contato com o repositório de XML).
 
 ## 7. Fechamento da rodada até aqui — corte R7-OB entregue
 

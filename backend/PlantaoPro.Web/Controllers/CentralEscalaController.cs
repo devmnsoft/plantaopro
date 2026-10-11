@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Services;
 
 namespace PlantaoPro.Web.Controllers;
@@ -31,7 +32,7 @@ public sealed class CentralEscalaController : BaseWebController
 
             if (data is null)
             {
-                ViewBag.ErrorMessage = error ?? "Não foi possível carregar a Central de Escala.";
+                ViewBag.ErrorMessage = error ?? UiText.L("Coverage.LoadFailed");
                 return View(OperacaoResumoDto.Empty());
             }
 
@@ -40,7 +41,7 @@ public sealed class CentralEscalaController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Falha ao carregar Central de Escala.");
-            ViewBag.ErrorMessage = "Falha inesperada ao carregar a Central de Escala.";
+            ViewBag.ErrorMessage = UiText.L("Coverage.LoadUnexpected");
             return View(OperacaoResumoDto.Empty());
         }
     }
@@ -58,7 +59,7 @@ public sealed class CentralEscalaController : BaseWebController
         if (!AddBearerToken(client)) return HandleUnauthorized();
         var result = ModelState.IsValid
             ? await ReadApiResponse<IEnumerable<ManagerSubstitutionDto>>(client, "api/substituicoes")
-            : (null, "Revise os filtros informados.", HttpStatusCode.UnprocessableEntity);
+            : (null, UiText.L("Coverage.FiltersInvalid"), HttpStatusCode.UnprocessableEntity);
         var query = (result.Item1 ?? Array.Empty<ManagerSubstitutionDto>()).AsEnumerable();
         if (unidadeId.HasValue) query = query.Where(x => x.HospitalId == unidadeId);
         if (!string.IsNullOrWhiteSpace(status)) query = query.Where(x => x.Status.Equals(status.Trim(), StringComparison.OrdinalIgnoreCase));
@@ -83,13 +84,13 @@ public sealed class CentralEscalaController : BaseWebController
     {
         justificativa = justificativa?.Trim();
         if (id == Guid.Empty || versaoEsperada <= 0 || decisao is not ("APROVAR" or "RECUSAR") || justificativa?.Length is < 3 or > 1000)
-        { TempData["Error"] = "Selecione uma decisão explícita e informe justificativa entre 3 e 1.000 caracteres."; TempData["DecisionReason"] = justificativa; return RedirectToAction(nameof(SubstituicaoDetails), new { id, returnUrl = LocalReturnUrl(returnUrl) }); }
+        { TempData["Error"] = UiText.L("Coverage.DecisionValidation"); TempData["DecisionReason"] = justificativa; return RedirectToAction(nameof(SubstituicaoDetails), new { id, returnUrl = LocalReturnUrl(returnUrl) }); }
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
         var endpoint = $"api/substituicoes/{id}/{(decisao == "APROVAR" ? "aprovar" : "recusar")}";
         var response = await client.PostAsJsonAsync(endpoint, new { Justificativa = justificativa, VersaoEsperada = versaoEsperada });
-        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? "Decisão registrada. O profissional já pode acompanhar a situação no portal." : response.StatusCode switch
-        { HttpStatusCode.Conflict => "A solicitação mudou ou já foi decidida. Revise o estado atual antes de tentar novamente.", HttpStatusCode.Forbidden => "Sua permissão ou vínculo com a unidade não permite esta decisão.", HttpStatusCode.NotFound => "Solicitação indisponível no contexto atual.", _ => "Não foi possível confirmar o resultado. Consulte o estado antes de repetir." };
+        TempData[response.IsSuccessStatusCode ? "Success" : "Error"] = response.IsSuccessStatusCode ? UiText.L("Coverage.DecisionRecorded") : response.StatusCode switch
+        { HttpStatusCode.Conflict => UiText.L("Coverage.DecisionConflict"), HttpStatusCode.Forbidden => UiText.L("Coverage.DecisionForbidden"), HttpStatusCode.NotFound => UiText.L("Coverage.DecisionNotFound"), _ => UiText.L("Coverage.DecisionUnknown") };
         if (!response.IsSuccessStatusCode) TempData["DecisionReason"] = justificativa;
         return RedirectToAction(nameof(SubstituicaoDetails), new { id, returnUrl = LocalReturnUrl(returnUrl) });
     }
@@ -104,7 +105,7 @@ public sealed class CentralEscalaController : BaseWebController
     {
         if (plantaoId == Guid.Empty || medicoId == Guid.Empty)
         {
-            TempData["Error"] = "Selecione um plantão e um médico válidos para enviar o convite.";
+            TempData["Error"] = UiText.L("Coverage.InviteValidation");
             return RedirectToAction(nameof(ConvitesPendentes));
         }
 
@@ -120,7 +121,7 @@ public sealed class CentralEscalaController : BaseWebController
             var payload = new
             {
                 MedicoIds = new List<Guid> { medicoId },
-                Mensagem = "Convite enviado pela Central de Cobertura."
+                Mensagem = UiText.L("Coverage.InviteMessage")
             };
             var (data, error, statusCode) = await SendApiAsync<object, int>(client, HttpMethod.Post, endpoint, payload);
             LogRequestContext("cobertura.convite.enviar", endpoint, (int)statusCode);
@@ -132,17 +133,17 @@ public sealed class CentralEscalaController : BaseWebController
 
             if (statusCode is < HttpStatusCode.OK or >= HttpStatusCode.Ambiguous || data <= 0)
             {
-                TempData["Error"] = error ?? "O convite não foi enviado. Verifique a disponibilidade e se já existe um convite pendente.";
+                TempData["Error"] = error ?? UiText.L("Coverage.InviteFailed");
                 return RedirectToAction(nameof(Plantao), new { id = plantaoId });
             }
 
-            TempData["Success"] = "Convite enviado e registrado com sucesso.";
+            TempData["Success"] = UiText.L("Coverage.InviteSent");
             return RedirectToAction(nameof(Plantao), new { id = plantaoId });
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Falha ao enviar convite pela Central de Cobertura. PlantaoId:{PlantaoId} MedicoId:{MedicoId}", plantaoId, medicoId);
-            TempData["Error"] = "Não foi possível enviar o convite agora. Tente novamente.";
+            TempData["Error"] = UiText.L("Coverage.InviteUnexpected");
             return RedirectToAction(nameof(Plantao), new { id = plantaoId });
         }
     }
@@ -164,7 +165,7 @@ public sealed class CentralEscalaController : BaseWebController
 
             if (data is null)
             {
-                ViewBag.ErrorMessage = error ?? "Plantão não encontrado.";
+                ViewBag.ErrorMessage = error ?? UiText.L("Shift.NotFound");
             }
 
             return View(data);
@@ -172,7 +173,7 @@ public sealed class CentralEscalaController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Falha ao carregar plantão {PlantaoId} na Central de Escala.", id);
-            ViewBag.ErrorMessage = "Falha inesperada ao carregar o plantão.";
+            ViewBag.ErrorMessage = UiText.L("Shift.LoadUnexpected");
             return View(null);
         }
     }

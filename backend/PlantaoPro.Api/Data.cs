@@ -1444,7 +1444,7 @@ where plantao_id=@id and reg_status='A' and lower(status) in ('solicitado','soli
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, escalaId, null, "solicitado", "Aceite de plantão", userId);
-                await notificacao.CriarNotificacaoAsync(userId, "Aceite de plantão", "Aceite registrado com sucesso", "escala", tx);
+                await notificacao.CriarNotificacaoAsync(userId, "Aceite de plantão", "Aceite registrado com sucesso", "escala", tx, "escala", escalaId);
                 await audit.LogAsync(userId, "ACEITAR", "escalas", escalaId, "Aceite de plantão", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 logger.LogInformation("Escala {EscalaId} aceita", escalaId);
@@ -1510,7 +1510,7 @@ status=case when vagas_disponiveis-1=0 then 'preenchido' else 'em_escala' end,up
 where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                 await cn.ExecuteAsync("update plantaopro.plantao_convites set status='ACEITO',data_resposta=now(),reg_update=now() where id=@conviteId", new { conviteId }, tx);
                 await AddHistoricoAsync(cn, tx, escalaId, null, "confirmado", "Aceite de convite operacional", userId);
-                await notificacao.CriarNotificacaoAsync(userId, "Plantão confirmado", "O compromisso foi confirmado na sua agenda.", "escala", tx);
+                await notificacao.CriarNotificacaoAsync(userId, "Plantão confirmado", "O compromisso foi confirmado na sua agenda.", "escala", tx, "escala", escalaId);
                 await tx.CommitAsync();
                 try
                 {
@@ -1581,7 +1581,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                         return ApiResponse<string>.Fail("A última vaga foi preenchida por outra operação. Atualize o plantão.", 409);
                     await cn.ExecuteAsync("update plantaopro.escalas set status='confirmado',updated_by=@u,reg_update=now() where id=@id and status='solicitado'", new { id, u = userId }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "confirmado", justificativa, userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Escala confirmada", "Sua escala foi confirmada", "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Escala confirmada", "Sua escala foi confirmada", "escala", tx, "escala", id);
                 }
                 else if (novo == "recusado")
                 {
@@ -1603,7 +1603,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                         u = userId
                     }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "recusado", justificativa, userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Escala recusada", justificativa!, "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Escala recusada", justificativa!, "escala", tx, "escala", id);
                 }
                 else if (novo == "cancelado")
                 {
@@ -1629,7 +1629,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                         }, tx);
                     }
                     await AddHistoricoAsync(cn, tx, id, e.Status, "cancelado", justificativa, userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Escala cancelada", justificativa!, "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Escala cancelada", justificativa!, "escala", tx, "escala", id);
                 }
                 else if (novo == "substituido")
                 {
@@ -1667,7 +1667,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                     }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "substituido", justificativa, userId);
                     await AddHistoricoAsync(cn, tx, nova, null, "confirmado", "Escala criada por substituição", userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Escala substituída", justificativa!, "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Escala substituída", justificativa!, "escala", tx, "escala", id);
                 }
                 else if (novo == "realizado")
                 {
@@ -1684,7 +1684,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                         u = userId
                     }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "realizado", justificativa, userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Escala realizada", "Escala marcada como realizada", "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Escala realizada", "Escala marcada como realizada", "escala", tx, "escala", id);
                 }
                 else if (novo == "nao_compareceu")
                 {
@@ -1699,7 +1699,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                         u = userId
                     }, tx);
                     await AddHistoricoAsync(cn, tx, id, e.Status, "nao_compareceu", justificativa, userId);
-                    await notificacao.CriarNotificacaoAsync(userId, "Não comparecimento registrado", justificativa ?? "Escala marcada como não compareceu", "escala", tx);
+                    await notificacao.CriarNotificacaoAsync(userId, "Não comparecimento registrado", justificativa ?? "Escala marcada como não compareceu", "escala", tx, "escala", id);
                 }
                 else
                     return ApiResponse<string>.Fail("Status não suportado");
@@ -1856,7 +1856,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, id, null, "pendente", req.Observacoes ?? "Pagamento gerado", userId);
-                await notificacao.CriarNotificacaoAsync(row.UsuarioId, "Pagamento gerado", "Seu pagamento foi gerado e está pendente.", "financeiro", tx);
+                await notificacao.CriarNotificacaoAsync(row.UsuarioId, "Pagamento gerado", "Seu pagamento foi gerado e está pendente.", "financeiro", tx, "pagamento", id);
                 await audit.LogAsync(userId, "CREATE", "pagamentos", id, "Pagamento gerado", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 return ApiResponse<Guid>.Ok(id, "Pagamento gerado");
@@ -1902,7 +1902,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, "pago", req.Observacoes ?? "Pagamento confirmado", userId);
-                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento confirmado", "Seu pagamento foi confirmado.", "financeiro", tx);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento confirmado", "Seu pagamento foi confirmado.", "financeiro", tx, "pagamento", id);
                 await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, $"{pg.Status}->pago", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 return ApiResponse<string>.Ok("ok", "Pagamento confirmado");
@@ -1928,7 +1928,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
             var changed=await cn.ExecuteAsync("update plantaopro.pagamentos set status='pago',valor_pago=valor_aprovado,forma_pagamento=@forma,data_pagamento=@data,origem_pagamento='MANUAL',observacoes=coalesce(@obs,observacoes),updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status='aprovado'",new{id,tenantId,clienteId,forma=req.FormaPagamento.Trim(),data=req.DataPagamento,obs=req.Observacoes,userId},tx);
             if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("O registro foi atualizado por outra pessoa. Recarregue a página.",409);
             await AddHistoricoAsync(cn,tx,id,"aprovado","pago",req.Observacoes??"Pagamento manual registrado",userId);
-            await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento registrado","O pagamento foi registrado manualmente pelo financeiro.","financeiro",tx);
+            await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento registrado","O pagamento foi registrado manualmente pelo financeiro.","financeiro",tx,"pagamento",id);
             await tx.CommitAsync(); await audit.LogAsync(userId,"PAGAMENTO_MANUAL_REGISTRADO","pagamentos",id,"Obrigação aprovada quitada integralmente.",ip:ip,userAgent:ua);
             return ApiResponse<PagamentoActionResponse>.Ok(new(id,"pago",pg.ValorAprovado,req.DataPagamento,"nenhuma"),"Pagamento registrado.");
         }
@@ -1952,9 +1952,10 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                 var statusAposContestacao = pg.Status == "pago" ? "pago" : "contestado";
                 if (statusAposContestacao != pg.Status)
                     await cn.ExecuteAsync("update plantaopro.pagamentos set status='contestado',versao=versao+1,reg_update=now(),updated_by=@userId where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status in ('pendente','aprovado')", new { id,tenantId,clienteId,userId }, tx);
-                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,situacao_anterior,aberto_por) values(gen_random_uuid(),@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@anterior,@userId)", new { tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=valorBase,anterior=pg.Status,userId },tx);
+                var contestacaoId=Guid.NewGuid();
+                await cn.ExecuteAsync("insert into plantaopro.pagamento_contestacoes(id,tenant_id,cliente_id,pagamento_id,motivo,status,valor_original,situacao_anterior,aberto_por) values(@contestacaoId,@tenantId,@clienteId,@id,@motivo,'ABERTA',@valor,@anterior,@userId)", new { contestacaoId,tenantId,clienteId,id,motivo=req.Motivo.Trim(),valor=valorBase,anterior=pg.Status,userId },tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, statusAposContestacao, "CONTESTACAO_ABERTA: " + req.Motivo.Trim(), userId);
-                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento contestado", req.Motivo.Trim(), "financeiro", tx, "contestacao", contestacaoId);
                 await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, "CONTESTACAO_ABERTA", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 return ApiResponse<PagamentoActionResponse>.Ok(new(id, statusAposContestacao, valorBase, null, "aguardar-resolucao"), "Contestação registrada.");
@@ -1982,7 +1983,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                 var novoStatus=decisao=="CANCELAR_PAGAMENTO"?"cancelado":situacaoAnterior;var valor=decisao=="AJUSTAR_VALOR"?req.NovoValor!.Value:pg.ValorPrevisto;
                 var changed=await cn.ExecuteAsync("update plantaopro.pagamento_contestacoes set status='RESOLVIDA',decisao=@decisao,justificativa_resolucao=@justificativa,valor_resolvido=@valor,resolvido_por=@userId,resolvido_em=now(),updated_at=now() where id=@contestacaoId and status='ABERTA'",new{decisao,justificativa,valor,userId,contestacaoId=contestacao.Id},tx);if(changed!=1)return ApiResponse<PagamentoActionResponse>.Fail("Contestação já foi resolvida.",409);
                 await cn.ExecuteAsync("update plantaopro.pagamentos set status=@novoStatus,valor_aprovado=@valor,observacoes=@justificativa,updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status=@status",new{id,novoStatus,valor,justificativa,userId,tenantId,clienteId,status=pg.Status},tx);
-                await AddHistoricoAsync(cn,tx,id,pg.Status,novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx);await tx.CommitAsync();
+                await AddHistoricoAsync(cn,tx,id,pg.Status,novoStatus,$"{decisao}: {justificativa}",userId);await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Contestação resolvida",justificativa,"financeiro",tx,"contestacao",contestacao.Id);await tx.CommitAsync();
                 await audit.LogAsync(userId,"CONTESTACAO_RESOLVIDA","pagamentos",id,$"{pg.ValorPrevisto}->{valor}; {decisao}",ip:ip,userAgent:ua);return ApiResponse<PagamentoActionResponse>.Ok(new(id,novoStatus,valor,null,"nenhuma"),"Contestação resolvida.");
             }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao resolver contestação do pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao resolver contestação.",500);}
         }
@@ -2002,7 +2003,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                 // CHECK ck_v2158_pagamento_valores exige valor_pago=valor_aprovado quando pago; estorno zera os dois lados na mesma statement.
                 await cn.ExecuteAsync("update plantaopro.pagamentos set status='aprovado',valor_pago=null,forma_pagamento=null,data_pagamento=null,referencia_pagamento=null,origem_pagamento=null,observacoes=coalesce(observacoes||' | ','')||@motivo,updated_by=@userId,reg_update=now(),versao=versao+1 where id=@id and tenant_id=@tenantId and cliente_id=@clienteId and status='pago'",new{id,tenantId,clienteId,motivo,userId},tx);
                 await AddHistoricoAsync(cn,tx,id,"pago","aprovado","ESTORNO: "+motivo,userId);
-                await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento estornado",motivo,"financeiro",tx);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId,"Pagamento estornado",motivo,"financeiro",tx,"pagamento",id);
                 await tx.CommitAsync();await audit.LogAsync(userId,"PAGAMENTO_ESTORNADO","pagamentos",id,motivo,ip:ip,userAgent:ua);
                 return ApiResponse<PagamentoActionResponse>.Ok(new(id,"aprovado",0m,null,"estorno"),"Pagamento estornado.");
             }catch(Exception ex){await tx.RollbackAsync();logger.LogError(ex,"Erro ao estornar pagamento {PagamentoId}",id);return ApiResponse<PagamentoActionResponse>.Fail("Erro ao estornar pagamento.",500);}
@@ -2030,7 +2031,7 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
                     u = userId
                 }, tx);
                 await AddHistoricoAsync(cn, tx, id, pg.Status, "cancelado", justificativa, userId);
-                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento cancelado", justificativa, "financeiro", tx);
+                await notificacao.CriarNotificacaoAsync(pg.UsuarioId, "Pagamento cancelado", justificativa, "financeiro", tx, "pagamento", id);
                 await audit.LogAsync(userId, "STATUS_CHANGE", "pagamentos", id, $"{pg.Status}->cancelado", ip: ip, userAgent: ua);
                 await tx.CommitAsync();
                 return ApiResponse<string>.Ok("ok", "Pagamento cancelado");
@@ -2155,7 +2156,11 @@ where id=@plantaoId", new { plantaoId = convite.PlantaoId, userId }, tx);
             this.audit = audit;
             this.logger = logger;
         }
-        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default")); public async Task CriarNotificacaoAsync(Guid usuarioId, string titulo, string mensagem, string tipo, NpgsqlTransaction transaction) => await transaction.Connection!.ExecuteAsync("insert into plantaopro.notificacoes(id,usuario_id,titulo,mensagem,tipo,lida,created_by,reg_status,reg_date) values(gen_random_uuid(),@usuarioId,@titulo,@mensagem,@tipo,false,@usuarioId,'A',now())", new { usuarioId, titulo, mensagem, tipo }, transaction);
+        private NpgsqlConnection Cn() => new(cfg.GetConnectionString("Default"));
+        // R8-B2: dedupe em retries adota a convenção do in-app operacional (Operation360): chave
+        // (usuario_id, origem_tipo, origem_id, titulo) parcial p/ origens declaradas (v2346).
+        // Retorna false quando a notificação já existe para esse usuário/origem/título.
+        internal async Task<bool> CriarNotificacaoAsync(Guid usuarioId, string titulo, string mensagem, string tipo, NpgsqlTransaction transaction, string? origemTipo = null, Guid? origemId = null) => (await transaction.Connection!.ExecuteAsync("insert into plantaopro.notificacoes(id,usuario_id,titulo,mensagem,tipo,lida,origem_tipo,origem_id,created_by,reg_status,reg_date) values(gen_random_uuid(),@usuarioId,@titulo,@mensagem,@tipo,false,@origemTipo,@origemId,@usuarioId,'A',now()) on conflict (usuario_id,origem_tipo,origem_id,titulo) where reg_status='A' and origem_id is not null do nothing", new { usuarioId, titulo, mensagem, tipo, origemTipo, origemId }, transaction)) == 1;
         public async Task<ApiResponse<PagedResult<NotificacaoDto>>> ListarAsync(Guid uid, NotificationFilterRequest f)
         {
             await using var cn = Cn();

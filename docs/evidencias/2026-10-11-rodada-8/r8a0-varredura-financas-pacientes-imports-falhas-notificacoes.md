@@ -163,7 +163,7 @@ Caminhos relativos a `C:\MNSOFT\plantaopro`. Classificações: pronto com evidê
 ### E3. Dedupe em retries
 - **ESTADO:** parcial
 - **EVIDÊNCIA:** Operation360 tem dedupe: `insert into notifications ... on conflict(tenant_id,usuario_id_dedupe,origem_tipo,origem_id,tipo_evento) do nothing` e `if (inserted == 0) return false;` — `NotificationService.cs:97-98`; read-states idempotentes. AlertRuleService consulta estado atual antes de disparar (`AlertRuleService.cs:139-159`).
-- **OBS:** O caminho legado (`Data.cs:2158`) insere **sem** dedupe/unique — cada chamada cria nova notificação.
+- **OBS:** O caminho legado (`Data.cs:2158`) inseria **sem** dedupe/unique — cada chamada criava nova notificação. **Corrigido em R8-B2** (v2346: coluna `origem_tipo`/`origem_id` + unique index parcial + `on conflict do nothing`; os 21 call sites declararam origem). Doc `r8b2-notificacoes-legado-dedupe.md`.
 
 ### E4. Preferências por usuário (não anulam avisos obrigatórios)
 - **ESTADO:** parcial

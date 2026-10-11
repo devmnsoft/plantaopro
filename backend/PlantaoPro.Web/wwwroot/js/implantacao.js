@@ -30,9 +30,9 @@
             title.className = 'h6';
             title.textContent = `${etapa.ordem}. ${etapa.nome}`;
             const details = document.createElement('p');
-            details.textContent = `Responsável: ${etapa.responsavel} · Prazo: ${new Date(etapa.prazo).toLocaleDateString('pt-BR')}`;
+            details.textContent = `${app.dataset.responsavelLabel}: ${etapa.responsavel} · ${app.dataset.prazoLabel}: ${new Date(etapa.prazo).toLocaleDateString('pt-BR')}`;
             const button = document.createElement('button');
-            button.type = 'button'; button.className = 'btn btn-sm btn-outline-primary'; button.textContent = 'Validar etapa';
+            button.type = 'button'; button.className = 'btn btn-sm btn-outline-primary'; button.textContent = app.dataset.validarEtapaLabel || 'Validar etapa';
             button.addEventListener('click', () => validarEtapa(etapa.codigo));
             body.append(title, details, button); card.appendChild(body); col.appendChild(card); alvo.appendChild(col);
         });
@@ -43,7 +43,7 @@
         byId('implantacao-error').classList.add('d-none');
         try {
             const responses = await Promise.all([fetch(app.dataset.prontidaoUrl), fetch(app.dataset.etapasUrl), fetch(app.dataset.relatorioUrl)]);
-            if (responses.some(response => !response.ok)) throw new Error('Não foi possível carregar a implantação. Tente novamente.');
+            if (responses.some(response => !response.ok)) throw new Error(app.dataset.loadError || 'Não foi possível carregar a implantação. Tente novamente.');
             const [prontidao, etapasResponse, relatorio] = await Promise.all(responses.map(response => response.json()));
             etapas = etapasResponse.data || [];
             const percentual = prontidao.data && prontidao.data.prontidaoPercentual || 0;
@@ -55,7 +55,7 @@
         } catch (error) { text('implantacao-error', error.message); byId('implantacao-error').classList.remove('d-none'); }
         finally { byId('implantacao-loading').classList.add('d-none'); }
     }
-    async function post(url) { const response = await fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } }); if (!response.ok) throw new Error('A validação não foi concluída.'); await carregarImplantacao(); }
+    async function post(url) { const response = await fetch(url, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } }); if (!response.ok) throw new Error(app.dataset.validateError || 'A validação não foi concluída.'); await carregarImplantacao(); }
     function validarEtapa(codigo) { return post(`${app.dataset.etapasUrl}/${encodeURIComponent(codigo)}/validar`); }
     byId('filtro-status').addEventListener('change', renderizarEtapas);
     byId('atualizar-implantacao').addEventListener('click', carregarImplantacao);

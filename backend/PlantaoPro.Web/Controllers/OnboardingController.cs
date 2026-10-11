@@ -1,6 +1,7 @@
 using System.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 using PlantaoPro.Web.Services.Security;
 
@@ -44,7 +45,7 @@ public sealed class OnboardingController : BaseWebController
         if (_currentUser.IsGlobalAdmin() && !_currentUser.TenantId.HasValue)
         {
             vm.SemContextoCliente = true;
-            vm.InfoMessage = "Onboarding pertence a um cliente. Cadastre um novo cliente com plano em \"Iniciar onboarding\" ou selecione um cliente em AdminSaaS para acompanhar a jornada dele.";
+            vm.InfoMessage = UiText.L("Onboarding.NoClientContext");
             return View(vm);
         }
 
@@ -71,7 +72,7 @@ public sealed class OnboardingController : BaseWebController
             vm.Grupos.Add(new OnboardingGrupoWebModel
             {
                 Geral = true,
-                ModuloNome = "Implantação geral",
+                ModuloNome = UiText.L("Onboarding.GeneralGroup"),
                 Itens = etapas.Where(e => string.IsNullOrEmpty(e.ModuloCodigo)).ToList(),
             });
         vm.Grupos.AddRange(etapas
@@ -93,7 +94,7 @@ public sealed class OnboardingController : BaseWebController
     public async Task<IActionResult> Iniciar()
     {
         var (ok, _) = await PostJornadaAsync("api/onboarding/iniciar");
-        if (ok) TempData["Success"] = "Onboarding iniciado: as etapas refletem os modulos contratados deste cliente.";
+        if (ok) TempData["Success"] = UiText.L("Onboarding.StartedSuccess");
         return RedirectToAction(nameof(Index));
     }
 
@@ -102,7 +103,7 @@ public sealed class OnboardingController : BaseWebController
     public async Task<IActionResult> Reavaliar()
     {
         var (ok, _) = await PostJornadaAsync("api/onboarding/reavaliar");
-        if (ok) TempData["Success"] = "Checklist reavaliado contra os dados atuais do ambiente.";
+        if (ok) TempData["Success"] = UiText.L("Onboarding.ReevaluatedSuccess");
         return RedirectToAction(nameof(Index));
     }
 
@@ -112,7 +113,7 @@ public sealed class OnboardingController : BaseWebController
     {
         // Sem criterio atendido a API responde 409 com a evidencia do que falta (nada de sucesso por clique).
         var (_, erro) = await PostJornadaAsync($"api/onboarding/checklist/{id}/concluir");
-        if (erro is null) TempData["Success"] = "Etapa concluida.";
+        if (erro is null) TempData["Success"] = UiText.L("Onboarding.StepCompletedSuccess");
         return RedirectToAction(nameof(Index));
     }
 
@@ -121,7 +122,7 @@ public sealed class OnboardingController : BaseWebController
     public async Task<IActionResult> PularEtapa(Guid id, [FromForm] string? justificativa)
     {
         var (_, erro) = await PostJornadaAsync($"api/onboarding/checklist/{id}/pular", new { justificativa });
-        if (erro is null) TempData["Success"] = "Etapa opcional marcada como pulada (persistida).";
+        if (erro is null) TempData["Success"] = UiText.L("Onboarding.StepSkippedSuccess");
         return RedirectToAction(nameof(Index));
     }
 
@@ -130,7 +131,7 @@ public sealed class OnboardingController : BaseWebController
     public async Task<IActionResult> RestaurarEtapa(Guid id)
     {
         var (_, erro) = await PostJornadaAsync($"api/onboarding/checklist/{id}/restaurar");
-        if (erro is null) TempData["Success"] = "Etapa restaurada para o checklist.";
+        if (erro is null) TempData["Success"] = UiText.L("Onboarding.StepRestoredSuccess");
         return RedirectToAction(nameof(Index));
     }
 
@@ -166,7 +167,7 @@ public sealed class OnboardingController : BaseWebController
 
             if (statusCode is < System.Net.HttpStatusCode.OK or >= System.Net.HttpStatusCode.Ambiguous || payload is null)
             {
-                ModelState.AddModelError(string.Empty, error ?? "Não foi possível concluir o onboarding.");
+                ModelState.AddModelError(string.Empty, error ?? UiText.L("Onboarding.ClientCreateFailed"));
                 return View(model);
             }
 
@@ -175,7 +176,7 @@ public sealed class OnboardingController : BaseWebController
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao executar onboarding web");
-            ModelState.AddModelError(string.Empty, "Erro inesperado ao criar cliente.");
+            ModelState.AddModelError(string.Empty, UiText.L("Onboarding.ClientCreateUnexpectedError"));
             return View(model);
         }
     }
@@ -189,13 +190,13 @@ public sealed class OnboardingController : BaseWebController
             if (!AddBearerToken(client)) return HandleUnauthorized();
 
             var (data, error, _) = await ReadApiResponse<OnboardingResumoDto>(client, $"api/onboarding/resumo?clienteId={clienteId}");
-            if (data is null) return EmptyViewWithError(new OnboardingResumoDto(), error ?? "Resumo não disponível.");
+            if (data is null) return EmptyViewWithError(new OnboardingResumoDto(), error ?? UiText.L("Onboarding.SummaryUnavailable"));
             return View(data);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Erro ao carregar página de sucesso do onboarding.");
-            return EmptyViewWithError(new OnboardingResumoDto(), "Erro ao carregar resumo.");
+            return EmptyViewWithError(new OnboardingResumoDto(), UiText.L("Onboarding.SummaryLoadError"));
         }
     }
 }

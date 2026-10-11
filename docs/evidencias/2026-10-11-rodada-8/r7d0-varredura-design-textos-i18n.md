@@ -211,7 +211,8 @@ conflito real é **plano-SaaS × plano-de-saúde**, não plano-de-cuidados.
 | **F2 — Login/perfil** | ✅ **ENTREGUE nesta rodada** — doc `r7df2-login-perfil-i18n.md` (34 chaves `Auth.*` ×4; renames `Profile.Nome/Telefone/Notificacoes`→`Name/Phone/Notifications`; controller + Forgot/Reset localizados; 2 contratos do gate migrados literal→chave; validação v2 gate 52/52 + full ×3 1260/1260) |
 | **F3 — Central de Escala** | ✅ **ENTREGUE nesta rodada** — doc `r7df3-central-escala-i18n.md` (165 chaves `Coverage.*`/`Shift.*` ×4 idiomas; controller + 3 views sem literais pt-BR; contrato de fonte novo no gate; validação v2 gate 52/52 + full ×3 = 1264/1264/1263-flake-B1/1264) |
 | **F4 — Saúde 360** | ✅ **ENTREGUE nesta rodada** — doc `r7df4-saude360-i18n.md` (126 chaves `Clinical.*` ×4 idiomas → 478/resx; vazio des-genericizado por módulo + CTA real da ViewModel; Consultas stub → wrapper padrão; `_PageHelp`/`_LookupSelect` localizados; contrato V184 migrado literal→chave; validação v2 gate 52/52 + full ×3 = 1268/1268-flake-40P01/1268/1268) |
-| F5–F6 | pendentes, na ordem sugerida acima |
+| **F5 — Onboarding/Implantação** | ✅ **ENTREGUE nesta rodada** — doc `r7df5-onboarding-implantacao-i18n.md` (132 chaves `Onboarding.*`/`Implantacao.*` ×4 idiomas → 610/resx; controller com acentuação corrigida nos valores pt-BR (`módulos`, `concluída`) + 4 views + `implantacao.js` via data-attrs localizados; quirk Razor RZ1027 isolado por bissecção e resolvido com expressão explícita; validação v2 gate 52/52 + full ×3 = 1272/1272/1272 sem flake) |
+| F6 | pendente (Admin 360: cotações + dashboard + convenção de TempData), conforme linha acima |
 
 ## Pendências explícitas (não verificado)
 Corpo dos testes de paridade de resx em `backend/PlantaoPro.Tests/*` (citados, não abertos);

@@ -1447,4 +1447,400 @@
   <data name="Clinical.LookupNotFoundHelp" xml:space="preserve">
     <value>¿No lo encontró? Vea cómo registrar uno nuevo.</value>
   </data>
+  <data name="Onboarding.NoClientContext" xml:space="preserve">
+    <value>El onboarding pertenece a un cliente. Registre un nuevo cliente con plan en "Iniciar onboarding" o seleccione un cliente en AdminSaaS para seguir su jornada.</value>
+  </data>
+  <data name="Onboarding.StartedSuccess" xml:space="preserve">
+    <value>Onboarding iniciado: las etapas reflejan los módulos contratados de este cliente.</value>
+  </data>
+  <data name="Onboarding.ReevaluatedSuccess" xml:space="preserve">
+    <value>Checklist reevaluado contra los datos actuales del entorno.</value>
+  </data>
+  <data name="Onboarding.StepCompletedSuccess" xml:space="preserve">
+    <value>Etapa completada.</value>
+  </data>
+  <data name="Onboarding.StepSkippedSuccess" xml:space="preserve">
+    <value>Etapa opcional marcada como omitida (persistida).</value>
+  </data>
+  <data name="Onboarding.StepRestoredSuccess" xml:space="preserve">
+    <value>Etapa restaurada al checklist.</value>
+  </data>
+  <data name="Onboarding.ClientCreateFailed" xml:space="preserve">
+    <value>No fue posible concluir el onboarding.</value>
+  </data>
+  <data name="Onboarding.ClientCreateUnexpectedError" xml:space="preserve">
+    <value>Error inesperado al crear el cliente.</value>
+  </data>
+  <data name="Onboarding.SummaryUnavailable" xml:space="preserve">
+    <value>Resumen no disponible.</value>
+  </data>
+  <data name="Onboarding.SummaryLoadError" xml:space="preserve">
+    <value>Error al cargar el resumen.</value>
+  </data>
+  <data name="Onboarding.GeneralGroup" xml:space="preserve">
+    <value>Implementación general</value>
+  </data>
+  <data name="Onboarding.PageTitle" xml:space="preserve">
+    <value>Onboarding SaaS</value>
+  </data>
+  <data name="Onboarding.Eyebrow" xml:space="preserve">
+    <value>Implementación orientada al contrato</value>
+  </data>
+  <data name="Onboarding.HeroTitle" xml:space="preserve">
+    <value>Onboarding de clientes</value>
+  </data>
+  <data name="Onboarding.HeroBody" xml:space="preserve">
+    <value>El checklist siguiente se genera de los módulos efectivamente contratados y solo se completa cuando los datos correspondientes existen en el entorno — ninguna etapa marcada por clic vacío.</value>
+  </data>
+  <data name="Onboarding.ReassessNow" xml:space="preserve">
+    <value>Reevaluar ahora</value>
+  </data>
+  <data name="Onboarding.NewClientWithPlan" xml:space="preserve">
+    <value>Nuevo cliente con plan</value>
+  </data>
+  <data name="Onboarding.NoClientTitle" xml:space="preserve">
+    <value>Sin cliente seleccionado</value>
+  </data>
+  <data name="Onboarding.NoClientBody" xml:space="preserve">
+    <value>El onboarding pertenece a un cliente (tenant). Cree un nuevo cliente con plan para generar la jornada adaptada al contrato, o seleccione un cliente existente en AdminSaaS.</value>
+  </data>
+  <data name="Onboarding.RegisterClient" xml:space="preserve">
+    <value>Registrar cliente</value>
+  </data>
+  <data name="Onboarding.StartEyebrow" xml:space="preserve">
+    <value>Punto de partida</value>
+  </data>
+  <data name="Onboarding.StartTitle" xml:space="preserve">
+    <value>Onboarding aún no iniciado</value>
+  </data>
+  <data name="Onboarding.StartBody" xml:space="preserve">
+    <value>Al iniciar, el sistema monta el checklist a partir del catálogo canónico: etapas generales de la implementación más las etapas de los módulos que este cliente realmente contrató. La conclusión de cada etapa se verifica en datos persistidos.</value>
+  </data>
+  <data name="Onboarding.StartButton" xml:space="preserve">
+    <value>Iniciar onboarding</value>
+  </data>
+  <data name="Onboarding.SummaryEyebrow" xml:space="preserve">
+    <value>Checklist del cliente</value>
+  </data>
+  <data name="Onboarding.DoneTitle" xml:space="preserve">
+    <value>Onboarding finalizado</value>
+  </data>
+  <data name="Onboarding.InProgressTitle" xml:space="preserve">
+    <value>Jornada en curso</value>
+  </data>
+  <data name="Onboarding.NextStepLabel" xml:space="preserve">
+    <value>Próximo paso:</value>
+  </data>
+  <data name="Onboarding.AllVerified" xml:space="preserve">
+    <value>Todas las etapas obligatorias fueron verificadas con datos reales.</value>
+  </data>
+  <data name="Onboarding.ProgressAria" xml:space="preserve">
+    <value>{0} por ciento completado</value>
+  </data>
+  <data name="Onboarding.ProgressLabel" xml:space="preserve">
+    <value>completado</value>
+  </data>
+  <data name="Onboarding.LegendAria" xml:space="preserve">
+    <value>Leyenda de estado</value>
+  </data>
+  <data name="Onboarding.LegendDone" xml:space="preserve">
+    <value>Completada (verificada en datos)</value>
+  </data>
+  <data name="Onboarding.StatusPending" xml:space="preserve">
+    <value>Pendiente</value>
+  </data>
+  <data name="Onboarding.LegendLocked" xml:space="preserve">
+    <value>Bloqueada por prerrequisito</value>
+  </data>
+  <data name="Onboarding.LegendSkipped" xml:space="preserve">
+    <value>Omitida (opcional)</value>
+  </data>
+  <data name="Onboarding.StepsAria" xml:space="preserve">
+    <value>Etapas de {0}</value>
+  </data>
+  <data name="Onboarding.ResponsiblePrefix" xml:space="preserve">
+    <value>Responsable:</value>
+  </data>
+  <data name="Onboarding.ResponsibleMnssoft" xml:space="preserve">
+    <value>MNSOFT (implementación)</value>
+  </data>
+  <data name="Onboarding.ResponsibleClient" xml:space="preserve">
+    <value>cliente</value>
+  </data>
+  <data name="Onboarding.OptionalSuffix" xml:space="preserve">
+    <value> · opcional</value>
+  </data>
+  <data name="Onboarding.DependenceNote" xml:space="preserve">
+    <value>Depende de la etapa anterior de este módulo.</value>
+  </data>
+  <data name="Onboarding.CriterionLabel" xml:space="preserve">
+    <value>Criterio:</value>
+  </data>
+  <data name="Onboarding.OpenScreen" xml:space="preserve">
+    <value>Abrir pantalla</value>
+  </data>
+  <data name="Onboarding.CompleteStep" xml:space="preserve">
+    <value>Concluir</value>
+  </data>
+  <data name="Onboarding.SkipJustificationPlaceholder" xml:space="preserve">
+    <value>Justificación</value>
+  </data>
+  <data name="Onboarding.SkipJustificationAria" xml:space="preserve">
+    <value>Justificación para omitir</value>
+  </data>
+  <data name="Onboarding.SkipStep" xml:space="preserve">
+    <value>Omitir</value>
+  </data>
+  <data name="Onboarding.RestoreStep" xml:space="preserve">
+    <value>Restaurar</value>
+  </data>
+  <data name="Onboarding.PillDone" xml:space="preserve">
+    <value>Completada</value>
+  </data>
+  <data name="Onboarding.PillSkipped" xml:space="preserve">
+    <value>Omitida</value>
+  </data>
+  <data name="Onboarding.PillLocked" xml:space="preserve">
+    <value>Bloqueada</value>
+  </data>
+  <data name="Onboarding.WizardTitle" xml:space="preserve">
+    <value>Nuevo cliente</value>
+  </data>
+  <data name="Onboarding.WizardSubtitle" xml:space="preserve">
+    <value>Configure empresa, plan, unidad y administrador inicial.</value>
+  </data>
+  <data name="Onboarding.WizardHeroTitle" xml:space="preserve">
+    <value>Prepare una operación segura desde el primer acceso</value>
+  </data>
+  <data name="Onboarding.WizardHeroBody" xml:space="preserve">
+    <value>Complete los datos por contexto. Todos los campos obligatorios serán revisados antes de la creación.</value>
+  </data>
+  <data name="Onboarding.CancelWizard" xml:space="preserve">
+    <value>Cancelar onboarding</value>
+  </data>
+  <data name="Onboarding.StepperAria" xml:space="preserve">
+    <value>Etapas del onboarding</value>
+  </data>
+  <data name="Onboarding.StepCompany" xml:space="preserve">
+    <value>Empresa</value>
+  </data>
+  <data name="Onboarding.StepPlan" xml:space="preserve">
+    <value>Plan</value>
+  </data>
+  <data name="Onboarding.StepAdmin" xml:space="preserve">
+    <value>Administrador</value>
+  </data>
+  <data name="Onboarding.StepReview" xml:space="preserve">
+    <value>Revisión</value>
+  </data>
+  <data name="Onboarding.StepFinish" xml:space="preserve">
+    <value>Conclusión</value>
+  </data>
+  <data name="Onboarding.CompanySectionBody" xml:space="preserve">
+    <value>Datos fiscales y canales de contacto del tenant.</value>
+  </data>
+  <data name="Onboarding.LabelCompanyName" xml:space="preserve">
+    <value>Razón social</value>
+  </data>
+  <data name="Onboarding.HelpCompanyName" xml:space="preserve">
+    <value>Use la denominación registrada en el CNPJ.</value>
+  </data>
+  <data name="Onboarding.LabelTradeName" xml:space="preserve">
+    <value>Nombre fantasia</value>
+  </data>
+  <data name="Onboarding.HelpCnpj" xml:space="preserve">
+    <value>Informe el CNPJ para crear el tenant.</value>
+  </data>
+  <data name="Onboarding.LabelCorporateEmail" xml:space="preserve">
+    <value>Correo corporativo</value>
+  </data>
+  <data name="Onboarding.LabelCity" xml:space="preserve">
+    <value>Ciudad</value>
+  </data>
+  <data name="Onboarding.LabelUf" xml:space="preserve">
+    <value>UF</value>
+  </data>
+  <data name="Onboarding.PlanSectionTitle" xml:space="preserve">
+    <value>Plan y unidad inicial</value>
+  </data>
+  <data name="Onboarding.PlanSectionBody" xml:space="preserve">
+    <value>Vincule el plan contratado y la primera unidad operativa.</value>
+  </data>
+  <data name="Onboarding.LabelPlanId" xml:space="preserve">
+    <value>Identificador del plan</value>
+  </data>
+  <data name="Onboarding.HelpPlanId" xml:space="preserve">
+    <value>Elija un plan válido del catálogo antes de continuar.</value>
+  </data>
+  <data name="Onboarding.LabelInitialStatus" xml:space="preserve">
+    <value>Estado inicial</value>
+  </data>
+  <data name="Onboarding.StatusActive" xml:space="preserve">
+    <value>Activo</value>
+  </data>
+  <data name="Onboarding.StatusTrial" xml:space="preserve">
+    <value>Periodo de prueba</value>
+  </data>
+  <data name="Onboarding.HelpInitialStatus" xml:space="preserve">
+    <value>Define la disponibilidad inicial del tenant.</value>
+  </data>
+  <data name="Onboarding.LabelUnitName" xml:space="preserve">
+    <value>Nombre de la unidad</value>
+  </data>
+  <data name="Onboarding.HelpUnitName" xml:space="preserve">
+    <value>Informe al menos una unidad.</value>
+  </data>
+  <data name="Onboarding.LabelUnitType" xml:space="preserve">
+    <value>Tipo de unidad</value>
+  </data>
+  <data name="Onboarding.LabelUnitCity" xml:space="preserve">
+    <value>Ciudad de la unidad</value>
+  </data>
+  <data name="Onboarding.LabelUnitUf" xml:space="preserve">
+    <value>UF de la unidad</value>
+  </data>
+  <data name="Onboarding.LabelUnitManager" xml:space="preserve">
+    <value>Responsable de la unidad</value>
+  </data>
+  <data name="Onboarding.HelpUnitManager" xml:space="preserve">
+    <value>Opcional; puede definirse posteriormente.</value>
+  </data>
+  <data name="Onboarding.AdminSectionTitle" xml:space="preserve">
+    <value>Administrador inicial</value>
+  </data>
+  <data name="Onboarding.AdminSectionBody" xml:space="preserve">
+    <value>Este usuario recibirá acceso administrativo al nuevo tenant.</value>
+  </data>
+  <data name="Onboarding.HelpAdminEmail" xml:space="preserve">
+    <value>El correo corporativo se usará para crear el administrador inicial.</value>
+  </data>
+  <data name="Onboarding.LabelTempPassword" xml:space="preserve">
+    <value>Contraseña temporal</value>
+  </data>
+  <data name="Onboarding.HelpTempPassword" xml:space="preserve">
+    <value>Comparta la contraseña por un canal seguro y solicite el cambio en el primer acceso.</value>
+  </data>
+  <data name="Onboarding.ReviewAndCreate" xml:space="preserve">
+    <value>Revisar y crear cliente</value>
+  </data>
+  <data name="Onboarding.SummaryKicker" xml:space="preserve">
+    <value>Resumen</value>
+  </data>
+  <data name="Onboarding.SummaryBeforeTitle" xml:space="preserve">
+    <value>Antes de concluir</value>
+  </data>
+  <data name="Onboarding.SummaryCheck1" xml:space="preserve">
+    <value>Confirme el CNPJ y los datos de contacto.</value>
+  </data>
+  <data name="Onboarding.SummaryCheck2" xml:space="preserve">
+    <value>Valide el plan contratado.</value>
+  </data>
+  <data name="Onboarding.SummaryCheck3" xml:space="preserve">
+    <value>Confirme la unidad inicial.</value>
+  </data>
+  <data name="Onboarding.SummaryCheck4" xml:space="preserve">
+    <value>Revise el correo del administrador.</value>
+  </data>
+  <data name="Onboarding.SummaryNoSample" xml:space="preserve">
+    <value>Ningún dato de ejemplo se completa automáticamente.</value>
+  </data>
+  <data name="Onboarding.SuccessPageTitle" xml:space="preserve">
+    <value>Onboarding concluido</value>
+  </data>
+  <data name="Onboarding.SuccessAlert" xml:space="preserve">
+    <value>Cliente creado con éxito.</value>
+  </data>
+  <data name="Onboarding.SuccessPlanLabel" xml:space="preserve">
+    <value>Plan:</value>
+  </data>
+  <data name="Onboarding.SuccessUnitLabel" xml:space="preserve">
+    <value>Unidad:</value>
+  </data>
+  <data name="Onboarding.SuccessAdminLabel" xml:space="preserve">
+    <value>Usuario administrador:</value>
+  </data>
+  <data name="Onboarding.SuccessSubscriptionLabel" xml:space="preserve">
+    <value>Suscripción:</value>
+  </data>
+  <data name="Onboarding.SuccessCreatedLabel" xml:space="preserve">
+    <value>Creado en:</value>
+  </data>
+  <data name="Onboarding.GoToClients" xml:space="preserve">
+    <value>Ir a clientes</value>
+  </data>
+  <data name="Implantacao.PageTitle" xml:space="preserve">
+    <value>Centro de Implementación y Go-Live</value>
+  </data>
+  <data name="Implantacao.HeroTitle" xml:space="preserve">
+    <value>Centro de Implementación, Diagnóstico y Go-Live</value>
+  </data>
+  <data name="Implantacao.HeroBody" xml:space="preserve">
+    <value>Panel responsivo para seguir KPIs, preparación, etapas, pendientes, evidencias, histórico, alertas y reporte de Go-Live.</value>
+  </data>
+  <data name="Implantacao.ValidateAll" xml:space="preserve">
+    <value>Validar todo</value>
+  </data>
+  <data name="Implantacao.Refresh" xml:space="preserve">
+    <value>Actualizar</value>
+  </data>
+  <data name="Implantacao.Loading" xml:space="preserve">
+    <value>Cargando información real de la API...</value>
+  </data>
+  <data name="Implantacao.KpisAria" xml:space="preserve">
+    <value>KPIs de la implementación</value>
+  </data>
+  <data name="Implantacao.KpiReadiness" xml:space="preserve">
+    <value>Preparación</value>
+  </data>
+  <data name="Implantacao.KpiSteps" xml:space="preserve">
+    <value>Etapas</value>
+  </data>
+  <data name="Implantacao.KpiPending" xml:space="preserve">
+    <value>Pendencias</value>
+  </data>
+  <data name="Implantacao.KpiAlerts" xml:space="preserve">
+    <value>Alertas</value>
+  </data>
+  <data name="Implantacao.FilterStatus" xml:space="preserve">
+    <value>Filtro por estado</value>
+  </data>
+  <data name="Implantacao.FilterAll" xml:space="preserve">
+    <value>Todos</value>
+  </data>
+  <data name="Implantacao.ProgressAria" xml:space="preserve">
+    <value>Barra de progreso</value>
+  </data>
+  <data name="Implantacao.EmptyFiltered" xml:space="preserve">
+    <value>Ninguna etapa encontrada para el filtro seleccionado.</value>
+  </data>
+  <data name="Implantacao.TimelineTitle" xml:space="preserve">
+    <value>Línea de tiempo e histórico</value>
+  </data>
+  <data name="Implantacao.EvidenceTitle" xml:space="preserve">
+    <value>Evidencias y reporte</value>
+  </data>
+  <data name="Implantacao.WaitingLoad" xml:space="preserve">
+    <value>Esperando carga.</value>
+  </data>
+  <data name="Implantacao.ConfirmTitle" xml:space="preserve">
+    <value>Confirmar validación</value>
+  </data>
+  <data name="Implantacao.CloseAria" xml:space="preserve">
+    <value>Cerrar</value>
+  </data>
+  <data name="Implantacao.ConfirmBody" xml:space="preserve">
+    <value>¿Ejecutar la validación completa de implementación ahora?</value>
+  </data>
+  <data name="Implantacao.JsDueDateLabel" xml:space="preserve">
+    <value>Fecha límite:</value>
+  </data>
+  <data name="Implantacao.JsValidateStep" xml:space="preserve">
+    <value>Validar etapa</value>
+  </data>
+  <data name="Implantacao.JsLoadError" xml:space="preserve">
+    <value>No fue posible cargar la implementación. Intente de nuevo.</value>
+  </data>
+  <data name="Implantacao.JsValidateError" xml:space="preserve">
+    <value>La validación no fue completada.</value>
+  </data>
 </root>

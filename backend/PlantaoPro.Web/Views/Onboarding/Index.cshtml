@@ -1,7 +1,7 @@
 @model OnboardingJornadaWebViewModel
-@{ ViewData["Title"] = "Onboarding SaaS"; }
+@{ ViewData["Title"] = UiText.L("Onboarding.PageTitle"); }
 <div class="pp-page">
-<header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">Implantação orientada ao contrato</span><h2>Onboarding de clientes</h2><p>O checklist abaixo é gerado dos módulos efetivamente contratados e só é concluído quando os dados correspondentes existem no ambiente — nada de etapa marcada por clique vazio.</p></div><div class="pp-hero-actions">@if (!Model.SemContextoCliente && !Model.SemOnboarding){<form asp-action="Reavaliar" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> Reavaliar agora</button></form>}<a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> Novo cliente com plano</a></div></header>
+<header class="pp-page-hero"><div class="pp-page-hero__copy"><span class="pp-eyebrow">@UiText.L("Onboarding.Eyebrow")</span><h2>@UiText.L("Onboarding.HeroTitle")</h2><p>@UiText.L("Onboarding.HeroBody")</p></div><div class="pp-hero-actions">@if (!Model.SemContextoCliente && !Model.SemOnboarding){<form asp-action="Reavaliar" method="post" class="d-inline">@Html.AntiForgeryToken()<button type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-repeat" aria-hidden="true"></i> @UiText.L("Onboarding.ReassessNow")</button></form>}<a asp-action="NovoCliente" class="btn btn-primary"><i class="bi bi-plus-circle" aria-hidden="true"></i> @UiText.L("Onboarding.NewClientWithPlan")</a></div></header>
 
 @if (Model.SuccessMessage is not null){<div class="alert alert-success" role="status">@Model.SuccessMessage</div>}
 @if (Model.ErrorMessage is not null){<div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>}
@@ -9,27 +9,27 @@
 
 @if (Model.SemContextoCliente)
 {
-    <aside class="pp-next-step"><i class="bi bi-building" aria-hidden="true"></i><div><strong>Sem cliente selecionado</strong><p>O onboarding pertence a um cliente (tenant). Crie um novo cliente com plano para gerar a jornada adaptada ao contrato, ou selecione um cliente existente em AdminSaaS.</p></div><a asp-action="NovoCliente" class="btn btn-primary">Cadastrar cliente</a></aside>
+    <aside class="pp-next-step"><i class="bi bi-building" aria-hidden="true"></i><div><strong>@UiText.L("Onboarding.NoClientTitle")</strong><p>@UiText.L("Onboarding.NoClientBody")</p></div><a asp-action="NovoCliente" class="btn btn-primary">@UiText.L("Onboarding.RegisterClient")</a></aside>
 }
 else if (Model.SemOnboarding)
 {
-    <section class="pp-section"><div><span class="pp-eyebrow">Ponto de partida</span><h2>Onboarding ainda não iniciado</h2><p>Ao iniciar, o sistema monta o checklist a partir do catálogo canônico: etapas gerais da implantação mais as etapas dos módulos que este cliente realmente contratou. A conclusão de cada etapa é verificada em dados persistidos.</p></div>
-        <form asp-action="Iniciar" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-primary"><i class="bi bi-play-circle" aria-hidden="true"></i> Iniciar onboarding</button></form>
+    <section class="pp-section"><div><span class="pp-eyebrow">@UiText.L("Onboarding.StartEyebrow")</span><h2>@UiText.L("Onboarding.StartTitle")</h2><p>@UiText.L("Onboarding.StartBody")</p></div>
+        <form asp-action="Iniciar" method="post">@Html.AntiForgeryToken()<button type="submit" class="btn btn-primary"><i class="bi bi-play-circle" aria-hidden="true"></i> @UiText.L("Onboarding.StartButton")</button></form>
     </section>
 }
 else
 {
     var finalizado = Model.Status == "FINALIZADO";
     <section class="pp-section pp-implementation-summary">
-        <div><span class="pp-eyebrow">Checklist do cliente</span><h2>@(finalizado ? "Onboarding finalizado" : "Jornada em andamento")</h2><p>@if (!finalizado && !string.IsNullOrEmpty(Model.ProximaAcao)){<text>Próximo passo: <strong>@Model.ProximaAcao</strong>.</text>}else{<text>Todas as etapas obrigatórias foram verificadas em dados reais.</text>}</p></div>
-        <div class="pp-progress-ring" aria-label="@Model.Progresso por cento concluído"><strong>@Model.Progresso%</strong><span>concluído</span></div>
+        <div><span class="pp-eyebrow">@UiText.L("Onboarding.SummaryEyebrow")</span><h2>@(finalizado ? UiText.L("Onboarding.DoneTitle") : UiText.L("Onboarding.InProgressTitle"))</h2><p>@if (!finalizado && !string.IsNullOrEmpty(Model.ProximaAcao)){<text>@UiText.L("Onboarding.NextStepLabel") <strong>@Model.ProximaAcao</strong>.</text>}else{<text>@UiText.L("Onboarding.AllVerified")</text>}</p></div>
+        <div class="pp-progress-ring" aria-label="@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Onboarding.ProgressAria"), Model.Progresso)"><strong>@Model.Progresso%</strong><span>@UiText.L("Onboarding.ProgressLabel")</span></div>
     </section>
-    <div class="pp-checklist-legend" aria-label="Legenda de status"><span><i class="bi bi-check-circle-fill text-success"></i> Concluída (verificada em dados)</span><span><i class="bi bi-circle text-warning"></i> Pendente</span><span><i class="bi bi-lock-fill text-secondary"></i> Bloqueada por pré-requisito</span><span><i class="bi bi-skip-end-circle-fill text-info"></i> Pulada (opcional)</span></div>
+    <div class="pp-checklist-legend" aria-label="@UiText.L("Onboarding.LegendAria")"><span><i class="bi bi-check-circle-fill text-success"></i> @UiText.L("Onboarding.LegendDone")</span><span><i class="bi bi-circle text-warning"></i> @UiText.L("Onboarding.StatusPending")</span><span><i class="bi bi-lock-fill text-secondary"></i> @UiText.L("Onboarding.LegendLocked")</span><span><i class="bi bi-skip-end-circle-fill text-info"></i> @UiText.L("Onboarding.LegendSkipped")</span></div>
 
     @foreach (var grupo in Model.Grupos)
     {
         <h3 class="mt-4"><i class="bi @(grupo.Geral ? "bi-clipboard-check" : "bi-boxes")" aria-hidden="true"></i> @grupo.ModuloNome</h3>
-        <ol class="pp-implementation-list" aria-label="Etapas de @grupo.ModuloNome">
+        <ol class="pp-implementation-list" aria-label="@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Onboarding.StepsAria"), grupo.ModuloNome)">
             @foreach (var e in grupo.Itens)
             {
                 <li class="pp-implementation-item @(e.Status == "PENDENTE" ? "is-next" : e.Status == "BLOQUEADO" ? "is-locked" : "")">
@@ -43,22 +43,22 @@ else
                         <strong>@e.Titulo</strong>
                         <small class="d-block">@e.Objetivo</small>
                         @if (!string.IsNullOrWhiteSpace(e.Descricao) && e.Descricao != e.Objetivo){<small class="d-block">@e.Descricao</small>}
-                        <small class="d-block text-muted"><i class="bi bi-person-badge" aria-hidden="true"></i> Responsável: @(e.Responsavel == "MNSOFT" ? "MNSOFT (implantação)" : "cliente")@(e.Obrigatorio ? "" : " · opcional")</small>
-                        @if (!e.PreRequisitoAtendido){<small class="d-block text-secondary"><i class="bi bi-lock" aria-hidden="true"></i> Depende da etapa anterior deste módulo.</small>}
-                        @if (!string.IsNullOrWhiteSpace(e.CriterioDescricao)){<small class="d-block text-muted"><i class="bi bi-clipboard2-check" aria-hidden="true"></i> Critério: @e.CriterioDescricao</small>}
+                        <small class="d-block text-muted"><i class="bi bi-person-badge" aria-hidden="true"></i> @UiText.L("Onboarding.ResponsiblePrefix") @(e.Responsavel == "MNSOFT" ? UiText.L("Onboarding.ResponsibleMnssoft") : UiText.L("Onboarding.ResponsibleClient"))@(e.Obrigatorio ? "" : UiText.L("Onboarding.OptionalSuffix"))</small>
+                        @if (!e.PreRequisitoAtendido){<small class="d-block text-secondary"><i class="bi bi-lock" aria-hidden="true"></i> @UiText.L("Onboarding.DependenceNote")</small>}
+                        @if (!string.IsNullOrWhiteSpace(e.CriterioDescricao)){<small class="d-block text-muted"><i class="bi bi-clipboard2-check" aria-hidden="true"></i> @UiText.L("Onboarding.CriterionLabel") @e.CriterioDescricao</small>}
                         @if (!string.IsNullOrWhiteSpace(e.Evidencia)){<small class="d-block"><em>@e.Evidencia</em></small>}
                     </span>
                     <span class="d-flex flex-column gap-1 align-items-end">
-                        <span class="pp-status-pill">@(e.Status == "CONCLUIDO" ? "Concluída" : e.Status == "PULADA" ? "Pulada" : e.Status == "BLOQUEADO" ? "Bloqueada" : "Pendente")</span>
-                        @if (!string.IsNullOrEmpty(e.LinkAcao) && (e.Status == "PENDENTE" || e.Status == "BLOQUEADO")){<a class="btn btn-sm btn-outline-primary" href="@e.LinkAcao">Abrir tela</a>}
+                        <span class="pp-status-pill">@(e.Status == "CONCLUIDO" ? UiText.L("Onboarding.PillDone") : e.Status == "PULADA" ? UiText.L("Onboarding.PillSkipped") : e.Status == "BLOQUEADO" ? UiText.L("Onboarding.PillLocked") : UiText.L("Onboarding.StatusPending"))</span>
+                        @if (!string.IsNullOrEmpty(e.LinkAcao) && (e.Status == "PENDENTE" || e.Status == "BLOQUEADO")){<a class="btn btn-sm btn-outline-primary" href="@e.LinkAcao">@UiText.L("Onboarding.OpenScreen")</a>}
                         @if (e.Status == "PENDENTE"){
-                            <form asp-action="ConcluirEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-success">Concluir</button></form>
+                            <form asp-action="ConcluirEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-success">@UiText.L("Onboarding.CompleteStep")</button></form>
                         }
                         @if (!e.Obrigatorio && (e.Status == "PENDENTE" || e.Status == "BLOQUEADO")){
-                            <form asp-action="PularEtapa" method="post" class="d-flex gap-1">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><input type="text" name="justificativa" class="form-control form-control-sm" style="max-width:180px" placeholder="Justificativa" aria-label="Justificativa para pular"/><button type="submit" class="btn btn-sm btn-outline-secondary">Pular</button></form>
+                            <form asp-action="PularEtapa" method="post" class="d-flex gap-1">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><input type="text" name="justificativa" class="form-control form-control-sm" style="max-width:180px" placeholder="@UiText.L("Onboarding.SkipJustificationPlaceholder")" aria-label="@UiText.L("Onboarding.SkipJustificationAria")"/><button type="submit" class="btn btn-sm btn-outline-secondary">@UiText.L("Onboarding.SkipStep")</button></form>
                         }
                         @if (e.Pulada){
-                            <form asp-action="RestaurarEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-outline-secondary">Restaurar</button></form>
+                            <form asp-action="RestaurarEtapa" method="post">@Html.AntiForgeryToken()<input type="hidden" name="id" value="@e.Id"/><button type="submit" class="btn btn-sm btn-outline-secondary">@UiText.L("Onboarding.RestoreStep")</button></form>
                         }
                     </span>
                 </li>

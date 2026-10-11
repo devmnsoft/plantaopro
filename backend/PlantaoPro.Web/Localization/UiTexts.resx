@@ -1069,4 +1069,382 @@
   <data name="Shift.Risk" xml:space="preserve">
     <value>Risco</value>
   </data>
+  <data name="Clinical.PhWhenToUse" xml:space="preserve">
+    <value>Use esta tela para conduzir a jornada assistencial com dados reais da API e contexto por tenant.</value>
+  </data>
+  <data name="Clinical.PhStep1" xml:space="preserve">
+    <value>Revise os indicadores e registros.</value>
+  </data>
+  <data name="Clinical.PhStep2" xml:space="preserve">
+    <value>Use os botões de ação para avançar no fluxo.</value>
+  </data>
+  <data name="Clinical.PhStep3" xml:space="preserve">
+    <value>Se não houver dados, siga a próxima ação recomendada.</value>
+  </data>
+  <data name="Clinical.PhStep4" xml:space="preserve">
+    <value>Consulte o manual do perfil em caso de dúvida.</value>
+  </data>
+  <data name="Clinical.PhTipAudit" xml:space="preserve">
+    <value>Acesso clínico é auditado.</value>
+  </data>
+  <data name="Clinical.PhTipTenant" xml:space="preserve">
+    <value>Registros respeitam o tenant atual.</value>
+  </data>
+  <data name="Clinical.PhTipSensitive" xml:space="preserve">
+    <value>Dados sensíveis não aparecem em logs técnicos.</value>
+  </data>
+  <data name="Clinical.PhProfileNotes" xml:space="preserve">
+    <value>A tela adapta a operação para recepção, triagem, médico, financeiro e convênios.</value>
+  </data>
+  <data name="Clinical.JourneyTagline" xml:space="preserve">
+    <value>jornada assistencial</value>
+  </data>
+  <data name="Clinical.JourneyAria" xml:space="preserve">
+    <value>Etapas da jornada Saúde 360</value>
+  </data>
+  <data name="Clinical.JourneyPatient" xml:space="preserve">
+    <value>Paciente</value>
+  </data>
+  <data name="Clinical.JourneyAppointment" xml:space="preserve">
+    <value>Agendamento</value>
+  </data>
+  <data name="Clinical.JourneyCheckIn" xml:space="preserve">
+    <value>Check-in</value>
+  </data>
+  <data name="Clinical.JourneyCallBoard" xml:space="preserve">
+    <value>Chamada</value>
+  </data>
+  <data name="Clinical.JourneyTriage" xml:space="preserve">
+    <value>Triagem</value>
+  </data>
+  <data name="Clinical.JourneyConsult" xml:space="preserve">
+    <value>Consulta</value>
+  </data>
+  <data name="Clinical.JourneyPrescription" xml:space="preserve">
+    <value>Prescrição</value>
+  </data>
+  <data name="Clinical.JourneyFinance" xml:space="preserve">
+    <value>Financeiro</value>
+  </data>
+  <data name="Clinical.JourneyCountAppointments" xml:space="preserve">
+    <value>Agendamentos de hoje</value>
+  </data>
+  <data name="Clinical.JourneyCountCheckIns" xml:space="preserve">
+    <value>Check-ins realizados</value>
+  </data>
+  <data name="Clinical.JourneyCountWaiting" xml:space="preserve">
+    <value>Pacientes aguardando</value>
+  </data>
+  <data name="Clinical.JourneyCountTriagePending" xml:space="preserve">
+    <value>Triagens pendentes</value>
+  </data>
+  <data name="Clinical.JourneyCountConsultActive" xml:space="preserve">
+    <value>Consultas em andamento</value>
+  </data>
+  <data name="Clinical.JourneyCountRxPending" xml:space="preserve">
+    <value>Prescrições pendentes</value>
+  </data>
+  <data name="Clinical.JourneyCountFinancePending" xml:space="preserve">
+    <value>Financeiro pendente</value>
+  </data>
+  <data name="Clinical.NextKicker" xml:space="preserve">
+    <value>Próxima ação</value>
+  </data>
+  <data name="Clinical.NextTitle" xml:space="preserve">
+    <value>Continue somente com vínculo e status reais</value>
+  </data>
+  <data name="Clinical.NextBody" xml:space="preserve">
+    <value>Abra um registro retornado pela API para confirmar paciente, agendamento e identificadores antes de avançar. Ações sem vínculo permanecem indisponíveis.</value>
+  </data>
+  <data name="Clinical.NextRulesButton" xml:space="preserve">
+    <value>Ver regras da jornada</value>
+  </data>
+  <data name="Clinical.PatientContextAria" xml:space="preserve">
+    <value>Contexto longitudinal do paciente</value>
+  </data>
+  <data name="Clinical.PatientBlockData" xml:space="preserve">
+    <value>Dados</value>
+  </data>
+  <data name="Clinical.PatientBlockSchedule" xml:space="preserve">
+    <value>Agenda</value>
+  </data>
+  <data name="Clinical.PatientBlockConsults" xml:space="preserve">
+    <value>Consultas</value>
+  </data>
+  <data name="Clinical.PatientBlockBilling" xml:space="preserve">
+    <value>Faturamento</value>
+  </data>
+  <data name="Clinical.PatientBlockBody" xml:space="preserve">
+    <value>Selecione um paciente retornado pela API para consultar este bloco. Nenhum histórico demonstrativo é exibido.</value>
+  </data>
+  <data name="Clinical.EmptyTitle" xml:space="preserve">
+    <value>Nenhum registro de {0}</value>
+  </data>
+  <data name="Clinical.EmptyBody" xml:space="preserve">
+    <value>A API não retornou registros reais para este módulo.</value>
+  </data>
+  <data name="Clinical.EmptyTableBody" xml:space="preserve">
+    <value>Comece pela ação principal desta tela ou ajuste os filtros da jornada.</value>
+  </data>
+  <data name="Clinical.KpiStripAria" xml:space="preserve">
+    <value>Contexto do módulo</value>
+  </data>
+  <data name="Clinical.KpiPlanMin" xml:space="preserve">
+    <value>Plano mínimo</value>
+  </data>
+  <data name="Clinical.KpiPlanHint" xml:space="preserve">
+    <value>requisito do módulo</value>
+  </data>
+  <data name="Clinical.KpiRecords" xml:space="preserve">
+    <value>Registros</value>
+  </data>
+  <data name="Clinical.KpiRecordsHint" xml:space="preserve">
+    <value>resultado real carregado</value>
+  </data>
+  <data name="Clinical.KpiUnavailable" xml:space="preserve">
+    <value>Indisponível</value>
+  </data>
+  <data name="Clinical.KpiUnavailableHint" xml:space="preserve">
+    <value>a API não confirmou o total</value>
+  </data>
+  <data name="Clinical.KpiAccess" xml:space="preserve">
+    <value>Controle de acesso</value>
+  </data>
+  <data name="Clinical.KpiProtected" xml:space="preserve">
+    <value>Protegido</value>
+  </data>
+  <data name="Clinical.KpiProtectedHint" xml:space="preserve">
+    <value>tenant, perfil e auditoria</value>
+  </data>
+  <data name="Clinical.RecordsKicker" xml:space="preserve">
+    <value>Registros assistenciais</value>
+  </data>
+  <data name="Clinical.RecordsTableAria" xml:space="preserve">
+    <value>Registros do módulo {0}</value>
+  </data>
+  <data name="Clinical.ThIdentity" xml:space="preserve">
+    <value>Identificação</value>
+  </data>
+  <data name="Clinical.ThCode" xml:space="preserve">
+    <value>Código</value>
+  </data>
+  <data name="Clinical.ThDescription" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="Clinical.ThStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Clinical.ThRecordDate" xml:space="preserve">
+    <value>Registro</value>
+  </data>
+  <data name="Clinical.LgpdLabel" xml:space="preserve">
+    <value>LGPD e auditoria:</value>
+  </data>
+  <data name="Clinical.LgpdBody" xml:space="preserve">
+    <value>as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.</value>
+  </data>
+  <data name="Clinical.PageHelpAria" xml:space="preserve">
+    <value>Ajuda contextual da tela</value>
+  </data>
+  <data name="Clinical.PageHelpYouAreHere" xml:space="preserve">
+    <value>Você está aqui</value>
+  </data>
+  <data name="Clinical.PageHelpWhenToUseLabel" xml:space="preserve">
+    <value>Quando usar:</value>
+  </data>
+  <data name="Clinical.PageHelpNextSteps" xml:space="preserve">
+    <value>Próximos passos</value>
+  </data>
+  <data name="Clinical.PageHelpTips" xml:space="preserve">
+    <value>Dicas rápidas</value>
+  </data>
+  <data name="Clinical.PageHelpManual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
+  <data name="Clinical.FormHelpDescription" xml:space="preserve">
+    <value>Preencha os campos com orientação contextual, validação server-side e envio para a API configurada.</value>
+  </data>
+  <data name="Clinical.FormHelpWhenToUse" xml:space="preserve">
+    <value>Use este formulário para registrar uma etapa real da jornada Paciente -&gt; Agendamento -&gt; Check-in -&gt; Triagem -&gt; Consulta -&gt; Financeiro.</value>
+  </data>
+  <data name="Clinical.FormHelpStep1" xml:space="preserve">
+    <value>Preencha os dados obrigatórios do contexto.</value>
+  </data>
+  <data name="Clinical.FormHelpStep2" xml:space="preserve">
+    <value>Use os seletores por nome; o sistema grava o identificador internamente sem expor GUID ao usuário.</value>
+  </data>
+  <data name="Clinical.FormHelpStep3" xml:space="preserve">
+    <value>Clique em Salvar e aguarde o toast de confirmação.</value>
+  </data>
+  <data name="Clinical.FormHelpStep4" xml:space="preserve">
+    <value>Em caso de erro, os dados preenchidos permanecem na tela.</value>
+  </data>
+  <data name="Clinical.FormHelpTip1" xml:space="preserve">
+    <value>Não informe dados clínicos sensíveis em campos administrativos.</value>
+  </data>
+  <data name="Clinical.FormHelpTip2" xml:space="preserve">
+    <value>Todo POST usa antiforgery e endpoint API real.</value>
+  </data>
+  <data name="Clinical.FormHelpTip3" xml:space="preserve">
+    <value>Campos opcionais ajudam em casos sem CPF ou convênio.</value>
+  </data>
+  <data name="Clinical.FormHelpProfileNotes" xml:space="preserve">
+    <value>Recepção, triagem, médico e financeiro visualizam somente o que o perfil permitir.</value>
+  </data>
+  <data name="Clinical.FormSubline" xml:space="preserve">
+    <value>Formulário auditável com escopo por tenant e sem exposição de dados clínicos em logs.</value>
+  </data>
+  <data name="Clinical.FormHiddenHint" xml:space="preserve">
+    <value>Formulário Saúde 360 com validação, antiforgery e preservação dos dados em caso de erro.</value>
+  </data>
+  <data name="Clinical.SectionPersonalData" xml:space="preserve">
+    <value>Dados pessoais</value>
+  </data>
+  <data name="Clinical.SectionContactAddress" xml:space="preserve">
+    <value>Contato e endereço</value>
+  </data>
+  <data name="Clinical.SectionScheduleLinks" xml:space="preserve">
+    <value>Agendamento e vínculos</value>
+  </data>
+  <data name="Clinical.SectionTriageVitals" xml:space="preserve">
+    <value>Triagem e sinais vitais</value>
+  </data>
+  <data name="Clinical.SectionObservationsBilling" xml:space="preserve">
+    <value>Observações e cobrança</value>
+  </data>
+  <data name="Clinical.LabelFullName" xml:space="preserve">
+    <value>Nome completo</value>
+  </data>
+  <data name="Clinical.LabelSocialName" xml:space="preserve">
+    <value>Nome social</value>
+  </data>
+  <data name="Clinical.LabelBirthDate" xml:space="preserve">
+    <value>Nascimento</value>
+  </data>
+  <data name="Clinical.LabelGender" xml:space="preserve">
+    <value>Sexo/gênero</value>
+  </data>
+  <data name="Clinical.LabelCpfOptional" xml:space="preserve">
+    <value>CPF opcional</value>
+  </data>
+  <data name="Clinical.LabelCns" xml:space="preserve">
+    <value>CNS</value>
+  </data>
+  <data name="Clinical.LabelAltDocument" xml:space="preserve">
+    <value>Documento alternativo</value>
+  </data>
+  <data name="Clinical.LabelResponsible" xml:space="preserve">
+    <value>Responsável</value>
+  </data>
+  <data name="Clinical.LabelEmail" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Clinical.LabelAddress" xml:space="preserve">
+    <value>Endereço</value>
+  </data>
+  <data name="Clinical.LookupDoctor" xml:space="preserve">
+    <value>Médico/profissional</value>
+  </data>
+  <data name="Clinical.LookupHealthPlan" xml:space="preserve">
+    <value>Plano de saúde</value>
+  </data>
+  <data name="Clinical.LookupPatientPlaceholder" xml:space="preserve">
+    <value>Busque o paciente pelo nome</value>
+  </data>
+  <data name="Clinical.LookupDoctorPlaceholder" xml:space="preserve">
+    <value>Selecione pelo nome do profissional</value>
+  </data>
+  <data name="Clinical.LookupAppointmentPlaceholder" xml:space="preserve">
+    <value>Selecione paciente, data ou status</value>
+  </data>
+  <data name="Clinical.LookupConsultPlaceholder" xml:space="preserve">
+    <value>Selecione a consulta vinculada</value>
+  </data>
+  <data name="Clinical.LookupPlanPlaceholder" xml:space="preserve">
+    <value>Selecione convênio ou plano</value>
+  </data>
+  <data name="Clinical.LabelSelectOption" xml:space="preserve">
+    <value>Selecione</value>
+  </data>
+  <data name="Clinical.TriageRiskHelp" xml:space="preserve">
+    <value>Decisão do profissional autorizado; obrigatória somente ao finalizar.</value>
+  </data>
+  <data name="Clinical.LabelRiskClassification" xml:space="preserve">
+    <value>Classificação de risco</value>
+  </data>
+  <data name="Clinical.LabelChiefComplaint" xml:space="preserve">
+    <value>Queixa principal</value>
+  </data>
+  <data name="Clinical.VitalSystolic" xml:space="preserve">
+    <value>PAS (mmHg)</value>
+  </data>
+  <data name="Clinical.VitalDiastolic" xml:space="preserve">
+    <value>PAD (mmHg)</value>
+  </data>
+  <data name="Clinical.VitalHeartRate" xml:space="preserve">
+    <value>FC (bpm)</value>
+  </data>
+  <data name="Clinical.VitalRespRate" xml:space="preserve">
+    <value>FR (irpm)</value>
+  </data>
+  <data name="Clinical.VitalTemperature" xml:space="preserve">
+    <value>Temperatura (°C)</value>
+  </data>
+  <data name="Clinical.VitalSpO2" xml:space="preserve">
+    <value>Saturação (%)</value>
+  </data>
+  <data name="Clinical.VitalWeight" xml:space="preserve">
+    <value>Peso (kg)</value>
+  </data>
+  <data name="Clinical.VitalHeight" xml:space="preserve">
+    <value>Altura (m)</value>
+  </data>
+  <data name="Clinical.LabelPaymentMethod" xml:space="preserve">
+    <value>Forma de pagamento</value>
+  </data>
+  <data name="Clinical.LabelCardNumber" xml:space="preserve">
+    <value>Carteirinha</value>
+  </data>
+  <data name="Clinical.LabelAdminNotes" xml:space="preserve">
+    <value>Descrição / observações administrativas</value>
+  </data>
+  <data name="Clinical.LabelReason" xml:space="preserve">
+    <value>Motivo</value>
+  </data>
+  <data name="Clinical.LabelJustification" xml:space="preserve">
+    <value>Justificativa</value>
+  </data>
+  <data name="Clinical.LabelMarkPrimary" xml:space="preserve">
+    <value>Marcar como principal</value>
+  </data>
+  <data name="Clinical.ButtonCancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Clinical.LoadingSaving" xml:space="preserve">
+    <value>Salvando...</value>
+  </data>
+  <data name="Clinical.ButtonSave" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Clinical.LoadingFinalizing" xml:space="preserve">
+    <value>Finalizando...</value>
+  </data>
+  <data name="Clinical.ButtonFinishTriage" xml:space="preserve">
+    <value>Finalizar triagem</value>
+  </data>
+  <data name="Clinical.TriageFinishDisabledTitle" xml:space="preserve">
+    <value>Salve a triagem para obter um identificador real antes de finalizar.</value>
+  </data>
+  <data name="Clinical.ButtonReferConsult" xml:space="preserve">
+    <value>Encaminhar para consulta</value>
+  </data>
+  <data name="Clinical.TriageReferDisabledTitle" xml:space="preserve">
+    <value>O encaminhamento será liberado quando a API retornar o identificador da consulta vinculada.</value>
+  </data>
+  <data name="Clinical.LookupSelected" xml:space="preserve">
+    <value>Registro selecionado</value>
+  </data>
+  <data name="Clinical.LookupNotFoundHelp" xml:space="preserve">
+    <value>Não encontrou? Veja como cadastrar novo.</value>
+  </data>
 </root>

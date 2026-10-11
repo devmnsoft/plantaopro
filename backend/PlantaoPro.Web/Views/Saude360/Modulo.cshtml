@@ -3,6 +3,8 @@
     var vm = Model ?? new PlantaoPro.Web.Models.Saude360PageViewModel();
     ViewData["Title"] = vm.Titulo;
     var registros = (vm.Registros ?? Array.Empty<PlantaoPro.Web.Models.Saude360RegistroViewModel>()).ToList();
+    var acoes = (vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>()).ToList();
+    var primaria = acoes.FirstOrDefault();
     string? Quantidade(string indicador) => registros.FirstOrDefault(item => string.Equals(item.Nome, indicador, StringComparison.OrdinalIgnoreCase))?.Descricao;
 }
 
@@ -15,23 +17,23 @@
 {
     Title = vm.Titulo,
     Description = vm.Descricao,
-    WhenToUse = "Use esta tela para conduzir a jornada assistencial com dados reais da API e contexto por tenant.",
-    StepByStep = new List<string> { "Revise os indicadores e registros.", "Use os botões de ação para avançar no fluxo.", "Se não houver dados, siga a próxima ação recomendada.", "Consulte o manual do perfil em caso de dúvida." },
-    Tips = new List<string> { "Acesso clínico é auditado.", "Registros respeitam o tenant atual.", "Dados sensíveis não aparecem em logs técnicos." },
+    WhenToUse = UiText.L("Clinical.PhWhenToUse"),
+    StepByStep = new List<string> { UiText.L("Clinical.PhStep1"), UiText.L("Clinical.PhStep2"), UiText.L("Clinical.PhStep3"), UiText.L("Clinical.PhStep4") },
+    Tips = new List<string> { UiText.L("Clinical.PhTipAudit"), UiText.L("Clinical.PhTipTenant"), UiText.L("Clinical.PhTipSensitive") },
     RelatedActions = vm.Acoes,
-    ProfileNotes = "A tela adapta a operação para recepção, triagem, médico, financeiro e convênios.",
+    ProfileNotes = UiText.L("Clinical.PhProfileNotes"),
     DocumentationUrl = Url.Action("Perfil", "Manual") ?? string.Empty
 })
 
 <div class="pp-page pp-clinical-page clinical-mvp-journey pp-strategic-surface" data-clinical-mvp-journey data-patient-context="@(string.Equals(vm.Controller, "Pacientes", StringComparison.OrdinalIgnoreCase) ? "available-from-api" : null)">
 <section class="pp-page-hero" aria-labelledby="saude360Title">
     <div>
-        <span class="pp-eyebrow">PlantãoPro Saúde 360 · jornada assistencial</span>
+        <span class="pp-eyebrow">PlantãoPro @UiText.L("Nav.SectionClinical") · @UiText.L("Clinical.JourneyTagline")</span>
         <h1 id="saude360Title">@vm.Titulo</h1>
         <p>@vm.Descricao</p>
     </div>
     <div class="d-flex flex-wrap gap-2">
-        @foreach (var acao in vm.Acoes ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>())
+        @foreach (var acao in acoes)
         {
             <a asp-controller="@(string.IsNullOrWhiteSpace(acao.Controller) ? vm.Controller : acao.Controller)" asp-action="@acao.Action" class="btn btn-primary">
                 <i class="bi @acao.Icone me-1" aria-hidden="true"></i>@acao.Titulo
@@ -40,32 +42,32 @@
     </div>
 </section>
 
-<nav class="clinical-journey" aria-label="Etapas da jornada Saúde 360">
-    <a asp-controller="Pacientes" asp-action="Index"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>Paciente</span></a>
-    <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>Agendamento</span>@if (Quantidade("agendamentos hoje") is string agendamentos) { <strong aria-label="Agendamentos de hoje">@agendamentos</strong> }</a>
-    <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>Check-in</span>@if (Quantidade("checkins realizados") is string checkins) { <strong aria-label="Check-ins realizados">@checkins</strong> }</a>
-    <a asp-controller="PainelChamada" asp-action="Index"><i class="bi bi-megaphone" aria-hidden="true"></i><span>Chamada</span>@if (Quantidade("pacientes aguardando") is string aguardando) { <strong aria-label="Pacientes aguardando">@aguardando</strong> }</a>
-    <a asp-controller="Triagem" asp-action="Index"><i class="bi bi-activity" aria-hidden="true"></i><span>Triagem</span>@if (Quantidade("triagens pendentes") is string triagens) { <strong aria-label="Triagens pendentes">@triagens</strong> }</a>
-    <a asp-controller="Consultas" asp-action="Index"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>Consulta</span>@if (Quantidade("consultas em andamento") is string consultas) { <strong aria-label="Consultas em andamento">@consultas</strong> }</a>
-    <a asp-controller="Prescricoes" asp-action="Index"><i class="bi bi-capsule" aria-hidden="true"></i><span>Prescrição</span>@if (Quantidade("prescricoes pendentes") is string prescricoes) { <strong aria-label="Prescrições pendentes">@prescricoes</strong> }</a>
-    <a asp-controller="ClinicaFinanceiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>Financeiro</span>@if (Quantidade("financeiro pendente") is string financeiro) { <strong aria-label="Financeiro pendente">@financeiro</strong> }</a>
+<nav class="clinical-journey" aria-label="@UiText.L("Clinical.JourneyAria")">
+    <a asp-controller="Pacientes" asp-action="Index"><i class="bi bi-person-vcard" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyPatient")</span></a>
+    <a asp-controller="Agendamentos" asp-action="Index"><i class="bi bi-calendar-check" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyAppointment")</span>@if (Quantidade("agendamentos hoje") is string agendamentos) { <strong aria-label="@UiText.L("Clinical.JourneyCountAppointments")">@agendamentos</strong> }</a>
+    <a asp-controller="Agendamentos" asp-action="CheckIn"><i class="bi bi-box-arrow-in-right" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyCheckIn")</span>@if (Quantidade("checkins realizados") is string checkins) { <strong aria-label="@UiText.L("Clinical.JourneyCountCheckIns")">@checkins</strong> }</a>
+    <a asp-controller="PainelChamada" asp-action="Index"><i class="bi bi-megaphone" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyCallBoard")</span>@if (Quantidade("pacientes aguardando") is string aguardando) { <strong aria-label="@UiText.L("Clinical.JourneyCountWaiting")">@aguardando</strong> }</a>
+    <a asp-controller="Triagem" asp-action="Index"><i class="bi bi-activity" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyTriage")</span>@if (Quantidade("triagens pendentes") is string triagens) { <strong aria-label="@UiText.L("Clinical.JourneyCountTriagePending")">@triagens</strong> }</a>
+    <a asp-controller="Consultas" asp-action="Index"><i class="bi bi-clipboard2-pulse" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyConsult")</span>@if (Quantidade("consultas em andamento") is string consultas) { <strong aria-label="@UiText.L("Clinical.JourneyCountConsultActive")">@consultas</strong> }</a>
+    <a asp-controller="Prescricoes" asp-action="Index"><i class="bi bi-capsule" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyPrescription")</span>@if (Quantidade("prescricoes pendentes") is string prescricoes) { <strong aria-label="@UiText.L("Clinical.JourneyCountRxPending")">@prescricoes</strong> }</a>
+    <a asp-controller="ClinicaFinanceiro" asp-action="Index"><i class="bi bi-receipt" aria-hidden="true"></i><span>@UiText.L("Clinical.JourneyFinance")</span>@if (Quantidade("financeiro pendente") is string financeiro) { <strong aria-label="@UiText.L("Clinical.JourneyCountFinancePending")">@financeiro</strong> }</a>
 </nav>
 
 <section class="clinical-next-action" data-next-action aria-labelledby="clinicalNextActionTitle">
     <div>
-        <span class="pp-section-kicker">Próxima ação</span>
-        <h2 id="clinicalNextActionTitle">Continue somente com vínculo e status reais</h2>
-        <p>Abra um registro retornado pela API para confirmar paciente, agendamento e identificadores antes de avançar. Ações sem vínculo permanecem indisponíveis.</p>
+        <span class="pp-section-kicker">@UiText.L("Clinical.NextKicker")</span>
+        <h2 id="clinicalNextActionTitle">@UiText.L("Clinical.NextTitle")</h2>
+        <p>@UiText.L("Clinical.NextBody")</p>
     </div>
-    <a class="btn btn-outline-primary" asp-controller="ClinicaDashboard" asp-action="FluxoAtendimento">Ver regras da jornada</a>
+    <a class="btn btn-outline-primary" asp-controller="ClinicaDashboard" asp-action="FluxoAtendimento">@UiText.L("Clinical.NextRulesButton")</a>
 </section>
 
 @if (string.Equals(vm.Controller, "Pacientes", StringComparison.OrdinalIgnoreCase))
 {
-    <section class="clinical-patient-sections" aria-label="Contexto longitudinal do paciente">
-        @foreach (var bloco in new[] { "Dados", "Agenda", "Triagem", "Consultas", "Faturamento" })
+    <section class="clinical-patient-sections" aria-label="@UiText.L("Clinical.PatientContextAria")">
+        @foreach (var bloco in new[] { UiText.L("Clinical.PatientBlockData"), UiText.L("Clinical.PatientBlockSchedule"), UiText.L("Clinical.JourneyTriage"), UiText.L("Clinical.PatientBlockConsults"), UiText.L("Clinical.PatientBlockBilling") })
         {
-            <article class="clinical-context-card"><h2>@bloco</h2><p>Selecione um paciente retornado pela API para consultar este bloco. Nenhum histórico demonstrativo é exibido.</p></article>
+            <article class="clinical-context-card"><h2>@bloco</h2><p>@UiText.L("Clinical.PatientBlockBody")</p></article>
         }
     </section>
 }
@@ -77,27 +79,27 @@
 
 @if (registros.Count == 0 && string.IsNullOrWhiteSpace(vm.ErrorMessage))
 {
-    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-inbox", "Nenhum registro encontrado", "A API não retornou registros reais para este módulo.")' />
+    <partial name="_EmptyState" model='new PlantaoPro.Web.Models.EmptyStateViewModel("bi-inbox", string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Clinical.EmptyTitle"), vm.Modulo), UiText.L("Clinical.EmptyBody"), primaria != null ? primaria.Titulo : null, primaria != null ? primaria.Action : null, primaria != null ? (string.IsNullOrWhiteSpace(primaria.Controller) ? vm.Controller : primaria.Controller) : null, primaria == null)' />
 }
 
-<div class="pp-kpi-strip" aria-label="Contexto do módulo">
-    <article class="pp-kpi-card"><span>Plano mínimo</span><strong>@vm.Plano</strong><small>requisito do módulo</small></article>
-    <article class="pp-kpi-card"><span>Registros</span>@if (string.IsNullOrWhiteSpace(vm.ErrorMessage) || string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase)) { <strong>@registros.Count</strong><small>resultado real carregado</small> } else { <strong>Indisponível</strong><small>a API não confirmou o total</small> }</article>
-    <article class="pp-kpi-card"><span>Controle de acesso</span><strong>Protegido</strong><small>tenant, perfil e auditoria</small></article>
+<div class="pp-kpi-strip" aria-label="@UiText.L("Clinical.KpiStripAria")">
+    <article class="pp-kpi-card"><span>@UiText.L("Clinical.KpiPlanMin")</span><strong>@vm.Plano</strong><small>@UiText.L("Clinical.KpiPlanHint")</small></article>
+    <article class="pp-kpi-card"><span>@UiText.L("Clinical.KpiRecords")</span>@if (string.IsNullOrWhiteSpace(vm.ErrorMessage) || string.Equals(vm.ErrorMessage, "Registros carregados.", StringComparison.OrdinalIgnoreCase)) { <strong>@registros.Count</strong><small>@UiText.L("Clinical.KpiRecordsHint")</small> } else { <strong>@UiText.L("Clinical.KpiUnavailable")</strong><small>@UiText.L("Clinical.KpiUnavailableHint")</small> }</article>
+    <article class="pp-kpi-card"><span>@UiText.L("Clinical.KpiAccess")</span><strong>@UiText.L("Clinical.KpiProtected")</strong><small>@UiText.L("Clinical.KpiProtectedHint")</small></article>
 </div>
 
 <section class="pp-data-table" aria-labelledby="moduleRecordsTitle">
     <div class="pp-section-heading">
-        <div><span class="pp-section-kicker">Registros assistenciais</span><h2 id="moduleRecordsTitle">@vm.Modulo</h2></div>
+        <div><span class="pp-section-kicker">@UiText.L("Clinical.RecordsKicker")</span><h2 id="moduleRecordsTitle">@vm.Modulo</h2></div>
         <span class="badge bg-light text-dark">@vm.Permissao</span>
     </div>
     <div class="table-responsive">
-        <table class="table align-middle mb-0" aria-label="Registros do módulo @vm.Modulo">
-            <thead><tr><th scope="col">Identificação</th><th scope="col">Código</th><th scope="col">Descrição</th><th scope="col">Status</th><th scope="col">Registro</th></tr></thead>
+        <table class="table align-middle mb-0" aria-label="@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Clinical.RecordsTableAria"), vm.Modulo)">
+            <thead><tr><th scope="col">@UiText.L("Clinical.ThIdentity")</th><th scope="col">@UiText.L("Clinical.ThCode")</th><th scope="col">@UiText.L("Clinical.ThDescription")</th><th scope="col">@UiText.L("Clinical.ThStatus")</th><th scope="col">@UiText.L("Clinical.ThRecordDate")</th></tr></thead>
             <tbody>
             @if (!registros.Any())
             {
-                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>Nenhum registro encontrado</strong><span>Comece pela ação principal desta tela ou ajuste os filtros da jornada.</span></div></td></tr>
+                <tr><td colspan="5"><div class="saude360-empty-state" role="status" aria-live="polite"><i class="bi bi-inbox" aria-hidden="true"></i><strong>@string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Clinical.EmptyTitle"), vm.Modulo)</strong><span>@UiText.L("Clinical.EmptyTableBody")</span></div></td></tr>
             }
             else
             {
@@ -119,6 +121,6 @@
 
 
 <div class="pp-info-banner" role="note">
-    <strong>LGPD e auditoria:</strong> as ações deste módulo usam endpoints autenticados, escopo por tenant e trilha de auditoria clínica/operacional.
+    <strong>@UiText.L("Clinical.LgpdLabel")</strong> @UiText.L("Clinical.LgpdBody")
 </div>
 </div>

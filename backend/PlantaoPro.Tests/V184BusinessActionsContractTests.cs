@@ -13,7 +13,8 @@ public sealed class V184BusinessActionsContractTests
         Assert.Contains("{id:guid}/finalizar-tipado", controller);
         Assert.Contains("FinalizarTriagemAsync", webController);
         Assert.Contains("asp-action=\"Finalizar\"", view);
-        Assert.Contains("Salve a triagem para obter um identificador real", view);
+        // R7-D-F4: título do botão desabilitado saiu para o recurso Clinical.TriageFinishDisabledTitle
+        Assert.Contains("UiText.L(\"Clinical.TriageFinishDisabledTitle\")", view);
         Assert.DoesNotContain("A API atual salva a triagem, mas não expõe", view);
     }
 }

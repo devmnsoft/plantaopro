@@ -5,20 +5,20 @@
     var tips = (vm.Tips ?? Array.Empty<string>()).ToList();
     var actions = (vm.RelatedActions ?? Array.Empty<PlantaoPro.Web.Models.Saude360ActionLinkViewModel>()).ToList();
 }
-<section class="saude360-help-panel" aria-label="Ajuda contextual da tela">
+<section class="saude360-help-panel" aria-label="@UiText.L("Clinical.PageHelpAria")">
     <div class="help-main">
-        <span class="help-kicker"><i class="bi bi-compass"></i> Você está aqui</span>
+        <span class="help-kicker"><i class="bi bi-compass"></i> @UiText.L("Clinical.PageHelpYouAreHere")</span>
         <h2>@vm.Title</h2>
         <p>@vm.Description</p>
         @if (!string.IsNullOrWhiteSpace(vm.WhenToUse))
         {
-            <div class="saude360-infobox"><strong>Quando usar:</strong> @vm.WhenToUse</div>
+            <div class="saude360-infobox"><strong>@UiText.L("Clinical.PageHelpWhenToUseLabel")</strong> @vm.WhenToUse</div>
         }
     </div>
     <div class="help-side">
         @if (steps.Any())
         {
-            <h3>Próximos passos</h3>
+            <h3>@UiText.L("Clinical.PageHelpNextSteps")</h3>
             <ol class="saude360-steps-mini">
             @foreach (var step in steps)
             {
@@ -28,7 +28,7 @@
         }
         @if (tips.Any())
         {
-            <h3>Dicas rápidas</h3>
+            <h3>@UiText.L("Clinical.PageHelpTips")</h3>
             <ul class="saude360-tips">
             @foreach (var tip in tips)
             {
@@ -47,7 +47,7 @@
             }
             @if (!string.IsNullOrWhiteSpace(vm.DocumentationUrl))
             {
-                <a class="btn btn-sm btn-light" href="@vm.DocumentationUrl"><i class="bi bi-book me-1"></i>Manual</a>
+                <a class="btn btn-sm btn-light" href="@vm.DocumentationUrl"><i class="bi bi-book me-1"></i>@UiText.L("Clinical.PageHelpManual")</a>
             }
         </div>
     </div>

@@ -6,8 +6,13 @@ Data: 2026-10-10. Base: `HEAD = 9588fab` (R7-A1). Banco de prova: `plantaopro_te
 aplicada.`) — coluna `usuarios.idioma_preferido varchar(8)` com CHECK em
 {pt-BR,en,es,fr}∪{null} verificada por psql (`ck_usuarios_idioma_preferido`).
 
-Suíte de fechamento: **[números da execução final]** (baseline da rodada: 1219 + 29 novos
-R7E1 = 1248 esperados por execução), executada 3 vezes seguidas.
+Suíte de fechamento (validação executada na rodada 8, 11/10): **gate contratos+R7E1+R7A1
+= 47/47**; suíte completa **1248/1248** (full1) · **1248/1248** (full2) · **1247/1248**
+(full3) — a única falha do full3 foi `Npgsql 40P01` no **cleanup** (`PurgarAsync` em
+`Dispose`, `SaasGovernancaB6Rodada4Tests.cs:481/78`) sob concorrência total; as assertions
+do próprio teste passaram, e a classe reexecutada isolada deu **8/8 em 1 s**
+(`rerun-b6.log`). Máquina calma nesta janela: suíte completa em ~12-20 s (vs 40-75 min sob
+thrash de RAM nas noites anteriores).
 
 Observação de ambiente (importante para leitura dos logs desta janela): a máquina de teste
 ficou sem RAM livre (processos de teste morrendo por OOM; até `systeminfo`/`dotnet new`
@@ -21,8 +26,10 @@ conflito de bind em `:5000` causado por `testhost.exe` órfão de execução ant
 OOM (finalizado); (b) ~29 processos `dotnet.exe` ociosos de build server finalizados via
 `dotnet build-server shutdown`/taskkill. Registro apenas; nenhuma mudança de produto.
 
-**Estado honesto**: IMPLEMENTADO → TESTADO (suíte + banco real). AINDA NÃO HOMOLOGADO em host
-vivo e não LIBERADO. Commit local; push diferido por decisão da rodada.
+**Estado honesto**: IMPLEMENTADO → TESTADO (suíte + banco real). AINDA NÃO HOMOLOGADO em
+host vivo e não LIBERADO. Commitado e publicado em `2f4533d3` (mensagem externa "novos";
+conteúdo do pacote conferido via `git show` — 31 arquivos, incluindo os 3 contratos de
+fonte atualizados).
 
 ## 1. O que o ponto pediu (design+i18n de cada etapa do ciclo) e o que foi feito
 

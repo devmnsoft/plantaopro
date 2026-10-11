@@ -432,6 +432,7 @@ public sealed class R7E1I18nPersistenciaRealTests
             Assert.Equal("es", Text(primoProp(primeiro), "idiomaOrganizacao"));
 
             // 2) Salvar preferência via endpoint real → coluna v2344 atualizada no PostgreSQL.
+            client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Text(primoProp(primeiro), "token")!);
             var save = await client.PostAsJsonAsync("api/usuarios/me/idioma",
                 new { idioma = "fr" });
             Assert.Equal(HttpStatusCode.OK, save.StatusCode);

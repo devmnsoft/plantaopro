@@ -242,6 +242,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
         var table = ResolveTable(tableKey);
         var status = StatusForAction(acao);
         string? esperadoStatus = null;
+        string painelFonteExtra = "";
         var imprimir = string.Equals(acao, "imprimir", StringComparison.OrdinalIgnoreCase);
         if (string.Equals(tableKey, "painel", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADO";
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) status = "FINALIZADA";
@@ -305,6 +306,14 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             // R7-A1: reserva concorrente segura — dois operadores não assumem o mesmo item da fila.
             // A atualização é condicional ao estado lido; o perdedor da corrida recebe 409 de conflito.
             esperadoStatus = currentPainel;
+            // R8-A1: ancora o estado-fonte permitido POR AÇÃO no predicado do UPDATE. Sem isso, uma
+            // chamada que lê a linha depois do commit da mais rápida (ex.: já CHAMADO) revalida a
+            // própria transição (CHAMADO→CHAMADO) e vira sucesso duplicado: ações de uso único
+            // (chamar/finalizar) passam a perder com 409 também nesse entrelaçamento leitura→commit.
+            // Rechamar é repetível por natureza (CHAMADO→CHAMADO) e mantém só a guarda de estado.
+            if (string.Equals(acao, "chamar", StringComparison.OrdinalIgnoreCase)) painelFonteExtra = " and status in ('AGUARDANDO','RECHAMADO')";
+            else if (string.Equals(acao, "rechamar", StringComparison.OrdinalIgnoreCase)) painelFonteExtra = " and status='CHAMADO'";
+            else if (string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase)) painelFonteExtra = " and status<>'FINALIZADO'";
         }
         if (string.Equals(tableKey, "triagens", StringComparison.OrdinalIgnoreCase) && string.Equals(acao, "finalizar", StringComparison.OrdinalIgnoreCase))
         {
@@ -320,7 +329,7 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
                 ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then coalesce(finalizada_em,now()) else finalizada_em end, finalizada_por=case when @status='FINALIZADA' then coalesce(finalizada_por,@uid) else finalizada_por end, updated_by=@uid, reg_update=now(), versao=versao+1 where id=@id and reg_status='A' and status<>'FINALIZADA' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
             : string.Equals(tableKey, "prescricoes", StringComparison.OrdinalIgnoreCase)
                 ? $"update plantaopro.{table} set status=@status, finalizada_em=case when @status='FINALIZADA' then now() else finalizada_em end, cancelada_em=case when @status='CANCELADA' then now() else cancelada_em end, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)"
-                : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado)";
+                : $"update plantaopro.{table} set status=@status, updated_by=@uid, updated_at=now() where id=@id and reg_status='A' and (@isGlobal or (@tenantId is not null and cliente_id=@tenantId)) and (@esperado is null or status=@esperado){painelFonteExtra}";
         await using var tx = cn.BeginTransaction();
         try
         {

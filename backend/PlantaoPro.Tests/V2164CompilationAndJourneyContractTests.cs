@@ -114,7 +114,14 @@ public sealed class V2164CompilationAndJourneyContractTests
         var titulo = resx[resx.IndexOf("<data name=\"Login.Title\"", StringComparison.Ordinal)
             ..resx.IndexOf("</data>", resx.IndexOf("<data name=\"Login.Title\"", StringComparison.Ordinal), StringComparison.Ordinal)];
         Assert.Contains("<value>Acesse sua conta</value>", titulo);
-        Assert.Contains("Não foi possível conectar ao serviço de autenticação", controller);
+        // R7-D-F2: os erros publicos de conexao viram recursos localizados — contrato
+        // preservado como chave no controller + texto publico no master pt-BR; a frase
+        // tecnica de diagnostico continua ausente do que chega ao usuario.
+        Assert.Contains("UiText.L(\"Auth.LoginConnection\")", controller);
+        var conexao = resx[resx.IndexOf("<data name=\"Auth.LoginConnection\"", StringComparison.Ordinal)
+            ..resx.IndexOf("</data>", resx.IndexOf("<data name=\"Auth.LoginConnection\"", StringComparison.Ordinal), StringComparison.Ordinal)];
+        Assert.Contains("<value>Não foi possível conectar ao serviço de autenticação. Tente novamente em instantes.</value>", conexao);
         Assert.DoesNotContain("Verifique se o backend está em execução", controller);
+        Assert.DoesNotContain("Verifique se o backend está em execução", resx);
     }
 }

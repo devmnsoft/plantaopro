@@ -253,7 +253,7 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 ## 4. Ordem de cortes proposta (atualizada após esta auditoria)
 
 1. ~~**R7-OB** — passo "Preferências" (idioma) no onboarding~~ — ✅ **entregue nesta rodada** (v2345 + avaliador + 5 testes; doc `r7ob-onboarding-preferencias-idioma.md`; fecha a linha da matriz e o uso na jornada de §12.6). Wizard MNSOFT `NovoCliente` segue fora do escopo desta fatia.
-2. **R7-D** — varredura design/textos/i18n por jornada: escopo consolidado em `r7d0-varredura-design-textos-i18n.md` (6 fatias). **F1 entregue** nesta rodada (sidebar + topbar em recursos localizados, doc `r7df1-navegacao-i18n.md`); segue F2 (login/perfil: lacunas + padronização de chaves `Profile.*`).
+2. **R7-D** — varredura design/textos/i18n por jornada: escopo consolidado em `r7d0-varredura-design-textos-i18n.md` (6 fatias). **F1 e F2 entregues nesta rodada** (sidebar/topbar + login/perfil em recursos localizados; docs `r7df1-navegacao-i18n.md` e `r7df2-login-perfil-i18n.md`; suite agora 1260 testes com gate 52); segue F3 (Central de Escala).
 3. Cortes novos derivados dos achados §17–§30 (definidos após consolidação desta matriz; prioridade: itens classificados quebrado, depois ausente-alto-impacto).
 4. Externos/DECs: upgrade formal `plantaopro` v2339→v2344 + IIS; homologação viva; credenciais fiscais; semântica de `solicitado`; DECs de R6-A1b.
 

@@ -13,10 +13,10 @@
     </div>
 
     <dl class="row mb-4">
-        <dt class="col-sm-3">@UiText.L("Profile.Nome")</dt><dd class="col-sm-9">@Model.Nome</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Name")</dt><dd class="col-sm-9">@Model.Nome</dd>
         <dt class="col-sm-3">@UiText.L("Profile.Email")</dt><dd class="col-sm-9">@Model.Email</dd>
-        <dt class="col-sm-3">@UiText.L("Profile.Telefone")</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Telefone) ? UiText.L("Profile.NotInformado") : Model.Telefone)</dd>
-        <dt class="col-sm-3">@UiText.L("Profile.Notificacoes")</dt><dd class="col-sm-9">@Model.PreferenciasNotificacao</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Phone")</dt><dd class="col-sm-9">@(string.IsNullOrWhiteSpace(Model.Telefone) ? UiText.L("Profile.NotInformado") : Model.Telefone)</dd>
+        <dt class="col-sm-3">@UiText.L("Profile.Notifications")</dt><dd class="col-sm-9">@Model.PreferenciasNotificacao</dd>
     </dl>
 
     <div class="d-flex gap-2 flex-wrap">

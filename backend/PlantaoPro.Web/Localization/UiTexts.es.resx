@@ -130,16 +130,16 @@
   <data name="Profile.AccountActive" xml:space="preserve">
     <value>Cuenta activa</value>
   </data>
-  <data name="Profile.Nome" xml:space="preserve">
+  <data name="Profile.Name" xml:space="preserve">
     <value>Nombre</value>
   </data>
   <data name="Profile.Email" xml:space="preserve">
     <value>Correo electrónico</value>
   </data>
-  <data name="Profile.Telefone" xml:space="preserve">
+  <data name="Profile.Phone" xml:space="preserve">
     <value>Teléfono</value>
   </data>
-  <data name="Profile.Notificacoes" xml:space="preserve">
+  <data name="Profile.Notifications" xml:space="preserve">
     <value>Notificaciones</value>
   </data>
   <data name="Profile.NotInformado" xml:space="preserve">
@@ -387,5 +387,107 @@
   </data>
   <data name="Nav.TopbarDefaultSubtitle" xml:space="preserve">
     <value>Siga sus prioridades y continúe su jornada.</value>
+  </data>
+  <data name="Auth.SessionEnded" xml:space="preserve">
+    <value>Sesión finalizada con éxito.</value>
+  </data>
+  <data name="Auth.LoginUnexpected" xml:space="preserve">
+    <value>No fue posible iniciar sesión en este momento.</value>
+  </data>
+  <data name="Auth.LoginTimeout" xml:space="preserve">
+    <value>La autenticación excedió el tiempo de respuesta. Inténtelo de nuevo en instantes.</value>
+  </data>
+  <data name="Auth.LoginConnection" xml:space="preserve">
+    <value>No fue posible conectar con el servicio de autenticación. Inténtelo de nuevo en instantes.</value>
+  </data>
+  <data name="Auth.ContextRefreshed" xml:space="preserve">
+    <value>Contexto y módulos actualizados con éxito.</value>
+  </data>
+  <data name="Auth.ContextExpired" xml:space="preserve">
+    <value>Su sesión expiró o fue revocada. Inicie sesión de nuevo para continuar.</value>
+  </data>
+  <data name="Auth.ContextRefreshFailed" xml:space="preserve">
+    <value>No fue posible actualizar su acceso. Inicie sesión de nuevo para continuar con seguridad.</value>
+  </data>
+  <data name="Auth.ErrorUserInactive" xml:space="preserve">
+    <value>Su usuario está inactivo. Contacte al administrador.</value>
+  </data>
+  <data name="Auth.ErrorUserLocked" xml:space="preserve">
+    <value>Usuario bloqueado temporalmente.</value>
+  </data>
+  <data name="Auth.ErrorInvalidCredentials" xml:space="preserve">
+    <value>Identificador o contraseña no válidos.</value>
+  </data>
+  <data name="Auth.ErrorAuthFailedWithRef" xml:space="preserve">
+    <value>No fue posible autenticar. Inténtelo de nuevo. Referencia: {0}</value>
+  </data>
+  <data name="Auth.ForgotTitle" xml:space="preserve">
+    <value>Recuperar acceso</value>
+  </data>
+  <data name="Auth.ForgotBack" xml:space="preserve">
+    <value>← Volver al inicio de sesión</value>
+  </data>
+  <data name="Auth.ForgotEyebrow" xml:space="preserve">
+    <value>Recuperación segura</value>
+  </data>
+  <data name="Auth.ForgotHeading" xml:space="preserve">
+    <value>Recupere su acceso</value>
+  </data>
+  <data name="Auth.ForgotIntro" xml:space="preserve">
+    <value>Indique el correo profesional. Si hay una cuenta activa, enviaremos instrucciones seguras sin revelar datos del registro.</value>
+  </data>
+  <data name="Auth.ForgotProtectionTitle" xml:space="preserve">
+    <value>Protección de su cuenta</value>
+  </data>
+  <data name="Auth.ForgotProtectionBody" xml:space="preserve">
+    <value>El enlace tiene validez limitada y solo puede utilizarse una vez.</value>
+  </data>
+  <data name="Auth.ForgotEmailLabel" xml:space="preserve">
+    <value>Correo profesional</value>
+  </data>
+  <data name="Auth.ForgotEmailHelp" xml:space="preserve">
+    <value>Use el mismo correo vinculado a PlantãoPro.</value>
+  </data>
+  <data name="Auth.ForgotSubmit" xml:space="preserve">
+    <value>Enviar instrucciones</value>
+  </data>
+  <data name="Auth.ForgotSent" xml:space="preserve">
+    <value>Si el correo está registrado, enviaremos instrucciones de recuperación.</value>
+  </data>
+  <data name="Auth.ResetTitle" xml:space="preserve">
+    <value>Redefinir contraseña</value>
+  </data>
+  <data name="Auth.ResetEyebrow" xml:space="preserve">
+    <value>Nueva credencial</value>
+  </data>
+  <data name="Auth.ResetHeading" xml:space="preserve">
+    <value>Cree una contraseña segura</value>
+  </data>
+  <data name="Auth.ResetIntro" xml:space="preserve">
+    <value>Elija una contraseña exclusiva. La confirmación debe ser idéntica para proteger su acceso.</value>
+  </data>
+  <data name="Auth.ResetNoReuseTitle" xml:space="preserve">
+    <value>No reutilice contraseñas</value>
+  </data>
+  <data name="Auth.ResetNoReuseBody" xml:space="preserve">
+    <value>Evite nombres, fechas y credenciales usadas en otros servicios.</value>
+  </data>
+  <data name="Auth.ResetNewPasswordLabel" xml:space="preserve">
+    <value>Nueva contraseña</value>
+  </data>
+  <data name="Auth.ResetNewPasswordHelp" xml:space="preserve">
+    <value>Use la combinación de caracteres exigida por la política de la organización.</value>
+  </data>
+  <data name="Auth.ResetConfirmLabel" xml:space="preserve">
+    <value>Confirme la nueva contraseña</value>
+  </data>
+  <data name="Auth.ResetSubmit" xml:space="preserve">
+    <value>Redefinir contraseña</value>
+  </data>
+  <data name="Auth.ResetSuccess" xml:space="preserve">
+    <value>Contraseña redefinida con éxito.</value>
+  </data>
+  <data name="Auth.ResetTokenInvalid" xml:space="preserve">
+    <value>Token inválido o expirado.</value>
   </data>
 </root>

@@ -79,7 +79,12 @@ public sealed class V2156SessionSecurityTests
         Assert.DoesNotContain("new Claim(\"jwt\", ctx.Token)", builder);
         Assert.Contains("HttpContext.SignOutAsync", refresh);
         Assert.Contains("HttpContext.Session.Clear()", refresh);
-        Assert.Contains("Sua sessão expirou ou foi revogada", refresh);
+        // R7-D-F2: a mensagem de sessao expirada virou recurso localizado — o contrato se
+        // preserva como: o controller usa a chave canonica e o master pt-BR mantem o
+        // texto publico (sem causa tecnica) em todos os idiomas do fluxo.
+        Assert.Contains("UiText.L(\"Auth.ContextExpired\")", refresh);
+        var resx = File.ReadAllText(Path.Combine(RepoRoot, "backend/PlantaoPro.Web/Localization/UiTexts.resx"));
+        Assert.Contains("<value>Sua sessão expirou ou foi revogada. Entre novamente para continuar.</value>", resx);
     }
 
     private static AuthenticationSessionRow ValidSession()=>new()

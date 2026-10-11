@@ -208,7 +208,8 @@ conflito real é **plano-SaaS × plano-de-saúde**, não plano-de-cuidados.
 | Fatia | Estado |
 |---|---|
 | **F1 — Sidebar + topbar** | ✅ **ENTREGUE nesta rodada** — doc `r7df1-navegacao-i18n.md` (63 chaves `Nav.*` ×4 idiomas; partials sem literais pt-BR; `session-health.js` lê data-attrs localizados; contrato de fonte novo no gate; validação v2 gate 52/52 + full ×3 1257/1257) |
-| F2–F6 | pendentes, na ordem sugerida acima |
+| **F2 — Login/perfil** | ✅ **ENTREGUE nesta rodada** — doc `r7df2-login-perfil-i18n.md` (34 chaves `Auth.*` ×4; renames `Profile.Nome/Telefone/Notificacoes`→`Name/Phone/Notifications`; controller + Forgot/Reset localizados; 2 contratos do gate migrados literal→chave; validação v2 gate 52/52 + full ×3 1260/1260) |
+| F3–F6 | pendentes, na ordem sugerida acima |
 
 ## Pendências explícitas (não verificado)
 Corpo dos testes de paridade de resx em `backend/PlantaoPro.Tests/*` (citados, não abertos);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlantaoPro.Web.Models;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Security;
 using PlantaoPro.Web.Services.Security;
 using PlantaoPro.CrossCutting.Security;
@@ -92,10 +93,10 @@ public sealed class AccountController : Controller
             {
                 var errorMessage = response.StatusCode switch
                 {
-                    HttpStatusCode.Forbidden => "Seu usuário está inativo. Procure o administrador.",
-                    (HttpStatusCode)423 => apiResult?.Message ?? "Usuário bloqueado temporariamente.",
-                    HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => "Identificador ou senha inválidos.",
-                    _ => apiResult?.Message ?? $"Não foi possível autenticar. Tente novamente. Referência: {correlationId}"
+                    HttpStatusCode.Forbidden => UiText.L("Auth.ErrorUserInactive"),
+                    (HttpStatusCode)423 => apiResult?.Message ?? UiText.L("Auth.ErrorUserLocked"),
+                    HttpStatusCode.Unauthorized or HttpStatusCode.BadRequest => UiText.L("Auth.ErrorInvalidCredentials"),
+                    _ => apiResult?.Message ?? string.Format(System.Globalization.CultureInfo.InvariantCulture, UiText.L("Auth.ErrorAuthFailedWithRef"), correlationId)
                 };
 
                 TempData["Error"] = errorMessage;
@@ -164,8 +165,8 @@ public sealed class AccountController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro inesperado no login Web. TipoIdentificador:{TipoIdentificador} BaseUrl:{ApiBaseUrl} Mensagem:{ExceptionMessage}", identifierKind, apiBaseUrl, ex.Message);
-            TempData["Error"] = "Não foi possível realizar o login no momento.";
-            ModelState.AddModelError(string.Empty, "Não foi possível realizar o login no momento.");
+            TempData["Error"] = UiText.L("Auth.LoginUnexpected");
+            ModelState.AddModelError(string.Empty, UiText.L("Auth.LoginUnexpected"));
             return LoginFailureView(model);
         }
     }
@@ -173,8 +174,8 @@ public sealed class AccountController : Controller
     private IActionResult HandleApiConnectionFailure(LoginViewModel model, string identifierKind, Uri? apiBaseUrl, Exception exception, bool timedOut = false)
     {
         var message = timedOut
-            ? "A autenticação excedeu o tempo de resposta. Tente novamente em instantes."
-            : "Não foi possível conectar ao serviço de autenticação. Tente novamente em instantes.";
+            ? UiText.L("Auth.LoginTimeout")
+            : UiText.L("Auth.LoginConnection");
         var failureType = exception is TaskCanceledException ? "Timeout" : exception.GetType().Name;
 
         _logger.LogError(
@@ -325,7 +326,7 @@ public sealed class AccountController : Controller
         }
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         HttpContext.Session.Clear();
-        TempData["Success"] = "Sessão encerrada com sucesso.";
+        TempData["Success"] = UiText.L("Auth.SessionEnded");
         _logger.LogInformation("Logout UsuarioId:{UsuarioId} IP:{Ip}", usuarioId, HttpContext.Connection.RemoteIpAddress?.ToString());
         return RedirectToAction(nameof(Login));
     }
@@ -376,7 +377,7 @@ public sealed class AccountController : Controller
             return View(model);
         var client = _httpClientFactory.CreateClient("PlantaoProApi");
         var response = await client.PostAsJsonAsync("api/auth/forgot-password", new ForgotPasswordRequest(model.Email));
-        TempData["Info"] = "Se o e-mail estiver cadastrado, enviaremos instruções para recuperação.";
+        TempData["Info"] = UiText.L("Auth.ForgotSent");
         _logger.LogInformation("Solicitação Web de recuperação encaminhada. TipoIdentificador:{TipoIdentificador} Status:{Status}", ClassifyIdentifier(model.Email), (int)response.StatusCode);
         return RedirectToAction(nameof(Login));
     }
@@ -398,12 +399,12 @@ public sealed class AccountController : Controller
         var result = DeserializeApiResponse<object>(responseBody);
         if (result?.Success == true)
         {
-            TempData["Success"] = "Senha redefinida com sucesso.";
+            TempData["Success"] = UiText.L("Auth.ResetSuccess");
             _logger.LogInformation("Redefinição de senha Web concluída. TipoIdentificador:{TipoIdentificador}", ClassifyIdentifier(model.Email));
             return RedirectToAction(nameof(Login));
         }
 
-        TempData["Error"] = "Token inválido ou expirado.";
+        TempData["Error"] = UiText.L("Auth.ResetTokenInvalid");
         _logger.LogWarning("Redefinição de senha Web recusada. TipoIdentificador:{TipoIdentificador}", ClassifyIdentifier(model.Email));
         return View(model);
     }
@@ -420,15 +421,15 @@ public sealed class AccountController : Controller
         var (login, statusCode) = await _sessionReissue.RefreshFromApiAsync(HttpContext, ct);
         if (login != null)
         {
-            TempData["Success"] = "Contexto e módulos atualizados com sucesso.";
+            TempData["Success"] = UiText.L("Auth.ContextRefreshed");
             return !string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "MeuDia");
         }
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         HttpContext.Session.Clear();
         TempData["Error"] = statusCode == (int)HttpStatusCode.Unauthorized
-            ? "Sua sessão expirou ou foi revogada. Entre novamente para continuar."
-            : "Não foi possível atualizar seu acesso. Entre novamente para continuar com segurança.";
+            ? UiText.L("Auth.ContextExpired")
+            : UiText.L("Auth.ContextRefreshFailed");
         _logger.LogWarning("Atualização de contexto recusada. Status:{Status}", statusCode ?? -1);
         return RedirectToAction(nameof(Login));
     }

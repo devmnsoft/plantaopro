@@ -41,7 +41,9 @@ um usuário com idioma en/es/fr via perfil viajava a interface inteira em inglê
 - Build do projeto Web (compilação Razor dos partials): **0 erros** (`build14.log`,
   `BUILDWEB14_EXIT:0`); build do Tests: **0 erros**.
 - Testes alvo (R7DF1 + R7E1 + V2150 + V2164): **56/56 aprovados em 9 s** (`build14.log`).
-- Gate da rodada + suíte completa ×3: `[números]` (total esperado: 1253 + 4 novos = 1257).
+- Gate da rodada + suíte completa ×3: gate **52/52** · full1 **1257/1257** · full2
+  **1257/1257** · full3 **1257/1257** — janela limpa, sem flake de limpeza neste ciclo
+  (`suite-final2-summary.txt` de 10:01 UTC-3, `v2-full*.log`).
 
 **Estado honesto**: IMPLEMENTADO → TESTADO. AINDA NÃO HOMOLOGADO em host vivo e não LIBERADO.
 Commit local desta fatia; push diferido por decisão da rodada.

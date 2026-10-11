@@ -203,6 +203,13 @@ conflito real é **plano-SaaS × plano-de-saúde**, não plano-de-cuidados.
 | **F5 — Onboarding/Implantação: rotas + acentuação** | Grupo `Onboarding.*`/`Implantacao.*` (~20 chaves) + corrigir acentos em `OnboardingController.cs:96,115,124` | Médio | Muito baixo |
 | **F6 — Admin 360: cotações + dashboard + convenção de TempData** | Grupo `Adm360.*` (~30 chaves) para `Cotacoes/Index.cshtml`, `Gestao/Dashboard.cshtml`, `Index.cshtml`; convenção de que TODO `TempData["Success"/"Error"]` de `Adm360*` passe por `UiText.L` | Médio | Baixo |
 
+## Status das fatias (atualizado)
+
+| Fatia | Estado |
+|---|---|
+| **F1 — Sidebar + topbar** | ✅ **ENTREGUE nesta rodada** — doc `r7df1-navegacao-i18n.md` (63 chaves `Nav.*` ×4 idiomas; partials sem literais pt-BR; `session-health.js` lê data-attrs localizados; contrato de fonte novo no gate; validação v2 gate 52/52 + full ×3 1257/1257) |
+| F2–F6 | pendentes, na ordem sugerida acima |
+
 ## Pendências explícitas (não verificado)
 Corpo dos testes de paridade de resx em `backend/PlantaoPro.Tests/*` (citados, não abertos);
 `UiLanguageCatalog.cs` linha a linha; `Administrativo360/{Orcamentos,TitulosReceber,…}.cshtml`

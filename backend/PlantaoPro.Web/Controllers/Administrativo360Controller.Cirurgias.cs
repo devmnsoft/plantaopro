@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -86,11 +87,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cirurgias", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Cirurgia operacional agendada com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Cirurgias.OkScheduled");
             return RedirectToAction(nameof(Cirurgias));
         }
 
-        TempData["Error"] = resp.Error ?? "Falha ao agendar cirurgia.";
+        TempData["Error"] = resp.Error ?? UiText.L("Adm360.Cirurgias.FallbackSchedule");
         await PreencherLookupsCirurgiaAsync(client, model);
         return View(model);
     }
@@ -117,9 +118,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/cirurgias/{id}/cancelar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Cirurgia cancelada com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Cirurgias.OkCancelled");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao cancelar cirurgia.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Cirurgias.FallbackCancel");
 
         return RedirectToAction(nameof(CirurgiaDetalhes), new { id });
     }

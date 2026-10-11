@@ -1,6 +1,6 @@
 @model PlantaoPro.Web.Models.OrganizacaoIndexViewModel
 @{
-    ViewData["Title"] = "Resumo Organizacional — Administrativo 360";
+    ViewData["Title"] = UiText.L("Adm360.Org.PageTitle");
     var ptBr = new System.Globalization.CultureInfo("pt-BR");
     string Num(long valor) => valor.ToString("N0", ptBr);
 }
@@ -15,8 +15,8 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <h2 class="h4 mb-1 fw-bold">Gestão Organizacional</h2>
-            <p class="text-muted small mb-0">Departamentos, cargos, colaboradores e contratos de trabalho — dados restritos ao tenant autenticado, com histórico preservado em todas as transições.</p>
+            <h2 class="h4 mb-1 fw-bold">@UiText.L("Adm360.Org.Heading")</h2>
+            <p class="text-muted small mb-0">@UiText.L("Adm360.Org.Subheading")</p>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
     {
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle me-2"></i>@Model.Erro
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@UiText.L("Implantacao.CloseAria")"></button>
         </div>
     }
 
@@ -36,7 +36,7 @@
                     <span class="badge bg-primary bg-opacity-25 text-primary rounded-2 p-3"><i class="bi bi-building fs-4"></i></span>
                     <div>
                         <div class="display-6 fw-bold text-light lh-1">@Num(Model.Resumo.Departamentos)</div>
-                        <div class="text-secondary small">Departamentos cadastrados</div>
+                        <div class="text-secondary small">@UiText.L("Adm360.Org.KpiDepartments")</div>
                     </div>
                 </div>
             </div>
@@ -47,7 +47,7 @@
                     <span class="badge bg-info bg-opacity-25 text-info rounded-2 p-3"><i class="bi bi-person-badge fs-4"></i></span>
                     <div>
                         <div class="display-6 fw-bold text-light lh-1">@Num(Model.Resumo.Cargos)</div>
-                        <div class="text-secondary small">Cargos cadastrados</div>
+                        <div class="text-secondary small">@UiText.L("Adm360.Org.KpiRoles")</div>
                     </div>
                 </div>
             </div>
@@ -58,7 +58,7 @@
                     <span class="badge bg-success bg-opacity-25 text-success rounded-2 p-3"><i class="bi bi-people fs-4"></i></span>
                     <div>
                         <div class="display-6 fw-bold text-light lh-1">@Num(Model.Resumo.ColaboradoresAtivos)</div>
-                        <div class="text-secondary small">Colaboradores ativos</div>
+                        <div class="text-secondary small">@UiText.L("Adm360.Org.KpiActiveEmployees")</div>
                     </div>
                 </div>
             </div>
@@ -69,23 +69,23 @@
                     <span class="badge bg-warning bg-opacity-25 text-warning rounded-2 p-3"><i class="bi bi-file-earmark-text fs-4"></i></span>
                     <div>
                         <div class="display-6 fw-bold text-light lh-1">@Num(Model.Resumo.ContratosVigentes)</div>
-                        <div class="text-secondary small">Contratos vigentes</div>
+                        <div class="text-secondary small">@UiText.L("Adm360.Org.KpiActiveContracts")</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Áreas de gestão -->
-    <h5 class="h6 mb-3"><i class="bi bi-diagram-3 me-2"></i>Áreas de gestão</h5>
+    <!-- areas -->
+    <h5 class="h6 mb-3"><i class="bi bi-diagram-3 me-2"></i>@UiText.L("Adm360.Org.AreasTitle")</h5>
     <div class="row g-3">
         <div class="col-md-6 col-xl-3">
             <a asp-action="Departamentos" asp-controller="Administrativo360" class="text-decoration-none">
                 <div class="card bg-dark border-secondary h-100">
                     <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div>
-                            <div class="fw-bold text-light">Departamentos</div>
-                            <small class="text-secondary">@Num(Model.Resumo.Departamentos) cadastrados · estrutura organizacional</small>
+                            <div class="fw-bold text-light">@UiText.L("Adm360.Org.AreaDepartments")</div>
+                            <small class="text-secondary">@Num(Model.Resumo.Departamentos) @UiText.L("Adm360.Org.AreaDepartmentsDesc")</small>
                         </div>
                         <i class="bi bi-chevron-right text-secondary"></i>
                     </div>
@@ -97,8 +97,8 @@
                 <div class="card bg-dark border-secondary h-100">
                     <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div>
-                            <div class="fw-bold text-light">Cargos</div>
-                            <small class="text-secondary">@Num(Model.Resumo.Cargos) cadastrados · funções e vínculo departamental</small>
+                            <div class="fw-bold text-light">@UiText.L("Adm360.Org.AreaRoles")</div>
+                            <small class="text-secondary">@Num(Model.Resumo.Cargos) @UiText.L("Adm360.Org.AreaRolesDesc")</small>
                         </div>
                         <i class="bi bi-chevron-right text-secondary"></i>
                     </div>
@@ -110,8 +110,8 @@
                 <div class="card bg-dark border-secondary h-100">
                     <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div>
-                            <div class="fw-bold text-light">Colaboradores</div>
-                            <small class="text-secondary">@Num(Model.Resumo.ColaboradoresAtivos) ativos · matrículas, vínculos e status</small>
+                            <div class="fw-bold text-light">@UiText.L("Adm360.Org.AreaEmployees")</div>
+                            <small class="text-secondary">@Num(Model.Resumo.ColaboradoresAtivos) @UiText.L("Adm360.Org.AreaEmployeesDesc")</small>
                         </div>
                         <i class="bi bi-chevron-right text-secondary"></i>
                     </div>
@@ -123,8 +123,8 @@
                 <div class="card bg-dark border-secondary h-100">
                     <div class="card-body d-flex align-items-center justify-content-between gap-2">
                         <div>
-                            <div class="fw-bold text-light">Contratos de Trabalho</div>
-                            <small class="text-secondary">@Num(Model.Resumo.ContratosVigentes) vigentes · admissão, vigência e remuneração</small>
+                            <div class="fw-bold text-light">@UiText.L("Adm360.Org.AreaContracts")</div>
+                            <small class="text-secondary">@Num(Model.Resumo.ContratosVigentes) @UiText.L("Adm360.Org.AreaContractsDesc")</small>
                         </div>
                         <i class="bi bi-chevron-right text-secondary"></i>
                     </div>
@@ -134,6 +134,6 @@
     </div>
 
     <p class="text-muted small mt-4">
-        <i class="bi bi-info-circle me-1"></i>Inativar um departamento, cargo ou colaborador não apaga vínculos nem contratos: todo o histórico permanece disponível para auditoria e relatórios.
+        <i class="bi bi-info-circle me-1"></i>@UiText.L("Adm360.Org.HistoryNote")
     </p>
 </div>

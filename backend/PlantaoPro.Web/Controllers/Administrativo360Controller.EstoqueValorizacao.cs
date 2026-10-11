@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -57,13 +58,13 @@ public partial class Administrativo360Controller
 
         if (origemId == destinoId)
         {
-            TempData["Error"] = "Local de origem e destino devem ser diferentes.";
+            TempData["Error"] = UiText.L("Adm360.Estoque.ErrOriginDestinDifferent");
             return RedirectToAction(nameof(Movimentacoes));
         }
 
         if (quantidade <= 0)
         {
-            TempData["Error"] = "Quantidade a transferir deve ser positiva.";
+            TempData["Error"] = UiText.L("Adm360.Estoque.ErrTransferQuantityPositive");
             return RedirectToAction(nameof(Movimentacoes));
         }
 
@@ -80,9 +81,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/estoque/transferencias", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Transferência de estoque concluída com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkTransferDone");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao transferir estoque.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Estoque.FallbackTransfer");
 
         return RedirectToAction(nameof(Movimentacoes));
     }
@@ -120,9 +121,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/inventarios", payload);
 
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["Success"] = "Inventário aberto com sucesso. O local está em contagem de estoque.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkInventoryOpened");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao abrir inventário.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Estoque.FallbackOpenInventory");
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -143,9 +144,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Put, $"api/administrativo360/inventarios/{inventarioId}/contagens", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Contagem registrada no inventário.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkCountRegistered");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao registrar contagem.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Estoque.FallbackRegisterCount");
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -168,9 +169,9 @@ public partial class Administrativo360Controller
         var response = await client.SendAsync(message);
 
         if (response.IsSuccessStatusCode)
-            TempData["Success"] = "Inventário aprovado e ajustes de saldo consolidados com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkInventoryApproved");
         else
-            TempData["Error"] = "Falha ao aprovar inventário.";
+            TempData["Error"] = UiText.L("Adm360.Estoque.ErrInventoryApproval");
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -190,9 +191,9 @@ public partial class Administrativo360Controller
         var response = await client.SendAsync(message);
 
         if (response.IsSuccessStatusCode)
-            TempData["Success"] = "Inventário cancelado com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkInventoryCancelled");
         else
-            TempData["Error"] = "Falha ao cancelar inventário.";
+            TempData["Error"] = UiText.L("Adm360.Estoque.ErrInventoryCancel");
 
         return RedirectToAction(nameof(Inventarios));
     }
@@ -224,7 +225,7 @@ public partial class Administrativo360Controller
 
         if (string.IsNullOrWhiteSpace(codigo) || quantidade <= 0)
         {
-            TempData["Error"] = "Código de barras e quantidade positiva são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Estoque.ErrBarcodeAndQuantity");
             return RedirectToAction(nameof(Coleta));
         }
 
@@ -239,9 +240,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/coleta/leituras", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Leitura de código de barras registrada com sucesso na tarefa.";
+            TempData["Success"] = UiText.L("Adm360.Estoque.OkBarcodeRead");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao registrar leitura.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Estoque.FallbackRegisterRead");
 
         return RedirectToAction(nameof(Coleta));
     }
@@ -288,7 +289,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<PreviaValorizacaoViewModel>(client, $"api/administrativo360/valorizacoes/previa/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Vale não encontrado para valorização prévia.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Estoque.FallbackVoucherNotFoundPrevValuation");
             return RedirectToAction(nameof(Valorizacao));
         }
 
@@ -332,7 +333,7 @@ public partial class Administrativo360Controller
 
         if (respVal.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
         {
-            TempData["Error"] = respVal.Error ?? "Erro ao valorizar o vale.";
+            TempData["Error"] = respVal.Error ?? UiText.L("Adm360.Estoque.FallbackValueVoucher");
             return RedirectToAction(nameof(ValorizacaoPrevia), new { id = valeId });
         }
 
@@ -357,7 +358,7 @@ public partial class Administrativo360Controller
 
         if (respVenda.StatusCode is not (System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created))
         {
-            TempData["Error"] = respVenda.Error ?? "Vale valorizado, mas houve erro ao gerar a venda e títulos.";
+            TempData["Error"] = respVenda.Error ?? UiText.L("Adm360.Estoque.FallbackValueVoucherSaleError");
             return RedirectToAction(nameof(Vendas));
         }
 
@@ -367,7 +368,7 @@ public partial class Administrativo360Controller
             vendaId = vId;
         }
 
-        TempData["Success"] = "Vale valorizado com sucesso e venda interna gerada!";
+        TempData["Success"] = UiText.L("Adm360.Estoque.OkVoucherValued");
         return RedirectToAction(nameof(VendaDetalhes), new { id = vendaId != Guid.Empty ? vendaId : valorizacaoId });
     }
 }

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -81,7 +82,7 @@ public partial class Administrativo360Controller
 
         if (model.Itens.Count == 0)
         {
-            TempData["Error"] = "Adicione ao menos um item ao vale de consignação.";
+            TempData["Error"] = UiText.L("Adm360.Vales.ErrAtLeastOneItem");
             await PreencherLookupsValeAsync(client, model);
             return View(model);
         }
@@ -112,11 +113,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/vales", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Vale de consignação criado com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkCreated");
             return RedirectToAction(nameof(Vales));
         }
 
-        TempData["Error"] = resp.Error ?? "Falha ao criar vale de consignação.";
+        TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackCreate");
         await PreencherLookupsValeAsync(client, model);
         return View(model);
     }
@@ -143,9 +144,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/separar-item", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Conferência do item registrada.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkItemVerification");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao registrar conferência do item.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackItemVerification");
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -159,9 +160,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/concluir-separacao", new { });
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Separação de materiais concluída. Vale pronto para expedição.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkSeparationDone");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao concluir separação de materiais.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackSeparation");
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -176,9 +177,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/expedir", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Vale expedido com sucesso! Materiais transferidos para custódia externa no hospital.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkDispatched");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao expedir vale.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackDispatch");
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -196,6 +197,14 @@ public partial class Administrativo360Controller
             "PERDA" => $"api/administrativo360/vales/{id}/perda",
             _ => throw new ArgumentException("Tipo de evento inválido.")
         };
+        // R7-D-F6: mensagem do evento por recursos localizados; o valor de máquina `tipo` permanece só na rota.
+        var (chaveEventoOk, chaveEventoErro) = tipo switch
+        {
+            "CONSUMO" => ("Adm360.Vales.OkEventConsumption", "Adm360.Vales.FallbackEventConsumption"),
+            "RETORNO" => ("Adm360.Vales.OkEventReturn", "Adm360.Vales.FallbackEventReturn"),
+            "PERDA" => ("Adm360.Vales.OkEventLoss", "Adm360.Vales.FallbackEventLoss"),
+            _ => throw new ArgumentException("Tipo de evento inválido.")
+        };
 
         var payload = new
         {
@@ -209,9 +218,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, endpoint, payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = $"Evento de {tipo} registrado com sucesso.";
+            TempData["Success"] = UiText.L(chaveEventoOk);
         else
-            TempData["Error"] = resp.Error ?? $"Falha ao registrar evento de {tipo}.";
+            TempData["Error"] = resp.Error ?? UiText.L(chaveEventoErro);
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -232,9 +241,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/reconciliar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Vale reconciliado com sucesso! Pronto para valorização no próximo incremento.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkReconciled");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao reconciliar vale.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackReconcile");
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }
@@ -249,9 +258,9 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/vales/{id}/cancelar", payload);
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Vale cancelado com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Vales.OkCancelled");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao cancelar vale.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vales.FallbackCancel");
 
         return RedirectToAction(nameof(ValeDetalhes), new { id });
     }

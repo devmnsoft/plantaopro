@@ -1843,4 +1843,727 @@
   <data name="Implantacao.JsValidateError" xml:space="preserve">
     <value>The validation was not completed.</value>
   </data>
+  <data name="Adm360.Cotacoes.PageTitle" xml:space="preserve">
+    <value>Quotes Center — Administrative 360</value>
+  </data>
+  <data name="Adm360.Cotacoes.Heading" xml:space="preserve">
+    <value>Pre-Surgical Quotes Center</value>
+  </data>
+  <data name="Adm360.Cotacoes.Subheading" xml:space="preserve">
+    <value>Capture, matching, quote generation and response transmission to OPMENEXO and INPART Saúde portals.</value>
+  </data>
+  <data name="Adm360.Cotacoes.ButtonDeParaGeral" xml:space="preserve">
+    <value>Global Matching</value>
+  </data>
+  <data name="Adm360.Cotacoes.ButtonConfigContas" xml:space="preserve">
+    <value>Configure Accounts</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideTitle" xml:space="preserve">
+    <value>How the Pre-Surgical Quote Cycle Works</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep1Title" xml:space="preserve">
+    <value>Capture &amp; Intake</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep1Body" xml:space="preserve">
+    <value>Quotes are captured via the portal connector or manual import, with uniqueness per external revision and payload protection.</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep2Title" xml:space="preserve">
+    <value>Matching &amp; Validation</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep2Body" xml:space="preserve">
+    <value>Requested items must be mapped to internal products with a conversion factor. Pending items block submission.</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep3Title" xml:space="preserve">
+    <value>Linked Quote</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep3Body" xml:space="preserve">
+    <value>Creates an idempotent canonical surgical draft in Administrative 360, keeping full traceability.</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep4Title" xml:space="preserve">
+    <value>Safe Outbox Queue</value>
+  </data>
+  <data name="Adm360.Cotacoes.GuideStep4Body" xml:space="preserve">
+    <value>The approved response generates an immutable snapshot and enters the send queue with retry and processing lookup.</value>
+  </data>
+  <data name="Adm360.LabelProvedor" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="Adm360.Cotacoes.OptAllPortals" xml:space="preserve">
+    <value>All portals</value>
+  </data>
+  <data name="Adm360.Cotacoes.OptManualImport" xml:space="preserve">
+    <value>Manual Import</value>
+  </data>
+  <data name="Adm360.LabelStatusInterno" xml:space="preserve">
+    <value>Internal Status</value>
+  </data>
+  <data name="Adm360.Cotacoes.OptAllStatuses" xml:space="preserve">
+    <value>All situations</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusRecebida" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusEmRelacionamento" xml:space="preserve">
+    <value>In Matching</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusEmOrcamento" xml:space="preserve">
+    <value>In Quoting</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusAguardandoAprovacao" xml:space="preserve">
+    <value>Awaiting Approval</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusProntaEnvio" xml:space="preserve">
+    <value>Ready to Send</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusRespondida" xml:space="preserve">
+    <value>Responded</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusExpirada" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Adm360.Cotacoes.StatusBadgeProntaEnvio" xml:space="preserve">
+    <value>Ready to Send</value>
+  </data>
+  <data name="Adm360.ButtonFiltrar" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Adm360.ButtonLimpar" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Adm360.Cotacoes.RegisteredTitle" xml:space="preserve">
+    <value>Registered Quotes</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThIdExternalRev" xml:space="preserve">
+    <value>External ID / Rev</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThHospitalRequester" xml:space="preserve">
+    <value>Hospital / Requester</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThProcedure" xml:space="preserve">
+    <value>Procedure</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThResponseDeadline" xml:space="preserve">
+    <value>Response Deadline</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThItems" xml:space="preserve">
+    <value>Items</value>
+  </data>
+  <data name="Adm360.Cotacoes.ThQuote" xml:space="preserve">
+    <value>Quote</value>
+  </data>
+  <data name="Adm360.Cotacoes.EmptyState" xml:space="preserve">
+    <value>No quotes found for the selected criteria.</value>
+  </data>
+  <data name="Adm360.Cotacoes.NotSpecified" xml:space="preserve">
+    <value>Not specified</value>
+  </data>
+  <data name="Adm360.Cotacoes.BadgeDeadlineExpired" xml:space="preserve">
+    <value>Deadline Expired</value>
+  </data>
+  <data name="Adm360.Cotacoes.UnitItems" xml:space="preserve">
+    <value>items</value>
+  </data>
+  <data name="Adm360.Cotacoes.UnitPending" xml:space="preserve">
+    <value>pending</value>
+  </data>
+  <data name="Adm360.Cotacoes.BadgeMatchingComplete" xml:space="preserve">
+    <value>100% Matched</value>
+  </data>
+  <data name="Adm360.Cotacoes.QuoteLinked" xml:space="preserve">
+    <value>Linked</value>
+  </data>
+  <data name="Adm360.Cotacoes.QuotePending" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Adm360.Cotacoes.ButtonOpenQuote" xml:space="preserve">
+    <value>Open Quote</value>
+  </data>
+  <data name="Adm360.Dash.PageTitle" xml:space="preserve">
+    <value>Management Dashboard — Administrative 360</value>
+  </data>
+  <data name="Adm360.Dash.Heading" xml:space="preserve">
+    <value>360 Management &amp; Statistics Dashboard</value>
+  </data>
+  <data name="Adm360.Dash.Subheading" xml:space="preserve">
+    <value>Real consolidated indicators for portal quotes, NF-e tax documents and integrations.</value>
+  </data>
+  <data name="Adm360.Dash.ButtonExportQuotes" xml:space="preserve">
+    <value>Export Quotes (CSV)</value>
+  </data>
+  <data name="Adm360.Dash.ButtonExportDocuments" xml:space="preserve">
+    <value>Export Documents (CSV)</value>
+  </data>
+  <data name="Adm360.Dash.LabelStartDate" xml:space="preserve">
+    <value>Start Date</value>
+  </data>
+  <data name="Adm360.Dash.LabelEndDate" xml:space="preserve">
+    <value>End Date</value>
+  </data>
+  <data name="Adm360.Dash.CapabilitiesTitle" xml:space="preserve">
+    <value>Contracted Tenant Capabilities</value>
+  </data>
+  <data name="Adm360.Dash.CapabilitiesIsolationBadge" xml:space="preserve">
+    <value>Multi-tenant Isolation Active</value>
+  </data>
+  <data name="Adm360.Dash.CapQuotePortalsTitle" xml:space="preserve">
+    <value>Quote Portals</value>
+  </data>
+  <data name="Adm360.Dash.CapQuotePortalsDesc" xml:space="preserve">
+    <value>OPMENEXO and INPART capture with outbox transmission.</value>
+  </data>
+  <data name="Adm360.Dash.CapXmlCenterTitle" xml:space="preserve">
+    <value>Incoming XML Center</value>
+  </data>
+  <data name="Adm360.Dash.CapXmlCenterDesc" xml:space="preserve">
+    <value>NF-e mod 55 import and DF-e Sefaz synchronization.</value>
+  </data>
+  <data name="Adm360.Dash.CapDashboardTitle" xml:space="preserve">
+    <value>Management Dashboard</value>
+  </data>
+  <data name="Adm360.Dash.CapDashboardDesc" xml:space="preserve">
+    <value>Metrics computed through real SQL queries.</value>
+  </data>
+  <data name="Adm360.Dash.CapabilityEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="Adm360.Dash.CapabilityDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Adm360.Dash.ButtonEnable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Adm360.Dash.ButtonDisable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="Adm360.Dash.GroupQuotesTitle" xml:space="preserve">
+    <value>Pre-Surgical Quote Indicators</value>
+  </data>
+  <data name="Adm360.Dash.KpiQuotesReceived" xml:space="preserve">
+    <value>Quotes Received</value>
+  </data>
+  <data name="Adm360.Dash.LinkViewFullList" xml:space="preserve">
+    <value>View full list</value>
+  </data>
+  <data name="Adm360.Dash.KpiAwaitingMatching" xml:space="preserve">
+    <value>Awaiting Matching</value>
+  </data>
+  <data name="Adm360.Dash.KpiAwaitingMatchingDesc" xml:space="preserve">
+    <value>Product or registration pending</value>
+  </data>
+  <data name="Adm360.Dash.KpiDueSoon24h" xml:space="preserve">
+    <value>Due Soon (24h)</value>
+  </data>
+  <data name="Adm360.Dash.KpiDueSoonDesc" xml:space="preserve">
+    <value>Priority action required</value>
+  </data>
+  <data name="Adm360.Dash.KpiLinkedQuotes" xml:space="preserve">
+    <value>Linked Quotes</value>
+  </data>
+  <data name="Adm360.Dash.KpiLinkedQuotesDesc" xml:space="preserve">
+    <value>Integrated into the surgical flow</value>
+  </data>
+  <data name="Adm360.Dash.KpiAcceptedResponses" xml:space="preserve">
+    <value>Accepted Responses (Portal)</value>
+  </data>
+  <data name="Adm360.Dash.KpiAcceptedResponsesDesc" xml:space="preserve">
+    <value>Successful technical transmission</value>
+  </data>
+  <data name="Adm360.Dash.KpiWinningProposals" xml:space="preserve">
+    <value>Winning Proposals</value>
+  </data>
+  <data name="Adm360.Dash.LostLabel" xml:space="preserve">
+    <value>Lost:</value>
+  </data>
+  <data name="Adm360.Dash.KpiSuccessRate" xml:space="preserve">
+    <value>Success / Conversion Rate</value>
+  </data>
+  <data name="Adm360.Dash.KpiSuccessRateDesc" xml:space="preserve">
+    <value>Formula: winners / completed</value>
+  </data>
+  <data name="Adm360.Dash.KpiAvgResponseTime" xml:space="preserve">
+    <value>Average Response Time</value>
+  </data>
+  <data name="Adm360.Dash.IntegrationFailuresLabel" xml:space="preserve">
+    <value>Integration failures:</value>
+  </data>
+  <data name="Adm360.Dash.GroupXmlTitle" xml:space="preserve">
+    <value>XML Document Indicators (NF-e Model 55)</value>
+  </data>
+  <data name="Adm360.Dash.KpiTotalDocuments" xml:space="preserve">
+    <value>Total Documents</value>
+  </data>
+  <data name="Adm360.Dash.UnitCompleteDocs" xml:space="preserve">
+    <value>complete</value>
+  </data>
+  <data name="Adm360.Dash.UnitSummaryDocs" xml:space="preserve">
+    <value>summaries</value>
+  </data>
+  <data name="Adm360.Dash.KpiPendingVerification" xml:space="preserve">
+    <value>Pending Verification</value>
+  </data>
+  <data name="Adm360.Dash.LinkRunVerification" xml:space="preserve">
+    <value>Run verification</value>
+  </data>
+  <data name="Adm360.Dash.KpiLinkedQuarantine" xml:space="preserve">
+    <value>Linked to Receipt / Quarantine</value>
+  </data>
+  <data name="Adm360.Dash.UnitInQuarantine" xml:space="preserve">
+    <value>in quarantine</value>
+  </data>
+  <data name="Adm360.Dash.GroupIntegrationsTitle" xml:space="preserve">
+    <value>Global Integration Monitor</value>
+  </data>
+  <data name="Adm360.Dash.KpiActivePortalAccounts" xml:space="preserve">
+    <value>Active Portal Accounts</value>
+  </data>
+  <data name="Adm360.Dash.BlockedLabel" xml:space="preserve">
+    <value>Blocked:</value>
+  </data>
+  <data name="Adm360.Dash.KpiFailuresLast24h" xml:space="preserve">
+    <value>Failures in the Last 24h</value>
+  </data>
+  <data name="Adm360.Dash.KpiFailuresLast24hDesc" xml:space="preserve">
+    <value>Outbox and communication attempts</value>
+  </data>
+  <data name="Adm360.Dash.KpiLastGlobalSync" xml:space="preserve">
+    <value>Last Global Sync</value>
+  </data>
+  <data name="Adm360.Dash.NoneValue" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Adm360.Dash.LinkOpenFullMonitor" xml:space="preserve">
+    <value>Open full monitor</value>
+  </data>
+  <data name="Adm360.Org.PageTitle" xml:space="preserve">
+    <value>Organizational Overview — Administrative 360</value>
+  </data>
+  <data name="Adm360.Org.Heading" xml:space="preserve">
+    <value>Organizational Management</value>
+  </data>
+  <data name="Adm360.Org.Subheading" xml:space="preserve">
+    <value>Departments, roles, employees and labor contracts — data restricted to the authenticated tenant, with history preserved in every transition.</value>
+  </data>
+  <data name="Adm360.Org.KpiDepartments" xml:space="preserve">
+    <value>Registered departments</value>
+  </data>
+  <data name="Adm360.Org.KpiRoles" xml:space="preserve">
+    <value>Registered roles</value>
+  </data>
+  <data name="Adm360.Org.KpiActiveEmployees" xml:space="preserve">
+    <value>Active employees</value>
+  </data>
+  <data name="Adm360.Org.KpiActiveContracts" xml:space="preserve">
+    <value>Active contracts</value>
+  </data>
+  <data name="Adm360.Org.AreasTitle" xml:space="preserve">
+    <value>Management areas</value>
+  </data>
+  <data name="Adm360.Org.AreaDepartments" xml:space="preserve">
+    <value>Departments</value>
+  </data>
+  <data name="Adm360.Org.AreaDepartmentsDesc" xml:space="preserve">
+    <value>registered · organizational structure</value>
+  </data>
+  <data name="Adm360.Org.AreaRoles" xml:space="preserve">
+    <value>Roles</value>
+  </data>
+  <data name="Adm360.Org.AreaRolesDesc" xml:space="preserve">
+    <value>registered · functions and department link</value>
+  </data>
+  <data name="Adm360.Org.AreaEmployees" xml:space="preserve">
+    <value>Employees</value>
+  </data>
+  <data name="Adm360.Org.AreaEmployeesDesc" xml:space="preserve">
+    <value>active · registrations, links and status</value>
+  </data>
+  <data name="Adm360.Org.AreaContracts" xml:space="preserve">
+    <value>Labor Contracts</value>
+  </data>
+  <data name="Adm360.Org.AreaContractsDesc" xml:space="preserve">
+    <value>active · hiring, validity and remuneration</value>
+  </data>
+  <data name="Adm360.Org.HistoryNote" xml:space="preserve">
+    <value>Deactivating a department, role or employee does not remove links or contracts: all history remains available for audit and reports.</value>
+  </data>
+  <data name="Adm360.Compras.ErrSupplierProductRequired" xml:space="preserve">
+    <value>Supplier and at least one product are required.</value>
+  </data>
+  <data name="Adm360.Compras.ErrZeroQuantity" xml:space="preserve">
+    <value>Provide at least one product with a quantity greater than zero.</value>
+  </data>
+  <data name="Adm360.Compras.OkOrderDraft" xml:space="preserve">
+    <value>Purchase order created successfully as draft.</value>
+  </data>
+  <data name="Adm360.Compras.OkOrderApproved" xml:space="preserve">
+    <value>Purchase order approved successfully. Values frozen.</value>
+  </data>
+  <data name="Adm360.Compras.ErrReceiptRequiredFields" xml:space="preserve">
+    <value>Order, tax document, quantity and destination location are required.</value>
+  </data>
+  <data name="Adm360.Compras.OkReceiptConfirmed" xml:space="preserve">
+    <value>Receipt confirmed successfully. Material directed to quarantine/inspection and obligation generated in finance.</value>
+  </data>
+  <data name="Adm360.Compras.ErrInspectionQuantity" xml:space="preserve">
+    <value>Provide an approved or rejected quantity.</value>
+  </data>
+  <data name="Adm360.Compras.ErrRejectionJustification" xml:space="preserve">
+    <value>Rejection requires a mandatory technical justification.</value>
+  </data>
+  <data name="Adm360.Compras.OkInspectionDecision" xml:space="preserve">
+    <value>Inspection decision recorded successfully. Material released to stock according to the approved quantity.</value>
+  </data>
+  <data name="Adm360.Compras.FallbackCreateOrder" xml:space="preserve">
+    <value>Failed to create the purchase order.</value>
+  </data>
+  <data name="Adm360.Compras.FallbackApproveOrder" xml:space="preserve">
+    <value>Failed to approve the purchase order.</value>
+  </data>
+  <data name="Adm360.Compras.FallbackRegisterReceipt" xml:space="preserve">
+    <value>Failed to register the receipt.</value>
+  </data>
+  <data name="Adm360.Compras.FallbackRegisterInspection" xml:space="preserve">
+    <value>Failed to register the inspection decision.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrPositiveAmount" xml:space="preserve">
+    <value>The received amount must be positive.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrReversalReasonRequired" xml:space="preserve">
+    <value>The reversal reason is required.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrAccountNameRequired" xml:space="preserve">
+    <value>The financial account name is required.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrSupplierAndAmount" xml:space="preserve">
+    <value>Supplier and a positive amount are required.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrPaymentAmountPositive" xml:space="preserve">
+    <value>The payment amount must be positive.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrAccountAndName" xml:space="preserve">
+    <value>Account and name are required.</value>
+  </data>
+  <data name="Adm360.Financeiro.ErrReopenReasonRequired" xml:space="preserve">
+    <value>The reopen reason is required.</value>
+  </data>
+  <data name="Adm360.Financeiro.FallbackTitleNotFound" xml:space="preserve">
+    <value>Title not found.</value>
+  </data>
+  <data name="Adm360.Financeiro.FallbackPayableTitleNotFound" xml:space="preserve">
+    <value>Payable title not found.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkManualReceipt" xml:space="preserve">
+    <value>Receipt registered manually with success.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkReceiptReversed" xml:space="preserve">
+    <value>Write-off reversed successfully. Balance and cash reverted.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkAccountCreated" xml:space="preserve">
+    <value>Financial account created successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkManualExpense" xml:space="preserve">
+    <value>Manual expense registered successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkObligationApproved" xml:space="preserve">
+    <value>Obligation approved successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkManualPayment" xml:space="preserve">
+    <value>Payment registered manually with success.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkPaymentReversed" xml:space="preserve">
+    <value>Payment reversed successfully. Balance and obligation restored.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkCommissionTitleGenerated" xml:space="preserve">
+    <value>Commission title generated in Accounts Payable successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkAccountUpdated" xml:space="preserve">
+    <value>Financial account updated successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkAccountDeactivated" xml:space="preserve">
+    <value>Financial account deactivated successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkCashClosed" xml:space="preserve">
+    <value>Cash closed successfully.</value>
+  </data>
+  <data name="Adm360.Financeiro.OkCashReopened" xml:space="preserve">
+    <value>Cash closure reopened successfully.</value>
+  </data>
+  <data name="Adm360.Vendas.ErrCancellationReasonRequired" xml:space="preserve">
+    <value>The cancellation reason is required.</value>
+  </data>
+  <data name="Adm360.Vendas.FallbackSaleNotFound" xml:space="preserve">
+    <value>Sale not found.</value>
+  </data>
+  <data name="Adm360.Vendas.OkSaleCancelled" xml:space="preserve">
+    <value>Sale cancelled successfully.</value>
+  </data>
+  <data name="Adm360.Vales.ErrAtLeastOneItem" xml:space="preserve">
+    <value>Add at least one item to the consignment voucher.</value>
+  </data>
+  <data name="Adm360.Vales.OkCreated" xml:space="preserve">
+    <value>Consignment voucher created successfully.</value>
+  </data>
+  <data name="Adm360.Vales.OkItemVerification" xml:space="preserve">
+    <value>Item verification registered.</value>
+  </data>
+  <data name="Adm360.Vales.OkSeparationDone" xml:space="preserve">
+    <value>Material separation completed. Voucher ready for dispatch.</value>
+  </data>
+  <data name="Adm360.Vales.OkDispatched" xml:space="preserve">
+    <value>Voucher dispatched successfully! Materials transferred to external custody at the hospital.</value>
+  </data>
+  <data name="Adm360.Vales.OkReconciled" xml:space="preserve">
+    <value>Voucher reconciled successfully! Ready for valuation on the next increment.</value>
+  </data>
+  <data name="Adm360.Vales.OkCancelled" xml:space="preserve">
+    <value>Voucher cancelled successfully.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackCreate" xml:space="preserve">
+    <value>Failed to create the consignment voucher.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackItemVerification" xml:space="preserve">
+    <value>Failed to register the item verification.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackSeparation" xml:space="preserve">
+    <value>Failed to complete the material separation.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackDispatch" xml:space="preserve">
+    <value>Failed to dispatch the voucher.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackReconcile" xml:space="preserve">
+    <value>Failed to reconcile the voucher.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackCancel" xml:space="preserve">
+    <value>Failed to cancel the voucher.</value>
+  </data>
+  <data name="Adm360.Vales.OkEventConsumption" xml:space="preserve">
+    <value>Consumption event registered successfully.</value>
+  </data>
+  <data name="Adm360.Vales.OkEventReturn" xml:space="preserve">
+    <value>Return event registered successfully.</value>
+  </data>
+  <data name="Adm360.Vales.OkEventLoss" xml:space="preserve">
+    <value>Loss event registered successfully.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackEventConsumption" xml:space="preserve">
+    <value>Failed to register the consumption event.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackEventReturn" xml:space="preserve">
+    <value>Failed to register the return event.</value>
+  </data>
+  <data name="Adm360.Vales.FallbackEventLoss" xml:space="preserve">
+    <value>Failed to register the loss event.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkPartnerSaved" xml:space="preserve">
+    <value>Partner created/updated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkProductSaved" xml:space="preserve">
+    <value>Product created/updated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkLocationSaved" xml:space="preserve">
+    <value>Storage location created/updated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackSavePartner" xml:space="preserve">
+    <value>Failed to save the partner.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackPartnerStatus" xml:space="preserve">
+    <value>Failed to change the partner status.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackSaveProduct" xml:space="preserve">
+    <value>Failed to save the product.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackProductStatus" xml:space="preserve">
+    <value>Failed to change the product status.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackSaveLocation" xml:space="preserve">
+    <value>Failed to save the location.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkPartnerActivated" xml:space="preserve">
+    <value>Partner activated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkPartnerDeactivated" xml:space="preserve">
+    <value>Partner deactivated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkProductActivated" xml:space="preserve">
+    <value>Product activated successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.OkProductDeactivated" xml:space="preserve">
+    <value>Product deactivated successfully.</value>
+  </data>
+  <data name="Adm360.Cirurgias.OkScheduled" xml:space="preserve">
+    <value>Surgical operation scheduled successfully.</value>
+  </data>
+  <data name="Adm360.Cirurgias.OkCancelled" xml:space="preserve">
+    <value>Surgery cancelled successfully.</value>
+  </data>
+  <data name="Adm360.Cirurgias.FallbackSchedule" xml:space="preserve">
+    <value>Failed to schedule the surgery.</value>
+  </data>
+  <data name="Adm360.Cirurgias.FallbackCancel" xml:space="preserve">
+    <value>Failed to cancel the surgery.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkDepartmentCreated" xml:space="preserve">
+    <value>Department created.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkDepartmentUpdated" xml:space="preserve">
+    <value>Department updated.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkDepartmentDeactivated" xml:space="preserve">
+    <value>Department deactivated. Linked roles and employees preserve the history.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkDepartmentReactivated" xml:space="preserve">
+    <value>Department reactivated.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkRoleCreated" xml:space="preserve">
+    <value>Role created.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkRoleUpdated" xml:space="preserve">
+    <value>Role updated.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkRoleDeactivated" xml:space="preserve">
+    <value>Role deactivated. Linked employees preserve the history.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkRoleReactivated" xml:space="preserve">
+    <value>Role reactivated.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkEmployeeCreated" xml:space="preserve">
+    <value>Employee created.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkEmployeeUpdated" xml:space="preserve">
+    <value>Employee data updated.</value>
+  </data>
+  <data name="Adm360.Organizacao.ErrEmployeeStatusInvalid" xml:space="preserve">
+    <value>Invalid status for the employee.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkStatusReactived" xml:space="preserve">
+    <value>Employee reactivated.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkStatusOnLeave" xml:space="preserve">
+    <value>Employee marked as on leave.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkStatusTerminated" xml:space="preserve">
+    <value>Employee terminated. Close the active contracts when applicable.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkHireRegistered" xml:space="preserve">
+    <value>Hiring registered.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkContractEnded" xml:space="preserve">
+    <value>Contract ended. History remains available.</value>
+  </data>
+  <data name="Adm360.Organizacao.OkContractCancelled" xml:space="preserve">
+    <value>Contract cancelled. The record was preserved for audit.</value>
+  </data>
+  <data name="Adm360.Organizacao.FallbackOperationFailed" xml:space="preserve">
+    <value>Could not complete the operation. Please try again.</value>
+  </data>
+  <data name="Adm360.Orcamentos.ErrRequiredFields" xml:space="preserve">
+    <value>Hospital, Financial Responsible and Procedure are required.</value>
+  </data>
+  <data name="Adm360.Orcamentos.ErrPositiveQuantity" xml:space="preserve">
+    <value>Provide at least one product with a positive quantity.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkDraftCreated" xml:space="preserve">
+    <value>Surgical quote created as draft successfully.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkUpdated" xml:space="preserve">
+    <value>Surgical quote updated successfully.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkApproved" xml:space="preserve">
+    <value>Quote approved successfully! The commercial version is frozen and eligible for material reservation.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkRejected" xml:space="preserve">
+    <value>Quote rejected.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkCancelled" xml:space="preserve">
+    <value>Quote cancelled and active reservations released.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkMaterialReserved" xml:space="preserve">
+    <value>Material successfully reserved for the surgery.</value>
+  </data>
+  <data name="Adm360.Orcamentos.OkReservationCancelled" xml:space="preserve">
+    <value>Material reservation cancelled successfully.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackCreate" xml:space="preserve">
+    <value>Failed to create the quote.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackNotFound" xml:space="preserve">
+    <value>Quote not found.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackUpdate" xml:space="preserve">
+    <value>Failed to update the quote.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackApprove" xml:space="preserve">
+    <value>Failed to approve the quote.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackReject" xml:space="preserve">
+    <value>Failed to reject the quote.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackCancel" xml:space="preserve">
+    <value>Failed to cancel the quote.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackNotFoundOrNotApproved" xml:space="preserve">
+    <value>Quote not found or not yet approved for reservation.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackReserveMaterial" xml:space="preserve">
+    <value>Failed to reserve the material.</value>
+  </data>
+  <data name="Adm360.Orcamentos.FallbackCancelReservation" xml:space="preserve">
+    <value>Failed to cancel the reservation.</value>
+  </data>
+  <data name="Adm360.Estoque.ErrOriginDestinDifferent" xml:space="preserve">
+    <value>Origin and destination locations must be different.</value>
+  </data>
+  <data name="Adm360.Estoque.ErrTransferQuantityPositive" xml:space="preserve">
+    <value>The quantity to transfer must be positive.</value>
+  </data>
+  <data name="Adm360.Estoque.OkTransferDone" xml:space="preserve">
+    <value>Stock transfer completed successfully.</value>
+  </data>
+  <data name="Adm360.Estoque.OkInventoryOpened" xml:space="preserve">
+    <value>Inventory opened successfully. The location is now in stock count.</value>
+  </data>
+  <data name="Adm360.Estoque.OkCountRegistered" xml:space="preserve">
+    <value>Count registered in the inventory.</value>
+  </data>
+  <data name="Adm360.Estoque.OkInventoryApproved" xml:space="preserve">
+    <value>Inventory approved and balance adjustments consolidated successfully.</value>
+  </data>
+  <data name="Adm360.Estoque.ErrInventoryApproval" xml:space="preserve">
+    <value>Failed to approve the inventory.</value>
+  </data>
+  <data name="Adm360.Estoque.OkInventoryCancelled" xml:space="preserve">
+    <value>Inventory cancelled successfully.</value>
+  </data>
+  <data name="Adm360.Estoque.ErrInventoryCancel" xml:space="preserve">
+    <value>Failed to cancel the inventory.</value>
+  </data>
+  <data name="Adm360.Estoque.ErrBarcodeAndQuantity" xml:space="preserve">
+    <value>Barcode and a positive quantity are required.</value>
+  </data>
+  <data name="Adm360.Estoque.OkBarcodeRead" xml:space="preserve">
+    <value>Barcode read successfully registered in the task.</value>
+  </data>
+  <data name="Adm360.Estoque.OkVoucherValued" xml:space="preserve">
+    <value>Voucher valued successfully and internal sale generated!</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackTransfer" xml:space="preserve">
+    <value>Failed to transfer stock.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackOpenInventory" xml:space="preserve">
+    <value>Failed to open the inventory.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackRegisterCount" xml:space="preserve">
+    <value>Failed to register the count.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackRegisterRead" xml:space="preserve">
+    <value>Failed to register the read.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackVoucherNotFoundPrevValuation" xml:space="preserve">
+    <value>Voucher not found for previous valuation.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackValueVoucher" xml:space="preserve">
+    <value>Error while valuing the voucher.</value>
+  </data>
+  <data name="Adm360.Estoque.FallbackValueVoucherSaleError" xml:space="preserve">
+    <value>The voucher was valued, but an error occurred while generating the sale and titles.</value>
+  </data>
 </root>

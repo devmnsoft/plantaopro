@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -40,7 +41,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<VendaDetalhesViewModel>(client, $"api/administrativo360/vendas/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Venda não encontrada.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Vendas.FallbackSaleNotFound");
             return RedirectToAction(nameof(Vendas));
         }
 
@@ -52,7 +53,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["Error"] = "O motivo do cancelamento é obrigatório.";
+            TempData["Error"] = UiText.L("Adm360.Vendas.ErrCancellationReasonRequired");
             return RedirectToAction(nameof(VendaDetalhes), new { id });
         }
 
@@ -63,7 +64,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, $"api/administrativo360/vendas/{id}/cancelar", motivo);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Venda cancelada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Vendas.OkSaleCancelled") : resp.Error;
         return RedirectToAction(nameof(VendaDetalhes), new { id });
     }
 

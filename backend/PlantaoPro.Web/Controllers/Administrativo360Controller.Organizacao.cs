@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -38,7 +39,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, "api/administrativo360/departamentos", new { codigo = codigoLimpo, nome = nomeLimpo });
         if (ok)
         {
-            TempData["Success"] = "Departamento cadastrado.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkDepartmentCreated");
             return RedirectToAction(nameof(Departamentos), new { busca });
         }
         return ViewDepartamentoComErro(await CarregarDepartamentosAsync(client, busca, 1), codigoLimpo, nomeLimpo, erro);
@@ -56,7 +57,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/departamentos/{id}", new { codigo = codigoLimpo, nome = nomeLimpo });
         if (ok)
         {
-            TempData["Success"] = "Departamento atualizado.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkDepartmentUpdated");
             return RedirectToAction(nameof(Departamentos), new { busca, page });
         }
         return ViewDepartamentoComErro(await CarregarDepartamentosAsync(client, busca, page), codigoLimpo, nomeLimpo, erro, id, new DepartamentoEdicaoModel(id, codigoLimpo, nomeLimpo));
@@ -65,13 +66,13 @@ public partial class Administrativo360Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> InativarDepartamento(Guid id, string? busca, int page) =>
         await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/departamentos/{id}/inativar", new { },
-            "Departamento inativado. Cargos e colaboradores vinculados preservam o histórico.",
+            UiText.L("Adm360.Organizacao.OkDepartmentDeactivated"),
             () => RedirectToAction(nameof(Departamentos), new { busca, page }));
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AtivarDepartamento(Guid id, string? busca, int page) =>
         await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/departamentos/{id}/ativar", new { },
-            "Departamento reativado.",
+            UiText.L("Adm360.Organizacao.OkDepartmentReactivated"),
             () => RedirectToAction(nameof(Departamentos), new { busca, page }));
 
     // ==================== CARGOS ====================
@@ -94,7 +95,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, "api/administrativo360/cargos", new { codigo = codigoLimpo, nome = nomeLimpo, departamentoId });
         if (ok)
         {
-            TempData["Success"] = "Cargo cadastrado.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkRoleCreated");
             return RedirectToAction(nameof(Cargos), new { busca });
         }
         return ViewCargoComErro(await CarregarCargosAsync(client, busca, 1), codigoLimpo, nomeLimpo, departamentoId, erro);
@@ -113,7 +114,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/cargos/{id}", new { codigo = codigoLimpo, nome = nomeLimpo, departamentoId });
         if (ok)
         {
-            TempData["Success"] = "Cargo atualizado.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkRoleUpdated");
             return RedirectToAction(nameof(Cargos), new { busca, page });
         }
         return ViewCargoComErro(await CarregarCargosAsync(client, busca, page), codigoLimpo, nomeLimpo, departamentoId, erro, id, edicao);
@@ -122,13 +123,13 @@ public partial class Administrativo360Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> InativarCargo(Guid id, string? busca, int page) =>
         await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/cargos/{id}/inativar", new { },
-            "Cargo inativado. Colaboradores vinculados preservam o histórico.",
+            UiText.L("Adm360.Organizacao.OkRoleDeactivated"),
             () => RedirectToAction(nameof(Cargos), new { busca, page }));
 
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AtivarCargo(Guid id, string? busca, int page) =>
         await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/cargos/{id}/ativar", new { },
-            "Cargo reativado.",
+            UiText.L("Adm360.Organizacao.OkRoleReactivated"),
             () => RedirectToAction(nameof(Cargos), new { busca, page }));
 
     // ==================== COLABORADORES ====================
@@ -161,7 +162,7 @@ public partial class Administrativo360Controller
             new { matricula = matriculaLimpa, nome = nomeLimpo, cpf = cpfDigitos, email = emailLimpo, cargoId });
         if (ok)
         {
-            TempData["Success"] = "Colaborador cadastrado.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkEmployeeCreated");
             return RedirectToAction(nameof(Colaboradores), new { busca, status });
         }
         return ViewColaboradorComErro(await CarregarColaboradoresAsync(client, busca, status, 1), matriculaLimpa, nomeLimpo, cpf, emailLimpo, cargoId, erro);
@@ -180,7 +181,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Put, $"api/administrativo360/colaboradores/{id}", new { nome = nomeLimpo, email = emailLimpo });
         if (ok)
         {
-            TempData["Success"] = "Dados do colaborador atualizados.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkEmployeeUpdated");
             return RedirectToAction(nameof(Colaboradores), new { busca, status, page });
         }
         return ViewColaboradorComErro(await CarregarColaboradoresAsync(client, busca, status, page), string.Empty, nomeLimpo, string.Empty, emailLimpo, Guid.Empty,
@@ -193,14 +194,14 @@ public partial class Administrativo360Controller
         var alvo = (novoStatus ?? string.Empty).Trim().ToUpperInvariant();
         var mensagem = alvo switch
         {
-            "ATIVO" => "Colaborador reativado.",
-            "AFASTADO" => "Colaborador marcado como afastado.",
-            "DESLIGADO" => "Colaborador desligado. Encerre os contratos vigentes quando houver.",
+            "ATIVO" => UiText.L("Adm360.Organizacao.OkStatusReactived"),
+            "AFASTADO" => UiText.L("Adm360.Organizacao.OkStatusOnLeave"),
+            "DESLIGADO" => UiText.L("Adm360.Organizacao.OkStatusTerminated"),
             _ => null
         };
         if (mensagem is null)
         {
-            TempData["Error"] = "Status inválido para o colaborador.";
+            TempData["Error"] = UiText.L("Adm360.Organizacao.ErrEmployeeStatusInvalid");
             return RedirectToAction(nameof(Colaboradores), new { busca, status, page });
         }
         return await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/colaboradores/{id}/status", new { status = alvo }, mensagem,
@@ -243,7 +244,7 @@ public partial class Administrativo360Controller
             new { colaboradorId, tipo, inicio = inicio.Value.ToString("yyyy-MM-dd"), fim = fim?.ToString("yyyy-MM-dd"), salario, cargaHorariaSemanal });
         if (ok)
         {
-            TempData["Success"] = "Contratação registrada.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkHireRegistered");
             return RedirectToAction(nameof(Contratos), new { busca, status });
         }
         var modeloRejeitado = await CarregarContratosAsync(client, busca, status, 1);
@@ -264,7 +265,7 @@ public partial class Administrativo360Controller
         var (ok, erro) = await EnviarAsync(client, HttpMethod.Post, $"api/administrativo360/contratos/{id}/encerrar", new { fim = fim?.ToString("yyyy-MM-dd") });
         if (ok)
         {
-            TempData["Success"] = "Contrato encerrado. O histórico permanece disponível.";
+            TempData["Success"] = UiText.L("Adm360.Organizacao.OkContractEnded");
             return RedirectToAction(nameof(ContratoDetalhes), new { id });
         }
         var baseDetalhe = await CarregarContratoDetalhesAsync(client, id);
@@ -281,7 +282,7 @@ public partial class Administrativo360Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> CancelarContrato(Guid id) =>
         await TransicaoAsync(HttpMethod.Post, $"api/administrativo360/contratos/{id}/cancelar", new { },
-            "Contrato cancelado. O registro foi preservado para auditoria.",
+            UiText.L("Adm360.Organizacao.OkContractCancelled"),
             () => RedirectToAction(nameof(ContratoDetalhes), new { id }));
 
     // ==================== RE-RENDER COM VALORES PRESERVADOS ====================
@@ -396,7 +397,7 @@ public partial class Administrativo360Controller
     {
         var (_, erro, status) = await SendApiAsync<object, JsonElement>(client, metodo, endpoint, payload);
         if (status is >= HttpStatusCode.OK and < HttpStatusCode.Ambiguous) return (true, null);
-        return (false, erro ?? "Não foi possível concluir a operação. Tente novamente.");
+        return (false, erro ?? UiText.L("Adm360.Organizacao.FallbackOperationFailed"));
     }
 
     // Ação de impacto simples (inativar/ativar/status/encerrar/cancelar): sempre redireciona

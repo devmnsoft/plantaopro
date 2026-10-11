@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -45,14 +46,14 @@ public partial class Administrativo360Controller
 
         if (form.HospitalId == Guid.Empty || form.ResponsavelFinanceiroId == Guid.Empty || string.IsNullOrWhiteSpace(form.Procedimento))
         {
-            TempData["Error"] = "Hospital, Responsável Financeiro e Procedimento são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Orcamentos.ErrRequiredFields");
             await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
 
         if (form.Itens.Count == 0 || form.Itens.All(x => x.Quantidade <= 0))
         {
-            TempData["Error"] = "Informe ao menos um produto com quantidade positiva.";
+            TempData["Error"] = UiText.L("Adm360.Orcamentos.ErrPositiveQuantity");
             await PreencherLookupsOrcamentoAsync(client, form);
             return View(form);
         }
@@ -79,11 +80,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/orcamentos", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Orçamento cirúrgico cadastrado em rascunho com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkDraftCreated");
             return RedirectToAction(nameof(Orcamentos));
         }
 
-        TempData["Error"] = resp.Error ?? "Falha ao cadastrar orçamento.";
+        TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackCreate");
         await PreencherLookupsOrcamentoAsync(client, form);
         return View(form);
     }
@@ -97,7 +98,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackNotFound");
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -158,11 +159,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Put, $"api/administrativo360/orcamentos/{id}", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Orçamento cirúrgico atualizado com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkUpdated");
             return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
         }
 
-        TempData["Error"] = resp.Error ?? "Falha ao atualizar orçamento.";
+        TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackUpdate");
         return RedirectToAction(nameof(OrcamentoEditar), new { id });
     }
 
@@ -175,7 +176,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackNotFound");
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -194,7 +195,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<OrcamentoDetalhesViewModel>(client, $"api/administrativo360/orcamentos/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Orçamento não encontrado.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackNotFound");
             return RedirectToAction(nameof(Orcamentos));
         }
 
@@ -210,11 +211,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/orcamentos/{id}/aprovar", new { });
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Orçamento aprovado com sucesso! A versão comercial está congelada e apta para reserva de materiais.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkApproved");
         }
         else
         {
-            TempData["Error"] = resp.Error ?? "Falha ao aprovar orçamento.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackApprove");
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -233,11 +234,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Orçamento rejeitado.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkRejected");
         }
         else
         {
-            TempData["Error"] = resp.Error ?? "Falha ao rejeitar orçamento.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackReject");
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -256,11 +257,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Orçamento cancelado e reservas ativas liberadas.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkCancelled");
         }
         else
         {
-            TempData["Error"] = resp.Error ?? "Falha ao cancelar orçamento.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackCancel");
         }
 
         return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
@@ -275,7 +276,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<PlanejamentoReservaOrcamentoViewModel>(client, $"api/administrativo360/orcamentos/{id}/reserva-planejamento");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Orçamento não encontrado ou ainda não aprovado para reserva.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackNotFoundOrNotApproved");
             return RedirectToAction(nameof(OrcamentoDetalhes), new { id });
         }
 
@@ -304,11 +305,11 @@ public partial class Administrativo360Controller
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/orcamentos/{id}/reservas", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Material reservado com sucesso para a cirurgia.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkMaterialReserved");
         }
         else
         {
-            TempData["Error"] = resp.Error ?? "Falha ao realizar reserva de material.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackReserveMaterial");
         }
 
         return RedirectToAction(nameof(OrcamentoReserva), new { id });
@@ -325,11 +326,11 @@ public partial class Administrativo360Controller
 
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
         {
-            TempData["Success"] = "Reserva de material cancelada com sucesso.";
+            TempData["Success"] = UiText.L("Adm360.Orcamentos.OkReservationCancelled");
         }
         else
         {
-            TempData["Error"] = resp.Error ?? "Falha ao cancelar reserva.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Orcamentos.FallbackCancelReservation");
         }
 
         return RedirectToAction(nameof(OrcamentoReserva), new { id });

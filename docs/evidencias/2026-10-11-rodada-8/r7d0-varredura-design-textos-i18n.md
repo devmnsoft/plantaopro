@@ -212,7 +212,7 @@ conflito real é **plano-SaaS × plano-de-saúde**, não plano-de-cuidados.
 | **F3 — Central de Escala** | ✅ **ENTREGUE nesta rodada** — doc `r7df3-central-escala-i18n.md` (165 chaves `Coverage.*`/`Shift.*` ×4 idiomas; controller + 3 views sem literais pt-BR; contrato de fonte novo no gate; validação v2 gate 52/52 + full ×3 = 1264/1264/1263-flake-B1/1264) |
 | **F4 — Saúde 360** | ✅ **ENTREGUE nesta rodada** — doc `r7df4-saude360-i18n.md` (126 chaves `Clinical.*` ×4 idiomas → 478/resx; vazio des-genericizado por módulo + CTA real da ViewModel; Consultas stub → wrapper padrão; `_PageHelp`/`_LookupSelect` localizados; contrato V184 migrado literal→chave; validação v2 gate 52/52 + full ×3 = 1268/1268-flake-40P01/1268/1268) |
 | **F5 — Onboarding/Implantação** | ✅ **ENTREGUE nesta rodada** — doc `r7df5-onboarding-implantacao-i18n.md` (132 chaves `Onboarding.*`/`Implantacao.*` ×4 idiomas → 610/resx; controller com acentuação corrigida nos valores pt-BR (`módulos`, `concluída`) + 4 views + `implantacao.js` via data-attrs localizados; quirk Razor RZ1027 isolado por bissecção e resolvido com expressão explícita; validação v2 gate 52/52 + full ×3 = 1272/1272/1272 sem flake) |
-| F6 | pendente (Admin 360: cotações + dashboard + convenção de TempData), conforme linha acima |
+| F6 | **ENTREGUE** (2026-10-11) — 241 chaves `Adm360.*` (estimativa "~30" revisada na execução, precedente F3); 3 views + convenção de TempData nos 9 partials; doc `r7df6-admin360-cotacoes-dashboard-tempdata-i18n.md` |
 
 ## Pendências explícitas (não verificado)
 Corpo dos testes de paridade de resx em `backend/PlantaoPro.Tests/*` (citados, não abertos);

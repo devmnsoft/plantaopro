@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -43,7 +44,7 @@ public partial class Administrativo360Controller
 
         if (fornecedorId == Guid.Empty || produtoId == null || produtoId.Length == 0)
         {
-            TempData["Error"] = "Fornecedor e ao menos um produto são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrSupplierProductRequired");
             return RedirectToAction(nameof(PedidosCompra));
         }
 
@@ -62,7 +63,7 @@ public partial class Administrativo360Controller
 
         if (itens.Count == 0)
         {
-            TempData["Error"] = "Informe ao menos um produto com quantidade maior que zero.";
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrZeroQuantity");
             return RedirectToAction(nameof(PedidosCompra));
         }
 
@@ -76,9 +77,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/compras", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["Success"] = "Pedido de compra cadastrado com sucesso em rascunho.";
+            TempData["Success"] = UiText.L("Adm360.Compras.OkOrderDraft");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao criar pedido de compra.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Compras.FallbackCreateOrder");
 
         return RedirectToAction(nameof(PedidosCompra));
     }
@@ -94,9 +95,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/compras/{id}/aprovar", new { });
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Pedido de compra aprovado com sucesso. Valores congelados.";
+            TempData["Success"] = UiText.L("Adm360.Compras.OkOrderApproved");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao aprovar pedido de compra.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Compras.FallbackApproveOrder");
 
         return RedirectToAction(nameof(PedidosCompra));
     }
@@ -139,7 +140,7 @@ public partial class Administrativo360Controller
 
         if (pedidoId == Guid.Empty || string.IsNullOrWhiteSpace(documento) || quantidade <= 0 || localId == Guid.Empty)
         {
-            TempData["Error"] = "Pedido, documento da nota fiscal, quantidade e local de destino são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrReceiptRequiredFields");
             return RedirectToAction(nameof(Recebimentos));
         }
 
@@ -165,9 +166,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/compras/recebimentos", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
-            TempData["Success"] = "Recebimento confirmado com sucesso. Material direcionado para quarentena/inspeção e obrigação gerada no financeiro.";
+            TempData["Success"] = UiText.L("Adm360.Compras.OkReceiptConfirmed");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao registrar recebimento.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Compras.FallbackRegisterReceipt");
 
         return RedirectToAction(nameof(Recebimentos));
     }
@@ -199,13 +200,13 @@ public partial class Administrativo360Controller
 
         if (aprovada + reprovada <= 0)
         {
-            TempData["Error"] = "Informe uma quantidade aprovada ou reprovada.";
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrInspectionQuantity");
             return RedirectToAction(nameof(Inspecoes));
         }
 
         if (reprovada > 0 && string.IsNullOrWhiteSpace(justificativa))
         {
-            TempData["Error"] = "A reprovação exige justificativa técnica obrigatória.";
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrRejectionJustification");
             return RedirectToAction(nameof(Inspecoes));
         }
 
@@ -221,9 +222,9 @@ public partial class Administrativo360Controller
 
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/qualidade/decisoes", payload);
         if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
-            TempData["Success"] = "Decisão de inspeção registrada com sucesso. Material liberado para estoque conforme quantidade aprovada.";
+            TempData["Success"] = UiText.L("Adm360.Compras.OkInspectionDecision");
         else
-            TempData["Error"] = resp.Error ?? "Falha ao registrar decisão da inspeção.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Compras.FallbackRegisterInspection");
 
         return RedirectToAction(nameof(Inspecoes));
     }

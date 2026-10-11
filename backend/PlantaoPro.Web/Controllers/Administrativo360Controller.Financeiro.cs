@@ -1,5 +1,6 @@
 using PlantaoPro.CrossCutting.Localization;
 using Microsoft.AspNetCore.Mvc;
+using PlantaoPro.Web.Localization;
 using PlantaoPro.Web.Models;
 
 namespace PlantaoPro.Web.Controllers;
@@ -43,7 +44,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<TituloReceberDetalhesViewModel>(client, $"api/administrativo360/titulos/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Título não encontrado.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Financeiro.FallbackTitleNotFound");
             return RedirectToAction(nameof(TitulosReceber));
         }
 
@@ -69,7 +70,7 @@ public partial class Administrativo360Controller
     {
         if (valorRecebido <= 0m)
         {
-            TempData["Error"] = "O valor recebido deve ser positivo.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrPositiveAmount");
             return RedirectToAction(nameof(TituloDetalhes), new { id });
         }
 
@@ -93,7 +94,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos/receber", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Recebimento registrado manualmente com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkManualReceipt") : resp.Error;
         return RedirectToAction(nameof(TituloDetalhes), new { id });
     }
 
@@ -102,7 +103,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["Error"] = "O motivo do estorno é obrigatório.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrReversalReasonRequired");
             return RedirectToAction(nameof(TituloDetalhes), new { id = tituloId });
         }
 
@@ -122,7 +123,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos/estornar", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Baixa estornada com sucesso. Saldo e caixa revertidos." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkReceiptReversed") : resp.Error;
         return RedirectToAction(nameof(TituloDetalhes), new { id = tituloId });
     }
 
@@ -163,7 +164,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(nome))
         {
-            TempData["Error"] = "O nome da conta financeira é obrigatório.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrAccountNameRequired");
             return RedirectToAction(nameof(FluxoCaixa));
         }
 
@@ -185,7 +186,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/caixa/contas", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Conta financeira cadastrada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkAccountCreated") : resp.Error;
         return RedirectToAction(nameof(FluxoCaixa));
     }
 
@@ -231,7 +232,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiResponse<TituloPagarDetalhesViewModel>(client, $"api/administrativo360/titulos-pagar/{id}");
         if (resp.Data is null)
         {
-            TempData["Error"] = resp.Error ?? "Título a pagar não encontrado.";
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Financeiro.FallbackPayableTitleNotFound");
             return RedirectToAction(nameof(TitulosPagar));
         }
 
@@ -255,7 +256,7 @@ public partial class Administrativo360Controller
     {
         if (model.FornecedorId == Guid.Empty || model.ValorPrincipal <= 0)
         {
-            TempData["Error"] = "Fornecedor e valor positivo são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrSupplierAndAmount");
             return View(model);
         }
 
@@ -280,7 +281,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos-pagar/despesa-manual", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Despesa manual registrada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkManualExpense") : resp.Error;
         return RedirectToAction(nameof(TitulosPagar));
     }
 
@@ -302,7 +303,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, $"api/administrativo360/titulos-pagar/{id}/aprovar", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Obrigação aprovada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkObligationApproved") : resp.Error;
         return RedirectToAction(nameof(TituloPagarDetalhes), new { id });
     }
 
@@ -318,7 +319,7 @@ public partial class Administrativo360Controller
     {
         if (valorPago <= 0m)
         {
-            TempData["Error"] = "O valor do pagamento deve ser positivo.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrPaymentAmountPositive");
             return RedirectToAction(nameof(TituloPagarDetalhes), new { id });
         }
 
@@ -342,7 +343,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos-pagar/pagar", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Pagamento registrado manualmente com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkManualPayment") : resp.Error;
         return RedirectToAction(nameof(TituloPagarDetalhes), new { id });
     }
 
@@ -351,7 +352,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["Error"] = "O motivo do estorno é obrigatório.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrReversalReasonRequired");
             return RedirectToAction(nameof(TituloPagarDetalhes), new { id = tituloId });
         }
 
@@ -371,7 +372,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos-pagar/estornar", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Pagamento estornado com sucesso. Saldo e obrigação recompostos." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkPaymentReversed") : resp.Error;
         return RedirectToAction(nameof(TituloPagarDetalhes), new { id = tituloId });
     }
 
@@ -417,7 +418,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/titulos-pagar/gerar-de-comissao", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Título de comissão gerado em Contas a Pagar com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkCommissionTitleGenerated") : resp.Error;
         return RedirectToAction(nameof(TitulosPagar));
     }
 
@@ -444,7 +445,7 @@ public partial class Administrativo360Controller
     {
         if (!form.Id.HasValue || string.IsNullOrWhiteSpace(form.Nome))
         {
-            TempData["Error"] = "Conta e nome são obrigatórios.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrAccountAndName");
             return RedirectToAction(nameof(ContasFinanceiras));
         }
 
@@ -467,7 +468,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Put, $"api/administrativo360/caixa/contas/{form.Id.Value}", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Conta financeira atualizada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkAccountUpdated") : resp.Error;
         return RedirectToAction(nameof(ContasFinanceiras));
     }
 
@@ -481,7 +482,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Delete, $"api/administrativo360/caixa/contas/{id}", new { });
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Conta financeira inativada com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkAccountDeactivated") : resp.Error;
         return RedirectToAction(nameof(ContasFinanceiras));
     }
 
@@ -535,7 +536,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, "api/administrativo360/caixa/fechar", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Caixa fechado com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkCashClosed") : resp.Error;
         return RedirectToAction(nameof(FechamentoCaixa), new { contaId = contaFinanceiraId });
     }
 
@@ -544,7 +545,7 @@ public partial class Administrativo360Controller
     {
         if (string.IsNullOrWhiteSpace(motivo))
         {
-            TempData["Error"] = "O motivo da reabertura é obrigatório.";
+            TempData["Error"] = UiText.L("Adm360.Financeiro.ErrReopenReasonRequired");
             return RedirectToAction(nameof(FechamentoCaixa), new { contaId });
         }
 
@@ -561,7 +562,7 @@ public partial class Administrativo360Controller
             client, HttpMethod.Post, $"api/administrativo360/caixa/fechamentos/{fechamentoId}/reabrir", cmd);
 
         var ok = resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous;
-        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? "Fechamento de caixa reaberto com sucesso." : resp.Error;
+        TempData[ok ? "SuccessMessage" : "ErrorMessage"] = ok ? UiText.L("Adm360.Financeiro.OkCashReopened") : resp.Error;
         return RedirectToAction(nameof(FechamentoCaixa), new { contaId });
     }
 

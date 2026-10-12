@@ -165,7 +165,7 @@ Varredura completa: `r8a0-varredura-financas-pacientes-imports-falhas-notificaco
 | Busca por combinações de dados | único termo livre `ilike nome|cpf|telefone|email` (`Saude360ClinicalService.cs:635`) | parcial | sem busca combinada nome+CPF+nascimento | evolução simples | novo teste |
 | Duplicidade: CPF exato bloqueia; aviso de similaridade | contagem por CPF normalizado (`:153/:215`) + índice único `ux_pacientes_cliente_cpf_informado`; fuzzy/trigram: ausente (busca exaustiva) | parcial | sem aviso de possível duplicidade | fatia §23 (trigram ou similar) | novo teste |
 | Correção cadastral com histórico | `paciente_historico(acao,detalhes jsonb,usuario_id)` inserido em toda mudança (`:752`) | pronto | — | — | suíte |
-| Mesclagem controlada c/ impacto + sem cross-tenant | **ausente** (busca `merge/mescla/merged_into` repo-wide → 0) | ausente | operação inteira | fatia §23 | novo teste (§30) |
+| Mesclagem controlada c/ impacto + sem cross-tenant | `MesclarPacientesAsync` re-ponteiando as 39 tabelas por `paciente_id`; origem inativada com `status='INATIVO'` + `reg_status='I'` (libera o índice único de CPF); plano principal da origem despromovido; trilha MESCLAR nos dois históricos + colunas `mesclado_em/em_em/por` (v2349); gates 400/403/404/409 + `FOR UPDATE` em ordem determinística; `POST api/pacientes/{alvo}/mesclar?origem=` + Web "Mesclar em outro" | corrigido | — | fatia §23 entregue (R8-B6) | `R8B6MesclagemPacienteTests` 9/9 + pipeline v2 full×3 (1314) |
 | Nome social × civil com uso definido | coluna existe e persiste (`base_clinica.sql:10`, `:682`); regra de exibição ausente | parcial | uso em etiquetas/documentos | R7-D (textos/design) | walkthrough |
 
 #### §24 Central de importações

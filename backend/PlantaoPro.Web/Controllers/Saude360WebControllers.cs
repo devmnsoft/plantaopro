@@ -351,6 +351,52 @@ public sealed class PacientesController : Saude360WebControllerBase
             return View(form.Id.HasValue ? "Edit" : "Create", form);
         }
     }
+    // R8-B6: mesclagem controlada — este paciente (origem) é absorvido pelo destino escolhido.
+    // O POST vai para api/pacientes/{alvo}/mesclar?origem={id} reutilizando ExecutarAcaoAsync ({Motivo}).
+    public async Task<IActionResult> Mesclar(Guid id)
+    {
+        var vm = new MesclarPacienteFormViewModel { OrigemId = id };
+        var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+        var (origem, origemErro, _) = await ReadApiResponseAsync<PacienteResumoDto>(client, $"api/pacientes/{id}");
+        if (origem is not null && !string.IsNullOrWhiteSpace(origem.Nome)) vm.NomeOrigem = origem.Nome;
+        try
+        {
+            var (lista, _, _) = await ReadApiResponseAsync<IReadOnlyList<PacienteResumoDto>>(client, "api/pacientes/buscar?tamanho=200");
+            vm.Alvos = (lista ?? Array.Empty<PacienteResumoDto>())
+                .Where(p => p.Id != id)
+                .Select(p => new SelectListItemViewModel(p.Id.ToString(), string.IsNullOrWhiteSpace(p.Nome) ? p.Id.ToString() : p.Nome))
+                .ToList();
+        }
+        catch { /* candidatos vazios: a view segue exibível com aviso */ }
+        if (origem is null) ViewBag.ErroInicial = origemErro ?? "Não foi possível carregar os dados do paciente.";
+        return View(vm);
+    }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Mesclar(Guid id, MesclarPacienteFormViewModel form)
+    {
+        form.OrigemId = id;
+        if (!ModelState.IsValid) return View(form);
+        try
+        {
+            var token = GetJwtToken();
+            if (string.IsNullOrWhiteSpace(token)) return HandleUnauthorized();
+            if (!Guid.TryParse(form.AlvoId, out var alvoId) || alvoId == id)
+            {
+                ModelState.AddModelError(nameof(form.AlvoId), "Selecione um paciente de destino diferente do paciente de origem.");
+                return View(form);
+            }
+            var result = await service.ExecutarAcaoAsync(token, $"api/pacientes/{alvoId}/mesclar?origem={id}", form.Motivo);
+            if (!result.Success) { ModelState.AddModelError(string.Empty, result.Message); return View(form); }
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Falha ao mesclar paciente {PacienteId}", id);
+            ModelState.AddModelError(string.Empty, "Não foi possível concluir a mesclagem. Tente novamente.");
+            return View(form);
+        }
+    }
     [Authorize(Policy="Consulta.VerDadosSensiveis")]
     public async Task<IActionResult> Prontuario(Guid id, string? tipo = null, int page = 1)
     {

@@ -1,0 +1,17 @@
+@model PlantaoPro.Web.Models.MesclarPacienteFormViewModel
+@{ ViewData["Title"] = "Mesclar paciente"; }
+<h1>Mesclar paciente</h1>
+@if (ViewBag.ErroInicial is string erroInicial && !string.IsNullOrEmpty(erroInicial))
+{
+    <div class="pp-error-panel" role="alert">@erroInicial</div>
+}
+<form asp-action="Mesclar" method="post" class="pp-form" novalidate data-focus-invalid data-unsaved-form>
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="pp-error-panel" role="alert" aria-live="assertive" tabindex="-1"></div>
+    <section class="pp-info-banner" role="note"><span class="pp-alert__icon" aria-hidden="true">!</span><div class="pp-alert__content"><strong>Mesclagem controlada</strong><p>O paciente <strong>@(string.IsNullOrWhiteSpace(Model.NomeOrigem) ? "selecionado" : Model.NomeOrigem)</strong> será <strong>inativado</strong>: todo o histórico clínico e financeiro passa para o paciente de destino. A operação fica registrada em auditoria nos dois cadastros e não pode ser desfeita.</p></div></section>
+    <section class="pp-form-section" aria-labelledby="mergeTarget"><header class="pp-form-section__header"><app-icon name="User" size="24" /><div><h2 id="mergeTarget">Destino da mesclagem</h2><p>Escolha o cadastro que permanecerá ativo e receberá todo o histórico.</p></div></header><div class="pp-form-grid">
+        <div class="pp-form-field pp-form-field--half"><label asp-for="AlvoId" class="pp-form-label">Paciente de destino <span class="pp-required-marker">*</span></label><select asp-for="AlvoId" class="form-control" required><option value="">Selecione o paciente que receberá o histórico…</option>@foreach (var alvo in Model.Alvos) { <option value="@alvo.Value">@alvo.Text</option>}</select><span asp-validation-for="AlvoId" class="pp-form-error"></span></div>
+        <div class="pp-form-field"><label asp-for="Motivo" class="pp-form-label">Motivo <span class="pp-required-marker">*</span></label><textarea asp-for="Motivo" class="form-control" rows="3" required placeholder="Ex.: duplicidade encontrada na busca por CPF/nome"></textarea><span asp-validation-for="Motivo" class="pp-form-error"></span></div>
+    </div></section>
+    <footer class="pp-form-sticky-footer"><div class="pp-form-status"><app-icon name="Security" size="18" /><span>Operação auditada com trilha no histórico dos dois pacientes.</span></div><div class="pp-form-actions"><a asp-action="Edit" asp-route-id="@Model.OrigemId" class="btn btn-outline-secondary">Cancelar</a><button class="btn btn-primary" type="submit"><app-icon name="Check" size="18" /> Confirmar mesclagem</button></div></footer>
+</form>

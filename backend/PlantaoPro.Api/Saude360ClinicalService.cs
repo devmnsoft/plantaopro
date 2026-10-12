@@ -46,6 +46,24 @@ public sealed class Saude360ClinicalService
         { "unidadesAtendimento", "clinica_unidades_atendimento" }
     };
 
+    // R8-B6: todas as tabelas do schema clinico/financeiro com coluna paciente_id (mapeamento
+    // confirmado em information_schema na fatia R8-B6). A mesclagem re-aponta estas da origem para o
+    // alvo. Se surgir tabela nova com paciente_id, adicionar aqui — o contrato em
+    // R8B6MesclagemPacienteTests guarda a contagem contra a varredura do banco.
+    private static readonly string[] TabelasComPacienteId =
+    {
+        "agendamento_checkins", "agendamentos", "anexos_clinicos", "atendimentos_fila",
+        "cid_uso_historico", "clinica_contas_receber", "clinica_recebimentos",
+        "consulta_anamnese", "consulta_condutas", "consulta_diagnosticos", "consulta_encaminhamentos",
+        "consulta_exame_fisico", "consulta_historico", "consultas", "convenio_autorizacoes",
+        "documentos_clinicos", "encaminhamentos_clinicos", "paciente_alergias", "paciente_consentimentos",
+        "paciente_contatos", "paciente_convenios", "paciente_documentos", "paciente_enderecos",
+        "paciente_historico", "paciente_medicamentos_uso", "paciente_observacoes", "paciente_problemas",
+        "painel_chamada_fila", "painel_chamada_historico", "plano_saude_autorizacoes",
+        "plano_saude_historico", "plano_saude_pacientes", "prescricoes", "resultados_exames",
+        "solicitacoes_exames", "triagem_fila", "triagem_historico", "triagem_sinais_vitais", "triagens"
+    };
+
     public Saude360ClinicalService(IConfiguration cfg, ICurrentUserService currentUser, IAuditService audit, ILogger<Saude360ClinicalService> logger, ConflitoHorarioService conflito)
     {
         this.cfg = cfg;
@@ -365,6 +383,89 @@ limit @Limite", new { TenantId, IsGlobal, Termo = termo, LikeTermo = termo is nu
             : new { table, motivo = request.Motivo, justificativa = request.Justificativa };
         await AuditAsync(table, id, acao.ToUpperInvariant(), auditDetalhes);
         return await ObterAsync(tableKey, id);
+    }
+
+    /// <summary>
+    /// R8-B6: mesclagem controlada de pacientes — a origem é absorvida pelo alvo. Re-aponta os
+    /// vínculos das <see cref="TabelasComPacienteId"/> (clinico + financeiro), despromove o plano
+    /// principal da origem (único parcial por paciente), inativa a origem (status E reg_status —
+    /// diferentemente da inativação comum, o CPF sai do índice único ativo) e deixa trilha MESCLAR
+    /// no paciente_historico de ambos + colunas mesclado_em/em/por (v2349). Gates: mesmo tenant,
+    /// ambos ativos, origem não mesclada antes, destino não mesclado antes, motivo obrigatório.
+    /// Concorrência: FOR UPDATE na ordem determinística dos dois ids; violação única → 409.
+    /// </summary>
+    public async Task<ApiResponse<Saude360RegistroDto>> MesclarPacientesAsync(Guid alvoId, Guid origemId, string motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo)) return ApiResponse<Saude360RegistroDto>.Fail("Mesclagem exige motivo.", 400);
+        if (alvoId == origemId) return ApiResponse<Saude360RegistroDto>.Fail("O destino da mesclagem não pode ser o próprio paciente de origem.", 400);
+        await GarantirBaseClinicaAsync();
+        await using var cn = Cn();
+        if (cn.State != ConnectionState.Open) await cn.OpenAsync();
+        await using var tx = cn.BeginTransaction();
+        try
+        {
+            // Lock em ordem determinística (id crescente) para evitar deadlock entre duas mesclagens.
+            var primeiro = alvoId.CompareTo(origemId) <= 0 ? alvoId : origemId;
+            var segundo = primeiro == alvoId ? origemId : alvoId;
+            await cn.ExecuteAsync("select id from plantaopro.pacientes where id=@id for update", new { id = primeiro }, tx);
+            await cn.ExecuteAsync("select id from plantaopro.pacientes where id=@id for update", new { id = segundo }, tx);
+            var alvo = await cn.QueryFirstOrDefaultAsync<(string Status, Guid? ClienteId, Guid? MescladoEm)>("select status, cliente_id as ClienteId, mesclado_em as MescladoEm from plantaopro.pacientes where id=@id", new { id = alvoId }, tx);
+            var origem = await cn.QueryFirstOrDefaultAsync<(string Status, Guid? ClienteId, Guid? MescladoEm)>("select status, cliente_id as ClienteId, mesclado_em as MescladoEm from plantaopro.pacientes where id=@id", new { id = origemId }, tx);
+            if (alvo == default || origem == default)
+            {
+                tx.Rollback();
+                return ApiResponse<Saude360RegistroDto>.Fail("Paciente não encontrado para mesclagem.", 404);
+            }
+            if (!alvo.ClienteId.HasValue || !origem.ClienteId.HasValue || alvo.ClienteId != origem.ClienteId)
+            {
+                tx.Rollback();
+                return ApiResponse<Saude360RegistroDto>.Fail("Não é possível mesclar pacientes de tenants diferentes.", 409);
+            }
+            if (!IsGlobal && TenantId.HasValue && alvo.ClienteId != TenantId)
+            {
+                tx.Rollback();
+                return ApiResponse<Saude360RegistroDto>.Fail("Você não possui acesso a este paciente.", 403);
+            }
+            if (origem.MescladoEm.HasValue)
+            {
+                tx.Rollback();
+                return ApiResponse<Saude360RegistroDto>.Fail("Este paciente já foi mesclado em outro.", 409);
+            }
+            if (alvo.MescladoEm.HasValue)
+            {
+                tx.Rollback();
+                return ApiResponse<Saude360RegistroDto>.Fail("Paciente já mesclado não pode ser destino de nova mesclagem.", 409);
+            }
+            var uid = currentUser.UserId;
+            // Plano principal da origem é despromovido antes do re-pontejamento: o principal do
+            // destino prevalece (índice único parcial ux_plano_saude_pacientes_principal por paciente).
+            await cn.ExecuteAsync("update plantaopro.plano_saude_pacientes set principal=false, updated_at=now(), updated_by=@uid where paciente_id=@origem and principal=true and reg_status='A'", new { uid, origem = origemId }, tx);
+            var movidos = 0;
+            foreach (var t in TabelasComPacienteId)
+            {
+                movidos += await cn.ExecuteAsync($"update plantaopro.{t} set paciente_id=@alvo where paciente_id=@origem", new { alvo = alvoId, origem = origemId }, tx);
+            }
+            // Inativação da origem mais forte que a comum (AcaoAsync inativar só zera status e deixa o
+            // CPF retido no índice único): o registro foi absorvido, então o CPF volta a ser utilizável.
+            await cn.ExecuteAsync("update plantaopro.pacientes set status='INATIVO', reg_status='I', mesclado_em=@alvo, mesclado_em_em=now(), mesclado_por=@uid, updated_by=@uid, updated_at=now() where id=@origem", new { alvo = alvoId, uid, origem = origemId }, tx);
+            var req = new Saude360ActionRequest { Motivo = motivo };
+            await InsertHistoricoAsync(cn, "pacientes", alvoId, "mesclar", req, tx);
+            await InsertHistoricoAsync(cn, "pacientes", origemId, "mesclar", req, tx);
+            tx.Commit();
+            await AuditAsync("pacientes", alvoId, "MESCLAR", new { origem = origemId, motivo, movidos });
+            logger.LogInformation("Mesclagem de pacientes: origem {Origem} -> alvo {Alvo} ({Movidos} registros movidos)", origemId, alvoId, movidos);
+            return await ObterAsync("pacientes", alvoId);
+        }
+        catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
+        {
+            try { tx.Rollback(); } catch { /* rollback best-effort */ }
+            return ApiResponse<Saude360RegistroDto>.Fail("Conflito concorrente: o cadastro foi alterado em outra operação simultânea.", 409);
+        }
+        catch
+        {
+            try { tx.Rollback(); } catch { /* rollback best-effort */ }
+            throw;
+        }
     }
 
     /// <summary>

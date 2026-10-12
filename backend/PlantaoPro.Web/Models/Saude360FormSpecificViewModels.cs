@@ -2,6 +2,14 @@ using System.ComponentModel.DataAnnotations;
 
 namespace PlantaoPro.Web.Models;
 
+// R8-B6: resumo mínimo do paciente para o select de destino da mesclagem
+// (a Web não referencia a API — tipo local desserializado do mesmo contrato JSON).
+public sealed class PacienteResumoDto
+{
+    public Guid Id { get; set; }
+    public string Nome { get; set; } = string.Empty;
+}
+
 public sealed class PacienteFormViewModel
 {
     public Guid? Id { get; set; }
@@ -17,6 +25,17 @@ public sealed class PacienteFormViewModel
     public string Endereco { get; set; } = string.Empty;
     public string ResponsavelNome { get; set; } = string.Empty;
     [Range(typeof(bool), "true", "true", ErrorMessage = "Registre o consentimento LGPD.")] public bool ConsentimentoLgpd { get; set; }
+}
+
+// R8-B6: formulário de mesclagem controlada de pacientes — este paciente (origem) será
+// absorvido pelo destino escolhido; motivo obrigatório (mesma regra da glosa/cancelamento).
+public sealed class MesclarPacienteFormViewModel
+{
+    public Guid OrigemId { get; set; }
+    public string NomeOrigem { get; set; } = string.Empty;
+    public IReadOnlyList<SelectListItemViewModel> Alvos { get; set; } = Array.Empty<SelectListItemViewModel>();
+    [Required(ErrorMessage = "Selecione o paciente de destino.")] public string AlvoId { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Informe o motivo da mesclagem.")] [StringLength(500, ErrorMessage = "O motivo deve ter no máximo 500 caracteres.")] public string Motivo { get; set; } = string.Empty;
 }
 
 public sealed class AgendamentoFormViewModel

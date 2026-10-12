@@ -92,6 +92,33 @@ where i.medico_id=@medicoId and coalesce(i.reg_status,'A')='A'
     public async Task<bool> ExisteConflitoAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim, Guid? escalaIgnoradaId = null)
         => (await ListarFontesConflitoAsync(medicoId, dataInicio, dataFim, escalaIgnoradaId)).Count > 0;
 
+    /// <summary>
+    /// R8-B3: política de conflito do recurso compartilhado SALA no intervalo [dataInicio, dataFim)
+    /// (fim exclusivo — adjacência não é conflito, mesma regra da política do profissional).
+    /// Dois agendamentos ativos NÃO podem se sobrepor quando declaram a MESMA sala; sem sala
+    /// declarada não há conflito de sala (null = sem sala). O predicato de "ativo" espelha o ramo
+    /// AGENDAMENTO da política unificada do profissional (reg_status='A' e status fora de
+    /// CANCELADO/FINALIZADO). Escopo: agendamentos com sala_id (encontro achado A8: tabelas prontas,
+    /// regra ausente); outros reservantes de sala são dívida registrada no doc r8b3.
+    /// </summary>
+    public async Task<List<ConflitoFonteDto>> ListarFontesConflitoSalaAsync(Guid salaId, DateTime dataInicio, DateTime dataFim, Guid? agendamentoIgnoradoId = null)
+    {
+        await using var cn = Cn();
+        return (await cn.QueryAsync<ConflitoFonteDto>(@"
+select 'AGENDAMENTO' as Tipo, coalesce(a.status,'') as Status, a.data_inicio as DataInicio, a.data_fim as DataFim
+from plantaopro.agendamentos a
+where a.sala_id=@salaId and a.reg_status='A'
+  and upper(coalesce(a.status,'')) not in ('CANCELADO','FINALIZADO')
+  and a.data_inicio is not null and a.data_fim is not null
+  and (@agendamentoIgnoradoId is null or a.id <> @agendamentoIgnoradoId)
+  and @dataInicio < a.data_fim
+  and @dataFim > a.data_inicio",
+            new { salaId, dataInicio, dataFim, agendamentoIgnoradoId })).ToList();
+    }
+
+    public async Task<bool> ExisteConflitoSalaAsync(Guid? salaId, DateTime dataInicio, DateTime dataFim, Guid? agendamentoIgnoradoId = null)
+        => salaId.HasValue && (await ListarFontesConflitoSalaAsync(salaId.Value, dataInicio, dataFim, agendamentoIgnoradoId)).Count > 0;
+
     public async Task<IEnumerable<ConflitoHorarioDetalheDto>> ListarConflitosAsync(Guid medicoId, DateTime dataInicio, DateTime dataFim)
     {
         await using var cn = Cn();

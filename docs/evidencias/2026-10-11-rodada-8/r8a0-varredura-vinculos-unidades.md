@@ -80,6 +80,7 @@ OBS — Um usuário opera em **todas** as unidades do tenant: não há mapeament
 - Regras de conflito: **apenas por profissional**, nunca por sala — `ConflitoHorarioService.ListarFontesConflitoAsync` cobre escalas + agendamentos + indisponibilidades pelo `medico_id` (`BusinessRulesServices.cs:61-90`).
 - Ausência de trava de reserva exclusiva de sala: índices de `agendamentos` (`ix_agendamentos_periodo on (cliente_id, medico_id, data_inicio, data_fim)` — `base_clinica.sql:105`) — **nenhum** índice/constraint com `sala_id` nem único parcial anti-double-booking. Buscas `unique.*sala|conflito.*sala|sala.*conflito` → 0 regras.
 - A única "reserva concorrente" tratada com prova é a de **item de fila do painel de chamada** (R7-A1; teste `Chamar_FilaConcorrente_DoisOperadores_SomenteUmaReservaESemHistoricoDuplicado` :384) — não é reserva temporal de sala/guichê.
+- **R8-B3 (corrigido em parte):** política de conflito de sala canônica adicionada a `ConflitoHorarioService` (`ListarFontesConflitoSalaAsync`/`ExisteConflitoSalaAsync`) e aplicada na criação/reagendamento de agendamentos clínicos, incluindo mudança apenas de sala — `r8b3-conflicto-sala-agendamentos.md` (8 testes). Mantém-se ausente o constraint excludente de banco em `agendamentos(sala_id, período)` e a cobertura de `painel_chamada_fila`/guichê/setor (dívida §5 do doc).
 - Mapas internos registram a limitação: `docs/evidencias/2026-10-06-rodada-3/mapas/mapa-saude360.md:13,36`.
 
 ---

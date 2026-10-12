@@ -651,6 +651,9 @@ select distinct g.codigo from granted g where not exists(select 1 from denied d 
                 esp = req.EspecialidadeId,
                 u = userId
             });
+            // R8-B5: a especialidade do formulário espelha em medico_especialidades — tabela lida pela
+            // elegibilidade/score de recomendação que antes não tinha writer produtivo (matriz r8a0 / A2).
+            await EspelharEspecialidadeAsync(cn, id, req.EspecialidadeId);
             await audit.LogAsync(userId, "CREATE", "medicos", id, "Criação médico", ip: ip, userAgent: ua);
             logger.LogInformation("Médico {Id}", id);
             return ApiResponse<MedicoDto>.Ok(new(id, req.Nome, req.Cpf, req.Crm, req.UfCrm, req.Email, req.Telefone, req.Cidade, req.Estado, req.EspecialidadeId, "A"));
@@ -679,6 +682,8 @@ where id=@id", new
                 u = userId
             });
             if (n == 0) return ApiResponse<string>.Fail("Registro não encontrado.", 404);
+            // R8-B5: mantém o vínculo ativo sincronizado com o formulário (replace-all; histórico via reg_status).
+            await EspelharEspecialidadeAsync(cn, id, req.EspecialidadeId);
             await audit.LogAsync(userId, "UPDATE", "medicos", id, "Atualização médico", ip: ip, userAgent: ua);
             logger.LogInformation("Médico atualizado {Id}", id);
             return ApiResponse<string>.Ok("ok", "Médico atualizado com sucesso.");
@@ -692,6 +697,46 @@ where id=@id", new
             await audit.LogAsync(userId, "DELETE", "medicos", id, "Inativação médico", ip: ip, userAgent: ua);
             logger.LogInformation("Médico inativado {Id}", id);
             return ApiResponse<string>.Ok("ok", "Médico inativado com sucesso.");
+        }
+
+        // R8-B5: sincronia replace-all do vínculo de especialidade (formulário -> medico_especialidades).
+        // Desativa o que não foi selecionado, reativa a linha histórica quando existe e só insere se o par
+        // nunca teve registro — o índice único parcial ux_medico_especialidade_ativa garante no máximo um
+        // vínculo ativo por médico/especialidade. Transação própria para a troca atômica das três operações.
+        private static async Task EspelharEspecialidadeAsync(NpgsqlConnection cn, Guid medicoId, Guid especialidadeId)
+        {
+            // O Dapper refecha conexões que ele mesmo abriu por comando — se a conexão chega fechada,
+            // este helper abre e refecha para não alterar o ciclo de vida da conexão do chamador.
+            var euAbri = cn.State != System.Data.ConnectionState.Open;
+            if (euAbri) await cn.OpenAsync();
+            try
+            {
+                await using var tx = await cn.BeginTransactionAsync();
+                try
+                {
+                if (especialidadeId == Guid.Empty)
+                {
+                    await cn.ExecuteAsync("update plantaopro.medico_especialidades set reg_status='I' where medico_id=@id and reg_status='A'", new { id = medicoId }, tx);
+                }
+                else
+                {
+                    await cn.ExecuteAsync("update plantaopro.medico_especialidades set reg_status='I' where medico_id=@id and reg_status='A' and especialidade_id<>@esp", new { id = medicoId, esp = especialidadeId }, tx);
+                    var reativada = await cn.ExecuteAsync("update plantaopro.medico_especialidades set reg_status='A' where medico_id=@id and especialidade_id=@esp and reg_status='I'", new { id = medicoId, esp = especialidadeId }, tx);
+                    if (reativada == 0)
+                        await cn.ExecuteAsync("insert into plantaopro.medico_especialidades(medico_id,especialidade_id,reg_status) select @id,@esp,'A' where not exists(select 1 from plantaopro.medico_especialidades where medico_id=@id and especialidade_id=@esp)", new { id = medicoId, esp = especialidadeId }, tx);
+                }
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
+            }
+            finally
+            {
+                if (euAbri) await cn.CloseAsync();
+            }
         }
     }
 

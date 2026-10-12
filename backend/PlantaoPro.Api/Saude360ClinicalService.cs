@@ -585,6 +585,35 @@ on conflict (versao, upper(codigo)) where reg_status='A' and codigo <> '' do upd
         return ApiResponse<object>.Ok(new { TotalLinhas = lines.Count - 1, Inseridos = inseridos, Atualizados = atualizados, Erros = erros }, "Importação CID processada.");
     }
 
+    // R8-B8 (§24 prévia): mesmo parsing/validação de ImportarCidCsvAsync, mas SEM gravar — espelha por
+    // leitura a decisão inserido/atualizado do upsert para o usuário ver o resultado antes de confirmar.
+    // Confirmar/processar continua sendo POST importar-csv / importar-url (mesmo payload).
+    public async Task<ApiResponse<object>> PreverImportacaoCidCsvAsync(CidImportacaoRequest request)
+    {
+        await GarantirBaseClinicaAsync();
+        if (string.IsNullOrWhiteSpace(request.Csv)) return ApiResponse<object>.Fail("CSV obrigatório.", 400);
+        var lines = request.Csv.Replace("\r\n", "\n").Split('\n').Where(l => !string.IsNullOrWhiteSpace(l)).ToList();
+        if (lines.Count < 2) return ApiResponse<object>.Fail("CSV deve conter cabeçalho e ao menos uma linha.", 400);
+        var sep = lines[0].Contains(';') ? ';' : ',';
+        var headers = lines[0].Split(sep).Select(h => h.Trim().Trim('"').ToLowerInvariant()).ToList();
+        var codigoIdx = headers.IndexOf("codigo");
+        var descricaoIdx = headers.IndexOf("descricao");
+        if (codigoIdx < 0 || descricaoIdx < 0) return ApiResponse<object>.Fail("CSV deve conter as colunas codigo e descricao.", 400);
+        var versao = string.IsNullOrWhiteSpace(request.Versao) ? "CID-10" : request.Versao;
+        var inseridos = 0; var atualizados = 0; var erros = 0;
+        await using var cn = Cn();
+        foreach (var line in lines.Skip(1))
+        {
+            var cols = line.Split(sep).Select(c => c.Trim().Trim('"')).ToArray();
+            if (cols.Length <= Math.Max(codigoIdx, descricaoIdx)) { erros++; continue; }
+            var codigo = cols[codigoIdx]; var descricao = cols[descricaoIdx];
+            if (string.IsNullOrWhiteSpace(codigo) || string.IsNullOrWhiteSpace(descricao)) { erros++; continue; }
+            var jaExiste = await cn.ExecuteScalarAsync<bool>("select exists(select 1 from plantaopro.cid_tabela where versao=@versao and upper(codigo)=upper(@codigo) and reg_status='A')", new { versao, codigo });
+            if (jaExiste) atualizados++; else inseridos++;
+        }
+        return ApiResponse<object>.Ok(new { previa = true, TotalLinhas = lines.Count - 1, Inseridos = inseridos, Atualizados = atualizados, Erros = erros }, "Prévia de importação CID gerada — nada foi gravado.");
+    }
+
     private static string Get(string[] values, int index)
     {
         if (index < 0 || index >= values.Length) return string.Empty;

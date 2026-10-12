@@ -545,7 +545,7 @@ public interface IDocumentosXmlRepository
     Task<DocumentoRecebidoDetalhesDto?> ObterDocumentoPorIdAsync(Guid tenantId, Guid id, CancellationToken ct = default);
 
     /// <summary>A3: retorna resultado por unidade (um arquivo pode conter múltiplos documentos).</summary>
-    Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default);
+    Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default, bool previa = false);
 
     /// <summary>B1: bytes originais preservados (fonte da verdade para hash e download) com ETag=SHA-256.</summary>
     Task<(byte[] Bytes, string Hash, string ChaveAcesso)?> ObterXmlBytesAsync(Guid tenantId, Guid id, CancellationToken ct = default);

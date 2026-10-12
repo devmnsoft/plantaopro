@@ -171,8 +171,8 @@ Varredura completa: `r8a0-varredura-financas-pacientes-imports-falhas-notificaco
 #### §24 Central de importações
 | Recurso | Evidência (HEAD) | Estado | Problema | Ação | Validação |
 |---|---|---|---|---|---|
-| Importadores reais | XML NF-e/NFS-e Adm360 (`Adm360DocumentosXmlController` + repository c/ quarentena) + CID CSV/URL (`cid_importacoes`); sem planilha p/ clientes/pacientes | pronto (escopo atual) | central unificada não existe | padronizar fluxo (abaixo) | A3/B1/WsA3 tests |
-| Fluxo selecionar→validar→prévia→confirmar→processar→resultado | XML: selecionar→validar (2MiB/quarentena)→processar→resultado consultável; **prévia e confirmar ausentes** (grava direto) | parcial | etapas do prompt faltando | fatia §24 | novo teste |
+| Importadores reais | XML NF-e/NFS-e Adm360 (`Adm360DocumentosXmlController` + repository c/ quarentena) + CID CSV/URL (`cid_importacoes`); sem planilha p/ clientes/pacientes | pronto (escopo atual) | central unificada não existe | fluxo padronizado c/ prévia+confirmar (R8-B8); unificação p/ planilhas ainda aberta | A3/B1/WsA3 tests |
+| Fluxo selecionar→validar→prévia→confirmar→processar→resultado | XML: `importar-preview` (dry-run c/ MESMO parsing/quarentena/dedup, **sem gravar**) → `importar-manual` (confirma/processa); CID: `prever-csv` → `importar-csv`; prévia espelha por leitura as decisões de gravação (`AvaliarUnidadePrevioAsync` / upsert-check) e nada persiste; confirmar = endpoint de escrita existente (back-compat) | corrigido | UI Web sem botão de prévia (dívida registrada) | fatia §24 entregue (R8-B8) | `R8B8ImportsPrevioConfirmarTests` 7/7 + pipeline v2 full×3 (1335) |
 | Erros por item + sucesso parcial | resultado por documento c/ motivo + resumo agregado (`DocumentosXmlRepository.cs:290-325`); CID só totais | pronto (XML)/parcial (CID) | — | — | G2/G3/G5 |
 | Repetição não duplica | `UNIQUE(tenant_id,chave_acesso)` + dedup intra-arquivo; testes `G2…Idempotente`, `G3…`, `G5…` | pronto | CID upsert sem teste nomeado | — | suíte (linha §15) |
 | Processamento longo c/ progresso | síncrono (teto 2MiB); sem job/progresso | parcial | arquivos maiores | assíncrono se necessário | — |

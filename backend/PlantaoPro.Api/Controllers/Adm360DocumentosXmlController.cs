@@ -86,6 +86,24 @@ public sealed class Adm360DocumentosXmlController : ControllerBase
         return Ok(resultado);
     }
 
+    // R8-B8 (§24 prévia): mesmo parsing/validação do importar-manual, mas SEM gravar — mostra o que
+    // seria importado / enviado a quarentena / tratado como duplicado antes do usuário confirmar.
+    // Confirmar/processar continua sendo POST importar-manual (mesmo payload).
+    [HttpPost("importar-preview")]
+    [Authorize(Policy = "Adm360.ImportarXml")]
+    public async Task<IActionResult> Prever([FromBody] ImportarXmlManualCommand command, CancellationToken ct)
+    {
+        var (tenant, user) = Context();
+        if (string.IsNullOrWhiteSpace(command.XmlConteudo)) return BadRequest("Forneça o conteúdo XML do documento fiscal.");
+        if (command.XmlConteudo.Length > 2_000_000) return BadRequest("O conteúdo XML excede o limite de 2.000.000 caracteres.");
+        if (command.XmlBytes is { Length: > (2 * 1024 * 1024) }) return BadRequest("O arquivo XML excede o limite de 2 MiB.");
+        var resultado = await repository.ImportarXmlAsync(tenant, user, command, ct, previa: true);
+        logger.LogInformation(
+            "Prévia de XML pelo usuário {UsuarioId} no tenant {TenantId}: {Total} unidade(s), {Importados} importável(is), {Quarentena} em quarentena, {Duplicados} duplicado(s), {Falhas} falha(s) — nada gravado.",
+            user, tenant, resultado.TotalUnidades, resultado.Importados, resultado.EmQuarentena, resultado.DuplicadosIgnorados, resultado.Falhas);
+        return Ok(new { previa = true, resultado });
+    }
+
     [HttpPost("conferir")]
     [Authorize(Policy = "Adm360.VincularDocumentos")]
     public async Task<IActionResult> Conferir([FromBody] ConferirDocumentoCommand command, CancellationToken ct)

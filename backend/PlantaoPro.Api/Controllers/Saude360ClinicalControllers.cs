@@ -167,6 +167,7 @@ public sealed class CidController : ControllerBase
     [HttpGet("grupos")] public async Task<IActionResult> Grupos([FromQuery] string? capitulo) { var r = await service.CidGruposAsync(capitulo); return StatusCode(r.StatusCode, r); }
     [HttpGet("importacoes")] public async Task<IActionResult> Importacoes() { var r = await service.CidImportacoesAsync(); return StatusCode(r.StatusCode, r); }
     [HttpPost("importar-csv"), Authorize(Roles = RolesConstants.Saude360CidGestao)] public async Task<IActionResult> ImportarCsv([FromBody] CidImportacaoRequest request) { var r = await service.ImportarCidCsvAsync(request); return StatusCode(r.StatusCode, r); }
+    [HttpPost("prever-csv"), Authorize(Roles = RolesConstants.Saude360CidGestao)] public async Task<IActionResult> PreverCsv([FromBody] CidImportacaoRequest request) { var r = await service.PreverImportacaoCidCsvAsync(request); return StatusCode(r.StatusCode, r); }
     [HttpPost("importar-url"), Authorize(Roles = RolesConstants.Saude360CidGestao)] public async Task<IActionResult> ImportarUrl([FromBody] CidImportacaoUrlRequest request) { var r = await service.ImportarCidUrlAsync(request); return StatusCode(r.StatusCode, r); }
     [HttpGet] public async Task<IActionResult> Get([FromQuery] string? termo) { var r = await service.ListarAsync("cid", termo: termo); return StatusCode(r.StatusCode, r); }
     [HttpGet("buscar")] public async Task<IActionResult> Buscar([FromQuery] string termo) { var r = await service.ListarAsync("cid", termo: termo); return StatusCode(r.StatusCode, r); }

@@ -198,8 +198,11 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
         return (((byte[])d.xml_bytes), (string)d.xml_hash, (string)d.chave_acesso);
     }
 
-    public async Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default)
+    public async Task<ImportarXmlResultadoDto> ImportarXmlAsync(Guid tenantId, Guid usuarioId, ImportarXmlManualCommand command, CancellationToken ct = default, bool previa = false)
     {
+        // R8-B8 (§24 prévia): previa=true roda o MESMO parsing/validação, mas não grava nada —
+        // é a etapa "prévia" do fluxo selecionar→validar→prévia→confirmar→processar→resultado
+        // (confirmar/processar segue sendo a chamada comum, previa=false).
         // B1: os bytes originais do arquivo são a fonte da verdade (hash, duplicidade e download).
         // Quando o chamador não envia bytes (API JSON clássica), deriva-se UTF-8 do texto.
         byte[] xmlBytes;
@@ -305,7 +308,9 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
             ImportarXmlDocumentoResultado r;
             try
             {
-                r = await ImportarUnidadeAsync(tenantId, usuarioId, un, xmlBytes, textoXml, xmlHash, nomeArquivo, estabelecimentoId, ct);
+                r = previa
+                    ? await AvaliarUnidadePrevioAsync(cn, tenantId, un, xmlBytes, textoXml, xmlHash, ct)
+                    : await ImportarUnidadeAsync(tenantId, usuarioId, un, xmlBytes, textoXml, xmlHash, nomeArquivo, estabelecimentoId, ct);
             }
             catch (Exception ex)
             {
@@ -323,6 +328,44 @@ public sealed class DocumentosXmlRepository : Adm360Repository, IDocumentosXmlRe
         }
 
         return new ImportarXmlResultadoDto(unidades.Count, importados, emQuarentena, duplicadosIgnorados, falhas, resultados);
+    }
+
+    // R8-B8 (§24 prévia): avalia UMA unidade só por leitura, espelhando as decisões de
+    // ImportarUnidadeAsync (duplicidade pela chave, conteúdo divergente, conflito de identidade fiscal)
+    // SEM gravar nada. O DocumentoId devolvido para unidade nova é sintético — a prévia não persiste.
+    private static async Task<ImportarXmlDocumentoResultado> AvaliarUnidadePrevioAsync(
+        NpgsqlConnection cn, Guid tenantId, UnidadeXml u, byte[] xmlBytes, string textoXml, string xmlHash, CancellationToken ct)
+    {
+        var existente = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+            SELECT id, xml_hash, xml_bytes, xml_conteudo FROM plantaopro.adm360_documentos_recebidos
+            WHERE tenant_id = @tenantId AND chave_acesso = @chaveAcesso",
+            new { tenantId, chaveAcesso = u.ChaveAcesso }, cancellationToken: ct));
+
+        if (existente is not null)
+        {
+            var existenteHash = (string)existente.xml_hash;
+            var existenteBytes = existente.xml_bytes is byte[] b ? b : Array.Empty<byte>();
+            var existenteConteudo = ((string?)existente.xml_conteudo)?.Trim();
+            if (existenteHash == xmlHash
+                || existenteBytes.AsSpan().SequenceEqual(xmlBytes.AsSpan())
+                || existenteConteudo == textoXml)
+                return new ImportarXmlDocumentoResultado((Guid)existente.id, u.ChaveAcesso, true, u.Quarentena, u.MotivoQuarentena, null);
+            throw new Administrativo360BusinessException($"Chave de acesso {u.ChaveAcesso} já cadastrada no tenant com conteúdo XML divergente.");
+        }
+
+        if (!u.Quarentena)
+        {
+            var conflito = await cn.ExecuteScalarAsync<string>(new CommandDefinition(@"
+                SELECT chave_acesso FROM plantaopro.adm360_documentos_recebidos
+                WHERE tenant_id = @tenantId AND emitente_cnpj = @emitCnpj
+                  AND modelo = @modelo AND numero = @numero AND serie = @serie
+                  AND quarentena = false LIMIT 1",
+                new { tenantId, emitCnpj = u.EmitCnpj, modelo = u.Modelo, numero = u.Numero, serie = u.Serie }, cancellationToken: ct));
+            if (conflito is not null)
+                throw new Administrativo360BusinessException($"Identidade fiscal (emitente {u.EmitCnpj}, modelo {u.Modelo}, número {u.Numero}, série {u.Serie}) já registrada pelo documento {conflito}. Revise as duplicidades antes de importar.");
+        }
+
+        return new ImportarXmlDocumentoResultado(Guid.NewGuid(), u.ChaveAcesso, false, u.Quarentena, u.MotivoQuarentena, null);
     }
 
     // A3: uma unidade = um documento fiscal dentro do arquivo (infNFe, raiz ABRASF ou raiz externa NFS-e).

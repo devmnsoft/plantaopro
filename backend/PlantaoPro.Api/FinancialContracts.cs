@@ -16,9 +16,14 @@ public sealed record RegraFaturamentoDto(Guid Id, string Codigo, string Nome, st
 public sealed record ContaReceberDto(Guid Id, Guid ReferenciaId, string OrigemTipo, decimal ValorOriginal, decimal Descontos, decimal Acrescimos, decimal GlosaReconhecida, decimal Recebido, decimal Estornado, decimal Saldo, string Status, DateTime EmitidaEm);
 public sealed record RecebimentoDto(Guid Id, Guid ContaId, decimal Valor, string Forma, DateTime RecebidoEm, string Status);
 public sealed record RecebimentoResumoDto(Guid ContaId, decimal Recebido, decimal Estornado, decimal Saldo, string Status);
-public sealed record GlosaDto(Guid Id, Guid ContaId, Guid? TituloId, Guid ConvenioId, string Motivo, decimal ValorGlosado, decimal ValorRecuperado, DateTime? PrazoRecurso, string Status);
+public sealed record GlosaDto(Guid Id, Guid ContaId, Guid? TituloId, Guid ConvenioId, string Motivo, decimal ValorGlosado, decimal ValorRecuperado, DateTime? PrazoRecurso, string Status, Guid? LoteItemId, string? RecursoJustificativa, DateTime? RecursoEm);
 public sealed record GlosaResumoDto(Guid Id, Guid ContaId, Guid ConvenioId, decimal ValorGlosado, DateTime? PrazoRecurso, string Status);
 public sealed record GlosaHistoricoDto(Guid Id, Guid GlosaId, string Evento, string? Resultado, decimal? ValorAnterior, decimal? ValorNovo, DateTime CriadoEm);
+// R8-B7 (matriz §22): glosa por item de lote + recurso rastreável com documentos anexos.
+public sealed record V115RecursoDocumentoRequest(string NomeArquivo, string? TipoMime, string? ConteudoBase64);
+public sealed record V115RecursoRequest(string? Justificativa, V115RecursoDocumentoRequest[]? Documentos);
+public sealed record V115ResolucaoGlosaRequest(string? Motivo, decimal? ValorRecuperado);
+public sealed record V115RecursoDocumentoDto(Guid Id, string NomeArquivo, string? TipoMime, string? ConteudoBase64, int Tamanho, DateTime CriadoEm);
 public sealed record RepasseRegraDto(Guid Id, string Tipo, decimal Percentual, decimal ValorFixo, string EventoGerador, Guid? ConvenioId);
 public sealed record RepasseMedicoDto(Guid Id, Guid ReferenciaId, Guid MedicoId, Guid RegraId, decimal ValorBase, decimal ValorRepasse, string EventoGerador, string Status);
 public sealed record CaixaDto(Guid Id, Guid? UnidadeId, Guid OperadorId, decimal ValorAbertura, decimal SaldoEsperado, string Status, DateTime AbertoEm);

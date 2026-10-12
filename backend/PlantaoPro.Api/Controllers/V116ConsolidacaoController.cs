@@ -22,6 +22,7 @@ public sealed class V116ConsolidacaoController : ControllerBase
     [HttpGet("faturamento/lotes")] public Task<ActionResult<ApiResponse<IEnumerable<object>>>> Lotes() => Safe(() => lotes.ListarAsync(), "listar lotes");
     [HttpPost("faturamento/lotes")] public Task<ActionResult<ApiResponse<object>>> CriarLote(V116OperacaoRequest r) => Safe(() => lotes.CriarAsync(r), "criar lote");
     [HttpGet("faturamento/lotes/{id:guid}")] public Task<ActionResult<ApiResponse<object>>> Lote(Guid id) => Safe(() => lotes.ObterAsync(id), "obter lote");
+    [HttpGet("faturamento/lotes/{id:guid}/itens")] public Task<ActionResult<ApiResponse<IEnumerable<object>>>> ItensLote(Guid id) => Safe(() => lotes.ListarItensAsync(id), "itens do lote");
     [HttpPost("faturamento/lotes/{id:guid}/itens")] public Task<ActionResult<ApiResponse<object>>> AddItem(Guid id, V116OperacaoRequest r) => Safe(() => lotes.AdicionarItemAsync(id, r), "adicionar item");
     [HttpDelete("faturamento/lotes/{id:guid}/itens/{itemId:guid}")] public Task<ActionResult<ApiResponse<object>>> DelItem(Guid id, Guid itemId) => Safe(() => lotes.RemoverItemAsync(id, itemId), "remover item");
     [HttpPost("faturamento/lotes/{id:guid}/fechar")] public Task<ActionResult<ApiResponse<object>>> FecharLote(Guid id, V116OperacaoRequest? r) => Safe(() => lotes.FecharAsync(id, r), "fechar lote");

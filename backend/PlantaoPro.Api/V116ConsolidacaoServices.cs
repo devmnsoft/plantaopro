@@ -14,7 +14,7 @@ public abstract class V116BaseService
     private readonly IConfiguration configuration;
     private readonly ICurrentUserService currentUser;
     private readonly IAuditService audit;
-    private readonly ILogger logger;
+    protected readonly ILogger logger;
     private static readonly HashSet<string> TabelasPermitidas = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "v116_convenio_autorizacoes", "v116_convenio_guias", "v116_faturamento_lotes", "v116_faturamento_lote_itens",
@@ -149,9 +149,9 @@ returning id, tenant_id as TenantId, cliente_id as ClienteId, @Tipo as Tipo, coa
         }
     }
 
-    private NpgsqlConnection CriarConexao() => new NpgsqlConnection(configuration.GetConnectionString("Default"));
-    private async Task RegistrarEventoAsync(V116Contexto ctx, string entidade, Guid id, string acao, bool sucesso, object? detalhes) => await audit.RegistrarAsync(ctx.UserId, ctx.ClienteId, entidade, id, acao, detalhes, sucesso, null, string.Join(',', currentUser.Roles));
-    private V116Contexto ResolverContexto()
+    protected NpgsqlConnection CriarConexao() => new NpgsqlConnection(configuration.GetConnectionString("Default"));
+    protected async Task RegistrarEventoAsync(V116Contexto ctx, string entidade, Guid id, string acao, bool sucesso, object? detalhes) => await audit.RegistrarAsync(ctx.UserId, ctx.ClienteId, entidade, id, acao, detalhes, sucesso, null, string.Join(',', currentUser.Roles));
+    protected V116Contexto ResolverContexto()
     {
         if (!currentUser.IsAuthenticated()) return V116Contexto.Fail("Sessão inválida ou expirada.", 401);
         var tenantId = currentUser.TenantId;
@@ -160,8 +160,8 @@ returning id, tenant_id as TenantId, cliente_id as ClienteId, @Tipo as Tipo, coa
         return V116Contexto.Ok(currentUser.UserId, tenantId.Value, clienteId.Value);
     }
     private static string TabelaSegura(string tabela) { if (!TabelasPermitidas.Contains(tabela)) throw new InvalidOperationException("Tabela v1.16 não permitida."); return tabela; }
-    private static string? Texto(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
-    private sealed class V116Contexto
+    protected static string? Texto(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    protected sealed class V116Contexto
     {
         public bool Success { get; private set; } public string Message { get; private set; } = string.Empty; public int StatusCode { get; private set; } public Guid? UserId { get; private set; } public Guid TenantId { get; private set; } public Guid ClienteId { get; private set; }
         public static V116Contexto Ok(Guid? userId, Guid tenantId, Guid clienteId) => new V116Contexto { Success = true, StatusCode = 200, UserId = userId, TenantId = tenantId, ClienteId = clienteId };
@@ -184,7 +184,52 @@ public sealed class V116ConvenioService : V116BaseService
 public sealed class V116LoteFaturamentoService : V116BaseService
 {
     public V116LoteFaturamentoService(IConfiguration c, ICurrentUserService u, IAuditService a, ILogger<V116LoteFaturamentoService> l) : base(c, u, a, l) { }
-    public Task<ApiResponse<IEnumerable<object>>> ListarAsync() => ListarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO"); public Task<ApiResponse<object>> CriarAsync(V116OperacaoRequest r) => CriarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", r); public Task<ApiResponse<object>> ObterAsync(Guid id) => ObterAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", id); public Task<ApiResponse<object>> AdicionarItemAsync(Guid id, V116OperacaoRequest r) => CriarAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "ADICIONADO", r); public Task<ApiResponse<object>> RemoverItemAsync(Guid id, Guid itemId) => AtualizarStatusAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "REMOVIDO", itemId); public Task<ApiResponse<object>> FecharAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "FECHADO", id, r); public Task<ApiResponse<object>> ReabrirAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", id, r); public Task<ApiResponse<object>> EnviadoDemoAsync(Guid id) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ENVIADO_DEMO", id); public Task<ApiResponse<object>> RetornoDemoAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "RETORNO_DEMO", id, r);
+    public Task<ApiResponse<IEnumerable<object>>> ListarAsync() => ListarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO"); public Task<ApiResponse<object>> CriarAsync(V116OperacaoRequest r) => CriarAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", r); public Task<ApiResponse<object>> ObterAsync(Guid id) => ObterAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", id); public async Task<ApiResponse<object>> AdicionarItemAsync(Guid id, V116OperacaoRequest r)
+    {
+        try
+        {
+            var ctx = ResolverContexto();
+            if (!ctx.Success) return ApiResponse<object>.Fail(ctx.Message, ctx.StatusCode);
+            var novoId = Guid.NewGuid();
+            var descricao = Texto(r?.Nome) ?? Texto(r?.Observacao) ?? "LOTE_ITEM";
+            var payload = JsonSerializer.Serialize(new { r?.EntidadeId, r?.Justificativa, r?.Observacao, loteId = id, origem = "v1.17-runtime" });
+            await using var cn = CriarConexao();
+            var row = await cn.QuerySingleAsync<V116ResumoDto>(@"insert into plantaopro.v116_faturamento_lote_itens
+(id, cliente_id, tenant_id, descricao, status_operacional, valor, data_referencia, payload_demo, lote_id, created_by, created_at, reg_status)
+values (@Id, @ClienteId, @TenantId, @Descricao, 'ADICIONADO', @Valor, now(), cast(@Payload as jsonb), @LoteId, @UserId, now(), 'ATIVO')
+returning id, tenant_id as TenantId, cliente_id as ClienteId, 'LOTE_ITEM' as Tipo, coalesce(status_operacional, reg_status) as Status,
+    coalesce(descricao, '') as Descricao, valor as Valor, created_at as CriadoEm, updated_at as AtualizadoEm,
+    true as Auditado, 'PostgreSQL/Dapper' as Fonte", new { Id = novoId, ctx.ClienteId, ctx.TenantId, Descricao = descricao, r?.Valor, Payload = payload, UserId = ctx.UserId?.ToString(), LoteId = id });
+            await RegistrarEventoAsync(ctx, "v116_faturamento_lote_itens", novoId, "LOTE_ITEM_ADICIONADO", true, r);
+            return ApiResponse<object>.Ok(row, "Item de lote persistido.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao adicionar item de lote v1.16 {Lote}", id);
+            return ApiResponse<object>.Fail("Não foi possível persistir a operação v1.16.", 500);
+        }
+    }
+    public async Task<ApiResponse<IEnumerable<object>>> ListarItensAsync(Guid loteId)
+    {
+        try
+        {
+            var ctx = ResolverContexto();
+            if (!ctx.Success) return ApiResponse<IEnumerable<object>>.Fail(ctx.Message, ctx.StatusCode);
+            await using var cn = CriarConexao();
+            var rows = await cn.QueryAsync<V116ResumoDto>(@"select id, tenant_id as TenantId, cliente_id as ClienteId, 'LOTE_ITEM' as Tipo,
+    coalesce(status_operacional, reg_status) as Status, coalesce(descricao, '') as Descricao, valor as Valor,
+    created_at as CriadoEm, updated_at as AtualizadoEm, true as Auditado, 'PostgreSQL/Dapper' as Fonte
+from plantaopro.v116_faturamento_lote_itens
+where lote_id=@LoteId and tenant_id=@TenantId and cliente_id=@ClienteId and coalesce(reg_status, 'ATIVO') <> 'EXCLUIDO'
+order by created_at", new { LoteId = loteId, ctx.TenantId, ctx.ClienteId });
+            return ApiResponse<IEnumerable<object>>.Ok(rows.Cast<object>().ToList(), "Itens do lote carregados.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Falha ao listar itens de lote v1.16 {Lote}", loteId);
+            return ApiResponse<IEnumerable<object>>.Fail("Não foi possível consultar a operação v1.16.", 500);
+        }
+    } public Task<ApiResponse<object>> RemoverItemAsync(Guid id, Guid itemId) => AtualizarStatusAsync("v116_faturamento_lote_itens", "LOTE_ITEM", "REMOVIDO", itemId); public Task<ApiResponse<object>> FecharAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "FECHADO", id, r); public Task<ApiResponse<object>> ReabrirAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ABERTO", id, r); public Task<ApiResponse<object>> EnviadoDemoAsync(Guid id) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "ENVIADO_DEMO", id); public Task<ApiResponse<object>> RetornoDemoAsync(Guid id, V116OperacaoRequest? r) => AtualizarStatusAsync("v116_faturamento_lotes", "LOTE_FATURAMENTO", "RETORNO_DEMO", id, r);
 }
 public sealed class V116CaixaService : V116BaseService
 {

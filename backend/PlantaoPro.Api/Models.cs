@@ -159,6 +159,10 @@ public sealed class DashboardDto
     public decimal ValorPendente { get; set; }
     public decimal ValorPagoMes { get; set; }
     public long NotificacoesNaoLidas { get; set; }
+    /// <summary>R8-B9 (§27): definições por indicador (fórmula/fonte/período/fuso/filtros) — padrão Operacional estendido.</summary>
+    public IReadOnlyList<KpiDefinicao> Definicoes { get; set; } = new List<KpiDefinicao>();
+    /// <summary>R8-B9 (§27): critério de tempo aplicado ao dashboard (fuso do servidor / período).</summary>
+    public string TimeCriterion { get; set; } = "";
 }
 public record NotificacaoDto(Guid Id,string Titulo,string Mensagem,string Tipo,bool Lida,DateTime RegDate);
 
@@ -648,6 +652,10 @@ public sealed class BiResumoExecutivoDto
     public string Periodo { get; set; } = "";
     /// <summary>Fuso horário efetivamente usado na consulta (parâmetro ou fuso do servidor quando omitido).</summary>
     public string Fuso { get; set; } = "";
+    /// <summary>R8-B9 (§27): definições por indicador (fórmula/fonte/período/fuso/filtros) — padrão Operacional estendido.</summary>
+    public IReadOnlyList<KpiDefinicao> Definicoes { get; set; } = new List<KpiDefinicao>();
+    /// <summary>R8-B9 (§27): critério de tempo (janela do mês / fuso) aplicado ao resumo executivo.</summary>
+    public string TimeCriterion { get; set; } = "";
 }
 
 }

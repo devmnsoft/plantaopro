@@ -17,10 +17,10 @@ public sealed class DashboardPremiumService
             await using var cn = new NpgsqlConnection(cfg.GetConnectionString("Default"));
             await cn.OpenAsync();
             var kpis = (List<DashboardKpiDto>)dto.Kpis;
-            await AddCount(cn, kpis, "Plantões", "plantaopro.plantoes", clienteId);
-            await AddCount(cn, kpis, "Escalas", "plantaopro.escalas", clienteId);
-            await AddCount(cn, kpis, "Médicos", "plantaopro.medicos", clienteId);
-            await AddCount(cn, kpis, "Agendamentos", "plantaopro.agendamentos", clienteId);
+            await AddCount(cn, kpis, "Plantões", "plantaopro.plantoes", clienteId, "Contagem de plantões ativos (reg_status='A') no escopo; sem filtro de período (estado atual).");
+            await AddCount(cn, kpis, "Escalas", "plantaopro.escalas", clienteId, "Contagem de escalas ativas (reg_status='A') no escopo; sem filtro de período (estado atual).");
+            await AddCount(cn, kpis, "Médicos", "plantaopro.medicos", clienteId, "Contagem de médicos ativos (reg_status='A') no escopo; sem filtro de período (estado atual).");
+            await AddCount(cn, kpis, "Agendamentos", "plantaopro.agendamentos", clienteId, "Contagem de agendamentos ativos (reg_status='A') no escopo; sem filtro de período (estado atual).");
             ((List<string>)dto.ProximosPassos).Add("Revisar pendências reais e filtros do perfil " + perfil + ".");
             ((List<DashboardAtalhoDto>)dto.Atalhos).Add(new DashboardAtalhoDto("Operação Inteligente", "/OperacaoInteligente/Index"));
             ((List<DashboardChartItem>)dto.Series).AddRange(kpis.Select(k => new DashboardChartItem(k.Titulo, k.Valor)));
@@ -33,17 +33,17 @@ public sealed class DashboardPremiumService
         }
         return dto;
     }
-    private static async Task AddCount(NpgsqlConnection cn, IList<DashboardKpiDto> kpis, string titulo, string tabela, Guid? clienteId)
+    private static async Task AddCount(NpgsqlConnection cn, IList<DashboardKpiDto> kpis, string titulo, string tabela, Guid? clienteId, string definicao)
     {
         try
         {
             var total = await cn.ExecuteScalarAsync<long>("select count(1)::bigint from " + tabela + " where reg_status='A' and (@clienteId is null or cliente_id=@clienteId or tenant_id=@clienteId)", new { clienteId });
-            kpis.Add(new DashboardKpiDto(titulo, total, "real"));
+            kpis.Add(new DashboardKpiDto(titulo, total, "real", definicao));
         }
         catch (PostgresException ex) when (ex.SqlState == "42P01" || ex.SqlState == "42703") { }
     }
 }
 
 public record DashboardPremiumDto(string Perfil,IEnumerable<DashboardKpiDto> Kpis,IEnumerable<string> Alertas,IEnumerable<string> ProximosPassos,IEnumerable<DashboardAtalhoDto> Atalhos,IEnumerable<DashboardChartItem> Series,string StatusPlanoModulo);
-public record DashboardKpiDto(string Titulo,long Valor,string Fonte);
+public record DashboardKpiDto(string Titulo,long Valor,string Fonte,string Definicao="");
 public record DashboardAtalhoDto(string Titulo,string Url);

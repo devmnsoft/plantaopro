@@ -2404,7 +2404,26 @@ from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id joi
             var pgMes = await cn.QueryAsync<DashboardChartItem>("select to_char(date_trunc('month',coalesce(data_pagamento::timestamp,reg_date)),'YYYY-MM') as Label,coalesce(sum(coalesce(valor_pago,valor_previsto)),0) as Valor from plantaopro.pagamentos where reg_status='A' and (@tid is null or tenant_id=@tid or cliente_id=@tid) group by 1 order by 1", new { tid = tenantId });
             var plEsp = await cn.QueryAsync<DashboardChartItem>("select e.nome as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.especialidades e on e.id=p.especialidade_id where p.reg_status='A' and (@tid is null or p.tenant_id=@tid or p.cliente_id=@tid) group by e.nome order by Valor desc", new { tid = tenantId });
             var plHosp = await cn.QueryAsync<DashboardChartItem>("select h.nome_fantasia as Label,count(1)::decimal as Valor from plantaopro.plantoes p join plantaopro.hospitais h on h.id=p.hospital_id where p.reg_status='A' and (@tid is null or p.tenant_id=@tid or p.cliente_id=@tid) group by h.nome_fantasia order by Valor desc", new { tid = tenantId });
+            ind.Definicoes = Definicoes();
+            ind.TimeCriterion = "Contagens e somas em estado atual no fuso do servidor (now()); somente ValorPagoMes usa período = mês corrente do servidor. Sem fuso do usuário.";
             return ApiResponse<DashboardOverviewDto>.Ok(new(ind, prox, pag, nots, plMes, pgMes, plEsp, plHosp));
         }
+
+        private static IReadOnlyList<KpiDefinicao> Definicoes() => new[]
+        {
+            new KpiDefinicao("TotalMedicos", "Médicos", "Contagem de médicos ativos (reg_status='A') no escopo (estado atual)."),
+            new KpiDefinicao("TotalHospitais", "Hospitais", "Contagem de hospitais ativos (reg_status='A') no escopo (estado atual)."),
+            new KpiDefinicao("TotalEspecialidades", "Especialidades", "Contagem de especialidades ativas (reg_status='A') no escopo (estado atual)."),
+            new KpiDefinicao("TotalPlantoes", "Plantões", "Contagem de plantões (reg_status='A') no escopo (estado atual)."),
+            new KpiDefinicao("PlantoesAbertos", "Plantões abertos", "Contagem de plantões com status 'aberto' no escopo."),
+            new KpiDefinicao("PlantoesConfirmados", "Plantões confirmados", "Contagem de plantões com status 'confirmado' no escopo."),
+            new KpiDefinicao("PlantoesRealizados", "Plantões realizados", "Contagem de plantões com status 'realizado' no escopo."),
+            new KpiDefinicao("PlantoesCancelados", "Plantões cancelados", "Contagem de plantões com status 'cancelado' no escopo."),
+            new KpiDefinicao("PagamentosPendentes", "Pagamentos pendentes", "Contagem de pagamentos com status 'pendente' no escopo."),
+            new KpiDefinicao("PagamentosPagos", "Pagamentos pagos", "Contagem de pagamentos com status 'pago' no escopo."),
+            new KpiDefinicao("ValorPendente", "Valor pendente", "Soma de valor_previsto de pagamentos pendentes no escopo (estado atual)."),
+            new KpiDefinicao("ValorPagoMes", "Valor pago no mês", "Soma de valor_pago de pagamentos pagos cujo mês (data_pagamento ou agora) é igual ao mês corrente no fuso do servidor (período; now())."),
+            new KpiDefinicao("NotificacoesNaoLidas", "Notificações não lidas", "Contagem de notificações do usuário não lidas (lida=false, reg_status='A').")
+        };
     }
 }

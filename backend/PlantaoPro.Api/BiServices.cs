@@ -61,7 +61,9 @@ select
  (select count(1) from plantaopro.escalas e join plantaopro.plantoes p on p.id=e.plantao_id where e.reg_status='A' and p.reg_status='A' and lower(e.status) in ('confirmado','confirmada') and (@cid is null or p.cliente_id=@cid or p.tenant_id=@cid) and p.data_inicio>=(select inicio from periodo) and p.data_inicio<(select fim from periodo)) as EscalasConfirmadasPeriodo,
  (select coalesce(sum(p.valor_pago),0) from plantaopro.pagamentos p where p.reg_status='A' and lower(p.status)='pago' and p.data_pagamento is not null and (p.data_pagamento::timestamp at time zone @fuso)>=(select inicio from periodo) and (p.data_pagamento::timestamp at time zone @fuso)<(select fim from periodo) and (@cid is null or p.cliente_id=@cid or p.tenant_id=@cid)) as ValorPagoPeriodo,
  to_char(coalesce(@mesRef::date,(now() at time zone @fuso)::date),'YYYY-MM') as Periodo,
- @fuso::text as Fuso", new { cid=clienteId, mesRef, fuso=fusoEfetivo });
+ @fuso::text as Fuso", new { cid=clienteId, mesRef=mesRef?.ToString("yyyy-MM-dd"), fuso=fusoEfetivo });
+            row.Definicoes = Definicoes();
+            row.TimeCriterion = $"Janela do mês {row.Periodo} no fuso {row.Fuso}; KPIs de período usam essa janela, demais em estado atual (B9).";
             logger.LogInformation("BI resumo executivo concluído em {Elapsed}ms", (DateTime.UtcNow - started).TotalMilliseconds);
             return ApiResponse<BiResumoExecutivoDto>.Ok(row);
         }
@@ -71,6 +73,22 @@ select
             return ApiResponse<BiResumoExecutivoDto>.Fail("Não foi possível carregar o resumo executivo.", 500);
         }
     }
+
+    private static IReadOnlyList<KpiDefinicao> Definicoes() => new[]
+    {
+        new KpiDefinicao("TotalClientesAtivos", "Clientes ativos", "Contagem de clientes com reg_status='A' e status ATIVO no escopo (estado atual)."),
+        new KpiDefinicao("ReceitaMensalEstimada", "Receita mensal estimada", "Soma de valor_contratado de assinaturas ativas (status 'ativa') no escopo (estado atual)."),
+        new KpiDefinicao("ReceitaVencida", "Receita vencida", "Soma de valor_total de faturas SaaS vencidas (status 'VENCIDA') no escopo (estado atual)."),
+        new KpiDefinicao("PlantoesPublicadosMes", "Plantões publicados no mês", "Plantões ativos não rascunho/cancelado cujo data_inicio cai na janela do mês consultado no fuso informado (período)."),
+        new KpiDefinicao("PercentualCobertura", "% de cobertura", "Média percentual de vagas ocupadas ((vagas - vagas_disponiveis)/vagas*100; 0 sem vagas) dos plantões ativos na janela do mês (período)."),
+        new KpiDefinicao("EscalasConfirmadas", "Escalas confirmadas", "Contagem de escalas com status confirmado/confirmada no escopo (estado atual)."),
+        new KpiDefinicao("EscalasCanceladas", "Escalas canceladas", "Contagem de escalas canceladas no escopo (estado atual)."),
+        new KpiDefinicao("PagamentosPendentes", "Pagamentos pendentes", "Contagem de pagamentos pendente/atrasado no escopo (estado atual)."),
+        new KpiDefinicao("PagamentosConfirmados", "Pagamentos confirmados", "Contagem de pagamentos pagos no escopo (estado atual)."),
+        new KpiDefinicao("TempoMedioPreenchimentoHoras", "Tempo médio de preenchimento (h)", "Média em horas entre a criação do plantão e da escala ligada (reg_date da escala - reg_date do plantao), escalas ativas no escopo (estado atual)."),
+        new KpiDefinicao("EscalasConfirmadasPeriodo", "Escalas confirmadas no período", "Escalas confirmadas cujo plantão inicia dentro da janela do mês consultado no fuso (período)."),
+        new KpiDefinicao("ValorPagoPeriodo", "Valor pago no período", "Soma de valor_pago de pagamentos pagos com data_pagamento dentro da janela do mês no fuso consultado (período).")
+    };
 
     private const string UTC_TZ = "UTC";
 }

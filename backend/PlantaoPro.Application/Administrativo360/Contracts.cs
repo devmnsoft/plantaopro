@@ -67,6 +67,7 @@ public interface IComprasRepository
     Task<Guid> CriarAsync(Guid tenantId, Guid usuarioId, CriarPedidoCommand command, CancellationToken ct);
     Task AprovarAsync(Guid tenantId, Guid usuarioId, Guid pedidoId, string idempotencyKey, CancellationToken ct);
     Task<Guid> ReceberAsync(Guid tenantId, Guid usuarioId, ConfirmarRecebimentoCommand command, CancellationToken ct);
+    Task CancelarAsync(Guid tenantId, Guid usuarioId, Guid pedidoId, string motivo, CancellationToken ct);
 }
 
 public interface IEstoqueRepository

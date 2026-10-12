@@ -102,6 +102,29 @@ public partial class Administrativo360Controller
         return RedirectToAction(nameof(PedidosCompra));
     }
 
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> CancelarPedidoCompra(Guid id, string motivo)
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+        {
+            TempData["Error"] = UiText.L("Adm360.Compras.ErrCancelMotivo");
+            return RedirectToAction(nameof(PedidosCompra));
+        }
+
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        // R8-B4: cancelamento com compensação server-side; 409 fundamentado volta como resp.Error
+        // (estoque já consumido/transferido/inspecionado, reserva ativa ou título pago — exige estorno/ajuste prévio).
+        var resp = await SendApiAsync<string, System.Text.Json.JsonElement>(client, HttpMethod.Post, $"api/administrativo360/compras/{id}/cancelar", motivo);
+        if (resp.StatusCode is >= System.Net.HttpStatusCode.OK and < System.Net.HttpStatusCode.Ambiguous)
+            TempData["Success"] = UiText.L("Adm360.Compras.OkOrderCancelled");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Compras.FallbackCancelOrder");
+
+        return RedirectToAction(nameof(PedidosCompra));
+    }
+
     // ==========================================
     // RECEBIMENTOS E CONFERÊNCIA
     // ==========================================

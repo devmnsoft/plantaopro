@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs241ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs244ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(241, totalAdm360);
+            Assert.Equal(244, totalAdm360);
             foreach (var chave in new[]
                      {
                          // views

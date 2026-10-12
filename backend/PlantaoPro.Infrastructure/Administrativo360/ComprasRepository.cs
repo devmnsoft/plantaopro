@@ -108,6 +108,142 @@ public sealed class ComprasRepository : Adm360Repository, IComprasRepository
         }
     }
 
+    public async Task CancelarAsync(Guid tenantId, Guid usuarioId, Guid pedidoId, string motivo, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(motivo))
+            throw new ArgumentException("Motivo do cancelamento do pedido é obrigatório.");
+
+        // R8-B4: cancelamento de pedido de compra com compensação dos efeitos do recebimento.
+        // - Estado CANCELADO ja era valido no check da tabela (v2191); faltava a operacao.
+        // - RASCUNHO/APROVADO: sem efeitos ainda — cancela direto.
+        // - PARCIAL/RECEBIDO: compensa APENAS quando seguro — para cada linha recebida exige
+        //   saldo fisico integral no grupo (produto, lote, local, condicao) e, para linhas
+        //   LIBERADO, que reservas ativas continuem cobertas apos a saida compensatoria.
+        //   Titulos com pagamento exigem estorno previo (mesmo padrao do modulo: venda paga
+        //   exige estorno antes de cancelar). Nao ha estorno ficticio: se algo ja saiu do
+        //   grupo, o cancelamento e recusado e o ajuste de estoque e manual.
+        await ExecutarComRetrySerializableAsync(async (cn, tx) =>
+        {
+            var pedido = await cn.QuerySingleOrDefaultAsync<dynamic>(new CommandDefinition(@"
+                SELECT id, numero, situacao FROM plantaopro.adm360_pedidos
+                WHERE id = @pedidoId AND tenant_id = @tenantId FOR UPDATE",
+                new { pedidoId, tenantId }, tx, cancellationToken: ct));
+
+            if (pedido is null) throw new Administrativo360BusinessException("Pedido de compra não encontrado.");
+            if ((string)pedido.situacao == "CANCELADO") return; // reenvio idempotente: efeito ja aplicado
+
+            // RASCUNHO/APROVADO nao tem recebimentos: os gates e a compensacao ancoram em subconsulta
+            // por pedido (nunca em ANY(@array) vazio, que gera clausula invalida no Dapper).
+
+            var linhas = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
+                SELECT ri.id, ri.produto_id, ri.lote_id, ri.local_id, ri.quantidade, ri.condicao
+                FROM plantaopro.adm360_recebimento_itens ri
+                JOIN plantaopro.adm360_recebimentos r ON r.id = ri.recebimento_id AND r.tenant_id = ri.tenant_id
+                WHERE r.pedido_id = @pedidoId AND r.tenant_id = @tenantId
+                ORDER BY ri.id",
+                new { pedidoId, tenantId }, tx, cancellationToken: ct))).ToList();
+
+            // Nomes crus (snake_case) do banco: apelidos camelCase soem no fold minusculo do PostgreSQL
+            // e o acesso dinamico do Dapper e case-sensitive — mesmo padrao dos demais reads do modulo.
+
+            foreach (var local in linhas.Select(l => (Guid)l.local_id).Distinct())
+                await ValidarBloqueioInventarioAsync(cn, tx, tenantId, local, ct);
+
+            var chaves = linhas
+                .Select(l => $"{tenantId}:{l.produto_id}:{l.lote_id}:{l.local_id}")
+                .Distinct()
+                .OrderBy(k => k, StringComparer.Ordinal)
+                .ToArray();
+            await BloquearChavesDeterministasAsync(cn, tx, chaves, ct);
+
+            foreach (var linha in linhas)
+            {
+                var saldoGrupo = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
+                    SELECT COALESCE(sum(m.quantidade), 0)
+                    FROM plantaopro.adm360_movimentos m
+                    WHERE m.tenant_id = @tenantId AND m.produto_id = @produtoId AND m.lote_id = @loteId
+                      AND m.local_id = @localId AND m.condicao = @condicao",
+                    new { tenantId, produtoId = linha.produto_id, loteId = linha.lote_id, localId = linha.local_id, condicao = linha.condicao }, tx, cancellationToken: ct));
+
+                if (saldoGrupo < (decimal)linha.quantidade)
+                    throw new Administrativo360BusinessException("Há parte do estoque deste recebimento já consumida, transferida ou com destino de qualidade definido; ajuste o estoque antes de cancelar o pedido.");
+
+                if ((string)linha.condicao == "LIBERADO")
+                {
+                    var reservado = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition(@"
+                        SELECT COALESCE(sum(r.quantidade), 0)
+                        FROM plantaopro.adm360_reservas r
+                        WHERE r.tenant_id = @tenantId AND r.lote_id = @loteId AND r.local_id = @localId AND r.situacao = 'ATIVA'",
+                        new { tenantId, loteId = linha.lote_id, localId = linha.local_id }, tx, cancellationToken: ct));
+                    if (saldoGrupo - (decimal)linha.quantidade < reservado)
+                        throw new Administrativo360BusinessException("Há reserva ativa sobre o estoque deste recebimento; libere as reservas antes de cancelar o pedido.");
+                }
+            }
+
+            var tituloPago = await cn.ExecuteScalarAsync<bool>(new CommandDefinition(@"
+                SELECT EXISTS(SELECT 1 FROM plantaopro.adm360_titulos_pagar t
+                WHERE t.tenant_id = @tenantId AND t.origem_tipo = 'RECEBIMENTO_COMPRA'
+                  AND t.origem_id IN (SELECT id FROM plantaopro.adm360_recebimentos WHERE pedido_id = @pedidoId AND tenant_id = @tenantId)
+                  AND (t.valor_pago > 0 OR t.situacao IN ('PARCIAL', 'PAGO')))",
+                new { tenantId, pedidoId }, tx, cancellationToken: ct));
+            if (tituloPago)
+                throw new Administrativo360BusinessException("Há pagamento registrado nos títulos deste recebimento; estorne os pagamentos antes de cancelar o pedido.");
+
+            // Compensação do estoque: uma SAIDA por linha recebida, espelhando a condição de origem.
+            foreach (var linha in linhas)
+            {
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_movimentos(
+                        id, tenant_id, produto_id, lote_id, local_id, tipo, condicao, quantidade, motivo,
+                        origem_tipo, origem_id, idempotency_key, created_by
+                    ) VALUES (
+                        gen_random_uuid(), @tenantId, @produtoId, @loteId, @localId, 'SAIDA', @condicao, @negQtd,
+                        'Cancelamento do pedido ' || @numero || ': ' || @motivo,
+                        'CANCELAMENTO_COMPRA', @pedidoId, @keyMov, @usuarioId)",
+                    new
+                    {
+                        tenantId, produtoId = linha.produto_id, loteId = linha.lote_id, localId = linha.local_id,
+                        condicao = linha.condicao, negQtd = -(decimal)linha.quantidade,
+                        numero = (string)pedido.numero, motivo, pedidoId,
+                        keyMov = $"CANC_PEDIDO:{pedidoId:N}:{linha.id:N}", usuarioId
+                    }, tx, cancellationToken: ct));
+            }
+
+            // Compensação financeira: títulos do recebimento cancelam com saldo zerado (pagamentos ja barrados acima).
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_titulos_pagar
+                SET situacao = 'CANCELADO', saldo_aberto = 0, versao = versao + 1, updated_at = now(),
+                    observacoes = COALESCE(observacoes || E'\n', '') || 'Título cancelado pelo cancelamento do pedido ' || @numero || ': ' || @motivo
+                WHERE tenant_id = @tenantId AND origem_tipo = 'RECEBIMENTO_COMPRA'
+                  AND origem_id IN (SELECT id FROM plantaopro.adm360_recebimentos WHERE pedido_id = @pedidoId AND tenant_id = @tenantId)",
+                new { tenantId, pedidoId, numero = (string)pedido.numero, motivo }, tx, cancellationToken: ct));
+
+            // Trilha auditável nos documentos fiscais vinculados aos recebimentos do pedido.
+            foreach (var docId in (await cn.QueryAsync<Guid>(new CommandDefinition(@"
+                        SELECT id FROM plantaopro.adm360_documentos_recebidos
+                        WHERE tenant_id = @tenantId AND recebimento_id IN (SELECT id FROM plantaopro.adm360_recebimentos WHERE pedido_id = @pedidoId AND tenant_id = @tenantId)
+                        ORDER BY id",
+                        new { tenantId, pedidoId }, tx, cancellationToken: ct))).ToArray())
+            {
+                var seqDoc = await ProximaSequenciaEventoDocumentoAsync(cn, tx, tenantId, docId, ct);
+                await cn.ExecuteAsync(new CommandDefinition(@"
+                    INSERT INTO plantaopro.adm360_documento_eventos(
+                        id, tenant_id, documento_id, tipo_evento, sequencia_evento, descricao_evento, data_evento, detalhes, registrado_por
+                    ) VALUES (
+                        gen_random_uuid(), @tenantId, @docId, 'CANCELAMENTO_RECEBIMENTO', @seqDoc,
+                        'Pedido de compra cancelado: estoque e título do recebimento deste documento foram compensados.', now(),
+                        'Cancelamento do pedido ' || @numero || '. Motivo: ' || @motivo, @usuarioId)",
+                    new { tenantId, docId, seqDoc, numero = (string)pedido.numero, motivo, usuarioId }, tx, cancellationToken: ct));
+            }
+
+            await cn.ExecuteAsync(new CommandDefinition(@"
+                UPDATE plantaopro.adm360_pedidos
+                SET situacao = 'CANCELADO', motivo_cancelamento = @motivo, cancelado_em = now(), cancelado_por = @usuarioId, versao = versao + 1
+                WHERE id = @pedidoId AND tenant_id = @tenantId",
+                new { tenantId, pedidoId, motivo, usuarioId }, tx, cancellationToken: ct));
+        }, ct);
+    }
+
     public async Task<Guid> ReceberAsync(Guid tenantId, Guid usuarioId, ConfirmarRecebimentoCommand c, CancellationToken ct)
     {
         // WS-A3: toda a transação passa pelo helper de retry 40001/40P01 (SERIALIZABLE),

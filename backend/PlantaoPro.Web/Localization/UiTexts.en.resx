@@ -2224,6 +2224,15 @@
   <data name="Adm360.Compras.FallbackRegisterInspection" xml:space="preserve">
     <value>Failed to register the inspection decision.</value>
   </data>
+  <data name="Adm360.Compras.ErrCancelMotivo" xml:space="preserve">
+    <value>Provide the reason for cancelling the order.</value>
+  </data>
+  <data name="Adm360.Compras.OkOrderCancelled" xml:space="preserve">
+    <value>Purchase order cancelled.</value>
+  </data>
+  <data name="Adm360.Compras.FallbackCancelOrder" xml:space="preserve">
+    <value>Failed to cancel the purchase order.</value>
+  </data>
   <data name="Adm360.Financeiro.ErrPositiveAmount" xml:space="preserve">
     <value>The received amount must be positive.</value>
   </data>

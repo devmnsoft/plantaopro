@@ -15,6 +15,8 @@ public sealed class Compras360Controller : ControllerBase
  [HttpPost] public async Task<IActionResult> Criar(CriarPedidoCommand command,CancellationToken ct){var x=Context();var id=await repository.CriarAsync(x.Tenant,x.User,command,ct);return CreatedAtAction(nameof(Listar),new{id});}
  [HttpPost("{id:guid}/aprovar")] public async Task<IActionResult> Aprovar(Guid id,[FromHeader(Name="Idempotency-Key")]string key,CancellationToken ct){var x=Context();await repository.AprovarAsync(x.Tenant,x.User,id,key,ct);return NoContent();}
  [HttpPost("recebimentos")] public async Task<IActionResult> Receber(ConfirmarRecebimentoCommand command,CancellationToken ct){var x=Context();return Ok(new{id=await repository.ReceberAsync(x.Tenant,x.User,command,ct)});}
+ // R8-B4: cancelamento com compensação — 409 fundamentado quando há efeito que exige estorno/ajuste prévio.
+ [HttpPost("{id:guid}/cancelar")] public async Task<IActionResult> Cancelar(Guid id,[FromBody]string motivo,CancellationToken ct){var x=Context();try{await repository.CancelarAsync(x.Tenant,x.User,id,motivo,ct);return NoContent();}catch(ArgumentException ex){return BadRequest(new { error = ex.Message });}catch(PlantaoPro.Domain.Administrativo360.Administrativo360BusinessException ex){return Conflict(new { message = ex.Message });}}
 }
 [ApiController,Route("api/administrativo360/estoque"),Authorize(Policy="Adm360.Estoque")]
 public sealed class Estoque360Controller : ControllerBase

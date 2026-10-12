@@ -141,6 +141,13 @@
                                         <i class="bi bi-box-arrow-in-down me-1"></i>Receber
                                     </a>
                                 }
+                                @if (ped.Situacao != "CANCELADO")
+                                {
+                                    <button type="button" class="btn btn-sm btn-outline-danger" title="Cancelar Pedido de Compra"
+                                            data-bs-toggle="modal" data-bs-target="#modalCancelar-@ped.Id">
+                                        <i class="bi bi-x-circle me-1"></i>Cancelar
+                                    </button>
+                                }
                             </td>
                         </tr>
                     }
@@ -216,3 +223,36 @@
         </form>
     </div>
 </div>
+
+<!-- R8-B4: Modal de cancelamento de pedido (um por linha, motivo obrigatório) -->
+@foreach (var ped in Model.Pedidos.Where(p => p.Situacao != "CANCELADO"))
+{
+    <div class="modal fade" id="modalCancelar-@ped.Id" tabindex="-1" aria-labelledby="tituloModalCancelar-@ped.Id" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title h6" id="tituloModalCancelar-@ped.Id"><i class="bi bi-x-circle me-2 text-danger"></i>Cancelar Pedido @ped.Numero</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form asp-action="CancelarPedidoCompra" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@ped.Id" />
+                    <div class="modal-body small">
+                        <p class="text-secondary mb-3">
+                            Se o pedido já foi recebido, o cancelamento reverte o estoque lançado e zera os títulos de contas a pagar do recebimento.
+                            Se parte do material já foi consumida, transferida ou teve inspeção decidida — ou se há reserva ativa ou título pago —
+                            o sistema recusa o cancelamento e exige o ajuste ou o estorno prévio.
+                        </p>
+                        <label class="form-label small fw-bold" for="motivo-@ped.Id">Motivo do Cancelamento *</label>
+                        <textarea name="motivo" id="motivo-@ped.Id" class="form-control bg-black text-light border-secondary" rows="3" required
+                                  placeholder="Informe o motivo do cancelamento deste pedido..."></textarea>
+                    </div>
+                    <div class="modal-footer border-secondary">
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Voltar</button>
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-lg me-1"></i>Confirmar Cancelamento</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}

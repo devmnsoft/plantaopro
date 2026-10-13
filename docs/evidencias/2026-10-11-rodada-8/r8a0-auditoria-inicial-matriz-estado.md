@@ -225,7 +225,7 @@ Varredura completa: `r8a0-varredura-indicadores-design-redundancias.md`.
 #### §29 Revisão de redundâncias (mapa — sem conclusão, ordem §29 do prompt)
 Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 1. **5 calculadoras de dashboard/KPI** (`BiService`, `DashboardPremiumService`, `Fase6…DashboardAsync`, `DashboardService`, v114/operacoes) — inclui o bug "Plantões do mês" (§27).
-2. **`cid_tabela` criada divergente em 6 arquivos** (seeds/migrations) — risco de drift de schema.
+2. **`cid_tabela` criada divergente em 6 arquivos** (seeds/migrations) — risco de drift de schema. → **R8-B10**: unicidade canônica = **versionada** `(versao, upper(codigo))` (alvo do `ON CONFLICT` do import); as 2 únicas **não-versionadas** (`ux_cid_tabela_codigo` [constraint] + `ux_cid_tabela_codigo_ativo` [índice]) removidas em `v2351` — bloqueavam o mesmo código sob duas versões (23505); relaxação monotônica (0 perda de dados; 0 duplicidades existentes); **contrato anti-drift** `R8B10CidTabelaUnicaoVersionadaTests` 3/3. Os 6 blocos `CREATE` permanecem (dedup de DDL segue o rito §29).
 3. **Mirror de DTOs Api↔Web ×4** (ManagerCommandCenter, Admin360Resumo, ProductivityPage, DashboardPremium).
 4. Placeholder "Sem dados no período" duplicado em 5 views + `BiController` 8 ações/4 views (views-fantasma).
 5. Menu `_AppSidebar` com **Usuarios.Index ×2 e Perfis.Index ×2** (:75/:76 vs :89/:90) — duplicação visível para super-admin.
@@ -234,7 +234,7 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 8. `consultas.especialidade` text + FK `especialidade_id` coexistindo.
 9. `MeuDiaService` facade sobre `ProductivityActionService` (compatibilidade intencional).
 10. Cards KPI manuais × partials `_KpiCard`/`_CoverageCard` subutilizados.
-**Estado: mapa pronto.** Consolidação segue o rito do §29 (comparar consumidores → canônico → migrar → regressões); nenhuma deleção nesta rodada.
+**Estado:** item 1 (KPI calculadoras) com **contrato de definição** (R8-B9); item 2 (`cid_tabela`) com **unicidade canônica versionada + contrato anti-drift** (R8-B10, `v2351`). Demais candidatos seguem o rito do §29 (comparar consumidores → canônico → migrar → regressões). Sem deleção de tabelas/blocos DDL nesta rodada — R8-B10 removeu apenas os 2 índices únicos não-versionados que contradiziam o modelo versionado (relaxação monotônica).
 
 ## 3. GATE (§3 do prompt) — situação local
 

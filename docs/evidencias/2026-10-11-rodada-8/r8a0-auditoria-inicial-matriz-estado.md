@@ -20,7 +20,7 @@ Nota: o commit `2f4533d3` foi criado e empurrado externamente ao agente (mensage
 |---|---|
 | Solução oficial | `backend/PlantaoPro.sln`, SDK net10.0 |
 | Arquitetura | Web BFF MVC/Razor + controllers API · PostgreSQL 18 local (serviço `postgresql-x64-18`) · Dapper 2.1.35 / Npgsql 10.0.2 |
-| Migrations canônicas | até **v2344** em `database/migrations/` + `migration-manifest.json`; v2339→v2344 aplicadas em `plantaopro_test`; banco principal `plantaopro` **sem upgrade formal acumulado** (pendência externa) |
+| Migrations canônicas | até **v2351** em `database/migrations/`; referência `plantaopro_test` em v2351; banco principal `plantaopro` **atualizado para v2351 nesta rodada** (espelho da referência testada) — pendências restantes: apontar app/IIS + aceite do usuário (§7) + fiscal |
 | Build fresco (11/10, build10) | `dotnet build PlantaoPro.Tests.csproj -nodeReuse:false` → **0 erros** / 55 avisos (pré-existentes, sem novos bloqueantes); `PlantaoPro.Tests.dll` regenerado 11/10 08:11 |
 | Suíte | 1248 testes (1219 pós-R7-A1 + 29 R7E1). Execução v2 em curso nesta rodada: gate contratos+R7E1+R7A1 (≈47) + suíte completa ×3 (logs `Temp\opencode\v2-*.log`, resumo central `suite-final2-summary.txt`) |
 
@@ -245,17 +245,17 @@ Top 10 candidatos mapeados com consumidores (varredura completa no anexo):
 | Rotas sem duplicidade | ✅ investigado na C7-A0; monitorar novas rotas |
 | Permissão/negação por perfil | ✅ guard + motivos + testes dedicados |
 | Isolamento tenant | ✅ múltiplos e2e |
-| Migrations em ambiente descartável | ✅ v2339→v2344 em `plantaopro_test` |
+| Migrations em ambiente descartável | ✅ v2339→v2351 em `plantaopro_test`; banco principal `plantaopro` em **v2351** (espelho da referência) |
 | Persistência comprovada | ✅ suíte de integração (PostgreSQL real) |
 
-**GATE satisfatório localmente.** Homologação viva segue etapa separada (roteiro `r6a1b` §7, inclui agora o ciclo convite→aceite e o upgrade v2339→v2344 do banco principal).
+**GATE satisfatório localmente.** Homologação viva segue etapa separada (roteiro `r6a1b` §7): o **upgrade formal do banco principal para v2351 foi concluído nesta rodada** (espelho da referência testada — ver `r8-homologacao-upgrade-banco-principal-v2351.md`); restam **apontar app/IIS**, o **aceite do usuário (§7)** e as **credenciais fiscais P1/P2**. O ciclo convite→aceite segue no escopo da janela.
 
 ## 4. Ordem de cortes proposta (atualizada após esta auditoria)
 
 1. ~~**R7-OB** — passo "Preferências" (idioma) no onboarding~~ — ✅ **entregue nesta rodada** (v2345 + avaliador + 5 testes; doc `r7ob-onboarding-preferencias-idioma.md`; fecha a linha da matriz e o uso na jornada de §12.6). Wizard MNSOFT `NovoCliente` segue fora do escopo desta fatia.
 2. **R7-D** — varredura design/textos/i18n por jornada: escopo consolidado em `r7d0-varredura-design-textos-i18n.md` (6 fatias). **F1–F6 entregues nesta rodada** (sidebar/topbar, login/perfil, central de escala, jornada clínica Saúde360, onboarding/implantação e Admin 360 cotações/dashboard/resumo organizacional + convenção de `TempData["Success"/"Error"]` em `Adm360*`; docs `r7df1-navegacao-i18n.md`, `r7df2-login-perfil-i18n.md`, `r7df3-central-escala-i18n.md`, `r7df4-saude360-i18n.md`, `r7df5-onboarding-implantacao-i18n.md`, `r7df6-admin360-cotacoes-dashboard-tempdata-i18n.md`; suíte agora 1276 testes com gate 52; resx com 851 chaves por arquivo). Dívidas R7-D restantes (registradas no doc do F6): `_SuprimentosNav.cshtml` (~45 literais compartilhados), erros de formulário `ComFormError`, demais views sob `Views/Administrativo360/`.
 3. Cortes novos derivados dos achados §17–§30 (definidos após consolidação desta matriz; prioridade: itens classificados quebrado, depois ausente-alto-impacto).
-4. Externos/DECs: upgrade formal `plantaopro` v2339→v2344 + IIS; homologação viva; credenciais fiscais; semântica de `solicitado`; DECs de R6-A1b.
+4. Externos/DECs: ~~upgrade formal `plantaopro`~~ ✅ **concluído nesta rodada (v2351)** — restam **apontar app/IIS** + **aceite do usuário (§7)** + **credenciais fiscais P1/P2**; semântica de `solicitado`; DECs de R6-A1b.
 
 ## 5. Notas
 

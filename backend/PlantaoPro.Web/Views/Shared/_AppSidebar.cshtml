@@ -73,8 +73,8 @@
             @if (Can("RELATORIOS")) { <a class="nav-link-app @Active("Relatorios")" asp-controller="Relatorios" asp-action="Index"><app-icon name="Report" size="19" /><span>@UiText.L("Nav.Relatorios")</span></a> }
             @if (Can("MEDICOS")) { <a class="nav-link-app @Active("Medicos")" asp-controller="Medicos" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Profissionais")</span></a> }
             @if (Can("HOSPITAIS")) { <a class="nav-link-app @Active("Hospitais")" asp-controller="Hospitais" asp-action="Index"><app-icon name="Unit" size="19" /><span>@UiText.L("Nav.Unidades")</span></a> }
-            @if (Can("USUARIOS")) { <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Usuarios")</span></a> }
-            @if (Can("PERFIS")) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Perfis")</span></a> }
+            @if (Can("USUARIOS") && !isGlobalAdmin) { <a class="nav-link-app @Active("Usuarios")" asp-controller="Usuarios" asp-action="Index"><app-icon name="Coverage" size="19" /><span>@UiText.L("Nav.Usuarios")</span></a> }
+            @if (Can("PERFIS") && !isGlobalAdmin) { <a class="nav-link-app @Active("Perfis")" asp-controller="Perfis" asp-action="Index"><app-icon name="User" size="19" /><span>@UiText.L("Nav.Perfis")</span></a> }
             @if (Can("SEGURANCA")) { <a class="nav-link-app @Active("Permissoes")" asp-controller="Permissoes" asp-action="Matriz"><app-icon name="Security" size="19" /><span>@UiText.L("Nav.Permissoes")</span></a> }
             @if (Can("CONFIGURACOES")) { <a class="nav-link-app @Active("Configuracoes")" asp-controller="Configuracoes" asp-action="Index"><app-icon name="Settings" size="19" /><span>@UiText.L("Nav.Configuracoes")</span></a> }
         }

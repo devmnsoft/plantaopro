@@ -37,7 +37,7 @@ else
 <div class="mt-3 d-flex gap-2 flex-wrap">
 @foreach (var atalho in Model.Atalhos)
 {
-    <a class="btn btn-outline-primary" href="@(string.IsNullOrWhiteSpace(atalho.Url) ? Url.Action("Index", "Home") : atalho.Url)">@atalho.Texto</a>
+    <a class="btn btn-outline-primary" href="@(string.IsNullOrWhiteSpace(atalho.Url) ? Url.Action("Index", "Home") : atalho.Url)">@atalho.Titulo</a>
 }
 <a class="btn btn-primary" asp-controller="OperacaoInteligente" asp-action="Index">Ir para Operação Inteligente</a>
 </div>

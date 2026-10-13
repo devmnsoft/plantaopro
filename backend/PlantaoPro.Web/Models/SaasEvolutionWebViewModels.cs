@@ -149,7 +149,7 @@ public sealed class DashboardKpiWebViewModel
 
 public sealed class DashboardAtalhoWebViewModel
 {
-    public string Texto { get; set; } = string.Empty;
+    public string Titulo { get; set; } = string.Empty;
     public string Url { get; set; } = string.Empty;
     public string PerfilMinimo { get; set; } = string.Empty;
 }

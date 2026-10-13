@@ -4,6 +4,7 @@
     ViewData["Title"] = "Painel operacional";
     var dadosDisponiveis = ViewData["DashboardDataAvailable"] as bool? == true;
     var indicadores = dadosDisponiveis ? Model?.Indicadores : null;
+    var definicoesKpi = indicadores?.Definicoes ?? Enumerable.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
     var plantoes = (Model?.ProximosPlantoes ?? Enumerable.Empty<PlantaoPro.Web.Models.PlantaoResumoDto>()).OrderBy(x => x.DataInicio).ToArray();
     var pagamentos = (Model?.UltimosPagamentos ?? Enumerable.Empty<PagamentoResumoDto>()).ToArray();
     var notificacoes = (Model?.UltimasNotificacoes ?? Enumerable.Empty<NotificacaoDto>()).ToArray();
@@ -58,6 +59,21 @@
                 <article class="pp-kpi-card @(riscosCobertura.Any() ? "pp-kpi-card--danger" : "")"><span>Coberturas em risco</span><strong>@riscosCobertura.Length</strong><small>entre os plantões retornados</small></article>
                 <article class="pp-kpi-card"><span>Agenda de hoje</span><strong>@agendaHoje.Length</strong><small>eventos retornados</small></article>
             </div>
+            @* R8-B21 (§27): exibe as definições dos indicadores já retornadas pela API (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+            <details class="mt-3 pp-definicoes-kpi">
+                <summary class="fw-semibold">Como cada indicador é calculado <span class="text-muted small">(fórmula · fonte · período · fuso)</span></summary>
+                <div class="border rounded p-2 mt-2">
+                    <p class="small text-muted mb-2">@indicadores.TimeCriterion</p>
+                    @if (definicoesKpi.Any())
+                    {
+                        <ul class="mb-0 small">@foreach (var item in definicoesKpi) { <li><strong>@item.Label</strong>: @item.Definicao</li> }</ul>
+                    }
+                    else
+                    {
+                        <p class="small text-muted mb-0">Sem definições informadas pela fonte para os indicadores.</p>
+                    }
+                </div>
+            </details>
         }
     </section>
 

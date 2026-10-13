@@ -1,0 +1,10 @@
+@* Stub canônico dos relatórios ainda sem fonte de dados (mapa §29 item 4 / C7.2). Os 5 relatórios-stub
+   (Cobertura, Convites, ProdutividadeMedica, Sla, FaturamentoSaas) compartilham este único markup —
+   fonte única do placeholder de vazio e do botão de exportação bloqueado. O título é lido de
+   ViewData["Title"], definido por cada view antes de invocar o partial. Quando um relatório ganhar
+   fonte real, sua view substitui este partial. Contrato: R8B12StubRelatoriosEBiContratoTests. *@
+<partial name="_PageHeader" model='new PlantaoPro.Web.Models.PageHeaderViewModel(ViewData["Title"]?.ToString() ?? string.Empty, "Visão executiva e operacional com filtros, KPIs e tabela.", "bi-graph-up")' />
+<div class="alert alert-secondary"><i class="bi bi-funnel"></i> Utilize filtros por período, cliente e status para análises mais precisas.</div>
+<div class="pp-notice" role="note"><strong>Indicadores não disponíveis.</strong> Nenhum agregado foi retornado por uma fonte de dados para esta visão.</div>
+<div class="table-responsive"><table class="table table-striped"><thead><tr><th>Indicador</th><th>Valor</th></tr></thead><tbody><tr><td colspan="2">Sem dados no período selecionado.</td></tr></tbody></table></div>
+<button class="btn btn-outline-secondary" type="button" disabled title="Ação indisponível"><i class="bi bi-file-earmark-excel"></i> Baixar Excel</button>

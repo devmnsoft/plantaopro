@@ -36,8 +36,13 @@ img, svg, video, canvas { max-width: 100%; }
 body.pp-modal-open { overflow: hidden; }
 
 @media (max-width: 74.99rem) {
-  .pp-app-shell { grid-template-columns: 1fr; }
-  .pp-main-shell { grid-column: 1; }
+  /* v2.14.4-fix (r8): NÃO colapsar o shell para 1 coluna nesta faixa (≈992–1199px).
+     O modo mobile/off-canvas do menu lateral só entra em ≤~991px (clinical/responsive);
+     enquanto ele continua visível, o conteúdo precisa ficar na 2ª coluna, AO LADO do
+     rail. Forçar grid-template-columns:1fr + .pp-main-shell{grid-column:1} aqui empilhava
+     o conteúdo ABAIXO do menu lateral e afundava tudo numa faixa estreita à esquerda
+     (o menu "ficava atrás/abaixo" dos cards e tabelas — sobretudo nas telas largas do
+     Administrativo 360). Mantemos o shell em 2 colunas; o off-canvas cuida do mobile. */
   .pp-sidebar { width: min(19rem, calc(100vw - 2.5rem)); }
   .pp-topbar__actions > :is(.tenant-context-badge, .plan-usage-mini-card, .pp-live-context) { display: none !important; }
 }

@@ -228,13 +228,14 @@ public partial class Administrativo360Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> SalvarProduto(Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo = true, string? anvisaNumero = null, string anvisaAplicabilidade = "PENDENTE", bool anvisaEntradaManual = true, DateOnly? anvisaVigencia = null, string? anvisaJustificacao = null)
+    public async Task<IActionResult> SalvarProduto(Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal? precoCusto, bool ativo = true, string? anvisaNumero = null, string anvisaAplicabilidade = "PENDENTE", bool anvisaEntradaManual = true, DateOnly? anvisaVigencia = null, string? anvisaJustificacao = null, decimal? precoVenda = null)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
 
         // s6 (rodada 9): campos ANVISA encaminhados para validação no servidor (API).
-        var payload = new { Id = id, Sku = sku, Nome = nome, Unidade = unidade, CodigoBarras = codigoBarras, ControlaLote = controlaLote, ExigeInspecao = exigeInspecao, PrecoCusto = precoCusto, Ativo = ativo, AnvisaNumero = anvisaNumero, AnvisaAplicabilidade = anvisaAplicabilidade, AnvisaEntradaManual = anvisaEntradaManual, AnvisaVigencia = anvisaVigencia, AnvisaJustificacao = anvisaJustificacao };
+        // s7 (rodada 9): custo/venda podem ser nulos (ausente ≠ zero); derivadas calculadas no servidor.
+        var payload = new { Id = id, Sku = sku, Nome = nome, Unidade = unidade, CodigoBarras = codigoBarras, ControlaLote = controlaLote, ExigeInspecao = exigeInspecao, PrecoCusto = precoCusto, Ativo = ativo, AnvisaNumero = anvisaNumero, AnvisaAplicabilidade = anvisaAplicabilidade, AnvisaEntradaManual = anvisaEntradaManual, AnvisaVigencia = anvisaVigencia, AnvisaJustificacao = anvisaJustificacao, PrecoVenda = precoVenda };
         var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/produtos", payload);
         if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
             TempData["Success"] = UiText.L("Adm360.Cadastros.OkProductSaved");

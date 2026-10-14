@@ -169,6 +169,7 @@
                         <th style="min-width: 250px;">Descrição do Produto</th>
                         <th>Unidade</th>
                         <th>Preço Custo (R$)</th>
+                        <th>Preço Venda / Precificação</th>
                         <th>Rastreabilidade</th>
                         <th>ANVISA</th>
                         <th>Status</th>
@@ -179,7 +180,7 @@
                     @if (Model.Produtos.Count == 0)
                     {
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <i class="bi bi-box-seam fs-2 d-block mb-2 text-secondary"></i>
                                 Nenhum produto encontrado com os filtros aplicados.
                             </td>
@@ -205,7 +206,33 @@
                                     <span class="badge bg-secondary-subtle text-secondary-emphasis">@p.Unidade</span>
                                 </td>
                                 <td class="font-monospace fw-semibold">
-                                    @p.PrecoCusto.ToString("N2", new System.Globalization.CultureInfo("pt-BR"))
+                                    @if (p.PrecoCusto.HasValue)
+                                    {
+                                        @p.PrecoCusto.Value.ToString("N2", new System.Globalization.CultureInfo("pt-BR"))
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" title="custo não informado (ausente — não tratado como zero)">—</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (p.PrecoVenda.HasValue)
+                                    {
+                                        <div class="font-monospace fw-semibold">@p.PrecoVenda.Value.ToString("N2", new System.Globalization.CultureInfo("pt-BR"))</div>
+                                        <div class="small @(p.MargemPercentual.HasValue && p.MargemPercentual.Value < 0 ? "text-danger fw-semibold" : "text-muted")">
+                                            Lucro unit: @(p.LucroBrutoUnitario?.ToString("N2", new System.Globalization.CultureInfo("pt-BR")) ?? "—") ·
+                                            M vend.: @(p.MargemPercentual?.ToString("N2", new System.Globalization.CultureInfo("pt-BR")) ?? "não calc.")% ·
+                                            Markup: @(p.MarkupPercentual?.ToString("N2", new System.Globalization.CultureInfo("pt-BR")) ?? "não calc.")%
+                                        </div>
+                                        @if (p.MargemPercentual.HasValue && p.MargemPercentual.Value < 0)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">margem negativa</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted" title="preço de venda padrão não definido">—</span>
+                                    }
                                 </td>
                                 <td>
                                     @if (p.ControlaLote)
@@ -259,7 +286,7 @@
                                         <i class="bi bi-boxes"></i>
                                     </a>
                                     <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" type="button"
-                                            onclick="editarProduto('@p.Id', '@p.Sku', '@p.Nome', '@p.Unidade', '@p.CodigoBarras', @p.ControlaLote.ToString().ToLower(), @p.ExigeInspecao.ToString().ToLower(), @p.PrecoCusto.ToString(System.Globalization.CultureInfo.InvariantCulture), @p.Ativo.ToString().ToLower(), '@p.AnvisaNumero', '@p.AnvisaAplicabilidade', '@anvisaVigenciaStr', '@p.AnvisaJustificacao')">
+                                            onclick="editarProduto('@p.Id', '@p.Sku', '@p.Nome', '@p.Unidade', '@p.CodigoBarras', @p.ControlaLote.ToString().ToLower(), @p.ExigeInspecao.ToString().ToLower(), @((p.PrecoCusto?.ToString(System.Globalization.CultureInfo.InvariantCulture)) ?? ""), @p.Ativo.ToString().ToLower(), '@p.AnvisaNumero', '@p.AnvisaAplicabilidade', '@anvisaVigenciaStr', '@p.AnvisaJustificacao', @((p.PrecoVenda?.ToString(System.Globalization.CultureInfo.InvariantCulture)) ?? ""))">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form method="post" asp-action="AlternarStatusProduto" class="d-inline" onsubmit="return desabilitarAoEnviar(this);">
@@ -341,16 +368,23 @@
                         <input type="text" name="Nome" id="produtoNome" class="form-control form-control-sm" required maxlength="200" placeholder="Ex.: Stent Coronário Farmacológico de Sirolimus" />
                     </div>
 
-                    <div class="row g-2 mb-3">
+                    <div class="row g-2 mb-2">
                         <div class="col-md-6">
                             <label for="produtoPrecoCusto" class="form-label small fw-bold">Preço de Custo (R$) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" name="PrecoCusto" id="produtoPrecoCusto" class="form-control form-control-sm font-monospace" required placeholder="0.00" />
+                            <input type="number" step="0.01" min="0" name="PrecoCusto" id="produtoPrecoCusto" class="form-control form-control-sm font-monospace" required placeholder="0.00" oninput="recalcularPrecos()" />
                         </div>
                         <div class="col-md-6">
                             <label for="produtoCodigoBarras" class="form-label small fw-bold">Código de Barras (EAN)</label>
                             <input type="text" name="CodigoBarras" id="produtoCodigoBarras" class="form-control form-control-sm font-monospace" maxlength="60" placeholder="Opcional" />
                         </div>
                     </div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-md-6">
+                            <label for="produtoPrecoVenda" class="form-label small fw-bold">Preço de Venda padrão (R$)</label>
+                            <input type="number" step="0.01" min="0" name="PrecoVenda" id="produtoPrecoVenda" class="form-control form-control-sm font-monospace" placeholder="Opcional" oninput="recalcularPrecos()" />
+                        </div>
+                    </div>
+                    <div class="small text-muted mb-3" id="previewPrecos" aria-live="polite"></div>
 
                     <div class="mb-3 p-3 bg-light rounded-3 border">
                         <span class="small fw-bold d-block mb-2 text-dark">Rastreabilidade e Qualidade</span>
@@ -428,16 +462,18 @@
         document.getElementById('produtoAnvisaVigencia').value = '';
         document.getElementById('produtoAnvisaJustificacao').value = '';
         document.getElementById('produtoAtivo').checked = true;
+        document.getElementById('produtoPrecoVenda').value = '';
+        recalcularPrecos();
         new bootstrap.Modal(document.getElementById('modalProduto')).show();
     }
 
-    function editarProduto(id, sku, nome, unidade, codigoBarras, controlaLote, exigeInspecao, precoCusto, ativo, anvisaNumero, anvisaAplicabilidade, anvisaVigencia, anvisaJustificacao) {
+    function editarProduto(id, sku, nome, unidade, codigoBarras, controlaLote, exigeInspecao, precoCusto, ativo, anvisaNumero, anvisaAplicabilidade, anvisaVigencia, anvisaJustificacao, precoVenda) {
         document.getElementById('modalProdutoLabel').innerText = 'Editar Produto';
         document.getElementById('produtoId').value = id;
         document.getElementById('produtoSku').value = sku;
         document.getElementById('produtoNome').value = nome;
         document.getElementById('produtoUnidade').value = unidade || 'UN';
-        document.getElementById('produtoPrecoCusto').value = precoCusto;
+        document.getElementById('produtoPrecoCusto').value = precoCusto || '0.00';
         document.getElementById('produtoCodigoBarras').value = codigoBarras || '';
         document.getElementById('produtoControlaLote').checked = controlaLote;
         document.getElementById('produtoExigeInspecao').checked = exigeInspecao;
@@ -446,7 +482,30 @@
         document.getElementById('produtoAnvisaVigencia').value = anvisaVigencia || '';
         document.getElementById('produtoAnvisaJustificacao').value = anvisaJustificacao || '';
         document.getElementById('produtoAtivo').checked = ativo;
+        document.getElementById('produtoPrecoVenda').value = precoVenda || '';
+        recalcularPrecos();
         new bootstrap.Modal(document.getElementById('modalProduto')).show();
+    }
+
+    // s7 (rodada 9): prévia LOCAL apenas para usabilidade — o cálculo oficial das derivadas
+    // (lucro unitário, margem sobre venda %, markup sobre custo %) é recalculado no SERVIDOR.
+    // Mesmas regras: ausente ≠ zero; denominador zero => "não calculável"; negativo é evidenciado.
+    function recalcularPrecos() {
+        var el = document.getElementById('previewPrecos');
+        if (!el) { return; }
+        var c = parseFloat(document.getElementById('produtoPrecoCusto').value);
+        var v = parseFloat(document.getElementById('produtoPrecoVenda').value);
+        var fmt = function (n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+        if (isNaN(v)) { el.textContent = 'Informe o preço de venda para calcular a precificação.'; return; }
+        if (isNaN(c)) { el.textContent = 'Custo ausente — margem/markup não calculáveis (ausente não é tratado como zero).'; return; }
+        var lucro = Math.round((v - c) * 100) / 100;
+        var m = v > 0 ? Math.round((v - c) / v * 10000) / 100 : null;
+        var mu = c > 0 ? Math.round((v - c) / c * 10000) / 100 : null;
+        el.textContent = 'Lucro unitário: R$ ' + fmt(lucro)
+            + ' · Margem sobre venda: ' + (m === null ? 'não calculável (venda zero)' : fmt(m) + '%')
+            + ' · Markup sobre custo: ' + (mu === null ? 'não calculável (custo zero)' : fmt(mu) + '%')
+            + (m !== null && m < 0 ? ' · MARGEM NEGATIVA' : '')
+            + ' — prévia local; o cálculo oficial é recalculado no servidor ao salvar.';
     }
 
     function desabilitarAoEnviar(form) {

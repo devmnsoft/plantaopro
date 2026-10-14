@@ -918,7 +918,19 @@ public sealed class ContaFinanceiraFormViewModel
 // Cadastros e Lookups Administrativo 360
 public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm, bool EhHospital = false, bool EhPagador = false, bool EhCliente = false);
 public sealed record Medico360ViewModel(Guid Id, string Nome, string? Documento, bool Ativo);
-public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null);
+public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal? PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null, decimal? PrecoVenda = null)
+{
+    // Espelho Web do registro de aplicação (mesmas fórmulas e mesmas regras do s7).
+    public decimal? LucroBrutoUnitario => PrecoVenda.HasValue && PrecoCusto.HasValue
+        ? Math.Round(PrecoVenda.Value - PrecoCusto.Value, 2)
+        : null;
+    public decimal? MargemPercentual => LucroBrutoUnitario.HasValue && PrecoVenda!.Value > 0m
+        ? Math.Round(LucroBrutoUnitario!.Value / PrecoVenda!.Value * 100m, 2)
+        : null;
+    public decimal? MarkupPercentual => LucroBrutoUnitario.HasValue && PrecoCusto!.Value > 0m
+        ? Math.Round(LucroBrutoUnitario!.Value / PrecoCusto!.Value * 100m, 2)
+        : null;
+}
 public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
 public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao, decimal? CustoUnitario = null);
 

@@ -1338,6 +1338,17 @@
       "status": "active",
       "transactional": true,
       "installRequired": false
+    },
+    {
+      "version": "2026_10_v2353_r9d_precificacao_preco_venda",
+      "source": "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql",
+      "checksum": "4580ee72997a604d765b78cdefd05d40e268679c738275e0ca0786c802be7283",
+      "dependsOn": [
+        "2026_10_v2352_r9c_cadastro_anvisa_produtos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
     }
   ]
 }

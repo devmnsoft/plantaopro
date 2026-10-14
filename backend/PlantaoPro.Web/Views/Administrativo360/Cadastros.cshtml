@@ -180,7 +180,7 @@
                                         }
                                     </td>
                                     <td class="text-end font-monospace text-light">
-                                        @prod.PrecoCusto.ToString("C")
+                                        @(prod.PrecoCusto.HasValue ? prod.PrecoCusto.Value.ToString("C") : "—")
                                     </td>
                                     <td>
                                         @if (prod.Ativo)

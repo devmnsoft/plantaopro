@@ -151,12 +151,13 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         return (await cn.QueryAsync<Produto360>(new CommandDefinition(@"
             SELECT id, sku, nome, unidade, codigo_barras AS CodigoBarras,
                    controla_lote AS ControlaLote, exige_inspecao AS ExigeInspecao,
-                   COALESCE(preco_custo, 0) AS PrecoCusto, ativo,
+                   preco_custo AS PrecoCusto, ativo,
                    anvisa_numero AS AnvisaNumero,
                    coalesce(anvisa_aplicabilidade, 'PENDENTE') AS AnvisaAplicabilidade,
                    coalesce(anvisa_entrada_manual, true) AS AnvisaEntradaManual,
                    anvisa_vigencia AS AnvisaVigencia,
-                   anvisa_justificacao AS AnvisaJustificacao
+                   anvisa_justificacao AS AnvisaJustificacao,
+                   preco_venda AS PrecoVenda
             FROM plantaopro.adm360_produtos
             WHERE tenant_id = @tenantId
               AND (@apenasAtivos = false OR ativo = true)
@@ -167,11 +168,14 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             new { tenantId, busca, apenasAtivos, apenasInativos, limite, offset = (pagina - 1) * limite }, cancellationToken: ct))).AsList();
     }
 
-    public async Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct, string? anvisaNumero = null, string anvisaAplicabilidade = "PENDENTE", bool anvisaEntradaManual = true, DateOnly? anvisaVigencia = null, string? anvisaJustificacao = null)
+    public async Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal? precoCusto, bool ativo, CancellationToken ct, string? anvisaNumero = null, string anvisaAplicabilidade = "PENDENTE", bool anvisaEntradaManual = true, DateOnly? anvisaVigencia = null, string? anvisaJustificacao = null, decimal? precoVenda = null)
     {
         if (string.IsNullOrWhiteSpace(sku)) throw new ArgumentException("SKU é obrigatório.");
         if (string.IsNullOrWhiteSpace(nome)) throw new ArgumentException("Nome do produto é obrigatório.");
-        if (precoCusto < 0) throw new ArgumentOutOfRangeException(nameof(precoCusto), "O preço de custo não pode ser negativo.");
+        // s7 (rodada 9): custo e venda aceitam NULO (ausente ≠ zero) — só rejeita valor negativo.
+        // As derivadas (lucro/margem/markup) são calculadas no registro Produto360 (servidor).
+        if (precoCusto.HasValue && precoCusto.Value < 0) throw new ArgumentOutOfRangeException(nameof(precoCusto), "O preço de custo não pode ser negativo.");
+        if (precoVenda.HasValue && precoVenda.Value < 0) throw new ArgumentOutOfRangeException(nameof(precoVenda), "O preço de venda não pode ser negativo.");
 
         // s6 (rodada 9): regulação ANVISA. O número é TEXTO (preserva zeros à esquerda — nunca vira
         // numérico), a aplicabilidade é tri-estável, a entrada é manual (não há busca simulada),
@@ -211,9 +215,9 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             try
             {
                 await cn.ExecuteAsync(new CommandDefinition(@"
-                    INSERT INTO plantaopro.adm360_produtos (id, tenant_id, sku, nome, unidade, codigo_barras, controla_lote, exige_inspecao, preco_custo, ativo, anvisa_numero, anvisa_aplicabilidade, anvisa_entrada_manual, anvisa_vigencia, anvisa_justificacao, created_at)
-                    VALUES (@novoId, @tenantId, @normSku, @normNome, @normUnidade, @normBarras, @controlaLote, @exigeInspecao, @precoCusto, @ativo, @normAnvisaNumero, @normAnvisaAplic, @anvisaEntradaManual, @anvisaVigencia, @normAnvisaJustif, now())",
-                    new { novoId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo, normAnvisaNumero, normAnvisaAplic, anvisaEntradaManual, anvisaVigencia, normAnvisaJustif }, cancellationToken: ct));
+                    INSERT INTO plantaopro.adm360_produtos (id, tenant_id, sku, nome, unidade, codigo_barras, controla_lote, exige_inspecao, preco_custo, ativo, anvisa_numero, anvisa_aplicabilidade, anvisa_entrada_manual, anvisa_vigencia, anvisa_justificacao, preco_venda, created_at)
+                    VALUES (@novoId, @tenantId, @normSku, @normNome, @normUnidade, @normBarras, @controlaLote, @exigeInspecao, @precoCusto, @ativo, @normAnvisaNumero, @normAnvisaAplic, @anvisaEntradaManual, @anvisaVigencia, @normAnvisaJustif, @precoVenda, now())",
+                    new { novoId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo, normAnvisaNumero, normAnvisaAplic, anvisaEntradaManual, anvisaVigencia, normAnvisaJustif, precoVenda }, cancellationToken: ct));
             }
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
@@ -279,9 +283,10 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
                     anvisa_aplicabilidade = @normAnvisaAplic,
                     anvisa_entrada_manual = @anvisaEntradaManual,
                     anvisa_vigencia = @anvisaVigencia,
-                    anvisa_justificacao = @normAnvisaJustif
+                    anvisa_justificacao = @normAnvisaJustif,
+                    preco_venda = @precoVenda
                 WHERE id = @targetId AND tenant_id = @tenantId",
-                new { targetId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo, normAnvisaNumero, normAnvisaAplic, anvisaEntradaManual, anvisaVigencia, normAnvisaJustif }, cancellationToken: ct));
+                new { targetId, tenantId, normSku, normNome, normUnidade, normBarras, controlaLote, exigeInspecao, precoCusto, ativo, normAnvisaNumero, normAnvisaAplic, anvisaEntradaManual, anvisaVigencia, normAnvisaJustif, precoVenda }, cancellationToken: ct));
 
             if (affected == 0)
                 throw new KeyNotFoundException("Produto não encontrado ou não pertence a este cliente.");
@@ -477,12 +482,13 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
         var produtos = (await cn.QueryAsync<Produto360>(new CommandDefinition(@"
             SELECT id, sku, nome, unidade, codigo_barras AS CodigoBarras,
                    controla_lote AS ControlaLote, exige_inspecao AS ExigeInspecao,
-                   COALESCE(preco_custo, 0) AS PrecoCusto, ativo,
+                   preco_custo AS PrecoCusto, ativo,
                    anvisa_numero AS AnvisaNumero,
                    coalesce(anvisa_aplicabilidade, 'PENDENTE') AS AnvisaAplicabilidade,
                    coalesce(anvisa_entrada_manual, true) AS AnvisaEntradaManual,
                    anvisa_vigencia AS AnvisaVigencia,
-                   anvisa_justificacao AS AnvisaJustificacao
+                   anvisa_justificacao AS AnvisaJustificacao,
+                   preco_venda AS PrecoVenda
             FROM plantaopro.adm360_produtos
             WHERE tenant_id = @tenantId AND ativo = true
             ORDER BY nome

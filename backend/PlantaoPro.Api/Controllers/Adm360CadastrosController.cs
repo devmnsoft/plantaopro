@@ -94,7 +94,7 @@ public sealed class Adm360CadastrosController : ControllerBase
         return Ok(lista);
     }
 
-    public sealed record SalvarProdutoRequest(Guid? Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null);
+    public sealed record SalvarProdutoRequest(Guid? Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal? PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null, decimal? PrecoVenda = null);
 
     [HttpPost("produtos"), Authorize(Policy = "Adm360.MapearProdutos")]
     public async Task<IActionResult> SalvarProduto([FromBody] SalvarProdutoRequest req, CancellationToken ct = default)
@@ -103,7 +103,8 @@ public sealed class Adm360CadastrosController : ControllerBase
         try
         {
             // s6 (rodada 9): campos ANVISA (número texto, aplicabilidade, entrada manual, vigência regulatória, justificação).
-            var id = await repository.SalvarProdutoAsync(tenant, req.Id, req.Sku, req.Nome, req.Unidade, req.CodigoBarras, req.ControlaLote, req.ExigeInspecao, req.PrecoCusto, req.Ativo, ct, req.AnvisaNumero, req.AnvisaAplicabilidade, req.AnvisaEntradaManual, req.AnvisaVigencia, req.AnvisaJustificacao);
+            // s7 (rodada 9): PrecoVenda padrão; custo e venda aceitam null (ausente ≠ zero) — derivadas no servidor.
+            var id = await repository.SalvarProdutoAsync(tenant, req.Id, req.Sku, req.Nome, req.Unidade, req.CodigoBarras, req.ControlaLote, req.ExigeInspecao, req.PrecoCusto, req.Ativo, ct, req.AnvisaNumero, req.AnvisaAplicabilidade, req.AnvisaEntradaManual, req.AnvisaVigencia, req.AnvisaJustificacao, req.PrecoVenda);
             return Ok(new { id });
         }
         catch (KeyNotFoundException ex)

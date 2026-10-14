@@ -108,7 +108,7 @@
                                                 <option value="">-- Selecione o Produto --</option>
                                                 @foreach (var prod in Model.ProdutosDisponiveis)
                                                 {
-                                                    <option value="@prod.Id" data-preco="@prod.PrecoCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">@prod.Sku - @prod.Nome (@prod.Unidade)</option>
+                                                    <option value="@prod.Id" data-preco="@prod.PrecoCusto?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) ?? """>@prod.Sku - @prod.Nome (@prod.Unidade)</option>
                                                 }
                                             </select>
                                         </td>
@@ -165,7 +165,7 @@
     <option value="">-- Selecione o Produto --</option>
     @foreach (var prod in Model.ProdutosDisponiveis)
     {
-        <option value="@prod.Id" data-preco="@prod.PrecoCusto.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)">@prod.Sku - @prod.Nome (@prod.Unidade)</option>
+        <option value="@prod.Id" data-preco="@prod.PrecoCusto?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture) ?? """>@prod.Sku - @prod.Nome (@prod.Unidade)</option>
     }
 </template>
 

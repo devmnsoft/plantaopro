@@ -663,7 +663,7 @@ public sealed record Parceiro360(
 public sealed record Medico360(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
-public sealed record Lote360(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
+public sealed record Lote360(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao, decimal? CustoUnitario = null);
 public sealed record Lookups360Bundle(
     IReadOnlyList<Parceiro360> Parceiros,
     IReadOnlyList<Produto360> Produtos,
@@ -694,6 +694,9 @@ public interface ICadastrosRepository
     Task<Guid> SalvarLocalAsync(Guid tenantId, Guid? id, string codigo, string nome, string tipo, bool ativo, CancellationToken ct);
 
     Task<IReadOnlyList<Lote360>> ListarLotesAsync(Guid tenantId, Guid? produtoId, CancellationToken ct);
+    // s5 (rodada 9): registro de lote a partir da tela de produto. Não cria movimentação:
+    // o cadastro do lote não ajusta estoque automaticamente (quantidade só por movimento c/ origem).
+    Task<Guid> SalvarLoteAsync(Guid tenantId, Guid produtoId, string codigo, DateOnly? validade, decimal? custoUnitario, CancellationToken ct);
     Task<Lookups360Bundle> ObterLookupsAsync(Guid tenantId, CancellationToken ct);
 }
 

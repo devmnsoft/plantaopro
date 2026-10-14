@@ -174,4 +174,31 @@ public sealed class Adm360CadastrosController : ControllerBase
         var lista = await repository.ListarLotesAsync(tenant, produtoId, ct);
         return Ok(lista);
     }
+
+    public sealed record SalvarLoteRequest(Guid ProdutoId, string Codigo, DateOnly? Validade, decimal? CustoUnitario);
+
+    // s5 (rodada 9): registro de lote vinculado ao produto. Não cria movimentação de estoque
+    // (registro de lote != entrada automática); quantidade só entra por movimento com origem.
+    [HttpPost("lotes"), Authorize(Policy = "Adm360.MapearProdutos")]
+    public async Task<IActionResult> SalvarLote([FromBody] SalvarLoteRequest req, CancellationToken ct)
+    {
+        var (tenant, _) = Context();
+        try
+        {
+            var id = await repository.SalvarLoteAsync(tenant, req.ProdutoId, req.Codigo, req.Validade, req.CustoUnitario, ct);
+            return Ok(new { id });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

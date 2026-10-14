@@ -56,7 +56,7 @@ public partial class Administrativo360Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Produtos(string? busca, bool? status, int? pagina)
+    public async Task<IActionResult> Produtos(string? busca, bool? status, int? pagina, Guid? produtoId)
     {
         using var client = CreateApiClient();
         if (!AddBearerToken(client)) return HandleUnauthorized();
@@ -74,7 +74,7 @@ public partial class Administrativo360Controller
         var resp = await ReadApiListResponseAsync<Produto360ViewModel>(client, "api/administrativo360/cadastros/produtos?" + string.Join("&", qs));
         var itens = resp.Data.ToList();
 
-        return View(new ProdutosIndexViewModel
+        var vm = new ProdutosIndexViewModel
         {
             Produtos = itens,
             Busca = busca,
@@ -82,7 +82,35 @@ public partial class Administrativo360Controller
             Pagina = paginaAtual,
             TemProximaPagina = itens.Count >= 100,
             Erro = resp.Error
-        });
+        };
+
+        // s5 (rodada 9): seção de lotes vinculados quando um produto está em contexto
+        // (registro de lote não ajusta estoque; quantidade só por movimento com origem).
+        if (produtoId.HasValue && produtoId.Value != Guid.Empty)
+        {
+            vm.ProdutoId = produtoId.Value;
+            var contexto = itens.FirstOrDefault(x => x.Id == produtoId.Value);
+            var respLotes = await ReadApiListResponseAsync<Lote360ViewModel>(client, "api/administrativo360/cadastros/lotes?produtoId=" + produtoId.Value);
+            vm.Lotes = respLotes.Data.ToList();
+            if (contexto != null)
+            {
+                vm.ProdutoSku = contexto.Sku;
+                vm.ProdutoNome = contexto.Nome;
+                vm.ProdutoControlaLote = contexto.ControlaLote;
+            }
+            else if (vm.Lotes.Count > 0)
+            {
+                vm.ProdutoNome = vm.Lotes[0].ProdutoNome;
+            }
+            else
+            {
+                vm.ProdutoNome = produtoId.Value.ToString();
+            }
+            if (string.IsNullOrWhiteSpace(vm.Erro) && !string.IsNullOrWhiteSpace(respLotes.Error))
+                vm.Erro = respLotes.Error;
+        }
+
+        return View(vm);
     }
 
     [HttpGet]
@@ -236,6 +264,23 @@ public partial class Administrativo360Controller
             return RedirectToAction(nameof(Produtos));
 
         return RedirectToAction(nameof(Cadastros), new { aba = "produtos" });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> SalvarLote(Guid produtoId, string codigo, DateOnly? validade, decimal? custoUnitario)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var payload = new { ProdutoId = produtoId, Codigo = codigo, Validade = validade, CustoUnitario = custoUnitario };
+        var resp = await SendApiAsync<object, System.Text.Json.JsonElement>(client, HttpMethod.Post, "api/administrativo360/cadastros/lotes", payload);
+        if (resp.StatusCode is System.Net.HttpStatusCode.OK or System.Net.HttpStatusCode.Created)
+            TempData["Success"] = UiText.L("Adm360.Cadastros.OkLoteSaved");
+        else
+            TempData["Error"] = resp.Error ?? UiText.L("Adm360.Cadastros.FallbackSaveLote");
+
+        // Volta mantendo o contexto do produto (seção de lotes atualizada).
+        return RedirectToAction(nameof(Produtos), new { produtoId });
     }
 
     [HttpPost, ValidateAntiForgeryToken]

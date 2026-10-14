@@ -920,7 +920,7 @@ public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Document
 public sealed record Medico360ViewModel(Guid Id, string Nome, string? Documento, bool Ativo);
 public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
 public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
-public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao);
+public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao, decimal? CustoUnitario = null);
 
 public sealed class CadastrosIndexViewModel
 {
@@ -951,7 +951,14 @@ public sealed class ProdutosIndexViewModel
     public bool ApenasAtivos { get; init; }
     public int Pagina { get; init; } = 1;
     public bool TemProximaPagina { get; init; }
-    public string? Erro { get; init; }
+    public string? Erro { get; set; }
+
+    // s5 (rodada 9): contexto de produto para a seção de lotes vinculados.
+    public Guid? ProdutoId { get; set; }
+    public string? ProdutoSku { get; set; }
+    public string? ProdutoNome { get; set; }
+    public bool? ProdutoControlaLote { get; set; }
+    public IReadOnlyList<Lote360ViewModel> Lotes { get; set; } = Array.Empty<Lote360ViewModel>();
 }
 
 public sealed class LocaisIndexViewModel

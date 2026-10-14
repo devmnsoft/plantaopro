@@ -398,13 +398,43 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
     {
         await using var cn = Connection();
         return (await cn.QueryAsync<Lote360>(new CommandDefinition(@"
-            SELECT l.id, l.produto_id AS ProdutoId, p.nome AS ProdutoNome, l.codigo, l.validade, l.fabricacao
+            SELECT l.id, l.produto_id AS ProdutoId, p.nome AS ProdutoNome, l.codigo, l.validade, l.fabricacao,
+                   l.custo_unitario AS CustoUnitario
             FROM plantaopro.adm360_lotes l
             JOIN plantaopro.adm360_produtos p ON p.id = l.produto_id AND p.tenant_id = l.tenant_id
             WHERE l.tenant_id = @tenantId
               AND (@produtoId::uuid IS NULL OR l.produto_id = @produtoId::uuid)
             ORDER BY l.validade NULLS LAST, l.codigo",
             new { tenantId, produtoId }, cancellationToken: ct))).AsList();
+    }
+
+    // s5 (rodada 9): registro de lote pela tela de produto, reutilizando a identidade e a
+    // semântica de preenchimento do módulo de compras (mesma unique + COALESCE). Não cria
+    // movimentação de estoque: registrar lote não é entrada automática — a quantidade só entra
+    // por movimento com origem em adm360_movimentos (recebimento, inventário ou ajuste).
+    public async Task<Guid> SalvarLoteAsync(Guid tenantId, Guid produtoId, string codigo, DateOnly? validade, decimal? custoUnitario, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(codigo)) throw new ArgumentException("Código do lote é obrigatório.");
+        if (!validade.HasValue) throw new ArgumentException("Data de validade do lote é obrigatória.");
+        if (custoUnitario.HasValue && custoUnitario.Value < 0m) throw new ArgumentException("O custo unitário do lote não pode ser negativo.");
+
+        await using var cn = Connection();
+        var controla = await cn.QueryFirstOrDefaultAsync<bool?>(new CommandDefinition(@"
+            SELECT controla_lote
+            FROM plantaopro.adm360_produtos
+            WHERE id = @produtoId AND tenant_id = @tenantId",
+            new { tenantId, produtoId }, cancellationToken: ct));
+        if (controla is null) throw new KeyNotFoundException("Produto não encontrado neste cliente.");
+        if (!controla.Value) throw new InvalidOperationException("Este produto não tem controle de lote habilitado. Ative 'Exige controle de Lote e Validade' no cadastro do produto.");
+
+        return await cn.ExecuteScalarAsync<Guid>(new CommandDefinition(@"
+            INSERT INTO plantaopro.adm360_lotes(id, tenant_id, produto_id, codigo, validade, custo_unitario)
+            VALUES(gen_random_uuid(), @tenantId, @produtoId, @codigo, @validade, @custoUnitario)
+            ON CONFLICT(tenant_id, produto_id, codigo) DO UPDATE
+            SET validade = COALESCE(plantaopro.adm360_lotes.validade, excluded.validade),
+                custo_unitario = COALESCE(plantaopro.adm360_lotes.custo_unitario, excluded.custo_unitario)
+            RETURNING id",
+            new { tenantId, produtoId, codigo = codigo.Trim(), validade = validade.Value, custoUnitario = custoUnitario }, cancellationToken: ct));
     }
 
     public async Task<Lookups360Bundle> ObterLookupsAsync(Guid tenantId, CancellationToken ct)
@@ -440,7 +470,8 @@ public sealed class CadastrosRepository : Adm360Repository, ICadastrosRepository
             new { tenantId }, cancellationToken: ct))).AsList();
 
         var lotes = (await cn.QueryAsync<Lote360>(new CommandDefinition(@"
-            SELECT l.id, l.produto_id AS ProdutoId, p.nome AS ProdutoNome, l.codigo, l.validade, l.fabricacao
+            SELECT l.id, l.produto_id AS ProdutoId, p.nome AS ProdutoNome, l.codigo, l.validade, l.fabricacao,
+                   l.custo_unitario AS CustoUnitario
             FROM plantaopro.adm360_lotes l
             JOIN plantaopro.adm360_produtos p ON p.id = l.produto_id AND p.tenant_id = l.tenant_id
             WHERE l.tenant_id = @tenantId

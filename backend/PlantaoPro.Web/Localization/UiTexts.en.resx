@@ -2575,4 +2575,10 @@
   <data name="Adm360.Estoque.FallbackValueVoucherSaleError" xml:space="preserve">
     <value>The voucher was valued, but an error occurred while generating the sale and titles.</value>
   </data>
+  <data name="Adm360.Cadastros.OkLoteSaved" xml:space="preserve">
+    <value>Lot registered successfully.</value>
+  </data>
+  <data name="Adm360.Cadastros.FallbackSaveLote" xml:space="preserve">
+    <value>Failed to register the lot.</value>
+  </data>
 </root>

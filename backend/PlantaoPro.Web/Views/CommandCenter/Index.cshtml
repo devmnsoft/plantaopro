@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Command Center";
     var isGlobal = ViewBag.IsGlobal as bool? == true;
+    var definicoesCC = Model.Summary?.Definicoes ?? Array.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
 }
 <main class="command-center">
     <header class="cc-hero">
@@ -78,6 +79,19 @@
                 <article><span>Financeiro</span><strong>@Model.Summary.FinancialPending</strong><small>pendências associadas</small></article>
                 <article><span>Alertas</span><strong>@Model.Summary.CriticalNotifications</strong><small>notificações críticas</small></article>
             </section>
+            @* R8-B23 (§27): exibe as definições fiéis ao SQL dos indicadores operacionais (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+            <details class="cc-definicoes">
+                <summary class="fw-semibold small">Como cada indicador é calculado (fórmula · fonte · período · fuso)</summary>
+                <p class="small text-muted mb-1">@Model.Summary.TimeCriterion</p>
+                @if (definicoesCC.Count > 0)
+                {
+                    <ul class="small mb-0">@foreach (var item in definicoesCC) { <li><strong>@item.Label</strong>: @item.Definicao</li> }</ul>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">Sem definições informadas pela fonte para os indicadores.</p>
+                }
+            </details>
         }
         <section class="cc-panel">
             <div class="cc-heading">

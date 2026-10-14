@@ -21,7 +21,13 @@ public sealed record CommandCenterSummary(
     long PendingReplacements,
     long FinancialPending,
     long CriticalNotifications,
-    PlatformHealthSummary? PlatformHealth = null);
+    PlatformHealthSummary? PlatformHealth = null)
+{
+    /// <summary>R8-B23 (§27): definições fiéis ao SQL dos indicadores operacionais (populadas em GetAsync).</summary>
+    public IReadOnlyList<KpiDefinicao>? Definicoes { get; init; }
+    /// <summary>R8-B23 (§27): critério de tempo/escopo aplicado (período p/ plantões + estado atual do tenant; fuso do servidor).</summary>
+    public string TimeCriterion { get; init; } = "";
+}
 
 public sealed record CoverageItem(
     Guid Id,
@@ -168,7 +174,7 @@ public sealed class ManagerCommandCenterService
                 cancellationToken: ct);
 
             using var grid = await connection.QueryMultipleAsync(command);
-            var summary = await grid.ReadSingleAsync<CommandCenterSummary>();
+            var summary = (await grid.ReadSingleAsync<CommandCenterSummary>()) with { Definicoes = Definicoes(), TimeCriterion = TempoCritico };
             var coverage = (await grid.ReadAsync<CoverageRow>())
                 .Select(row => row.ToItem())
                 .ToArray();
@@ -224,6 +230,21 @@ public sealed class ManagerCommandCenterService
             throw;
         }
     }
+
+    /// <summary>R8-B23 (§27): definições dos indicadores OPERACIONAIS exibidos no Command Center, fiéis ao SQL real
+    /// (SqlCommandCenter). Cada texto descreve exatamente o filtro aplicado — nada inventado (os 8 cards exibidos).</summary>
+    private static IReadOnlyList<KpiDefinicao> Definicoes() => new[]
+    {
+        new KpiDefinicao("Critical", "Risco agora", "Plantões com vagas disponíveis cujo início está em até 6 horas (data_inicio <= now() + interval '6 hours'), no período selecionado do tenant (estado atual)."),
+        new KpiDefinicao("Uncovered", "Descobertos", "Plantões com vagas disponíveis (vagas_disponiveis > 0) e status diferente de cancelado/realizado, no período selecionado (estado atual)."),
+        new KpiDefinicao("PendingConfirmation", "Confirmação", "Plantões com status 'aberto' ou 'pendente' no período selecionado; aguardam confirmação (estado atual)."),
+        new KpiDefinicao("PendingCheckIns", "Em Execução", "Check-ins de médicos ainda sem checkout (checkout_em IS NULL) com status_conferencia 'REGISTRO_INCOMPLETO' no tenant; estado atual (independe do período de plantões)."),
+        new KpiDefinicao("OpenIncidents", "Ocorrências", "Ocorrências operacionais com situação 'ABERTA' ou 'EM_ATENDIMENTO' e reg_status 'A' no tenant; estado atual."),
+        new KpiDefinicao("AvailableProfessionals", "Profissionais", "Médicos ativos (reg_status 'A') vinculados ao tenant/cliente; estado atual."),
+        new KpiDefinicao("FinancialPending", "Financeiro", "Fechamentos de plantão com status 'EM_CONFERENCIA', 'AGUARDANDO_APROVACAO' ou 'COM_DIVERGENCIA' no tenant; estado atual."),
+        new KpiDefinicao("CriticalNotifications", "Alertas", "Notificações ativas (reg_status 'A') não lidas de tipo 'critico', 'urgente' ou 'erro' vinculadas ao tenant; estado atual.")
+    };
+    private const string TempoCritico = "Plantões: período selecionado (data_inicio::date entre 'De' e 'Até') + escopo do tenant (cliente_id ou tenant_id, reg_status 'A'). Demais indicadores (check-ins, ocorrências, profissionais, financeiro, alertas): estado atual do tenant, independente do período. Fuso das janelas (now()/current_date) = servidor.";
 
     private sealed record CoverageRow(
         Guid Id,

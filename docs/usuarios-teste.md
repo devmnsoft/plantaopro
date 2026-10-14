@@ -11,6 +11,7 @@
 | Médico | `medico@plantaopro.local` | `Medico@123456` |
 | Recepção | `recepcao@plantaopro.local` | `Recepcao@123456` |
 | Financeiro | `financeiro@plantaopro.local` | `Financeiro@123456` |
+| Sistema Vertical (acesso de TESTE) | `admin.sistemavertical@plantaopro.local` | `Sv-Homolog-2026!` |
 
 ## Provisionamento
 
@@ -21,6 +22,16 @@ psql "$ConnectionStrings__Default" -v ON_ERROR_STOP=1 -f database/seeds/developm
 ```
 
 O seed é idempotente e cria a Clínica Modelo PlantãoPro, um segundo tenant sintético sem usuários para testes de isolamento, o plano de homologação, módulos, unidade, especialidade, médico e vínculos de perfil. As senhas são persistidas somente como hashes **BCrypt cost 11**, o mesmo formato verificado por `BCrypt.Net.BCrypt.Verify` na API. Ao reaplicar, o seed preserva a senha das contas já existentes.
+
+### Tenant "Sistema Vertical" (seed 123)
+
+Acesso de **teste** dedicado à homologação do SaaS (cliente SaaS separado dos clientes comerciais do Administrativo 360):
+
+```bash
+psql "$ConnectionStrings__Default" -v ON_ERROR_STOP=1 -f database/seeds/development/123_sistema_vertical_plantaopro.sql
+```
+
+Idempotente: cria tenant/cliente/próprio, perfil `ADMINISTRADOR` escopado ao próprio tenant e o usuário de teste, reutilizando o plano `HOMOLOGACAO_360`; resolve os contratos de módulo por `modulo_id`/`codigo_modulo` (fonte canônica `plantaopro.modulos_efetivos()`) e escopa as permissões aos módulos contratados. Reaplicar preserva a senha existente; detalhes e provas de execução em `docs/evidencias/2026-10-14-rodada-9/r4-sistema-vertical-provas.md`.
 
 ### Reset local das cinco senhas
 

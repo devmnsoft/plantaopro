@@ -219,7 +219,8 @@ public sealed class ManagerCommandCenterService
                 PendingReplacements: 0,
                 FinancialPending: 0,
                 CriticalNotifications: 0,
-                PlatformHealth: health);
+                PlatformHealth: health)
+                with { Definicoes = DefinicoesPlataforma(), TimeCriterion = TempoCriticoPlataforma };
 
             var result = new ManagerCommandCenterDto(summary, Array.Empty<CoverageItem>(), DateTime.UtcNow);
             return ApiResponse<ManagerCommandCenterDto>.Ok(result);
@@ -245,6 +246,16 @@ public sealed class ManagerCommandCenterService
         new KpiDefinicao("CriticalNotifications", "Alertas", "Notificações ativas (reg_status 'A') não lidas de tipo 'critico', 'urgente' ou 'erro' vinculadas ao tenant; estado atual.")
     };
     private const string TempoCritico = "Plantões: período selecionado (data_inicio::date entre 'De' e 'Até') + escopo do tenant (cliente_id ou tenant_id, reg_status 'A'). Demais indicadores (check-ins, ocorrências, profissionais, financeiro, alertas): estado atual do tenant, independente do período. Fuso das janelas (now()/current_date) = servidor.";
+
+    /// <summary>R8-B28 (§27): definições dos indicadores de GOVERNANÇA/PLATAFORMA exibidos no Command Center GLOBAL
+    /// (GetGlobalAsync), fiéis ao SQL real (contagens globais, sem filtro de tenant/período).</summary>
+    private static IReadOnlyList<KpiDefinicao> DefinicoesPlataforma() => new[]
+    {
+        new KpiDefinicao("ActiveTenants", "Tenants Ativos", "Contagem de tenants da plataforma com status = 'ATIVO' (escopo global — sem filtro de tenant/período; estado atual)."),
+        new KpiDefinicao("ActiveClients", "Clientes Ativos", "Contagem de clientes com reg_status = 'A' e status = 'ATIVO' (escopo global — todos os tenants; estado atual)."),
+        new KpiDefinicao("ContractedModules", "Módulos Contratados", "Contagem de registros em tenant_modulos com status = 'ATIVO' (escopo global — todos os tenants; estado atual)."),
+    };
+    private const string TempoCriticoPlataforma = "Escopo global da plataforma (sem filtro de tenant/período); contagens em estado atual; fuso do servidor (sem janela temporal aplicada).";
 
     private sealed record CoverageRow(
         Guid Id,

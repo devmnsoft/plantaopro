@@ -66,6 +66,19 @@
                 <article><span>Clientes Ativos</span><strong>@Model.Summary.PlatformHealth.ActiveClients</strong><small>contratos no sistema</small></article>
                 <article><span>Módulos Contratados</span><strong>@Model.Summary.PlatformHealth.ContractedModules</strong><small>funcionalidades ativas</small></article>
             </section>
+            @* R8-B28 (§27): exibe as definições fiéis ao SQL dos indicadores de plataforma (governança global). *@
+            <details class="cc-definicoes">
+                <summary class="fw-semibold small">Como cada indicador da plataforma é calculado (fonte · escopo · estado)</summary>
+                <p class="small text-muted mb-1">@Model.Summary.TimeCriterion</p>
+                @if (definicoesCC.Count > 0)
+                {
+                    <ul class="small mb-0">@foreach (var item in definicoesCC) { <li><strong>@item.Label</strong>: @item.Definicao</li> }</ul>
+                }
+                else
+                {
+                    <p class="small text-muted mb-0">Sem definições informadas pela fonte para os indicadores.</p>
+                }
+            </details>
         }
         else
         {

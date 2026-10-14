@@ -4,6 +4,24 @@ using PlantaoPro.Application.Administrativo360;
 
 namespace PlantaoPro.Api.Controllers;
 
+/// <summary>R8-B27 (§27): resposta do Fluxo de Caixa que carrega as definições fiéis ao SQL dos indicadores.
+/// Vive na camada Api porque KpiDefinicao está no projeto Api (o DTO de Aplicação não o referencia).
+/// Mantém os mesmos campos de topo de FluxoCaixaDto para a BFF Web mapear 1:1 por nome (STJ).</summary>
+public sealed record FluxoCaixaResposta(
+    DateOnly DataBase,
+    decimal SaldoAtualContas,
+    decimal SaldoAberturaPeriodo,
+    decimal SaldoFechamentoPeriodo,
+    decimal TotalEntradasPrevistas,
+    decimal TotalSaidasPrevistas,
+    decimal TotalEntradasRealizadas,
+    decimal TotalSaidasRealizadas,
+    decimal TotalVencidosReceber,
+    decimal TotalVencidosPagar,
+    IReadOnlyList<FluxoCaixaItemDto> Itens,
+    IReadOnlyList<KpiDefinicao> Definicoes,
+    string TimeCriterion);
+
 [ApiController, Route("api/administrativo360/caixa"), Authorize(Policy = "Adm360.Financeiro")]
 public sealed class Adm360CaixaController : ControllerBase
 {
@@ -94,8 +112,40 @@ public sealed class Adm360CaixaController : ControllerBase
     {
         var (tenant, _) = Context();
         var fluxo = await repository.FluxoCaixaAsync(tenant, inicio, fim, ct);
-        return Ok(fluxo);
+        var resposta = new FluxoCaixaResposta(
+            fluxo.DataBase,
+            fluxo.SaldoAtualContas,
+            fluxo.SaldoAberturaPeriodo,
+            fluxo.SaldoFechamentoPeriodo,
+            fluxo.TotalEntradasPrevistas,
+            fluxo.TotalSaidasPrevistas,
+            fluxo.TotalEntradasRealizadas,
+            fluxo.TotalSaidasRealizadas,
+            fluxo.TotalVencidosReceber,
+            fluxo.TotalVencidosPagar,
+            fluxo.Itens,
+            Definicoes(),
+            TempoCritico);
+        return Ok(resposta);
     }
+
+    private static string TempoCritico =>
+        "Período [início, fim] (inclusivo, data do filtro) para Entradas/Saídas Realizadas e Previsões (AR/AP); " +
+        "estado atual em now() (UTC, fuso do servidor) para Saldo Atual das Contas e Vencidos em Aberto; " +
+        "Abertura/Fechamento derivados no servidor. Sem fuso do usuário.";
+
+    private static IReadOnlyList<KpiDefinicao> Definicoes() => new[]
+    {
+        new KpiDefinicao("SaldoAtualContas", "Saldo Atual das Contas", "Soma do saldo atual derivado de todas as contas financeiras ativas do tenant; o saldo por conta é o saldo inicial documentado + soma(movimentos ENTRADA - SAIDA) em adm360_movimentos_financeiros; não há saldo gravado, logo nunca diverge dos movimentos; estado atual (data-base hoje)."),
+        new KpiDefinicao("SaldoAberturaPeriodo", "Saldo Abertura Período", "Soma dos saldos iniciais das contas com DataSaldoInicial <= início + soma dos movimentos (ENTRADA - SAIDA) com data_movimento < @inicio; posição antes do período filtrado."),
+        new KpiDefinicao("TotalEntradasRealizadas", "Entradas Realizadas", "Soma dos valores dos movimentos tipo 'ENTRADA' em adm360_movimentos_financeiros com data_movimento dentro de [início, fim] (inclusivo)."),
+        new KpiDefinicao("TotalSaidasRealizadas", "Saídas Realizadas", "Soma dos valores dos movimentos tipo 'SAIDA' em adm360_movimentos_financeiros com data_movimento dentro de [início, fim] (inclusivo)."),
+        new KpiDefinicao("SaldoFechamentoPeriodo", "Saldo Fechamento Período", "Calculado no servidor (fórmula derivada, não gravada): Abertura do período + Entradas Realizadas - Saídas Realizadas."),
+        new KpiDefinicao("TotalEntradasPrevistas", "Entradas Previstas (AR)", "Soma de saldo_aberto de títulos a receber (adm360_titulos_receber) com situacao IN ('ABERTO','PARCIAL') e data_vencimento dentro de [início, fim]; são projeções e NÃO entram no Saldo Acumulado das linhas."),
+        new KpiDefinicao("TotalSaidasPrevistas", "Saídas Previstas (AP)", "Soma de saldo_aberto de títulos a pagar (adm360_titulos_pagar) com situacao IN ('PENDENTE_APROVACAO','APROVADO','PARCIAL') e data_vencimento dentro de [início, fim]; projeções e NÃO entram no Saldo Acumulado."),
+        new KpiDefinicao("TotalVencidos", "Vencidos em Aberto (AR+AP)", "Títulos com data_vencimento < hoje (independente do período): AR = soma de saldo_aberto em ABERTO/PARCIAL (adm360_titulos_receber); AP = soma de saldo_aberto em PENDENTE_APROVACAO/APROVADO/PARCIAL (adm360_titulos_pagar)."),
+        new KpiDefinicao("Estorno", "Tratamento de estorno", "O estorno gera movimento compensatório tipo SAIDA datado na data do estorno (origem ESTORNO_RECEBIMENTO), reduzindo o saldo derivado da conta onde o recebimento caiu; o título volta a ABERTO/PARCIAL e as comissões da baixa viram ESTORNADA. Estorno é bloqueado dentro de fechamento de caixa fechado."),
+    };
 
     [HttpGet("fechamentos")]
     public async Task<IActionResult> ListarFechamentos([FromQuery] Guid? contaId, CancellationToken ct)

@@ -645,7 +645,13 @@ public sealed record FluxoCaixaViewModel(
     decimal TotalSaidasRealizadas,
     decimal TotalVencidosReceber,
     decimal TotalVencidosPagar,
-    IReadOnlyList<FluxoCaixaItemViewModel> Itens);
+    IReadOnlyList<FluxoCaixaItemViewModel> Itens)
+{
+    // R8-B27 (§27): definições dos 8 indicadores de Fluxo de Caixa (espelho da API; a Web não referencia o projeto Api).
+    public IReadOnlyList<KpiDefinicaoDto>? Definicoes { get; init; }
+    // R8-B27 (§27): critério de escopo/estado aplicado aos indicadores de Fluxo de Caixa.
+    public string TimeCriterion { get; init; } = "";
+}
 
 public sealed record RelatorioVendasItemViewModel(
     string Numero,

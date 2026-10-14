@@ -11,7 +11,13 @@ public sealed record ColaboradorDto(Guid Id, string Matricula, string Nome, stri
 public sealed record ContratoTrabalhoDto(Guid Id, Guid ColaboradorId, string Colaborador, string Tipo, DateOnly Inicio, DateOnly? Fim, decimal Salario, int CargaHorariaSemanal, string Status);
 // COUNT(*) no PostgreSQL retorna bigint (Int64): os contadores usam long para manter a
 // representação de leitura compatível com o banco, sem cast lossy para int.
-public sealed record Administrativo360ResumoDto(long Departamentos, long Cargos, long ColaboradoresAtivos, long ContratosVigentes);
+public sealed record Administrativo360ResumoDto(long Departamentos, long Cargos, long ColaboradoresAtivos, long ContratosVigentes)
+{
+    /// <summary>R8-B24 (§27): definições fiéis ao SQL do resumo organizacional (populadas em ResumoAsync).</summary>
+    public IReadOnlyList<KpiDefinicao>? Definicoes { get; init; }
+    /// <summary>R8-B24 (§27): critério de escopo/estado aplicado (tenant_id + reg_status 'A'; estado atual).</summary>
+    public string TimeCriterion { get; init; } = "";
+}
 // Envelope de paginação das listagens: limit/offset aplicados no banco e contagem total.
 public sealed record Administrativo360PaginadoDto<T>(IReadOnlyList<T> Items, int Page, int PageSize, long Total, int TotalPages);
 public sealed record ContratoTrabalhoDetalheDto(Guid Id, Guid ColaboradorId, string Colaborador, string Matricula, string Tipo, DateOnly Inicio, DateOnly? Fim, decimal Salario, int CargaHorariaSemanal, string Status, DateTime CriadoEm);

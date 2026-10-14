@@ -3,7 +3,13 @@ namespace PlantaoPro.Web.Models;
 public sealed record SelectListItemViewModel(string Value, string Text);
 
 // COUNT(*) no PostgreSQL retorna bigint; o ViewModel espelha o DTO com long.
-public sealed record Administrativo360ResumoViewModel(long Departamentos, long Cargos, long ColaboradoresAtivos, long ContratosVigentes);
+public sealed record Administrativo360ResumoViewModel(long Departamentos, long Cargos, long ColaboradoresAtivos, long ContratosVigentes)
+{
+    /// <summary>R8-B24 (§27): definições dos indicadores organizacionais (espelhadas da API; a Web não referencia o projeto Api).</summary>
+    public IReadOnlyList<KpiDefinicaoDto>? Definicoes { get; init; }
+    /// <summary>R8-B24 (§27): critério de escopo/estado aplicado aos indicadores organizacionais.</summary>
+    public string TimeCriterion { get; init; } = "";
+}
 public sealed record Departamento360ViewModel(Guid Id, string Codigo, string Nome, bool Ativo);
 public sealed record Cargo360ViewModel(Guid Id, string Codigo, string Nome, Guid? DepartamentoId, string? Departamento, bool Ativo);
 public sealed record Colaborador360ViewModel(Guid Id, string Matricula, string Nome, string Cpf, string Email, Guid CargoId, string Cargo, Guid? DepartamentoId, string? Departamento, string Status);

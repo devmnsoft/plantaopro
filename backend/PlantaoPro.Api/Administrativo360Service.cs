@@ -27,12 +27,24 @@ public sealed class Administrativo360Service
     {
         // count(*) retorna bigint no PostgreSQL; o DTO usa long (compatível, sem cast lossy).
         await using var cn = Connection();
-        return await cn.QuerySingleAsync<Administrativo360ResumoDto>(new CommandDefinition(@"select
+        var resumo = await cn.QuerySingleAsync<Administrativo360ResumoDto>(new CommandDefinition(@"select
   (select count(*) from plantaopro.adm_departamentos where tenant_id=@tenant and reg_status='A') as Departamentos,
   (select count(*) from plantaopro.adm_cargos where tenant_id=@tenant and reg_status='A') as Cargos,
   (select count(*) from plantaopro.adm_colaboradores where tenant_id=@tenant and status='ATIVO' and reg_status='A') as ColaboradoresAtivos,
   (select count(*) from plantaopro.adm_contratos_trabalho where tenant_id=@tenant and status='VIGENTE' and reg_status='A') as ContratosVigentes", new { tenant = Tenant() }, cancellationToken: ct));
+        return resumo with { Definicoes = Definicoes(), TimeCriterion = TempoCritico };
     }
+
+    /// <summary>R8-B24 (§27): definições dos indicadores organizacionais exibidos no índice Admin360, fiéis ao SQL real
+    /// (ResumoAsync). Cada texto descreve exatamente o filtro aplicado — nada inventado (os 4 cards).</summary>
+    private static IReadOnlyList<KpiDefinicao> Definicoes() => new[]
+    {
+        new KpiDefinicao("Departamentos", "Departamentos", "Quantidade de departamentos cadastrados na organização com reg_status 'A'; estado atual."),
+        new KpiDefinicao("Cargos", "Cargos", "Quantidade de cargos cadastrados na organização com reg_status 'A'; estado atual."),
+        new KpiDefinicao("ColaboradoresAtivos", "Colaboradores ativos", "Quantidade de colaboradores com status 'ATIVO' e reg_status 'A' na organização; estado atual."),
+        new KpiDefinicao("ContratosVigentes", "Contratos vigentes", "Quantidade de contratos de trabalho com status 'VIGENTE' e reg_status 'A' na organização; estado atual.")
+    };
+    private const string TempoCritico = "Contagens por organização (tenant_id), apenas registros ativos (reg_status 'A'); colaboradores somente status 'ATIVO'; contratos somente status 'VIGENTE'. Estado atual (sem janela de data).";
     public async Task<Administrativo360PaginadoDto<DepartamentoDto>> DepartamentosAsync(int pagina, int tamanho, string? busca, bool somenteAtivos, CancellationToken ct)
     {
         var (p, t) = NormalizarPagina(pagina, tamanho);

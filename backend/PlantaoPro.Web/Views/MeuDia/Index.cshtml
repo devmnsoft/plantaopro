@@ -8,6 +8,7 @@
     var isGlobal = User.IsInRole(RolesConstants.AdministradorGlobal);
     var isClientAdmin = User.IsInRole(RolesConstants.AdministradorCliente) || User.IsInRole(RolesConstants.Administrador);
     var isPhysician = User.IsInRole(RolesConstants.Medico);
+    var definicoesMeuDia = Model.Summary?.Definicoes ?? Enumerable.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
 }
 <div class="pp-page my-day">
     <section class="day-command-hero">
@@ -113,6 +114,19 @@
             <article class="is-warning"><span>Hoje</span><strong>@Model.Summary.Today</strong></article>
             <article><span>Atrasadas</span><strong>@Model.Summary.Overdue</strong></article>
         </section>
+        @* R8-B22 (§27): exibe as definições fiéis ao SQL do resumo (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+        <details class="myday-definicoes">
+            <summary class="fw-semibold small">Como cada indicador é calculado (fórmula · fonte · período · fuso)</summary>
+            <p class="small text-muted mb-1">@Model.Summary.TimeCriterion</p>
+            @if (definicoesMeuDia.Any())
+            {
+                <ul class="small mb-0">@foreach (var item in definicoesMeuDia) { <li><strong>@item.Label</strong>: @item.Definicao</li> }</ul>
+            }
+            else
+            {
+                <p class="small text-muted mb-0">Sem definições informadas pela fonte para os indicadores.</p>
+            }
+        </details>
         <div class="day-workspace">
             <section class="day-timeline">
                 <header>

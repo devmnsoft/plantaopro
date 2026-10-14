@@ -44,7 +44,7 @@ public sealed class ProductivityActionController : ControllerBase
     private async Task<object> PageAsync(ProductivityQuery query, CancellationToken ct)
     {
         var page = await service.ListAsync(query, ct);
-        var summary = await service.SummaryAsync(ct);
+        var summary = (await service.SummaryAsync(ct)) with { Definicoes = DefinicoesMeuDia(), TimeCriterion = TempoCriticoMeuDia };
         var agenda = await service.GetAgendaAsync(ct);
         return new
         {
@@ -86,4 +86,15 @@ public sealed class ProductivityActionController : ControllerBase
         };
         return new { label, controller=parts.ElementAtOrDefault(0)??"Home", action=parts.ElementAtOrDefault(1)??"Index", routeValues=route };
     }
+
+    /// <summary>R8-B22 (§27): definições dos indicadores de Meu Dia, fiéis ao SQL real (summarySql de
+    /// ProductivityActionService.SummaryAsync). Nada inventado: apenas descreve os filtros aplicados.</summary>
+    private static IReadOnlyList<KpiDefinicao> DefinicoesMeuDia() => new[]
+    {
+        new KpiDefinicao("Active", "Pendências", "Contagem de ações/pendências reais (derivadas das entidades de origem) visíveis, NÃO adiadas nem descartadas, dentro do escopo de permissões do usuário (estado atual)."),
+        new KpiDefinicao("Critical", "Críticas", "Subconjunto de Pendências com prioridade CRÍTICA (Priority='CRITICA'), não adiadas, no escopo do usuário (estado atual)."),
+        new KpiDefinicao("Today", "Hoje", "Pendências cujo prazo (DueAt) cai no dia atual, calculado em now() no fuso do servidor; não adiadas (estado atual)."),
+        new KpiDefinicao("Overdue", "Atrasadas", "Pendências cujo prazo (DueAt) é anterior à data/hora atual do servidor (DueAt < now()); não adiadas (estado atual).")
+    };
+    private const string TempoCriticoMeuDia = "Janelas de hoje/atraso em now() no fuso do servidor (UTC do banco), sem fuso do usuário; somente itens não adiados (snooze) e não descartados, no escopo de permissões do usuário.";
 }

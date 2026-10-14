@@ -57,6 +57,10 @@ public sealed class ProductivitySummaryViewModel
     public int Overdue { get; set; }
     public int Snoozed { get; set; }
     public int CompletedToday { get; set; }
+    /// <summary>R8-B22 (§27): definições dos indicadores de Meu Dia (espelhadas da API; a Web não referencia o projeto Api).</summary>
+    public IReadOnlyList<KpiDefinicaoDto>? Definicoes { get; set; }
+    /// <summary>R8-B22 (§27): critério de tempo aplicado (janelas de hoje/atraso em now() no fuso do servidor).</summary>
+    public string TimeCriterion { get; set; } = "";
 }
 
 public sealed class ProductivityQuickActionViewModel

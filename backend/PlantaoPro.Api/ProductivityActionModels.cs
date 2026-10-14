@@ -24,7 +24,13 @@ public sealed record ProductivityQuery(
 public sealed record ProductivityPageDto(
     IReadOnlyList<ProductivityActionDto> Items, int Page, int PageSize, int Total, int TotalPages);
 
-public sealed record ProductivitySummaryDto(int Active, int Critical, int Today, int Overdue, int Snoozed);
+public sealed record ProductivitySummaryDto(int Active, int Critical, int Today, int Overdue, int Snoozed)
+{
+    /// <summary>R8-B22 (§27): definições fiéis ao SQL do resumo de produtividade (populadas na controller).</summary>
+    public IReadOnlyList<KpiDefinicao>? Definicoes { get; init; }
+    /// <summary>R8-B22 (§27): critério de tempo aplicado (janelas de hoje/atraso em now() no fuso do servidor).</summary>
+    public string TimeCriterion { get; init; } = "";
+}
 public sealed record SnoozeProductivityRequest(DateTimeOffset SnoozedUntil);
 public sealed record QuickActionDto(string Code, string Label, string Icon, string Controller, string Action,
     IReadOnlyDictionary<string, string>? RouteValues = null);

@@ -918,7 +918,7 @@ public sealed class ContaFinanceiraFormViewModel
 // Cadastros e Lookups Administrativo 360
 public sealed record Parceiro360ViewModel(Guid Id, string Nome, string? Documento, bool Fornecedor, bool Ativo, DateTime CriadoEm, bool EhHospital = false, bool EhPagador = false, bool EhCliente = false);
 public sealed record Medico360ViewModel(Guid Id, string Nome, string? Documento, bool Ativo);
-public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
+public sealed record Produto360ViewModel(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null);
 public sealed record Local360ViewModel(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
 public sealed record Lote360ViewModel(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao, decimal? CustoUnitario = null);
 

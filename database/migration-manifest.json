@@ -1,6 +1,6 @@
 {
   "schemaVersion": "v2.16.7",
-  "generatedAt": "2026-10-06",
+  "generatedAt": "2026-10-14",
   "migrations": [
     {
       "version": "20260607_saas_lgpd_jornada_comercial_ajuda",
@@ -1257,6 +1257,83 @@
       "checksum": "15d6bdb179322525d976bc5a039cd6b707d288cc6aacf59fcd5b601628314029",
       "dependsOn": [
         "2026_10_v2344_r7e1_usuario_idioma_preferido"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2346_r8b2_notificacoes_legado_dedupe",
+      "source": "database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql",
+      "checksum": "97f2f638e79d002022a7528a0b810b0a48db9a4dce268b57986aa1701400ee65",
+      "dependsOn": [
+        "2026_10_v2345_r7ob_onboarding_preferencias_idioma"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2347_r8b4_cancelamento_compras",
+      "source": "database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql",
+      "checksum": "2e8ba13f929badb6c3a51961e0557611cec8532b319f58e7a383067094a6da8c",
+      "dependsOn": [
+        "2026_10_v2346_r8b2_notificacoes_legado_dedupe"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2348_r8b5_backfill_medico_especialidades",
+      "source": "database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql",
+      "checksum": "5317df66afb7a42f141e1846d230a8caa584cc5cce92c5a133e9c7e57c40ee64",
+      "dependsOn": [
+        "2026_10_v2347_r8b4_cancelamento_compras"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2349_r8b6_mesclagem_pacientes",
+      "source": "database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql",
+      "checksum": "0b226ee6cb5d739ae84ba9aab3c68cde1c7f229cb00c624df2febb84e3fae1cd",
+      "dependsOn": [
+        "2026_10_v2348_r8b5_backfill_medico_especialidades"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2350_r8b7_glosa_item_recurso_documentos",
+      "source": "database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql",
+      "checksum": "f363c5d37285179edfa51a9ce8c36d0095cd57b2d0e16296a384b303289beef6",
+      "dependsOn": [
+        "2026_10_v2349_r8b6_mesclagem_pacientes"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2351_r8b10_cid_tabela_unicao_versionada",
+      "source": "database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql",
+      "checksum": "25a9c25f89b1e6aeefee695a4080df3be259386e6f78faed6bac3f29c793cb19",
+      "dependsOn": [
+        "2026_10_v2350_r8b7_glosa_item_recurso_documentos"
+      ],
+      "status": "active",
+      "transactional": true,
+      "installRequired": false
+    },
+    {
+      "version": "2026_10_v2352_r9c_cadastro_anvisa_produtos",
+      "source": "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql",
+      "checksum": "455574771556eff4a86cd33522e56e1acbf9e4470c62f2e1461412a8a7d027eb",
+      "dependsOn": [
+        "2026_10_v2351_r8b10_cid_tabela_unicao_versionada"
       ],
       "status": "active",
       "transactional": true,

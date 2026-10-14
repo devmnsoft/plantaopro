@@ -661,7 +661,7 @@ public sealed record Parceiro360(
     bool EhPagador = false,
     bool EhCliente = false);
 public sealed record Medico360(Guid Id, string Nome, string? Documento, bool Ativo);
-public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo);
+public sealed record Produto360(Guid Id, string Sku, string Nome, string Unidade, string? CodigoBarras, bool ControlaLote, bool ExigeInspecao, decimal PrecoCusto, bool Ativo, string? AnvisaNumero = null, string AnvisaAplicabilidade = "PENDENTE", bool AnvisaEntradaManual = true, DateOnly? AnvisaVigencia = null, string? AnvisaJustificacao = null);
 public sealed record Local360(Guid Id, string Codigo, string Nome, string Tipo, bool Ativo);
 public sealed record Lote360(Guid Id, Guid ProdutoId, string ProdutoNome, string Codigo, DateOnly? Validade, DateOnly? Fabricacao, decimal? CustoUnitario = null);
 public sealed record Lookups360Bundle(
@@ -687,7 +687,7 @@ public interface ICadastrosRepository
     Task AlternarStatusParceiroAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
 
     Task<IReadOnlyList<Produto360>> ListarProdutosAsync(Guid tenantId, string? busca, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false);
-    Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct);
+    Task<Guid> SalvarProdutoAsync(Guid tenantId, Guid? id, string sku, string nome, string unidade, string? codigoBarras, bool controlaLote, bool exigeInspecao, decimal precoCusto, bool ativo, CancellationToken ct, string? anvisaNumero = null, string anvisaAplicabilidade = "PENDENTE", bool anvisaEntradaManual = true, DateOnly? anvisaVigencia = null, string? anvisaJustificacao = null);
     Task AlternarStatusProdutoAsync(Guid tenantId, Guid id, bool ativo, CancellationToken ct);
 
     Task<IReadOnlyList<Local360>> ListarLocaisAsync(Guid tenantId, string? tipo, bool apenasAtivos, CancellationToken ct, int pagina = 1, int limite = 100, bool apenasInativos = false, string? busca = null);

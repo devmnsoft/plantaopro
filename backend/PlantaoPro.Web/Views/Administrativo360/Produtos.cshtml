@@ -170,6 +170,7 @@
                         <th>Unidade</th>
                         <th>Preço Custo (R$)</th>
                         <th>Rastreabilidade</th>
+                        <th>ANVISA</th>
                         <th>Status</th>
                         <th class="text-end pe-3">Ações</th>
                     </tr>
@@ -178,7 +179,7 @@
                     @if (Model.Produtos.Count == 0)
                     {
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 <i class="bi bi-box-seam fs-2 d-block mb-2 text-secondary"></i>
                                 Nenhum produto encontrado com os filtros aplicados.
                             </td>
@@ -188,6 +189,7 @@
                     {
                         @foreach (var p in Model.Produtos)
                         {
+                            var anvisaVigenciaStr = p.AnvisaVigencia?.ToString("yyyy-MM-dd") ?? "";
                             <tr>
                                 <td>
                                     <span class="badge bg-light text-dark font-monospace border">@p.Sku</span>
@@ -224,6 +226,24 @@
                                     }
                                 </td>
                                 <td>
+                                    @switch (p.AnvisaAplicabilidade)
+                                    {
+                                        case "INFORMADO":
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle font-monospace" title="Registro ANVISA informado manualmente@(p.AnvisaVigencia.HasValue ? " · Vigência regulatória: " + p.AnvisaVigencia.Value.ToString("dd/MM/yyyy") : "")">
+                                                <i class="bi bi-patch-check me-1"></i>@(p.AnvisaNumero ?? "")
+                                            </span>
+                                            break;
+                                        case "NAO_APLICAVEL":
+                                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" title="@p.AnvisaJustificacao">
+                                                <i class="bi bi-slash-circle me-1"></i>n/a
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">pendente</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
                                     @if (p.Ativo)
                                     {
                                         <span class="badge bg-success-subtle text-success border border-success-subtle">Ativo</span>
@@ -239,7 +259,7 @@
                                         <i class="bi bi-boxes"></i>
                                     </a>
                                     <button class="btn btn-outline-primary btn-sm py-0 px-2 me-1" type="button"
-                                            onclick="editarProduto('@p.Id', '@p.Sku', '@p.Nome', '@p.Unidade', '@p.CodigoBarras', @p.ControlaLote.ToString().ToLower(), @p.ExigeInspecao.ToString().ToLower(), @p.PrecoCusto.ToString(System.Globalization.CultureInfo.InvariantCulture), @p.Ativo.ToString().ToLower())">
+                                            onclick="editarProduto('@p.Id', '@p.Sku', '@p.Nome', '@p.Unidade', '@p.CodigoBarras', @p.ControlaLote.ToString().ToLower(), @p.ExigeInspecao.ToString().ToLower(), @p.PrecoCusto.ToString(System.Globalization.CultureInfo.InvariantCulture), @p.Ativo.ToString().ToLower(), '@p.AnvisaNumero', '@p.AnvisaAplicabilidade', '@anvisaVigenciaStr', '@p.AnvisaJustificacao')">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <form method="post" asp-action="AlternarStatusProduto" class="d-inline" onsubmit="return desabilitarAoEnviar(this);">
@@ -344,6 +364,36 @@
                         </div>
                     </div>
 
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <span class="small fw-bold d-block mb-1 text-dark">Regulação ANVISA</span>
+                        <p class="small text-muted mb-2">O número é registrado como texto (preserva zeros à esquerda) e a entrada é manual — não há busca simulada. A vigência regulatória é independente da validade do lote.</p>
+                        <input type="hidden" name="AnvisaEntradaManual" value="true" />
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label for="produtoAnvisaNumero" class="form-label small fw-bold">Número de Registro ANVISA</label>
+                                <input type="text" name="AnvisaNumero" id="produtoAnvisaNumero" class="form-control form-control-sm font-monospace" maxlength="60" placeholder="Ex.: 800123456789512" autocomplete="off" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="produtoAnvisaAplicabilidade" class="form-label small fw-bold">Aplicabilidade</label>
+                                <select name="AnvisaAplicabilidade" id="produtoAnvisaAplicabilidade" class="form-select form-select-sm">
+                                    <option value="PENDENTE">Pendente</option>
+                                    <option value="INFORMADO">Informado</option>
+                                    <option value="NAO_APLICAVEL">Não aplicável</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="produtoAnvisaVigencia" class="form-label small fw-bold">Vigência regulatória (autorização)</label>
+                                <input type="date" name="AnvisaVigencia" id="produtoAnvisaVigencia" class="form-control form-control-sm" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="produtoAnvisaJustificacao" class="form-label small fw-bold">Justificação (obrigatória quando "não aplicável")</label>
+                                <input type="text" name="AnvisaJustificacao" id="produtoAnvisaJustificacao" class="form-control form-control-sm" maxlength="200" placeholder="Ex.: produto fora do escopo de regulação RDC ..." />
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="Ativo" id="produtoAtivo" value="true" checked />
@@ -373,11 +423,15 @@
         document.getElementById('produtoCodigoBarras').value = '';
         document.getElementById('produtoControlaLote').checked = true;
         document.getElementById('produtoExigeInspecao').checked = true;
+        document.getElementById('produtoAnvisaNumero').value = '';
+        document.getElementById('produtoAnvisaAplicabilidade').value = 'PENDENTE';
+        document.getElementById('produtoAnvisaVigencia').value = '';
+        document.getElementById('produtoAnvisaJustificacao').value = '';
         document.getElementById('produtoAtivo').checked = true;
         new bootstrap.Modal(document.getElementById('modalProduto')).show();
     }
 
-    function editarProduto(id, sku, nome, unidade, codigoBarras, controlaLote, exigeInspecao, precoCusto, ativo) {
+    function editarProduto(id, sku, nome, unidade, codigoBarras, controlaLote, exigeInspecao, precoCusto, ativo, anvisaNumero, anvisaAplicabilidade, anvisaVigencia, anvisaJustificacao) {
         document.getElementById('modalProdutoLabel').innerText = 'Editar Produto';
         document.getElementById('produtoId').value = id;
         document.getElementById('produtoSku').value = sku;
@@ -387,6 +441,10 @@
         document.getElementById('produtoCodigoBarras').value = codigoBarras || '';
         document.getElementById('produtoControlaLote').checked = controlaLote;
         document.getElementById('produtoExigeInspecao').checked = exigeInspecao;
+        document.getElementById('produtoAnvisaNumero').value = anvisaNumero || '';
+        document.getElementById('produtoAnvisaAplicabilidade').value = anvisaAplicabilidade || 'PENDENTE';
+        document.getElementById('produtoAnvisaVigencia').value = anvisaVigencia || '';
+        document.getElementById('produtoAnvisaJustificacao').value = anvisaJustificacao || '';
         document.getElementById('produtoAtivo').checked = ativo;
         new bootstrap.Modal(document.getElementById('modalProduto')).show();
     }

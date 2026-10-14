@@ -460,8 +460,13 @@ public sealed record DashboardAdm360ViewModel(
     CotacoesIndicadoresViewModel Cotacoes,
     XmlIndicadoresViewModel DocumentosXml,
     IntegracoesIndicadoresViewModel Integracoes,
-    DateTime GeradoEm
-);
+    DateTime GeradoEm)
+{
+    /// <summary>R8-B25 (§27): definições dos indicadores do dashboard gerencial (espelhadas da API; a Web não referencia o projeto Api).</summary>
+    public IReadOnlyList<KpiDefinicaoDto>? Definicoes { get; init; }
+    /// <summary>R8-B25 (§27): critério de tempo/escopo aplicado aos indicadores do dashboard gerencial.</summary>
+    public string TimeCriterion { get; init; } = "";
+}
 
 public sealed class DashboardGestaoViewModel
 {

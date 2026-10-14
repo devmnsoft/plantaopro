@@ -4,6 +4,7 @@
     var c = Model.Dashboard.Cotacoes;
     var x = Model.Dashboard.DocumentosXml;
     var i = Model.Dashboard.Integracoes;
+    var definicoesDash = Model.Dashboard?.Definicoes ?? Array.Empty<PlantaoPro.Web.Models.KpiDefinicaoDto>();
 }
 
 <div class="container-fluid py-3">
@@ -297,4 +298,21 @@
             </div>
         </div>
     </div>
+
+    @if (string.IsNullOrEmpty(Model.Erro))
+    {
+        @* R8-B25 (§27): exibe as definições fiéis ao SQL dos indicadores do dashboard gerencial (mesmo critério "definição e rastreabilidade"; sem nova consulta/número/regra). *@
+        <details class="dash-definicoes mt-4">
+            <summary class="fw-semibold small">Como cada indicador é calculado (fórmula · fonte · período · fuso)</summary>
+            <p class="small text-muted mb-2">@Model.Dashboard.TimeCriterion</p>
+            @if (definicoesDash.Count > 0)
+            {
+                <ul class="small mb-0">@foreach (var item in definicoesDash) { <li><strong>@item.Label</strong>: @item.Definicao</li> }</ul>
+            }
+            else
+            {
+                <p class="small text-muted mb-0">Sem definições informadas pela fonte para os indicadores.</p>
+            }
+        </details>
+    }
 </div>

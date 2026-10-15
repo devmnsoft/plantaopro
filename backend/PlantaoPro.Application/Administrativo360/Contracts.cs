@@ -657,6 +657,41 @@ public interface IContasPagarRepository
 }
 
 
+// s11 (rodada 9 r9g): DRE gerencial POR CLIENTE em competência (vendas e despesas reconhecidas na
+// competência do documento — NÃO fluxo de caixa, que é por data de recebimento/pagamento).
+// ClienteId nulo = bucket "Não atribuída" (venda sem nome resolvido + despesas, que nesta base não
+// têm vínculo com cliente comercial — limitação declarada, não atribuição inventada).
+public sealed record DreGerencialLinha(
+    Guid? ClienteId,
+    string Cliente,
+    int QtdVendas,
+    decimal ReceitaBruta,
+    decimal Deducoes,
+    decimal ReceitaLiquida,
+    decimal CustoRealizado,
+    decimal ResultadoBruto,
+    decimal ComissoesPrevistas,
+    decimal DespesasAtribuidas,
+    decimal ResultadoGerencial);
+
+// Conciliação: consolidado = clientes + "Não atribuída", verificado re-agregando as mesmas fontes
+// no período (deltas != 0 sinalizam divergência em vez de esconder).
+public sealed record DreGerencialConciliacao(
+    int VendasNoPeriodo,
+    int DespesasNoPeriodo,
+    bool ReceitaLiquidaBate,
+    decimal DeltaReceitaLiquida,
+    bool CustoBate,
+    decimal DeltaCusto,
+    bool DespesasBatem,
+    decimal DeltaDespesas);
+
+public sealed record DreGerencialDto(
+    DateOnly? Inicio,
+    DateOnly? Fim,
+    IReadOnlyList<DreGerencialLinha> Linhas,
+    DreGerencialConciliacao Conciliacao);
+
 public interface ICaixaRepository
 {
     Task<IReadOnlyList<ContaFinanceiraDto>> ListarContasAsync(Guid tenantId, CancellationToken ct);
@@ -680,6 +715,8 @@ public interface IAdm360FinanceiroRelatoriosRepository
     Task<IReadOnlyList<RelatorioMargemItem>> RelatorioMargemAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, CancellationToken ct, Guid? clienteId = null);
     // s10 (rodada 9 r9f): vencimentos por parcela, um título = uma linha; vencido na data do relatório.
     Task<IReadOnlyList<RelatorioVencimentoItem>> RelatorioVencimentosAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? clienteId, CancellationToken ct);
+    // s11 (rodada 9 r9g): DRE gerencial por cliente em competência; cross-tenant → 400.
+    Task<DreGerencialDto> RelatorioDreAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? clienteId, CancellationToken ct);
 }
 
 // Cadastros e Lookups Administrativo 360

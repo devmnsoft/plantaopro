@@ -10,7 +10,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h2 class="h4 mb-1 text-light fw-bold">Relatórios Financeiros & Resultado</h2>
-            <p class="text-muted small mb-0">Visão executiva por CLIENTE comercial: vendas, apropriação de comissões, margem cirúrgica e vencimentos por parcela.</p>
+            <p class="text-muted small mb-0">Visão executiva por CLIENTE comercial: vendas, apropriação de comissões, margem cirúrgica, vencimentos por parcela e DRE gerencial em competência.</p>
         </div>
     </div>
 
@@ -77,6 +77,14 @@
                 <i class="bi bi-stopwatch me-1"></i> Vencimentos por Parcela
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "dre" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="dre"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-journal-text me-1"></i> DRE Gerencial
+            </a>
+        </li>
     </ul>
 
     <!-- Filtro Superior -->
@@ -139,6 +147,14 @@
                     else if (Model.AbaAtiva == "vencimentos")
                     {
                         <a asp-action="ExportarVencimentosCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           asp-route-clienteId="@Model.ClienteId?.ToString()"
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                    }
+                    else if (Model.AbaAtiva == "dre")
+                    {
+                        <a asp-action="ExportarDreCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
                             <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
@@ -402,6 +418,159 @@
         </div>
     }
 
+    else if (Model.AbaAtiva == "dre")
+    {
+        <!-- Conteúdo Aba DRE Gerencial por Cliente (s11 / rodada 9 r9g) -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="fw-bold">DRE Gerencial por Cliente — competência (NÃO é fluxo de caixa)</span>
+                <div>
+                    @if (Model.DreConciliacao is { } concHead)
+                    {
+                        @if (concHead.ReceitaLiquidaBate && concHead.CustoBate && concHead.DespesasBatem)
+                        {
+                            <span class="badge bg-success me-1" title="Consolidado = clientes + Não atribuída, verificado re-agregando as mesmas fontes no período">Consolidado reconciliado</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger me-1">Divergência no consolidado — veja os deltas abaixo</span>
+                        }
+                    }
+                    <span class="badge bg-secondary">@Model.Dre.Count linhas</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 1160px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Cliente</th>
+                            <th scope="col" class="text-end">Nº Vendas</th>
+                            <th scope="col" class="text-end">Receita Bruta</th>
+                            <th scope="col" class="text-end">(−) Deduções</th>
+                            <th scope="col" class="text-end">(=) Receita Líquida</th>
+                            <th scope="col" class="text-end">(−) Custo Realizado</th>
+                            <th scope="col" class="text-end">(=) Resultado Bruto</th>
+                            <th scope="col" class="text-end">(−) Comissões Previstas</th>
+                            <th scope="col" class="text-end">(−) Despesas Atribuídas</th>
+                            <th scope="col" class="text-end">(=) Resultado Gerencial</th>
+                            <th scope="col">Origem</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Dre.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="11" class="text-center text-muted py-4">Sem vendas confirmadas nem títulos de despesa no período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var it in Model.Dre)
+                            {
+                                var ehOrfa = !it.ClienteId.HasValue;
+                                <tr>
+                                    <td>
+                                        @if (ehOrfa)
+                                        {
+                                            <em class="text-muted">@it.Cliente</em>
+                                        }
+                                        else
+                                        {
+                                            @it.Cliente
+                                        }
+                                    </td>
+                                    <td class="text-end font-monospace">@it.QtdVendas</td>
+                                    <td class="text-end font-monospace">@it.ReceitaBruta.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-warning">@it.Deducoes.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-success">@it.ReceitaLiquida.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@it.CustoRealizado.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace fw-bold @(it.ResultadoBruto >= 0 ? "text-success" : "text-danger")">@it.ResultadoBruto.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@it.ComissoesPrevistas.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@it.DespesasAtribuidas.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace fw-bold @(it.ResultadoGerencial >= 0 ? "text-success" : "text-danger")">@it.ResultadoGerencial.ToString("C2", ptBr)</td>
+                                    <td class="text-nowrap">
+                                        @if (it.ClienteId.HasValue)
+                                        {
+                                            <a asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
+                                               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                                               asp-route-clienteId="@it.ClienteId.Value.ToString()"
+                                               class="text-info" title="Ver as vendas que compõem esta linha (aba Vendas filtrada por este cliente)">
+                                                <i class="bi bi-search"></i>
+                                            </a>
+                                        }
+                                        else
+                                        {
+                                            <a asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
+                                               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                                               class="text-info" title="Revisar vendas sem atribuição na aba Vendas (o bucket é derivado — não há filtro único para ele)">
+                                                <i class="bi bi-search"></i>
+                                            </a>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    @if (Model.Dre.Count > 0)
+                    {
+                        <tfoot class="table-dark border-secondary">
+                            <tr class="fw-bold">
+                                <td colspan="2" class="text-end">Total do período (clientes + não atribuída):</td>
+                                <td class="text-end font-monospace">@Model.Dre.Sum(x => x.ReceitaBruta).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-warning">@Model.Dre.Sum(x => x.Deducoes).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace text-success">@Model.Dre.Sum(x => x.ReceitaLiquida).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace">@Model.Dre.Sum(x => x.CustoRealizado).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace">@Model.Dre.Sum(x => x.ResultadoBruto).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace">@Model.Dre.Sum(x => x.ComissoesPrevistas).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace">@Model.Dre.Sum(x => x.DespesasAtribuidas).ToString("C2", ptBr)</td>
+                                <td class="text-end font-monospace @(Model.Dre.Sum(x => x.ResultadoGerencial) >= 0 ? "text-success" : "text-danger")">@Model.Dre.Sum(x => x.ResultadoGerencial).ToString("C2", ptBr)</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+            @if (Model.DreConciliacao is { } conc)
+            {
+                <div class="card-footer bg-dark border-secondary small text-secondary">
+                    <strong class="text-light d-block mb-2"><i class="bi bi-check2-all me-1"></i>Conciliação — consolidado = clientes + "Não atribuída" (re-agregado das mesmas fontes na geração)</strong>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            Receita líquida:
+                            @if (conc.ReceitaLiquidaBate)
+                            {
+                                <span class="badge bg-success">bate — delta zero</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">delta @conc.DeltaReceitaLiquida.ToString("C2", ptBr)</span>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            Custo realizado:
+                            @if (conc.CustoBate)
+                            {
+                                <span class="badge bg-success">bate — delta zero</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">delta @conc.DeltaCusto.ToString("C2", ptBr)</span>
+                            }
+                        </div>
+                        <div class="col-md-4">
+                            Despesas:
+                            <span class="badge bg-secondary">por construção (sem divisão por cliente nesta base)</span>
+                        </div>
+                    </div>
+                    <p class="mb-0 mt-2">
+                        Período com <strong>@conc.VendasNoPeriodo</strong> venda(s) confirmada(s) e <strong>@conc.DespesasNoPeriodo</strong> título(s) de despesa em competência.
+                        <strong>Diferença de caixa:</strong> esta visão reconhece na <code>competencia</code> dos documentos (competência), e não nas datas de recebimento/pagamento — para o lado caixa use o Fluxo de Caixa.
+                    </p>
+                </div>
+            }
+        </div>
+    }
+
     <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
     <div class="card bg-dark border-secondary mt-4 text-light">
         <div class="card-header bg-dark border-secondary">
@@ -443,6 +612,17 @@
                         <li><strong>Fórmula "vencido":</strong> <code>data_vencimento &lt; data do relatório AND saldo_aberto &gt; 0</code> (referência = momento da geração do relatório), mesma regra das Contas a Receber.</li>
                         <li><strong>Filtros/período:</strong> período sobre <code>data_vencimento</code> (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sempre isolado por tenant.</li>
                         <li><strong>Estorno/recebimento:</strong> baixas e estornos atualizam <code>valor_recebido</code>/<code>saldo_aberto</code>/<code>situacao</code> no próprio título; a linha reflete o estado corrente sem duplicar.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-12">
+                    <strong class="text-light d-block mb-1">DRE Gerencial por Cliente (competência)</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> lado receita/custo = <code>adm360_vendas</code> somente <code>situacao='CONFIRMADA'</code>, período sobre <code>competencia</code>; lado despesa = <code>adm360_titulos_pagar</code> do período (sobre o <code>competencia</code> do título; CANCELADO fora). Vendas sem nome resolvido no tenant caem no bucket "Não atribuída".</li>
+                        <li><strong>Fórmula:</strong> Receita Líquida = Bruta − Deduções (descontos identificados na venda); Resultado Bruto = Líquida − Custo Realizado (valor gravado na venda); Resultado Gerencial = Bruto − Comissões Previstas (gravadas na venda) − Despesas Atribuídas (Σ valor_principal dos títulos do período).</li>
+                        <li><strong>Conciliação:</strong> consolidado = clientes + "Não atribuída", verificado na geração re-agregando as mesmas fontes; deltas diferentes de zero aparecem como badge vermelho em vez de somas "que casam por construção". Cada linha tem atalho para a aba Vendas (registros de origem), filtrada pelo cliente quando aplicável.</li>
+                        <li><strong>Filtros/período:</strong> competência entre início e fim (inclusivo); opcional <code>clienteId</code> com rejeição cross-tenant (400); sempre isolado por tenant.</li>
+                        <li><strong>Diferente de fluxo de caixa:</strong> reconhece na <code>competencia</code> do documento — não nas datas de recebimento/pagamento.</li>
+                        <li><strong>Limitações (fontes incompletas, sinalizadas sem esconder):</strong> (1) despesas não têm vínculo com cliente comercial nesta base (<code>origem_tipo</code> ∈ RECEBIMENTO_COMPRA/DESPESA_MANUAL/COMISSAO_VENDEDOR) — todo o total se concentra na linha "Não atribuída", e com filtro por cliente a linha leva 0 (nenhuma regra de atribuição foi inventada); (2) comissões são as previstas na venda, não o efetivamente pago em caixa; (3) base gerencial (sem critério contábil/ISC, sem conversão cambial); (4) valores gravados no documento — sem recálculo retroativo de custos.</li>
                     </ul>
                 </div>
             </div>

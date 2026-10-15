@@ -67,4 +67,16 @@ public sealed class Adm360FinanceiroRelatoriosController : ControllerBase
         var lista = await repository.RelatorioVencimentosAsync(Tenant(), inicio, fim, clienteId, ct);
         return Ok(lista);
     }
+
+    // s11 (rodada 9 r9g): DRE gerencial por cliente em competência (linhas + conciliação); cross-tenant → 400.
+    [HttpGet("dre")]
+    public async Task<IActionResult> Dre(
+        [FromQuery] DateOnly? inicio,
+        [FromQuery] DateOnly? fim,
+        [FromQuery] Guid? clienteId,
+        CancellationToken ct)
+    {
+        var dre = await repository.RelatorioDreAsync(Tenant(), inicio, fim, clienteId, ct);
+        return Ok(dre);
+    }
 }

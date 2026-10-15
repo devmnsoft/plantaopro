@@ -707,6 +707,39 @@ public sealed record RelatorioVencimentoItemViewModel(
     string Situacao,
     bool Vencido);
 
+// s11 (rodada 9 r9g): espelhos do DRE gerencial POR CLIENTE em competência (nomes casam com o DTO da API).
+public sealed record DreGerencialLinhaViewModel(
+    Guid? ClienteId,
+    string Cliente,
+    int QtdVendas,
+    decimal ReceitaBruta,
+    decimal Deducoes,
+    decimal ReceitaLiquida,
+    decimal CustoRealizado,
+    decimal ResultadoBruto,
+    decimal ComissoesPrevistas,
+    decimal DespesasAtribuidas,
+    decimal ResultadoGerencial);
+
+public sealed record DreGerencialConciliacaoViewModel(
+    int VendasNoPeriodo,
+    int DespesasNoPeriodo,
+    bool ReceitaLiquidaBate,
+    decimal DeltaReceitaLiquida,
+    bool CustoBate,
+    decimal DeltaCusto,
+    bool DespesasBatem,
+    decimal DeltaDespesas);
+
+// Espelho do DreGerencialDto da API (binding JSON por nome).
+public sealed class DreGerencialDtoWeb
+{
+    public DateOnly? Inicio { get; init; }
+    public DateOnly? Fim { get; init; }
+    public IReadOnlyList<DreGerencialLinhaViewModel> Linhas { get; init; } = Array.Empty<DreGerencialLinhaViewModel>();
+    public DreGerencialConciliacaoViewModel? Conciliacao { get; init; }
+}
+
 public sealed class ValorizacaoPreviaViewModel
 {
     public PreviaValorizacaoViewModel Previa { get; init; } = null!;
@@ -769,6 +802,9 @@ public sealed class RelatoriosFinanceirosPageViewModel
     // s9 (rodada 9 r9f): opções do filtro por cliente — parceiros comerciais + hospitais clínicos
     // (histórico de v.cliente_id apontando para a tabela clínica), com rótulo distinguível.
     public IReadOnlyList<SelectListItemViewModel> Clientes { get; init; } = Array.Empty<SelectListItemViewModel>();
+    // s11 (rodada 9 r9g): DRE gerencial por cliente em competência + conciliação.
+    public IReadOnlyList<DreGerencialLinhaViewModel> Dre { get; init; } = Array.Empty<DreGerencialLinhaViewModel>();
+    public DreGerencialConciliacaoViewModel? DreConciliacao { get; init; }
 }
 
 // ==========================================

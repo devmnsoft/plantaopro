@@ -27,9 +27,11 @@ public partial class Administrativo360Controller
         var respComissoes = await ReadApiResponse<List<RelatorioComissaoItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/comissoes{query}");
         var respMargem = await ReadApiResponse<List<RelatorioMargemItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/margem{query}");
         var respVencimentos = await ReadApiResponse<List<RelatorioVencimentoItemViewModel>>(client, $"api/administrativo360/relatorios-financeiros/vencimentos{query}");
+        // s11 (rodada 9 r9g): DRE gerencial por cliente em competência (linhas + conciliação)
+        var respDre = await ReadApiResponse<DreGerencialDtoWeb>(client, $"api/administrativo360/relatorios-financeiros/dre{query}");
 
         // s9: qualquer erro da API aparece na tela (ex.: "O cliente informado pertence a outro tenant.").
-        var erroConsulta = respVendas.Error ?? respComissoes.Error ?? respMargem.Error ?? respVencimentos.Error;
+        var erroConsulta = respVendas.Error ?? respComissoes.Error ?? respMargem.Error ?? respVencimentos.Error ?? respDre.Error;
         if (erroConsulta is not null) TempData["Error"] = erroConsulta;
 
         // s9: opcoes do filtro por cliente — parceiros comerciais + hospitais clinicos (historico em que
@@ -57,6 +59,9 @@ public partial class Administrativo360Controller
             Comissoes = (IReadOnlyList<RelatorioComissaoItemViewModel>?)respComissoes.Data ?? Array.Empty<RelatorioComissaoItemViewModel>(),
             Margens = (IReadOnlyList<RelatorioMargemItemViewModel>?)respMargem.Data ?? Array.Empty<RelatorioMargemItemViewModel>(),
             Vencimentos = (IReadOnlyList<RelatorioVencimentoItemViewModel>?)respVencimentos.Data ?? Array.Empty<RelatorioVencimentoItemViewModel>(),
+            // s11 (rodada 9 r9g): DRE por cliente + conciliação (falha na consulta degrada para vazio; o erro já foi toast)
+            Dre = respDre.Data?.Linhas ?? Array.Empty<DreGerencialLinhaViewModel>(),
+            DreConciliacao = respDre.Data?.Conciliacao,
             AbaAtiva = string.IsNullOrWhiteSpace(aba) ? "vendas" : aba,
             Inicio = dtInicio,
             Fim = dtFim,
@@ -219,5 +224,44 @@ public partial class Administrativo360Controller
 
         var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         return File(bytes, "text/csv; charset=utf-8", $"vencimentos_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
+    }
+
+    // s11 (rodada 9 r9g): exportação do DRE gerencial por cliente — mesmas linhas/conciliação da aba.
+    [HttpGet]
+    public async Task<IActionResult> ExportarDreCsv(DateOnly? inicio, DateOnly? fim, Guid? clienteId)
+    {
+        using var client = CreateApiClient();
+        if (!AddBearerToken(client)) return HandleUnauthorized();
+
+        var query = $"?inicio={inicio:yyyy-MM-dd}&fim={fim:yyyy-MM-dd}";
+        if (clienteId.HasValue) query += $"&clienteId={clienteId.Value}";
+
+        var resp = await ReadApiResponse<DreGerencialDtoWeb>(client, $"api/administrativo360/relatorios-financeiros/dre{query}");
+        if (resp.Data is null)
+        {
+            TempData["Error"] = resp.Error ?? "Falha ao consultar o DRE gerencial.";
+            return RedirectToAction(nameof(RelatoriosFinanceiros));
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("Cliente;QtdVendas;ReceitaBruta;Deducoes;ReceitaLiquida;CustoRealizado;ResultadoBruto;ComissoesPrevistas;DespesasAtribuidas;ResultadoGerencial");
+
+        foreach (var it in resp.Data.Linhas)
+        {
+            sb.AppendLine(string.Join(";",
+                SanitizarCsv(it.Cliente),
+                it.QtdVendas.ToString(),
+                ValorHumano.Format(it.ReceitaBruta),
+                ValorHumano.Format(it.Deducoes),
+                ValorHumano.Format(it.ReceitaLiquida),
+                ValorHumano.Format(it.CustoRealizado),
+                ValorHumano.Format(it.ResultadoBruto),
+                ValorHumano.Format(it.ComissoesPrevistas),
+                ValorHumano.Format(it.DespesasAtribuidas),
+                ValorHumano.Format(it.ResultadoGerencial)));
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return File(bytes, "text/csv; charset=utf-8", $"dre_gerencial_{DateTime.UtcNow:yyyyMMddHHmm}.csv");
     }
 }

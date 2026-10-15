@@ -221,4 +221,137 @@ public sealed class Adm360FinanceiroRelatoriosRepository : Adm360Repository, IAd
             );
         }).ToList();
     }
+
+    // s11 (rodada 9 r9g): DRE gerencial por CLIENTE em COMPETÊNCIA (não fluxo de caixa).
+    // - Receita: adm360_vendas CONFIRMADA, período sobre v.competencia (não data de recebimento);
+    //   "deduções" = descontos identificados na venda; "custo realizado" = valor gravado na venda.
+    // - Despesas: adm360_titulos_pagar do período (sobre p.competencia; CANCELADO fora). Nesta base
+    //   a despesa NÃO tem vínculo com cliente comercial (origem_tipo ∈ RECEBIMENTO_COMPRA /
+    //   DESPESA_MANUAL / COMISSAO_VENDEDOR) — sem filtro, todo o total cai no bucket "Não atribuída"
+    //   (limitação declarada, sem regra de atribuição inventada); com filtro de cliente, zero.
+    // - Conciliação: consolidado = clientes + "Não atribuída", verificado re-agregando as mesmas
+    //   fontes e comparando (deltas explícitos em vez de somas que se "casam por construção").
+    public async Task<DreGerencialDto> RelatorioDreAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? clienteId, CancellationToken ct)
+    {
+        await using var cn = Connection();
+        await ValidarClienteFiltroAsync(cn, tenantId, clienteId, ct);
+
+        const string filtroVendas = @"
+              AND v.tenant_id = @tenantId
+              AND v.situacao = 'CONFIRMADA'
+              AND (@inicio::date IS NULL OR v.competencia >= @inicio::date)
+              AND (@fim::date IS NULL OR v.competencia <= @fim::date)
+              AND (@clienteId::uuid IS NULL OR v.cliente_id = @clienteId::uuid)";
+        const string filtroDespesas = @"
+              AND p.tenant_id = @tenantId
+              AND p.situacao <> 'CANCELADO'
+              AND (@inicio::date IS NULL OR p.competencia >= @inicio::date)
+              AND (@fim::date IS NULL OR p.competencia <= @fim::date)";
+
+        var sqlVendas = $@"
+            SELECT v.cliente_id AS ClienteId,
+                   CASE WHEN c.id IS NOT NULL OR hosp.id IS NOT NULL THEN COALESCE(c.nome, hosp.nome) ELSE NULL END AS Nome,
+                   count(*)::int AS QtdVendas,
+                   COALESCE(sum(v.total_bruto), 0) AS ReceitaBruta,
+                   COALESCE(sum(v.desconto), 0) AS Deducoes,
+                   COALESCE(sum(v.total_liquido), 0) AS ReceitaLiquida,
+                   COALESCE(sum(v.total_custo), 0) AS CustoRealizado,
+                   COALESCE(sum(v.comissao_prevista), 0) AS ComissoesPrevistas
+            FROM plantaopro.adm360_vendas v
+            LEFT JOIN plantaopro.adm360_parceiros c ON c.id = v.cliente_id AND c.tenant_id = v.tenant_id
+            LEFT JOIN plantaopro.hospitais hosp ON hosp.id = v.cliente_id AND hosp.tenant_id = v.tenant_id
+            WHERE true
+{filtroVendas}
+            GROUP BY v.cliente_id, c.id, hosp.id, c.nome, hosp.nome
+            ORDER BY 2 NULLS LAST";
+        var rowsVendas = await cn.QueryAsync<dynamic>(new CommandDefinition(sqlVendas, new { tenantId, inicio, fim, clienteId }, cancellationToken: ct));
+
+        var linhas = new List<DreGerencialLinha>();
+        bool temOrfa = false;
+        int qtdOrfa = 0;
+        decimal brutoOrfa = 0m, dedOrfa = 0m, liqOrfa = 0m, custoOrfa = 0m, comOrfa = 0m;
+
+        foreach (var r in rowsVendas)
+        {
+            string? nome = (string?)r.nome;
+            int qtd = (int)r.qtdvendas;
+            decimal bruto = (decimal)r.receitabruta;
+            decimal ded = (decimal)r.deducoes;
+            decimal liq = (decimal)r.receitaliquida;
+            decimal custo = (decimal)r.custorealizado;
+            decimal comissao = (decimal)r.comissoesprevistas;
+
+            if (nome is null)
+            {
+                // bucket "Não atribuída": coalesce qualquer cliente_id que não resolva em nome
+                temOrfa = true;
+                qtdOrfa += qtd; brutoOrfa += bruto; dedOrfa += ded; liqOrfa += liq; custoOrfa += custo; comOrfa += comissao;
+            }
+            else
+            {
+                linhas.Add(new DreGerencialLinha((Guid?)r.clienteid, nome, qtd, bruto, ded, liq, custo, liq - custo, comissao, 0m, liq - custo - comissao));
+            }
+        }
+
+        // despesas do período (somente quando sem filtro — com filtro, a linha do cliente leva 0)
+        int qtdDespesas = 0;
+        decimal totalDespesas = 0m;
+        if (clienteId is null)
+        {
+            qtdDespesas = await cn.ExecuteScalarAsync<int>(new CommandDefinition($@"
+                SELECT count(*)
+                FROM plantaopro.adm360_titulos_pagar p
+                WHERE true
+{filtroDespesas}", new { tenantId, inicio, fim }, cancellationToken: ct));
+            totalDespesas = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition($@"
+                SELECT COALESCE(sum(p.valor_principal), 0)
+                FROM plantaopro.adm360_titulos_pagar p
+                WHERE true
+{filtroDespesas}", new { tenantId, inicio, fim }, cancellationToken: ct));
+        }
+
+        // conciliação: re-agrega as MESMAS fontes do relatório e compara com as linhas
+        decimal liqRef = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition($@"
+            SELECT COALESCE(sum(v.total_liquido), 0)
+            FROM plantaopro.adm360_vendas v
+            WHERE true
+{filtroVendas}", new { tenantId, inicio, fim, clienteId }, cancellationToken: ct));
+        decimal custoRef = await cn.ExecuteScalarAsync<decimal>(new CommandDefinition($@"
+            SELECT COALESCE(sum(v.total_custo), 0)
+            FROM plantaopro.adm360_vendas v
+            WHERE true
+{filtroVendas}", new { tenantId, inicio, fim, clienteId }, cancellationToken: ct));
+
+        decimal liqLinhas = linhas.Sum(x => x.ReceitaLiquida) + liqOrfa;
+        decimal custoLinhas = linhas.Sum(x => x.CustoRealizado) + custoOrfa;
+        int vendasNoPeriodo = linhas.Sum(x => x.QtdVendas) + qtdOrfa;
+
+        // somas do PostgreSQL (numeric) e .NET decimal são exatas — comparação direta é válida
+        bool okLiq = liqLinhas == liqRef;
+        bool okCusto = custoLinhas == custoRef;
+        // Conciliação de despesas: nesta base todo o total vai para "Não atribuída" (sem divisão em
+        // linhas de cliente) → bate por construção com a referência da mesma consulta; o flag e o
+        // delta seguem explícitos na resposta para a UI e para eventual regra futura de atribuição.
+        bool okDes = true;
+        decimal deltaDes = 0m;
+
+        if (temOrfa || totalDespesas > 0m)
+        {
+            linhas.Add(new DreGerencialLinha(
+                null, "Não atribuída", qtdOrfa, brutoOrfa, dedOrfa, liqOrfa, custoOrfa,
+                liqOrfa - custoOrfa, comOrfa, totalDespesas, liqOrfa - custoOrfa - comOrfa - totalDespesas));
+        }
+
+        var final = linhas
+            .OrderBy(x => x.ClienteId is null ? 1 : 0)   // bucket "Não atribuída" sempre por último
+            .ThenBy(x => x.Cliente, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new DreGerencialDto(
+            inicio, fim, final,
+            new DreGerencialConciliacao(
+                vendasNoPeriodo, qtdDespesas,
+                okLiq, Math.Abs(liqLinhas - liqRef),
+                okCusto, Math.Abs(custoLinhas - custoRef),
+                okDes, deltaDes));
+    }
 }

@@ -164,4 +164,145 @@ public sealed class Administrativo360RelatoriosFinanceiroClienteTests
         await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
             repo.RelatorioMargemAsync(tenantA, null, null, CancellationToken.None, clienteB));
     }
+
+    // s11 (rodada 9 r9g): DRE gerencial POR CLIENTE em competência — bucket "Não atribuída"
+    // (venda sem nome resolvido + despesas, que não têm vínculo com cliente nesta base),
+    // reconciliação consolidado = clientes + não atribuída, e rejeição cross-tenant.
+    [Fact]
+    public async Task DreGerencial_PorCliente_CompentenciaConciliacaoEOrfa()
+    {
+        var cs = ObterConnectionString();
+        await GarantirConexaoBancoAsync(cs);
+
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var usuarioId = Guid.NewGuid();
+        var clienteA = Guid.NewGuid();     // parceiro resolvido → linha com nome
+        var clienteB = Guid.NewGuid();     // parceiro de OUTRO tenant → rejeição cross-tenant
+        var orfaCli = Guid.NewGuid();     // cliente_id aleatório (sem parceiro/hospital) → "Não atribuída"
+        var fornecedorA = Guid.NewGuid(); // fornecedor para adm360_titulos_pagar
+
+        var hoje = DateOnly.FromDateTime(DateTime.UtcNow);
+        var compOk = hoje.AddDays(-5);     // dentro da janela [-30, +30]
+        var compFora = hoje.AddDays(40);   // fora da janela principal, dentro da secundária [+31, +60]
+
+        var vendaN1 = Guid.NewGuid();     // venda do cliente nomeado
+        var vendaO1 = Guid.NewGuid();     // venda órfã (não atribuída)
+        var dp1 = Guid.NewGuid();         // despesa APROVADA na janela → contabilizada
+        var dp2 = Guid.NewGuid();         // despesa CANCELADA na janela → fora
+        var dp3 = Guid.NewGuid();         // despesa APROVADA fora da janela → fora da principal
+
+        await using var cn = new NpgsqlConnection(cs);
+        await cn.OpenAsync();
+
+        // Repositório antes do SQL bruto (construtor estático registra o TypeHandler de DateOnly).
+        var repo = new Adm360FinanceiroRelatoriosRepository(cs);
+
+        await cn.ExecuteAsync(@"
+            INSERT INTO plantaopro.tenants(id, tenant_id, codigo, nome, status)
+            VALUES
+                (@tenantA, @tenantA, 'tenant-r9g-a', 'Tenant R9G A', 'ATIVO'),
+                (@tenantB, @tenantB, 'tenant-r9g-b', 'Tenant R9G B', 'ATIVO')
+            ON CONFLICT (id) DO NOTHING;
+
+            INSERT INTO plantaopro.adm360_parceiros(id, tenant_id, nome, documento, fornecedor, ativo)
+            VALUES
+                (@clienteA, @tenantA, 'Cliente DRE Alfa', null, false, true),
+                (@fornecedorA, @tenantA, 'Fornecedor DRE Alfa', null, true, true),
+                (@clienteB, @tenantB, 'Cliente DRE Outro Tenant', null, false, true);
+
+            INSERT INTO plantaopro.adm360_vendas(
+                id, tenant_id, numero, origem_tipo, origem_id, cliente_id, pagador_id, competencia,
+                total_bruto, desconto, total_liquido, total_custo, comissao_percentual, comissao_prevista,
+                condicao_pagamento, quantidade_parcelas, situacao, idempotency_key, created_by
+            ) VALUES
+                (@vendaN1, @tenantA, 'VEN-R9G-01', 'DIRETA', @vendaN1, @clienteA, @fornecedorA, @compOk,
+                 200.00, 20.00, 180.00, 80.00, 5, 9.00, 'A_PRAZO', 1, 'CONFIRMADA', 'key-ven-r9g-01', @usuarioId),
+                (@vendaO1, @tenantA, 'VEN-R9G-02', 'DIRETA', @vendaO1, @orfaCli, @fornecedorA, @compOk,
+                 100.00, 0.00, 100.00, 40.00, 4, 4.00, 'A_PRAZO', 1, 'CONFIRMADA', 'key-ven-r9g-02', @usuarioId);
+
+            INSERT INTO plantaopro.adm360_titulos_pagar(
+                id, tenant_id, numero, origem_tipo, fornecedor_id, competencia, data_emissao, data_vencimento,
+                valor_principal, situacao, saldo_aberto
+            ) VALUES
+                (@dp1, @tenantA, 'TP-R9G-01', 'DESPESA_MANUAL', @fornecedorA, @compOk, @compOk, @compOk, 30.00, 'APROVADO', 30.00),
+                (@dp2, @tenantA, 'TP-R9G-02', 'DESPESA_MANUAL', @fornecedorA, @compOk, @compOk, @compOk, 77.00, 'CANCELADO', 77.00),
+                (@dp3, @tenantA, 'TP-R9G-03', 'DESPESA_MANUAL', @fornecedorA, @compFora, @compFora, @compFora, 55.00, 'APROVADO', 55.00);
+        ", new { tenantA, tenantB, usuarioId, clienteA, clienteB, orfaCli, fornecedorA, compOk, compFora, vendaN1, vendaO1, dp1, dp2, dp3 });
+
+        var jn = hoje.AddDays(-30);
+        var jf = hoje.AddDays(30);
+
+        // -------------------------------------------------------------------
+        // Sem filtro: linha do cliente nomeado + bucket "Não atribuída" (órfã + despesas).
+        // -------------------------------------------------------------------
+        var dre = await repo.RelatorioDreAsync(tenantA, jn, jf, null, CancellationToken.None);
+        Assert.Equal(2, dre.Linhas.Count);
+        // ordenação: nomeado primeiro, "Não atribuída" sempre por último
+        var linhaAlfa = dre.Linhas[0];
+        var linhaOrfa = dre.Linhas[1];
+
+        Assert.Equal("Cliente DRE Alfa", linhaAlfa.Cliente);
+        Assert.Equal(clienteA, linhaAlfa.ClienteId);
+        Assert.Equal(1, linhaAlfa.QtdVendas);
+        Assert.Equal(200.00m, linhaAlfa.ReceitaBruta);
+        Assert.Equal(20.00m, linhaAlfa.Deducoes);
+        Assert.Equal(180.00m, linhaAlfa.ReceitaLiquida);
+        Assert.Equal(80.00m, linhaAlfa.CustoRealizado);
+        Assert.Equal(100.00m, linhaAlfa.ResultadoBruto);
+        Assert.Equal(9.00m, linhaAlfa.ComissoesPrevistas);
+        Assert.Equal(0.00m, linhaAlfa.DespesasAtribuidas);   // nenhuma regra de atribuição inventada
+        Assert.Equal(91.00m, linhaAlfa.ResultadoGerencial);  // 180 - 80 - 9
+
+        Assert.Equal("Não atribuída", linhaOrfa.Cliente);
+        Assert.Null(linhaOrfa.ClienteId);
+        Assert.Equal(1, linhaOrfa.QtdVendas);
+        Assert.Equal(100.00m, linhaOrfa.ReceitaLiquida);
+        Assert.Equal(40.00m, linhaOrfa.CustoRealizado);
+        Assert.Equal(60.00m, linhaOrfa.ResultadoBruto);
+        Assert.Equal(4.00m, linhaOrfa.ComissoesPrevistas);
+        Assert.Equal(30.00m, linhaOrfa.DespesasAtribuidas);  // só a APROVADA na janela (CANCELADA e futura fora)
+        Assert.Equal(26.00m, linhaOrfa.ResultadoGerencial);  // 60 - 4 - 30
+
+        // conciliação: consolidado = clientes + não atribuída, re-agregado das mesmas fontes
+        Assert.Equal(2, dre.Conciliacao.VendasNoPeriodo);
+        Assert.Equal(1, dre.Conciliacao.DespesasNoPeriodo);
+        Assert.True(dre.Conciliacao.ReceitaLiquidaBate);
+        Assert.True(dre.Conciliacao.CustoBate);
+        Assert.True(dre.Conciliacao.DespesasBatem);
+        Assert.Equal(0m, dre.Conciliacao.DeltaReceitaLiquida);
+        Assert.Equal(0m, dre.Conciliacao.DeltaCusto);
+        Assert.Equal(0m, dre.Conciliacao.DeltaDespesas);
+
+        // -------------------------------------------------------------------
+        // Filtro por cliente do próprio tenant: só a linha dele, sem despesas (regra declarada).
+        // -------------------------------------------------------------------
+        var dreFiltrado = await repo.RelatorioDreAsync(tenantA, jn, jf, clienteA, CancellationToken.None);
+        var somenteAlfa = Assert.Single(dreFiltrado.Linhas);
+        Assert.Equal("Cliente DRE Alfa", somenteAlfa.Cliente);
+        Assert.Equal(0.00m, somenteAlfa.DespesasAtribuidas);
+        Assert.Equal(91.00m, somenteAlfa.ResultadoGerencial);
+        Assert.True(dreFiltrado.Conciliacao.ReceitaLiquidaBate);
+        Assert.Equal(1, dreFiltrado.Conciliacao.VendasNoPeriodo);
+
+        // cross-tenant continua sendo rejeição explícita no DRE
+        await Assert.ThrowsAsync<Administrativo360BusinessException>(() =>
+            repo.RelatorioDreAsync(tenantA, jn, jf, clienteB, CancellationToken.None));
+
+        // -------------------------------------------------------------------
+        // Período secundário sem vendas: só o total de despesas entra (competencia da despesa).
+        // -------------------------------------------------------------------
+        var dreSemVendas = await repo.RelatorioDreAsync(tenantA, hoje.AddDays(31), hoje.AddDays(60), null, CancellationToken.None);
+        var apenasDespesa = Assert.Single(dreSemVendas.Linhas);
+        Assert.Equal("Não atribuída", apenasDespesa.Cliente);
+        Assert.Equal(0, apenasDespesa.QtdVendas);
+        Assert.Equal(0.00m, apenasDespesa.ReceitaLiquida);
+        Assert.Equal(55.00m, apenasDespesa.DespesasAtribuidas);
+        Assert.Equal(-55.00m, apenasDespesa.ResultadoGerencial);
+        Assert.Equal(1, dreSemVendas.Conciliacao.DespesasNoPeriodo);
+        Assert.Equal(0, dreSemVendas.Conciliacao.VendasNoPeriodo);
+
+        // isolamento por tenant: B não vê nada do A
+        Assert.Empty((await repo.RelatorioDreAsync(tenantB, jn, jf, null, CancellationToken.None)).Linhas);
+    }
 }

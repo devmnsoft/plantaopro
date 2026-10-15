@@ -1,0 +1,5 @@
+start 2026-10-15T14:58:37.6174533-03:00
+listening 18999
+saved relfin.html bytes=66763
+saved produtos.html bytes=82444
+saved cotdet.html bytes=89391

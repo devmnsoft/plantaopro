@@ -84,3 +84,47 @@
 - `plantaopro.adm360_documentos_xml_a3` depende de: plantaopro.adm360_documentos_xml_b1, plantaopro.administrativo360_cotacoes_xml_dashboard
 - `plantaopro.adm360_eventos_conferencia_a3` depende de: plantaopro.adm360_eventos
 - `plantaopro.adm360_documentos_identidade_ws_a3` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard
+- `plantaopro.tabelas_legado_gap_instalacao` depende de: plantaopro.saas_tenants
+- `plantaopro.colunas_convergencia_instalacao` depende de: plantaopro.auditoria_observabilidade, plantaopro.executive_commercial_v1450, plantaopro.financeiro_clinico_convenios_v2180, plantaopro.identity_access, plantaopro.jornada_clinica_v2160, plantaopro.operacao_plantoes, plantaopro.relatorios, plantaopro.saas_tenants, plantaopro.saude360, plantaopro.saude360_prontuario_v1270, plantaopro.saude360_v2159, plantaopro.schema_canonico_base
+- `2026_10_v2312_saas_assinaturas_colunas_comerciais_b6` depende de: plantaopro.saas_tenants
+- `2026_10_v2313_saas_planos_permite_relatorios_b6` depende de: plantaopro.saas_tenants
+- `2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem` depende de: plantaopro.administrativo360_cotacoes_xml_dashboard, plantaopro.adm360_eventos
+- `2026_10_v2315_saude360_b8_financeiro_canonico` depende de: nenhuma
+- `2026_10_v2316_saude360_b8_fila_atendimento_legado` depende de: nenhuma
+- `2026_10_v2317_saude360_b9_contestacao_situacao_anterior` depende de: plantaopro.fechamento_operacional_v187
+- `2026_10_v2318_saude360_b9_plantao_historico_contrato` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2319_saude360_b9_notificacoes_contrato` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2320_saude360_b9_plantoes_auditoria` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2321_adm360_fiscal_parametros_pre_emitidas` depende de: plantaopro.adm360_eventos
+- `2026_10_v2322_adm360_grants_adm_cliente_r5_a2` depende de: nenhuma
+- `2026_10_v2323_b4_matriz_comercial_solicitacoes` depende de: plantaopro.saas_tenants
+- `2026_10_v2324_b4_plano_modulos_canonicos` depende de: plantaopro.tabelas_legado_gap_instalacao
+- `2026_10_v2325_b4_plano_recursos_colunas` depende de: plantaopro.tabelas_legado_gap_instalacao
+- `2026_10_v2326_b4_assinatura_historico_colunas` depende de: plantaopro.saas_tenants
+- `2026_10_v2327_b4_historico_reg_status` depende de: plantaopro.saas_tenants
+- `2026_10_v2328_b5_provisionamento_convites` depende de: plantaopro.saas_tenants
+- `2026_10_v2329_b5_grants_usuarios_adm_cliente` depende de: nenhuma
+- `2026_10_v2330_b5_onboarding_whitelabel_colunas` depende de: plantaopro.saas_tenants
+- `2026_10_v2331_b5_lgpd_consentimentos_colunas` depende de: plantaopro.tabelas_legado_gap_instalacao
+- `2026_10_v2332_b6_cobranca_saas` depende de: plantaopro.saas_tenants
+- `2026_10_v2333_c7_onboarding_contrato` depende de: plantaopro.saas_tenants
+- `2026_10_v2334_d9_perfil_admin_modulos_jornada` depende de: nenhuma
+- `2026_10_v2335_d11_perfil_admin_modulos_finos_saude` depende de: nenhuma
+- `2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico` depende de: nenhuma
+- `2026_10_v2337_p0_convergencia_tenant_modulos_reg_status` depende de: plantaopro.saas_tenants
+- `2026_10_v2338_p0_adm360_garantia_codigos_fiscais` depende de: nenhuma
+- `2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades` depende de: plantaopro.schema_canonico_base
+- `2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade` depende de: nenhuma
+- `2026_10_v2341_r7a1_conflitos_unificados_profissional` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2342_r7a1_historico_escala_colunas` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2343_r7a1_convite_ciclo_vida` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2344_r7e1_usuario_idioma_preferido` depende de: plantaopro.identity_access
+- `2026_10_v2345_r7ob_onboarding_preferencias_idioma` depende de: nenhuma
+- `2026_10_v2346_r8b2_notificacoes_legado_dedupe` depende de: plantaopro.operacao_plantoes
+- `2026_10_v2347_r8b4_cancelamento_compras` depende de: plantaopro.administrativo360_suprimentos
+- `2026_10_v2348_r8b5_backfill_medico_especialidades` depende de: nenhuma
+- `2026_10_v2349_r8b6_mesclagem_pacientes` depende de: plantaopro.saude360
+- `2026_10_v2350_r8b7_glosa_item_recurso_documentos` depende de: plantaopro.regras_faturamento_repasses_v115, plantaopro.tabelas_legado_gap_instalacao
+- `2026_10_v2351_r8b10_cid_tabela_unicao_versionada` depende de: plantaopro.tabelas_legado_gap_instalacao
+- `2026_10_v2352_r9c_cadastro_anvisa_produtos` depende de: plantaopro.administrativo360_suprimentos
+- `2026_10_v2353_r9d_precificacao_preco_venda` depende de: plantaopro.administrativo360_suprimentos

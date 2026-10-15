@@ -5,9 +5,9 @@ DO $$ BEGIN
  END IF;
 END $$;
 -- PlantãoPro - schema SQL puro para banco de destino já existente
--- Versão do schema: v2.21.8
+-- Versão do schema: v2.21.9
 -- PostgreSQL suportado: 16
--- Data de geração: 2026-10-04
+-- Data de geração: 2026-10-15
 -- Execução oficial:
 --   psql \
 --     -v ON_ERROR_STOP=1 \
@@ -7093,3 +7093,3132 @@ BEGIN
     RAISE NOTICE 'WS-A3/v2311: pos-condicoes verificadas (identidade fiscal unica fora de quarentena, sequencias 1..N, hashes coerentes)';
 END
 $v2311$;
+
+-- ============================================================
+-- Seção 81 — Tabelas Legado Gap Instalacao v2.21.9
+-- ============================================================
+
+-- SOURCE: database/schema/450_v2219_tabelas_legado_gap_instalacao.sql
+-- SOURCE-SHA256: 9606092c662e98fd3c4d30df1cc7c1426e4ff9b2e6ce421c69dfbdd784b2a3fc
+-- ============================================================================
+-- PlantaoPro | Schema canonico de instalacao limpa: 450_v2219_tabelas_legado_gap_instalacao
+-- Rodada 9 (r9i) - fechamento do debito de instalacao consolidada (auditoria 3.10).
+--
+-- Contexto: oito tabelas criadas por migrations legadas (antes da curadoria do
+-- install-manifest) nunca foram incorporadas ao caminho de instalacao limpa,
+-- quebrando as migrations subsequentes v2312-v2353 em banco novo:
+--   plano_modulos              (2026_plantao_pro_self_service_white_label e similares)
+--   plano_recursos             (2026_plantao_pro_saas_comercial_lgpd_jornada e similares)
+--   lgpd_consentimentos        (20260607_saas_lgpd_jornada_comercial_ajuda e similares)
+--   v116_faturamento_lote_itens (2026_v116_consolidacao_operacional_final)
+--   cid_tabela                 (2026_fix_cid_tabela_schema / saude360_cid_*)
+--   clinica_lancamentos        (2026_plantao_pro_saude360_modulos_clinicos / 2026_saude360_financeiro_clinica)
+--   clinica_estornos           (2026_saude360_financeiro_clinica)
+--   convenio_autorizacoes      (2026_plantao_pro_saude360_modulos_clinicos / 2026_saude360_convenios_planos_saude)
+--
+-- Conteudo: snapshot de schema (colunas, constraints, indices e sequencias)
+-- gerado do catalogo do banco de homologacao em 2026-10-15 (pg_attribute,
+-- pg_constraint/pg_get_constraintdef, pg_index, pg_depend). As migrations
+-- v2315/v2324/v2325/v2331/v2350/v2351 sao aditivas e idempotentes (ADD COLUMN IF
+-- NOT EXISTS / DROP CONSTRAINT IF EXISTS), portanto convergem sobre este
+-- snapshot sem conflito em banco novo nem legado.
+--
+-- Idempotencia: CREATE TABLE/SEQUENCE/INDEX IF NOT EXISTS; seguro dentro da
+-- transacao unica do comando install. Inclui bloco final de garantia dos
+-- codigos ADM360/USUARIOS exigidos pelos v2322/v2329 ("garantia codigos").
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS plantaopro.plano_modulos (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    plano_id uuid NOT NULL,
+    modulo_id uuid,
+    codigo_modulo text NOT NULL,
+    habilitado boolean NOT NULL DEFAULT true,
+    status text NOT NULL DEFAULT 'ATIVO'::text,
+    reg_date timestamp without time zone NOT NULL DEFAULT now(),
+    reg_update timestamp without time zone,
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    tenant_id uuid,
+    cliente_id uuid,
+    parceiro_id uuid,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    incluido boolean NOT NULL DEFAULT true,
+    limite integer,
+    preco_adicional numeric(14,2),
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_plano_modulos_cliente_id ON plantaopro.plano_modulos USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_plano_modulos_plano_status_regdate ON plantaopro.plano_modulos USING btree (plano_id, status, reg_date);
+
+CREATE INDEX IF NOT EXISTS ix_plano_modulos_reg_date ON plantaopro.plano_modulos USING btree (reg_date DESC);
+
+CREATE INDEX IF NOT EXISTS ix_plano_modulos_status ON plantaopro.plano_modulos USING btree (status);
+
+CREATE INDEX IF NOT EXISTS ix_plano_modulos_tenant_id ON plantaopro.plano_modulos USING btree (tenant_id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_plano_modulos_ativo ON plantaopro.plano_modulos USING btree (plano_id, modulo_id) WHERE ((reg_status = 'A'::bpchar) AND (modulo_id IS NOT NULL));
+
+CREATE TABLE IF NOT EXISTS plantaopro.plano_recursos (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    plano_id uuid NOT NULL,
+    recurso character varying(80) NOT NULL,
+    habilitado boolean NOT NULL DEFAULT true,
+    limite integer,
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    reg_date timestamp without time zone NOT NULL DEFAULT now(),
+    reg_update timestamp without time zone,
+    codigo character varying(80),
+    tenant_id uuid,
+    cliente_id uuid,
+    parceiro_id uuid,
+    status character varying(40) NOT NULL DEFAULT 'ATIVO'::character varying,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    nome character varying(160),
+    descricao text,
+    FOREIGN KEY (plano_id) REFERENCES plantaopro.planos(id),
+    PRIMARY KEY (id),
+    UNIQUE (plano_id, codigo)
+);
+
+CREATE INDEX IF NOT EXISTS ix_plano_recursos_cliente_id ON plantaopro.plano_recursos USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_plano_recursos_plano_codigo ON plantaopro.plano_recursos USING btree (plano_id, codigo, reg_status);
+
+CREATE INDEX IF NOT EXISTS ix_plano_recursos_reg_date ON plantaopro.plano_recursos USING btree (reg_date DESC);
+
+CREATE INDEX IF NOT EXISTS ix_plano_recursos_status ON plantaopro.plano_recursos USING btree (status);
+
+CREATE INDEX IF NOT EXISTS ix_plano_recursos_tenant_id ON plantaopro.plano_recursos USING btree (tenant_id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.lgpd_consentimentos (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    usuario_id uuid,
+    finalidade character varying(160) NOT NULL,
+    base_legal character varying(120) NOT NULL,
+    versao_politica character varying(30) NOT NULL,
+    consentido boolean NOT NULL DEFAULT true,
+    ip character varying(80),
+    user_agent text,
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    reg_date timestamp without time zone NOT NULL DEFAULT now(),
+    reg_update timestamp without time zone,
+    cliente_id uuid,
+    tenant_id uuid,
+    parceiro_id uuid,
+    plano_id uuid,
+    status character varying(40) NOT NULL DEFAULT 'ATIVO'::character varying,
+    metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    titular_email text,
+    politica_id uuid,
+    aceito boolean,
+    origem text,
+    ip_origem text,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_cliente_id ON plantaopro.lgpd_consentimentos USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_reg_date ON plantaopro.lgpd_consentimentos USING btree (reg_date DESC);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_status ON plantaopro.lgpd_consentimentos USING btree (status);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_tenant_cliente_status_regdate ON plantaopro.lgpd_consentimentos USING btree (tenant_id, cliente_id, reg_status, reg_date);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_tenant_id ON plantaopro.lgpd_consentimentos USING btree (tenant_id);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_usuario ON plantaopro.lgpd_consentimentos USING btree (usuario_id, finalidade);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_usuario_finalidade ON plantaopro.lgpd_consentimentos USING btree (usuario_id, finalidade, reg_date DESC);
+
+CREATE INDEX IF NOT EXISTS ix_lgpd_consentimentos_usuario_reg_date ON plantaopro.lgpd_consentimentos USING btree (usuario_id, reg_date DESC);
+
+CREATE TABLE IF NOT EXISTS plantaopro.v116_faturamento_lote_itens (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    cliente_id uuid NOT NULL,
+    tenant_id uuid NOT NULL,
+    reg_status character varying(40) NOT NULL DEFAULT 'ATIVO'::character varying,
+    descricao text,
+    status_operacional character varying(60),
+    valor numeric(14,2),
+    data_referencia timestamp with time zone,
+    payload_demo jsonb,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    created_by character varying(120),
+    updated_at timestamp with time zone,
+    updated_by character varying(120),
+    lote_id uuid,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_v116_faturamento_lote_itens_tenant_status_data ON plantaopro.v116_faturamento_lote_itens USING btree (tenant_id, reg_status, created_at);
+
+CREATE INDEX IF NOT EXISTS ix_v116_lote_itens_tenant_lote ON plantaopro.v116_faturamento_lote_itens USING btree (tenant_id, lote_id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.cid_tabela (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    cliente_id uuid,
+    tenant_id uuid,
+    codigo text NOT NULL,
+    descricao text NOT NULL,
+    categoria text NOT NULL DEFAULT ''::text,
+    status text NOT NULL DEFAULT 'ATIVO'::text,
+    created_by uuid,
+    reg_date timestamp with time zone NOT NULL DEFAULT now(),
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    capitulo text NOT NULL DEFAULT ''::text,
+    updated_by uuid,
+    reg_update timestamp without time zone,
+    updated_at timestamp without time zone,
+    data_fim timestamp with time zone,
+    data_inicio timestamp with time zone,
+    versao text NOT NULL DEFAULT 'CID-10'::text,
+    descricao_normalizada text NOT NULL DEFAULT ''::text,
+    capitulo_codigo text NOT NULL DEFAULT ''::text,
+    capitulo_nome text NOT NULL DEFAULT ''::text,
+    grupo_codigo text NOT NULL DEFAULT ''::text,
+    grupo_nome text NOT NULL DEFAULT ''::text,
+    fonte text NOT NULL DEFAULT ''::text,
+    fonte_url text NOT NULL DEFAULT ''::text,
+    data_importacao timestamp without time zone NOT NULL DEFAULT now(),
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_busca ON plantaopro.cid_tabela USING btree (codigo, descricao);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_capitulo_codigo ON plantaopro.cid_tabela USING btree (capitulo_codigo);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_cliente_id ON plantaopro.cid_tabela USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_codigo ON plantaopro.cid_tabela USING btree (codigo);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_descricao ON plantaopro.cid_tabela USING btree (descricao);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_descricao_normalizada ON plantaopro.cid_tabela USING btree (descricao_normalizada);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_grupo_codigo ON plantaopro.cid_tabela USING btree (grupo_codigo);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_reg_date ON plantaopro.cid_tabela USING btree (reg_date);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_reg_status ON plantaopro.cid_tabela USING btree (reg_status);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_status ON plantaopro.cid_tabela USING btree (status);
+
+CREATE INDEX IF NOT EXISTS ix_cid_tabela_versao ON plantaopro.cid_tabela USING btree (versao);
+
+CREATE INDEX IF NOT EXISTS ix_saude360_cid_codigo ON plantaopro.cid_tabela USING btree (codigo);
+
+CREATE INDEX IF NOT EXISTS ix_saude360_cid_descricao ON plantaopro.cid_tabela USING btree (descricao);
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_cid_tabela_versao_codigo_ativo ON plantaopro.cid_tabela USING btree (versao, upper(codigo)) WHERE ((reg_status = 'A'::bpchar) AND (codigo <> ''::text));
+
+CREATE TABLE IF NOT EXISTS plantaopro.clinica_lancamentos (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    cliente_id uuid,
+    caixa_id uuid,
+    tipo text NOT NULL,
+    descricao text NOT NULL,
+    valor numeric(12,2) NOT NULL,
+    status text NOT NULL DEFAULT 'REGISTRADO'::text,
+    created_by uuid,
+    updated_by uuid,
+    created_at timestamp with time zone NOT NULL DEFAULT now(),
+    updated_at timestamp with time zone,
+    reg_date timestamp with time zone NOT NULL DEFAULT now(),
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_lancamentos_cliente_caixa ON plantaopro.clinica_lancamentos USING btree (cliente_id, caixa_id);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_lancamentos_cliente_id ON plantaopro.clinica_lancamentos USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_lancamentos_reg_date ON plantaopro.clinica_lancamentos USING btree (reg_date);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_lancamentos_reg_status ON plantaopro.clinica_lancamentos USING btree (reg_status);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_lancamentos_status ON plantaopro.clinica_lancamentos USING btree (status);
+
+CREATE TABLE IF NOT EXISTS plantaopro.clinica_estornos (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid,
+    recebimento_id uuid,
+    motivo text NOT NULL DEFAULT ''::text,
+    valor numeric(14,2) NOT NULL DEFAULT 0,
+    status text NOT NULL DEFAULT 'ESTORNADO'::text,
+    reg_date timestamp without time zone NOT NULL DEFAULT now(),
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_clinica_estornos_recebimento ON plantaopro.clinica_estornos USING btree (recebimento_id);
+
+CREATE TABLE IF NOT EXISTS plantaopro.convenio_autorizacoes (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid,
+    paciente_id uuid,
+    convenio_id uuid,
+    plano_saude_id uuid,
+    agendamento_id uuid,
+    consulta_id uuid,
+    numero_guia text NOT NULL DEFAULT ''::text,
+    senha_autorizacao text NOT NULL DEFAULT ''::text,
+    procedimento text NOT NULL DEFAULT ''::text,
+    procedimento_id uuid,
+    motivo text NOT NULL DEFAULT ''::text,
+    valor_autorizado numeric(14,2) NOT NULL DEFAULT 0,
+    status text NOT NULL DEFAULT 'PENDENTE'::text,
+    motivo_negativa text NOT NULL DEFAULT ''::text,
+    validade date,
+    created_by uuid,
+    updated_by uuid,
+    created_at timestamp without time zone NOT NULL DEFAULT now(),
+    updated_at timestamp without time zone,
+    reg_date timestamp without time zone NOT NULL DEFAULT now(),
+    reg_update timestamp without time zone,
+    reg_status character(1) NOT NULL DEFAULT 'A'::bpchar,
+    PRIMARY KEY (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_agendamento_id ON plantaopro.convenio_autorizacoes USING btree (agendamento_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_cliente_consulta ON plantaopro.convenio_autorizacoes USING btree (cliente_id, consulta_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_cliente_id ON plantaopro.convenio_autorizacoes USING btree (cliente_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_consulta_id ON plantaopro.convenio_autorizacoes USING btree (consulta_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_convenio_id ON plantaopro.convenio_autorizacoes USING btree (convenio_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_paciente_id ON plantaopro.convenio_autorizacoes USING btree (paciente_id);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_reg_date ON plantaopro.convenio_autorizacoes USING btree (reg_date);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_reg_status ON plantaopro.convenio_autorizacoes USING btree (reg_status);
+
+CREATE INDEX IF NOT EXISTS ix_convenio_autorizacoes_status ON plantaopro.convenio_autorizacoes USING btree (status);
+
+-- ============================================================================
+-- Garantia dos codigos de permissao de instalacao limpa. Este bloco
+-- garante os codigos exigidos pelos sanity-checks do v2322 (grants
+-- ADMINISTRADOR_CLIENTE ADM360) e do v2329 (grants ADMINISTRADOR_CLIENTE
+-- USUARIOS). Em instalacao limpa o seeder canonico (v2198 / seeds/system)
+-- cobre apenas parte deles e o restante (v2338) so existe depois do v2322 na
+-- ordem de versao; nos bancos legados esses codigos vieram dos scripts
+-- consolidados pre-manifest. Bloco idempotente: insere somente o que falta
+-- (dedupe por codigo normalizado ':' -> '.', mesmo padrao dos sanity-checks),
+-- usando o formato canonico com dois-pontos, o modulo ADM360 garantido pelo
+-- v2197 e as acoes/modulo USUARIOS canonicos dos seeds/system.
+-- ============================================================================
+DO $garantia_codigos$
+DECLARE
+    v_acao_acessar_id uuid;
+    v_acao_editar_id uuid;
+    v_acao_usr_id uuid;
+    v_modulo_adm_id uuid;
+    v_modulo_usr_id uuid;
+    v_suffix text;
+BEGIN
+    select id into v_acao_acessar_id from plantaopro.acoes_sistema where codigo in ('ACESSAR', 'LISTAR') order by id limit 1;
+    if v_acao_acessar_id is null then
+        v_acao_acessar_id := gen_random_uuid();
+        insert into plantaopro.acoes_sistema(id, codigo, nome, status, reg_status, reg_date)
+        values (v_acao_acessar_id, 'ACESSAR', 'Acessar', 'ATIVO', 'A', now());
+    end if;
+
+    select id into v_acao_editar_id from plantaopro.acoes_sistema where codigo in ('EDITAR', 'SALVAR') order by id limit 1;
+    if v_acao_editar_id is null then
+        v_acao_editar_id := gen_random_uuid();
+        insert into plantaopro.acoes_sistema(id, codigo, nome, status, reg_status, reg_date)
+        values (v_acao_editar_id, 'EDITAR', 'Editar', 'ATIVO', 'A', now());
+    end if;
+
+    select id into v_modulo_adm_id from plantaopro.modulos_sistema where upper(btrim(codigo)) = 'ADM360' and reg_status = 'A' limit 1;
+
+    foreach v_suffix in array array[
+        'VER',
+        'EXPORTAR',
+        'IMPORTAR_XML',
+        'CRIAR',
+        'EDITAR',
+        'CONFIGURAR',
+        'REABRIR',
+        'CONFIRMAR',
+        'CANCELAR',
+        'CONFERIR',
+        'MANIFESTAR_DFE',
+        'VINCULAR_DOCUMENTOS',
+        'TRANSMITIR_RESPOSTA'
+    ] loop
+        if not exists (
+            select 1 from plantaopro.permissoes
+             where replace(upper(btrim(codigo)), ':', '.') = ('ADM360.' || v_suffix)
+               and reg_status = 'A'
+        ) then
+            insert into plantaopro.permissoes (id, acao_id, modulo_id, codigo, nome, status, reg_status, reg_date)
+            values (gen_random_uuid(),
+                    case when v_suffix = 'VER' then v_acao_acessar_id else v_acao_editar_id end,
+                    v_modulo_adm_id, 'ADM360:' || v_suffix, replace('ADM360:' || v_suffix, ':', ' - '), 'ATIVO', 'A', now());
+        end if;
+    end loop;
+
+    select id into v_modulo_usr_id from plantaopro.modulos_sistema where upper(btrim(codigo)) = 'USUARIOS' and reg_status = 'A' limit 1;
+    foreach v_suffix in array array['VER', 'CRIAR', 'EDITAR', 'CONVIDAR'] loop
+        if not exists (
+            select 1 from plantaopro.permissoes
+             where replace(upper(btrim(codigo)), ':', '.') = ('USUARIOS.' || v_suffix)
+               and reg_status = 'A'
+        ) then
+            select id into v_acao_usr_id from plantaopro.acoes_sistema where codigo = v_suffix and reg_status = 'A' order by id limit 1;
+            if v_acao_usr_id is null then
+                v_acao_usr_id := gen_random_uuid();
+                insert into plantaopro.acoes_sistema(id, codigo, nome, status, reg_status, reg_date)
+                values (v_acao_usr_id, v_suffix, v_suffix, 'ATIVO', 'A', now());
+            end if;
+            insert into plantaopro.permissoes (id, acao_id, modulo_id, codigo, nome, status, reg_status, reg_date)
+            values (gen_random_uuid(), v_acao_usr_id, v_modulo_usr_id, 'USUARIOS:' || v_suffix, 'USUARIOS ' || v_suffix, 'ATIVO', 'A', now());
+        end if;
+    end loop;
+END
+$garantia_codigos$;
+
+-- ============================================================
+-- Seção 82 — Colunas Convergencia Instalacao v2.21.9
+-- ============================================================
+
+-- SOURCE: database/schema/460_v2219_colunas_convergencia_instalacao.sql
+-- SOURCE-SHA256: 92e665682e06e1d4bcdcddd0b66da475d10a6be1581a6944892cf74f0551abc9
+-- ============================================================================
+-- PlantaoPro | Convergencia de colunas de instalacao limpa: 460_v2219_colunas_convergencia_instalacao
+-- Rodada 9 (r9i) - fechamento do debito de instalacao consolidada (auditoria 3.10).
+--
+-- Contexto: a base canonica de instalacao foi curada para uma forma enxuta,
+-- enquanto o banco homologado (que percorreu todas as migrations legadas ate
+-- v2353) carrega, em 66 tabelas, as colunas de escopo/auditoria
+-- (tenant_id/cliente_id/parceiro_id/plano_id/metadata/reg_date/reg_update/
+-- reg_status/created_at/updated_at/created_by/updated_by) e campos de dominio
+-- que o codigo e as migrations v2312-v2353 consomem. Sem essa convergencia, a
+-- instalacao limpa quebra em v2333 (a.reg_status) e o runtime perderia colunas.
+--
+-- Conteudo: ADD COLUMN IF NOT EXISTS idempotente para cada coluna presente no
+-- homologado e ausente na instalacao limpa (fora das que o lote novo ja
+-- adiciona). Regra de seguranca: NOT NULL e mantido somente quando ha DEFAULT
+-- (linhas existentes herdariam o valor); colunas NOT NULL sem default sao
+-- adicionadas como NULLABLE para nunca falhar em tabela ja populada.
+-- Gerado do catalogo do banco homologado em 2026-10-15 (pg_attribute).
+-- ============================================================================
+
+alter table if exists plantaopro.acoes_sistema add column if not exists cliente_id uuid;
+alter table if exists plantaopro.acoes_sistema add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.acoes_sistema add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.acoes_sistema add column if not exists plano_id uuid;
+alter table if exists plantaopro.acoes_sistema add column if not exists tenant_id uuid;
+alter table if exists plantaopro.agendamento_checkins add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.agendamento_checkins add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.agendamentos add column if not exists convenio_id uuid;
+alter table if exists plantaopro.agendamentos add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.agendamentos add column if not exists created_by uuid;
+alter table if exists plantaopro.agendamentos add column if not exists especialidade text;
+alter table if exists plantaopro.agendamentos add column if not exists especialidade_id uuid;
+alter table if exists plantaopro.agendamentos add column if not exists hospital_id uuid;
+alter table if exists plantaopro.agendamentos add column if not exists motivo_cancelamento text default ''::text not null;
+alter table if exists plantaopro.agendamentos add column if not exists observacoes text default ''::text not null;
+alter table if exists plantaopro.agendamentos add column if not exists plano_saude_id uuid;
+alter table if exists plantaopro.agendamentos add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.agendamentos add column if not exists sala_id uuid;
+alter table if exists plantaopro.agendamentos add column if not exists tipo text default 'CONSULTA'::text not null;
+alter table if exists plantaopro.agendamentos add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.agendamentos add column if not exists updated_by uuid;
+alter table if exists plantaopro.agendamentos add column if not exists valor numeric(12,2) default 0 not null;
+alter table if exists plantaopro.api_error_logs add column if not exists user_id uuid;
+alter table if exists plantaopro.assinatura_bloqueios add column if not exists cliente_id uuid;
+alter table if exists plantaopro.assinatura_bloqueios add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.assinatura_bloqueios add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.assinatura_historico add column if not exists assinatura_id uuid;
+alter table if exists plantaopro.assinatura_historico add column if not exists cliente_id uuid;
+alter table if exists plantaopro.assinatura_historico add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.assinatura_historico add column if not exists status_novo text;
+alter table if exists plantaopro.assinatura_modulos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.assinatura_modulos add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.assinatura_modulos add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.assinatura_uso add column if not exists cliente_id uuid;
+alter table if exists plantaopro.assinatura_uso add column if not exists competencia date;
+alter table if exists plantaopro.assinatura_uso add column if not exists quantidade integer default 0 not null;
+alter table if exists plantaopro.assinatura_uso add column if not exists recurso character varying(80);
+alter table if exists plantaopro.assinatura_uso add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.assinatura_uso add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.assinaturas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.assinaturas add column if not exists data_fim date default (CURRENT_DATE + '1 mon'::interval) not null;
+alter table if exists plantaopro.assinaturas add column if not exists data_suspensao timestamp with time zone;
+alter table if exists plantaopro.assinaturas add column if not exists data_trial_fim date;
+alter table if exists plantaopro.assinaturas add column if not exists dia_vencimento integer default 10 not null;
+alter table if exists plantaopro.assinaturas add column if not exists motivo_suspensao text;
+alter table if exists plantaopro.assinaturas add column if not exists periodicidade character varying(30) default 'MENSAL'::character varying not null;
+alter table if exists plantaopro.assinaturas add column if not exists plano_id uuid;
+alter table if exists plantaopro.assinaturas add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.assinaturas add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.assinaturas add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.assinaturas add column if not exists renovacao_automatica boolean default true not null;
+alter table if exists plantaopro.assinaturas add column if not exists valor_contratado numeric(12,2) default 0 not null;
+alter table if exists plantaopro.assinaturas add column if not exists valor_mensal numeric(12,2) default 0 not null;
+alter table if exists plantaopro.auditoria_eventos add column if not exists acao character varying(120);
+alter table if exists plantaopro.auditoria_eventos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.auditoria_eventos add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.clientes add column if not exists cnpj character varying(30);
+alter table if exists plantaopro.clientes add column if not exists data_cancelamento timestamp with time zone;
+alter table if exists plantaopro.clientes add column if not exists data_inicio_contrato date;
+alter table if exists plantaopro.clientes add column if not exists data_suspensao timestamp with time zone;
+alter table if exists plantaopro.clientes add column if not exists motivo_cancelamento text;
+alter table if exists plantaopro.clientes add column if not exists motivo_suspensao text;
+alter table if exists plantaopro.clientes add column if not exists nome_fantasia character varying(200);
+alter table if exists plantaopro.clientes add column if not exists observacoes text;
+alter table if exists plantaopro.clientes add column if not exists razao_social character varying(200);
+alter table if exists plantaopro.clientes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.clientes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.clientes add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.clientes add column if not exists responsavel_email character varying(180);
+alter table if exists plantaopro.clientes add column if not exists responsavel_nome character varying(180);
+alter table if exists plantaopro.clientes add column if not exists responsavel_telefone character varying(40);
+alter table if exists plantaopro.clientes add column if not exists saude_score integer default 50 not null;
+alter table if exists plantaopro.clientes add column if not exists saude_status character varying(20) default 'ATENCAO'::character varying not null;
+alter table if exists plantaopro.clientes add column if not exists ultimo_recalculo_saude timestamp with time zone;
+alter table if exists plantaopro.clinica_caixa add column if not exists data_abertura timestamp without time zone default now() not null;
+alter table if exists plantaopro.clinica_caixa add column if not exists data_fechamento timestamp without time zone;
+alter table if exists plantaopro.clinica_caixa add column if not exists observacoes text default ''::text not null;
+alter table if exists plantaopro.clinica_caixa add column if not exists saldo_final numeric(14,2) default 0 not null;
+alter table if exists plantaopro.clinica_caixa add column if not exists total_entradas numeric(14,2) default 0 not null;
+alter table if exists plantaopro.clinica_caixa add column if not exists total_saidas numeric(14,2) default 0 not null;
+alter table if exists plantaopro.clinica_caixa add column if not exists usuario_abertura_id uuid;
+alter table if exists plantaopro.clinica_caixa add column if not exists usuario_fechamento_id uuid;
+alter table if exists plantaopro.clinica_contas_receber add column if not exists observacoes text default ''::text not null;
+alter table if exists plantaopro.clinica_contas_receber add column if not exists tipo_recebimento text default 'PARTICULAR'::text not null;
+alter table if exists plantaopro.clinica_recebimentos add column if not exists comprovante text default ''::text not null;
+alter table if exists plantaopro.clinica_recebimentos add column if not exists observacoes text default ''::text not null;
+alter table if exists plantaopro.clinica_recebimentos add column if not exists paciente_id uuid;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists descricao text default ''::text not null;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists destino text;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists especialidade_destino_id uuid;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists observacoes text default ''::text not null;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists paciente_id uuid;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists prioridade text default ''::text not null;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists status text default 'ABERTO'::text not null;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists tenant_id uuid;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.consulta_encaminhamentos add column if not exists updated_by uuid;
+alter table if exists plantaopro.consulta_historico add column if not exists acao text default ''::text not null;
+alter table if exists plantaopro.consulta_historico add column if not exists detalhe text default ''::text not null;
+alter table if exists plantaopro.consulta_historico add column if not exists status text default 'REGISTRADO'::text not null;
+alter table if exists plantaopro.consulta_historico add column if not exists tenant_id uuid;
+alter table if exists plantaopro.consulta_historico add column if not exists usuario_id uuid;
+alter table if exists plantaopro.consultas add column if not exists agendamento_id uuid;
+alter table if exists plantaopro.consultas add column if not exists cancelada_em timestamp with time zone;
+alter table if exists plantaopro.consultas add column if not exists cid_id uuid;
+alter table if exists plantaopro.consultas add column if not exists codigo_cid text default ''::text not null;
+alter table if exists plantaopro.consultas add column if not exists created_by uuid;
+alter table if exists plantaopro.consultas add column if not exists data_fim timestamp without time zone;
+alter table if exists plantaopro.consultas add column if not exists data_inicio timestamp without time zone;
+alter table if exists plantaopro.consultas add column if not exists especialidade_id uuid;
+alter table if exists plantaopro.consultas add column if not exists finalizada_em timestamp with time zone;
+alter table if exists plantaopro.consultas add column if not exists hospital_id uuid;
+alter table if exists plantaopro.consultas add column if not exists medico_id uuid;
+alter table if exists plantaopro.consultas add column if not exists motivo_atendimento text default ''::text not null;
+alter table if exists plantaopro.consultas add column if not exists motivo_cancelamento text default ''::text not null;
+alter table if exists plantaopro.consultas add column if not exists profissional_id uuid;
+alter table if exists plantaopro.consultas add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.consultas add column if not exists resumo text default ''::text not null;
+alter table if exists plantaopro.consultas add column if not exists tipo text default 'CONSULTA'::text not null;
+alter table if exists plantaopro.consultas add column if not exists updated_by uuid;
+alter table if exists plantaopro.convenios add column if not exists cliente_id uuid;
+alter table if exists plantaopro.convenios add column if not exists cnpj text default ''::text not null;
+alter table if exists plantaopro.convenios add column if not exists codigo_ans text default ''::text not null;
+alter table if exists plantaopro.convenios add column if not exists created_by uuid;
+alter table if exists plantaopro.convenios add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.convenios add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.convenios add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.convenios add column if not exists updated_by uuid;
+alter table if exists plantaopro.conversas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.conversas add column if not exists created_by uuid;
+alter table if exists plantaopro.conversas add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.conversas add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.conversas add column if not exists updated_by uuid;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.downgrade_solicitacoes add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.escalas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.escalas add column if not exists created_by uuid;
+alter table if exists plantaopro.escalas add column if not exists data_fim timestamp with time zone;
+alter table if exists plantaopro.escalas add column if not exists data_inicio timestamp with time zone;
+alter table if exists plantaopro.escalas add column if not exists justificativa text;
+alter table if exists plantaopro.escalas add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.especialidades add column if not exists cliente_id uuid;
+alter table if exists plantaopro.especialidades add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.eventos_sistema add column if not exists cliente_id uuid;
+alter table if exists plantaopro.eventos_sistema add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.eventos_sistema add column if not exists tipo character varying(120);
+alter table if exists plantaopro.faturas_saas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.faturas_saas add column if not exists competencia date;
+alter table if exists plantaopro.faturas_saas add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.faturas_saas add column if not exists valor_total numeric(12,2) default 0 not null;
+alter table if exists plantaopro.faturas_saas add column if not exists vencimento date;
+alter table if exists plantaopro.hospitais add column if not exists cidade character varying(80);
+alter table if exists plantaopro.hospitais add column if not exists cliente_id uuid;
+alter table if exists plantaopro.hospitais add column if not exists cnpj character varying(18);
+alter table if exists plantaopro.hospitais add column if not exists estado character(2);
+alter table if exists plantaopro.hospitais add column if not exists nome_fantasia character varying(200);
+alter table if exists plantaopro.hospitais add column if not exists razao_social character varying(200);
+alter table if exists plantaopro.hospitais add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.logs_operacionais add column if not exists acao character varying(120);
+alter table if exists plantaopro.logs_operacionais add column if not exists cliente_id uuid;
+alter table if exists plantaopro.logs_operacionais add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists cliente_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists created_by uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists data_fim timestamp without time zone;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists data_inicio timestamp without time zone;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists dia_semana integer;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists especialidade_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists hospital_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists medico_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists observacoes text;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists plano_id uuid;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.medico_disponibilidades add column if not exists turno character varying(30);
+alter table if exists plantaopro.medico_disponibilidades add column if not exists updated_by uuid;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists cliente_id uuid;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists created_by uuid;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists data_fim timestamp without time zone;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists data_inicio timestamp without time zone;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists medico_id uuid;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists motivo text;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.medico_indisponibilidades add column if not exists updated_by uuid;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists cliente_id uuid;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists created_by uuid;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists especialidades_preferidas uuid[];
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists hospitais_preferidos uuid[];
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists limite_plantoes_mes integer default 20 not null;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists limite_plantoes_semana integer default 5 not null;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists medico_id uuid;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists observacoes text;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists turnos_preferidos text[];
+alter table if exists plantaopro.medico_preferencias_plantao add column if not exists updated_by uuid;
+alter table if exists plantaopro.medicos add column if not exists cpf text;
+alter table if exists plantaopro.medicos add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.medicos add column if not exists usuario_id uuid;
+alter table if exists plantaopro.mensagens add column if not exists conversa_id uuid;
+alter table if exists plantaopro.mensagens add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.mensagens add column if not exists remetente_usuario_id uuid;
+alter table if exists plantaopro.modulos_sistema add column if not exists cliente_id uuid;
+alter table if exists plantaopro.modulos_sistema add column if not exists is_demo boolean default false not null;
+alter table if exists plantaopro.modulos_sistema add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.modulos_sistema add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.modulos_sistema add column if not exists plano_id uuid;
+alter table if exists plantaopro.modulos_sistema add column if not exists tenant_id uuid;
+alter table if exists plantaopro.pacientes add column if not exists cns text;
+alter table if exists plantaopro.pacientes add column if not exists consentimento_lgpd boolean default false not null;
+alter table if exists plantaopro.pacientes add column if not exists consentimento_lgpd_canal text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists consentimento_lgpd_em timestamp without time zone;
+alter table if exists plantaopro.pacientes add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.pacientes add column if not exists created_by uuid;
+alter table if exists plantaopro.pacientes add column if not exists data_nascimento date;
+alter table if exists plantaopro.pacientes add column if not exists documento text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists documento_alternativo text;
+alter table if exists plantaopro.pacientes add column if not exists email text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists endereco text;
+alter table if exists plantaopro.pacientes add column if not exists finalidade_tratamento text default 'ASSISTENCIA_SAUDE'::text not null;
+alter table if exists plantaopro.pacientes add column if not exists nome_completo text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists nome_social text;
+alter table if exists plantaopro.pacientes add column if not exists observacoes text;
+alter table if exists plantaopro.pacientes add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.pacientes add column if not exists responsavel_nome text;
+alter table if exists plantaopro.pacientes add column if not exists sexo text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists sexo_genero text;
+alter table if exists plantaopro.pacientes add column if not exists telefone text default ''::text not null;
+alter table if exists plantaopro.pacientes add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.pacientes add column if not exists updated_by uuid;
+alter table if exists plantaopro.pacientes add column if not exists ver_dados_sensiveis boolean default false not null;
+alter table if exists plantaopro.pagamentos_saas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.pagamentos_saas add column if not exists fatura_id uuid;
+alter table if exists plantaopro.pagamentos_saas add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.pagamentos_saas add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.pagamentos_saas add column if not exists valor_pago numeric(12,2) default 0 not null;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists chamado_em timestamp without time zone;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists finalizado_em timestamp without time zone;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists guiche text default ''::text not null;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists sala text default ''::text not null;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists setor text default ''::text not null;
+alter table if exists plantaopro.painel_chamada_fila add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.perfil_permissoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.perfil_permissoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.perfil_permissoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.perfil_permissoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.perfil_permissoes add column if not exists status character varying(40) default 'ATIVO'::character varying not null;
+alter table if exists plantaopro.perfil_permissoes add column if not exists tenant_id uuid;
+alter table if exists plantaopro.perfis add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.perfis add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.perfis add column if not exists plano_id uuid;
+alter table if exists plantaopro.permissoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.permissoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.permissoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.permissoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.permissoes add column if not exists tenant_id uuid;
+alter table if exists plantaopro.planos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.planos add column if not exists descricao text;
+alter table if exists plantaopro.planos add column if not exists destaque boolean;
+alter table if exists plantaopro.planos add column if not exists dias_trial integer default 14 not null;
+alter table if exists plantaopro.planos add column if not exists limite_convites_mes integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists limite_hospitais integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists limite_medicos integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists limite_plantoes_mes integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists limite_usuarios integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.planos add column if not exists ordem integer;
+alter table if exists plantaopro.planos add column if not exists ordem_exibicao integer default 0 not null;
+alter table if exists plantaopro.planos add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.planos add column if not exists permite_api boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_bi boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_integracoes boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_mobile boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_operacao_assistida boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_perfis_customizados text;
+alter table if exists plantaopro.planos add column if not exists permite_relatorios_avancados boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_suporte_prioritario boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists permite_trial boolean default true not null;
+alter table if exists plantaopro.planos add column if not exists permite_white_label boolean;
+alter table if exists plantaopro.planos add column if not exists plano_id uuid;
+alter table if exists plantaopro.planos add column if not exists possui_bi boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists possui_mobile boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists possui_relatorios_avancados boolean default false not null;
+alter table if exists plantaopro.planos add column if not exists publico boolean;
+alter table if exists plantaopro.planos add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.planos add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.planos add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.planos add column if not exists slug text;
+alter table if exists plantaopro.planos add column if not exists valor_anual numeric(14,2) default 0 not null;
+alter table if exists plantaopro.planos add column if not exists valor_mensal numeric(12,2) default 0 not null;
+alter table if exists plantaopro.planos_saude add column if not exists cliente_id uuid;
+alter table if exists plantaopro.planos_saude add column if not exists convenio_id uuid;
+alter table if exists plantaopro.planos_saude add column if not exists created_by uuid;
+alter table if exists plantaopro.planos_saude add column if not exists operadora text default ''::text not null;
+alter table if exists plantaopro.planos_saude add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.planos_saude add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.planos_saude add column if not exists registro_ans text default ''::text not null;
+alter table if exists plantaopro.planos_saude add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.planos_saude add column if not exists updated_by uuid;
+alter table if exists plantaopro.plantao_convites add column if not exists data_envio timestamp with time zone;
+alter table if exists plantaopro.plantao_convites add column if not exists mensagem text;
+alter table if exists plantaopro.plantao_convites add column if not exists usuario_id uuid;
+alter table if exists plantaopro.plantoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.plantoes add column if not exists created_by uuid;
+alter table if exists plantaopro.plantoes add column if not exists especialidade_id uuid;
+alter table if exists plantaopro.plantoes add column if not exists hospital_id uuid;
+alter table if exists plantaopro.plantoes add column if not exists observacoes text;
+alter table if exists plantaopro.plantoes add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.plantoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.plantoes add column if not exists setor text;
+alter table if exists plantaopro.plantoes add column if not exists setor_id uuid;
+alter table if exists plantaopro.plantoes add column if not exists tipo text default 'PRESENCIAL'::text not null;
+alter table if exists plantaopro.prescricoes add column if not exists cancelada_em timestamp with time zone;
+alter table if exists plantaopro.prescricoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.prescricoes add column if not exists consulta_id uuid;
+alter table if exists plantaopro.prescricoes add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.prescricoes add column if not exists created_by uuid;
+alter table if exists plantaopro.prescricoes add column if not exists finalizada_em timestamp with time zone;
+alter table if exists plantaopro.prescricoes add column if not exists medico_id uuid;
+alter table if exists plantaopro.prescricoes add column if not exists modelo_id uuid;
+alter table if exists plantaopro.prescricoes add column if not exists orientacoes text default ''::text not null;
+alter table if exists plantaopro.prescricoes add column if not exists paciente_id uuid;
+alter table if exists plantaopro.prescricoes add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.prescricoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.prescricoes add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.prescricoes add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.prescricoes add column if not exists updated_by uuid;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists reg_date timestamp with time zone default now() not null;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.relatorio_exportacoes add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists arquivo_nome character varying(220);
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists created_by uuid;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists execucao_id uuid;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists exportado_por uuid;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists formato character varying(20) default 'CSV'::character varying not null;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists tipo character varying(60);
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists total_linhas integer default 0 not null;
+alter table if exists plantaopro.relatorios_exportacoes add column if not exists updated_by uuid;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists created_by uuid;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists filtros jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists tipo character varying(60);
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists updated_by uuid;
+alter table if exists plantaopro.relatorios_filtros_salvos add column if not exists usuario_id uuid;
+alter table if exists plantaopro.schema_migrations add column if not exists duration_ms integer;
+alter table if exists plantaopro.schema_migrations add column if not exists error_code text;
+alter table if exists plantaopro.schema_migrations add column if not exists error_message_sanitized text;
+alter table if exists plantaopro.schema_migrations add column if not exists executor_version text default 'PlantaoPro.Tools.Database v1.91.0'::text not null;
+alter table if exists plantaopro.schema_migrations add column if not exists source text;
+alter table if exists plantaopro.schema_migrations add column if not exists success boolean default true not null;
+alter table if exists plantaopro.schema_migrations add column if not exists version text;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists aprovador_usuario_id uuid;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists created_by uuid;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists decisao character varying(40);
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists justificativa text;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists substituicao_id uuid;
+alter table if exists plantaopro.substituicao_aprovacoes add column if not exists updated_by uuid;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists created_by uuid;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists motivos text;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists score numeric(10,2) default 0 not null;
+alter table if exists plantaopro.substituicao_candidatos add column if not exists updated_by uuid;
+alter table if exists plantaopro.substituicao_historico add column if not exists acao character varying(80);
+alter table if exists plantaopro.substituicao_historico add column if not exists cliente_id uuid;
+alter table if exists plantaopro.substituicao_historico add column if not exists created_by uuid;
+alter table if exists plantaopro.substituicao_historico add column if not exists observacao text;
+alter table if exists plantaopro.substituicao_historico add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.substituicao_historico add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.substituicao_historico add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.substituicao_historico add column if not exists status_anterior character varying(40);
+alter table if exists plantaopro.substituicao_historico add column if not exists status_novo character varying(40);
+alter table if exists plantaopro.substituicao_historico add column if not exists substituicao_id uuid;
+alter table if exists plantaopro.substituicao_historico add column if not exists updated_by uuid;
+alter table if exists plantaopro.substituicao_historico add column if not exists usuario_id uuid;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists created_by uuid;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists medico_solicitante_id uuid;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists medico_substituto_id uuid;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists motivo text;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists prazo_minimo_ok boolean default true not null;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists responsavel_usuario_id uuid;
+alter table if exists plantaopro.substituicoes_plantao add column if not exists updated_by uuid;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists categoria text default 'GERAL'::text not null;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists chave text;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenant_configuracoes add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenant_modulos add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_modulos add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_modulos add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_modulos add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_onboarding add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_onboarding add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_onboarding add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_onboarding add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_onboarding add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenant_onboarding add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenant_onboarding add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenant_onboarding_checklist add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenant_parametros add column if not exists categoria text;
+alter table if exists plantaopro.tenant_parametros add column if not exists chave text;
+alter table if exists plantaopro.tenant_parametros add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_parametros add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_parametros add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_parametros add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_parametros add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenant_parametros add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenant_parametros add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenant_white_label add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenant_white_label add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenant_white_label add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenant_white_label add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenant_white_label add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenant_white_label add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenant_white_label add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenants add column if not exists cliente_id uuid;
+alter table if exists plantaopro.tenants add column if not exists dominio_customizado text;
+alter table if exists plantaopro.tenants add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.tenants add column if not exists motivo_suspensao text;
+alter table if exists plantaopro.tenants add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.tenants add column if not exists plano_id uuid;
+alter table if exists plantaopro.tenants add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.tenants add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.tenants add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.tenants add column if not exists slug text;
+alter table if exists plantaopro.tenants add column if not exists subdominio text;
+alter table if exists plantaopro.triagem_encaminhamentos add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.triagem_encaminhamentos add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.triagem_fila add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.triagem_fila add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.triagens add column if not exists created_at timestamp with time zone default now() not null;
+alter table if exists plantaopro.triagens add column if not exists enfermeiro_id uuid;
+alter table if exists plantaopro.triagens add column if not exists iniciada_em timestamp without time zone;
+alter table if exists plantaopro.triagens add column if not exists medico_id uuid;
+alter table if exists plantaopro.triagens add column if not exists motivo_cancelamento text default ''::text not null;
+alter table if exists plantaopro.triagens add column if not exists profissional_id uuid;
+alter table if exists plantaopro.triagens add column if not exists reg_update timestamp without time zone;
+alter table if exists plantaopro.triagens add column if not exists updated_at timestamp with time zone;
+alter table if exists plantaopro.unidades add column if not exists cliente_id uuid;
+alter table if exists plantaopro.unidades add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists cliente_id uuid;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists plano_id uuid;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.upgrade_solicitacoes add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.usuario_permissoes_especiais add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.usuario_permissoes_especiais add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.usuario_permissoes_especiais add column if not exists plano_id uuid;
+alter table if exists plantaopro.usuario_permissoes_especiais add column if not exists status character varying(40) default 'ATIVO'::character varying not null;
+alter table if exists plantaopro.usuarios_perfis add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.usuarios_perfis add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.usuarios_perfis add column if not exists plano_id uuid;
+alter table if exists plantaopro.usuarios_perfis add column if not exists status character varying(40) default 'ATIVO'::character varying not null;
+alter table if exists plantaopro.white_label_temas add column if not exists cliente_id uuid;
+alter table if exists plantaopro.white_label_temas add column if not exists metadata jsonb default '{}'::jsonb not null;
+alter table if exists plantaopro.white_label_temas add column if not exists parceiro_id uuid;
+alter table if exists plantaopro.white_label_temas add column if not exists plano_id uuid;
+alter table if exists plantaopro.white_label_temas add column if not exists reg_date timestamp without time zone default now() not null;
+alter table if exists plantaopro.white_label_temas add column if not exists reg_status character(1) default 'A'::bpchar not null;
+alter table if exists plantaopro.white_label_temas add column if not exists reg_update timestamp with time zone;
+alter table if exists plantaopro.white_label_temas add column if not exists status text default 'ATIVO'::text not null;
+
+-- ============================================================
+-- Seção 83 — Saas Assinaturas Colunas Comerciais B6 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql
+-- SOURCE-SHA256: 67149e1d4e2c6c3585da34c4cdef92a246c83354a6e258456b2d7db2f903ad11
+-- R4-B6 (rodada 4, item B6 governanca SaaS): colunas comerciais ausentes em plantaopro.assinaturas.
+-- Os endpoints /api/assinaturas (Criar/AlterarStatus) e o SELECT de ObterAssinaturaAtual
+-- escrevem/lemem data_inicio, observacoes, motivo_cancelamento e data_cancelamento;
+-- nenhuma migracao anterior as criou, o que causava erro 42703 em tempo de execucao
+-- sem cobertura de teste viva (defeito preexistente, fechado em B6).
+-- Adicao aditiva e idempotente: todas as colunas aceitam null e nao afetam linhas existentes.
+
+alter table plantaopro.assinaturas add column if not exists data_inicio date null;
+alter table plantaopro.assinaturas add column if not exists observacoes text null;
+alter table plantaopro.assinaturas add column if not exists motivo_cancelamento text null;
+alter table plantaopro.assinaturas add column if not exists data_cancelamento timestamptz null;
+
+-- ============================================================
+-- Seção 84 — Saas Planos Permite Relatorios B6 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql
+-- SOURCE-SHA256: fd2b80cd31711c5d727da1b76cb805de59c5deaa7baf9947f041608ff38478ea
+-- R4-B6 (rodada 4, item B6 governanca SaaS): coluna permite_relatorios ausente em plantaopro.planos.
+-- Os endpoints comerciais (SaasCommercialController: listar/criar/editar plano) e o
+-- SELECT de ObterUsoPlano (TenantServices) leem/escrevem permite_relatorios; nenhuma
+-- migracao da linhagem de upgrade a criou, o que causava erro 42703 em tempo de
+-- execucao em plantaopro_test e no banco local plantaopro (verificado em 2026-10-06).
+-- A linhagem nova (2026_plantao_pro_saas_jornada_lgpd_inteligencia.sql) ja nasce com
+-- a coluna; bancos criados pela linhagem antiga precisam desta adicao.
+-- Adicao aditiva e idempotente; default false mantem o feature flag fechado em bancos
+-- existentes, no mesmo padrao das colunas vizinhas (permite_api, permite_integracoes).
+
+alter table plantaopro.planos add column if not exists permite_relatorios boolean not null default false;
+
+-- ============================================================
+-- Seção 85 — Administrativo360 Cotacao Cancelamento Estorno Triagem B7 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql
+-- SOURCE-SHA256: 4b56d6d862e403482d9473d75f1502abe730d613ac00f4635ec3158252210409
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem
+-- Administrativo 360 - B7: cancelamento de cotacao, estorno de resposta e
+-- triagem responsavel por documento em quarentena
+--
+-- Alteracoes oficiais:
+--   1. adm360_cotacoes: colunas de cancelamento auditavel (cancelado_em e
+--      motivo_cancelamento). O estado CANCELADA ja existia na maquina de
+--      estados do modulo, mas nao havia registro do momento nem do motivo.
+--   2. adm360_cotacao_respostas: indice unico PARCIAL garante no maximo uma
+--      resposta NAO RESOLVIDA por cotacao (estados operacionais NA_FILA,
+--      ENVIANDO, RESULTADO_DESCONHECIDO, CONFIGURACAO_PENDENTE,
+--      REJEITADA_PELO_PORTAL e EXPORTADA_MANUALMENTE). Estados resolvidos
+--      (ACEITA_PELO_PORTAL) ficam fora do indice: preserva o historico e
+--      permite estorno + re-aprovacao sem duplicidade (a aplicacao reutiliza
+--      a linha existente em vez de inserir nova).
+--      Backstop de banco complementa a guarda serializada da aplicacao
+--      (lock de cotacao -> lock de resposta na mesma ordem em todos os fluxos).
+--   3. adm360_documentos_recebidos: responsabilidade e prazo da triagem de
+--      quarentena (triagem_responsavel_id, triagem_aberta_em, triagem_prazo,
+--      triagem_observacao e triagem_resolvida_em) + indice parcial para a
+--      fila de triagens abertas. Resolver a triagem apenas sai do quarentena:
+--      a conferencia (status_conferencia) continua uma decisao separada.
+--   4. adm360_eventos: ampliacao idempotente do CHECK de tipo_evento com
+--      ESTORNO, CANCELAMENTO e TRIAGEM (mesmo padrao nomeado do v2310).
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS / CREATE INDEX IF NOT EXISTS; a
+-- ampliacao do CHECK remove qualquer versao anterior sem os novos valores e
+-- recria a constraint nomeada apenas quando nao existe versao atualizada.
+-- ============================================================================
+
+ALTER TABLE plantaopro.adm360_cotacoes
+    ADD COLUMN IF NOT EXISTS cancelado_em timestamptz;
+
+ALTER TABLE plantaopro.adm360_cotacoes
+    ADD COLUMN IF NOT EXISTS motivo_cancelamento text;
+
+COMMENT ON COLUMN plantaopro.adm360_cotacoes.cancelado_em IS 'B7: momento do cancelamento interno (NULL quando nao cancelada).';
+COMMENT ON COLUMN plantaopro.adm360_cotacoes.motivo_cancelamento IS 'B7: motivo registrado pelo operador no cancelamento.';
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_adm360_resposta_cotacao_nao_resolvida
+    ON plantaopro.adm360_cotacao_respostas (tenant_id, cotacao_id)
+    WHERE status_transmissao IN ('NA_FILA', 'ENVIANDO', 'RESULTADO_DESCONHECIDO',
+                                 'CONFIGURACAO_PENDENTE', 'REJEITADA_PELO_PORTAL',
+                                 'EXPORTADA_MANUALMENTE');
+
+CREATE INDEX IF NOT EXISTS ix_adm360_respostas_cotacao_ordem
+    ON plantaopro.adm360_cotacao_respostas (tenant_id, cotacao_id, created_at);
+
+ALTER TABLE plantaopro.adm360_documentos_recebidos
+    ADD COLUMN IF NOT EXISTS triagem_responsavel_id uuid REFERENCES plantaopro.usuarios(id);
+
+ALTER TABLE plantaopro.adm360_documentos_recebidos
+    ADD COLUMN IF NOT EXISTS triagem_aberta_em timestamptz;
+
+ALTER TABLE plantaopro.adm360_documentos_recebidos
+    ADD COLUMN IF NOT EXISTS triagem_prazo timestamptz;
+
+ALTER TABLE plantaopro.adm360_documentos_recebidos
+    ADD COLUMN IF NOT EXISTS triagem_observacao text;
+
+ALTER TABLE plantaopro.adm360_documentos_recebidos
+    ADD COLUMN IF NOT EXISTS triagem_resolvida_em timestamptz;
+
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.triagem_responsavel_id IS 'B7: usuario do tenant responsavel pela analise da quarentena.';
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.triagem_aberta_em IS 'B7: momento em que a triagem foi aberta (reabrindo reinicia).';
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.triagem_prazo IS 'B7: prazo UTC definido no ato da atribuicao.';
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.triagem_observacao IS 'B7: observacao registrada ao abrir a triagem.';
+COMMENT ON COLUMN plantaopro.adm360_documentos_recebidos.triagem_resolvida_em IS 'B7: momento da resolucao (saida da quarentena); NULL enquanto aberta.';
+
+CREATE INDEX IF NOT EXISTS ix_adm360_docrec_triagem
+    ON plantaopro.adm360_documentos_recebidos (tenant_id, quarentena, triagem_prazo)
+    WHERE quarentena;
+
+-- 4. Ampliacao do CHECK de tipo_evento (padrao nomeado do v2310, agora com
+-- ESTORNO, CANCELAMENTO e TRIAGEM). Remove a constraint nomeada anterior e
+-- quaisquer checks legados contendo APROVACAO sem TRIAGEM, e so recria quando
+-- nenhuma versao atualizada existe.
+DO $migration$
+DECLARE
+  r record;
+  tem_novo boolean;
+BEGIN
+  -- Remove primeiro a constraint nomeada anterior (podem existir instalacoes
+  -- ja criadas pelo v2310 com apenas os cinco tipos originais ampliados).
+  ALTER TABLE plantaopro.adm360_eventos DROP CONSTRAINT IF EXISTS ck_adm360_eventos_tipo_evento;
+
+  -- Remove qualquer CHECK legado restante da coluna (definicao varia entre
+  -- instalacoes por ter sido criada sem nome explicito no v2301).
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute at ON at.attrelid = con.conrelid AND at.attname = 'tipo_evento'
+    WHERE rel.relnamespace = 'plantaopro'::regnamespace
+      AND rel.relname = 'adm360_eventos'
+      AND con.contype = 'c'
+      AND con.conkey @> ARRAY[at.attnum]
+      AND pg_get_constraintdef(con.oid) LIKE '%''APROVACAO''%'
+      AND pg_get_constraintdef(con.oid) NOT LIKE '%''TRIAGEM'''
+  LOOP
+    EXECUTE format('ALTER TABLE plantaopro.adm360_eventos DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+
+  -- So recria se nenhuma versao ja contiver o novo conjunto completo.
+  SELECT count(*) > 0 INTO tem_novo
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  WHERE rel.relnamespace = 'plantaopro'::regnamespace
+    AND rel.relname = 'adm360_eventos'
+    AND con.contype = 'c'
+    AND pg_get_constraintdef(con.oid) LIKE '%''TRIAGEM''%';
+
+  IF NOT tem_novo THEN
+    ALTER TABLE plantaopro.adm360_eventos
+      ADD CONSTRAINT ck_adm360_eventos_tipo_evento
+      CHECK (tipo_evento IN ('APROVACAO', 'ARQUIVO', 'DECLARACAO_MANUAL', 'RETORNO_EXTERNO',
+                             'CONFIRMACAO_CONFERENCIA', 'ESTORNO', 'CANCELAMENTO', 'TRIAGEM'));
+  END IF;
+END $migration$;
+
+-- ============================================================
+-- Seção 86 — Saude360 Financeiro Canonico B8 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql
+-- SOURCE-SHA256: dd5a5e4d32b8ab1d9b23b9b4845dfbfd1e0772f2e6634db433f118c0f1f155d2
+-- ============================================================================
+-- v2315 | B8 Saúde 360 | Financeiro canônico: baixa, estorno e fechamento de caixa
+-- ----------------------------------------------------------------------------
+-- Decisão (R4-B8): para a jornada clínica (consulta -> conta a receber ->
+-- recebimento -> caixa/lançamentos/fechamento -> estorno), clinica_* é a fonte
+-- canônica de origem do financeiro. As camadas v115/v116 permanecem módulos de
+-- consolidação com origem própria (faturamento em lote, relatórios, integração)
+-- e NÃO recebem escritas cruzadas desta jornada. Não há nova tabela paralela:
+-- esta migração apenas normaliza dados existentes e libera pagamentos parciais.
+--
+-- Alterações:
+--   1) Normaliza contas geradas pela finalização de consulta (que gravava
+--      somente valor_bruto/desconto/coparticipacao/valor_liquido): o par
+--      operacional canônico passa a ser valor_total/valor_pendente.
+--   2) Baixa parcial: remove a unicidade "um recebimento ativo por conta"
+--      (ux_recebimento_conta_confirmado). A proteção contra pagamento em
+--      excesso passa a ser transacional: lock da conta (FOR UPDATE) +
+--      validação valor <= saldo pendente + predicado de valor esperado na
+--      atualização da conta (conflicto 409 em corrida).
+--   3) Índices de apoio à baixa/estorno/estornos/histórico/autorizações.
+-- ============================================================================
+set search_path to plantaopro, public;
+
+update plantaopro.clinica_contas_receber
+set    valor_total = coalesce(valor_liquido, 0)
+where  reg_status = 'A'
+  and  coalesce(valor_total, 0) = 0
+  and  coalesce(valor_liquido, 0) > 0;
+
+update plantaopro.clinica_contas_receber
+set    valor_pendente = greatest(coalesce(valor_liquido, 0) - coalesce(valor_pago, 0), 0)
+where  reg_status = 'A'
+  and  coalesce(valor_pendente, 0) = 0
+  and  coalesce(valor_liquido, 0) > coalesce(valor_pago, 0);
+
+drop index if exists plantaopro.ux_recebimento_conta_confirmado;
+
+-- Índices de apoio: nomes sem qualificação de schema (CREATE INDEX não admite;
+-- o search_path acima já posiciona em plantaopro). Tabelas continuam qualificadas.
+create index if not exists ix_clinica_recebimentos_cliente_conta_status
+    on plantaopro.clinica_recebimentos (cliente_id, conta_receber_id, status);
+
+create index if not exists ix_clinica_lancamentos_cliente_caixa
+    on plantaopro.clinica_lancamentos (cliente_id, caixa_id);
+
+create index if not exists ix_clinica_estornos_recebimento
+    on plantaopro.clinica_estornos (recebimento_id);
+
+create index if not exists ix_convenio_autorizacoes_cliente_consulta
+    on plantaopro.convenio_autorizacoes (cliente_id, consulta_id);
+
+-- ============================================================
+-- Seção 87 — Saude360 Fila Atendimento Legado B8 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql
+-- SOURCE-SHA256: cc22f08306c85a294395a021f31f1e26b9eae600b501b9eb7c8fe569a01d51e8
+-- ============================================================================
+-- v2316 | B8 Saúde 360 | Tabela legada fila_atendimento (DDL ausente no repo)
+-- ----------------------------------------------------------------------------
+-- Root cause (R4-B8): FinalizarAsync (ConsultaApplicationService.cs, linha do
+-- UPDATE em plantaopro.fila_atendimento) foi introduzido no commit 5406e514
+-- (prontuário médico e faturamento v1.27.0) e faz parte da transação de
+-- finalização de consulta, mas NENHUMA DDL do repositório cria a tabela.
+-- Sem ela, a transação de finalização falha com 42P01 (relation does not
+-- exist) em todo ambiente onde ela nunca existiu manualmente — incluindo os
+-- bancos locais de homologação (plantaopro/plantaopro_test), o que impedia a
+-- jornada consulta -> conta -> recebimento -> caixa exigida pelo B8.
+--
+-- A documentação de auditoria (mapa-saude360.md, rodada 3) lista
+-- fila_atendimento entre as tabelas principais do módulo; esta migração
+-- materializa esse contrato de forma idempotente (IF NOT EXISTS), preservando
+-- o código existente sem módulos paralelas. O UPDATE da finalização só marca
+-- status='FINALIZADO' onde já houver linhas; nenhum escritor insere nesta
+-- versão (projeção legada de fila), então a criação é suficiente para a
+-- jornada operar.
+-- ============================================================================
+set search_path to plantaopro, public;
+
+create table if not exists plantaopro.fila_atendimento(
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid not null,
+    atendimento_id uuid not null,
+    status text not null default 'AGUARDANDO',
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now(),
+    reg_update timestamp
+);
+
+-- Índice de apoio ao UPDATE da finalização (predicado cliente + atendimento):
+-- nome sem qualificação de schema (CREATE INDEX não admite; o search_path
+-- acima posiciona em plantaopro). Tabela continua qualificada.
+create index if not exists ix_fila_atendimento_cliente_atendimento
+    on plantaopro.fila_atendimento(cliente_id, atendimento_id);
+
+-- ============================================================
+-- Seção 88 — Saude360 Contestacao Situacao Anterior B9 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql
+-- SOURCE-SHA256: be46976f4bc70a02bc84b16cfeb4b457235cb36cade2d27403bdb16c21fd76aa
+-- ============================================================================
+-- v2317 | B9 Saude 360 | Contestacao financeira: situacao_anterior
+-- ----------------------------------------------------------------------------
+-- Decisao (R4-B9, opcao B): contestar um pagamento pendente ou aprovado
+-- passa a marca-lo como 'contestado', preservando a situacao de origem.
+-- Para que a resolucao (MANTER_VALOR / AJUSTAR_VALOR / CANCELAR_PAGAMENTO)
+-- restaure o estado anterior de forma deterministica e explicavel, a situacao
+-- do pagamento imediatamente antes da contestacao e gravada na propria
+-- contestacao. Linhas historicas permanecem com situacao_anterior NULL; a
+-- resolucao as trata explicitamente (409 orientando manutencao de dados) em
+-- vez de inferir o estado anterior.
+-- O indice unico parcial ux_pagamento_contestacao_aberta (tenant_id,
+-- pagamento_id) WHERE status='ABERTA' ja existe no schema (regra de uma
+-- unica contestacao aberta por pagamento); nenhum novo indice nesta migracao.
+-- ============================================================================
+set search_path to plantaopro, public;
+
+alter table plantaopro.pagamento_contestacoes
+    add column if not exists situacao_anterior varchar(32);
+
+comment on column plantaopro.pagamento_contestacoes.situacao_anterior is
+    'Situacao do pagamento imediatamente antes da contestacao (pendente/aprovado/pago). NULL apenas em linhas historicas criadas antes da v2317.';
+
+-- ============================================================
+-- Seção 89 — Saude360 Plantao Historico Contrato B9 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql
+-- SOURCE-SHA256: 8a0f882bf14e8c6684805c1eaaac1840633a780a214729500e631c780ddd1074
+-- ============================================================================
+-- v2318 | B9 Saude 360 | plantao_historico alinhado ao contrato de codigo
+-- ----------------------------------------------------------------------------
+-- Problema: PlantaoHistoricoService.RegistrarAsync e PlantaoService.
+-- ListarHistoricoAsync leem/gravam as colunas plantao_id, status_anterior,
+-- status_novo, justificativa, usuario_id, reg_date e reg_status, mas a tabela
+-- criada no schema base (030_operacao_plantoes.sql) conserva o layout generico
+-- (id/tenant_id/codigo/nome/status/dados/criado_em/atualizado_em) — nenhuma
+-- migracao anterior adicionou as colunas usadas pelo codigo. Resultado: toda
+-- mudanca de status de plantao (publicar/cancelar/realizar/encerrar) falhava
+-- com "column ... does not exist" em ambos os bancos (plantaopro e
+-- plantaopro_test), tornando o estado terminal 'encerrado' inalcançavel pela
+-- API — requisito central do bloco B9.
+-- Decisao: acrescentar as colunas faltantes (idempotente; as colunas
+-- genericas permanecem por compatibilidade). Nenhum dado historico dependia
+-- do layout antigo (a tabela esta vazia em ambos os bancos nesta data).
+-- Nota: plantaopro.historico_escala apresenta a mesma defasacao e segue em
+-- backlog (fora da jornada critica B9: nenhuma acao testada aqui grava nela).
+-- ============================================================================
+set search_path to plantaopro, public;
+
+alter table plantaopro.plantao_historico add column if not exists plantao_id uuid;
+alter table plantaopro.plantao_historico add column if not exists status_anterior varchar(32);
+alter table plantaopro.plantao_historico add column if not exists status_novo varchar(32);
+alter table plantaopro.plantao_historico add column if not exists justificativa text;
+alter table plantaopro.plantao_historico add column if not exists usuario_id uuid;
+alter table plantaopro.plantao_historico add column if not exists reg_date timestamptz;
+alter table plantaopro.plantao_historico add column if not exists reg_status char(1) not null default 'A';
+
+create index if not exists ix_plantao_historico_plantao_regdate
+    on plantaopro.plantao_historico (plantao_id, reg_date);
+
+comment on column plantaopro.plantao_historico.plantao_id is
+    'Plantao cuja mudanca de status esta sendo registrada (PlantaoHistoricoService).';
+comment on column plantaopro.plantao_historico.status_anterior is
+    'Status do plantao imediatamente antes da transicao.';
+comment on column plantaopro.plantao_historico.status_novo is
+    'Status do plantao apos a transicao.';
+
+-- ============================================================
+-- Seção 90 — Saude360 Notificacoes Contrato B9 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql
+-- SOURCE-SHA256: baca5925613bcd26ac0568892c7e159492d542f4cd2000c8abc537f76db9706a
+-- ============================================================================
+-- v2319 | B9 Saude 360 | notificacoes com contrato de instancia do codigo
+-- ----------------------------------------------------------------------------
+-- Problema: NotificacaoService.CriarNotificacaoAsync/ListarNotificacoesAsync/
+-- MarcarLidaAsync e DashboardService (NotificacoesNaoLidas) leem/gravam em
+-- plantaopro.notificacoes as colunas usuario_id, titulo, mensagem, tipo, lida,
+-- created_by, updated_by, reg_date, reg_update e reg_status, mas a tabela
+-- criada no schema base (030_operacao_plantoes.sql) conserva o layout generico
+-- de catalogo (id/tenant_id/codigo/nome/status/dados/criado_em/atualizado_em).
+-- Nenhuma migracao anterior adicionou essas colunas (v2069/v2070 repararam
+-- apenas o agregado central novo plantaopro.notifications). Resultado: todo
+-- fluxo que cria notificacao (escala aceita/confirmada/recusada/substituida/
+-- realizada, pagamento gerado/confirmado/registrado/contestado/resolvido/
+-- estornado/cancelado) falha com "column usuario_id does not exist" em bases
+-- instaladas pelo object-catalog, e os contadores de dashboard tambem quebram.
+-- Decisao: acrescentar as colunas faltantes de forma idempotente (mesmo
+-- padrao de 345_v2069_reparar_base_notificacoes) e preservar as colunas
+-- genericas por compatibilidade. Linhas de catalogo existentes (status
+-- 'ATIVO', codigo/nome preenchidos) permanecem intactas: os caminhos de
+-- notificacao filtram por usuario_id e reg_status='A' e usuario_id delas e
+-- nulo, logo nao aparecem em listagens nem contagens.
+-- ============================================================================
+set search_path to plantaopro, public;
+
+alter table plantaopro.notificacoes add column if not exists usuario_id uuid;
+alter table plantaopro.notificacoes add column if not exists titulo varchar(160);
+alter table plantaopro.notificacoes add column if not exists mensagem text;
+alter table plantaopro.notificacoes add column if not exists tipo varchar(40);
+alter table plantaopro.notificacoes add column if not exists lida boolean not null default false;
+alter table plantaopro.notificacoes add column if not exists created_by uuid;
+alter table plantaopro.notificacoes add column if not exists updated_by uuid;
+alter table plantaopro.notificacoes add column if not exists reg_date timestamptz not null default now();
+alter table plantaopro.notificacoes add column if not exists reg_update timestamptz;
+alter table plantaopro.notificacoes add column if not exists reg_status char(1) not null default 'A' check (reg_status in ('A','I'));
+
+create index if not exists idx_notificacoes_usuario_lida
+    on plantaopro.notificacoes (usuario_id, lida);
+
+comment on column plantaopro.notificacoes.usuario_id is
+    'Destinatario da notificacao (NotificacaoService); linhas de catalogo permanecem com valor nulo.';
+comment on column plantaopro.notificacoes.lida is
+    'Estado de leitura da notificacao para o destinatario.';
+
+-- ============================================================
+-- Seção 91 — Saude360 Plantoes Auditoria B9 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql
+-- SOURCE-SHA256: d9eec352ba21c23e6d76ded2718c70f52cf089ffa59405436d580692045503f7
+-- ============================================================================
+-- v2320 | B9 Saude 360 | plantoes com colunas de auditoria usadas pelo codigo
+-- ----------------------------------------------------------------------------
+-- Problema: PlantaoService.ChangeStatusAsync (L1223), a edicao de plantao
+-- (L1135), a deteccao de conflito (L1385) e o aceite de convite operacional
+-- (L1487) executam update em plantaopro.plantoes usando reg_update,
+-- updated_by e conflito_detectado, mas a tabela criada no schema base
+-- (030_operacao_plantoes.sql) termina as colunas em reg_status/reg_date/
+-- created_by — nenhuma migracao anterior adicionou essas tres colunas.
+-- Resultado: qualquer transicao de status de plantao (publicar/cancelar/
+-- realizar/encerrar), edicao, deteccao de conflito ou aceite de convite
+-- falha com "column reg_update does not exist" em bases instaladas pelo
+-- object-catalog — mesma classe da defasacao corrigida em v2318 para
+-- plantao_historico.
+-- Decisao: acrescentar as colunas faltantes de forma idempotente e preservar
+-- as colunas genericas por compatibilidade (padrao de 345_v2069_reparar_base_
+-- notificacoes / v2318). Dados existentes permanecem intactos; linhas ja
+-- existentes recebem updated_by null e reg_update null, o que e consistente
+-- com o restante do esquema (colunas de auditoria nullable).
+-- ============================================================================
+set search_path to plantaopro, public;
+
+alter table plantaopro.plantoes add column if not exists updated_by uuid;
+alter table plantaopro.plantoes add column if not exists reg_update timestamptz;
+alter table plantaopro.plantoes add column if not exists conflito_detectado boolean not null default false;
+
+comment on column plantaopro.plantoes.reg_update is
+    'Data/hora da ultima alteracao do plantao (PlantaoService).';
+comment on column plantaopro.plantoes.updated_by is
+    'Usuario que fez a ultima alteracao do plantao.';
+comment on column plantaopro.plantoes.conflito_detectado is
+    'Flag de conflito operacional detectada no aceite de escala (PlantaoService).';
+
+-- ============================================================
+-- Seção 92 — Administrativo360 Fiscal Parametros Pre Emitidas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql
+-- SOURCE-SHA256: 724de9952b3aff65d429d94b09673a318657970e76d3d66602a535fec13c3411
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2321_adm360_fiscal_parametros_pre_emitidas
+-- Administrativo 360 - Fiscal (item 9 do plano d1 / requisito A29 do MVP):
+-- parametros de emissao, pre-nota interna e seus itens.
+--
+-- Escopo oficial do bloco: decidir PRIMEIRO operacao/UF/provedor (decisao
+-- comercial registrada como PENDENCIA quando ausente) e avancar o que e
+-- independente dela: cadastro, seguranca (credenciais fora do banco, A33) e
+-- modelagem de estados. Homologacao externa BLOQUEADA ate haver credenciais;
+-- portanto esta migration cria APENAS o mundo interno: nenhum status externo
+-- pode surgir sem evidencia valida (chave de acesso 44 digitos + momento).
+--
+-- Alteracoes oficiais:
+--   1. adm360_parametros_fiscais: UMA linha por tenant com os parametros da
+--      emissao (UF, municipio, regime, operacao, CFOPs por operacao em jsonb
+--      - sem CFOP universal hardcodado -, responsavel, ambiente, provedor e
+--      certificado_referencia = NOME do segredo no user-secrets/ambiente,
+--      nunca o valor — A33). A decisao comercial ausente fica explicita:
+--      qualquer campo obrigatorio NULL => status PENDENTE_DE_CONFIGURACAO,
+--      garantida por CHECK (status "CONFIGURADO"/"BLOQUEADO" so com o
+--      conjunto completo + ambiente escolhido). O operador ve "PENDENTE DE
+--      CONFIGURACAO" na tela exatamente enquanto houver pendencia (P2),
+--      sem sucesso ficticio de emissao.
+--   2. adm360_notas_pre_emitidas: pre-nota interna (A29 MVP: pre-documento +
+--      conferencia de referencias; SEM emissao autorizada — isso e P1).
+--      Maquina de estados: RASCUNHO -> PRONTA_PARA_EMISSAO -> ENVIANDO ->
+--      AUTORIZADA | REJEITADA (+ PENDENTE_CONFIRMACAO para resultado duvidoso)
+--      e CANCELADA. INVARIANTE DE EVIDENCIA no proprio banco (H19: emitir
+--      bloqueado != sucesso falso):
+--        * AUTORIZADA exige chave_acesso_externa (44 digitos) + emitida_em;
+--        * REJEITADA exige emitida_em;
+--        * CANCELADA exige cancelada_em + motivo_cancelamento.
+--      Numero interno sequencial ('NPE-' + 8 digitos) via sequencia, mesmo
+--      padrao dos pedidos ADM360 ('PC-').
+--   3. adm360_nota_pre_emitida_itens: itens da pre-nota (descricao,
+--      quantidade, preco unitario, total). Sem calculo automatico de
+--      tributos (A30): o total e registro interno declarado pelo operador.
+--   4. adm360_eventos: ampliacao idempotente do CHECK de tipo_evento com
+--      EMISSAO_FISCAL (mesmo padrao nomeado do v2314), permitindo a trilha
+--      imutavel de transicoes de estado da pre-nota (rastreabilidade B7).
+--
+-- Idempotencia: CREATE SEQUENCE/TABLE/INDEX IF NOT EXISTS + bloco DO que so
+-- recria a constraint quando nenhuma versao contendo EMISSAO_FISCAL existe;
+-- pode ser reaplicada em qualquer ordem/replicacao do banco.
+-- ============================================================================
+
+-- 1. Parametros fiscais de emissao (uma linha por tenant) -------------------
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_parametros_fiscais(
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null references plantaopro.tenants(id),
+    uf char(2) check(uf is null or length(btrim(uf)) = 2),
+    municipio varchar(120),
+    regime_fiscal varchar(20) check(regime_fiscal is null or regime_fiscal in ('SIMPLES_NACIONAL','LUCRO_PRESUMIDO','LUCRO_REAL')),
+    operacao_fiscal varchar(12) check(operacao_fiscal is null or operacao_fiscal in ('VENDA','REMESSA','RETORNO')),
+    cfops jsonb not null default '{}'::jsonb,
+    responsavel_id uuid,
+    responsavel_nome varchar(160),
+    ambiente varchar(12) not null default 'PENDENTE' check(ambiente in ('PENDENTE','HOMOLOGACAO','PRODUCAO')),
+    provedor varchar(12) check(provedor is null or provedor in ('SEFAZ_DIRETO','OPMENEXO','INPART','OUTRO')),
+    certificado_referencia varchar(120),
+    status varchar(32) not null default 'PENDENTE_DE_CONFIGURACAO'
+        check(status in ('PENDENTE_DE_CONFIGURACAO','CONFIGURADO','BLOQUEADO')),
+    observacao text,
+    created_by uuid,
+    updated_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz,
+    unique(tenant_id),
+    unique(tenant_id,id),
+    -- Pendencia P2 formalizada: status "decidido" (CONFIGURADO/BLOQUEADO)
+    -- somente com o conjunto comercial completo e ambiente escolhido;
+    -- enquanto faltar qualquer campo, a situacao e PENDENTE_DE_CONFIGURACAO.
+    check((uf is not null and municipio is not null and regime_fiscal is not null
+           and operacao_fiscal is not null and provedor is not null
+           and ambiente in ('HOMOLOGACAO','PRODUCAO'))
+          = (status in ('CONFIGURADO','BLOQUEADO')))
+);
+
+comment on table plantaopro.adm360_parametros_fiscais is
+    'ADM360 Fiscal: parametros de emissao por tenant. Campos nulos registram a pendencia de decisao comercial (operacao/UF/regime/provedor) — status PENDENTE_DE_CONFIGURACAO ate completar.';
+comment on column plantaopro.adm360_parametros_fiscais.cfops is
+    'CFOP por operacao (jsonb: {"VENDA":"5101","REMESSA":"5405",...}). Sem CFOP universal hardcodado; ausente/{} significa pendencia de parametrizacao.';
+comment on column plantaopro.adm360_parametros_fiscais.certificado_referencia is
+    'NOME da referencia do segredo (user-secrets/variavel de ambiente) que guarda senha/token/certificado A1 — nunca o valor em si (A33).';
+comment on column plantaopro.adm360_parametros_fiscais.status is
+    'PENDENTE_DE_CONFIGURACAO: falta decisao comercial (P2). CONFIGURADO: conjunto completo + ambiente. BLOQUEADO: completo, mas emissao externa bloqueada (ex.: credencial ainda indisponivel).';
+
+-- 2. Pre-nota de emissao (documento interno — A29 MVP) -----------------------
+CREATE SEQUENCE IF NOT EXISTS plantaopro.adm360_nota_pre_numero;
+
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_notas_pre_emitidas(
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null references plantaopro.tenants(id),
+    numero varchar(24) not null,
+    origem_tipo varchar(12) not null check(origem_tipo in ('MANUAL','VENDA','ORCAMENTO','COTACAO')),
+    origem_id uuid,
+    situacao varchar(24) not null default 'RASCUNHO'
+        check(situacao in ('RASCUNHO','PRONTA_PARA_EMISSAO','ENVIANDO','AUTORIZADA','REJEITADA','PENDENTE_CONFIRMACAO','CANCELADA')),
+    destinatario_nome varchar(180) not null,
+    destinatario_documento varchar(20),
+    itens_total numeric(18,4) not null default 0 check(itens_total >= 0),
+    valor_total numeric(18,4) not null default 0 check(valor_total >= 0),
+    chave_acesso_externa varchar(44) check(chave_acesso_externa is null or chave_acesso_externa ~ '^[0-9]{44}$'),
+    protocolo_externo varchar(80),
+    emitida_em timestamptz,
+    rejeicao_mensagem text,
+    cancelada_em timestamptz,
+    motivo_cancelamento text,
+    idempotency_key varchar(160),
+    versao bigint not null default 1,
+    created_by uuid,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz,
+    updated_by uuid,
+    unique(tenant_id,id),
+    unique(tenant_id,numero),
+    unique(tenant_id,idempotency_key),
+    -- Invariante de evidencia (A29/H19): status EXTERNO somente com evidencia
+    -- valida gravada — o banco impede "NF-e autorizada" sem chave + momento.
+    check(situacao <> 'AUTORIZADA' or (chave_acesso_externa is not null and emitida_em is not null)),
+    check(situacao <> 'REJEITADA' or emitida_em is not null),
+    check((situacao = 'CANCELADA') = (cancelada_em is not null)),
+    check(situacao <> 'CANCELADA' or motivo_cancelamento is not null)
+);
+
+create index if not exists ix_adm360_notas_pre_filtro
+    on plantaopro.adm360_notas_pre_emitidas(tenant_id,situacao,created_at desc);
+
+comment on table plantaopro.adm360_notas_pre_emitidas is
+    'ADM360 Fiscal: pre-nota interna (MVP A29). Sem emissao autorizada externa no MVP (isso e P1); o documento vive nos estados internos e apenas AUTORIZADA/REJEITADA exigem evidencia externa valida (CHECK).';
+comment on column plantaopro.adm360_notas_pre_emitidas.numero is
+    'Numero interno sequencial por tenant ("NPE-" + 8 digitos, sequencia adm360_nota_pre_numero) — identificacao interna, nao numero fiscal.';
+comment on column plantaopro.adm360_notas_pre_emitidas.chave_acesso_externa is
+    'Chave de acesso NF-e (44 digitos) devolvida pela autorizacao externa — evidencia obrigatoria para situacao AUTORIZADA.';
+
+-- 3. Itens da pre-nota ---------------------------------------------------------
+CREATE TABLE IF NOT EXISTS plantaopro.adm360_nota_pre_emitida_itens(
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid not null,
+    nota_id uuid not null,
+    descricao varchar(180) not null,
+    quantidade numeric(18,4) not null check(quantidade > 0),
+    preco_unitario numeric(18,4) not null default 0 check(preco_unitario >= 0),
+    total numeric(18,4) not null default 0 check(total >= 0),
+    created_at timestamptz not null default now(),
+    unique(tenant_id,id),
+    foreign key(tenant_id,nota_id) references plantaopro.adm360_notas_pre_emitidas(tenant_id,id)
+);
+
+create index if not exists ix_adm360_notas_pre_itens_nota
+    on plantaopro.adm360_nota_pre_emitida_itens(tenant_id,nota_id);
+
+comment on table plantaopro.adm360_nota_pre_emitida_itens is
+    'ADM360 Fiscal: itens da pre-nota (sem calculo automatico de tributos — A30; total e valor interno declarado).';
+
+-- 4. Ampliacao do CHECK de tipo_evento com EMISSAO_FISCAL --------------------
+DO $migration$
+DECLARE
+  r record;
+  tem_novo boolean;
+BEGIN
+  ALTER TABLE plantaopro.adm360_eventos DROP CONSTRAINT IF EXISTS ck_adm360_eventos_tipo_evento;
+
+  -- Remove checks legados anteriores (definicao varia entre instalacoes) que
+  -- ja contenham TRIAGEM (v2314) mas ainda nao contenham EMISSAO_FISCAL.
+  FOR r IN
+    SELECT con.conname
+    FROM pg_constraint con
+    JOIN pg_class rel ON rel.oid = con.conrelid
+    JOIN pg_attribute at ON at.attrelid = con.conrelid AND at.attname = 'tipo_evento'
+    WHERE rel.relnamespace = 'plantaopro'::regnamespace
+      AND rel.relname = 'adm360_eventos'
+      AND con.contype = 'c'
+      AND con.conkey @> ARRAY[at.attnum]
+      AND pg_get_constraintdef(con.oid) LIKE '%''TRIAGEM'''
+      AND pg_get_constraintdef(con.oid) NOT LIKE '%''EMISSAO_FISCAL'''
+  LOOP
+    EXECUTE format('ALTER TABLE plantaopro.adm360_eventos DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+
+  SELECT count(*) > 0 INTO tem_novo
+  FROM pg_constraint con
+  JOIN pg_class rel ON rel.oid = con.conrelid
+  WHERE rel.relnamespace = 'plantaopro'::regnamespace
+    AND rel.relname = 'adm360_eventos'
+    AND con.contype = 'c'
+    AND pg_get_constraintdef(con.oid) LIKE '%''EMISSAO_FISCAL''%';
+
+  IF NOT tem_novo THEN
+    ALTER TABLE plantaopro.adm360_eventos
+      ADD CONSTRAINT ck_adm360_eventos_tipo_evento
+      CHECK (tipo_evento IN ('APROVACAO', 'ARQUIVO', 'DECLARACAO_MANUAL', 'RETORNO_EXTERNO',
+                             'CONFIRMACAO_CONFERENCIA', 'ESTORNO', 'CANCELAMENTO', 'TRIAGEM',
+                             'EMISSAO_FISCAL'));
+  END IF;
+END $migration$;
+
+-- ============================================================
+-- Seção 93 — Administrativo360 Grants Adm Cliente R5 A2 v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql
+-- SOURCE-SHA256: 1994d6ba58125896ecb57efb792cad804dde0cd2676364138bde7135560e2191
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2322_adm360_grants_adm_cliente_r5_a2
+-- Administrativo 360 - Fiscal (R5-A2): grants ADM360 para ADMINISTRADOR_CLIENTE.
+--
+-- Contexto: a API fiscal (api/administrativo360/fiscal) autoriza POR ACAO
+-- (Adm360.Ver/Configurar/Criar/Editar/Reabrir/Confirmar/Cancelar + as acoes de
+-- XML ja existentes). Perfis ADMINISTRADOR_CLIENTE criados antes desta rodada
+-- (seed antigo ou provisionamento manual) nao possuem esses grants, entao as
+-- telas fiscais negariam tudo com PERMISSAO_NEGADA mesmo para o gestor do
+-- cliente. Esta migration concede os 13 codigos ADM360 aos perfis ativos
+-- codigo='ADMINISTRADOR_CLIENTE'.
+--
+-- Dedupe: permissoes.codigo mistura ponto e dois-pontos (linhas historicas
+-- duplicadas, ex.: ADM360.VER e ADM360:VER). A escolha e deterministica
+-- (distinct on do codigo normalizado ':' -> '.', menor id) e a insercao so
+-- acontece quando o perfil ainda nao tem NENHUM grant com o mesmo codigo
+-- normalizado — reaplicacao nao duplica nada (idempotente).
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    -- Sanity: os 13 codigos precisam existir (forma ponto ou dois-pontos).
+    IF EXISTS (
+        SELECT 1
+          FROM (VALUES ('ADM360.VER'),('ADM360.EXPORTAR'),('ADM360.IMPORTAR_XML'),
+                       ('ADM360.CRIAR'),('ADM360.EDITAR'),('ADM360.CONFIGURAR'),
+                       ('ADM360.REABRIR'),('ADM360.CONFIRMAR'),('ADM360.CANCELAR'),
+                       ('ADM360.CONFERIR'),('ADM360.MANIFESTAR_DFE'),
+                       ('ADM360.VINCULAR_DOCUMENTOS'),('ADM360.TRANSMITIR_RESPOSTA')) AS alvo(codigo)
+         WHERE NOT EXISTS (
+             SELECT 1 FROM plantaopro.permissoes pe
+              WHERE replace(pe.codigo, ':', '.') = alvo.codigo)
+    ) THEN
+        RAISE EXCEPTION 'v2322: codigo ADM360 esperado ausente em plantaopro.permissoes';
+    END IF;
+
+    INSERT INTO plantaopro.perfil_permissoes(id, perfil_id, permissao_id, permitido, reg_date, reg_status)
+    SELECT gen_random_uuid(), pf.id, esc.id, true, now(), 'A'
+      FROM plantaopro.perfis pf
+      CROSS JOIN (VALUES ('ADM360.VER'),('ADM360.EXPORTAR'),('ADM360.IMPORTAR_XML'),
+                         ('ADM360.CRIAR'),('ADM360.EDITAR'),('ADM360.CONFIGURAR'),
+                         ('ADM360.REABRIR'),('ADM360.CONFIRMAR'),('ADM360.CANCELAR'),
+                         ('ADM360.CONFERIR'),('ADM360.MANIFESTAR_DFE'),
+                         ('ADM360.VINCULAR_DOCUMENTOS'),('ADM360.TRANSMITIR_RESPOSTA')) AS alvo(codigo)
+      JOIN LATERAL (
+          SELECT pe.id
+            FROM plantaopro.permissoes pe
+           WHERE replace(pe.codigo, ':', '.') = alvo.codigo
+           ORDER BY pe.id
+           LIMIT 1
+      ) AS esc ON true
+     WHERE pf.codigo = 'ADMINISTRADOR_CLIENTE'
+       AND pf.reg_status = 'A'
+       AND NOT EXISTS (
+           SELECT 1
+             FROM plantaopro.perfil_permissoes pp
+             JOIN plantaopro.permissoes pe2 ON pe2.id = pp.permissao_id
+            WHERE pp.perfil_id = pf.id
+              AND pp.reg_status = 'A'
+              AND replace(pe2.codigo, ':', '.') = alvo.codigo
+       );
+END $migration$;
+
+-- ============================================================
+-- Seção 94 — B4 Matriz Comercial Solicitacoes v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql
+-- SOURCE-SHA256: 5b02855bf3374750252687bda7f2efc3162af36772dfebc253e1cd3531b4ade0
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2323_b4_matriz_comercial_solicitacoes
+-- B4 (matriz comercial canonica): reconcilia o shape das tabelas comerciais que
+-- duas migrations concorrentes criaram com tipos diferentes (o "IF NOT EXISTS"
+-- congela o shape de quem rodou primeiro):
+--
+-- 1. plantaopro.planos: publico/destaque/permite_white_label nasceram TEXT
+--    ('true'/'false'/NULL) mas o codigo le como boolean (ListarPlanosPublicos
+--    quebrava com 42804 e o /planos/publicos devolvia 500 para todo mundo);
+--    ordem nasceu TEXT mas o codigo ordena como numero. Conversao com USING
+--    explicito: NULL vira false/999 (negacao por padrao em exposicao publica;
+--    decisao registrada em r5b4-matriz-comercial.md).
+-- 2. plantaopro.upgrade_solicitacoes / downgrade_solicitacoes: nasceram com
+--    colunas genericas (codigo/nome/dados), mas o self-service insere colunas
+--    ricas (assinatura_id/plano_destino_id/motivo/...) -> 500 em
+--    solicitar-upgrade/downgrade/cancelamento. Adiciona as colunas que faltam
+--    + colunas de decisao (decidido_por/decidido_em/justificativa_decisao) para
+--    a aprovacao B2B das solicitacoes (estados explicitos).
+--
+-- Idempotencia: cada bloco verifica o catalogo antes de alterar; reaplicacao
+-- nao muda nada. Nao ha UPDATE de dados alem da conversao de tipo (USING).
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    -- 1a. planos.publico TEXT -> boolean (NULL vira false: plano interno/rascunho
+    -- nao aparece no catalogo publico ate decisao comercial explicita).
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'plantaopro' AND table_name = 'planos'
+           AND column_name = 'publico' AND data_type <> 'boolean'
+    ) THEN
+        ALTER TABLE plantaopro.planos ALTER COLUMN publico TYPE boolean
+            USING (coalesce(lower(nullif(publico, '')), 'false') IN ('true', 't', '1', 's', 'sim', 'y', 'yes'));
+    END IF;
+
+    -- 1b. planos.destaque TEXT -> boolean (NULL vira false).
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'plantaopro' AND table_name = 'planos'
+           AND column_name = 'destaque' AND data_type <> 'boolean'
+    ) THEN
+        ALTER TABLE plantaopro.planos ALTER COLUMN destaque TYPE boolean
+            USING (coalesce(lower(nullif(destaque, '')), 'false') IN ('true', 't', '1', 's', 'sim', 'y', 'yes'));
+    END IF;
+
+    -- 1c. planos.permite_white_label TEXT -> boolean (NULL vira false).
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'plantaopro' AND table_name = 'planos'
+           AND column_name = 'permite_white_label' AND data_type <> 'boolean'
+    ) THEN
+        ALTER TABLE plantaopro.planos ALTER COLUMN permite_white_label TYPE boolean
+            USING (coalesce(lower(nullif(permite_white_label, '')), 'false') IN ('true', 't', '1', 's', 'sim', 'y', 'yes'));
+    END IF;
+
+    -- 1d. planos.ordem TEXT -> integer (nao-numerico/NULL vira 999 = fim da lista,
+    -- mesmo fallback do ORDER BY do catalogo publico).
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'plantaopro' AND table_name = 'planos'
+           AND column_name = 'ordem' AND data_type <> 'integer'
+    ) THEN
+        ALTER TABLE plantaopro.planos ALTER COLUMN ordem TYPE integer
+            USING (CASE WHEN ordem ~ '^[0-9]+$' THEN ordem::integer ELSE 999 END);
+    END IF;
+
+    -- 2a. upgrade_solicitacoes: colunas ricas do self-service + decisao B2B.
+    ALTER TABLE plantaopro.upgrade_solicitacoes
+        ADD COLUMN IF NOT EXISTS assinatura_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS plano_atual_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS plano_destino_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS motivo text NULL,
+        ADD COLUMN IF NOT EXISTS solicitado_por uuid NULL,
+        ADD COLUMN IF NOT EXISTS decidido_por uuid NULL,
+        ADD COLUMN IF NOT EXISTS decidido_em timestamptz NULL,
+        ADD COLUMN IF NOT EXISTS justificativa_decisao text NULL;
+    CREATE INDEX IF NOT EXISTS ix_upgrade_solicitacoes_assinatura_id
+        ON plantaopro.upgrade_solicitacoes(assinatura_id);
+
+    -- 2b. downgrade_solicitacoes: idem + flags de impacto (cancelamento usa esta
+    -- tabela com status='CANCELAMENTO_SOLICITADO' e plano_destino = plano atual).
+    ALTER TABLE plantaopro.downgrade_solicitacoes
+        ADD COLUMN IF NOT EXISTS assinatura_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS plano_atual_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS plano_destino_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS motivo text NULL,
+        ADD COLUMN IF NOT EXISTS impacto_validado boolean NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS bloqueado boolean NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS solicitado_por uuid NULL,
+        ADD COLUMN IF NOT EXISTS decidido_por uuid NULL,
+        ADD COLUMN IF NOT EXISTS decidido_em timestamptz NULL,
+        ADD COLUMN IF NOT EXISTS justificativa_decisao text NULL;
+    CREATE INDEX IF NOT EXISTS ix_downgrade_solicitacoes_assinatura_id
+        ON plantaopro.downgrade_solicitacoes(assinatura_id);
+END $migration$;
+
+-- ============================================================
+-- Seção 95 — B4 Plano Modulos Canonicos v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql
+-- SOURCE-SHA256: 63b0e1f517295cc9aa27c55cd5bd1477479b348e46a1b4263d61b81007fa9371
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2324_b4_plano_modulos_canonicos
+-- B4 (matriz comercial canonica): reconcilia plantaopro.plano_modulos.
+-- Tres migrations concorrentes criaram a tabela com shapes diferentes
+-- (generico / habilitado-status / incluido-limite-preco_adicional); o codigo
+-- canonico (LinkPlan + GET matriz) usa o terceiro. Como a tabela esta vazia
+-- nos bancos conhecidos, a reconciliacao e aditiva e sem risco de dados:
+--
+--   1. garante as colunas canonicas (modulo_id, codigo_modulo, incluido,
+--      limite, preco_adicional);
+--   2. retroage incluido=false onde habilitado=false (bancos que ja tenham
+--      linhas no shape antigo);
+--   3. cria o indice unico ux_plano_modulos_ativo exigido pelo ON CONFLICT
+--      do vincular-plano (sem ele, o upsert quebra).
+--
+-- Idempotencia: ADD COLUMN / CREATE INDEX IF NOT EXISTS + blocos
+-- condicionais ao catalogo; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.plano_modulos
+        ADD COLUMN IF NOT EXISTS modulo_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS codigo_modulo text NULL,
+        ADD COLUMN IF NOT EXISTS incluido boolean NOT NULL DEFAULT true,
+        ADD COLUMN IF NOT EXISTS limite integer NULL,
+        ADD COLUMN IF NOT EXISTS preco_adicional numeric(14, 2) NULL;
+
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+         WHERE table_schema = 'plantaopro' AND table_name = 'plano_modulos'
+           AND column_name = 'habilitado'
+    ) THEN
+        UPDATE plantaopro.plano_modulos
+           SET incluido = false
+         WHERE coalesce(habilitado, true) = false
+           AND incluido = true;
+    END IF;
+
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_plano_modulos_ativo
+        ON plantaopro.plano_modulos(plano_id, modulo_id)
+        WHERE reg_status = 'A' AND modulo_id IS NOT NULL;
+END $migration$;
+
+-- ============================================================
+-- Seção 96 — B4 Plano Recursos Colunas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql
+-- SOURCE-SHA256: 797e597937f13830b53997581a8e41bafe17e014034bee04bcc0320a467db73a
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2325_b4_plano_recursos_colunas
+-- B4 (matriz comercial canonica): reconcilia plantaopro.plano_recursos.
+-- O shape canonico (saas_inteligente_auditavel) tem recurso/habilitado/
+-- limite, mas o contrato vigente da API (GET/PUT planos/{id}/recursos e a
+-- matriz B4) usa codigo/nome/descricao — colunas que faltam nos bancos onde
+-- outra migration criou a tabela primeiro (42703 no GET/PUT). Adiciona as
+-- colunas que faltam sem tocar nas existentes.
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.plano_recursos
+        ADD COLUMN IF NOT EXISTS codigo varchar(80) NULL,
+        ADD COLUMN IF NOT EXISTS nome varchar(160) NULL,
+        ADD COLUMN IF NOT EXISTS descricao text NULL;
+END $migration$;
+
+-- ============================================================
+-- Seção 97 — B4 Assinatura Historico Colunas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql
+-- SOURCE-SHA256: 52688af05632eeec06ded37ca238c361df6d25e61d94ef3aae8973b98680c5b1
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2326_b4_assinatura_historico_colunas
+-- B4 (estados explicitos): reconcilia plantaopro.assinatura_historico.
+-- O alterar-plano manual B2B (e a aprovacao de upgrade/downgrade B4) grava
+-- (plano_id_anterior, plano_id_novo, acao, justificativa) — colunas que
+-- nenhuma migration criou nos bancos vigentes (42703 no ALTERAR_PLANO real).
+-- Adiciona as colunas que faltam sem tocar nas existentes.
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.assinatura_historico
+        ADD COLUMN IF NOT EXISTS plano_id_anterior uuid NULL,
+        ADD COLUMN IF NOT EXISTS plano_id_novo uuid NULL,
+        ADD COLUMN IF NOT EXISTS acao varchar(40) NULL,
+        ADD COLUMN IF NOT EXISTS justificativa text NULL,
+        ADD COLUMN IF NOT EXISTS reg_update timestamptz NULL;
+END $migration$;
+
+-- ============================================================
+-- Seção 98 — B4 Historico Reg Status v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2327_b4_historico_reg_status.sql
+-- SOURCE-SHA256: f4523c5ca99a5ee31361400b5a467d669f64eaa7153f725f17ae1249348394de
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2327_b4_historico_reg_status
+-- B4: complementa a v2326 — plantaopro.assinatura_historico tambem nao tem
+-- reg_status nos bancos vigentes (o shape canonico auditavel tem). Sem ela,
+-- o INSERT do alterar-plano/aprovacao quebra com 42703.
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.assinatura_historico
+        ADD COLUMN IF NOT EXISTS reg_status char(1) NOT NULL DEFAULT 'A';
+END $migration$;
+
+-- ============================================================
+-- Seção 99 — B5 Provisionamento Convites v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2328_b5_provisionamento_convites.sql
+-- SOURCE-SHA256: 7ad01e18a79b7884bb53ef7b37644d82a75416cc676a1e2e1a48f3d97691b1cf
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2328_b5_provisionamento_convites
+-- B5 (provisionar cliente novo de verdade):
+--
+-- 1. plantaopro.clientes: o finalizar self-service grava email/telefone/
+--    cidade/estado/plano_id — colunas que faltam nos bancos vigentes (42703
+--    no finalizar real). Adiciona sem tocar nas existentes.
+-- 2. plantaopro.usuario_convites (NOVA): convite de equipe com expiracao e
+--    uso unico. Guarda SÓ o hash SHA-256 do token (nunca o token); estado
+--    derivado (PENDENTE = sem uso/revogacao e dentro da validade). Indice
+--    unico parcial impede dois convites pendentes para o mesmo e-mail no
+--    tenant (re-convite idempotente = 409 honesto, não duplicata).
+--
+-- Idempotencia: CREATE/ADD/INDEX IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    -- 1. clientes: colunas do contrato de provisionamento.
+    ALTER TABLE plantaopro.clientes
+        ADD COLUMN IF NOT EXISTS email varchar(254) NULL,
+        ADD COLUMN IF NOT EXISTS telefone varchar(40) NULL,
+        ADD COLUMN IF NOT EXISTS cidade varchar(120) NULL,
+        ADD COLUMN IF NOT EXISTS estado varchar(60) NULL,
+        ADD COLUMN IF NOT EXISTS plano_id uuid NULL;
+
+    -- 2. convites de equipe (token com expiracao + uso unico).
+    CREATE TABLE IF NOT EXISTS plantaopro.usuario_convites (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        tenant_id uuid NOT NULL,
+        cliente_id uuid NOT NULL,
+        email varchar(254) NOT NULL,
+        perfil_ids uuid[] NOT NULL,
+        token_hash char(64) NOT NULL,
+        expira_em timestamptz NOT NULL,
+        usado_em timestamptz NULL,
+        usado_por uuid NULL,
+        revogado_em timestamptz NULL,
+        criado_por uuid NULL,
+        reg_date timestamptz NOT NULL DEFAULT now(),
+        reg_update timestamptz NULL,
+        reg_status char(1) NOT NULL DEFAULT 'A'
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_usuario_convites_token
+        ON plantaopro.usuario_convites(token_hash)
+        WHERE reg_status = 'A';
+    CREATE UNIQUE INDEX IF NOT EXISTS ux_usuario_convites_pendente
+        ON plantaopro.usuario_convites(tenant_id, lower(email))
+        WHERE reg_status = 'A' AND usado_em IS NULL AND revogado_em IS NULL;
+    CREATE INDEX IF NOT EXISTS ix_usuario_convites_tenant
+        ON plantaopro.usuario_convites(tenant_id, reg_date DESC);
+END $migration$;
+
+-- ============================================================
+-- Seção 100 — B5 Grants Usuarios Adm Cliente v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql
+-- SOURCE-SHA256: 505f10f5f1e06704b7e53bce3a55a44bc9fc7b0a638a0dca4033be1799e57ce0
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2329_b5_grants_usuarios_adm_cliente
+-- B5 (convidar equipe): grants USUARIOS para ADMINISTRADOR_CLIENTE.
+-- As telas de equipe/convites autorizam POR ACAO (USUARIOS.VER/CRIAR/EDITAR/
+-- CONVIDAR); perfis de cliente criados antes desta rodada nao tem esses
+-- grants e negariam tudo com PERMISSAO_NEGADA. Mesmo padrao dedupe da v2322
+-- (distinct por codigo normalizado + not-exists = idempotente).
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+          FROM (VALUES ('USUARIOS.VER'),('USUARIOS.CRIAR'),('USUARIOS.EDITAR'),('USUARIOS.CONVIDAR')) AS alvo(codigo)
+         WHERE NOT EXISTS (
+             SELECT 1 FROM plantaopro.permissoes pe
+              WHERE replace(pe.codigo, ':', '.') = alvo.codigo)
+    ) THEN
+        RAISE EXCEPTION 'v2329: codigo USUARIOS esperado ausente em plantaopro.permissoes';
+    END IF;
+
+    INSERT INTO plantaopro.perfil_permissoes(id, perfil_id, permissao_id, permitido, reg_date, reg_status)
+    SELECT gen_random_uuid(), pf.id, esc.id, true, now(), 'A'
+      FROM plantaopro.perfis pf
+      CROSS JOIN (VALUES ('USUARIOS.VER'),('USUARIOS.CRIAR'),('USUARIOS.EDITAR'),('USUARIOS.CONVIDAR')) AS alvo(codigo)
+      JOIN LATERAL (
+          SELECT pe.id
+            FROM plantaopro.permissoes pe
+           WHERE replace(pe.codigo, ':', '.') = alvo.codigo
+           ORDER BY pe.id
+           LIMIT 1
+      ) AS esc ON true
+     WHERE pf.codigo = 'ADMINISTRADOR_CLIENTE'
+       AND pf.reg_status = 'A'
+       AND NOT EXISTS (
+           SELECT 1
+             FROM plantaopro.perfil_permissoes pp
+             JOIN plantaopro.permissoes pe2 ON pe2.id = pp.permissao_id
+            WHERE pp.perfil_id = pf.id
+              AND pp.reg_status = 'A'
+              AND replace(pe2.codigo, ':', '.') = alvo.codigo
+       );
+END $migration$;
+
+-- ============================================================
+-- Seção 101 — B5 Onboarding Whitelabel Colunas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql
+-- SOURCE-SHA256: 0aa20335a227cd35786c8ed33cce31a16eb98022a5246c6b890dce1c661badc4
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2330_b5_onboarding_whitelabel_colunas
+-- B5 (provisionar cliente novo): reconcilia tenant_white_label,
+-- tenant_onboarding e tenant_onboarding_checklist. O provisionamento
+-- (CriarWhiteLabelPadrao/CriarOnboarding) e as leituras usam o shape
+-- canonico (self_service_white_label), mas os bancos vigentes tem o shape
+-- generico (42703 no finalizar real). Adiciona as colunas que faltam.
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.tenant_white_label
+        ADD COLUMN IF NOT EXISTS nome_plataforma text NULL,
+        ADD COLUMN IF NOT EXISTS cliente_nome text NULL,
+        ADD COLUMN IF NOT EXISTS slogan text NULL,
+        ADD COLUMN IF NOT EXISTS logo_url text NULL,
+        ADD COLUMN IF NOT EXISTS logo_reduzida_url text NULL,
+        ADD COLUMN IF NOT EXISTS favicon_url text NULL,
+        ADD COLUMN IF NOT EXISTS cor_primaria text NULL,
+        ADD COLUMN IF NOT EXISTS cor_secundaria text NULL,
+        ADD COLUMN IF NOT EXISTS cor_fundo text NULL,
+        ADD COLUMN IF NOT EXISTS cor_menu text NULL,
+        ADD COLUMN IF NOT EXISTS tema text NULL,
+        ADD COLUMN IF NOT EXISTS email_remetente text NULL,
+        ADD COLUMN IF NOT EXISTS texto_boas_vindas text NULL,
+        ADD COLUMN IF NOT EXISTS texto_rodape text NULL,
+        ADD COLUMN IF NOT EXISTS login_banner_url text NULL;
+
+    ALTER TABLE plantaopro.tenant_onboarding
+        ADD COLUMN IF NOT EXISTS progresso int NULL,
+        ADD COLUMN IF NOT EXISTS proxima_acao text NULL,
+        ADD COLUMN IF NOT EXISTS iniciado_em timestamptz NULL,
+        ADD COLUMN IF NOT EXISTS finalizado_em timestamptz NULL;
+
+    ALTER TABLE plantaopro.tenant_onboarding_checklist
+        ADD COLUMN IF NOT EXISTS onboarding_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS titulo text NULL,
+        ADD COLUMN IF NOT EXISTS descricao text NULL,
+        ADD COLUMN IF NOT EXISTS ordem int NULL,
+        ADD COLUMN IF NOT EXISTS obrigatorio boolean NULL,
+        ADD COLUMN IF NOT EXISTS concluido boolean NOT NULL DEFAULT false,
+        ADD COLUMN IF NOT EXISTS concluido_em timestamptz NULL,
+        ADD COLUMN IF NOT EXISTS link_acao text NULL;
+END $migration$;
+
+-- ============================================================
+-- Seção 102 — B5 Lgpd Consentimentos Colunas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql
+-- SOURCE-SHA256: 7744c1349b4946f2b677897bea42dd5e9600b2dbb53b4807cf2c14082bc8e646
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2331_b5_lgpd_consentimentos_colunas
+-- B5 (provisionar cliente novo): reconcilia plantaopro.lgpd_consentimentos.
+-- O provisionamento grava (titular_email, aceito, origem, ip_origem) do shape
+-- canonico (self_service_white_label), mas os bancos vigentes tem outro
+-- shape (42703 no finalizar real). Adiciona as colunas que faltam; o codigo
+-- passa a gravar tambem consentido/ip exigidos pelo shape vigente.
+--
+-- Idempotencia: ADD COLUMN IF NOT EXISTS; reaplicacao nao muda nada.
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    ALTER TABLE plantaopro.lgpd_consentimentos
+        ADD COLUMN IF NOT EXISTS titular_email text NULL,
+        ADD COLUMN IF NOT EXISTS politica_id uuid NULL,
+        ADD COLUMN IF NOT EXISTS aceito boolean NULL,
+        ADD COLUMN IF NOT EXISTS origem text NULL,
+        ADD COLUMN IF NOT EXISTS ip_origem text NULL;
+END $migration$;
+
+-- ============================================================
+-- Seção 103 — B6 Cobranca Saas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2332_b6_cobranca_saas.sql
+-- SOURCE-SHA256: b6aee89b3a44863c0a4399aac0f971065e46d6fd555d5baf16415b13120b74ab
+-- R5-B6: cobranca SaaS de verdade (provider sandbox + webhook assinado) e reconciliacao
+-- dos shapes congelados de faturas_saas/pagamentos_saas.
+-- Contexto: criacoes concorrentes com "if not exists" congelaram as tabelas no formato
+-- placeholder em bancos reais. O BFF canônico (api/faturamento-saas) ja escreve em
+-- data_pagamento/forma_pagamento/motivo_*/resposta_contestacao/observacoes e essas
+-- colunas nunca existiram nesses bancos (42703 escondido por testes de contrato).
+-- Esta migration e aditiva e idempotente: ADD COLUMN IF NOT EXISTS preserva quem ja tem.
+alter table plantaopro.faturas_saas add column if not exists data_pagamento date null;
+alter table plantaopro.faturas_saas add column if not exists forma_pagamento varchar(60) null;
+alter table plantaopro.faturas_saas add column if not exists motivo_cancelamento text null;
+alter table plantaopro.faturas_saas add column if not exists motivo_contestacao text null;
+alter table plantaopro.faturas_saas add column if not exists resposta_contestacao text null;
+alter table plantaopro.faturas_saas add column if not exists valor numeric(14,2) not null default 0;
+alter table plantaopro.faturas_saas add column if not exists valor_pago numeric(14,2) null;
+alter table plantaopro.faturas_saas add column if not exists assinatura_id uuid null;
+
+alter table plantaopro.pagamentos_saas add column if not exists data_pagamento date null;
+alter table plantaopro.pagamentos_saas add column if not exists forma_pagamento varchar(60) null;
+alter table plantaopro.pagamentos_saas add column if not exists observacoes text null;
+alter table plantaopro.pagamentos_saas add column if not exists criado_em timestamp null;
+
+-- Provider de cobranca: registro administrativo do meio de pagamento.
+-- Nenhum dado de cartao ou bancario sensivel e armazenado aqui.
+create table if not exists plantaopro.cobranca_providers (
+    codigo varchar(40) primary key,
+    nome varchar(120) not null,
+    modo varchar(20) not null default 'SANDBOX' constraint ck_cobranca_providers_modo check (modo in ('SANDBOX','PRODUCAO')),
+    status varchar(20) not null default 'INATIVO' constraint ck_cobranca_providers_status check (status in ('ATIVO','INATIVO')),
+    descricao text null,
+    criado_em timestamp not null default now(),
+    atualizado_em timestamp not null default now(),
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now(),
+    reg_update timestamp null
+);
+
+-- Cobranca = tentativa de pagamento de uma fatura em um provider.
+-- Referencia e opaca e unica; no maximo uma cobranca ativa por fatura.
+create table if not exists plantaopro.cobranca_cobrancas (
+    id uuid primary key default gen_random_uuid(),
+    fatura_id uuid not null,
+    cliente_id uuid not null,
+    provider_codigo varchar(40) not null,
+    referencia varchar(80) not null,
+    checkout_url text null,
+    valor numeric(14,2) not null constraint ck_cobranca_cobrancas_valor check (valor > 0),
+    status varchar(20) not null default 'PENDENTE' constraint ck_cobranca_cobrancas_status check (status in ('PENDENTE','INICIADA','PAGA','FALHA','CANCELADA','ESTORNADA')),
+    expira_em timestamp not null default now() + interval '7 days',
+    evento_final_id varchar(120) null,
+    criado_em timestamp not null default now(),
+    atualizado_em timestamp not null default now(),
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now(),
+    reg_update timestamp null
+);
+
+create unique index if not exists ux_cobranca_cobrancas_referencia on plantaopro.cobranca_cobrancas(referencia);
+create unique index if not exists ux_cobranca_cobrancas_fatura_ativa on plantaopro.cobranca_cobrancas(fatura_id) where status in ('PENDENTE','INICIADA') and reg_status='A';
+create index if not exists ix_cobranca_cobrancas_fatura on plantaopro.cobranca_cobrancas(fatura_id);
+create index if not exists ix_cobranca_cobrancas_cliente on plantaopro.cobranca_cobrancas(cliente_id);
+
+-- Eventos de webhook recebidos. O indice unico (provider, evento) e o arbitro do dedupe:
+-- violacao significa evento repetido e a transacao inteira de aplicacao e descartada.
+create table if not exists plantaopro.cobranca_webhook_eventos (
+    id uuid primary key default gen_random_uuid(),
+    provider_codigo varchar(40) not null,
+    evento_id varchar(120) not null,
+    tipo_evento varchar(40) not null,
+    referencia varchar(80) null,
+    cobranca_id uuid null,
+    fatura_id uuid null,
+    resultado varchar(20) not null constraint ck_cobranca_webhook_resultado check (resultado in ('APLICADO','IGNORADO','RECUSADO')),
+    mensagem text null,
+    payload jsonb null,
+    processado_em timestamp not null default now(),
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now()
+);
+
+create unique index if not exists ux_cobranca_webhook_evento on plantaopro.cobranca_webhook_eventos(provider_codigo, evento_id);
+create index if not exists ix_cobranca_webhook_fatura on plantaopro.cobranca_webhook_eventos(fatura_id);
+
+-- Provider sandbox deterministico (nenhum provedor externo existe ainda no produto).
+insert into plantaopro.cobranca_providers(codigo,nome,modo,status,descricao)
+values('SANDBOX','Cobranca sandbox PLANTAOPro','SANDBOX','ATIVO','Checkout simulado sem dados de cartao; webhooks assinados com HMAC local.')
+on conflict (codigo) do update set nome=excluded.nome, modo=excluded.modo, descricao=excluded.descricao, atualizado_em=now();
+
+-- ============================================================
+-- Seção 104 — C7 Onboarding Contrato v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2333_c7_onboarding_contrato.sql
+-- SOURCE-SHA256: 8057680ca36bcba306753c6f89c58a4ab1d27761e0fa3dd9bb7fb146a4c2f5d7
+-- R5-C7: onboarding adaptado ao contrato (catalogo canonicos de etapas com jornada e criterio verificavel).
+-- Contexto: o kernel B5 materializava 11 etapas genericas fixas (codigo ETAPA_00..11), iguais para
+-- qualquer plano, sem objetivo/responsavel/pre-requisito e concluidas por clique (sucesso ficticio).
+-- Esta migration e aditiva e idempotente: o catalogo vira a unica fonte das etapas; cada passo da
+-- jornada do cliente passa a ter objetivo, responsavel, pre-requisito, destino e um CRITERIO que o
+-- servidor verifica em dados persistidos (avaliador no OnboardingJornadaService). Etapas de modulo
+-- so existem para o tenant quando o contrato do modulo esta efetivo (predicado de vigencia B4/B6).
+create table if not exists plantaopro.onboarding_etapas_catalogo (
+    id uuid primary key default gen_random_uuid(),
+    codigo varchar(60) not null constraint ux_onboarding_etapas_catalogo_codigo unique,
+    titulo varchar(160) not null,
+    objetivo text not null,
+    descricao text null,
+    responsavel varchar(20) not null default 'CLIENTE' constraint ck_onboarding_etapas_catalogo_resp check (responsavel in ('CLIENTE','MNSOFT')),
+    pre_requisito_codigo varchar(60) null,
+    modulo_codigo varchar(40) null,
+    criterio_codigo varchar(60) null,
+    link_acao text not null,
+    ordem integer not null,
+    obrigatorio boolean not null default true,
+    reg_status char(1) not null default 'A',
+    reg_date timestamp not null default now(),
+    reg_update timestamp null
+);
+comment on column plantaopro.onboarding_etapas_catalogo.modulo_codigo is 'nulo = nucleo geral do onboarding; senao codigo operacional em modulos_sistema (PLANTOES/SAUDE360/ADM360). A etapa so e materializada com contrato efetivo do modulo.';
+comment on column plantaopro.onboarding_etapas_catalogo.criterio_codigo is 'nulo = conclusao humana explicita (origem MANUAL); senao o servidor deriva a conclusao verificando dados persistidos do tenant.';
+
+-- Colunas que materializam a jornada no checklist do tenant (preserva linhas legadas ETAPA_xx).
+alter table plantaopro.tenant_onboarding_checklist add column if not exists objetivo text null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists responsavel varchar(20) null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists pre_requisito_codigo varchar(60) null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists modulo_codigo varchar(40) null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists criterio_codigo varchar(60) null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists origem_conclusao varchar(20) null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists evidencia text null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists avaliada_em timestamptz null;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists pulada boolean not null default false;
+alter table plantaopro.tenant_onboarding_checklist add column if not exists motivo_pular text null;
+
+-- Arbitro anti-duplicacao de etapa por tenant (materializacao idempotente por codigo).
+-- Deducacao previa defensiva: linhas antigas simultaneas nao bloqueiam o indice.
+delete from plantaopro.tenant_onboarding_checklist a
+ using plantaopro.tenant_onboarding_checklist b
+ where a.tenant_id = b.tenant_id and a.codigo = b.codigo and a.reg_status = 'A' and b.reg_status = 'A'
+   and a.ctid < b.ctid;
+create unique index if not exists ux_tenant_onboarding_checklist_tenant_codigo
+ on plantaopro.tenant_onboarding_checklist(tenant_id, codigo) where reg_status = 'A';
+
+-- Catalogo canonicos (fonte unica das etapas; rerun atualiza a jornada sem tocar nos tenants).
+insert into plantaopro.onboarding_etapas_catalogo
+(codigo,titulo,objetivo,descricao,responsavel,pre_requisito_codigo,modulo_codigo,criterio_codigo,link_acao,ordem,obrigatorio)
+values
+('ONB_EMPRESA_DADOS','Completar os dados da empresa','Manter o cadastro do cliente integro para contato, faturamento e suporte.','Verificamos razao social, nome fantasia, CNPJ, e-mail, telefone, cidade e estado no cadastro persistido.','CLIENTE',null,null,'EMPRESA_DADOS_COMPLETOS','/ClientePortal/Index',10,true),
+('ONB_EQUIPE_CONVIDAR','Convidar o primeiro integrante da equipe','Distribuir acesso nominal desde o inicio; nenhuma conta compartilhada.','O criterio le a tabela de convites de equipe (token com expiracao e uso unico, B5).','CLIENTE',null,null,'CONVITE_EQUIPE_ENVIADO','/ConvitesEquipe/Index',20,true),
+('ONB_EQUIPE_ACESSO','Primeiro convite aceito pela equipe','Provar que uma pessoa real entrou no ambiente com login proprio.','O criterio le o aceite do convite (uso do token registrado no banco).','CLIENTE','ONB_EQUIPE_CONVIDAR',null,'MEMBRO_EQUIPE_ATIVO','/ConvitesEquipe/Index',30,true),
+('ONB_IDENTIDADE','Personalizar a identidade visual','Entregar o produto com a marca do cliente (white label).','Etapa opcional: pode ser pulada sem travar o onboarding. O criterio le logo/nome customizados na configuracao salva.','CLIENTE',null,null,'WHITE_LABEL_PERSONALIZADO','/WhiteLabel',40,false),
+('ONB_PL_CRIAR','Criar o primeiro plantao','Registrar uma vaga real na grade de plantoes.','Exige contrato efetivo do modulo Plantoes. O criterio le a tabela de plantoes do tenant.','CLIENTE',null,'PLANTOES','PRIMEIRO_PLANTAO_CRIADO','/Plantoes/Create',110,true),
+('ONB_PL_PUBLICAR','Publicar o plantao na grade','Abrir a vaga publicada para que a operacao comecou de verdade.','Pre-requisito: plantao criado. O criterio le plantoes em status publicado (aberto/confirmado/realizado).','CLIENTE','ONB_PL_CRIAR','PLANTOES','PRIMEIRO_PLANTAO_PUBLICADO','/Plantoes/Index',120,true),
+('ONB_PL_ESCALA','Fechar a primeira escala com medico','Completar o ciclo convite -> resposta -> escala confirmada.','Pre-requisito: plantao publicado. O criterio le escalas confirmadas/realizadas vinculadas aos plantoes do tenant.','CLIENTE','ONB_PL_PUBLICAR','PLANTOES','ESCALA_PREENCHIDA','/CentralEscala/Index',130,true),
+('ONB_SD_UNIDADE','Cadastrar a unidade de atendimento','Estruturar o local fisico onde o Saude 360 vai operar.','Exige contrato efetivo do modulo Saude 360. O criterio le unidades de atendimento cadastradas.','CLIENTE',null,'SAUDE360','PRIMEIRA_UNIDADE_SAUDE','/ClinicaDashboard/Index',210,true),
+('ONB_SD_PACIENTE','Cadastrar o primeiro paciente','Formar a base cadastral do atendimento em saude.','Pre-requisito: unidade cadastrada. O criterio le pacientes do tenant.','CLIENTE','ONB_SD_UNIDADE','SAUDE360','PRIMEIRO_PACIENTE_CADASTRADO','/Pacientes/Create',220,true),
+('ONB_SD_TRIAGEM','Realizar a primeira triagem','Exercitar o fluxo assistido completo na operacao real.','Pre-requisito: paciente cadastrado. O criterio le triagens registradas do tenant.','CLIENTE','ONB_SD_PACIENTE','SAUDE360','PRIMEIRA_TRIAGEM_REALIZADA','/Triagem/Create',230,true),
+('ONB_AD_OPERACAO','Registrar a primeira operacao administrativa','Movimentar o Administrativo 360 com um lancamento real.','Exige contrato efetivo do modulo Administrativo 360. O criterio le operacoes do tenant.','CLIENTE',null,'ADM360','PRIMEIRA_OPERACAO_ADM360','/Administrativo360/Index',310,true),
+('ONB_REVISAO','Revisao final e liberacao','Conferir as pendencias restantes e declarar a operacao pronta.','Conclusao derivada: o servidor so marca esta etapa quando TODAS as obrigatorias contratadas estao atendidas em dados.','CLIENTE',null,null,'REVISAO_GERAL','/Onboarding/Index',900,true)
+on conflict (codigo) do update set
+    titulo = excluded.titulo,
+    objetivo = excluded.objetivo,
+    descricao = excluded.descricao,
+    responsavel = excluded.responsavel,
+    pre_requisito_codigo = excluded.pre_requisito_codigo,
+    modulo_codigo = excluded.modulo_codigo,
+    criterio_codigo = excluded.criterio_codigo,
+    link_acao = excluded.link_acao,
+    ordem = excluded.ordem,
+    obrigatorio = excluded.obrigatorio,
+    reg_update = now();
+
+-- ============================================================
+-- Seção 105 — D9 Perfil Admin Modulos Jornada v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql
+-- SOURCE-SHA256: 69f87da1d81ffb94de63f153b2952c21c958fc22f65acc2f103b3e0ae112c87f
+-- R5-D9: completude de permissoes canonicas do perfil ADMINISTRADOR_CLIENTE para modulos de jornada.
+-- Contexto: a homologacao D9 mostrou que habilitar um modulo no contrato (B5 habilitar-tenant) ativa o
+-- claim de modulo, mas o PERFIL do administrador do cliente so tinha grants parciais semeados:
+-- PLANTOES com 5 de 31 acoes (sem PLANTOES.VER -> pagina /Plantoes caia em PERMISSAO_NEGADA apesar de
+-- contrato ATIVO) e SAUDE360 sem nenhuma acao. O precedente do catalogo e o suite ADM360, que foi
+-- semeado completo (39 acoes) para este mesmo perfil. Esta migration segue o mesmo contrato:
+-- quem contrata um modulo administra o modulo contratado; o gate de contrato (tenant_modulos +
+-- vigencia B4/B6) continua obrigatorio - aqui só se completa o catalogo de capacidades do perfil,
+-- que o proprio cliente pode revogar por override depois (usuario_permissoes_especiais).
+-- Aditiva e idempotente: so insere o que ainda nao existe; nunca remove ou reduz grants.
+insert into plantaopro.perfil_permissoes (
+    id, perfil_id, permissao_id, permitido, bloqueado_por_plano, reg_status, reg_date, status, metadata
+)
+select
+    gen_random_uuid(), pf.id, p.id, true, false, 'A', now(), 'ATIVO', '{}'::jsonb
+from plantaopro.perfis pf
+join plantaopro.permissoes p on p.reg_status = 'A'
+join plantaopro.modulos_sistema ms on ms.id = p.modulo_id and upper(ms.codigo) in ('PLANTOES','SAUDE360')
+where upper(pf.codigo) = 'ADMINISTRADOR_CLIENTE'
+  and pf.tenant_id is null
+  and pf.reg_status = 'A'
+  and not exists (
+      select 1 from plantaopro.perfil_permissoes pp
+      where pp.perfil_id = pf.id and pp.permissao_id = p.id
+  );
+
+-- ============================================================
+-- Seção 106 — D11 Perfil Admin Modulos Finos Saude v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql
+-- SOURCE-SHA256: 2a551c70881105e5f7527b33c2f61e2126e8d722eeb19c307af47b89de1fcc0d
+-- R5-D11: completude do catalogo de permissoes canonicas do ADMINISTRADOR_CLIENTE para os modulos
+-- finos de jornada Saude 360. Contexto: a homologacao D11 mostrou que o contrato SAUDE360 habilitado
+-- (B5) e os grants do suite generico SAUDE360.* (v2334) ainda deixam o gestor sem os codigos finos
+-- que o guard Web cobra por controller (SaasRouteGuardFilter: Pacientes->PACIENTES, Consultas->
+-- CONSULTAS, Triagem->TRIAGEM, Agendamentos->AGENDAMENTOS, ClinicaDashboard->CLINICA_DASHBOARD).
+-- Sem PACIENTES.* no perfil, /Pacientes caia em PERMISSAO_NEGADA mesmo com modulo PACIENTES ATIVO no
+-- contrato - o mesmo defeito que v2334 corrigiu para PLANTOES/SAUDE360, agora na camada fina.
+-- Mesmo contrato de v2334: quem contrata um modulo administra o modulo contratado; o gate de
+-- vigencia (tenant_modulos + B4/B6) continua obrigatorio e codigos inexistentes em modulos_sistema
+-- (ex.: TRIAGEM, ate decisao de catalogo E13) viram no-op natural do join. Desta vez cobre tambem os
+-- perfis base por tenant criados pelo kernel B5 (ba7faac0-... nao recebia nada dos suites).
+-- Aditiva e idempotente: so insere o que falta; nunca remove ou reduz grants existentes.
+insert into plantaopro.perfil_permissoes (
+    id, perfil_id, permissao_id, permitido, bloqueado_por_plano, reg_status, reg_date, status, metadata
+)
+select
+    gen_random_uuid(), pf.id, p.id, true, false, 'A', now(), 'ATIVO', '{}'::jsonb
+from plantaopro.perfis pf
+join plantaopro.permissoes p on p.reg_status = 'A'
+join plantaopro.modulos_sistema ms on ms.id = p.modulo_id
+    and upper(ms.codigo) in ('PACIENTES','CONSULTAS','AGENDAMENTOS','TRIAGEM','UNIDADES','CLINICA_DASHBOARD')
+where upper(pf.codigo) = 'ADMINISTRADOR_CLIENTE'
+  and pf.reg_status = 'A'
+  and not exists (
+      select 1 from plantaopro.perfil_permissoes pp
+      where pp.perfil_id = pf.id and pp.permissao_id = p.id
+  );
+
+-- ============================================================
+-- Seção 107 — E13 P2 Backfill Tenant Id Nucleo Clinico v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql
+-- SOURCE-SHA256: 72651255f8ebe56ae8b2f5037d313055ea7ae38c6c09c7b2d24509cfb8af621f
+-- R5-E13/P2: padronizacao do escopo canonico do nucleo clinico em tenant_id.
+-- Contexto (divida medida na evidencia D11): o kernel Saude360 (Saude360ClinicalService) gravava
+-- somente cliente_id e deixava tenant_id NULL em 100% das linhas clinicas criadas por rota; dois
+-- writers pontuais (favoritar CID e usar modelo de prescricao) ainda escreviam a chave de escopo
+-- (cliente_id) dentro da coluna tenant_id, contaminando a semantica. A rota de escrita agora
+-- resolve o tenant de origem pelo mapeamento persistido (clientes.tenant_id, com fallback
+-- tenants.cliente_id ou o proprio tenant quando o escopo ja e um tenant) e esta migracao retroa a
+-- MESMA regra as linhas existentes.
+-- Regra de backfill: tenant_id := clientes.tenant_id do cliente do registro, somente onde o valor
+-- atual e NULL ou esta contaminado (= cliente_id do proprio registro). Valores distintos
+-- intencionais nao sao tocados. Tabelas sem a coluna tenant_id sao ignoradas pelo guard.
+-- Aditiva e idempotente: reexecucao nao altera nada (a condicao so casa com NULL/contaminado).
+do $$
+declare
+    t text;
+begin
+    foreach t in array array[
+        'pacientes','paciente_historico','painel_chamada_fila','painel_chamada_historico',
+        'agendamentos','triagens','consultas','consulta_historico','cid_tabela','cid_favoritos',
+        'cid_uso_historico','prescricoes','prescricao_modelos','prescricao_historico',
+        'clinica_contas_receber','clinica_recebimentos','clinica_caixa','convenios',
+        'convenio_planos','convenio_autorizacoes','planos_saude','plano_saude_pacientes',
+        'convenio_glosas','repasses_medicos_clinicos','clinica_unidades_atendimento'
+    ] loop
+        if exists (
+            select 1 from information_schema.columns
+            where table_schema = 'plantaopro' and table_name = t and column_name = 'tenant_id'
+        ) then
+            execute format(
+                'update plantaopro.%I x set tenant_id = m.tenant_id
+                 from plantaopro.clientes m
+                 where m.id = x.cliente_id and m.tenant_id is not null
+                   and (x.tenant_id is null or x.tenant_id = x.cliente_id)', t);
+        end if;
+    end loop;
+end $$;
+
+insert into plantaopro.schema_migrations(id,script_path,checksum,applied_at)
+select 'v2336','database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql','runtime-managed',now()
+where not exists(select 1 from plantaopro.schema_migrations where id='v2336');
+
+-- ============================================================
+-- Seção 108 — P0 Convergencia Tenant Modulos Reg Status v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql
+-- SOURCE-SHA256: 464e02c21b47f3e8fc129c0ad6db3e76b3deef4326beab6023f96a6a74c1bc2a
+-- R5-P0: Convergencia de shape do tenant_modulos para linhagens legadas de instalacao.
+-- Linhagens criadas antes do catalogo SaaS de modulos possuem plantaopro.tenant_modulos com o
+-- shape antigo (codigo/dados/criado_em) sem as colunas canonicas; como as migrations subsequentes
+-- usam create table if not exists, o indice unico parcial de
+-- 2026_plantao_pro_self_service_white_label (tenant_id, lower(codigo_modulo) WHERE reg_status='A')
+-- falha com 42703 ao referenciar colunas ausentes em bancos legados (medido no ensaio P0 sobre
+-- clone do banco principal). Esta guarda replica exatamente o bloco de colunas da reconciliacao
+-- canonica 2026_09_v2197 (mesmas colunas, mesmas nulabilidades), permitindo que a ordem canonica
+-- seja aplicada por PlantaoPro.Tools.Database upgrade em qualquer linhagem sem reordenar o
+-- manifesto nem remendo ad-hoc fora das migrations; a propria v2197 continua sendo a reconciliacao
+-- de dados e constraints ao chegar sua vez no manifesto.
+-- Aditivo e idempotente: add column if not exists e no-op onde a coluna ja existe.
+alter table if exists plantaopro.tenant_modulos add column if not exists modulo_id uuid null;
+alter table if exists plantaopro.tenant_modulos add column if not exists codigo text null;
+alter table if exists plantaopro.tenant_modulos add column if not exists codigo_modulo text null;
+alter table if exists plantaopro.tenant_modulos add column if not exists habilitado boolean null;
+alter table if exists plantaopro.tenant_modulos add column if not exists origem text null;
+alter table if exists plantaopro.tenant_modulos add column if not exists status text null;
+alter table if exists plantaopro.tenant_modulos add column if not exists reg_status char(1) null;
+alter table if exists plantaopro.tenant_modulos add column if not exists reg_date timestamptz null;
+alter table if exists plantaopro.tenant_modulos add column if not exists reg_update timestamptz null;
+alter table if exists plantaopro.tenant_modulos add column if not exists ativado_em timestamptz null;
+alter table if exists plantaopro.tenant_modulos add column if not exists desativado_em timestamptz null;
+alter table if exists plantaopro.tenant_modulos add column if not exists limite_contratado integer null;
+alter table if exists plantaopro.tenant_modulos add column if not exists preco_contratado numeric(14,2) null;
+alter table if exists plantaopro.tenant_modulos add column if not exists created_by uuid null;
+alter table if exists plantaopro.tenant_modulos add column if not exists updated_by uuid null;
+
+-- ============================================================
+-- Seção 109 — P0 Administrativo360 Garantia Codigos Fiscais v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql
+-- SOURCE-SHA256: 1ef1dda3e29ba1e9bca510ac239de65055cd8389d10b61134a9e1ca5fef24427
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2338_p0_adm360_garantia_codigos_fiscais
+-- Guarda de compatibilidade P0 (ensaio rodada 5): a sequencia canonica de
+-- migrations cria em permissoes apenas o conjunto historico de codigos ADM360
+-- (2026_09_v2198); os 7 codigos fiscaus novos (CRIAR, EDITAR, CONFIGURAR,
+-- REABRIR, CONFIRMAR, CANCELAR, CONFERIR) eram criados somente pelo catalogo
+-- de permissoes do runtime da API. Isso fazia a sanidade da
+-- 2026_10_v2322_adm360_grants_adm_cliente_r5_a2 falhar em bancos novos ou
+-- legados onde a API nova ainda nao subiu antes do upgrade de banco.
+-- Esta guarda cadastra os codigos faltantes com o MESMO padrao da v2198
+-- (acao EDITAR para acoes de escrita, modulo ADM360 quando existir) e e
+-- integralmente idempotente: nao duplica onde o runtime ja criou e nao
+-- altera codigos existentes.
+-- ============================================================================
+
+DO $migration$
+DECLARE
+    v_acao_editar_id uuid;
+    v_modulo_adm_id uuid;
+    v_perm_code text;
+BEGIN
+    select id into v_acao_editar_id
+      from plantaopro.acoes_sistema
+     where codigo in ('EDITAR', 'SALVAR') order by id limit 1;
+    if v_acao_editar_id is null then
+        v_acao_editar_id := gen_random_uuid();
+        insert into plantaopro.acoes_sistema(id, codigo, nome, status, reg_status, reg_date)
+        values (v_acao_editar_id, 'EDITAR', 'Editar', 'ATIVO', 'A', now());
+    end if;
+
+    select id into v_modulo_adm_id
+      from plantaopro.modulos_sistema
+     where upper(btrim(codigo)) = 'ADM360' and reg_status = 'A' limit 1;
+
+    foreach v_perm_code in array array[
+        'ADM360:CRIAR',
+        'ADM360:EDITAR',
+        'ADM360:CONFIGURAR',
+        'ADM360:REABRIR',
+        'ADM360:CONFIRMAR',
+        'ADM360:CANCELAR',
+        'ADM360:CONFERIR'
+    ] loop
+        if not exists (
+            select 1 from plantaopro.permissoes
+             where upper(btrim(codigo)) = upper(btrim(v_perm_code))
+               and reg_status = 'A'
+        ) then
+            insert into plantaopro.permissoes (id, acao_id, modulo_id, codigo, nome, status, reg_status, reg_date)
+            values (gen_random_uuid(), v_acao_editar_id, v_modulo_adm_id, v_perm_code,
+                    replace(v_perm_code, ':', ' - '), 'ATIVO', 'A', now());
+        end if;
+    end loop;
+END
+$migration$;
+
+-- ============================================================
+-- Seção 110 — R6A Granularidade Saude360 Pacote Capacidades v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql
+-- SOURCE-SHA256: f29fa8e6f083d1035352827a9184ef2a1771a2029759d224eef13bd9a306e038
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades
+-- R6-BlocoA item 2: granularidade real do Saude 360. O catalogo canônico só
+-- registrava PACIENTES e CONSULTAS como modulos finos; os demais codigos que o
+-- guard Web cobra por controller (AGENDAMENTOS, TRIAGEM, UNIDADES,
+-- CLINICA_DASHBOARD, PAINEL_CHAMADA, CID, PRESCRICOES, CLINICA_FINANCEIRO,
+-- CONVENIOS, PLANOS_SAUDE, PENDENCIAS_CLINICAS) nao existiam em
+-- modulos_sistema, entao um contrato SAUDE360 valido ainda derrubava paginas
+-- clinicas legitimas em MODULO_NAO_CONTRATADO (defeito medido no inventario
+-- R6 secao D.2/D.3).
+--
+-- Modelo decidido (sem preco, sem cobranca extra): SAUDE360 permanece o
+-- pacote comercial de topo; as capacidades viram linhas proprias no catalogo
+-- com disponivel_comercialmente=false e pacote_codigo='SAUDE360' (relacao
+-- pacote->capacidade no proprio catalogo canunico). Quem contrata o pacote
+-- passa a ter as capacidades efetivas automaticamente - nenhum insert novo em
+-- tenant_modulos, nenhuma machine de estado paralela. A vigencia continua
+-- avaliada 1:1 pelo predicado canonical de B6 (ModuleContractVigencia), agora
+-- materializado na funcao plantaopro.modulos_efetivos()/modulo_efetivo(), que
+-- todo o runtime passa a consultar (claims de login, politica por request,
+-- gate clinico da API, autosservico).
+--
+-- Permissoes por acao preservadas: cada capacidade recebe a MESMA suíte de
+-- 31 permissoes X.ACAO do modulo PACIENTES (v2322/v2335), e os grants
+-- operacionais translating os conjuntos hardcoded do guard legado
+-- (AccessServices pre-v2149) para dados de catalogo: administradores recebem a
+-- suíte completa das capacidades (mesmo contrato de v2334/v2335), perfis
+-- operacional recebem apenas as acoes que o guard sabe cobrar (VER/LISTAR/
+-- VISUALIZAR/CRIAR/EDITAR/EXCLUIR/EXPORTAR/CONFIRMAR) e auditoria recebe
+-- somente leitura. Aditiva e idempotente: nao remove nem reduz nada.
+-- ============================================================================
+
+DO $migration$
+DECLARE
+    v_acoes uuid[];
+BEGIN
+    -- 1) Relacao pacote->capacidade no catalogo canônico -----------------------
+    alter table plantaopro.modulos_sistema add column if not exists pacote_codigo text;
+    comment on column plantaopro.modulos_sistema.pacote_codigo is
+      'R6: codigo do modulo-pacote que inclui esta capacidade (ex.: SAUDE360). Null = modulo de topo, contratado e cobrado individualmente.';
+    create index if not exists ix_modulos_sistema_pacote_codigo
+        on plantaopro.modulos_sistema (lower(pacote_codigo)) where reg_status = 'A';
+
+    if not exists (select 1 from pg_constraint where conname = 'ck_modulos_sistema_pacote_distinto') then
+        alter table plantaopro.modulos_sistema
+            add constraint ck_modulos_sistema_pacote_distinto
+            check (pacote_codigo is null or lower(pacote_codigo) <> lower(codigo));
+    end if;
+
+    if not exists (select 1 from plantaopro.modulos_sistema
+                   where lower(codigo) = 'saude360' and reg_status = 'A') then
+        raise exception 'v2339: modulo-pacote SAUDE360 ausente do catalogo canônico';
+    end if;
+
+    -- 2) Capacidades-filhas faltantes (somente as que o guard/regras ja cobram)
+    insert into plantaopro.modulos_sistema
+        (id, codigo, nome, descricao, ordem, status, reg_status, reg_date,
+         categoria, essencial, disponivel_comercialmente, funcionalidades, metadata)
+    select md5('module:' || f.codigo)::uuid, f.codigo, f.nome, f.descricao,
+           111 + row_number() over () * 10, 'ATIVO', 'A', now(),
+           'SAUDE360', false, false, '[]'::jsonb, '{}'::jsonb
+    from (values
+        ('AGENDAMENTOS',      'Agendamentos',       'Capacidade inclusa no pacote SAUDE360: agenda, check-in e chegada de pacientes.'),
+        ('TRIAGEM',           'Triagem',            'Capacidade inclusa no pacote SAUDE360: priorizacao e encaminhamento de pacientes.'),
+        ('UNIDADES',          'Unidades de Atendimento', 'Capacidade inclusa no pacote SAUDE360: unidades clinicas do tenant (R5-E13).'),
+        ('CLINICA_DASHBOARD', 'Dashboard Clinico',  'Capacidade inclusa no pacote SAUDE360: visao operacional da clinica.'),
+        ('PAINEL_CHAMADA',    'Painel de Chamada',  'Capacidade inclusa no pacote SAUDE360: chamada de pacientes sem expor dados sensiveis.'),
+        ('CID',               'CID',                'Capacidade inclusa no pacote SAUDE360: catalogo e uso de cid na consulta.'),
+        ('PRESCRICOES',       'Prescricoes',        'Capacidade inclusa no pacote SAUDE360: prescricoes e receitarios.'),
+        ('CLINICA_FINANCEIRO','Financeiro Clinico', 'Capacidade inclusa no pacote SAUDE360: contas a receber e faturamento da clinica.'),
+        ('CONVENIOS',         'Convenios',          'Capacidade inclusa no pacote SAUDE360: credenciamento e guias de convenios.'),
+        ('PLANOS_SAUDE',      'Planos de Saude',    'Capacidade inclusa no pacote SAUDE360: planos vinculados aos convenios.'),
+        ('PENDENCIAS_CLINICAS','Pendencias Clinicas','Capacidade inclusa no pacote SAUDE360: pendencias assistenciais por paciente.')
+    ) as f(codigo, nome, descricao)
+    on conflict (lower(codigo)) where reg_status = 'A' do nothing;
+
+    -- 3) Mapeamento de pacote em todas as capacidades da familia ---------------
+    update plantaopro.modulos_sistema
+       set pacote_codigo = 'SAUDE360', reg_update = now()
+     where reg_status = 'A'
+       and lower(codigo) in ('pacientes', 'consultas', 'agendamentos', 'triagem', 'unidades',
+                             'clinica_dashboard', 'painel_chamada', 'cid', 'prescricoes',
+                             'clinica_financeiro', 'convenios', 'planos_saude', 'pendencias_clinicas')
+       and pacote_codigo is distinct from 'SAUDE360';
+
+    -- 4) Suíte de permissoes por capacidade ====================================
+    -- Espelha exatamente o conjunto de acoes das permissoes existentes do modulo
+    -- PACIENTES (mesma suíte generica canônica); em bancos onde ela ainda não
+    -- existe cai no conjunto completo de acoes_sistema ativas.
+    select array_agg(distinct px.acao_id) into v_acoes
+    from plantaopro.permissoes px
+    join plantaopro.modulos_sistema mp on mp.id = px.modulo_id and lower(mp.codigo) = 'pacientes'
+    where px.reg_status = 'A' and px.acao_id is not null;
+
+    if v_acoes is null or cardinality(v_acoes) = 0 then
+        select array_agg(id) into v_acoes from plantaopro.acoes_sistema where reg_status = 'A';
+    end if;
+
+    insert into plantaopro.permissoes (id, codigo, nome, status, reg_status, reg_date, modulo_id, acao_id)
+    select gen_random_uuid(), upper(m.codigo || '.' || ac.codigo), m.nome || ' - ' || lower(ac.codigo),
+           'ATIVO', 'A', now(), m.id, ac.id
+    from plantaopro.modulos_sistema m
+    join plantaopro.acoes_sistema ac on ac.id = any (v_acoes) and ac.reg_status = 'A'
+    where m.reg_status = 'A'
+      and lower(m.codigo) in ('pacientes', 'consultas', 'agendamentos', 'triagem', 'unidades',
+                              'clinica_dashboard', 'painel_chamada', 'cid', 'prescricoes',
+                              'clinica_financeiro', 'convenios', 'planos_saude', 'pendencias_clinicas')
+    on conflict (lower(codigo)) where reg_status = 'A' do nothing;
+
+    -- 5) Grants - administrados/operacao/auditoria =============================
+    -- 5a) Administradores do tenant e da clinica administram cada capacidade
+    --     contratada via pacote (mesmo contrato de v2334/v2335).
+    insert into plantaopro.perfil_permissoes (
+        id, perfil_id, permissao_id, permitido, bloqueado_por_plano, reg_status, reg_date, status, metadata
+    )
+    select gen_random_uuid(), pf.id, p.id, true, false, 'A', now(), 'ATIVO', '{}'::jsonb
+    from plantaopro.perfis pf
+    join plantaopro.permissoes p on p.reg_status = 'A'
+    join plantaopro.modulos_sistema ms on ms.id = p.modulo_id
+        and upper(ms.codigo) in ('PACIENTES', 'CONSULTAS', 'AGENDAMENTOS', 'TRIAGEM', 'UNIDADES',
+                                 'CLINICA_DASHBOARD', 'PAINEL_CHAMADA', 'CID', 'PRESCRICOES',
+                                 'CLINICA_FINANCEIRO', 'CONVENIOS', 'PLANOS_SAUDE', 'PENDENCIAS_CLINICAS')
+    where upper(pf.codigo) in ('ADMINISTRADOR_CLIENTE', 'ADMINISTRADOR_CLINICA')
+      and pf.reg_status = 'A'
+      and not exists (
+          select 1 from plantaopro.perfil_permissoes pp
+          where pp.perfil_id = pf.id and pp.permissao_id = p.id
+      );
+
+    -- 5b) Subconjuntos operacionais: traducao dos conjuntos hardcoded do guard
+    --     legado (saude360Recepcao/Triagem/Medico/Financeiro/Convenios em
+    --     AccessServices) para grants de catalogo. So usa acoes que o resolver
+    --     generico do guard sabe exigir e o tipo de leitura definida por perfil.
+    insert into plantaopro.perfil_permissoes (
+        id, perfil_id, permissao_id, permitido, bloqueado_por_plano, reg_status, reg_date, status, metadata
+    )
+    select gen_random_uuid(), pf.id, p.id, true, false, 'A', now(), 'ATIVO', '{}'::jsonb
+    from plantaopro.perfis pf
+    join (values
+        ('RECEPCAO',             'PACIENTES',          'op'),
+        ('RECEPCAO',             'AGENDAMENTOS',       'op'),
+        ('RECEPCAO',             'PAINEL_CHAMADA',     'op'),
+        ('RECEPCAO',             'CLINICA_DASHBOARD',  'leitura'),
+        ('TRIAGEM',              'TRIAGEM',            'op'),
+        ('TRIAGEM',              'CLINICA_DASHBOARD',  'leitura'),
+        ('ENFERMAGEM',           'TRIAGEM',            'op'),
+        ('ENFERMAGEM',           'CLINICA_DASHBOARD',  'leitura'),
+        ('COORDENADOR_CLINICO',  'TRIAGEM',            'op'),
+        ('COORDENADOR_CLINICO',  'CLINICA_DASHBOARD',  'leitura'),
+        ('MEDICO',               'CONSULTAS',          'op'),
+        ('MEDICO',               'PRESCRICOES',        'op'),
+        ('MEDICO',               'CID',                'op'),
+        ('MEDICO',               'CLINICA_DASHBOARD',  'leitura'),
+        ('MEDICO',               'AGENDAMENTOS',       'leitura'),
+        ('MEDICO',               'TRIAGEM',            'leitura'),
+        ('FINANCEIRO_CLINICA',   'CLINICA_FINANCEIRO', 'op'),
+        ('FINANCEIRO',           'CLINICA_FINANCEIRO', 'relatorio'),
+        ('FATURAMENTO_CONVENIO', 'CONVENIOS',          'op'),
+        ('FATURAMENTO_CONVENIO', 'PLANOS_SAUDE',       'op')
+    ) as r(perfil, modulo, tipo) on upper(pf.codigo) = r.perfil
+    join plantaopro.permissoes p on p.reg_status = 'A'
+    join plantaopro.modulos_sistema ms on ms.id = p.modulo_id and upper(ms.codigo) = r.modulo
+    join plantaopro.acoes_sistema ac on ac.id = p.acao_id
+        and ac.codigo = any (case r.tipo
+                                when 'op'       then array['VER', 'LISTAR', 'VISUALIZAR', 'CRIAR', 'EDITAR', 'EXCLUIR', 'EXPORTAR', 'CONFIRMAR']
+                                when 'relatorio' then array['VER', 'LISTAR', 'VISUALIZAR', 'EXPORTAR', 'CONFIRMAR']
+                                else array['VER', 'LISTAR', 'VISUALIZAR']
+                             end)
+    where pf.reg_status = 'A'
+      and not exists (
+          select 1 from plantaopro.perfil_permissoes pp
+          where pp.perfil_id = pf.id and pp.permissao_id = p.id
+      );
+
+    -- 5c) Auditor clinico: somente leitura em toda a familia (guard legado
+    --     liberava qualquer SAUDE360_* para leitura).
+    insert into plantaopro.perfil_permissoes (
+        id, perfil_id, permissao_id, permitido, bloqueado_por_plano, reg_status, reg_date, status, metadata
+    )
+    select gen_random_uuid(), pf.id, p.id, true, false, 'A', now(), 'ATIVO', '{}'::jsonb
+    from plantaopro.perfis pf
+    join plantaopro.permissoes p on p.reg_status = 'A'
+    join plantaopro.modulos_sistema ms on ms.id = p.modulo_id
+        and upper(ms.codigo) in ('PACIENTES', 'CONSULTAS', 'AGENDAMENTOS', 'TRIAGEM', 'UNIDADES',
+                                 'CLINICA_DASHBOARD', 'PAINEL_CHAMADA', 'CID', 'PRESCRICOES',
+                                 'CLINICA_FINANCEIRO', 'CONVENIOS', 'PLANOS_SAUDE', 'PENDENCIAS_CLINICAS')
+    join plantaopro.acoes_sistema ac on ac.id = p.acao_id
+        and ac.codigo in ('VER', 'LISTAR', 'VISUALIZAR')
+    where upper(pf.codigo) = 'AUDITOR_CLINICO'
+      and pf.reg_status = 'A'
+      and not exists (
+          select 1 from plantaopro.perfil_permissoes pp
+          where pp.perfil_id = pf.id and pp.permissao_id = p.id
+      );
+
+    -- 6) Kernel canonico de contratacao efetiva =================================
+    -- MESMA semantica de ModuleContractVigencia.EffectivePredicate (B6) +
+    -- heranca de capacidades pelo pacote (pacote_codigo). O texto do predicado e
+    -- verificado por teste de sincronia contra o C# (R6GranularidadeSaude360Tests).
+    create or replace function plantaopro.modulos_efetivos(p_tenant_id uuid)
+    returns table (codigo text, modulo_id uuid, pacote_codigo text)
+    language sql stable
+    as $fn$
+        select distinct upper(ms.codigo), ms.id, nullif(ms.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema ms on ms.id = tm.modulo_id and ms.reg_status = 'A' and upper(ms.status) = 'ATIVO'
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+        union
+        select distinct upper(ch.codigo), ch.id, nullif(ch.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema pkg on pkg.id = tm.modulo_id and pkg.reg_status = 'A' and upper(pkg.status) = 'ATIVO'
+        join plantaopro.modulos_sistema ch on ch.reg_status = 'A' and upper(ch.status) = 'ATIVO'
+            and lower(ch.pacote_codigo) = lower(pkg.codigo)
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+        union
+        select distinct upper(ms.codigo), ms.id, nullif(ms.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema ms on lower(ms.codigo) = lower(nullif(tm.codigo_modulo, '')) and ms.reg_status = 'A' and upper(ms.status) = 'ATIVO'
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+        union
+        select distinct upper(ch.codigo), ch.id, nullif(ch.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema pkg on lower(pkg.codigo) = lower(nullif(tm.codigo_modulo, '')) and pkg.reg_status = 'A' and upper(pkg.status) = 'ATIVO'
+        join plantaopro.modulos_sistema ch on ch.reg_status = 'A' and upper(ch.status) = 'ATIVO'
+            and lower(ch.pacote_codigo) = lower(pkg.codigo)
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()));
+    $fn$;
+
+    create or replace function plantaopro.modulo_efetivo(p_tenant_id uuid, p_codigo text)
+    returns boolean
+    language sql stable
+    as $fn$
+        select exists(
+            select 1 from plantaopro.modulos_efetivos(p_tenant_id) e
+            where e.codigo = upper(btrim(p_codigo)));
+    $fn$;
+
+    comment on function plantaopro.modulos_efetivos(uuid) is
+      'R6: unicos modulos efetivamente contratados do tenant (predicado B6 + capacidades herdadas do pacote). Fonte unica do kernel de acesso.';
+    comment on function plantaopro.modulo_efetivo(uuid, text) is
+      'R6: consulta pontual de contratacao efetiva (inclui heranca de pacote). Usado por politicas por request e gates de modulo.';
+END
+$migration$;
+
+-- ============================================================
+-- Seção 111 — R6A1 Acesso Canonico Conflito Pacote Capacidade v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql
+-- SOURCE-SHA256: e8715962ccc1376740f6db90021a49c55725253c9ede0acc6d6c26cf3c5337b3
+-- ============================================================================
+-- PlantaoPro | Migration: 2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade
+-- R6-BlocoA item 1 (acesso canônico): trata EXPLICITAMENTE o conflito entre o
+-- contrato de um pacote e a restrição de uma de suas capacidades-filhas.
+--
+-- O que mudou em relação à v2339:
+--   Na v2339, um pacote contratado (ex.: SAUDE360) expandia TODAS as capacidades
+--   cujo pacote_codigo = código do pacote, independentemente de o tenant ter uma
+--   linha própria de contrato para aquela capacidade. Consequência: se um
+--   ADMINISTRADOR desabilitava uma capacidade individualmente (tenant_modulos
+--   com habilitado=false / status inativo para PACIENTES, por exemplo), a função
+--   ainda devolvia PACIENTES como efetivo via herança do pacote -- a restrição
+--   era ignorada e a página continuava acessível com contrato "contraditório".
+--
+-- Regra canônica agora (documentada no kernel):
+--   Um módulo M é efetivo para o tenant T quando
+--     (a) T possui linha direta efetiva para M (predicado B6), OU
+--     (b) M é capacidade de um pacote P contratado por T (linha efetiva para P)
+--         E T NÃO possui linha própria de contrato para M (nenhum override).
+--   Ou seja: abrir uma linha própria de contrato para uma capacidade é uma
+--   DECISÃO PER-CAPACIDADE que prevalece sobre a herança do pacote. Capacidade
+--   sem linha própria herda o estado do pacote; capacidade com linha própria
+--   segue o estado daquela linha. Aditivo e idempotente; reusa o predicado B6
+--   idêntico (mesmo texto verificado pelo teste de sincronia contra o C#).
+-- ============================================================================
+
+DO $migration$
+BEGIN
+    create or replace function plantaopro.modulos_efetivos(p_tenant_id uuid)
+    returns table (codigo text, modulo_id uuid, pacote_codigo text)
+    language sql stable
+    as $fn$
+        -- (a) Contratação direta por modulo_id, avaliada 1:1 pelo predicado B6.
+        select distinct upper(ms.codigo), ms.id, nullif(ms.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema ms on ms.id = tm.modulo_id and ms.reg_status = 'A' and upper(ms.status) = 'ATIVO'
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+        union
+        -- (b1) Herança de capacidades do pacote contratado por modulo_id,
+        --      SEMPRE QUE o tenant NÃO tenha aberto linha própria para aquela
+        --      capacidade (override per-capacidade prevalece sobre o pacote).
+        select distinct upper(ch.codigo), ch.id, nullif(ch.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema pkg on pkg.id = tm.modulo_id and pkg.reg_status = 'A' and upper(pkg.status) = 'ATIVO'
+        join plantaopro.modulos_sistema ch on ch.reg_status = 'A' and upper(ch.status) = 'ATIVO'
+            and lower(ch.pacote_codigo) = lower(pkg.codigo)
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+          and not exists (
+              select 1 from plantaopro.tenant_modulos ovr
+              where ovr.tenant_id = p_tenant_id and ovr.reg_status = 'A'
+                and (ovr.modulo_id = ch.id
+                     or (ovr.modulo_id is null and lower(nullif(ovr.codigo_modulo,'')) = lower(ch.codigo)))
+          )
+        union
+        -- (a') Contratação direta por codigo_modulo (linhas sem modulo_id).
+        select distinct upper(ms.codigo), ms.id, nullif(ms.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema ms on lower(ms.codigo) = lower(nullif(tm.codigo_modulo, '')) and ms.reg_status = 'A' and upper(ms.status) = 'ATIVO'
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+        union
+        -- (b2) Herança de capacidades por codigo_modulo do pacote contratado,
+        --      com a mesma regra de override per-capacidade.
+        select distinct upper(ch.codigo), ch.id, nullif(ch.pacote_codigo, '')
+        from plantaopro.tenant_modulos tm
+        join plantaopro.modulos_sistema pkg on lower(pkg.codigo) = lower(nullif(tm.codigo_modulo, '')) and pkg.reg_status = 'A' and upper(pkg.status) = 'ATIVO'
+        join plantaopro.modulos_sistema ch on ch.reg_status = 'A' and upper(ch.status) = 'ATIVO'
+            and lower(ch.pacote_codigo) = lower(pkg.codigo)
+        where tm.tenant_id = p_tenant_id
+          and tm.reg_status='A' and tm.desativado_em is null
+          and ((upper(coalesce(tm.status,'ATIVO'))='ATIVO' and tm.habilitado=true and (tm.ativado_em is null or tm.ativado_em<=now()))
+            or (upper(coalesce(tm.status,''))='AGENDADO' and coalesce(tm.ativado_em,tm.reg_date)<=now()))
+          and not exists (
+              select 1 from plantaopro.tenant_modulos ovr
+              where ovr.tenant_id = p_tenant_id and ovr.reg_status = 'A'
+                and (ovr.modulo_id = ch.id
+                     or (ovr.modulo_id is null and lower(nullif(ovr.codigo_modulo,'')) = lower(ch.codigo)))
+          );
+    $fn$;
+
+    comment on function plantaopro.modulos_efetivos(uuid) is
+      'R6: modulos efetivamente contratados do tenant (predicado B6 + capacidades herdadas do pacote). Override per-capacidade (linha propria em tenant_modulos) prevalece sobre a heranca do pacote. Fonte unica do kernel de acesso.';
+END
+$migration$;
+
+-- ============================================================
+-- Seção 112 — R7A1 Conflitos Unificados Profissional v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql
+-- SOURCE-SHA256: b2c44ea9be12e49029afbabf1bae25182e0b00ce5e1dee9306a957551d5c819f
+-- PlantãoPro v2.34.1 (R7-A1): invariantes das verificações de conflito/elegibilidade unificadas do profissional.
+-- O fluxo canônico de aceite/confirmacao de escala (EscalaService/MedicoElegibilidadeService) consulta
+-- medicos.bloqueado e medico_especialidades; ambas as estruturas eram referenciadas pelo código mas
+-- ausentes do banco (falha 500 latente em todo aceite de convite operacional). Esta migration materializa
+-- a estrutura mínima exigida pela regra, sem alterar histórico.
+
+alter table plantaopro.medicos
+    add column if not exists bloqueado boolean not null default false;
+
+create table if not exists plantaopro.medico_especialidades (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid,
+    cliente_id uuid,
+    medico_id uuid not null references plantaopro.medicos(id),
+    especialidade_id uuid not null references plantaopro.especialidades(id),
+    reg_status char(1) not null default 'A',
+    reg_date timestamptz not null default now()
+);
+
+-- Vínculo ativo único por médico/especialidade; o histórico é preservado via reg_status.
+create unique index if not exists ux_medico_especialidade_ativa
+    on plantaopro.medico_especialidades(medico_id, especialidade_id)
+    where reg_status='A';
+
+-- ============================================================
+-- Seção 113 — R7A1 Historico Escala Colunas v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql
+-- SOURCE-SHA256: 2c5800b64701f8a27feaf6878720419de0582543c92f8445858b313f769a5f47
+-- PlantãoPro v2.34.2 (R7-A1): colunas do histórico de escalas referenciadas pelo código canônico.
+-- As transições de escala (EscalaService.AddHistoricoAsync) gravam escala_id/status_anterior/status_novo/
+-- justificativa/usuario_id/reg_date e o Portal Profissional lê escala_id/status_novo/reg_date para
+-- derivar "confirmado em" e "pode confirmar"; todas essas colunas estavam ausentes da tabela
+-- (falha 500 latente no aceite de convite e na listagem do portal).
+
+alter table plantaopro.historico_escala
+    add column if not exists escala_id uuid,
+    add column if not exists status_anterior text,
+    add column if not exists status_novo text,
+    add column if not exists justificativa text,
+    add column if not exists usuario_id uuid,
+    add column if not exists reg_date timestamptz;
+
+create index if not exists ix_historico_escala_escala
+    on plantaopro.historico_escala(escala_id);
+
+-- ============================================================
+-- Seção 114 — R7A1 Convite Ciclo de Vida v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql
+-- SOURCE-SHA256: d3c57ceda6a8fafc585f77c101b77b5e78c98911dff3311254eb1486d879eb8e
+-- PlantãoPro v2.34.3 (R7-A1): colunas de ciclo de vida de convites operacionais ausentes da estrutura.
+-- O código canônico grava/lê data_resposta e motivo_recusa (aceite, recusa, cancelamento e listagens no
+-- portal profissional/móvel) e reg_update e reg_date (aceite de convite e envio de convite); nenhuma
+-- dessas colunas existia em plantao_convites (falha 500 latente no aceite/recusa e 500 latente nos
+-- seletores de convites do portal e do app).
+
+alter table plantaopro.plantao_convites
+    add column if not exists data_resposta timestamptz,
+    add column if not exists motivo_recusa text,
+    add column if not exists reg_update timestamptz,
+    add column if not exists reg_date timestamptz not null default now();
+
+-- ============================================================
+-- Seção 115 — R7E1 Usuario Idioma Preferido v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql
+-- SOURCE-SHA256: 623f6f52c4f1ee4ad0ba1e850094b5cdd4100c03023698da12671ae170302226
+-- PlantãoPro v2.34.4 (R7-E1): preferência de idioma da interface do usuário.
+-- A coluna persiste a escolha do USUÁRIO (precedência canônica: usuário > organização >
+-- navegador > pt-BR; ver PlantaoPro.CrossCutting.Localization.UiLanguageCatalog). O padrão
+-- da ORGANIZAÇÃO vive em tenants.metadata->>'idiomaPadrao' (jsonb existente, sem estrutura nova).
+-- O idioma é INDEPENDENTE de moeda/fuso/fiscal: apenas rótulos da interface variam; formatos
+-- permanecem pt-BR (CurrentCulture fixada) e conteúdo clínico/XML fiscal nunca é traduzido.
+
+alter table plantaopro.usuarios
+    add column if not exists idioma_preferido varchar(8);
+
+alter table plantaopro.usuarios drop constraint if exists ck_usuarios_idioma_preferido;
+alter table plantaopro.usuarios
+    add constraint ck_usuarios_idioma_preferido
+    check (idioma_preferido is null or idioma_preferido in ('pt-BR','en','es','fr'));
+
+comment on column plantaopro.usuarios.idioma_preferido is
+    'Idioma da interface escolhido pelo usuario (pt-BR/en/es/fr). Nulo = resolver por organizacao/navegador/pt-BR. R7-E1.';
+
+-- ============================================================
+-- Seção 116 — R7OB Onboarding Preferencias Idioma v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql
+-- SOURCE-SHA256: 15d6bdb179322525d976bc5a039cd6b707d288cc6aacf59fcd5b601628314029
+-- R7-OB: jornada de onboarding — etapa "Definir o idioma da interface" (opcional, núcleo).
+-- R7-E1 (v2344) criou a preferência persistida (usuarios.idioma_preferido) e o padrão de
+-- organização (tenants.metadata->>'idiomaPadrao'). Esta migração expõe a configuração na
+-- jornada por contrato com critério DERIVADO DE DADOS (mesma filosofia C7: a verdade segue
+-- os dados, não o botão): concluída quando o padrão de idioma da organização está registrado
+-- OU ao menos um usuário ativo do tenant tem preferência de idioma salva.
+-- Opcional (obrigatorio=false): se nada for definido, pt-BR continua sendo o padrão silencioso;
+-- a etapa pode ser pulada com justificativa persistida sem travar o onboarding.
+-- Rerun idempotente: upsert pelo codigo único + MaterializarAsync só cria para tenants novos;
+-- tenants existentes recebem a etapa via POST /api/onboarding/sincronizar (ou iniciar).
+
+insert into plantaopro.onboarding_etapas_catalogo
+(codigo,titulo,objetivo,descricao,responsavel,pre_requisito_codigo,modulo_codigo,criterio_codigo,link_acao,ordem,obrigatorio)
+values
+('ONB_PREFERENCIAS','Definir o idioma da interface','Garantir que a operação escolha conscientemente o idioma da interface (padrão da organização ou preferência individual).','Etapa opcional do núcleo: pode ser pulada com justificativa sem travar o onboarding. O critério deriva dos dados persistidos: padrão de idioma da organização registrado OU ao menos um usuário ativo com preferência de idioma salva (coluna v2344).','CLIENTE',null,null,'IDIOMA_PREFERENCIA_DEFINIDA','/Usuario/Index',50,false)
+on conflict (codigo) do update set
+    titulo = excluded.titulo,
+    objetivo = excluded.objetivo,
+    descricao = excluded.descricao,
+    responsavel = excluded.responsavel,
+    pre_requisito_codigo = excluded.pre_requisito_codigo,
+    modulo_codigo = excluded.modulo_codigo,
+    criterio_codigo = excluded.criterio_codigo,
+    link_acao = excluded.link_acao,
+    ordem = excluded.ordem,
+    obrigatorio = excluded.obrigatorio,
+    reg_update = now();
+
+-- ============================================================
+-- Seção 117 — R8B2 Notificacoes Legado Dedupe v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql
+-- SOURCE-SHA256: 97f2f638e79d002022a7528a0b810b0a48db9a4dce268b57986aa1701400ee65
+-- PlantãoPro v2.34.6 (R8-B2): idempotência do caminho legado de notificações em retries.
+-- Achado E3 (r8a0-varredura-financas-pacientes-imports-falhas-notificacoes.md): o caminho legado
+-- (NotificacaoService.CriarNotificacaoAsync -> plantaopro.notificacoes) inseria sem dedupe/unique;
+-- cada chamada repetida do mesmo evento criava uma notificação duplicada para o usuário.
+-- Adota a convenção já estabelecida pelo in-app operacional (Operation360 NotificationService:
+-- origem_tipo/origem_id + on conflict do nothing + inserted==0 -> false).
+-- Dedupe PARCIAL e intencional: só notificações COM origem declarada (origem_id não nulo) são
+-- deduplicadas; chamadas sem origem mantêm o comportamento histórico (uma por chamada).
+-- A chave inclui titulo para permitir a sequência natural de eventos distintos do MESMO registro
+-- (ex.: escala confirmada -> cancelada); repetir o mesmo evento do mesmo registro para o mesmo
+-- usuário vira no-op. O predicato reg_status='A' preserva o padrão de vínculo ativo da base.
+-- Rerun idempotente: add column if not exists / create unique index if not exists.
+
+alter table plantaopro.notificacoes
+    add column if not exists origem_tipo text,
+    add column if not exists origem_id uuid;
+
+create unique index if not exists ux_notificacao_legado_origem
+    on plantaopro.notificacoes(usuario_id, origem_tipo, origem_id, titulo)
+    where reg_status='A' and origem_id is not null;
+
+-- ============================================================
+-- Seção 118 — R8B4 Cancelamento Compras v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql
+-- SOURCE-SHA256: 2e8ba13f929badb6c3a51961e0557611cec8532b319f58e7a383067094a6da8c
+-- R8-B4: trilha de auditoria do cancelamento de pedido de compra (ADM360 suprimentos).
+-- O estado CANCELADO ja existe no check de situacao (v2191); este corte so registra
+-- quem/quando/por que cancelou, no mesmo padrao de auditoria dos demais cancels do modulo.
+alter table plantaopro.adm360_pedidos add column if not exists motivo_cancelamento text;
+alter table plantaopro.adm360_pedidos add column if not exists cancelado_em timestamptz;
+alter table plantaopro.adm360_pedidos add column if not exists cancelado_por uuid;
+
+-- ============================================================
+-- Seção 119 — R8B5 Backfill Medico Especialidades v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql
+-- SOURCE-SHA256: 5317df66afb7a42f141e1846d230a8caa584cc5cce92c5a133e9c7e57c40ee64
+-- PlantãoPro v2.34.8 (R8-B5): backfill de medico_especialidades a partir de medicos.especialidade_id.
+-- O M:N nasceu em v2341 para sustentar a elegibilidade por especialidade e o score de recomendação
+-- (BusinessRulesServices), mas nenhum writer produtivo o populava — a tabela nasce vazia em banco real
+-- (matriz r8a0 linha "Especialidades na operação" / varredura A2). A partir daqui o MedicoService
+-- espelha a especialidade do formulário (replace-all, histórico via reg_status); este backfill aplica a
+-- mesma regra aos médicos já existentes: reativa a linha histórica quando existe, senão insere.
+-- Idempotente: repetir não cria duplicatas nem desativa vínculos.
+-- Defensivo: médicos com especialidade_id órfã (especialidade já inexistente) são pulados no insert.
+
+update plantaopro.medico_especialidades me set reg_status='A'
+from plantaopro.medicos m
+where me.medico_id = m.id
+  and me.especialidade_id = m.especialidade_id
+  and me.reg_status <> 'A'
+  and m.reg_status = 'A'
+  and m.especialidade_id is not null
+  and m.especialidade_id <> '00000000-0000-0000-0000-000000000000';
+
+insert into plantaopro.medico_especialidades(medico_id, especialidade_id, reg_status)
+select m.id, m.especialidade_id, 'A'
+from plantaopro.medicos m
+where m.reg_status = 'A'
+  and m.especialidade_id is not null
+  and m.especialidade_id <> '00000000-0000-0000-0000-000000000000'
+  and not exists(select 1 from plantaopro.medico_especialidades me where me.medico_id = m.id and me.especialidade_id = m.especialidade_id)
+  and exists(select 1 from plantaopro.especialidades e where e.id = m.especialidade_id);
+
+-- ============================================================
+-- Seção 120 — R8B6 Mesclagem Pacientes v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql
+-- SOURCE-SHA256: 0b226ee6cb5d739ae84ba9aab3c68cde1c7f229cb00c624df2febb84e3fae1cd
+-- PlantãoPro v2.34.9 (R8-B6): trilha de mesclagem de pacientes.
+-- A operação (mesclagem controlada) re-aponta os vínculos do paciente de origem para o alvo e
+-- inativa a origem; estas colunas tornam a absorção auditável e idempotente:
+--   mesclado_em   -> paciente alvo da absorção (não nula = já mesclado)
+--   mesclado_em_em-> instante da mesclagem
+--   mesclado_por  -> usuário que executou
+-- Idempotente: add column if not exists + índice condicional.
+
+alter table plantaopro.pacientes add column if not exists mesclado_em uuid null;
+alter table plantaopro.pacientes add column if not exists mesclado_em_em timestamptz null;
+alter table plantaopro.pacientes add column if not exists mesclado_por uuid null;
+
+create index if not exists ix_pacientes_mesclado_em on plantaopro.pacientes (mesclado_em) where mesclado_em is not null;
+
+-- ============================================================
+-- Seção 121 — R8B7 Glosa Item Recurso Documentos v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql
+-- SOURCE-SHA256: f363c5d37285179edfa51a9ce8c36d0095cd57b2d0e16296a384b303289beef6
+-- PlantãoPro v2.35.0 (R8-B7): glosa por item de lote + recurso com documentos (matriz §22).
+-- Antes: a glosa v115 era registrada apenas por conta/título — não havia referência ao item do
+-- lote (v116_faturamento_lote_itens), o recurso não tinha trilha própria (nem justificativa nem
+-- documentos persistidos) e a coluna v113_faturas.glosa_reconhecida era lida na fórmula do saldo
+-- sem writer (a glosa não afetava o saldo). Esta migração torna o ciclo
+-- lote -> item -> glosa -> recurso -> resolucao reconciliável no saldo da conta.
+-- Idempotente: add column if not exists + create table/index if not exists.
+
+alter table plantaopro.v115_regras_glosa add column if not exists lote_item_id uuid null;
+alter table plantaopro.v115_regras_glosa add column if not exists recurso_justificativa text null;
+alter table plantaopro.v115_regras_glosa add column if not exists recurso_em timestamptz null;
+
+create index if not exists ix_v115_glosa_lote_item on plantaopro.v115_regras_glosa (lote_item_id) where reg_status = 'A';
+
+alter table plantaopro.v116_faturamento_lote_itens add column if not exists lote_id uuid null;
+
+create index if not exists ix_v116_lote_itens_tenant_lote on plantaopro.v116_faturamento_lote_itens (tenant_id, lote_id);
+
+create table if not exists plantaopro.v115_recurso_documentos (
+    id uuid primary key default gen_random_uuid(),
+    tenant_id uuid null,
+    cliente_id uuid null,
+    glosa_id uuid null,
+    nome_arquivo text not null default '',
+    tipo_mime text null,
+    conteudo text null,
+    tamanho int not null default 0,
+    created_at timestamptz not null default now(),
+    created_by uuid null,
+    reg_status char(1) not null default 'A'
+);
+
+create index if not exists ix_v115_recurso_documentos_glosa on plantaopro.v115_recurso_documentos (glosa_id) where reg_status = 'A';
+
+-- ============================================================
+-- Seção 122 — R8B10 CID Tabela Unicao Versionada v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql
+-- SOURCE-SHA256: 25a9c25f89b1e6aeefee695a4080df3be259386e6f78faed6bac3f29c793cb19
+-- PlantãoPro v2.35.1 (R8-B10): unicidade canônica VERSIONADA de cid_tabela (§29 item 2 — drift de schema).
+-- Antecedente: cid_tabela é um vocabulário de CID VERSIONADO (CID-10/CID-11). O importador
+-- (Saude360ClinicalService, upsert ~L580) grava via ON CONFLICT (versao, upper(codigo)) WHERE reg_status='A'
+-- AND codigo<>'', ou seja, o MESMO código pode existir em várias versões ao mesmo tempo.
+-- Drift: 6 DDLs criaram cid_tabela com formas divergentes; sobraram TRÊS índices únicos sobre codigo:
+--   ux_cid_tabela_codigo              UNIQUE (codigo)                                                    -> bloq. mesmo código em 2 versões
+--   ux_cid_tabela_codigo_ativo        UNIQUE (upper(codigo)) WHERE reg_status='A' AND codigo<>''         -> idem (só ativos)
+--   ux_cid_tabela_versao_codigo_ativo UNIQUE (versao, upper(codigo)) WHERE reg_status='A' AND codigo<>'' -> CANÔNICO (alvo do upsert)
+-- Os dois primeiros contradizem o modelo versionado: importar o mesmo código sob duas versões falhava
+-- com 23505 no índice plano (bug latente — o import nunca cruzou versões nos testes até aqui).
+-- Correção (relaxação monotônica, sem perda de dados; 0 duplicidades existentes no base): remove as duas
+-- unicidades NÃO-versionadas e reafirma a versionada (canônica). Idempotente. Sem alteração de colunas —
+-- o superset já converge via alter-add idempotente dos DDLs anteriores na ordem de aplicação; a
+-- deduplicação dos 6 blocos CREATE segue o rito §29 (nenhuma deleção de tabela/DDL nesta rodada).
+-- Robustez: em alguns ambientes cada unicidade é um índice puro (CREATE UNIQUE INDEX); em outros,
+-- uma RESTRIÇÃO de tabela (ADD CONSTRAINT ... UNIQUE) — e DROP INDEX não remove índice que sustenta
+-- restrição. Por isso, para cada nome: tenta DROP CONSTRAINT (se for restrição) e depois DROP INDEX
+-- (se for índice puro, ou vira no-op após a restrição). Idempotente nos dois sentidos.
+alter table if exists plantaopro.cid_tabela drop constraint if exists ux_cid_tabela_codigo;
+drop index if exists plantaopro.ux_cid_tabela_codigo;
+alter table if exists plantaopro.cid_tabela drop constraint if exists ux_cid_tabela_codigo_ativo;
+drop index if exists plantaopro.ux_cid_tabela_codigo_ativo;
+-- Reafirma a unicidade versionada (canônica; é o alvo do ON CONFLICT do importador).
+-- OBS: o NOME do índice não leva o esquema (Postgres: CREATE INDEX [nome] ON esquema.tabela).
+create unique index if not exists ux_cid_tabela_versao_codigo_ativo
+    on plantaopro.cid_tabela (versao, upper(codigo)) where reg_status = 'A' and codigo <> '';
+
+-- ============================================================
+-- Seção 123 — R9C Cadastro ANVISA Produtos v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql
+-- SOURCE-SHA256: 455574771556eff4a86cd33522e56e1acbf9e4470c62f2e1461412a8a7d027eb
+-- PlantãoPro v2.35.2 (R9-C / §6): cadastro regulatório ANVISA para produtos do Administrativo 360.
+-- Requisitos da rodada: número como TEXTO (preserva zeros à esquerda — nunca numérico),
+-- aplicabilidade tri-estável (INFORMADO / NAO_APLICAVEL / PENDENTE), flag de entrada manual
+-- (não há busca simulada: toda entrada atual é manual), vigência REGULATÓRIA independente da
+-- validade do lote, e justificação obrigatória quando o produto é marcado como não aplicável.
+-- Rerun idempotente: add column if not exists / drop-add constraint.
+
+alter table plantaopro.adm360_produtos
+    add column if not exists anvisa_numero varchar(60),
+    add column if not exists anvisa_aplicabilidade varchar(15) not null default 'PENDENTE',
+    add column if not exists anvisa_entrada_manual boolean not null default true,
+    add column if not exists anvisa_vigencia date,
+    add column if not exists anvisa_justificacao text;
+
+alter table plantaopro.adm360_produtos
+    drop constraint if exists ck_adm360_produtos_anvisa_aplicabilidade,
+    add constraint ck_adm360_produtos_anvisa_aplicabilidade
+        check (anvisa_aplicabilidade in ('INFORMADO', 'NAO_APLICAVEL', 'PENDENTE'));
+
+-- ============================================================
+-- Seção 124 — R9D Precificacao Preco Venda v2.21.9
+-- ============================================================
+
+-- SOURCE: database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql
+-- SOURCE-SHA256: 4580ee72997a604d765b78cdefd05d40e268679c738275e0ca0786c802be7283
+-- PlantãoPro v2.35.3 (R9-D / §7): preço de venda padrão dos produtos do Administrativo 360 (precificação).
+-- preco_venda numeric(18,4) NULL — NULL = preço de venda padrão NÃO DEFINIDO (estado "ausente"),
+-- nunca substituído por zero. O custo (preco_custo) permanece nullable: CUSTO AUSENTE ≠ ZERO.
+-- Os campos derivados (lucro bruto unitário, margem sobre venda %, markup sobre custo %) são
+-- recalculados NO SERVIDOR (Application/Administrativo360/Contracts.cs - Produto360) com
+-- arredondamento de 2 casas; denominador zero => "não calculável"; margem negativa não é
+-- truncada (evidência de margem negativa). Esta DDL não reescreve cotações/vendas existentes.
+-- Rerun idempotente: add column if not exists / comment on (sobrescreve).
+
+alter table plantaopro.adm360_produtos
+    add column if not exists preco_venda numeric(18,4);
+
+-- Custo AUSENTE ≠ ZERO: a coluna histórica é NOT NULL DEFAULT 0, o que tornava impossível
+-- representar "custo não informado" (o default 0 virava margem 100% nas derivadas).
+-- Passa a admitir NULL; linhas existentes não são modificadas (sem backfill).
+-- Rerun idempotente: drop not null em coluna já nullable é no-op.
+alter table plantaopro.adm360_produtos
+    alter column preco_custo drop not null;
+
+comment on column plantaopro.adm360_produtos.preco_venda is
+    'Preco de venda padrao (s7 rodada 9). NULL = nao definido; derivadas calculadas no servidor; custo ausente != zero.';

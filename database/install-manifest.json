@@ -1,6 +1,6 @@
 {
-  "schemaVersion": "v2.21.8",
-  "generatedAt": "2026-10-04",
+  "schemaVersion": "v2.21.9",
+  "generatedAt": "2026-10-15",
   "sections": [
     {
       "order": 3,
@@ -1097,6 +1097,690 @@
           "source": "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql",
           "dependsOn": [
             "plantaopro.administrativo360_cotacoes_xml_dashboard"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 81,
+      "name": "Tabelas Legado Gap Instalacao v2.21.9",
+      "objects": [
+        {
+          "name": "plantaopro.tabelas_legado_gap_instalacao",
+          "type": "canonical",
+          "category": "CANONICAL_EVOLUTION",
+          "required": true,
+          "source": "database/schema/450_v2219_tabelas_legado_gap_instalacao.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 82,
+      "name": "Colunas Convergencia Instalacao v2.21.9",
+      "objects": [
+        {
+          "name": "plantaopro.colunas_convergencia_instalacao",
+          "type": "canonical",
+          "category": "CANONICAL_EVOLUTION",
+          "required": true,
+          "source": "database/schema/460_v2219_colunas_convergencia_instalacao.sql",
+          "dependsOn": [
+            "plantaopro.auditoria_observabilidade",
+            "plantaopro.executive_commercial_v1450",
+            "plantaopro.financeiro_clinico_convenios_v2180",
+            "plantaopro.identity_access",
+            "plantaopro.jornada_clinica_v2160",
+            "plantaopro.operacao_plantoes",
+            "plantaopro.relatorios",
+            "plantaopro.saas_tenants",
+            "plantaopro.saude360",
+            "plantaopro.saude360_prontuario_v1270",
+            "plantaopro.saude360_v2159",
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 83,
+      "name": "Saas Assinaturas Colunas Comerciais B6 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 84,
+      "name": "Saas Planos Permite Relatorios B6 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2313_saas_planos_permite_relatorios_b6",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 85,
+      "name": "Administrativo360 Cotacao Cancelamento Estorno Triagem B7 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_cotacoes_xml_dashboard",
+            "plantaopro.adm360_eventos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 86,
+      "name": "Saude360 Financeiro Canonico B8 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2315_saude360_b8_financeiro_canonico",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql"
+        }
+      ]
+    },
+    {
+      "order": 87,
+      "name": "Saude360 Fila Atendimento Legado B8 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2316_saude360_b8_fila_atendimento_legado",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql"
+        }
+      ]
+    },
+    {
+      "order": 88,
+      "name": "Saude360 Contestacao Situacao Anterior B9 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2317_saude360_b9_contestacao_situacao_anterior",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql",
+          "dependsOn": [
+            "plantaopro.fechamento_operacional_v187"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 89,
+      "name": "Saude360 Plantao Historico Contrato B9 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2318_saude360_b9_plantao_historico_contrato",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 90,
+      "name": "Saude360 Notificacoes Contrato B9 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2319_saude360_b9_notificacoes_contrato",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 91,
+      "name": "Saude360 Plantoes Auditoria B9 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2320_saude360_b9_plantoes_auditoria",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 92,
+      "name": "Administrativo360 Fiscal Parametros Pre Emitidas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql",
+          "dependsOn": [
+            "plantaopro.adm360_eventos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 93,
+      "name": "Administrativo360 Grants Adm Cliente R5 A2 v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql"
+        }
+      ]
+    },
+    {
+      "order": 94,
+      "name": "B4 Matriz Comercial Solicitacoes v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2323_b4_matriz_comercial_solicitacoes",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 95,
+      "name": "B4 Plano Modulos Canonicos v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2324_b4_plano_modulos_canonicos",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql",
+          "dependsOn": [
+            "plantaopro.tabelas_legado_gap_instalacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 96,
+      "name": "B4 Plano Recursos Colunas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2325_b4_plano_recursos_colunas",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql",
+          "dependsOn": [
+            "plantaopro.tabelas_legado_gap_instalacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 97,
+      "name": "B4 Assinatura Historico Colunas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2326_b4_assinatura_historico_colunas",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 98,
+      "name": "B4 Historico Reg Status v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2327_b4_historico_reg_status",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2327_b4_historico_reg_status.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 99,
+      "name": "B5 Provisionamento Convites v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2328_b5_provisionamento_convites",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2328_b5_provisionamento_convites.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 100,
+      "name": "B5 Grants Usuarios Adm Cliente v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2329_b5_grants_usuarios_adm_cliente",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql"
+        }
+      ]
+    },
+    {
+      "order": 101,
+      "name": "B5 Onboarding Whitelabel Colunas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2330_b5_onboarding_whitelabel_colunas",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 102,
+      "name": "B5 Lgpd Consentimentos Colunas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2331_b5_lgpd_consentimentos_colunas",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql",
+          "dependsOn": [
+            "plantaopro.tabelas_legado_gap_instalacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 103,
+      "name": "B6 Cobranca Saas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2332_b6_cobranca_saas",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2332_b6_cobranca_saas.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 104,
+      "name": "C7 Onboarding Contrato v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2333_c7_onboarding_contrato",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2333_c7_onboarding_contrato.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 105,
+      "name": "D9 Perfil Admin Modulos Jornada v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2334_d9_perfil_admin_modulos_jornada",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql"
+        }
+      ]
+    },
+    {
+      "order": 106,
+      "name": "D11 Perfil Admin Modulos Finos Saude v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2335_d11_perfil_admin_modulos_finos_saude",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql"
+        }
+      ]
+    },
+    {
+      "order": 107,
+      "name": "E13 P2 Backfill Tenant Id Nucleo Clinico v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql"
+        }
+      ]
+    },
+    {
+      "order": 108,
+      "name": "P0 Convergencia Tenant Modulos Reg Status v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql",
+          "dependsOn": [
+            "plantaopro.saas_tenants"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 109,
+      "name": "P0 Administrativo360 Garantia Codigos Fiscais v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2338_p0_adm360_garantia_codigos_fiscais",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql"
+        }
+      ]
+    },
+    {
+      "order": 110,
+      "name": "R6A Granularidade Saude360 Pacote Capacidades v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql",
+          "dependsOn": [
+            "plantaopro.schema_canonico_base"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 111,
+      "name": "R6A1 Acesso Canonico Conflito Pacote Capacidade v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql"
+        }
+      ]
+    },
+    {
+      "order": 112,
+      "name": "R7A1 Conflitos Unificados Profissional v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2341_r7a1_conflitos_unificados_profissional",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 113,
+      "name": "R7A1 Historico Escala Colunas v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2342_r7a1_historico_escala_colunas",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 114,
+      "name": "R7A1 Convite Ciclo de Vida v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2343_r7a1_convite_ciclo_vida",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 115,
+      "name": "R7E1 Usuario Idioma Preferido v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2344_r7e1_usuario_idioma_preferido",
+          "type": "migration",
+          "category": "CANONICAL_IDENTITY",
+          "required": true,
+          "source": "database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql",
+          "dependsOn": [
+            "plantaopro.identity_access"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 116,
+      "name": "R7OB Onboarding Preferencias Idioma v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2345_r7ob_onboarding_preferencias_idioma",
+          "type": "migration",
+          "category": "CANONICAL_SAAS",
+          "required": true,
+          "source": "database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql"
+        }
+      ]
+    },
+    {
+      "order": 117,
+      "name": "R8B2 Notificacoes Legado Dedupe v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2346_r8b2_notificacoes_legado_dedupe",
+          "type": "migration",
+          "category": "CANONICAL_OPERATION",
+          "required": true,
+          "source": "database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql",
+          "dependsOn": [
+            "plantaopro.operacao_plantoes"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 118,
+      "name": "R8B4 Cancelamento Compras v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2347_r8b4_cancelamento_compras",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 119,
+      "name": "R8B5 Backfill Medico Especialidades v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2348_r8b5_backfill_medico_especialidades",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql"
+        }
+      ]
+    },
+    {
+      "order": 120,
+      "name": "R8B6 Mesclagem Pacientes v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2349_r8b6_mesclagem_pacientes",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql",
+          "dependsOn": [
+            "plantaopro.saude360"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 121,
+      "name": "R8B7 Glosa Item Recurso Documentos v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2350_r8b7_glosa_item_recurso_documentos",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql",
+          "dependsOn": [
+            "plantaopro.regras_faturamento_repasses_v115",
+            "plantaopro.tabelas_legado_gap_instalacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 122,
+      "name": "R8B10 CID Tabela Unicao Versionada v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2351_r8b10_cid_tabela_unicao_versionada",
+          "type": "migration",
+          "category": "CANONICAL_SAÚDE360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql",
+          "dependsOn": [
+            "plantaopro.tabelas_legado_gap_instalacao"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 123,
+      "name": "R9C Cadastro ANVISA Produtos v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2352_r9c_cadastro_anvisa_produtos",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_suprimentos"
+          ]
+        }
+      ]
+    },
+    {
+      "order": 124,
+      "name": "R9D Precificacao Preco Venda v2.21.9",
+      "objects": [
+        {
+          "name": "2026_10_v2353_r9d_precificacao_preco_venda",
+          "type": "migration",
+          "category": "CANONICAL_ADMINISTRATIVO360",
+          "required": true,
+          "source": "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql",
+          "dependsOn": [
+            "plantaopro.administrativo360_suprimentos"
           ]
         }
       ]

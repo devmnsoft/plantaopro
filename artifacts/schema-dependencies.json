@@ -560,5 +560,304 @@
       "plantaopro.administrativo360_cotacoes_xml_dashboard"
     ],
     "source": "database/migrations/2026_10_v2311_adm360_documentos_identidade_eventos.sql"
+  },
+  {
+    "object": "plantaopro.tabelas_legado_gap_instalacao",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/schema/450_v2219_tabelas_legado_gap_instalacao.sql"
+  },
+  {
+    "object": "plantaopro.colunas_convergencia_instalacao",
+    "dependsOn": [
+      "plantaopro.auditoria_observabilidade",
+      "plantaopro.executive_commercial_v1450",
+      "plantaopro.financeiro_clinico_convenios_v2180",
+      "plantaopro.identity_access",
+      "plantaopro.jornada_clinica_v2160",
+      "plantaopro.operacao_plantoes",
+      "plantaopro.relatorios",
+      "plantaopro.saas_tenants",
+      "plantaopro.saude360",
+      "plantaopro.saude360_prontuario_v1270",
+      "plantaopro.saude360_v2159",
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/schema/460_v2219_colunas_convergencia_instalacao.sql"
+  },
+  {
+    "object": "2026_10_v2312_saas_assinaturas_colunas_comerciais_b6",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2312_saas_assinaturas_colunas_comerciais_b6.sql"
+  },
+  {
+    "object": "2026_10_v2313_saas_planos_permite_relatorios_b6",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2313_saas_planos_permite_relatorios_b6.sql"
+  },
+  {
+    "object": "2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem",
+    "dependsOn": [
+      "plantaopro.administrativo360_cotacoes_xml_dashboard",
+      "plantaopro.adm360_eventos"
+    ],
+    "source": "database/migrations/2026_10_v2314_adm360_b7_cotacao_cancelamento_estorno_triagem.sql"
+  },
+  {
+    "object": "2026_10_v2315_saude360_b8_financeiro_canonico",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2315_saude360_b8_financeiro_canonico.sql"
+  },
+  {
+    "object": "2026_10_v2316_saude360_b8_fila_atendimento_legado",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2316_saude360_b8_fila_atendimento_legado.sql"
+  },
+  {
+    "object": "2026_10_v2317_saude360_b9_contestacao_situacao_anterior",
+    "dependsOn": [
+      "plantaopro.fechamento_operacional_v187"
+    ],
+    "source": "database/migrations/2026_10_v2317_saude360_b9_contestacao_situacao_anterior.sql"
+  },
+  {
+    "object": "2026_10_v2318_saude360_b9_plantao_historico_contrato",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2318_saude360_b9_plantao_historico_contrato.sql"
+  },
+  {
+    "object": "2026_10_v2319_saude360_b9_notificacoes_contrato",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2319_saude360_b9_notificacoes_contrato.sql"
+  },
+  {
+    "object": "2026_10_v2320_saude360_b9_plantoes_auditoria",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2320_saude360_b9_plantoes_auditoria.sql"
+  },
+  {
+    "object": "2026_10_v2321_adm360_fiscal_parametros_pre_emitidas",
+    "dependsOn": [
+      "plantaopro.adm360_eventos"
+    ],
+    "source": "database/migrations/2026_10_v2321_adm360_fiscal_parametros_pre_emitidas.sql"
+  },
+  {
+    "object": "2026_10_v2322_adm360_grants_adm_cliente_r5_a2",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2322_adm360_grants_adm_cliente_r5_a2.sql"
+  },
+  {
+    "object": "2026_10_v2323_b4_matriz_comercial_solicitacoes",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2323_b4_matriz_comercial_solicitacoes.sql"
+  },
+  {
+    "object": "2026_10_v2324_b4_plano_modulos_canonicos",
+    "dependsOn": [
+      "plantaopro.tabelas_legado_gap_instalacao"
+    ],
+    "source": "database/migrations/2026_10_v2324_b4_plano_modulos_canonicos.sql"
+  },
+  {
+    "object": "2026_10_v2325_b4_plano_recursos_colunas",
+    "dependsOn": [
+      "plantaopro.tabelas_legado_gap_instalacao"
+    ],
+    "source": "database/migrations/2026_10_v2325_b4_plano_recursos_colunas.sql"
+  },
+  {
+    "object": "2026_10_v2326_b4_assinatura_historico_colunas",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2326_b4_assinatura_historico_colunas.sql"
+  },
+  {
+    "object": "2026_10_v2327_b4_historico_reg_status",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2327_b4_historico_reg_status.sql"
+  },
+  {
+    "object": "2026_10_v2328_b5_provisionamento_convites",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2328_b5_provisionamento_convites.sql"
+  },
+  {
+    "object": "2026_10_v2329_b5_grants_usuarios_adm_cliente",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2329_b5_grants_usuarios_adm_cliente.sql"
+  },
+  {
+    "object": "2026_10_v2330_b5_onboarding_whitelabel_colunas",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2330_b5_onboarding_whitelabel_colunas.sql"
+  },
+  {
+    "object": "2026_10_v2331_b5_lgpd_consentimentos_colunas",
+    "dependsOn": [
+      "plantaopro.tabelas_legado_gap_instalacao"
+    ],
+    "source": "database/migrations/2026_10_v2331_b5_lgpd_consentimentos_colunas.sql"
+  },
+  {
+    "object": "2026_10_v2332_b6_cobranca_saas",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2332_b6_cobranca_saas.sql"
+  },
+  {
+    "object": "2026_10_v2333_c7_onboarding_contrato",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2333_c7_onboarding_contrato.sql"
+  },
+  {
+    "object": "2026_10_v2334_d9_perfil_admin_modulos_jornada",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2334_d9_perfil_admin_modulos_jornada.sql"
+  },
+  {
+    "object": "2026_10_v2335_d11_perfil_admin_modulos_finos_saude",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2335_d11_perfil_admin_modulos_finos_saude.sql"
+  },
+  {
+    "object": "2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2336_e13_p2_backfill_tenant_id_nucleo_clinico.sql"
+  },
+  {
+    "object": "2026_10_v2337_p0_convergencia_tenant_modulos_reg_status",
+    "dependsOn": [
+      "plantaopro.saas_tenants"
+    ],
+    "source": "database/migrations/2026_10_v2337_p0_convergencia_tenant_modulos_reg_status.sql"
+  },
+  {
+    "object": "2026_10_v2338_p0_adm360_garantia_codigos_fiscais",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2338_p0_adm360_garantia_codigos_fiscais.sql"
+  },
+  {
+    "object": "2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades",
+    "dependsOn": [
+      "plantaopro.schema_canonico_base"
+    ],
+    "source": "database/migrations/2026_10_v2339_r6a_granularidade_saude360_pacote_capacidades.sql"
+  },
+  {
+    "object": "2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2340_r6a1_acesso_canonico_conflito_pacote_capacidade.sql"
+  },
+  {
+    "object": "2026_10_v2341_r7a1_conflitos_unificados_profissional",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2341_r7a1_conflitos_unificados_profissional.sql"
+  },
+  {
+    "object": "2026_10_v2342_r7a1_historico_escala_colunas",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2342_r7a1_historico_escala_colunas.sql"
+  },
+  {
+    "object": "2026_10_v2343_r7a1_convite_ciclo_vida",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2343_r7a1_convite_ciclo_vida.sql"
+  },
+  {
+    "object": "2026_10_v2344_r7e1_usuario_idioma_preferido",
+    "dependsOn": [
+      "plantaopro.identity_access"
+    ],
+    "source": "database/migrations/2026_10_v2344_r7e1_usuario_idioma_preferido.sql"
+  },
+  {
+    "object": "2026_10_v2345_r7ob_onboarding_preferencias_idioma",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2345_r7ob_onboarding_preferencias_idioma.sql"
+  },
+  {
+    "object": "2026_10_v2346_r8b2_notificacoes_legado_dedupe",
+    "dependsOn": [
+      "plantaopro.operacao_plantoes"
+    ],
+    "source": "database/migrations/2026_10_v2346_r8b2_notificacoes_legado_dedupe.sql"
+  },
+  {
+    "object": "2026_10_v2347_r8b4_cancelamento_compras",
+    "dependsOn": [
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_10_v2347_r8b4_cancelamento_compras.sql"
+  },
+  {
+    "object": "2026_10_v2348_r8b5_backfill_medico_especialidades",
+    "dependsOn": [],
+    "source": "database/migrations/2026_10_v2348_r8b5_backfill_medico_especialidades.sql"
+  },
+  {
+    "object": "2026_10_v2349_r8b6_mesclagem_pacientes",
+    "dependsOn": [
+      "plantaopro.saude360"
+    ],
+    "source": "database/migrations/2026_10_v2349_r8b6_mesclagem_pacientes.sql"
+  },
+  {
+    "object": "2026_10_v2350_r8b7_glosa_item_recurso_documentos",
+    "dependsOn": [
+      "plantaopro.regras_faturamento_repasses_v115",
+      "plantaopro.tabelas_legado_gap_instalacao"
+    ],
+    "source": "database/migrations/2026_10_v2350_r8b7_glosa_item_recurso_documentos.sql"
+  },
+  {
+    "object": "2026_10_v2351_r8b10_cid_tabela_unicao_versionada",
+    "dependsOn": [
+      "plantaopro.tabelas_legado_gap_instalacao"
+    ],
+    "source": "database/migrations/2026_10_v2351_r8b10_cid_tabela_unicao_versionada.sql"
+  },
+  {
+    "object": "2026_10_v2352_r9c_cadastro_anvisa_produtos",
+    "dependsOn": [
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_10_v2352_r9c_cadastro_anvisa_produtos.sql"
+  },
+  {
+    "object": "2026_10_v2353_r9d_precificacao_preco_venda",
+    "dependsOn": [
+      "plantaopro.administrativo360_suprimentos"
+    ],
+    "source": "database/migrations/2026_10_v2353_r9d_precificacao_preco_venda.sql"
   }
 ]

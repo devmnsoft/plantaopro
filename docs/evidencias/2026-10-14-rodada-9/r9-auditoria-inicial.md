@@ -23,7 +23,7 @@ Leitura somente-leitura dos componentes nomeados + rastreio de consumidores (API
 | 3.7 | Relatórios (Hospital→Cliente) | **QUEBRADO** | alias/filtro "hospitalId" sobre `v.cliente_id`; CSV com cabeçalho "Hospital" |
 | 3.8 | DRE gerencial | **AUSENTE** | 0 ocorrências de DRE em `.cs`/`.sql` |
 | 3.9 | Autenticação/seed/permissões | **PRONTO** | template idempotente 122_* + BCrypt cost 11 + mapa política→permissão |
-| 3.10 | Migrations/manifesto | **PARCIAL** | manifesto encerra em v2345; arquivos até v2351 (drift) |
+| 3.10 | Migrations/manifesto | **PRONTO** | manifesto de upgrade completo até v2353; install-manifest v2.21.9 cobre v2312-v2353 + gap/convergência; instalação limpa validada em banco scratch (evidência `r9i-instalacao-consolidada.md`) |
 | 3.11 | Estado do banco | **PRONTO** | banco vivo; sem tenant "Vertical"/"Sistema" pré-existente |
 
 ## 3. Evidências por domínio
@@ -73,9 +73,10 @@ Leitura somente-leitura dos componentes nomeados + rastreio de consumidores (API
 - Gating de menu: `_AppSidebar.cshtml:72` `Can("ADM360")`; sub-nav `_SuprimentosNav.cshtml:18-39` `PermissionService.HasPermission("ADM360", …)`.
 - DB: plano `HOMOLOGACAO_360` (`8b0c8e74-a81b-4ea2-b499-94755a1ca003`, ATIVO) existe; catálogo `modulos_sistema` contém `ADM360` e ações; **nenhum** tenant `VERTICAL`/`SISTEMA` pré-existente.
 
-### 3.10 Migrations/manifesto — PARCIAL
+### 3.10 Migrations/manifesto — PRONTO (fechado em r9i, 2026-10-15)
 - Convenção real: `database/migrations/2026_10_vNNNN_<desc>.sql` encadeados em `migration-manifest.json` (checksum SHA-256, `dependsOn`).
-- Drift: manifesto lê até **v2345**; arquivos existem até **v2351** (migrações R8 não anexadas). `install-manifest.json` (v2.21.8) encerra em ordem 80 (≈v2311). Corrigir no §14 (“atualize manifesto e consolidado”).
+- Drift original: manifesto lê até **v2345**; arquivos existem até **v2351** (migrações R8 não anexadas). `install-manifest.json` (v2.21.8) encerrava em ordem 80 (≈v2311).
+- **Fechamento (r9i):** upgrade manifest verificado completo até v2353 (checksums conferem); install-manifest elevado a **v2.21.9** com 42 migrações v2312-v2353 + 2 arquivos de canonização de gap/convergência (`database/schema/450_v2219_*`, `460_v2219_*`); instalação limpa validada de ponta a ponta em banco scratch (128 fontes, `IDENTITY_SCHEMA_READY`); `scrpt_completo.sql` regenerado e validado (cobertura 100%). Evidência completa em `r9i-instalacao-consolidada.md`.
 
 ### 3.11 Estado do banco (consultas)
 - `tenants=3976`, `usuarios=1470`, `saas_tenants=0`, `modulos_sistema=1142`, `tenant_modulos=23`, `perfis=26`, `adm360_parceiros=5765`.

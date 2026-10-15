@@ -336,7 +336,12 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                    i.fabricante_externo, i.modelo_externo, i.quantidade_solicitada, i.unidade_solicitada,
                    i.produto_id, pr.nome AS produto_nome, i.unidade_interna, i.fator_conversao,
                    i.quantidade_convertida, i.preco_unitario_ofertado, i.desconto, i.preco_total_ofertado,
-                   i.material_ofertado, i.justificativa_substituicao, i.status_relacionamento, i.motivo_nao_atendimento
+                   i.material_ofertado, i.justificativa_substituicao, i.status_relacionamento, i.motivo_nao_atendimento,
+                    pr.anvisa_numero AS anvisa_numero,
+                    pr.anvisa_aplicabilidade AS anvisa_aplicabilidade,
+                    pr.anvisa_entrada_manual AS anvisa_entrada_manual,
+                    pr.anvisa_vigencia AS anvisa_vigencia,
+                    pr.anvisa_justificacao AS anvisa_justificacao
             FROM plantaopro.adm360_cotacao_itens i
             LEFT JOIN plantaopro.adm360_produtos pr ON pr.id = i.produto_id AND pr.tenant_id = i.tenant_id
             WHERE i.cotacao_id = @id AND i.tenant_id = @tenantId
@@ -370,7 +375,13 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             (string?)i.material_ofertado,
             (string?)i.justificativa_substituicao,
             (string)i.status_relacionamento,
-            (string?)i.motivo_nao_atendimento
+            (string?)i.motivo_nao_atendimento,
+            // s8 (rodada 9): regulação ANVISA do produto ofertado (nula sem produto relacionado).
+            i.produto_id is null ? null : (string?)i.anvisa_numero,
+            i.produto_id is null ? null : (string?)i.anvisa_aplicabilidade,
+            i.anvisa_entrada_manual is null ? true : (bool)i.anvisa_entrada_manual,
+            i.anvisa_vigencia is null ? null : (DateOnly?)ToDateOnly(i.anvisa_vigencia),
+            i.produto_id is null ? null : (string?)i.anvisa_justificacao
         )).ToList();
 
         var anexos = anexosRows.Select(a => new CotacaoAnexoDto(
@@ -797,9 +808,15 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
             var itens = (await cn.QueryAsync<dynamic>(new CommandDefinition(@"
                 SELECT numero_item, status_relacionamento, motivo_nao_atendimento, produto_id,
                        quantidade_convertida, preco_unitario_ofertado, preco_total_ofertado,
-                       material_ofertado, justificativa_substituicao
-                FROM plantaopro.adm360_cotacao_itens
-                WHERE cotacao_id = @CotacaoId AND tenant_id = @tenantId",
+                       material_ofertado, justificativa_substituicao,
+                       pr.anvisa_numero AS anvisa_numero,
+                       pr.anvisa_aplicabilidade AS anvisa_aplicabilidade,
+                       pr.anvisa_entrada_manual AS anvisa_entrada_manual,
+                       pr.anvisa_vigencia AS anvisa_vigencia,
+                       pr.anvisa_justificacao AS anvisa_justificacao
+                FROM plantaopro.adm360_cotacao_itens i
+                LEFT JOIN plantaopro.adm360_produtos pr ON pr.id = i.produto_id AND pr.tenant_id = i.tenant_id
+                WHERE i.cotacao_id = @CotacaoId AND i.tenant_id = @tenantId",
                 new { command.CotacaoId, tenantId }, tx, cancellationToken: ct))).ToList();
 
             var itensValidacao = itens.Select(i => (
@@ -853,7 +870,19 @@ public sealed class CotacoesRepository : Adm360Repository, ICotacoesRepository
                     i.preco_total_ofertado,
                     i.material_ofertado,
                     i.justificativa_substituicao,
-                    i.status_relacionamento
+                    i.status_relacionamento,
+                    // s8 (rodada 9): snapshot ANVISA POR VERSÃO ENVIADA — congela o estado do
+                    // registro de cada produto ofertado no momento da aprovação. Mudanças
+                    // posteriores no catálogo não alteram nenhuma versão já enviada
+                    // (proposta enviada é imutável; o arquivo exportado deriva deste jsonb).
+                    anvisa = new
+                    {
+                        numero = i.anvisa_numero is null ? null : (string)i.anvisa_numero,
+                        aplicabilidade = i.anvisa_aplicabilidade is null ? null : (string)i.anvisa_aplicabilidade,
+                        entrada_manual = i.anvisa_entrada_manual is null ? true : (bool)i.anvisa_entrada_manual,
+                        vigencia = i.anvisa_vigencia is null ? null : ToDateOnly(i.anvisa_vigencia).ToString("yyyy-MM-dd"),
+                        justificacao = i.anvisa_justificacao is null ? null : (string)i.anvisa_justificacao
+                    }
                 })
             };
 

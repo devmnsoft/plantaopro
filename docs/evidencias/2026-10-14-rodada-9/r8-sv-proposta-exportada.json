@@ -1,0 +1,55 @@
+﻿{
+  "tipo_documento": "PROPOSTA_APROVADA_EXPORTACAO_MANUAL",
+  "cotacao": {
+    "identificador_externo": "SV-ANVISA-R9",
+    "revisao_externa": 1
+  },
+  "aprovacao": {
+    "aprovado_por": "8b0c8e74-a81b-4ea2-b499-94755a1ca310",
+    "aprovado_em": "2026-10-14T23:56:04.0187440Z"
+  },
+  "gerado_em_utc": "2026-10-14T23:56:04.3100226Z",
+  "proposta_aprovada": {
+    "Itens": [
+      {
+        "anvisa": {
+          "numero": null,
+          "vigencia": null,
+          "justificacao": "Produto de limpeza fora do escopo de regulacao de OPME (exemplo de homologacao).",
+          "aplicabilidade": "NAO_APLICAVEL",
+          "entrada_manual": true
+        },
+        "produto_id": "83816d7d-1e99-4501-b396-361913716e68",
+        "numero_item": 2,
+        "material_ofertado": null,
+        "preco_total_ofertado": 5.0000,
+        "quantidade_convertida": 1.0000,
+        "status_relacionamento": "RELACIONADO",
+        "preco_unitario_ofertado": 5.0000,
+        "justificativa_substituicao": null
+      },
+      {
+        "anvisa": {
+          "numero": "0001234567890123",
+          "vigencia": "2029-01-31",
+          "justificacao": null,
+          "aplicabilidade": "INFORMADO",
+          "entrada_manual": true
+        },
+        "produto_id": "3a002ffc-3c7e-4493-8563-a6200d8e7618",
+        "numero_item": 1,
+        "material_ofertado": null,
+        "preco_total_ofertado": 20.5000,
+        "quantidade_convertida": 1.0000,
+        "status_relacionamento": "RELACIONADO",
+        "preco_unitario_ofertado": 20.5000,
+        "justificativa_substituicao": null
+      }
+    ],
+    "Revisao": 1,
+    "CotacaoId": "ced7c533-91cd-42e9-9b69-d57e68b90d49",
+    "AprovadoEm": "2026-10-14T23:56:04.0305128Z",
+    "AprovadoPor": "8b0c8e74-a81b-4ea2-b499-94755a1ca310",
+    "IdentificadorExterno": "SV-ANVISA-R9"
+  }
+}

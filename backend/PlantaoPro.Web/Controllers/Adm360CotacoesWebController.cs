@@ -51,10 +51,24 @@ public sealed class Adm360CotacoesWebController : BaseWebController
         var respostasResp = await ReadApiResponse<IReadOnlyList<CotacaoRespostaViewModel>>(client, "api/administrativo360/cotacoes/respostas");
         var respostas = (respostasResp.Data ?? Array.Empty<CotacaoRespostaViewModel>()).Where(r => r.CotacaoId == id).ToList();
 
+        // s8 (rodada 9): catálogo de produtos para o modal de mapeamento de item — a seleção
+        // exibe a regulação ANVISA de cada candidato (número/estado/vigência do cadastro).
+        Lookups360ViewModel lookups;
+        try
+        {
+            var lookupsResp = await ReadApiResponse<Lookups360ViewModel>(client, "api/administrativo360/cadastros/lookups");
+            lookups = lookupsResp.Data ?? new Lookups360ViewModel();
+        }
+        catch
+        {
+            lookups = new Lookups360ViewModel();
+        }
+
         return View("~/Views/Administrativo360/Cotacoes/Detalhes.cshtml", new CotacaoDetalhesPageViewModel
         {
             Cotacao = cotacaoResp.Data,
             Respostas = respostas,
+            Produtos = lookups.Produtos,
             Erro = cotacaoResp.Error
         });
     }

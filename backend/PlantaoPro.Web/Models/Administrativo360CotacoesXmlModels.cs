@@ -41,7 +41,13 @@ public sealed record CotacaoItemDetalheViewModel(
     string? MaterialOfertado,
     string? JustificativaSubstituicao,
     string StatusRelacionamento,
-    string? MotivoNaoAtendimento
+    string? MotivoNaoAtendimento,
+    // Espelho Web do s8 (rodada 9): regulação ANVISA do produto ofertado (nula sem produto).
+    string? AnvisaNumero = null,
+    string? AnvisaAplicabilidade = null,
+    bool AnvisaEntradaManual = true,
+    DateOnly? AnvisaVigencia = null,
+    string? AnvisaJustificacao = null
 );
 
 public sealed record CotacaoAnexoViewModel(
@@ -154,6 +160,9 @@ public sealed class CotacaoDetalhesPageViewModel
 {
     public CotacaoDetalhesViewModel Cotacao { get; init; } = default!;
     public IReadOnlyList<CotacaoRespostaViewModel> Respostas { get; init; } = Array.Empty<CotacaoRespostaViewModel>();
+    // s8 (rodada 9): catálogo para a seleção de produto no modal de mapeamento de item
+    // (exibe a regulação ANVISA de cada candidato na seleção).
+    public IReadOnlyList<Produto360ViewModel> Produtos { get; init; } = Array.Empty<Produto360ViewModel>();
     public string? Erro { get; init; }
 }
 

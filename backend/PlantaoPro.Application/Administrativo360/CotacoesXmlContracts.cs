@@ -126,7 +126,15 @@ public sealed record CotacaoItemDetalheDto(
     string? MaterialOfertado,
     string? JustificativaSubstituicao,
     string StatusRelacionamento,
-    string? MotivoNaoAtendimento
+    string? MotivoNaoAtendimento,
+    // s8 (rodada 9): regulação ANVISA do produto ofertado (via JOIN com o cadastro do produto;
+    // nula quando o item não tem produto relacionado). O congelamento POR VERSÃO ENVIADA é o
+    // jsonb snapshot_proposta da resposta — ver AprovarRespostaAsync.
+    string? AnvisaNumero = null,
+    string? AnvisaAplicabilidade = null,
+    bool AnvisaEntradaManual = true,
+    DateOnly? AnvisaVigencia = null,
+    string? AnvisaJustificacao = null
 );
 
 public sealed record CotacaoAnexoDto(

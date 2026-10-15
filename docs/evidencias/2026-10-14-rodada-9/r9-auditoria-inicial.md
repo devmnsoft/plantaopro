@@ -96,3 +96,7 @@ Leitura somente-leitura dos componentes nomeados + rastreio de consumidores (API
 7. **r9g — §11 DRE gerencial por cliente:** reconstrução + reconciliação + limitações.
 8. **r9h — §12 Design + i18n (pt/en/es/fr)** nos fluxos ajustados, preservando Gestão Organizacional.
 9. Cada slice: build + testes (suíte) + migrações incrementais + evidência; commits locais, sem push/merge automático.
+
+## 6. Registro de fechamentos da fila pendente (atualizado por slice)
+
+- **r9j — i18n completude (2026-10-15): PRONTO** nos 3 arquivos restantes do escopo: `RelatoriosFinanceiros.cshtml` (108 chaves), `Produtos.cshtml` (99) e bloco ANVISA de `Cotacoes/Detalhes.cshtml` (12). Contrato Adm360 **283 → 502 chaves × 4 idiomas** (paridade verificada por parse XML e teste de contrato); suíte efetiva 1397/1397 (1 flake de deadlock 40P01 em `SaasComercialB4MatrizTests.Dispose`, retry isolado 12/12). Evidência: `r9j-i18n-completude.md`. Dívida registrada remanescente: literais fora do bloco ANVISA em `Cotacoes/Detalhes.cshtml` (guia/status/outbox/estorno/IA).

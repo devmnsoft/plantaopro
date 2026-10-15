@@ -141,30 +141,30 @@
         <!-- Conteúdo Aba Vendas -->
         <div class="card bg-dark border-secondary text-light">
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Vendas Faturadas no Período</span>
-                <span class="badge bg-secondary">@Model.Vendas.Count vendas</span>
+                <span class="fw-bold">@UiText.L("Adm360.RelFin.VendasCardTitle")</span>
+                <span class="badge bg-secondary">@Model.Vendas.Count @UiText.L("Adm360.RelFin.UnitVendas")</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
                     <thead class="table-secondary text-dark">
                         <tr>
-                            <th scope="col">Número</th>
-                            <th scope="col">Competência</th>
-                            <th scope="col">Cliente</th>
-                            <th scope="col">Pagador</th>
-                            <th scope="col">Vendedor</th>
-                            <th scope="col" class="text-end">Total Bruto</th>
-                            <th scope="col" class="text-end">Desconto</th>
-                            <th scope="col" class="text-end">Total Líquido</th>
-                            <th scope="col" class="text-end">Comissão Prev.</th>
-                            <th scope="col">Situação</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThNumero")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThCompetencia")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThCliente")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThPagador")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVendedor")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThTotalBruto")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThDesconto")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThTotalLiquido")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThComissaoPrev")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThSituacao")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.Vendas.Count == 0)
                         {
                             <tr>
-                                <td colspan="10" class="text-center text-muted py-4">Nenhuma venda encontrada no período.</td>
+                                <td colspan="10" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.VendasVazia")</td>
                             </tr>
                         }
                         else
@@ -195,27 +195,27 @@
         <!-- Conteúdo Aba Comissões -->
         <div class="card bg-dark border-secondary text-light">
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Apropriação de Comissões por Recebimentos Efetivos</span>
-                <span class="badge bg-secondary">@Model.Comissoes.Count baixas</span>
+                <span class="fw-bold">@UiText.L("Adm360.RelFin.ComissoesCardTitle")</span>
+                <span class="badge bg-secondary">@Model.Comissoes.Count @UiText.L("Adm360.RelFin.UnitBaixas")</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 800px;">
                     <thead class="table-secondary text-dark">
                         <tr>
-                            <th scope="col">Vendedor</th>
-                            <th scope="col">Venda</th>
-                            <th scope="col">Data do Recebimento</th>
-                            <th scope="col" class="text-end">Base de Cálculo (Recebido)</th>
-                            <th scope="col" class="text-end">% Comissão</th>
-                            <th scope="col" class="text-end">Comissão Apropriada</th>
-                            <th scope="col">Situação</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVendedor")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVenda")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThDataRecebimento")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThBaseCalculo")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThPctComissao")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThComissaoApropriada")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThSituacao")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.Comissoes.Count == 0)
                         {
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Nenhuma comissão apropriada no período.</td>
+                                <td colspan="7" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.ComissoesVazia")</td>
                             </tr>
                         }
                         else
@@ -236,7 +236,7 @@
                     </tbody>
                     <tfoot class="table-dark border-secondary">
                         <tr class="fw-bold">
-                            <td colspan="5" class="text-end">Total Apropriado (líquido de estornos — apenas APROPRIADA):</td>
+                            <td colspan="5" class="text-end">@UiText.L("Adm360.RelFin.ComissoesTotalLabel")</td>
                             <td class="text-end text-success fs-6 font-monospace">
                                 @Model.Comissoes.Where(x => x.Situacao == "APROPRIADA").Sum(x => x.ComissaoApropriada).ToString("C2", ptBr)
                             </td>
@@ -252,29 +252,29 @@
         <!-- Conteúdo Aba Margem -->
         <div class="card bg-dark border-secondary text-light">
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Resultado Gerencial e Margem por Cirurgia</span>
-                <span class="badge bg-secondary">@Model.Margens.Count cirurgias</span>
+                <span class="fw-bold">@UiText.L("Adm360.RelFin.MargemCardTitle")</span>
+                <span class="badge bg-secondary">@Model.Margens.Count @UiText.L("Adm360.RelFin.UnitCirurgias")</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 860px;">
                     <thead class="table-secondary text-dark">
                         <tr>
-                            <th scope="col">Venda</th>
-                            <th scope="col">Vale</th>
-                            <th scope="col">Cliente</th>
-                            <th scope="col" class="text-end">Receita Líquida</th>
-                            <th scope="col" class="text-end">Custo Materiais</th>
-                            <th scope="col" class="text-end">Comissão Prev.</th>
-                            <th scope="col" class="text-end">Comissão Aprop.</th>
-                            <th scope="col" class="text-end">Margem Bruta (R$)</th>
-                            <th scope="col" class="text-end">Margem (%)</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVenda")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVale")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThCliente")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThReceitaLiquida")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThCustoMateriais")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThComissaoPrev")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThComissaoAprop")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThMargemBruta")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThMargemPct")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.Margens.Count == 0)
                         {
                             <tr>
-                                <td colspan="9" class="text-center text-muted py-4">Nenhum resultado gerencial encontrado no período.</td>
+                                <td colspan="9" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.MargemVazia")</td>
                             </tr>
                         }
                         else
@@ -308,32 +308,32 @@
         <!-- Conteúdo Aba Vencimentos por Parcela (s10 / rodada 9 r9f) -->
         <div class="card bg-dark border-secondary text-light">
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
-                <span class="fw-bold">Títulos a Receber por Parcela — vencido avaliado na data do relatório</span>
-                <span class="badge bg-secondary">@Model.Vencimentos.Count parcelas</span>
+                <span class="fw-bold">@UiText.L("Adm360.RelFin.VencimentosCardTitle")</span>
+                <span class="badge bg-secondary">@Model.Vencimentos.Count @UiText.L("Adm360.RelFin.UnitParcelas")</span>
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 960px;">
                     <thead class="table-secondary text-dark">
                         <tr>
-                            <th scope="col">Título</th>
-                            <th scope="col">Venda</th>
-                            <th scope="col">Competência</th>
-                            <th scope="col">Cliente</th>
-                            <th scope="col">Pagador</th>
-                            <th scope="col">Parcela</th>
-                            <th scope="col">Emissão</th>
-                            <th scope="col">Vencimento</th>
-                            <th scope="col" class="text-end">Valor Principal</th>
-                            <th scope="col" class="text-end">Recebido</th>
-                            <th scope="col" class="text-end">Saldo Aberto</th>
-                            <th scope="col">Situação</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThTitulo")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVenda")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThCompetencia")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThCliente")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThPagador")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThParcela")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThEmissao")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThVencimento")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThValorPrincipal")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThRecebido")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.ThSaldoAberto")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.ThSituacao")</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (Model.Vencimentos.Count == 0)
                         {
                             <tr>
-                                <td colspan="12" class="text-center text-muted py-4">Nenhuma parcela com vencimento no período.</td>
+                                <td colspan="12" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.VencimentosVazia")</td>
                             </tr>
                         }
                         else
@@ -356,7 +356,7 @@
                                     <td>
                                         @if (it.Vencido)
                                         {
-                                            <span class="badge bg-danger me-1" title="Vencimento anterior à data do relatório com saldo aberto">VENCIDO</span>
+                                            <span class="badge bg-danger me-1" title="@UiText.L("Adm360.RelFin.VencidoTooltip")">@UiText.L("Adm360.RelFin.VencidoBadge")</span>
                                         }
                                         <span class="badge @badgeSituacao">@it.Situacao</span>
                                     </td>
@@ -366,7 +366,7 @@
                     </tbody>
                     <tfoot class="table-dark border-secondary">
                         <tr class="fw-bold">
-                            <td colspan="8" class="text-end">Totais do relatório (cada parcela contada uma única vez):</td>
+                            <td colspan="8" class="text-end">@UiText.L("Adm360.RelFin.VencimentosTotaisLabel")</td>
                             <td class="text-end font-monospace">@Model.Vencimentos.Sum(x => x.ValorPrincipal).ToString("C2", ptBr)</td>
                             <td class="text-end font-monospace">@Model.Vencimentos.Sum(x => x.ValorRecebido).ToString("C2", ptBr)</td>
                             <td class="text-end font-monospace text-warning">@Model.Vencimentos.Sum(x => x.SaldoAberto).ToString("C2", ptBr)</td>
@@ -374,12 +374,12 @@
                                 @if (Model.Vencimentos.Any(x => x.Vencido))
                                 {
                                     <span class="badge bg-danger">
-                                        @Model.Vencimentos.Count(x => x.Vencido) vencida(s) — @Model.Vencimentos.Where(x => x.Vencido).Sum(x => x.SaldoAberto).ToString("C2", ptBr)
+                                        @Model.Vencimentos.Count(x => x.Vencido) @UiText.L("Adm360.RelFin.VencidasUnit") — @Model.Vencimentos.Where(x => x.Vencido).Sum(x => x.SaldoAberto).ToString("C2", ptBr)
                                     </span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-success">Sem saldo vencido na data do relatório</span>
+                                    <span class="badge bg-success">@UiText.L("Adm360.RelFin.SemSaldoVencido")</span>
                                 }
                             </td>
                         </tr>
@@ -400,7 +400,7 @@
                     {
                         @if (concHead.ReceitaLiquidaBate && concHead.CustoBate && concHead.DespesasBatem)
                         {
-                            <span class="badge bg-success me-1" title="Consolidado = clientes + Não atribuída, verificado re-agregando as mesmas fontes no período">@UiText.L("Adm360.RelFin.DreBadgeReconciliado")</span>
+                            <span class="badge bg-success me-1" title="@UiText.L("Adm360.RelFin.DreConciliadoTitle")">@UiText.L("Adm360.RelFin.DreBadgeReconciliado")</span>
                         }
                         else
                         {
@@ -431,7 +431,7 @@
                         @if (Model.Dre.Count == 0)
                         {
                             <tr>
-                                <td colspan="11" class="text-center text-muted py-4">Sem vendas confirmadas nem títulos de despesa no período.</td>
+                                <td colspan="11" class="text-center text-muted py-4">@UiText.L("Adm360.RelFin.DreVazia")</td>
                             </tr>
                         }
                         else
@@ -465,7 +465,7 @@
                                             <a asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
                                                asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                                                asp-route-clienteId="@it.ClienteId.Value.ToString()"
-                                               class="text-info" title="Ver as vendas que compõem esta linha (aba Vendas filtrada por este cliente)">
+                                               class="text-info" title="@UiText.L("Adm360.RelFin.DreDrillCliente")">
                                                 <i class="bi bi-search"></i>
                                             </a>
                                         }
@@ -473,7 +473,7 @@
                                         {
                                             <a asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
                                                asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-                                               class="text-info" title="Revisar vendas sem atribuição na aba Vendas (o bucket é derivado — não há filtro único para ele)">
+                                               class="text-info" title="@UiText.L("Adm360.RelFin.DreDrillOrfa")">
                                                 <i class="bi bi-search"></i>
                                             </a>
                                         }
@@ -507,35 +507,35 @@
                     <strong class="text-light d-block mb-2"><i class="bi bi-check2-all me-1"></i>@UiText.L("Adm360.RelFin.DreConciliacaoTitulo")</strong>
                     <div class="row g-2">
                         <div class="col-md-4">
-                            Receita líquida:
+                            @UiText.L("Adm360.RelFin.DreConcReceita")
                             @if (conc.ReceitaLiquidaBate)
                             {
-                                <span class="badge bg-success">bate — delta zero</span>
+                                <span class="badge bg-success">@UiText.L("Adm360.RelFin.DreConcBate")</span>
                             }
                             else
                             {
-                                <span class="badge bg-danger">delta @conc.DeltaReceitaLiquida.ToString("C2", ptBr)</span>
+                                <span class="badge bg-danger">@UiText.L("Adm360.RelFin.DreConcDelta") @conc.DeltaReceitaLiquida.ToString("C2", ptBr)</span>
                             }
                         </div>
                         <div class="col-md-4">
-                            Custo realizado:
+                            @UiText.L("Adm360.RelFin.DreConcCusto")
                             @if (conc.CustoBate)
                             {
-                                <span class="badge bg-success">bate — delta zero</span>
+                                <span class="badge bg-success">@UiText.L("Adm360.RelFin.DreConcBate")</span>
                             }
                             else
                             {
-                                <span class="badge bg-danger">delta @conc.DeltaCusto.ToString("C2", ptBr)</span>
+                                <span class="badge bg-danger">@UiText.L("Adm360.RelFin.DreConcDelta") @conc.DeltaCusto.ToString("C2", ptBr)</span>
                             }
                         </div>
                         <div class="col-md-4">
-                            Despesas:
-                            <span class="badge bg-secondary">por construção (sem divisão por cliente nesta base)</span>
+                            @UiText.L("Adm360.RelFin.DreConcDespesas")
+                            <span class="badge bg-secondary">@UiText.L("Adm360.RelFin.DreConcPorConstrucao")</span>
                         </div>
                     </div>
                     <p class="mb-0 mt-2">
-                        Período com <strong>@conc.VendasNoPeriodo</strong> venda(s) confirmada(s) e <strong>@conc.DespesasNoPeriodo</strong> título(s) de despesa em competência.
-                        <strong>Diferença de caixa:</strong> esta visão reconhece na <code>competencia</code> dos documentos (competência), e não nas datas de recebimento/pagamento — para o lado caixa use o Fluxo de Caixa.
+                        @UiText.L("Adm360.RelFin.DreConcPeriodoIntro") <strong>@conc.VendasNoPeriodo</strong> @UiText.L("Adm360.RelFin.DreConcPeriodoVendas") <strong>@conc.DespesasNoPeriodo</strong> @UiText.L("Adm360.RelFin.DreConcPeriodoDespesas")
+                        <strong>@UiText.L("Adm360.RelFin.DreConcCaixaDiff")</strong> @Html.Raw(UiText.L("Adm360.RelFin.DreConcCaixaBody"))
                     </p>
                 </div>
             }
@@ -550,50 +550,50 @@
         <div class="card-body small text-secondary">
             <div class="row g-3">
                 <div class="col-lg-3">
-                    <strong class="text-light d-block mb-1">Vendas por Período</strong>
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.IndVendasTitle")</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> (linha por venda confirmada), com nomes de cliente/pagador/vendedor resolvidos via <code>adm360_parceiros</code>; registros históricos podem apontar para a tabela clínica <code>hospitais</code> (fallback de nome) e sem nome vira "Cliente não identificado".</li>
-                        <li><strong>Fórmula:</strong> Total Líquido = bruto − desconto; Custo = Σ custo dos lotes consumidos na valorização; Comissão prevista = líquido × % comissão da venda. Valores gravados na venda, sem recálculo retroativo.</li>
-                        <li><strong>Filtros/período:</strong> <code>competencia &gt;= início AND competencia &lt;= fim</code> (inclusivo); opcionais <code>clienteId</code> e <code>vendedorId</code>; sempre isolado por tenant — <code>clienteId</code> de outro tenant é rejeitado com erro explícito (400). Sem data: últimos 30 dias até hoje.</li>
-                        <li><strong>Estorno:</strong> não altera a linha da venda; o efeito aparece apenas em Comissões (situação ESTORNADA) e no Fluxo de Caixa (movimento compensatório).</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFonte"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVendasFonte"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFormula"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVendasFormula"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFiltros"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVendasFiltros"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbEstorno"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVendasEstorno"))</li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
-                    <strong class="text-light d-block mb-1">Comissões Apropriadas</strong>
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.IndComissoesTitle")</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> <code>adm360_comissoes_apropriadas</code> — uma linha por recebimento efetivo (baixa de título), junta venda, usuário e baixa para auditoria.</li>
-                        <li><strong>Fórmula:</strong> por baixa: arred((recebido acumulado da venda) × % ÷ 100, 2) − já apropriada, mínimo 0 (resíduo corrigido na última baixa).</li>
-                        <li><strong>Filtros/período:</strong> <code>data_recebimento &gt;= início AND data_recebimento &lt;= fim</code> (inclusivo); opcional <code>vendedorId</code>.</li>
-                        <li><strong>Estorno:</strong> a linha vira ESTORNADA (preservada para auditoria; badge âmbar) e o total do rodapé conta apenas APROPRIADA. Re-estorno devolve a APROPRIADA. Estorno é bloqueado dentro de fechamento de caixa fechado.</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFonte"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndComissoesFonte"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFormula"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndComissoesFormula"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFiltros"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndComissoesFiltros"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbEstorno"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndComissoesEstorno"))</li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
-                    <strong class="text-light d-block mb-1">Margem por Cirurgia</strong>
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.IndMargemTitle")</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> somente com <code>situacao='CONFIRMADA'</code>, via valorização até o vale de origem.</li>
-                        <li><strong>Fórmula:</strong> Margem R$ = Receita Líquida − Custo Consumido − Comissão Prevista; Margen % = margem ÷ receita × 100 (2 casas; 0 quando receita = 0). Coluna "Comissão Aprop." = Σ comissões APROPRIADA (estornos já excluídos no banco).</li>
-                        <li><strong>Filtros/período:</strong> <code>competencia</code> entre início e fim (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sem filtro de vendedor nesta aba.</li>
-                        <li><strong>Estorno:</strong> não altera receita, custo nem comissão prevista; somente a coluna "Comissão Aprop." cai quando uma baixa da venda é estornada.</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFonte"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndMargemFonte"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFormula"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndMargemFormula"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFiltros"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndMargemFiltros"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbEstorno"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndMargemEstorno"))</li>
                     </ul>
                 </div>
                 <div class="col-lg-3">
-                    <strong class="text-light d-block mb-1">Vencimentos por Parcela</strong>
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.IndVencimentosTitle")</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> <code>adm360_titulos_receber</code> × <code>adm360_vendas</code> — um título (parcela) = exatamente uma linha; os JOINs de nome são 1:1, então os totais do rodapé somam cada parcela uma única vez (sem multiplicação). Parcelas CANCELADO ficam fora; QUITADO/PARCIAL aparecem como histórico de liquidação.</li>
-                        <li><strong>Fórmula "vencido":</strong> <code>data_vencimento &lt; data do relatório AND saldo_aberto &gt; 0</code> (referência = momento da geração do relatório), mesma regra das Contas a Receber.</li>
-                        <li><strong>Filtros/período:</strong> período sobre <code>data_vencimento</code> (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sempre isolado por tenant.</li>
-                        <li><strong>Estorno/recebimento:</strong> baixas e estornos atualizam <code>valor_recebido</code>/<code>saldo_aberto</code>/<code>situacao</code> no próprio título; a linha reflete o estado corrente sem duplicar.</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFonte"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVencFontes"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFormulaVencido"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVencFormula"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFiltros"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVencFiltros"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbEstornoReceb"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndVencEstornoReceb"))</li>
                     </ul>
                 </div>
                 <div class="col-lg-12">
-                    <strong class="text-light d-block mb-1">DRE Gerencial por Cliente (competência)</strong>
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.IndDreTitle")</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> lado receita/custo = <code>adm360_vendas</code> somente <code>situacao='CONFIRMADA'</code>, período sobre <code>competencia</code>; lado despesa = <code>adm360_titulos_pagar</code> do período (sobre o <code>competencia</code> do título; CANCELADO fora). Vendas sem nome resolvido no tenant caem no bucket "Não atribuída".</li>
-                        <li><strong>Fórmula:</strong> Receita Líquida = Bruta − Deduções (descontos identificados na venda); Resultado Bruto = Líquida − Custo Realizado (valor gravado na venda); Resultado Gerencial = Bruto − Comissões Previstas (gravadas na venda) − Despesas Atribuídas (Σ valor_principal dos títulos do período).</li>
-                        <li><strong>Conciliação:</strong> consolidado = clientes + "Não atribuída", verificado na geração re-agregando as mesmas fontes; deltas diferentes de zero aparecem como badge vermelho em vez de somas "que casam por construção". Cada linha tem atalho para a aba Vendas (registros de origem), filtrada pelo cliente quando aplicável.</li>
-                        <li><strong>Filtros/período:</strong> competência entre início e fim (inclusivo); opcional <code>clienteId</code> com rejeição cross-tenant (400); sempre isolado por tenant.</li>
-                        <li><strong>Diferente de fluxo de caixa:</strong> reconhece na <code>competencia</code> do documento — não nas datas de recebimento/pagamento.</li>
-                        <li><strong>Limitações (fontes incompletas, sinalizadas sem esconder):</strong> (1) despesas não têm vínculo com cliente comercial nesta base (<code>origem_tipo</code> ∈ RECEBIMENTO_COMPRA/DESPESA_MANUAL/COMISSAO_VENDEDOR) — todo o total se concentra na linha "Não atribuída", e com filtro por cliente a linha leva 0 (nenhuma regra de atribuição foi inventada); (2) comissões são as previstas na venda, não o efetivamente pago em caixa; (3) base gerencial (sem critério contábil/ISC, sem conversão cambial); (4) valores gravados no documento — sem recálculo retroativo de custos.</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFonte"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreFonte"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFormula"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreFormula"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbConciliacao"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreConciliacao"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFiltros"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreFiltros"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbFluxoCaixa"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreFluxoCaixa"))</li>
+                        <li><strong>@UiText.L("Adm360.RelFin.IndLbLimitacoes"):</strong> @Html.Raw(UiText.L("Adm360.RelFin.IndDreLimitacoes"))</li>
                     </ul>
                 </div>
             </div>
@@ -603,27 +603,27 @@
     <!-- Guia da tela -->
     <div class="card bg-dark border-secondary mb-4 text-light">
         <div class="card-body">
-            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo os Relatórios Financeiros</h5>
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>@UiText.L("Adm360.RelFin.GuideTitle")</h5>
             <div class="row g-3 small text-secondary">
                 <div class="col-md-4 col-lg-2">
-                    <strong class="text-light d-block mb-1">Para que serve</strong>
-                    Permite auditar as vendas efetuadas, a liquidação de comissões por vendedor e a rentabilidade gerencial dos procedimentos cirúrgicos.
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.GuideSec1Title")</strong>
+                    @UiText.L("Adm360.RelFin.GuideSec1Body")
                 </div>
                 <div class="col-md-4 col-lg-2">
-                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
-                    Diretoria, controladoria, gerência comercial e auditoria interna.
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.GuideSec2Title")</strong>
+                    @UiText.L("Adm360.RelFin.GuideSec2Body")
                 </div>
                 <div class="col-md-4 col-lg-3">
-                    <strong class="text-light d-block mb-1">Como executar</strong>
-                    Selecione a visão desejada nas abas, aplique os filtros de período e de cliente (comercial) e exporte em CSV caso necessite de análises em planilhas.
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.GuideSec3Title")</strong>
+                    @UiText.L("Adm360.RelFin.GuideSec3Body")
                 </div>
                 <div class="col-md-6 col-lg-3">
-                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
-                    Os relatórios utilizam custos históricos reais e comissões efetivamente apropriadas pelas liquidações de caixa.
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.GuideSec4Title")</strong>
+                    @UiText.L("Adm360.RelFin.GuideSec4Body")
                 </div>
                 <div class="col-md-6 col-lg-2">
-                    <strong class="text-light d-block mb-1">Próximo passo</strong>
-                    Utilizar as exportações protegidas para fechamento contábil e conciliação de pagamentos.
+                    <strong class="text-light d-block mb-1">@UiText.L("Adm360.RelFin.GuideSec5Title")</strong>
+                    @UiText.L("Adm360.RelFin.GuideSec5Body")
                 </div>
             </div>
         </div>

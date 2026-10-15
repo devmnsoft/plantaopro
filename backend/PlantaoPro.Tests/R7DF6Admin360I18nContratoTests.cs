@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs283ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs502ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(283, totalAdm360);
+            Assert.Equal(502, totalAdm360);
             foreach (var chave in new[]
                      {
                          // views
@@ -281,7 +281,15 @@ public sealed class R7DF6Admin360I18nContratoTests
                           // r9h: fluxos ajustados (relatorios financeiros por cliente + DRE + secoes do formulario de produto)
                           "Adm360.RelFin.PageTitle", "Adm360.RelFin.TabDre", "Adm360.RelFin.ExportCsv",
                           "Adm360.RelFin.DreTableTitle", "Adm360.RelFin.DreThResultadoGerencial", "Adm360.RelFin.DreConciliacaoTitulo",
-                          "Adm360.Produtos.SecIdentificacao", "Adm360.Produtos.SecPrecificacao"
+                          "Adm360.Produtos.SecIdentificacao", "Adm360.Produtos.SecPrecificacao",
+                          // r9j: completude RelFin (abas/indicadores/guia), Produtos (tela + modal + JS) e bloco ANVISA do detalhe da cotação
+                          "Adm360.RelFin.VendasCardTitle", "Adm360.RelFin.ThCompetencia", "Adm360.RelFin.ThReceitaLiquida",
+                          "Adm360.RelFin.VencidoBadge", "Adm360.RelFin.DreDrillCliente", "Adm360.RelFin.DreConciliadoTitle", "Adm360.RelFin.DreConcCaixaBody",
+                          "Adm360.RelFin.IndLbLimitacoes", "Adm360.RelFin.IndDreLimitacoes", "Adm360.RelFin.GuideTitle", "Adm360.RelFin.GuideSec5Body",
+                          "Adm360.Produtos.PageTitle", "Adm360.Produtos.ThUnidade", "Adm360.Produtos.GuiaSkuUnico", "Adm360.Produtos.LoteAviso",
+                          "Adm360.Produtos.ConfContinuar", "Adm360.Produtos.JsMargemNeg", "Adm360.Produtos.JsPrevLocal",
+                          "Adm360.CotDet.AnvisaBadgeTit", "Adm360.CotDet.AnvisaBadgeNaTxt", "Adm360.CotDet.AnvisaBadgePendTxt",
+                          "Adm360.CotDet.SelectAjuda", "Adm360.CotDet.OptSelecioneProduto", "Adm360.CotDet.JsPendenteTexto"
                      })
             {
                 Assert.Contains($"<data name=\"{chave}\"", resx, StringComparison.Ordinal);
@@ -308,5 +316,98 @@ public sealed class R7DF6Admin360I18nContratoTests
         // r9h
         Assert.Contains("<value>Management P&amp;L by Client — accrual basis (NOT cash flow)</value>", en);
         Assert.Contains("<value>Due Dates by Installment</value>", en);
+        // r9j: pt-BR canônico (inclui <code>/<strong> escapados no resx e espaços preservados)
+        Assert.Contains("<value>Vendas Faturadas no Período</value>", master);
+        Assert.Contains("<value>&lt;strong&gt;SKU Único:&lt;/strong&gt; O código de identificação do item deve ser exclusivo no seu cliente.</value>", master);
+        Assert.Contains("<value> · Vigência regulatória: </value>", master);
+        // r9j: amostras en/es/fr
+        var es = Read("backend", "PlantaoPro.Web", "Localization", "UiTexts.es.resx");
+        var fr = Read("backend", "PlantaoPro.Web", "Localization", "UiTexts.fr.resx");
+        Assert.Contains("<value>Billed Sales in Period</value>", en);
+        Assert.Contains("<value>ANVISA pending</value>", en);
+        Assert.Contains("<value>Ventas Facturadas en el Período</value>", es);
+        Assert.Contains("<value>Ventes facturées sur la période</value>", fr);
+    }
+
+    [Fact]
+    public void ViewsAdm360_R9jRelFinProdutosEAnvisaDoCotDetPorRecursosSemLiterals()
+    {
+        var relfin = Read("backend", "PlantaoPro.Web", "Views", "Administrativo360", "RelatoriosFinanceiros.cshtml");
+        foreach (var chave in new[]
+                 {
+                     "Adm360.RelFin.VendasCardTitle", "Adm360.RelFin.UnitVendas", "Adm360.RelFin.ThCompetencia", "Adm360.RelFin.ThReceitaLiquida",
+                     "Adm360.RelFin.ComissoesTotalLabel", "Adm360.RelFin.MargemCardTitle", "Adm360.RelFin.VencimentosCardTitle",
+                     "Adm360.RelFin.VencidoTooltip", "Adm360.RelFin.VencidoBadge", "Adm360.RelFin.DreDrillCliente", "Adm360.RelFin.DreDrillOrfa",
+                     "Adm360.RelFin.DreConciliadoTitle", "Adm360.RelFin.DreConcBate", "Adm360.RelFin.DreConcCaixaBody",
+                     "Adm360.RelFin.IndLbFonte", "Adm360.RelFin.IndVendasFonte", "Adm360.RelFin.IndDreLimitacoes",
+                     "Adm360.RelFin.GuideTitle", "Adm360.RelFin.GuideSec1Title", "Adm360.RelFin.GuideSec5Body"
+                 })
+        {
+            Assert.Contains($"UiText.L(\"{chave}\")", relfin);
+        }
+        // formatos/valores de máquina preservados
+        Assert.Contains(".ToString(\"C2\", ptBr)", relfin);
+        Assert.Contains("<input type=\"hidden\" name=\"aba\" value=\"@Model.AbaAtiva\" />", relfin);
+        foreach (var literal in new[]
+                 {
+                     "Vendas Faturadas no Período", "Nenhuma venda encontrada no período.",
+                     "Total Apropriado (líquido de estornos — apenas APROPRIADA):", "Sem saldo vencido na data do relatório",
+                     "bate — delta zero", "por construção (sem divisão por cliente nesta base)",
+                     "Entendendo os Relatórios Financeiros", "Ver as vendas que compõem esta linha"
+                 })
+        {
+            Assert.DoesNotContain(literal, relfin);
+        }
+
+        var produtos = Read("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Produtos.cshtml");
+        foreach (var chave in new[]
+                 {
+                     "Adm360.Produtos.PageTitle", "Adm360.Produtos.Heading", "Adm360.Produtos.GuiaSkuUnico", "Adm360.Produtos.LoteAviso",
+                     "Adm360.Produtos.ThUnidade", "Adm360.Produtos.PlOpcional", "Adm360.Produtos.ConfInativarTitulo",
+                     "Adm360.Produtos.ConfContinuar", "Adm360.Produtos.AriaPaginacao", "Adm360.Produtos.JsMargemNeg",
+                     "Adm360.Produtos.JsPrevLocal", "Adm360.Produtos.JsProcessando",
+                     "Implantacao.CloseAria", "Clinical.ButtonCancel", "Clinical.ButtonSave"
+                 })
+        {
+            Assert.Contains($"UiText.L(\"{chave}\")", produtos);
+        }
+        // estados de máquina e formatos preservados
+        Assert.Contains("value=\"NAO_APLICAVEL\"", produtos);
+        Assert.Contains(".ToString(\"N2\", new System.Globalization.CultureInfo(\"pt-BR\"))", produtos);
+        foreach (var literal in new[]
+                 {
+                     "Novo Produto", "Editar Produto", "Processando...", "margem negativa", "MARGEM NEGATIVA",
+                     "Regras de Cadastro e Integridade de Estoque", "Nenhum produto encontrado com os filtros aplicados.",
+                     "Deseja continuar?"
+                 })
+        {
+            Assert.DoesNotContain(literal, produtos);
+        }
+
+        var cotdet = Read("backend", "PlantaoPro.Web", "Views", "Administrativo360", "Cotacoes", "Detalhes.cshtml");
+        foreach (var chave in new[]
+                 {
+                     "Adm360.CotDet.AnvisaBadgeTit", "Adm360.CotDet.AnvisaBadgeNaTxt", "Adm360.CotDet.AnvisaBadgePendTxt",
+                     "Adm360.CotDet.AnvisaBadgePendTit", "Adm360.CotDet.OptSelecioneProduto", "Adm360.CotDet.LblIdentificadorManual",
+                     "Adm360.CotDet.SelectAjuda", "Adm360.CotDet.JsSemProduto", "Adm360.CotDet.JsVigenciaLbl",
+                     "Adm360.CotDet.JsRegistroManual", "Adm360.CotDet.JsAnvisaNaTxt", "Adm360.CotDet.JsPendenteTexto"
+                 })
+        {
+            Assert.Contains($"UiText.L(\"{chave}\")", cotdet);
+        }
+        // classes/estados dos badges preservados
+        Assert.Contains("pp-badge--neutral", cotdet);
+        Assert.Contains("pp-badge--warning", cotdet);
+        foreach (var literal in new[]
+                 {
+                     "Registro ANVISA informado no cadastro do produto",
+                     "Registro ANVISA pendente de informação no cadastro do produto",
+                     "-- Selecione o Produto --", "ou identificador manual (UUID)",
+                     "Selecione no catálogo ou informe o identificador", "Sem produto relacionado — regulação ANVISA",
+                     "(registro manual no cadastro)", "número ainda não informado no cadastro do produto."
+                 })
+        {
+            Assert.DoesNotContain(literal, cotdet);
+        }
     }
 }

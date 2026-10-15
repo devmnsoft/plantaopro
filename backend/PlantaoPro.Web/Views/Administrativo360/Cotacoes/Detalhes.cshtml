@@ -188,15 +188,15 @@
                                         @* s8 (rodada 9): regulação ANVISA por item — estado do cadastro do produto ofertado *@
                                         @if (!string.IsNullOrWhiteSpace(item.AnvisaNumero))
                                         {
-                                            <div class="small"><span class="pp-badge pp-badge--success" title="Registro ANVISA informado no cadastro do produto">ANVISA @item.AnvisaNumero</span></div>
+                                            <div class="small"><span class="pp-badge pp-badge--success" title="@UiText.L("Adm360.CotDet.AnvisaBadgeTit")">ANVISA @item.AnvisaNumero</span></div>
                                         }
                                         else if (item.AnvisaAplicabilidade == "NAO_APLICAVEL")
                                         {
-                                            <div class="small"><span class="pp-badge pp-badge--neutral" title="@item.AnvisaJustificacao">ANVISA n/a</span></div>
+                                            <div class="small"><span class="pp-badge pp-badge--neutral" title="@item.AnvisaJustificacao">@UiText.L("Adm360.CotDet.AnvisaBadgeNaTxt")</span></div>
                                         }
                                         else
                                         {
-                                            <div class="small"><span class="pp-badge pp-badge--warning" title="Registro ANVISA pendente de informação no cadastro do produto">ANVISA pendente</span></div>
+                                            <div class="small"><span class="pp-badge pp-badge--warning" title="@UiText.L("Adm360.CotDet.AnvisaBadgePendTit")">@UiText.L("Adm360.CotDet.AnvisaBadgePendTxt")</span></div>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(item.JustificativaSubstituicao))
                                         {
@@ -274,7 +274,7 @@
                                                     <label class="form-label small" for="selProduto-@item.Id">Produto Interno</label>
                                                      @* s8 (rodada 9): seleção pelo catálogo — cada candidato exibe a regulação ANVISA do seu cadastro; entrada manual por UUID continua disponível. *@
                                                      <select id="selProduto-@item.Id" class="form-select form-select-sm bg-dark text-light border-secondary" onchange="selecionarProduto('@item.Id', this)">
-                                                         <option value="">-- Selecione o Produto --</option>
+                                                         <option value="">@UiText.L("Adm360.CotDet.OptSelecioneProduto")</option>
                                                          @foreach (var prod in Model.Produtos)
                                                          {
                                                              var anvisaVigStr = prod.AnvisaVigencia?.ToString("yyyy-MM-dd");
@@ -282,10 +282,10 @@
                                                          }
                                                      </select>
                                                      <div id="anvisaInfo-@item.Id" class="form-text small mt-1" aria-live="polite"></div>
-                                                     <label class="form-label small mt-2" for="uuidProduto-@item.Id">ou identificador manual (UUID)</label>
+                                                     <label class="form-label small mt-2" for="uuidProduto-@item.Id">@UiText.L("Adm360.CotDet.LblIdentificadorManual")</label>
                                                     <input type="text" id="uuidProduto-@item.Id" name="ProdutoId" class="form-control form-control-sm bg-dark text-light border-secondary" oninput="atualizarAnvisaInfo('@item.Id', this.value)"
                                                            value="@item.ProdutoId" placeholder="Ex: d3f6584c-2c64-4e5a-9ea9-4e1428647520" />
-                                                    <div class="form-text text-muted small">Selecione no catálogo ou informe o identificador do produto no estoque interno. A regulação ANVISA exibida é a do cadastro do produto; na aprovação da resposta ela é congelada no snapshot da versão enviada.</div>
+                                                    <div class="form-text text-muted small">@UiText.L("Adm360.CotDet.SelectAjuda")</div>
                                                 </div>
                                                 <div class="row g-2 mb-3">
                                                     <div class="col-md-6">
@@ -353,7 +353,7 @@
                     }
                 }
                 if (!produtoId || !op) {
-                    info.innerHTML = '<span class="text-muted">Sem produto relacionado — regulação ANVISA não avaliável para este item.</span>';
+                    info.innerHTML = '<span class="text-muted">' + '@UiText.L("Adm360.CotDet.JsSemProduto")' + '</span>';
                     return;
                 }
                 var num = op.getAttribute('data-anvisa-numero') || '';
@@ -362,12 +362,12 @@
                 var vig = op.getAttribute('data-anvisa-vigencia') || '';
                 if (num) {
                     info.innerHTML = '<span class="pp-badge pp-badge--success">ANVISA ' + num + '</span>'
-                        + (vig ? ' <span class="text-muted">vigência regulatória até ' + vig + '</span>' : '')
-                        + ' <span class="text-muted">(registro manual no cadastro)</span>';
+                        + (vig ? ' <span class="text-muted">' + '@UiText.L("Adm360.CotDet.JsVigenciaLbl")' + vig + '</span>' : '')
+                        + ' <span class="text-muted">' + '@UiText.L("Adm360.CotDet.JsRegistroManual")' + '</span>';
                 } else if (apl === 'NAO_APLICAVEL') {
-                    info.innerHTML = '<span class="pp-badge pp-badge--neutral">ANVISA não aplicável</span>' + (just ? ' <span class="text-muted">' + just + '</span>' : '');
+                    info.innerHTML = '<span class="pp-badge pp-badge--neutral">' + '@UiText.L("Adm360.CotDet.JsAnvisaNaTxt")' + '</span>' + (just ? ' <span class="text-muted">' + just + '</span>' : '');
                 } else {
-                    info.innerHTML = '<span class="pp-badge pp-badge--warning">ANVISA pendente</span> <span class="text-muted">número ainda não informado no cadastro do produto.</span>';
+                    info.innerHTML = '<span class="pp-badge pp-badge--warning">' + '@UiText.L("Adm360.CotDet.AnvisaBadgePendTxt")' + '</span> <span class="text-muted">' + '@UiText.L("Adm360.CotDet.JsPendenteTexto")' + '</span>';
                 }
             }
 

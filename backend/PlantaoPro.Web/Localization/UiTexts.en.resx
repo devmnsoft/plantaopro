@@ -2693,4 +2693,661 @@
   <data name="Adm360.Produtos.SecStatus" xml:space="preserve">
     <value>Status</value>
   </data>
+  <data name="Adm360.CotDet.AnvisaBadgeNaTxt" xml:space="preserve">
+    <value>ANVISA n/a</value>
+  </data>
+  <data name="Adm360.CotDet.AnvisaBadgePendTit" xml:space="preserve">
+    <value>ANVISA registration pending entry in the product record</value>
+  </data>
+  <data name="Adm360.CotDet.AnvisaBadgePendTxt" xml:space="preserve">
+    <value>ANVISA pending</value>
+  </data>
+  <data name="Adm360.CotDet.AnvisaBadgeTit" xml:space="preserve">
+    <value>ANVISA registration provided in the product record</value>
+  </data>
+  <data name="Adm360.CotDet.JsAnvisaNaTxt" xml:space="preserve">
+    <value>ANVISA not applicable</value>
+  </data>
+  <data name="Adm360.CotDet.JsPendenteTexto" xml:space="preserve">
+    <value>number not yet provided in the product record.</value>
+  </data>
+  <data name="Adm360.CotDet.JsRegistroManual" xml:space="preserve">
+    <value>(manual registration in the record)</value>
+  </data>
+  <data name="Adm360.CotDet.JsSemProduto" xml:space="preserve">
+    <value>No related product — ANVISA regulation not assessable for this item.</value>
+  </data>
+  <data name="Adm360.CotDet.JsVigenciaLbl" xml:space="preserve">
+    <value>regulatory validity until </value>
+  </data>
+  <data name="Adm360.CotDet.LblIdentificadorManual" xml:space="preserve">
+    <value>or manual identifier (UUID)</value>
+  </data>
+  <data name="Adm360.CotDet.OptSelecioneProduto" xml:space="preserve">
+    <value>-- Select Product --</value>
+  </data>
+  <data name="Adm360.CotDet.SelectAjuda" xml:space="preserve">
+    <value>Select from the catalog or provide the product identifier in internal stock. The displayed ANVISA regulation is the one in the product record; upon response approval it is frozen in the snapshot of the submitted version.</value>
+  </data>
+  <data name="Adm360.Produtos.AnvisaTitManual" xml:space="preserve">
+    <value>ANVISA registration entered manually</value>
+  </data>
+  <data name="Adm360.Produtos.AnvisaVigPrefix" xml:space="preserve">
+    <value> · Regulatory validity: </value>
+  </data>
+  <data name="Adm360.Produtos.AriaPaginacao" xml:space="preserve">
+    <value>Products pagination</value>
+  </data>
+  <data name="Adm360.Produtos.BadgeInspecao" xml:space="preserve">
+    <value>Inspection</value>
+  </data>
+  <data name="Adm360.Produtos.BadgeLote" xml:space="preserve">
+    <value>Lot</value>
+  </data>
+  <data name="Adm360.Produtos.BadgePadrao" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+  <data name="Adm360.Produtos.BadgePendente" xml:space="preserve">
+    <value>pending</value>
+  </data>
+  <data name="Adm360.Produtos.BtnComoUsar" xml:space="preserve">
+    <value>How To Use</value>
+  </data>
+  <data name="Adm360.Produtos.BtnNovoProduto" xml:space="preserve">
+    <value>New Product</value>
+  </data>
+  <data name="Adm360.Produtos.BtnRegistrarLote" xml:space="preserve">
+    <value>Register Lot</value>
+  </data>
+  <data name="Adm360.Produtos.ChkApenasAtivos" xml:space="preserve">
+    <value>Active Only</value>
+  </data>
+  <data name="Adm360.Produtos.ChkControlaLote" xml:space="preserve">
+    <value>Requires Lot and Expiration Control</value>
+  </data>
+  <data name="Adm360.Produtos.ChkExigeInspecao" xml:space="preserve">
+    <value>Requires Inspection Report on Receipt</value>
+  </data>
+  <data name="Adm360.Produtos.ChkProdutoAtivo" xml:space="preserve">
+    <value>Active Product</value>
+  </data>
+  <data name="Adm360.Produtos.ConfAtivarMsg" xml:space="preserve">
+    <value>The product returns to active registrations.</value>
+  </data>
+  <data name="Adm360.Produtos.ConfAtivarTitulo" xml:space="preserve">
+    <value>Activate product</value>
+  </data>
+  <data name="Adm360.Produtos.ConfContinuar" xml:space="preserve">
+    <value> Do you want to continue?</value>
+  </data>
+  <data name="Adm360.Produtos.ConfInativarMsg" xml:space="preserve">
+    <value>The product will leave active registrations; lots, ANVISA and prices remain readable in reports.</value>
+  </data>
+  <data name="Adm360.Produtos.ConfInativarTitulo" xml:space="preserve">
+    <value>Deactivate product</value>
+  </data>
+  <data name="Adm360.Produtos.ErroLbl" xml:space="preserve">
+    <value>Error:</value>
+  </data>
+  <data name="Adm360.Produtos.GuiaControleLote" xml:space="preserve">
+    <value>&lt;strong&gt;Lot Control:&lt;/strong&gt; Surgical items and OPME require strict traceability by lot and expiration date.</value>
+  </data>
+  <data name="Adm360.Produtos.GuiaPrecoCusto" xml:space="preserve">
+    <value>&lt;strong&gt;Cost Price:&lt;/strong&gt; Must be positive or zero. Serves as the valuation base for purchases and quotes.</value>
+  </data>
+  <data name="Adm360.Produtos.GuiaSkuUnico" xml:space="preserve">
+    <value>&lt;strong&gt;Unique SKU:&lt;/strong&gt; The item identification code must be unique within your customer.</value>
+  </data>
+  <data name="Adm360.Produtos.GuiaTitulo" xml:space="preserve">
+    <value>Registration Rules and Inventory Integrity</value>
+  </data>
+  <data name="Adm360.Produtos.GuiaTravaMov" xml:space="preserve">
+    <value>&lt;strong&gt;Movement Lock:&lt;/strong&gt; You cannot change the Unit of Measure, Lot Control or Inspection Requirement of products that already have recorded inventory movements.</value>
+  </data>
+  <data name="Adm360.Produtos.Heading" xml:space="preserve">
+    <value>Product &amp; OPME Catalog</value>
+  </data>
+  <data name="Adm360.Produtos.JsEditarProduto" xml:space="preserve">
+    <value>Edit Product</value>
+  </data>
+  <data name="Adm360.Produtos.JsLucroPrefix" xml:space="preserve">
+    <value>Unit profit: R$ </value>
+  </data>
+  <data name="Adm360.Produtos.JsMargemLbl" xml:space="preserve">
+    <value> · Sale margin: </value>
+  </data>
+  <data name="Adm360.Produtos.JsMargemNeg" xml:space="preserve">
+    <value> · NEGATIVE MARGIN</value>
+  </data>
+  <data name="Adm360.Produtos.JsMarkupLbl" xml:space="preserve">
+    <value> · Cost markup: </value>
+  </data>
+  <data name="Adm360.Produtos.JsMsgSemCusto" xml:space="preserve">
+    <value>Cost absent — margin/markup not calculable (absent is not treated as zero).</value>
+  </data>
+  <data name="Adm360.Produtos.JsMsgSemVenda" xml:space="preserve">
+    <value>Enter the sale price to calculate pricing.</value>
+  </data>
+  <data name="Adm360.Produtos.JsNaoCalcCusto" xml:space="preserve">
+    <value>not calculable (zero cost)</value>
+  </data>
+  <data name="Adm360.Produtos.JsNaoCalcVenda" xml:space="preserve">
+    <value>not calculable (zero sale)</value>
+  </data>
+  <data name="Adm360.Produtos.JsPrevLocal" xml:space="preserve">
+    <value> — local preview; the official calculation is recomputed on the server when saving.</value>
+  </data>
+  <data name="Adm360.Produtos.JsProcessando" xml:space="preserve">
+    <value>Processing...</value>
+  </data>
+  <data name="Adm360.Produtos.LblAnvisaNumero" xml:space="preserve">
+    <value>ANVISA Registration Number</value>
+  </data>
+  <data name="Adm360.Produtos.LblAnvisaVigencia" xml:space="preserve">
+    <value>Regulatory validity (authorization)</value>
+  </data>
+  <data name="Adm360.Produtos.LblAplicabilidade" xml:space="preserve">
+    <value>Applicability</value>
+  </data>
+  <data name="Adm360.Produtos.LblCodigoBarras" xml:space="preserve">
+    <value>Barcode (EAN)</value>
+  </data>
+  <data name="Adm360.Produtos.LblDescricaoMaterial" xml:space="preserve">
+    <value>Material Description</value>
+  </data>
+  <data name="Adm360.Produtos.LblJustificacao" xml:space="preserve">
+    <value>Justification (required when "not applicable")</value>
+  </data>
+  <data name="Adm360.Produtos.LblPrecoCusto" xml:space="preserve">
+    <value>Cost Price (R$)</value>
+  </data>
+  <data name="Adm360.Produtos.LblPrecoVendaPadrao" xml:space="preserve">
+    <value>Default Sale Price (R$)</value>
+  </data>
+  <data name="Adm360.Produtos.LblSkuCodigo" xml:space="preserve">
+    <value>SKU / Code</value>
+  </data>
+  <data name="Adm360.Produtos.LhCodigoLote" xml:space="preserve">
+    <value>Lot Code</value>
+  </data>
+  <data name="Adm360.Produtos.LhCustoUnit" xml:space="preserve">
+    <value>Unit Cost (R$)</value>
+  </data>
+  <data name="Adm360.Produtos.LhDataValidade" xml:space="preserve">
+    <value>Expiration Date</value>
+  </data>
+  <data name="Adm360.Produtos.LhValidade" xml:space="preserve">
+    <value>Expiration</value>
+  </data>
+  <data name="Adm360.Produtos.LoteAviso" xml:space="preserve">
+    <value>Registering a lot &lt;strong&gt;does not adjust inventory&lt;/strong&gt;: quantity enters only through an originated movement (purchase receipt, inventory or adjustment) in the Stock module. The lot validity is the product expiration date and does not replace regulatory validity.</value>
+  </data>
+  <data name="Adm360.Produtos.LotesVazio" xml:space="preserve">
+    <value>No lot registered for this product.</value>
+  </data>
+  <data name="Adm360.Produtos.LotesVinculados" xml:space="preserve">
+    <value>Linked lots</value>
+  </data>
+  <data name="Adm360.Produtos.LucroUnitLbl" xml:space="preserve">
+    <value>Unit profit:</value>
+  </data>
+  <data name="Adm360.Produtos.MargemNeg" xml:space="preserve">
+    <value>negative margin</value>
+  </data>
+  <data name="Adm360.Produtos.MargemVendaLbl" xml:space="preserve">
+    <value>Sale margin:</value>
+  </data>
+  <data name="Adm360.Produtos.MarkupLbl" xml:space="preserve">
+    <value>Markup:</value>
+  </data>
+  <data name="Adm360.Produtos.NaoCalc" xml:space="preserve">
+    <value>not calc.</value>
+  </data>
+  <data name="Adm360.Produtos.NavAnterior" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="Adm360.Produtos.NavProxima" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="Adm360.Produtos.OptCX" xml:space="preserve">
+    <value>CX — Box</value>
+  </data>
+  <data name="Adm360.Produtos.OptInformado" xml:space="preserve">
+    <value>Provided</value>
+  </data>
+  <data name="Adm360.Produtos.OptKG" xml:space="preserve">
+    <value>KG — Kilogram</value>
+  </data>
+  <data name="Adm360.Produtos.OptKIT" xml:space="preserve">
+    <value>KIT — Set</value>
+  </data>
+  <data name="Adm360.Produtos.OptLT" xml:space="preserve">
+    <value>LT — Liter</value>
+  </data>
+  <data name="Adm360.Produtos.OptNaoAplicavel" xml:space="preserve">
+    <value>Not applicable</value>
+  </data>
+  <data name="Adm360.Produtos.OptPC" xml:space="preserve">
+    <value>PC — Piece</value>
+  </data>
+  <data name="Adm360.Produtos.OptPendente" xml:space="preserve">
+    <value>Pending</value>
+  </data>
+  <data name="Adm360.Produtos.OptUN" xml:space="preserve">
+    <value>UN — Unit</value>
+  </data>
+  <data name="Adm360.Produtos.PageTitle" xml:space="preserve">
+    <value>Products and Materials — Administrative 360</value>
+  </data>
+  <data name="Adm360.Produtos.PaginaItensInfo" xml:space="preserve">
+    <value>item(s) on page</value>
+  </data>
+  <data name="Adm360.Produtos.PaginaMaxInfo" xml:space="preserve">
+    <value>maximum 100 per page</value>
+  </data>
+  <data name="Adm360.Produtos.PhBusca" xml:space="preserve">
+    <value>Search by SKU, material description or barcode...</value>
+  </data>
+  <data name="Adm360.Produtos.PhExAnvisaJustif" xml:space="preserve">
+    <value>E.g.: product outside RDC regulation scope ...</value>
+  </data>
+  <data name="Adm360.Produtos.PhExNome" xml:space="preserve">
+    <value>E.g.: Sirolimus Drug-Eluting Coronary Stent</value>
+  </data>
+  <data name="Adm360.Produtos.PlOpcional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="Adm360.Produtos.Sec2Aviso" xml:space="preserve">
+    <value>Lots and expiration dates are not entered here — they go into the product panel (Lots section), where each lot has its own expiration.</value>
+  </data>
+  <data name="Adm360.Produtos.Sec3Aviso" xml:space="preserve">
+    <value>The number is stored as text (preserving leading zeros) and entry is manual — there is no simulated lookup. Regulatory validity is independent of lot expiration.</value>
+  </data>
+  <data name="Adm360.Produtos.Sec5Aviso" xml:space="preserve">
+    <value>Deactivating preserves the product history (lots, ANVISA and prices remain readable in reports).</value>
+  </data>
+  <data name="Adm360.Produtos.StatusAtivo" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Adm360.Produtos.StatusInativo" xml:space="preserve">
+    <value>Inactive</value>
+  </data>
+  <data name="Adm360.Produtos.Subheading" xml:space="preserve">
+    <value>Item management with lot traceability control, quality inspection report on reception and cost pricing.</value>
+  </data>
+  <data name="Adm360.Produtos.TabTituloMateriais" xml:space="preserve">
+    <value>Registered Materials</value>
+  </data>
+  <data name="Adm360.Produtos.TabVazia" xml:space="preserve">
+    <value>No product found with the applied filters.</value>
+  </data>
+  <data name="Adm360.Produtos.ThAcoes" xml:space="preserve">
+    <value>Actions</value>
+  </data>
+  <data name="Adm360.Produtos.ThAnvisa" xml:space="preserve">
+    <value>ANVISA</value>
+  </data>
+  <data name="Adm360.Produtos.ThDescricaoProduto" xml:space="preserve">
+    <value>Product Description</value>
+  </data>
+  <data name="Adm360.Produtos.ThPrecoCusto" xml:space="preserve">
+    <value>Cost Price (R$)</value>
+  </data>
+  <data name="Adm360.Produtos.ThPrecoVenda" xml:space="preserve">
+    <value>Sale Price / Pricing</value>
+  </data>
+  <data name="Adm360.Produtos.ThRastreabilidade" xml:space="preserve">
+    <value>Traceability</value>
+  </data>
+  <data name="Adm360.Produtos.ThSku" xml:space="preserve">
+    <value>SKU</value>
+  </data>
+  <data name="Adm360.Produtos.ThStatus" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Adm360.Produtos.ThUnidade" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Adm360.Produtos.TitCustoAusente" xml:space="preserve">
+    <value>cost not provided (absent — not treated as zero)</value>
+  </data>
+  <data name="Adm360.Produtos.TitExigeInspecao" xml:space="preserve">
+    <value>Requires quality inspection</value>
+  </data>
+  <data name="Adm360.Produtos.TitExigeLote" xml:space="preserve">
+    <value>Requires lot and expiration</value>
+  </data>
+  <data name="Adm360.Produtos.TitPrecoVendaND" xml:space="preserve">
+    <value>default sale price not defined</value>
+  </data>
+  <data name="Adm360.Produtos.VencidoPar" xml:space="preserve">
+    <value>(expired)</value>
+  </data>
+  <data name="Adm360.Produtos.VoltarCatalogo" xml:space="preserve">
+    <value>Back to catalog</value>
+  </data>
+  <data name="Adm360.RelFin.ComissoesCardTitle" xml:space="preserve">
+    <value>Commission Recognition by Effective Receipts</value>
+  </data>
+  <data name="Adm360.RelFin.ComissoesTotalLabel" xml:space="preserve">
+    <value>Recognized Total (net of reversals — APROPRIADA only):</value>
+  </data>
+  <data name="Adm360.RelFin.ComissoesVazia" xml:space="preserve">
+    <value>No commission recognized in the period.</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcBate" xml:space="preserve">
+    <value>matches — zero delta</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcCaixaBody" xml:space="preserve">
+    <value>this view recognizes on the document &lt;code&gt;competencia&lt;/code&gt; (accrual basis), not on receipt/payment dates — use Cash Flow for the cash side.</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcCaixaDiff" xml:space="preserve">
+    <value>Cash difference:</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcCusto" xml:space="preserve">
+    <value>Realized cost:</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcDelta" xml:space="preserve">
+    <value>delta</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcDespesas" xml:space="preserve">
+    <value>Expenses:</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcPeriodoDespesas" xml:space="preserve">
+    <value>expense invoice(s) on accrual basis.</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcPeriodoIntro" xml:space="preserve">
+    <value>Period with</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcPeriodoVendas" xml:space="preserve">
+    <value>confirmed sale(s) and</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcPorConstrucao" xml:space="preserve">
+    <value>by construction (no per-customer split on this base)</value>
+  </data>
+  <data name="Adm360.RelFin.DreConcReceita" xml:space="preserve">
+    <value>Net revenue:</value>
+  </data>
+  <data name="Adm360.RelFin.DreConciliadoTitle" xml:space="preserve">
+    <value>Consolidated = customers + Not attributed, verified by re-aggregating the same sources in the period</value>
+  </data>
+  <data name="Adm360.RelFin.DreDrillCliente" xml:space="preserve">
+    <value>See the sales composing this row (Sales tab filtered by this customer)</value>
+  </data>
+  <data name="Adm360.RelFin.DreDrillOrfa" xml:space="preserve">
+    <value>Review unattributed sales in the Sales tab (the bucket is derived — there is no single filter for it)</value>
+  </data>
+  <data name="Adm360.RelFin.DreVazia" xml:space="preserve">
+    <value>No confirmed sales or expense invoices in the period.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec1Body" xml:space="preserve">
+    <value>Audits executed sales, commission settlement by salesperson, and management profitability of surgical procedures.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec1Title" xml:space="preserve">
+    <value>Purpose</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec2Body" xml:space="preserve">
+    <value>Board of directors, internal control, commercial management and internal audit.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec2Title" xml:space="preserve">
+    <value>Who can use it</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec3Body" xml:space="preserve">
+    <value>Select the desired view in the tabs, apply the period and customer filters, and export to CSV when spreadsheet analysis is needed.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec3Title" xml:space="preserve">
+    <value>How to run it</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec4Body" xml:space="preserve">
+    <value>The reports use real historical costs and commissions effectively recognized by cash settlements.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec4Title" xml:space="preserve">
+    <value>Effect of confirmation</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec5Body" xml:space="preserve">
+    <value>Use the protected exports for accounting closing and payment reconciliation.</value>
+  </data>
+  <data name="Adm360.RelFin.GuideSec5Title" xml:space="preserve">
+    <value>Next step</value>
+  </data>
+  <data name="Adm360.RelFin.GuideTitle" xml:space="preserve">
+    <value>Understanding the Financial Reports</value>
+  </data>
+  <data name="Adm360.RelFin.IndComissoesEstorno" xml:space="preserve">
+    <value>the row becomes ESTORNADA (preserved for audit; amber badge) and the footer total counts APROPRIADA only. Re-reversal restores APROPRIADA. Reversal is blocked inside a closed cash closing.</value>
+  </data>
+  <data name="Adm360.RelFin.IndComissoesFiltros" xml:space="preserve">
+    <value>&lt;code&gt;data_recebimento &amp;gt;= start AND data_recebimento &amp;lt;= end&lt;/code&gt; (inclusive); optional &lt;code&gt;vendedorId&lt;/code&gt;.</value>
+  </data>
+  <data name="Adm360.RelFin.IndComissoesFonte" xml:space="preserve">
+    <value>&lt;code&gt;adm360_comissoes_apropriadas&lt;/code&gt; — one row per effective receipt (invoice write-off), joining sale, user and write-off for audit.</value>
+  </data>
+  <data name="Adm360.RelFin.IndComissoesFormula" xml:space="preserve">
+    <value>per write-off: round((sale accumulated received) × % ÷ 100, 2) − already recognized, minimum 0 (residue corrected on the last write-off).</value>
+  </data>
+  <data name="Adm360.RelFin.IndComissoesTitle" xml:space="preserve">
+    <value>Recognized Commissions</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreConciliacao" xml:space="preserve">
+    <value>consolidated = customers + "Not attributed", verified at generation time by re-aggregating the same sources; non-zero deltas appear as red badges instead of totals "that match by construction". Each row has a shortcut to the Sales tab (source records), filtered by customer when applicable.</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreFiltros" xml:space="preserve">
+    <value>accrual between start and end (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; with cross-tenant rejection (400); always isolated by tenant.</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreFluxoCaixa" xml:space="preserve">
+    <value>recognizes on the document &lt;code&gt;competencia&lt;/code&gt; — not on receipt/payment dates.</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreFonte" xml:space="preserve">
+    <value>revenue/cost side = &lt;code&gt;adm360_vendas&lt;/code&gt; only &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, period over &lt;code&gt;competencia&lt;/code&gt;; expense side = period &lt;code&gt;adm360_titulos_pagar&lt;/code&gt; (on the invoice &lt;code&gt;competencia&lt;/code&gt;; CANCELADO out). Sales without a name resolved in the tenant fall into the "Not attributed" bucket.</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreFormula" xml:space="preserve">
+    <value>Net Revenue = Gross − Deductions (discounts identified on the sale); Gross Result = Net − Realized Cost (value stored on the sale); Management Result = Gross − Estimated Commissions (stored on the sale) − Attributed Expenses (Σ valor_principal of period invoices).</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreLimitacoes" xml:space="preserve">
+    <value>(1) expenses have no link to a commercial customer on this base (&lt;code&gt;origem_tipo&lt;/code&gt; ∈ RECEBIMENTO_COMPRA/DESPESA_MANUAL/COMISSAO_VENDEDOR) — the entire total concentrates on the "Not attributed" row, and with a customer filter the row gets 0 (no attribution rule was invented); (2) commissions are the ones estimated on the sale, not what was actually paid in cash; (3) management basis (no accounting/ISC criterion, no currency conversion); (4) values stored on the document — no retroactive cost recalculation.</value>
+  </data>
+  <data name="Adm360.RelFin.IndDreTitle" xml:space="preserve">
+    <value>Management P&amp;L by Customer (accrual)</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbConciliacao" xml:space="preserve">
+    <value>Reconciliation</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbEstorno" xml:space="preserve">
+    <value>Reversal</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbEstornoReceb" xml:space="preserve">
+    <value>Reversal/receipt</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbFiltros" xml:space="preserve">
+    <value>Filters/period</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbFluxoCaixa" xml:space="preserve">
+    <value>Different from cash flow</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbFonte" xml:space="preserve">
+    <value>Source</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbFormula" xml:space="preserve">
+    <value>Formula</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbFormulaVencido" xml:space="preserve">
+    <value>Formula "overdue"</value>
+  </data>
+  <data name="Adm360.RelFin.IndLbLimitacoes" xml:space="preserve">
+    <value>Limitations (incomplete sources, flagged not hidden)</value>
+  </data>
+  <data name="Adm360.RelFin.IndMargemEstorno" xml:space="preserve">
+    <value>does not change revenue, cost or estimated commission; only the "Commission Rec." column drops when a sale write-off is reversed.</value>
+  </data>
+  <data name="Adm360.RelFin.IndMargemFiltros" xml:space="preserve">
+    <value>&lt;code&gt;competencia&lt;/code&gt; between start and end (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; (with cross-tenant rejection); no salesperson filter on this tab.</value>
+  </data>
+  <data name="Adm360.RelFin.IndMargemFonte" xml:space="preserve">
+    <value>&lt;code&gt;adm360_vendas&lt;/code&gt; only with &lt;code&gt;situacao='CONFIRMADA'&lt;/code&gt;, via valuation back to the source voucher.</value>
+  </data>
+  <data name="Adm360.RelFin.IndMargemFormula" xml:space="preserve">
+    <value>Margin R$ = Net Revenue − Consumed Cost − Estimated Commission; Margin % = margin ÷ revenue × 100 (2 decimals; 0 when revenue = 0). Column "Commission Rec." = Σ APROPRIADA commissions (reversals already excluded in the database).</value>
+  </data>
+  <data name="Adm360.RelFin.IndMargemTitle" xml:space="preserve">
+    <value>Margin per Surgery</value>
+  </data>
+  <data name="Adm360.RelFin.IndVencEstornoReceb" xml:space="preserve">
+    <value>write-offs and reversals update &lt;code&gt;valor_recebido&lt;/code&gt;/&lt;code&gt;saldo_aberto&lt;/code&gt;/&lt;code&gt;situacao&lt;/code&gt; on the invoice itself; the row reflects current state without duplication.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVencFiltros" xml:space="preserve">
+    <value>period over &lt;code&gt;data_vencimento&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; (with cross-tenant rejection); always isolated by tenant.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVencFontes" xml:space="preserve">
+    <value>&lt;code&gt;adm360_titulos_receber&lt;/code&gt; × &lt;code&gt;adm360_vendas&lt;/code&gt; — one invoice (installment) = exactly one row; name JOINs are 1:1, so footer totals sum each installment once (no multiplication). CANCELADO installments are out; QUITADO/PARCIAL appear as settlement history.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVencFormula" xml:space="preserve">
+    <value>&lt;code&gt;data_vencimento &amp;lt; report date AND saldo_aberto &amp;gt; 0&lt;/code&gt; (reference = moment of report generation), same rule as Accounts Receivable.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVencimentosTitle" xml:space="preserve">
+    <value>Overdue by Installment</value>
+  </data>
+  <data name="Adm360.RelFin.IndVendasEstorno" xml:space="preserve">
+    <value>does not change the sale row; the effect appears only in Commissions (status ESTORNADA) and in Cash Flow (compensating movement).</value>
+  </data>
+  <data name="Adm360.RelFin.IndVendasFiltros" xml:space="preserve">
+    <value>&lt;code&gt;competencia &amp;gt;= start AND competencia &amp;lt;= end&lt;/code&gt; (inclusive); optional &lt;code&gt;clienteId&lt;/code&gt; and &lt;code&gt;vendedorId&lt;/code&gt;; always isolated by tenant — a &lt;code&gt;clienteId&lt;/code&gt; from another tenant is rejected with an explicit error (400). Without dates: last 30 days up to today.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVendasFonte" xml:space="preserve">
+    <value>&lt;code&gt;adm360_vendas&lt;/code&gt; (one row per confirmed sale), with customer/payer/salesperson names resolved via &lt;code&gt;adm360_parceiros&lt;/code&gt;; historical records may point to the clinical table &lt;code&gt;hospitais&lt;/code&gt; (name fallback) and an unresolved name becomes "Customer not identified".</value>
+  </data>
+  <data name="Adm360.RelFin.IndVendasFormula" xml:space="preserve">
+    <value>Net Total = gross − discount; Cost = Σ cost of lots consumed at valuation; Estimated commission = net × sale commission %. Values stored on the sale, no retroactive recalculation.</value>
+  </data>
+  <data name="Adm360.RelFin.IndVendasTitle" xml:space="preserve">
+    <value>Sales by Period</value>
+  </data>
+  <data name="Adm360.RelFin.MargemCardTitle" xml:space="preserve">
+    <value>Management Result and Margin per Surgery</value>
+  </data>
+  <data name="Adm360.RelFin.MargemVazia" xml:space="preserve">
+    <value>No management result found in the period.</value>
+  </data>
+  <data name="Adm360.RelFin.SemSaldoVencido" xml:space="preserve">
+    <value>No overdue balance at report date</value>
+  </data>
+  <data name="Adm360.RelFin.ThBaseCalculo" xml:space="preserve">
+    <value>Calculation Base (Received)</value>
+  </data>
+  <data name="Adm360.RelFin.ThCliente" xml:space="preserve">
+    <value>Customer</value>
+  </data>
+  <data name="Adm360.RelFin.ThComissaoAprop" xml:space="preserve">
+    <value>Commission Rec.</value>
+  </data>
+  <data name="Adm360.RelFin.ThComissaoApropriada" xml:space="preserve">
+    <value>Recognized Commission</value>
+  </data>
+  <data name="Adm360.RelFin.ThComissaoPrev" xml:space="preserve">
+    <value>Commission Est.</value>
+  </data>
+  <data name="Adm360.RelFin.ThCompetencia" xml:space="preserve">
+    <value>Accrual Date</value>
+  </data>
+  <data name="Adm360.RelFin.ThCustoMateriais" xml:space="preserve">
+    <value>Materials Cost</value>
+  </data>
+  <data name="Adm360.RelFin.ThDataRecebimento" xml:space="preserve">
+    <value>Receipt Date</value>
+  </data>
+  <data name="Adm360.RelFin.ThDesconto" xml:space="preserve">
+    <value>Discount</value>
+  </data>
+  <data name="Adm360.RelFin.ThEmissao" xml:space="preserve">
+    <value>Issue Date</value>
+  </data>
+  <data name="Adm360.RelFin.ThMargemBruta" xml:space="preserve">
+    <value>Gross Margin (R$)</value>
+  </data>
+  <data name="Adm360.RelFin.ThMargemPct" xml:space="preserve">
+    <value>Margin (%)</value>
+  </data>
+  <data name="Adm360.RelFin.ThNumero" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="Adm360.RelFin.ThPagador" xml:space="preserve">
+    <value>Payer</value>
+  </data>
+  <data name="Adm360.RelFin.ThParcela" xml:space="preserve">
+    <value>Installment</value>
+  </data>
+  <data name="Adm360.RelFin.ThPctComissao" xml:space="preserve">
+    <value>Commission %</value>
+  </data>
+  <data name="Adm360.RelFin.ThRecebido" xml:space="preserve">
+    <value>Received</value>
+  </data>
+  <data name="Adm360.RelFin.ThReceitaLiquida" xml:space="preserve">
+    <value>Net Revenue</value>
+  </data>
+  <data name="Adm360.RelFin.ThSaldoAberto" xml:space="preserve">
+    <value>Open Balance</value>
+  </data>
+  <data name="Adm360.RelFin.ThSituacao" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Adm360.RelFin.ThTitulo" xml:space="preserve">
+    <value>Invoice</value>
+  </data>
+  <data name="Adm360.RelFin.ThTotalBruto" xml:space="preserve">
+    <value>Gross Total</value>
+  </data>
+  <data name="Adm360.RelFin.ThTotalLiquido" xml:space="preserve">
+    <value>Net Total</value>
+  </data>
+  <data name="Adm360.RelFin.ThVale" xml:space="preserve">
+    <value>Voucher</value>
+  </data>
+  <data name="Adm360.RelFin.ThValorPrincipal" xml:space="preserve">
+    <value>Principal Amount</value>
+  </data>
+  <data name="Adm360.RelFin.ThVencimento" xml:space="preserve">
+    <value>Due Date</value>
+  </data>
+  <data name="Adm360.RelFin.ThVenda" xml:space="preserve">
+    <value>Sale</value>
+  </data>
+  <data name="Adm360.RelFin.ThVendedor" xml:space="preserve">
+    <value>Salesperson</value>
+  </data>
+  <data name="Adm360.RelFin.UnitBaixas" xml:space="preserve">
+    <value>payments</value>
+  </data>
+  <data name="Adm360.RelFin.UnitCirurgias" xml:space="preserve">
+    <value>surgeries</value>
+  </data>
+  <data name="Adm360.RelFin.UnitParcelas" xml:space="preserve">
+    <value>installments</value>
+  </data>
+  <data name="Adm360.RelFin.UnitVendas" xml:space="preserve">
+    <value>sales</value>
+  </data>
+  <data name="Adm360.RelFin.VencidasUnit" xml:space="preserve">
+    <value>overdue</value>
+  </data>
+  <data name="Adm360.RelFin.VencidoBadge" xml:space="preserve">
+    <value>OVERDUE</value>
+  </data>
+  <data name="Adm360.RelFin.VencidoTooltip" xml:space="preserve">
+    <value>Due before report date with open balance</value>
+  </data>
+  <data name="Adm360.RelFin.VencimentosCardTitle" xml:space="preserve">
+    <value>Receivables by Installment — overdue evaluated at report date</value>
+  </data>
+  <data name="Adm360.RelFin.VencimentosTotaisLabel" xml:space="preserve">
+    <value>Report totals (each installment counted once):</value>
+  </data>
+  <data name="Adm360.RelFin.VencimentosVazia" xml:space="preserve">
+    <value>No installment due in the period.</value>
+  </data>
+  <data name="Adm360.RelFin.VendasCardTitle" xml:space="preserve">
+    <value>Billed Sales in Period</value>
+  </data>
+  <data name="Adm360.RelFin.VendasVazia" xml:space="preserve">
+    <value>No sales found in the period.</value>
+  </data>
 </root>

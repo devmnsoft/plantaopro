@@ -14,39 +14,43 @@ Leitura somente-leitura dos componentes nomeados + rastreio de consumidores (API
 
 | # | Domínio | Status | Evidência-chave |
 |---|---------|--------|-----------------|
-| 3.1 | Produto canônico + lotes + validade | **PARCIAL** | estrutura multi-lote existe; falta ANVISA/preço de venda/UI de lotes na tela do produto |
-| 3.2 | Precificação + custo histórico | **PARCIAL** | `preco_custo` (produto) + `custo_unitario` (lote) existem; sem `preco_venda`/margem/markup |
-| 3.3 | ANVISA (cadastro/rastreio) | **AUSENTE** | 0 ocorrências em `.cs` e `.sql`; só texto incidente em 2 views |
-| 3.4 | Cotações/propostas (itens) | **PARCIAL** | item já liga produto+preço(snapshot); sem ANVISA/lote por item |
+| 3.1 | Produto canônico + lotes + validade | **PRONTO** (fechado em r9b) | estrutura multi-lote + UI de lotes vinculados na tela do produto com regras de estoque/origem/validade; evidência `r5-produtos-lotes.md` |
+| 3.2 | Precificação + custo histórico | **PRONTO** (fechado em r9d) | `preco_venda` padrão + margem/markup recalculados no servidor c/ estados ausente/não calculável/negativo; evidência `r7-precificacao.md` |
+| 3.3 | ANVISA (cadastro/rastreio) | **PRONTO** (fechado em r9c) | cadastro regulatório em texto (zeros à esquerda), tri-estável (informado/não aplicável/pendente), origem manual, vigência regulatória ≠ validade de lote; evidência `r6-produtos-anvisa.md` |
+| 3.4 | Cotações/propostas (itens) | **PRONTO** (fechado em r9e) | item liga produto+preço(snapshot) + ANVISA por item (seleção/linha/detalhe/comparativo) preservada no snapshot da versão enviada; evidência `r8-cotacoes-anvisa.md` |
 | 3.5 | Parceiros com função de cliente | **PRONTO** | `adm360_parceiros.eh_cliente/eh_pagador/eh_hospital` |
 | 3.6 | Vendas/títulos/parcelas/baixas | **PRONTO** | `adm360_vendas` + títulos por parcela (`data_vencimento`,`saldo_aberto`) + `adm360_recebimentos` |
-| 3.7 | Relatórios (Hospital→Cliente) | **QUEBRADO** | alias/filtro "hospitalId" sobre `v.cliente_id`; CSV com cabeçalho "Hospital" |
-| 3.8 | DRE gerencial | **AUSENTE** | 0 ocorrências de DRE em `.cs`/`.sql` |
+| 3.7 | Relatórios (Hospital→Cliente) | **PRONTO** (corrigido em r9f) | contrato Hospital→Cliente corrigido (filtro/colunas/fallback "Cliente não identificado"/cross-tenant 400) + vencimentos por parcela sem multiplicar totais; evidência `r9-financeiro-cliente.md` |
+| 3.8 | DRE gerencial | **PRONTO** (construído em r9g) | DRE por cliente em competência, consolidado conciliado = clientes + não atribuídas, origem e limitações sinalizadas; evidência `r9-dre-gerencial.md` |
 | 3.9 | Autenticação/seed/permissões | **PRONTO** | template idempotente 122_* + BCrypt cost 11 + mapa política→permissão |
 | 3.10 | Migrations/manifesto | **PRONTO** | manifesto de upgrade completo até v2353; install-manifest v2.21.9 cobre v2312-v2353 + gap/convergência; instalação limpa validada em banco scratch (evidência `r9i-instalacao-consolidada.md`) |
 | 3.11 | Estado do banco | **PRONTO** | banco vivo; sem tenant "Vertical"/"Sistema" pré-existente |
 
 ## 3. Evidências por domínio
 
-### 3.1 Produto + lotes + validade — PARCIAL
+### 3.1 Produto + lotes + validade — **PRONTO** (inicialmente PARCIAL; fechado em r9b)
 - Tabela produto: `adm360_produtos(id, tenant_id, sku, nome, unidade, codigo_barras, controla_lote, exige_inspecao, preco_custo, ativo)` — `CadastrosRepository.cs:151-162` (SELECT) e `:196-197` (INSERT). Registro `Produto360` em `Contracts.cs:664`.
 - **Estrutura multi-lote já existe** (não colapsar num único campo): tabela `adm360_lotes(id, tenant_id, produto_id, codigo, validade, custo_unitario)` criada por *upsert* `ON CONFLICT (tenant_id,produto_id,codigo)` em `ComprasRepository.cs:368-372`; registro `Lote360(Id,ProdutoId,Codigo,Validade,Fabricacao)` em `Contracts.cs:666`; consulta `ListarLotesAsync(tenantId, produtoId)` em `Contracts.cs:696` e `CadastrosRepository.cs:402/444`.
 - Saldos por lote+local+condição: `adm360_saldos` (`EstoqueRepository.cs:32-33`,`:86-89`); registro `SaldoEstoque` por `LoteId` em `Contracts.cs:16`. Movimentações com origem: `adm360_movimentos(…origem_tipo,origem_id,…)` (`EstoqueRepository.cs:113-116`).
 - **Gaps (§5):** sem ANVISA no produto; sem `preco_venda`/margem/markup; cadastro de lote hoje ocorre pelo fluxo de compras/recebimento — a tela do produto ainda não lista/registra lotes vinculados de forma explícita (view `Views/Administrativo360/Produtos.cshtml` existe, sem seção de lotes confirmada). Regras a garantir: lote não cria estoque; entrada exige movimentação+origem; alteração de lote/validade com movimentações é procedimento controlado.
+- **Fechamento (r9b, `8b83e10`):** tela de produtos com lotes vinculados (registro sem estoque automático); gaps de ANVISA e precificação atendidos nos slices próprios (r9c/r9d). Evidência: `r5-produtos-lotes.md`.
 
-### 3.2 Precificação + custo histórico — PARCIAL
+### 3.2 Precificação + custo histórico — **PRONTO** (inicialmente PARCIAL; fechado em r9d)
 - Custo de referência: `preco_custo` (produto) `CadastrosRepository.cs:154/196/258`. Custo histórico por lote: `custo_unitario` (`ComprasRepository.cs:368`).
 - `RelatorioMargemItem`/`RelatorioMargemAsync` (`Adm360FinanceiroRelatoriosRepository.cs:84-128`) é **relatório de margem de contribuição da VENDA** (receita−custo−comissão), **não** o cálculo de precificação do produto.
 - **Gap (§7):** ausente `preco_venda` padrão e os campos derivados (lucro bruto unitário, margem sobre venda %, markup %). Precisam ser calculados **no servidor** com as fórmulas do §7, “Não calculável” quando denominador 0, margem negativa evidente, custo ausente ≠ zero confirmado, sem reescrever cotações/vendas passadas, decimal + política de arredondamento.
+- **Fechamento (r9d, `27e1d8d`):** `preco_venda` padrão + margem/markup recalculados no servidor com todos os estados do §7. Evidência: `r7-precificacao.md`.
 
-### 3.3 ANVISA — AUSENTE
+### 3.3 ANVISA — **PRONTO** (inicialmente AUSENTE; construído em r9c)
 - `grep -i anvisa` em `backend/**/*.cs` = 0; em `database/**/*.sql` = 0. Ocorrências incidentes apenas: `Views/Administrativo360/Cotacoes/Detalhes.cshtml:285` (placeholder “autorizado pela ANVISA”) e `Views/Administrativo360/Recebimentos.cshtml:167` (rótulo “Data de Validade (ANVISA)”).
 - **A construir (§6):** registro/notificação como **texto** (preserva zeros à esquerda), tipo de identificação, aplicabilidade (informado/não aplicável/pendente), fabricante/apresentação quando necessário, origem+data da conferência, flag “informação manual”, não simular consulta à ANVISA, não confundir validade do lote com vigência regulatória, justificativa para dispensados.
+- **Fechamento (r9c, `d0fcbdc`):** cadastro regulatório ANVISA em produtos com todos os itens do §6 (texto c/ zeros à esquerda, tri-estável, manual, vigência regulatória). Evidência: `r6-produtos-anvisa.md`.
 
-### 3.4 Cotações/propostas (itens) — PARCIAL
+### 3.4 Cotações/propostas (itens) — **PRONTO** (inicialmente PARCIAL; fechado em r9e)
 - Item: `CotacaoItemDetalheDto(Id, NumeroItem, CodigoExterno, DescricaoExterna, FabricanteExterno, ModeloExterno, QuantidadeSolicitada, UnidadeSolicitada, ProdutoId?, ProdutoNome?, UnidadeInterna, FatorConversao, QuantidadeConvertida, PrecoUnitarioOfertado, Desconto, PrecoTotalOfertado, MaterialOfertado?, JustificativaSubstituicao?, StatusRelacionamento, MotivoNaoAtendimento?)` — `CotacoesXmlContracts.cs:109-130`. Detalhes com `RevisaoExterna`, `StatusInterno/Externo`, `OrcamentoId` (`:141-168`). Comandos `RelacionarItemCotacaoCommand` (`:206-216`) e `CapturarCotacaoItemCommand` (`:188-196`).
 - Já há vínculo de produto + **snapshot de preço ofertado**.
 - **Gaps (§8):** sem campo de ANVISA no item; sem snapshot de lote/validade no item; sem distinção explícita “cadastro × fornecedor” da informação regulatória; precisa preservar snapshot na versão enviada (mudança posterior no produto não altera proposta enviada).
+- **Fechamento (r9e, `684ab79`):** ANVISA em itens de cotação (seleção/linha/detalhe/comparativo) com snapshot congelado por versão enviada. Evidência: `r8-cotacoes-anvisa.md`.
 
 ### 3.5 Parceiros → cliente comercial — PRONTO
 - `adm360_parceiros` com flags `eh_hospital/eh_pagador/eh_cliente` (`CadastrosRepository.cs:19-29` SELECT, `:113-115` UPDATE); `SalvarParceiroAsync(..., ehCliente)` (`Contracts.cs:686`); filtro `ehCliente` em `ListarParceirosAsync` (`CadastrosRepository.cs:12`). Modelo canônico de cliente comercial pronto para o §9.
@@ -56,15 +60,17 @@ Leitura somente-leitura dos componentes nomeados + rastreio de consumidores (API
 - Títulos por **parcela**: `documentO, competencia, data_emissao, data_vencimento, parcela, total_parcelas, saldo_aberto, situacao` (`ComprasRepository.cs:431,436`; `ContasReceberRepository.cs:24-57,74-163`; `ContasPagarRepository.cs:25-186`). Baixas/recebimentos: `adm360_recebimentos`.
 - Cálculo de vencido já existe: `data_vencimento < hoje && saldo_aberto > 0` (`ContasReceberRepository.cs:57`; `CaixaRepository.cs:307`).
 
-### 3.7 Relatórios — Hospital→Cliente — QUEBRADO (contrato)
+### 3.7 Relatórios — Hospital→Cliente — **PRONTO** (inicialmente QUEBRADO; corrigido em r9f)
 - `RelatorioVendasAsync`: `Adm360FinanceiroRelatoriosRepository.cs:17` → `COALESCE(c.nome, hosp.nome,'Hospital') AS Hospital`, juntando **ambos** `adm360_parceiros c ON c.id=v.cliente_id` e `hospitais hosp ON hosp.id=v.cliente_id`; parâmetro `hospitalId` filtra `v.cliente_id=@hospitalId` (assinatura `:11`).
 - `RelatorioMargemAsync`: mesmo alias em `:91` (join `hosp` em `:100`), mapeia `r.hospital` em `:120`.
 - Exportação CSV mantém cabeçalho “Hospital”: `Administrativo360Controller.RelatoriosFinanceiros.cs:115`.
 - **A corrigir (§9):** renomear dimensão para Cliente (filtro por cliente comercial, colunas/agrupamento/totais, busca por nome, impressão/exportação com mesmos filtros), manter **Pagador** separado, fallback “Cliente não identificado”, compatibilidade para registros históricos vinculados a hospital (sem remover tabelas/FK clínicas), rejeitar cliente de outro tenant.
+- **Fechamento (r9f, `9c347ff`):** dimensão corrigida para Cliente com todos os itens do §9 + vencimentos por parcela (sem multiplicar totais). Evidência: `r9-financeiro-cliente.md`.
 
-### 3.8 DRE gerencial — AUSENTE
+### 3.8 DRE gerencial — **PRONTO** (inicialmente AUSENTE; construído em r9g)
 - `grep -i DRE` em `backend/**/*.cs` e `database/**/*.sql` = 0. Não há relatório/endpoint de DRE.
 - **A construir (§11):** DRE por cliente em competência (receita, deduções identificadas, receita líquida, custo dos produtos/serviços realizado, resultado bruto, despesas atribuídas + “Não atribuída”, resultado gerencial do período); distinguível de fluxo de caixa; consolidado reconciliado = clientes + não atribuídas; acesso aos registros de origem; fontes incompletas sinalizadas como limitação.
+- **Fechamento (r9g, `6729b69`):** DRE gerencial por CLIENTE em competência + conciliação, origem e limitações, implementado com todos os itens do §11. Evidência: `r9-dre-gerencial.md`.
 
 ### 3.9 Autenticação/seed/permissões — PRONTO
 - Hash: `PasswordHashService.Hash = BCrypt.Net.BCrypt.HashPassword(pw, 11)` → `$2a$11$…`; verificação `BCrypt.Verify` (`backend/PlantaoPro.Api/Security/PasswordHashService.cs:10-29`). Pacote `BCrypt.Net-Next 4.0.3`.

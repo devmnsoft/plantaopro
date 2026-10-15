@@ -49,6 +49,18 @@ public sealed class ProvisionamentoB5Tests : IDisposable
     private const string CnpjDup = "11222333000181";
     private const string EmailDup = "b5-duplicado@exemplo.test";
 
+    // r9k (R8-B14): todos os CNPJs criados pelos testes — crash-idempotência da semente.
+    private static readonly string[] CnpjsDosTestes =
+    {
+        "99988877000166", // P1 mundo do admin
+        "55443322000155", // P2 e-mail duplicado
+        CnpjDup,          // P2 CNPJ duplicado (fixture B5ClienteDup)
+        "77665544000132", // P3 corrida
+        "00112233000144", // P4 plano inativo
+        "33445566000177", // P5 trial
+        "66554433000188"  // P5 manual (BaseManual)
+    };
+
     private readonly Task SementePronta = SementarAsync();
 
     public void Dispose()
@@ -434,6 +446,9 @@ delete from plantaopro.cadastro_cliente_solicitacoes where id=@s;",
                     UsuarioAdminId = u ?? Guid.Empty
                 });
         }
+        // r9k (R8-B14): varredura final — uma corrida derrubada pode deixar mais de
+        // uma solicitação por CNPJ (o QueryFirstOrDefault acima pega só a primeira).
+        await cn.ExecuteAsync("delete from plantaopro.cadastro_cliente_solicitacoes where regexp_replace(cnpj,'\\D','','g')=@cnpj", new { cnpj });
     }
 
     private static async Task LimparConviteAsync(string email)
@@ -499,6 +514,14 @@ insert into plantaopro.usuarios (id, tenant_id, cliente_id, nome, email, email_n
 
     private static async Task SementarAsync()
     {
+        // r9k (R8-B14): crash-idempotência — uma execução derrubada no meio de um
+        // teste (OOM/deadlock com RAM baixa) podia deixar o mundo por CNPJ órfão e
+        // a próxima execução falhava com "CNPJ já cadastrado" até limpeza manual.
+        // Remove tudo ligado aos CNPJs dos testes antes da semente (a fixture
+        // B5ClienteDup, que carrega CnpjDup, é recriada no insert).
+        foreach (var cnpj in CnpjsDosTestes)
+            await LimparPorCnpjAsync(cnpj);
+
         await using var cn = new NpgsqlConnection(TestDatabase.ConnectionString);
         await cn.OpenAsync();
         await using var tx = await cn.BeginTransactionAsync();

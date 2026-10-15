@@ -653,10 +653,13 @@ public sealed record FluxoCaixaViewModel(
     public string TimeCriterion { get; init; } = "";
 }
 
+// s9/s10 (rodada 9 r9f): espelha o DTO da API POR NOME (o binding JSON do ReadApiResponse é por nome).
+// Antes, "Numero"/"Data" não casavam com "vendaNumero"/"competencia" e chegavam vazios na tela;
+// a dimensão comercial virou CLIENTE (não hospital) e bruto/desconto passam a ser transportados de fato.
 public sealed record RelatorioVendasItemViewModel(
-    string Numero,
-    DateOnly Data,
-    string Hospital,
+    string VendaNumero,
+    DateOnly Competencia,
+    string Cliente,
     string Pagador,
     string? Vendedor,
     decimal TotalBruto,
@@ -675,16 +678,34 @@ public sealed record RelatorioComissaoItemViewModel(
     decimal ComissaoApropriada,
     string Situacao);
 
+// s9 (rodada 9 r9f): dimensão comercial Cliente (espelha o DTO da API por nome).
 public sealed record RelatorioMargemItemViewModel(
     string VendaNumero,
     string ValeNumero,
-    string Hospital,
+    string Cliente,
     decimal ReceitaLiquida,
     decimal CustoConsumido,
     decimal ComissaoPrevista,
     decimal ComissaoApropriada,
     decimal MargemContribuicao,
     decimal MargemPercentual);
+
+// s10 (rodada 9 r9f): espelho do vencimento POR PARCELA (um título = uma linha).
+public sealed record RelatorioVencimentoItemViewModel(
+    string TituloNumero,
+    string VendaNumero,
+    DateOnly Competencia,
+    string Cliente,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido);
 
 public sealed class ValorizacaoPreviaViewModel
 {
@@ -737,11 +758,17 @@ public sealed class RelatoriosFinanceirosPageViewModel
     public IReadOnlyList<RelatorioVendasItemViewModel> Vendas { get; init; } = Array.Empty<RelatorioVendasItemViewModel>();
     public IReadOnlyList<RelatorioComissaoItemViewModel> Comissoes { get; init; } = Array.Empty<RelatorioComissaoItemViewModel>();
     public IReadOnlyList<RelatorioMargemItemViewModel> Margens { get; init; } = Array.Empty<RelatorioMargemItemViewModel>();
+    // s10 (rodada 9 r9f): aba de vencimentos por parcela + filtro por cliente (s9).
+    public IReadOnlyList<RelatorioVencimentoItemViewModel> Vencimentos { get; init; } = Array.Empty<RelatorioVencimentoItemViewModel>();
     public string AbaAtiva { get; init; } = "vendas";
     public DateOnly? Inicio { get; init; }
     public DateOnly? Fim { get; init; }
     public Guid? VendedorId { get; init; }
+    public Guid? ClienteId { get; init; }
     public IReadOnlyList<SelectListItemViewModel> Vendedores { get; init; } = Array.Empty<SelectListItemViewModel>();
+    // s9 (rodada 9 r9f): opções do filtro por cliente — parceiros comerciais + hospitais clínicos
+    // (histórico de v.cliente_id apontando para a tabela clínica), com rótulo distinguível.
+    public IReadOnlyList<SelectListItemViewModel> Clientes { get; init; } = Array.Empty<SelectListItemViewModel>();
 }
 
 // ==========================================

@@ -1,0 +1,2 @@
+﻿Numero;Data;Cliente;Pagador;Vendedor;TotalBruto;Desconto;TotalLiquido;TotalCusto;ComissaoPrevista;Situacao
+"VEN-SV-R9F-01";2026-10-09;"Clinica Horizonte Azul";"Cofre Clinica Azul";"Não informado";1.200,00;200,00;1.000,00;600,00;50,00;"CONFIRMADA"

@@ -547,16 +547,25 @@ public sealed record GerarTituloPagarDeComissaoCommand(
     DateOnly DataVencimento,
     string IdempotencyKey);
 
+// s9/s10 (rodada 9 r9f): a dimensão comercial é o CLIENTE (adm360_parceiros.eh_cliente),
+// não o hospital. Registros históricos podem apontar v.cliente_id para a tabela clínica
+// hospitais — o nome resolve via COALESCE(parceiro, hospital) e o fallback é
+// "Cliente não identificado". Filtro por clienteId é validado contra o tenant (cross-tenant
+// é rejeitado com 400 — ver ValidarClienteFiltroAsync no repositório).
 public sealed record RelatorioVendasItem(
     string VendaNumero,
     DateOnly Competencia,
-    string Hospital,
+    string Cliente,
     string Pagador,
     string Vendedor,
     decimal TotalLiquido,
     decimal TotalCusto,
     decimal ComissaoPrevista,
-    string Situacao);
+    string Situacao,
+    // s10 (rodada 9 r9f): bruto/desconto gravados na venda (antes ausentes do DTO e zerados
+    // no espelho Web — o binding JSON era por nome e as propriedades antigas nunca casavam).
+    decimal TotalBruto = 0m,
+    decimal Desconto = 0m);
 
 public sealed record RelatorioComissaoItem(
     string Vendedor,
@@ -567,16 +576,36 @@ public sealed record RelatorioComissaoItem(
     decimal ComissaoApropriada,
     string Situacao);
 
+// s9 (rodada 9 r9f): dimensão comercial Cliente (não hospital) — ver comentário em RelatorioVendasItem.
 public sealed record RelatorioMargemItem(
     string VendaNumero,
     string ValeNumero,
-    string Hospital,
+    string Cliente,
     decimal ReceitaLiquida,
     decimal CustoConsumido,
     decimal ComissaoPrevista,
     decimal ComissaoApropriada,
     decimal MargemContribuicao,
     decimal MargemPercentual);
+
+// s10 (rodada 9 r9f): vencimentos por PARCELA — cada título/parcela é exatamente uma linha
+// (sem multiplicação por JOINs); "vencido" é avaliado na data do relatório (referência =
+// data de geração), mesma regra das contas a receber: vencimento < hoje && saldo aberto > 0.
+public sealed record RelatorioVencimentoItem(
+    string TituloNumero,
+    string VendaNumero,
+    DateOnly Competencia,
+    string Cliente,
+    string Pagador,
+    int Parcela,
+    int TotalParcelas,
+    DateOnly DataEmissao,
+    DateOnly DataVencimento,
+    decimal ValorPrincipal,
+    decimal ValorRecebido,
+    decimal SaldoAberto,
+    string Situacao,
+    bool Vencido);
 
 public interface IValorizacaoRepository
 {
@@ -644,9 +673,13 @@ public interface ICaixaRepository
 
 public interface IAdm360FinanceiroRelatoriosRepository
 {
-    Task<IReadOnlyList<RelatorioVendasItem>> RelatorioVendasAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? hospitalId, Guid? vendedorId, CancellationToken ct);
+    // s9 (rodada 9 r9f): filtro por CLIENTE comercial (renomeado de hospitalId); cross-tenant é rejeitado com 400.
+    Task<IReadOnlyList<RelatorioVendasItem>> RelatorioVendasAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? clienteId, Guid? vendedorId, CancellationToken ct);
     Task<IReadOnlyList<RelatorioComissaoItem>> RelatorioComissoesAsync(Guid tenantId, Guid? vendedorId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
-    Task<IReadOnlyList<RelatorioMargemItem>> RelatorioMargemAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, CancellationToken ct);
+    // s9 (rodada 9 r9f): clienteId opcional final (compatibilidade de fonte com chamadas existentes).
+    Task<IReadOnlyList<RelatorioMargemItem>> RelatorioMargemAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, CancellationToken ct, Guid? clienteId = null);
+    // s10 (rodada 9 r9f): vencimentos por parcela, um título = uma linha; vencido na data do relatório.
+    Task<IReadOnlyList<RelatorioVencimentoItem>> RelatorioVencimentosAsync(Guid tenantId, DateOnly? inicio, DateOnly? fim, Guid? clienteId, CancellationToken ct);
 }
 
 // Cadastros e Lookups Administrativo 360

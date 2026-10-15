@@ -10,7 +10,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
             <h2 class="h4 mb-1 text-light fw-bold">Relatórios Financeiros & Resultado</h2>
-            <p class="text-muted small mb-0">Visão executiva de vendas, apropriação de comissões e margem de contribuição cirúrgica.</p>
+            <p class="text-muted small mb-0">Visão executiva por CLIENTE comercial: vendas, apropriação de comissões, margem cirúrgica e vencimentos por parcela.</p>
         </div>
     </div>
 
@@ -29,7 +29,7 @@
                 </div>
                 <div class="col-md-4 col-lg-3">
                     <strong class="text-light d-block mb-1">Como executar</strong>
-                    Selecione a visão desejada nas abas, aplique os filtros de período e exporte em CSV caso necessite de análises em planilhas.
+                    Selecione a visão desejada nas abas, aplique os filtros de período e de cliente (comercial) e exporte em CSV caso necessite de análises em planilhas.
                 </div>
                 <div class="col-md-6 col-lg-3">
                     <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
@@ -48,22 +48,33 @@
         <li class="nav-item">
             <a class="nav-link @(Model.AbaAtiva == "vendas" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
                asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
                 <i class="bi bi-graph-up me-1"></i> Vendas por Período
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(Model.AbaAtiva == "comissoes" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
                asp-action="RelatoriosFinanceiros" asp-route-aba="comissoes"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
                 <i class="bi bi-people me-1"></i> Comissões Apropriadas
             </a>
         </li>
         <li class="nav-item">
             <a class="nav-link @(Model.AbaAtiva == "margem" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
                asp-action="RelatoriosFinanceiros" asp-route-aba="margem"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")">
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
                 <i class="bi bi-pie-chart me-1"></i> Margem por Cirurgia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "vencimentos" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="vencimentos"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-stopwatch me-1"></i> Vencimentos por Parcela
             </a>
         </li>
     </ul>
@@ -73,23 +84,38 @@
         <div class="card-body">
             <form method="get" class="row g-3 align-items-end">
                 <input type="hidden" name="aba" value="@Model.AbaAtiva" />
-                <div class="col-6 col-md-3">
+                @if (Model.VendedorId.HasValue)
+                {
+                    <input type="hidden" name="vendedorId" value="@Model.VendedorId.Value" />
+                }
+                <div class="col-6 col-md-2">
                     <label class="form-label small text-secondary" for="dataInicio">Início</label>
                     <input type="date" id="dataInicio" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
                            value="@Model.Inicio?.ToString("yyyy-MM-dd")" />
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-2">
                     <label class="form-label small text-secondary" for="dataFim">Fim</label>
                     <input type="date" id="dataFim" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
                            value="@Model.Fim?.ToString("yyyy-MM-dd")" />
                 </div>
-                <div class="col-12 col-md-6 d-flex gap-2">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-secondary" for="selCliente">Cliente</label>
+                    <select id="selCliente" name="clienteId" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os clientes</option>
+                        @foreach (var opcao in Model.Clientes)
+                        {
+                            <option value="@opcao.Value" selected="@((Model.ClienteId?.ToString() == opcao.Value) ? "selected" : "")">@opcao.Text</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary">
                         <i class="bi bi-search me-1"></i> Atualizar Relatório
                     </button>
                     @if (Model.AbaAtiva == "vendas")
                     {
                         <a asp-action="ExportarVendasCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
                             <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
                         </a>
@@ -97,6 +123,7 @@
                     else if (Model.AbaAtiva == "comissoes")
                     {
                         <a asp-action="ExportarComissoesCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
                             <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
                         </a>
@@ -104,6 +131,15 @@
                     else if (Model.AbaAtiva == "margem")
                     {
                         <a asp-action="ExportarMargemCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           asp-route-clienteId="@Model.ClienteId?.ToString()"
+                           class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                    }
+                    else if (Model.AbaAtiva == "vencimentos")
+                    {
+                        <a asp-action="ExportarVencimentosCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+                           asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
                             <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
                         </a>
@@ -126,8 +162,8 @@
                     <thead class="table-secondary text-dark">
                         <tr>
                             <th scope="col">Número</th>
-                            <th scope="col">Data</th>
-                            <th scope="col">Hospital</th>
+                            <th scope="col">Competência</th>
+                            <th scope="col">Cliente</th>
                             <th scope="col">Pagador</th>
                             <th scope="col">Vendedor</th>
                             <th scope="col" class="text-end">Total Bruto</th>
@@ -149,9 +185,9 @@
                             @foreach (var it in Model.Vendas)
                             {
                                 <tr>
-                                    <td class="fw-bold text-info">@it.Numero</td>
-                                    <td>@it.Data.ToString("dd/MM/yyyy")</td>
-                                    <td>@it.Hospital</td>
+                                    <td class="fw-bold text-info">@it.VendaNumero</td>
+                                    <td>@it.Competencia.ToString("dd/MM/yyyy")</td>
+                                    <td>@it.Cliente</td>
                                     <td>@it.Pagador</td>
                                     <td>@(it.Vendedor ?? "—")</td>
                                     <td class="text-end font-monospace">@it.TotalBruto.ToString("C2", ptBr)</td>
@@ -238,7 +274,7 @@
                         <tr>
                             <th scope="col">Venda</th>
                             <th scope="col">Vale</th>
-                            <th scope="col">Hospital</th>
+                            <th scope="col">Cliente</th>
                             <th scope="col" class="text-end">Receita Líquida</th>
                             <th scope="col" class="text-end">Custo Materiais</th>
                             <th scope="col" class="text-end">Comissão Prev.</th>
@@ -261,7 +297,7 @@
                                 <tr>
                                     <td class="fw-bold text-info">@m.VendaNumero</td>
                                     <td>@m.ValeNumero</td>
-                                    <td>@m.Hospital</td>
+                                    <td>@m.Cliente</td>
                                     <td class="text-end font-monospace text-success">@m.ReceitaLiquida.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace text-muted">@m.CustoConsumido.ToString("C2", ptBr)</td>
                                     <td class="text-end font-monospace text-muted">@m.ComissaoPrevista.ToString("C2", ptBr)</td>
@@ -280,6 +316,91 @@
             </div>
         </div>
     }
+    else if (Model.AbaAtiva == "vencimentos")
+    {
+        <!-- Conteúdo Aba Vencimentos por Parcela (s10 / rodada 9 r9f) -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Títulos a Receber por Parcela — vencido avaliado na data do relatório</span>
+                <span class="badge bg-secondary">@Model.Vencimentos.Count parcelas</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 960px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Título</th>
+                            <th scope="col">Venda</th>
+                            <th scope="col">Competência</th>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Pagador</th>
+                            <th scope="col">Parcela</th>
+                            <th scope="col">Emissão</th>
+                            <th scope="col">Vencimento</th>
+                            <th scope="col" class="text-end">Valor Principal</th>
+                            <th scope="col" class="text-end">Recebido</th>
+                            <th scope="col" class="text-end">Saldo Aberto</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Vencimentos.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="12" class="text-center text-muted py-4">Nenhuma parcela com vencimento no período.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var it in Model.Vencimentos)
+                            {
+                                var badgeSituacao = it.Situacao == "QUITADO" ? "bg-success" : (it.Situacao == "PARCIAL" ? "bg-warning text-dark" : "bg-secondary");
+                                <tr>
+                                    <td class="fw-bold text-info">@it.TituloNumero</td>
+                                    <td>@it.VendaNumero</td>
+                                    <td>@it.Competencia.ToString("dd/MM/yyyy")</td>
+                                    <td>@it.Cliente</td>
+                                    <td>@it.Pagador</td>
+                                    <td class="font-monospace">@it.Parcela/@it.TotalParcelas</td>
+                                    <td>@it.DataEmissao.ToString("dd/MM/yyyy")</td>
+                                    <td class="@(it.Vencido ? "text-danger fw-bold" : "")">@it.DataVencimento.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end font-monospace">@it.ValorPrincipal.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace text-muted">@it.ValorRecebido.ToString("C2", ptBr)</td>
+                                    <td class="text-end font-monospace @(it.SaldoAberto > 0 ? "fw-bold text-warning" : "text-muted")">@it.SaldoAberto.ToString("C2", ptBr)</td>
+                                    <td>
+                                        @if (it.Vencido)
+                                        {
+                                            <span class="badge bg-danger me-1" title="Vencimento anterior à data do relatório com saldo aberto">VENCIDO</span>
+                                        }
+                                        <span class="badge @badgeSituacao">@it.Situacao</span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                    <tfoot class="table-dark border-secondary">
+                        <tr class="fw-bold">
+                            <td colspan="8" class="text-end">Totais do relatório (cada parcela contada uma única vez):</td>
+                            <td class="text-end font-monospace">@Model.Vencimentos.Sum(x => x.ValorPrincipal).ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace">@Model.Vencimentos.Sum(x => x.ValorRecebido).ToString("C2", ptBr)</td>
+                            <td class="text-end font-monospace text-warning">@Model.Vencimentos.Sum(x => x.SaldoAberto).ToString("C2", ptBr)</td>
+                            <td class="text-center">
+                                @if (Model.Vencimentos.Any(x => x.Vencido))
+                                {
+                                    <span class="badge bg-danger">
+                                        @Model.Vencimentos.Count(x => x.Vencido) vencida(s) — @Model.Vencimentos.Where(x => x.Vencido).Sum(x => x.SaldoAberto).ToString("C2", ptBr)
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Sem saldo vencido na data do relatório</span>
+                                }
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
 
     <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
     <div class="card bg-dark border-secondary mt-4 text-light">
@@ -288,16 +409,16 @@
         </div>
         <div class="card-body small text-secondary">
             <div class="row g-3">
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <strong class="text-light d-block mb-1">Vendas por Período</strong>
                     <ul class="mb-0 ps-3">
-                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> (linha por venda confirmada), com nome de hospital/pagador/vendedor resolvidos via <code>adm360_parceiros</code>, <code>hospitais</code> e <code>usuarios</code>.</li>
+                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> (linha por venda confirmada), com nomes de cliente/pagador/vendedor resolvidos via <code>adm360_parceiros</code>; registros históricos podem apontar para a tabela clínica <code>hospitais</code> (fallback de nome) e sem nome vira "Cliente não identificado".</li>
                         <li><strong>Fórmula:</strong> Total Líquido = bruto − desconto; Custo = Σ custo dos lotes consumidos na valorização; Comissão prevista = líquido × % comissão da venda. Valores gravados na venda, sem recálculo retroativo.</li>
-                        <li><strong>Filtros/período:</strong> <code>competencia &gt;= início AND competencia &lt;= fim</code> (inclusivo); opcional <code>hospitalId</code> e <code>vendedorId</code>; sempre isolado por tenant. Sem data: últimos 30 dias até hoje.</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia &gt;= início AND competencia &lt;= fim</code> (inclusivo); opcionais <code>clienteId</code> e <code>vendedorId</code>; sempre isolado por tenant — <code>clienteId</code> de outro tenant é rejeitado com erro explícito (400). Sem data: últimos 30 dias até hoje.</li>
                         <li><strong>Estorno:</strong> não altera a linha da venda; o efeito aparece apenas em Comissões (situação ESTORNADA) e no Fluxo de Caixa (movimento compensatório).</li>
                     </ul>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <strong class="text-light d-block mb-1">Comissões Apropriadas</strong>
                     <ul class="mb-0 ps-3">
                         <li><strong>Fonte:</strong> <code>adm360_comissoes_apropriadas</code> — uma linha por recebimento efetivo (baixa de título), junta venda, usuário e baixa para auditoria.</li>
@@ -306,13 +427,22 @@
                         <li><strong>Estorno:</strong> a linha vira ESTORNADA (preservada para auditoria; badge âmbar) e o total do rodapé conta apenas APROPRIADA. Re-estorno devolve a APROPRIADA. Estorno é bloqueado dentro de fechamento de caixa fechado.</li>
                     </ul>
                 </div>
-                <div class="col-lg-4">
+                <div class="col-lg-3">
                     <strong class="text-light d-block mb-1">Margem por Cirurgia</strong>
                     <ul class="mb-0 ps-3">
                         <li><strong>Fonte:</strong> <code>adm360_vendas</code> somente com <code>situacao='CONFIRMADA'</code>, via valorização até o vale de origem.</li>
                         <li><strong>Fórmula:</strong> Margem R$ = Receita Líquida − Custo Consumido − Comissão Prevista; Margen % = margem ÷ receita × 100 (2 casas; 0 quando receita = 0). Coluna "Comissão Aprop." = Σ comissões APROPRIADA (estornos já excluídos no banco).</li>
-                        <li><strong>Filtros/período:</strong> <code>competencia</code> entre início e fim (inclusivo); sem filtro de hospital/vendedor nesta aba.</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia</code> entre início e fim (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sem filtro de vendedor nesta aba.</li>
                         <li><strong>Estorno:</strong> não altera receita, custo nem comissão prevista; somente a coluna "Comissão Aprop." cai quando uma baixa da venda é estornada.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <strong class="text-light d-block mb-1">Vencimentos por Parcela</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_titulos_receber</code> × <code>adm360_vendas</code> — um título (parcela) = exatamente uma linha; os JOINs de nome são 1:1, então os totais do rodapé somam cada parcela uma única vez (sem multiplicação). Parcelas CANCELADO ficam fora; QUITADO/PARCIAL aparecem como histórico de liquidação.</li>
+                        <li><strong>Fórmula "vencido":</strong> <code>data_vencimento &lt; data do relatório AND saldo_aberto &gt; 0</code> (referência = momento da geração do relatório), mesma regra das Contas a Receber.</li>
+                        <li><strong>Filtros/período:</strong> período sobre <code>data_vencimento</code> (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sempre isolado por tenant.</li>
+                        <li><strong>Estorno/recebimento:</strong> baixas e estornos atualizam <code>valor_recebido</code>/<code>saldo_aberto</code>/<code>situacao</code> no próprio título; a linha reflete o estado corrente sem duplicar.</li>
                     </ul>
                 </div>
             </div>

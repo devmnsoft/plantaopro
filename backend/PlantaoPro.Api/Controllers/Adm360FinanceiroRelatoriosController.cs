@@ -25,11 +25,12 @@ public sealed class Adm360FinanceiroRelatoriosController : ControllerBase
     public async Task<IActionResult> Vendas(
         [FromQuery] DateOnly? inicio,
         [FromQuery] DateOnly? fim,
-        [FromQuery] Guid? hospitalId,
+        // s9 (rodada 9 r9f): filtro por CLIENTE comercial (renomeado de hospitalId); cross-tenant → 400.
+        [FromQuery] Guid? clienteId,
         [FromQuery] Guid? vendedorId,
         CancellationToken ct)
     {
-        var lista = await repository.RelatorioVendasAsync(Tenant(), inicio, fim, hospitalId, vendedorId, ct);
+        var lista = await repository.RelatorioVendasAsync(Tenant(), inicio, fim, clienteId, vendedorId, ct);
         return Ok(lista);
     }
 
@@ -48,9 +49,22 @@ public sealed class Adm360FinanceiroRelatoriosController : ControllerBase
     public async Task<IActionResult> Margem(
         [FromQuery] DateOnly? inicio,
         [FromQuery] DateOnly? fim,
+        [FromQuery] Guid? clienteId,
         CancellationToken ct)
     {
-        var lista = await repository.RelatorioMargemAsync(Tenant(), inicio, fim, ct);
+        var lista = await repository.RelatorioMargemAsync(Tenant(), inicio, fim, ct, clienteId);
+        return Ok(lista);
+    }
+
+    // s10 (rodada 9 r9f): vencimentos por parcela — período sobre data_vencimento; vencido na data do relatório.
+    [HttpGet("vencimentos")]
+    public async Task<IActionResult> Vencimentos(
+        [FromQuery] DateOnly? inicio,
+        [FromQuery] DateOnly? fim,
+        [FromQuery] Guid? clienteId,
+        CancellationToken ct)
+    {
+        var lista = await repository.RelatorioVencimentosAsync(Tenant(), inicio, fim, clienteId, ct);
         return Ok(lista);
     }
 }

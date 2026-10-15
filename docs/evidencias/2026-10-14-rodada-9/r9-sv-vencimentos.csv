@@ -1,0 +1,4 @@
+﻿TituloNumero;VendaNumero;Competencia;Cliente;Pagador;Parcela;TotalParcelas;DataEmissao;DataVencimento;ValorPrincipal;ValorRecebido;SaldoAberto;Situacao;Vencido
+"TIT-SV-R9F-01";"VEN-SV-R9F-01";2026-10-09;"Clinica Horizonte Azul";"Cofre Clinica Azul";1;3;2026-10-09;2026-09-29;333,33;0,00;333,33;"ABERTO";Sim
+"TIT-SV-R9F-02";"VEN-SV-R9F-01";2026-10-09;"Clinica Horizonte Azul";"Cofre Clinica Azul";2;3;2026-10-09;2026-10-07;333,33;333,33;0,00;"QUITADO";Nao
+"TIT-SV-R9F-03";"VEN-SV-R9F-01";2026-10-09;"Clinica Horizonte Azul";"Cofre Clinica Azul";3;3;2026-10-09;2026-11-03;333,34;0,00;333,34;"ABERTO";Nao

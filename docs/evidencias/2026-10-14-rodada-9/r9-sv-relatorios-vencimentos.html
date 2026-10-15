@@ -1,0 +1,799 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09243c" />
+    <meta name="antiforgery-token" content="CfDJ8GFU8tOBpcVCqV5VTCj5kmz5UoOyrZRLan2q_Dkkgn_LYfPvpAlPCUpurN770aKi5230wXC8yzdr9vzbK_3aH4Ra2lrQD5GFdGng9YKbFZ7jj1gJQDxnOJcybk_MPSGWUPhMnOoGBWVd6negxk7WQJtfIjKQ2hk9wcR10m3SO9EcG0XKBmtOVPrLDFK8fWlr3A" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Relat&#xF3;rios Financeiros &#x2014; Administrativo 360</title>
+    <link rel="icon" type="image/svg+xml" href="/media/brand/favicon.svg" />
+    <link rel="apple-touch-icon" href="/media/brand/apple-touch-icon.png" />
+    <link rel="stylesheet" href="/css/vendor/bootstrap.min.css?v=zRgmWB5PK4CvTx4FiXsxbHaYRBBjz_rvu97sOC7kzXI" />
+    <link rel="stylesheet" href="/css/vendor/bootstrap-compat.css?v=OMH6aGES-FGl4BwMbl2tcMpuDixZHNo6W_GCOHBsLFk" />
+    <link rel="stylesheet" href="/css/icons/bootstrap-icons.css?v=p2iNNlToKNF2hEuy1wUYLCzr8eYacsdAYoO_oDmPR_8" />
+    <link rel="stylesheet" href="/css/plantaopro.css?v=jzR-cAU65azzNmlApjvTPhhQG0awBt6j9Q12TlVvn-M" />
+    <link rel="stylesheet" href="/css/app-icons.css?v=Z1hrew2O18d_ZbiZw3_OLSScBU9xjPHHVrH-hUbdkC4" />
+    <link rel="stylesheet" href="/css/design-system/v2000-premium.css?v=aF2t7fzp0OL0--GDui9WrmCJipYgYNOYLpdXjo7kG3A" />
+    <link rel="stylesheet" href="/css/design-system/v2010-screen-polish.css?v=nN--pkfkTBoxyRfMUODK5lvQzak8ZH_zFftnAT53D2U" />
+    <link rel="stylesheet" href="/css/design-system/v2116-premium-review.css?v=-m6FHWkBRjHYNJRXB2lLZ2O73s-5bOj2gT2U6bMSnTw" />
+    <link rel="stylesheet" href="/css/design-system/v2117-design-stabilization.css?v=3L8w0MuMvlCedU-wa0SgxhePr9vtxxiqgP43n981G00" />
+    <link rel="stylesheet" href="/css/design-system/v2118-functional-polish.css?v=o-EcUzuPsV4hxvUX8lzCGuHDCVjH8qxXp7XWFP6iYbk" />
+    <link rel="stylesheet" href="/css/design-system/v2120-premium-final-polish.css?v=Fd0VrlsLkGAg2PdYnoueGM4n53ihK7aL_QUjPsu8t7Y" />
+    <link rel="stylesheet" href="/css/design-system/v2130-forms.css?v=gzpcd4_djr5-j1HkXNv2dl6x3iwJKsgKwpVyg09Ievw" />
+    <link rel="stylesheet" href="/css/design-system/v2121-saas-guided.css?v=_QAwLsgypc1SD7RqapWzPWmzKjoWgFyw6U2BrwkGqlI" />
+    <link rel="stylesheet" href="/css/design-system/v2122-saas-commerce.css?v=vOoxJM79Tpmi6JMgw_HxJQeb4iP5WQkrDNgsPcvKtbo" />
+    <link rel="stylesheet" href="/css/design-system/v2123-saas-operations.css?v=5ukN1SfFoLaUrWDBnQON6uLNOf2uKAxVcPrbJRk3DZQ" />
+    <link rel="stylesheet" href="/css/design-system/v2124-operational-intelligence.css?v=uMLPqPh1jKfWSIkOvrsMrj62LqhH1I4dnRvrx5Tb11o" />
+    <link rel="stylesheet" href="/css/design-system/drawers.css?v=imyysg1O2yLVq4Oroz59E2k_rRGbGqO7i-0xhNldcgs" />
+    <link rel="stylesheet" href="/css/design-system/v2126-form-feedback.css?v=2HNBrOLRshcaAj0WKsJfV1u3xz8ydaxObfhecOnhitY" />
+    <link rel="stylesheet" href="/css/design-system/v2132-premium-global.css?v=jb0EFY2h-4qL-22dF06fa0EuijujF5sv6sDQJ4tRjQw" />
+    <link rel="stylesheet" href="/css/design-system/v2133-real-screens.css?v=ZVL_TDsJZUvfCgyJQAR_kQpuoWItvwFHjNmOAJH6UVA" />
+    <link rel="stylesheet" href="/css/design-system/v2134-premium-qa.css?v=GM4cIn7A1LZ01G7bET8mMyTcSpXyZ6mbDbbgU5Ftu9Y" />
+    <link rel="stylesheet" href="/css/design-system/v2137-global-ux.css?v=Aufiz3wJw60B61NNL6Ud_PVivSL_uJpnTI59JJtNCEY" />
+    <link rel="stylesheet" href="/css/design-system/v2138-session-internal.css?v=_S1sZqY01x-lkEGIQei31v9komdk8mR7FO5Gy-vc-JQ" />
+    <link rel="stylesheet" href="/css/design-system/v2139-premium-library.css?v=yfHO-if0Wguynqe0VB9IoutSRycEvet4wonzo24wPOs" />
+    <link rel="stylesheet" href="/css/design-system/v2140-guided-journeys.css?v=V9UXNfWM8KYGpF9Aop6ZaAANf6dR8NVGcSXeUHw8G-k" />
+    <link rel="stylesheet" href="/css/design-system/v2141-premium-cockpit.css?v=_-Qfztjiv3kIanGMRY1NHgFd-MQwDZtWaNJMTE-Zz9s" />
+    <link rel="stylesheet" href="/css/design-system/v2142-guided-premium.css?v=g8SJo06tZLuoQVx5ysA8erVxpBrXUK1j5dYQX51C_8o" />
+    <link rel="stylesheet" href="/css/design-system/v2143-qa-visual.css?v=6e6Lv6QJNd2e32C-AMmw6lG0bQlVZn5UgxTe9FfkAJc" />
+    <link rel="stylesheet" href="/css/design-system/v2144-responsive-safe-actions.css?v=COsTsE5kQx1ulqbbARH6RAGKJkVQ7NwQW5oWIzK_U-8" />
+    <link rel="stylesheet" href="/css/design-system/v2145-onboarding-help.css?v=HP6-489d5wwPM3SlV08xHc1FY-T2DD6RlN0sNwudUUs" />
+    <link rel="stylesheet" href="/css/design-system/v2146-pending-notifications.css?v=M6nr8NBQBkKafAVpURpB_Zot5xTgPMeRG0NUQmy87CU" />
+    <link rel="stylesheet" href="/css/design-system/kanban.css?v=rNGyfW0pMWiHAYAY3D200bCrh8r0I_Rk96TNBtyFH3c" />
+    <link rel="stylesheet" href="/css/design-system/v2148-operational-premium.css?v=HoDSmH-GF3dnDm4y5MI8pmL79T1ZQIM8mPLvSEFj2L4" />
+    <link rel="stylesheet" href="/css/pages/administrativo360-tema-claro.css?v=zaw4ZlM9aSmSX2FX87IO7BwQhmruc73sl-VyYycSgX4" />
+    <link rel="stylesheet" href="/css/design-system/v2150-bloco-c-canonical.css?v=EwYRXC9K26SRBdRx8PLtBDng4BjigCQ5sjRlMQheH34" />
+    <link rel="stylesheet" href="/css/design-system/v2151-wp-c-homologacao.css?v=dIJyD0-TVQV5EpADBQTBjZrKWL-YGozUuARkWBJmEg4" />
+    
+</head>
+<body class="pp-body app-body pp-a360">
+<script>
+(function () {
+    // P0 CSRF: wrapper global de window.fetch — injeta o token antiforgery em requests
+    // same-origin com método inseguro (POST/PUT/PATCH/DELETE) via header canônico
+    // RequestVerificationToken. O cookie antiforgery já é enviado automaticamente pelo
+    // browser em requests same-origin. O wrapper nunca bloqueia a página em caso de erro.
+    var meta = document.querySelector('meta[name="antiforgery-token"]');
+    var token = meta ? meta.getAttribute('content') : '';
+    if (!token || !window.fetch) return;
+    var unsafe = { POST: 1, PUT: 1, PATCH: 1, DELETE: 1 };
+    var original = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        try {
+            var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+            if (!unsafe[method]) return original(input, init);
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var sameOrigin = !url || url.charAt(0) === '/' || url.indexOf(window.location.origin) === 0;
+            if (!sameOrigin) return original(input, init);
+            init = init || {};
+            if (!init.headers) { init.headers = new Headers({ RequestVerificationToken: token }); return original(input, init); }
+            if (init.headers instanceof Headers) { init.headers.set('RequestVerificationToken', token); }
+            else if (Array.isArray(init.headers)) { init.headers.push(['RequestVerificationToken', token]); }
+            else { init.headers['RequestVerificationToken'] = token; }
+            return original(input, init);
+        } catch (err) {
+            return original(input, init);
+        }
+    };
+})();
+</script>
+    <a class="skip-link" href="#mainContent">Pular para o conte&#xFA;do</a>
+        
+        <div class="pp-app-shell" data-app-shell="true">
+            <aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="Navega&#xE7;&#xE3;o principal">
+    <header class="sidebar-brand">
+        <a class="sidebar-logo" aria-label="PlantãoPro — início" href="/MinhaCentral"><img class="brand-logo" src="/branding/logo-horizontal-light.svg" alt="PlantãoPro" /></a>
+        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg></button>
+        <div class="sidebar-tenant"><span class="tenant-status" aria-hidden="true"></span><div><strong>Sistema Vertical</strong><span>ADMINISTRADOR</span></div></div>
+        <button class="sidebar-search" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Abrir busca r&#xE1;pida"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg><span>Busca r&#xE1;pida</span><kbd>Ctrl K</kbd></button>
+    </header>
+    <nav class="sidebar-nav">
+        <div class="nav-section-title"><span>Vis&#xE3;o geral</span></div>
+        <a class="nav-link-app " href="/MinhaCentral"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Minha Central</span></a>
+        <a class="nav-link-app " href="/MeuDia"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#calendar"></use></svg><span>Meu dia</span></a>
+        <a class="nav-link-app " href="/Home/Dashboard"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chart-bar"></use></svg><span>Dashboard</span></a>
+        <a class="nav-link-app " href="/Pendencias/MinhasPendencias"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg><span>Central de Pend&#xEA;ncias</span></a>
+            <div class="nav-section-title"><span>Opera&#xE7;&#xE3;o</span></div>
+                <a class="nav-link-app " href="/CommandCenter"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Command Center</span></a>
+            <div class="nav-section-title"><span>Sa&#xFA;de 360</span></div>
+ <a class="nav-link-app " href="/Pacientes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user-heart"></use></svg><span>Pacientes</span></a>  <a class="nav-link-app " href="/Consultas/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#medical-cross"></use></svg><span>Consultas</span></a>  <a class="nav-link-app " href="/ClinicaUnidades/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#building"></use></svg><span>Unidades cl&#xED;nica</span></a>             <div class="nav-section-title"><span>Financeiro</span></div>
+ <a class="nav-link-app " href="/Financeiro/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg><span>Vis&#xE3;o financeira</span></a>             <div class="nav-section-title"><span>Administra&#xE7;&#xE3;o do Cliente</span></div>
+ <a class="nav-link-app active" href="/Administrativo360/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>Administrativo 360</span></a>  <a class="nav-link-app " href="/Relatorios/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chart-bar"></use></svg><span>Relat&#xF3;rios</span></a>  <a class="nav-link-app " href="/Usuarios/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>Usu&#xE1;rios</span></a>  <a class="nav-link-app " href="/Perfis"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg><span>Perfis</span></a>  <a class="nav-link-app " href="/Permissoes/Matriz"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#shield-lock"></use></svg><span>Permiss&#xF5;es</span></a>  <a class="nav-link-app " href="/Configuracoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg><span>Configura&#xE7;&#xF5;es</span></a>         <div class="nav-section-title"><span>Acompanhamento</span></div>
+        <a class="nav-link-app " href="/Notificacoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#bell"></use></svg><span>Notifica&#xE7;&#xF5;es</span></a>
+    </nav>
+    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" href="/Ajuda/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg><span>Central de ajuda</span></a><a class="nav-link-app" href="/Lgpd/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#lock"></use></svg><span>Privacidade e LGPD</span></a><span class="sidebar-version">PlantãoPro v1.95.1 · operação segura</span>
+</footer>
+</aside>
+
+            <div class="pp-main-shell">
+                <header class="pp-topbar app-topbar">
+    <div class="pp-topbar__identity topbar-left">
+        <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg>
+        </button>
+        <div>
+            <nav class="pp-breadcrumb" aria-label="Voc&#xEA; est&#xE1; em">
+                <ol class="app-breadcrumb">
+                            <li><a href="/Home/Dashboard">In&#xED;cio</a></li>
+                            <li>Administrativo 360</li>
+                            <li aria-current="page">Relat&#xF3;rios Financeiros &#x2014; Administrativo 360</li>
+                </ol>
+            </nav>
+            <h1 class="pp-topbar__title page-title">Relat&#xF3;rios Financeiros &#x2014; Administrativo 360</h1>
+            <p class="pp-topbar__subtitle pp-caption d-none d-md-block">Acompanhe prioridades e continue sua jornada.</p>
+        </div>
+    </div>
+    <div class="pp-topbar__actions topbar-actions">
+        <span class="pp-live-context d-none d-xxl-inline-flex" role="status"><span aria-hidden="true"></span> Ambiente operacional</span>
+        <div class="pp-session-health d-none d-xl-flex" role="status" aria-live="polite" data-session-health data-online="true"
+             data-online-text="Protegida" data-offline-text="Sem conex&#xE3;o"
+             data-aria-online="Conex&#xE3;o protegida com a plataforma" data-aria-offline="Sem conex&#xE3;o. Evite concluir altera&#xE7;&#xF5;es at&#xE9; reconectar.">
+            <span class="pp-session-health__dot" aria-hidden="true"></span>
+            <span><small>Conex&#xE3;o</small><strong data-session-health-label>Protegida</strong></span>
+        </div>
+        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Buscar no Plant&#xE3;oPro">
+            <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg>
+            <span>Buscar no Plant&#xE3;oPro</span>
+            <kbd>Ctrl K</kbd>
+        </button>
+        <span class="tenant-context-badge d-none d-lg-inline-flex is-tenant" role="status" aria-label="&#xC1;rea da institui&#xE7;&#xE3;o: Sistema Vertical"><i class="bi bi-building" aria-hidden="true"></i><span><small>&#xC1;rea da institui&#xE7;&#xE3;o</small><strong>Sistema Vertical</strong></span></span>
+
+        <span class="plan-usage-mini d-none d-lg-inline-flex"><i class="bi bi-speedometer2"></i><span>Plano n&#xE3;o informado</span><small>uso saudável</small></span>
+
+        <a class="btn btn-light btn-icon" title="Ajuda contextual" aria-label="Ajuda contextual" href="/Ajuda/Index">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg>
+        </a>
+        <button class="btn btn-light btn-icon position-relative notification-menu" type="button" data-notification-open
+        aria-label="Abrir central de notificações" aria-haspopup="dialog" aria-controls="notificationDrawer">
+    <i class="bi bi-bell" aria-hidden="true"></i>
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+          data-notification-count hidden><span data-notification-count-value></span><span class="visually-hidden"> notificações não lidas</span></span>
+</button>
+
+            <a class="btn btn-warning btn-sm d-none d-md-inline-flex" href="/MinhaAssinatura/Upgrade">
+                <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg> Upgrade
+            </a>
+        <div class="pp-user-menu pp-calm-user-menu" data-user-menu>
+    <button class="pp-user-menu__trigger" type="button" data-user-menu-trigger aria-controls="userMenuDropdown" aria-expanded="false" aria-haspopup="menu">
+        <span class="user-avatar" aria-hidden="true"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg></span>
+        <span class="user-info"><span class="user-name">Administrador Sistema Vertical</span><small>ADMINISTRADOR</small></span>
+        <svg class="pp-icon" width="16" height="16" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chevron-down"></use></svg>
+    </button>
+    <div class="pp-user-menu__dropdown" id="userMenuDropdown" role="menu" hidden>
+        <div class="pp-user-menu__summary"><strong>Administrador Sistema Vertical</strong><span>Sistema Vertical</span></div>
+        <a role="menuitem" href="/Configuracoes/MeuPerfil"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg> Meu perfil</a>
+        <a role="menuitem" href="/Configuracoes/Index"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg> Configurações</a>
+        <div class="pp-user-menu__divider" role="separator"></div>
+        <a class="pp-user-menu__logout" role="menuitem" href="/Account/Logout"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#logout"></use></svg> Sair</a>
+    </div>
+</div>
+
+    </div>
+</header>
+
+                <main class="pp-content app-content" id="mainContent" tabindex="-1">
+                    <div class="pp-content-container">
+                        <section class="pp-context-bar is-tenant " aria-label="Contexto de acesso atual" data-context-bar>
+    <div class="pp-context-bar__scope">
+        <span class="pp-context-bar__icon" aria-hidden="true">
+ <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#building-hospital"></use></svg>         </span>
+        <div>
+            <span class="pp-context-bar__eyebrow">Contexto da institui&#xE7;&#xE3;o</span>
+            <strong>Sistema Vertical</strong>
+            <small>Dados e a&#xE7;&#xF5;es limitados ao tenant e &#xE0;s permiss&#xF5;es deste perfil.</small>
+        </div>
+    </div>
+    <dl class="pp-context-bar__identity">
+        <div><dt>Usuário</dt><dd>Administrador Sistema Vertical</dd></div>
+        <div><dt>Perfil</dt><dd>ADMINISTRADOR</dd></div>
+        <div><dt>Modo</dt><dd>Tenant</dd></div>
+    </dl>
+    <div class="pp-context-bar__actions">
+    </div>
+</section>
+
+                        
+
+
+<header class="page-header pp-future-page-header" aria-labelledby="page-context-title">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <p class="text-uppercase text-muted small mb-1"></p>
+            <h1 id="page-context-title" class="h2 mb-2">P&#xE1;gina</h1>
+            <p class="text-muted mb-0">Consulte as informa&#xE7;&#xF5;es e a&#xE7;&#xF5;es dispon&#xED;veis.</p>
+        </div>
+    </div>
+</header>
+
+                        <section class="pp-guided-journey" aria-label="Jornada da institui&#xE7;&#xE3;o" data-guided-journey>
+    <div class="pp-guided-journey__intro">
+        <span class="pp-guided-journey__eyebrow">Experiência guiada</span>
+        <strong>Jornada da institui&#xE7;&#xE3;o</strong>
+        <p>Configure sua institui&#xE7;&#xE3;o e acompanhe a opera&#xE7;&#xE3;o sem sair do contexto contratado.</p>
+    </div>
+    <ol class="pp-guided-journey__steps">
+            <li class="">
+                <a href="/Home/Index">
+                    <span aria-hidden="true">1</span>
+                    <strong>Vis&#xE3;o geral</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Usuarios/Index">
+                    <span aria-hidden="true">2</span>
+                    <strong>Equipe</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Perfis">
+                    <span aria-hidden="true">3</span>
+                    <strong>Perfis</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Plantoes/Index">
+                    <span aria-hidden="true">4</span>
+                    <strong>Opera&#xE7;&#xE3;o</strong>
+                </a>
+            </li>
+    </ol>
+</section>
+
+                        <details class="pp-screen-guide" data-screen-guide>
+    <summary>
+        <span class="pp-screen-guide__icon" aria-hidden="true">?</span>
+        <span>Como usar esta tela</span>
+        <span class="pp-screen-guide__chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="pp-screen-guide__content">
+        <div>
+            <strong data-screen-guide-purpose>Conduza a opera&#xE7;&#xE3;o administrativa: cadastros, compras, documentos fiscais, recebimento e qualidade.</strong>
+            <p data-screen-guide-audience><span class="pp-screen-guide__label">Quem pode usar:</span> Gestores e operadores autorizados do tenant contratado para o m&#xF3;dulo.</p>
+            <p class="pp-screen-guide__scope"><span class="pp-screen-guide__label">Contexto:</span> somente a institui&#xE7;&#xE3;o vinculada &#xE0; sua sess&#xE3;o.</p>
+        </div>
+        <ol aria-label="Orientação rápida">
+            <li data-screen-guide-action>Importe o XML da NF-e, confira o destinat&#xE1;rio, vincule ao pedido autorizado e confirme o recebimento antes de decidir a inspe&#xE7;&#xE3;o.</li>
+            <li data-screen-guide-care>Recebimento e inspe&#xE7;&#xE3;o movem estoque e geram t&#xED;tulos a pagar; as a&#xE7;&#xF5;es s&#xE3;o auditadas e devem ser executadas uma &#xFA;nica vez por documento.</li>
+            <li data-screen-guide-next>Depois de concluir, confirme a mensagem de resultado antes de sair.</li>
+        </ol>
+    </div>
+</details>
+
+                        
+<div class="container-fluid py-3">
+    <nav class="adm360-nav-wrapper mb-4" aria-label="Navegação Administrativo 360">
+    <div class="card shadow-sm">
+        <div class="card-body p-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-2 py-1"><i class="bi bi-shield-check me-1"></i>Administrativo 360</span>
+                    <span class="text-secondary small d-none d-md-inline">| ERP de Gestão Hospitalar, Suprimentos e OPME</span>
+                </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="/Administrativo360/Gestao/Dashboard" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-graph-up me-1"></i>Dashboard 360
+                        </a>
+                        <a class="btn btn-sm btn-outline-secondary" href="/Administrativo360/Index">
+                            <i class="bi bi-building me-1"></i>Resumo
+                        </a>
+                    </div>
+            </div>
+
+            <!-- Grupos de Navegação -->
+            <div class="d-flex flex-wrap gap-1 align-items-center" role="menubar">
+                    <!-- 1. Gestão Organizacional -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-diagram-3 me-1"></i>Gestão Organizacional
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Departamentos"><i class="bi bi-building me-2"></i>Departamentos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Cargos"><i class="bi bi-person-badge me-2"></i>Cargos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Colaboradores"><i class="bi bi-people me-2"></i>Colaboradores</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Contratos"><i class="bi bi-file-earmark-text me-2"></i>Contratos de Trabalho</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Cadastros -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-folder me-1"></i>Cadastros
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cadastros"><i class="bi bi-grid me-2"></i>Hub de Cadastros</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Parceiros"><i class="bi bi-people me-2"></i>Parceiros (Hospitais/Fornecedores)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Produtos"><i class="bi bi-box-seam me-2"></i>Produtos &amp; OPME</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Locais"><i class="bi bi-geo-alt me-2"></i>Locais de Estoque</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Lotes"><i class="bi bi-tag me-2"></i>Lotes &amp; Validades</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Comercial & Cotações -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-tag me-1"></i>Comercial & Cotações
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cotacoes"><i class="bi bi-inbox me-2"></i>Central de Cotações</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/Relacionamento"><i class="bi bi-diagram-3 me-2"></i>De/Para de Produtos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Orcamentos"><i class="bi bi-receipt me-2"></i>Orçamentos Cirúrgicos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Vendas"><i class="bi bi-cart-check me-2"></i>Vendas Internas</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Compras -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bag-check me-1"></i>Compras
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/PedidosCompra"><i class="bi bi-cart-plus me-2"></i>Pedidos de Compra</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Recebimentos"><i class="bi bi-box-arrow-in-down me-2"></i>Recebimento & Conferência</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 5. Estoque & Qualidade -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-boxes me-1"></i>Estoque & Qualidade
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Estoque"><i class="bi bi-boxes me-2"></i>Estoque & Lotes (FEFO)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Movimentacoes"><i class="bi bi-arrow-left-right me-2"></i>Transferências</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Inspecoes"><i class="bi bi-shield-check me-2"></i>Inspeções & Quarentena</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Ocorrencias"><i class="bi bi-exclamation-octagon me-2"></i>Ocorrências da Qualidade</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Inventarios"><i class="bi bi-clipboard-check me-2"></i>Inventários</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Coleta"><i class="bi bi-upc-scan me-2"></i>Coleta Móvel</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 6. Operação Cirúrgica -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-heart-pulse me-1"></i>Operação Cirúrgica
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cirurgias"><i class="bi bi-calendar-check me-2"></i>Agendamentos Cirúrgicos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Vales"><i class="bi bi-truck me-2"></i>Vales de Consignação</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Valorizacao"><i class="bi bi-cash-coin me-2"></i>Consumo, Devolução & Valorização</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 7. Financeiro -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-wallet2 me-1"></i>Financeiro
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/TitulosReceber"><i class="bi bi-arrow-down-left-circle me-2 text-success"></i>Contas a Receber</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/TitulosPagar"><i class="bi bi-arrow-up-right-circle me-2 text-danger"></i>Contas a Pagar</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/ComissoesPendentes"><i class="bi bi-percent me-2 text-warning"></i>Comissões a Pagar</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/ContasFinanceiras"><i class="bi bi-bank me-2"></i>Contas Financeiras</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/FluxoCaixa"><i class="bi bi-graph-down me-2"></i>Fluxo de Caixa</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/FechamentoCaixa"><i class="bi bi-lock me-2"></i>Fechamento de Caixa</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 7b. Fiscal (R4-F2) -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-receipt-cutoff me-1"></i>Fiscal
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Fiscal/Notas"><i class="bi bi-receipt me-2"></i>Pré-Emissão de NF-e</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Fiscal/Configurar"><i class="bi bi-gear me-2"></i>Configuração Fiscal</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 8. Documentos & Integrações -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-code me-1"></i>Documentos & Integrações
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-2"></i>Central XML (NF-e 55)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml/Triagens"><i class="bi bi-funnel me-2"></i>Fila de Triagem (Quarentena)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml/Sincronizacao"><i class="bi bi-cloud-arrow-down me-2"></i>DF-e Sefaz</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/ContasPortal"><i class="bi bi-key me-2"></i>Contas Portal</a></li>
+                                <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/Estabelecimentos"><i class="bi bi-building me-2"></i>Estabelecimentos (CNPJs)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Gestao/Monitor"><i class="bi bi-activity me-2"></i>Monitor de Integrações</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 9. Relatórios -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-secondary text-white fw-bold dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-bar-graph me-1"></i>Relatórios
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Relatorios"><i class="bi bi-file-earmark-text me-2"></i>Relatórios Operacionais & Rastreabilidade</a></li>
+                            <li><a class="dropdown-item active" href="/Administrativo360/RelatoriosFinanceiros"><i class="bi bi-file-earmark-ruled me-2"></i>Relatórios Financeiros & DRE</a></li>
+                        </ul>
+                    </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+            <h2 class="h4 mb-1 text-light fw-bold">Relatórios Financeiros & Resultado</h2>
+            <p class="text-muted small mb-0">Visão executiva por CLIENTE comercial: vendas, apropriação de comissões, margem cirúrgica e vencimentos por parcela.</p>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo os Relatórios Financeiros</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Permite auditar as vendas efetuadas, a liquidação de comissões por vendedor e a rentabilidade gerencial dos procedimentos cirúrgicos.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Diretoria, controladoria, gerência comercial e auditoria interna.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Selecione a visão desejada nas abas, aplique os filtros de período e de cliente (comercial) e exporte em CSV caso necessite de análises em planilhas.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Os relatórios utilizam custos históricos reais e comissões efetivamente apropriadas pelas liquidações de caixa.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Utilizar as exportações protegidas para fechamento contábil e conciliação de pagamentos.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs border-secondary mb-3">
+        <li class="nav-item">
+            <a class="nav-link text-muted" href="/Administrativo360/RelatoriosFinanceiros?aba=vendas&amp;inicio=2026-09-14&amp;fim=2026-11-13">
+                <i class="bi bi-graph-up me-1"></i> Vendas por Período
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-muted" href="/Administrativo360/RelatoriosFinanceiros?aba=comissoes&amp;inicio=2026-09-14&amp;fim=2026-11-13">
+                <i class="bi bi-people me-1"></i> Comissões Apropriadas
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-muted" href="/Administrativo360/RelatoriosFinanceiros?aba=margem&amp;inicio=2026-09-14&amp;fim=2026-11-13">
+                <i class="bi bi-pie-chart me-1"></i> Margem por Cirurgia
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active bg-dark text-light border-secondary border-bottom-0" href="/Administrativo360/RelatoriosFinanceiros?aba=vencimentos&amp;inicio=2026-09-14&amp;fim=2026-11-13">
+                <i class="bi bi-stopwatch me-1"></i> Vencimentos por Parcela
+            </a>
+        </li>
+    </ul>
+
+    <!-- Filtro Superior -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <input type="hidden" name="aba" value="vencimentos" />
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-secondary" for="dataInicio">Início</label>
+                    <input type="date" id="dataInicio" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="2026-09-14" />
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small text-secondary" for="dataFim">Fim</label>
+                    <input type="date" id="dataFim" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
+                           value="2026-11-13" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label small text-secondary" for="selCliente">Cliente</label>
+                    <select id="selCliente" name="clienteId" class="form-select form-select-sm bg-dark text-light border-secondary">
+                        <option value="">Todos os clientes</option>
+                            <option value="e9f00001-9f0f-4a11-8f0f-000000000001" selected="">Clinica Horizonte Azul</option>
+                            <option value="e9f00002-9f0f-4a11-8f0f-000000000002" selected="">Cofre Clinica Azul</option>
+                            <option value="c891d50d-159f-45a4-b0a9-e7f6ac54b183" selected="">Hospital Solicitante</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search me-1"></i> Atualizar Relatório
+                    </button>
+                        <a class="btn btn-sm btn-outline-success" href="/Administrativo360/ExportarVencimentosCsv?inicio=2026-09-14&amp;fim=2026-11-13">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                        </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+        <!-- Conteúdo Aba Vencimentos por Parcela (s10 / rodada 9 r9f) -->
+        <div class="card bg-dark border-secondary text-light">
+            <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Títulos a Receber por Parcela — vencido avaliado na data do relatório</span>
+                <span class="badge bg-secondary">3 parcelas</span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 960px;">
+                    <thead class="table-secondary text-dark">
+                        <tr>
+                            <th scope="col">Título</th>
+                            <th scope="col">Venda</th>
+                            <th scope="col">Competência</th>
+                            <th scope="col">Cliente</th>
+                            <th scope="col">Pagador</th>
+                            <th scope="col">Parcela</th>
+                            <th scope="col">Emissão</th>
+                            <th scope="col">Vencimento</th>
+                            <th scope="col" class="text-end">Valor Principal</th>
+                            <th scope="col" class="text-end">Recebido</th>
+                            <th scope="col" class="text-end">Saldo Aberto</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                <tr>
+                                    <td class="fw-bold text-info">TIT-SV-R9F-01</td>
+                                    <td>VEN-SV-R9F-01</td>
+                                    <td>09/10/2026</td>
+                                    <td>Clinica Horizonte Azul</td>
+                                    <td>Cofre Clinica Azul</td>
+                                    <td class="font-monospace">1/3</td>
+                                    <td>09/10/2026</td>
+                                    <td class="text-danger fw-bold">29/09/2026</td>
+                                    <td class="text-end font-monospace">R$ 333,33</td>
+                                    <td class="text-end font-monospace text-muted">R$ 0,00</td>
+                                    <td class="text-end font-monospace fw-bold text-warning">R$ 333,33</td>
+                                    <td>
+                                            <span class="badge bg-danger me-1" title="Vencimento anterior à data do relatório com saldo aberto">VENCIDO</span>
+                                        <span class="badge bg-secondary">ABERTO</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-info">TIT-SV-R9F-02</td>
+                                    <td>VEN-SV-R9F-01</td>
+                                    <td>09/10/2026</td>
+                                    <td>Clinica Horizonte Azul</td>
+                                    <td>Cofre Clinica Azul</td>
+                                    <td class="font-monospace">2/3</td>
+                                    <td>09/10/2026</td>
+                                    <td class="">07/10/2026</td>
+                                    <td class="text-end font-monospace">R$ 333,33</td>
+                                    <td class="text-end font-monospace text-muted">R$ 333,33</td>
+                                    <td class="text-end font-monospace text-muted">R$ 0,00</td>
+                                    <td>
+                                        <span class="badge bg-success">QUITADO</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-info">TIT-SV-R9F-03</td>
+                                    <td>VEN-SV-R9F-01</td>
+                                    <td>09/10/2026</td>
+                                    <td>Clinica Horizonte Azul</td>
+                                    <td>Cofre Clinica Azul</td>
+                                    <td class="font-monospace">3/3</td>
+                                    <td>09/10/2026</td>
+                                    <td class="">03/11/2026</td>
+                                    <td class="text-end font-monospace">R$ 333,34</td>
+                                    <td class="text-end font-monospace text-muted">R$ 0,00</td>
+                                    <td class="text-end font-monospace fw-bold text-warning">R$ 333,34</td>
+                                    <td>
+                                        <span class="badge bg-secondary">ABERTO</span>
+                                    </td>
+                                </tr>
+                    </tbody>
+                    <tfoot class="table-dark border-secondary">
+                        <tr class="fw-bold">
+                            <td colspan="8" class="text-end">Totais do relatório (cada parcela contada uma única vez):</td>
+                            <td class="text-end font-monospace">R$ 1.000,00</td>
+                            <td class="text-end font-monospace">R$ 333,33</td>
+                            <td class="text-end font-monospace text-warning">R$ 666,67</td>
+                            <td class="text-center">
+                                    <span class="badge bg-danger">
+                                        1 vencida(s) — R$ 333,33
+                                    </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+    <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
+    <div class="card bg-dark border-secondary mt-4 text-light">
+        <div class="card-header bg-dark border-secondary">
+            <span class="fw-bold"><i class="bi bi-calculator me-2"></i>Indicadores Declarados — Fonte, Fórmula, Filtros/Período e Tratamento de Estorno</span>
+        </div>
+        <div class="card-body small text-secondary">
+            <div class="row g-3">
+                <div class="col-lg-3">
+                    <strong class="text-light d-block mb-1">Vendas por Período</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> (linha por venda confirmada), com nomes de cliente/pagador/vendedor resolvidos via <code>adm360_parceiros</code>; registros históricos podem apontar para a tabela clínica <code>hospitais</code> (fallback de nome) e sem nome vira "Cliente não identificado".</li>
+                        <li><strong>Fórmula:</strong> Total Líquido = bruto − desconto; Custo = Σ custo dos lotes consumidos na valorização; Comissão prevista = líquido × % comissão da venda. Valores gravados na venda, sem recálculo retroativo.</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia &gt;= início AND competencia &lt;= fim</code> (inclusivo); opcionais <code>clienteId</code> e <code>vendedorId</code>; sempre isolado por tenant — <code>clienteId</code> de outro tenant é rejeitado com erro explícito (400). Sem data: últimos 30 dias até hoje.</li>
+                        <li><strong>Estorno:</strong> não altera a linha da venda; o efeito aparece apenas em Comissões (situação ESTORNADA) e no Fluxo de Caixa (movimento compensatório).</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <strong class="text-light d-block mb-1">Comissões Apropriadas</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_comissoes_apropriadas</code> — uma linha por recebimento efetivo (baixa de título), junta venda, usuário e baixa para auditoria.</li>
+                        <li><strong>Fórmula:</strong> por baixa: arred((recebido acumulado da venda) × % ÷ 100, 2) − já apropriada, mínimo 0 (resíduo corrigido na última baixa).</li>
+                        <li><strong>Filtros/período:</strong> <code>data_recebimento &gt;= início AND data_recebimento &lt;= fim</code> (inclusivo); opcional <code>vendedorId</code>.</li>
+                        <li><strong>Estorno:</strong> a linha vira ESTORNADA (preservada para auditoria; badge âmbar) e o total do rodapé conta apenas APROPRIADA. Re-estorno devolve a APROPRIADA. Estorno é bloqueado dentro de fechamento de caixa fechado.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <strong class="text-light d-block mb-1">Margem por Cirurgia</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_vendas</code> somente com <code>situacao='CONFIRMADA'</code>, via valorização até o vale de origem.</li>
+                        <li><strong>Fórmula:</strong> Margem R$ = Receita Líquida − Custo Consumido − Comissão Prevista; Margen % = margem ÷ receita × 100 (2 casas; 0 quando receita = 0). Coluna "Comissão Aprop." = Σ comissões APROPRIADA (estornos já excluídos no banco).</li>
+                        <li><strong>Filtros/período:</strong> <code>competencia</code> entre início e fim (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sem filtro de vendedor nesta aba.</li>
+                        <li><strong>Estorno:</strong> não altera receita, custo nem comissão prevista; somente a coluna "Comissão Aprop." cai quando uma baixa da venda é estornada.</li>
+                    </ul>
+                </div>
+                <div class="col-lg-3">
+                    <strong class="text-light d-block mb-1">Vencimentos por Parcela</strong>
+                    <ul class="mb-0 ps-3">
+                        <li><strong>Fonte:</strong> <code>adm360_titulos_receber</code> × <code>adm360_vendas</code> — um título (parcela) = exatamente uma linha; os JOINs de nome são 1:1, então os totais do rodapé somam cada parcela uma única vez (sem multiplicação). Parcelas CANCELADO ficam fora; QUITADO/PARCIAL aparecem como histórico de liquidação.</li>
+                        <li><strong>Fórmula "vencido":</strong> <code>data_vencimento &lt; data do relatório AND saldo_aberto &gt; 0</code> (referência = momento da geração do relatório), mesma regra das Contas a Receber.</li>
+                        <li><strong>Filtros/período:</strong> período sobre <code>data_vencimento</code> (inclusivo); opcional <code>clienteId</code> (com rejeição cross-tenant); sempre isolado por tenant.</li>
+                        <li><strong>Estorno/recebimento:</strong> baixas e estornos atualizam <code>valor_recebido</code>/<code>saldo_aberto</code>/<code>situacao</code> no próprio título; a linha reflete o estado corrente sem duplicar.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+                    </div>
+                </main>
+                <footer class="pp-footer app-footer"><span>PlantãoPro • v1.95.1.0</span><span>Development</span><span>Powered by MNSOFT</span></footer>
+
+            </div>
+        </div>
+        <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="Fechar menu" tabindex="-1"></button>
+        <nav class="mobile-navigation d-lg-none" aria-label="Navegação mobile"><a class="mobile-nav-item" href="/Home/Dashboard"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#home"></use></svg><span>Início</span></a><a class="mobile-nav-item" href="/MeuDia"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Meu dia</span></a><button class="mobile-nav-item" id="mobileMenuToggle" type="button" aria-controls="appSidebar" aria-expanded="false"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg><span>Menu</span></button></nav>
+
+        <dialog class="pp-dialog" id="commandPalette" aria-labelledby="commandPaletteTitle">
+    <header class="pp-command-header"><span class="pp-eyebrow">Navegação inteligente</span><h2 id="commandPaletteTitle">Busca rápida</h2></header>
+    <form class="p-3 border-bottom" role="search" data-command-search>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <label class="visually-hidden" for="commandSearchInput">Pesquisar no PlantãoPro</label>
+            <input class="form-control border-0 shadow-none"
+                   id="commandSearchInput"
+                   name="q"
+                   type="search"
+                   minlength="2"
+                   autocomplete="off"
+                   aria-controls="commandSearchResults"
+                   aria-describedby="commandSearchHint"
+                   placeholder="Pacientes, médicos, plantões e unidades" />
+            <button class="btn btn-light btn-sm" type="button" data-command-close aria-label="Fechar busca">
+                <kbd>Esc</kbd>
+            </button>
+        </div>
+        <p class="pp-caption mb-0 mt-2" id="commandSearchHint">Digite ao menos dois caracteres. Dados clínicos não são exibidos.</p>
+    </form>
+    <div class="pp-command-results" id="commandSearchResults" role="listbox" aria-live="polite">
+        <p class="text-secondary p-3 mb-0">Encontre rapidamente o que precisa sem sair da sua jornada.</p>
+    </div>
+</dialog>
+
+        <div id="pp-overlay-root" class="pp-overlay-root" aria-live="polite">
+    <button class="pp-overlay-backdrop" type="button" data-pp-confirm-cancel aria-label="Fechar confirmação"></button>
+    
+<section class="pp-modal pp-confirm-modal pp-future-modal pp-confirm-modal-warning " id="pp-confirm-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="pp-confirm-modal-title" aria-describedby="pp-confirm-modal-description" aria-busy="false" hidden>
+            <div class="modal-header">
+                <div class="pp-confirm-heading">
+                    <span class="pp-confirm-icon" aria-hidden="true"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg></span>
+                    <div>
+                    <span class="pp-confirm-kicker">Confirmação necessária</span>
+                    <h5 class="modal-title mb-0" id="pp-confirm-modal-title" data-pp-confirm-title>Confirmar a&#xE7;&#xE3;o</h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="pp-delete-confirmation"><strong>Revise antes de continuar</strong><p class="mb-0" id="pp-confirm-modal-description" data-pp-confirm-message>Deseja realmente continuar?</p></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" data-pp-confirm-action>
+                        <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#check"></use></svg>
+                    <span>Confirmar</span>
+                    <span class="spinner-border spinner-border-sm d-none" data-pp-confirm-loading aria-hidden="true"></span>
+                </button>
+                <span class="visually-hidden" aria-live="polite" data-pp-confirm-status></span>
+            </div>
+
+</section>
+
+</div>
+<div class="overlay-backdrop" data-overlay-backdrop hidden></div>
+<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden>
+    <header><div><span class="eyebrow">Atualizações reais</span><h2 id="notificationTitle">Notificações</h2></div><button type="button" data-notification-close aria-label="Fechar notificações"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header>
+    <div class="drawer-toolbar">
+        <select aria-label="Filtrar notificações por tipo" data-notification-filter>
+            <option value="">Todos os tipos</option><option value="LOGIN">Login</option><option value="SESSAO">Sessão</option><option value="PLANTAO">Plantão</option><option value="ESCALA">Escala</option><option value="FINANCEIRO">Financeiro</option><option value="CLIENTE">Cliente</option><option value="USUARIO">Usuário</option><option value="PERMISSAO">Permissão</option><option value="COBRANCA">Cobrança</option><option value="AUDITORIA">Auditoria</option><option value="SISTEMA">Sistema</option>
+        </select>
+        <button type="button" class="button button-subtle" data-notification-read-all disabled hidden>Marcar todas como lidas</button>
+    </div>
+    <div class="drawer-body" data-notification-list aria-live="polite" aria-busy="false"></div>
+    <footer class="drawer-footer"><a class="button button-subtle" href="/Notificacoes/Index">Abrir histórico de notificações</a></footer>
+</section>
+
+<section class="app-drawer pp-future-drawer" id="quickActionDrawer" role="dialog" aria-modal="true" aria-labelledby="quickActionTitle" hidden><header><div><span class="eyebrow">Produtividade</span><h2 id="quickActionTitle">Nova ação</h2></div><button type="button" data-drawer-close aria-label="Fechar ações"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header><div class="drawer-body quick-action-list" data-quick-actions></div></section>
+
+<aside class="context-panel" aria-label="Contexto da página" hidden data-context-panel><div data-context-content></div></aside>
+
+
+        <section class="toast-region" aria-label="Mensagens" aria-live="polite" aria-relevant="additions" data-toast-region></section>
+
+        <aside class="app-drawer pp-detail-drawer pp-future-drawer" data-pp-detail-drawer role="dialog" aria-modal="true" aria-labelledby="ppDetailDrawerTitle" aria-describedby="ppDetailDrawerSummary" tabindex="-1" hidden>
+    <header><div><span class="pp-eyebrow" data-detail-kind>Detalhe operacional</span><h2 id="ppDetailDrawerTitle" data-detail-title>Detalhes</h2><span class="pp-detail-drawer__status" data-detail-status></span></div><button type="button" data-detail-close aria-label="Fechar painel de detalhes"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header>
+    <div class="drawer-body" data-detail-body aria-live="polite" aria-busy="false">
+        <div class="pp-detail-drawer__loading" data-detail-loading role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Carregando contexto operacional…</div>
+        <div data-detail-error role="alert" hidden>Não foi possível abrir os detalhes. Tente novamente.</div>
+        <div data-detail-content hidden>
+            <section aria-labelledby="ppDetailSummaryTitle"><h3 id="ppDetailSummaryTitle">Resumo</h3><p id="ppDetailDrawerSummary" data-detail-summary></p><dl class="pp-detail-drawer__metadata" data-detail-metadata></dl></section>
+            <section aria-labelledby="ppDetailTimelineTitle"><h3 id="ppDetailTimelineTitle">Timeline e histórico</h3><ol class="pp-detail-drawer__timeline" data-detail-timeline></ol></section>
+            <section aria-labelledby="ppDetailActionsTitle"><h3 id="ppDetailActionsTitle">Ações disponíveis</h3><div class="pp-detail-drawer__actions" data-detail-actions></div></section>
+        </div>
+    </div>
+</aside>
+
+        <button class="pp-help-trigger" type="button" data-context-help-open aria-controls="contextHelpDrawer" aria-expanded="false">
+    <i class="bi bi-question-circle" aria-hidden="true"></i><span>Ajuda desta tela</span>
+</button>
+<div class="pp-help-backdrop" data-context-help-close hidden></div>
+<aside class="pp-help-drawer" id="contextHelpDrawer" aria-labelledby="contextHelpTitle" aria-hidden="true" tabindex="-1">
+    <header class="pp-help-drawer__header">
+        <div><span class="pp-eyebrow">Guia rápido</span><h2 id="contextHelpTitle">Como usar esta tela</h2></div>
+        <button class="btn btn-sm btn-light" type="button" data-context-help-close aria-label="Fechar ajuda"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </header>
+    <div class="pp-help-drawer__body">
+        <p>Comece pela ação principal no topo e use os filtros para encontrar o que precisa.</p>
+        <ol class="pp-help-steps">
+            <li><strong>Confira o contexto</strong><span>Valide a unidade, o período e o perfil exibidos.</span></li>
+            <li><strong>Revise os status</strong><span>Abra um item para entender detalhes e próximos passos.</span></li>
+            <li><strong>Ajuste a busca</strong><span>Se nada aparecer, limpe ou amplie os filtros.</span></li>
+        </ol>
+        <section class="pp-help-note" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Acesso e permissões</strong><p>As ações disponíveis respeitam seu perfil e a unidade ativa. Se uma opção esperada não aparecer, fale com o administrador.</p></div></section>
+    </div>
+</aside>
+
+    <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="/js/vendor/bootstrap.bundle.min.js?v=NfRUfZNkERrKSFA0c1a8VmCplPDYtpTYj5lQmKe1R_o"></script>
+    <script src="/js/plantaopro-toast.js?v=vmolcyDRKpGeNWHCLQWRrYbtKO0dRpZRycRGgeqMJXs"></script>
+    <script src="/js/plantaopro-ui.js?v=cqaT751bU2u0LFJJaeDsvkWj2kATBwafaG_t3ttOclk"></script>
+    <script src="/js/form-experience.js?v=oEbsbhB_4Y3dudGGOhMzSv6KhADf7NX7hpAq04gCmRg"></script>
+    <script src="/js/lookup.js?v=c3xISsbXdegU5h9ZtBbINX69g8a1QcqFtPCIPyBQrpM"></script>
+    <script src="/js/components/business-actions.js?v=OarzxE__NK-ZuVGAs-HEyuVdCa35eU_ha_sy3A6AdEg"></script>
+    <script src="/js/v155-medical-ui.js?v=F_x7bFt07fVxqG_FCBylz98FWJNoGc04yAqnlD48lJg"></script>
+    <script src="/js/detail-drawer.js?v=IbY5Z416xJZl-qOvWwvrx8XK90ocY7DjAQ_qlHao71E"></script>
+    <script src="/js/context-help.js?v=qx-wCZzhHxw76GHvFkUYch8y-ivT4OySJHYrp1NABzs"></script>
+        <script src="/js/command-palette.js?v=GufQiEtcJDGL67BKg-ddBHLSKQEv_J7oEYYlbFfZvtI"></script>
+    <script src="/js/service-worker-registration.js?v=2ss7Y4sSqR1TLulSJtUEU8YQoLR0ZvvlknvQZjree5s"></script>
+ <script type="module" src="/js/core/app-shell.js?v=XGaBQq4kkoLtYhC8jS18AsGTgZarFpxas_zCkJw1txo"></script>  <script src="/js/session-health.js?v=UIY8a6-NHw1byCSQWQzR-WYLXaWDxiebRzrTuRQXvRc"></script>     <script src="/js/v2139-premium-library.js?v=w8cAWWow8B_s8BwI2BtwLvxY3RooWlidnYiyibuhKmM"></script>
+    <script src="/js/v2145-guided-tour.js?v=ov49nq4fYWZQvv5dELqiyuqyyKfPSw6XSwiGD1rG11w"></script>
+    
+</body>
+</html>

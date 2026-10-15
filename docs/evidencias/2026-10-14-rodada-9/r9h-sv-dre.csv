@@ -1,0 +1,3 @@
+﻿Cliente;QtdVendas;ReceitaBruta;Deducoes;ReceitaLiquida;CustoRealizado;ResultadoBruto;ComissoesPrevistas;DespesasAtribuidas;ResultadoGerencial
+"Clinica Horizonte Azul";1;1.200,00;200,00;1.000,00;600,00;400,00;50,00;0,00;350,00
+"Não atribuída";1;300,00;50,00;250,00;100,00;150,00;2,50;40,00;107,50

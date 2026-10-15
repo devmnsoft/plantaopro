@@ -2581,4 +2581,116 @@
   <data name="Adm360.Cadastros.FallbackSaveLote" xml:space="preserve">
     <value>Error al registrar el lote.</value>
   </data>
+  <!-- r9h: flujos ajustados — informes financieros por cliente (+estado de resultados gerencial) y secciones del formulario de producto -->
+  <data name="Adm360.RelFin.PageTitle" xml:space="preserve">
+    <value>Informes Financieros — Administrativo 360</value>
+  </data>
+  <data name="Adm360.RelFin.Heading" xml:space="preserve">
+    <value>Informes Financieros y Resultados</value>
+  </data>
+  <data name="Adm360.RelFin.Subheading" xml:space="preserve">
+    <value>Visión ejecutiva por CLIENTE comercial: ventas, apropiación de comisiones, margen quirúrgico, vencimientos por cuota y estado de resultados gerencial en devengado.</value>
+  </data>
+  <data name="Adm360.RelFin.LabelInicio" xml:space="preserve">
+    <value>Inicio</value>
+  </data>
+  <data name="Adm360.RelFin.LabelFim" xml:space="preserve">
+    <value>Fin</value>
+  </data>
+  <data name="Adm360.RelFin.LabelCliente" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="Adm360.RelFin.OptTodosClientes" xml:space="preserve">
+    <value>Todos los clientes</value>
+  </data>
+  <data name="Adm360.RelFin.ButtonAtualizar" xml:space="preserve">
+    <value>Actualizar Informe</value>
+  </data>
+  <data name="Adm360.RelFin.ExportCsv" xml:space="preserve">
+    <value>Exportar CSV</value>
+  </data>
+  <data name="Adm360.RelFin.TabVendas" xml:space="preserve">
+    <value>Ventas por Periodo</value>
+  </data>
+  <data name="Adm360.RelFin.TabComissoes" xml:space="preserve">
+    <value>Comisiones Apropionadas</value>
+  </data>
+  <data name="Adm360.RelFin.TabMargem" xml:space="preserve">
+    <value>Margen por Cirugia</value>
+  </data>
+  <data name="Adm360.RelFin.TabVencimentos" xml:space="preserve">
+    <value>Vencimientos por Cuota</value>
+  </data>
+  <data name="Adm360.RelFin.TabDre" xml:space="preserve">
+    <value>Estado de Resultados Gerencial</value>
+  </data>
+  <data name="Adm360.RelFin.IndicatorsTitle" xml:space="preserve">
+    <value>Indicadores Declarados — Fuente, Formula, Filtros/Periodo y Tratamiento de Reversion</value>
+  </data>
+  <data name="Adm360.RelFin.DreTableTitle" xml:space="preserve">
+    <value>Estado de Resultados Gerencial por Cliente — devengado (NO es flujo de caja)</value>
+  </data>
+  <data name="Adm360.RelFin.DreBadgeReconciliado" xml:space="preserve">
+    <value>Consolidado conciliado</value>
+  </data>
+  <data name="Adm360.RelFin.DreBadgeDivergencia" xml:space="preserve">
+    <value>Divergencia en el consolidado — vea los deltas abajo</value>
+  </data>
+  <data name="Adm360.RelFin.DreUnitLinhas" xml:space="preserve">
+    <value>lineas</value>
+  </data>
+  <data name="Adm360.RelFin.DreThCliente" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="Adm360.RelFin.DreThQtdVendas" xml:space="preserve">
+    <value>Nº Ventas</value>
+  </data>
+  <data name="Adm360.RelFin.DreThReceitaBruta" xml:space="preserve">
+    <value>Ingresos Brutos</value>
+  </data>
+  <data name="Adm360.RelFin.DreThDeducoes" xml:space="preserve">
+    <value>(−) Deducciones</value>
+  </data>
+  <data name="Adm360.RelFin.DreThReceitaLiquida" xml:space="preserve">
+    <value>(=) Ingresos Netos</value>
+  </data>
+  <data name="Adm360.RelFin.DreThCustoRealizado" xml:space="preserve">
+    <value>(−) Costo Realizado</value>
+  </data>
+  <data name="Adm360.RelFin.DreThResultadoBruto" xml:space="preserve">
+    <value>(=) Resultado Bruto</value>
+  </data>
+  <data name="Adm360.RelFin.DreThComissoes" xml:space="preserve">
+    <value>(−) Comisiones Previstas</value>
+  </data>
+  <data name="Adm360.RelFin.DreThDespesas" xml:space="preserve">
+    <value>(−) Gastos Atribuidos</value>
+  </data>
+  <data name="Adm360.RelFin.DreThResultadoGerencial" xml:space="preserve">
+    <value>(=) Resultado Gerencial</value>
+  </data>
+  <data name="Adm360.RelFin.DreThOrigem" xml:space="preserve">
+    <value>Origen</value>
+  </data>
+  <data name="Adm360.RelFin.DreRodapeTotal" xml:space="preserve">
+    <value>Total del periodo (clientes + no asignada):</value>
+  </data>
+  <data name="Adm360.RelFin.DreConciliacaoTitulo" xml:space="preserve">
+    <value>Conciliacion — consolidado = clientes + "No asignada" (re-agregado de las mismas fuentes en la generacion)</value>
+  </data>
+  <data name="Adm360.Produtos.SecIdentificacao" xml:space="preserve">
+    <value>Identificacion</value>
+  </data>
+  <data name="Adm360.Produtos.SecEstoqueLotes" xml:space="preserve">
+    <value>Inventario, Lotes y Trazabilidad</value>
+  </data>
+  <data name="Adm360.Produtos.SecRegulacaoAnvisa" xml:space="preserve">
+    <value>Regulacion ANVISA</value>
+  </data>
+  <data name="Adm360.Produtos.SecPrecificacao" xml:space="preserve">
+    <value>Precificacion</value>
+  </data>
+  <data name="Adm360.Produtos.SecStatus" xml:space="preserve">
+    <value>Estado</value>
+  </data>
 </root>

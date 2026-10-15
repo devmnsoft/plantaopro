@@ -1,6 +1,6 @@
 @model PlantaoPro.Web.Models.RelatoriosFinanceirosPageViewModel
 @{
-    ViewData["Title"] = "Relatórios Financeiros — Administrativo 360";
+    ViewData["Title"] = UiText.L("Adm360.RelFin.PageTitle");
     var ptBr = new System.Globalization.CultureInfo("pt-BR");
 }
 
@@ -9,83 +9,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <div>
-            <h2 class="h4 mb-1 text-light fw-bold">Relatórios Financeiros & Resultado</h2>
-            <p class="text-muted small mb-0">Visão executiva por CLIENTE comercial: vendas, apropriação de comissões, margem cirúrgica, vencimentos por parcela e DRE gerencial em competência.</p>
+            <h2 class="h4 mb-1 text-light fw-bold">@UiText.L("Adm360.RelFin.Heading")</h2>
+            <p class="text-muted small mb-0">@UiText.L("Adm360.RelFin.Subheading")</p>
         </div>
     </div>
-
-    <!-- Guia da tela -->
-    <div class="card bg-dark border-secondary mb-4 text-light">
-        <div class="card-body">
-            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo os Relatórios Financeiros</h5>
-            <div class="row g-3 small text-secondary">
-                <div class="col-md-4 col-lg-2">
-                    <strong class="text-light d-block mb-1">Para que serve</strong>
-                    Permite auditar as vendas efetuadas, a liquidação de comissões por vendedor e a rentabilidade gerencial dos procedimentos cirúrgicos.
-                </div>
-                <div class="col-md-4 col-lg-2">
-                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
-                    Diretoria, controladoria, gerência comercial e auditoria interna.
-                </div>
-                <div class="col-md-4 col-lg-3">
-                    <strong class="text-light d-block mb-1">Como executar</strong>
-                    Selecione a visão desejada nas abas, aplique os filtros de período e de cliente (comercial) e exporte em CSV caso necessite de análises em planilhas.
-                </div>
-                <div class="col-md-6 col-lg-3">
-                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
-                    Os relatórios utilizam custos históricos reais e comissões efetivamente apropriadas pelas liquidações de caixa.
-                </div>
-                <div class="col-md-6 col-lg-2">
-                    <strong class="text-light d-block mb-1">Próximo passo</strong>
-                    Utilizar as exportações protegidas para fechamento contábil e conciliação de pagamentos.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Abas de Navegação -->
-    <ul class="nav nav-tabs border-secondary mb-3">
-        <li class="nav-item">
-            <a class="nav-link @(Model.AbaAtiva == "vendas" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
-               asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
-                <i class="bi bi-graph-up me-1"></i> Vendas por Período
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.AbaAtiva == "comissoes" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
-               asp-action="RelatoriosFinanceiros" asp-route-aba="comissoes"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
-                <i class="bi bi-people me-1"></i> Comissões Apropriadas
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.AbaAtiva == "margem" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
-               asp-action="RelatoriosFinanceiros" asp-route-aba="margem"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
-                <i class="bi bi-pie-chart me-1"></i> Margem por Cirurgia
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.AbaAtiva == "vencimentos" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
-               asp-action="RelatoriosFinanceiros" asp-route-aba="vencimentos"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
-                <i class="bi bi-stopwatch me-1"></i> Vencimentos por Parcela
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link @(Model.AbaAtiva == "dre" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")"
-               asp-action="RelatoriosFinanceiros" asp-route-aba="dre"
-               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
-               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
-                <i class="bi bi-journal-text me-1"></i> DRE Gerencial
-            </a>
-        </li>
-    </ul>
 
     <!-- Filtro Superior -->
     <div class="card bg-dark border-secondary mb-4 text-light">
@@ -97,19 +24,19 @@
                     <input type="hidden" name="vendedorId" value="@Model.VendedorId.Value" />
                 }
                 <div class="col-6 col-md-2">
-                    <label class="form-label small text-secondary" for="dataInicio">Início</label>
+                    <label class="form-label small text-secondary" for="dataInicio">@UiText.L("Adm360.RelFin.LabelInicio")</label>
                     <input type="date" id="dataInicio" name="inicio" class="form-control form-control-sm bg-dark text-light border-secondary"
                            value="@Model.Inicio?.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-6 col-md-2">
-                    <label class="form-label small text-secondary" for="dataFim">Fim</label>
+                    <label class="form-label small text-secondary" for="dataFim">@UiText.L("Adm360.RelFin.LabelFim")</label>
                     <input type="date" id="dataFim" name="fim" class="form-control form-control-sm bg-dark text-light border-secondary"
                            value="@Model.Fim?.ToString("yyyy-MM-dd")" />
                 </div>
                 <div class="col-12 col-md-4">
-                    <label class="form-label small text-secondary" for="selCliente">Cliente</label>
+                    <label class="form-label small text-secondary" for="selCliente">@UiText.L("Adm360.RelFin.LabelCliente")</label>
                     <select id="selCliente" name="clienteId" class="form-select form-select-sm bg-dark text-light border-secondary">
-                        <option value="">Todos os clientes</option>
+                        <option value="">@UiText.L("Adm360.RelFin.OptTodosClientes")</option>
                         @foreach (var opcao in Model.Clientes)
                         {
                             <option value="@opcao.Value" selected="@((Model.ClienteId?.ToString() == opcao.Value) ? "selected" : "")">@opcao.Text</option>
@@ -118,14 +45,14 @@
                 </div>
                 <div class="col-12 col-md-4 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="bi bi-search me-1"></i> Atualizar Relatório
+                        <i class="bi bi-search me-1"></i> @UiText.L("Adm360.RelFin.ButtonAtualizar")
                     </button>
                     @if (Model.AbaAtiva == "vendas")
                     {
                         <a asp-action="ExportarVendasCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> @UiText.L("Adm360.RelFin.ExportCsv")
                         </a>
                     }
                     else if (Model.AbaAtiva == "comissoes")
@@ -133,7 +60,7 @@
                         <a asp-action="ExportarComissoesCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> @UiText.L("Adm360.RelFin.ExportCsv")
                         </a>
                     }
                     else if (Model.AbaAtiva == "margem")
@@ -141,7 +68,7 @@
                         <a asp-action="ExportarMargemCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> @UiText.L("Adm360.RelFin.ExportCsv")
                         </a>
                     }
                     else if (Model.AbaAtiva == "vencimentos")
@@ -149,7 +76,7 @@
                         <a asp-action="ExportarVencimentosCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> @UiText.L("Adm360.RelFin.ExportCsv")
                         </a>
                     }
                     else if (Model.AbaAtiva == "dre")
@@ -157,13 +84,57 @@
                         <a asp-action="ExportarDreCsv" asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
                            asp-route-clienteId="@Model.ClienteId?.ToString()"
                            class="btn btn-sm btn-outline-success">
-                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar CSV
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> @UiText.L("Adm360.RelFin.ExportCsv")
                         </a>
                     }
                 </div>
             </form>
         </div>
     </div>
+
+    <!-- Abas de Navegação -->
+    <ul class="nav nav-tabs border-secondary mb-3" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "vendas" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")" role="tab" aria-selected="@(Model.AbaAtiva == "vendas" ? "true" : "false")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="vendas"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-graph-up me-1"></i> @UiText.L("Adm360.RelFin.TabVendas")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "comissoes" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")" role="tab" aria-selected="@(Model.AbaAtiva == "comissoes" ? "true" : "false")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="comissoes"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-people me-1"></i> @UiText.L("Adm360.RelFin.TabComissoes")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "margem" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")" role="tab" aria-selected="@(Model.AbaAtiva == "margem" ? "true" : "false")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="margem"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-pie-chart me-1"></i> @UiText.L("Adm360.RelFin.TabMargem")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "vencimentos" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")" role="tab" aria-selected="@(Model.AbaAtiva == "vencimentos" ? "true" : "false")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="vencimentos"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-stopwatch me-1"></i> @UiText.L("Adm360.RelFin.TabVencimentos")
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.AbaAtiva == "dre" ? "active bg-dark text-light border-secondary border-bottom-0" : "text-muted")" role="tab" aria-selected="@(Model.AbaAtiva == "dre" ? "true" : "false")"
+               asp-action="RelatoriosFinanceiros" asp-route-aba="dre"
+               asp-route-inicio="@Model.Inicio?.ToString("yyyy-MM-dd")" asp-route-fim="@Model.Fim?.ToString("yyyy-MM-dd")"
+               asp-route-vendedorId="@Model.VendedorId?.ToString()" asp-route-clienteId="@Model.ClienteId?.ToString()">
+                <i class="bi bi-journal-text me-1"></i> @UiText.L("Adm360.RelFin.TabDre")
+            </a>
+        </li>
+    </ul>
 
     @if (Model.AbaAtiva == "vendas")
     {
@@ -423,37 +394,37 @@
         <!-- Conteúdo Aba DRE Gerencial por Cliente (s11 / rodada 9 r9g) -->
         <div class="card bg-dark border-secondary text-light">
             <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span class="fw-bold">DRE Gerencial por Cliente — competência (NÃO é fluxo de caixa)</span>
+                <span class="fw-bold">@UiText.L("Adm360.RelFin.DreTableTitle")</span>
                 <div>
                     @if (Model.DreConciliacao is { } concHead)
                     {
                         @if (concHead.ReceitaLiquidaBate && concHead.CustoBate && concHead.DespesasBatem)
                         {
-                            <span class="badge bg-success me-1" title="Consolidado = clientes + Não atribuída, verificado re-agregando as mesmas fontes no período">Consolidado reconciliado</span>
+                            <span class="badge bg-success me-1" title="Consolidado = clientes + Não atribuída, verificado re-agregando as mesmas fontes no período">@UiText.L("Adm360.RelFin.DreBadgeReconciliado")</span>
                         }
                         else
                         {
-                            <span class="badge bg-danger me-1">Divergência no consolidado — veja os deltas abaixo</span>
+                            <span class="badge bg-danger me-1">@UiText.L("Adm360.RelFin.DreBadgeDivergencia")</span>
                         }
                     }
-                    <span class="badge bg-secondary">@Model.Dre.Count linhas</span>
+                    <span class="badge bg-secondary">@Model.Dre.Count @UiText.L("Adm360.RelFin.DreUnitLinhas")</span>
                 </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-dark table-hover table-striped align-middle mb-0" style="min-width: 1160px;">
                     <thead class="table-secondary text-dark">
                         <tr>
-                            <th scope="col">Cliente</th>
-                            <th scope="col" class="text-end">Nº Vendas</th>
-                            <th scope="col" class="text-end">Receita Bruta</th>
-                            <th scope="col" class="text-end">(−) Deduções</th>
-                            <th scope="col" class="text-end">(=) Receita Líquida</th>
-                            <th scope="col" class="text-end">(−) Custo Realizado</th>
-                            <th scope="col" class="text-end">(=) Resultado Bruto</th>
-                            <th scope="col" class="text-end">(−) Comissões Previstas</th>
-                            <th scope="col" class="text-end">(−) Despesas Atribuídas</th>
-                            <th scope="col" class="text-end">(=) Resultado Gerencial</th>
-                            <th scope="col">Origem</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.DreThCliente")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThQtdVendas")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThReceitaBruta")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThDeducoes")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThReceitaLiquida")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThCustoRealizado")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThResultadoBruto")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThComissoes")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThDespesas")</th>
+                            <th scope="col" class="text-end">@UiText.L("Adm360.RelFin.DreThResultadoGerencial")</th>
+                            <th scope="col">@UiText.L("Adm360.RelFin.DreThOrigem")</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -515,7 +486,7 @@
                     {
                         <tfoot class="table-dark border-secondary">
                             <tr class="fw-bold">
-                                <td colspan="2" class="text-end">Total do período (clientes + não atribuída):</td>
+                                <td colspan="2" class="text-end">@UiText.L("Adm360.RelFin.DreRodapeTotal")</td>
                                 <td class="text-end font-monospace">@Model.Dre.Sum(x => x.ReceitaBruta).ToString("C2", ptBr)</td>
                                 <td class="text-end font-monospace text-warning">@Model.Dre.Sum(x => x.Deducoes).ToString("C2", ptBr)</td>
                                 <td class="text-end font-monospace text-success">@Model.Dre.Sum(x => x.ReceitaLiquida).ToString("C2", ptBr)</td>
@@ -533,7 +504,7 @@
             @if (Model.DreConciliacao is { } conc)
             {
                 <div class="card-footer bg-dark border-secondary small text-secondary">
-                    <strong class="text-light d-block mb-2"><i class="bi bi-check2-all me-1"></i>Conciliação — consolidado = clientes + "Não atribuída" (re-agregado das mesmas fontes na geração)</strong>
+                    <strong class="text-light d-block mb-2"><i class="bi bi-check2-all me-1"></i>@UiText.L("Adm360.RelFin.DreConciliacaoTitulo")</strong>
                     <div class="row g-2">
                         <div class="col-md-4">
                             Receita líquida:
@@ -574,7 +545,7 @@
     <!-- B4 (J12) — Indicadores declarados: fonte, fórmula, filtros/período e tratamento de estorno -->
     <div class="card bg-dark border-secondary mt-4 text-light">
         <div class="card-header bg-dark border-secondary">
-            <span class="fw-bold"><i class="bi bi-calculator me-2"></i>Indicadores Declarados — Fonte, Fórmula, Filtros/Período e Tratamento de Estorno</span>
+            <span class="fw-bold"><i class="bi bi-calculator me-2"></i>@UiText.L("Adm360.RelFin.IndicatorsTitle")</span>
         </div>
         <div class="card-body small text-secondary">
             <div class="row g-3">
@@ -624,6 +595,35 @@
                         <li><strong>Diferente de fluxo de caixa:</strong> reconhece na <code>competencia</code> do documento — não nas datas de recebimento/pagamento.</li>
                         <li><strong>Limitações (fontes incompletas, sinalizadas sem esconder):</strong> (1) despesas não têm vínculo com cliente comercial nesta base (<code>origem_tipo</code> ∈ RECEBIMENTO_COMPRA/DESPESA_MANUAL/COMISSAO_VENDEDOR) — todo o total se concentra na linha "Não atribuída", e com filtro por cliente a linha leva 0 (nenhuma regra de atribuição foi inventada); (2) comissões são as previstas na venda, não o efetivamente pago em caixa; (3) base gerencial (sem critério contábil/ISC, sem conversão cambial); (4) valores gravados no documento — sem recálculo retroativo de custos.</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guia da tela -->
+    <div class="card bg-dark border-secondary mb-4 text-light">
+        <div class="card-body">
+            <h5 class="card-title text-info h6 mb-3"><i class="bi bi-info-circle me-2"></i>Entendendo os Relatórios Financeiros</h5>
+            <div class="row g-3 small text-secondary">
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Para que serve</strong>
+                    Permite auditar as vendas efetuadas, a liquidação de comissões por vendedor e a rentabilidade gerencial dos procedimentos cirúrgicos.
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <strong class="text-light d-block mb-1">Quem pode usar</strong>
+                    Diretoria, controladoria, gerência comercial e auditoria interna.
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <strong class="text-light d-block mb-1">Como executar</strong>
+                    Selecione a visão desejada nas abas, aplique os filtros de período e de cliente (comercial) e exporte em CSV caso necessite de análises em planilhas.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <strong class="text-light d-block mb-1">Efeito da confirmação</strong>
+                    Os relatórios utilizam custos históricos reais e comissões efetivamente apropriadas pelas liquidações de caixa.
+                </div>
+                <div class="col-md-6 col-lg-2">
+                    <strong class="text-light d-block mb-1">Próximo passo</strong>
+                    Utilizar as exportações protegidas para fechamento contábil e conciliação de pagamentos.
                 </div>
             </div>
         </div>

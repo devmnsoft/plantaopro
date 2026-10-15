@@ -289,7 +289,10 @@
                                             onclick="editarProduto('@p.Id', '@p.Sku', '@p.Nome', '@p.Unidade', '@p.CodigoBarras', @p.ControlaLote.ToString().ToLower(), @p.ExigeInspecao.ToString().ToLower(), @((p.PrecoCusto?.ToString(System.Globalization.CultureInfo.InvariantCulture)) ?? ""), @p.Ativo.ToString().ToLower(), '@p.AnvisaNumero', '@p.AnvisaAplicabilidade', '@anvisaVigenciaStr', '@p.AnvisaJustificacao', @((p.PrecoVenda?.ToString(System.Globalization.CultureInfo.InvariantCulture)) ?? ""))">
                                         <i class="bi bi-pencil"></i>
                                     </button>
-                                    <form method="post" asp-action="AlternarStatusProduto" class="d-inline" onsubmit="return desabilitarAoEnviar(this);">
+                                    <form method="post" asp-action="AlternarStatusProduto" class="d-inline" onsubmit="return desabilitarAoEnviar(this);"
+                                          data-confirm="true" data-confirm-type="@(p.Ativo ? "warning" : "success")"
+                                          data-confirm-title="@((p.Ativo ? "Inativar" : "Ativar") + " produto " + p.Sku)"
+                                          data-confirm-message="@((p.Ativo ? "O produto sairá dos cadastros ativos; lotes, ANVISA e preços permanecem legíveis nos relatórios." : "O produto volta aos cadastros ativos.") + " Deseja continuar?")">
                                         <input type="hidden" name="id" value="@p.Id" />
                                         <input type="hidden" name="ativo" value="@((!p.Ativo).ToString().ToLower())" />
                                         <button type="submit" class="btn btn-sm py-0 px-2 @(p.Ativo ? "btn-outline-danger" : "btn-outline-success")"
@@ -345,49 +348,40 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="Id" id="produtoId" value="" />
 
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <label for="produtoSku" class="form-label small fw-bold">SKU / Código <span class="text-danger">*</span></label>
-                            <input type="text" name="Sku" id="produtoSku" class="form-control form-control-sm font-monospace text-uppercase" required maxlength="60" placeholder="Ex.: STENT-001" />
+                    <!-- Seção 1 — Identificação (r9h) -->
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <span class="small fw-bold d-block mb-2 text-dark">1 · @UiText.L("Adm360.Produtos.SecIdentificacao")</span>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label for="produtoSku" class="form-label small fw-bold">SKU / Código <span class="text-danger">*</span></label>
+                                <input type="text" name="Sku" id="produtoSku" class="form-control form-control-sm font-monospace text-uppercase" required maxlength="60" placeholder="Ex.: STENT-001" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="produtoUnidade" class="form-label small fw-bold">Unidade <span class="text-danger">*</span></label>
+                                <select name="Unidade" id="produtoUnidade" class="form-select form-select-sm" required>
+                                    <option value="UN">UN — Unidade</option>
+                                    <option value="CX">CX — Caixa</option>
+                                    <option value="PC">PC — Peça</option>
+                                    <option value="KIT">KIT — Conjunto</option>
+                                    <option value="KG">KG — Quilograma</option>
+                                    <option value="LT">LT — Litro</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <label for="produtoUnidade" class="form-label small fw-bold">Unidade <span class="text-danger">*</span></label>
-                            <select name="Unidade" id="produtoUnidade" class="form-select form-select-sm" required>
-                                <option value="UN">UN — Unidade</option>
-                                <option value="CX">CX — Caixa</option>
-                                <option value="PC">PC — Peça</option>
-                                <option value="KIT">KIT — Conjunto</option>
-                                <option value="KG">KG — Quilograma</option>
-                                <option value="LT">LT — Litro</option>
-                            </select>
+                        <div class="mb-2">
+                            <label for="produtoNome" class="form-label small fw-bold">Descrição do Material <span class="text-danger">*</span></label>
+                            <input type="text" name="Nome" id="produtoNome" class="form-control form-control-sm" required maxlength="200" placeholder="Ex.: Stent Coronário Farmacológico de Sirolimus" />
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="produtoNome" class="form-label small fw-bold">Descrição do Material <span class="text-danger">*</span></label>
-                        <input type="text" name="Nome" id="produtoNome" class="form-control form-control-sm" required maxlength="200" placeholder="Ex.: Stent Coronário Farmacológico de Sirolimus" />
-                    </div>
-
-                    <div class="row g-2 mb-2">
-                        <div class="col-md-6">
-                            <label for="produtoPrecoCusto" class="form-label small fw-bold">Preço de Custo (R$) <span class="text-danger">*</span></label>
-                            <input type="number" step="0.01" min="0" name="PrecoCusto" id="produtoPrecoCusto" class="form-control form-control-sm font-monospace" required placeholder="0.00" oninput="recalcularPrecos()" />
-                        </div>
-                        <div class="col-md-6">
+                        <div class="mb-0">
                             <label for="produtoCodigoBarras" class="form-label small fw-bold">Código de Barras (EAN)</label>
                             <input type="text" name="CodigoBarras" id="produtoCodigoBarras" class="form-control form-control-sm font-monospace" maxlength="60" placeholder="Opcional" />
                         </div>
                     </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-md-6">
-                            <label for="produtoPrecoVenda" class="form-label small fw-bold">Preço de Venda padrão (R$)</label>
-                            <input type="number" step="0.01" min="0" name="PrecoVenda" id="produtoPrecoVenda" class="form-control form-control-sm font-monospace" placeholder="Opcional" oninput="recalcularPrecos()" />
-                        </div>
-                    </div>
-                    <div class="small text-muted mb-3" id="previewPrecos" aria-live="polite"></div>
 
+                    <!-- Seção 2 — Estoque, Lotes e Rastreabilidade (r9h) -->
                     <div class="mb-3 p-3 bg-light rounded-3 border">
-                        <span class="small fw-bold d-block mb-2 text-dark">Rastreabilidade e Qualidade</span>
+                        <span class="small fw-bold d-block mb-1 text-dark">2 · @UiText.L("Adm360.Produtos.SecEstoqueLotes")</span>
+                        <p class="small text-muted mb-2">Os lotes e datas de validade não são lançados aqui — eles entram no painel do produto (seção Lotes), onde cada lote tem sua própria validade.</p>
                         <div class="form-check form-switch mb-2">
                             <input class="form-check-input" type="checkbox" name="ControlaLote" id="produtoControlaLote" value="true" checked />
                             <label class="form-check-label small" for="produtoControlaLote">Exige controle de Lote e Validade</label>
@@ -398,8 +392,9 @@
                         </div>
                     </div>
 
+                    <!-- Seção 3 — Regulação ANVISA (r9h; bloco existente preservado) -->
                     <div class="mb-3 p-3 bg-light rounded-3 border">
-                        <span class="small fw-bold d-block mb-1 text-dark">Regulação ANVISA</span>
+                        <span class="small fw-bold d-block mb-1 text-dark">3 · @UiText.L("Adm360.Produtos.SecRegulacaoAnvisa")</span>
                         <p class="small text-muted mb-2">O número é registrado como texto (preserva zeros à esquerda) e a entrada é manual — não há busca simulada. A vigência regulatória é independente da validade do lote.</p>
                         <input type="hidden" name="AnvisaEntradaManual" value="true" />
                         <div class="row g-2 mb-2">
@@ -428,11 +423,30 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
+                    <!-- Seção 4 — Precificação (r9h) -->
+                    <div class="mb-3 p-3 bg-light rounded-3 border">
+                        <span class="small fw-bold d-block mb-2 text-dark">4 · @UiText.L("Adm360.Produtos.SecPrecificacao")</span>
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6">
+                                <label for="produtoPrecoCusto" class="form-label small fw-bold">Preço de Custo (R$) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" min="0" name="PrecoCusto" id="produtoPrecoCusto" class="form-control form-control-sm font-monospace" required placeholder="0.00" oninput="recalcularPrecos()" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="produtoPrecoVenda" class="form-label small fw-bold">Preço de Venda padrão (R$)</label>
+                                <input type="number" step="0.01" min="0" name="PrecoVenda" id="produtoPrecoVenda" class="form-control form-control-sm font-monospace" placeholder="Opcional" oninput="recalcularPrecos()" />
+                            </div>
+                        </div>
+                        <div class="small text-muted mb-0" id="previewPrecos" aria-live="polite"></div>
+                    </div>
+
+                    <!-- Seção 5 — Status (r9h) -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <span class="small fw-bold d-block mb-2 text-dark">5 · @UiText.L("Adm360.Produtos.SecStatus")</span>
+                        <div class="form-check form-switch mb-1">
                             <input class="form-check-input" type="checkbox" name="Ativo" id="produtoAtivo" value="true" checked />
                             <label class="form-check-label small fw-bold" for="produtoAtivo">Produto Ativo</label>
                         </div>
+                        <p class="small text-muted mb-0">Inativar preserva o histórico do produto (lotes, ANVISA e preços permanecem legíveis nos relatórios).</p>
                     </div>
                 </div>
                 <div class="modal-footer bg-light">

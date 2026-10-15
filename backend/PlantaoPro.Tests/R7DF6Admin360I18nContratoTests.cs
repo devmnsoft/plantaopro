@@ -251,13 +251,13 @@ public sealed class R7DF6Admin360I18nContratoTests
     }
 
     [Fact]
-    public void RecursosContemAs246ChavesAdm360EmTodosOsQuatroIdiomas()
+    public void RecursosContemAs283ChavesAdm360EmTodosOsQuatroIdiomas()
     {
         foreach (var arquivo in new[] { "UiTexts.resx", "UiTexts.en.resx", "UiTexts.es.resx", "UiTexts.fr.resx" })
         {
             var resx = Read("backend", "PlantaoPro.Web", "Localization", arquivo);
             var totalAdm360 = Regex.Matches(resx, "<data name=\"Adm360\\.").Count;
-            Assert.Equal(246, totalAdm360);
+            Assert.Equal(283, totalAdm360);
             foreach (var chave in new[]
                      {
                          // views
@@ -277,7 +277,11 @@ public sealed class R7DF6Admin360I18nContratoTests
                          "Adm360.Cirurgias.OkScheduled", "Adm360.Organizacao.OkDepartmentDeactivated", "Adm360.Organizacao.OkStatusOnLeave",
                          "Adm360.Organizacao.OkContractCancelled", "Adm360.Organizacao.FallbackOperationFailed",
                          "Adm360.Orcamentos.OkApproved", "Adm360.Orcamentos.FallbackNotFound", "Adm360.Orcamentos.FallbackNotFoundOrNotApproved",
-                         "Adm360.Estoque.OkVoucherValued", "Adm360.Estoque.FallbackValueVoucherSaleError"
+                          "Adm360.Estoque.OkVoucherValued", "Adm360.Estoque.FallbackValueVoucherSaleError",
+                          // r9h: fluxos ajustados (relatorios financeiros por cliente + DRE + secoes do formulario de produto)
+                          "Adm360.RelFin.PageTitle", "Adm360.RelFin.TabDre", "Adm360.RelFin.ExportCsv",
+                          "Adm360.RelFin.DreTableTitle", "Adm360.RelFin.DreThResultadoGerencial", "Adm360.RelFin.DreConciliacaoTitulo",
+                          "Adm360.Produtos.SecIdentificacao", "Adm360.Produtos.SecPrecificacao"
                      })
             {
                 Assert.Contains($"<data name=\"{chave}\"", resx, StringComparison.Ordinal);
@@ -292,11 +296,17 @@ public sealed class R7DF6Admin360I18nContratoTests
         Assert.Contains("<value>Não foi possível concluir a operação. Tente novamente.</value>", master);
         Assert.Contains("<value>cadastrados · estrutura organizacional</value>", master);
         Assert.Contains("<value>Vale valorizado com sucesso e venda interna gerada!</value>", master);
+        // r9h
+        Assert.Contains("<value>DRE Gerencial por Cliente — competência (NÃO é fluxo de caixa)</value>", master);
+        Assert.Contains("<value>Vencimentos por Parcela</value>", master);
         // ampersand escapado no título bilingue do guia (pt-BR canônico)
         Assert.Contains("<value>Captação &amp; Entrada</value>", master);
         // traduções presentes nas demais culturas (amostra)
         var en = Read("backend", "PlantaoPro.Web", "Localization", "UiTexts.en.resx");
         Assert.Contains("<value>Capture &amp; Intake</value>", en);
         Assert.Contains("<value>Purchase order approved successfully. Values frozen.</value>", en);
+        // r9h
+        Assert.Contains("<value>Management P&amp;L by Client — accrual basis (NOT cash flow)</value>", en);
+        Assert.Contains("<value>Due Dates by Installment</value>", en);
     }
 }

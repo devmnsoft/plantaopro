@@ -1,0 +1,691 @@
+﻿<html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#09243c">
+    <meta name="antiforgery-token" content="CfDJ8GFU8tOBpcVCqV5VTCj5kmzC9SCK5llxyp9qLnkl_QIqedwfU2DYAiDF9MltXQlvjpbFGiHxNIreavSokIA3ddSx6YUWYlAWICw2G2jFIhwJZVdmdWeV-OD44OZzyy5vshYIDHQEmL_W8mXVsEkRKoiqGs8gjRy3-Hi2ChezAMR32puShdm3DH7-h9rC9e1YVA">
+    <link rel="manifest" href="/manifest.json">
+    <title>Estoque e Lotes â€” Administrativo 360</title>
+    <link rel="icon" type="image/svg+xml" href="/media/brand/favicon.svg">
+    <link rel="apple-touch-icon" href="/media/brand/apple-touch-icon.png">
+    <link rel="stylesheet" href="/css/vendor/bootstrap.min.css?v=zRgmWB5PK4CvTx4FiXsxbHaYRBBjz_rvu97sOC7kzXI">
+    <link rel="stylesheet" href="/css/vendor/bootstrap-compat.css?v=OMH6aGES-FGl4BwMbl2tcMpuDixZHNo6W_GCOHBsLFk">
+    <link rel="stylesheet" href="/css/icons/bootstrap-icons.css?v=p2iNNlToKNF2hEuy1wUYLCzr8eYacsdAYoO_oDmPR_8">
+    <link rel="stylesheet" href="/css/plantaopro.css?v=jzR-cAU65azzNmlApjvTPhhQG0awBt6j9Q12TlVvn-M">
+    <link rel="stylesheet" href="/css/app-icons.css?v=Z1hrew2O18d_ZbiZw3_OLSScBU9xjPHHVrH-hUbdkC4">
+    <link rel="stylesheet" href="/css/design-system/v2000-premium.css?v=aF2t7fzp0OL0--GDui9WrmCJipYgYNOYLpdXjo7kG3A">
+    <link rel="stylesheet" href="/css/design-system/v2010-screen-polish.css?v=nN--pkfkTBoxyRfMUODK5lvQzak8ZH_zFftnAT53D2U">
+    <link rel="stylesheet" href="/css/design-system/v2116-premium-review.css?v=-m6FHWkBRjHYNJRXB2lLZ2O73s-5bOj2gT2U6bMSnTw">
+    <link rel="stylesheet" href="/css/design-system/v2117-design-stabilization.css?v=3L8w0MuMvlCedU-wa0SgxhePr9vtxxiqgP43n981G00">
+    <link rel="stylesheet" href="/css/design-system/v2118-functional-polish.css?v=o-EcUzuPsV4hxvUX8lzCGuHDCVjH8qxXp7XWFP6iYbk">
+    <link rel="stylesheet" href="/css/design-system/v2120-premium-final-polish.css?v=Fd0VrlsLkGAg2PdYnoueGM4n53ihK7aL_QUjPsu8t7Y">
+    <link rel="stylesheet" href="/css/design-system/v2130-forms.css?v=gzpcd4_djr5-j1HkXNv2dl6x3iwJKsgKwpVyg09Ievw">
+    <link rel="stylesheet" href="/css/design-system/v2121-saas-guided.css?v=_QAwLsgypc1SD7RqapWzPWmzKjoWgFyw6U2BrwkGqlI">
+    <link rel="stylesheet" href="/css/design-system/v2122-saas-commerce.css?v=vOoxJM79Tpmi6JMgw_HxJQeb4iP5WQkrDNgsPcvKtbo">
+    <link rel="stylesheet" href="/css/design-system/v2123-saas-operations.css?v=5ukN1SfFoLaUrWDBnQON6uLNOf2uKAxVcPrbJRk3DZQ">
+    <link rel="stylesheet" href="/css/design-system/v2124-operational-intelligence.css?v=uMLPqPh1jKfWSIkOvrsMrj62LqhH1I4dnRvrx5Tb11o">
+    <link rel="stylesheet" href="/css/design-system/drawers.css?v=imyysg1O2yLVq4Oroz59E2k_rRGbGqO7i-0xhNldcgs">
+    <link rel="stylesheet" href="/css/design-system/v2126-form-feedback.css?v=2HNBrOLRshcaAj0WKsJfV1u3xz8ydaxObfhecOnhitY">
+    <link rel="stylesheet" href="/css/design-system/v2132-premium-global.css?v=jb0EFY2h-4qL-22dF06fa0EuijujF5sv6sDQJ4tRjQw">
+    <link rel="stylesheet" href="/css/design-system/v2133-real-screens.css?v=ZVL_TDsJZUvfCgyJQAR_kQpuoWItvwFHjNmOAJH6UVA">
+    <link rel="stylesheet" href="/css/design-system/v2134-premium-qa.css?v=GM4cIn7A1LZ01G7bET8mMyTcSpXyZ6mbDbbgU5Ftu9Y">
+    <link rel="stylesheet" href="/css/design-system/v2137-global-ux.css?v=Aufiz3wJw60B61NNL6Ud_PVivSL_uJpnTI59JJtNCEY">
+    <link rel="stylesheet" href="/css/design-system/v2138-session-internal.css?v=_S1sZqY01x-lkEGIQei31v9komdk8mR7FO5Gy-vc-JQ">
+    <link rel="stylesheet" href="/css/design-system/v2139-premium-library.css?v=yfHO-if0Wguynqe0VB9IoutSRycEvet4wonzo24wPOs">
+    <link rel="stylesheet" href="/css/design-system/v2140-guided-journeys.css?v=V9UXNfWM8KYGpF9Aop6ZaAANf6dR8NVGcSXeUHw8G-k">
+    <link rel="stylesheet" href="/css/design-system/v2141-premium-cockpit.css?v=_-Qfztjiv3kIanGMRY1NHgFd-MQwDZtWaNJMTE-Zz9s">
+    <link rel="stylesheet" href="/css/design-system/v2142-guided-premium.css?v=g8SJo06tZLuoQVx5ysA8erVxpBrXUK1j5dYQX51C_8o">
+    <link rel="stylesheet" href="/css/design-system/v2143-qa-visual.css?v=6e6Lv6QJNd2e32C-AMmw6lG0bQlVZn5UgxTe9FfkAJc">
+    <link rel="stylesheet" href="/css/design-system/v2144-responsive-safe-actions.css?v=COsTsE5kQx1ulqbbARH6RAGKJkVQ7NwQW5oWIzK_U-8">
+    <link rel="stylesheet" href="/css/design-system/v2145-onboarding-help.css?v=HP6-489d5wwPM3SlV08xHc1FY-T2DD6RlN0sNwudUUs">
+    <link rel="stylesheet" href="/css/design-system/v2146-pending-notifications.css?v=M6nr8NBQBkKafAVpURpB_Zot5xTgPMeRG0NUQmy87CU">
+    <link rel="stylesheet" href="/css/design-system/kanban.css?v=rNGyfW0pMWiHAYAY3D200bCrh8r0I_Rk96TNBtyFH3c">
+    <link rel="stylesheet" href="/css/design-system/v2148-operational-premium.css?v=HoDSmH-GF3dnDm4y5MI8pmL79T1ZQIM8mPLvSEFj2L4">
+    <link rel="stylesheet" href="/css/pages/administrativo360-tema-claro.css?v=zaw4ZlM9aSmSX2FX87IO7BwQhmruc73sl-VyYycSgX4">
+    <link rel="stylesheet" href="/css/design-system/v2150-bloco-c-canonical.css?v=EwYRXC9K26SRBdRx8PLtBDng4BjigCQ5sjRlMQheH34">
+    <link rel="stylesheet" href="/css/design-system/v2151-wp-c-homologacao.css?v=dIJyD0-TVQV5EpADBQTBjZrKWL-YGozUuARkWBJmEg4">
+    
+</head>
+<body class="pp-body app-body pp-a360">
+<script>
+(function () {
+    // P0 CSRF: wrapper global de window.fetch â€” injeta o token antiforgery em requests
+    // same-origin com mÃ©todo inseguro (POST/PUT/PATCH/DELETE) via header canÃ´nico
+    // RequestVerificationToken. O cookie antiforgery jÃ¡ Ã© enviado automaticamente pelo
+    // browser em requests same-origin. O wrapper nunca bloqueia a pÃ¡gina em caso de erro.
+    var meta = document.querySelector('meta[name="antiforgery-token"]');
+    var token = meta ? meta.getAttribute('content') : '';
+    if (!token || !window.fetch) return;
+    var unsafe = { POST: 1, PUT: 1, PATCH: 1, DELETE: 1 };
+    var original = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+        try {
+            var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+            if (!unsafe[method]) return original(input, init);
+            var url = typeof input === 'string' ? input : (input && input.url) || '';
+            var sameOrigin = !url || url.charAt(0) === '/' || url.indexOf(window.location.origin) === 0;
+            if (!sameOrigin) return original(input, init);
+            init = init || {};
+            if (!init.headers) { init.headers = new Headers({ RequestVerificationToken: token }); return original(input, init); }
+            if (init.headers instanceof Headers) { init.headers.set('RequestVerificationToken', token); }
+            else if (Array.isArray(init.headers)) { init.headers.push(['RequestVerificationToken', token]); }
+            else { init.headers['RequestVerificationToken'] = token; }
+            return original(input, init);
+        } catch (err) {
+            return original(input, init);
+        }
+    };
+})();
+</script>
+    <a class="skip-link" href="#mainContent">Pular para o conteÃºdo</a>
+        
+        <div class="pp-app-shell" data-app-shell="true">
+            <aside class="pp-sidebar app-sidebar pp-calm-navigation" id="appSidebar" aria-label="NavegaÃ§Ã£o principal">
+    <header class="sidebar-brand">
+        <a class="sidebar-logo" aria-label="PlantÃ£oPro â€” inÃ­cio" href="/MinhaCentral"><img class="brand-logo" src="/branding/logo-horizontal-light.svg" alt="PlantÃ£oPro"></a>
+        <button class="sidebar-collapse btn-icon" id="sidebarCollapse" type="button" aria-label="Recolher menu lateral" aria-expanded="true"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg></button>
+        <div class="sidebar-tenant"><span class="tenant-status" aria-hidden="true"></span><div><strong>Sistema Vertical</strong><span>ADMINISTRADOR</span></div></div>
+        <button class="sidebar-search" type="button" data-command-open="" aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Abrir busca rÃ¡pida" aria-expanded="false"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg><span>Busca rÃ¡pida</span><kbd>Ctrl K</kbd></button>
+    </header>
+    <nav class="sidebar-nav">
+        <div class="nav-section-title"><span>VisÃ£o geral</span></div>
+        <a class="nav-link-app " href="/MinhaCentral"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Minha Central</span></a>
+        <a class="nav-link-app " href="/MeuDia"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#calendar"></use></svg><span>Meu dia</span></a>
+        <a class="nav-link-app " href="/Home/Dashboard"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chart-bar"></use></svg><span>Dashboard</span></a>
+        <a class="nav-link-app " href="/Pendencias/MinhasPendencias"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg><span>Central de PendÃªncias</span></a>
+            <div class="nav-section-title"><span>OperaÃ§Ã£o</span></div>
+                <a class="nav-link-app " href="/CommandCenter"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Command Center</span></a>
+            <div class="nav-section-title"><span>SaÃºde 360</span></div>
+ <a class="nav-link-app " href="/Pacientes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user-heart"></use></svg><span>Pacientes</span></a>  <a class="nav-link-app " href="/Consultas/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#medical-cross"></use></svg><span>Consultas</span></a>  <a class="nav-link-app " href="/ClinicaUnidades/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#building"></use></svg><span>Unidades clÃ­nica</span></a>             <div class="nav-section-title"><span>Financeiro</span></div>
+ <a class="nav-link-app " href="/Financeiro/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg><span>VisÃ£o financeira</span></a>             <div class="nav-section-title"><span>AdministraÃ§Ã£o do Cliente</span></div>
+ <a class="nav-link-app active" href="/Administrativo360/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>Administrativo 360</span></a>  <a class="nav-link-app " href="/Relatorios/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chart-bar"></use></svg><span>RelatÃ³rios</span></a>  <a class="nav-link-app " href="/Usuarios/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#users-group"></use></svg><span>UsuÃ¡rios</span></a>  <a class="nav-link-app " href="/Perfis"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg><span>Perfis</span></a>  <a class="nav-link-app " href="/Permissoes/Matriz"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#shield-lock"></use></svg><span>PermissÃµes</span></a>  <a class="nav-link-app " href="/Configuracoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg><span>ConfiguraÃ§Ãµes</span></a>         <div class="nav-section-title"><span>Acompanhamento</span></div>
+        <a class="nav-link-app " href="/Notificacoes/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#bell"></use></svg><span>NotificaÃ§Ãµes</span></a>
+    </nav>
+    <footer class="sidebar-footer"><span class="nav-section-title">Suporte</span><a class="nav-link-app" href="/Ajuda/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg><span>Central de ajuda</span></a><a class="nav-link-app" href="/Lgpd/Index"><svg class="pp-icon" width="19" height="19" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#lock"></use></svg><span>Privacidade e LGPD</span></a><span class="sidebar-version">PlantÃ£oPro v1.95.1 Â· operaÃ§Ã£o segura</span>
+</footer>
+</aside>
+
+            <div class="pp-main-shell">
+                <header class="pp-topbar app-topbar">
+    <div class="pp-topbar__identity topbar-left">
+        <button class="btn btn-light btn-icon d-lg-none" id="sidebarToggle" type="button" aria-controls="appSidebar" aria-expanded="false" aria-label="Abrir menu" data-pp-nav-bound="1">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg>
+        </button>
+        <div>
+            <nav class="pp-breadcrumb" aria-label="VocÃª estÃ¡ em">
+                <ol class="app-breadcrumb">
+                            <li><a href="/Home/Dashboard">InÃ­cio</a></li>
+                            <li>Administrativo 360</li>
+                            <li aria-current="page">Estoque e Lotes (FEFO)</li>
+                </ol>
+            </nav>
+            <h1 class="pp-topbar__title page-title">Estoque e Lotes â€” Administrativo 360</h1>
+            <p class="pp-topbar__subtitle pp-caption d-none d-md-block">Acompanhe prioridades e continue sua jornada.</p>
+        </div>
+    </div>
+    <div class="pp-topbar__actions topbar-actions">
+        <span class="pp-live-context d-none d-xxl-inline-flex" role="status"><span aria-hidden="true"></span> Ambiente operacional</span>
+        <div class="pp-session-health d-none d-xl-flex" role="status" aria-live="polite" data-session-health="" data-online="true" data-online-text="Protegida" data-offline-text="Sem conexÃ£o" data-aria-online="ConexÃ£o protegida com a plataforma" data-aria-offline="Sem conexÃ£o. Evite concluir alteraÃ§Ãµes atÃ© reconectar." aria-label="ConexÃ£o protegida com a plataforma">
+            <span class="pp-session-health__dot" aria-hidden="true"></span>
+            <span><small>ConexÃ£o</small><strong data-session-health-label="">Protegida</strong></span>
+        </div>
+        <button class="topbar-search d-none d-xl-flex" type="button" data-command-open="" aria-haspopup="dialog" aria-controls="commandPalette" aria-label="Buscar no PlantÃ£oPro" aria-expanded="false">
+            <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#search"></use></svg>
+            <span>Buscar no PlantÃ£oPro</span>
+            <kbd>Ctrl K</kbd>
+        </button>
+        <span class="tenant-context-badge d-none d-lg-inline-flex is-tenant" role="status" aria-label="Ãrea da instituiÃ§Ã£o: Sistema Vertical"><i class="bi bi-building" aria-hidden="true"></i><span><small>Ãrea da instituiÃ§Ã£o</small><strong>Sistema Vertical</strong></span></span>
+
+        <span class="plan-usage-mini d-none d-lg-inline-flex"><i class="bi bi-speedometer2"></i><span>Plano nÃ£o informado</span><small>uso saudÃ¡vel</small></span>
+
+        <a class="btn btn-light btn-icon" aria-label="Ajuda contextual" href="/Ajuda/Index" data-bs-original-title="Ajuda contextual" data-pp-tooltip="1">
+            <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#help-circle"></use></svg>
+        </a>
+        <button class="btn btn-light btn-icon position-relative notification-menu" type="button" data-notification-open="" aria-label="Abrir central de notificaÃ§Ãµes" aria-haspopup="dialog" aria-controls="notificationDrawer">
+    <i class="bi bi-bell" aria-hidden="true"></i>
+    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger" data-notification-count="" hidden=""><span data-notification-count-value=""></span><span class="visually-hidden"> notificaÃ§Ãµes nÃ£o lidas</span></span>
+</button>
+
+            <a class="btn btn-warning btn-sm d-none d-md-inline-flex" href="/MinhaAssinatura/Upgrade">
+                <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#wallet"></use></svg> Upgrade
+            </a>
+        <div class="pp-user-menu pp-calm-user-menu" data-user-menu="">
+    <button class="pp-user-menu__trigger" type="button" data-user-menu-trigger="" aria-controls="userMenuDropdown" aria-expanded="false" aria-haspopup="menu">
+        <span class="user-avatar" aria-hidden="true"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg></span>
+        <span class="user-info"><span class="user-name">Administrador Sistema Vertical</span><small>ADMINISTRADOR</small></span>
+        <svg class="pp-icon" width="16" height="16" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#chevron-down"></use></svg>
+    </button>
+    <div class="pp-user-menu__dropdown" id="userMenuDropdown" role="menu" hidden="">
+        <div class="pp-user-menu__summary"><strong>Administrador Sistema Vertical</strong><span>Sistema Vertical</span></div>
+        <a role="menuitem" href="/Configuracoes/MeuPerfil"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#user"></use></svg> Meu perfil</a>
+        <a role="menuitem" href="/Configuracoes/Index"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#settings"></use></svg> ConfiguraÃ§Ãµes</a>
+        <div class="pp-user-menu__divider" role="separator"></div>
+        <a class="pp-user-menu__logout" role="menuitem" href="/Account/Logout"><svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#logout"></use></svg> Sair</a>
+    </div>
+</div>
+
+    </div>
+</header>
+
+                <main class="pp-content app-content" id="mainContent" tabindex="-1">
+                    <div class="pp-content-container">
+                        <section class="pp-context-bar is-tenant " aria-label="Contexto de acesso atual" data-context-bar="">
+    <div class="pp-context-bar__scope">
+        <span class="pp-context-bar__icon" aria-hidden="true">
+ <svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#building-hospital"></use></svg>         </span>
+        <div>
+            <span class="pp-context-bar__eyebrow">Contexto da instituiÃ§Ã£o</span>
+            <strong>Sistema Vertical</strong>
+            <small>Dados e aÃ§Ãµes limitados ao tenant e Ã s permissÃµes deste perfil.</small>
+        </div>
+    </div>
+    <dl class="pp-context-bar__identity">
+        <div><dt>UsuÃ¡rio</dt><dd>Administrador Sistema Vertical</dd></div>
+        <div><dt>Perfil</dt><dd>ADMINISTRADOR</dd></div>
+        <div><dt>Modo</dt><dd>Tenant</dd></div>
+    </dl>
+    <div class="pp-context-bar__actions">
+    </div>
+</section>
+
+                        
+
+
+<header class="page-header pp-future-page-header" aria-labelledby="page-context-title">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+        <div>
+            <p class="text-uppercase text-muted small mb-1"></p>
+            <h1 id="page-context-title" class="h2 mb-2">PÃ¡gina</h1>
+            <p class="text-muted mb-0">Consulte as informaÃ§Ãµes e aÃ§Ãµes disponÃ­veis.</p>
+        </div>
+    </div>
+</header>
+
+                        <section class="pp-guided-journey" aria-label="Jornada da instituiÃ§Ã£o" data-guided-journey="">
+    <div class="pp-guided-journey__intro">
+        <span class="pp-guided-journey__eyebrow">ExperiÃªncia guiada</span>
+        <strong>Jornada da instituiÃ§Ã£o</strong>
+        <p>Configure sua instituiÃ§Ã£o e acompanhe a operaÃ§Ã£o sem sair do contexto contratado.</p>
+    </div>
+    <ol class="pp-guided-journey__steps">
+            <li class="">
+                <a href="/Home/Index">
+                    <span aria-hidden="true">1</span>
+                    <strong>VisÃ£o geral</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Usuarios/Index">
+                    <span aria-hidden="true">2</span>
+                    <strong>Equipe</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Perfis">
+                    <span aria-hidden="true">3</span>
+                    <strong>Perfis</strong>
+                </a>
+            </li>
+            <li class="">
+                <a href="/Plantoes/Index">
+                    <span aria-hidden="true">4</span>
+                    <strong>OperaÃ§Ã£o</strong>
+                </a>
+            </li>
+    </ol>
+</section>
+
+                        <details class="pp-screen-guide" data-screen-guide="">
+    <summary>
+        <span class="pp-screen-guide__icon" aria-hidden="true">?</span>
+        <span>Como usar esta tela</span>
+        <span class="pp-screen-guide__chevron" aria-hidden="true"></span>
+    </summary>
+    <div class="pp-screen-guide__content">
+        <div>
+            <strong data-screen-guide-purpose="">Conduza a operaÃ§Ã£o administrativa: cadastros, compras, documentos fiscais, recebimento e qualidade.</strong>
+            <p data-screen-guide-audience=""><span class="pp-screen-guide__label">Quem pode usar:</span> Gestores e operadores autorizados do tenant contratado para o mÃ³dulo.</p>
+            <p class="pp-screen-guide__scope"><span class="pp-screen-guide__label">Contexto:</span> somente a instituiÃ§Ã£o vinculada Ã  sua sessÃ£o.</p>
+        </div>
+        <ol aria-label="OrientaÃ§Ã£o rÃ¡pida">
+            <li data-screen-guide-action="">Importe o XML da NF-e, confira o destinatÃ¡rio, vincule ao pedido autorizado e confirme o recebimento antes de decidir a inspeÃ§Ã£o.</li>
+            <li data-screen-guide-care="">Recebimento e inspeÃ§Ã£o movem estoque e geram tÃ­tulos a pagar; as aÃ§Ãµes sÃ£o auditadas e devem ser executadas uma Ãºnica vez por documento.</li>
+            <li data-screen-guide-next="">Depois de concluir, confirme a mensagem de resultado antes de sair.</li>
+        </ol>
+    </div>
+</details>
+
+                        
+<div class="container-fluid py-3">
+
+    <nav class="adm360-nav-wrapper mb-4" aria-label="NavegaÃ§Ã£o Administrativo 360">
+    <div class="card shadow-sm">
+        <div class="card-body p-2">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 border-bottom pb-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-2 py-1"><i class="bi bi-shield-check me-1"></i>Administrativo 360</span>
+                    <span class="text-secondary small d-none d-md-inline">| ERP de GestÃ£o Hospitalar, Suprimentos e OPME</span>
+                </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <a href="/Administrativo360/Gestao/Dashboard" class="btn btn-sm btn-outline-info">
+                            <i class="bi bi-graph-up me-1"></i>Dashboard 360
+                        </a>
+                        <a class="btn btn-sm btn-outline-secondary" href="/Administrativo360/Index">
+                            <i class="bi bi-building me-1"></i>Resumo
+                        </a>
+                    </div>
+            </div>
+
+            <!-- Grupos de NavegaÃ§Ã£o -->
+            <div class="d-flex flex-wrap gap-1 align-items-center" role="menubar">
+                    <!-- 1. GestÃ£o Organizacional -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-diagram-3 me-1"></i>GestÃ£o Organizacional
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Departamentos"><i class="bi bi-building me-2"></i>Departamentos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Cargos"><i class="bi bi-person-badge me-2"></i>Cargos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Colaboradores"><i class="bi bi-people me-2"></i>Colaboradores</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Contratos"><i class="bi bi-file-earmark-text me-2"></i>Contratos de Trabalho</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 2. Cadastros -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-folder me-1"></i>Cadastros
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cadastros"><i class="bi bi-grid me-2"></i>Hub de Cadastros</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Parceiros"><i class="bi bi-people me-2"></i>Parceiros (Hospitais/Fornecedores)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Produtos"><i class="bi bi-box-seam me-2"></i>Produtos &amp; OPME</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Locais"><i class="bi bi-geo-alt me-2"></i>Locais de Estoque</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Lotes"><i class="bi bi-tag me-2"></i>Lotes &amp; Validades</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 3. Comercial & CotaÃ§Ãµes -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-tag me-1"></i>Comercial &amp; CotaÃ§Ãµes
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cotacoes"><i class="bi bi-inbox me-2"></i>Central de CotaÃ§Ãµes</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/Relacionamento"><i class="bi bi-diagram-3 me-2"></i>De/Para de Produtos</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Orcamentos"><i class="bi bi-receipt me-2"></i>OrÃ§amentos CirÃºrgicos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Vendas"><i class="bi bi-cart-check me-2"></i>Vendas Internas</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 4. Compras -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bag-check me-1"></i>Compras
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/PedidosCompra"><i class="bi bi-cart-plus me-2"></i>Pedidos de Compra</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Recebimentos"><i class="bi bi-box-arrow-in-down me-2"></i>Recebimento &amp; ConferÃªncia</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 5. Estoque & Qualidade -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-success text-white fw-bold dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-boxes me-1"></i>Estoque &amp; Qualidade
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item active" href="/Administrativo360/Estoque"><i class="bi bi-boxes me-2"></i>Estoque &amp; Lotes (FEFO)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Movimentacoes"><i class="bi bi-arrow-left-right me-2"></i>TransferÃªncias</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Inspecoes"><i class="bi bi-shield-check me-2"></i>InspeÃ§Ãµes &amp; Quarentena</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Ocorrencias"><i class="bi bi-exclamation-octagon me-2"></i>OcorrÃªncias da Qualidade</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Inventarios"><i class="bi bi-clipboard-check me-2"></i>InventÃ¡rios</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Coleta"><i class="bi bi-upc-scan me-2"></i>Coleta MÃ³vel</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 6. OperaÃ§Ã£o CirÃºrgica -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-heart-pulse me-1"></i>OperaÃ§Ã£o CirÃºrgica
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Cirurgias"><i class="bi bi-calendar-check me-2"></i>Agendamentos CirÃºrgicos</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Vales"><i class="bi bi-truck me-2"></i>Vales de ConsignaÃ§Ã£o</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Valorizacao"><i class="bi bi-cash-coin me-2"></i>Consumo, DevoluÃ§Ã£o &amp; ValorizaÃ§Ã£o</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 7. Financeiro -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-wallet2 me-1"></i>Financeiro
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/TitulosReceber"><i class="bi bi-arrow-down-left-circle me-2 text-success"></i>Contas a Receber</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/TitulosPagar"><i class="bi bi-arrow-up-right-circle me-2 text-danger"></i>Contas a Pagar</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/ComissoesPendentes"><i class="bi bi-percent me-2 text-warning"></i>ComissÃµes a Pagar</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/ContasFinanceiras"><i class="bi bi-bank me-2"></i>Contas Financeiras</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/FluxoCaixa"><i class="bi bi-graph-down me-2"></i>Fluxo de Caixa</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/FechamentoCaixa"><i class="bi bi-lock me-2"></i>Fechamento de Caixa</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 7b. Fiscal (R4-F2) -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-receipt-cutoff me-1"></i>Fiscal
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Fiscal/Notas"><i class="bi bi-receipt me-2"></i>PrÃ©-EmissÃ£o de NF-e</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Fiscal/Configurar"><i class="bi bi-gear me-2"></i>ConfiguraÃ§Ã£o Fiscal</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 8. Documentos & IntegraÃ§Ãµes -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-code me-1"></i>Documentos &amp; IntegraÃ§Ãµes
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml"><i class="bi bi-file-earmark-code me-2"></i>Central XML (NF-e 55)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml/Triagens"><i class="bi bi-funnel me-2"></i>Fila de Triagem (Quarentena)</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/DocumentosXml/Sincronizacao"><i class="bi bi-cloud-arrow-down me-2"></i>DF-e Sefaz</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/ContasPortal"><i class="bi bi-key me-2"></i>Contas Portal</a></li>
+                                <li><a class="dropdown-item " href="/Administrativo360/Cotacoes/Estabelecimentos"><i class="bi bi-building me-2"></i>Estabelecimentos (CNPJs)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/Gestao/Monitor"><i class="bi bi-activity me-2"></i>Monitor de IntegraÃ§Ãµes</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- 9. RelatÃ³rios -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-file-earmark-bar-graph me-1"></i>RelatÃ³rios
+                        </button>
+                        <ul class="dropdown-menu shadow">
+                            <li><a class="dropdown-item " href="/Administrativo360/Relatorios"><i class="bi bi-file-earmark-text me-2"></i>RelatÃ³rios Operacionais &amp; Rastreabilidade</a></li>
+                            <li><a class="dropdown-item " href="/Administrativo360/RelatoriosFinanceiros"><i class="bi bi-file-earmark-ruled me-2"></i>RelatÃ³rios Financeiros &amp; DRE</a></li>
+                        </ul>
+                    </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 text-light fw-bold mb-1">PosiÃ§Ã£o de Estoque &amp; Lotes (FEFO)</h1>
+            <p class="text-secondary small mb-0">Disponibilidade calculada atomicamente: FÃ­sico Liberado menos Reservas Ativas com ordenaÃ§Ã£o FEFO.</p>
+        </div>
+        <div>
+            <a class="btn btn-outline-info btn-sm" href="/Administrativo360/Movimentacoes">
+                <i class="bi bi-arrow-left-right me-1"></i>Transferir Estoque
+            </a>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Saldo FÃ­sico em CustÃ³dia</span>
+                    <strong class="fs-4 text-light">8 <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Soma de todos os lotes e almoxarifados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Reservas CirÃºrgicas Ativas</span>
+                    <strong class="fs-4 text-warning">0 <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Bloqueadas para procedimentos agendados</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="card bg-dark border-secondary shadow-sm">
+                <div class="card-body">
+                    <span class="text-secondary small d-block">Saldo Imediatamente DisponÃ­vel</span>
+                    <strong class="fs-4 text-success">0 <small class="fs-6 text-secondary">unidades</small></strong>
+                    <div class="text-secondary small mt-1">Lotes liberados e nÃ£o vencidos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card bg-dark border-secondary shadow-sm mb-4">
+        <div class="card-body py-3">
+            <form method="get" class="row g-2 align-items-end pp-form-enhanced" data-pp-loading-bound="1"><div class="pp-client-validation-summary" role="alert" tabindex="-1"><strong>Revise os campos destacados</strong><p>Preencha as informaÃ§Ãµes obrigatÃ³rias e corrija os formatos indicados.</p></div>
+                <div class="col-12 col-md-5">
+                    <label class="form-label small text-secondary mb-1">Buscar por Produto ou Lote</label>
+                    <input type="text" name="busca" class="form-control form-control-sm bg-black text-light border-secondary" placeholder="Nome do produto, SKU ou cÃ³digo do lote">
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">CondiÃ§Ã£o TÃ©cnica</label>
+                    <select name="condicao" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todas as CondiÃ§Ãµes</option>
+                        <option value="LIBERADO">Liberado</option>
+                        <option value="QUARENTENA">Quarentena</option>
+                        <option value="VENCIDO">Vencido</option>
+                        <option value="BLOQUEADO" selected="selected">Bloqueado</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-secondary mb-1">Local de Armazenamento</label>
+                    <select name="localId" class="form-select form-select-sm bg-black text-light border-secondary">
+                        <option value="">Todos os Locais</option>
+                            <option value="16300dde-55f7-4277-92b4-c3a5fe196f74">SV-DEP-R11 â€” Deposito Central R11 (homologacao)</option>
+                            <option value="711b0ccc-3b97-428d-a707-213d08dc38c7">SV-EXT-R11 â€” Externo R11 (homologacao)</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-1">
+                    <button type="submit" class="btn btn-outline-info btn-sm w-100"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tabela de Saldos -->
+    <div class="card bg-dark border-secondary shadow-sm">
+        <div class="card-header bg-dark border-secondary d-flex justify-content-between align-items-center py-2">
+            <span class="text-light fw-bold small"><i class="bi bi-boxes me-2 text-info"></i>Saldos e Validades por Lote</span>
+            <span class="text-secondary small">Total: 2 registros</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-dark table-hover table-striped align-middle mb-0">
+                <thead>
+                    <tr class="text-secondary small">
+                        <th>Material / Produto</th>
+                        <th>Lote</th>
+                        <th>Validade (FEFO)</th>
+                        <th>Local de Armazenamento</th>
+                        <th>CondiÃ§Ã£o</th>
+                        <th class="text-end">FÃ­sico</th>
+                        <th class="text-end">Reservado</th>
+                        <th class="text-end">DisponÃ­vel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td><strong class="text-light">Seroma de Teste p/ Lote</strong></td>
+                            <td><code class="text-info fw-bold">LT-2026-001</code></td>
+                            <td>
+                                    <span class="text-light">
+                                        31/01/2027
+                                    </span>
+                            </td>
+                            <td><span class="badge bg-secondary">Deposito Central R11 (homologacao)</span></td>
+                            <td>
+                                        <span class="badge bg-secondary">BLOQUEADO</span>
+                            </td>
+                            <td class="text-end font-monospace text-light">6</td>
+                            <td class="text-end font-monospace text-warning">0</td>
+                            <td class="text-end font-monospace fw-bold text-secondary">
+                                0
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-light">Seroma de Teste p/ Lote</strong></td>
+                            <td><code class="text-info fw-bold">LT-2026-001</code></td>
+                            <td>
+                                    <span class="text-light">
+                                        31/01/2027
+                                    </span>
+                            </td>
+                            <td><span class="badge bg-secondary">Externo R11 (homologacao)</span></td>
+                            <td>
+                                        <span class="badge bg-secondary">BLOQUEADO</span>
+                            </td>
+                            <td class="text-end font-monospace text-light">2</td>
+                            <td class="text-end font-monospace text-warning">0</td>
+                            <td class="text-end font-monospace fw-bold text-secondary">
+                                0
+                            </td>
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+                    </div>
+                </main>
+                <footer class="pp-footer app-footer"><span>PlantÃ£oPro â€¢ v1.95.1.0</span><span>Development</span><span>Powered by MNSOFT</span></footer>
+
+            </div>
+        </div>
+        <button class="sidebar-overlay border-0" id="sidebarOverlay" type="button" aria-label="Fechar menu" tabindex="-1"></button>
+        <nav class="mobile-navigation d-lg-none" aria-label="NavegaÃ§Ã£o mobile"><a class="mobile-nav-item" href="/Home/Dashboard"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#home"></use></svg><span>InÃ­cio</span></a><a class="mobile-nav-item" href="/MeuDia"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#layout-dashboard"></use></svg><span>Meu dia</span></a><button class="mobile-nav-item" id="mobileMenuToggle" type="button" aria-controls="appSidebar" aria-expanded="false" data-pp-nav-bound="1"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#menu"></use></svg><span>Menu</span></button></nav>
+
+        <dialog class="pp-dialog" id="commandPalette" aria-labelledby="commandPaletteTitle">
+    <header class="pp-command-header"><span class="pp-eyebrow">NavegaÃ§Ã£o inteligente</span><h2 id="commandPaletteTitle">Busca rÃ¡pida</h2></header>
+    <form class="p-3 border-bottom pp-form-enhanced" role="search" data-command-search="" data-pp-loading-bound="1"><div class="pp-client-validation-summary" role="alert" tabindex="-1"><strong>Revise os campos destacados</strong><p>Preencha as informaÃ§Ãµes obrigatÃ³rias e corrija os formatos indicados.</p></div>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <label class="visually-hidden" for="commandSearchInput">Pesquisar no PlantÃ£oPro</label>
+            <input class="form-control border-0 shadow-none" id="commandSearchInput" name="q" type="search" minlength="2" autocomplete="off" aria-controls="commandSearchResults" aria-describedby="commandSearchHint" placeholder="Pacientes, mÃ©dicos, plantÃµes e unidades">
+            <button class="btn btn-light btn-sm" type="button" data-command-close="" aria-label="Fechar busca">
+                <kbd>Esc</kbd>
+            </button>
+        </div>
+        <p class="pp-caption mb-0 mt-2" id="commandSearchHint">Digite ao menos dois caracteres. Dados clÃ­nicos nÃ£o sÃ£o exibidos.</p>
+    </form>
+    <div class="pp-command-results" id="commandSearchResults" role="listbox" aria-live="polite">
+        <p class="text-secondary p-3 mb-0">Encontre rapidamente o que precisa sem sair da sua jornada.</p>
+    </div>
+</dialog>
+
+        <div id="pp-overlay-root" class="pp-overlay-root" aria-live="polite" data-pp-confirm-root-bound="1">
+    <button class="pp-overlay-backdrop" type="button" data-pp-confirm-cancel="" aria-label="Fechar confirmaÃ§Ã£o"></button>
+    
+<section class="pp-modal pp-confirm-modal pp-future-modal pp-confirm-modal-warning " id="pp-confirm-modal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="pp-confirm-modal-title" aria-describedby="pp-confirm-modal-description" aria-busy="false" hidden="">
+            <div class="modal-header">
+                <div class="pp-confirm-heading">
+                    <span class="pp-confirm-icon" aria-hidden="true"><svg class="pp-icon" width="22" height="22" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#alert-triangle"></use></svg></span>
+                    <div>
+                    <span class="pp-confirm-kicker">ConfirmaÃ§Ã£o necessÃ¡ria</span>
+                    <h5 class="modal-title mb-0" id="pp-confirm-modal-title" data-pp-confirm-title="">Confirmar aÃ§Ã£o</h5>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="pp-delete-confirmation"><strong>Revise antes de continuar</strong><p class="mb-0" id="pp-confirm-modal-description" data-pp-confirm-message="">Deseja realmente continuar?</p></div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" data-pp-confirm-action="">
+                        <svg class="pp-icon" width="18" height="18" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#check"></use></svg>
+                    <span>Confirmar</span>
+                    <span class="spinner-border spinner-border-sm d-none" data-pp-confirm-loading="" aria-hidden="true"></span>
+                </button>
+                <span class="visually-hidden" aria-live="polite" data-pp-confirm-status=""></span>
+            </div>
+
+</section>
+
+</div>
+<div class="overlay-backdrop" data-overlay-backdrop="" hidden=""></div>
+<section class="app-drawer" id="notificationDrawer" role="dialog" aria-modal="true" aria-labelledby="notificationTitle" hidden="">
+    <header><div><span class="eyebrow">AtualizaÃ§Ãµes reais</span><h2 id="notificationTitle">NotificaÃ§Ãµes</h2></div><button type="button" data-notification-close="" aria-label="Fechar notificaÃ§Ãµes"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header>
+    <div class="drawer-toolbar">
+        <select aria-label="Filtrar notificaÃ§Ãµes por tipo" data-notification-filter="">
+            <option value="">Todos os tipos</option><option value="LOGIN">Login</option><option value="SESSAO">SessÃ£o</option><option value="PLANTAO">PlantÃ£o</option><option value="ESCALA">Escala</option><option value="FINANCEIRO">Financeiro</option><option value="CLIENTE">Cliente</option><option value="USUARIO">UsuÃ¡rio</option><option value="PERMISSAO">PermissÃ£o</option><option value="COBRANCA">CobranÃ§a</option><option value="AUDITORIA">Auditoria</option><option value="SISTEMA">Sistema</option>
+        </select>
+        <button type="button" class="button button-subtle" data-notification-read-all="" disabled="" hidden="">Marcar todas como lidas</button>
+    </div>
+    <div class="drawer-body" data-notification-list="" aria-live="polite" aria-busy="false"></div>
+    <footer class="drawer-footer"><a class="button button-subtle" href="/Notificacoes/Index">Abrir histÃ³rico de notificaÃ§Ãµes</a></footer>
+</section>
+
+<section class="app-drawer pp-future-drawer" id="quickActionDrawer" role="dialog" aria-modal="true" aria-labelledby="quickActionTitle" hidden=""><header><div><span class="eyebrow">Produtividade</span><h2 id="quickActionTitle">Nova aÃ§Ã£o</h2></div><button type="button" data-drawer-close="" aria-label="Fechar aÃ§Ãµes"><svg class="pp-icon" width="20" height="20" focusable="false" role="presentation" aria-hidden="true"><use href="/assets/icons/sprite.svg#x"></use></svg></button></header><div class="drawer-body quick-action-list" data-quick-actions=""></div></section>
+
+<aside class="context-panel" aria-label="Contexto da pÃ¡gina" hidden="" data-context-panel=""><div data-context-content=""></div></aside>
+
+
+        <section class="toast-region" aria-label="Mensagens" aria-live="polite" aria-relevant="additions" data-toast-region=""></section>
+
+        <aside class="app-drawer pp-detail-drawer pp-future-drawer" data-pp-detail-drawer="" role="dialog" aria-modal="true" aria-labelledby="ppDetailDrawerTitle" aria-describedby="ppDetailDrawerSummary" tabindex="-1" hidden="">
+    <header><div><span class="pp-eyebrow" data-detail-kind="">Detalhe operacional</span><h2 id="ppDetailDrawerTitle" data-detail-title="">Detalhes</h2><span class="pp-detail-drawer__status" data-detail-status=""></span></div><button type="button" data-detail-close="" aria-label="Fechar painel de detalhes"><i class="bi bi-x-lg" aria-hidden="true"></i></button></header>
+    <div class="drawer-body" data-detail-body="" aria-live="polite" aria-busy="false">
+        <div class="pp-detail-drawer__loading" data-detail-loading="" role="status"><span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Carregando contexto operacionalâ€¦</div>
+        <div data-detail-error="" role="alert" hidden="">NÃ£o foi possÃ­vel abrir os detalhes. Tente novamente.</div>
+        <div data-detail-content="" hidden="">
+            <section aria-labelledby="ppDetailSummaryTitle"><h3 id="ppDetailSummaryTitle">Resumo</h3><p id="ppDetailDrawerSummary" data-detail-summary=""></p><dl class="pp-detail-drawer__metadata" data-detail-metadata=""></dl></section>
+            <section aria-labelledby="ppDetailTimelineTitle"><h3 id="ppDetailTimelineTitle">Timeline e histÃ³rico</h3><ol class="pp-detail-drawer__timeline" data-detail-timeline=""></ol></section>
+            <section aria-labelledby="ppDetailActionsTitle"><h3 id="ppDetailActionsTitle">AÃ§Ãµes disponÃ­veis</h3><div class="pp-detail-drawer__actions" data-detail-actions=""></div></section>
+        </div>
+    </div>
+</aside>
+
+        <button class="pp-help-trigger" type="button" data-context-help-open="" aria-controls="contextHelpDrawer" aria-expanded="false">
+    <i class="bi bi-question-circle" aria-hidden="true"></i><span>Ajuda desta tela</span>
+</button>
+<div class="pp-help-backdrop" data-context-help-close="" hidden=""></div>
+<aside class="pp-help-drawer" id="contextHelpDrawer" aria-labelledby="contextHelpTitle" aria-hidden="true" tabindex="-1">
+    <header class="pp-help-drawer__header">
+        <div><span class="pp-eyebrow">Guia rÃ¡pido</span><h2 id="contextHelpTitle">Como usar esta tela</h2></div>
+        <button class="btn btn-sm btn-light" type="button" data-context-help-close="" aria-label="Fechar ajuda"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+    </header>
+    <div class="pp-help-drawer__body">
+        <p>Comece pela aÃ§Ã£o principal no topo e use os filtros para encontrar o que precisa.</p>
+        <ol class="pp-help-steps">
+            <li><strong>Confira o contexto</strong><span>Valide a unidade, o perÃ­odo e o perfil exibidos.</span></li>
+            <li><strong>Revise os status</strong><span>Abra um item para entender detalhes e prÃ³ximos passos.</span></li>
+            <li><strong>Ajuste a busca</strong><span>Se nada aparecer, limpe ou amplie os filtros.</span></li>
+        </ol>
+        <section class="pp-help-note" role="note"><i class="bi bi-shield-check" aria-hidden="true"></i><div><strong>Acesso e permissÃµes</strong><p>As aÃ§Ãµes disponÃ­veis respeitam seu perfil e a unidade ativa. Se uma opÃ§Ã£o esperada nÃ£o aparecer, fale com o administrador.</p></div></section>
+    </div>
+</aside>
+
+    <div class="pp-live-region" id="appLiveRegion" role="status" aria-live="polite" aria-atomic="true"></div>
+    <script src="/js/vendor/bootstrap.bundle.min.js?v=NfRUfZNkERrKSFA0c1a8VmCplPDYtpTYj5lQmKe1R_o"></script>
+    <script src="/js/plantaopro-toast.js?v=vmolcyDRKpGeNWHCLQWRrYbtKO0dRpZRycRGgeqMJXs"></script>
+    <script src="/js/plantaopro-ui.js?v=cqaT751bU2u0LFJJaeDsvkWj2kATBwafaG_t3ttOclk"></script>
+    <script src="/js/form-experience.js?v=oEbsbhB_4Y3dudGGOhMzSv6KhADf7NX7hpAq04gCmRg"></script>
+    <script src="/js/lookup.js?v=c3xISsbXdegU5h9ZtBbINX69g8a1QcqFtPCIPyBQrpM"></script>
+    <script src="/js/components/business-actions.js?v=OarzxE__NK-ZuVGAs-HEyuVdCa35eU_ha_sy3A6AdEg"></script>
+    <script src="/js/v155-medical-ui.js?v=F_x7bFt07fVxqG_FCBylz98FWJNoGc04yAqnlD48lJg"></script>
+    <script src="/js/detail-drawer.js?v=IbY5Z416xJZl-qOvWwvrx8XK90ocY7DjAQ_qlHao71E"></script>
+    <script src="/js/context-help.js?v=qx-wCZzhHxw76GHvFkUYch8y-ivT4OySJHYrp1NABzs"></script>
+        <script src="/js/command-palette.js?v=GufQiEtcJDGL67BKg-ddBHLSKQEv_J7oEYYlbFfZvtI"></script>
+    <script src="/js/service-worker-registration.js?v=2ss7Y4sSqR1TLulSJtUEU8YQoLR0ZvvlknvQZjree5s"></script>
+ <script type="module" src="/js/core/app-shell.js?v=XGaBQq4kkoLtYhC8jS18AsGTgZarFpxas_zCkJw1txo"></script>  <script src="/js/session-health.js?v=UIY8a6-NHw1byCSQWQzR-WYLXaWDxiebRzrTuRQXvRc"></script>     <script src="/js/v2139-premium-library.js?v=w8cAWWow8B_s8BwI2BtwLvxY3RooWlidnYiyibuhKmM"></script>
+    <script src="/js/v2145-guided-tour.js?v=ov49nq4fYWZQvv5dELqiyuqyyKfPSw6XSwiGD1rG11w"></script>
+    
+
+
+</body></html>

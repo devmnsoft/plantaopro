@@ -44,6 +44,7 @@ Cada slice termina com: evidência executada (testes isolados + suíte full), do
 | Slice | Escopo | Resultado | Evidência |
 |---|---|---|---|
 | `r11b1` | D1 P1 — bloqueio imediato de saldo (A12 L112/L296) | FECHADO — abrir gera pernas `BLOQUEIO_OCORRENCIA` (LIBERADO→BLOQUEADO, locais internos e externos, local da ocorrência primeiro, bloqueio parcial sem rejeitar); resolver inverte (`LIBERACAO_OCORRENCIA`); tratar/encerrar sem pernas; reserva fail-closed sobre saldo bloqueado; motivo/origem consultáveis; sem DDL/API/Web; invariante "não apaga estoque" agora vale com bloqueio (ciclo net-zero); **24/24** da classe A12; **full 1428/1428 limpo** | `r11b1-bloqueio-imediato-a12.md` |
+| `r11b2` | Homologação webview — P1 ao vivo + drill-downs | FECHADO c/ achado — CRUD Ocorrências completo no tenant SV (ABERTA→TRATAMENTO→RESOLVIDA→ENCERRADA); bloqueio imediato cobriu saldo INTERNO+EXTERNO (DEP 6 + EXT 2) e o ciclo terminou net-zero; Estoque exibe/filtra BLOQUEADO; **ACHADO P2 reprodutível**: `/Bi` e `/DashboardsPremium` → `CATALOGO_NAO_CONFIGURADO` para todo autenticado (falta entrada no catálogo `SaasRouteGuardFilter.ControllerModules`; telas sem link de menu) — bloqueia o clique nos 7 drill-downs; evidência DOM versionada (4 artefatos); capturas de pixel pendentes de janela em 1º plano | `r11b2-homologacao-bloqueio-a12-drilldowns.md` |
 
 ## 5. Riscos e gotchas da rodada
 
